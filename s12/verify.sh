@@ -17,3 +17,6 @@ $V certificates/s12_56points_3.8.txt 12 2000 "$(nproc)" 0
 echo
 echo "=== independent exact re-check (Python Fractions, sampled bins) ==="
 python3 xcheck.py certificates/s12_56points_3.8.txt 2000 5
+echo
+echo "=== rejection tests (a verifier that never says no is worthless) ==="
+./tests/rejection_tests.sh

@@ -178,7 +178,9 @@ fn main() {
     let threads: usize = if args.len()>4 { args[4].parse().unwrap() } else { 16 };
     let topk: usize = if args.len()>5 { args[5].parse().unwrap() } else { 0 };
     let out: Arc<std::sync::Mutex<Vec<(i128,f64,f64,f64)>>> = Arc::new(std::sync::Mutex::new(Vec::new()));
-    assert!(check_symmetry(&cert), "atom set is not D4-symmetric");
+    // D4 symmetry lets us restrict angles to [0,45]; without it we cover [0,90).
+    let sym = check_symmetry(&cert);
+    println!("D4-symmetric atom set: {}  -> angles cover {}", sym, if sym {"[0,45] deg"} else {"[0,90) deg"});
     let total: i128 = cert.atoms.iter().map(|a| a.2).sum();
     println!("atoms={} total weight = {}/{} = {:.6}", cert.atoms.len(), total, cert.wd, total as f64/cert.wd as f64);
     println!("s = {}/{} = {:.6}", cert.s_num, cert.s_den, cert.s_num as f64/cert.s_den as f64);
@@ -186,7 +188,7 @@ fn main() {
     if !weight_ok { println!("WEIGHT NOT < n={} (total*WD = {} vs {})", nn, total, nn*cert.wd); }
     // angle list k=0..K with t=k/N, need 2*arctan(K/N) >= 45deg  <=>  (K/N+1)^2 >= 2
     let mut kk: i128 = 0;
-    while (kk + bigN)*(kk + bigN) < 2*bigN*bigN { kk += 1; }
+    if sym { while (kk + bigN)*(kk + bigN) < 2*bigN*bigN { kk += 1; } } else { kk = bigN; }
     println!("angles: k=0..{} (N={}), covering [0,45deg]", kk, bigN);
     let bad = Arc::new(AtomicI64::new(0));
     let minw = Arc::new(std::sync::Mutex::new((i128::MAX, 0i128)));
