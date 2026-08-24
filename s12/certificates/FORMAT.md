@@ -44,6 +44,11 @@ coordinate by `λ` and the container likewise — in this format, simply divide 
 Each certificate stays valid up to a critical `λ`, beyond which some square's captured weight
 drops below 1:
 
-* the 56-point set is critical at `λ = 400/397`, container `1520/397 = 3.828715…`
-  (the container-corner square, at square side exactly `397/400`, is what breaks first);
+* the 56-point set is critical at `λ = 400/398 = 200/199`, container `760/199 = 3.819095…`;
+  one step further, at `λ = 400/397` (container `1520/397 = 3.828715…`), an axis-aligned
+  square drops to **4** points out of 5 — captured weight `4/5`, a clean rejection rather
+  than a marginal one, stable from `N = 2000` to `N = 200000`;
 * the 788-point set is critical just above container `3920/997`, with binding placements near 41°.
+
+Both figures are reproduced by `search/scale_to_critical.py`, which binary-searches `D`
+with the integer coordinates held fixed.

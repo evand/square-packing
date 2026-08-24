@@ -40,7 +40,7 @@ A second, weaker certificate is included because it is uniform, hence purely com
 | | |
 |---|---|
 | `lean/` | Lean 4 + Mathlib formalisation of the reduction step (weighted set of total weight `W` ⟹ at most `W` squares), including the rescaling lemmas. **0 sorries**; axioms are only `propext`, `Classical.choice`, `Quot.sound`. |
-| `verify/` | Exact `i128` verifier. Checks the covering property over the **entire continuum** of placements — no sampling. Angles are enumerated as rational rotations `θ_k = 2·arctan(k/N)` (so all trigonometry is rational); a unit square at any angle in `[θ_k, θ_{k+1}]` contains the concentric square of side `σ_k = 1/(cos δ + sin δ)` at angle `θ_k`, and for each such angle the minimum over all centres is computed exactly by an arrangement sweep. Verified at `N` = 2000, 6000, 12000. |
+| `verify/` | Exact `i128` verifier. Checks the covering property over the **entire continuum** of placements — no sampling. Angles are enumerated as rational rotations `θ_k = 2·arctan(k/N)` (so all trigonometry is rational); a unit square at any angle in `[θ_k, θ_{k+1}]` contains the concentric square of side `σ_k = 1/(cos δ + sin δ)` at angle `θ_k`, and for each such angle the minimum over all centres is computed exactly by an arrangement sweep. Verified at `N` = 6000 and 12000; at `N` ≤ 4000 the net's `σ`-shrink exceeds this certificate's slack and the verifier correctly refuses it (see `VERIFICATION.md`). |
 | `xcheck.py` | Independent re-implementation in exact Python `Fraction`s; agrees bin by bin. |
 | — | A third check, a dense float scan over 181 angles spanning the full 0–90° range (~500k centres each, not using the symmetry reduction), returns the same minimum. |
 
@@ -49,6 +49,34 @@ checked exactly by the verifier.
 
 See `certificates/FORMAT.md` for the file format and the closed-square convention, and
 `VERIFICATION.md` for the full log.
+
+## Reproducing the certificate, not just checking it
+
+`verify.sh` checks the shipped certificates.  To regenerate one from nothing:
+
+```sh
+# 1. LP with cutting planes over a rigorous cell decomposition of placement space.
+#    Every LP iterate is already a valid certificate; this writes runs/cert_<tag>.txt.
+#    (s, cell size `fine`, cell side `eta`, angle width `dt`, time limit, tag)
+mkdir -p runs
+python3 search/lp_search.py 3.92 0.005 0.005 0.005 7200 mytag
+
+# 2. Scale the finished certificate up to its critical container size.
+#    This step alone moved the bound from 3.92 to 3.931795.
+python3 search/scale_to_critical.py runs/cert_mytag.txt --n 12 --N 6000
+```
+
+Step 2 is pure arithmetic: the integer coordinates never change, only the denominator `D`,
+since scaling the whole picture by `λ` is exactly `D → D/λ`, `s → λs`.  A certificate
+therefore proves a *family* of bounds and the best one is at the critical `D`; see
+`certificates/FORMAT.md`.
+
+Step 1 is a stochastic search with a time limit, so it does not reproduce the shipped file
+bit for bit.  The shipped file is pinned by `certificates/SHA256SUMS`, and what it asserts
+is checked independently of how it was found — which is the entire point of the format.
+
+The packing search that looked for a counterexample from the other side (L-BFGS + basin
+hopping, validated against `s(5)`, `s(10)`, `s(11)`) is `search/pack_src/main.rs`.
 
 ## Limits of the method
 
@@ -61,7 +89,7 @@ layered on top of a certificate, in the style of Bentz's `s(13)` proof.
 
 Separately, an extensive search for a packing of 12 unit squares into a square of side < 4
 (L-BFGS + basin hopping, validated by reproducing `s(5)`, `s(10)`, `s(11)` to 5 decimals) found
-nothing below 4; every run collapsed to the compressed 4×4 grid.  Code in `search/`.
+nothing below 4; every run collapsed to the compressed 4×4 grid.  Code in `search/pack_src/`.
 
 ## Credits and prior art
 
