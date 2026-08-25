@@ -14,18 +14,19 @@ the container contains one, therefore `n` interior-disjoint squares cannot fit �
 and was developed by
 
 * **W. Stromquist**, *Packing 10 or 11 unit squares in a square*, Electron. J. Combin. **10**
-  (2003) #R8 — the source of the bound this work improves, `s(11) ≥ 2 + 4/√5 = 3.788854…`,
+  (2003) #R8, https://www.combinatorics.org/ojs/index.php/eljc/article/view/v10i1r8 — the source of the bound this work improves, `s(11) ≥ 2 + 4/√5 = 3.788854…`,
   which transfers to `s(12)` by monotonicity;
 * **M. J. Kearney and P. Shiu**, *Efficient packing of unit squares in a square*,
-  Electron. J. Combin. **9** (2002) #R14 — the green/red duality trick;
+  Electron. J. Combin. **9** (2002) #R14, https://www.combinatorics.org/ojs/index.php/eljc/article/view/v9i1r14 — the green/red duality trick;
 * **H. Nagamochi**, *Packing unit squares in a rectangle*, Electron. J. Combin. **12** (2005)
-  #R37 — weighted points, segments and areas as "resources";
+  #R37, https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37 — weighted points, segments and areas as "resources";
 * **W. Bentz**, *Optimal packings of 13 and 46 unit squares in a square*, Electron. J. Combin.
-  **17** (2010) #R126, and *Optimal packings of 22 and 33 unit squares in a square*,
-  arXiv:1606.03746 — continuously varying families of unavoidable sets.  `s(13) = 4` is what
+  **17** (2010) #R126, https://www.combinatorics.org/ojs/index.php/eljc/article/view/v17i1r126 , and *Optimal packings of 22 and 33 unit squares in a square*,
+  arXiv:1606.03746 (https://arxiv.org/abs/1606.03746) — continuously varying families of unavoidable sets.  `s(13) = 4` is what
   makes `n = 12` the exact boundary case.
 * **E. Friedman**, *Packing unit squares in squares: a survey and new results*, Electron. J.
-  Combin. Dynamic Survey **DS7** — the standard reference, and the source of the technical
+  Combin. Dynamic Survey **DS7**, https://www.combinatorics.org/ojs/index.php/eljc/article/view/DS7
+  (maintained copy: https://erich-friedman.github.io/papers/squares/squares.html ) — the standard reference, and the source of the technical
   lemmas the whole area uses.
 
 Best known packings, including `s(11) = 3.877083…` (**W. Trump**, 1979) and the current record
@@ -55,10 +56,12 @@ verifier, a Lean formalisation of the reduction, and scaling a finished certific
 
 **Unweighted / subdivision family — different architecture, same problem:**
 
-* **Stanislav Fort**, https://github.com/stanislavfort/17squares — `s(17) > 4.456575`.
+* **Stanislav Fort**, https://github.com/stanislavfort/17squares — `s(17) > 4.456575`.  The repo
+  states that it was produced by an AI model with the author not vouching for correctness.
 * **Mira**, https://github.com/Mira-acc/17squares — `s(17) > 4.468292`; 16 unweighted points, a
   122.6M-node exact dyadic subdivision of pose space, a strict triangle-piercing lemma, and three
-  independent exact checkers.  The most thorough verification artifact in this area, and the
+  independent exact checkers; write-up at
+  https://github.com/Mira-acc/17squares/blob/main/paper/17squares-lower-bound.pdf .  The most thorough verification artifact in this area, and the
   source of several practices adopted here (rejection tests, a self-describing `points.json`,
   publishing checkers rather than only claims).
 

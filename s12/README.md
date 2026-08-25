@@ -102,13 +102,75 @@ Kearney–Shiu, Nagamochi and Bentz; Friedman's Dynamic Survey **DS7** is the st
 The idea of replacing an unavoidable *set* by LP-optimised *weights*, and mechanising the
 verification in exact rational arithmetic, is due to the August 2026 work on `s(17)` by
 **Sam Burns** and **Gustavo Massaccesi** (unrefereed blog posts); this repo applies that idea to
-`n = 12`, which as far as I know had not been tried.
+`n = 12`, which as far as I know had not been tried.  `CREDITS.md` has the full lineage.
 
 What is new here beyond that: cutting planes generated over a rigorous *cell* decomposition of
 placement space (so every LP iterate is a valid certificate), column generation for the point
 locations, the exact arrangement-sweep verifier over rational rotations, the Lean formalisation
 of the reduction, and the observation that a finished certificate can be **scaled up to its
 critical size** — which is what moved this bound from 3.92 to 3.9318.
+
+## References
+
+**Results this work depends on**
+
+* F. Göbel, *Geometrical packing and covering problems*, in *Packing and Covering in
+  Combinatorics* (A. Schrijver, ed.), Math. Centrum Tracts **106** (1979), 179–199.
+  The unavoidable-set argument.
+* W. Stromquist, *Packing 10 or 11 unit squares in a square*, Electron. J. Combin. **10**
+  (2003), #R8.  https://www.combinatorics.org/ojs/index.php/eljc/article/view/v10i1r8 —
+  the previous bound, `s(11) ≥ 2 + 4/√5`, which transfers to `n = 12` by monotonicity.
+* W. Bentz, *Optimal packings of 13 and 46 unit squares in a square*, Electron. J. Combin.
+  **17** (2010), #R126.  https://www.combinatorics.org/ojs/index.php/eljc/article/view/v17i1r126 —
+  `s(13) = 4`, which makes `n = 12` the boundary case.
+* E. Friedman, *Packing unit squares in squares: a survey and new results*, Electron. J.
+  Combin. Dynamic Survey **DS7** (last revised 2009).
+  https://www.combinatorics.org/ojs/index.php/eljc/article/view/DS7 — Table 2 is the only
+  tabulation of lower bounds for `s(n)`; a maintained copy is at
+  https://erich-friedman.github.io/papers/squares/squares.html .
+* D. Ellsworth, *Squares in Squares*, https://kingbird.myphotos.cc/packing/squares_in_squares.html —
+  current record packings (including Trump's `s(11) = 3.877083…`, 1979) with exact constants;
+  the "previous record" claim above was checked against this and DS7.
+
+**The mechanised-certificate line this work belongs to (all August 2026, all unrefereed)**
+
+* S. Burns, *Proposing a better lower bound for n=17 square packing* (6 Aug 2026),
+  https://sam-burns.com/posts/proposing-better-lower-bound-for-n17-square-packing/ —
+  weighted atoms, exact rational verification.  `s(17) ≥ 4.4811`.
+* G. Massaccesi, *Another better lower bound for n=17 square packing* (21 Aug 2026),
+  https://gus-massa.blogspot.com/2026/08/another-better-lower-bound-for-n17.html , and
+  *Linear programming for square packing*,
+  https://gus-massa.blogspot.com/2026/08/linear-programing-for-square-packing.html —
+  LP-optimised weights over a rational angle net.  `s(17) ≥ 4.5058`.  The direct ancestor of
+  the method here.
+* S. Fort, https://github.com/stanislavfort/17squares — `s(17) > 4.456575`; unweighted points,
+  exact subdivision of pose space, CI re-verification.
+* Mira, https://github.com/Mira-acc/17squares — `s(17) > 4.468292`; 16 unweighted points,
+  exact dyadic subdivision of pose space, a triangle-piercing lemma, three independent checkers,
+  rejection tests, and a write-up at
+  https://github.com/Mira-acc/17squares/blob/main/paper/17squares-lower-bound.pdf .  Several
+  verification practices here (rejection tests, self-describing certificate files, shipping
+  checkers rather than claims) are taken from this repo.
+
+The two 2026 families use different conventions — Fort and Mira use *open* squares and
+pigeonhole, Burns, Massaccesi and this repo use *closed* squares with a concentric-shrink
+argument — so certificates are not interchangeable between their checkers and ours without
+reworking the disjointness step.  As of this writing none of the four `n = 17` results, nor this
+one, appears in DS7 Table 2 or on Wikipedia's *Square packing* page.
+
+**Further reading**
+
+* M. J. Kearney and P. Shiu, *Efficient packing of unit squares in a square*, Electron. J.
+  Combin. **9** (2002), #R14.  https://www.combinatorics.org/ojs/index.php/eljc/article/view/v9i1r14
+* H. Nagamochi, *Packing unit squares in a rectangle*, Electron. J. Combin. **12** (2005),
+  #R37.  https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37 — weighted
+  points, segments and areas as "resources", the closest classical precedent for weights.
+* W. Bentz, *Optimal packings of 22 and 33 unit squares in a square*, arXiv:1606.03746,
+  https://arxiv.org/abs/1606.03746 .
+* Wikipedia, *Square packing*, https://en.wikipedia.org/wiki/Square_packing .
+* `google-deepmind/formal-conjectures` issue #646, *Seventeen square packing problem*,
+  https://github.com/google-deepmind/formal-conjectures/issues/646 — a Lean formalisation
+  venue for statements in this area.
 
 ## Status
 
