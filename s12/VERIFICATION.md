@@ -24,6 +24,7 @@ weights with denominator 10^7, total weight 14916233/1250000 = 11.9329864 < 12.
 4b. `xcheck.py` (independent Python implementation, exact rationals, EVERY angle bin),
    N=6000 -> minimum 10000023/10000000 over all 2486 bins, 61 s on 32 cores : VERIFIED.
    Per-bin minima are identical to the Rust verifier's in all 2486 bins.
+   N=12000 -> same minimum, 4971 bins, 130 s; again identical to Rust in every bin.
    At N=4000 it also REJECTS, with the same minimum 9987038/10000000 in the same bin
    (k=746) as the Rust verifier; one neighbouring bin (k=748) differs because the Rust
    verifier pads its centre range by 1e-6*h (a deliberate superset), i.e. Rust is
