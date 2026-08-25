@@ -20,3 +20,7 @@ python3 xcheck.py certificates/s12_56points_3.8.txt 2000 5
 echo
 echo "=== rejection tests (a verifier that never says no is worthless) ==="
 ./tests/rejection_tests.sh
+echo
+echo "=== points.json companions: json -> txt reproduces the shipped .txt byte for byte ==="
+python3 search/export_points.py --roundtrip certificates/s12_lower_3.931795.txt certificates/s12_lower_3.931795.json
+python3 search/export_points.py --roundtrip certificates/s12_56points_3.8.txt certificates/s12_56points_3.8.json

@@ -2,6 +2,8 @@
 
 A certificate is a plain-text file of whitespace-separated integers. Everything is exact:
 no floating point appears anywhere in a certificate or in its verification.
+(Each certificate is also published as a self-describing `.json` companion; see
+[JSON companion](#json-companion-pointsjson) below.)
 
 ```
 s_num s_den        # container is the closed square [0, s_num/s_den]^2
@@ -52,3 +54,55 @@ drops below 1:
 
 Both figures are reproduced by `search/scale_to_critical.py`, which binary-searches `D`
 with the integer coordinates held fixed.
+
+## JSON companion (`points.json`)
+
+Every `.txt` certificate ships next to a `.json` file with the same stem
+(`s12_lower_3.931795.json`, `s12_56points_3.8.json`), so that the data is self-describing
+and readable without this document.  The schema follows the `points.json` of Mira's
+`17squares` repository (`problem`, `theorem`, `container_side` as
+`{numerator, denominator, decimal}`, `point_denominator`, `points` as `[X, Y]` integer
+pairs, provenance with a file name and SHA-256), extended with the fields the weighted
+method needs.  The `.txt` remains the source of truth: it is what `verify/` reads and what
+`SHA256SUMS` pins first; the JSON is generated from it by `search/export_points.py` and is
+pinned too.
+
+| field | type | meaning |
+|---|---|---|
+| `schema` | string | `"s12-points-json/1"` |
+| `problem` | string | `"packing 12 unit squares in a square"` |
+| `theorem` | string | `"s(12) >= 3920/997"` (note `>=`, not `>`: closed squares, see `convention`) |
+| `bound` | string | the container side as an exact fraction, `"3920/997"` |
+| `n` | integer | number of squares the certificate rules out: 12 |
+| `container_side` | object | `{"numerator": s_num, "denominator": s_den, "decimal": …}` — the container is `[0, s_num/s_den]^2` |
+| `point_denominator` | integer | `D`: point `i` is at `(points[i][0]/D, points[i][1]/D)` |
+| `weight_denominator` | integer | `W`: point `i` has weight `weights[i]/W` |
+| `points` | array of `[X, Y]` | integer coordinates, in file order |
+| `weights` | array of integers | integer weight numerators, parallel to `points` (same length, same order) |
+| `total_weight` | object | `{"numerator", "denominator", "decimal"}` — `sum(weights)/W` in lowest terms; the certificate is valid only if this is `< n` |
+| `convention` | object | `squares: "closed"`, `boundary_points_count: true`, and prose `claim` / `argument` / `note` fields restating the closed-square, concentric-shrink argument of this document, with `reference` pointing here |
+| `source` | object | `file`: the `.txt` file name; `sha256`: its SHA-256 (the value in `SHA256SUMS`); `format`: this document |
+
+Every number that matters is an integer or an exact rational; the `decimal` values are the
+nearest IEEE double, provided for readers and ignored on import.  Keys appear in the order
+above, one point and one weight per line, so the file is deterministic and diffs cleanly.
+
+Both directions are checked by `verify.sh`:
+
+```sh
+python3 search/export_points.py --roundtrip certificates/s12_lower_3.931795.txt certificates/s12_lower_3.931795.json
+```
+
+asserts that rebuilding the `.txt` from the JSON's integer fields reproduces the shipped
+`.txt` byte for byte, that regenerating the JSON from the `.txt` reproduces the shipped
+`.json` byte for byte, that `source.sha256` is the `.txt`'s hash, and that `total_weight`
+equals `sum(weights)/W` and is below `n`.  `export` (txt → json) and `import`
+(json → txt) are the two conversions; they need nothing beyond the Python standard library.
+
+What is **not** carried over from Mira's schema: `triangles` / `triangle_indices_are_zero_based`
+(their strict triangle-piercing lemma has no counterpart here — the weighted argument needs no
+combinatorial structure on the points) and the subdivision-tree statistics under `certificate`
+(there is no tree; the covering property is checked over the whole continuum by the
+arrangement sweep in `verify/`).  Their points are *unweighted* and their squares *open*;
+our `weights` and `convention.squares = "closed"` are exactly the two places where a reader
+of both formats must not assume the same semantics.
