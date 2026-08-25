@@ -45,7 +45,7 @@ A second, weaker certificate is included because it is uniform, hence purely com
 |---|---|
 | `lean/` | Lean 4 + Mathlib formalisation of the reduction step (weighted set of total weight `W` ⟹ at most `W` squares), including the rescaling lemmas. **0 sorries**; axioms are only `propext`, `Classical.choice`, `Quot.sound`. |
 | `verify/` | Exact `i128` verifier. Checks the covering property over the **entire continuum** of placements — no sampling. Angles are enumerated as rational rotations `θ_k = 2·arctan(k/N)` (so all trigonometry is rational); a unit square at any angle in `[θ_k, θ_{k+1}]` contains the concentric square of side `σ_k = 1/(cos δ + sin δ)` at angle `θ_k`, and for each such angle the minimum over all centres is computed exactly by an arrangement sweep. Verified at `N` = 6000 and 12000; at `N` ≤ 4000 the net's `σ`-shrink exceeds this certificate's slack and the verifier correctly refuses it (see `VERIFICATION.md`). |
-| `xcheck.py` | Independent re-implementation in exact Python `Fraction`s; agrees bin by bin. |
+| `xcheck.py` | Independent re-implementation in exact Python, re-derived from the definition rather than from the Rust; checks **every** angle bin (2486 bins at `N` = 6000 for the main certificate) and agrees with the Rust verifier bin by bin. |
 | — | A third check, a dense float scan over 181 angles spanning the full 0–90° range (~500k centres each, not using the symmetry reduction), returns the same minimum. |
 
 The `D4` symmetry of the point set — which is what reduces angles to `[0°, 45°]` — is itself

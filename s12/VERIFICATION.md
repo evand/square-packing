@@ -21,13 +21,22 @@ weights with denominator 10^7, total weight 14916233/1250000 = 11.9329864 < 12.
    highest-value improvement available.
 4. dense float scan, 181 angles over the FULL [0,90] range, ~500k centres each,
    not using the D4 reduction -> minimum 1.000002 (agrees)
+4b. `xcheck.py` (independent Python implementation, exact rationals, EVERY angle bin),
+   N=6000 -> minimum 10000023/10000000 over all 2486 bins, 61 s on 32 cores : VERIFIED.
+   Per-bin minima are identical to the Rust verifier's in all 2486 bins.
+   At N=4000 it also REJECTS, with the same minimum 9987038/10000000 in the same bin
+   (k=746) as the Rust verifier; one neighbouring bin (k=748) differs because the Rust
+   verifier pads its centre range by 1e-6*h (a deliberate superset), i.e. Rust is
+   slightly more conservative there.  Sampled mode is retained for speed but a sampled
+   VERIFIED is labelled as not a proof.
 5. D4 symmetry of the point multiset: checked exactly inside `verify`
 
 ## Companion certificate (weaker but human-readable)
 `certificates/s12_56points_3.8.txt` — 56 points in [0,19/5]^2 (scales up to [0,1520/397]^2), weight 1/5 each (total 56/5 = 11.2).
 Statement: every closed unit square inside [0,3.8]^2, at any angle, contains at least 5 of the
 56 points; 12 disjoint squares would need 60.  Checks: `verify` at N=2000/4000/8000, and the
-independent Python Fraction re-check `xcheck.py` (minimum exactly 1 at every sampled bin).
+independent exact Python re-check `xcheck.py` over every bin at N=2000 (829 bins, identical
+to the Rust per-bin minima) and N=8000 (3314 bins): minimum exactly 1.
 
 ## Formalisation
 `lean/Sqpack/Basic.lean` (Lean 4 + Mathlib) proves the reduction:
