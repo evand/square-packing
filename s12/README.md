@@ -2,6 +2,8 @@
 
 [![verify](https://github.com/evand/square-packing-12/actions/workflows/verify.yml/badge.svg)](https://github.com/evand/square-packing-12/actions/workflows/verify.yml)
 
+Readable write-up with the point diagram: **https://evand.github.io/square-packing-12/**
+
 `s(n)` is the side of the smallest square into which `n` unit squares can be packed, with
 rotations allowed.  `s(12) = 4` is conjectured but **open**: `s(13) = 4` is proved (Bentz 2010)
 and `s(11) = 3.877083…` (Trump 1979), so the largest `n` with `s(n) < 4` is either 11 or 12,
