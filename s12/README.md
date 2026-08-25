@@ -75,8 +75,11 @@ since scaling the whole picture by `λ` is exactly `D → D/λ`, `s → λs`.  A
 therefore proves a *family* of bounds and the best one is at the critical `D`; see
 `certificates/FORMAT.md`.
 
-Step 1 is a stochastic search with a time limit, so it does not reproduce the shipped file
-bit for bit.  The shipped file is pinned by `certificates/SHA256SUMS`, and what it asserts
+Step 1 with a time limit is not reproducible bit for bit (it stops on the wall clock).  With
+`--iters N --seed S` instead of a time limit it is a pure function of its arguments — two runs
+give byte-identical certificates — and `--dump-lp` archives the exact final LP so the weights
+can be regenerated from it with `--resolve`; see `search/REPRODUCIBILITY.md`.  The shipped file
+predates those options.  The shipped file is pinned by `certificates/SHA256SUMS`, and what it asserts
 is checked independently of how it was found — which is the entire point of the format.
 
 The packing search that looked for a counterexample from the other side (L-BFGS + basin
