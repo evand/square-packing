@@ -7,11 +7,76 @@ Q(c,t) for every (c,t) in the cell provided
    (centre shift: |u - u_mid|_inf <= eta/2 ;  angle shift: |p-c| * dt/2 <= 0.7072*dt/2.)
 Cells whose u-square meets the admissible centre region cover every placement, so if every
 such cell has guaranteed weight >= 1 then every unit square in C covers weight >= 1.
+
+Command line
+------------
+    python3 search/lp_search.py S FINE ETA DT TLIMIT TAG [options]
+
+positional (unchanged from the original script; the README command still works):
+    S        container side (e.g. 3.92)
+    FINE     atom grid spacing
+    ETA      cell side in u-space
+    DT       angle bin width
+    TLIMIT   wall-clock limit in seconds (ignored when --iters is given)
+    TAG      output files are runs/cert_TAG.txt, runs/snap_TAG.txt, runs/xsep_TAG.txt
+
+options (all new; every one is optional and the defaults reproduce the old behaviour):
+    --iters N            run exactly N cutting-plane iterations (N LP solves) and stop.
+                         Replaces the wall-clock limit, and removes the timeout on the
+                         verifier subprocess, so the run is a pure function of its
+                         arguments (and of the software versions -- see REPRODUCIBILITY.md).
+                         The one remaining early exit, "certificate with weight < 11.999",
+                         is itself deterministic.
+    --seed N             seed python's `random` and numpy's global RNG, and pass N to HiGHS as
+                         `random_seed`.  NOTE: the search itself draws no random numbers; the
+                         seed only pins the LP solver's internal perturbations (HiGHS default
+                         random_seed is 0, which is what you get without --seed).
+    --dump-lp PATH       write the LP whose solution is exported (objective, constraint
+                         matrix, cell and orbit definitions, solution and duals) to PATH in
+                         the exact text format described in search/REPRODUCIBILITY.md.
+                         `--resolve PATH` reads such a dump back, re-solves it, and compares.
+    --verifier PATH      exact verifier binary (default: <repo>/verify/target/release/verify).
+                         If it is missing the exact check is skipped, which changes the
+                         search (the verifier's worst placements are fed back as cuts), so
+                         the log records whether it was found.
+    --verify-threads N   threads for the verifier (default 4).  Its output is canonically
+                         sorted before use, so N does not affect the result.
+    --no-verify          never call the verifier (useful for quick tests).
+    --runs DIR           output directory (default runs/, created if needed).
+    --highs-threads N    HiGHS `threads` option (default 1).
+
+    python3 search/lp_search.py --resolve DUMP    re-solve an LP dump and print the objective.
+
+Nondeterminism audit (what --iters/--seed fix, and what they do not):
+    * wall-clock termination (`time.time()-t0 > tlimit`)      -> fixed by --iters
+    * verifier subprocess timeout=600 s                       -> removed under --iters
+    * verifier multithreading: witnesses are merged in thread completion order and only
+      stably sorted by value, so ties are in arbitrary order  -> canonical full-tuple sort
+    * stale runs/xsep_TAG.txt from an earlier run with the same tag was consumed on
+      iteration 0                                             -> deleted at start-up
+    * HiGHS: scipy forces the serial dual simplex; we additionally pin threads=1 and
+      random_seed; the LP is dumped so it can be re-solved by anything
+    * no python/numpy RNG is used anywhere; dict/set are only used for membership tests,
+      never iterated, so hash order is irrelevant
+    * floating-point results depend on numpy/scipy/HiGHS versions and on the CPU's SIMD
+      code paths (np.cumsum, argsort tie-breaking, HiGHS pivoting).  Same machine + same
+      wheels => byte-identical; across machines the certificate may differ (but every
+      certificate produced is independently checkable).
 """
 import numpy as np, scipy.sparse as sp
 from scipy.optimize import linprog
-import math, sys, time, os
+import math, sys, time, os, warnings, random, argparse, hashlib
 from fractions import Fraction
+
+HIGHS_OPTS = {'threads': 1, 'random_seed': 0}   # overridden from the command line
+
+def _linprog(c, A, b):
+    with warnings.catch_warnings():
+        # scipy warns that `threads`/`random_seed` are not among its named options; they are
+        # passed to HiGHS verbatim, which is exactly what we want.
+        warnings.simplefilter("ignore")
+        return linprog(c=c, A_ub=-A, b_ub=-b, bounds=(0, None), method='highs',
+                       options=dict(HIGHS_OPTS))
 
 class M:
     def __init__(s_,s,fine,eta,dt):
@@ -86,7 +151,8 @@ class M:
         R=np.concatenate(s_.R);C=np.concatenate(s_.C);V=np.concatenate(s_.V)
         A=sp.coo_matrix((V,(R,C)),shape=(len(s_.cells),len(s_.orbits))).tocsr()
         sizes=np.array([len(P) for P in s_.orbits],dtype=float)
-        res=linprog(c=sizes,A_ub=-A,b_ub=-np.ones(len(s_.cells)),bounds=(0,None),method='highs')
+        s_.lastA=A; s_.lastc=sizes          # kept for --dump-lp
+        res=_linprog(sizes,A,np.ones(len(s_.cells)))
         if not res.success: return None
         return res.fun,res.x,-res.ineqlin.marginals
 
@@ -121,8 +187,30 @@ def admissible(U0,U1,box,tol=0.0):
     cx=U0*ct-U1*st; cy=U0*st+U1*ct
     return (cx>=lo-tol)&(cx<=hi+tol)&(cy>=lo-tol)&(cy<=hi+tol)
 
-def run(s,fine=0.005,eta=0.005,dt=0.005,tlimit=7200,log=print,perang=260,tag='x'):
+REPO=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DEFAULT_VERIFIER=os.path.join(REPO,"verify","target","release","verify")
+
+def read_xsep(path):
+    """parse the verifier's witness file and return the violated placements as (cx,cy,theta)
+    in a CANONICAL order.  The verifier merges per-thread lists in completion order and then
+    sorts stably by value only, so ties would otherwise come back in a thread-dependent order."""
+    pts=[]
+    for line in open(path):
+        q=line.split()
+        if len(q)==4 and float(q[0])<1.0: pts.append((float(q[0]),float(q[1]),float(q[2]),float(q[3])))
+    pts.sort()
+    return [(cx,cy,th) for v,th,cx,cy in pts]
+
+def run(s,fine=0.005,eta=0.005,dt=0.005,tlimit=7200,log=print,perang=260,tag='x',
+        iters=None,verifier=DEFAULT_VERIFIER,verify_threads=4,no_verify=False,runs='runs'):
     t0=time.time(); m=M(s,fine,eta,dt)
+    os.makedirs(runs,exist_ok=True)
+    snapf=os.path.join(runs,f"snap_{tag}.txt"); xf=os.path.join(runs,f"xsep_{tag}.txt"); winf=os.path.join(runs,f"WIN_{tag}.txt")
+    for f_ in (snapf,xf):                       # stale state from an earlier run with the same tag
+        if os.path.exists(f_): os.remove(f_)
+    use_verifier=(not no_verify) and os.path.isfile(verifier) and os.access(verifier,os.X_OK)
+    log(f"  verifier: {'using '+verifier if use_verifier else 'NOT USED (missing or --no-verify); exact cuts disabled'}")
+    log(f"  mode: {'deterministic, iters='+str(iters) if iters is not None else 'wall-clock limit '+str(tlimit)+'s'}  highs={HIGHS_OPTS}")
     thetas=np.arange(dt/2, math.pi/4+dt/2+1e-12, dt)
     k=max(1,int(round(0.125/fine)))
     for i in range(k//2,m.n,k):
@@ -136,12 +224,13 @@ def run(s,fine=0.005,eta=0.005,dt=0.005,tlimit=7200,log=print,perang=260,tag='x'
         sel=admissible(G0.ravel(),G1.ravel(),box,0.70711*eta)
         u0=G0.ravel()[sel][::40]; u1=G1.ravel()[sel][::40]
         m.add_cells(u0,u1,tm)
-    best=None
-    for it in range(400):
+    best=None; last=None
+    for it in range(400 if iters is None else iters):
         out=m.solve()
         if out is None: log("  LP failed"); break
         val,x,y=out
         P,own=m.atoms(); w=x[own]
+        last=snapshot(m,val,x,y)
         tot_viol=0; gmin=9e9; added=0; pend=[]
         for tm in thetas:
             r=scan_angle(P,w,s,tm,m.hE,eta)
@@ -172,24 +261,24 @@ def run(s,fine=0.005,eta=0.005,dt=0.005,tlimit=7200,log=print,perang=260,tag='x'
                 pend.append((G0.ravel()[sel].copy(),G1.ravel()[sel].copy(),tm))
         exact=None
         try:
-            if val<12.6:
-                tw=write_cert(m,x,s,f"runs/snap_{tag}.txt")
+            if val<12.6 and use_verifier:
+                tw=write_cert(m,x,s,snapf)
                 import subprocess
-                r=subprocess.run(["./verify/target/release/verify",f"runs/snap_{tag}.txt","12","2000","4","6",f"runs/xsep_{tag}.txt"],
-                                 capture_output=True,text=True,timeout=600)
+                r=subprocess.run([verifier,snapf,"12","2000",str(verify_threads),"6",xf],
+                                 capture_output=True,text=True,timeout=None if iters is not None else 600)
                 ln=[l for l in r.stdout.split(chr(10)) if l.startswith("min covered")]
                 exact=float(ln[0].split("=")[-2].split()[0]) if ln else None
                 if exact is not None and exact>=1.0 and tw<12.0:
                     log(f"  *** EXACT-VERIFIED CERTIFICATE  s={s}  total={tw:.6f} < 12  (mincov={exact}) ***")
-                    import shutil; shutil.copy(f"runs/snap_{tag}.txt", f"runs/WIN_{tag}.txt")
+                    import shutil; shutil.copy(snapf, winf)
         except Exception as e: log(f"   [exact check failed: {e}]")
         log(f"  it{it} LP={val:.5f} exact={exact} cells={len(m.cells)} orb={len(m.orbits)} minguar={gmin:.4f} viol={tot_viol} +{added} t={time.time()-t0:.0f}s")
         if tot_viol==0:
-            if best is None or val<best[0]:
-                best=(val,x,m)
+            if best is None or val<best.val:
+                best=last
                 log(f"  *** RIGOROUS CERTIFICATE at s={s}: TOTAL WEIGHT = {val:.6f} ***")
             if val<11.999: break
-        if time.time()-t0>tlimit: break
+        if iters is None and time.time()-t0>tlimit: break
         act=np.nonzero(y>1e-12)[0]
         if len(act):
             nn=m.n; Pr=np.zeros((nn,nn)); GX,GY=np.meshgrid(m.gx,m.gx,indexing='ij')
@@ -214,21 +303,32 @@ def run(s,fine=0.005,eta=0.005,dt=0.005,tlimit=7200,log=print,perang=260,tag='x'
         for u0,u1,tm in pend: added+=m.add_cells(u0,u1,tm)
         # extra cuts at the exact worst placements found by the integer verifier
         try:
-            xf=f"runs/xsep_{tag}.txt"
             if os.path.exists(xf):
-                pts=[]
-                for line in open(xf):
-                    q=line.split()
-                    if len(q)==4 and float(q[0])<1.0: pts.append((float(q[2]),float(q[3]),float(q[1])))
+                pts=read_xsep(xf)
                 if pts: added+=m.add_points(pts[:4000], 0.49975)
                 os.remove(xf)
         except Exception as e: pass
-    return best if best is not None else (val,x,m)
+    return best if best is not None else last
+
+class Snap:
+    """a frozen LP iterate: everything needed to write the certificate and to dump the LP.
+    (`M` keeps growing after the iterate is taken, so the raw (val,x,m) triple is not enough.)"""
+    __slots__=("val","x","y","P","own","step","cells","orbits","A","c")
+    def __init__(s_,**kw):
+        for k_,v_ in kw.items(): setattr(s_,k_,v_)
+
+def snapshot(m,val,x,y):
+    P,own=m.atoms()
+    return Snap(val=val,x=x.copy(),y=y.copy(),P=P.copy(),own=own.copy(),step=m.step,
+                cells=list(m.cells),orbits=list(m.orbits),A=m.lastA,c=m.lastc)
 
 def write_cert(m,x,s,path,WD=10**7):
-    P,own=m.atoms(); w=x[own]
+    """m may be an `M` (live model) or a `Snap`."""
+    if isinstance(m,Snap): P,own,step=m.P,m.own,m.step
+    else: P,own=m.atoms(); step=m.step
+    w=x[own]
     keep=w>1e-10; P=P[keep]; w=w[keep]
-    fr=Fraction(s).limit_denominator(10**6); D=int(round(2/m.step))
+    fr=Fraction(s).limit_denominator(10**6); D=int(round(2/step))
     X=np.round(P[:,0]*D).astype(np.int64); Y=np.round(P[:,1]*D).astype(np.int64)
     assert np.max(np.abs(P[:,0]*D-X))<1e-7 and (fr*D).denominator==1
     W=np.ceil(w*WD).astype(np.int64)
@@ -237,9 +337,114 @@ def write_cert(m,x,s,path,WD=10**7):
         for a,b,c in zip(X,Y,W): f.write(f"{a} {b} {c}\n")
     return W.sum()/WD
 
+# ----------------------------------------------------------------------------- LP dump
+# Text format (see search/REPRODUCIBILITY.md).  All floats are written as C99 hex literals
+# (float.hex()) so that reading them back reproduces the exact double.
+def write_lp_dump(snap,path,meta):
+    A=snap.A.tocoo(); A.sum_duplicates()
+    with open(path,'w') as f:
+        f.write("LPDUMP 1\n")
+        for k_,v_ in meta.items(): f.write(f"META {k_} {v_}\n")
+        f.write("PROBLEM minimize c.x  subject to  A x >= 1,  x >= 0\n")
+        f.write(f"SIZE {A.shape[0]} {A.shape[1]} {A.nnz}\n")
+        f.write(f"OBJ {A.shape[1]}\n")
+        for v_ in snap.c: f.write(f"{int(v_)}\n")
+        f.write(f"ROWS {len(snap.cells)}\n")
+        for u0,u1,tm in snap.cells: f.write(f"{float(u0).hex()} {float(u1).hex()} {float(tm).hex()}\n")
+        f.write(f"COLS {len(snap.orbits)}\n")
+        for Q in snap.orbits:
+            f.write(str(len(Q))+"".join(f" {float(a).hex()} {float(b).hex()}" for a,b in Q)+"\n")
+        f.write(f"ENTRIES {A.nnz}\n")
+        for r_,c_,v_ in zip(A.row,A.col,A.data): f.write(f"{r_} {c_} {int(v_)}\n")
+        f.write(f"SOLUTION {float(snap.val).hex()}\n")
+        f.write(f"X {len(snap.x)}\n")
+        for v_ in snap.x: f.write(f"{float(v_).hex()}\n")
+        f.write(f"DUAL {len(snap.y)}\n")
+        for v_ in snap.y: f.write(f"{float(v_).hex()}\n")
+        f.write("END\n")
+
+def read_lp_dump(path):
+    """returns dict with keys meta, c, A (csr), cells, orbits, val, x, y"""
+    out={'meta':{}}
+    with open(path) as f:
+        L=[l.rstrip("\n") for l in f]
+    i=0
+    assert L[i]=="LPDUMP 1"; i+=1
+    while L[i].startswith("META "):
+        _,k_,v_=L[i].split(" ",2); out['meta'][k_]=v_; i+=1
+    assert L[i].startswith("PROBLEM"); i+=1
+    _,nr,nc,nnz=L[i].split(); nr,nc,nnz=int(nr),int(nc),int(nnz); i+=1
+    assert L[i]==f"OBJ {nc}"; i+=1
+    out['c']=np.array([float(L[i+j]) for j in range(nc)]); i+=nc
+    assert L[i]==f"ROWS {nr}"; i+=1
+    out['cells']=[tuple(float.fromhex(t) for t in L[i+j].split()) for j in range(nr)]; i+=nr
+    assert L[i]==f"COLS {nc}"; i+=1
+    orbs=[]
+    for j in range(nc):
+        t=L[i+j].split(); n_=int(t[0]); orbs.append(np.array([[float.fromhex(t[1+2*q]),float.fromhex(t[2+2*q])] for q in range(n_)]))
+    out['orbits']=orbs; i+=nc
+    assert L[i]==f"ENTRIES {nnz}"; i+=1
+    R=np.empty(nnz,dtype=np.int64);C=np.empty(nnz,dtype=np.int64);V=np.empty(nnz)
+    for j in range(nnz):
+        a,b,c_=L[i+j].split(); R[j]=int(a);C[j]=int(b);V[j]=float(c_)
+    i+=nnz
+    out['A']=sp.coo_matrix((V,(R,C)),shape=(nr,nc)).tocsr()
+    assert L[i].startswith("SOLUTION "); out['val']=float.fromhex(L[i].split()[1]); i+=1
+    assert L[i]==f"X {nc}"; i+=1
+    out['x']=np.array([float.fromhex(L[i+j]) for j in range(nc)]); i+=nc
+    assert L[i]==f"DUAL {nr}"; i+=1
+    out['y']=np.array([float.fromhex(L[i+j]) for j in range(nr)]); i+=nr
+    assert L[i]=="END"
+    return out
+
+def resolve_dump(path):
+    d=read_lp_dump(path)
+    res=_linprog(d['c'],d['A'],np.ones(d['A'].shape[0]))
+    print(f"dump: {path}")
+    for k_,v_ in d['meta'].items(): print(f"  {k_}: {v_}")
+    print(f"  rows={d['A'].shape[0]} cols={d['A'].shape[1]} nnz={d['A'].nnz}")
+    print(f"  recorded objective  = {d['val']!r}")
+    print(f"  re-solved objective = {res.fun!r}  (status {res.status})")
+    print(f"  max |x - x_recorded| = {np.max(np.abs(res.x-d['x'])):.3e}")
+    print(f"  x identical: {np.array_equal(res.x,d['x'])}")
+    return res
+
+def _sha256(path):
+    h=hashlib.sha256()
+    with open(path,'rb') as f: h.update(f.read())
+    return h.hexdigest()
+
+def main(argv=None):
+    ap=argparse.ArgumentParser(description="LP cutting-plane certificate search (see module docstring)")
+    ap.add_argument("s",type=float,nargs='?'); ap.add_argument("fine",type=float,nargs='?')
+    ap.add_argument("eta",type=float,nargs='?'); ap.add_argument("dt",type=float,nargs='?')
+    ap.add_argument("tlimit",type=float,nargs='?'); ap.add_argument("tag",nargs='?')
+    ap.add_argument("--iters",type=int,default=None); ap.add_argument("--seed",type=int,default=None)
+    ap.add_argument("--dump-lp",default=None); ap.add_argument("--resolve",default=None)
+    ap.add_argument("--verifier",default=DEFAULT_VERIFIER); ap.add_argument("--verify-threads",type=int,default=4)
+    ap.add_argument("--no-verify",action="store_true"); ap.add_argument("--runs",default="runs")
+    ap.add_argument("--highs-threads",type=int,default=1)
+    a=ap.parse_args(argv)
+    HIGHS_OPTS['threads']=a.highs_threads
+    if a.seed is not None:
+        random.seed(a.seed); np.random.seed(a.seed); HIGHS_OPTS['random_seed']=a.seed
+    if a.resolve is not None:
+        resolve_dump(a.resolve); return
+    if None in (a.s,a.fine,a.eta,a.dt,a.tlimit,a.tag): ap.error("need S FINE ETA DT TLIMIT TAG (or --resolve DUMP)")
+    import scipy
+    print(f"lp_search: python {sys.version.split()[0]} numpy {np.__version__} scipy {scipy.__version__}  args={' '.join(sys.argv[1:] if argv is None else argv)}")
+    best=run(a.s,fine=a.fine,eta=a.eta,dt=a.dt,tlimit=a.tlimit,tag=a.tag,iters=a.iters,
+             verifier=a.verifier,verify_threads=a.verify_threads,no_verify=a.no_verify,runs=a.runs)
+    cert=os.path.join(a.runs,f"cert_{a.tag}.txt")
+    tot=write_cert(best,best.x,a.s,cert)
+    print(f"RESULT s={a.s} eta={a.eta} dt={a.dt} TOTAL={best.val:.5f} exported={tot:.5f}")
+    print(f"wrote {cert}  sha256={_sha256(cert)}")
+    if a.dump_lp:
+        meta={'s':repr(a.s),'fine':repr(a.fine),'eta':repr(a.eta),'dt':repr(a.dt),'tag':a.tag,
+              'iters':a.iters,'seed':a.seed,'highs':HIGHS_OPTS,'numpy':np.__version__,'scipy':scipy.__version__,
+              'certificate':cert,'certificate_sha256':_sha256(cert)}
+        write_lp_dump(best,a.dump_lp,meta)
+        print(f"wrote {a.dump_lp}  sha256={_sha256(a.dump_lp)}")
+
 if __name__=="__main__":
-    s=float(sys.argv[1]); fine=float(sys.argv[2]); eta=float(sys.argv[3]); dt=float(sys.argv[4]); tl=float(sys.argv[5]); tag=sys.argv[6]
-    best=run(s,fine=fine,eta=eta,dt=dt,tlimit=tl,tag=tag)
-    val,x,m=best
-    tot=write_cert(m,x,s,f"runs/cert_{tag}.txt")
-    print(f"RESULT s={s} eta={eta} dt={dt} TOTAL={val:.5f} exported={tot:.5f}")
+    main()
