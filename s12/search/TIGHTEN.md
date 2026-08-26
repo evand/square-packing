@@ -3,8 +3,8 @@
 Code: `search/tighten.py` (new), plus a `--warm CERT` option in `search/lp_search.py`.
 Everything below ran on one 32-core machine in about two hours of wall clock (several runs at a
 time); logs and intermediate certificates are in the gitignored `runs/`.  **Outcome: the bound
-moves from 3920/997 = 3.931795 to 980/247 = 3.967611, and the certificate at the old bound
-shrinks from 788 to 224 points.**
+moves from 3920/997 = 3.931795 to 15680/3951 = 3.968616 (1736 points; 764 points at
+980/247 = 3.967611), and the certificate at the old bound shrinks from 788 to 224 points.**
 
 ## Starting point
 
@@ -87,13 +87,16 @@ every row) and `xcheck.py --all` at `N = 6000` for every certificate marked *shi
 | `runs/sparse_B5.txt` | 3920/989 = 3.963600 | 548 | 11.9925972 | 1.0000031 | B applied to `tight_C6b` | 858 s |
 | `runs/tight_C7b.txt` | 980/247 = 3.967611 | 1344 | 11.9844236 | 1.0000041 | C: colgen from `tight_C5b` at D=1976, then cut-only on the support | 878 + 807 s |
 | **`certificates/s12_lower_3.9676.txt`** *(shipped)* | 980/247 = 3.967611 | **764** | 11.9962288 | 1.0000033 | B applied to `tight_C7b` (budget 11.998) | 879 s |
+| **`certificates/s12_lower_3.9686.txt`** *(shipped)* | 15680/3951 = 3.968616 | 1736 | 11.9738036 | 1.0000056 | C: colgen from `tight_C7b` at D=1975 (26 rounds, 293-orbit support), cut-only on that support at D=3951/2 | 2116 + 1169 s |
 
-Beyond 3.9676: the same procedure at `D = 1975` (`s = 1568/395 = 3.9696`) reached LP 11.94
-with column generation still running (849 orbits, 14.8k violated placements per round, ~3 min
-per LP), and the cut-only re-optimisation on its support snapshots ended at **12.05** (144-orbit
-support) and **12.02** (172 orbits); at `D = 3951/2` (`s = 15680/3951 = 3.9686`) the same
-gave **12.003** — i.e. no certificate beyond 3.9676 within the time box, but the LP values say
-the crossing of this method is very close to 3.969.  That is consistent with `CEILING.md`'s estimate that
+Beyond 3.9676: the same procedure at `D = 1975` (`s = 1568/395 = 3.9696`) reached LP 11.94–11.98
+with column generation and cuts still running (849 orbits, ~14k violated placements per round,
+~2–3 min per LP; stopped at round 26, LP 11.976, not converged).  Cut-only re-optimisation on
+its support snapshots at 3.9696 ended at **12.05** (144-orbit support) and **12.02** (172
+orbits); at `D = 3951/2` (`s = 15680/3951 = 3.9686`) the 172-orbit support gave **12.003** and
+the later 293-orbit support gave **11.974** — the last shipped file.  So the crossing of this
+method (for point sets of this kind) is between 3.9686 and about 3.970, consistent with
+`CEILING.md`'s estimate.  The 3.9686 file was not sparsified (time).  That is consistent with `CEILING.md`'s estimate that
 `ν_f` crosses 12 around 3.965–3.97.
 
 With the shipped **points** and only the weights free, the bound goes from 3.931795 to
@@ -111,8 +114,10 @@ rounds; `--budget` trades points for weight margin.
 **Shipped** (all three checks pass: `verify` at N = 6000 and 12000, `xcheck.py --all` at
 N = 6000, `export_points.py --roundtrip`):
 
-* `certificates/s12_lower_3.9676.txt` — **s(12) ≥ 980/247 = 3.967611**, 764 points, total
-  weight 7497643/625000 = 11.9962288 (best bound);
+* `certificates/s12_lower_3.9686.txt` — **s(12) ≥ 15680/3951 = 3.968616**, 1736 points, total
+  weight 29934509/2500000 = 11.9738036 (best bound; not sparsified);
+* `certificates/s12_lower_3.9676.txt` — s(12) ≥ 980/247 = 3.967611, 764 points, total
+  weight 7497643/625000 = 11.9962288 (a smaller file, 0.001 below the best bound);
 * `certificates/s12_lower_3.931795_sparse.txt` — the shipped bound 3920/997 with **224**
   points (total 29958593/2500000 = 11.9834372) instead of 788 (smallest certificate).
 
@@ -161,6 +166,9 @@ python3 search/tighten.py reopt runs/tight_C5b.txt C7 --Dp 1976 --colgen 15 --cg
 cp runs/tight_C7_probe.txt runs/seed_C7.txt;  python3 search/tighten.py reopt runs/seed_C7.txt C7b
 python3 search/tighten.py sparsify runs/tight_C6b.txt B5 --budget 11.995 --rounds 8
 python3 search/tighten.py sparsify runs/tight_C7b.txt B6 --budget 11.998 --rounds 8         # -> the shipped 3.9676 file
+python3 search/tighten.py reopt runs/tight_C7b.txt C8 --Dp 1975 --colgen 12 --cg-want 100   # stopped after 26 rounds
+cp runs/tight_C8_probe.txt runs/seed_C9b.txt
+python3 search/tighten.py reopt runs/seed_C9b.txt C9b --mul 2 --Dp 3951                      # -> the shipped 3.9686 file
 # checks (every shipped file)
 verify/target/release/verify certificates/s12_lower_3.9676.txt 12 6000  32 0
 verify/target/release/verify certificates/s12_lower_3.9676.txt 12 12000 32 0
