@@ -90,9 +90,12 @@ hopping, validated against `s(5)`, `s(10)`, `s(11)`) is `search/pack_src/main.rs
 
 By LP duality the least possible certificate weight at container side `s` equals the
 **fractional packing number** `ν_f(s)`; the method proves `s(12) ≥ s` exactly when
-`ν_f(s) < 12`.  Numerically `ν_f` crosses 12 at about `s ≈ 3.95–3.96`, and jumps to 16 at
-`s = 4` where the grid tiles.  So ~3.95 is a hard ceiling for this entire family of arguments,
-and the bound here is within ~0.02 of it.  Closing the remaining gap to 4 needs case analysis
+`ν_f(s) < 12`.  Numerically `ν_f` crosses 12 somewhere around `s ≈ 3.94–3.97` (heuristic LP estimates;
+`search/CEILING.md` has the table and what is and is not rigorous), and in the open-square
+convention reaches 16 at `s = 4` where the grid tiles.  So ~3.95 is a hard ceiling for this
+entire family of arguments, and the bound here is within a few hundredths of it.  The shipped
+certificate is also not optimal for its own container: the cover LP over its own 788 points
+gives ~11.82 against its 11.93, so a little more is available even without new ideas.  Closing the remaining gap to 4 needs case analysis
 layered on top of a certificate, in the style of Bentz's `s(13)` proof.
 
 Separately, an extensive search for a packing of 12 unit squares into a square of side < 4
