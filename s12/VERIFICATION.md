@@ -77,5 +77,10 @@ should fail, and watching it not fail.
    rejection.  All now exit 2 with `ERROR:` and no verdict word.
 4. Points outside the container were not rejected; now `ERROR`.
 
+5. **`verify.sh` (hence CI) did not fail on NOT VERIFIED.**  `verify` exits 0 on a verdict
+   either way, and `set -e` only sees exit codes, so a rejected certificate would have left
+   the badge green.  Every verdict is now checked explicitly; tested by breaking a
+   certificate's header and watching `verify.sh` exit 1.
+
 `tests/rejection_tests.sh` now has 42 checks (was 7); against the pre-fix binary 15 fail and
 8 panic.
