@@ -78,7 +78,9 @@ every row) and `xcheck.py --all` at `N = 6000` for every certificate marked *shi
 | `runs/sparse_B2.txt` | 15680/3971 = 3.948628 | 368 | 11.9934340 | 1.0000030 | B at that bound | 208 s |
 | `runs/tight_C1.txt` | 245/62 = 3.951613 | 1272 | 11.9353104 | 1.0000050 | C: column generation from the shipped points | 1632 s |
 | **`certificates/s12_lower_3.9516.txt`** *(shipped)* | 245/62 = 3.951613 | **392** | 11.9916200 | 1.0000031 | B applied to `tight_C1` | 727 s |
-| C4/C5 | (see below) | | | | | |
+| `runs/tight_C4b.txt` | 3920/991 = 3.955600 | 1108 | 11.8934460 | 1.0000034 | C: colgen from `tight_C1` at D=1982 (15 rounds, pricing on a 0.01 grid), then cut-only on the support | 856 + 476 s |
+| `runs/tight_C5b.txt` | 392/99 = 3.959596 | 968 | 11.9389496 | 1.0000045 | C: same from `tight_C1` at D=1980 | 614 + 431 s |
+| **`certificates/s12_lower_3.9596.txt`** *(shipped)* | 392/99 = 3.959596 | **428** | 11.9918800 | 1.0000030 | B applied to `tight_C5b` | 446 s |
 
 With the shipped **points** and only the weights free, the bound goes from 3.931795 to
 3.948628 (`D = 19855/10`); at the next step (`D = 1985`, `s = 3.94962`) the LP total jumps to
