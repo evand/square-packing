@@ -44,6 +44,11 @@ options (all new; every one is optional and the defaults reproduce the old behav
     --no-verify          never call the verifier (useful for quick tests).
     --runs DIR           output directory (default runs/, created if needed).
     --highs-threads N    HiGHS `threads` option (default 1).
+    --warm CERT          warm start: the points of an existing certificate, scaled from its own
+                         container to S and snapped to the nearest atom-grid cell, are added as
+                         initial orbits (their weights are NOT reused: every iterate is a fresh LP
+                         over all columns).  Only the initial column set changes; the cell cuts,
+                         the exact cuts and the column generation are as without it.
 
     python3 search/lp_search.py --resolve DUMP    re-solve an LP dump and print the objective.
 
@@ -201,8 +206,18 @@ def read_xsep(path):
     pts.sort()
     return [(cx,cy,th) for v,th,cx,cy in pts]
 
+def warm_orbits(m,cert,s):
+    """add the points of certificate `cert` (scaled to container s, snapped to the atom grid) as orbits"""
+    t=open(cert).read().split(); sn,sd,D=int(t[0]),int(t[1]),int(t[2]); mp=int(t[4])
+    lam=s/(sn/sd); n=0
+    for q in range(mp):
+        X,Y=int(t[5+3*q]),int(t[6+3*q])
+        i=min(m.n-1,max(0,int((X/D*lam)/m.step))); j=min(m.n-1,max(0,int((Y/D*lam)/m.step)))
+        n+=m.add_orbit(i,j)[1]
+    return n
+
 def run(s,fine=0.005,eta=0.005,dt=0.005,tlimit=7200,log=print,perang=260,tag='x',
-        iters=None,verifier=DEFAULT_VERIFIER,verify_threads=4,no_verify=False,runs='runs'):
+        iters=None,verifier=DEFAULT_VERIFIER,verify_threads=4,no_verify=False,runs='runs',warm=None):
     t0=time.time(); m=M(s,fine,eta,dt)
     os.makedirs(runs,exist_ok=True)
     snapf=os.path.join(runs,f"snap_{tag}.txt"); xf=os.path.join(runs,f"xsep_{tag}.txt"); winf=os.path.join(runs,f"WIN_{tag}.txt")
@@ -215,6 +230,8 @@ def run(s,fine=0.005,eta=0.005,dt=0.005,tlimit=7200,log=print,perang=260,tag='x'
     k=max(1,int(round(0.125/fine)))
     for i in range(k//2,m.n,k):
         for j in range(k//2,m.n,k): m.add_orbit(i,j)
+    if warm is not None:
+        log(f"  warm start: {warm_orbits(m,warm,s)} orbits added from {warm}")
     P,own=m.atoms()
     for tm in thetas[::max(1,len(thetas)//6)]:
         r=scan_angle(P,np.ones(len(P)),s,tm,m.hE,eta)
@@ -424,6 +441,7 @@ def main(argv=None):
     ap.add_argument("--verifier",default=DEFAULT_VERIFIER); ap.add_argument("--verify-threads",type=int,default=4)
     ap.add_argument("--no-verify",action="store_true"); ap.add_argument("--runs",default="runs")
     ap.add_argument("--highs-threads",type=int,default=1)
+    ap.add_argument("--warm",default=None,help="certificate whose points seed the initial orbits (see docstring)")
     a=ap.parse_args(argv)
     HIGHS_OPTS['threads']=a.highs_threads
     if a.seed is not None:
@@ -434,7 +452,7 @@ def main(argv=None):
     import scipy
     print(f"lp_search: python {sys.version.split()[0]} numpy {np.__version__} scipy {scipy.__version__}  args={' '.join(sys.argv[1:] if argv is None else argv)}")
     best=run(a.s,fine=a.fine,eta=a.eta,dt=a.dt,tlimit=a.tlimit,tag=a.tag,iters=a.iters,
-             verifier=a.verifier,verify_threads=a.verify_threads,no_verify=a.no_verify,runs=a.runs)
+             verifier=a.verifier,verify_threads=a.verify_threads,no_verify=a.no_verify,runs=a.runs,warm=a.warm)
     cert=os.path.join(a.runs,f"cert_{a.tag}.txt")
     tot=write_cert(best,best.x,a.s,cert)
     print(f"RESULT s={a.s} eta={a.eta} dt={a.dt} TOTAL={best.val:.5f} exported={tot:.5f}")
