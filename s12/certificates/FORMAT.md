@@ -25,6 +25,15 @@ squares in a container of side `s' < s` by `s/s' > 1`, so each square strictly c
 concentric closed unit square; those unit squares lie in pairwise disjoint interiors, so no
 point is counted twice, giving `n <= sum w`.  (Formalised in `lean/Sqpack/Basic.lean`.)
 
+**Well-formedness.**  A file is valid only if all header values are positive integers,
+`s_den` divides `s_num · D` (so the container side is a multiple of the coordinate unit),
+every point lies in `[0, s]^2`, every weight numerator is `>= 0`, and there are exactly `m`
+point lines.  The verifier refuses (exit 2, `ERROR:`) anything else rather than reporting a
+verdict.  Non-negativity is not a formality: the reduction `n <= sum w` (and its Lean proof,
+hypothesis `hw`) needs it, and a negative-weight point outside the container would otherwise
+lower the total without touching the covering.  Duplicate coordinates are allowed and their
+weights add — the file describes a weighted multiset.
+
 Note the **closed** square convention: a point exactly on the boundary of `Q` **counts**.
 This is what the rescaling argument above needs, and it is what `verify/` implements.
 

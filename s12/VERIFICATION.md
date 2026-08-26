@@ -44,3 +44,30 @@ to the Rust per-bin minima) and N=8000 (3314 bins): minimum exactly 1.
 a weighted set whose closed unit squares all carry weight >= 1 bounds the number of squares of
 side L>1 packable with disjoint interiors by the total weight; plus the scaling lemmas.
 0 sorries; axioms: propext, Classical.choice, Quot.sound.
+
+## Verifier defects found by the rejection tests (2026-08-25), and fixed
+
+Recorded because a verifier's history matters as much as its current state.  None affects
+the shipped certificates or the bound; each was found by writing a test that the verifier
+should fail, and watching it not fail.
+
+1. **Negative weights were not rejected.**  The reduction `n <= sum w` requires `w >= 0`
+   (the Lean proof's hypothesis `hw`).  The old verifier accepted the 56-point set plus one
+   point of weight `-2` placed *outside* the container, claimed for `n = 11`: the total
+   dropped to 10.8 while the covering was untouched, and it printed VERIFIED.  Now an
+   `ERROR`.  The shipped certificates have only positive weights.
+2. **Centre box too small above 45°.**  For each angle bin the admissible-centre box used
+   the bounding-box width `w = cos θ + sin θ` at `θ_k` only.  Below 45° that is the bin's
+   minimum (correct); above 45° `w` decreases, so it was the bin's maximum and a strip of
+   width `(w(θ_k) − w(θ_{k+1}))/2` along the container edges was never checked.  Found by
+   the exhaustive Python checker disagreeing with the Rust one on a non-symmetric mutant
+   (bin k=1530 of N=2000: Rust 2/5, exact 1/5).  Only the `[0,90°)` path was affected; both
+   shipped certificates are D4-symmetric and use `[0,45°]` only.  Fixed to
+   `min(w(θ_k), w(θ_{k+1}))`.  The tests now pin the per-bin minimum on that mutant.
+3. **Panics on malformed input** (header-only file, non-integer token, short point line,
+   point count mismatch, empty or missing file, `s_den ∤ s_num·D`).  A panic is not a
+   rejection.  All now exit 2 with `ERROR:` and no verdict word.
+4. Points outside the container were not rejected; now `ERROR`.
+
+`tests/rejection_tests.sh` now has 42 checks (was 7); against the pre-fix binary 15 fail and
+8 panic.
