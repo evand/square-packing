@@ -14,7 +14,11 @@
 //!     theta_k whose center is admissible.  For fixed angle the covered weight is a step
 //!     function of the center; we minimise it EXACTLY by sweeping the arrangement of
 //!     breakpoints (q_a +- h) with an exact sliding-window sweep.
-//!   * angles in [45deg,90deg) are covered by the D4 symmetry of the atom set (checked).
+//!   * angles in [45deg,90deg) are covered by the D4 symmetry of the atom set (checked); for a
+//!     non-symmetric set the same enumeration is run over all of [0,90deg] (k=0..N).
+//!   * the admissible-centre box of a bin uses the bin's MINIMUM bounding-box width cos+sin
+//!     (an endpoint, since cos+sin is unimodal on [0,90deg]).
+//!   * input is validated: weights >= 0, points inside the container, s_den | s_num*D.
 use std::env;
 use std::fs;
 use std::sync::atomic::{AtomicI64, Ordering};
@@ -24,21 +28,49 @@ use std::thread;
 #[derive(Clone)]
 struct Cert { s_num: i128, s_den: i128, d: i128, wd: i128, atoms: Vec<(i128,i128,i128)> }
 
+/// Malformed input is rejected with a message and exit status 2 -- never a panic, and never
+/// anything that could be mistaken for a verdict (the words VERIFIED / NOT VERIFIED never appear).
+fn die(msg: String) -> ! { eprintln!("ERROR: {}", msg); std::process::exit(2) }
+
+fn tok(it: &mut std::str::SplitAsciiWhitespace, what: &str) -> i128 {
+    match it.next() {
+        None => die(format!("malformed certificate: missing {}", what)),
+        Some(t) => t.parse::<i128>().unwrap_or_else(|_| die(format!("malformed certificate: {} is not an integer: {:?}", what, t))),
+    }
+}
+
+/// Read and VALIDATE a certificate.  Beyond syntax, the checks below are part of the soundness
+/// argument (see certificates/FORMAT.md and lean/Sqpack/Basic.lean, `packing_le_weight`):
+///   * every weight must be >= 0  (hypothesis `hw` of the Lean theorem; a negative weight placed
+///     where no square can see it would lower the total without affecting coverage),
+///   * every point must lie in the closed container [0,s]^2,
+///   * s*D must be an integer, i.e. s_den | s_num*D (the container side in atom units), which
+///     the exact arithmetic below relies on,
+///   * exactly m points, nothing after them.
 fn read_cert(path: &str) -> Cert {
-    let txt = fs::read_to_string(path).unwrap();
-    let mut it = txt.split_ascii_whitespace().map(|x| x.parse::<i128>().unwrap());
-    let s_num = it.next().unwrap(); let s_den = it.next().unwrap();
-    let d = it.next().unwrap(); let wd = it.next().unwrap();
-    let m = it.next().unwrap() as usize;
-    let mut atoms = Vec::with_capacity(m);
-    for _ in 0..m { let x=it.next().unwrap(); let y=it.next().unwrap(); let w=it.next().unwrap(); atoms.push((x,y,w)); }
+    let txt = match fs::read_to_string(path) { Ok(t) => t, Err(e) => die(format!("cannot read {}: {}", path, e)) };
+    let mut it = txt.split_ascii_whitespace();
+    let s_num = tok(&mut it, "s_num"); let s_den = tok(&mut it, "s_den");
+    let d = tok(&mut it, "D"); let wd = tok(&mut it, "W");
+    let m = tok(&mut it, "m");
+    if s_num <= 0 || s_den <= 0 || d <= 0 || wd <= 0 { die("malformed certificate: s_num, s_den, D and W must be positive".to_string()); }
+    if m < 0 { die("malformed certificate: m must be >= 0".to_string()); }
+    if (s_num * d) % s_den != 0 { die(format!("s_den = {} does not divide s_num*D = {}: the container side must be an integer in atom units (coordinate denominator D must be a multiple of s_den)", s_den, s_num * d)); }
+    let sd = s_num * d / s_den;                       // container side in atom units
+    let mut atoms = Vec::new();
+    for i in 1..=m {
+        let x = tok(&mut it, &format!("X_{}", i)); let y = tok(&mut it, &format!("Y_{}", i)); let w = tok(&mut it, &format!("w_{}", i));
+        if w < 0 { die(format!("point {} has negative weight {}: weights must be >= 0", i, w)); }
+        if x < 0 || y < 0 || x > sd || y > sd { die(format!("point {} = ({}, {})/{} lies outside the container [0, {}/{}]^2", i, x, y, d, s_num, s_den)); }
+        atoms.push((x, y, w));
+    }
+    if it.next().is_some() { die(format!("malformed certificate: trailing data after the {} points declared in the header", m)); }
     Cert{s_num,s_den,d,wd,atoms}
 }
 
 /// check the atom multiset is invariant under the dihedral group of the square [0,s]^2
 fn check_symmetry(c: &Cert) -> bool {
-    assert!(c.s_num * c.d % c.s_den == 0, "s*D must be an integer");
-    let sd = c.s_num * c.d / c.s_den;
+    let sd = c.s_num * c.d / c.s_den;             // integer: validated in read_cert
     let mut v: Vec<(i128,i128,i128)> = c.atoms.clone(); v.sort();
     let f = |g: &dyn Fn(i128,i128)->(i128,i128)| -> bool {
         let mut u: Vec<(i128,i128,i128)> = c.atoms.iter().map(|&(x,y,w)| { let (a,b)=g(x,y); (a,b,w) }).collect();
@@ -172,11 +204,14 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
 
 fn main() {
     let args: Vec<String> = env::args().collect();
+    if args.len() < 4 { die("usage: verify <certificate> <n> <N> [threads] [topk] [witness-file]".to_string()); }
     let cert = read_cert(&args[1]);
-    let nn: i128 = args[2].parse().unwrap();          // claim: fewer than nn squares fit
-    let bigN: i128 = args[3].parse().unwrap();        // angle parameter
-    let threads: usize = if args.len()>4 { args[4].parse().unwrap() } else { 16 };
-    let topk: usize = if args.len()>5 { args[5].parse().unwrap() } else { 0 };
+    let nn: i128 = args[2].parse().unwrap_or_else(|_| die(format!("n must be an integer, got {:?}", args[2])));   // claim: fewer than nn squares fit
+    let bigN: i128 = args[3].parse().unwrap_or_else(|_| die(format!("N must be an integer, got {:?}", args[3])));  // angle parameter
+    if nn < 1 || bigN < 1 { die("n and N must be >= 1".to_string()); }
+    let threads: usize = if args.len()>4 { args[4].parse().unwrap_or_else(|_| die("threads must be an integer".to_string())) } else { 16 };
+    let topk: usize = if args.len()>5 { args[5].parse().unwrap_or_else(|_| die("topk must be an integer".to_string())) } else { 0 };
+    if threads < 1 { die("threads must be >= 1".to_string()); }
     let out: Arc<std::sync::Mutex<Vec<(i128,f64,f64,f64)>>> = Arc::new(std::sync::Mutex::new(Vec::new()));
     // D4 symmetry lets us restrict angles to [0,45]; without it we cover [0,90).
     let sym = check_symmetry(&cert);
@@ -189,7 +224,7 @@ fn main() {
     // angle list k=0..K with t=k/N, need 2*arctan(K/N) >= 45deg  <=>  (K/N+1)^2 >= 2
     let mut kk: i128 = 0;
     if sym { while (kk + bigN)*(kk + bigN) < 2*bigN*bigN { kk += 1; } } else { kk = bigN; }
-    println!("angles: k=0..{} (N={}), covering [0,45deg]", kk, bigN);
+    println!("angles: k=0..{} (N={}), covering {}", kk, bigN, if sym {"[0,45deg]"} else {"[0,90deg]"});
     let bad = Arc::new(AtomicI64::new(0));
     let minw = Arc::new(std::sync::Mutex::new((i128::MAX, 0i128)));
     let cert = Arc::new(cert);
@@ -208,8 +243,11 @@ fn main() {
                 // sigma = 1/(cos d + sin d) = g0*g1/(cd+sd), ROUNDED DOWN to 1e-6 (sound: smaller square)
                 const SCALE: i128 = 1_000_000;
                 let sg_n = (g0*g1*SCALE)/(cd + sd); let sg_d = SCALE;
-                // w_min = cos(theta_k)+sin(theta_k) = (c0+s0)/g0, ROUNDED DOWN (sound: bigger centre box)
-                let wm_n = ((c0 + s0)*SCALE)/g0; let wm_d = SCALE;
+                // w_min = min over the bin of cos(theta)+sin(theta): unimodal on [0,90deg] with its
+                // maximum at 45deg, so the minimum is at an endpoint theta_k or theta_{k+1}.
+                // ROUNDED DOWN (sound: bigger centre box).  Using theta_k alone is wrong above 45deg.
+                let wm_k0 = ((c0 + s0)*SCALE)/g0; let wm_k1 = ((c1 + s1)*SCALE)/g1;
+                let wm_n = wm_k0.min(wm_k1); let wm_d = SCALE;
                 let (v, wit) = min_cover_k(&cert, c0, s0, g0, sg_n, sg_d, wm_n, wm_d, topk);
                 if topk>0 { let th = 2.0*((k as f64)/(bigN as f64)).atan();
                     let mut o=out.lock().unwrap();
