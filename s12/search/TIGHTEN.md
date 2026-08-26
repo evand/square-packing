@@ -90,8 +90,10 @@ every row) and `xcheck.py --all` at `N = 6000` for every certificate marked *shi
 
 Beyond 3.9676: the same procedure at `D = 1975` (`s = 1568/395 = 3.9696`) reached LP 11.94
 with column generation still running (849 orbits, 14.8k violated placements per round, ~3 min
-per LP), and the cut-only re-optimisation on its support snapshot ended at **12.05** — i.e. no
-certificate at 3.9696 within the time box.  That is consistent with `CEILING.md`'s estimate that
+per LP), and the cut-only re-optimisation on its support snapshots ended at **12.05** (144-orbit
+support) and **12.02** (172 orbits); at `D = 3951/2` (`s = 15680/3951 = 3.9686`) the same
+gave **12.003** — i.e. no certificate beyond 3.9676 within the time box, but the LP values say
+the crossing of this method is very close to 3.969.  That is consistent with `CEILING.md`'s estimate that
 `ν_f` crosses 12 around 3.965–3.97.
 
 With the shipped **points** and only the weights free, the bound goes from 3.931795 to
