@@ -11,12 +11,12 @@ and deciding which *is* the open problem.
 
 This repo contains an exact certificate and its verifier for
 
-> **s(12) ≥ 3920/997 = 3.931795386…**
+> **s(12) ≥ 15680/3951 = 3.968616…**
 
 improving the previous published bound `2 + 4/√5 = 3.788854…` (Stromquist 2003, inherited from
 n = 11 by monotonicity; listed as the record for n = 11–12 in Friedman's Dynamic Survey DS7,
 Table 2).  The upper bound remains the trivial `4`, so the gap narrows from
-`[3.788854, 4]` to `[3.931795, 4]`.
+`[3.788854, 4]` to `[3.968616, 4]`.
 
 Run everything with:
 
@@ -32,7 +32,9 @@ pairwise disjoint interiors capture ≥ 12 in total while no point is counted tw
 certificate of total weight < 12 rules them out.  This is the fractional (LP) relaxation of the
 classical *unavoidable set of points* method — see credits below.
 
-The certificate here has 788 points and total weight `14916233/1250000 = 11.9329864`.
+The main certificate has 1736 points and total weight `11.9738036`.  Two more are shipped:
+764 points proving `s(12) ≥ 980/247 = 3.967611`, and a 224-point one at the earlier bound
+`3920/997 = 3.931795` (the original 788-point certificate for that bound is kept for the record).
 
 Weaker but purely combinatorial certificates are included too, because they are **uniform** —
 every point has the same weight, so no fractions are involved and the statement is one sentence:
@@ -74,8 +76,13 @@ mkdir -p runs
 python3 search/lp_search.py 3.92 0.005 0.005 0.005 7200 mytag
 
 # 2. Scale the finished certificate up to its critical container size.
-#    This step alone moved the bound from 3.92 to 3.931795.
+#    This step alone moved the first bound from 3.92 to 3.931795.
 python3 search/scale_to_critical.py runs/cert_mytag.txt --n 12 --N 6000
+
+# 3. Tighten: re-optimise the weights with the exact verifier as separation oracle,
+#    sparsify, and grow the point set by column generation at a larger container.
+#    This is what moved the bound from 3.931795 to 3.968616; see search/TIGHTEN.md.
+python3 search/tighten.py --help
 ```
 
 Step 2 is pure arithmetic: the integer coordinates never change, only the denominator `D`,
@@ -100,9 +107,9 @@ By LP duality the least possible certificate weight at container side `s` equals
 `ν_f(s) < 12`.  Numerically `ν_f` crosses 12 somewhere around `s ≈ 3.94–3.97` (heuristic LP estimates;
 `search/CEILING.md` has the table and what is and is not rigorous), and in the open-square
 convention reaches 16 at `s = 4` where the grid tiles.  So ~3.95 is a hard ceiling for this
-entire family of arguments, and the bound here is within a few hundredths of it.  The shipped
-certificate is also not optimal for its own container: the cover LP over its own 788 points
-gives ~11.82 against its 11.93, so a little more is available even without new ideas.  Closing the remaining gap to 4 needs case analysis
+entire family of arguments.  The bound here, `3.9686`, is essentially at that ceiling: column
+generation at `3.9696` no longer gets below 12 (`search/TIGHTEN.md`), so the method is
+exhausted to within about `0.001`.  Closing the remaining gap to 4 needs case analysis
 layered on top of a certificate, in the style of Bentz's `s(13)` proof.
 
 Separately, an extensive search for a packing of 12 unit squares into a square of side < 4
@@ -122,7 +129,8 @@ What is new here beyond that: cutting planes generated over a rigorous *cell* de
 placement space (so every LP iterate is a valid certificate), column generation for the point
 locations, the exact arrangement-sweep verifier over rational rotations, the Lean formalisation
 of the reduction, and the observation that a finished certificate can be **scaled up to its
-critical size** — which is what moved this bound from 3.92 to 3.9318.
+critical size**, and — the step that moved the bound from 3.93 to 3.97 — column generation
+with exact reduced-cost pricing and the exact verifier as the separation oracle (`search/tighten.py`).
 
 ## References
 

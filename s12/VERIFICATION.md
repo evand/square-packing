@@ -1,37 +1,23 @@
 # Verification log
 
 ## Result
-`s(12) >= 3920/997 = 3.931795386`  — 12 unit squares cannot be packed into any square of side < 3920/997 = 3.9317954.
+`s(12) >= 15680/3951 = 3.968616`  — 12 unit squares cannot be packed into any square of side < 15680/3951.
 
-## Certificate
-`certificates/s12_lower_3.931795.txt` — 788 points in [0,3920/997]^2, coordinates with denominator 1994,
-weights with denominator 10^7, total weight 14916233/1250000 = 11.9329864 < 12.
+## Certificates
+| file | s | points | total weight | verify N=6000 min | N=12000 | xcheck --all N=6000 |
+|---|---|---|---|---|---|---|
+| `s12_lower_3.9686.txt` | 15680/3951 = 3.968616 | 1736 | 11.9738036 | 10000056/10^7 VERIFIED | VERIFIED | 1250007/1250000 VERIFIED (5 min, 32 cores) |
+| `s12_lower_3.9676.txt` | 980/247 = 3.967611 | 764 | 11.9962288 | 10000033/10^7 VERIFIED | VERIFIED | VERIFIED |
+| `s12_lower_3.931795_sparse.txt` | 3920/997 | 224 | 11.9834372 | 10000022/10^7 VERIFIED | VERIFIED | VERIFIED |
+| `s12_lower_3.931795.txt` (original) | 3920/997 | 788 | 14916233/1250000 = 11.9329864 | 10000023/10^7 VERIFIED | VERIFIED | VERIFIED |
 
-## Checks performed
-1. `verify` (Rust, exact i128), N=6000  -> min covered weight 10000023/10000000 = 1.000002 : VERIFIED
-   (2487 rational angle bins)
-2. `verify` (Rust, exact i128), N=12000 -> VERIFIED (4973 bins)
-3. At N <= 4000 the verifier REJECTS this certificate: min covered weight
-   9987038/10000000 = 0.998704, at theta = 2*arctan(370/2000) ~ 20.96 deg.
-   This is the uniform angle net, not the certificate.  The net checks a square shrunk by
-   sigma_k ~ 1 - 1/N to cover the gaps between net directions, and below N ~ 6000 that
-   shrink exceeds the certificate's slack, so the verifier correctly refuses to certify.
-   Recorded here because it is the concrete price of the uniform-net architecture, and the
-   reason TODO item A1 (exact adaptive subdivision of pose space, no shrink) is the
-   highest-value improvement available.
-4. dense float scan, 181 angles over the FULL [0,90] range, ~500k centres each,
-   not using the D4 reduction -> minimum 1.000002 (agrees)
-4b. `xcheck.py` (independent Python implementation, exact rationals, EVERY angle bin),
-   N=6000 -> minimum 10000023/10000000 over all 2486 bins, 61 s on 32 cores : VERIFIED.
-   Per-bin minima are identical to the Rust verifier's in all 2486 bins.
-   N=12000 -> same minimum, 4971 bins, 130 s; again identical to Rust in every bin.
-   At N=4000 it also REJECTS, with the same minimum 9987038/10000000 in the same bin
-   (k=746) as the Rust verifier; one neighbouring bin (k=748) differs because the Rust
-   verifier pads its centre range by 1e-6*h (a deliberate superset), i.e. Rust is
-   slightly more conservative there.  Sampled mode is retained for speed but a sampled
-   VERIFIED is labelled as not a proof.
-5. D4 symmetry of the point multiset: checked exactly inside `verify`
+All coordinates have denominator 2·s_den (1994 for the 3920/997 files, 494 and 3951 for the
+others); weights have denominator 10^7.  How the three newer files were produced (weights
+re-optimised at fixed points with the exact verifier as separation oracle; reweighted-L1
+sparsification; column generation with exact reduced-cost pricing) is in `search/TIGHTEN.md`.
+The checks were re-run independently of the search session on the merged tree.
 
+## Checks performed on the original 788-point certificate (2026-08-23)
 ## Companion certificate (weaker but human-readable)
 `certificates/s12_56points_3.8.txt` — 56 points in [0,19/5]^2 (scales up to [0,1520/397]^2), weight 1/5 each (total 56/5 = 11.2).
 Statement: every closed unit square inside [0,3.8]^2, at any angle, contains at least 5 of the

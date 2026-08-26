@@ -37,15 +37,20 @@ weights add — the file describes a weighted multiset.
 Note the **closed** square convention: a point exactly on the boundary of `Q` **counts**.
 This is what the rescaling argument above needs, and it is what `verify/` implements.
 
-## The two certificates here
+## The certificates here
 
 | file | s | points | total weight | proves |
 |---|---|---|---|---|
-| `s12_lower_3.931795.txt` | 3920/997 | 788 | 14916233/1250000 = 11.9329864 | s(12) >= 3.931795386 |
+| `s12_lower_3.9686.txt` | 15680/3951 | 1736 | 11.9738036 | s(12) >= 3.968616 |
+| `s12_lower_3.9676.txt` | 980/247 | 764 | 11.9962288 | s(12) >= 3.967611 |
+| `s12_lower_3.931795_sparse.txt` | 3920/997 | 224 | 11.9834372 | s(12) >= 3.931795 |
+| `s12_lower_3.931795.txt` | 3920/997 | 788 | 14916233/1250000 = 11.9329864 | s(12) >= 3.931795 |
+| `s12_uniform_7of81_3.888.txt` | 35/9 | 81 | 81/7 | s(12) >= 3.888889 (uniform: every square contains 7 of 81) |
+| `s12_uniform_<k>of<m>_<s>.txt` | see `search/uniform/UNIFORM.md` | m | m/k | uniform family, k = 1..8 |
 | `s12_56points_3.8.txt` | 19/5 | 56 | 56/5 = 11.2 | s(12) >= 3.8 |
 
-The second is included because it is uniform — every weight is `1/5` — so it reads as a
-purely combinatorial statement: *every closed unit square inside `[0, 3.8]^2` contains at
+The uniform ones are included because every weight is equal, so they read as purely
+combinatorial statements — e.g. the 56-point one: *every closed unit square inside `[0, 3.8]^2` contains at
 least 5 of these 56 points; twelve disjoint squares would need 60.*
 
 ## Scaling
