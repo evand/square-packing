@@ -27,7 +27,7 @@ with `python3 xcheck.py <cert> 2000 --all --n 12` (every angle bin), and round-t
 | 5 | 57 | 59 | 11.40 | 3040/789 | 3.852978 | D4 | `s12_uniform_5of57_3.852.txt` | previous + centre point |
 | 6 | 69 | 71 | 11.50 | 15000/3931 | 3.815823 | D4 | `s12_uniform_6of69_3.815.txt` | `#` + 8-ring (r ~ 0.44) + 4 at r ~ 0.56 + centre |
 | 7 | 81 | 83 | 11.57 | **35/9** | **3.888889** | D4 | `s12_uniform_7of81_3.888.txt` | `#` + 16-point ring (r ~ 0.48–0.50) + centre |
-| 8 | 93 | 95 | 11.63 | 500/131 | 3.816794 | D4 | `s12_uniform_8of93_3.816.txt` | `#` + 12 inner points on three 4-rings (r ~ 0.27, 0.43, 0.51) + centre |
+| 8 | 93 | 95 | 11.63 | 29223/7594 | 3.848170 | D4 | `s12_uniform_8of93_3.848.txt` | `#` + 16-point ring + centre (seeded from the k = 7 set, see stage 4) |
 
 `m/k` is the number of points per unit of `k`; the argument needs `< 12`.  With full D4
 symmetry (orbits of size 8, 4 on a mirror line, 1 at the centre) `m ≡ 0, 1 (mod 4)`, so the
@@ -86,14 +86,18 @@ next to a first k = 3 certificate.  Both made by `plot_cert.py`.)
   gives 3.767 and `(k = 3, m = 35)` gives 3.808 (the two extra non-symmetric points did not
   help `k = 3` at all); nothing with `k <= 4` reached 3.85.  The smallest `k` at 3.85 is
   `k = 5` (56 or 57 points), and `k = 7` is the striking corner.
-* **Non-monotonicity in `k` (6 and 8 below 5 and 7) is almost certainly a search artefact.**
+* **Non-monotonicity in `k` (4 and 6 below 3, 5, 7, 8) is a search artefact, at least partly.**
   The `k = 4, 6, 8` chains started from ILP seeds at 3.70–3.75; the grid ILP found nothing at
   3.82–3.85 for them on four different grid spacings, while for `k = 7` one spacing happened to
-  admit a feasible 3.85 seed with the ring structure, and that seed polished to 35/9.  Attempts
-  to transfer the `k = 7` structure to `k = 6, 8` by dropping / adding twelve points did not
-  converge inside the time-box.  A better ILP seed (finer grid, or the ring imposed) would
-  probably lift `k = 6, 8` to ~3.89 as well; there is no reason to expect the even `k` to be
-  genuinely worse.  Likewise none of the `s` values here is claimed optimal for its `(k, m)`.
+  admit a feasible 3.85 seed with the ring structure, and that seed polished to 35/9.
+  Transferring the `k = 7` structure by hand (dropping / adding twelve points, then
+  polishing) stalled at 3.66–3.74; but re-running the ILP with the candidate points
+  restricted to the neighbourhoods of the `k = 7` points (`--near ... --radius 0.06` on a
+  0.0125 grid, stage 4) gave a feasible `k = 8` seed at 3.82 in 17 min, which polished to
+  3.848 in 15 min — from 3.817.  The same for `k = 6` was infeasible at 3.85 and unfinished at
+  3.82 when the time-box ended.  Better seeds would probably lift `k = 4, 6` (and `k = 8`
+  further); there is no reason to expect the even `k` to be genuinely worse.  Likewise none
+  of the `s` values here is claimed optimal for its `(k, m)`.
 
 ## Method
 
@@ -132,8 +136,10 @@ Two stages, both driven by the exact verifier.
 Three polish stages were run: stage 1 (25 min) from the ILP seeds with `m` fixed; stage 2
 (30 min) from the stage-1 results with fill-up to the maximal `m` and kicks, two seeds each,
 plus no-symmetry chains for `k = 1, 2, 3, 5, 7, 8`; stage 3 (25 min) re-seeded the best of
-each `k` and tried cross-`k` transfers (which failed).  Improvement typically saturates after
-5–10 minutes of a chain; new seeds and the fill-up step were what kept moving.
+each `k` and tried cross-`k` transfers (which failed); stage 4 (35 min, `stage4.sh`) re-ran
+the ILP for `k = 6, 8` with candidates near the `k = 7` points and polished the resulting
+`k = 8` seed.  Improvement typically saturates after 5–10 minutes of a chain; new seeds and
+the fill-up step were what kept moving.
 
 ## Reproduce
 
@@ -151,6 +157,8 @@ sh search/uniform/polish_launch.sh 1500 2 1 certificates/s12_56points_3.8.txt ru
 # stage 2 / 3 exactly as launched (file names are the stage-1 / stage-2 outputs):
 sh search/uniform/stage2.sh
 sh search/uniform/stage3.sh
+sh search/uniform/stage4.sh            # ILP near the k=7 points for k=6,8; polish the k=8 seed:
+EXTRA="--mmax 93" sh search/uniform/polish_launch.sh 900 8 31 runs/uni_near7_k8_s3.82.txt
 # 3. canonicalise, install, and check (verify N=2000/8000, xcheck --all, json, scale_to_critical)
 python3 search/uniform/canon.py runs/pol_....txt
 sh search/uniform/finalize_all.sh
@@ -176,5 +184,5 @@ development of the scripts.
 | `critical.py` | critical scaling that writes the scaled certificate and re-checks at N = 2000, 8000 |
 | `canon.py` | container fraction to lowest terms, `D` reduced by the gcd, points sorted |
 | `finalize.sh`, `finalize_all.sh`, `finalize_log.txt` | install + all checks, and their output |
-| `ladder.sh`, `polish_launch.sh`, `stage2.sh`, `stage3.sh`, `wait_polish.sh`, `status.sh` | launchers / bookkeeping used in the session |
+| `ladder.sh`, `polish_launch.sh`, `stage2.sh`, `stage3.sh`, `stage4.sh`, `wait_polish.sh`, `status.sh` | launchers / bookkeeping used in the session |
 | `plot_cert.py`, `uniform_certs.png`, `s12_56points_structure.png` | pictures |

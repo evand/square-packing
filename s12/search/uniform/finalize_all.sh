@@ -10,4 +10,4 @@ sh $F runs/pol_s12_56points_3.8_s1.txt              s12_uniform_5of56_3.852
 sh $F runs/pol_pol_s12_56points_3.8_s1_s3.txt       s12_uniform_5of57_3.852
 sh $F runs/pol_pol_uni_k6_s3.75_f0.05_s1_s2.txt     s12_uniform_6of69_3.815
 sh $F runs/pol_pol_uni_k7_s3.85_f0.05_s1_s3.txt     s12_uniform_7of81_3.888
-sh $F runs/pol_pol_k8fill_test_s2.txt               s12_uniform_8of93_3.816
+sh $F runs/pol_uni_near7_k8_s3.82_s31.txt          s12_uniform_8of93_3.848
