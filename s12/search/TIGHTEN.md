@@ -1,8 +1,10 @@
 # Tightening the certificate: re-optimised weights, sparser point sets, larger containers
 
 Code: `search/tighten.py` (new), plus a `--warm CERT` option in `search/lp_search.py`.
-Everything below ran on one 32-core machine in about two hours of wall clock; logs and
-intermediate certificates are in the gitignored `runs/`.
+Everything below ran on one 32-core machine in about two hours of wall clock (several runs at a
+time); logs and intermediate certificates are in the gitignored `runs/`.  **Outcome: the bound
+moves from 3920/997 = 3.931795 to 980/247 = 3.967611, and the certificate at the old bound
+shrinks from 788 to 224 points.**
 
 ## Starting point
 
@@ -82,7 +84,15 @@ every row) and `xcheck.py --all` at `N = 6000` for every certificate marked *shi
 | `runs/tight_C5b.txt` | 392/99 = 3.959596 | 968 | 11.9389496 | 1.0000045 | C: same from `tight_C1` at D=1980 | 614 + 431 s |
 | `runs/sparse_B4.txt` | 392/99 = 3.959596 | 428 | 11.9918800 | 1.0000030 | B applied to `tight_C5b` | 446 s |
 | `runs/tight_C6b.txt` | 3920/989 = 3.963600 | 1192 | 11.9504824 | 1.0000046 | C: colgen from `tight_C5b` at D=1978, then cut-only on the support | 956 + 572 s |
-| **`certificates/s12_lower_3.9676.txt`** *(shipped)* | 980/247 = 3.967611 | 1344 | 11.9844236 | 1.0000041 | C: colgen from `tight_C5b` at D=1976, then cut-only on the support | 878 + 807 s |
+| `runs/sparse_B5.txt` | 3920/989 = 3.963600 | 548 | 11.9925972 | 1.0000031 | B applied to `tight_C6b` | 858 s |
+| `runs/tight_C7b.txt` | 980/247 = 3.967611 | 1344 | 11.9844236 | 1.0000041 | C: colgen from `tight_C5b` at D=1976, then cut-only on the support | 878 + 807 s |
+| **`certificates/s12_lower_3.9676.txt`** *(shipped)* | 980/247 = 3.967611 | **764** | 11.9962288 | 1.0000033 | B applied to `tight_C7b` (budget 11.998) | 879 s |
+
+Beyond 3.9676: the same procedure at `D = 1975` (`s = 1568/395 = 3.9696`) reached LP 11.94
+with column generation still running (849 orbits, 14.8k violated placements per round, ~3 min
+per LP), and the cut-only re-optimisation on its support snapshot ended at **12.05** — i.e. no
+certificate at 3.9696 within the time box.  That is consistent with `CEILING.md`'s estimate that
+`ν_f` crosses 12 around 3.965–3.97.
 
 With the shipped **points** and only the weights free, the bound goes from 3.931795 to
 3.948628 (`D = 19855/10`); at the next step (`D = 1985`, `s = 3.94962`) the LP total jumps to
@@ -92,8 +102,20 @@ at `D = 1984` (`s = 245/62 = 3.951613`) the LP drops from 14.03 (fixed points) t
 ~800 orbits added (of which 162 end up in the support).
 
 Sparsification costs almost nothing in the bound: 224 points suffice at the shipped bound
-(788 before), and 392 at 3.9516.  The reweighted-L1 heuristic stops after 3–4 rounds; a
-different budget (`--budget`) trades points for weight margin.
+(788 before), 392 at 3.9516, 428 at 3.9596, 548 at 3.9636 and 764 at 3.9676 (where the LP
+optimum 11.984 leaves only 0.014 of budget).  The reweighted-L1 heuristic stops after 3–4
+rounds; `--budget` trades points for weight margin.
+
+**Shipped** (all three checks pass: `verify` at N = 6000 and 12000, `xcheck.py --all` at
+N = 6000, `export_points.py --roundtrip`):
+
+* `certificates/s12_lower_3.9676.txt` — **s(12) ≥ 980/247 = 3.967611**, 764 points, total
+  weight 7497643/625000 = 11.9962288 (best bound);
+* `certificates/s12_lower_3.931795_sparse.txt` — the shipped bound 3920/997 with **224**
+  points (total 29958593/2500000 = 11.9834372) instead of 788 (smallest certificate).
+
+The certificates at 3.9516, 3.9596, 3.9636 and the un-sparsified ones are in `runs/`
+(regenerable with the commands below); they were verified the same way but are dominated.
 
 **`lp_search.py --warm` (the cell-cut search seeded with a point set).**  The one change to
 `lp_search.py` is the option `--warm CERT`: the points of `CERT`, scaled from its container to
@@ -125,17 +147,31 @@ python3 search/tighten.py sparsify certificates/s12_lower_3.931795.txt B2 --Dp 1
 # C: column generation at 245/62, then sparsify             -> runs/tight_C1.txt, runs/sparse_B3.txt
 python3 search/tighten.py reopt certificates/s12_lower_3.931795.txt C1 --Dp 1984 --colgen 40 --cg-want 150
 python3 search/tighten.py sparsify runs/tight_C1.txt B3 --budget 11.995 --rounds 8
+# C, larger containers.  Each step: colgen seeded with the previous certificate; after the
+# column set has settled (LP value flat, ~10-15 rounds) the current support -- written every
+# round to runs/tight_<TAG>_probe.txt -- is copied and re-optimised cut-only (much faster than
+# letting the big LP converge).  C5b -> C6b/C7b -> (C8: no certificate)
+python3 search/tighten.py reopt runs/tight_C1.txt  C5 --Dp 1980 --colgen 60 --cg-want 100   # stop after ~12 rounds
+cp runs/tight_C5_probe.txt runs/seed_C5.txt;  python3 search/tighten.py reopt runs/seed_C5.txt C5b
+python3 search/tighten.py reopt runs/tight_C5b.txt C6 --Dp 1978 --colgen 15 --cg-want 100
+cp runs/tight_C6_probe.txt runs/seed_C6.txt;  python3 search/tighten.py reopt runs/seed_C6.txt C6b
+python3 search/tighten.py reopt runs/tight_C5b.txt C7 --Dp 1976 --colgen 15 --cg-want 100
+cp runs/tight_C7_probe.txt runs/seed_C7.txt;  python3 search/tighten.py reopt runs/seed_C7.txt C7b
+python3 search/tighten.py sparsify runs/tight_C6b.txt B5 --budget 11.995 --rounds 8
+python3 search/tighten.py sparsify runs/tight_C7b.txt B6 --budget 11.998 --rounds 8         # -> the shipped 3.9676 file
 # checks (every shipped file)
-verify/target/release/verify certificates/s12_lower_3.9516.txt 12 6000  32 0
-verify/target/release/verify certificates/s12_lower_3.9516.txt 12 12000 32 0
-python3 xcheck.py certificates/s12_lower_3.9516.txt 6000 --all --n 12
-python3 search/export_points.py export certificates/s12_lower_3.9516.txt -o certificates/s12_lower_3.9516.json --n 12
-python3 search/export_points.py --roundtrip certificates/s12_lower_3.9516.txt certificates/s12_lower_3.9516.json
+verify/target/release/verify certificates/s12_lower_3.9676.txt 12 6000  32 0
+verify/target/release/verify certificates/s12_lower_3.9676.txt 12 12000 32 0
+python3 xcheck.py certificates/s12_lower_3.9676.txt 6000 --all --n 12
+python3 search/export_points.py export certificates/s12_lower_3.9676.txt -o certificates/s12_lower_3.9676.json --n 12
+python3 search/export_points.py --roundtrip certificates/s12_lower_3.9676.txt certificates/s12_lower_3.9676.json
 ```
 
 `C1` was run with the earlier `max_coverage`-based pricing (see above); re-running the command
 with the current file uses the grid pricing and will give a different (in our runs, better)
-point set.  HiGHS's `random_seed` is pinned (`--seed`, default 0); as in
+point set.  The colgen runs were stopped by hand once the support was snapshotted (the snapshot
+round is the one thing not fixed by the command line; the `_probe.txt` of every round is the
+current support and any of them can be used).  HiGHS's `random_seed` is pinned (`--seed`, default 0); as in
 `search/REPRODUCIBILITY.md`, bit-identity holds on one machine and one set of wheels
 (numpy 2.4.2, scipy 1.17.0 here).
 
