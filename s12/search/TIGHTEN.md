@@ -77,10 +77,12 @@ every row) and `xcheck.py --all` at `N = 6000` for every certificate marked *shi
 | `runs/tight_S2_D19855.txt` | 15680/3971 = 3.948628 | 624 | 11.9633556 | 1.0000031 | A at D=19855/10 — best with the shipped points | 110 s |
 | `runs/sparse_B2.txt` | 15680/3971 = 3.948628 | 368 | 11.9934340 | 1.0000030 | B at that bound | 208 s |
 | `runs/tight_C1.txt` | 245/62 = 3.951613 | 1272 | 11.9353104 | 1.0000050 | C: column generation from the shipped points | 1632 s |
-| **`certificates/s12_lower_3.9516.txt`** *(shipped)* | 245/62 = 3.951613 | **392** | 11.9916200 | 1.0000031 | B applied to `tight_C1` | 727 s |
+| `runs/sparse_B3.txt` | 245/62 = 3.951613 | 392 | 11.9916200 | 1.0000031 | B applied to `tight_C1` | 727 s |
 | `runs/tight_C4b.txt` | 3920/991 = 3.955600 | 1108 | 11.8934460 | 1.0000034 | C: colgen from `tight_C1` at D=1982 (15 rounds, pricing on a 0.01 grid), then cut-only on the support | 856 + 476 s |
 | `runs/tight_C5b.txt` | 392/99 = 3.959596 | 968 | 11.9389496 | 1.0000045 | C: same from `tight_C1` at D=1980 | 614 + 431 s |
-| **`certificates/s12_lower_3.9596.txt`** *(shipped)* | 392/99 = 3.959596 | **428** | 11.9918800 | 1.0000030 | B applied to `tight_C5b` | 446 s |
+| `runs/sparse_B4.txt` | 392/99 = 3.959596 | 428 | 11.9918800 | 1.0000030 | B applied to `tight_C5b` | 446 s |
+| `runs/tight_C6b.txt` | 3920/989 = 3.963600 | 1192 | 11.9504824 | 1.0000046 | C: colgen from `tight_C5b` at D=1978, then cut-only on the support | 956 + 572 s |
+| **`certificates/s12_lower_3.9676.txt`** *(shipped)* | 980/247 = 3.967611 | 1344 | 11.9844236 | 1.0000041 | C: colgen from `tight_C5b` at D=1976, then cut-only on the support | 878 + 807 s |
 
 With the shipped **points** and only the weights free, the bound goes from 3.931795 to
 3.948628 (`D = 19855/10`); at the next step (`D = 1985`, `s = 3.94962`) the LP total jumps to
@@ -93,8 +95,19 @@ Sparsification costs almost nothing in the bound: 224 points suffice at the ship
 (788 before), and 392 at 3.9516.  The reweighted-L1 heuristic stops after 3–4 rounds; a
 different budget (`--budget`) trades points for weight margin.
 
-The `--warm` run of `lp_search.py` (cell cuts, `fine = eta = dt = 0.005`, `s = 3.94`, seeded
-with the points of `tight_S1_D1988.txt`) is reported in the "Part C" section below.
+**`lp_search.py --warm` (the cell-cut search seeded with a point set).**  The one change to
+`lp_search.py` is the option `--warm CERT`: the points of `CERT`, scaled from its container to
+`S` and snapped to the nearest atom-grid cell, are added as initial orbits (weights are not
+reused; every iterate is a fresh LP).  Run: `python3 search/lp_search.py 3.94 0.005 0.005 0.005 0 W1
+--iters 30 --seed 0 --verify-threads 8 --warm runs/tight_S1_D1988.txt` — 76 orbits added
+(the 592 points of the 3.9437 certificate, snapped to the 0.005 grid).  Result after 30
+rounds (47 min, sharing the machine with the runs above): LP 12.99 → 13.75 → **13.13**, never
+below the 12.6 threshold at which it calls the verifier; `runs/cert_W1.txt` has total 13.75.
+The eroded-cell LP at `η = δθ = 0.005` carries a handicap of ≈ 0.4 % of the side (see
+`CEILING.md`), i.e. it is solving something like the exact problem at `s ≈ 3.957`, and the
+snapping to the 0.005 grid destroys the fine structure of the seed.  The exact-row loop of
+`tighten.py` with column generation is the right tool at these container sizes; the cell
+search is not competitive there, warm-started or not.
 
 ## Reproduce
 
