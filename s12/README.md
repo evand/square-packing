@@ -34,10 +34,17 @@ classical *unavoidable set of points* method — see credits below.
 
 The certificate here has 788 points and total weight `14916233/1250000 = 11.9329864`.
 
-A second, weaker certificate is included because it is uniform, hence purely combinatorial:
+Weaker but purely combinatorial certificates are included too, because they are **uniform** —
+every point has the same weight, so no fractions are involved and the statement is one sentence:
 
-> **56 points** in `[0, 19/5]²` such that every closed unit square inside, at every angle,
-> contains **at least 5** of them — twelve disjoint squares would need 60.
+> **81 points** in `[0, 35/9]²` such that every closed unit square inside, at every angle,
+> contains **at least 7** of them — twelve disjoint squares would need 84.
+
+So `s(12) ≥ 35/9 = 3.888…`, already above Stromquist's `3.7889`, by a plain hitting-set
+argument.  `search/uniform/UNIFORM.md` has the family for `k = 1 … 8` points-per-square
+(`certificates/s12_uniform_<k>of<m>_<s>.txt`); they all share one describable skeleton — a `#`
+of lines one unit from each wall plus a small ring at the centre — and the original 56-point,
+5-per-square set at `19/5` is kept as `s12_56points_3.8.txt`.
 
 ## What is verified, and how
 

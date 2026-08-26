@@ -39,6 +39,14 @@ Statement: every closed unit square inside [0,3.8]^2, at any angle, contains at 
 independent exact Python re-check `xcheck.py` over every bin at N=2000 (829 bins, identical
 to the Rust per-bin minima) and N=8000 (3314 bins): minimum exactly 1.
 
+## Uniform certificates (2026-08-25)
+`certificates/s12_uniform_<k>of<m>_<s>.txt`, k = 1..8: m points, weight 1/k each, m < 12k,
+every closed unit square contains >= k of them.  Headline: 81 points in [0,35/9]^2 with
+k = 7, i.e. s(12) >= 35/9 = 3.888889.  Each file is written at its critical container.
+Checks: `verify` at N=2000 and N=8000 (all nine files), `xcheck.py --all` at N=2000 (all
+nine) and at N=4000 for the 81-point set, JSON round-trip for all.  Search method (ILP over
+D4 orbits + verifier-driven polish) in `search/uniform/UNIFORM.md`.
+
 ## Formalisation
 `lean/Sqpack/Basic.lean` (Lean 4 + Mathlib) proves the reduction:
 a weighted set whose closed unit squares all carry weight >= 1 bounds the number of squares of
