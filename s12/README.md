@@ -100,17 +100,36 @@ is checked independently of how it was found — which is the entire point of th
 The packing search that looked for a counterexample from the other side (L-BFGS + basin
 hopping, validated against `s(5)`, `s(10)`, `s(11)`) is `search/pack_src/main.rs`.
 
+## A bound for s(11) as well
+
+The same pipeline run with `n = 11` gives **`s(11) ≥ 3040/797 = 3.814303…`**, improving
+Stromquist's `2 + 4/√5 = 3.788854` (2003).  Certificate `certificates/s11_lower_3.8143.txt`
+(680 points, total weight `10.8146708 < 11`), verified at `N` = 6000 and 12000 and by
+`xcheck.py --all --n 11`; it is at its critical container.  It is a separate certificate:
+`s(11) ≤ s(12)`, so the `n = 12` files say nothing about `n = 11`.  The LP crosses 11 at
+about `3.815`, so for `n = 11` the pure method stops ~0.06 below the conjectured value
+`3.877083` (Trump's packing); details and the crossing bracket in `search/N11.md`.
+
 ## Limits of the method
 
-By LP duality the least possible certificate weight at container side `s` equals the
-**fractional packing number** `ν_f(s)`; the method proves `s(12) ≥ s` exactly when
-`ν_f(s) < 12`.  Numerically `ν_f` crosses 12 somewhere around `s ≈ 3.94–3.97` (heuristic LP estimates;
-`search/CEILING.md` has the table and what is and is not rigorous), and in the open-square
-convention reaches 16 at `s = 4` where the grid tiles.  So ~3.95 is a hard ceiling for this
-entire family of arguments.  The bound here, `3.9686`, is essentially at that ceiling: column
-generation at `3.9696` no longer gets below 12 (`search/TIGHTEN.md`), so the method is
-exhausted to within about `0.001`.  Closing the remaining gap to 4 needs case analysis
-layered on top of a certificate, in the style of Bentz's `s(13)` proof.
+By LP duality the least possible certificate weight at container side `s` is at least the
+**fractional packing number** `ν_f(s)`, so the method proves `s(12) ≥ s` only if `ν_f(s) < 12`.
+**This ceiling is now pinned rigorously.**  An explicit fractional packing of mass `12.00823`
+at `s = 399/100`, certified in exact rational arithmetic (`search/DUAL_EXACT.md`,
+`search/dual_exact.py`), shows that no cover of weight `< 12` exists at any `s ≥ 3.99`; with
+the shipped certificate, the ceiling `s*` of this entire family of arguments lies in
+**`[3.968616, 3.99)`**.  It is probably a little below 3.99: non-converged runs give
+`L(3.98) ≥ 11.918` and `L(3.97) ≥ 11.807` (`search/DUAL.md`), and column generation at
+`3.9696` no longer gets below 12 (`search/TIGHTEN.md`).  The same measure shows that a
+closed-semantics cover of `[0,4]²` — the object a limit argument at `s = 4` would need —
+costs at least `12.008`; the best explicit one found costs `12.51` (heuristic,
+`search/CLOSED4.md`), with 91 % of its weight on the grid lines `x, y ∈ {1,2,3}`.
+
+Closing the remaining gap to 4 therefore needs case analysis layered on top of a certificate,
+in the style of Bentz's `s(13)` proof (`notes/proof-anatomy.md` dissects those proofs).  What
+the LP contributes to that is the size of the excess budget: between `0.008` and about `0.5`,
+against the 3 units that unit-weight point sets leave for `n = 12`.  `TODO.md` separates what
+is established from what is only suggested.
 
 Separately, an extensive search for a packing of 12 unit squares into a square of side < 4
 (L-BFGS + basin hopping, validated by reproducing `s(5)`, `s(10)`, `s(11)` to 5 decimals) found
