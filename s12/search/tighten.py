@@ -284,7 +284,7 @@ def price(m, y, pitch=0.01, want=200, ysup=1e-9):
 
 def tighten(m, tag, margin=2e-6, N=6000, topk=6, max_iters=200, log=print, cost=None, budget=None,
             fixed_zero=None, probe_margin=None, final_check=True, x0=None, prune_at=120000,
-            colgen=0, cg_want=200, cg_pitch=0.01):
+            colgen=0, cg_want=200, cg_pitch=0.01, n=12):
     """cutting-plane loop.  Returns (x, val, info).
     colgen=k: for the first k iterations also generate columns: the dual y is a (D4-symmetrised)
     packing measure on the rows; points where its closed-square coverage exceeds 1 have negative
@@ -299,7 +299,7 @@ def tighten(m, tag, margin=2e-6, N=6000, topk=6, max_iters=200, log=print, cost=
             log(f"  it{it} LP infeasible/failed (rows={len(m.rows)})"); return None, None, dict(status='infeasible')
         val, x, y = out; tw = float(m.sizes @ x)
         export(m, x, tmp, WD=10 ** 12, factor=1.0 / (1.0 + probe_margin), up=False)
-        mv, ok = run_verifier(tmp, N, topk=topk, sep=sep)
+        mv, ok = run_verifier(tmp, N, topk=topk, sep=sep, n=n)
         wit = read_witnesses(sep, N) if os.path.exists(sep) else []
         if os.path.exists(sep): os.remove(sep)
         nz = int((x > 1e-12).sum()); natoms = int(m.sizes[x > 1e-12].sum())
@@ -320,44 +320,44 @@ def tighten(m, tag, margin=2e-6, N=6000, topk=6, max_iters=200, log=print, cost=
     return x, val, dict(iters=it, rows=len(m.rows), t=time.time() - t0)
 
 
-def finalize(m, x, tag, out_path, N=6000, log=print, WD=10 ** 7, margin=2e-6, cost=None, budget=None, fixed_zero=None, x0=None):
+def finalize(m, x, tag, out_path, N=6000, log=print, WD=10 ** 7, margin=2e-6, cost=None, budget=None, fixed_zero=None, x0=None, n=12):
     """export at WD (rounded up); check at N and 2N, feeding back 2N witnesses if needed."""
     for rnd in range(20):
         tw, npts = export(m, x, out_path, WD=WD, up=True)
-        mv1, ok1 = run_verifier(out_path, N)
+        mv1, ok1 = run_verifier(out_path, N, n=n)
         sep = f"runs/tight_{tag}_sep2.txt"
-        mv2, ok2 = run_verifier(out_path, 2 * N, topk=6, sep=sep)
+        mv2, ok2 = run_verifier(out_path, 2 * N, topk=6, sep=sep, n=n)
         wit = read_witnesses(sep, 2 * N) if os.path.exists(sep) else []
         if os.path.exists(sep): os.remove(sep)
         log(f"  final[{rnd}] {out_path}: points={npts} total={tw:.7f} min@{N}={float(mv1):.7f} {'OK' if ok1 else 'FAIL'}  min@{2*N}={float(mv2):.7f} {'OK' if ok2 else 'FAIL'} (viol {len(wit)})")
         if ok1 and ok2: return tw, npts, mv1, mv2
-        if tw >= 12.0 and mv1 >= 1 and mv2 >= 1:
-            log(f"  final: covering holds at both nets but total weight {tw:.6f} >= 12: not a certificate")
+        if tw >= n and mv1 >= 1 and mv2 >= 1:
+            log(f"  final: covering holds at both nets but total weight {tw:.6f} >= {n}: not a certificate")
             return tw, npts, mv1, mv2
         m.add_rows(wit)
-        x, val, info = tighten(m, tag, margin=margin, N=N, log=log, cost=cost, budget=budget, fixed_zero=fixed_zero, x0=x)
+        x, val, info = tighten(m, tag, margin=margin, N=N, log=log, cost=cost, budget=budget, fixed_zero=fixed_zero, x0=x, n=n)
         if x is None: return None
     return None
 
 
-def reopt(cert, tag, Dp=None, mul=1, N=6000, topk=6, margin=2e-6, log=print, warm=True, out=None, colgen=0, cg_want=200, cg_pitch=0.01):
+def reopt(cert, tag, Dp=None, mul=1, N=6000, topk=6, margin=2e-6, log=print, warm=True, out=None, colgen=0, cg_want=200, cg_pitch=0.01, n=12):
     m, w0, s = build_model(cert, Dp, mul)
     log(f"[{tag}] {cert}: {len(m.orbits)} orbits / {len(m.P)} atoms, container {s} = {float(s):.7f}, input total {float(m.sizes @ w0):.6f}")
     t0 = time.time()
     if warm:
         lr = lattice_rows(m, w0[m.own], thr=1.05)
         m.add_rows(lr); log(f"[{tag}] warm start: {len(m.rows)} lattice rows ({time.time()-t0:.0f}s)")
-    x, val, info = tighten(m, tag, margin=margin, N=N, topk=topk, log=log, colgen=colgen, cg_want=cg_want, cg_pitch=cg_pitch)
+    x, val, info = tighten(m, tag, margin=margin, N=N, topk=topk, log=log, colgen=colgen, cg_want=cg_want, cg_pitch=cg_pitch, n=n)
     if x is None: log(f"[{tag}] FAILED"); return None
     out = out or f"runs/tight_{tag}.txt"
-    res = finalize(m, x, tag, out, N=N, log=log, margin=margin)
+    res = finalize(m, x, tag, out, N=N, log=log, margin=margin, n=n)
     if res is None: log(f"[{tag}] finalize FAILED"); return None
     tw, npts, mv1, mv2 = res
     log(f"[{tag}] RESULT s={s} ({float(s):.7f}) points={npts} total={tw:.7f} min@{N}={mv1} min@{2*N}={mv2} t={time.time()-t0:.0f}s")
     return dict(cert=out, s=str(s), sf=float(s), points=npts, total=tw, min1=str(mv1), min2=str(mv2), t=time.time() - t0, model=m, x=x)
 
 
-def sparsify(cert, tag, budget, Dp=None, mul=1, N=6000, topk=6, margin=2e-6, rounds=8, eps=1e-4, log=print, out=None, seed_from=None):
+def sparsify(cert, tag, budget, Dp=None, mul=1, N=6000, topk=6, margin=2e-6, rounds=8, eps=1e-4, log=print, out=None, seed_from=None, n=12):
     """reweighted-L1 under a total-weight budget; then min-weight on the support."""
     m, w0, s = build_model(cert, Dp, mul)
     log(f"[{tag}] sparsify {cert}: {len(m.orbits)} orbits / {len(m.P)} atoms, s={float(s):.7f}, budget {budget}")
@@ -365,13 +365,13 @@ def sparsify(cert, tag, budget, Dp=None, mul=1, N=6000, topk=6, margin=2e-6, rou
     lr = lattice_rows(m, w0[m.own], thr=1.05); m.add_rows(lr)
     log(f"[{tag}] warm start: {len(m.rows)} lattice rows ({time.time()-t0:.0f}s)")
     # first: plain min-weight, to have a clean row set and a starting x
-    x, val, info = tighten(m, tag, margin=margin, N=N, topk=topk, log=log)
+    x, val, info = tighten(m, tag, margin=margin, N=N, topk=topk, log=log, n=n)
     if x is None: return None
     best = None
     fixed = np.zeros(0, dtype=int)
     for rd in range(rounds):
         cost = m.sizes / (x + eps)
-        x2, val2, info = tighten(m, tag, margin=margin, N=N, topk=topk, log=log, cost=cost, budget=budget, fixed_zero=fixed)
+        x2, val2, info = tighten(m, tag, margin=margin, N=N, topk=topk, log=log, cost=cost, budget=budget, fixed_zero=fixed, n=n)
         if x2 is None:
             log(f"[{tag}] round {rd}: infeasible under budget with {len(fixed)} fixed zeros"); break
         x = x2
@@ -382,10 +382,10 @@ def sparsify(cert, tag, budget, Dp=None, mul=1, N=6000, topk=6, margin=2e-6, rou
         best = (len(sup), x.copy(), fixed.copy())
     # polish: min total weight on the final support
     nsup, x, fixed = best
-    x, val, info = tighten(m, tag, margin=margin, N=N, topk=topk, log=log, fixed_zero=fixed)
+    x, val, info = tighten(m, tag, margin=margin, N=N, topk=topk, log=log, fixed_zero=fixed, n=n)
     if x is None: return None
     out = out or f"runs/sparse_{tag}.txt"
-    res = finalize(m, x, tag, out, N=N, log=log, margin=margin, fixed_zero=fixed)
+    res = finalize(m, x, tag, out, N=N, log=log, margin=margin, fixed_zero=fixed, n=n)
     if res is None: log(f"[{tag}] finalize FAILED"); return None
     tw, npts, mv1, mv2 = res
     log(f"[{tag}] RESULT s={s} ({float(s):.7f}) points={npts} total={tw:.7f} min@{N}={mv1} min@{2*N}={mv2} t={time.time()-t0:.0f}s")
@@ -405,6 +405,7 @@ def main():
     ap.add_argument('--seed', type=int, default=0); ap.add_argument('--out', default=None)
     ap.add_argument('--colgen', type=int, default=0, help='number of column-generation iterations (reopt)')
     ap.add_argument('--cg-want', type=int, default=200); ap.add_argument('--cg-pitch', type=float, default=0.01)
+    ap.add_argument('--n', type=int, default=12, help='number of squares to rule out (only the weight threshold: verifier n and the "not a certificate" test)')
     a = ap.parse_args()
     HIGHS['random_seed'] = a.seed
     os.makedirs('runs', exist_ok=True)
@@ -413,15 +414,15 @@ def main():
         print(msg, flush=True); lf.write(msg + '\n'); lf.flush()
     log(f"tighten.py {' '.join(sys.argv[1:])}")
     if a.mode == 'reopt':
-        r = reopt(a.cert, a.tag, Dp=a.Dp, mul=a.mul, N=a.N, topk=a.topk, margin=a.margin, log=log, out=a.out, colgen=a.colgen, cg_want=a.cg_want, cg_pitch=a.cg_pitch)
+        r = reopt(a.cert, a.tag, Dp=a.Dp, mul=a.mul, N=a.N, topk=a.topk, margin=a.margin, log=log, out=a.out, colgen=a.colgen, cg_want=a.cg_want, cg_pitch=a.cg_pitch, n=a.n)
         if r: r.pop('model'); r.pop('x'); json.dump(r, open(f"runs/tight_{a.tag}.json", 'w'), indent=1)
     elif a.mode == 'sparsify':
-        r = sparsify(a.cert, a.tag, a.budget, Dp=a.Dp, mul=a.mul, N=a.N, topk=a.topk, margin=a.margin, rounds=a.rounds, eps=a.eps, log=log, out=a.out)
+        r = sparsify(a.cert, a.tag, a.budget, Dp=a.Dp, mul=a.mul, N=a.N, topk=a.topk, margin=a.margin, rounds=a.rounds, eps=a.eps, log=log, out=a.out, n=a.n)
         if r: json.dump(r, open(f"runs/tight_{a.tag}.json", 'w'), indent=1)
     elif a.mode == 'scan':
         res = []
         for Dp in [int(v) for v in a.Dps.split(',')]:
-            r = reopt(a.cert, f"{a.tag}_D{Dp}", Dp=Dp, mul=a.mul, N=a.N, topk=a.topk, margin=a.margin, log=log)
+            r = reopt(a.cert, f"{a.tag}_D{Dp}", Dp=Dp, mul=a.mul, N=a.N, topk=a.topk, margin=a.margin, log=log, n=a.n)
             if r: r.pop('model'); r.pop('x'); res.append(r)
             json.dump(res, open(f"runs/tight_{a.tag}_scan.json", 'w'), indent=1)
         for r in res: log(f"SCAN s={r['sf']:.7f} points={r['points']} total={r['total']:.7f} min={r['min1']}")

@@ -17,6 +17,20 @@ re-optimised at fixed points with the exact verifier as separation oracle; rewei
 sparsification; column generation with exact reduced-cost pricing) is in `search/TIGHTEN.md`.
 The checks were re-run independently of the search session on the merged tree.
 
+## s(11) certificate (2026-08-26)
+`certificates/s11_lower_3.8143.txt` — `s(11) >= 3040/797 = 3.814304`; 680 points, coordinates
+over 3985, weights over 10^7, total 27036677/2500000 = 10.8146708 < 11.  Checks: `verify` with
+n = 11 at N=6000 (min 10000042/10^7) and N=12000: VERIFIED; `xcheck.py --all --n 11` at N=6000:
+identical minimum; `scale_to_critical.py --n 11 --N 6000`: already critical (D = 3985).  The
+N=6000 run was repeated by hand on the merged tree.  Search: `tighten.py --n 11` from the
+n = 12 certificates rescaled, with column generation (`search/N11.md`).  Now in `verify.sh`.
+
+## Verifier diagnostic mode (2026-08-26)
+`verify/src/main.rs` gained an opt-in mode `TIGHT_DUMP=<path> TIGHT_THRESH=<int>` that lists the
+arrangement cells below a captured-weight threshold (`search/TIGHTSET.md`).  With the variable
+unset the code path and output are unchanged: the default output for the main certificate at
+N=6000 was diffed against the previous binary, and `verify.sh` plus the 42 rejection tests pass.
+
 ## Checks performed on the original 788-point certificate (2026-08-23)
 ## Companion certificate (weaker but human-readable)
 `certificates/s12_56points_3.8.txt` — 56 points in [0,19/5]^2 (scales up to [0,1520/397]^2), weight 1/5 each (total 56/5 = 11.2).

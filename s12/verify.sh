@@ -34,6 +34,10 @@ echo
 echo "=== the other uniform certificates (k of m points, see search/uniform/UNIFORM.md) ==="
 for c in certificates/s12_uniform_*.txt; do echo "$c"; chk $V "$c" 12 2000 "$(nproc)" 0 | grep -E "^(VERIFIED|NOT)"; done
 echo
+echo "=== n = 11: s(11) >= 3040/797 = 3.814304 (680 points, total weight 10.8146708 < 11) ==="
+chk $V certificates/s11_lower_3.8143.txt 11 6000 "$(nproc)" 0
+chk $V certificates/s11_lower_3.8143.txt 11 12000 "$(nproc)" 0
+echo
 echo "=== independent exact re-check (Python, exact rationals, EVERY angle bin) ==="
 # Exhaustive: all 829 bins of the N=2000 net (the same net the Rust run above used, so the
 # per-bin minima are directly comparable).  56 points -> well under a minute even on 2 cores;
@@ -47,4 +51,5 @@ echo
 echo "=== points.json companions: json -> txt reproduces the shipped .txt byte for byte ==="
 for c in certificates/s12_lower_*.txt; do python3 search/export_points.py --roundtrip "$c" "${c%.txt}.json"; done
 python3 search/export_points.py --roundtrip certificates/s12_56points_3.8.txt certificates/s12_56points_3.8.json
+python3 search/export_points.py --roundtrip certificates/s11_lower_3.8143.txt certificates/s11_lower_3.8143.json
 for c in certificates/s12_uniform_*.txt; do python3 search/export_points.py --roundtrip "$c" "${c%.txt}.json"; done
