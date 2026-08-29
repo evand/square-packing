@@ -214,8 +214,8 @@ def read_witnesses(path, N):
     out = []
     for line in open(path):
         q = line.split()
-        if len(q) != 4: continue
-        v, th, cx, cy = map(float, q)
+        if len(q) not in (4, 5): continue          # 5th column = region flag (branch.py); ignored here
+        v, th, cx, cy = map(float, q[:4])
         k = int(round(N * math.tan(th / 2)))
         out.append((v, th, cx, cy, k))
     out.sort()

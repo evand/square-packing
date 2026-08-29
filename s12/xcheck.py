@@ -53,7 +53,17 @@ MODES
              -v      print the exact minimum of every bin checked
              -j J    worker processes (default: all CPUs)
 The program always prints the overall minimum covered weight as an exact fraction and a final
-line VERIFIED or NOT VERIFIED.  A sampled run can only say NOT VERIFIED with certainty; its
+line VERIFIED or NOT VERIFIED.
+
+BRANCH CERTIFICATES (FORMAT.md, "Branch certificates").  A trailer `region corner r_num r_den /
+lambda L / k K` after the points changes the claim to: squares whose centre lies in one of the
+four closed corner boxes [0,r]^2, [s-r,s]x[0,r], ... capture >= 1 + L/W, all others >= 1, and
+total - (L/W)*K < n.  Here every cell of the sweep is classified EXACTLY (rational arithmetic,
+no padding, unlike the verifier's float-with-padding test): the cell is a convex quadrilateral in
+container coordinates, so it lies inside a box iff its bounding box does and can meet a box only
+if its bounding box does; a cell that may meet a box must reach 1 + lambda, a cell that may leave
+the boxes must reach 1, and the reported minimum is min over cells of (covered - required extra).
+The condition (2r-1)^2 < 2 (one square per box) is checked exactly.  A sampled run can only say NOT VERIFIED with certainty; its
 VERIFIED is qualified as "(sampled bins only)".
 """
 from fractions import Fraction as F
@@ -66,10 +76,27 @@ def load(path):
     t = open(path).read().split()
     sn, sd, D, WD, m = (int(v) for v in t[:5])
     assert sn > 0 and sd > 0 and D > 0 and WD > 0 and m >= 0
-    assert len(t) == 5 + 3*m, "wrong number of integers in certificate"
     A = [(int(t[5+3*i]), int(t[6+3*i]), int(t[7+3*i])) for i in range(m)]
     assert all(w >= 0 for _, _, w in A), "weights must be non-negative"
-    return F(sn, sd), D, WD, A
+    rest = t[5 + 3*m:]
+    region = None
+    if rest:
+        # `region corner r_num r_den / lambda L [L2 L3 L4] / k K [K2 K3 K4]`
+        assert len(rest) >= 8 and rest[0] == "region" and rest[1] == "corner" and rest[4] == "lambda" and "k" in rest[5:], \
+            "trailing data is not a `region corner r_num r_den / lambda ... / k ...` trailer"
+        ik = rest.index("k", 5)
+        lams = [int(v) for v in rest[5:ik]]; ks = [int(v) for v in rest[ik+1:]]
+        r = F(int(rest[2]), int(rest[3]))
+        assert r > 0 and (2*r - 1)**2 < 2, "region trailer: r > 0 and (2r-1)^2 < 2 required (one square per corner box)"
+        if len(lams) == 1 and len(ks) == 1:
+            assert 0 <= ks[0] <= 4, "region trailer: 0 <= k <= 4 required"
+            region = dict(r=r, lam=[lams[0]]*4, k=[ks[0]]*4, kdot=lams[0]*ks[0], single=True, ktot=ks[0])
+        elif len(lams) == 4 and len(ks) == 4:
+            assert all(v in (0, 1) for v in ks), "region trailer: per-box k must be 0 or 1"
+            region = dict(r=r, lam=lams, k=ks, kdot=sum(l*k for l, k in zip(lams, ks)), single=False, ktot=sum(ks))
+        else:
+            raise AssertionError("region trailer: 1 or 4 lambda values and as many k values expected")
+    return F(sn, sd), D, WD, A, region
 
 def d4_symmetric(A, sD):
     """exact: is the weighted point multiset invariant under the dihedral group of [0,s]^2 ?"""
@@ -112,8 +139,10 @@ G = {}
 
 def min_cover_bin(k):
     """exact minimum, over every admissible centre, of the weight covered by the closed
-    sigma_k-square at angle theta_k.  Returns (k, min_weight_numerator or None, witness)."""
-    N, S, D, A = G['N'], G['s'], G['D'], G['A']
+    sigma_k-square at angle theta_k, minus the region's required extra (0 without a trailer).
+    Returns (k, min_numerator or None, witness)."""
+    N, S, D, A, region = G['N'], G['s'], G['D'], G['A'], G['region']
+    WD = G['WD']
     c, sn, sigma, wmin = bin_params(k, N)
     h = sigma / 2
     L = wmin / 2; U = S - wmin / 2
@@ -122,13 +151,40 @@ def min_cover_bin(k):
     # rotate by -theta_k: atoms and the centre box
     Q = [(c*F(x, D) + sn*F(y, D), -sn*F(x, D) + c*F(y, D), w) for x, y, w in A]
     poly = [(c*a + sn*b, -sn*a + c*b) for a, b in ((L, L), (U, L), (U, U), (L, U))]
+    # corner boxes (container coordinates, closed) and their u-space images
+    boxes = []; bpolys = []; lams = [0, 0, 0, 0]
+    if region is not None:
+        r = region['r']; lams = region['lam']
+        for x0, y0 in ((0, 0), (S - r, 0), (0, S - r), (S - r, S - r)):
+            boxes.append((x0, x0 + r, y0, y0 + r))
+            bpolys.append([(c*a + sn*b, -sn*a + c*b) for a, b in ((x0, y0), (x0 + r, y0), (x0 + r, y0 + r), (x0, y0 + r))])
+    def cell_flags(u0a, u0b, u1a, u1b):
+        """(list of boxes the cell may meet, index of a box it certainly lies inside or None) for
+        the u-space cell [u0a,u0b]x[u1a,u1b] (Fractions, container units), EXACTLY: the cell's image
+        is the convex hull of its four rotated corners, and a convex set lies inside / meets an
+        axis-parallel box iff its bounding box does / does."""
+        xs = []; ys = []
+        for u0, u1 in ((u0a, u1a), (u0b, u1a), (u0a, u1b), (u0b, u1b)):
+            xs.append(c*u0 - sn*u1); ys.append(sn*u0 + c*u1)
+        x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
+        may = [j for j, (bx0, bx1, by0, by1) in enumerate(boxes) if x1 >= bx0 and x0 <= bx1 and y1 >= by0 and y0 <= by1]
+        inside = next((j for j, (bx0, bx1, by0, by1) in enumerate(boxes) if x0 >= bx0 and x1 <= bx1 and y0 >= by0 and y1 <= by1), None)
+        return may, inside
+    def required(may, inside):
+        # no contact -> 0; entirely inside box j -> lam_j; straddling -> max over the boxes met of max(lam_j, 0)
+        if not may: return 0
+        if inside is not None: return lams[inside]
+        return max(max(lams[j], 0) for j in may)
     if L == U:                      # a single admissible centre: evaluate f there directly
         u0, u1 = poly[0]
         tot = sum(w for q0, q1, w in Q if abs(q0 - u0) <= h and abs(q1 - u1) <= h)
-        return k, tot, (u0, u1)
+        may, inside = cell_flags(u0, u0, u1, u1)
+        return k, tot - required(may, inside), (u0, u1)
     # one common denominator for the whole bin -> integer sweep
     den = 1
-    for v in [h] + [q[0] for q in Q] + [q[1] for q in Q] + [p[0] for p in poly] + [p[1] for p in poly]:
+    for v in [h] + [q[0] for q in Q] + [q[1] for q in Q] + [p[0] for p in poly] + [p[0] for bp in bpolys for p in bp] + [p[1] for bp in bpolys for p in bp]:
+        den = lcm(den, v.denominator)
+    for v in [p[1] for p in poly]:
         den = lcm(den, v.denominator)
     def I(v):
         v = v * den; assert v.denominator == 1; return v.numerator
@@ -136,6 +192,7 @@ def min_cover_bin(k):
     atoms = sorted((I(q0), I(q1), w) for q0, q1, w in Q)
     qx = [t[0] for t in atoms]
     V = [(I(px), I(py)) for px, py in poly]
+    BV = [[(I(px), I(py)) for px, py in bp] for bp in bpolys]
     px0 = min(p[0] for p in V); px1 = max(p[0] for p in V)
     bx = sorted(set([x - H for x in qx] + [x + H for x in qx] + [px0, px1]))
     best = None; wit = None
@@ -146,8 +203,25 @@ def min_cover_bin(k):
         i0 = bisect_left(qx, b - H); i1 = bisect_right(qx, a + H)
         ylo, yhi = yrange_over_strip(V, a, b)
         assert ylo < yhi
+        # u1-bands where the strip meets a corner box (integer units); cells outside all bands
+        # cannot meet the region
+        bands = []
+        for bv in BV:
+            bpx0 = min(p[0] for p in bv); bpx1 = max(p[0] for p in bv)
+            if b <= bpx0 or a >= bpx1: continue
+            lo, hi = yrange_over_strip(bv, max(a, bpx0), min(b, bpx1))
+            bands.append((lo, hi))
+        def flags(cl, dl):
+            """flags of the cell [a,b] x [max(cl,ylo), min(dl,yhi)] (a superset of its admissible part)"""
+            cl = max(cl, ylo); dl = min(dl, yhi)
+            if not any(dl >= lo and cl <= hi for lo, hi in bands): return [], None
+            return cell_flags(F(a, den), F(b, den), F(cl, den), F(dl, den))
         if i1 <= i0:
-            return k, 0, (F(a + b, 2*den), (ylo + yhi) / (2*den))   # nothing covered in this strip
+            v = 0 - required(*flags(ylo, yhi))
+            if v < WD:
+                return k, v, (F(a + b, 2*den), (ylo + yhi) / (2*den))   # nothing covered in this strip
+            if best is None or v < best: best = v; wit = (F(a + b, 2*den), (ylo + yhi) / (2*den))
+            continue
         ys = sorted((atoms[i][1], atoms[i][2]) for i in range(i0, i1))
         yv = [t[0] for t in ys]
         pre = [0]
@@ -159,12 +233,18 @@ def min_cover_bin(k):
         j_end = bisect_left(by, yhi) - 1
         for j in range(j_start, j_end + 1):
             if j < 0 or j >= len(by) - 1:
-                return k, 0, (F(a + b, 2*den), (ylo + yhi) / (2*den))   # beyond every atom's window
+                cl = ylo if j < 0 else by[j]; dl = by[0] if j < 0 else yhi
+                v = 0 - required(*flags(cl, dl))
+                if v < WD:
+                    return k, v, (F(a + b, 2*den), (ylo + yhi) / (2*den))   # beyond every atom's window
+                if best is None or v < best: best = v; wit = (F(a + b, 2*den), (ylo + yhi) / (2*den))
+                continue
             cl, dl = by[j], by[j+1]
             k0 = bisect_left(yv, dl - H); k1 = bisect_right(yv, cl + H)
             tot = pre[k1] - pre[k0] if k1 > k0 else 0
-            if best is None or tot < best:
-                best = tot
+            v = tot - required(*flags(cl, dl))
+            if best is None or v < best:
+                best = v
                 wit = (F(a + b, 2*den), F(max(cl, ylo) + min(dl, yhi), 2*den))
     assert best is not None
     return k, best, wit
@@ -188,15 +268,24 @@ def main():
     stride = 1 if args.all else args.stride
     assert stride >= 1 and args.N >= 3
 
-    s, D, WD, A = load(args.cert)
+    s, D, WD, A, region = load(args.cert)
     tot = sum(a[2] for a in A)
     print(f"certificate {args.cert}:  s={s}={float(s):.6f}  atoms={len(A)}  total weight={F(tot, WD)}={tot/WD:.7f}")
+    kdot = region['kdot'] if region else 0
+    kk = region['ktot'] if region else 0
+    if region:
+        if region['single']:
+            print(f"BRANCH certificate: corner boxes [0,{region['r']}]^2 and images, lambda={F(region['lam'][0], WD)}={region['lam'][0]/WD:+.7f}, k={kk}; "
+                  f"total - lambda*k = {F(tot - kdot, WD)} = {(tot - kdot)/WD:.7f}")
+        else:
+            print(f"BRANCH certificate: corner boxes [0,{region['r']}]^2 and images, PER BOX lambda={[l/WD for l in region['lam']]}, k={region['k']}; "
+                  f"total - sum lambda_j k_j = {F(tot - kdot, WD)} = {(tot - kdot)/WD:.7f}")
     weight_ok = True
     if args.n is not None:
-        weight_ok = tot < args.n * WD
-        print(f"total weight < n={args.n}: {'yes' if weight_ok else 'NO'}")
+        weight_ok = tot - kdot < args.n * WD
+        print(f"total{' - lambda.k' if region else ''} < n={args.n}: {'yes' if weight_ok else 'NO'}")
     sD = s * D; assert sD.denominator == 1, "s*D must be an integer"
-    sym = d4_symmetric(A, int(sD))
+    sym = d4_symmetric(A, int(sD)) and (region is None or len(set(region['lam'])) == 1)   # unequal per-box lambdas break the symmetry of the claim
     N = args.N
     if sym:
         K = 0
@@ -208,7 +297,7 @@ def main():
     ks = list(range(0, K, stride))
     exhaustive = (stride == 1)
     print(f"{'EXHAUSTIVE' if exhaustive else 'SAMPLED'}: checking {len(ks)} of {K} bins with {args.jobs} worker(s)")
-    G.update(N=N, s=s, D=D, A=A)
+    G.update(N=N, s=s, D=D, A=A, WD=WD, region=region)
 
     t0 = time.time()
     res = []
@@ -237,12 +326,16 @@ def main():
     if worst is None:
         print("no admissible placements at all (container smaller than a unit square)")
         worst = 0
-    print(f"minimum covered weight over {'ALL' if exhaustive else 'SAMPLED'} bins = {F(worst, WD)} = {worst/WD:.7f}   (at bin k={worst_k})")
+    print(f"minimum covered weight{' minus region threshold' if region else ''} over {'ALL' if exhaustive else 'SAMPLED'} bins = {F(worst, WD)} = {worst/WD:.7f}   (at bin k={worst_k})")
     ok = worst >= WD and weight_ok
     if ok:
         qual = "" if exhaustive else "  (sampled bins only -- not a proof)"
         nn = f", and total weight < {args.n}" if args.n is not None else " (total weight vs n not checked: pass --n)"
-        print(f"VERIFIED: every closed unit square inside [0,{s}]^2 covers weight >= 1{nn}{qual}")
+        if region:
+            ktxt = str(kk) if region['single'] else "".join(str(v) for v in region['k'])
+            print(f"VERIFIED: (branch k={ktxt}) every closed unit square inside [0,{s}]^2 centred in corner box j covers weight >= 1 + lambda_j, every other one >= 1{nn.replace('total weight', 'total - lambda.k')}{qual}")
+        else:
+            print(f"VERIFIED: every closed unit square inside [0,{s}]^2 covers weight >= 1{nn}{qual}")
     else:
         print("NOT VERIFIED")
     sys.exit(0 if ok else 1)

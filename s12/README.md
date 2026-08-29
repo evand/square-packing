@@ -135,6 +135,27 @@ Separately, an extensive search for a packing of 12 unit squares into a square o
 (L-BFGS + basin hopping, validated by reproducing `s(5)`, `s(10)`, `s(11)` to 5 decimals) found
 nothing below 4; every run collapsed to the compressed 4×4 grid.  Code in `search/pack_src/`.
 
+## Beyond the ceiling: branch certificates (2026-08-28)
+
+The first step past the pure method is now built and measured (`search/BRANCH.md`).  A **branch
+certificate** carries a region — the four corner boxes `[0,r]²` — a multiplier `λ` (or one per
+box) and an occupancy count `k`, and asserts that squares centred in a box capture `≥ 1 + λ`,
+all others `≥ 1`, with `W − λk < 12`; it then refutes every packing with exactly `k` squares
+centred in the boxes, and the five (or, per box, sixteen) leaves together refute all of them.
+The format is in `certificates/FORMAT.md`, the verifier and `xcheck.py` check it exactly, the
+reduction is in Lean (`packing_le_weight_region`, `packing_le_weight_regions`), and
+`search/branch.py` produces the certificates with the verifier as separation oracle.
+
+What it gave at `s = 3.98`, where the pure cover costs ≈ 12.02: the leaves `k = 0, 1, 2` close
+with room (`certificates/branch/`, verified; `verify_branch.sh`), the mixed leaf closes with
+per-box multipliers (11.97), but the **all-corners leaf is exactly 12** — its LP endpoint is a
+grid cover with dyadic weights whose dual is a fractional packing of mass exactly 12 with a
+full unit in each corner.  So once the corners are full the relaxation is already integral
+there, and the whole LP gap sits with the eight non-corner squares.  Corner branching alone
+therefore cannot beat the pure ceiling (≈ 3.975–3.98) by more than about 0.005; the next level
+is wall-strip occupancy, for which the loop needs a faster LP first.  Pure covers, for the
+record: `COVER(3.99) = 12.2009` (converged), `COVER(3.98) ≈ 12.02`, `COVER(3.975) ≈ 11.96`.
+
 ## Credits and prior art
 
 The unavoidable-point-set method is due to Göbel, and was developed by Stromquist, Friedman,
