@@ -74,16 +74,28 @@ cliques.  Consequences:
 * On the packing side the honest computation is the ladder above with explicit (zero-width) cuts on
   a fixed pose set, then refinement.
 
-## Results
+## Results (partial; runs still going are marked *)
 
-(filled in as the runs finish; `runs/cc_C99.log`, `cc_C995.log`, `cc_C40.log`, `cc_L98.log`)
+Stage value = LP mass on the fixed pose set when the inner loop stopped; "conv" = no violated
+vertex and max clique `<= 1 + 1e-5` (a feasible measure), otherwise the residual max clique is
+given (more cuts would lower the value further).  One core per run; the first attempts
+(`cc_C99`, `cc_C40`, `cc_C995`, `cc_L98`) ran with a 150-iteration inner cap and lost to a solver
+failure or a bookkeeping bug at a stage boundary; the `b`/`c`/`d` runs restart from the previous
+run's last support with the fixes and a 400-iteration cap.
 
-| t | mode | stage values (fixed poses, cuts converged) | last pricing gap | certified exact mass | max clique / M (exact) |
-|---|---|---|---|---|---|
-| 3.99 | pure | | | | |
-| 3.995 | pure | | | | |
-| 4.00 | pure, closed | | | | |
-| 3.98 | leaf `k = 4`, `r = 1` | | | | |
+| t | mode | poses → stage value | certified exact mass | notes |
+|---|---|---|---|---|
+| 3.99 | pure | 172 → 11.205 (mc 1.03); 468 → 11.211 (mc 1.07); **314 → 11.191 conv; 613 → 11.191 conv; 912 → 11.364 conv**; 1029 → 11.374 (mc 1.045); 1170 → 11.374 (mc 1.018); * | **11.363636358** (= 125/11 − 6e-9; `runs/cc_C99c_exact.txt`, re-checked by `--check`: 11 poses, 88 images, M = 1, max clique = 1, both exact) | pure `L(3.99) = 12.008` |
+| 3.995 | pure | 245 → 11.58 (mc 1.13); 432 → 11.366 (mc 1.034); 728 → 11.481 (mc 1.075); * | 9.914 (scaled; the best measure was not clique-converged) | pure `L(3.995)` between 12.008 and 12.163 |
+| 4.00 | pure, closed | 384 → 11.883 (mc 1.16); 542 → 11.950 (mc 1.20); 650 → 12.042 (mc 1.19); 726 → 12.132 (mc 1.20; M 1.037); * (new-code ladder from the 726-pose support running) | — | pure `L(4.00) = 12.163`; all four stages hit the 150-cap, none converged |
+| 3.98 | leaf `k = 4`, `r = 1` | 1206 → 11.744 (mc 1.18); 1302 → 11.651 (mc 1.12); * | — | leaf value without cliques `12.000 ± 0.001` |
+
+**The certified measure at 3.99** (mass 125/11): corners **4.000** (the pose `(0.5, 0.5, 0°)`, one
+full square per corner), the eight wall slots **4.000** (3.273 on `(0.5, 1.5, 0°)`, 0.727 on
+`(0.56, 2.08, 7.5°)`), and **3.364** in the interior on seven tilted poses (0.09–0.55 each, 8.4°–37°,
+centred 1.2–1.7 from the walls).  Against the pure measure at the same `t` (corners 3.40, walls
+~4.3, interior ~4.3) the clique constraints have made the frame integral and cut the interior by
+about one unit; the residual excess over 11 is 0.36 and it is entirely interior.
 
 Reference (pure point-LP, certified): `L(3.99) = 12.0082`, `L(4.00) = 12.163`; corner leaf `k = 4`
 at 3.98 `= 12.000 +- 0.001` (`DUAL_EXACT.md`, `DUAL.md`, `CLIQUE.md`).
