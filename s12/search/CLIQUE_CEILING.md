@@ -54,7 +54,8 @@ centres, exactly admissible; coverage at every arrangement vertex in exact integ
 (`dual_exact.py`, generalised to any rational `t`); closed intersection of every pair of images in
 integers (SAT on integer corner coordinates, `<=`); the maximum clique mass by branch and bound on
 **integer** masses; masses rounded down and scaled so that both maxima are `<= 1` exactly.  In leaf
-mode the rows carry a `1e-6` margin and the corner mass is adjusted to exactly `k` after rounding.
+mode the corner mass is topped up to exactly `k` after rounding (a `--margin` on the rows makes the
+corner-mass-4 LP infeasible, so the runs used margin 0 and the top-up is checked exactly).
 
 ## A structural finding: the excess is carried by grazing contacts
 
