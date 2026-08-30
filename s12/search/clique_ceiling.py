@@ -216,8 +216,12 @@ class CModel(PD.Model):
         Aeq = beq = None
         if self.kmass is not None:
             Aeq = sp.csr_matrix(self.flags().astype(float).reshape(1, -1)); beq = [self.kmass]
-        res = linprog(c=-np.ones(n), A_ub=A, b_ub=b, A_eq=Aeq, b_eq=beq, bounds=(0, None), method='highs',
-                      options={'primal_feasibility_tolerance': 1e-9, 'dual_feasibility_tolerance': 1e-9})
+        res = None
+        for meth, opts in (('highs', {'primal_feasibility_tolerance': 1e-9, 'dual_feasibility_tolerance': 1e-9}),
+                           ('highs-ds', {}), ('highs-ipm', {})):
+            res = linprog(c=-np.ones(n), A_ub=A, b_ub=b, A_eq=Aeq, b_eq=beq, bounds=(0, None), method=meth, options=opts)
+            if res.success: break
+            self.log(f"   [LP {meth} failed: status {res.status} {res.message}]")
         if not res.success: return None
         mu = np.maximum(res.x, 0.0); yz = np.maximum(-res.ineqlin.marginals, 0.0)
         y = yz[:m]; self.z = yz[m:]
@@ -344,7 +348,12 @@ def price_columns(m, a, lib, y, mu, angs, t, log):
             for (cx, cy, th, v), c in zip(allc, cc)]
     allc.sort(key=lambda r: r[3]); rmin = allc[0][3]
     newc = [(cx, cy, th) for cx, cy, th, v in allc if v < 1.0 - a.price_tol][:a.cg_want]
-    ncol = m.add_poses(newc)
+    n0 = len(m.poses); ncol = m.add_poses(newc)
+    # rows for the new columns (row ageing may have dropped every row inside them -> unbounded LP):
+    # the seed grid again, plus the centres and corners of the new squares
+    m.add_points(PD.seed_points(t, a.row_pitch))
+    if ncol:
+        m.add_points(np.array([(cx, cy) for cx, cy, th in m.poses[n0:]])); m.add_points(PD.corners(m.poses[n0:], t))
     log(f"   pricing: candidates {len(allc)} improving {sum(1 for r in allc if r[3] < 1 - a.price_tol)} min reduced cost {rmin:.6f} verifier min {vmin} | +cols {ncol}")
     return ncol, rmin, vmin
 
@@ -376,11 +385,12 @@ def main_loop(a):
         if out is not None: mu, y, _ = out
         nsup = int((mu > 1e-12).sum())
         write_support(m, mu, y, t, tag + '_last', mass, M, kmax, stage)
-        if Lf > best['L'] and kmax <= 1 + a.ktol and M <= 1 + 1e-6:
+        if Lf > best['L']:
             best = dict(L=Lf, mass=mass, M=M, kmax=kmax, stage=stage, support=nsup); write_support(m, mu, y, t, tag, mass, M, kmax, stage)
+        cm = float(mu[m.flags()].sum()) if a.kmass is not None else None
         ncol, rmin, vmin = price_columns(m, a, lib, y, mu, angs, t, log)
         rec = dict(stage=stage, t=time.time() - T0, mass=mass, M=M, kmax=kmax, Lf=Lf, inner_its=its, support=nsup, cols=len(m.poses), rows=len(m.pts),
-                   cuts=len(m.cuts), new_cols=ncol, rmin=rmin, vmin=vmin, lam=m.lam, corner=(float(mu[m.flags()].sum()) if a.kmass is not None else None))
+                   cuts=len(m.cuts), new_cols=ncol, rmin=rmin, vmin=vmin, lam=m.lam, corner=cm)
         hist.append(rec)
         log(f"STAGE {stage}: value {Lf:.6f} (LP {mass:.6f}, M {M:.6f}, maxclique {kmax:.6f}) cols {len(m.poses)} cuts {len(m.cuts)} min reduced cost {rmin} +cols {ncol}")
         json.dump(dict(t=t, tag=tag, args=vars(a), best=best, hist=hist), open(os.path.join(RUNS, f'cc_{tag}.json'), 'w'), indent=1)
@@ -584,9 +594,19 @@ def main():
     ap.add_argument('--exact', action='store_true'); ap.add_argument('--exact-rounds', type=int, default=40)
     ap.add_argument('--Q', type=int, default=100000); ap.add_argument('--Dc', type=int, default=1000000); ap.add_argument('--DM', type=int, default=10 ** 9); ap.add_argument('--procs', type=int, default=4)
     ap.add_argument('--check', default=None, help='exact support file to re-check (no search)'); ap.add_argument('--full', action='store_true')
+    ap.add_argument('--certify-from', default=None, help='float support file (cc_*_support.txt) to certify exactly, no search')
     a = ap.parse_args()
     sys.set_int_max_str_digits(0)
     if a.check: return cmd_check(a)
+    if a.certify_from:                        # exact certification of an existing float support file, no search
+        import shutil; os.makedirs(RUNS, exist_ok=True)
+        shutil.copy(a.certify_from, os.path.join(RUNS, f'cc_{a.TAG}_support.txt'))
+        lf = open(os.path.join(RUNS, f'cc_{a.TAG}.log'), 'a')
+        def log(msg):
+            print(msg, flush=True); lf.write(msg + '\n'); lf.flush()
+        res = exact_certify(a, None, log)
+        json.dump(dict(t=a.T, tag=a.TAG, certify_from=a.certify_from, exact=res), open(os.path.join(RUNS, f'cc_{a.TAG}.json'), 'w'), indent=1)
+        return
     m, best, log = main_loop(a)
     if a.exact and best['L'] > 0:
         res = exact_certify(a, m, log)
