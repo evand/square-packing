@@ -52,7 +52,7 @@ try:
 except ImportError:
     highspy = None
     if SOLVER == 'warm': SOLVER = 'highs'
-LAM_LO, LAM_HI = -1.0, 1.5   # the LP has a free direction (corner-only atoms up, lambda up); the cap keeps certificates sane
+LAM_LO, LAM_HI = -1.0, 1.5   # the LP has a free direction (corner-only atoms up, lambda up); the cap keeps certificates sane (--lam-hi overrides; the k = 4 leaf sits at the cap)
 
 
 class BModel(T.Model):
@@ -330,6 +330,17 @@ def price_asym(m, y, pitch=0.02, want=200, ysup=1e-9):
     return cand
 
 
+def dump_dual(m, y, lam, val, path, thr=1e-9):
+    """the LP dual at this round as a fractional packing: one line per row with y > thr,
+    `cx cy theta h flag y`.  For a symmetric model the measure is y/8 on each D4 image of the
+    pose (total mass sum(y) = LP value), its coverage is <= 1 at every column point."""
+    with open(path + ".tmp", 'w') as f:
+        f.write(f"# s={m.K}/{m.D} value={val:.9f} lambda={' '.join(f'{l:.7f}' for l in lam)} k={m.kvec} sym={int(m.sym)} mass={float(np.sum(y)):.9f} mass_in_R={float(sum(v for v, fl in zip(y, m.rflag) if fl)):.9f}\n")
+        for (cx, cy, tm, h), fl, v in zip(m.rows, m.rflag, y):
+            if v > thr: f.write(f"{cx:.9f} {cy:.9f} {tm:.9f} {h:.7f} {fl} {v:.9e}\n")
+    os.replace(path + ".tmp", path)
+
+
 def save_cols(m, path):
     """all integer points of the model (one representative per orbit; the D4 images are implied for
     symmetric models), so that a later run can start from the same column set (--cols)"""
@@ -369,6 +380,7 @@ def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe
         if out is None:
             log(f"  it{it} LP infeasible/failed (rows={len(m.rows)})"); return None, None, None, dict(status='infeasible')
         val, x, lam, y = out; tw = float(m.sizes @ x)
+        dump_dual(m, y, lam, val, f"runs/branch_{tag}_dual.txt")
         export(m, x, lam, tmp, WD=10 ** 12, factor=1.0 / (1.0 + probe_margin), up=False)
         t1 = time.time(); mv, ok = T.run_verifier(tmp, N, topk=topk, sep=sep, n=n, threads=threads or T.NPROC); t_ver = time.time() - t1
         wit = read_witnesses(sep, N) if os.path.exists(sep) else []
@@ -423,7 +435,7 @@ def finalize(m, x, lam, tag, out_path, N=6000, log=print, WD=10 ** 7, margin=2e-
 
 
 def run(cert, tag, kreg, r, Dp=None, mul=1, N=6000, topk=6, margin=2e-6, log=print, warm=True, out=None,
-        colgen=0, cg_want=200, cg_pitch=0.01, n=12, threads=None, cols=None, warm_thr=1.05, prune_at=None, row_grid=None):
+        colgen=0, cg_want=200, cg_pitch=0.01, n=12, threads=None, cols=None, warm_thr=1.05, prune_at=None, row_grid=None, max_iters=None):
     m, w0, s = build_model(cert, r, kreg, Dp, mul)
     if row_grid: m.row_grid = tuple(row_grid)
     log(f"[{tag}] {cert}: {len(m.orbits)} columns / {len(m.P)} atoms ({'D4 orbits' if m.sym else 'single points'}), container {s} = {float(s):.7f}, r = {m.rfrac} = {m.r:.4f}, k = {kreg}, input total {float(m.sizes @ w0):.6f}")
@@ -433,8 +445,12 @@ def run(cert, tag, kreg, r, Dp=None, mul=1, N=6000, topk=6, margin=2e-6, log=pri
         m.add_rows(lr); log(f"[{tag}] warm start: {len(m.rows)} lattice rows (capture < {warm_thr} under the input weights), {sum(1 for f in m.rflag if f)} in boxes ({time.time()-t0:.0f}s)")
     for cf in (cols or []):
         nc = load_cols(m, cf); log(f"[{tag}] columns from {cf}: +{nc} -> {len(m.orbits)} columns")
-    x, lam, val, info = loop(m, tag, margin=margin, N=N, topk=topk, log=log, colgen=colgen, cg_want=cg_want, cg_pitch=cg_pitch, n=n, threads=threads, prune_at=prune_at)
+    x, lam, val, info = loop(m, tag, margin=margin, N=N, topk=topk, log=log, colgen=colgen, cg_want=cg_want, cg_pitch=cg_pitch, n=n, threads=threads, prune_at=prune_at,
+                             max_iters=max_iters if max_iters is not None else 400)
     if x is None: log(f"[{tag}] FAILED"); return None
+    if max_iters is not None:
+        log(f"[{tag}] stopped after {info.get('iters')} rounds (--max-iters): LP value {val:.7f}, dual in runs/branch_{tag}_dual.txt; no finalize")
+        return None
     out = out or f"runs/branch_{tag}.txt"
     res = finalize(m, x, lam, tag, out, N=N, log=log, margin=margin, n=n, threads=threads)
     if res is None: log(f"[{tag}] finalize FAILED"); return None
@@ -460,8 +476,12 @@ def main():
     ap.add_argument('--cols', action='append', default=None, help='column checkpoint file(s) (runs/branch_TAG_cols.txt) whose points are added as columns')
     ap.add_argument('--warm-thr', type=float, default=1.05, help='warm start with lattice poses capturing < this under the input weights (use ~3 when restarting from a converged probe)')
     ap.add_argument('--prune-at', type=int, default=None, help='prune the row set when it exceeds this (default 40000 symmetric / 60000 asymmetric; asymmetric leaves converge better unpruned)')
+    ap.add_argument('--lam-hi', type=float, default=None, help='upper bound on the multipliers (default 1.5; the k = 4 leaf sits at the cap, so a higher cap can only lower its value)')
+    ap.add_argument('--max-iters', type=int, default=None, help='stop the cutting-plane loop after this many rounds and skip finalize (diagnostic runs: the dual of every round is in runs/branch_TAG_dual.txt)')
     ap.add_argument('--row-grid', type=float, nargs=2, default=None, metavar=('POS', 'ANG'), help='merge rows whose centre/angle agree to this resolution (default 1e-7 1e-8; e.g. 0.002 0.005 keeps the LP small)')
     a = ap.parse_args()
+    global LAM_HI
+    if a.lam_hi is not None: LAM_HI = float(a.lam_hi)
     r = Fraction(a.r); assert (2 * r - 1) ** 2 < 2, "r too large: (2r-1)^2 < 2 needed"
     kreg = parse_k(a.k)
     T.HIGHS['random_seed'] = a.seed
@@ -471,7 +491,7 @@ def main():
         print(msg, flush=True); lf.write(msg + '\n'); lf.flush()
     log(f"branch.py {' '.join(sys.argv[1:])}")
     res = run(a.cert, a.tag, kreg, r, Dp=a.Dp, mul=a.mul, N=a.N, topk=a.topk, margin=a.margin, log=log, warm=not a.no_warm, out=a.out,
-              colgen=a.colgen, cg_want=a.cg_want, cg_pitch=a.cg_pitch, n=a.n, threads=a.threads, cols=a.cols, warm_thr=a.warm_thr, prune_at=a.prune_at, row_grid=a.row_grid)
+              colgen=a.colgen, cg_want=a.cg_want, cg_pitch=a.cg_pitch, n=a.n, threads=a.threads, cols=a.cols, warm_thr=a.warm_thr, prune_at=a.prune_at, row_grid=a.row_grid, max_iters=a.max_iters)
     if res: json.dump(res, open(f"runs/branch_{a.tag}.json", 'w'), indent=1)
 
 

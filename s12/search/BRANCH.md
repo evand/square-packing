@@ -4,7 +4,12 @@ Code: `search/branch.py` (LP with one Lagrange multiplier), `verify/` (region tr
 `xcheck.py` (exact re-check), `lean/Sqpack/Basic.lean` (`packing_le_weight_region`),
 `tests/rejection_tests.sh` (nine trailer tests), `certificates/FORMAT.md` ("Branch certificates").
 Status 2026-08-28: **method built and verified end to end (single and per-box multipliers); it
-does not close `s = 3.99`, and at `s = 3.98` the all-corners leaf is exactly 12** — see the tables.  Everything numeric below is a cutting-plane LP
+does not close `s = 3.99`, and at `s = 3.98` the all-corners leaf is exactly 12** — see the tables.
+**Correction 2026-08-29 (`search/CLIQUE.md`): the `k = 4` statement is withdrawn.**  Those loops never
+produced a valid cover (probe minimum 0.27–0.94 in all 31 rounds; the verifier's value is
+`covered − λ·[box]` with pass `≥ 1`), the `12·(1+margin)` value is the LP cycling on a pruned row set,
+the 80-point dyadic cover fails coverage by 0.75, and its dual was never certified.  The leaf is
+open in both directions; clean unpruned runs are in progress.  Everything numeric below is a cutting-plane LP
 value that can only *rise* as the loop continues (rows are added; column generation is priced
 out to 1–3 %), so an unconverged value above 12 is final and one below 12 is not.
 
