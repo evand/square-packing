@@ -79,7 +79,24 @@ def load(path):
     A = [(int(t[5+3*i]), int(t[6+3*i]), int(t[7+3*i])) for i in range(m)]
     assert all(w >= 0 for _, _, w in A), "weights must be non-negative"
     rest = t[5 + 3*m:]
-    region = None
+    region = None; cliques = None
+    if rest and rest[0] == "cliques":
+        # `cliques N Q c`, then per clique `w b` and b box lines `k U0LO U0HI U1LO U1HI`
+        N_cl, Q, c = int(rest[1]), int(rest[2]), int(rest[3])
+        assert N_cl >= 3 and Q > 0 and c >= 0, "clique block: N >= 3, Q > 0, c >= 0 required"
+        pos = 4; ws = []; boxes = []
+        for ci in range(c):
+            w, nb = int(rest[pos]), int(rest[pos + 1]); pos += 2
+            assert w >= 0, "clique weights must be non-negative"
+            assert nb >= 1, "a clique needs at least one box"
+            ws.append(w)
+            for _ in range(nb):
+                k, lo0, hi0, lo1, hi1 = (int(v) for v in rest[pos:pos + 5]); pos += 5
+                assert 0 <= k < N_cl, "box bin k must satisfy 0 <= k < N"
+                assert lo0 <= hi0 and lo1 <= hi1, "box rectangle has LO > HI"
+                boxes.append((ci, k, lo0, hi0, lo1, hi1))
+        cliques = dict(N=N_cl, Q=Q, w=ws, boxes=boxes)
+        rest = rest[pos:]
     if rest:
         # `region corner r_num r_den / lambda L [L2 L3 L4] / k K [K2 K3 K4]`
         assert len(rest) >= 8 and rest[0] == "region" and rest[1] == "corner" and rest[4] == "lambda" and "k" in rest[5:], \
@@ -96,7 +113,52 @@ def load(path):
             region = dict(r=r, lam=lams, k=ks, kdot=sum(l*k for l, k in zip(lams, ks)), single=False, ktot=sum(ks))
         else:
             raise AssertionError("region trailer: 1 or 4 lambda values and as many k values expected")
-    return F(sn, sd), D, WD, A, region
+    return F(sn, sd), D, WD, A, region, cliques
+
+def box_core(box, Q, N):
+    """EXACT core of a box (FORMAT.md, 'Clique certificates'): in the frame of its bin k, every
+    unit square with a pose in the box contains the axis-parallel rectangle
+    [hi0 - h, lo0 + h] x [hi1 - h, lo1 + h], h = sigma_k / 2 with the exact (unrounded) sigma_k.
+    Returns ((lo0, hi0, lo1, hi1) as Fractions, (cos, sin) of theta_k)."""
+    _, k, lo0, hi0, lo1, hi1 = box
+    c, sn, sigma, _ = bin_params(k, N)
+    h = sigma / 2
+    core = (F(hi0, Q) - h, F(lo0, Q) + h, F(hi1, Q) - h, F(lo1, Q) + h)
+    return core, (c, sn)
+
+def cores_meet(ca, ra, cb, rb):
+    """do two cores (closed rectangles, each axis-parallel in its own bin's frame) intersect?
+    Exact separating-axis test: two convex polygons are disjoint iff an edge normal separates
+    them; here the four edge normals are the axes of the two frames."""
+    def project_onto(core, rot, rot_axes):
+        # corners of `core` (frame `rot`) expressed in the frame `rot_axes`: u' = R(theta - theta') u
+        (c, s), (c2, s2) = rot, rot_axes
+        cc = c * c2 + s * s2; ss = s * c2 - c * s2          # cos, sin of (theta - theta')
+        p0 = []; p1 = []
+        for u0 in (core[0], core[1]):
+            for u1 in (core[2], core[3]):
+                p0.append(cc * u0 - ss * u1); p1.append(ss * u0 + cc * u1)
+        return (min(p0), max(p0)), (min(p1), max(p1))
+    for (x, rx), (y, ry) in (((ca, ra), (cb, rb)), ((cb, rb), (ca, ra))):
+        (q0lo, q0hi), (q1lo, q1hi) = project_onto(x, rx, ry)
+        if q0hi < y[0] or y[1] < q0lo or q1hi < y[2] or y[3] < q1lo:
+            return False
+    return True
+
+def check_cliques(cl, N):
+    """refuse (AssertionError) any clique not certified by pairwise core intersection"""
+    assert cl['N'] == N, f"clique block is defined on the net N={cl['N']} but the check runs with N={N}"
+    cores = [box_core(b, cl['Q'], N) for b in cl['boxes']]
+    for i, (core, _) in enumerate(cores):
+        assert core[0] <= core[1] and core[2] <= core[3], f"box {i+1} of clique {cl['boxes'][i][0]+1} has an empty core: not a clique"
+    by_cl = {}
+    for i, b in enumerate(cl['boxes']): by_cl.setdefault(b[0], []).append(i)
+    for cid, idx in by_cl.items():
+        for a in range(len(idx)):
+            for b in range(a, len(idx)):
+                i, j = idx[a], idx[b]
+                assert cores_meet(cores[i][0], cores[i][1], cores[j][0], cores[j][1]), \
+                    f"clique {cid+1}: cores of boxes {a+1} and {b+1} do not meet: not certified to be a clique"
 
 def d4_symmetric(A, sD):
     """exact: is the weighted point multiset invariant under the dihedral group of [0,s]^2 ?"""
@@ -142,8 +204,20 @@ def min_cover_bin(k):
     sigma_k-square at angle theta_k, minus the region's required extra (0 without a trailer).
     Returns (k, min_numerator or None, witness)."""
     N, S, D, A, region = G['N'], G['s'], G['D'], G['A'], G['region']
-    WD = G['WD']
+    WD = G['WD']; cliques = G['cliques']
     c, sn, sigma, wmin = bin_params(k, N)
+    # clique boxes of this bin: (clique id, lo0, hi0, lo1, hi1) over Q, in the frame of bin k
+    cboxes = [(b[0], b[2], b[3], b[4], b[5]) for b in cliques['boxes'] if b[1] == k] if cliques else []
+    Qc = cliques['Q'] if cliques else 1; cw = cliques['w'] if cliques else []
+    def clique_credit(u0a, u0b, u1a, u1b):
+        """weight of the cliques one of whose boxes contains the closed u-space cell (Fractions), each once"""
+        if not cboxes: return 0
+        credit = 0; seen = set()
+        for cid, lo0, hi0, lo1, hi1 in cboxes:
+            if cid in seen: continue
+            if F(lo0, Qc) <= u0a and u0b <= F(hi0, Qc) and F(lo1, Qc) <= u1a and u1b <= F(hi1, Qc):
+                credit += cw[cid]; seen.add(cid)
+        return credit
     h = sigma / 2
     L = wmin / 2; U = S - wmin / 2
     if U < L:
@@ -177,7 +251,7 @@ def min_cover_bin(k):
         return max(max(lams[j], 0) for j in may)
     if L == U:                      # a single admissible centre: evaluate f there directly
         u0, u1 = poly[0]
-        tot = sum(w for q0, q1, w in Q if abs(q0 - u0) <= h and abs(q1 - u1) <= h)
+        tot = sum(w for q0, q1, w in Q if abs(q0 - u0) <= h and abs(q1 - u1) <= h) + clique_credit(u0, u0, u1, u1)
         may, inside = cell_flags(u0, u0, u1, u1)
         return k, tot - required(may, inside), (u0, u1)
     # one common denominator for the whole bin -> integer sweep
@@ -217,7 +291,7 @@ def min_cover_bin(k):
             if not any(dl >= lo and cl <= hi for lo, hi in bands): return [], None
             return cell_flags(F(a, den), F(b, den), F(cl, den), F(dl, den))
         if i1 <= i0:
-            v = 0 - required(*flags(ylo, yhi))
+            v = clique_credit(F(a, den), F(b, den), F(ylo, den), F(yhi, den)) - required(*flags(ylo, yhi))
             if v < WD:
                 return k, v, (F(a + b, 2*den), (ylo + yhi) / (2*den))   # nothing covered in this strip
             if best is None or v < best: best = v; wit = (F(a + b, 2*den), (ylo + yhi) / (2*den))
@@ -234,14 +308,14 @@ def min_cover_bin(k):
         for j in range(j_start, j_end + 1):
             if j < 0 or j >= len(by) - 1:
                 cl = ylo if j < 0 else by[j]; dl = by[0] if j < 0 else yhi
-                v = 0 - required(*flags(cl, dl))
+                v = clique_credit(F(a, den), F(b, den), F(cl, den), F(dl, den)) - required(*flags(cl, dl))
                 if v < WD:
                     return k, v, (F(a + b, 2*den), (ylo + yhi) / (2*den))   # beyond every atom's window
                 if best is None or v < best: best = v; wit = (F(a + b, 2*den), (ylo + yhi) / (2*den))
                 continue
             cl, dl = by[j], by[j+1]
             k0 = bisect_left(yv, dl - H); k1 = bisect_right(yv, cl + H)
-            tot = pre[k1] - pre[k0] if k1 > k0 else 0
+            tot = (pre[k1] - pre[k0] if k1 > k0 else 0) + clique_credit(F(a, den), F(b, den), F(cl, den), F(dl, den))
             v = tot - required(*flags(cl, dl))
             if best is None or v < best:
                 best = v
@@ -268,9 +342,15 @@ def main():
     stride = 1 if args.all else args.stride
     assert stride >= 1 and args.N >= 3
 
-    s, D, WD, A, region = load(args.cert)
+    s, D, WD, A, region, cliques = load(args.cert)
     tot = sum(a[2] for a in A)
-    print(f"certificate {args.cert}:  s={s}={float(s):.6f}  atoms={len(A)}  total weight={F(tot, WD)}={tot/WD:.7f}")
+    if cliques:
+        check_cliques(cliques, args.N)
+        tot_cl = sum(cliques['w'])
+        print(f"CLIQUE certificate: {len(cliques['w'])} cliques, {len(cliques['boxes'])} boxes, net N={cliques['N']}, Q={cliques['Q']}; "
+              f"clique weight {F(tot_cl, WD)}={tot_cl/WD:.7f}; pairwise core intersection checked exactly (exact sigma_k)")
+        tot += tot_cl
+    print(f"certificate {args.cert}:  s={s}={float(s):.6f}  atoms={len(A)}  total weight{' (points + cliques)' if cliques else ''}={F(tot, WD)}={tot/WD:.7f}")
     kdot = region['kdot'] if region else 0
     kk = region['ktot'] if region else 0
     if region:
@@ -286,6 +366,7 @@ def main():
         print(f"total{' - lambda.k' if region else ''} < n={args.n}: {'yes' if weight_ok else 'NO'}")
     sD = s * D; assert sD.denominator == 1, "s*D must be an integer"
     sym = d4_symmetric(A, int(sD)) and (region is None or len(set(region['lam'])) == 1)   # unequal per-box lambdas break the symmetry of the claim
+    sym = sym and cliques is None            # clique boxes are tied to the net: no representable images under the symmetries
     N = args.N
     if sym:
         K = 0
@@ -293,11 +374,11 @@ def main():
         print(f"D4 symmetry of the atom set: OK  -> angles reduce to [0,45deg]: bins k=0..{K-1} (N={N})")
     else:
         K = N                                # theta_N = 90 deg
-        print(f"atom set is NOT D4-symmetric  -> full range [0,90deg): bins k=0..{K-1} (N={N})")
+        print(f"{'clique block present' if cliques else 'atom set is NOT D4-symmetric'}  -> full range [0,90deg): bins k=0..{K-1} (N={N})")
     ks = list(range(0, K, stride))
     exhaustive = (stride == 1)
     print(f"{'EXHAUSTIVE' if exhaustive else 'SAMPLED'}: checking {len(ks)} of {K} bins with {args.jobs} worker(s)")
-    G.update(N=N, s=s, D=D, A=A, WD=WD, region=region)
+    G.update(N=N, s=s, D=D, A=A, WD=WD, region=region, cliques=cliques)
 
     t0 = time.time()
     res = []
@@ -335,7 +416,7 @@ def main():
             ktxt = str(kk) if region['single'] else "".join(str(v) for v in region['k'])
             print(f"VERIFIED: (branch k={ktxt}) every closed unit square inside [0,{s}]^2 centred in corner box j covers weight >= 1 + lambda_j, every other one >= 1{nn.replace('total weight', 'total - lambda.k')}{qual}")
         else:
-            print(f"VERIFIED: every closed unit square inside [0,{s}]^2 covers weight >= 1{nn}{qual}")
+            print(f"VERIFIED: every closed unit square inside [0,{s}]^2 covers weight >= 1{' (points plus cliques)' if cliques else ''}{nn}{qual}")
     else:
         print("NOT VERIFIED")
     sys.exit(0 if ok else 1)

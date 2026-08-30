@@ -291,5 +291,66 @@ check "per-box k=2"                               ERROR   $T/t17f.txt 12
 ( cat "$C"; printf 'region corner 6 5\nlambda 0 0 0 0\nk 1 1 1\n' ) > $T/t17g.txt
 check "four lambdas, three k"                     ERROR   $T/t17g.txt 12
 
+echo "-- clique certificates: the cliques N Q c block (FORMAT.md, 'Clique certificates')"
+# 18. A clique that covers nothing new (one box of bin 0 near the centre, weight 1/5) is harmless:
+#     verifies for n=13 (total 11.4), is reported as a clique certificate, and forces the full
+#     [0,90) sweep whatever the symmetry of the points.
+( cat "$C"; printf 'cliques 2000 1000 1\n1 1\n0 1890 1910 1890 1910\n' ) > $T/t18a.txt
+check "harmless clique, claimed for n=13"          VERIFIED $T/t18a.txt 13
+expect_out "  ...reported as a clique certificate"  "^CLIQUE certificate: 1 cliques with 1 boxes"
+expect_out "  ...swept over [0,90) deg"             "angles cover \[0,90) deg"
+expect_out "  ...total counts the clique (11.4)"    "total weight (points + cliques) = 57/5"
+#     the clique weight counts in the total: 4/5 more makes 12 = n -> weight bound fails
+( cat "$C"; printf 'cliques 2000 1000 1\n4 1\n0 1890 1910 1890 1910\n' ) > $T/t18b.txt
+check "clique weight 4/5: total reaches 12"        REJECT  $T/t18b.txt 12
+expect_out "  ...for the stated reason"             "^WEIGHT NOT"
+#     two boxes whose cores do not meet: not certified to be a clique -> refused
+( cat "$C"; printf 'cliques 2000 1000 1\n1 2\n0 1890 1910 1890 1910\n400 400 420 3000 3020\n' ) > $T/t18c.txt
+check "boxes whose cores do not meet"              ERROR   $T/t18c.txt 13
+#     a box wider than 2h: its own core is empty -> refused
+( cat "$C"; printf 'cliques 2000 1000 1\n1 1\n0 1000 2500 1890 1910\n' ) > $T/t18d.txt
+check "box wider than 2h (empty core)"             ERROR   $T/t18d.txt 13
+#     the block is defined on N=4000 but the verifier runs with N=2000 -> refused
+( cat "$C"; printf 'cliques 4000 1000 1\n1 1\n0 1890 1910 1890 1910\n' ) > $T/t18e.txt
+check "clique block on another N"                  ERROR   $T/t18e.txt 13
+( cat "$C"; printf 'cliques 2000 1000 1\n-1 1\n0 1890 1910 1890 1910\n' ) > $T/t18f.txt
+check "negative clique weight"                     ERROR   $T/t18f.txt 13
+( cat "$C"; printf 'cliques 2000 1000 1\n1 0\n' ) > $T/t18g.txt
+check "clique with no boxes"                       ERROR   $T/t18g.txt 13
+( cat "$C"; printf 'cliques 2000 1000 1\n1 1\n2000 1890 1910 1890 1910\n' ) > $T/t18h.txt
+check "box bin k=N (out of range)"                 ERROR   $T/t18h.txt 13
+( cat "$C"; printf 'cliques 2000 1000 1\n1 1\n0 1910 1890 1890 1910\n' ) > $T/t18i.txt
+check "box rectangle with LO > HI"                 ERROR   $T/t18i.txt 13
+( cat "$C"; printf 'cliques 2000 1000 2\n1 1\n0 1890 1910 1890 1910\n' ) > $T/t18j.txt
+check "two cliques declared, one given"            ERROR   $T/t18j.txt 13
+( cat "$C"; printf 'region corner 6 5\nlambda 0\nk 4\ncliques 2000 1000 1\n1 1\n0 1890 1910 1890 1910\n' ) > $T/t18k.txt
+check "clique block after the region trailer"      ERROR   $T/t18k.txt 13
+( cat "$C"; printf 'cliques 2000 1000 1\n1 1\n0 1890 1910 1890 1910\nregion corner 6 5\nlambda 0\nk 4\n' ) > $T/t18l.txt
+check "clique block, then region trailer"          VERIFIED $T/t18l.txt 13
+expect_out "  ...reported as branch k=4"            "^VERIFIED: (branch k=4)"
+# 19. Clique weight must not leak: the one-point-deleted mutant (t1, REJECT) stays rejected when
+#     a clique of weight 1 sits where nothing fails, and its witnesses all carry flag 0.
+( cat $T/t1.txt; printf 'cliques 2000 1000 1\n5 1\n0 1890 1910 1890 1910\n' ) > $T/t19a.txt
+check "deleted point + clique elsewhere (w=1)"     REJECT  $T/t19a.txt 12 8 $T/t19a.sep
+if python3 - $T/t19a.sep <<'EOF2'
+import sys
+rows = [l.split() for l in open(sys.argv[1]) if l.strip()]
+ok = rows and all(len(q) == 5 and q[4] == '0' for q in rows)
+print("      %d witnesses, all flagged 0: %s" % (len(rows), ok)); sys.exit(0 if ok else 1)
+EOF2
+then ok "  ...witnesses all flagged 0" "yes"; else bad "  ...witnesses all flagged 0" "no" "yes"; fi
+
+# 20. The shipped demonstration certificate (224 points + 8 clique orbits, FORMAT.md): verifies at
+#     its own N; the same file with a box shifted so that the clique's cores no longer meet is
+#     refused; with the cliques' weights set to 0 the points alone still verify (the cliques carry
+#     0.008 of the total and are not load-bearing there -- see search/BOXCLIQUE.md).
+B=certificates/s12_boxclique_demo_3.9318_N2000.txt
+check "shipped box-clique certificate"            VERIFIED "$B" 12
+expect_out "  ...reported with its cliques"         "^CLIQUE certificate: 8 cliques"
+awk 'f && NF==5 && !done {print $1, $2+900000, $3+900000, $4, $5; done=1; next} /^cliques/{f=1} {print}' "$B" > $T/t20a.txt
+check "one box shifted by 0.9 (cores apart)"       ERROR   $T/t20a.txt 12
+awk 'f && NF==2 {print 0, $2; next} /^cliques/{f=1} {print}' "$B" > $T/t20b.txt
+check "clique weights zeroed"                     VERIFIED $T/t20b.txt 12
+
 echo "  ---- $pass passed, $fail failed, $panics panics"
 [ "$fail" -eq 0 ] && [ "$panics" -eq 0 ]
