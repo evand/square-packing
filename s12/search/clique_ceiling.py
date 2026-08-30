@@ -515,7 +515,7 @@ def exact_certify(a, m, log):
     # integerize
     MU = [int(math.floor(float(x) * DM)) for x in mu]
     if flags is not None:
-        S = sum(MU[k] for k in range(nP) if flags[k]); d = a.kmass * DM - S
+        S = sum(MU[k] for k in range(nP) if flags[k]); d = int(round(a.kmass * DM)) - S
         h = max((k for k in range(nP) if flags[k]), key=lambda k: MU[k]); MU[h] += d
         log(f"  leaf: corner mass adjusted by {d}/{DM} on pose {h} to make it exactly {a.kmass}")
     def exact_maxima(MU):
