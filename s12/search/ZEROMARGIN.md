@@ -172,8 +172,15 @@ So the LP cover is *not* fragile at the grid poses: the sampled LP (rows at angl
 is exactly the P1 situation.  Its known failures (`CLOSED4.md`: 0.9927 at `(3.40, 1.42, 76.4°)`)
 are ordinary unconverged rows at 14°/76° near a wall, not zero-margin poses.
 
-The exact checker run on this cover (depth 10, weighted CORE/P1; `--tri` is useless for weights
-`≈ 0.17`) is in `runs/zeromargin_closed4.log` — see the status in `tasks/zero-margin/README.md`.
+The exact checker on this cover (`runs/zeromargin_closed4.log`, depth limit 6, 575 s on 4 cores;
+`--tri` is useless for weights `≈ 0.17`): 111,020 boxes, 24,905 leaves by weighted CORE, 350 by
+P1, 4,459 empty, 28,996 not certified *at that depth* (boxes of side 0.025 × 1.8°, along the
+walls — `cx ≈ 0.5`, `cy ≈ 1.4–1.6`, `θ ≤ 7°` first — where the cover's margin is a few per
+cent and the weight is spread over many points).  A depth-10 run was stopped after an hour: with
+2,000 points the weighted core test costs ~8 ms per box, so this cover needs the float
+pre-filter vectorised (numpy over the point set) before it is a practical oracle — an
+engineering item, not a semantic one.  "Not certified at depth 6" is not a failure of the cover;
+the known failures are the 0.9927 poses above.
 
 **Verdict.**  Rung 2 needs (i) an LP cover at `s = 4` that is a valid cover — the current best
 fails by 0.7 % at tilted wall poses, i.e. the `closed4.py` loop must be run with the exact
