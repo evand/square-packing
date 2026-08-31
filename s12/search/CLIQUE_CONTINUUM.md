@@ -14,12 +14,12 @@ the packing side it cannot be one.**
 
 The headline pair, on the lattice that passes calibration and on one and the same pose set:
 
-    pure LP            12.0115 → 12.0234        (target L(3.99) = 12.008: PASS at every stage)
-    anchor-clique LP   11.8965 → 11.9097        (gain 0.104 – 0.120)
+    pure LP            12.0115 → 12.0245        (target L(3.99) = 12.008: PASS at every stage)
+    anchor-clique LP   11.8965 → 11.9099        (gain 0.104 – 0.120)
 
-over eight stages in which the pose set grows from 558 to 3515 orbits, each stage ending with no
+over nine stages in which the pose set grows from 558 to 3916 orbits, each stage ending with no
 violated anchor clique the separator can find.  The clique value stays pinned at `11.90 ± 0.006`
-across that 6.3× refinement while the pure value on the very same poses climbs — flat, where task
+across that 7.0× refinement while the pure value on the very same poses climbs — flat, where task
 A's unrestricted-clique ladder drifted by `0.26` over a comparable refinement.  The same
 measurement in the `k = 4` corner leaf at `t = 3.98` gives the same gain, `0.103–0.105` (§7a).
 
@@ -152,12 +152,13 @@ across lattices (`runs/cq_A99sw5.log`):
 | `r5` | 2649 | 784 | `12.018611` | `11.901056` | `0.118` | `≈ 1.00` (converged) |
 | `r6` | 3109 | 816 | `12.020539` | `11.903942` | `0.117` | `≈ 1.00` (converged) |
 | `r7` | 3515 | 850 | `12.023412` | `11.909723` | `0.114` | `≈ 1.00` (converged) |
+| `r8` | 3916 | 882 | `12.024525` | `11.909865` | `0.115` | `≈ 1.00` (converged) |
 
 Every pure value clears the calibration target `12.008`, and the certifiable clique family costs
 the LP `0.104–0.120` — **thirteen to fifteen times** the pure method's entire excess over 12 at
-`t = 3.99`.  **The ladder is flat.**  Over these eight stages the pose set grows by a factor of
-**6.3** (558 → 3515 orbits) and the clique value stays pinned at `11.90 ± 0.007`, while the pure
-value on the very same poses climbs from `12.0115` to `12.0234`.  The gap does not close; it
+`t = 3.99`.  **The ladder is flat.**  Over these nine stages the pose set grows by a factor of
+**7.0** (558 → 3916 orbits) and the clique value stays pinned at `11.90 ± 0.007`, while the pure
+value on the very same poses climbs from `12.0115` to `12.0245`.  The gap does not close; it
 widens slightly.  That is the qualitative difference from task A, whose stage values drifted `11.19 → 11.36 →
 11.45` over a comparable pose refinement: A's cuts were explicit lists of poses, so every new
 column arrived outside every cut; these cuts are geometric regions, so a new column that lands
@@ -212,12 +213,26 @@ Consequence, by the duality of `search/CEILING.md`: no weighted unavoidable set 
 `< 12.0281` exists at any container side `>= 3.99` — a slightly larger margin than before on the
 statement that pins the pure method's ceiling.
 
+### An exactly certified anchor-clique-feasible measure
+
+`clique_exact.py` was also run with the cuts on, end to end: snap the anchor run's support to
+rationals, enumerate the arrangement vertices exactly, separate anchor cliques and re-solve until
+none is violated, then round the masses down and re-check everything in integers, with the
+**exact** rational membership test for `K(p, A)` (three-axis SAT in `Fraction`s) rather than the
+LP's float one.  Result (`runs/cqx_A99.log`, `runs/cqx_A99_support.txt`):
+
+    mass    = 595075949/50000000  = 11.901518980
+    M       = 3999999999/4000000000 = 0.999999999750   <= 1
+    37 anchor cuts, exact maximum value 0.999999998250  <= 1
+
+So the float LP value `11.9097` is reproduced exactly at `11.9015` on the snapped poses, with every
+cut verified in exact arithmetic — the pipeline is sound end to end.  As a *bound* this is a lower
+bound on the clique-LP value and therefore decides nothing in the useful direction; it is here as
+validation.
+
 | other exact numbers | value | note |
 |---|---|---|
 | pure LP over the anchor solution's own 77 support poses | `11971698781/1000000000 = 11.971698781`, `M = 3999999999/4000000000` | certified; those poses alone cannot reach 12 |
-
-(Certified *anchor-feasible* measures are lower bounds on the clique-LP value and so decide
-nothing in the useful direction; they are recorded in `runs/cqx_*`.)
 
 ## 4. What the measures say, directly
 
