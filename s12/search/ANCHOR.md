@@ -8,8 +8,6 @@ an LP column and as a certificate block), `search/anchorsep.py` (separation on t
 `search/anchorstress.py` (independent stress test), `search/branch.py` (`--cliques`).
 Mathematics: `notes/clique-family.md`.  Packing-side measurements: `search/CLIQUE_CONTINUUM.md`.
 
-*(status: work in progress — the leaf run of §5 is still going as this is written)*
-
 ## 1. What was built
 
 **The object.**  A certificate may now carry an `anchors` block:
@@ -157,34 +155,104 @@ anchor of every clique it writes, and `certificates/FORMAT.md` records it.
 
 ## 4. The leaf run (`k = 4`, `r = 1`, `t = 3.98`)
 
-Setup: the restart of the main tree's `t398hk4` run — same container `3120320/784000 = 3.98`, same
+Setup: a restart of the main tree's `t398hk4` run — same container `3120320/784000 = 3.98`, same
 corner box `r = 1`, same net `N = 2000`, same margin `2·10⁻⁶`, same column checkpoint
-(`runs/branch_t398hk4_cols.txt`, 6155 orbits) and probe (`runs/branch_t398hk4_probe.txt`), restricted
-master — **plus** anchor-clique columns, seeded from the separation of §3 on that run's converged
-dual and re-priced every round.  The pure run it restarts converged to `12.000024 = 12·(1 + margin)`
-(`search/BRANCH.md`), i.e. exactly 12; that is the number to beat.
+(`runs/branch_t398hk4_cols.txt`, 6155 orbits) and probe, restricted master — **plus** anchor-clique
+columns, seeded from the separation of §3 on that run's converged dual and re-priced every round.
+The pure run it restarts converged to `12.000024 = 12·(1 + margin)`, i.e. exactly 12
+(`search/BRANCH.md`); that is the number to beat.  Every LP value below is a **lower** bound on the
+leaf's value that rises as rows are added and falls as columns are priced in, so an unconverged
+value below 12 proves nothing and one above 12 is not final either.
 
-*(the run is still going; the table below is regenerated from `runs/branch_t398ik4*.log` when it
-stops)*
+The last and longest of the runs (`runs/branch_t398ik4g.log`; `runs/branch_t398ik4[d-h].log` are
+the others):
 
-### What the engineering cost, and two things worth recording
+| round | rows | point cols | clique cols (used) | clique weight | LP value | probe min | best ȳ(K) / ȳ(P_p) | time |
+|---|---|---|---|---|---|---|---|---|
+| `0` | 33,269 | 8322 | 460 (0) | 0 | `2.000016` | −1.500 | 1.0311 / 1.0311 | 0m23s |
+| `1` | 39,269 | 8446 | 520 (7) | 1.0138 | `11.951010` | −0.853 | 1.4715 / 1.4667 | 0m53s |
+| `2` | 45,268 | 8585 | 580 (1) | 2.0000 | `12.000024` | 0.375 | 1.1426 / 1.1364 | 0m38s |
+| `3` | 51,268 | 8679 | 640 (9) | 0.2366 | `12.045093` | 0.884 | 1.1332 / 1.1332 | 1m16s |
+| `4` | 57,265 | 8864 | 700 (11) | 1.0438 | `12.083954` | 0.923 | 1.2081 / 1.2081 | 1m46s |
+| `5` | 62,934 | 9055 | 760 (1) | 4.0000 | `12.000024` | 0.000 | **1.0626 / 1.0082** | 1m24s |
+| `6` | 68,934 | 9238 | 820 (13) | 3.8115 | `11.992229` | 0.498 | 1.0156 / 1.0132 | 3m36s |
+| `7` | 74,934 | 9347 | 880 (14) | 2.8953 | `11.996570` | 0.938 | **1.3366 / 1.0000** | 3m58s |
+| `8` | 75,289 | 9492 | 940 (1) | 4.0000 | `12.000024` | 0.000 | 1.0132 / 1.0132 | 3m12s |
+| `9` | 81,079 | 9687 | 1000 (10) | 1.8342 | `12.342232` | 0.713 | 1.5361 / 1.5361 | 3m21s |
+
+**What it shows.**  The mechanism runs end to end: the LP takes clique columns (up to 14 orbits at
+once, carrying up to `3.8` of the total), the separator keeps finding violated ones, and the two
+rows in bold are the interesting ones — at round 5 the best clique is violated by `+0.063` while the
+worst coverage row is violated by only `+0.008`, and at round 7 by `+0.337` while **no** coverage
+row is violated at all (`ȳ(P_p) = 1.0000`).  That is the non-Helly mass, on the cover side, in a
+running LP.  What it does not show is convergence: the LP value oscillates between `11.95` and
+`12.34` and the probe minimum between `0` and `0.94` as rows accumulate and columns are priced in.
+**No verified certificate of value `< 12` was produced.**
+
+The oscillation is the ordinary behaviour of this loop far from convergence (the pure reference took
+18 rounds of 1–2 h each, its value climbing `11.996 → 12.000024` from below, before it settled); the
+runs here are 10 rounds of 1–4 min from a restarted row set, i.e. an order of magnitude short.
+
+### Two things worth recording from the engineering
 
 * **The verifier became the bottleneck, and then did not.**  With 152 anchor cliques in the probe
   the sweep took `4300` CPU-s against `95` CPU-s for the same 1332-atom file without the block —
-  520 s of a 976 s round.  Three fixes (a division-free per-cell prefilter in the sweep's own
-  units, a fast-accept path for `contains` that tests corners only in a thin band around a piece's
+  520 s of a 976 s round.  Three fixes (a division-free per-cell prefilter in the sweep's own units,
+  a fast-accept path for `contains` that tests corners only in a thin band around a piece's
   boundary, and hoisting the per-cell `Vec`s out of the closure — the last was the largest) brought
-  it to `620` CPU-s with bit-identical results.
+  it to `620` CPU-s with results unchanged wherever they can be compared exactly.
 * **Row pruning cycles when the sweep doubles.**  A certificate with cliques is swept over
-  `[0°, 90°)` instead of `[0°, 45°]`, so with `topk = 6` a round produces 12 000 witnesses instead
-  of 5 000; the row set then hits `prune_at` every round, the prune drops rows whose slack is still
+  `[0°, 90°)` instead of `[0°, 45°]`, so with `topk = 6` a round produces 12,000 witnesses instead
+  of 5,000; the row set then hits `prune_at` every round, the prune drops rows whose slack is still
   large, and they come straight back — `new_rows = 12000` every round against `~1800` in the pure
   reference, and the LP value flat-lined at `11.94` with the probe minimum oscillating between
-  `0.29` and `0.87`.  `--topk 3 --prune-at 250000` restores the reference's row discipline.
+  `0.29` and `0.87` (`runs/branch_t398ik4d.log`).  `--topk 3 --prune-at 250000` restores the
+  reference's row discipline.
 
 ## 5. Verdict
 
-*(to be completed when the run stops)*
+**The object is done and checked; the lever is confirmed on the cover side; the leaf is not
+closed.**
+
+*Done and verified (not heuristic).*  A certificate may now carry anchor cliques; the verifier
+refuses anything Lemma 0 does not certify, credits a cell only when one piece provably holds every
+pose of it, and is bit-identical to the previous binary on every certificate without an anchor
+block (10 checks, plain / witness / `TIGHT_DUMP` modes).  `xcheck.py` re-derives the whole thing in
+`Fraction`s and agrees exactly — `5000011/5000000` against `10000022/10000000` — on an exhaustive
+run over all 6000 bins of the shipped demonstration.  The Lean reduction is machine-checked
+(`clique_of_anchors`, `packing_le_weight_anchor_cliques`, and — a gap the box-clique work left —
+`packing_le_weight_regions_cliques` for a branch certificate that carries cliques), 0 sorries,
+axioms unchanged.  136 rejection tests, 40,000 random cases of the two predicates against an
+independent geometry implementation, 0 failures.  `certificates/s12_anchorclique_demo_3.9318.txt`
+is a **load-bearing** demonstration: one point of the 224-point certificate replaced by its own
+`K(p, A)`, verified at `N = 6000` and `N = 12000`, rejected the moment the clique's weight is
+zeroed.
+
+*Measured, heuristic (a float evaluation of an LP dual, no bound in either direction).*  On the
+converged dual of the pure `k = 4` leaf — the packing of mass exactly `12.000000` that pins that
+leaf — the best anchor clique has `ȳ(K) = 1.054176` while the worst coverage row has
+`ȳ(P_p) = 1.003849`: **the family cuts off the packing that makes the leaf exactly 12, by `+0.05`,
+and it is the only known describable family that does.**  That is the cover-side counterpart of task
+G's packing-side `+0.024`–`0.10`, and it is the reason to keep going.  Inside the running LP the
+same separation keeps firing (`+0.34` at round 7 of the table above, with no coverage row violated
+at all).
+
+*Not established.*  No verified leaf certificate of value `< 12`.  The LP value never settled: it
+sits in `11.95 … 12.34` after ten rounds, against the pure reference's converged `12.000024`.  The
+loop is compute-bound, not stuck — the pure reference needed 18 rounds of 1–2 h from the same start,
+and the clique loop's rounds are cheaper but its row set was restarted several times while the
+verifier and the pricing were being fixed.  The next run should simply be left alone: same settings
+as `runs/leafk4h.sh` (`--topk 3 --prune-at 250000`, restricted master priced to convergence,
+`BRANCH_CQ_MAX=3000`), started from `runs/branch_t398ik4g_cols.txt` and `runs/cq_seed_g.txt`, for
+40–80 rounds.
+
+*The `1110` leaf was not run* (the brief makes it conditional on `k = 4` closing).  Its own pure
+run stands at `11.967276` with probe minimum `0.94` and rising ~`0.0002`/round after 51 rounds
+(`runs/branch_t398j1110.log`), i.e. it may well close without cliques.
+
+*Deliverable 8 (the pure cover at `t = 3.99`) was not attempted.*  `branch.py --lam-lo 0 --lam-hi 0`
+now pins the multipliers at zero, which is the pure cover LP with a vacuous trailer, so the same
+driver can do it.
 
 ## Reproduce
 
@@ -195,6 +263,11 @@ sh tests/bitid.sh <pre-change binary>                      # bit-identity withou
 python3 search/anchorstress.py --n 40000 --samples 25
 ( cd lean && lake build )
 M=/home/evand/math/square-packing/s12/runs
-python3 search/anchorsep.py $M/branch_t398hk4_dual_it16.txt --pitch 0.01 --top 400 --out runs/cq_seed_k4.txt
-sh runs/leafk4.sh                                          # the k = 4 leaf at t = 3.98
+python3 search/anchorsep.py $M/branch_t398hk4_dual_it16.txt --pitch 0.01 --out runs/cq_seed_k4.txt
+python3 search/anchordemo.py certificates/s12_lower_3.931795_sparse.txt out.txt --i 0 --D 1994
+# the k = 4 leaf (runs/leafk4h.sh; `runs/` is gitignored, so the command in full):
+BRANCH_SOLVER=restricted BRANCH_RESTRICTED_PASSES=0 BRANCH_CQ_MAX=3000 \
+python3 search/branch.py runs/branch_t398ik4g_probe.txt t398ik4h --k 4 --r 1 --N 2000 \
+    --cols runs/branch_t398ik4g_cols.txt --warm-thr 3 --cliques 400 --colgen 400 --cq-want 60 \
+    --cq-load runs/cq_seed_g.txt --prune-at 250000 --topk 3 --threads 8
 ```
