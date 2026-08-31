@@ -341,10 +341,39 @@ poses moves less.  `runs/J15.*` continues this with the §2 separator as well (b
 ## Reproduce
 
 ```sh
-M=/home/evand/math/square-packing/s12/runs
-python3 search/reconcile.py escape  J1 --t 3.99 --support $M/cq_A99sw5_support.txt --cuts $M/cq_A99sw5_cuts.json
-python3 search/reconcile.py probe   J5 --t 3.99 --support $M/cq_A99sw5_support.txt --cuts $M/cq_A99sw5_cuts.json
-python3 search/reconcile.py xmember JX --n 120 --poses 20000
-python3 search/reconcile.py price   J2 --t 3.99 --support $M/cq_A99sw5_support.txt --cuts $M/cq_A99sw5_cuts.json \
-    --sweep-too --cut-per-round 40 --maxit 80 --h 0.02 --want 500
+M=/home/evand/math/square-packing/s12/runs      # the main tree's runs/, read-only here
+C="--support $M/cq_A99sw5_support.txt --cuts $M/cq_A99sw5_cuts.json"
+
+# §1b duality, §1d the pricing defect, §1e the cover probe, §1c the two credit rules
+python3 search/reconcile.py escape  J1  --t 3.99 $C --cut-per-round 40 --maxit 80
+python3 search/reconcile.py probe   J5  --t 3.99 $C --cut-per-round 40 --maxit 80 --probe-n 300000
+python3 search/reconcile.py xmember JX  --n 120 --poses 20000
+python3 search/reconcile.py build   J8  --t 3.99 $C --seg-only --cut-per-round 40 --maxit 80
+
+# §2 the interior cliques: on the certified measures, and on the k = 4 leaf's converged dual
+python3 search/clique_family.py separate --support $M/cqx_PURE99_support.txt --pitch 0.01 --thr 0.95 --max-pts 200
+python3 runs/J9b.py $M/dual_exact_3.99_support.txt 3.99 150 0.9       # offset cap lifted
+python3 runs/J11_verify_clique.py runs/J9b_dual_exact_3.99_support.json $M/dual_exact_3.99_support.txt 3.99 5
+python3 search/reconcile.py dualsep JD1 --dual $M/branch_t398hk4_dual_it16.txt --pitch 0.02 --top 150
+python3 runs/J14_kseg_check.py                                        # the verifier accepts kseg
+
+# §3 the matched pair, task G's row rule against the honest one, on its own pose set
+python3 search/reconcile.py build J10a --t 3.99 --support runs/J10_poses.txt --cuts runs/J10_cuts.json --no-pure-rows
+python3 search/reconcile.py build J10b --t 3.99 --support runs/J10_poses.txt --cuts runs/J10_cuts.json
+
+# §4 the ladder with a correct pricer (add --full-sep for the §2 separator as well)
+python3 search/reconcile.py price J15 --t 3.99 $C --h 0.02 --want 400 --refine --full-sep \
+    --cut-per-round 40 --maxit 40 --threads 6
+
+# §5 the cover side at t = 3.99, wall separator (control) against interior (add --cq-interior)
+BRANCH_SOLVER=restricted BRANCH_CQ_MAX=3000 BRANCH_CQ_INT_TOP=120 \
+python3 search/branch.py $M/dual_B1_price.txt J12 --k 4 --r 1 --lam-lo 0 --lam-hi 0 --N 2000 \
+    --topk 6 --cliques 400 --cq-want 60 --cq-interior --colgen 400 --cg-want 300 --matched \
+    --threads 6 --max-iters 60 --prune-at 60000
+# and the k = 4 leaf at 3.98, restarted from task I's checkpoint with the interior separator
+BRANCH_SOLVER=restricted BRANCH_RESTRICTED_PASSES=2 BRANCH_CQ_MAX=3000 BRANCH_CQ_INT_TOP=120 \
+python3 search/branch.py $M/branch_t398ik4n_probe.txt J16 --k 4 --r 1 --N 2000 \
+    --cols $M/branch_t398ik4n_cols.txt --warm-thr 3 --cliques 400 --colgen 400 --cq-want 60 \
+    --cq-interior --matched --cq-load $M/branch_t398ik4n_cliques.txt --prune-at 250000 \
+    --topk 3 --threads 6 --max-iters 60
 ```
