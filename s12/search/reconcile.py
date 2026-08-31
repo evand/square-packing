@@ -241,6 +241,37 @@ def price_neighbours(M, lib, ax, ay, aw, ycut, mu, threads, want, log,
 
 
 # ------------------------------------------------------------------ commands
+def refine_true(M, lib, ax, ay, aw, ycut, cand, threads, rounds=3,
+                steps=(0.02, 0.005, 0.0012), dths=(1.0, 0.25, 0.06)):
+    """coordinate descent on the TRUE orbit reduced cost, so the priced columns are not stuck on
+    the pricing lattice (the analogue of packing_dual.refine, which maximises 1 - capture)."""
+    cur = np.asarray(cand, dtype=float).reshape(-1, 3)
+    if len(cur) == 0:
+        return cur, np.zeros(0)
+    val = orbit_reduced_cost(M, lib, ax, ay, aw, ycut, cur, threads)
+    for h, dd in zip(steps, dths):
+        dt = math.radians(dd)
+        moves = np.array([[h, 0, 0], [-h, 0, 0], [0, h, 0], [0, -h, 0], [0, 0, dt], [0, 0, -dt],
+                          [h, h, 0], [-h, -h, 0], [h, -h, 0], [-h, h, 0]])
+        for _ in range(rounds):
+            trial = (cur[:, None, :] + moves[None, :, :]).reshape(-1, 3)
+            cl = [PD.clamp_pose(*p, M.t) for p in trial]
+            ok = np.array([p is not None for p in cl])
+            T = np.array([p if p is not None else (0.0, 0.0, 0.0) for p in cl], dtype=float)
+            v = orbit_reduced_cost(M, lib, ax, ay, aw, ycut, T, threads)
+            v[~ok] = -9e9
+            v = v.reshape(len(cur), len(moves))
+            T = T.reshape(len(cur), len(moves), 3)
+            j = np.argmax(v, axis=1)
+            best = v[np.arange(len(cur)), j]
+            better = best > val + 1e-12
+            if not better.any():
+                break
+            cur[better] = T[np.arange(len(cur)), j][better]
+            val = np.maximum(val, best)
+    return cur, val
+
+
 def cmd_build(a, log):
     t = a.t
     sargs = SepArgs()
@@ -445,6 +476,8 @@ def main():
     ap.add_argument('--maxatoms', type=int, default=8000)
     ap.add_argument('--time', type=float, default=1e9)
     ap.add_argument('--no-neighbours', action='store_true')
+    ap.add_argument('--refine', action='store_true',
+                    help='coordinate-descent the priced candidates on the true reduced cost')
     ap.add_argument('--n', type=int, default=200, help='xmember: number of cliques')
     ap.add_argument('--poses', type=int, default=20000, help='xmember: poses per clique')
     ap.add_argument('--Ns', default='2000,6000', help='xmember: verifier nets to compare')
@@ -539,6 +572,11 @@ def main():
         if not cands:
             log("* PRICING CLEAN on the true reduced cost: no improving pose found")
             break
+        if a.refine:
+            C0 = np.array(cands, dtype=float)
+            C1, v1 = refine_true(M, lib, ax, ay, aw, ycut, C0, a.threads)
+            log(f"  refine: best true rc {v1.max():.6f} on {len(C1)} candidates")
+            cands = [(c[0], c[1], c[2]) for c in C1] + cands
         nnew = M.add_poses(cands)
         log(f"  added {nnew} new orbits -> {len(M.poses)}")
         if nnew == 0:

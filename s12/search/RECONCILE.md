@@ -93,16 +93,29 @@ fatal as a *ranking*: on the dual the LP returns for the clique instance the poi
 only `1.85` of the `11.94`, the rest sitting on the cut rows, so the capture of nearly every
 admissible pose is `≈ 0` and the ordering is noise.
 
-Measured on the rebuilt instance (`python3 search/reconcile.py escape J1 …`):
+Measured on the rebuilt instance (`python3 search/reconcile.py escape J1 …`).  The instance is
+badly dual-degenerate — two independent runs that converge to the *same* LP value return
+completely different optimal duals — so the table gives both, and only the columns that agree
+across them are load-bearing:
 
-| quantity | value |
-|---|---|
-| dual weight on point rows / on cut rows | `1.850287` / `10.089071` |
-| cuts with positive dual | 46 of 1120 |
-| the 540 poses task G's pricer adds per stage — capture-only reduced cost `1 − cap` | min `0.9974`, median `1.0000`, max `1.0000` |
-| the same 540 poses — **true** reduced cost `1 − cap − Σ y_K` | min `−0.0026`, median `0.0000`, max `0.0000` |
-| of those 540, how many improve the clique LP | **0** |
-| perturbations of the LP's own support with positive true reduced cost | **1938**, best `+0.344759` |
+| quantity | run A | run B |
+|---|---|---|
+| LP value (packing = cover) | `11.939358` | `11.937685` |
+| dual weight on point rows / on cut rows | `1.850` / `10.089` | `7.498` / `4.440` |
+| cuts with positive dual | 46 of 1120 | 37 of 1157 |
+| the 540 poses task G's pricer adds per stage — capture-only rc `1 − cap` | med `1.0000` | med `0.7805` |
+| the same 540 poses — **true** rc `1 − cap − Σ y_K` | max `0.0000` | max `0.0739` |
+| of those 540, how many improve the clique LP | `0` | `329` |
+| best true rc among perturbations of the LP's **own support** | **`+0.3448`** | **`+0.3586`** |
+
+The part that is stable is the part that matters: **the best column task G's pricer offers the
+clique LP has reduced cost `0.00–0.07`, while poses the pricer never proposes — small
+perturbations of the LP's own support, the poses that step just outside a cut's
+`{S : A subseteq S}` — have reduced cost `0.34–0.36`, five times to infinitely more.**  The
+dual instability is itself part of the diagnosis and is exactly `search/BOXCLIQUE.md`'s "the LP
+is dual-degenerate enough to dodge a single batch": with `900+` cut rows the split of the dual
+between point rows and cut rows is not determined, so a pricer that reads only the point half of
+it is reading noise.
 
 Task G's own logs carry the fingerprint without any new run: the sweep's reported "best capture"
 is `0.64–0.69` in the pure run (`runs/cq_P99sw1.log` — a healthy pricing gap on an unconverged
