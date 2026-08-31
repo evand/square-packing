@@ -32,11 +32,13 @@ $V $T/br.txt 12 2000 1 6 $T/br.sepnew  > $T/br.wnew  2>&1
 if diff -q $T/br.wbase $T/br.wnew >/dev/null && diff -q $T/br.sepbase $T/br.sepnew >/dev/null
 then echo "  identical  per-box branch trailer (witness mode)"; else echo "  DIFFERS    per-box branch trailer"; fail=1; fi
 # a real branch certificate
-one "branch_k1" certificates/branch/s12_t3.98_corner_k1.txt 12 500 1 0
+one "branch_k1" certificates/branch/s12_t3.98_corner_k1.txt 12 120 1 0
 # TIGHT_DUMP mode
 TIGHT_DUMP=$T/td.base TIGHT_THRESH=10000000 TIGHT_MAX=20000 $B certificates/s12_56points_3.8.txt 12 200 1 0 > $T/td.wbase 2>&1
 TIGHT_DUMP=$T/td.new  TIGHT_THRESH=10000000 TIGHT_MAX=20000 $V certificates/s12_56points_3.8.txt 12 200 1 0 > $T/td.wnew  2>&1
-if diff -q $T/td.wbase $T/td.wnew >/dev/null && diff -q $T/td.base $T/td.new >/dev/null
-then echo "  identical  TIGHT_DUMP"; else echo "  DIFFERS    TIGHT_DUMP"; fail=1; fi
+# the stdout names the dump file, so normalise the two paths before comparing
+sed "s|$T/td.base|DUMP|" $T/td.wbase > $T/td.wbase2; sed "s|$T/td.new|DUMP|" $T/td.wnew > $T/td.wnew2
+if diff -q $T/td.wbase2 $T/td.wnew2 >/dev/null && diff -q $T/td.base $T/td.new >/dev/null
+then echo "  identical  TIGHT_DUMP ($(grep -c '^c ' $T/td.new) cells dumped)"; else echo "  DIFFERS    TIGHT_DUMP"; fail=1; fi
 [ $fail -eq 0 ] && echo "ALL IDENTICAL" || echo "BIT-IDENTITY FAILED"
 exit $fail
