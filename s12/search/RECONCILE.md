@@ -61,7 +61,7 @@ was rebuilt from what task G left behind: the `r10` support of `runs/cq_A99sw5_s
 arrangement-vertex certifier (`packing_dual.Model.certify`) and the same separator
 (`clique_continuum.separate`) run to convergence.  The support contains an optimal basis of the
 stage, so this reproduces the stage's LP value; it is not the 4739-orbit pose set (a faithful
-replay of that run, `runs/cq_JG99*`, is in §4).
+replay of that run, `runs/cq_JG99*`, is in §3).
 
 ### 1b. Duality: the two implementations agree exactly
 
@@ -308,7 +308,22 @@ at positive weight.  `xcheck.py runs/J14_kseg_w10.txt 6000 200 --n 12` agrees ex
 `5000011/5000000 = 1.0000022` against the Rust's `10000022/10000000`, "Lemma 0 checked exactly for
 every pair of pieces" — and `tests/rejection_tests.sh` (136 checks) still passes unchanged.
 
-## 3. Step 1 — the matched pair, done honestly, on task G's own pose set
+## 3. The replay of task G's run, and its matched pair done honestly
+
+`clique_continuum.py` keeps no pose set, so its `A99sw5` run was replayed from the same three warm
+files with `--dump-poses` (`runs/cq_JG99*`; `--cut-per-round` differs, so it is not bit-identical —
+the original added 30 cuts in its first inner iteration where the shipped code caps at 12).  It
+reproduces the phenomenon:
+
+| stage | pose orbits | cuts | clique LP | pure LP, task G's row rule |
+|---|---|---|---|---|
+| `r0` | 558 | 474 | `11.959997` | `12.010891` |
+| `r1` | 830 | 787 | `11.957517` | `12.013928` |
+| `r2` | 1162 | 1070 | `11.953229` | `12.014448` |
+| `r3` | 1456 | 1422 | `11.942928` | `12.021357` |
+
+— the same flat clique ladder (`11.96 → 11.94` while the pose set grows `2.6×`) against a rising
+pure value, i.e. the same appearance of a stable `0.05–0.08` gain.
 
 `runs/J10a` and `runs/J10b` are the same instance — the replay's `r2` pose set (1162 orbits) and
 its 1070 anchor cuts — converged twice, once with task G's row rule and once with the pure
