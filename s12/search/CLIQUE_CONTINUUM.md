@@ -374,16 +374,23 @@ graph is `1.11–1.33`, i.e. unrestricted cliques are still violated while ancho
 
 ### Calibration: NOT reached — `0.051` short, and why
 
-The best pure leaf value obtained is **`11.9516`** (`runs/cq_LP98b.log` r5, 5294 poses,
-`λ = -0.437`, still rising: `11.911, 11.911, 11.930, 11.944, 11.949, 11.952`), against the
-target `12.000 ± 0.001`.  So the `≈ 0.10` clique gain
+The best pure leaf value obtained is **`11.9542`** (`runs/cq_LP98b.log` r6, 5760 poses,
+`λ = -0.344`), against the target `12.000 ± 0.001`.  The stage sequence is monotone and still
+rising when the budget ran out: `11.911, 11.911, 11.930, 11.943, 11.944, 11.949, 11.952,
+11.954`, at about `+0.003` per stage with stages costing ~50 min by the end.  So the `≈ 0.10` clique gain
 **cannot yet be quoted against 12**: on the pose sets reachable here the pure reference is
-`11.91–11.95`, not `12.00`.  The residual gap is `0.048`.
+`11.91–11.95`, not `12.00`.  The residual gap is `0.046`.
+
+The run is **not converged**, and says so itself: at the last stage the sweep pricer still
+reports a best capture of `0.805` (reduced cost `0.195`) for interior poses and the corner pricer
+a reduced cost of `0.020` on 972 corner poses.  Columns with that much reduced cost mean the pose
+set, not the LP, is the binding constraint — this is a run that needs more compute, not a value
+that has settled below the target.
 
 The shortfall is a column-generation deficit at `t = 3.98` in general, **not** something specific
 to the leaf.  The control that shows this: the *unconstrained* pure LP at `t = 3.98`, same
 machinery, same time, reaches only `11.934` (`runs/cq_P98u.log`) — *below* the leaf LP's
-`11.952`, even though the leaf LP carries an extra equality constraint and so has the smaller
+`11.954`, even though the leaf LP carries an extra equality constraint and so has the smaller
 feasible set.  Both are simply short of their common ceiling.  The reason is the warm start: at
 `3.99` the run begins from the certified `12.008` measure, which is already essentially optimal,
 so calibration passes at round 0; at `3.98` no such measure exists.  The best available seed,
@@ -405,7 +412,8 @@ anchor-clique leaf value at `≈ 11.90` — the leaf would close with room and `
 follow — but that is an extrapolation from a `0.05` extrapolated reference, not a measurement, and
 this write-up does not claim it.  What would settle it is not more clique work but a converged
 pure LP at `3.98`: an exactly certified `t = 3.98` measure of the kind §3 produced at `3.99`,
-which is a self-contained follow-up worth about a day of compute.
+which is a self-contained follow-up worth about a day of compute; extrapolating the `+0.003`-per-stage trend, roughly 15 more
+stages of the run already in `runs/cq_LP98b.log`, which restarts from its own support file.
 
 No exactly certified anchor-clique-feasible leaf measure is reported: the rule stated in §3 is
 that such a measure is a lower bound on the clique-LP value and decides nothing in the useful
