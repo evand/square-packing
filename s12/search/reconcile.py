@@ -274,9 +274,162 @@ def save_state(M, mu, tag, t, log):
     log(f"# wrote {sp_path}, {pose_path}, runs/cq_{tag}_cuts.json")
 
 
+def cmd_xmember(a, log):
+    """compare mu(K) for IDENTICAL cliques computed by the two code paths.
+
+    G's path (`clique_family.contains_np` / `meets_np` via `clique_continuum.ACut`) tests the
+    exact closed unit square of a single pose.  I's path (`anchorclique.member`) tests a *cell*
+    of the verifier's sweep: `contains` by the concentric sigma_k-square (smaller than the unit
+    square) and `meets` by the hexagon `A + [-h,h]^2` (larger).  With h = 1/2 the two should
+    agree; with h = sigma_k(N)/2 the cover side is conservative and credits less.
+    """
+    import anchorclique as AC
+    from fractions import Fraction as Fr
+    import tighten as T
+    rng = np.random.default_rng(a.seed)
+    t = a.t
+    D = 100000
+    Ns = [int(v) for v in a.Ns.split(',')]
+    hs = [('exact 1/2', 0.5)] + [(f'sigma_k/2 N={N}', None) for N in Ns]
+    log("# clique                                  poses  G-in  I-in  G\\I   I\\G   mass_G   mass_I")
+    tot = {k: [0, 0, 0] for k, _ in hs}
+    ncl = 0
+    for trial in range(a.n):
+        # a wall point p and the Lemma-2 anchor, exactly as anchorsep/branch.py builds them
+        d = float(rng.uniform(0.35, 0.995))
+        py = float(rng.uniform(1.0, t / 2))
+        X, Y = int(round(d * D)), int(round(py * D))
+        params = AC.cand_params(Fr(t).limit_denominator(10000), D, X, Y,
+                                frac=float(rng.choice([0.95, 0.7, 0.4])))
+        params = [q for q in params if q[0] == 0]
+        if not params:
+            continue
+        wall, en, rn, dd = params[0]
+        cl = AC.kpa(Fr(t).limit_denominator(10000), D, X, Y, wall, en, rn)
+        if cl is None:
+            continue
+        ncl += 1
+        p = (X / D, Y / D)
+        A = [(float(cl[0][1][1]), float(cl[0][1][2])), (float(cl[0][1][3]), float(cl[0][1][4]))]
+        acut = CC.ACut(p, A)
+        # poses: random admissible poses concentrated near p (where the clique lives)
+        n = a.poses
+        th = rng.uniform(0, math.pi / 2, n)
+        w2 = np.array([PD.wid_of(v) / 2 for v in th])
+        cx = np.clip(p[0] + rng.uniform(-1.2, 1.2, n), w2, t - w2)
+        cy = np.clip(p[1] + rng.uniform(-1.2, 1.2, n), w2, t - w2)
+        P = np.c_[cx, cy, th]
+        mG = acut.members(P)
+        for name, hv in hs:
+            if hv is None:
+                N = int(name.split('=')[1])
+                # the verifier's net is uniform in u = tan(theta/2), k = floor(u N), u in [0,1)
+                k = np.minimum(np.floor(np.tan(th / 2) * N).astype(int), N - 1)
+                h = np.array([T.sigma_k(N, int(kk)) / 2 for kk in k])
+            else:
+                h = np.full(n, hv)
+            rows = np.c_[P, h]
+            mI = AC.member(cl, rows)
+            tot[name][0] += int(mG.sum())
+            tot[name][1] += int(mI.sum())
+            tot[name][2] += int((mG & ~mI).sum())
+        if trial < a.show:
+            for name, hv in hs:
+                pass
+    log(f"# {ncl} cliques x {a.poses} random poses each")
+    for name, _ in hs:
+        g, i, gi = tot[name]
+        log(f"  {name:20s}  G credits {g:8d}   I credits {i:8d}   G\\I {gi:7d}  "
+            f"({100.0*gi/max(g,1):.4f} % of G's)")
+
+
+def probe_cover(M, ycov, poses, threads):
+    """covered weight of each pose under the cover solution ycov (point rows then cut rows):
+    sum over point cliques p with p in S of y_p, plus sum over anchor cliques K with S in K.
+
+    The packing LP's value is the cover's cost ONLY on the poses that are columns of the LP;
+    this is what the same cover pays on an arbitrary pose, i.e. what the verifier would see."""
+    poses = np.asarray(poses, dtype=float).reshape(-1, 3)
+    npt = M.m.A.shape[0]
+    y = ycov[:npt]
+    ycut = ycov[npt:]
+    IM = np.c_[poses, np.zeros(len(poses))]
+    tot = np.zeros(len(poses))
+    sel = np.nonzero(y > 1e-12)[0]
+    t = M.t
+    for i in sel:
+        px, py = M.m.pts[i]
+        # WITH multiplicity: packing_dual.images_array emits all 8 images of a pose whether or
+        # not they coincide, and the incidence matrix sums the duplicates, so the point side
+        # must count coincident images too (a point on a symmetry axis has fewer distinct
+        # images but the same coefficient)
+        for (qx, qy) in [(px, py), (t - px, py), (px, t - py), (t - px, t - py),
+                         (py, px), (t - py, px), (py, t - px), (t - py, t - px)]:
+            tot += (y[i] / 8.0) * CF.contains_np(IM, [(qx, qy)])
+    act = np.nonzero(ycut > 1e-12)[0]
+    if len(act):
+        # the cut row's coefficient for a pose orbit is (#images of the orbit in K)/8
+        imgs = []
+        for (cx, cy, th) in poses:
+            imgs += PD.pose_images(cx, cy, th, t)
+        imgs = np.ascontiguousarray(np.array(imgs, dtype=float).reshape(-1, 3))
+        for j in act:
+            m = M.cuts[j]['obj'].members(imgs).reshape(len(poses), 8)
+            tot += ycut[j] * m.mean(axis=1)
+    return tot
+
+
+def cmd_probe(a, log):
+    """the cover-side probe: what does the converged cover of the finite instance pay on poses
+    that are not columns of it?"""
+    sargs = SepArgs()
+    sargs.cut_per_round = a.cut_per_round
+    M = build_model(a.t, a.threads, log, a.support, a.cuts, row_pitch=a.row_pitch)
+    r = converge(M, log, sargs, maxit=a.maxit, tag='b')
+    mu, y, ycut, obj, conv = r
+    cv, ycov = cover_lp(M)
+    log(f"* instance: packing {obj:.6f}  cover {cv:.6f}  cols {len(M.poses)} cuts {len(M.cuts)}")
+    npt = M.m.A.shape[0]
+    log(f"  cover uses {int((ycov[:npt] > 1e-12).sum())} point cliques (weight "
+        f"{ycov[:npt].sum():.4f}) and {int((ycov[npt:] > 1e-12).sum())} anchor cliques (weight "
+        f"{ycov[npt:].sum():.4f})")
+    # (a) the LP's own columns: must all be covered to weight >= 1
+    own = np.array(M.poses, dtype=float)
+    cown = probe_cover(M, ycov, own, a.threads)
+    log(f"  covered weight on the LP's OWN {len(own)} pose orbits: min {cown.min():.6f} "
+        f"med {np.median(cown):.6f}")
+    # (b) random admissible poses
+    rng = np.random.default_rng(a.seed)
+    n = a.probe_n
+    th = rng.uniform(0, math.pi / 2, n)
+    w2 = np.array([PD.wid_of(v) / 2 for v in th])
+    cx = w2 + rng.uniform(0, 1, n) * (a.t - 2 * w2)
+    cy = w2 + rng.uniform(0, 1, n) * (a.t - 2 * w2)
+    P = np.c_[cx, cy, th]
+    cr = probe_cover(M, ycov, P, a.threads)
+    log(f"  covered weight on {n} RANDOM admissible poses: min {cr.min():.6f} "
+        f"1% {np.quantile(cr, 0.01):.6f} med {np.median(cr):.6f} max {cr.max():.6f}")
+    log(f"  fraction of random poses with covered weight < 1: {float((cr < 1).mean()):.4f}")
+    # (c) perturbations of the LP's own support
+    nb = []
+    sup = [M.poses[i] for i in np.nonzero(mu > 1e-11)[0]]
+    for (px, py, pt) in sup:
+        for d in (0.001, 0.005, 0.02, 0.05):
+            for (ax_, ay_, at_) in ((d, 0, 0), (-d, 0, 0), (0, d, 0), (0, -d, 0),
+                                    (0, 0, math.radians(d * 50)), (0, 0, -math.radians(d * 50))):
+                q = PD.clamp_pose(px + ax_, py + ay_, pt + at_, a.t)
+                if q is not None:
+                    nb.append(q)
+    nb = np.array(nb, dtype=float)
+    cn = probe_cover(M, ycov, nb, a.threads)
+    log(f"  covered weight on {len(nb)} SUPPORT PERTURBATIONS: min {cn.min():.6f} "
+        f"1% {np.quantile(cn, 0.01):.6f} med {np.median(cn):.6f}")
+    log(f"  fraction < 1: {float((cn < 1).mean()):.4f}")
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=('build', 'price', 'escape'))
+    ap.add_argument('cmd', choices=('build', 'price', 'escape', 'xmember', 'probe'))
     ap.add_argument('tag')
     ap.add_argument('--t', type=float, default=3.99)
     ap.add_argument('--support', action='append', default=[])
@@ -292,6 +445,12 @@ def main():
     ap.add_argument('--maxatoms', type=int, default=8000)
     ap.add_argument('--time', type=float, default=1e9)
     ap.add_argument('--no-neighbours', action='store_true')
+    ap.add_argument('--n', type=int, default=200, help='xmember: number of cliques')
+    ap.add_argument('--poses', type=int, default=20000, help='xmember: poses per clique')
+    ap.add_argument('--Ns', default='2000,6000', help='xmember: verifier nets to compare')
+    ap.add_argument('--seed', type=int, default=1)
+    ap.add_argument('--probe-n', type=int, default=200000, help='probe: random poses')
+    ap.add_argument('--show', type=int, default=0)
     ap.add_argument('--sweep-too', action='store_true',
                     help="also add task G's sweep candidates (capture-ranked), for comparison")
     a = ap.parse_args()
@@ -307,6 +466,12 @@ def main():
     log(f"# reconcile {a.cmd} {a.tag}: t={a.t} threads={a.threads} h={a.h}")
     if a.cmd == 'build':
         cmd_build(a, log)
+        return
+    if a.cmd == 'xmember':
+        cmd_xmember(a, log)
+        return
+    if a.cmd == 'probe':
+        cmd_probe(a, log)
         return
 
     # ---- price / escape both need the built instance

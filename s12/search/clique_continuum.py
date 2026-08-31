@@ -399,6 +399,9 @@ def main():
     ap.add_argument('--corner-price-pitch', type=float, default=0.004,
                     help='centre pitch of the explicit corner-box pricer (leaf mode)')
     ap.add_argument('--cuts', default=None, help='reload anchor cuts from a JSON dump')
+    ap.add_argument('--dump-poses', action='store_true',
+                    help='also write the FULL pose set (not just the support) at every stage, '
+                         'as runs/cq_TAG_poses.txt (task J needs it to replay the instance)')
     args = ap.parse_args()
 
     t = float(eval(args.T)) if '/' in args.T else float(args.T)
@@ -508,6 +511,11 @@ def main():
             f"cols {len(M.poses)} cuts {len(M.cuts)} maxclique {mcl:.5f}  "
             f"({time.time()-t0:.0f}s)")
         write_support(M, mu, obj, Mx, args.TAG, t)
+        if args.dump_poses:
+            with open(os.path.join(RUNS, f'cq_{args.TAG}_poses.txt'), 'w') as f:
+                f.write(f"# t={t} full pose set at stage r{rnd}: {len(M.poses)} orbits\n")
+                for (cx, cy, th) in M.poses:
+                    f.write(f"pose {cx:.13f} {cy:.13f} {math.degrees(th):.11f} 0\n")
         dump_cuts(M, args.TAG)
         json.dump(dict(tag=args.TAG, t=t, mode=args.mode, h=args.h, dth=args.dth, obj=obj,
                        maxcov=Mx, hist=hist),
