@@ -423,12 +423,16 @@ the same `N = 2000` verifier as separation oracle, the same column generation, t
 | `it8` | `12.220990` | `0.897` | `+0.002921` | | | |
 | `it9` | `12.219917` | `0.963` | `+0.003208` | | | |
 | `it10` | `12.227723` | `0.954` | `+0.003413` | | | |
+| `it11` | `12.231654` | `0.975` | `+0.001886` | | | |
 
 The interior run's gain **grows monotonically once it starts**: `0.000, 0.051, 0.064, 0.095` over
 rounds 1-4.  At `it4` it has 300 clique columns of which **25 are in use carrying `3.44` of the
 total**, and the separator's best is `ȳ(K) = 1.1154` against `ȳ(P_p) = 1.0311`.  The wall run at
 the same point has 300 columns, 5-12 in use carrying `0.20-0.42`, and `ȳ(K) = ȳ(P_p)` to four
-decimals.  Its LP value has come down from `12.28` to `12.077` while the wall run's sits at
+decimals; by `it11` it has been offered **720** wall cliques, uses 15 of them, and they carry
+`0.348` in total, with `ȳ(K) = ȳ(P_p) = 1.0072` — the wall family is adding *nothing* to the point
+clique it contains, which is precisely `ANCHOR.md` §4's "a clique column costs the same as the
+point column it contains" seen from the other side.  Its LP value has come down from `12.28` to `12.077` while the wall run's sits at
 `12.22`; the pure reference at this container is `>= 12.0281608` exactly.
 
 **So the answer to `ANCHOR.md`'s closing question — "does the matched gain grow as the row set
@@ -534,7 +538,7 @@ None of the four long runs is converged; all were left running.  What each had r
 
 | run | what | reached |
 |---|---|---|
-| `runs/branch_J6.log` | pure cover at `3.99`, **wall** separator (the control) | `it10`, LP `12.228`, probe `0.954`, gain `+0.0034` |
+| `runs/branch_J6.log` | pure cover at `3.99`, **wall** separator (the control) | `it11`, LP `12.232`, probe `0.975`, gain `+0.0019` |
 | `runs/branch_J12.log` | pure cover at `3.99`, **interior** separator | `it4`, LP `12.077`, probe `0.891`, gain `+0.0952` |
 | `runs/branch_J16.log` | task I's `k = 4` leaf at `3.98`, interior separator, from its own checkpoint | `it1`, gain `+0.0532` |
 | `runs/J15.out` | packing side at `3.99`, correct pricer **and** interior separator | `r0`, clique `11.8018`, pure `11.9909`, gain `0.1891` |
