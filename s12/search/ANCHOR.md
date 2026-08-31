@@ -189,22 +189,45 @@ running LP.  What it does not show is convergence: the LP value oscillates betwe
 `12.34` and the probe minimum between `0` and `0.94` as rows accumulate and columns are priced in.
 **No verified certificate of value `< 12` was produced.**
 
-**And a caveat that has to be read with the table.**  `--matched` was added to measure the gain the
-way `search/CLIQUE_CONTINUUM.md` does — re-solve the same restricted master with the clique columns
-removed — and it returns an *impossible* answer: a pure value **below** the clique value
-(`1.945380` against `2.000016` at round 0), when removing columns from a minimisation cannot lower
-it.  The two solves therefore do not have the same column set, which means the restricted master's
-per-round value is not reliable to better than `~0.05` at these settings (`BRANCH_RESTRICTED_ADD`
-1000, two passes).  So the excursions in the table above — `11.95`, `11.99`, `12.08` — are **inside
-the solver's own noise**, and none of them should be read as "the leaf value moved".  The numbers in
-this note that are not inside that noise are the verified ones of §2–§3a and the separation
-measurement of §3, which is computed from a *converged* run's dual.  Fixing the matched pair (or
-running the master to convergence, `BRANCH_RESTRICTED_PASSES=0`, which needs ~20 GB and 15 min a
-round here) is the first thing the next run should do.
-
 The oscillation is the ordinary behaviour of this loop far from convergence (the pure reference took
 18 rounds of 1–2 h each, its value climbing `11.996 → 12.000024` from below, before it settled); the
-runs here are 10 rounds of 1–4 min from a restarted row set, i.e. an order of magnitude short.
+runs here are 10 rounds of 1–4 min from a restarted row set, i.e. an order of magnitude short — and
+the LP value of a *restricted* master is an upper bound on the round's true optimum that moves as
+the master's column set moves, so those excursions should not be read as "the leaf value moved"
+either.
+
+### The matched pair — the number that does not need convergence
+
+The way to get a number out of a loop that has not converged is `search/CLIQUE_CONTINUUM.md`'s:
+re-solve the **same** LP — same rows, same columns — with the clique columns removed, so the gain is
+read off one row set instead of across runs.  `branch.py --matched` does that
+(`runs/branch_t398ik4n.log`):
+
+| round | rows | clique cols (used) | clique weight | clique LP | pure LP, same rows and columns | **gain** |
+|---|---|---|---|---|---|---|
+| `0` | 35,332 | 1060 (1) | 2.0000 | `2.000016` | `2.000016` | `0.000000` |
+| `1` | 41,332 | 1120 (3) | 6.4000 | `11.600023` | `11.600023` | `0.000000` |
+| `2` | 47,332 | 1180 (11) | 2.8298 | `11.811348` | `11.811739` | **`+0.000392`** |
+
+So on the cover side, with 1180 anchor cliques offered and 11 of them carrying `2.83` of the total,
+the LP is **0.0004 cheaper** than the same LP without them.  Against `≈ 0.10` on the packing side
+(`search/CLIQUE_CONTINUUM.md` §7a, same leaf, same container).  Three rounds is a thin sample and
+the row set is far from converged, but the sign and the order of magnitude are what they are, and
+they say the cover side is not yet seeing what the packing side saw.  (Getting this right needed one
+correction worth recording: the matched solve must run *before* the round's column generation — a
+column added in between is marked active by the next solve, so the "pure" LP ran with 328 columns
+against the clique LP's 168 and came out `0.05` *lower*, which is impossible for a minimisation over
+a subset of columns.)
+
+**Why the two sides can disagree.**  On the packing side a clique is a *cut*: `μ(K) ≤ 1` removes
+mass from a fixed pose lattice, and 600 of them removed `0.10`.  On the cover side a clique is a
+*column* of the same cost as the point column it contains (`K(p, A) ⊇ P_p`, Lemma 2), so it can only
+help by the weight it saves on the poses of `{S : A ⊆ S}` outside `P_p` — a strip of width
+`ε ≤ 1 − p_x`, which at the leaf's tight points (`p_x ≈ 0.99`) is `ε ≤ 0.01`.  The dual does see the
+violation (`ȳ(K) = 1.054` on the converged pure dual, §3), but a violated dual constraint lowers the
+primal only as far as the degeneracy allows, and this leaf is extremely degenerate — `search/BRANCH.md`
+found its optimum sitting on an 80-point cover with dyadic weights and cost exactly
+`18 − 4·1.5 = 12`.
 
 ### Two things worth recording from the engineering
 
@@ -246,19 +269,28 @@ converged dual of the pure `k = 4` leaf — the packing of mass exactly `12.0000
 leaf — the best anchor clique has `ȳ(K) = 1.054176` while the worst coverage row has
 `ȳ(P_p) = 1.003849`: **the family cuts off the packing that makes the leaf exactly 12, by `+0.05`,
 and it is the only known describable family that does.**  That is the cover-side counterpart of task
-G's packing-side `+0.024`–`0.10`, and it is the reason to keep going.  Inside the running LP the
-same separation keeps firing (`+0.34` at round 7 of the table above, with no coverage row violated
-at all).
+G's packing-side `+0.024`–`0.10`.  Inside the running LP the same separation keeps firing (`+0.34`
+at round 7 of the table above, with no coverage row violated at all).
 
-*Not established.*  No verified leaf certificate of value `< 12`.  The LP value never settled: it
-sits in `11.95 … 12.34` after ten rounds, against the pure reference's converged `12.000024` — and
-those excursions are inside the restricted master's own noise (§4), so the honest statement is that
-the leaf's value was not measured at all, not that it moved.  The loop is compute-bound, not stuck — the pure reference needed 18 rounds of 1–2 h from the same start,
-and the clique loop's rounds are cheaper but its row set was restarted several times while the
-verifier and the pricing were being fixed.  The next run should simply be left alone: same settings
-as `runs/leafk4h.sh` (`--topk 3 --prune-at 250000`, restricted master priced to convergence,
-`BRANCH_CQ_MAX=3000`), started from `runs/branch_t398ik4g_cols.txt` and `runs/cq_seed_g.txt`, for
-40–80 rounds.
+*Measured, and the discouraging half of the answer.*  The **matched pairs** — the same LP with and
+without the clique columns, so no convergence is needed — put the cover-side gain at `0.0000`,
+`0.0000` and `+0.0004` over the three rounds measured, with 1180 cliques offered and 11 of them
+carrying `2.83` of the total.  The packing side's `≈ 0.10` on this same leaf does **not** transfer,
+at least not on these row sets.  §4 gives the reason to expect a gap: on the cover side the clique
+is a column of the same cost as the point column it contains, so it can only pay for the weight
+saved on `{S : A ⊆ S} \ P_p`, and at the leaf's tight points that strip is `0.01` wide.
+
+*Not established.*  No verified leaf certificate of value `< 12`, and the leaf's value with cliques
+was not pinned down: the loop's LP values (`11.95 … 12.34` over ten rounds) are restricted-master
+upper bounds moving with the master's column set, not measurements of the leaf.  The loop is
+compute-bound, not stuck — the pure reference needed 18 rounds of 1–2 h from the same start, and
+the clique loop's row set was restarted several times while the verifier and the pricing were being
+fixed.  A continuation is left running (`runs/leafk4p.sh`, from `runs/branch_t398ik4n_cols.txt` and
+`runs/branch_t398ik4n_cliques.txt`: 10,147 point columns, 1,181 clique columns).  What it should be
+asked next is not "does it close" but **"does the matched gain grow as the row set converges"** —
+if it stays at `10⁻⁴` the family is not the lever on the cover side however violated the dual is,
+and the design question moves to anchors that are *not* contained in a point clique (the two-anchor
+corner families of `notes/clique-family.md` §3, which task G designed and did not build).
 
 *The `1110` leaf was not run* (the brief makes it conditional on `k = 4` closing).  Its own pure
 run stands at `11.967276` with probe minimum `0.94` and rising ~`0.0002`/round after 51 rounds
