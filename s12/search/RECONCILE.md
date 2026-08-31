@@ -175,11 +175,11 @@ Both were plausible and both were measured and rejected, which is what leaves §
   in the *lower* direction, so the representable family is if anything the stronger one here — and
   in the cover solution all 35 anchor cliques with positive weight are segment-anchored (`1.9000`
   of the total) while the polygon ones carry `0.0000`.
-* **The separators are the same strength.**  They are not the same *family* — task I's
-  `anchorclique.cand_params` offers only the wall-perpendicular Lemma-2 segment at 6 values of
-  `eps`, while task G's `anchor_local` scans 16 directions x 10 `eps` x 8 `rho` and
-  `anchor_separate` adds the polygon greedy — but by the line above the extra reach buys `1e-3` on
-  this instance, not `1e-1`.
+* **Task G's richer separator, as such.**  Task I's `anchorclique.cand_params` offers only the
+  wall-perpendicular Lemma-2 segment at 6 values of `eps`; task G's `anchor_local` scans 16
+  directions x 10 `eps` x 8 `rho` and `anchor_separate` adds the polygon greedy.  On this instance
+  that extra reach is worth `1e-3`, not `1e-1`.  (What *is* worth an order of magnitude is a
+  restriction the two separators share, and that is §2.)
 
 ### 1g. A second, smaller artefact: the matched pure value
 
@@ -208,7 +208,7 @@ nothing about a differently shaped clique at an interior point.  For interior `p
 not a superset of `P_p` at all — it is *"the squares through `p` that reach `A`, plus the squares
 that contain `A`"* — and it is a clique for every `p` and `A` by Lemma 0, with no wall hypothesis.
 Its mass is not bounded by the coverage constraint at any point, and it is exactly where the
-violations are:
+violations are.
 
 There is a second, sharper version of the same mistake inside the packing-side separator.
 `clique_family.anchor_local` builds its offset schedule as
@@ -233,10 +233,12 @@ so at an interior anchor point it only ever tries `eps <= 0.05`, and along a wal
 | converged dual of the `k = 4` leaf at `3.98`, mass exactly `12.000000` (`runs/branch_t398hk4_dual_it16.txt`) | `ANCHOR.md` §3 = `anchorsep.separate` (wall band, wall-perpendicular) | `1.054176` | wall distance `0.99` |
 | **the same dual, same cover-side credit rule** (`anchorclique.member`, `sigma_k`-square and hexagon at each row's own `h`) | any `p`, any direction (`reconcile.py dualsep`) | **`1.143071`** | `p = (1.22, 1.52)`, **wall distance `1.22`**, `eps = 0.225`, `\|A\| = 0.8575`; the point clique there is `ȳ(P_p) = 1.000000` exactly |
 
-For scale: `search/CLIQUE.md`'s **unrestricted** max clique on that same certified measure — an
-arbitrary pairwise-intersecting set of support squares, with no describable structure and nothing a
-certificate could carry — is `1.327`.  The certifiable one-point-one-segment family recovers
-**`1.220` of that `1.327`**, not the `1.024` recorded in `CLIQUE_CONTINUUM.md` §4.  The
+For scale: the **unrestricted** max clique of that same measure's support graph — an arbitrary
+pairwise-intersecting set of support squares, with no describable structure and nothing a
+certificate could ever carry — is `1.2139` in `CLIQUE_CONTINUUM.md` §4's own branch-and-bound
+(a 60-120 s cap, so a lower bound), and `1.327` for task A on an earlier measure.  **The
+certifiable one-point-one-segment family reaches `1.2201` on that measure — above the unrestricted
+number that write-up's own search found** — not the `1.024` it records as "the usable number".  The
 "factor of ten" of that write-up's §4 ("the region-shaped violation is `+0.024`, not `+0.33`") is
 an artefact of the search restriction, not a property of the family.
 
