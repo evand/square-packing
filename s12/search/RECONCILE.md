@@ -156,10 +156,11 @@ Both were plausible and both were measured and rejected, which is what leaves §
   and `anchorS`, nothing else); 82 of the 112 have area `<= 1.7e-4` and one is a whole unit
   square, i.e. `{S : A subseteq S}` is a measure-zero set of poses that can cut a finite pose list
   and can never pay for itself in a cover.  **But they are not what the value rests on.**  Dropping
-  all 112 and separating with segment anchors only (`reconcile.py --seg-only`) moves the LP value
-  from `11.938521` to `11.937549` — `1e-3`, in the wrong direction to matter — and in the cover
-  solution all 35 anchor cliques with positive weight are segment-anchored (`1.9000` of the total)
-  and the polygon ones carry `0.0000`.
+  all 112 and separating with segment anchors only (`reconcile.py build … --seg-only`) gives a
+  converged value of `11.936211` against `11.937685–11.939358` with the full family — `1e-3`, and
+  in the *lower* direction, so the representable family is if anything the stronger one here — and
+  in the cover solution all 35 anchor cliques with positive weight are segment-anchored (`1.9000`
+  of the total) while the polygon ones carry `0.0000`.
 * **The separators are the same strength.**  They are not the same *family* — task I's
   `anchorclique.cand_params` offers only the wall-perpendicular Lemma-2 segment at 6 values of
   `eps`, while task G's `anchor_local` scans 16 directions x 10 `eps` x 8 `rho` and
