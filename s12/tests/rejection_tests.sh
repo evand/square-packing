@@ -200,12 +200,157 @@ if python3 - $T/t15.sep <<'EOF'
 import sys, math
 best = {}
 for l in open(sys.argv[1]):
-    v, th, cx, cy = map(float, l.split()); k = round(math.tan(th/2)*2000)
+    v, th, cx, cy = map(float, l.split()[:4]); k = round(math.tan(th/2)*2000)
     best[k] = min(best.get(k, 9), v)
 print("      per-bin minimum near 74.8 deg:", "  ".join("k=%d:%.1f" % (k, best[k]) for k in (1529, 1530, 1531) if k in best))
 sys.exit(0 if best.get(1530, 9) <= 0.2 + 1e-9 else 1)
 EOF
 then ok "  ...bin k=1530 reaches its edge placement (1/5)" "1/5"; else bad "  ...bin k=1530 reaches its edge placement (1/5)" "min > 1/5" "1/5"; fi
+
+echo "-- branch certificates: the region / lambda / k trailer (FORMAT.md, 'Branch certificates')"
+# 16. A trailer with lambda = 0 changes nothing: same verdict as the plain file.
+( cat "$C"; printf 'region corner 6 5\nlambda 0\nk 4\n' ) > $T/t16a.txt
+check "trailer with lambda=0, k=4"                VERIFIED $T/t16a.txt 12
+expect_out "  ...reported as a branch certificate"  "^VERIFIED: (branch k=4)"
+#     r = 13/10: the corner box could hold two centres ((2r-1)^2 = 2.56 >= 2): refused.
+( cat "$C"; printf 'region corner 13 10\nlambda 0\nk 4\n' ) > $T/t16b.txt
+check "r=13/10 (two squares could share a box)"    ERROR   $T/t16b.txt 12
+( cat "$C"; printf 'region corner 6 5\nlambda 0\nk 5\n' ) > $T/t16c.txt
+check "k=5 (more squares than boxes)"             ERROR   $T/t16c.txt 12
+( cat "$C"; printf 'region square 6 5\nlambda 0\nk 4\n' ) > $T/t16d.txt
+check "unknown region kind"                       ERROR   $T/t16d.txt 12
+( cat "$C"; printf 'region corner 6 5\nlambda 0\nk 4\n7\n' ) > $T/t16e.txt
+check "data after the trailer"                    ERROR   $T/t16e.txt 12
+( cat "$C"; printf 'region corner 6 5\nk 4\nlambda 0\n' ) > $T/t16f.txt
+check "trailer keywords out of order"             ERROR   $T/t16f.txt 12
+#     lambda = +1 (W=5): squares centred in a corner box must capture 2 -- they do not.
+( cat "$C"; printf 'region corner 6 5\nlambda 5\nk 4\n' ) > $T/t16g.txt
+check "lambda=+1, k=4: corners must capture 2"    REJECT  $T/t16g.txt 12 8 $T/t16g.sep
+if python3 - $T/t16g.sep <<'EOF2'
+import sys
+rows = [l.split() for l in open(sys.argv[1]) if l.strip()]
+s = 19/5; r = 6/5
+ok = rows and all(len(q) == 5 for q in rows) and all(q[4] in ('1', '2', '3', '4') for q in rows)   # flag = index of the box met
+nin = sum((float(q[2]) <= r + 1e-6 or float(q[2]) >= s - r - 1e-6) and (float(q[3]) <= r + 1e-6 or float(q[3]) >= s - r - 1e-6) for q in rows)
+print("      %d witnesses, all flagged with a box: %s, centred in a corner box: %d (cells straddling the box edge fall back to their centroid)" % (len(rows), ok, nin))
+sys.exit(0 if ok and nin >= 0.95 * len(rows) else 1)
+EOF2
+then ok "  ...witnesses flagged 1, >=95% centred in the boxes" "yes"; else bad "  ...witnesses flagged 1, >=95% centred in the boxes" "no" "yes"; fi
+#     lambda = -1, k = 4: the covering holds (corners may capture 0) but W - lambda*k = 15.2 >= 12.
+( cat "$C"; printf 'region corner 6 5\nlambda -5\nk 4\n' ) > $T/t16h.txt
+check "lambda=-1, k=4: weight bound fails"        REJECT  $T/t16h.txt 12
+expect_out "  ...for the stated reason"            "^WEIGHT NOT"
+#     lambda = -1, k = 0: corner poses are free, everything else still covered: verifies as branch k=0.
+( cat "$C"; printf 'region corner 6 5\nlambda -5\nk 0\n' ) > $T/t16i.txt
+check "lambda=-1, k=0 (corner free)"              VERIFIED $T/t16i.txt 12
+expect_out "  ...reported as branch k=0"           "^VERIFIED: (branch k=0)"
+#     the same with the points inside the corner boxes deleted: squares centred OUTSIDE the
+#     boxes still reach into the corners, so the plain covering breaks -> REJECT, with flag-0
+#     witnesses only (flag-1 violations cannot occur at lambda = -1).
+awk 'NR<=4{print; next} { if (($1<=480 || $1>=1040) && ($2<=480 || $2>=1040)) next; print }' "$C" > $T/t16j.txt
+n=$(($(wc -l < $T/t16j.txt) - 4)); awk -v n=$n 'NR==4{print n; next}{print}' $T/t16j.txt > $T/t16k.txt
+( cat $T/t16k.txt; printf 'region corner 6 5\nlambda -5\nk 0\n' ) > $T/t16l.txt
+check "k=0 with the corner points deleted"        REJECT  $T/t16l.txt 12 8 $T/t16l.sep
+if python3 - $T/t16l.sep <<'EOF2'
+import sys
+rows = [l.split() for l in open(sys.argv[1]) if l.strip()]
+ok = rows and all(len(q) == 5 and q[4] == '0' for q in rows)
+print("      %d witnesses, all flagged 0: %s" % (len(rows), ok)); sys.exit(0 if ok else 1)
+EOF2
+then ok "  ...witnesses all flagged 0" "yes"; else bad "  ...witnesses all flagged 0" "no" "yes"; fi
+
+echo "-- per-box trailer: lambda L1 L2 L3 L4 / k K1 K2 K3 K4"
+# 17. Four multipliers, one per corner box (box 1 = [0,r]^2, 2 = bottom-right, 3 = top-left, 4 = top-right).
+( cat "$C"; printf 'region corner 6 5\nlambda 0 0 0 0\nk 1 1 1 1\n' ) > $T/t17a.txt
+check "per-box, all lambda=0, pattern 1111"       VERIFIED $T/t17a.txt 12
+expect_out "  ...reported with the pattern"         "^VERIFIED: (branch k=1111)"
+#     unequal lambdas break the D4 symmetry of the claim: the full angle range must be swept
+( cat "$C"; printf 'region corner 6 5\nlambda -5 -5 0 0\nk 0 0 1 1\n' ) > $T/t17b.txt
+check "per-box, boxes 1,2 free, 3,4 threshold 1"  VERIFIED $T/t17b.txt 12
+expect_out "  ...swept over [0,90) deg"             "angles cover \[0,90) deg"
+#     box 1 must capture 2: rejected, and every witness names box 1
+( cat "$C"; printf 'region corner 6 5\nlambda 5 0 0 0\nk 1 0 0 0\n' ) > $T/t17c.txt
+check "per-box, lambda_1=+1: box 1 must capture 2" REJECT  $T/t17c.txt 12 8 $T/t17c.sep
+if python3 - $T/t17c.sep <<'EOF2'
+import sys
+rows = [l.split() for l in open(sys.argv[1]) if l.strip()]
+ok = rows and all(len(q) == 5 and q[4] == '1' for q in rows)
+nin = sum(float(q[2]) <= 1.2 + 1e-6 and float(q[3]) <= 1.2 + 1e-6 for q in rows)
+print("      %d witnesses, all flagged box 1: %s, %d centred in box 1" % (len(rows), ok, nin))
+sys.exit(0 if ok and nin >= 0.95 * len(rows) else 1)
+EOF2
+then ok "  ...witnesses all name box 1, >=95% inside it" "yes"; else bad "  ...witnesses all name box 1, >=95% inside it" "no" "yes"; fi
+#     weight check uses sum_j lambda_j k_j: 11.2 - (-1)(1+1) = 13.2 >= 12
+( cat "$C"; printf 'region corner 6 5\nlambda -5 -5 -5 -5\nk 1 1 0 0\n' ) > $T/t17d.txt
+check "per-box, lambda=-1 on two occupied boxes"   REJECT  $T/t17d.txt 12
+expect_out "  ...for the stated reason"             "^WEIGHT NOT"
+( cat "$C"; printf 'region corner 6 5\nlambda 0 0\nk 1 1\n' ) > $T/t17e.txt
+check "two lambdas (neither 1 nor 4)"             ERROR   $T/t17e.txt 12
+( cat "$C"; printf 'region corner 6 5\nlambda 0 0 0 0\nk 1 1 2 0\n' ) > $T/t17f.txt
+check "per-box k=2"                               ERROR   $T/t17f.txt 12
+( cat "$C"; printf 'region corner 6 5\nlambda 0 0 0 0\nk 1 1 1\n' ) > $T/t17g.txt
+check "four lambdas, three k"                     ERROR   $T/t17g.txt 12
+
+echo "-- clique certificates: the cliques N Q c block (FORMAT.md, 'Clique certificates')"
+# 18. A clique that covers nothing new (one box of bin 0 near the centre, weight 1/5) is harmless:
+#     verifies for n=13 (total 11.4), is reported as a clique certificate, and forces the full
+#     [0,90) sweep whatever the symmetry of the points.
+( cat "$C"; printf 'cliques 2000 1000 1\n1 1\n0 1890 1910 1890 1910\n' ) > $T/t18a.txt
+check "harmless clique, claimed for n=13"          VERIFIED $T/t18a.txt 13
+expect_out "  ...reported as a clique certificate"  "^CLIQUE certificate: 1 cliques with 1 boxes"
+expect_out "  ...swept over [0,90) deg"             "angles cover \[0,90) deg"
+expect_out "  ...total counts the clique (11.4)"    "total weight (points + cliques) = 57/5"
+#     the clique weight counts in the total: 4/5 more makes 12 = n -> weight bound fails
+( cat "$C"; printf 'cliques 2000 1000 1\n4 1\n0 1890 1910 1890 1910\n' ) > $T/t18b.txt
+check "clique weight 4/5: total reaches 12"        REJECT  $T/t18b.txt 12
+expect_out "  ...for the stated reason"             "^WEIGHT NOT"
+#     two boxes whose cores do not meet: not certified to be a clique -> refused
+( cat "$C"; printf 'cliques 2000 1000 1\n1 2\n0 1890 1910 1890 1910\n400 400 420 3000 3020\n' ) > $T/t18c.txt
+check "boxes whose cores do not meet"              ERROR   $T/t18c.txt 13
+#     a box wider than 2h: its own core is empty -> refused
+( cat "$C"; printf 'cliques 2000 1000 1\n1 1\n0 1000 2500 1890 1910\n' ) > $T/t18d.txt
+check "box wider than 2h (empty core)"             ERROR   $T/t18d.txt 13
+#     the block is defined on N=4000 but the verifier runs with N=2000 -> refused
+( cat "$C"; printf 'cliques 4000 1000 1\n1 1\n0 1890 1910 1890 1910\n' ) > $T/t18e.txt
+check "clique block on another N"                  ERROR   $T/t18e.txt 13
+( cat "$C"; printf 'cliques 2000 1000 1\n-1 1\n0 1890 1910 1890 1910\n' ) > $T/t18f.txt
+check "negative clique weight"                     ERROR   $T/t18f.txt 13
+( cat "$C"; printf 'cliques 2000 1000 1\n1 0\n' ) > $T/t18g.txt
+check "clique with no boxes"                       ERROR   $T/t18g.txt 13
+( cat "$C"; printf 'cliques 2000 1000 1\n1 1\n2000 1890 1910 1890 1910\n' ) > $T/t18h.txt
+check "box bin k=N (out of range)"                 ERROR   $T/t18h.txt 13
+( cat "$C"; printf 'cliques 2000 1000 1\n1 1\n0 1910 1890 1890 1910\n' ) > $T/t18i.txt
+check "box rectangle with LO > HI"                 ERROR   $T/t18i.txt 13
+( cat "$C"; printf 'cliques 2000 1000 2\n1 1\n0 1890 1910 1890 1910\n' ) > $T/t18j.txt
+check "two cliques declared, one given"            ERROR   $T/t18j.txt 13
+( cat "$C"; printf 'region corner 6 5\nlambda 0\nk 4\ncliques 2000 1000 1\n1 1\n0 1890 1910 1890 1910\n' ) > $T/t18k.txt
+check "clique block after the region trailer"      ERROR   $T/t18k.txt 13
+( cat "$C"; printf 'cliques 2000 1000 1\n1 1\n0 1890 1910 1890 1910\nregion corner 6 5\nlambda 0\nk 4\n' ) > $T/t18l.txt
+check "clique block, then region trailer"          VERIFIED $T/t18l.txt 13
+expect_out "  ...reported as branch k=4"            "^VERIFIED: (branch k=4)"
+# 19. Clique weight must not leak: the one-point-deleted mutant (t1, REJECT) stays rejected when
+#     a clique of weight 1 sits where nothing fails, and its witnesses all carry flag 0.
+( cat $T/t1.txt; printf 'cliques 2000 1000 1\n5 1\n0 1890 1910 1890 1910\n' ) > $T/t19a.txt
+check "deleted point + clique elsewhere (w=1)"     REJECT  $T/t19a.txt 12 8 $T/t19a.sep
+if python3 - $T/t19a.sep <<'EOF2'
+import sys
+rows = [l.split() for l in open(sys.argv[1]) if l.strip()]
+ok = rows and all(len(q) == 5 and q[4] == '0' for q in rows)
+print("      %d witnesses, all flagged 0: %s" % (len(rows), ok)); sys.exit(0 if ok else 1)
+EOF2
+then ok "  ...witnesses all flagged 0" "yes"; else bad "  ...witnesses all flagged 0" "no" "yes"; fi
+
+# 20. The shipped demonstration certificate (224 points + 8 clique orbits, FORMAT.md): verifies at
+#     its own N; the same file with a box shifted so that the clique's cores no longer meet is
+#     refused; with the cliques' weights set to 0 the points alone still verify (the cliques carry
+#     0.008 of the total and are not load-bearing there -- see search/BOXCLIQUE.md).
+B=certificates/s12_boxclique_demo_3.9318_N2000.txt
+check "shipped box-clique certificate"            VERIFIED "$B" 12
+expect_out "  ...reported with its cliques"         "^CLIQUE certificate: 8 cliques"
+awk 'f && NF==5 && !done {print $1, $2+900000, $3+900000, $4, $5; done=1; next} /^cliques/{f=1} {print}' "$B" > $T/t20a.txt
+check "one box shifted by 0.9 (cores apart)"       ERROR   $T/t20a.txt 12
+awk 'f && NF==2 {print 0, $2; next} /^cliques/{f=1} {print}' "$B" > $T/t20b.txt
+check "clique weights zeroed"                     VERIFIED $T/t20b.txt 12
 
 echo "  ---- $pass passed, $fail failed, $panics panics"
 [ "$fail" -eq 0 ] && [ "$panics" -eq 0 ]

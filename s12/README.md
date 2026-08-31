@@ -135,6 +135,31 @@ Separately, an extensive search for a packing of 12 unit squares into a square o
 (L-BFGS + basin hopping, validated by reproducing `s(5)`, `s(10)`, `s(11)` to 5 decimals) found
 nothing below 4; every run collapsed to the compressed 4×4 grid.  Code in `search/pack_src/`.
 
+## Beyond the ceiling: branch certificates (2026-08-28)
+
+The first step past the pure method is now built and measured (`search/BRANCH.md`).  A **branch
+certificate** carries a region — the four corner boxes `[0,r]²` — a multiplier `λ` (or one per
+box) and an occupancy count `k`, and asserts that squares centred in a box capture `≥ 1 + λ`,
+all others `≥ 1`, with `W − λk < 12`; it then refutes every packing with exactly `k` squares
+centred in the boxes, and the five (or, per box, sixteen) leaves together refute all of them.
+The format is in `certificates/FORMAT.md`, the verifier and `xcheck.py` check it exactly, the
+reduction is in Lean (`packing_le_weight_region`, `packing_le_weight_regions`), and
+`search/branch.py` produces the certificates with the verifier as separation oracle.
+
+What it gave at `s = 3.98`, where the pure cover costs ≈ 12.02: the leaves `k = 0, 1, 2` close
+with room (`certificates/branch/`, verified; `verify_branch.sh`), the mixed leaf `1110` is at
+≈ 11.75–11.97 and still rising, and the **all-corners leaf sits at `12.000 ± 0.001`**, straddled
+by the row and column steps of the cutting-plane loop (an earlier claim that it was *exactly* 12 with
+a dyadic grid cover was withdrawn — that run never produced a valid cover; see `search/CLIQUE.md`).
+Its dual puts a full unit in each corner, 3.75 on the eight wall slots and 4 in a tilted interior
+ring, and violates *clique* constraints by 0.5: rotated squares are not a Helly family, so the
+point-cover LP misses valid inequalities `Σ_{S∈K} y_S ≤ 1` over pairwise-intersecting pose sets
+`K` with no common point (`search/CLIQUE.md`, `search/CLIQUE_CEILING.md`).  Clique columns are
+now a verifiable certificate object (`search/BOXCLIQUE.md`: exact Rust and Python checks, Lean
+reduction, a demonstration certificate), and an exact zero-margin checker for closed containers
+re-proves `s(15) = 4` from Friedman's 14 points (`search/ZEROMARGIN.md`).  Pure covers, for the
+record: `COVER(3.99) = 12.2009` (converged), `COVER(3.98) ≈ 12.02`, `COVER(3.975) ≈ 11.96`.
+
 ## Credits and prior art
 
 The unavoidable-point-set method is due to Göbel, and was developed by Stromquist, Friedman,
