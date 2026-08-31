@@ -279,13 +279,37 @@ at positive weight.  `xcheck.py runs/J14_kseg_w10.txt 6000 200 --n 12` agrees ex
 `5000011/5000000 = 1.0000022` against the Rust's `10000022/10000000`, "Lemma 0 checked exactly for
 every pair of pieces" — and `tests/rejection_tests.sh` (136 checks) still passes unchanged.
 
-## 3. Step 1 — the ladder with a correct pricer
+## 3. Step 1 — the matched pair, done honestly, on task G's own pose set
 
-*(in progress)*
+`runs/J10a` and `runs/J10b` are the same instance — the replay's `r2` pose set (1162 orbits) and
+its 1070 anchor cuts — converged twice, once with task G's row rule and once with the pure
+solution's own violated arrangement vertices added as rows as well.  Every number is a float LP
+value; the clique value is an LP over a restricted pose set, hence a **lower** bound on the
+clique-LP value over the continuum at those angles, and the pure value likewise.
 
-## 4. The faithful replay of task G's run
+| row rule | clique LP | pure LP, same poses | gain |
+|---|---|---|---|
+| task G's (`clique_continuum.py`: rows converged for the clique solution only) | `11.950947` | `12.074469` | `0.123522` |
+| honest (rows converged for **both** solutions) | *(pending)* | *(pending)* | *(pending)* |
 
-*(in progress)*
+The `12.074469` is the tell: the pure LP on a pose set whose *pure* value on a converged row set is
+`12.01–12.03` cannot be `12.074`; the excess is coverage violated at points that are not rows.
+
+## 4. Step 1 — the ladder with a correct pricer
+
+`reconcile.py price` continues task G's instance (its `r10` support and its 932 cuts, rows and cuts
+re-converged) but prices poses on the **true** reduced cost `1 − capture − Σ_K y_K [S ∈ K]`, over a
+`h = 0.02` centre lattice, plus perturbations of the LP's own support, plus (for fairness) the same
+sweep candidates task G's pricer would have added.
+
+| stage | pose orbits | cuts | clique LP | pure LP, same poses (honest) | gain |
+|---|---|---|---|---|---|
+| `r-1` (task G's instance, re-converged) | 115 | 1175 | `11.936693` | `11.972988` | `0.036295` |
+| `r0` (one round of correct pricing) | 1066 | 1717 | `11.959186` | `11.988246` | `0.029060` |
+
+One round of correct pricing moves the clique LP by `+0.0225`, against `+0.0015` per round for the
+eleven rounds of `CLIQUE_CONTINUUM.md` §2 — and the *gain* shrinks, because the pure LP on the same
+poses moves less.  `runs/J15.*` continues this with the §2 separator as well (both fixes at once).
 
 ## 5. Step 2 — the verifier as the oracle
 
