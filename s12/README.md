@@ -114,9 +114,9 @@ about `3.815`, so for `n = 11` the pure method stops ~0.06 below the conjectured
 
 By LP duality the least possible certificate weight at container side `s` is at least the
 **fractional packing number** `ν_f(s)`, so the method proves `s(12) ≥ s` only if `ν_f(s) < 12`.
-**This ceiling is now pinned rigorously.**  An explicit fractional packing of mass `12.00823`
+**This ceiling is now pinned rigorously.**  An explicit fractional packing of mass `12.0282` (earlier `12.00823`)
 at `s = 399/100`, certified in exact rational arithmetic (`search/DUAL_EXACT.md`,
-`search/dual_exact.py`), shows that no cover of weight `< 12` exists at any `s ≥ 3.99`; with
+`search/dual_exact.py`, `search/CLIQUE_CONTINUUM.md` §3), shows that no cover of weight `< 12` exists at any `s ≥ 3.99`; with
 the shipped certificate, the ceiling `s*` of this entire family of arguments lies in
 **`[3.968616, 3.99)`**.  It is probably a little below 3.99: non-converged runs give
 `L(3.98) ≥ 11.918` and `L(3.97) ≥ 11.807` (`search/DUAL.md`), and column generation at
