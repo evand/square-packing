@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Anchor cliques: certifiable pose families that pairwise closed-intersect  (task G, part 1).
+r"""Anchor cliques: certifiable pose families that pairwise closed-intersect  (task G, part 1).
 
 An *anchor family* is  Q(A) = { S admissible closed unit square in [0,t]^2 : A subset of S }
 for a compact convex A.  Q({p}) is the point clique of p, which is exactly the family the point
@@ -1137,20 +1137,25 @@ def regularise(imgs, members, mass, t, nth=1024, shrink=(1.0, 0.5, 0.25, 0.1, 0.
 
 
 def kmass_multi(IM, anchors):
-    """mass of the general anchor clique
+    """mass of the general DIRECTED anchor clique.  With anchors A_0, ..., A_{m-1},
 
-        K(A_0, ..., A_{m-1}) = { S : A_i subset S for some i, and S meets A_j for every j }
+        part_i = { S : A_i subset S,  and S meets A_j for every j > i },
+        K       = part_0 u ... u part_{m-1}.
 
-    which is a clique for any anchors: if A_i subset S and S' meets A_i then S n S' is nonempty.
-    anchors: list of vertex lists (a single vertex = a point)."""
+    Clique: for i < j, a member of part_i meets A_j and A_j is inside every member of part_j,
+    so the two meet; two members of the same part share A_i.  (The filter for each pair is put
+    on the LOWER index -- any assignment works, and putting them all on the point anchor A_0
+    is the K(p, A) of Lemma 0 when m = 2.)"""
     import numpy as np
     n = len(IM)
-    anyc = np.zeros(n, dtype=bool)
-    allm = np.ones(n, dtype=bool)
-    for A in anchors:
-        anyc |= contains_np(IM, A)
-        allm &= meets_np(IM, A)
-    sel = anyc & allm
+    cont = [contains_np(IM, A) for A in anchors]
+    meet = [meets_np(IM, A) for A in anchors]
+    sel = np.zeros(n, dtype=bool)
+    for i, A in enumerate(anchors):
+        part = cont[i].copy()
+        for j in range(i + 1, len(anchors)):
+            part &= meet[j]
+        sel |= part
     return float(IM[sel, 3].sum()), int(sel.sum())
 
 
@@ -1185,14 +1190,15 @@ def anchor_multi(IM, p, t, nadd=2, neps=8, nrho=6, dirs=None, tol=1e-12):
                 kind='multi')
 
 
-def anchor_local(IM, p, t, neps=10, nrho=8, dirs=None, tol=1e-12):
+def anchor_local(IM, p, t, neps=10, nrho=8, dirs=None, tol=1e-12, ndir=16):
     """the anchor family Lemma 2 predicts: a short segment at offset eps in direction d,
     perpendicular to d, half-length rho.  Scans (d, eps, rho) directly -- much better targeted
     than a greedy over support squares, and it is exactly the family that survives perturbation."""
     import numpy as np
     thru = contains_np(IM, [p], tol=tol)
     if dirs is None:
-        dirs = [(math.cos(a), math.sin(a)) for a in np.linspace(0, 2 * math.pi, 16, endpoint=False)]
+        dirs = [(math.cos(a), math.sin(a))
+                for a in np.linspace(0, 2 * math.pi, ndir, endpoint=False)]
     best = None
     for d in dirs:
         dp = (-d[1], d[0])
@@ -1256,10 +1262,10 @@ def anchor_separate(IM, p, nseed=8, maxstep=40, tol=1e-12):
     return best
 
 
-def anchor_separate_all(IM, p, t, nseed=8, maxstep=40, tol=1e-12, neps=10, nrho=8):
+def anchor_separate_all(IM, p, t, nseed=8, maxstep=40, tol=1e-12, neps=10, nrho=8, ndir=16):
     """both families: the greedy-over-support-squares one and the local segment one"""
     a = anchor_separate(IM, p, nseed=nseed, maxstep=maxstep, tol=tol)
-    b = anchor_local(IM, p, t, neps=neps, nrho=nrho, tol=tol)
+    b = anchor_local(IM, p, t, neps=neps, nrho=nrho, tol=tol, ndir=ndir)
     if a is None:
         return b
     if b is None:

@@ -325,6 +325,9 @@ def main():
     ap.add_argument('--sep-pts', type=int, default=40)
     ap.add_argument('--nseed', type=int, default=4)
     ap.add_argument('--maxstep', type=int, default=12)
+    ap.add_argument('--neps', type=int, default=6)
+    ap.add_argument('--nrho', type=int, default=5)
+    ap.add_argument('--ndir', type=int, default=8)
     ap.add_argument('--h', type=float, default=0.01, help='centre pitch (0 = exact sweep pricer)')
     ap.add_argument('--dth', type=float, default=1.0, help='angle pitch in degrees')
     ap.add_argument('--rounds', type=int, default=60)
@@ -341,6 +344,7 @@ def main():
     ap.add_argument('--kmass', type=float, default=None,
                     help='leaf mode: total mass of poses centred in the four corner boxes [0,r]^2')
     ap.add_argument('--r', type=float, default=1.0)
+    ap.add_argument('--cuts', default=None, help='reload anchor cuts from a JSON dump')
     args = ap.parse_args()
 
     t = float(eval(args.T)) if '/' in args.T else float(args.T)
@@ -384,7 +388,9 @@ def main():
         seeds = snap_to_lattice(seeds, t, args.h, args.dth)
     M.add_poses(seeds)
     M.add_points(PD.seed_points(t, args.row_pitch))
-    log(f"# start: {len(M.poses)} orbits, {M.m.A.shape[0]} rows")
+    if args.cuts:
+        load_cuts(M, args.cuts, log)
+    log(f"# start: {len(M.poses)} orbits, {M.m.A.shape[0]} rows, {len(M.cuts)} cuts")
 
     t0 = time.time()
     hist = []
@@ -430,6 +436,7 @@ def main():
             f"cols {len(M.poses)} cuts {len(M.cuts)} maxclique {mcl:.5f}  "
             f"({time.time()-t0:.0f}s)")
         write_support(M, mu, obj, Mx, args.TAG, t)
+        dump_cuts(M, args.TAG)
         json.dump(dict(tag=args.TAG, t=t, mode=args.mode, h=args.h, dth=args.dth, obj=obj,
                        maxcov=Mx, hist=hist),
                   open(os.path.join(RUNS, f'cq_{args.TAG}.json'), 'w'), indent=1)
@@ -527,10 +534,11 @@ def separate(M, mu, args, log):
             added += 1
         return added, w0
     if args.mode == 'anchor':
-        pts = tight_row_points(M, args, npts=args.sep_pts)
+        pts = tight_row_points(M, args, mu, npts=args.sep_pts)
         recs = []
         for p in pts:
-            r = CF.anchor_separate_all(im, p, M.t, nseed=args.nseed, maxstep=args.maxstep)
+            r = CF.anchor_separate_all(im, p, M.t, nseed=args.nseed, maxstep=args.maxstep,
+                                       neps=args.neps, nrho=args.nrho, ndir=args.ndir)
             if r is not None:
                 recs.append(r)
         recs.sort(key=lambda r: -r['mass'])
@@ -564,12 +572,8 @@ def separate(M, mu, args, log):
     return added, worst
 
 
-def tight_row_points(M, args, npts=60):
+def tight_row_points(M, args, mu, npts=60):
     """the row points with the highest coverage (candidate anchor points)"""
-    r = M.solve()
-    if r is None:
-        return []
-    mu = r[0]
     cov = M.m.A.dot(mu)
     pts = M.m.pts
     t = M.t
@@ -579,12 +583,8 @@ def tight_row_points(M, args, npts=60):
     sel = sel[np.argsort(-cov[sel])]
     if len(sel) > npts:
         sel = sel[::max(1, len(sel) // npts)][:npts]
-    out = []
-    for i in sel:
-        x, y = float(pts[i, 0]), float(pts[i, 1])
-        for (a, b) in ((x, y), (y, x), (t - x, y), (x, t - y)):
-            out.append((a, b))
-    return out[:4 * npts]
+    # the measure is D4-symmetric, so the fundamental-domain representative is enough
+    return [(float(pts[i, 0]), float(pts[i, 1])) for i in sel]
 
 
 def kcut_candidates(M, im, args, npts=60):
@@ -614,6 +614,23 @@ def kcut_candidates(M, im, args, npts=60):
         out.append((float(im[mask, 3].sum()), p))
     out.sort(reverse=True)
     return out
+
+
+def dump_cuts(M, tag):
+    """persist the anchor cuts (they are just (p, A) pairs) so a restart keeps them"""
+    out = [dict(p=list(c['obj'].p), A=[list(v) for v in c['obj'].A])
+           for c in M.cuts if c['kind'] == 'anchor']
+    if out:
+        json.dump(out, open(os.path.join(RUNS, f'cq_{tag}_cuts.json'), 'w'))
+
+
+def load_cuts(M, path, log):
+    n = 0
+    for c in json.load(open(path)):
+        M.add_cut(dict(kind='anchor', obj=ACut(tuple(c['p']), [tuple(v) for v in c['A']])))
+        n += 1
+    log(f"# loaded {n} anchor cuts from {path}")
+    return n
 
 
 def write_support(M, mu, obj, Mx, tag, t):

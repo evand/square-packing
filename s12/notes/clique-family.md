@@ -327,17 +327,19 @@ On the exact certified extremal measure at `t = 3.99` (`runs/dual_exact_3.99_sup
 |---|---|---|
 | point clique (= coverage) | `1.000000` | certified exactly by `dual_exact.py` |
 | max-mass clique of the support's closed-intersection graph | **1.2139** (B&B, 60–120 s cap; task A reports 1.327 with a longer run) | valid, but its members are individual poses |
-| best **anchor clique** `K(p,A)` found (`clique_family.py separate`, 60 anchor points × 5 seeds × 20 greedy steps) | **1.0502** | `p = (3.01, 2.61)`, `A` = one whole support square: `{S : A ⊆ S} = {A}` — a *single pose*, so the cut is fragile under column generation |
-| best anchor clique with `A` of positive-measure "reach" (diam `≤ 0.01`) | **0.998** | i.e. no violation at all |
+| best **anchor clique** `K(p,A)` found (`clique_family.py separate`, greedy over support squares **and** the targeted `(d, ε, ρ)` scan of Lemma 2) | **1.0571** | `A` = one whole support square, so `{S : A ⊆ S} = {A}` is a *single pose*: valid, but a measure-zero cut that column generation and a cover both ignore |
+| best anchor clique whose `A` is a genuine segment, so that `{S : A ⊆ S}` is a pose *region* | **1.0242** at `p = (0.55, 2.99)`, `A` a segment of length `0.735` containing 8 support images; and `1.0193`, `1.0157`, `1.0083`, … at other wall points | this is the real number: robust, region-shaped, violated by `+0.024` |
 | regularising task A's max clique (`clique_family.py regular`): `p` = its heaviest common point, `A` = intersection of the members that miss `p` | **0.9695** (best over the greedy path) | the rule "contains `p` **and** meets `A`" keeps only 54 of the 137 support poses through `p` |
 
-**Reading.**  The certified 12.008 measure really does violate valid clique constraints (by
-0.21–0.33) — that is not an artefact.  But every violated clique found is carried by *individual
-poses*: as soon as the clique is required to be a **region** described by anchors, so that a
-perturbed pose is still charged, the violation drops from 0.21 to at most 0.05, and to 0 once the
-anchor is small enough for `{S : A ⊆ S}` to be more than one pose.  This is the same phenomenon
-`CLIQUE_CEILING.md` measured as "grazing contacts", stated in a form that says *why*: the
-grazing members are exactly the ones that a describable family cannot hold on to.
+**Reading.**  Three regimes, and the gaps between them are the content of the task.  The
+certified 12.008 measure violates *some* valid clique constraint by `0.21–0.33`; it violates the
+best **anchor** clique by `0.057`, but that one is carried by a single pose; and it violates the
+best anchor clique that is a genuine *region* by `0.024`.  Note where the region cliques live:
+`p = (0.55, 2.99)`, `(0.75, 1.99)`, `(2.33, 0.93)` — wall distances `0.55`, `0.75`, `0.93`,
+exactly the band Lemma 1 says is the only place a clique can beat a point row, and the violation
+shrinks as the wall distance grows towards 1.  This is the same phenomenon `CLIQUE_CEILING.md`
+measured as "grazing contacts", with the mechanism named: the grazing members are the ones a
+describable family cannot hold on to, and what survives is a factor of ten smaller.
 
 ## 7. A near miss, recorded
 
