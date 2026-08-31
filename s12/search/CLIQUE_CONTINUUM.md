@@ -119,7 +119,7 @@ gap is a real optimality certificate for the LP over `{all admissible centres} �
 |---|---|---|
 | `h = 0` (exact centres), `dθ = 1°` | `12.0083, 12.0095, 12.0166, 12.0227, 12.0282` — passes at **round 0** and keeps rising | **PASS** |
 | `h = 0.01`, `dθ = 1°` | `11.878, 11.914, 11.956, 11.981, 12.006` (rising, run stopped there) | **marginal** (`0.0025` low after 5 stages, still climbing) |
-| `h = 0.02`, `dθ = 2°` | `11.746, 11.913, 11.966` / restarted `11.909, 11.963, …` | **FAIL** (`0.045` low) |
+| `h = 0.02`, `dθ = 2°` | `11.746, 11.913, 11.966`; a restart from that support gave `11.909, 11.963` | **FAIL** (`0.045` low) |
 
 So the clique numbers below were computed **only** on the lattice that passes calibration, which
 is the point of the rule.  It is worth saying why the coarse lattices are not merely weaker but
@@ -135,12 +135,15 @@ cut of that family were found.
 | mode | family | stage values | residual max clique of the support graph |
 |---|---|---|---|
 | `pure` | — | `12.0083 → 12.0095 → 12.0166 → 12.0227 → 12.0282` (rising) | `1.21–1.33` (the pure measures are not clique-feasible — task A) |
-| `anchor` | `K(p, A)`, geometric membership | see the matched table below | `1.26–1.28` |
+| `anchor` | `K(p, A)`, geometric membership | see the matched table below | `1.16–1.37` (unrestricted cliques are still violated; anchor cliques are not) |
 | `sat` | arbitrary finite pose sets (task A's family) | inner iterations `11.975 → 11.932 → 11.911 → 11.902` on a fixed 514-pose set (834 cuts, still falling when the run was stopped) | `1.07` and falling |
 
 **Matched pairs — the number that matters.**  At every stage the run also solves the *same* LP on
 the *same* pose set with the cuts removed, so the clique gain is read off one pose set and not
 across lattices (`runs/cq_A99sw5.log`):
+
+Nine of the eleven inner loops ended with `+rows 0 +cuts 0` and residual max **anchor** clique
+`1.0000` — that is, with the separator unable to find any violated anchor clique at all.
 
 | stage | poses (orbits) | anchor cuts | pure value | anchor-clique value | gain | residual max anchor clique |
 |---|---|---|---|---|---|---|
