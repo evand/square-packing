@@ -335,27 +335,93 @@ to 12 digits.  Recorded also in `notes/clique-family.md §7`.
 ## 7a. `t = 3.98`, corner leaf `k = 4`
 
 `clique_continuum.py --kmass 4 --r 1` adds the leaf's equality row (total mass of poses centred in
-the four corner boxes `[0,1]²` equals 4) with its dual `λ` in the pricing, exactly as
-`clique_ceiling.py` does.  Warm start: the branch dual `runs/branch_t398hk4_dual_it16.txt`
-(520 poses, `CLIQUE.md`) plus `dual_PD1_support.txt`.  First stage (`runs/cq_L98B.log`):
+the four corner boxes `[0,1]²` equals 4) with its multiplier in the pricing, the packing-side dual
+of the branch certificate of `BRANCH.md` (`n <= W - λk`).  Warm starts: the branch dual
+`runs/branch_t398hk4_dual_it16.txt` (520 poses), `dual_PD1_support.txt`, and — rescaled by
+`3.98/3.99` — the new certified 3.99 measure.
 
-| stage | poses | anchor cuts | pure value on the same poses | anchor-clique value | gain |
-|---|---|---|---|---|---|
-| `r0` | 1207 | 260 | `11.913925` | `11.810839` | `0.103` |
-| `r1` | 1598 | 416 | `11.916397` | `11.811548` | `0.105` |
-| `r2` | 2012 | 447 | `11.918038` | `11.813884` | `0.104` |
-| `r3` | 2435 | 590 | `11.916111` | `11.811499` | `0.105` |
+### A pricing bug, found and fixed
 
-The **gain is the same size as at `t = 3.99`**, which is the interesting part.  The run is not yet
-calibrated: the leaf's pure value is known to be `12.000 ± 0.001` (`CLIQUE.md`) and this pose set
-only reaches `11.914`, so the leaf needs more pricing rounds before its clique value can be quoted
-against 12.  If the gain holds at `0.10` once the pure value reaches `12.000`, the `k = 4` leaf —
-the one thing blocking `s(12) >= 3.98` — would close with room, which makes finishing this run the
-single highest-value follow-up of the task.
+The first leaf runs stalled at `11.916`.  Two faults, both in the leaf multiplier:
+
+* the reduced cost was computed as `1 - capture + λ` for corner poses.  Dual feasibility for
+  `max Σμ  s.t.  Aμ <= 1, Fμ = k` is `Aᵀy + Fᵀλ >= c`, so it is `1 - capture - λ`;
+* worse, on the exact-centre lattice (`h = 0`) the pricer is `packing_dual.py`'s arrangement
+  sweep, which knows nothing about `λ` and filters candidates on `capture < 1`.  With `λ < 0`
+  the improving corner columns are exactly those with `capture ∈ [1, 1 - λ)`, so **every one of
+  them was invisible**.
+
+Measured `λ = -0.917` at the first stage, and the new explicit corner pricer (`price_corner`,
+which rasters the origin corner box — the other three are its D4 images) found **574 improving
+corner poses at once** that the sweep could not see.  The fix moved the leaf pure value from
+`11.916` to `11.949` and drove `|λ|` from `0.92` down to `0.29`.  The `t = 3.99` runs are
+unaffected: they have no equality row, and their row counts stayed below the `maxatoms` pricing
+cap that also had to be raised here (16k rows at 3.98 against 5.9k at 3.99).
+
+### Matched pairs (`runs/cq_LA98.log`), same protocol as §2
+
+| stage | poses | anchor cuts | pure value on the same poses | anchor-clique value | gain | corner mass | `λ` |
+|---|---|---|---|---|---|---|---|
+| `r0` | 1707 | 302 | `11.913024` | `11.815254` | `0.098` | `4.000000` | `-0.952` |
+| `r1` | 2126 | 438 | `11.913105` | `11.813382` | `0.100` | `4.000000` | `-1.044` |
+| `r2` | 2944 | 573 | `11.913980` | `11.812264` | `0.102` | `4.000000` | `-0.991` |
+| `r3` | 3367 | 601 | `11.916297` | `11.812316` | `0.104` | `4.000000` | `-1.123` |
+| `r4` | 4276 | 748 | `11.916476` | `11.810144` | `0.106` | `4.000000` | `-1.064` |
+
+The gain is `0.098–0.106` and creeping **up** as the pose set grows by a factor of 2.5 — the same size and the same
+flatness as the `0.104–0.120` measured at `t = 3.99`.  The residual max clique of the support
+graph is `1.11–1.33`, i.e. unrestricted cliques are still violated while anchor cliques are not.
+
+### Calibration: NOT reached — `0.051` short, and why
+
+The best pure leaf value obtained is **`11.9542`** (`runs/cq_LP98b.log` r6, 5760 poses,
+`λ = -0.344`), against the target `12.000 ± 0.001`.  The stage sequence is monotone and still
+rising when the budget ran out: `11.911, 11.911, 11.930, 11.943, 11.944, 11.949, 11.952,
+11.954`, at about `+0.003` per stage with stages costing ~50 min by the end.  So the `≈ 0.10` clique gain
+**cannot yet be quoted against 12**: on the pose sets reachable here the pure reference is
+`11.91–11.95`, not `12.00`.  The residual gap is `0.046`.
+
+The run is **not converged**, and says so itself: at the last stage the sweep pricer still
+reports a best capture of `0.805` (reduced cost `0.195`) for interior poses and the corner pricer
+a reduced cost of `0.020` on 972 corner poses.  Columns with that much reduced cost mean the pose
+set, not the LP, is the binding constraint — this is a run that needs more compute, not a value
+that has settled below the target.
+
+The shortfall is a column-generation deficit at `t = 3.98` in general, **not** something specific
+to the leaf.  The control that shows this: the *unconstrained* pure LP at `t = 3.98`, same
+machinery, same time, reaches only `11.934` (`runs/cq_P98u.log`) — *below* the leaf LP's
+`11.954`, even though the leaf LP carries an extra equality constraint and so has the smaller
+feasible set.  Both are simply short of their common ceiling.  The reason is the warm start: at
+`3.99` the run begins from the certified `12.008` measure, which is already essentially optimal,
+so calibration passes at round 0; at `3.98` no such measure exists.  The best available seed,
+`dual_PD1`, is itself a non-converged `11.918` (`DUAL.md`), and the branch dual is a cover-side
+object.  Rescaling the new certified `3.99` measure down to `3.98` was tried (`--warm-from 3.99`,
+`runs/cq_LP98c.log`) and starts a different but not better path (`11.770 → 11.885 → 11.918` and
+climbing).
+
+One further caveat about the target itself: `12.000 ± 0.001` is **uncertified**.  `CLIQUE.md`
+records that the `t398hk4` run reached it at a degenerate vertex with a 2 % pricing gain, with the
+value "straddled by the row and column steps" (`11.9995` on the column step, `12.000024` on the
+row step).  It is a soft target, and the true leaf value could be a little below it.
+
+**Leaf verdict: undecided, because the pure reference is not yet converged.**  What is
+established: the leaf's anchor-clique gain is `0.098–0.106`, stable and slowly rising, the
+same as at `3.99`.  What
+is not: whether the leaf's pure value is really `12.000`.  If it is, the same gain would put the
+anchor-clique leaf value at `≈ 11.90` — the leaf would close with room and `s(12) >= 3.98` would
+follow — but that is an extrapolation from a `0.05` extrapolated reference, not a measurement, and
+this write-up does not claim it.  What would settle it is not more clique work but a converged
+pure LP at `3.98`: an exactly certified `t = 3.98` measure of the kind §3 produced at `3.99`,
+which is a self-contained follow-up worth about a day of compute; extrapolating the `+0.003`-per-stage trend, roughly 15 more
+stages of the run already in `runs/cq_LP98b.log`, which restarts from its own support file.
+
+No exactly certified anchor-clique-feasible leaf measure is reported: the rule stated in §3 is
+that such a measure is a lower bound on the clique-LP value and decides nothing in the useful
+direction, and here it would additionally be quoted against an unconverged reference.
 
 ## 8. What was not done
 
-* **The `t = 3.98` leaf to convergence.**  Started, one stage, not calibrated (above).
+* **A converged pure LP at `t = 3.98`.**  Without it the leaf's clique gain (measured, `0.10`) cannot be quoted against 12 — see §7a.  This, not more clique machinery, is the blocker on the `k = 4` leaf.
 * **The cover side.**  Nothing here is a certificate.  The decisive experiment — a clique
   certificate of weight `< 12` — is on the cover side and needs the verifier changes of §6.
 * **Multi-anchor cliques (`m ≥ 3`).**  Implemented (`clique_family.kmass_multi`,
