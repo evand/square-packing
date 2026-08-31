@@ -178,7 +178,10 @@ def cut_penalty(M, ycut, poses, active=None):
     pen = np.zeros(len(poses))
     if not M.cuts:
         return pen
-    idx = range(len(M.cuts)) if active is None else active
+    # `ycut` can be shorter than `M.cuts`: the inner loop's last solve happens BEFORE that
+    # iteration's cut additions, so refresh or truncate rather than index out of range
+    n = min(len(M.cuts), len(ycut))
+    idx = range(n) if active is None else [i for i in active if i < n]
     for i in idx:
         d = ycut[i]
         if d <= 1e-12:
@@ -725,6 +728,9 @@ def main():
     t0 = time.time()
     hist = []
     for rnd in range(a.rounds):
+        rr = M.solve()                 # duals consistent with the current cut set
+        if rr is not None:
+            mu, y, ycut, _ = rr
         ax, ay, aw = PD.atoms_from_dual(M.m, y, maxrows=a.maxatoms)
         cands = []
         nb = np.zeros((0, 5))
