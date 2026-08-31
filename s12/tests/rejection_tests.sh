@@ -463,5 +463,26 @@ cmpmin "xcheck agrees: K(p,A) with a segment filter"  $T/t23a.txt 13
 cmpmin "xcheck agrees: unmeetable filter"             $T/t23b.txt 12
 cmpmin "xcheck agrees: box + anchor cliques together" $T/t26a.txt 13 2000
 
+# 28. The shipped anchor-clique demonstration (FORMAT.md).  It needs N = 6000 (the 224 points it
+#     is built from do not cover at N = 2000), so these three run the verifier directly.
+A=certificates/s12_anchorclique_demo_3.9318.txt
+runN() {  # file, n, N -> $got
+  $V "$1" "$2" "$3" 4 0 >"$LAST" 2>&1; rc=$?
+  if grep -q 'panicked at' "$LAST" || [ "$rc" -ge 100 ]; then got=PANIC; panics=$((panics+1))
+  elif grep -q '^NOT VERIFIED' "$LAST"; then got=REJECT
+  elif grep -q '^VERIFIED:' "$LAST" && [ "$rc" -eq 0 ]; then got=VERIFIED
+  elif [ "$rc" -ne 0 ] && ! grep -q 'VERIFIED' "$LAST"; then got=ERROR
+  else got="UNKNOWN(rc=$rc)"; fi
+}
+checkN() { runN "$3" "$4" "$5"; if [ "$got" = "$2" ]; then ok "$1" "$got"; else bad "$1" "$got" "$2"; fi; }
+checkN "shipped anchor-clique demo (N=6000)"      VERIFIED "$A" 12 6000
+expect_out "  ...one clique of two pieces"          "^ANCHOR-CLIQUE certificate: 1 cliques with 2 pieces"
+#     the clique is load-bearing: zero its weight and the covering breaks (a box clique never was)
+sed 's/^1198148 2$/0 2/' "$A" > $T/t28a.txt
+checkN "  ...clique weight zeroed: covering breaks" REJECT  $T/t28a.txt 12 6000
+#     move the anchor point by 0.05: the piece no longer holds the poses through p
+sed 's/^anchorP 1375 3875 1994$/anchorP 1475 3875 1994/' "$A" > $T/t28b.txt
+checkN "  ...anchor point displaced by 0.05"        REJECT  $T/t28b.txt 12 6000
+
 echo "  ---- $pass passed, $fail failed, $panics panics"
 [ "$fail" -eq 0 ] && [ "$panics" -eq 0 ]

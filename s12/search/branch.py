@@ -393,6 +393,17 @@ def export(m, x, lam, path, WD=10 ** 7, factor=1.0, up=True):
         w = int(math.ceil(v - 1e-9)) if up else int(math.floor(v))
         if w <= 0: continue
         for im in imgs: cls.append(im); clw.append(w); tot += w
+    # Every anchor point is emitted as a ZERO-WEIGHT atom.  It carries no weight, but the sweep's
+    # cells are the atoms' breakpoints and a cell is credited only if it lies WHOLLY inside a piece:
+    # without them the cells straddle the boundary of {S : p in S} and of {S : A subseteq S} and a
+    # band around each loses the credit -- which is exactly where the covering is tight.
+    extra = set()
+    for cl in cls:
+        for anc in cl[0]:
+            for (vx, vy) in ([(anc[1], anc[2])] if anc[0] == 'P' else [(anc[1], anc[2]), (anc[3], anc[4])]):
+                gx = Fraction(vx) * m.D; gy = Fraction(vy) * m.D
+                if gx.denominator == 1 and gy.denominator == 1: extra.add((int(gx), int(gy)))
+    for (X, Y) in sorted(extra): lines.append(f"{X} {Y} 0")
     Ls = [int(math.floor(l * factor * WD)) if up else int(math.ceil(l * factor * WD)) for l in lam]
     with open(path, 'w') as f:
         f.write(f"{s.numerator} {s.denominator}\n{m.D}\n{WD}\n{len(lines)}\n" + "\n".join(lines) + "\n")

@@ -49,6 +49,7 @@ This is what the rescaling argument above needs, and it is what `verify/` implem
 | `s12_uniform_<k>of<m>_<s>.txt` | see `search/uniform/UNIFORM.md` | m | m/k | uniform family, k = 1..8 |
 | `s12_56points_3.8.txt` | 19/5 | 56 | 56/5 = 11.2 | s(12) >= 3.8 |
 | `s12_boxclique_demo_3.9318_N2000.txt` | 3920/997 | 224 + 8 cliques | 11.9939028 | s(12) >= 3.931795 (format demonstration: points plus box cliques, tied to N = 2000; see below) |
+| `s12_anchorclique_demo_3.9318.txt` | 3920/997 | 226 + 1 anchor clique | 11.9834372 | s(12) >= 3.931795 (format demonstration: one point of the 224-point set replaced by its anchor clique `K(p, A)`, which carries its weight; see below) |
 
 The uniform ones are included because every weight is equal, so they read as purely
 combinatorial statements — e.g. the 56-point one: *every closed unit square inside `[0, 3.8]^2` contains at
@@ -329,5 +330,21 @@ no `N` and is meaningful at every `N` — a finer net simply credits more cells.
 no representable images under the container's symmetries, so a certificate carrying them is swept
 over the full `[0°, 90°]`.
 
-`search/anchorclique.py` (via `search/branch.py --cliques`) produces these certificates;
-`search/ANCHOR.md` reports what they are worth.
+**A practical note: the anchors' own points belong in the file as zero-weight atoms.**  They carry
+no weight, but the sweep's cells are the atoms' breakpoints and a cell is credited only if it lies
+*wholly* inside a piece: without them the cells straddle the boundary of `{S : p ∈ S}` and of
+`{S : A ⊆ S}` and a band around each boundary loses the credit — which is exactly where the
+covering is tight.  In the demonstration file below this is the difference between `1.000002` and
+`0.958275`.
+
+**Shipped demonstration** — `s12_anchorclique_demo_3.9318.txt`.  The 224-point certificate with one
+point (at `(1375, 3875)/1994`, wall distance `0.6896`) replaced by the anchor clique `K(p, A)` of
+`notes/clique-family.md` Lemma 2 carrying that point's weight `0.1198148`: `A` is the vertical
+segment at offset `ε = 0.2949` of half-length `ρ = 0.3109 > ρ* = 0.2808`, so `K(p, A)` contains the
+whole point clique of `p` and the covering is at least as strong; the total weight is unchanged at
+`11.9834372 < 12`.  Verified at `N = 6000` **and** `N = 12000` — an anchor block refers to no net.
+Unlike the box-clique demonstration the clique is **load-bearing**: with its weight set to `0` the
+minimum covered weight drops to `0.880188` and the file is rejected.
+
+`search/anchorclique.py` (via `search/branch.py --cliques`) produces these certificates,
+`search/anchordemo.py` the demonstration; `search/ANCHOR.md` reports what they are worth.
