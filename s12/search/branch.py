@@ -491,9 +491,10 @@ def price_asym(m, y, pitch=0.02, want=200, ysup=1e-9):
 
 
 CQ_MAX = int(os.environ.get('BRANCH_CQ_MAX', '400'))     # cap on the number of clique-orbit columns
+INT_TOP = int(os.environ.get('BRANCH_CQ_INT_TOP', '150'))  # anchor points for the interior separator
 
 
-def price_cliques(m, y, x, want=40, thr=1e-7, pitch=0.01, top=600, fracs=(0.95, 0.85, 0.7, 0.55, 0.4, 0.25), log=None):
+def price_cliques(m, y, x, want=40, thr=1e-7, pitch=0.01, top=600, fracs=(0.95, 0.85, 0.7, 0.55, 0.4, 0.25), log=None, interior=False):
     """Price anchor-clique columns `K(p, A)` on the current dual (search/anchorsep.py).
 
     The dual `y` is a fractional packing on the rows (D4-averaged for a symmetric model), so the
@@ -510,6 +511,12 @@ def price_cliques(m, y, x, want=40, thr=1e-7, pitch=0.01, top=600, fracs=(0.95, 
     if not sup.any(): return 0, None, None
     best = ASEP.separate(Q[sup], y[sup], float(Fraction(m.K, m.D)), m.D, pitch=pitch, top=top,
                          fracs=fracs, sym=m.sym)
+    if interior:
+        # the interior family as well (search/RECONCILE.md): the largest violations of these
+        # packings are at wall distance > 1, which `separate` never looks at
+        best = best + ASEP.separate_interior(Q[sup], y[sup], float(Fraction(m.K, m.D)), m.D,
+                                             pitch=max(pitch, 0.02), top=INT_TOP, sym=m.sym)
+        best.sort(key=lambda t: -t[0])
     added = 0
     for (mk, mp, params, cl) in best:
         if mk <= 1.0 + thr or added >= want: break
@@ -535,8 +542,12 @@ def load_cliques(m, path):
         sfr = Fraction(m.K, m.D)
         for line in f:
             q = [int(v) for v in line.split()]
-            if len(q) != 5: continue
-            cl = AC.kpa(sfr, m.D, q[0], q[1], q[2], q[3], q[4])
+            if len(q) == 5:                       # wall-perpendicular Lemma-2 anchor
+                cl = AC.kpa(sfr, m.D, q[0], q[1], q[2], q[3], q[4])
+            elif len(q) == 6:                     # general segment anchor (search/RECONCILE.md)
+                cl = AC.kseg(sfr, m.D, *q)
+            else:
+                continue
             if cl is not None and m.add_clique(cl, tuple(q)): n += 1
     return n
 
@@ -603,7 +614,7 @@ def load_cols(m, path, raw=False):
 
 def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe_margin=None, x0=None,
          prune_at=None, colgen=0, cg_want=200, cg_pitch=0.01, n=12, threads=None, dump_lp=None,
-         cliques=0, cq_want=40, cq_pitch=0.01, matched=False):
+         cliques=0, cq_want=40, cq_pitch=0.01, matched=False, cq_interior=False):
     """cutting-plane loop; returns (x, lam, obj, info).  Asymmetric models sweep [0,90deg), i.e.
     2.4x the bins: fewer witnesses per bin and a higher prune threshold keep the row set stable
     (pruning every round makes the LP vertex jump and the dropped rows come straight back)."""
@@ -644,7 +655,7 @@ def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe
         ncl_used = int((x[n_orb:] > 1e-12).sum()) if len(x) > n_orb else 0
         ncq = 0; cqmass = None; cqpt = None; t_cq = 0.0
         if it < cliques:
-            t1 = time.time(); ncq, cqmass, cqpt = price_cliques(m, y, x, want=cq_want, pitch=cq_pitch); t_cq = time.time() - t1
+            t1 = time.time(); ncq, cqmass, cqpt = price_cliques(m, y, x, want=cq_want, pitch=cq_pitch, interior=cq_interior); t_cq = time.time() - t1
         t1 = time.time(); added = m.add_rows(wit); t_rows = time.time() - t1
         save_cols(m, f"runs/branch_{tag}_cols.txt")          # checkpoint: every column, weight or not, so a restart loses nothing
         if m.cliques: save_cliques(m, f"runs/branch_{tag}_cliques.txt")
@@ -694,7 +705,7 @@ def finalize(m, x, lam, tag, out_path, N=6000, log=print, WD=10 ** 7, margin=2e-
 
 def run(cert, tag, kreg, r, Dp=None, mul=1, N=6000, topk=6, margin=2e-6, log=print, warm=True, out=None,
         colgen=0, cg_want=200, cg_pitch=0.01, n=12, threads=None, cols=None, warm_thr=1.05, prune_at=None, row_grid=None, max_iters=None, dump_lp=None, cols_raw=False,
-        cliques=0, cq_want=40, cq_load=None, cq_pitch=0.01, matched=False):
+        cliques=0, cq_want=40, cq_load=None, cq_pitch=0.01, matched=False, cq_interior=False):
     m, w0, s = build_model(cert, r, kreg, Dp, mul, raw_points=cols_raw)
     if row_grid: m.row_grid = tuple(row_grid)
     log(f"[{tag}] {cert}: {len(m.orbits)} columns / {len(m.P)} atoms ({'D4 orbits' if m.sym else 'single points'}), container {s} = {float(s):.7f}, r = {m.rfrac} = {m.r:.4f}, k = {kreg}, input total {float(m.sizes @ w0):.6f}")
@@ -712,7 +723,7 @@ def run(cert, tag, kreg, r, Dp=None, mul=1, N=6000, topk=6, margin=2e-6, log=pri
         m._active = np.concatenate([w0 > 0, np.zeros(len(m.orbits) - len(w0), dtype=bool)])
         log(f"[{tag}] restricted master: {int(m._active.sum())} of {len(m.orbits)} columns active at start")
     x, lam, val, info = loop(m, tag, margin=margin, N=N, topk=topk, log=log, colgen=colgen, cg_want=cg_want, cg_pitch=cg_pitch, n=n, threads=threads, prune_at=prune_at,
-                             max_iters=max_iters if max_iters is not None else 400, dump_lp=dump_lp, cliques=cliques, cq_want=cq_want, cq_pitch=cq_pitch, matched=matched)
+                             max_iters=max_iters if max_iters is not None else 400, dump_lp=dump_lp, cliques=cliques, cq_want=cq_want, cq_pitch=cq_pitch, matched=matched, cq_interior=cq_interior)
     if x is None: log(f"[{tag}] FAILED"); return None
     if max_iters is not None:
         log(f"[{tag}] stopped after {info.get('iters')} rounds (--max-iters): LP value {val:.7f}, dual in runs/branch_{tag}_dual.txt; no finalize")
@@ -751,6 +762,7 @@ def main():
     ap.add_argument('--cq-want', type=int, default=40, help='anchor-clique columns added per round (default 40)')
     ap.add_argument('--matched', action='store_true', help='every round, also solve the SAME LP with the clique columns removed and log the pure value and the gain (search/CLIQUE_CONTINUUM.md calls this a matched pair)')
     ap.add_argument('--cq-pitch', type=float, default=0.01, help='grid pitch of the anchor-clique separator (default 0.01)')
+    ap.add_argument('--cq-interior', action='store_true', help='also separate anchor cliques at INTERIOR anchor points and arbitrary anchor directions (search/anchorsep.py separate_interior; search/RECONCILE.md -- the largest violations are at wall distance > 1)')
     ap.add_argument('--cq-load', action='append', default=None, help='anchor-clique checkpoint file(s) (runs/branch_TAG_cliques.txt) to start from')
     ap.add_argument('--dump-lp', default=None, metavar='PREFIX', help='write the LP of every round of the cutting-plane loop as PREFIX_itN.npz + PREFIX_itN_A.npz (see write_lp_dump / load_lp_dump; used by search/lp_bench.py)')
     a = ap.parse_args()
@@ -767,7 +779,7 @@ def main():
     log(f"branch.py {' '.join(sys.argv[1:])}")
     res = run(a.cert, a.tag, kreg, r, Dp=a.Dp, mul=a.mul, N=a.N, topk=a.topk, margin=a.margin, log=log, warm=not a.no_warm, out=a.out,
               colgen=a.colgen, cg_want=a.cg_want, cg_pitch=a.cg_pitch, n=a.n, threads=a.threads, cols=a.cols, warm_thr=a.warm_thr, prune_at=a.prune_at, row_grid=a.row_grid, max_iters=a.max_iters, dump_lp=a.dump_lp, cols_raw=a.cols_raw,
-              cliques=a.cliques, cq_want=a.cq_want, cq_load=a.cq_load, cq_pitch=a.cq_pitch, matched=a.matched)
+              cliques=a.cliques, cq_want=a.cq_want, cq_load=a.cq_load, cq_pitch=a.cq_pitch, matched=a.matched, cq_interior=a.cq_interior)
     if res: json.dump(res, open(f"runs/branch_{a.tag}.json", 'w'), indent=1)
 
 

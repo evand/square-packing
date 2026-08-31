@@ -86,6 +86,57 @@ def separate(R, y, s, D, pitch=0.01, top=600, fracs=(0.95, 0.85, 0.7, 0.55, 0.4,
     return out
 
 
+def separate_interior(R, y, s, D, pitch=0.02, top=150, ndir=16, neps=8, nrho=8, epsmax=0.9,
+                      sym=True, log=None):
+    """Separate anchor cliques over the WHOLE container and ALL anchor directions.
+
+    `separate` above scans only wall points with the wall-perpendicular Lemma-2 anchor, because
+    Lemma 1 says that is the only place a clique can *dominate* the coverage row at `p`.  That is
+    not the only place a clique can be *violated*: for an interior `p`, `K(p, A)` is not a
+    superset of `P_p` -- it is "the squares through `p` that reach `A`, plus the squares that
+    contain `A`" -- and on both exactly certified extremal measures at `t = 3.99` and on the
+    converged dual of the `k = 4` leaf that is where the largest violations are
+    (`search/RECONCILE.md`).  Same return shape as `separate`, with 6-integer params
+    `(X, Y, X0, Y0, X1, Y1)` for `anchorclique.kseg`."""
+    if len(R) == 0: return []
+    n = int(round(s / pitch)) + 1
+    ax = np.linspace(0, s, n)
+    G = np.array([(u, v) for u in ax for v in ax if u <= v + 1e-12 and v <= s / 2 + 1e-12]) if sym \
+        else np.array([(u, v) for u in ax for v in ax])
+    gs = [lambda p: p, lambda p: np.c_[s - p[:, 0], p[:, 1]], lambda p: np.c_[p[:, 0], s - p[:, 1]],
+          lambda p: np.c_[s - p[:, 0], s - p[:, 1]], lambda p: np.c_[p[:, 1], p[:, 0]],
+          lambda p: np.c_[s - p[:, 1], p[:, 0]], lambda p: np.c_[p[:, 1], s - p[:, 0]],
+          lambda p: np.c_[s - p[:, 1], s - p[:, 0]]]
+    cov = (sum(cover_grid(R, y, g(G)) for g in gs) / 8.0) if sym else cover_grid(R, y, G)
+    rot = AC._rot(R); sfr = F(int(round(s * D)), D)
+    dirs = [(math.cos(a), math.sin(a)) for a in np.linspace(0, 2 * math.pi, ndir, endpoint=False)]
+    out = []
+    for i in np.argsort(-cov)[:top]:
+        px, py = float(G[i][0]), float(G[i][1])
+        X, Y = int(round(px * D)), int(round(py * D))
+        pcl = ((('P', F(X, D), F(Y, D)),), ((0, ()),))
+        pim = AC.images(sfr, pcl) if sym else [pcl]
+        mp = float(AC.coeff(pim, R, rot) @ y) / len(pim)
+        for (dx, dy) in dirs:
+            for ie in range(1, neps + 1):
+                eps = epsmax * ie / neps
+                mx, my = px + eps * dx, py + eps * dy
+                for ir in range(1, nrho + 1):
+                    rho = 0.49 * ir / nrho
+                    v0 = (mx + rho * dy, my - rho * dx); v1 = (mx - rho * dy, my + rho * dx)
+                    if min(v0 + v1) < 0 or max(v0 + v1) > s: continue
+                    par = (X, Y, int(round(v0[0] * D)), int(round(v0[1] * D)),
+                           int(round(v1[0] * D)), int(round(v1[1] * D)))
+                    cl = AC.kseg(sfr, D, *par)
+                    if cl is None: continue
+                    imgs = AC.images(sfr, cl) if sym else [cl]
+                    mk = float(AC.coeff(imgs, R, rot) @ y) / len(imgs)
+                    if mk > 1.0 + 1e-9:
+                        out.append((mk, mp, par, cl))
+    out.sort(key=lambda t: -t[0])
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('dual'); ap.add_argument('--pitch', type=float, default=0.01)

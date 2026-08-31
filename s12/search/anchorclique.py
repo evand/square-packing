@@ -76,6 +76,27 @@ def kpa(s, D, X, Y, wall, eps_n, rho_n):
     return ((('P', px, py), A), ((0, (1,)), (1, ())))
 
 
+def kseg(s, D, X, Y, X0, Y0, X1, Y1):
+    """K(p, A) with p = (X/D, Y/D) and A the arbitrary closed segment (X0,Y0)-(X1,Y1) over D.
+
+    `kpa` is the special case A perpendicular to a wall at offset eps -- the family for which
+    Lemma 2 gives `K(p, A) contains P_p`, so that the column dominates the point column of `p`.
+    That is a statement about *domination*, not about *validity* or *violation*: Lemma 0 makes
+    `K(p, A)` a clique for every `p` and every `A`, and the cliques that the packings at
+    `t = 3.99` and the `k = 4` leaf actually violate hardest have `p` in the INTERIOR (wall
+    distance > 1), where `K(p, A)` is not a superset of `P_p` at all -- it is "the squares through
+    `p` that reach `A`, plus the squares that contain `A`".  Lemma 1 says an interior point clique
+    cannot be *enlarged*; it does not say a differently shaped clique there cannot be violated.
+    See `search/RECONCILE.md`."""
+    px, py = F(X, D), F(Y, D)
+    A = ('S', F(X0, D), F(Y0, D), F(X1, D), F(Y1, D))
+    for v in A[1:]:
+        if v < 0 or v > s: return None
+    if (A[1], A[2]) == (A[3], A[4]): return None
+    # piece 0 filters anchor 1 (they need not intersect), piece 1 has no filter -- Lemma 0
+    return ((('P', px, py), A), ((0, (1,)), (1, ())))
+
+
 def cand_params(s, D, X, Y, frac=0.95, slack=0.10, pad=0.002, wallpad=0.0005):
     """the (wall, eps_n, rho_n) of the widest Lemma-2 anchor at p = (X/D, Y/D): eps a fraction
     `frac` of its cap 1 - d, rho = (1+slack) rho* + pad.
