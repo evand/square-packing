@@ -290,10 +290,13 @@ clique-LP value over the continuum at those angles, and the pure value likewise.
 | row rule | clique LP | pure LP, same poses | gain |
 |---|---|---|---|
 | task G's (`clique_continuum.py`: rows converged for the clique solution only) | `11.950947` | `12.074469` | `0.123522` |
-| honest (rows converged for **both** solutions) | *(pending)* | *(pending)* | *(pending)* |
+| honest (rows converged for **both** solutions) | `11.945402` | `12.011346` | **`0.065944`** |
 
-The `12.074469` is the tell: the pure LP on a pose set whose *pure* value on a converged row set is
-`12.01–12.03` cannot be `12.074`; the excess is coverage violated at points that are not rows.
+Both LPs converged (`+rows 0 +cuts 0`), and both solved the cover LP to the same value to `1e-14`.
+So **task G's protocol overstates the gain by a factor of `1.9` on its own pose set**: the honest
+matched gain there is `0.066`, not `0.124`.  The `12.074469` is the tell — the pure LP on a pose
+set whose pure value on a converged row set is `12.011` cannot be `12.074`; the excess is coverage
+violated at points that are not rows of the clique loop.
 
 ## 4. Step 1 — the ladder with a correct pricer
 
