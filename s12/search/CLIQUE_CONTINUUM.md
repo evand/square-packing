@@ -14,12 +14,12 @@ the packing side it cannot be one.**
 
 The headline pair, on the lattice that passes calibration and on one and the same pose set:
 
-    pure LP            12.0115 → 12.0245        (target L(3.99) = 12.008: PASS at every stage)
-    anchor-clique LP   11.8965 → 11.9099        (gain 0.104 – 0.120)
+    pure LP            12.0115 → 12.0258        (target L(3.99) = 12.008: PASS at every stage)
+    anchor-clique LP   11.8965 → 11.9127        (gain 0.104 – 0.120)
 
-over nine stages in which the pose set grows from 558 to 3916 orbits, each stage ending with no
+over eleven stages in which the pose set grows from 558 to 4739 orbits, each stage ending with no
 violated anchor clique the separator can find.  The clique value stays pinned at `11.90 ± 0.006`
-across that 7.0× refinement while the pure value on the very same poses climbs — flat, where task
+across that 8.5× refinement while the pure value on the very same poses climbs — flat, where task
 A's unrestricted-clique ladder drifted by `0.26` over a comparable refinement.  The same
 measurement in the `k = 4` corner leaf at `t = 3.98` gives the same gain, `0.103–0.105` (§7a).
 
@@ -118,7 +118,7 @@ gap is a real optimality certificate for the LP over `{all admissible centres} �
 | lattice `(h, dθ)` | pure value (stage sequence) | calibration |
 |---|---|---|
 | `h = 0` (exact centres), `dθ = 1°` | `12.0083, 12.0095, 12.0166, 12.0227, 12.0282` — passes at **round 0** and keeps rising | **PASS** |
-| `h = 0.01`, `dθ = 1°` | `11.878, 11.914, 11.956, 11.981, 12.006, …` (rising, not converged) | **marginal** (`0.0025` low after 5 stages, still climbing) |
+| `h = 0.01`, `dθ = 1°` | `11.878, 11.914, 11.956, 11.981, 12.006` (rising, run stopped there) | **marginal** (`0.0025` low after 5 stages, still climbing) |
 | `h = 0.02`, `dθ = 2°` | `11.746, 11.913, 11.966` / restarted `11.909, 11.963, …` | **FAIL** (`0.045` low) |
 
 So the clique numbers below were computed **only** on the lattice that passes calibration, which
@@ -153,12 +153,14 @@ across lattices (`runs/cq_A99sw5.log`):
 | `r6` | 3109 | 816 | `12.020539` | `11.903942` | `0.117` | `≈ 1.00` (converged) |
 | `r7` | 3515 | 850 | `12.023412` | `11.909723` | `0.114` | `≈ 1.00` (converged) |
 | `r8` | 3916 | 882 | `12.024525` | `11.909865` | `0.115` | `≈ 1.00` (converged) |
+| `r9` | 4316 | 913 | `12.025325` | `11.912448` | `0.113` | `≈ 1.00` (converged) |
+| `r10` | 4739 | 932 | `12.025821` | `11.912723` | `0.113` | `≈ 1.00` (converged) |
 
 Every pure value clears the calibration target `12.008`, and the certifiable clique family costs
 the LP `0.104–0.120` — **thirteen to fifteen times** the pure method's entire excess over 12 at
-`t = 3.99`.  **The ladder is flat.**  Over these nine stages the pose set grows by a factor of
-**7.0** (558 → 3916 orbits) and the clique value stays pinned at `11.90 ± 0.007`, while the pure
-value on the very same poses climbs from `12.0115` to `12.0245`.  The gap does not close; it
+`t = 3.99`.  **The ladder is flat.**  Over these eleven stages the pose set grows by a factor of
+**8.5** (558 → 4739 orbits) and the clique value stays pinned at `11.905 ± 0.008`, while the pure
+value on the very same poses climbs from `12.0115` to `12.0258`.  The gap does not close; it
 widens slightly.  That is the qualitative difference from task A, whose stage values drifted `11.19 → 11.36 →
 11.45` over a comparable pose refinement: A's cuts were explicit lists of poses, so every new
 column arrived outside every cut; these cuts are geometric regions, so a new column that lands
@@ -339,6 +341,7 @@ the four corner boxes `[0,1]²` equals 4) with its dual `λ` in the pricing, exa
 | `r0` | 1207 | 260 | `11.913925` | `11.810839` | `0.103` |
 | `r1` | 1598 | 416 | `11.916397` | `11.811548` | `0.105` |
 | `r2` | 2012 | 447 | `11.918038` | `11.813884` | `0.104` |
+| `r3` | 2435 | 590 | `11.916111` | `11.811499` | `0.105` |
 
 The **gain is the same size as at `t = 3.99`**, which is the interesting part.  The run is not yet
 calibrated: the leaf's pure value is known to be `12.000 ± 0.001` (`CLIQUE.md`) and this pose set
