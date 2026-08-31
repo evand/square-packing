@@ -348,6 +348,7 @@ def main():
     ap.add_argument('--kmass', type=float, default=None,
                     help='leaf mode: total mass of poses centred in the four corner boxes [0,r]^2')
     ap.add_argument('--r', type=float, default=1.0)
+    ap.add_argument('--corner-pitch', type=float, default=0.08)
     ap.add_argument('--cuts', default=None, help='reload anchor cuts from a JSON dump')
     args = ap.parse_args()
 
@@ -382,11 +383,11 @@ def main():
         seeds = snap_to_lattice(seeds, t, args.h, args.dth)
     seeds += PD.seed_poses(t, 0.25, max(args.dth, 5.0))
     if args.kmass is not None:
-        for thd in np.arange(0.0, 90.0 - 1e-9, max(args.dth, 2.0)):
+        for thd in np.arange(0.0, 90.0 - 1e-9, max(args.dth, 5.0)):
             th = math.radians(thd)
             w2 = PD.wid_of(th) / 2
-            for a in np.arange(w2, min(args.r, t / 2) + 1e-9, 0.02):
-                for b2 in np.arange(w2, min(args.r, t / 2) + 1e-9, 0.02):
+            for a in np.arange(w2, min(args.r, t / 2) + 1e-9, args.corner_pitch):
+                for b2 in np.arange(w2, min(args.r, t / 2) + 1e-9, args.corner_pitch):
                     seeds.append((float(a), float(b2), th))
     if args.h > 0:
         seeds = snap_to_lattice(seeds, t, args.h, args.dth)

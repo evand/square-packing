@@ -42,9 +42,11 @@ Three things are new relative to tasks A and B.
    lines), and the size of the gain is governed by an exact threshold
    `ρ* = ε·p_x/sqrt(1-p_x²)` (Lemma 2, proved and stress-tested).  The violated region cliques
    found sit at wall distances `0.55, 0.75, 0.93` — inside that band, as predicted — while the
-   *tight points* of the pure measure sit at `0.99`, where the whole extra family is `0.13 %` of
-   the point clique.  The clique lever is therefore not at the tight points of the pure optimum;
-   the LP has to move mass to reach it, which is exactly why the cuts cost the LP something.
+   *tight points* of the pure measures sit right against the line: `(0.98962, 0.99835)` for the
+   old certified measure and `(0.999939, 0.999939)` for the new one, i.e. wall distance `0.99` and
+   `0.99994`, where the whole extra family is `0.13 %` and `4e-6` of the point clique.  The clique
+   lever is therefore **not** at the tight points of the pure optimum: the LP has to move mass
+   inward to reach it, and that is exactly why the cuts cost it something.
 
 **What is not settled, and why the packing side cannot settle it.**  Every number below is an LP
 value on a *restricted* pose set, hence a **lower** bound on the continuum clique-LP value `V`;
@@ -131,7 +133,7 @@ cut of that family were found.
 |---|---|---|---|
 | `pure` | — | `12.0083 → 12.0095 → 12.0166 → 12.0227 → 12.0282` (rising) | `1.21–1.33` (the pure measures are not clique-feasible — task A) |
 | `anchor` | `K(p, A)`, geometric membership | see the matched table below | `1.26–1.28` |
-| `sat` | arbitrary finite pose sets (task A's family) | `11.975 → 11.932 → 11.911 → 11.902` (514 poses, 834 cuts, still falling) | `1.07` and falling |
+| `sat` | arbitrary finite pose sets (task A's family) | inner iterations `11.975 → 11.932 → 11.911 → 11.902` on a fixed 514-pose set (834 cuts, still falling when the run was stopped) | `1.07` and falling |
 
 **Matched pairs — the number that matters.**  At every stage the run also solves the *same* LP on
 the *same* pose set with the cuts removed, so the clique gain is read off one pose set and not
