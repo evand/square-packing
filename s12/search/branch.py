@@ -45,6 +45,7 @@ sys.path.insert(0, HERE)
 import tighten as T
 import nu_f as NF
 import anchorclique as AC
+import anchorsep as ASEP
 
 LAM_FREE = -2.0          # multiplier of a box with K_j = 0: its rows are vacuous (A x >= -1 + margin)
 SOLVER = os.environ.get('BRANCH_SOLVER', 'highs-ipm')   # scipy method: 'highs', 'highs-ds', 'highs-ipm'; 'warm' = highspy dual simplex with a carried basis (measured: a 40k-iteration phase 1 per round, no gain -- search/LPSPEED.md); 'restricted' = column-sifted master (see solve_restricted; the measured win)
@@ -469,49 +470,32 @@ def price_asym(m, y, pitch=0.02, want=200, ysup=1e-9):
     return cand
 
 
-def price_cliques(m, y, x, want=40, extra=None, thr=1e-7, fracs=(0.95, 0.55), maxpts=600):
-    """Price anchor-clique columns `K(p, A)` on the current dual (search/anchorclique.py).
+CQ_MAX = int(os.environ.get('BRANCH_CQ_MAX', '400'))     # cap on the number of clique-orbit columns
 
-    A candidate is a point `p` of the current support (or of the point pricer's list) that lies
-    strictly within distance 1 of a wall -- Lemma 1 says nowhere else can a clique beat the
-    coverage row at `p` -- together with the perpendicular segment `A` of Lemma 2 at offset
-    `eps = frac (1 - dist)` and half-length `rho = 1.1 rho* + pad`, so that `K(p, A)` contains the
-    whole point clique of `p`.  The column then has the same cost as the point column of `p` and
-    covers at least the same rows, i.e. it DOMINATES it; what it adds is the dual mass of
-    `{S : A subseteq S} minus P_p`.  The dual `y` is a fractional packing, so the reduced cost of the
-    clique orbit is `|orbit| (1 - ybar(K))` and a column is worth adding iff `ybar(K) > 1`.
-    Returns (number added, best ybar seen)."""
-    if not len(m.rows): return 0, None
-    Q = np.array(m.rows)
-    sup = np.nonzero(y > 1e-9)[0]
-    if not len(sup): return 0, None
-    Qs = Q[sup]; ys = y[sup]; rot = AC._rot(Qs)
-    sfr = Fraction(m.K, m.D); n_orb = len(m.orb_int)
-    xs = np.asarray(x[:n_orb]); pts = []
-    for k in np.argsort(-xs)[:maxpts]:
-        if xs[k] <= 1e-12: break
-        pts.append(tuple(int(v) for v in m.orb_int[k][0]))
-    for t in (extra or []): pts.append((int(t[1]), int(t[2])))
-    seen = set(); cands = []
-    for (X, Y) in pts:
-        if (X, Y) in seen: continue
-        seen.add((X, Y))
-        for frac in fracs:
-            for (wall, en, rn, d) in AC.cand_params(sfr, m.D, X, Y, frac=frac):
-                cl = AC.kpa(sfr, m.D, X, Y, wall, en, rn)
-                if cl is None or AC.key(cl) in m.ckey: continue
-                cands.append(((X, Y, wall, en, rn), cl))
-    scored = []
-    for params, cl in cands:
-        imgs = AC.images(sfr, cl) if m.sym else [cl]
-        v = AC.coeff(imgs, Qs, rot)
-        scored.append((float(v @ ys) / len(imgs), params, cl))
-    scored.sort(key=lambda t: -t[0])
+
+def price_cliques(m, y, x, want=40, thr=1e-7, pitch=0.01, top=300, fracs=(0.95, 0.8, 0.6, 0.4, 0.2), log=None):
+    """Price anchor-clique columns `K(p, A)` on the current dual (search/anchorsep.py).
+
+    The dual `y` is a fractional packing on the rows (D4-averaged for a symmetric model), so the
+    reduced cost of the clique orbit is `|orbit| (1 - ybar(K))` and a column is worth adding iff
+    `ybar(K) > 1` -- which is the same statement as "the packing violates the clique constraint
+    `mu(K) <= 1`".  Candidates are wall points `p` (Lemma 1: nowhere else can a clique beat the
+    coverage row at `p`) on a grid, ranked by their coverage, each with the Lemma-2 anchors for
+    several `eps`; `K(p, A)` then contains the whole point clique of `p`, so the column dominates
+    the point column of `p` and what it adds is the dual mass of `{S : A subseteq S}` outside
+    `P_p`.  Returns (number added, best ybar seen, best ybar of the corresponding point row)."""
+    want = min(want, CQ_MAX - len(m.cliques))
+    if want <= 0 or not len(m.rows): return 0, None, None
+    Q = np.array(m.rows); sup = y > 1e-9
+    if not sup.any(): return 0, None, None
+    best = ASEP.separate(Q[sup], y[sup], float(Fraction(m.K, m.D)), m.D, pitch=pitch, top=top,
+                         fracs=fracs, sym=m.sym)
     added = 0
-    for mass, params, cl in scored:
-        if mass <= 1.0 + thr or added >= want: break
+    for (mk, mp, params, cl) in best:
+        if mk <= 1.0 + thr or added >= want: break
+        if AC.key(cl) in m.ckey: continue
         if m.add_clique(cl, params): added += 1
-    return added, (scored[0][0] if scored else None)
+    return added, (best[0][0] if best else None), (best[0][1] if best else None)
 
 
 def save_cliques(m, path):
@@ -599,7 +583,7 @@ def load_cols(m, path, raw=False):
 
 def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe_margin=None, x0=None,
          prune_at=None, colgen=0, cg_want=200, cg_pitch=0.01, n=12, threads=None, dump_lp=None,
-         cliques=0, cq_want=40):
+         cliques=0, cq_want=40, cq_pitch=0.01):
     """cutting-plane loop; returns (x, lam, obj, info).  Asymmetric models sweep [0,90deg), i.e.
     2.4x the bins: fewer witnesses per bin and a higher prune threshold keep the row set stable
     (pruning every round makes the LP vertex jump and the dropped rows come straight back)."""
@@ -630,9 +614,9 @@ def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe
             t_cg = time.time() - t1
         wcl = float(m.csizes[:len(x) - n_orb] @ x[n_orb:]) if len(x) > n_orb else 0.0
         ncl_used = int((x[n_orb:] > 1e-12).sum()) if len(x) > n_orb else 0
-        ncq = 0; cqmass = None; t_cq = 0.0
+        ncq = 0; cqmass = None; cqpt = None; t_cq = 0.0
         if it < cliques:
-            t1 = time.time(); ncq, cqmass = price_cliques(m, y, x, want=cq_want, extra=cand); t_cq = time.time() - t1
+            t1 = time.time(); ncq, cqmass, cqpt = price_cliques(m, y, x, want=cq_want, pitch=cq_pitch); t_cq = time.time() - t1
         t1 = time.time(); added = m.add_rows(wit); t_rows = time.time() - t1
         save_cols(m, f"runs/branch_{tag}_cols.txt")          # checkpoint: every column, weight or not, so a restart loses nothing
         if m.cliques: save_cliques(m, f"runs/branch_{tag}_cliques.txt")
@@ -641,7 +625,7 @@ def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe
         ri = getattr(m, '_restricted_info', None) if SOLVER == 'restricted' else None
         log(f"  it{it} total={tw:.6f} lam=[{lamtxt}] obj={val:.6f} probe_min={float(mv):.7f} viol={len(wit)} new_rows={added} rows={len(m.rows)} (inR {nR}) support={nz} cols/{natoms} atoms"
             + (f" dualcov={Mcov:.4f} new_cols={ncol} cols={len(m.orbits)}" if Mcov is not None else "")
-            + (f" cliques={len(m.cliques)} (+{ncq}, used {ncl_used}, weight {wcl:.6f}" + (f", ybar {cqmass:.4f})" if cqmass is not None else ")") if (m.cliques or ncq) else "")
+            + (f" cliques={len(m.cliques)} (+{ncq}, used {ncl_used}, weight {wcl:.6f}" + (f", ybar {cqmass:.4f} vs point {cqpt:.4f})" if cqmass is not None else ")") if (m.cliques or ncq) else "")
             + f" t={time.time()-t0:.0f}s [lp {t_lp:.0f}s ver {t_ver:.0f}s cg {t_cg:.0f}s cq {t_cq:.0f}s rows {t_rows:.0f}s]"
             + (f" [restricted: {ri['cols']} active cols, {ri['passes']} passes, {ri['neg_rc']} neg rc left]" if ri else ""))
         if added == 0 and mv >= 1 and ncol == 0 and ncq == 0: break
@@ -681,7 +665,7 @@ def finalize(m, x, lam, tag, out_path, N=6000, log=print, WD=10 ** 7, margin=2e-
 
 def run(cert, tag, kreg, r, Dp=None, mul=1, N=6000, topk=6, margin=2e-6, log=print, warm=True, out=None,
         colgen=0, cg_want=200, cg_pitch=0.01, n=12, threads=None, cols=None, warm_thr=1.05, prune_at=None, row_grid=None, max_iters=None, dump_lp=None, cols_raw=False,
-        cliques=0, cq_want=40, cq_load=None):
+        cliques=0, cq_want=40, cq_load=None, cq_pitch=0.01):
     m, w0, s = build_model(cert, r, kreg, Dp, mul, raw_points=cols_raw)
     if row_grid: m.row_grid = tuple(row_grid)
     log(f"[{tag}] {cert}: {len(m.orbits)} columns / {len(m.P)} atoms ({'D4 orbits' if m.sym else 'single points'}), container {s} = {float(s):.7f}, r = {m.rfrac} = {m.r:.4f}, k = {kreg}, input total {float(m.sizes @ w0):.6f}")
@@ -699,7 +683,7 @@ def run(cert, tag, kreg, r, Dp=None, mul=1, N=6000, topk=6, margin=2e-6, log=pri
         m._active = np.concatenate([w0 > 0, np.zeros(len(m.orbits) - len(w0), dtype=bool)])
         log(f"[{tag}] restricted master: {int(m._active.sum())} of {len(m.orbits)} columns active at start")
     x, lam, val, info = loop(m, tag, margin=margin, N=N, topk=topk, log=log, colgen=colgen, cg_want=cg_want, cg_pitch=cg_pitch, n=n, threads=threads, prune_at=prune_at,
-                             max_iters=max_iters if max_iters is not None else 400, dump_lp=dump_lp, cliques=cliques, cq_want=cq_want)
+                             max_iters=max_iters if max_iters is not None else 400, dump_lp=dump_lp, cliques=cliques, cq_want=cq_want, cq_pitch=cq_pitch)
     if x is None: log(f"[{tag}] FAILED"); return None
     if max_iters is not None:
         log(f"[{tag}] stopped after {info.get('iters')} rounds (--max-iters): LP value {val:.7f}, dual in runs/branch_{tag}_dual.txt; no finalize")
@@ -735,6 +719,7 @@ def main():
     ap.add_argument('--cols-raw', action='store_true', help='asymmetric leaves: take the certificate\'s and --cols\' points as they are (no D4 images); use when restarting a leaf from its own probe + checkpoint, which already list every column')
     ap.add_argument('--cliques', type=int, default=0, metavar='ROUNDS', help='price anchor-clique columns K(p,A) (search/anchorclique.py, certificates/FORMAT.md) for this many rounds')
     ap.add_argument('--cq-want', type=int, default=40, help='anchor-clique columns added per round (default 40)')
+    ap.add_argument('--cq-pitch', type=float, default=0.01, help='grid pitch of the anchor-clique separator (default 0.01)')
     ap.add_argument('--cq-load', action='append', default=None, help='anchor-clique checkpoint file(s) (runs/branch_TAG_cliques.txt) to start from')
     ap.add_argument('--dump-lp', default=None, metavar='PREFIX', help='write the LP of every round of the cutting-plane loop as PREFIX_itN.npz + PREFIX_itN_A.npz (see write_lp_dump / load_lp_dump; used by search/lp_bench.py)')
     a = ap.parse_args()
@@ -750,7 +735,7 @@ def main():
     log(f"branch.py {' '.join(sys.argv[1:])}")
     res = run(a.cert, a.tag, kreg, r, Dp=a.Dp, mul=a.mul, N=a.N, topk=a.topk, margin=a.margin, log=log, warm=not a.no_warm, out=a.out,
               colgen=a.colgen, cg_want=a.cg_want, cg_pitch=a.cg_pitch, n=a.n, threads=a.threads, cols=a.cols, warm_thr=a.warm_thr, prune_at=a.prune_at, row_grid=a.row_grid, max_iters=a.max_iters, dump_lp=a.dump_lp, cols_raw=a.cols_raw,
-              cliques=a.cliques, cq_want=a.cq_want, cq_load=a.cq_load)
+              cliques=a.cliques, cq_want=a.cq_want, cq_load=a.cq_load, cq_pitch=a.cq_pitch)
     if res: json.dump(res, open(f"runs/branch_{a.tag}.json", 'w'), indent=1)
 
 
