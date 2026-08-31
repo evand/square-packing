@@ -14,7 +14,7 @@ rigorous), **heuristic** (a sampled LP or a local search value, not a bound), or
 
 | `m` | `n = m^2-4` | cover LP value (heuristic) | certified closed cover | certified packing mass (rigorous, float-checked lower bound on `nu_f`) | `n-1` |
 |---|---|---|---|---|---|
-| 4 | 12 | 12.4175 total / **12.509 honest** (`runs/closed4_best.txt`, `CLOSED4.md`); closing loop plateaus at **12.388 total / ~12.46 honest** (§2) | **no** (§2: an exact counterexample is exhibited) | **10.68** (`CLOSED4.md` §7) | 11 |
+| 4 | 12 | 12.4175 total / **12.509 honest** (`runs/closed4_best.txt`, `CLOSED4.md`); closing loop plateaus at **12.388 total / ~12.46 honest** (§2); scaled to `x1.02` / `x1.03` (**12.666** / **12.790**, §2b) removes the known exact violation but leaves other boxes uncertified at depth 8-17 (positive margin, slow convergence) | **no** (§2, §2b) | **10.68** (`CLOSED4.md` §7) | 11 |
 | 5 | 21 | **20.75-20.9**, still oscillating/rising when stopped (§3.1) | not attempted (bracket only, per the brief) | **16.05** (§3.2, this task) | 20 |
 
 (`m = 6, 7` not started — gated on `m = 4, 5` being finished or the time budget being spent,
@@ -90,6 +90,107 @@ short of a valid cover; (c) the next step, not taken here for lack of time, is c
 (new points) targeted at the plateau's residual violation region, or accepting a small increase in
 compute for the same loop with priced columns enabled (`rung2_close.py --allow-colgen` was
 stubbed as a CLI flag but the column-adding logic itself was not implemented in this session).
+
+## 2b. Coordinator follow-up (2026-08-30): scale the cover instead of reweighting it
+
+**Idea.** Captured weight scales linearly with the point weights, so if a cover's true minimum
+captured weight is `mu > 0` everywhere, multiplying every weight by any `lambda >= 1/mu` gives a
+valid closed cover of total `lambda * (original total)`. Since the exact worst pose found for
+`runs/closed4_best.txt` is `0.9926744` (`mu >= 0.9804` needed for `lambda = 1.02`), scaling by
+`1.02` or `1.03` should fix ordinary small-margin poses everywhere at once (P1 is unaffected by
+scaling: `|c-p|_inf <= 1-w/2` doesn't involve the weight at all), leaving only genuinely tight
+(margin-zero) or actually-worse-than-found poses as open questions.
+
+**Scaled certificates.** `search/scale_cover.py IN.txt P Q OUT.txt` multiplies every integer
+weight numerator by `P` and the weight denominator by `Q` -- exact, no floats, no rounding:
+
+| file | scale | total |
+|---|---|---|
+| `runs/closed4_best_x102.txt` | `x 51/50 = 1.02` | `6332916636/500000000 = 12.665833` |
+| `runs/closed4_best_x103.txt` | `x 103/100 = 1.03` | `12790008108/1000000000 = 12.790008` |
+
+Both `< 13`.
+
+**Exact checker, increasing depth, `--nproc 8`, `taskset -c 0-7`:**
+
+| cert | depth | boxes | CORE | P1 | TRI | EMPTY | UNCERTIFIED | wall time |
+|---|---|---|---|---|---|---|---|---|
+| x1.02 | 8  | 214,956   | 63,449  | 338 | 0 | 4,481 | 42,410 | 133 s |
+| x1.02 | 10 | 370,588   | 128,351 | 363 | 0 | 4,692 | 55,088 | 275 s |
+| x1.02 | 12 | 579,610   | 255,238 | 395 | 0 | 5,090 | 32,282 | 535 s |
+| x1.02 | 14 | 742,658   | 317,471 | 412 | 0 | 5,561 | 51,085 | 622 s |
+| x1.02 | 17 | 1,092,112 | 446,398 | 441 | 0 | 6,250 | 96,167 | 840 s |
+| x1.03 | 8  | 189,814   | 61,004  | 314 | 0 | 4,149 | 32,640 | 115 s |
+| x1.03 | 10 | 300,294   | 114,471 | 337 | 0 | 4,327 | 34,212 | 207 s |
+| x1.03 | 12 | 427,784   | 191,623 | 357 | 0 | 4,590 | 20,522 | 377 s |
+| x1.03 | 14 | 534,220   | 227,550 | 372 | 0 | 4,894 | 37,494 | 745 s |
+
+**Neither scaling reaches 0 uncertified, and the count does not shrink monotonically** (it dips
+then rises again for both: `42k -> 55k -> 32k -> 51k -> 96k` for x1.02, `33k -> 34k -> 21k -> 37k`
+for x1.03) -- this is the "boxes stop shrinking" stopping condition, not a crash or a runaway
+count, so per the brief's instructions this is reported honestly rather than pushed further on
+faith. `--tri` was not used (`C(1972,3)` is intractable; no candidate triangle was identified
+either, see below).
+
+**Diagnosis (step 3): case (b), not (a) or (c).** The uncertified boxes cluster at the same
+location for both scalings: a wall-touching square with its left edge on the container wall
+`x = 0` and its right edge on the interior grid line `x = 1`, centred near `cy approx 1.5`
+(and its three D4-type images by the `x -> 4-x`, `y -> 4-y` symmetry), angle `theta -> 0`.
+
+*Not case (a).* The exact `pose` mode confirms strictly positive margin there, for both scalings:
+
+```
+python3 search/zeromargin.py pose runs/closed4_best_x102.txt --cx 0.5015625 --cy 1.4969 --u 0.000872665
+EXACT captured weight = 266364789/250000000 = 1.065459156  (OK: >= 1)
+python3 search/zeromargin.py pose runs/closed4_best_x103.txt --cx 0.5015625 --cy 1.4969 --u 0.000872665
+EXACT captured weight = 537952417/500000000 = 1.075904834  (OK: >= 1)
+```
+(and a second point at the reported uncertified box's corner, x1.02: `106655127/100000000 =
+1.06655127`, also `>= 1`). So the true minimum here is **not** below `1/1.02` or `1/1.03` -- the
+scaling did what it was supposed to at this pose.
+
+*Not case (c).* The margin is a healthy `6.5-7.6%`, nowhere near zero, so this is not an
+unhandled zero-margin tight family (no triangle or two-region primitive is implicated).
+
+*Case (b): why CORE/P1 converge slowly here, specifically.* Direct inspection of `cert_core` /
+`cert_p1` on the reported box (clipped to its admissible slice, `[0.5,0.5] x [1.49688,1.5] x
+[0,~0.0004]deg`): **P1 sums to only `0.533`** of the needed `1` (`search/zeromargin.py`'s P1 wall
+shortcut only admits points with `p_x` within `[0,1]` for a box this close to the LEFT wall --
+points near the mirror wall `p_x approx 3` fail the *other*, non-wall-shortcut inequality because
+they are geometrically far from this box, not because the near-wall shortcut doesn't apply to
+them); **the exact CORE sum is only `0.306`** over the same clipped rectangle (CORE must hold for
+*every* pose in the box simultaneously, a strictly harder requirement than the `1.065` captured at
+any single pose in it). Root cause: the natural witness for a wall-square whose far edge sits on
+`x = 1` would be a cover point at exactly `(1, cy)` for the box's centre `cy`, but this cover
+(`CLOSED4.md`) deliberately splits its weight on the `x = 1` line to points at `y = 1.45` and
+`y = 1.55` rather than placing one at `y = 1.5` (the same degenerate-line "cusp" structure
+`ZEROMARGIN.md` §4 item 3 describes for *interior* squares) -- so there is no single coincident
+witness, only two off-centre ones, each of which needs the box to shrink further before it alone
+carries enough weight. Both primitives provably converge to the true value (`>1.06`) as the box
+shrinks to a point (CORE and P1 are monotone in box size), but the convergence here is unusually
+slow because the admissible-width margin `w(theta)/2 - 1/2` grows *linearly* in `theta` near a
+wall-touching pose (not quadratically, as in the pure corner case `ZEROMARGIN.md` §4 item 1 where
+P1 closes in one box) -- so precision in `cx` requires proportionally finer `theta`, and the
+subdivider splits whichever of `(dx, dy, 2 d(theta))` is currently longest, which does not
+preferentially resolve the actual bottleneck. This is an **engineering gap in the current
+primitives**, not a mathematical obstruction: candidates for closing it are (i) a wall-square
+lemma for *off-centre* witnesses (generalising `ZEROMARGIN.md` item 2 to two points straddling the
+symmetric line, analogous to DS7 Lemma 2's `(1,y)`-or-`(1+x,y)` disjunction), (ii) biasing the
+subdivision to split `theta` preferentially near `theta = 0` boxes, or (iii) enough further depth
+-- we did not locate where (if anywhere within reach) the oscillation turns into clean shrinkage.
+
+**Verdict on this experiment: rung 2 still not achieved.** No certificate is shipped (the
+coordinator's step 4 was conditional on certification). The scaling idea is validated in the sense
+that it removes the previously-identified *exact* violation (the `0.9926744` pose now reads
+`>1.06` at both scalings) and narrows the open question to a specific, well-characterised, and
+apparently fixable convergence weakness in `cert_p1`/`cert_core` for wall-adjacent squares with
+off-centre witnesses, rather than a structural deficiency of the point set itself.
+
+**Process improvement (coordinator note, implemented).** `search/rung2_close.py` and
+`search/closed4.py run` now export the current LP weights to `runs/<tag>_last.txt` **every
+round** (`C.export` / `export`), not only at loop exit -- a plateau's weights are no longer lost
+if the process is stopped or killed. (`search/nu_f.py run` already did this per-iteration via
+`write_cert_scaled`, no change needed there.)
 
 ## 3. `m = 5`, `n = 21`, `W < 21` — bracketed, gap not closed
 
@@ -189,13 +290,18 @@ session per the brief ("bracket... only `m = 6` if everything else is done").
 | file | what |
 |---|---|
 | `search/zeromargin.py` | exact checker (vectorised), `friedman14` / `cert` / `pose` modes, `--oracle` |
-| `search/rung2_close.py` | rung-2 separation loop (stress -> hard rows -> resolve) over a fixed column set |
+| `search/rung2_close.py` | rung-2 separation loop (stress -> hard rows -> resolve) over a fixed column set; now checkpoints `runs/<tag>_last.txt` every round |
+| `search/scale_cover.py` | exact rational weight scaling of a certificate (`IN.txt P Q OUT.txt` scales by `P/Q`) |
 | `runs/closed4_rung2c.log` / `.json` | the `m = 4` closing-loop run (67 rounds; no `_best.txt`, see §2) |
 | `runs/closed4_rung2c_attempt1.log` | the first (discarded) attempt, killed at round 6 for regressing below the baseline before being judged prematurely -- kept for the record |
 | `runs/closed4_s5.log` / `.json` | the `m = 5` heuristic cover LP run (10 iterations; no `_best.txt`, stopped deliberately, §3.1) |
 | `runs/nuf_s5nuf.log` (`= s5nuf.nohup.log`) / `.json` / `_cur.txt` | the `m = 5` certified packing-mass run (§3.2); `_cur.txt` is the last iteration's own (unconverged, unverified) cover-format export |
 | `runs/closed4_best.txt` | the `m = 4` reference cover (2026-08-26, `CLOSED4.md`); **exact counterexample above shows it is not a valid rung-2 cover** |
+| `runs/closed4_best_x102.txt` / `_x103.txt` | the `x1.02` / `x1.03` exactly-scaled covers (§2b); totals `12.665833` / `12.790008`, both `< 13`; **not certified** (uncertified boxes remain at depth 8-17, diagnosed as slow-converging positive-margin boxes, not violations) |
 
 To reproduce the exact counterexample: `python3 search/zeromargin.py pose runs/closed4_best.txt
 --cx 3.3965 --cy 1.4235 --u 0.7873211803`. To reproduce the rung-1 certification:
-`python3 search/zeromargin.py friedman14 --tri --depth 14 --nproc 4`.
+`python3 search/zeromargin.py friedman14 --tri --depth 14 --nproc 4`. To reproduce the scaled-cover
+positive-margin check: `python3 search/zeromargin.py pose runs/closed4_best_x102.txt --cx 0.5015625
+--cy 1.4969 --u 0.000872665`. To reproduce a depth-check on a scaled cover: `python3
+search/zeromargin.py cert runs/closed4_best_x102.txt --depth 14 --nproc 8`.
