@@ -155,13 +155,36 @@ points in the file as **zero-weight atoms** (allowed: weights need only be `≥ 
 cell boundaries back where the piece boundaries are.  `branch.py`'s export does this for every
 anchor of every clique it writes, and `certificates/FORMAT.md` records it.
 
-## 4. The leaf run
+## 4. The leaf run (`k = 4`, `r = 1`, `t = 3.98`)
 
-*(to be completed)*
+Setup: the restart of the main tree's `t398hk4` run — same container `3120320/784000 = 3.98`, same
+corner box `r = 1`, same net `N = 2000`, same margin `2·10⁻⁶`, same column checkpoint
+(`runs/branch_t398hk4_cols.txt`, 6155 orbits) and probe (`runs/branch_t398hk4_probe.txt`), restricted
+master — **plus** anchor-clique columns, seeded from the separation of §3 on that run's converged
+dual and re-priced every round.  The pure run it restarts converged to `12.000024 = 12·(1 + margin)`
+(`search/BRANCH.md`), i.e. exactly 12; that is the number to beat.
+
+*(the run is still going; the table below is regenerated from `runs/branch_t398ik4*.log` when it
+stops)*
+
+### What the engineering cost, and two things worth recording
+
+* **The verifier became the bottleneck, and then did not.**  With 152 anchor cliques in the probe
+  the sweep took `4300` CPU-s against `95` CPU-s for the same 1332-atom file without the block —
+  520 s of a 976 s round.  Three fixes (a division-free per-cell prefilter in the sweep's own
+  units, a fast-accept path for `contains` that tests corners only in a thin band around a piece's
+  boundary, and hoisting the per-cell `Vec`s out of the closure — the last was the largest) brought
+  it to `620` CPU-s with bit-identical results.
+* **Row pruning cycles when the sweep doubles.**  A certificate with cliques is swept over
+  `[0°, 90°)` instead of `[0°, 45°]`, so with `topk = 6` a round produces 12 000 witnesses instead
+  of 5 000; the row set then hits `prune_at` every round, the prune drops rows whose slack is still
+  large, and they come straight back — `new_rows = 12000` every round against `~1800` in the pure
+  reference, and the LP value flat-lined at `11.94` with the probe minimum oscillating between
+  `0.29` and `0.87`.  `--topk 3 --prune-at 250000` restores the reference's row discipline.
 
 ## 5. Verdict
 
-*(to be completed)*
+*(to be completed when the run stops)*
 
 ## Reproduce
 
