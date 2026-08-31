@@ -1,8 +1,13 @@
 # Reconciling the packing-side and cover-side anchor-clique gains (task J, 2026-08-31)
 
-Code: `search/reconcile.py` (both LPs on one instance, the true-reduced-cost pricer, the escape
-and cover-probe diagnostics, the membership cross-check), plus one additive flag
-`--dump-poses` in `search/clique_continuum.py`.  Runs: `runs/rc_*`, `runs/J*.out`.
+Code: `search/reconcile.py` (both LPs on one instance, the true-reduced-cost pricer, the escape,
+cover-probe and interior-separation diagnostics, the membership cross-check),
+`search/clique_scan.py` (the segment family with the offset cap lifted, on a measure),
+`search/clique_pairs.py` (an independent pairwise re-check of a separated clique),
+`search/kseg_check.py` (the verifier and `xcheck.py` on an interior anchor-clique block);
+new in the existing files: `anchorclique.kseg`, `anchorsep.separate_interior`,
+`branch.py --cq-interior`, and one additive `--dump-poses` in `clique_continuum.py`.
+Runs (gitignored): `runs/rc_*`, `runs/J*.out`, `runs/branch_J*.log`, `runs/cq_JG99*`.
 Read against `search/CLIQUE_CONTINUUM.md` (task G) and `search/ANCHOR.md` (task I).
 
 ## Verdict
@@ -10,10 +15,10 @@ Read against `search/CLIQUE_CONTINUUM.md` (task G) and `search/ANCHOR.md` (task 
 **Neither published number is the anchor family's number: task G's `0.10` is inflated by a pose
 pricer that is blind to its own cut duals and by a matched-pure that is an upper bound; task I's
 `0.0004` is deflated by a separator that cannot express the cliques these packings actually
-violate.  Fixing the separator raises the cover-side matched gain at `t = 3.99` from `≈ 0.000` to
-`+0.064` in four rounds, and the best certifiable clique on the exactly certified extremal measure
-from `1.024` to `1.2201` — above the unrestricted-clique number `CLIQUE_CONTINUUM.md`'s own search
-found.  No certificate below 12 was produced; see §6 for what is verified, what is heuristic and
+violate.  Fixing the separator raises the cover-side matched gain from `≈ 0.000` to `+0.064` in
+four rounds at `t = 3.99`, and from `+0.0004` to `+0.053` on task I's own `k = 4` leaf at `3.98`;
+and it raises the best certifiable clique on the exactly certified extremal measure from `1.024`
+to `1.2201`, above the unrestricted-clique number `CLIQUE_CONTINUUM.md`'s own search found.  No certificate below 12 was produced; see §6 for what is verified, what is heuristic and
 what to do next.**
 
 ## 0. The question
@@ -44,7 +49,8 @@ which of *pose set* and *separation depth* accounts for the difference.
   differently shaped clique there cannot be *violated* — and on the very packing that pins the
   `k = 4` leaf, **every one of the 1265 violated cliques found sits at wall distance `>= 1`**, with
   `ȳ(K)` up to `1.143` against task I's best of `1.054` (§2).  Fixing the separator raises the
-  cover-side matched gain on the same run from `≈ 0.000` to `+0.05` (§5).
+  cover-side matched gain from `≈ 0.000` to `+0.064` at `t = 3.99` and from `+0.0004` to `+0.053`
+  on that very leaf (§5).
 * **The family is much stronger than either task reported.**  On the exactly certified extremal
   measure at `t = 3.99` the best *certifiable, certificate-representable* anchor clique is
   `1.220`, against the `1.024` of `CLIQUE_CONTINUUM.md` §4 and the `1.327` of the *unrestricted*
@@ -234,7 +240,7 @@ so at an interior anchor point it only ever tries `eps <= 0.05`, and along a wal
 |---|---|---|---|
 | certified `12.008230754` at `3.99` (`runs/dual_exact_3.99_support.txt`) | `CLIQUE_CONTINUUM.md` §4, "the usable number" | `1.0242` | wall distance `0.55` |
 | the same measure | `clique_family.py separate` (as shipped: `anchor_local` + the polygon greedy) | `1.098045` | `p = (2.045, 2.705)`, **wall distance `1.285`**, segment of length `0.3675`, 165 members |
-| **the same measure** | segment anchors, 24 directions, **offset cap lifted** (`runs/J9b.py`) | **`1.220095`** | `p = (2.365, 2.765)`, **wall distance `1.225`**, `eps = 0.225`, `\|A\| = 0.588`, 163 members |
+| **the same measure** | segment anchors, 24 directions, **offset cap lifted** (`search/clique_scan.py`) | **`1.220095`** | `p = (2.365, 2.765)`, **wall distance `1.225`**, `eps = 0.225`, `\|A\| = 0.588`, 163 members |
 | certified `12.028160771` at `3.99` (`runs/cqx_PURE99_support.txt`) | `separate` as shipped | `1.088559` | wall distance `1.285` |
 | the same measure | segment anchors, cap lifted | **`1.216331`** | `p = (2.765, 2.435)`, wall distance `1.225`, `eps = 0.225`, `\|A\| = 0.686`, 281 members |
 | converged dual of the `k = 4` leaf at `3.98`, mass exactly `12.000000` (`runs/branch_t398hk4_dual_it16.txt`) | `ANCHOR.md` §3 = `anchorsep.separate` (wall band, wall-perpendicular) | `1.054176` | wall distance `0.99` |
@@ -248,6 +254,26 @@ certifiable one-point-one-segment family reaches `1.2201` on that measure — ab
 number that write-up's own search found** — not the `1.024` it records as "the usable number".  The
 "factor of ten" of that write-up's §4 ("the region-shaped violation is `+0.024`, not `+0.33`") is
 an artefact of the search restriction, not a property of the family.
+
+**Why `CLIQUE_CONTINUUM.md` §5's volume table does not contradict this.**  That table computes
+`vol(K(p) \\ P_p)` where `K(p) = {S : S meets every admissible S' containing p}` is the maximal
+clique *containing* `P_p`, and reports `0` at wall distance `>= 1` — which is Lemma 1 again, and is
+correct.  An interior `K(p, A)` is not of that shape: it **trades**, giving up the squares through
+`p` that miss `A` and gaining the squares that contain `A`.  The gain side is fat.  For the six
+best interior cliques on the certified `12.008` measure, in pose space `(c_x, c_y, theta)`:
+
+| `p` | wall distance | `\|A\|` | `vol P_p` | `vol Q_A` | `vol(Q_A \\ P_p)` | ratio |
+|---|---|---|---|---|---|---|
+| `(2.365, 2.765)` | `1.225` | `0.588` | `1.54911` | `0.54910` | `0.05447` | `0.035` |
+| `(1.555, 2.765)` | `1.225` | `0.686` | `1.54911` | `0.42638` | `0.03990` | `0.026` |
+| `(1.495, 1.675)` | `1.495` | `0.784` | `1.57080` | `0.30845` | `0.20886` | `0.133` |
+| `(1.825, 1.445)` | `1.445` | `0.784` | `1.57080` | `0.30845` | `0.26964` | `0.172` |
+| `(1.495, 1.745)` | `1.495` | `0.784` | `1.57080` | `0.30760` | `0.23978` | `0.153` |
+| `(1.745, 2.455)` | `1.535` | `0.686` | `1.57080` | `0.42476` | `0.32757` | `0.209` |
+
+(`Q_A = {S : A subseteq S}`, by `clique_family.anchor_volume`.)  So at an interior anchor point the
+piece the clique adds is `3-21 %` of the point clique's own volume — where §5's table, reading the
+question as "how much can `P_p` be enlarged", says `0`.
 
 These are region cliques, not measure-zero ones: the `1.220095` clique splits as **115 support
 images through `p` that reach `A`** and **48 that contain `A`** — `{S : A subseteq S}` is a fat set
@@ -263,7 +289,7 @@ Two counts that say how systematic this is:
 * on the `k = 4` leaf dual, **1265 violated cliques and every single one at wall distance `>= 1`** —
   none reachable by `anchorsep.separate`.
 
-**The interior cliques are real, and checked independently.**  `runs/J11_verify_clique.py`
+**The interior cliques are real, and checked independently.**  `search/clique_pairs.py`
 re-derives membership from the definition (an explicit rotation for `p in S`, `clique_family`'s
 scalar Liang–Barsky-style segment test for `S ∩ A ≠ ∅`) and then tests **every ordered pair of
 members** with the scalar SAT predicate `clique_family.sat_meet`, sharing no code with the
@@ -288,7 +314,7 @@ anchor), `anchorsep.separate_interior` (any `p`, any direction, same return shap
 credit rule as `separate`), `branch.py --cq-interior` (prices both families; the clique checkpoint
 format now carries 6-integer as well as 5-integer parameter lines).  The pairwise structure of a
 `kseg` clique is identical to `kpa`'s — two pieces, piece 0 filtering anchor 1 — so `verify/`'s
-Lemma-0 check accepts it unchanged; **checked, not assumed** (`runs/J14_kseg_check.py`): the
+Lemma-0 check accepts it unchanged; **checked, not assumed** (`search/kseg_check.py`): the
 224-point certificate with one interior `K(p, A)` (`p = (2.04413, 2.16249)`, wall distance
 `1.7693`, segment of length `0.37`) added as an `anchors` block, at `N = 6000`:
 
@@ -304,7 +330,7 @@ atoms=248 total weight (points + cliques) = 11.983445; min covered = 1.000002; V
 ```
 
 so the block passes the Lemma-0 refusal, leaks no weight at weight 0, and is accounted for exactly
-at positive weight.  `xcheck.py runs/J14_kseg_w10.txt 6000 200 --n 12` agrees exactly —
+at positive weight.  `xcheck.py runs/kseg_w10.txt 6000 200 --n 12` agrees exactly —
 `5000011/5000000 = 1.0000022` against the Rust's `10000022/10000000`, "Lemma 0 checked exactly for
 every pair of pieces" — and `tests/rejection_tests.sh` (136 checks) still passes unchanged.
 
@@ -349,14 +375,31 @@ re-converged) but prices poses on the **true** reduced cost `1 − capture − �
 `h = 0.02` centre lattice, plus perturbations of the LP's own support, plus (for fairness) the same
 sweep candidates task G's pricer would have added.
 
+**With task G's separator** (`runs/J2`): the pricing fix alone.
+
 | stage | pose orbits | cuts | clique LP | pure LP, same poses (honest) | gain |
 |---|---|---|---|---|---|
 | `r-1` (task G's instance, re-converged) | 115 | 1175 | `11.936693` | `11.972988` | `0.036295` |
 | `r0` (one round of correct pricing) | 1066 | 1717 | `11.959186` | `11.988246` | `0.029060` |
 
 One round of correct pricing moves the clique LP by `+0.0225`, against `+0.0015` per round for the
-eleven rounds of `CLIQUE_CONTINUUM.md` §2 — and the *gain* shrinks, because the pure LP on the same
-poses moves less.  `runs/J15.*` continues this with the §2 separator as well (both fixes at once).
+eleven rounds of `CLIQUE_CONTINUUM.md` §2 — and the *gain* shrinks, because the pure LP on the
+same poses moves less.
+
+**With the §2 separator as well** (`runs/J15`, `--full-sep --refine`): both fixes at once, from the
+same start.
+
+| stage | pose orbits | cuts | clique LP | pure LP, same poses | gain | cover LP |
+|---|---|---|---|---|---|---|
+| `r-1` | 115 | 1398 | `11.724875` | `11.972988` | `0.248113` | `11.724875` (gap `1.8e-15`) |
+| `r0` | 1148 | 1848 | `11.801755` | `11.990870` | `0.189115` | — |
+
+The two fixes pull opposite ways and the separator wins: on task G's own instance, with its own
+pose set refined correctly, the certifiable family is worth `0.19–0.25` rather than the `0.10` it
+reported — but neither ladder is converged (`conv=False`: the inner loop still had violated cliques
+of `1.01–1.03` at its iteration cap), and both stage values are LP values on a restricted pose set,
+so they are **lower** bounds on `V(3.99)` only if the separation is complete, which it is not.
+They are not evidence that `V(3.99) < 12`; the cover side (§5) is where that would be decided.
 
 ## 5. Step 2 — the verifier as the oracle, and the matched pair on the cover side
 
@@ -377,6 +420,9 @@ the same `N = 2000` verifier as separation oracle, the same column generation, t
 | `it5` | `12.220316` | `0.890` | `+0.004877` | | | |
 | `it6` | `12.198747` | `0.951` | `+0.002166` | | | |
 | `it7` | `12.222805` | `0.944` | `+0.004818` | | | |
+| `it8` | `12.220990` | `0.897` | `+0.002921` | | | |
+| `it9` | `12.219917` | `0.963` | `+0.003208` | | | |
+| `it10` | `12.227723` | `0.954` | `+0.003413` | | | |
 
 At `it3` the interior run has 240 clique columns of which **18 are in use carrying `3.10` of the
 total**, and the separator's best is `ȳ(K) = 1.1492` against `ȳ(P_p) = 1.0063` — a clique violated
@@ -385,14 +431,27 @@ has 240 columns, 5–12 in use carrying `0.20–0.42`, and `ȳ(K) = ȳ(P_p)` to 
 
 **So the answer to `ANCHOR.md`'s closing question — "does the matched gain grow as the row set
 converges?" — is yes, once the separator is fixed: `0.0004` (task I, wall family, `k = 4` leaf) →
-`0.05–0.06` (interior family, pure cover at `3.99`), and still rising.**  Every LP value in the
+`0.05–0.06` (interior family, pure cover at `3.99`), and `+0.053` on task I's own `k = 4` leaf at
+`3.98` by round 1 (below).**  Every LP value in the
 table is a restricted-master value on an unconverged row set, so it is *not* a bound in either
 direction; the matched gain is the number that does not need convergence, because it is one row
 set and one column set with the clique columns switched off.
 
-`runs/J16` is the same experiment on task I's own `k = 4` leaf at `3.98`, restarted from its
-checkpoint (`branch_t398ik4n_*`: 10,174 point columns, 1,180 wall clique columns) with
-`--cq-interior --matched`.  *(rounds in progress at the time of writing; see `runs/branch_J16.log`)*
+### The same experiment on task I's own leaf
+
+`runs/J16` restarts task I's `k = 4` leaf at `t = 3.98` from its own checkpoint
+(`branch_t398ik4n_*`: 10,174 point columns and its 1,180 **wall** clique columns, all kept) with
+`--cq-interior --matched` and nothing else changed:
+
+| round | rows | clique cols (used) | clique weight | clique LP | pure LP, same rows and cols | **gain** | `ȳ(K)` / `ȳ(P_p)` |
+|---|---|---|---|---|---|---|---|
+| `it0` | 35,040 | 1240 (2) | `4.000008` | `2.000016` | `2.000016` | `−0.000000` | `1.5000` / `1.0000` |
+| `it1` | 41,040 | 1300 (3) | `4.666676` | `11.333356` | `11.386526` | **`+0.053170`** | `1.4167` / `1.0833` |
+
+against `ANCHOR.md` §4's `0.000000, 0.000000, +0.000392` on the same leaf with the wall separator.
+**Two orders of magnitude, from the separator alone.**  (Both runs are far from converged and both
+LP values are restricted-master values; the gain is the matched number, one row set, one column
+set, clique columns switched off.)  *(later rounds in `runs/branch_J16.log`)*
 
 **No certificate of weight `< 12` was produced at `t = 3.99`.**  The cover LP is at `12.15–12.28`
 with the probe minimum at `0.86–0.95`, i.e. the row set is nowhere near converged and the value has
@@ -440,7 +499,9 @@ no bound in either direction unless said otherwise):
 * the best certifiable anchor clique on the exactly certified extremal measures at `t = 3.99` is
   `1.2201` and `1.2163` — interior, segment-anchored, region-shaped (§2);
 * the cover-side matched gain at `t = 3.99` with the interior separator is `+0.0506`, `+0.0635` at
-  rounds 2 and 3, against `+0.000–0.005` for the wall separator over eight rounds (§5).
+  rounds 2 and 3, against `+0.000–0.005` for the wall separator over eleven rounds (§5);
+* on task I's own `k = 4` leaf at `3.98`, restarted from its own checkpoint with nothing changed
+  but the separator, the matched gain is `+0.053` at round 1 against its `+0.0004` (§5).
 
 What is a **bound**: `nu_f(399/100) >= 12.0281608` exactly (`CLIQUE_CONTINUUM.md` §3), so the pure
 method cannot go below 12 at `3.99`; and `V(3.99) >= 11.9015` exactly (an anchor-clique-feasible
@@ -448,18 +509,30 @@ measure, `CLIQUE_CONTINUUM.md` §3).  Nothing in this task moves either.
 
 **What to do next**, in order:
 
-1. `branch.py --cq-interior --matched` on the `k = 4` leaf at `3.98` to convergence — `runs/J16`
-   is that run, started here and not finished.  If the matched gain there follows the `3.99` pure
-   cover to `0.05+`, the leaf's `12.000024` has `0.05` of room and `s(12) >= 3.98` follows from
-   the leaf certificates.
+1. `branch.py --cq-interior --matched` on the `k = 4` leaf at `3.98` **to convergence** —
+   `runs/J16` is that run, started here and two rounds in, already at `+0.053`.  The leaf's pure
+   value is exactly `12.000024`; if `0.05` of that survives to convergence the leaf closes and
+   `s(12) >= 3.98` follows.  This is now the single most valuable run in the project.
 2. Fix the two defects in place rather than around them: `clique_continuum.py`'s `h = 0` pricer
    must rank on the true reduced cost (`reduced_cost` already computes it; the `h > 0` path uses
    it), and its matched pure value must converge its own rows.  Until then no number from that
    script's `anchor` mode should be quoted.
-3. Re-run `CLIQUE_CONTINUUM.md` §4's "how big can the family ever be" (`clique_family.py kset`,
-   `anchorvol`) at interior anchor points: §5 of that write-up tabulates `vol K(p) \ P_p` only for
-   `p` within distance 1 of a wall, and reports `0` at distance `>= 1` — which is the same Lemma-1
-   reading, and the same mistake, in the volume computation.
+3. Search the interior family properly rather than through the two patched separators used here:
+   anchor point, direction, offset and half-length is a five-parameter family and every scan above
+   is a coarse grid over it.  `CLIQUE_CONTINUUM.md` §5's volume table is not the quantity that
+   governs it (§2), so "how big can the family ever be" is open again, and the answer at interior
+   points may be larger than the wall and corner numbers recorded there.
+
+## State of the runs at write-up time
+
+None of the four long runs is converged; all were left running.  What each had reached:
+
+| run | what | reached |
+|---|---|---|
+| `runs/branch_J6.log` | pure cover at `3.99`, **wall** separator (the control) | `it10`, LP `12.228`, probe `0.954`, gain `+0.0034` |
+| `runs/branch_J12.log` | pure cover at `3.99`, **interior** separator | `it3`, LP `12.147`, probe `0.888`, gain `+0.0635` |
+| `runs/branch_J16.log` | task I's `k = 4` leaf at `3.98`, interior separator, from its own checkpoint | `it1`, gain `+0.0532` |
+| `runs/J15.out` | packing side at `3.99`, correct pricer **and** interior separator | `r0`, clique `11.8018`, pure `11.9909`, gain `0.1891` |
 
 ## Reproduce
 
@@ -475,10 +548,10 @@ python3 search/reconcile.py build   J8  --t 3.99 $C --seg-only --cut-per-round 4
 
 # §2 the interior cliques: on the certified measures, and on the k = 4 leaf's converged dual
 python3 search/clique_family.py separate --support $M/cqx_PURE99_support.txt --pitch 0.01 --thr 0.95 --max-pts 200
-python3 runs/J9b.py $M/dual_exact_3.99_support.txt 3.99 150 0.9       # offset cap lifted
-python3 runs/J11_verify_clique.py runs/J9b_dual_exact_3.99_support.json $M/dual_exact_3.99_support.txt 3.99 5
+python3 search/clique_scan.py $M/dual_exact_3.99_support.txt 3.99 150 0.9   # offset cap lifted
+python3 search/clique_pairs.py runs/scan_dual_exact_3.99_support.json $M/dual_exact_3.99_support.txt 3.99 5
 python3 search/reconcile.py dualsep JD1 --dual $M/branch_t398hk4_dual_it16.txt --pitch 0.02 --top 150
-python3 runs/J14_kseg_check.py                                        # the verifier accepts kseg
+python3 search/kseg_check.py                                          # the verifier accepts kseg
 
 # §3 the matched pair, task G's row rule against the honest one, on its own pose set
 python3 search/reconcile.py build J10a --t 3.99 --support runs/J10_poses.txt --cuts runs/J10_cuts.json --no-pure-rows
