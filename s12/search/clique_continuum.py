@@ -430,9 +430,18 @@ def main():
         mu, y, ycut, obj = r
         Mx, bad, nv, ovf = M.m.certify(mu, thresh=1.0 + 1e-7, cap=200000)
         mcl = residual_clique(M, mu, args) if args.mode != 'pure' else 0.0
-        hist.append(dict(round=rnd, obj=obj, cov=Mx, rows=int(M.m.A.shape[0]),
+        pure_obj = obj
+        if M.cuts:                       # the same LP on the same pose set WITHOUT the cuts
+            saved = M.cuts, M.Ccols
+            M.cuts, M.Ccols = [], []
+            rp = M.solve()
+            M.cuts, M.Ccols = saved
+            if rp is not None:
+                pure_obj = rp[3]
+        hist.append(dict(round=rnd, obj=obj, pure=pure_obj, cov=Mx, rows=int(M.m.A.shape[0]),
                          cols=len(M.poses), cuts=len(M.cuts), maxclique=mcl))
-        log(f"* r{rnd}: STAGE obj {obj:.6f}  maxcov {Mx:.8f}  rows {M.m.A.shape[0]} "
+        log(f"* r{rnd}: STAGE obj {obj:.6f} (pure on the same poses {pure_obj:.6f})  "
+            f"maxcov {Mx:.8f}  rows {M.m.A.shape[0]} "
             f"cols {len(M.poses)} cuts {len(M.cuts)} maxclique {mcl:.5f}  "
             f"({time.time()-t0:.0f}s)")
         write_support(M, mu, obj, Mx, args.TAG, t)
