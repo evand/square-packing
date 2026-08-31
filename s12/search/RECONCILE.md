@@ -336,9 +336,47 @@ One round of correct pricing moves the clique LP by `+0.0225`, against `+0.0015`
 eleven rounds of `CLIQUE_CONTINUUM.md` §2 — and the *gain* shrinks, because the pure LP on the same
 poses moves less.  `runs/J15.*` continues this with the §2 separator as well (both fixes at once).
 
-## 5. Step 2 — the verifier as the oracle
+## 5. Step 2 — the verifier as the oracle, and the matched pair on the cover side
 
-*(in progress)*
+Two runs of `branch.py` at `t = 3.99` with the multipliers pinned at zero (`--lam-lo 0 --lam-hi 0`,
+i.e. the **pure cover LP** with a vacuous trailer — deliverable 8 of `ANCHOR.md`, not previously
+attempted), from the same start (`runs/dual_B1_price.txt`, 3496 atoms, total weight `12.0306`),
+the same `N = 2000` verifier as separation oracle, the same column generation, the same
+`--matched` protocol — **differing only in the clique separator**:
+
+| round | `J6` wall separator (`anchorsep.separate`) | | | `J12` interior separator (`--cq-interior`) | | |
+|---|---|---|---|---|---|---|
+| | LP value | probe min | **matched gain** | LP value | probe min | **matched gain** |
+| `it0` | `12.150721` | `0.290` | — | `12.150721` | `0.290` | — |
+| `it1` | `12.277570` | `0.625` | `+0.000000` | `12.277570` | `0.625` | `−0.000000` |
+| `it2` | `12.278440` | `0.884` | `−0.000000` | `12.231304` | `0.860` | **`+0.050628`** |
+| `it3` | `12.226652` | `0.862` | `+0.003260` | `12.147359` | `0.888` | **`+0.063500`** |
+| `it4` | `12.216848` | `0.875` | `+0.001907` | | | |
+| `it5` | `12.220316` | `0.890` | `+0.004877` | | | |
+| `it6` | `12.198747` | `0.951` | `+0.002166` | | | |
+| `it7` | `12.222805` | `0.944` | `+0.004818` | | | |
+
+At `it3` the interior run has 240 clique columns of which **18 are in use carrying `3.10` of the
+total**, and the separator's best is `ȳ(K) = 1.1492` against `ȳ(P_p) = 1.0063` — a clique violated
+by `15 %` while no coverage row is violated by more than `0.6 %`.  The wall run at the same point
+has 240 columns, 5–12 in use carrying `0.20–0.42`, and `ȳ(K) = ȳ(P_p)` to four decimals.
+
+**So the answer to `ANCHOR.md`'s closing question — "does the matched gain grow as the row set
+converges?" — is yes, once the separator is fixed: `0.0004` (task I, wall family, `k = 4` leaf) →
+`0.05–0.06` (interior family, pure cover at `3.99`), and still rising.**  Every LP value in the
+table is a restricted-master value on an unconverged row set, so it is *not* a bound in either
+direction; the matched gain is the number that does not need convergence, because it is one row
+set and one column set with the clique columns switched off.
+
+`runs/J16` is the same experiment on task I's own `k = 4` leaf at `3.98`, restarted from its
+checkpoint (`branch_t398ik4n_*`: 10,174 point columns, 1,180 wall clique columns) with
+`--cq-interior --matched`.  *(rounds in progress at the time of writing; see `runs/branch_J16.log`)*
+
+**No certificate of weight `< 12` was produced at `t = 3.99`.**  The cover LP is at `12.15–12.28`
+with the probe minimum at `0.86–0.95`, i.e. the row set is nowhere near converged and the value has
+not started to settle; the pure reference at this container is `>= 12.0281608` exactly
+(`CLIQUE_CONTINUUM.md` §3), so a clique cover below 12 needs the family to be worth `> 0.028`
+*at convergence*, and the measured `0.06` at round 3 is encouraging but is not that number.
 
 ## 6. Verdict
 
