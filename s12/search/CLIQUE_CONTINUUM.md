@@ -14,12 +14,12 @@ the packing side it cannot be one.**
 
 The headline pair, on the lattice that passes calibration and on one and the same pose set:
 
-    pure LP            12.0115 → 12.0186        (target L(3.99) = 12.008: PASS at every stage)
-    anchor-clique LP   11.8965 → 11.9011        (gain 0.104 – 0.120)
+    pure LP            12.0115 → 12.0205        (target L(3.99) = 12.008: PASS at every stage)
+    anchor-clique LP   11.8965 → 11.9039        (gain 0.104 – 0.120)
 
-over six stages in which the pose set grows from 558 to 2649 orbits, each stage ending with no
+over seven stages in which the pose set grows from 558 to 3109 orbits, each stage ending with no
 violated anchor clique the separator can find.  The clique value stays pinned at `11.90 ± 0.006`
-across that 4.7× refinement while the pure value on the very same poses climbs — flat, where task
+across that 5.6× refinement while the pure value on the very same poses climbs — flat, where task
 A's unrestricted-clique ladder drifted by `0.26` over a comparable refinement.  The same
 measurement in the `k = 4` corner leaf at `t = 3.98` gives the same gain, `0.103–0.105` (§7a).
 
@@ -150,12 +150,13 @@ across lattices (`runs/cq_A99sw5.log`):
 | `r3` | 1787 | 545 | `12.011641` | `11.907901` | `0.104` | `≈ 1.00` (converged) |
 | `r4` | 2204 | 709 | `12.015987` | `11.895710` | `0.120` | `≈ 1.00`; row loop hit its cap (`maxcov 1.0013`), so this stage is a little optimistic |
 | `r5` | 2649 | 784 | `12.018611` | `11.901056` | `0.118` | `≈ 1.00` (converged) |
+| `r6` | 3109 | 816 | `12.020539` | `11.903942` | `0.117` | `≈ 1.00` (converged) |
 
 Every pure value clears the calibration target `12.008`, and the certifiable clique family costs
 the LP `0.104–0.120` — **thirteen to fifteen times** the pure method's entire excess over 12 at
-`t = 3.99`.  **The ladder is flat.**  Over these six stages the pose set grows by a factor of
-**4.7** (558 → 2649 orbits) and the clique value stays pinned at `11.90 ± 0.006`, while the pure
-value on the very same poses climbs from `12.0115` to `12.0186`.  The gap does not close; it
+`t = 3.99`.  **The ladder is flat.**  Over these seven stages the pose set grows by a factor of
+**5.6** (558 → 3109 orbits) and the clique value stays pinned at `11.90 ± 0.006`, while the pure
+value on the very same poses climbs from `12.0115` to `12.0205`.  The gap does not close; it
 widens slightly.  That is the qualitative difference from task A, whose stage values drifted `11.19 → 11.36 →
 11.45` over a comparable pose refinement: A's cuts were explicit lists of poses, so every new
 column arrived outside every cut; these cuts are geometric regions, so a new column that lands
