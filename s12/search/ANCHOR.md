@@ -189,6 +189,19 @@ running LP.  What it does not show is convergence: the LP value oscillates betwe
 `12.34` and the probe minimum between `0` and `0.94` as rows accumulate and columns are priced in.
 **No verified certificate of value `< 12` was produced.**
 
+**And a caveat that has to be read with the table.**  `--matched` was added to measure the gain the
+way `search/CLIQUE_CONTINUUM.md` does — re-solve the same restricted master with the clique columns
+removed — and it returns an *impossible* answer: a pure value **below** the clique value
+(`1.945380` against `2.000016` at round 0), when removing columns from a minimisation cannot lower
+it.  The two solves therefore do not have the same column set, which means the restricted master's
+per-round value is not reliable to better than `~0.05` at these settings (`BRANCH_RESTRICTED_ADD`
+1000, two passes).  So the excursions in the table above — `11.95`, `11.99`, `12.08` — are **inside
+the solver's own noise**, and none of them should be read as "the leaf value moved".  The numbers in
+this note that are not inside that noise are the verified ones of §2–§3a and the separation
+measurement of §3, which is computed from a *converged* run's dual.  Fixing the matched pair (or
+running the master to convergence, `BRANCH_RESTRICTED_PASSES=0`, which needs ~20 GB and 15 min a
+round here) is the first thing the next run should do.
+
 The oscillation is the ordinary behaviour of this loop far from convergence (the pure reference took
 18 rounds of 1–2 h each, its value climbing `11.996 → 12.000024` from below, before it settled); the
 runs here are 10 rounds of 1–4 min from a restarted row set, i.e. an order of magnitude short.
@@ -238,8 +251,9 @@ same separation keeps firing (`+0.34` at round 7 of the table above, with no cov
 at all).
 
 *Not established.*  No verified leaf certificate of value `< 12`.  The LP value never settled: it
-sits in `11.95 … 12.34` after ten rounds, against the pure reference's converged `12.000024`.  The
-loop is compute-bound, not stuck — the pure reference needed 18 rounds of 1–2 h from the same start,
+sits in `11.95 … 12.34` after ten rounds, against the pure reference's converged `12.000024` — and
+those excursions are inside the restricted master's own noise (§4), so the honest statement is that
+the leaf's value was not measured at all, not that it moved.  The loop is compute-bound, not stuck — the pure reference needed 18 rounds of 1–2 h from the same start,
 and the clique loop's rounds are cheaper but its row set was restarted several times while the
 verifier and the pricing were being fixed.  The next run should simply be left alone: same settings
 as `runs/leafk4h.sh` (`--topk 3 --prune-at 250000`, restricted master priced to convergence,
