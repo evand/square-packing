@@ -125,9 +125,12 @@ class ACut:
 class CModel:
     """packing LP: orbit columns, point rows in the fundamental domain, plus cut rows"""
 
-    def __init__(self, t, threads, log):
+    def __init__(self, t, threads, log, kmass=None, r=1.0):
         self.m = PD.Model(t, PD.build_lib(), threads, log)
         self.t = t
+        self.kmass = kmass
+        self.r = r
+        self.lam = 0.0
         self.cuts = []                     # list of dicts: kind, data, matrix column values
         self.Ccols = []                    # list of 1-d arrays (len = ncols) per cut
         self.log = log
@@ -182,6 +185,15 @@ class CModel:
         self.cuts = [c for c, k in zip(self.cuts, keep) if k]
         self.Ccols = [c for c, k in zip(self.Ccols, keep) if k]
 
+    def flags(self):
+        """orbits whose poses are centred in one of the four corner boxes [0,r]^2 (leaf mode)"""
+        t = self.t
+        P = np.array(self.m.poses, dtype=float).reshape(-1, 3)
+        if len(P) == 0:
+            return np.zeros(0, dtype=bool)
+        return (np.minimum(P[:, 0], t - P[:, 0]) <= self.r + 1e-12) & \
+               (np.minimum(P[:, 1], t - P[:, 1]) <= self.r + 1e-12)
+
     def solve(self):
         n = len(self.m.poses)
         A = self.m.A
@@ -190,13 +202,20 @@ class CModel:
             C = sp.csr_matrix(np.array(self.Ccols))
             A = sp.vstack([A, C], format='csr')
             b = np.ones(A.shape[0])
-        res = linprog(c=-np.ones(n), A_ub=A, b_ub=b, bounds=(0, None), method='highs')
+        Aeq = beq = None
+        if self.kmass is not None:
+            Aeq = sp.csr_matrix(self.flags().astype(float).reshape(1, -1))
+            beq = [float(self.kmass)]
+        res = linprog(c=-np.ones(n), A_ub=A, b_ub=b, A_eq=Aeq, b_eq=beq, bounds=(0, None),
+                      method='highs')
         if not res.success:
-            res = linprog(c=-np.ones(n), A_ub=A, b_ub=b, bounds=(0, None), method='highs-ds')
+            res = linprog(c=-np.ones(n), A_ub=A, b_ub=b, A_eq=Aeq, b_eq=beq, bounds=(0, None),
+                          method='highs-ds')
         if not res.success:
             return None
         mu = np.maximum(res.x, 0.0)
         y = np.maximum(-res.ineqlin.marginals, 0.0)
+        self.lam = float(-res.eqlin.marginals[0]) if Aeq is not None else 0.0
         npt = self.m.A.shape[0]
         return mu, y[:npt], y[npt:], -res.fun
 
@@ -223,7 +242,9 @@ def lattice_size(t, h, angs):
     return sum(len(lattice_slice(t, h, th)) for th in angs)
 
 
-def price_lattice(lib, ax, ay, aw, t, h, angs, cutduals, cuts, threads, want):
+def price_lattice(lib, ax, ay, aw, t, h, angs, cutduals, cuts, threads, want,
+                  lam=0.0, rr=1.0):
+    tt = t
     """reduced cost of every lattice pose = 1 - capture - sum of duals of the cuts it is in.
     Returns the `want` best (cx, cy, th, rc)."""
     best = []
@@ -233,6 +254,10 @@ def price_lattice(lib, ax, ay, aw, t, h, angs, cutduals, cuts, threads, want):
             continue
         cap = PD.capture(lib, ax, ay, aw, P, threads)
         rc = 1.0 - cap
+        if lam:
+            corner = (np.minimum(P[:, 0], tt - P[:, 0]) <= rr + 1e-12) & \
+                     (np.minimum(P[:, 1], tt - P[:, 1]) <= rr + 1e-12)
+            rc = rc + lam * corner
         for (cut, dual) in zip(cuts, cutduals):
             if dual <= 1e-12:
                 continue
@@ -304,6 +329,9 @@ def main():
     ap.add_argument('--clique-tl', type=float, default=20.0)
     ap.add_argument('--maxatoms', type=int, default=8000)
     ap.add_argument('--kcut-nth', type=int, default=120)
+    ap.add_argument('--kmass', type=float, default=None,
+                    help='leaf mode: total mass of poses centred in the four corner boxes [0,r]^2')
+    ap.add_argument('--r', type=float, default=1.0)
     args = ap.parse_args()
 
     t = float(eval(args.T)) if '/' in args.T else float(args.T)
@@ -316,7 +344,7 @@ def main():
 
     log(f"# clique_continuum {args.TAG}: t={t} mode={args.mode} h={args.h} dth={args.dth} "
         f"threads={args.threads}")
-    M = CModel(t, args.threads, log)
+    M = CModel(t, args.threads, log, kmass=args.kmass, r=args.r)
     lib = M.m.lib
 
     # ---- lattice
@@ -336,6 +364,13 @@ def main():
     if args.h > 0 and seeds:
         seeds = snap_to_lattice(seeds, t, args.h, args.dth)
     seeds += PD.seed_poses(t, 0.25, max(args.dth, 5.0))
+    if args.kmass is not None:
+        for thd in np.arange(0.0, 90.0 - 1e-9, max(args.dth, 2.0)):
+            th = math.radians(thd)
+            w2 = PD.wid_of(th) / 2
+            for a in np.arange(w2, min(args.r, t / 2) + 1e-9, 0.02):
+                for b2 in np.arange(w2, min(args.r, t / 2) + 1e-9, 0.02):
+                    seeds.append((float(a), float(b2), th))
     if args.h > 0:
         seeds = snap_to_lattice(seeds, t, args.h, args.dth)
     M.add_poses(seeds)
@@ -395,7 +430,7 @@ def main():
             break
         if args.h > 0:
             cand = price_lattice(lib, ax, ay, aw, t, args.h, angs, ycut, M.cuts,
-                                 args.threads, args.cg_want)
+                                 args.threads, args.cg_want, lam=M.lam, rr=args.r)
             if len(cand) == 0:
                 log("* PRICING CLEAN: LP solved to optimality over the lattice")
                 break
@@ -458,14 +493,30 @@ def separate(M, mu, args, log):
         im = im[np.argsort(-im[:, 3])[:3000]]
     if args.mode == 'sat':
         adj = closed_adj(im[:, :3])
-        w, cl = max_weight_clique(adj, im[:, 3], tlimit=args.clique_tl)
-        if w <= 1.0 + 1e-6:
-            return 0, w
-        keys = np.round(im[cl, 0] * 1e7).astype(np.int64) * 1000000000000 \
-            + np.round(im[cl, 1] * 1e7).astype(np.int64) * 1000000 \
-            + np.round(np.degrees(im[cl, 2]) * 1e4).astype(np.int64)
-        M.add_cut(dict(kind='sat', keys=keys))
-        return 1, w
+        w0, cl0 = max_weight_clique(adj, im[:, 3], tlimit=args.clique_tl)
+        cands = [(w0, cl0)]
+        # plus a greedy clique through each of the heaviest images (task A's separation)
+        order = np.argsort(-im[:, 3])[:args.cut_per_round * 3]
+        for v in order:
+            ww, cc = CF.greedy_clique(adj, im[:, 3], [int(v)])
+            if ww > 1.0 + 1e-6:
+                cands.append((ww, cc))
+        cands.sort(key=lambda z: -z[0])
+        seen = set()
+        added = 0
+        for (ww, cc) in cands:
+            if ww <= 1.0 + 1e-6 or added >= args.cut_per_round:
+                break
+            key = tuple(sorted(cc))
+            if key in seen:
+                continue
+            seen.add(key)
+            keys = np.round(im[cc, 0] * 1e7).astype(np.int64) * 1000000000000 \
+                + np.round(im[cc, 1] * 1e7).astype(np.int64) * 1000000 \
+                + np.round(np.degrees(im[cc, 2]) * 1e4).astype(np.int64)
+            M.add_cut(dict(kind='sat', keys=keys))
+            added += 1
+        return added, w0
     if args.mode == 'anchor':
         pts = tight_row_points(M, args, npts=args.sep_pts)
         recs = []
