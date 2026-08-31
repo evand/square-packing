@@ -33,9 +33,11 @@ The root domain uses u in [0, 1/2] (theta up to 53deg) to keep endpoints rationa
 Usage:  python3 search/zeromargin.py friedman14 [--tri] [--depth 16] [--nproc 4] [--dump FILE]
         python3 search/zeromargin.py cert certificates/xxx.txt ...   (weighted: sum of certified weights >= 1)
 """
-import sys, os, time, argparse, itertools
+import sys, os, time, argparse, itertools, math
+for _v in ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS'): os.environ.setdefault(_v, '1')
 from fractions import Fraction as F
 from multiprocessing import Pool
+import numpy as np
 
 HALF = F(1, 2)
 
@@ -95,6 +97,24 @@ def in_core_f(a, b, Bf, tol=1e-9):
         return a * a + b * b <= 0.25 + tol
     return True
 
+def in_core_f_vec(a, b, Bf, tol=1e-9):
+    """numpy-vectorised version of in_core_f: a, b are arrays; returns a bool array, a superset
+    (lenient by tol) of the exact core test, used only as a pre-filter -- every candidate it
+    passes is re-checked exactly in Fractions before being counted."""
+    c0, s0, c1, s1, cD, sD = Bf
+    h = 0.5 + tol
+    x = a * c0 + b * s0; y = -a * s0 + b * c0
+    ok = (np.abs(x) <= h) & (np.abs(y) <= h)
+    x1 = a * c1 + b * s1; y1 = -a * s1 + b * c1
+    ok &= (np.abs(x1) <= h) & (np.abs(y1) <= h)
+    # fold (x,y) into the first quadrant mod 90deg -> (p,q)
+    p = np.where(x >= 0, np.where(y >= 0, x, -y), np.where(y >= 0, y, -x))
+    q = np.where(x >= 0, np.where(y >= 0, y, x), np.where(y >= 0, -x, -y))
+    in_sector = (p <= tol) | (q * cD <= p * sD + tol)
+    r2ok = (a * a + b * b) <= 0.25 + tol
+    ok &= np.where(in_sector, r2ok, True)
+    return ok
+
 class Checker:
     def __init__(self, m, points, weights=None, use_tri=False, max_depth=16, dump=None):
         self.m = F(m)
@@ -105,6 +125,14 @@ class Checker:
         self.max_depth = max_depth
         self.tris = self._triangles() if use_tri else []
         self.dump = dump
+        # vectorised (numpy) point/weight arrays for the float pre-filter; a fixed order by
+        # decreasing weight so the exact confirmation loop reaches total >= 1 in as few
+        # Fraction operations as possible.
+        n = len(self.P)
+        self.Pxf = np.array([p[0] for p in self.Pf], dtype=float) if n else np.zeros(0)
+        self.Pyf = np.array([p[1] for p in self.Pf], dtype=float) if n else np.zeros(0)
+        self.Wf = np.array([float(w) for w in self.W], dtype=float) if n else np.zeros(0)
+        self.order = np.argsort(-self.Wf) if n else np.zeros(0, dtype=np.int64)
 
     def _triangles(self):
         n = len(self.P); T = []
@@ -129,22 +157,27 @@ class Checker:
         lo = B['wlo'] / 2; hi = self.m - lo
         cx0 = max(cx0, lo); cx1 = min(cx1, hi); cy0 = max(cy0, lo); cy1 = min(cy1, hi)
         if cx0 > cx1 or cy0 > cy1: return ('EMPTY', None)
-        cxf = (float(cx0), float(cx1)); cyf = (float(cy0), float(cy1))
+        cxf0, cxf1 = float(cx0), float(cx1); cyf0, cyf1 = float(cy0), float(cy1)
+        # numpy float pre-filter over ALL points at once (superset of the exact test: every
+        # point that could pass the exact test passes this one, by construction of in_core_f_vec).
+        mask = in_core_f_vec(self.Pxf - cxf0, self.Pyf - cyf0, Bf)
+        mask &= in_core_f_vec(self.Pxf - cxf0, self.Pyf - cyf1, Bf)
+        mask &= in_core_f_vec(self.Pxf - cxf1, self.Pyf - cyf0, Bf)
+        mask &= in_core_f_vec(self.Pxf - cxf1, self.Pyf - cyf1, Bf)
+        if not mask.any() or self.Wf[mask].sum() < 1.0:
+            return (None, None)          # even the lenient float superset can't reach weight 1
+        # exact confirmation only on the (few) candidates, heaviest first
         total = F(0); used = []
-        for k, ((px, py), (pxf, pyf)) in enumerate(zip(self.P, self.Pf)):
-            okf = True
-            for a in (pxf - cxf[0], pxf - cxf[1]):
-                for b in (pyf - cyf[0], pyf - cyf[1]):
-                    if not in_core_f(a, b, Bf): okf = False; break
-                if not okf: break
-            if not okf: continue
+        for k in self.order:
+            if not mask[k]: continue
+            px, py = self.P[k]
             ok = True
             for a in (px - cx0, px - cx1):
                 for b in (py - cy0, py - cy1):
                     if not in_core(a, b, B): ok = False; break
                 if not ok: break
             if ok:
-                total += self.W[k]; used.append(k)
+                total += self.W[k]; used.append(int(k))
                 if total >= 1: return ('CORE', used)
         return (None, None)
 
@@ -152,13 +185,24 @@ class Checker:
         cx0, cx1, cy0, cy1 = box[:4]
         t = 1 - B['whi'] / 2
         m = self.m
+        tf = float(t); mf = float(m); eps = 1e-9
+        cxf0, cxf1, cyf0, cyf1 = float(cx0), float(cx1), float(cy0), float(cy1)
+        cond1 = (self.Pxf - 1 <= eps) | (cxf0 >= self.Pxf - tf - eps)
+        cond2 = (self.Pxf + 1 >= mf - eps) | (cxf1 <= self.Pxf + tf + eps)
+        cond3 = (self.Pyf - 1 <= eps) | (cyf0 >= self.Pyf - tf - eps)
+        cond4 = (self.Pyf + 1 >= mf - eps) | (cyf1 <= self.Pyf + tf + eps)
+        mask = cond1 & cond2 & cond3 & cond4
+        if not mask.any() or self.Wf[mask].sum() < 1.0:
+            return (None, None)
         total = F(0); used = []
-        for k, (px, py) in enumerate(self.P):
+        for k in self.order:
+            if not mask[k]: continue
+            px, py = self.P[k]
             if not (px - 1 <= 0 or cx0 >= px - t): continue
             if not (px + 1 >= m or cx1 <= px + t): continue
             if not (py - 1 <= 0 or cy0 >= py - t): continue
             if not (py + 1 >= m or cy1 <= py + t): continue
-            total += self.W[k]; used.append(k)
+            total += self.W[k]; used.append(int(k))
             if total >= 1: return ('P1', used)
         return (None, None)
 
@@ -258,7 +302,7 @@ def read_cert(path):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('what', help='friedman14 | cert')
+    ap.add_argument('what', help='friedman14 | cert | pose')
     ap.add_argument('path', nargs='?')
     ap.add_argument('--tri', action='store_true')
     ap.add_argument('--depth', type=int, default=16)
@@ -266,8 +310,39 @@ def main():
     ap.add_argument('--pitch', type=str, default='1/10')
     ap.add_argument('--ubins', type=int, default=8)
     ap.add_argument('--dump', type=str, default=None)
+    ap.add_argument('--oracle', type=str, default=None,
+                     help='write the uncertified boxes worst-case poses (centre + 4 corners x 2 angle '
+                          'endpoints, floats derived from the exact box) as (cx, cy, theta_rad) rows, '
+                          'one per line, for use as separating cutting planes in a cover LP')
     ap.add_argument('--full', action='store_true', help='no symmetry reduction (cy up to m, u up to 1)')
+    ap.add_argument('--u', type=str, default=None, help='pose mode: u = tan(theta/2), as a Fraction-parseable string ("1/3", "0.3333")')
+    ap.add_argument('--cx', type=str, default=None, help='pose mode: centre x, Fraction-parseable')
+    ap.add_argument('--cy', type=str, default=None, help='pose mode: centre y, Fraction-parseable')
     a = ap.parse_args()
+    if a.what == 'pose':
+        # exact captured weight at one rational pose (cx, cy, theta = 2*atan(u)): a rigorous,
+        # non-adaptive confirmation that a specific pose found by a float search (stress test,
+        # local polish, ...) really is (or is not) a violation of the cover -- no subdivision,
+        # no depth limit, pure Fraction arithmetic; the pose's u must be rational for cos/sin to
+        # be rational (trig(u)), so snap any float u to a nearby fraction first.
+        m, pts, ws = read_cert(a.path)
+        u = F(a.u); cx = F(a.cx); cy = F(a.cy)
+        c, s = trig(u)
+        total = F(0); used = []
+        for k, (px, py) in enumerate(pts):
+            dx, dy = px - cx, py - cy
+            x = dx * c + dy * s; y = -dx * s + dy * c
+            if -HALF <= x <= HALF and -HALF <= y <= HALF:
+                total += ws[k]; used.append((k, px, py, ws[k]))
+        th_deg = math.degrees(2 * math.atan(float(u)))
+        w_adm = abs(c) + abs(s)
+        adm = (w_adm / 2 <= cx <= m - w_adm / 2) and (w_adm / 2 <= cy <= m - w_adm / 2)
+        print(f"container [0,{m}]^2; pose cx={cx} ({float(cx):.9f}) cy={cy} ({float(cy):.9f}) "
+              f"u={u} theta={th_deg:.9f} deg; admissible: {adm}")
+        print(f"EXACT captured weight = {total} = {float(total):.12f}  "
+              f"({'OK: >= 1' if total >= 1 else '*** VIOLATION: < 1 ***'})")
+        print(f"captured points ({len(used)}): {[(k, str(px), str(py), str(w)) for k, px, py, w in used]}")
+        sys.exit(0)
     if a.what == 'friedman14':
         m, pts, ws = 4, FRIEDMAN14, None
     else:
@@ -299,7 +374,6 @@ def main():
     print(f"  leaves: CORE {tot['CORE']}  P1 {tot['P1']}  TRI {tot['TRI']}  EMPTY {tot['EMPTY']}  UNCERTIFIED {tot['UNCERT']}")
     if unc_all:
         print("uncertified boxes (cx0 cx1 cy0 cy1 u0 u1 -> theta0 theta1 deg):")
-        import math
         for b in sorted(unc_all)[:40]:
             print("  ", *[f"{float(v):.6f}" for v in b[:4]],
                   f"{math.degrees(2*math.atan(float(b[4]))):.3f} {math.degrees(2*math.atan(float(b[5]))):.3f}")
@@ -310,6 +384,20 @@ def main():
             for box, kind, wit in leaves_all:
                 f.write(" ".join(str(v) for v in box) + f" ; {kind} ; {wit}\n")
         print(f"leaves written to {a.dump}")
+    if a.oracle:
+        with open(a.oracle, 'w') as f:
+            f.write(f"# container {m}; uncertified box worst-case poses: cx cy theta_rad\n")
+            for box in unc_all:
+                bx0, bx1, by0, by1, bu0, bu1 = box
+                th0, th1 = 2 * math.atan(float(bu0)), 2 * math.atan(float(bu1))
+                cxs = sorted({float(bx0), float(bx1), float((bx0 + bx1) / 2)})
+                cys = sorted({float(by0), float(by1), float((by0 + by1) / 2)})
+                for cxv in cxs:
+                    for cyv in cys:
+                        for thv in (th0, th1, (th0 + th1) / 2):
+                            f.write(f"{cxv!r} {cyv!r} {thv!r}\n")
+        print(f"oracle rows (uncertified-box corner/centre poses) written to {a.oracle}: "
+              f"{len(unc_all)} boxes -> up to {len(unc_all) * 27} poses")
     print("VERIFIED" if tot['UNCERT'] == 0 else "NOT VERIFIED")
 
 if __name__ == '__main__':
