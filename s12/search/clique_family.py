@@ -1273,6 +1273,53 @@ def anchor_separate_all(IM, p, t, nseed=8, maxstep=40, tol=1e-12, neps=10, nrho=
     return a if a['mass'] >= b['mass'] else b
 
 
+def cmd_selftest(args):
+    """cross-check the vectorised predicates against the independent scalar ones"""
+    import numpy as np, random
+    rng = random.Random(args.seed)
+    bad_c = bad_m = bad_k = 0
+    for _ in range(args.n):
+        cx, cy = rng.uniform(0.5, 3.5), rng.uniform(0.5, 3.5)
+        th = rng.uniform(0, math.pi / 2)
+        IM = np.array([[cx, cy, th, 1.0]])
+        ax, ay = rng.uniform(0, 4), rng.uniform(0, 4)
+        L = rng.uniform(0.0, 0.8)
+        a = rng.uniform(0, 2 * math.pi)
+        A = [(ax, ay), (ax + L * math.cos(a), ay + L * math.sin(a))]
+        if bool(contains_np(IM, A, tol=0.0)[0]) != all(in_square(v, (cx, cy), th) for v in A):
+            bad_c += 1
+        if bool(meets_np(IM, A, tol=0.0)[0]) != seg_meets_square(A[0], A[1], (cx, cy), th):
+            bad_m += 1
+        p = (rng.uniform(0, 4), rng.uniform(0, 4))
+        thru = contains_np(IM, [p], tol=0.0)
+        km = kmass_np(IM, thru, A)[0]
+        direct = 1.0 if ((in_square(p, (cx, cy), th)
+                          and seg_meets_square(A[0], A[1], (cx, cy), th))
+                         or all(in_square(v, (cx, cy), th) for v in A)) else 0.0
+        if abs(km - direct) > 1e-12:
+            bad_k += 1
+    print(f"selftest: {args.n} random (square, segment, point): "
+          f"contains mismatches {bad_c}, meets mismatches {bad_m}, "
+          f"K(p, A) membership mismatches {bad_k}")
+    # the rho* law of Lemma 2 against the vectorised transversal test
+    bad_r = 0
+    for _ in range(args.nrho):
+        px = rng.uniform(0.3, 0.995)
+        py = rng.uniform(1.5, 2.5)
+        kappa = px / math.sqrt(1 - px * px)
+        eps = rng.uniform(0.05, 0.95) * (1 - px)
+        for mult, want in ((0.98, False), (1.02, True)):
+            rho = kappa * eps * mult
+            if rho >= 0.49:
+                continue
+            A = [(px + eps, py - rho), (px + eps, py + rho)]
+            ok = is_transversal_np((px, py), A, args.t, nth=4096)[0]
+            if ok != want:
+                bad_r += 1
+    print(f"selftest: Lemma 2 (rho* = eps px / sqrt(1-px^2)) against the transversal test on "
+          f"{args.nrho} random (p, eps): {bad_r} mismatches")
+
+
 def cmd_separate(args):
     """scan candidate anchor points p and report the best anchor clique of the measure"""
     import numpy as np
@@ -1384,6 +1431,11 @@ def main():
     g.add_argument('--tl', type=float, default=120.0)
     g.add_argument('--inflate', type=float, default=0.0)
     g.add_argument('--nth', type=int, default=1024)
+    st = sub.add_parser('selftest')
+    st.add_argument('--t', type=float, default=3.99)
+    st.add_argument('--n', type=int, default=40000)
+    st.add_argument('--nrho', type=int, default=200)
+    st.add_argument('--seed', type=int, default=20260830)
     s2 = sub.add_parser('separate')
     s2.add_argument('--t', type=float, default=3.99)
     s2.add_argument('--support', default=os.path.join(MAIN_RUNS, 'dual_exact_3.99_support.txt'))
@@ -1395,6 +1447,9 @@ def main():
     s2.add_argument('--top', type=int, default=25)
     s2.add_argument('--tag', default='PA2')
     args = ap.parse_args()
+    if args.cmd == 'selftest':
+        cmd_selftest(args)
+        return
     if args.cmd == 'separate':
         cmd_separate(args)
         return

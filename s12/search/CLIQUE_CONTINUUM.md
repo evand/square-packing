@@ -8,8 +8,17 @@ certification of a clique-feasible measure).  Mathematics, lemmas and proofs:
 
 ## Verdict
 
-**GO — the clique lever is real in the continuum, and it is about 15× the pure method's own
-excess.  It is not a proof, and from the packing side it cannot be one.**
+**GO — the clique lever is real in the continuum, it is about 14× the pure method's own excess,
+and unlike task A's the measurement is stable under pose refinement.  It is not a proof, and from
+the packing side it cannot be one.**
+
+The headline pair, on the lattice that passes calibration and on one and the same pose set:
+
+    pure LP            12.0113 – 12.0115        (target L(3.99) = 12.008: PASS)
+    anchor-clique LP   11.8965 – 11.9032        (gain 0.108 – 0.115)
+
+over three stages in which the pose set grows from 558 to 1340 orbits.  The gain moves by `0.007`
+across that refinement — flat, where task A's unrestricted-clique ladder drifted by `0.26`.
 
 Three things are new relative to tasks A and B.
 
@@ -130,14 +139,24 @@ across lattices (`runs/cq_A99sw5.log`):
 
 | stage | poses (orbits) | anchor cuts | pure value | anchor-clique value | gain | residual max anchor clique |
 |---|---|---|---|---|---|---|
-| `r0` | 558 | 422 | **12.011523** | **11.896525** | **0.115** | `≈ 1.00` (converged) |
+| `r0` | 558 | 422 | `12.011523` | `11.896525` | `0.115` | `≈ 1.00` (converged) |
+| `r1` | 965 | 458 | `12.011310` | `11.902459` | `0.109` | `≈ 1.00` (converged) |
+| `r2` | 1340 | 490 | `12.011327` | `11.903163` | `0.108` | `≈ 1.00` (converged) |
 
-The pure value on that pose set already clears the calibration target `12.008`, and the
-certifiable clique family costs the LP `0.115` — **fourteen times** the pure method's entire
-excess over 12 at `t = 3.99`.  The unrestricted (`sat`) family reaches `11.90` with 834 explicit
-cuts and is still descending, so on a fixed pose set the certifiable family recovers essentially
-all of what the unrestricted one achieves.  The difference between them is not the value: it is
-that the anchor cuts survive pricing and the `sat` cuts do not.
+Every pure value clears the calibration target `12.008`, and the certifiable clique family costs
+the LP `0.108–0.115` — **thirteen to fourteen times** the pure method's entire excess over 12 at
+`t = 3.99`.  **The ladder is flat**: the pose set grows by a factor of 2.4 across these stages and
+the clique value moves by `0.007`, upward, while the pure value on the same poses does not move at
+all.  That is the qualitative difference from task A, whose stage values drifted `11.19 → 11.36 →
+11.45` over a comparable pose refinement: A's cuts were explicit lists of poses, so every new
+column arrived outside every cut; these cuts are geometric regions, so a new column that lands
+inside one is charged and the LP has to move it out of the region — which it evidently cannot do
+cheaply.
+
+The unrestricted (`sat`) family reaches `11.90` with 834 explicit cuts and is still descending, so
+on a fixed pose set the certifiable family recovers essentially all of what the unrestricted one
+achieves.  The difference between them is not the value: it is that the anchor cuts survive
+pricing and the `sat` cuts do not.
 
 **Caveat, stated once and meant throughout.**  Every stage value is an LP over a finite pose set,
 so it is a **lower** bound on the value over the continuum of poses at those angles, and it rises
