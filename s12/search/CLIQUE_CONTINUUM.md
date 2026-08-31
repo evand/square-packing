@@ -144,12 +144,13 @@ across lattices (`runs/cq_A99sw5.log`):
 | `r0` | 558 | 422 | `12.011523` | `11.896525` | `0.115` | `≈ 1.00` (converged) |
 | `r1` | 965 | 458 | `12.011310` | `11.902459` | `0.109` | `≈ 1.00` (converged) |
 | `r2` | 1340 | 490 | `12.011327` | `11.903163` | `0.108` | `≈ 1.00` (converged) |
+| `r3` | 1787 | 545 | `12.011641` | `11.907901` | `0.104` | `≈ 1.00` (converged) |
 
 Every pure value clears the calibration target `12.008`, and the certifiable clique family costs
-the LP `0.108–0.115` — **thirteen to fourteen times** the pure method's entire excess over 12 at
-`t = 3.99`.  **The ladder is flat**: the pose set grows by a factor of 2.4 across these stages and
-the clique value moves by `0.007`, upward, while the pure value on the same poses does not move at
-all.  That is the qualitative difference from task A, whose stage values drifted `11.19 → 11.36 →
+the LP `0.104–0.115` — **thirteen to fourteen times** the pure method's entire excess over 12 at
+`t = 3.99`.  **The ladder is flat**: the pose set grows by a factor of 3.2 across these stages and
+the clique value moves by `0.011`, upward, while the pure value on the same poses moves by
+`0.0003`.  That is the qualitative difference from task A, whose stage values drifted `11.19 → 11.36 →
 11.45` over a comparable pose refinement: A's cuts were explicit lists of poses, so every new
 column arrived outside every cut; these cuts are geometric regions, so a new column that lands
 inside one is charged and the LP has to move it out of the region — which it evidently cannot do
@@ -303,11 +304,27 @@ is at `y = 1.0920 > 1`).  The missing axis is exactly the constraint `ε < 1 - p
 Two independent implementations of the transversal test and the exact certifier now agree on `ρ*`
 to 12 digits.  Recorded also in `notes/clique-family.md §7`.
 
+## 7a. `t = 3.98`, corner leaf `k = 4`
+
+`clique_continuum.py --kmass 4 --r 1` adds the leaf's equality row (total mass of poses centred in
+the four corner boxes `[0,1]²` equals 4) with its dual `λ` in the pricing, exactly as
+`clique_ceiling.py` does.  Warm start: the branch dual `runs/branch_t398hk4_dual_it16.txt`
+(520 poses, `CLIQUE.md`) plus `dual_PD1_support.txt`.  First stage (`runs/cq_L98B.log`):
+
+| stage | poses | anchor cuts | pure value on the same poses | anchor-clique value | gain |
+|---|---|---|---|---|---|
+| `r0` | 1207 | 260 | `11.913925` | `11.810839` | `0.103` |
+
+The **gain is the same size as at `t = 3.99`**, which is the interesting part.  The run is not yet
+calibrated: the leaf's pure value is known to be `12.000 ± 0.001` (`CLIQUE.md`) and this pose set
+only reaches `11.914`, so the leaf needs more pricing rounds before its clique value can be quoted
+against 12.  If the gain holds at `0.10` once the pure value reaches `12.000`, the `k = 4` leaf —
+the one thing blocking `s(12) >= 3.98` — would close with room, which makes finishing this run the
+single highest-value follow-up of the task.
+
 ## 8. What was not done
 
-* **`t = 3.98`, corner leaf `k = 4`.**  `clique_continuum.py` grew the leaf constraint
-  (`--kmass 4 --r 1`, corner mass as an equality row with its dual in the pricing) but no leaf run
-  was made: the `t = 3.99` ladder consumed the compute budget and is the prior question.
+* **The `t = 3.98` leaf to convergence.**  Started, one stage, not calibrated (above).
 * **The cover side.**  Nothing here is a certificate.  The decisive experiment — a clique
   certificate of weight `< 12` — is on the cover side and needs the verifier changes of §6.
 * **Multi-anchor cliques (`m ≥ 3`).**  Implemented (`clique_family.kmass_multi`,
