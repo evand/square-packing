@@ -366,22 +366,24 @@ cap that also had to be raised here (16k rows at 3.98 against 5.9k at 3.99).
 | `r1` | 2126 | 438 | `11.913105` | `11.813382` | `0.100` | `4.000000` | `-1.044` |
 | `r2` | 2944 | 573 | `11.913980` | `11.812264` | `0.102` | `4.000000` | `-0.991` |
 | `r3` | 3367 | 601 | `11.916297` | `11.812316` | `0.104` | `4.000000` | `-1.123` |
+| `r4` | 4276 | 748 | `11.916476` | `11.810144` | `0.106` | `4.000000` | `-1.064` |
 
-The gain is `0.098–0.104` and creeping **up** as the pose set doubles — the same size and the same
+The gain is `0.098–0.106` and creeping **up** as the pose set grows by a factor of 2.5 — the same size and the same
 flatness as the `0.104–0.120` measured at `t = 3.99`.  The residual max clique of the support
 graph is `1.11–1.33`, i.e. unrestricted cliques are still violated while anchor cliques are not.
 
 ### Calibration: NOT reached — `0.051` short, and why
 
-The best pure leaf value obtained is **`11.9487`** (`runs/cq_LP98b.log` r4, 4880 poses,
-`λ = -0.289`, still rising), against the target `12.000 ± 0.001`.  So the `≈ 0.10` clique gain
+The best pure leaf value obtained is **`11.9516`** (`runs/cq_LP98b.log` r5, 5294 poses,
+`λ = -0.437`, still rising: `11.911, 11.911, 11.930, 11.944, 11.949, 11.952`), against the
+target `12.000 ± 0.001`.  So the `≈ 0.10` clique gain
 **cannot yet be quoted against 12**: on the pose sets reachable here the pure reference is
-`11.91–11.95`, not `12.00`.
+`11.91–11.95`, not `12.00`.  The residual gap is `0.048`.
 
 The shortfall is a column-generation deficit at `t = 3.98` in general, **not** something specific
 to the leaf.  The control that shows this: the *unconstrained* pure LP at `t = 3.98`, same
 machinery, same time, reaches only `11.934` (`runs/cq_P98u.log`) — *below* the leaf LP's
-`11.949`, even though the leaf LP carries an extra equality constraint and so has the smaller
+`11.952`, even though the leaf LP carries an extra equality constraint and so has the smaller
 feasible set.  Both are simply short of their common ceiling.  The reason is the warm start: at
 `3.99` the run begins from the certified `12.008` measure, which is already essentially optimal,
 so calibration passes at round 0; at `3.98` no such measure exists.  The best available seed,
@@ -396,7 +398,8 @@ value "straddled by the row and column steps" (`11.9995` on the column step, `12
 row step).  It is a soft target, and the true leaf value could be a little below it.
 
 **Leaf verdict: undecided, because the pure reference is not yet converged.**  What is
-established: the leaf's anchor-clique gain is `0.098–0.104`, stable, the same as at `3.99`.  What
+established: the leaf's anchor-clique gain is `0.098–0.106`, stable and slowly rising, the
+same as at `3.99`.  What
 is not: whether the leaf's pure value is really `12.000`.  If it is, the same gain would put the
 anchor-clique leaf value at `≈ 11.90` — the leaf would close with room and `s(12) >= 3.98` would
 follow — but that is an extrapolation from a `0.05` extrapolated reference, not a measurement, and
