@@ -255,27 +255,72 @@ def lattice_size(t, h, angs):
     return sum(len(lattice_slice(t, h, th)) for th in angs)
 
 
+def reduced_cost(P, cap, cutduals, cuts, lam=0.0, t=None, rr=1.0, corner_all=False):
+    """reduced cost of each pose:  1 - capture - (cut duals) - lam*[pose is a corner pose].
+
+    The leaf equality "corner mass = k" contributes its multiplier lam = d(objective)/dk with a
+    MINUS sign (dual feasibility is  A^T y + F^T lam >= c), which is why a leaf LP that prices
+    with `+ lam` -- or, worse, ignores lam and filters on capture < 1 -- never generates the
+    corner columns it needs when lam < 0."""
+    rc = 1.0 - cap
+    if lam:
+        corner = np.ones(len(P), dtype=bool) if corner_all else (
+            (np.minimum(P[:, 0], t - P[:, 0]) <= rr + 1e-12) &
+            (np.minimum(P[:, 1], t - P[:, 1]) <= rr + 1e-12))
+        rc = rc - lam * corner
+    for (cut, dual) in zip(cuts, cutduals):
+        if dual <= 1e-12:
+            continue
+        if cut['kind'] in ('kcut', 'anchor'):
+            rc = rc - dual * cut['obj'].members(P)
+    return rc
+
+
+def corner_slice(t, r, pitch, th):
+    """the centre lattice inside the corner box [0, r]^2 at one angle (leaf mode).
+    Only the corner at the origin is needed: the other three are its D4 images."""
+    w2 = PD.wid_of(th) / 2
+    lo, hi = w2 + 1e-9, min(r, t / 2)
+    if hi <= lo:
+        return np.zeros((0, 3))
+    n = int(math.floor((hi - lo) / pitch))
+    g = lo + pitch * np.arange(n + 1)
+    g = np.unique(np.concatenate([g, [hi]]))
+    G0, G1 = np.meshgrid(g, g, indexing='ij')
+    return np.ascontiguousarray(np.c_[G0.ravel(), G1.ravel(), np.full(G0.size, th)])
+
+
+def price_corner(lib, ax, ay, aw, t, r, pitch, angs, cutduals, cuts, threads, want, lam):
+    """price the corner box explicitly (leaf mode): the sweep pricer knows nothing about lam,
+    so without this the leaf LP is starved of exactly the columns the equality row wants."""
+    best = []
+    for th in angs:
+        P = corner_slice(t, r, pitch, th)
+        if len(P) == 0:
+            continue
+        cap = PD.capture(lib, ax, ay, aw, P, threads)
+        rc = reduced_cost(P, cap, cutduals, cuts, lam=lam, t=t, rr=r, corner_all=True)
+        idx = np.nonzero(rc > 1e-9)[0]
+        if len(idx):
+            if len(idx) > want:
+                idx = idx[np.argsort(-rc[idx])[:want]]
+            best.append(np.c_[P[idx], rc[idx]])
+    if not best:
+        return np.zeros((0, 4))
+    B = np.vstack(best)
+    return B[np.argsort(-B[:, 3])][:want]
+
+
 def price_lattice(lib, ax, ay, aw, t, h, angs, cutduals, cuts, threads, want,
                   lam=0.0, rr=1.0):
-    tt = t
-    """reduced cost of every lattice pose = 1 - capture - sum of duals of the cuts it is in.
-    Returns the `want` best (cx, cy, th, rc)."""
+    """reduced cost of every lattice pose; returns the `want` best (cx, cy, th, rc)."""
     best = []
     for th in angs:
         P = lattice_slice(t, h, th)
         if len(P) == 0:
             continue
         cap = PD.capture(lib, ax, ay, aw, P, threads)
-        rc = 1.0 - cap
-        if lam:
-            corner = (np.minimum(P[:, 0], tt - P[:, 0]) <= rr + 1e-12) & \
-                     (np.minimum(P[:, 1], tt - P[:, 1]) <= rr + 1e-12)
-            rc = rc + lam * corner
-        for (cut, dual) in zip(cuts, cutduals):
-            if dual <= 1e-12:
-                continue
-            if cut['kind'] in ('kcut', 'anchor'):
-                rc = rc - dual * cut['obj'].members(P)
+        rc = reduced_cost(P, cap, cutduals, cuts, lam=lam, t=t, rr=rr)
         idx = np.nonzero(rc > 1e-9)[0]
         if len(idx):
             if len(idx) > want:
@@ -349,6 +394,8 @@ def main():
                     help='leaf mode: total mass of poses centred in the four corner boxes [0,r]^2')
     ap.add_argument('--r', type=float, default=1.0)
     ap.add_argument('--corner-pitch', type=float, default=0.08)
+    ap.add_argument('--corner-price-pitch', type=float, default=0.004,
+                    help='centre pitch of the explicit corner-box pricer (leaf mode)')
     ap.add_argument('--cuts', default=None, help='reload anchor cuts from a JSON dump')
     args = ap.parse_args()
 
@@ -445,7 +492,9 @@ def main():
                 pure_obj = rp[3]
         hist.append(dict(round=rnd, obj=obj, pure=pure_obj, cov=Mx, rows=int(M.m.A.shape[0]),
                          cols=len(M.poses), cuts=len(M.cuts), maxclique=mcl))
-        log(f"* r{rnd}: STAGE obj {obj:.6f} (pure on the same poses {pure_obj:.6f})  "
+        cm = float(mu[M.flags()].sum()) if args.kmass is not None else None
+        leafinfo = '' if cm is None else f" [corner mass {cm:.6f}, lam {M.lam:+.6f}]"
+        log(f"* r{rnd}: STAGE obj {obj:.6f} (pure on the same poses {pure_obj:.6f}){leafinfo}  "
             f"maxcov {Mx:.8f}  rows {M.m.A.shape[0]} "
             f"cols {len(M.poses)} cuts {len(M.cuts)} maxclique {mcl:.5f}  "
             f"({time.time()-t0:.0f}s)")
@@ -469,12 +518,26 @@ def main():
         else:
             got = PD.price_sweep(M.m, lib, ax, ay, aw, angs, 6, 0.02, args.threads)
             got = [g for g in got if g[3] < 1.0 - 1e-9]
-            if not got:
-                log("* PRICING CLEAN (sweep): optimal over all centres at these angles")
-                break
             got.sort(key=lambda g: g[3])
-            log(f"  sweep pricing: best capture {got[0][3]:.6f}, adding {min(len(got), args.cg_want)}")
-            nnew = M.add_poses([(g[0], g[1], g[2]) for g in got[:args.cg_want]])
+            cand = [(g[0], g[1], g[2]) for g in got[:args.cg_want]]
+            ncorner = 0
+            if args.kmass is not None:
+                # the sweep pricer knows nothing about the leaf multiplier, so corner columns
+                # with capture in [1, 1 - lam) are invisible to it: price the corner explicitly
+                cc = price_corner(lib, ax, ay, aw, t, args.r, args.corner_price_pitch, angs,
+                                  ycut, M.cuts, args.threads, args.cg_want, M.lam)
+                ncorner = len(cc)
+                cand += [(c[0], c[1], c[2]) for c in cc]
+                if ncorner:
+                    log(f"  corner pricing: best reduced cost {cc[0, 3]:.6f} on {ncorner} poses "
+                        f"(lam = {M.lam:.6f})")
+            if not cand:
+                log("* PRICING CLEAN (sweep + corner): optimal over all centres at these angles")
+                break
+            if got:
+                log(f"  sweep pricing: best capture {got[0][3]:.6f}, adding {len(cand)} "
+                    f"({ncorner} from the corner box)")
+            nnew = M.add_poses(cand)
         if nnew == 0:
             log("* no new columns (all duplicates) -- stop")
             break
