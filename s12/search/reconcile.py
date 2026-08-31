@@ -514,9 +514,108 @@ def cmd_probe(a, log):
     log(f"  fraction < 1: {float((cn < 1).mean()):.4f}")
 
 
+def cmd_dualsep(a, log):
+    """Separate anchor cliques on a cover-LP dual (`runs/branch_TAG_dual.txt`) over the FULL
+    family: any anchor point `p` (not only wall points) and any direction (not only the wall
+    normal), with the cover side's own credit rule (`anchorclique.member`).
+
+    `search/anchorsep.py` -- the separator task I's cover runs use -- scans only wall points
+    `0.05 < dist < 1` with the wall-PERPENDICULAR Lemma-2 segment.  That is the family for which
+    `K(p,A) ⊇ P_p` (Lemma 2), i.e. the family whose columns dominate a point column.  It is not
+    the family that violates these packings hardest: the best violated cliques of the certified
+    measures at `t = 3.99` sit in the INTERIOR, where `K(p,A)` is not a superset of `P_p` at all
+    but "the squares through `p` that reach `A`, plus the squares that contain `A`".  Lemma 1
+    does not forbid those -- it says a *superset* of an interior point clique is not a clique,
+    and this is not a superset."""
+    import anchorclique as AC
+    from fractions import Fraction as Fr
+    import anchorsep as AS
+    R, y, s = AS.load_dual(a.dual)
+    log(f"# {a.dual}: {len(R)} rows, dual mass {y.sum():.6f}, s = {s}")
+    D = a.D
+    sfr = Fr(int(round(s * D)), D)
+    rot = AC._rot(R)
+    ct, st, u0, u1 = rot
+    h = R[:, 3]
+
+    def ybar(cl):
+        imgs = AC.images(sfr, cl)
+        return float(AC.coeff(imgs, R, rot) @ y) / len(imgs), len(imgs)
+
+    def point_clique(X, Y):
+        return ((('P', Fr(X, D), Fr(Y, D)),), ((0, ()),))
+
+    def anchor_clique(X, Y, X0, Y0, X1, Y1):
+        return ((('P', Fr(X, D), Fr(Y, D)), ('S', Fr(X0, D), Fr(Y0, D), Fr(X1, D), Fr(Y1, D))),
+                ((0, (1,)), (1, ())))
+
+    # candidate anchor points: the grid points with the heaviest dual coverage (a point clique's
+    # own ybar), over the WHOLE container, not just the wall band
+    n = int(round(s / a.pitch)) + 1
+    ax = np.linspace(0, s, n)
+    G = np.array([(x, yv) for x in ax for yv in ax if x <= yv + 1e-12 and yv <= s / 2 + 1e-12])
+    gs = [lambda p: p, lambda p: np.c_[s - p[:, 0], p[:, 1]], lambda p: np.c_[p[:, 0], s - p[:, 1]],
+          lambda p: np.c_[s - p[:, 0], s - p[:, 1]], lambda p: np.c_[p[:, 1], p[:, 0]],
+          lambda p: np.c_[s - p[:, 1], p[:, 0]], lambda p: np.c_[p[:, 1], s - p[:, 0]],
+          lambda p: np.c_[s - p[:, 1], s - p[:, 0]]]
+    cov = sum(AS.cover_grid(R, y, g(G)) for g in gs) / 8.0
+    order = np.argsort(-cov)[:a.top]
+    log(f"# {len(G)} grid points at pitch {a.pitch}; best point-clique ybar {cov.max():.6f}")
+    dirs = [(math.cos(t), math.sin(t)) for t in
+            np.linspace(0, 2 * math.pi, a.ndir, endpoint=False)]
+    best = []
+    t0 = time.time()
+    for kk, i in enumerate(order):
+        px, py = float(G[i][0]), float(G[i][1])
+        X, Y = int(round(px * D)), int(round(py * D))
+        yp = float(cov[i])
+        for (dx, dy) in dirs:
+            for ie in range(1, a.neps + 1):
+                eps = a.epsmax * ie / a.neps
+                mx, my = px + eps * dx, py + eps * dy
+                for ir in range(1, a.nrho + 1):
+                    rho = 0.49 * ir / a.nrho
+                    x0, y0 = mx + rho * dy, my - rho * dx
+                    x1, y1 = mx - rho * dy, my + rho * dx
+                    if min(x0, x1, y0, y1) < 0 or max(x0, x1, y0, y1) > s:
+                        continue
+                    cl = anchor_clique(X, Y, int(round(x0 * D)), int(round(y0 * D)),
+                                       int(round(x1 * D)), int(round(y1 * D)))
+                    v, ni = ybar(cl)
+                    if v > 1.0 + 1e-9:
+                        best.append((v, yp, (px, py), (dx, dy), eps, rho, ni))
+        if kk % 20 == 0:
+            log(f"  {kk}/{len(order)}  best ybar(K) so far "
+                f"{max((b[0] for b in best), default=0):.6f}  ({time.time()-t0:.0f}s)")
+    best.sort(key=lambda z: -z[0])
+    log(f"{'ybar(K)':>9} {'ybar(P_p)':>10} {'extra':>9}  {'p':>20} {'walldist':>9} "
+        f"{'eps':>7} {'rho':>7} {'|A|':>7}")
+    seen = set()
+    shown = 0
+    for (v, yp, p, d, eps, rho, ni) in best:
+        k = (round(p[0], 6), round(p[1], 6))
+        if k in seen:
+            continue
+        seen.add(k)
+        wd = min(p[0], p[1], s - p[0], s - p[1])
+        log(f"{v:9.5f} {yp:10.5f} {v-yp:9.5f}  ({p[0]:8.4f},{p[1]:8.4f}) {wd:9.4f} "
+            f"{eps:7.4f} {rho:7.4f} {2*rho:7.4f}")
+        shown += 1
+        if shown >= a.show:
+            break
+    if best:
+        v, yp, p, d, eps, rho, ni = best[0]
+        wd = min(p[0], p[1], s - p[0], s - p[1])
+        log(f"\n# BEST ybar(K) = {v:.6f} at p = ({p[0]:.4f}, {p[1]:.4f}), wall distance {wd:.4f}, "
+            f"eps {eps:.4f}, |A| {2*rho:.4f}; the point clique there is {yp:.6f}")
+        nw = sum(1 for b in best if min(b[2][0], b[2][1], s - b[2][0], s - b[2][1]) >= 1.0)
+        log(f"# violated cliques found: {len(best)}, of which {nw} sit at wall distance >= 1 "
+            f"(unreachable by search/anchorsep.py)")
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=('build', 'price', 'escape', 'xmember', 'probe'))
+    ap.add_argument('cmd', choices=('build', 'price', 'escape', 'xmember', 'probe', 'dualsep'))
     ap.add_argument('tag')
     ap.add_argument('--t', type=float, default=3.99)
     ap.add_argument('--support', action='append', default=[])
@@ -535,6 +634,14 @@ def main():
     ap.add_argument('--no-pure-rows', action='store_true',
                     help="converge rows for the clique solution only (task G's protocol), so the "
                          "matched pure value is the upper bound clique_continuum.py reports")
+    ap.add_argument('--dual', default=None, help='dualsep: runs/branch_TAG_dual.txt')
+    ap.add_argument('--D', type=int, default=784000, help='dualsep: coordinate denominator')
+    ap.add_argument('--pitch', type=float, default=0.02, help='dualsep: anchor-point grid')
+    ap.add_argument('--top', type=int, default=200, help='dualsep: anchor points to try')
+    ap.add_argument('--ndir', type=int, default=16, help='dualsep: anchor directions')
+    ap.add_argument('--neps', type=int, default=8, help='dualsep: anchor offsets')
+    ap.add_argument('--nrho', type=int, default=8, help='dualsep: anchor half-lengths')
+    ap.add_argument('--epsmax', type=float, default=0.9, help='dualsep: largest anchor offset')
     ap.add_argument('--seg-only', action='store_true',
                     help='keep and separate only SEGMENT anchors (the representable family)')
     ap.add_argument('--refine', action='store_true',
@@ -566,6 +673,9 @@ def main():
         return
     if a.cmd == 'probe':
         cmd_probe(a, log)
+        return
+    if a.cmd == 'dualsep':
+        cmd_dualsep(a, log)
         return
 
     # ---- price / escape both need the built instance
