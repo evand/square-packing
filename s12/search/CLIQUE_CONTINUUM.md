@@ -82,8 +82,12 @@ arithmetic).  `t = 399/100`, `p = (99/100, 2)`, `ε = 1/250`, `ρ = 1.05 ρ*`:
 It **terminates for every `ρ > ρ*`** and **does not terminate at `ρ = ρ*`**: the critical pose sits
 on the admissibility boundary `c_x = w(θ)/2`, a curve that every box straddles — the exact
 analogue of `ZEROMARGIN.md §4.1`, quadratic margin against linear erosion.  Lemma 2 is itself the
-closed-form primitive for that case.  In practice `ρ = 1.05 ρ*` costs 5 % of the anchor length and
-buys a subdivision proof.
+closed-form primitive for that case.  The required depth scales like the reciprocal of the
+relative slack: at `ρ/ρ* = 1.05` it finishes at depth 30, while at `ρ/ρ* = 1.0003`
+(`ρ = 351/12500`) it is still reporting undecided boxes at depth 22, and they cluster at
+`θ ≈ 81.9° = 90° − arccos p_x` with `c_x ≈ w(θ)/2` — the mirror image of Lemma 2's witness pose,
+exactly where the theory says the margin vanishes.  In practice `ρ = 1.05 ρ*` costs 5 % of the
+anchor length and buys a subdivision proof.
 
 ## 2. Calibration and values at `t = 3.99`
 
@@ -116,15 +120,24 @@ cut of that family were found.
 
 | mode | family | stage values | residual max clique of the support graph |
 |---|---|---|---|
-| `pure` | — | `12.0083 → 12.0282` (5 stages, rising) | `1.21–1.33` (the pure measures are not clique-feasible — task A) |
-| `anchor` | `K(p, A)`, geometric membership | `11.8918` **conv** (558 poses, 382 cuts, residual max *anchor* clique `1.0000`); ladder continues in `runs/cq_A99sw5.log` | `1.259` |
+| `pure` | — | `12.0083 → 12.0095 → 12.0166 → 12.0227 → 12.0282` (rising) | `1.21–1.33` (the pure measures are not clique-feasible — task A) |
+| `anchor` | `K(p, A)`, geometric membership | see the matched table below | `1.26–1.28` |
 | `sat` | arbitrary finite pose sets (task A's family) | `11.975 → 11.932 → 11.911 → 11.902` (514 poses, 834 cuts, still falling) | `1.07` and falling |
 
-Read off the table: on the same lattice and comparable pose sets, the pure value is `12.008` and
-the anchor-clique value is `11.892` — a gain of `0.116`, against a pure excess over 12 of `0.008`.
-The unrestricted (`sat`) family reaches `11.90` with 834 explicit cuts and is still descending, so
-the certifiable family recovers most of what the unrestricted one achieves *on a fixed pose set*.
-The difference is that the anchor cuts survive pricing and the `sat` cuts do not.
+**Matched pairs — the number that matters.**  At every stage the run also solves the *same* LP on
+the *same* pose set with the cuts removed, so the clique gain is read off one pose set and not
+across lattices (`runs/cq_A99sw5.log`):
+
+| stage | poses (orbits) | anchor cuts | pure value | anchor-clique value | gain | residual max anchor clique |
+|---|---|---|---|---|---|---|
+| `r0` | 558 | 422 | **12.011523** | **11.896525** | **0.115** | `≈ 1.00` (converged) |
+
+The pure value on that pose set already clears the calibration target `12.008`, and the
+certifiable clique family costs the LP `0.115` — **fourteen times** the pure method's entire
+excess over 12 at `t = 3.99`.  The unrestricted (`sat`) family reaches `11.90` with 834 explicit
+cuts and is still descending, so on a fixed pose set the certifiable family recovers essentially
+all of what the unrestricted one achieves.  The difference between them is not the value: it is
+that the anchor cuts survive pricing and the `sat` cuts do not.
 
 **Caveat, stated once and meant throughout.**  Every stage value is an LP over a finite pose set,
 so it is a **lower** bound on the value over the continuum of poses at those angles, and it rises
@@ -140,13 +153,41 @@ centres clamped exactly into `[0, 399/100]²`, enumerates the arrangement vertic
 (`dual_exact.py` machinery), separates anchor cliques, re-solves, and rounds the masses down so
 that the maximum coverage and every cut are `<= 1` in exact rationals.
 
-| object | exact value | note |
-|---|---|---|
-| pure measure from the `h = 0, dθ = 1°` sweep run (262 poses, 2096 images, 300,716 arrangement vertices in the fundamental domain) | mass `12.0281…`, `M <= 1` | a **new certified lower bound** on `ν_f(3.99)`, improving `DUAL_EXACT.md`'s `12.008230754`; details below |
-| pure LP over the anchor solution's own 77 support poses | `11971698781/1000000000 = 11.971698781`, `M = 3999999999/4000000000` | certified; shows those poses alone cannot reach 12 |
+### A better exact ceiling constant at `t = 3.99` (side result)
 
-(The certified anchor-feasible measures are lower bounds on the clique-LP value and therefore do
-not decide anything in the useful direction; they are recorded in `runs/cqx_*`.)
+The pure run on the calibrated lattice produced a measure that certifies, in exact rationals,
+
+    mass = 12028160771 / 1000000000 = 12.028160771
+    M    = max coverage = 3999999987 / 4000000000 = 0.999999996750   (exactly)
+    L    = mass / M = 48112643084 / 3999999987 = 12.028160810092  >  12
+
+so **`ν_f(399/100) >= 12.0281608…`**, improving `DUAL_EXACT.md`'s `12.00823078`.  Support file
+`runs/cqx_PURE99_support.txt` (240 poses with positive mass, 1920 images).  Everything
+load-bearing is integer/`Fraction`: the poses are rational rotations `2 arctan(p/q)` with rational
+centres clamped exactly into the closed container, the arrangement vertices are exact integer
+triples, the coverage test is the integer one of `dual_exact.py`, and the masses were rounded
+**down** to multiples of `10^-9`.  Floats only chose the masses.
+
+**Independently re-checked** by the pre-existing checker, which re-reads the file and re-derives
+everything with no shared code path with the search:
+
+```
+python3 search/dual_exact.py check runs/cqx_PURE99_support.txt
+  EXACT: 255893 vertices checked; mass = 12028160771/1000000000;
+  M = 3999999987/4000000000 (attained at ~(0.999939, 0.999939));
+  L = 48112643084/3999999987 = 12.028160810092  (>= 12);  63.8 s
+```
+
+Consequence, by the duality of `search/CEILING.md`: no weighted unavoidable set of total weight
+`< 12.0281` exists at any container side `>= 3.99` — a slightly larger margin than before on the
+statement that pins the pure method's ceiling.
+
+| other exact numbers | value | note |
+|---|---|---|
+| pure LP over the anchor solution's own 77 support poses | `11971698781/1000000000 = 11.971698781`, `M = 3999999999/4000000000` | certified; those poses alone cannot reach 12 |
+
+(Certified *anchor-feasible* measures are lower bounds on the clique-LP value and so decide
+nothing in the useful direction; they are recorded in `runs/cqx_*`.)
 
 ## 4. What the measures say, directly
 
