@@ -725,6 +725,7 @@ def main():
     ap.add_argument('--warm-thr', type=float, default=1.05, help='warm start with lattice poses capturing < this under the input weights (use ~3 when restarting from a converged probe)')
     ap.add_argument('--prune-at', type=int, default=None, help='prune the row set when it exceeds this (default 40000 symmetric / 60000 asymmetric; asymmetric leaves converge better unpruned)')
     ap.add_argument('--lam-hi', type=float, default=None, help='upper bound on the multipliers (default 1.5; the k = 4 leaf sits at the cap, so a higher cap can only lower its value)')
+    ap.add_argument('--lam-lo', type=float, default=None, help='lower bound on the multipliers (default -1); --lam-lo 0 --lam-hi 0 pins every multiplier at 0, i.e. runs the PURE cover LP with a vacuous trailer')
     ap.add_argument('--max-iters', type=int, default=None, help='stop the cutting-plane loop after this many rounds and skip finalize (diagnostic runs: the dual of every round is in runs/branch_TAG_dual.txt)')
     ap.add_argument('--row-grid', type=float, nargs=2, default=None, metavar=('POS', 'ANG'), help='merge rows whose centre/angle agree to this resolution (default 1e-7 1e-8; e.g. 0.002 0.005 keeps the LP small)')
     ap.add_argument('--cols-raw', action='store_true', help='asymmetric leaves: take the certificate\'s and --cols\' points as they are (no D4 images); use when restarting a leaf from its own probe + checkpoint, which already list every column')
@@ -734,8 +735,9 @@ def main():
     ap.add_argument('--cq-load', action='append', default=None, help='anchor-clique checkpoint file(s) (runs/branch_TAG_cliques.txt) to start from')
     ap.add_argument('--dump-lp', default=None, metavar='PREFIX', help='write the LP of every round of the cutting-plane loop as PREFIX_itN.npz + PREFIX_itN_A.npz (see write_lp_dump / load_lp_dump; used by search/lp_bench.py)')
     a = ap.parse_args()
-    global LAM_HI
+    global LAM_HI, LAM_LO
     if a.lam_hi is not None: LAM_HI = float(a.lam_hi)
+    if a.lam_lo is not None: LAM_LO = float(a.lam_lo)
     r = Fraction(a.r); assert (2 * r - 1) ** 2 < 2, "r too large: (2r-1)^2 < 2 needed"
     kreg = parse_k(a.k)
     T.HIGHS['random_seed'] = a.seed
