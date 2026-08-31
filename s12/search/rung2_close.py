@@ -30,8 +30,11 @@ def main():
     ap.add_argument('--stress-pitch', type=float, default=0.003)
     ap.add_argument('--nrand', type=int, default=300)
     ap.add_argument('--nseed', type=int, default=24, help='how many of the worst stress poses to polish/add per round')
-    ap.add_argument('--allow-colgen', action='store_true', help='allow new priced columns if the fixed set cannot close the gap under weight 13')
     ap.add_argument('--cap', type=float, default=13.0, help='abort (report) if LP value would need to exceed this')
+    # NOTE: this loop only reweights the fixed column set from `cert` -- it does not price in new
+    # points.  The 2026-08-30 run (search/FAMILY.md sec 2) plateaus at stress_min ~0.994-0.996
+    # after 67 rounds without reweighting closing the gap; column generation (new points at the
+    # residual violation loci) is the natural next step and was not implemented here.
     a = ap.parse_args()
     os.makedirs('runs', exist_ok=True)
     lf = open(f"runs/closed4_{a.tag}.log", 'a')

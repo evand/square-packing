@@ -239,14 +239,21 @@ practical separation oracle.
   `closed4.py stress`/`polish`) into a rigorous yes/no on whether the current point set really
   fails there, independent of the box checker's adaptive-subdivision machinery.
 
-**Rung 2, `m = 4`, `W < 13` (step 2 of the brief).**  `search/rung2_close.py` runs the separation
-loop the brief asks for: solve the cover LP over `runs/closed4_best.txt`'s fixed column set (no
-new points), stress-test at pitch `0.003` (`search/closed4.py`'s own dense scan) to find the
-*actual* worst poses, add those (and a local polish around them) as hard LP rows, resolve, repeat
-— each round is blind exactly where the previous round's row set was blind, so it is a genuine
-(float) cutting-plane loop against the residual gap CLOSED4.md left open (LP converged at
-`12.4174` on its own row lattice, but a finer stress scan found `0.99267` at `(3.40, 1.42,
-76.4°)`).  Status and numbers: see `search/FAMILY.md` (filled in once the loop finishes or is
-reported stalled, per the brief's instruction to report honestly rather than declare
-near-success).  Whether the converged cover develops a tilted tight family needing a two-region
-primitive (ZEROMARGIN §4 item 4 / §5(ii)) is recorded there too.
+**Rung 2, `m = 4`, `W < 13` (step 2 of the brief) — result: not achieved; full numbers in
+`search/FAMILY.md` §2.**  First, the exact `pose` mode turned CLOSED4.md's float estimate into a
+certified fact: `runs/closed4_best.txt` (the best heuristic cover, `12.4175` total) is **exactly**
+not a valid cover — at `(3.3965, 1.4235, θ ≈ 76.428°)` (a rational `u` snapped near the float
+stress optimum), the captured weight is exactly `1240843/1250000 = 0.9926744 < 1`, `Fraction`
+arithmetic, 157 points checked.  `search/rung2_close.py` then ran the separation loop the brief
+asks for: solve the cover LP over the *same fixed column set*, stress-test at pitch `0.003`
+(`search/closed4.py`'s own dense scan) to find the actual worst poses, add those (and a local
+polish) as hard LP rows, resolve, repeat — each round is blind exactly where the previous round's
+row set was blind, a genuine (float) cutting-plane loop, not another generic refinement.  67
+rounds (5,210 s, 5 cores): the honest cost improved from `12.509` to about `12.46`, but the stress-
+tested minimum **plateaued at `0.9928–0.9958`** for the last 20+ rounds despite continued row
+generation — strong evidence that this specific 1,972-point column set has an intrinsic residual
+violation of about half a percent that reweighting alone cannot remove.  No tilted *tight* family
+(exactly-1 margin) was found; the residual is ordinary unconverged tilted-wall poses with small
+but nonzero margin, the same region CLOSED4.md already flagged, so the two-region primitive
+(ZEROMARGIN §4 item 4 / §5(ii)) was not needed for what was found — closing the gap looks like it
+needs new columns (points) at the persistent violation loci, which this run did not attempt.
