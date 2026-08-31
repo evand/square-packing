@@ -129,6 +129,26 @@ by `5 %` while it violates no coverage row by more than `0.4 %`.  That is the co
 counterpart of task G's packing-side `+0.024`–`0.10`, and it is a **heuristic** number (a float
 evaluation of an LP dual), not a bound in either direction.
 
+## 3a. The demonstration certificate, and the one practical fact that makes the family work
+
+`certificates/s12_anchorclique_demo_3.9318.txt` (`search/anchordemo.py`): the shipped 224-point
+certificate with **one point deleted** and the anchor clique `K(p, A)` of Lemma 2 put at that point
+with the same weight — `p = (1375, 3875)/1994`, wall distance `0.6896`, `ε = 0.2949`,
+`ρ = 0.3109 > ρ* = 0.2808`.  Since `K(p, A) ⊇ P_p` the covering is at least as strong and the total
+weight is unchanged, `11.9834372 < 12`.  It verifies at `N = 6000` and at `N = 12000` (minimum
+covered weight `1.000002` at both — an anchor block refers to no angle net, unlike a box clique),
+and with the clique's weight set to `0` the minimum drops to `0.880188`: **the clique is
+load-bearing**, which the box-clique demonstration could not be.
+
+Building it turned up the fact that decides whether the family is usable at all.  The first version
+*failed*, at `0.958275` — exactly one clique weight short.  The reason: the sweep's cells are the
+atoms' breakpoints, and a cell is credited only if it lies **wholly** inside a piece, so with `p`
+gone from the atom list the cells straddle the boundary of `{S : p ∈ S}` and a whole band around it
+loses the credit — precisely where the covering is tight.  The fix is to keep the anchors' own
+points in the file as **zero-weight atoms** (allowed: weights need only be `≥ 0`), which puts the
+cell boundaries back where the piece boundaries are.  `branch.py`'s export does this for every
+anchor of every clique it writes, and `certificates/FORMAT.md` records it.
+
 ## 4. The leaf run
 
 *(to be completed)*
