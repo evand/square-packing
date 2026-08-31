@@ -287,8 +287,8 @@ was not pinned down: the loop's LP values (`11.95 … 12.34` over ten rounds) ar
 upper bounds moving with the master's column set, not measurements of the leaf.  The loop is
 compute-bound, not stuck — the pure reference needed 18 rounds of 1–2 h from the same start, and
 the clique loop's row set was restarted several times while the verifier and the pricing were being
-fixed.  A continuation is left running (`runs/leafk4p.sh`, from `runs/branch_t398ik4n_cols.txt` and
-`runs/branch_t398ik4n_cliques.txt`: 10,147 point columns, 1,181 clique columns).  What it should be
+fixed.  A continuation is left running (`runs/leafk4q.sh`, from `runs/branch_t398ik4p_cols.txt` and
+`runs/branch_t398ik4p_cliques.txt`: 10,395 point columns, 1,421 clique columns).  What it should be
 asked next is not "does it close" but **"does the matched gain grow as the row set converges"** —
 if it stays at `10⁻⁴` the family is not the lever on the cover side however violated the dual is,
 and the design question moves to anchors that are *not* contained in a point clique (the two-anchor
@@ -315,7 +315,7 @@ python3 search/anchorsep.py $M/branch_t398hk4_dual_it16.txt --pitch 0.01 --out r
 python3 search/anchordemo.py certificates/s12_lower_3.931795_sparse.txt out.txt --i 0 --D 1994
 # the k = 4 leaf (`runs/` is gitignored, so the command in full; add --matched for the pair):
 BRANCH_SOLVER=restricted BRANCH_RESTRICTED_PASSES=2 BRANCH_CQ_MAX=3000 \
-python3 search/branch.py runs/branch_t398ik4n_probe.txt t398ik4p --k 4 --r 1 --N 2000 \
-    --cols runs/branch_t398ik4n_cols.txt --warm-thr 3 --cliques 400 --colgen 400 --cq-want 60 \
-    --cq-load runs/branch_t398ik4n_cliques.txt --prune-at 250000 --topk 3 --threads 8
+python3 search/branch.py runs/branch_t398ik4p_probe.txt t398ik4q --k 4 --r 1 --N 2000 \
+    --cols runs/branch_t398ik4p_cols.txt --warm-thr 3 --cliques 400 --colgen 400 --cq-want 60 \
+    --cq-load runs/branch_t398ik4p_cliques.txt --prune-at 250000 --topk 3 --threads 8
 ```
