@@ -119,15 +119,19 @@ class ACut:
     A clique for EVERY point p and every nonempty compact convex A, and membership is a
     geometric test, so newly generated columns are charged correctly."""
 
-    def __init__(self, p, A):
+    def __init__(self, p, A, tol=-1e-9):
         self.p = p
         self.A = [tuple(v) for v in A]
+        self.tol = tol            # NEGATIVE: membership is decided conservatively, so the
+        #                           family is a subset of K(p, A) -- and a subset of a clique
+        #                           is a clique, so the cut stays valid under float error
 
     def members(self, poses):
         poses = np.asarray(poses, dtype=float).reshape(-1, 3)
         IM = np.c_[poses, np.zeros(len(poses))]
-        thru = CF.contains_np(IM, [self.p])
-        return (thru & CF.meets_np(IM, self.A)) | ((~thru) & CF.contains_np(IM, self.A))
+        thru = CF.contains_np(IM, [self.p], tol=self.tol)
+        return (thru & CF.meets_np(IM, self.A, tol=self.tol)) | \
+               ((~thru) & CF.contains_np(IM, self.A, tol=self.tol))
 
 
 # ============================================================================ LP model
