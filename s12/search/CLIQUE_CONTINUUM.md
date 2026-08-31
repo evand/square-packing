@@ -14,11 +14,14 @@ the packing side it cannot be one.**
 
 The headline pair, on the lattice that passes calibration and on one and the same pose set:
 
-    pure LP            12.0113 – 12.0115        (target L(3.99) = 12.008: PASS)
-    anchor-clique LP   11.8965 – 11.9032        (gain 0.108 – 0.115)
+    pure LP            12.0115 → 12.0186        (target L(3.99) = 12.008: PASS at every stage)
+    anchor-clique LP   11.8965 → 11.9011        (gain 0.104 – 0.120)
 
-over three stages in which the pose set grows from 558 to 1340 orbits.  The gain moves by `0.007`
-across that refinement — flat, where task A's unrestricted-clique ladder drifted by `0.26`.
+over six stages in which the pose set grows from 558 to 2649 orbits, each stage ending with no
+violated anchor clique the separator can find.  The clique value stays pinned at `11.90 ± 0.006`
+across that 4.7× refinement while the pure value on the very same poses climbs — flat, where task
+A's unrestricted-clique ladder drifted by `0.26` over a comparable refinement.  The same
+measurement in the `k = 4` corner leaf at `t = 3.98` gives the same gain, `0.103–0.105` (§7a).
 
 Three things are new relative to tasks A and B.
 
