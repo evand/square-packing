@@ -46,7 +46,10 @@ import tighten as T
 import nu_f as NF
 
 LAM_FREE = -2.0          # multiplier of a box with K_j = 0: its rows are vacuous (A x >= -1 + margin)
-SOLVER = os.environ.get('BRANCH_SOLVER', 'highs-ipm')   # scipy method: 'highs', 'highs-ds', 'highs-ipm' (fastest at 30k rows); 'warm' = highspy with a carried basis (slow as written)
+SOLVER = os.environ.get('BRANCH_SOLVER', 'highs-ipm')   # scipy method: 'highs', 'highs-ds', 'highs-ipm'; 'warm' = highspy dual simplex with a carried basis (measured: a 40k-iteration phase 1 per round, no gain -- search/LPSPEED.md); 'restricted' = column-sifted master (see solve_restricted; the measured win)
+RESTRICTED_ADD = int(os.environ.get('BRANCH_RESTRICTED_ADD', '1000'))      # columns priced into the master per pass
+RESTRICTED_PASSES = int(os.environ.get('BRANCH_RESTRICTED_PASSES', '2'))  # passes per round (0 = to convergence: exact full-LP optimum)
+RESTRICTED_TOL = float(os.environ.get('BRANCH_RESTRICTED_TOL', '1e-7'))
 try:
     import highspy
 except ImportError:
@@ -143,8 +146,11 @@ class BModel(T.Model):
     def solve(self, margin, cost=None, budget=None, fixed_zero=None):
         """min cost.x - K.lam  s.t.  A x - F lam >= 1+margin, x >= 0 [, sizes.x <= budget] [, x_k = 0].
         Returns (obj, x, lam, y)."""
-        if SOLVER == 'warm' and cost is None and budget is None and not (fixed_zero is not None and len(fixed_zero)):
+        plain = cost is None and budget is None and not (fixed_zero is not None and len(fixed_zero))
+        if SOLVER == 'warm' and plain:
             return self.solve_warm(margin)
+        if SOLVER == 'restricted' and plain:
+            return self.solve_restricted(margin)
         A = self.matrix(); n = len(self.orbits); nr = len(self.rows); nl = self.nl
         c = np.concatenate([self.sizes.copy() if cost is None else np.asarray(cost, dtype=float), -self.kcoef()])
         Aub = sp.hstack([-A, self.flagmat()]).tocsr(); bub = -np.full(nr, 1.0 + margin)
@@ -209,6 +215,67 @@ def _solve_warm(self, margin):
 BModel.solve_warm = _solve_warm
 
 
+def _solve_restricted(self, margin, log=None):
+    """column-sifted master (search/LPSPEED.md).  The IPM's cost per iteration is ~ (columns)^1.5 here
+    and only ~10 % of the columns ever carry weight, so: solve the LP over an ACTIVE column set (the
+    previous support, this round's new columns, and whatever was priced in) with scipy highs-ipm, price
+    every column of the model by its reduced cost c_j - y.A_j under the master's dual, add the most
+    negative RESTRICTED_ADD, repeat for RESTRICTED_PASSES passes (0 = until none is below
+    -RESTRICTED_TOL, which is the exact full-LP optimum).  Rows are all kept.  The active set persists
+    across rounds in self._active; columns that leave the support stay active until the set is trimmed
+    (trim: drop zero-weight columns not added in the last 3 rounds).  The dual y and the multipliers
+    are those of the master, which is what the loop's pricing and verifier need."""
+    A = self.matrix(); n = len(self.orbits); nr = len(self.rows); nl = self.nl
+    kc = self.kcoef(); c_full = np.concatenate([self.sizes, -kc])
+    lo = np.concatenate([np.zeros(n), [LAM_FREE if kc[j] == 0 else LAM_LO for j in range(nl)]])
+    hi = np.concatenate([np.full(n, np.inf), [LAM_FREE if kc[j] == 0 else LAM_HI for j in range(nl)]])
+    M = sp.hstack([A, -self.flagmat()]).tocsr(); Mt = M.T.tocsr(); b = np.full(nr, 1.0 + margin)
+    act = getattr(self, '_active', None)
+    if act is None or len(act) != n:
+        new = np.zeros(n, dtype=bool)
+        if act is not None:
+            new[:len(act)] = act; new[len(act):] = True         # columns added since the last solve are in
+        elif n <= 3000: new[:] = True
+        # else: start empty; the greedy row cover below and the pricing passes fill the master
+        # (run() seeds _active with the input certificate's support)
+        act = new
+    age = getattr(self, '_age', None)
+    if age is None or len(age) != n:
+        a2 = np.zeros(n, dtype=np.int64)
+        if age is not None: a2[:len(age)] = age
+        age = a2
+    # feasibility: every row needs an active column with a positive entry
+    Pb = A.copy(); Pb.data = (Pb.data > 0).astype(float)
+    unc = (Pb @ act.astype(float)) <= 0
+    while unc.any():
+        hits = Pb[unc].sum(axis=0).A1; j = int(np.argmax(hits))
+        if hits[j] <= 0: break
+        act[j] = True; unc &= (Pb[:, j].toarray().ravel() <= 0)
+    passes = 0; t0 = time.time(); res = None
+    while True:
+        cols = np.concatenate([np.nonzero(act)[0], np.arange(n, n + nl)])
+        Mc = M[:, cols].tocsr()
+        bounds = [(l, None if not np.isfinite(h) else h) for l, h in zip(lo[cols], hi[cols])]
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            res = linprog(c=c_full[cols], A_ub=-Mc, b_ub=-b, bounds=bounds, method='highs-ipm', options=dict(T.HIGHS))
+        passes += 1
+        if not res.success: return None
+        y = np.maximum(-res.ineqlin.marginals, 0.0)
+        rc = c_full - (Mt @ y); rc[cols] = np.inf
+        neg = np.nonzero(rc[:n] < -RESTRICTED_TOL)[0]
+        if log: log(f"    restricted pass {passes}: {len(cols)-nl} cols obj={res.fun:.7f} neg_rc={len(neg)} min_rc={rc[:n].min() if len(neg) else 0:+.2e} t={time.time()-t0:.0f}s")
+        if len(neg) == 0 or (RESTRICTED_PASSES and passes >= RESTRICTED_PASSES): break
+        pick = neg[np.argsort(rc[neg])[:RESTRICTED_ADD]]; act[pick] = True; age[pick] = 0
+    x = np.zeros(n); x[cols[:-nl]] = res.x[:-nl]; lam = np.array(res.x[-nl:])
+    # trim: zero-weight columns that have been idle for 3 rounds leave the master (they stay in the model and are priced every round)
+    age[act & (x <= 1e-12)] += 1; age[x > 1e-12] = 0
+    act &= ~((x <= 1e-12) & (age > 3))
+    self._active = act; self._age = age; self._restricted_info = dict(passes=passes, cols=int(act.sum()), neg_rc=int(len(neg)), t=time.time() - t0)
+    return res.fun, x, lam, y
+BModel.solve_restricted = _solve_restricted
+
+
 def parse_k(txt):
     """'4' -> 4 (single), '1100' -> (1,1,0,0) (per box)"""
     txt = str(txt).strip()
@@ -216,7 +283,9 @@ def parse_k(txt):
     return int(txt)
 
 
-def build_model(cert, r, kreg, Dp=None, mul=1):
+def build_model(cert, r, kreg, Dp=None, mul=1, raw_points=False):
+    """raw_points (asymmetric leaves only): the certificate's points are the columns, no D4 images --
+    for restarting a leaf from its own probe/checkpoint, whose points already are the column set."""
     sn, sd, D, WD, rows = T.read_cert(cert)
     K = Fraction(sn, sd) * D; assert K.denominator == 1; K = int(K)
     if Dp is None: Dp = D * mul
@@ -225,6 +294,11 @@ def build_model(cert, r, kreg, Dp=None, mul=1):
     okey = {}; orbs = []; w0 = []
     for X, Y, W in rows:
         X = int(X) * mul; Y = int(Y) * mul
+        if raw_points and not sym:
+            p = (X, Y)
+            if p not in okey: okey[p] = len(orbs); orbs.append(np.array([p], dtype=np.int64)); w0.append(0.0)
+            w0[okey[p]] += W / WD
+            continue
         imgs = sorted(set([(X, Y), (K2 - X, Y), (X, K2 - Y), (K2 - X, K2 - Y), (Y, X), (K2 - Y, X), (Y, K2 - X), (K2 - Y, K2 - X)]))
         if sym:
             key = imgs[0]
@@ -350,15 +424,40 @@ def save_cols(m, path):
     os.replace(path + ".tmp", path)
 
 
-def load_cols(m, path):
-    """add the points of a column file (written for the same K, D) as columns; returns number added"""
+def write_lp_dump(m, margin, path, val=None, x=None, lam=None, y=None):
+    """the LP of this round, exactly as solve() builds it, as `path.npz` + `path_A.npz`:
+    min c.z  s.t.  M z >= b,  lo <= z <= hi,  z = (x, lambda);  M = [A, -F] (csr), plus the row keys
+    and flags, and the solution if given.  Read back with load_lp_dump()."""
+    A = m.matrix(); n = len(m.orbits); nr = len(m.rows); nl = self_nl = m.nl
+    M = sp.hstack([A, -m.flagmat()]).tocsr()
+    kc = m.kcoef()
+    c = np.concatenate([m.sizes, -kc])
+    lo = np.concatenate([np.zeros(n), [LAM_FREE if kc[j] == 0 else LAM_LO for j in range(nl)]])
+    hi = np.concatenate([np.full(n, np.inf), [LAM_FREE if kc[j] == 0 else LAM_HI for j in range(nl)]])
+    b = np.full(nr, 1.0 + margin)
+    sp.save_npz(path + "_A.npz", M, compressed=False)
+    np.savez(path + ".npz", c=c, b=b, lo=lo, hi=hi, n=n, nl=nl, nr=nr, K=m.K, D=m.D, sym=int(m.sym), kvec=np.array(m.kvec), r=m.r,
+             rows=np.array(m.rows), rflag=np.array(m.rflag), rowkeys=np.array([list(k) for k in m.rowkeys], dtype=np.int64),
+             val=np.nan if val is None else val, x=np.zeros(0) if x is None else x, lam=np.zeros(0) if lam is None else lam, y=np.zeros(0) if y is None else y)
+
+
+def load_lp_dump(path):
+    d = dict(np.load(path + ".npz", allow_pickle=False)); d['M'] = sp.load_npz(path + "_A.npz").tocsr()
+    return d
+
+
+def load_cols(m, path, raw=False):
+    """add the points of a column file (written for the same K, D) as columns; returns number added.
+    Asymmetric models get all 8 images of each point unless raw=True (then the file's points only:
+    the checkpoint of an asymmetric run already lists every column, and symmetrising it makes the LP
+    up to 8x wider than the run it came from)."""
     n = 0
     with open(path) as f:
         K, D, sym = (int(v) for v in f.readline().split())
         assert K == m.K and D == m.D, f"column file {path} is for container {K}/{D}, model is {m.K}/{m.D}"
         for line in f:
             X, Y = (int(v) for v in line.split())
-            if m.sym: n += m.add_orbit(X, Y)
+            if m.sym or raw: n += m.add_orbit(X, Y)
             else:
                 for p in set([(X, Y), (K - X, Y), (X, K - Y), (K - X, K - Y), (Y, X), (K - Y, X), (Y, K - X), (K - Y, K - X)]):
                     n += m.add_orbit(*p)
@@ -366,7 +465,7 @@ def load_cols(m, path):
 
 
 def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe_margin=None, x0=None,
-         prune_at=None, colgen=0, cg_want=200, cg_pitch=0.01, n=12, threads=None):
+         prune_at=None, colgen=0, cg_want=200, cg_pitch=0.01, n=12, threads=None, dump_lp=None):
     """cutting-plane loop; returns (x, lam, obj, info).  Asymmetric models sweep [0,90deg), i.e.
     2.4x the bins: fewer witnesses per bin and a higher prune threshold keep the row set stable
     (pruning every round makes the LP vertex jump and the dropped rows come straight back)."""
@@ -381,6 +480,7 @@ def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe
             log(f"  it{it} LP infeasible/failed (rows={len(m.rows)})"); return None, None, None, dict(status='infeasible')
         val, x, lam, y = out; tw = float(m.sizes @ x)
         dump_dual(m, y, lam, val, f"runs/branch_{tag}_dual.txt")
+        if dump_lp: write_lp_dump(m, margin, f"{dump_lp}_it{it}", val=val, x=x, lam=lam, y=y)
         export(m, x, lam, tmp, WD=10 ** 12, factor=1.0 / (1.0 + probe_margin), up=False)
         t1 = time.time(); mv, ok = T.run_verifier(tmp, N, topk=topk, sep=sep, n=n, threads=threads or T.NPROC); t_ver = time.time() - t1
         wit = read_witnesses(sep, N) if os.path.exists(sep) else []
@@ -397,8 +497,10 @@ def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe
         save_cols(m, f"runs/branch_{tag}_cols.txt")          # checkpoint: every column, weight or not, so a restart loses nothing
         nR = sum(1 for f in m.rflag if f)
         lamtxt = ",".join(f"{l:+.4f}" for l in lam)
+        ri = getattr(m, '_restricted_info', None) if SOLVER == 'restricted' else None
         log(f"  it{it} total={tw:.6f} lam=[{lamtxt}] obj={val:.6f} probe_min={float(mv):.7f} viol={len(wit)} new_rows={added} rows={len(m.rows)} (inR {nR}) support={nz} cols/{natoms} atoms"
-            + (f" dualcov={Mcov:.4f} new_cols={ncol} cols={len(m.orbits)}" if Mcov is not None else "") + f" t={time.time()-t0:.0f}s [lp {t_lp:.0f}s ver {t_ver:.0f}s cg {t_cg:.0f}s rows {t_rows:.0f}s]")
+            + (f" dualcov={Mcov:.4f} new_cols={ncol} cols={len(m.orbits)}" if Mcov is not None else "") + f" t={time.time()-t0:.0f}s [lp {t_lp:.0f}s ver {t_ver:.0f}s cg {t_cg:.0f}s rows {t_rows:.0f}s]"
+            + (f" [restricted: {ri['cols']} active cols, {ri['passes']} passes, {ri['neg_rc']} neg rc left]" if ri else ""))
         if added == 0 and mv >= 1 and ncol == 0: break
         if len(m.rows) > prune_at:
             # keep rows with positive dual, rows that are nearly tight (zero dual but no slack --
@@ -435,8 +537,8 @@ def finalize(m, x, lam, tag, out_path, N=6000, log=print, WD=10 ** 7, margin=2e-
 
 
 def run(cert, tag, kreg, r, Dp=None, mul=1, N=6000, topk=6, margin=2e-6, log=print, warm=True, out=None,
-        colgen=0, cg_want=200, cg_pitch=0.01, n=12, threads=None, cols=None, warm_thr=1.05, prune_at=None, row_grid=None, max_iters=None):
-    m, w0, s = build_model(cert, r, kreg, Dp, mul)
+        colgen=0, cg_want=200, cg_pitch=0.01, n=12, threads=None, cols=None, warm_thr=1.05, prune_at=None, row_grid=None, max_iters=None, dump_lp=None, cols_raw=False):
+    m, w0, s = build_model(cert, r, kreg, Dp, mul, raw_points=cols_raw)
     if row_grid: m.row_grid = tuple(row_grid)
     log(f"[{tag}] {cert}: {len(m.orbits)} columns / {len(m.P)} atoms ({'D4 orbits' if m.sym else 'single points'}), container {s} = {float(s):.7f}, r = {m.rfrac} = {m.r:.4f}, k = {kreg}, input total {float(m.sizes @ w0):.6f}")
     t0 = time.time()
@@ -444,9 +546,14 @@ def run(cert, tag, kreg, r, Dp=None, mul=1, N=6000, topk=6, margin=2e-6, log=pri
         lr = lattice_rows(m, w0[m.own], thr=warm_thr)
         m.add_rows(lr); log(f"[{tag}] warm start: {len(m.rows)} lattice rows (capture < {warm_thr} under the input weights), {sum(1 for f in m.rflag if f)} in boxes ({time.time()-t0:.0f}s)")
     for cf in (cols or []):
-        nc = load_cols(m, cf); log(f"[{tag}] columns from {cf}: +{nc} -> {len(m.orbits)} columns")
+        nc = load_cols(m, cf, raw=cols_raw); log(f"[{tag}] columns from {cf}{' (raw)' if cols_raw else ''}: +{nc} -> {len(m.orbits)} columns")
+    if SOLVER == 'restricted':
+        # the restricted master starts from the input certificate's support; checkpoint columns (mostly
+        # dead) are in the model but priced in only when their reduced cost says so
+        m._active = np.concatenate([w0 > 0, np.zeros(len(m.orbits) - len(w0), dtype=bool)])
+        log(f"[{tag}] restricted master: {int(m._active.sum())} of {len(m.orbits)} columns active at start")
     x, lam, val, info = loop(m, tag, margin=margin, N=N, topk=topk, log=log, colgen=colgen, cg_want=cg_want, cg_pitch=cg_pitch, n=n, threads=threads, prune_at=prune_at,
-                             max_iters=max_iters if max_iters is not None else 400)
+                             max_iters=max_iters if max_iters is not None else 400, dump_lp=dump_lp)
     if x is None: log(f"[{tag}] FAILED"); return None
     if max_iters is not None:
         log(f"[{tag}] stopped after {info.get('iters')} rounds (--max-iters): LP value {val:.7f}, dual in runs/branch_{tag}_dual.txt; no finalize")
@@ -479,6 +586,8 @@ def main():
     ap.add_argument('--lam-hi', type=float, default=None, help='upper bound on the multipliers (default 1.5; the k = 4 leaf sits at the cap, so a higher cap can only lower its value)')
     ap.add_argument('--max-iters', type=int, default=None, help='stop the cutting-plane loop after this many rounds and skip finalize (diagnostic runs: the dual of every round is in runs/branch_TAG_dual.txt)')
     ap.add_argument('--row-grid', type=float, nargs=2, default=None, metavar=('POS', 'ANG'), help='merge rows whose centre/angle agree to this resolution (default 1e-7 1e-8; e.g. 0.002 0.005 keeps the LP small)')
+    ap.add_argument('--cols-raw', action='store_true', help='asymmetric leaves: take the certificate\'s and --cols\' points as they are (no D4 images); use when restarting a leaf from its own probe + checkpoint, which already list every column')
+    ap.add_argument('--dump-lp', default=None, metavar='PREFIX', help='write the LP of every round of the cutting-plane loop as PREFIX_itN.npz + PREFIX_itN_A.npz (see write_lp_dump / load_lp_dump; used by search/lp_bench.py)')
     a = ap.parse_args()
     global LAM_HI
     if a.lam_hi is not None: LAM_HI = float(a.lam_hi)
@@ -491,7 +600,7 @@ def main():
         print(msg, flush=True); lf.write(msg + '\n'); lf.flush()
     log(f"branch.py {' '.join(sys.argv[1:])}")
     res = run(a.cert, a.tag, kreg, r, Dp=a.Dp, mul=a.mul, N=a.N, topk=a.topk, margin=a.margin, log=log, warm=not a.no_warm, out=a.out,
-              colgen=a.colgen, cg_want=a.cg_want, cg_pitch=a.cg_pitch, n=a.n, threads=a.threads, cols=a.cols, warm_thr=a.warm_thr, prune_at=a.prune_at, row_grid=a.row_grid, max_iters=a.max_iters)
+              colgen=a.colgen, cg_want=a.cg_want, cg_pitch=a.cg_pitch, n=a.n, threads=a.threads, cols=a.cols, warm_thr=a.warm_thr, prune_at=a.prune_at, row_grid=a.row_grid, max_iters=a.max_iters, dump_lp=a.dump_lp, cols_raw=a.cols_raw)
     if res: json.dump(res, open(f"runs/branch_{a.tag}.json", 'w'), indent=1)
 
 
