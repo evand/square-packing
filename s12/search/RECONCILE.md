@@ -103,9 +103,9 @@ cand = [(g[0], g[1], g[2]) for g in got[:args.cg_want]]
 `capture` is `sum_{p in S} y_p`, i.e. the *pure* LP's reduced cost `1 − capture`.  The clique
 LP's reduced cost is `1 − capture − sum_{K ∋ S} y_K`.  Dropping a non-negative term is harmless
 as a *filter* (it can only over-state the reduced cost, so no improving column is missed) and
-fatal as a *ranking*: on the dual the LP returns for the clique instance the point rows carry
-only `1.85` of the `11.94`, the rest sitting on the cut rows, so the capture of nearly every
-admissible pose is `≈ 0` and the ordering is noise.
+fatal as a *ranking*: on the duals the LP returns for the clique instance the point rows carry as
+little as `1.85` of the `11.94`, the rest sitting on the cut rows the pricer cannot see, so the
+capture of nearly every admissible pose is small and the ordering is noise.
 
 Measured on the rebuilt instance (`python3 search/reconcile.py escape J1 …`).  The instance is
 badly dual-degenerate — two independent runs that converge to the *same* LP value return
