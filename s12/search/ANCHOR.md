@@ -247,8 +247,10 @@ found its optimum sitting on an 80-point cover with dyadic weights and cost exac
 
 ## 5. Verdict
 
-**The object is done and checked; the lever is confirmed on the cover side; the leaf is not
-closed.**
+**The object is done and checked.  The dual violation is confirmed on the cover side — the family
+does cut off the packing that pins the `k = 4` leaf at exactly 12.  The leaf is not closed, and the
+matched pairs say that on the cover side the family is so far worth `10⁻⁴`, not the `10⁻¹` the
+packing side measured.**
 
 *Done and verified (not heuristic).*  A certificate may now carry anchor cliques; the verifier
 refuses anything Lemma 0 does not certify, credits a cell only when one piece provably holds every
