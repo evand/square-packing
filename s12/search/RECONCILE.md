@@ -146,7 +146,27 @@ half of the immediate neighbours of those very poses.  This is the same statemen
 the cover side: task I's LP, whose rows *are* the verifier's worst poses, is solving a problem
 that task G's LP never posed.
 
-### 1f. A second, smaller artefact: the matched pure value
+### 1f. Two hypotheses that are *not* the explanation
+
+Both were plausible and both were measured and rejected, which is what leaves §1d–e as the answer.
+
+* **Non-representable cuts.**  Of task G's 932 anchor cuts, 820 have a segment anchor and 112 have
+  a polygon anchor — `clique_family.anchor_separate` builds `A` as the intersection of support
+  squares, and a polygon is not writable in a certificate (`certificates/FORMAT.md` has `anchorP`
+  and `anchorS`, nothing else); 82 of the 112 have area `<= 1.7e-4` and one is a whole unit
+  square, i.e. `{S : A subseteq S}` is a measure-zero set of poses that can cut a finite pose list
+  and can never pay for itself in a cover.  **But they are not what the value rests on.**  Dropping
+  all 112 and separating with segment anchors only (`reconcile.py --seg-only`) moves the LP value
+  from `11.938521` to `11.937549` — `1e-3`, in the wrong direction to matter — and in the cover
+  solution all 35 anchor cliques with positive weight are segment-anchored (`1.9000` of the total)
+  and the polygon ones carry `0.0000`.
+* **The separators are the same strength.**  They are not the same *family* — task I's
+  `anchorclique.cand_params` offers only the wall-perpendicular Lemma-2 segment at 6 values of
+  `eps`, while task G's `anchor_local` scans 16 directions x 10 `eps` x 8 `rho` and
+  `anchor_separate` adds the polygon greedy — but by the line above the extra reach buys `1e-3` on
+  this instance, not `1e-1`.
+
+### 1g. A second, smaller artefact: the matched pure value
 
 `clique_continuum.py` computes "pure on the same poses" as one `M.solve()` with the cuts removed
 **on the row set the clique loop converged**.  Rows are only guaranteed to make the *clique*
