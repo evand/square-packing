@@ -403,11 +403,17 @@ not started to settle; the pure reference at this container is `>= 12.0281608` e
 ## 6. Verdict
 
 **Neither of the two numbers the brief set against each other is the anchor family's number, and
-the reconciliation turned up something better than either: the family is roughly twice as strong
-as `CLIQUE_CONTINUUM.md` measured and 150 times as strong as `ANCHOR.md` measured, because both
-searches were looking only in the wall band.  No certificate below 12 was produced at `t = 3.99`,
-so `V(3.99) < 12` is still open in both directions; but the cover-side matched gain — the number
-that does not need convergence — is `+0.06` and rising where task I measured `+0.0004`.**
+the reconciliation turned up something better than either.  The violation the certifiable family
+certifies on the exactly certified extremal measure at `t = 3.99` is `+0.220`, not the `+0.024`
+of `CLIQUE_CONTINUUM.md` §4; the cover-side matched gain is `+0.06` and rising, not the `+0.0004`
+of `ANCHOR.md` §4 — in both cases because the search was confined to the wall band.  No
+certificate below 12 was produced at `t = 3.99`, so `V(3.99) < 12` is still open in both
+directions.**
+
+(Throughout, `V(t)` is the value of the anchor-clique-strengthened packing LP over *all* poses at
+container side `t` — `max mass` subject to coverage `<= 1` everywhere and `mu(K) <= 1` for every
+anchor clique.  `V(t) < 12` is what a clique certificate of weight `< 12` would witness, and
+`V(t) >= 12` is what would kill the clique line at that `t`.)
 
 What is **verified** (exact arithmetic, or two independent implementations agreeing):
 
