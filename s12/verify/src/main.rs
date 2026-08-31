@@ -73,8 +73,21 @@ use std::thread;
 #[derive(Clone)]
 struct Region { r_num: i128, r_den: i128, lam: [i128;4], k: [i128;4], kdot: i128, single: bool, ktot: i128 }
 
+/// Optional CLIQUE block (certificates/FORMAT.md, "Clique certificates").  A box is the set of
+/// poses with angle in bin `k` and rotated centre `R(-theta_k) c` in a closed rectangle given over
+/// `q`; a clique is a union of boxes and is credited its weight (once) to every pose in it.  The
+/// only thing trusted about a clique is what `check_cliques` verifies: every pair of its boxes
+/// has intersecting cores, so any two of its squares share a point and a packing holds at most
+/// one of them.  `n` is the angle net the boxes refer to; the verifier must be run with that N.
 #[derive(Clone)]
-struct Cert { s_num: i128, s_den: i128, d: i128, wd: i128, atoms: Vec<(i128,i128,i128)>, region: Option<Region> }
+struct Cliques { n: i128, q: i128, w: Vec<i128>, boxes: Vec<(usize, i128, i128, i128, i128, i128)> }  // (clique, k, lo0, hi0, lo1, hi1)
+
+#[derive(Clone)]
+struct Cert { s_num: i128, s_den: i128, d: i128, wd: i128, atoms: Vec<(i128,i128,i128)>, region: Option<Region>, cliques: Option<Cliques> }
+
+/// checked i128 arithmetic: an overflow is an error, never a wrong verdict
+fn cmul(a: i128, b: i128) -> i128 { a.checked_mul(b).unwrap_or_else(|| die("integer overflow in clique arithmetic (Q or N too large)".to_string())) }
+fn cadd(a: i128, b: i128) -> i128 { a.checked_add(b).unwrap_or_else(|| die("integer overflow in clique arithmetic (Q or N too large)".to_string())) }
 
 /// Malformed input is rejected with a message and exit status 2 -- never a panic, and never
 /// anything that could be mistaken for a verdict (the words VERIFIED / NOT VERIFIED never appear).
@@ -112,7 +125,33 @@ fn read_cert(path: &str) -> Cert {
         if x < 0 || y < 0 || x > sd || y > sd { die(format!("point {} = ({}, {})/{} lies outside the container [0, {}/{}]^2", i, x, y, d, s_num, s_den)); }
         atoms.push((x, y, w));
     }
-    let region = match it.next() {
+    // optional clique block, then optional region trailer
+    let mut nxt = it.next();
+    let cliques = match nxt {
+        Some("cliques") => {
+            let n = tok(&mut it, "cliques N"); let q = tok(&mut it, "cliques Q"); let c = tok(&mut it, "cliques count");
+            if n < 3 || q <= 0 || c < 0 { die("clique block: N >= 3, Q > 0 and a non-negative clique count are required".to_string()); }
+            let mut w = Vec::new(); let mut boxes = Vec::new();
+            for ci in 0..c as usize {
+                let wc = tok(&mut it, &format!("weight of clique {}", ci + 1));
+                let nb = tok(&mut it, &format!("box count of clique {}", ci + 1));
+                if wc < 0 { die(format!("clique {} has negative weight {}: weights must be >= 0", ci + 1, wc)); }
+                if nb < 1 { die(format!("clique {} has no boxes", ci + 1)); }
+                w.push(wc);
+                for bi in 0..nb as usize {
+                    let k = tok(&mut it, &format!("bin of box {} of clique {}", bi + 1, ci + 1));
+                    let lo0 = tok(&mut it, "U0LO"); let hi0 = tok(&mut it, "U0HI"); let lo1 = tok(&mut it, "U1LO"); let hi1 = tok(&mut it, "U1HI");
+                    if k < 0 || k >= n { die(format!("box {} of clique {}: bin k = {} must satisfy 0 <= k < N = {}", bi + 1, ci + 1, k, n)); }
+                    if lo0 > hi0 || lo1 > hi1 { die(format!("box {} of clique {}: rectangle has LO > HI", bi + 1, ci + 1)); }
+                    boxes.push((ci, k, lo0, hi0, lo1, hi1));
+                }
+            }
+            nxt = it.next();
+            Some(Cliques { n, q, w, boxes })
+        }
+        _ => None,
+    };
+    let region = match nxt {
         None => None,
         Some("region") => {
             match it.next() { Some("corner") => (), other => die(format!("region trailer: unknown region kind {:?} (only 'corner' is supported)", other)) }
@@ -153,7 +192,78 @@ fn read_cert(path: &str) -> Cert {
         }
         Some(t) => die(format!("malformed certificate: trailing data after the {} points declared in the header (got {:?})", m, t)),
     };
-    Cert{s_num,s_den,d,wd,atoms,region}
+    Cert{s_num,s_den,d,wd,atoms,region,cliques}
+}
+
+/// Shrink parameters of bin k of the N-net, as used by the sweep: rotation (cn, sn, g) of
+/// theta_k, and sigma_k = sg_n/sg_d rounded DOWN to 1e-6.  (The same integer formulas as in
+/// `main`; kept here so the clique check and the sweep cannot disagree.)
+fn bin_geometry(k: i128, big_n: i128) -> (i128, i128, i128, i128, i128) {
+    let (c0, s0, g0) = (big_n*big_n - k*k, 2*k*big_n, big_n*big_n + k*k);
+    let k2 = k + 1;
+    let (c1, s1, g1) = (big_n*big_n - k2*k2, 2*k2*big_n, big_n*big_n + k2*k2);
+    let cd = c0*c1 + s0*s1; let sd = c0*s1 - s0*c1;
+    const SCALE: i128 = 1_000_000;
+    let sg_n = (g0*g1*SCALE)/(cd + sd);
+    (c0, s0, g0, sg_n, SCALE)
+}
+
+/// The core of a box: every unit square with a pose in the box contains, in the frame of its
+/// bin, the axis-parallel rectangle [hi0 - h, lo0 + h] x [hi1 - h, lo1 + h] with h = sigma_k/2
+/// (the concentric sigma_k-square about any admissible centre of the box).  Returned over the
+/// common denominator M = 2*sg_d*Q as (lo0, hi0, lo1, hi1), together with the bin's rotation.
+fn box_core(bx: &(usize, i128, i128, i128, i128, i128), q: i128, big_n: i128) -> ((i128, i128, i128, i128), (i128, i128, i128)) {
+    let (_, k, lo0, hi0, lo1, hi1) = *bx;
+    let (cn, sn, g, sg_n, sg_d) = bin_geometry(k, big_n);
+    let two_sgd = 2 * sg_d;
+    let hq = cmul(sg_n, q);                                    // h over M:  sigma/2 = sg_n/(2 sg_d) -> sg_n*Q / (2 sg_d Q)
+    let core = (cadd(cmul(two_sgd, hi0), -hq), cadd(cmul(two_sgd, lo0), hq),
+                cadd(cmul(two_sgd, hi1), -hq), cadd(cmul(two_sgd, lo1), hq));
+    (core, (cn, sn, g))
+}
+
+/// Do the cores of two boxes intersect (closed)?  Exact separating-axis test between two
+/// rectangles that are axis-parallel in their own bins' frames: core i is mapped into frame j by
+/// the rotation theta_i - theta_j (cos = (cn_i cn_j + sn_i sn_j)/(g_i g_j), sin = (sn_i cn_j -
+/// cn_i sn_j)/(g_i g_j)), its projections on j's two axes are compared with core j's intervals,
+/// and symmetrically.  Two convex polygons intersect iff no edge normal separates them.
+fn cores_meet(ci: &(i128, i128, i128, i128), ri: &(i128, i128, i128), cj: &(i128, i128, i128, i128), rj: &(i128, i128, i128)) -> bool {
+    let one_way = |ca: &(i128, i128, i128, i128), ra: &(i128, i128, i128), cb: &(i128, i128, i128, i128), rb: &(i128, i128, i128)| -> bool {
+        // corners of core a in frame b, over M * g_a * g_b
+        let (cn_a, sn_a, g_a) = *ra; let (cn_b, sn_b, g_b) = *rb;
+        let cc = cadd(cmul(cn_a, cn_b), cmul(sn_a, sn_b));      // cos(theta_a - theta_b) * g_a g_b
+        let ss = cadd(cmul(sn_a, cn_b), -cmul(cn_a, sn_b));     // sin(theta_a - theta_b) * g_a g_b
+        let gg = cmul(g_a, g_b);
+        let (mut p0lo, mut p0hi, mut p1lo, mut p1hi) = (i128::MAX, i128::MIN, i128::MAX, i128::MIN);
+        for &u0 in &[ca.0, ca.1] { for &u1 in &[ca.2, ca.3] {
+            let v0 = cadd(cmul(cc, u0), -cmul(ss, u1)); let v1 = cadd(cmul(ss, u0), cmul(cc, u1));
+            if v0 < p0lo { p0lo = v0; } if v0 > p0hi { p0hi = v0; } if v1 < p1lo { p1lo = v1; } if v1 > p1hi { p1hi = v1; }
+        } }
+        // overlap with core b's intervals on b's axes (scaled by g_a g_b)
+        p0lo <= cmul(cb.1, gg) && cmul(cb.0, gg) <= p0hi && p1lo <= cmul(cb.3, gg) && cmul(cb.2, gg) <= p1hi
+    };
+    one_way(ci, ri, cj, rj) && one_way(cj, rj, ci, ri)
+}
+
+/// Refuse any clique that is not certified to be one: every box must have a non-empty core and
+/// every pair of boxes of the same clique must have intersecting cores.
+fn check_cliques(cl: &Cliques, big_n: i128) {
+    if cl.n != big_n { die(format!("clique block is defined on the angle net N = {} but the verifier was run with N = {}: the boxes are meaningless on another net", cl.n, big_n)); }
+    let cores: Vec<_> = cl.boxes.iter().map(|b| box_core(b, cl.q, big_n)).collect();
+    for (i, (c, _)) in cores.iter().enumerate() {
+        if c.0 > c.1 || c.2 > c.3 { die(format!("box {} of clique {} has an empty core (its rectangle is wider than 2 h_k): two of its squares need not meet, so it is not a clique", i + 1, cl.boxes[i].0 + 1)); }
+    }
+    let mut start = 0;
+    while start < cl.boxes.len() {
+        let cid = cl.boxes[start].0; let mut end = start;
+        while end < cl.boxes.len() && cl.boxes[end].0 == cid { end += 1; }
+        for i in start..end { for j in i..end {
+            if !cores_meet(&cores[i].0, &cores[i].1, &cores[j].0, &cores[j].1) {
+                die(format!("clique {}: the cores of its boxes {} and {} do not meet, so the family is not certified to be a clique", cid + 1, i - start + 1, j - start + 1));
+            }
+        } }
+        start = end;
+    }
 }
 
 /// u1-range of the convex polygon `poly` (in u-space) over the vertical strip u0 in [af, bf];
@@ -286,8 +396,13 @@ impl Tight {
 /// `tight`: in dump mode every cell with sum <= thresh is counted (and appended, up to the cap)
 /// as (a, b, c0, c1, sum, cx, cy) -- positions over DEN -- and an EMPTY strip is recorded (sum 0)
 /// instead of returning early.  With `tight == None` the function is exactly the original.
+/// `cl`: the clique boxes of THIS bin, sorted by clique id, as (clique, lo0, hi0, lo1, hi1) over
+/// Q, with the clique weights and Q.  A cell is credited a clique's weight iff it lies inside
+/// one of the clique's boxes (exact integer comparison); a cell that meets a box without lying
+/// inside it gets nothing, and if it is violated its witness is taken outside that box so that
+/// the LP learns the box does not reach there.
 fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm_n: i128, wm_d: i128, topk: usize,
-               mut tight: Option<&mut Tight>) -> (i128, Vec<(i128,f64,f64,u8)>) {
+               mut tight: Option<&mut Tight>, cl: Option<(&[(usize,i128,i128,i128,i128)], &[i128], i128)>) -> (i128, Vec<(i128,f64,f64,u8)>) {
     // sg_n/sg_d = sigma (side of shrunken square), wm_n/wm_d = lower bound on min width
     let m = c.atoms.len();
     // Scaling.  Positions have denominator d.  Rotation has denominator g.  sigma = sg_n/sg_d.
@@ -397,11 +512,51 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
                 }
             }
         };
-        // want_in: the box index the witness should lie in, or 4 for "outside every box"
-        let witness = |c0: i128, c1: i128, want_in: usize| -> (f64, f64) {
+        // Clique boxes meeting this strip in u0 (open), each with "contains [a,b] in u0".
+        // Comparisons are exact: cell numerators are over DEN, box numerators over Q.
+        let den_i: i128 = 2*sg_d*wm_d*c.d*g;
+        let mut cands: Vec<(usize, i128, i128, i128, i128, bool)> = Vec::new();   // (clique, lo0, hi0, lo1, hi1, contains_u0)
+        if let Some((bx, _, q)) = cl {
+            let (aq, bq) = (cmul(a, q), cmul(b, q));
+            for &(cid, lo0, hi0, lo1, hi1) in bx {
+                let (l0, h0) = (cmul(lo0, den_i), cmul(hi0, den_i));
+                if l0 < bq && aq < h0 { cands.push((cid, l0, h0, cmul(lo1, den_i), cmul(hi1, den_i), l0 <= aq && bq <= h0)); }
+            }
+        }
+        // clique credit of the cell [a,b] x [c0,c1]: each clique once, iff some box contains the
+        // cell; also the boxes that meet the cell without containing it (for the witness)
+        let clique_credit = |c0: i128, c1: i128| -> (i128, Vec<(f64,f64,f64,f64)>) {
+            if cands.is_empty() { return (0, Vec::new()); }
+            let (_, cw, q) = cl.unwrap();
+            let (c0q, c1q) = (cmul(c0, q), cmul(c1, q));
+            let mut credit = 0; let mut last = usize::MAX; let mut partial = Vec::new();
+            for &(cid, l0, h0, l1, h1, cont0) in &cands {
+                if !(l1 < c1q && c0q < h1) { continue; }              // does not meet the cell in u1
+                if cont0 && l1 <= c0q && c1q <= h1 {
+                    if cid != last { credit += cw[cid]; last = cid; }
+                } else {
+                    partial.push((l0 as f64/den_all, h0 as f64/den_all, l1 as f64/den_all, h1 as f64/den_all));   // u-space, container units
+                }
+            }
+            (credit, partial)
+        };
+        // want_in: the box index the witness should lie in, or 4 for "outside every box";
+        // partial: clique boxes the cell meets without lying inside -- the witness avoids them
+        let witness = |c0: i128, c1: i128, want_in: usize, partial: &[(f64,f64,f64,f64)]| -> (f64, f64) {
             // vertices of the cell clipped to the admissible polygon, absolute container units of u-space
             let (oa, oc) = (a as f64/den_all, c0 as f64/den_all);
             let verts: Vec<(f64,f64)> = clip_rect_poly(a, b, c0, c1, &rot, den_all).iter().map(|v| (v[0]+oa, v[1]+oc)).collect();
+            if !partial.is_empty() && verts.len() >= 3 {
+                let n = verts.len() as f64;
+                let (m0, m1) = (verts.iter().map(|v| v.0).sum::<f64>()/n, verts.iter().map(|v| v.1).sum::<f64>()/n);
+                let outside = |u0: f64, u1: f64| partial.iter().all(|&(l0,h0,l1,h1)| u0 < l0 - RPAD || u0 > h0 + RPAD || u1 < l1 - RPAD || u1 > h1 + RPAD);
+                for &f in &[0.98f64, 1.0] {
+                    for &(x0, y0) in &verts {
+                        let (u0, u1) = (f*x0 + (1.0-f)*m0, f*y0 + (1.0-f)*m1);
+                        if outside(u0, u1) && (reg.is_none() || pt_in_r(u0, u1) == Some(want_in)) { return ((cnf*u0 - snf*u1)/gf, (snf*u0 + cnf*u1)/gf); }
+                    }
+                }
+            }
             let mut pick = if verts.len() >= 3 {
                 let n = verts.len() as f64;
                 (verts.iter().map(|v| v.0).sum::<f64>()/n, verts.iter().map(|v| v.1).sum::<f64>()/n)
@@ -433,8 +588,9 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
             let cx = ((cn as f64)*u0 - (sn as f64)*u1)/(g as f64)/dn;
             let cy = ((sn as f64)*u0 + (cn as f64)*u1)/(g as f64)/dn;
             let (may, inside) = flags(ylo, yhi);
-            let v = 0 - required(may, inside);
-            let (cx, cy) = if tight.is_none() { witness(ylo, yhi, inside) } else { (cx, cy) };
+            let (ccred, partial) = clique_credit(ylo, yhi);
+            let v = ccred - required(may, inside);
+            let (cx, cy) = if tight.is_none() { witness(ylo, yhi, inside, &partial) } else { (cx, cy) };
             if let Some(t) = tight.as_mut() {
                 // dump mode: record the empty strip as one cell of sum 0 and keep sweeping
                 if 0 <= t.thresh {
@@ -464,6 +620,8 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
             let j0 = yv.partition_point(|&v| v <  c1-hh);
             let j1 = yv.partition_point(|&v| v <= c0+hh);
             let sum = if j1>j0 { pre[j1]-pre[j0] } else { 0 };
+            let (ccred, partial) = clique_credit(c0, c1);
+            let sum = sum + ccred;
             let (may, inside) = flags(c0, c1);
             let v = sum - required(may, inside);
             if v < best { best = v;
@@ -491,8 +649,8 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
                 // One witness per violated threshold: flag 1 = "needs 1 + lambda" (cell meets the
                 // region), flag 0 = "needs 1" (cell is not entirely inside the region).
                 // flag j+1 = "needs 1 + lambda_j" (cell meets box j), flag 0 = "needs 1" (cell not inside a box)
-                for j in 0..4 { if may & (1 << j) != 0 && sum < c.wd + lams[j] { let (cx, cy) = witness(c0, c1, j); heap.push((sum - lams[j], cx, cy, (j + 1) as u8)); } }
-                if inside == 4 && sum < c.wd { let (cx, cy) = witness(c0, c1, 4); heap.push((sum, cx, cy, 0)); }
+                for j in 0..4 { if may & (1 << j) != 0 && sum < c.wd + lams[j] { let (cx, cy) = witness(c0, c1, j, &partial); heap.push((sum - lams[j], cx, cy, (j + 1) as u8)); } }
+                if inside == 4 && sum < c.wd { let (cx, cy) = witness(c0, c1, 4, &partial); heap.push((sum, cx, cy, 0)); }
                 if heap.len()>4*topk { heap.sort_unstable_by_key(|t| t.0); heap.truncate(topk); }
             }
         }
@@ -549,10 +707,23 @@ fn main() {
     // certificate with unequal per-box lambdas has a non-symmetric threshold: full range too.
     let sym_atoms = check_symmetry(&cert);
     let sym_lam = cert.region.as_ref().map(|r| r.lam.iter().all(|&l| l == r.lam[0])).unwrap_or(true);
-    let sym = sym_atoms && sym_lam;
-    println!("D4-symmetric atom set: {}{}  -> angles cover {}", sym_atoms, if sym_lam {""} else {" (but per-box lambdas differ)"}, if sym {"[0,45] deg"} else {"[0,90) deg"});
-    let total: i128 = cert.atoms.iter().map(|a| a.2).sum();
-    println!("atoms={} total weight = {}/{} = {:.6}", cert.atoms.len(), total, cert.wd, total as f64/cert.wd as f64);
+    // clique boxes are tied to the angle net and have no representable images under the
+    // container's symmetries, so a certificate with cliques is always swept over [0, 90).
+    let sym = sym_atoms && sym_lam && cert.cliques.is_none();
+    println!("D4-symmetric atom set: {}{}{}  -> angles cover {}", sym_atoms, if sym_lam {""} else {" (but per-box lambdas differ)"},
+             if cert.cliques.is_some() {" (clique block present: no symmetry reduction)"} else {""}, if sym {"[0,45] deg"} else {"[0,90) deg"});
+    let total_atoms: i128 = cert.atoms.iter().map(|a| a.2).sum();
+    let total_cl: i128 = cert.cliques.as_ref().map(|cl| cl.w.iter().sum()).unwrap_or(0);
+    let total = total_atoms + total_cl;
+    if let Some(cl) = &cert.cliques {
+        if tight_thresh.is_some() { die("TIGHT_DUMP is not supported for clique certificates".to_string()); }
+        check_cliques(cl, bigN);
+        println!("CLIQUE certificate: {} cliques with {} boxes (net N={}, Q={}), clique weight {}/{} = {:.6}; every clique certified by pairwise core intersection",
+                 cl.w.len(), cl.boxes.len(), cl.n, cl.q, total_cl, cert.wd, total_cl as f64/cert.wd as f64);
+        println!("atoms={} total weight (points + cliques) = {}/{} = {:.6}", cert.atoms.len(), total, cert.wd, total as f64/cert.wd as f64);
+    } else {
+        println!("atoms={} total weight = {}/{} = {:.6}", cert.atoms.len(), total, cert.wd, total as f64/cert.wd as f64);
+    }
     println!("s = {}/{} = {:.6}", cert.s_num, cert.s_den, cert.s_num as f64/cert.s_den as f64);
     let (lam, kreg) = match &cert.region {
         None => (0, 0),
@@ -580,12 +751,19 @@ fn main() {
     println!("angles: k=0..{} (N={}), covering {}", kk, bigN, if sym {"[0,45deg]"} else {"[0,90deg]"});
     let bad = Arc::new(AtomicI64::new(0));
     let minw = Arc::new(std::sync::Mutex::new((i128::MAX, 0i128)));
+    // clique boxes by bin (in file order, which is clique order, so each list is sorted by clique id)
+    let per_bin: Arc<Vec<Vec<(usize,i128,i128,i128,i128)>>> = Arc::new({
+        let mut v: Vec<Vec<(usize,i128,i128,i128,i128)>> = vec![Vec::new(); kk as usize + 1];
+        if let Some(cl) = &cert.cliques { for &(cid, k, lo0, hi0, lo1, hi1) in &cl.boxes { if (k as usize) < v.len() { v[k as usize].push((cid, lo0, hi0, lo1, hi1)); } } }
+        v
+    });
     let cert = Arc::new(cert);
     let mut hs = Vec::new();
     let chunk = (kk as usize + threads) / threads;
     for t in 0..threads {
         let cert = cert.clone(); let bad = bad.clone(); let minw = minw.clone(); let out = out.clone();
         let tight_out = tight_out.clone(); let tight_count = tight_count.clone(); let tight_written = tight_written.clone();
+        let per_bin = per_bin.clone();
         hs.push(thread::spawn(move || {
             for k in (t*chunk)..(((t+1)*chunk).min(kk as usize)) {
                 let k = k as i128;
@@ -609,7 +787,8 @@ fn main() {
                             grid: tight_grid, hist: vec![0.0; tight_grid*tight_grid],
                             s: (cert.s_num as f64)/(cert.s_den as f64), rng: 0x9E3779B97F4A7C15u64 ^ ((k as u64 + 1) * 0x2545F4914F6CDD1Du64) }
                 });
-                let (v, wit) = min_cover_k(&cert, c0, s0, g0, sg_n, sg_d, wm_n, wm_d, topk, tstate.as_mut());
+                let clk = cert.cliques.as_ref().map(|cl| (per_bin[k as usize].as_slice(), cl.w.as_slice(), cl.q));
+                let (v, wit) = min_cover_k(&cert, c0, s0, g0, sg_n, sg_d, wm_n, wm_d, topk, tstate.as_mut(), clk);
                 if let (Some(tw), Some(ts)) = (&tight_out, &tstate) {
                     use std::io::Write;
                     let den = 2*sg_d*wm_d*cert.d*g0;
@@ -663,7 +842,8 @@ fn main() {
     }
     if bad.load(Ordering::Relaxed)==0 && weight_ok {
         match &cert.region {
-            None => println!("VERIFIED: every CLOSED unit square inside C covers weight >= 1, and total weight < {}.\n==> {} unit squares cannot be packed into any square of side < {}/{} = {:.9},\n    i.e.  s({}) >= {:.9}", nn, nn, cert.s_num, cert.s_den, cert.s_num as f64/cert.s_den as f64, nn, cert.s_num as f64/cert.s_den as f64),
+            None => println!("VERIFIED: every CLOSED unit square inside C covers weight >= 1{}, and total weight < {}.\n==> {} unit squares cannot be packed into any square of side < {}/{} = {:.9},\n    i.e.  s({}) >= {:.9}",
+                             if cert.cliques.is_some() {" (points plus cliques)"} else {""}, nn, nn, cert.s_num, cert.s_den, cert.s_num as f64/cert.s_den as f64, nn, cert.s_num as f64/cert.s_den as f64),
             Some(r) => if r.single {
                 println!("VERIFIED: (branch k={}) every CLOSED unit square inside C centred in a corner box covers weight >= 1 + lambda, every other one >= 1, and total - lambda*k < {}.\n==> no packing of {} unit squares with exactly {} squares centred in the corner boxes [0, {}/{}]^2 (and images) fits in any square of side < {}/{} = {:.9}", r.ktot, nn, nn, r.ktot, r.r_num, r.r_den, cert.s_num, cert.s_den, cert.s_num as f64/cert.s_den as f64)
             } else {

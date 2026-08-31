@@ -38,6 +38,10 @@ echo "=== n = 11: s(11) >= 3040/797 = 3.814304 (680 points, total weight 10.8146
 chk $V certificates/s11_lower_3.8143.txt 11 6000 "$(nproc)" 0
 chk $V certificates/s11_lower_3.8143.txt 11 12000 "$(nproc)" 0
 echo
+echo "=== box-clique demonstration certificate (points + 8 clique orbits; FORMAT.md 'Clique certificates'; net N=2000 is part of the file) ==="
+chk $V certificates/s12_boxclique_demo_3.9318_N2000.txt 12 2000 "$(nproc)" 0
+python3 xcheck.py certificates/s12_boxclique_demo_3.9318_N2000.txt 2000 --all --n 12
+echo
 echo "=== independent exact re-check (Python, exact rationals, EVERY angle bin) ==="
 # Exhaustive: all 829 bins of the N=2000 net (the same net the Rust run above used, so the
 # per-bin minima are directly comparable).  56 points -> well under a minute even on 2 cores;
