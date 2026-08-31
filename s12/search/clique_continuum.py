@@ -17,9 +17,18 @@ Modes
     pure     no clique cuts (calibration)
     sat      cuts from the exact max-mass clique of the support's closed-intersection graph
              (the family task A used: any pairwise closed-intersecting set of support poses)
+    anchor   cuts from the certifiable ANCHOR family
+             K(p, A) = {S : p in S and S meets A} u {S : A subset S},
+             a clique for every p and every nonempty compact convex A (notes/clique-family.md
+             Lemma 0).  Membership is a geometric test, so newly priced columns are charged
+             correctly and column generation cannot dodge the cut -- unlike `sat`.
     kcut     cuts  mu(K(p)) <= 1  where K(p) = {S : S meets every admissible S' with p in S'}
-             (the maximal point-anchored family; membership is geometric, so column generation
-             cannot dodge it -- see search/clique_family.py and notes/clique-family.md)
+             (the maximal point-anchored family, an outer approximation, so the constraint is at
+             least as strong as any valid point-anchored clique through p)
+
+Leaf mode: --kmass K --r R adds the equality "total mass of poses centred in the four corner
+boxes [0,R]^2 equals K" (the corner-branching leaf of search/BRANCH.md), with its dual in the
+pricing.
 
 Everything here is floating point and heuristic; the certification of a final measure is
 exact and lives in dual_exact.py / clique_family.py.
@@ -521,7 +530,7 @@ def separate(M, mu, args, log):
         pts = tight_row_points(M, args, npts=args.sep_pts)
         recs = []
         for p in pts:
-            r = CF.anchor_separate(im, p, nseed=args.nseed, maxstep=args.maxstep)
+            r = CF.anchor_separate_all(im, p, M.t, nseed=args.nseed, maxstep=args.maxstep)
             if r is not None:
                 recs.append(r)
         recs.sort(key=lambda r: -r['mass'])

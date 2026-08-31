@@ -1136,6 +1136,83 @@ def regularise(imgs, members, mass, t, nth=1024, shrink=(1.0, 0.5, 0.25, 0.1, 0.
     return out
 
 
+def kmass_multi(IM, anchors):
+    """mass of the general anchor clique
+
+        K(A_0, ..., A_{m-1}) = { S : A_i subset S for some i, and S meets A_j for every j }
+
+    which is a clique for any anchors: if A_i subset S and S' meets A_i then S n S' is nonempty.
+    anchors: list of vertex lists (a single vertex = a point)."""
+    import numpy as np
+    n = len(IM)
+    anyc = np.zeros(n, dtype=bool)
+    allm = np.ones(n, dtype=bool)
+    for A in anchors:
+        anyc |= contains_np(IM, A)
+        allm &= meets_np(IM, A)
+    sel = anyc & allm
+    return float(IM[sel, 3].sum()), int(sel.sum())
+
+
+def anchor_multi(IM, p, t, nadd=2, neps=8, nrho=6, dirs=None, tol=1e-12):
+    """greedy multi-anchor clique containing the point p"""
+    import numpy as np
+    if dirs is None:
+        dirs = [(math.cos(a), math.sin(a)) for a in np.linspace(0, 2 * math.pi, 12, endpoint=False)]
+    anchors = [[(p[0], p[1])]]
+    best = kmass_multi(IM, anchors)[0]
+    clear = min(p[0], p[1], t - p[0], t - p[1])
+    base = max(1e-4, min(0.6, 1.0 - clear if clear < 1.0 else 0.05))
+    for _ in range(nadd):
+        cand = None
+        for d in dirs:
+            dp = (-d[1], d[0])
+            for ie in range(1, neps + 1):
+                eps = base * ie / neps
+                m = (p[0] + eps * d[0], p[1] + eps * d[1])
+                for ir in range(1, nrho + 1):
+                    rho = 0.49 * ir / nrho
+                    A = [(m[0] - rho * dp[0], m[1] - rho * dp[1]),
+                         (m[0] + rho * dp[0], m[1] + rho * dp[1])]
+                    v = kmass_multi(IM, anchors + [A])[0]
+                    if cand is None or v > cand[0]:
+                        cand = (v, A)
+        if cand is None or cand[0] <= best + 1e-12:
+            break
+        best = cand[0]
+        anchors.append(cand[1])
+    return dict(p=p, anchors=[[tuple(v) for v in A] for A in anchors], mass=best,
+                kind='multi')
+
+
+def anchor_local(IM, p, t, neps=10, nrho=8, dirs=None, tol=1e-12):
+    """the anchor family Lemma 2 predicts: a short segment at offset eps in direction d,
+    perpendicular to d, half-length rho.  Scans (d, eps, rho) directly -- much better targeted
+    than a greedy over support squares, and it is exactly the family that survives perturbation."""
+    import numpy as np
+    thru = contains_np(IM, [p], tol=tol)
+    if dirs is None:
+        dirs = [(math.cos(a), math.sin(a)) for a in np.linspace(0, 2 * math.pi, 16, endpoint=False)]
+    best = None
+    for d in dirs:
+        dp = (-d[1], d[0])
+        # the offset scale: how far the wall lets the family reach (Lemma 2: eps < 1 - <p,d>_wall)
+        clear = min(p[0], p[1], t - p[0], t - p[1])
+        base = max(1e-4, min(0.6, 1.0 - clear if clear < 1.0 else 0.05))
+        for ie in range(1, neps + 1):
+            eps = base * ie / neps
+            m = (p[0] + eps * d[0], p[1] + eps * d[1])
+            for ir in range(1, nrho + 1):
+                rho = 0.49 * ir / nrho
+                A = [(m[0] - rho * dp[0], m[1] - rho * dp[1]),
+                     (m[0] + rho * dp[0], m[1] + rho * dp[1])]
+                mm, n1, n2 = kmass_np(IM, thru, A)
+                if best is None or mm > best['mass']:
+                    best = dict(p=p, A=[tuple(v) for v in A], mass=mm, n_point=n1,
+                                n_anchor=n2, eps=eps, rho=rho, dir=d, kind='local')
+    return best
+
+
 def anchor_separate(IM, p, nseed=8, maxstep=40, tol=1e-12):
     """best anchor clique K(p, A) for the finite measure IM (n, 4).
 
@@ -1179,6 +1256,17 @@ def anchor_separate(IM, p, nseed=8, maxstep=40, tol=1e-12):
     return best
 
 
+def anchor_separate_all(IM, p, t, nseed=8, maxstep=40, tol=1e-12, neps=10, nrho=8):
+    """both families: the greedy-over-support-squares one and the local segment one"""
+    a = anchor_separate(IM, p, nseed=nseed, maxstep=maxstep, tol=tol)
+    b = anchor_local(IM, p, t, neps=neps, nrho=nrho, tol=tol)
+    if a is None:
+        return b
+    if b is None:
+        return a
+    return a if a['mass'] >= b['mass'] else b
+
+
 def cmd_separate(args):
     """scan candidate anchor points p and report the best anchor clique of the measure"""
     import numpy as np
@@ -1196,7 +1284,7 @@ def cmd_separate(args):
     recs = []
     t0 = time.time()
     for k, (p, cv) in enumerate(cand):
-        r = anchor_separate(IM, p, nseed=args.nseed, maxstep=args.maxstep)
+        r = anchor_separate_all(IM, p, t, nseed=args.nseed, maxstep=args.maxstep)
         if r is not None:
             r['cov'] = cv
             recs.append(r)

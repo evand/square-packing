@@ -180,7 +180,7 @@ def main():
             cand = cand[::max(1, len(cand) // args.sep_pts)][:args.sep_pts]
         found = []
         for (p, cv) in cand:
-            r = CF.anchor_separate(IM, p, nseed=args.nseed, maxstep=args.maxstep)
+            r = CF.anchor_separate_all(IM, p, float(T), nseed=args.nseed, maxstep=args.maxstep)
             if r is not None and r['mass'] > 1.0 + 1e-7:
                 found.append(r)
         found.sort(key=lambda r: -r['mass'])
@@ -202,7 +202,13 @@ def main():
             cuts.append(cut)
             Ccols.append(col)
 
-    # ---------------- exact rounding
+    # ---------------- final re-solve with every cut in the model, then exact rounding
+    A = Apt if not Ccols else sp.vstack([Apt, sp.csr_matrix(np.array(Ccols))], format='csr')
+    res = linprog(-np.ones(nP), A_ub=A, b_ub=np.ones(A.shape[0]), bounds=(0, None),
+                  method='highs')
+    assert res.status == 0, res.message
+    mu = np.maximum(res.x, 0.0)
+    say(f"  final LP mass {-res.fun:.9f} with all {len(cuts)} anchor cuts")
     DM = args.DM
     MU = [int(math.floor(float(m) * DM)) for m in mu]
     cutmem = [cut_members(c, squares) for c in cuts]
