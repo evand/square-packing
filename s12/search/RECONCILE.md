@@ -179,19 +179,73 @@ instance the effect is gross: `13.500000` with rows converged for the clique sol
 (`reconcile.converge(..., pure_too=True)`).  How large it is on task G's own 5,887-row instances
 is measured in §3.
 
-## 2. Step 1 — the ladder with a correct pricer
+## 2. The other half of the answer: both sides were separating in the wrong place
+
+This came out of the reconciliation and is the most useful thing in the task.
+
+`notes/clique-family.md` **Lemma 1** says: if `p` is at distance `>= 1` from every wall then the
+point clique `P_p` is a **maximal** clique.  Both tasks turned that into a search restriction —
+`CLIQUE_CONTINUUM.md` §1 heads it "where cliques can help at all", `anchorclique.cand_params`
+enforces `0.05 < d < 1`, `anchorsep.separate` scans only a wall band, and `branch.price_cliques`
+says "Lemma 1: nowhere else can a clique beat the coverage row at `p`".
+
+**That inference is wrong.**  Lemma 1 says an interior point clique cannot be *enlarged*.  It says
+nothing about a differently shaped clique at an interior point.  For interior `p`, `K(p, A)` is
+not a superset of `P_p` at all — it is *"the squares through `p` that reach `A`, plus the squares
+that contain `A`"* — and it is a clique for every `p` and `A` by Lemma 0, with no wall hypothesis.
+Its mass is not bounded by the coverage constraint at any point, and it is exactly where the
+violations are:
+
+| measure / dual | family searched | best clique mass or `ȳ(K)` | where |
+|---|---|---|---|
+| certified `12.008230754` at `3.99` (`runs/dual_exact_3.99_support.txt`) | `CLIQUE_CONTINUUM.md` §4, wall band | `1.0242` | wall distance `0.55` |
+| the same measure | any `p`, any direction (`clique_family.py separate`) | **`1.098045`** | `p = (2.045, 2.705)`, **wall distance `1.285`**, segment anchor of length `0.3675`, 165 members |
+| certified `12.028160771` at `3.99` (`runs/cqx_PURE99_support.txt`) | any `p`, any direction | **`1.088559`** | `p = (2.705, 2.045)`, wall distance `1.285`, segment `0.3675`, 268 members |
+| the same measure, segment anchors only, 24 directions (`runs/J9.py`) | representable family | **`1.091480`** | interior |
+| converged dual of the `k = 4` leaf at `3.98`, mass exactly `12.000000` (`runs/branch_t398hk4_dual_it16.txt`) | `ANCHOR.md` §3, `anchorsep.separate` (wall band, wall-perpendicular) | `1.054176` | wall distance `0.99` |
+| **the same dual, same cover-side credit rule** (`anchorclique.member`, `sigma_k`-square and hexagon at each row's own `h`) | any `p`, any direction (`reconcile.py dualsep`) | **`1.143071`** | `p = (1.22, 1.52)`, **wall distance `1.22`**, `eps = 0.225`, `|A| = 0.8575`; the point clique there is `ȳ(P_p) = 1.000000` exactly |
+
+On that leaf dual the scan found **1265 violated cliques and every one of them sits at wall
+distance `>= 1`** — i.e. not one of them is reachable by the separator task I's cover runs use.
+
+**The interior cliques are real, and checked independently.**  `runs/J11_verify_clique.py`
+re-derives membership from the definition (an explicit rotation for `p in S`, `clique_family`'s
+scalar Liang–Barsky-style segment test for `S ∩ A ≠ ∅`) and then tests **every ordered pair of
+members** with the scalar SAT predicate `clique_family.sat_meet`, sharing no code with the
+vectorised separator that produced the number — the check that catches the missing-axis bug of
+`notes/clique-family.md` §7:
+
+| clique | members | reported mass | recomputed | non-intersecting pairs |
+|---|---|---|---|---|
+| `p = (2.045, 2.705)`, wall distance `1.285`, `\|A\| = 0.3675` | 165 | `1.098045` | `1.098045` | **0** |
+| `p = (2.505, 1.845)`, wall distance `1.485` | 174 | `1.061755` | `1.061755` | **0** |
+| `p = (2.705, 2.045)` on the `12.028` measure | 268 | `1.088559` | `1.088559` | **0** |
+
+*(Verified in the sense of an independent second implementation in floats, not exact rationals.
+A certificate built from one of these would be checked exactly by `verify/` and `xcheck.py`,
+which already accept an arbitrary `anchorS` — the format never needed the wall restriction, only
+the separators did.)*
+
+**Shipped as code.**  `anchorclique.kseg` (the general `K(p, A)` with an arbitrary segment
+anchor), `anchorsep.separate_interior` (any `p`, any direction, same return shape and the same
+credit rule as `separate`), `branch.py --cq-interior` (prices both families; the clique checkpoint
+format now carries 6-integer as well as 5-integer parameter lines).  The pairwise structure of a
+`kseg` clique is identical to `kpa`'s — two pieces, piece 0 filtering anchor 1 — so `verify/`'s
+Lemma-0 check accepts it unchanged.
+
+## 3. Step 1 — the ladder with a correct pricer
 
 *(in progress)*
 
-## 3. The faithful replay of task G's run
+## 4. The faithful replay of task G's run
 
 *(in progress)*
 
-## 4. Step 2 — the verifier as the oracle
+## 5. Step 2 — the verifier as the oracle
 
 *(in progress)*
 
-## 5. Verdict
+## 6. Verdict
 
 *(in progress)*
 
