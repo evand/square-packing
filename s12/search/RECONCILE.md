@@ -15,8 +15,8 @@ Read against `search/CLIQUE_CONTINUUM.md` (task G) and `search/ANCHOR.md` (task 
 **Neither published number is the anchor family's number: task G's `0.10` is inflated by a pose
 pricer that is blind to its own cut duals and by a matched-pure that is an upper bound; task I's
 `0.0004` is deflated by a separator that cannot express the cliques these packings actually
-violate.  Fixing the separator raises the cover-side matched gain from `≈ 0.000` to `+0.064` in
-four rounds at `t = 3.99`, and from `+0.0004` to `+0.053` on task I's own `k = 4` leaf at `3.98`;
+violate.  Fixing the separator raises the cover-side matched gain from `≈ 0.000` to `+0.095` in
+five rounds at `t = 3.99`, and from `+0.0004` to `+0.053` on task I's own `k = 4` leaf at `3.98`;
 and it raises the best certifiable clique on the exactly certified extremal measure from `1.024`
 to `1.2201`, above the unrestricted-clique number `CLIQUE_CONTINUUM.md`'s own search found.  No certificate below 12 was produced; see §6 for what is verified, what is heuristic and
 what to do next.**
@@ -49,7 +49,7 @@ which of *pose set* and *separation depth* accounts for the difference.
   differently shaped clique there cannot be *violated* — and on the very packing that pins the
   `k = 4` leaf, **every one of the 1265 violated cliques found sits at wall distance `>= 1`**, with
   `ȳ(K)` up to `1.143` against task I's best of `1.054` (§2).  Fixing the separator raises the
-  cover-side matched gain from `≈ 0.000` to `+0.064` at `t = 3.99` and from `+0.0004` to `+0.053`
+  cover-side matched gain from `≈ 0.000` to `+0.095` at `t = 3.99` and from `+0.0004` to `+0.053`
   on that very leaf (§5).
 * **The family is much stronger than either task reported.**  On the exactly certified extremal
   measure at `t = 3.99` the best *certifiable, certificate-representable* anchor clique is
@@ -416,7 +416,7 @@ the same `N = 2000` verifier as separation oracle, the same column generation, t
 | `it1` | `12.277570` | `0.625` | `+0.000000` | `12.277570` | `0.625` | `−0.000000` |
 | `it2` | `12.278440` | `0.884` | `−0.000000` | `12.231304` | `0.860` | **`+0.050628`** |
 | `it3` | `12.226652` | `0.862` | `+0.003260` | `12.147359` | `0.888` | **`+0.063500`** |
-| `it4` | `12.216848` | `0.875` | `+0.001907` | | | |
+| `it4` | `12.216848` | `0.875` | `+0.001907` | `12.076820` | `0.891` | **`+0.095239`** |
 | `it5` | `12.220316` | `0.890` | `+0.004877` | | | |
 | `it6` | `12.198747` | `0.951` | `+0.002166` | | | |
 | `it7` | `12.222805` | `0.944` | `+0.004818` | | | |
@@ -424,15 +424,17 @@ the same `N = 2000` verifier as separation oracle, the same column generation, t
 | `it9` | `12.219917` | `0.963` | `+0.003208` | | | |
 | `it10` | `12.227723` | `0.954` | `+0.003413` | | | |
 
-At `it3` the interior run has 240 clique columns of which **18 are in use carrying `3.10` of the
-total**, and the separator's best is `ȳ(K) = 1.1492` against `ȳ(P_p) = 1.0063` — a clique violated
-by `15 %` while no coverage row is violated by more than `0.6 %`.  The wall run at the same point
-has 240 columns, 5–12 in use carrying `0.20–0.42`, and `ȳ(K) = ȳ(P_p)` to four decimals.
+The interior run's gain **grows monotonically once it starts**: `0.000, 0.051, 0.064, 0.095` over
+rounds 1-4.  At `it4` it has 300 clique columns of which **25 are in use carrying `3.44` of the
+total**, and the separator's best is `ȳ(K) = 1.1154` against `ȳ(P_p) = 1.0311`.  The wall run at
+the same point has 300 columns, 5-12 in use carrying `0.20-0.42`, and `ȳ(K) = ȳ(P_p)` to four
+decimals.  Its LP value has come down from `12.28` to `12.077` while the wall run's sits at
+`12.22`; the pure reference at this container is `>= 12.0281608` exactly.
 
 **So the answer to `ANCHOR.md`'s closing question — "does the matched gain grow as the row set
 converges?" — is yes, once the separator is fixed: `0.0004` (task I, wall family, `k = 4` leaf) →
-`0.05–0.06` (interior family, pure cover at `3.99`), and `+0.053` on task I's own `k = 4` leaf at
-`3.98` by round 1 (below).**  Every LP value in the
+`0.05 -> 0.06 -> 0.095` over rounds 2-4 (interior family, pure cover at `3.99`), and `+0.053` on
+task I's own `k = 4` leaf at `3.98` by round 1 (below).**  Every LP value in the
 table is a restricted-master value on an unconverged row set, so it is *not* a bound in either
 direction; the matched gain is the number that does not need convergence, because it is one row
 set and one column set with the clique columns switched off.
@@ -457,7 +459,9 @@ set, clique columns switched off.)  *(later rounds in `runs/branch_J16.log`)*
 with the probe minimum at `0.86–0.95`, i.e. the row set is nowhere near converged and the value has
 not started to settle; the pure reference at this container is `>= 12.0281608` exactly
 (`CLIQUE_CONTINUUM.md` §3), so a clique cover below 12 needs the family to be worth `> 0.028`
-*at convergence*, and the measured `0.06` at round 3 is encouraging but is not that number.
+*at convergence*.  The measured gain has passed that — `0.095` at round 4, and rising — but a gain
+on an unconverged row set is not a gain at convergence, and only a file the verifier accepts
+settles it.
 
 ## 6. Verdict
 
@@ -498,8 +502,9 @@ no bound in either direction unless said otherwise):
   `0.124` (§3);
 * the best certifiable anchor clique on the exactly certified extremal measures at `t = 3.99` is
   `1.2201` and `1.2163` — interior, segment-anchored, region-shaped (§2);
-* the cover-side matched gain at `t = 3.99` with the interior separator is `+0.0506`, `+0.0635` at
-  rounds 2 and 3, against `+0.000–0.005` for the wall separator over eleven rounds (§5);
+* the cover-side matched gain at `t = 3.99` with the interior separator is `+0.0506`, `+0.0635`,
+  `+0.0952` at rounds 2, 3 and 4 — monotone — against `+0.000–0.005` for the wall separator over
+  eleven rounds (§5);
 * on task I's own `k = 4` leaf at `3.98`, restarted from its own checkpoint with nothing changed
   but the separator, the matched gain is `+0.053` at round 1 against its `+0.0004` (§5).
 
@@ -530,7 +535,7 @@ None of the four long runs is converged; all were left running.  What each had r
 | run | what | reached |
 |---|---|---|
 | `runs/branch_J6.log` | pure cover at `3.99`, **wall** separator (the control) | `it10`, LP `12.228`, probe `0.954`, gain `+0.0034` |
-| `runs/branch_J12.log` | pure cover at `3.99`, **interior** separator | `it3`, LP `12.147`, probe `0.888`, gain `+0.0635` |
+| `runs/branch_J12.log` | pure cover at `3.99`, **interior** separator | `it4`, LP `12.077`, probe `0.891`, gain `+0.0952` |
 | `runs/branch_J16.log` | task I's `k = 4` leaf at `3.98`, interior separator, from its own checkpoint | `it1`, gain `+0.0532` |
 | `runs/J15.out` | packing side at `3.99`, correct pricer **and** interior separator | `r0`, clique `11.8018`, pure `11.9909`, gain `0.1891` |
 
