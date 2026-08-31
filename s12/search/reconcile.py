@@ -345,7 +345,9 @@ def cmd_build(a, log):
     t = a.t
     sargs = SepArgs()
     sargs.cut_per_round = a.cut_per_round
-    if a.seg_only:
+    if a.full_sep:
+        full_separator(log, epsmax=a.sep_epsmax)
+    elif a.seg_only:
         segments_only(log)
     M = build_model(t, a.threads, log, a.support, a.cuts, row_pitch=a.row_pitch,
                     seg_only=a.seg_only)
@@ -686,6 +688,10 @@ def main():
     ap.add_argument('--neps', type=int, default=8, help='dualsep: anchor offsets')
     ap.add_argument('--nrho', type=int, default=8, help='dualsep: anchor half-lengths')
     ap.add_argument('--epsmax', type=float, default=0.9, help='dualsep: largest anchor offset')
+    ap.add_argument('--full-sep', action='store_true',
+                    help='separate SEGMENT anchors at any point, any direction, offset up to '
+                         '--sep-epsmax (lifts clique_family.anchor_local interior cap of 0.05)')
+    ap.add_argument('--sep-epsmax', type=float, default=0.9)
     ap.add_argument('--seg-only', action='store_true',
                     help='keep and separate only SEGMENT anchors (the representable family)')
     ap.add_argument('--refine', action='store_true',
@@ -725,7 +731,9 @@ def main():
     # ---- price / escape both need the built instance
     sargs = SepArgs()
     sargs.cut_per_round = a.cut_per_round
-    if a.seg_only:
+    if a.full_sep:
+        full_separator(log, epsmax=a.sep_epsmax)
+    elif a.seg_only:
         segments_only(log)
     M = build_model(a.t, a.threads, log, a.support, a.cuts, row_pitch=a.row_pitch,
                     seg_only=a.seg_only)
