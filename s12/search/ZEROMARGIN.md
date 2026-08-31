@@ -207,3 +207,46 @@ by core / lemma; report the rest with locations) is the verification half of the
 the limit" of `TODO.md` Phase 3, and its uncertified-box output is the separation oracle the
 cover side needs at `s = 4`.  Rung 3 (`[0,7]²`, `n = 45`) is the same code with `m = 7` once
 task D produces a candidate.
+
+## 7. Task H (2026-08-30): the checker as a fast oracle, and the rung-2 closing loop
+
+**Vectorisation (step 1 of the brief).**  `cert_core` and `cert_p1` (`search/zeromargin.py`) now
+pre-filter the *entire* point set for a box with `numpy` (four vectorised corner tests over all
+`N` points at once, superset of the exact test by the same `1e-9` lenient tolerance the old
+per-point float pre-filter used) before doing any exact `Fraction` work; if the pre-filter's own
+weight sum can't reach `1`, the box is rejected with zero exact arithmetic.  Points that pass are
+confirmed exactly in decreasing-weight order so the accumulator reaches `≥ 1` in as few `Fraction`
+operations as possible.  Everything load-bearing (`in_core`, `in_rot_square`, the exact confirm
+loop) is untouched.
+
+*Regression.*  Rung 1 is byte-identical before/after: reduced domain `6,958` boxes /
+`3356/70/74/3179/0`, full domain `27,396` / `13556/298/280/12364/0`, `zeromargin_stress.py` `0`
+failures on `6,679` leaves and `340k` primitive instances (all re-run and matching ZEROMARGIN.md
+§3 exactly).  On the 1,972-point `runs/closed4_best.txt` cover (the rung-2 target), depth 6 now
+takes **74 s on 8 processes** (was 575 s on 4) for the *identical* leaf counts (`111,020` boxes,
+`24905` CORE / `350` P1 / `0` TRI / `4459` EMPTY / `28996` UNCERTIFIED) — about a 30× per-core
+speed-up, matching the brief's "minutes, not hours" target and making a 2,000-point cover a
+practical separation oracle.
+
+**New CLI modes.**
+- `--oracle FILE`: for every uncertified box, write its centre and the poses at its 4 corners ×
+  its 2 angle-bin endpoints (`≤ 27` poses/box after dedup) as `cx cy theta_rad` rows — candidate
+  cutting planes for a cover LP (`search/closed4.py` / `search/rung2_close.py` consume these
+  indirectly via their own local search seeded at these locations).
+- `pose CERT --cx C --cy C --u U`: compute the **exact** (`Fraction`) captured weight of one
+  rational pose (`u = tan(θ/2)` rational ⇒ `cos θ, sin θ` rational, `trig(u)`) with *no*
+  subdivision or depth limit — a way to turn a float-found candidate violation (from
+  `closed4.py stress`/`polish`) into a rigorous yes/no on whether the current point set really
+  fails there, independent of the box checker's adaptive-subdivision machinery.
+
+**Rung 2, `m = 4`, `W < 13` (step 2 of the brief).**  `search/rung2_close.py` runs the separation
+loop the brief asks for: solve the cover LP over `runs/closed4_best.txt`'s fixed column set (no
+new points), stress-test at pitch `0.003` (`search/closed4.py`'s own dense scan) to find the
+*actual* worst poses, add those (and a local polish around them) as hard LP rows, resolve, repeat
+— each round is blind exactly where the previous round's row set was blind, so it is a genuine
+(float) cutting-plane loop against the residual gap CLOSED4.md left open (LP converged at
+`12.4174` on its own row lattice, but a finer stress scan found `0.99267` at `(3.40, 1.42,
+76.4°)`).  Status and numbers: see `search/FAMILY.md` (filled in once the loop finishes or is
+reported stalled, per the brief's instruction to report honestly rather than declare
+near-success).  Whether the converged cover develops a tilted tight family needing a two-region
+primitive (ZEROMARGIN §4 item 4 / §5(ii)) is recorded there too.

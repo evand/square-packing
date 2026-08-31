@@ -302,7 +302,7 @@ def read_cert(path):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('what', help='friedman14 | cert')
+    ap.add_argument('what', help='friedman14 | cert | pose')
     ap.add_argument('path', nargs='?')
     ap.add_argument('--tri', action='store_true')
     ap.add_argument('--depth', type=int, default=16)
@@ -315,7 +315,34 @@ def main():
                           'endpoints, floats derived from the exact box) as (cx, cy, theta_rad) rows, '
                           'one per line, for use as separating cutting planes in a cover LP')
     ap.add_argument('--full', action='store_true', help='no symmetry reduction (cy up to m, u up to 1)')
+    ap.add_argument('--u', type=str, default=None, help='pose mode: u = tan(theta/2), as a Fraction-parseable string ("1/3", "0.3333")')
+    ap.add_argument('--cx', type=str, default=None, help='pose mode: centre x, Fraction-parseable')
+    ap.add_argument('--cy', type=str, default=None, help='pose mode: centre y, Fraction-parseable')
     a = ap.parse_args()
+    if a.what == 'pose':
+        # exact captured weight at one rational pose (cx, cy, theta = 2*atan(u)): a rigorous,
+        # non-adaptive confirmation that a specific pose found by a float search (stress test,
+        # local polish, ...) really is (or is not) a violation of the cover -- no subdivision,
+        # no depth limit, pure Fraction arithmetic; the pose's u must be rational for cos/sin to
+        # be rational (trig(u)), so snap any float u to a nearby fraction first.
+        m, pts, ws = read_cert(a.path)
+        u = F(a.u); cx = F(a.cx); cy = F(a.cy)
+        c, s = trig(u)
+        total = F(0); used = []
+        for k, (px, py) in enumerate(pts):
+            dx, dy = px - cx, py - cy
+            x = dx * c + dy * s; y = -dx * s + dy * c
+            if -HALF <= x <= HALF and -HALF <= y <= HALF:
+                total += ws[k]; used.append((k, px, py, ws[k]))
+        th_deg = math.degrees(2 * math.atan(float(u)))
+        w_adm = abs(c) + abs(s)
+        adm = (w_adm / 2 <= cx <= m - w_adm / 2) and (w_adm / 2 <= cy <= m - w_adm / 2)
+        print(f"container [0,{m}]^2; pose cx={cx} ({float(cx):.9f}) cy={cy} ({float(cy):.9f}) "
+              f"u={u} theta={th_deg:.9f} deg; admissible: {adm}")
+        print(f"EXACT captured weight = {total} = {float(total):.12f}  "
+              f"({'OK: >= 1' if total >= 1 else '*** VIOLATION: < 1 ***'})")
+        print(f"captured points ({len(used)}): {[(k, str(px), str(py), str(w)) for k, px, py, w in used]}")
+        sys.exit(0)
     if a.what == 'friedman14':
         m, pts, ws = 4, FRIEDMAN14, None
     else:
