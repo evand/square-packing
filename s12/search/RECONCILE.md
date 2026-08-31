@@ -231,7 +231,23 @@ anchor), `anchorsep.separate_interior` (any `p`, any direction, same return shap
 credit rule as `separate`), `branch.py --cq-interior` (prices both families; the clique checkpoint
 format now carries 6-integer as well as 5-integer parameter lines).  The pairwise structure of a
 `kseg` clique is identical to `kpa`'s — two pieces, piece 0 filtering anchor 1 — so `verify/`'s
-Lemma-0 check accepts it unchanged.
+Lemma-0 check accepts it unchanged; **checked, not assumed** (`runs/J14_kseg_check.py`): the
+224-point certificate with one interior `K(p, A)` (`p = (2.04413, 2.16249)`, wall distance
+`1.7693`, segment of length `0.37`) added as an `anchors` block, at `N = 6000`:
+
+```
+== certificates/s12_lower_3.931795_sparse.txt      (control)
+atoms=224 total weight = 11.983437; min covered = 1.000002; VERIFIED
+== + the interior clique at weight 0
+ANCHOR-CLIQUE certificate: 8 cliques ... every clique certified by Lemma 0
+atoms=248 total weight (points + cliques) = 11.983437; min covered = 1.000002; VERIFIED
+== + the interior clique at weight 10/10^7
+... weight 80/10000000 = 0.000008
+atoms=248 total weight (points + cliques) = 11.983445; min covered = 1.000002; VERIFIED
+```
+
+so the block passes the Lemma-0 refusal, leaks no weight at weight 0, and is accounted for exactly
+at positive weight.  `tests/rejection_tests.sh` (136 checks) still passes unchanged.
 
 ## 3. Step 1 — the ladder with a correct pricer
 
