@@ -383,6 +383,8 @@ def main():
     ap.add_argument('--time', type=float, default=7200)
     ap.add_argument('--threads', type=int, default=4)
     ap.add_argument('--warm', action='append', default=[])
+    ap.add_argument('--warm-from', type=float, default=None,
+                    help='the warm files are measures for this container side; rescale their centres')
     ap.add_argument('--row-pitch', type=float, default=0.05)
     ap.add_argument('--cg-want', type=int, default=400)
     ap.add_argument('--cut-per-round', type=int, default=12)
@@ -424,8 +426,15 @@ def main():
     seeds = []
     for wpath in args.warm:
         ps = read_support_any(wpath)
+        if args.warm_from:
+            # a measure for container T transfers to t by scaling the CENTRES (the squares stay
+            # unit size); add_poses clamps whatever ends up outside the smaller container
+            f = t / args.warm_from
+            ps = [(cx * f, cy * f, th) for (cx, cy, th) in ps]
+            log(f"# warm start {wpath}: {len(ps)} poses, centres scaled by {f:.6f}")
+        else:
+            log(f"# warm start {wpath}: {len(ps)} poses")
         seeds += ps
-        log(f"# warm start {wpath}: {len(ps)} poses")
     if args.h > 0 and seeds:
         seeds = snap_to_lattice(seeds, t, args.h, args.dth)
     seeds += PD.seed_poses(t, 0.25, max(args.dth, 5.0))
