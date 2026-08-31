@@ -196,17 +196,43 @@ that contain `A`"* — and it is a clique for every `p` and `A` by Lemma 0, with
 Its mass is not bounded by the coverage constraint at any point, and it is exactly where the
 violations are:
 
+There is a second, sharper version of the same mistake inside the packing-side separator.
+`clique_family.anchor_local` builds its offset schedule as
+
+```python
+clear = min(p[0], p[1], t - p[0], t - p[1])
+base  = max(1e-4, min(0.6, 1.0 - clear if clear < 1.0 else 0.05))
+for ie in range(1, neps + 1):  eps = base * ie / neps
+```
+
+so at an interior anchor point it only ever tries `eps <= 0.05`, and along a wall only
+`eps <= 1 - clear`.  The cliques these packings actually violate want `eps` of `0.2` to `0.8`.
+**Lifting that cap is worth an order of magnitude:**
+
 | measure / dual | family searched | best clique mass or `ȳ(K)` | where |
 |---|---|---|---|
-| certified `12.008230754` at `3.99` (`runs/dual_exact_3.99_support.txt`) | `CLIQUE_CONTINUUM.md` §4, wall band | `1.0242` | wall distance `0.55` |
-| the same measure | any `p`, any direction (`clique_family.py separate`) | **`1.098045`** | `p = (2.045, 2.705)`, **wall distance `1.285`**, segment anchor of length `0.3675`, 165 members |
-| certified `12.028160771` at `3.99` (`runs/cqx_PURE99_support.txt`) | any `p`, any direction | **`1.088559`** | `p = (2.705, 2.045)`, wall distance `1.285`, segment `0.3675`, 268 members |
-| the same measure, segment anchors only, 24 directions (`runs/J9.py`) | representable family | **`1.091480`** | interior |
-| converged dual of the `k = 4` leaf at `3.98`, mass exactly `12.000000` (`runs/branch_t398hk4_dual_it16.txt`) | `ANCHOR.md` §3, `anchorsep.separate` (wall band, wall-perpendicular) | `1.054176` | wall distance `0.99` |
-| **the same dual, same cover-side credit rule** (`anchorclique.member`, `sigma_k`-square and hexagon at each row's own `h`) | any `p`, any direction (`reconcile.py dualsep`) | **`1.143071`** | `p = (1.22, 1.52)`, **wall distance `1.22`**, `eps = 0.225`, `|A| = 0.8575`; the point clique there is `ȳ(P_p) = 1.000000` exactly |
+| certified `12.008230754` at `3.99` (`runs/dual_exact_3.99_support.txt`) | `CLIQUE_CONTINUUM.md` §4, "the usable number" | `1.0242` | wall distance `0.55` |
+| the same measure | `clique_family.py separate` (as shipped: `anchor_local` + the polygon greedy) | `1.098045` | `p = (2.045, 2.705)`, **wall distance `1.285`**, segment of length `0.3675`, 165 members |
+| **the same measure** | segment anchors, 24 directions, **offset cap lifted** (`runs/J9b.py`) | **`1.220095`** | `p = (2.365, 2.765)`, **wall distance `1.225`**, `eps = 0.225`, `\|A\| = 0.588`, 163 members |
+| certified `12.028160771` at `3.99` (`runs/cqx_PURE99_support.txt`) | `separate` as shipped | `1.088559` | wall distance `1.285` |
+| the same measure | segment anchors, cap lifted | **`1.216331`** | `p = (2.765, 2.435)`, wall distance `1.225`, `eps = 0.225`, `\|A\| = 0.686`, 281 members |
+| converged dual of the `k = 4` leaf at `3.98`, mass exactly `12.000000` (`runs/branch_t398hk4_dual_it16.txt`) | `ANCHOR.md` §3 = `anchorsep.separate` (wall band, wall-perpendicular) | `1.054176` | wall distance `0.99` |
+| **the same dual, same cover-side credit rule** (`anchorclique.member`, `sigma_k`-square and hexagon at each row's own `h`) | any `p`, any direction (`reconcile.py dualsep`) | **`1.143071`** | `p = (1.22, 1.52)`, **wall distance `1.22`**, `eps = 0.225`, `\|A\| = 0.8575`; the point clique there is `ȳ(P_p) = 1.000000` exactly |
 
-On that leaf dual the scan found **1265 violated cliques and every one of them sits at wall
-distance `>= 1`** — i.e. not one of them is reachable by the separator task I's cover runs use.
+For scale: `search/CLIQUE.md`'s **unrestricted** max clique on that same certified measure — an
+arbitrary pairwise-intersecting set of support squares, with no describable structure and nothing a
+certificate could carry — is `1.327`.  The certifiable one-point-one-segment family recovers
+**`1.220` of that `1.327`**, not the `1.024` recorded in `CLIQUE_CONTINUUM.md` §4.  The
+"factor of ten" of that write-up's §4 ("the region-shaped violation is `+0.024`, not `+0.33`") is
+an artefact of the search restriction, not a property of the family.
+
+Two counts that say how systematic this is:
+
+* on the certified `12.008` measure, the uncapped scan found **4683 violated cliques**, of which
+  **2785 are at wall distance `>= 1` and every one of those has `eps > 0.05`** — i.e. none of them
+  is reachable by `clique_family.anchor_local`;
+* on the `k = 4` leaf dual, **1265 violated cliques and every single one at wall distance `>= 1`** —
+  none reachable by `anchorsep.separate`.
 
 **The interior cliques are real, and checked independently.**  `runs/J11_verify_clique.py`
 re-derives membership from the definition (an explicit rotation for `p in S`, `clique_family`'s
@@ -217,9 +243,11 @@ vectorised separator that produced the number — the check that catches the mis
 
 | clique | members | reported mass | recomputed | non-intersecting pairs |
 |---|---|---|---|---|
+| `p = (2.365, 2.765)`, wall distance `1.225`, `\|A\| = 0.588`, on the `12.008` measure | 163 | `1.220095` | `1.220095` | **0** |
+| `p = (1.555, 2.765)`, wall distance `1.225` | 175 | `1.215894` | `1.215894` | **0** |
+| `p = (1.495, 1.675)`, wall distance `1.495` | 174 | `1.184166` | `1.184166` | **0** |
+| `p = (2.765, 2.435)`, wall distance `1.225`, `\|A\| = 0.686`, on the `12.028` measure | 281 | `1.216331` | `1.216331` | **0** |
 | `p = (2.045, 2.705)`, wall distance `1.285`, `\|A\| = 0.3675` | 165 | `1.098045` | `1.098045` | **0** |
-| `p = (2.505, 1.845)`, wall distance `1.485` | 174 | `1.061755` | `1.061755` | **0** |
-| `p = (2.705, 2.045)` on the `12.028` measure | 268 | `1.088559` | `1.088559` | **0** |
 
 *(Verified in the sense of an independent second implementation in floats, not exact rationals.
 A certificate built from one of these would be checked exactly by `verify/` and `xcheck.py`,

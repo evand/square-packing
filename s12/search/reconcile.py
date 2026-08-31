@@ -61,6 +61,47 @@ def segments_only(log):
     return orig
 
 
+def full_separator(log, epsmax=0.9, ndir=16, neps=10, nrho=8):
+    """the segment family with the OFFSET CAP LIFTED.
+
+    `clique_family.anchor_local` sets
+
+        clear = min(p_x, p_y, t-p_x, t-p_y)
+        base  = max(1e-4, min(0.6, 1 - clear if clear < 1 else 0.05))
+
+    so at an interior anchor point (`clear >= 1`) it only ever tries `eps <= 0.05`, and along a
+    wall only `eps <= 1 - clear`.  Both certified extremal measures at `t = 3.99` are violated
+    hardest by INTERIOR cliques with `eps` of 0.2-0.5, which that schedule cannot reach
+    (`search/RECONCILE.md` §2).  This separator scans `eps` up to `epsmax` everywhere."""
+    def sep(IM, p, t, nseed=8, maxstep=40, tol=1e-12, neps_=None, nrho_=None, ndir_=None,
+            **kw):
+        thru = CF.contains_np(IM, [p], tol=tol)
+        best = None
+        for a in np.linspace(0, 2 * math.pi, ndir, endpoint=False):
+            d = (math.cos(a), math.sin(a))
+            dp = (-d[1], d[0])
+            for ie in range(1, neps + 1):
+                eps = epsmax * ie / neps
+                m = (p[0] + eps * d[0], p[1] + eps * d[1])
+                for ir in range(1, nrho + 1):
+                    rho = 0.49 * ir / nrho
+                    A = [(m[0] - rho * dp[0], m[1] - rho * dp[1]),
+                         (m[0] + rho * dp[0], m[1] + rho * dp[1])]
+                    mm, n1, n2 = CF.kmass_np(IM, thru, A)
+                    if best is None or mm > best['mass']:
+                        best = dict(p=p, A=[tuple(v) for v in A], mass=mm, n_point=n1,
+                                    n_anchor=n2, eps=eps, rho=rho, dir=d, kind='full')
+        return best
+
+    def seg_all(IM, p, t, nseed=8, maxstep=40, tol=1e-12, neps=10, nrho=8, ndir=16):
+        return sep(IM, p, t, tol=tol)
+
+    CF.anchor_separate_all = seg_all
+    CC.CF.anchor_separate_all = seg_all
+    log(f"# separator: SEGMENT anchors, any direction ({ndir}), offset up to {epsmax} "
+        f"(clique_family.anchor_local's interior cap of 0.05 lifted)")
+
+
 def build_model(t, threads, log, supports, cutfile, row_pitch=0.05, extra_poses=None,
                 seg_only=False):
     M = CC.CModel(t, threads, log)
