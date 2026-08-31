@@ -41,7 +41,28 @@ TOL = 1e-9
 
 
 # ------------------------------------------------------------------ instance construction
-def build_model(t, threads, log, supports, cutfile, row_pitch=0.05, extra_poses=None):
+def segments_only(log):
+    """restrict the separator to SEGMENT anchors.
+
+    `clique_family.anchor_separate` builds `A` as the intersection of support squares, i.e. a
+    polygon.  A polygon anchor is a valid clique but it is (a) not representable in a certificate
+    -- `certificates/FORMAT.md` has `anchorP` (a point) and `anchorS` (a segment), nothing else --
+    and (b) typically of tiny or zero area, so `{S : A subseteq S}` is a measure-zero set of poses:
+    it can cut a finite pose list and can never pay for itself in a cover of the continuum.
+    `anchor_local` is the Lemma-2 segment family, which is representable."""
+    orig = CF.anchor_separate_all
+
+    def seg_all(IM, p, t, nseed=8, maxstep=40, tol=1e-12, neps=10, nrho=8, ndir=16):
+        return CF.anchor_local(IM, p, t, neps=neps, nrho=nrho, tol=tol, ndir=ndir)
+
+    CF.anchor_separate_all = seg_all
+    CC.CF.anchor_separate_all = seg_all
+    log("# separator restricted to SEGMENT anchors (certificate-representable)")
+    return orig
+
+
+def build_model(t, threads, log, supports, cutfile, row_pitch=0.05, extra_poses=None,
+                seg_only=False):
     M = CC.CModel(t, threads, log)
     seeds = []
     for path in supports:
@@ -54,6 +75,10 @@ def build_model(t, threads, log, supports, cutfile, row_pitch=0.05, extra_poses=
     M.add_points(PD.seed_points(t, row_pitch))
     if cutfile:
         CC.load_cuts(M, cutfile, log)
+        if seg_only:
+            keep = [len(c['obj'].A) == 2 for c in M.cuts]
+            log(f"# dropping {len(keep) - sum(keep)} polygon-anchored cuts of {len(keep)}")
+            M.drop_cuts(keep)
     log(f"# built: {len(M.poses)} orbits, {M.m.A.shape[0]} rows, {len(M.cuts)} cuts")
     return M
 
@@ -276,8 +301,11 @@ def cmd_build(a, log):
     t = a.t
     sargs = SepArgs()
     sargs.cut_per_round = a.cut_per_round
-    M = build_model(t, a.threads, log, a.support, a.cuts, row_pitch=a.row_pitch)
-    r = converge(M, log, sargs, maxit=a.maxit, tag='b')
+    if a.seg_only:
+        segments_only(log)
+    M = build_model(t, a.threads, log, a.support, a.cuts, row_pitch=a.row_pitch,
+                    seg_only=a.seg_only)
+    r = converge(M, log, sargs, maxit=a.maxit, tag='b', pure_too=not a.no_pure_rows)
     mu, y, ycut, obj, conv = r
     pure = pure_value(M)
     log(f"* PACKING: clique {obj:.6f}  pure(same poses) {pure:.6f}  gain {pure-obj:.6f} "
@@ -415,7 +443,10 @@ def cmd_probe(a, log):
     that are not columns of it?"""
     sargs = SepArgs()
     sargs.cut_per_round = a.cut_per_round
-    M = build_model(a.t, a.threads, log, a.support, a.cuts, row_pitch=a.row_pitch)
+    if a.seg_only:
+        segments_only(log)
+    M = build_model(a.t, a.threads, log, a.support, a.cuts, row_pitch=a.row_pitch,
+                    seg_only=a.seg_only)
     r = converge(M, log, sargs, maxit=a.maxit, tag='b')
     mu, y, ycut, obj, conv = r
     cv, ycov = cover_lp(M)
@@ -424,6 +455,31 @@ def cmd_probe(a, log):
     log(f"  cover uses {int((ycov[:npt] > 1e-12).sum())} point cliques (weight "
         f"{ycov[:npt].sum():.4f}) and {int((ycov[npt:] > 1e-12).sum())} anchor cliques (weight "
         f"{ycov[npt:].sum():.4f})")
+    # what SHAPE are the anchors the cover actually pays for?  Only a segment anchor is
+    # representable in a certificate (`anchorS`); an anchor that is a polygon -- the intersection
+    # of support squares, which is what clique_family.anchor_separate returns -- has
+    # {S : A subseteq S} of tiny or zero measure, so it can cut a finite pose list and can never
+    # help a cover of the continuum.
+    seg = poly = 0
+    wseg = wpoly = 0.0
+    areas = []
+    for j in np.nonzero(ycov[npt:] > 1e-12)[0]:
+        A = M.cuts[j]['obj'].A
+        if len(A) == 2:
+            seg += 1
+            wseg += ycov[npt + j]
+        else:
+            poly += 1
+            wpoly += ycov[npt + j]
+            s = 0.0
+            for i in range(len(A)):
+                k = (i + 1) % len(A)
+                s += A[i][0] * A[k][1] - A[k][0] * A[i][1]
+            areas.append(abs(s) / 2)
+    log(f"  of those anchor cliques: {seg} segment anchors (weight {wseg:.4f}), "
+        f"{poly} polygon anchors (weight {wpoly:.4f})"
+        + (f", polygon areas min {min(areas):.3e} med {sorted(areas)[len(areas)//2]:.3e} "
+           f"max {max(areas):.3e}" if areas else ""))
     # (a) the LP's own columns: must all be covered to weight >= 1
     own = np.array(M.poses, dtype=float)
     cown = probe_cover(M, ycov, own, a.threads)
@@ -476,6 +532,11 @@ def main():
     ap.add_argument('--maxatoms', type=int, default=8000)
     ap.add_argument('--time', type=float, default=1e9)
     ap.add_argument('--no-neighbours', action='store_true')
+    ap.add_argument('--no-pure-rows', action='store_true',
+                    help="converge rows for the clique solution only (task G's protocol), so the "
+                         "matched pure value is the upper bound clique_continuum.py reports")
+    ap.add_argument('--seg-only', action='store_true',
+                    help='keep and separate only SEGMENT anchors (the representable family)')
     ap.add_argument('--refine', action='store_true',
                     help='coordinate-descent the priced candidates on the true reduced cost')
     ap.add_argument('--n', type=int, default=200, help='xmember: number of cliques')
@@ -510,7 +571,10 @@ def main():
     # ---- price / escape both need the built instance
     sargs = SepArgs()
     sargs.cut_per_round = a.cut_per_round
-    M = build_model(a.t, a.threads, log, a.support, a.cuts, row_pitch=a.row_pitch)
+    if a.seg_only:
+        segments_only(log)
+    M = build_model(a.t, a.threads, log, a.support, a.cuts, row_pitch=a.row_pitch,
+                    seg_only=a.seg_only)
     lib = M.m.lib
     r = converge(M, log, sargs, maxit=a.maxit, tag='b')
     mu, y, ycut, obj, conv = r
