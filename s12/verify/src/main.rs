@@ -620,6 +620,7 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
     let h2: i128 = ASC / 2;
     let hsc: i128 = sg_n * ASC / (2 * sg_d);            // sigma_k/2 over ASC, rounded DOWN (conservative)
     let mut awin: Vec<(i128,i128,i128,i128)> = Vec::new();
+    let mut awind: Vec<(i128,i128,i128,i128)> = Vec::new();   // the same windows over DEN (prefilter)
     let mut aord: Vec<(i128, usize)> = Vec::new();      // (window u0 lo, piece), swept with the strips
     if let Some((ab, an)) = anc {
         for p in an.pieces.iter() {
@@ -632,9 +633,20 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
                 w1l = w1l.max(y.e[0][3].min(y.e[1][3]) - hsc); w1h = w1h.min(y.e[0][2].max(y.e[1][2]) + hsc);
             }
             awin.push((w0l, w0h, w1l, w1h)); aord.push((w0l, awin.len() - 1));
+            // the same window in the sweep's own units, rounded OUTWARD: the ASC test implies
+            // this one, so it is a sound (and division-free) prefilter for a cell
+            awind.push((fdiv(cmul(w0l, den_int), ASC), cdiv(cmul(w0h, den_int), ASC),
+                        fdiv(cmul(w1l, den_int), ASC), cdiv(cmul(w1h, den_int), ASC)));
         }
         aord.sort_unstable();
     }
+    // `core_margin`: a point with |v0|, |v1| <= h2 - core_margin is in the bin core whatever else
+    // holds, so a cell that far inside a piece's window needs no per-corner test.  Both remaining
+    // conditions of `in_core` are O(delta) corrections to |v| <= 1/2:
+    //   R_delta Q:  |v0 cos d + v1 sin d| <= (h2 - m) + h2 sin d <= h2   as soon as m >= h2 sin d;
+    //   the sector: it only applies when the direction of v is within delta of an axis, and there
+    //               |v| <= |v0'|/cos d <= (h2 - m)/cos d <= h2           as soon as m >= h2 (1-cos d).
+    let core_margin: i128 = if anc.is_some() { cdiv(cmul(h2, sd), gg) + cdiv(cmul(h2, cadd(gg, -cd)), gg) + 2 } else { 0 };
     let mut aptr = 0usize; let mut aact: Vec<usize> = Vec::new();
     // x-breakpoints
     let mut bx: Vec<i128> = Vec::with_capacity(2*m+2);
@@ -657,11 +669,14 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
             let n_before = aact.len();
             while aptr < aord.len() && aord[aptr].0 <= b0s { aact.push(aord[aptr].1); aptr += 1; }
             if aact.len() != n_before {
-                aact.retain(|&pi| awin[pi].1 >= a0s);
-                aact.sort_unstable_by_key(|&pi| awin[pi].2);       // by the window's u1 lower end
+                aact.retain(|&pi| awind[pi].1 >= a);
+                aact.sort_unstable_by_key(|&pi| awind[pi].2);      // by the window's u1 lower end
             }
         }
         let mut u1act: Vec<usize> = Vec::new(); let mut ptr1 = 0usize;
+        // reused across the cells of the strip: a fresh Vec per cell would be a heap allocation
+        // per cell, which dominates everything else in the sweep
+        let mut apart: Vec<usize> = Vec::new(); let mut adone: Vec<usize> = Vec::new();
         // active: q0 in (b-h, a+h)   [strict: covered for every centre in the CLOSED cell]
         // CLOSED squares: atom counts iff |q0 - u0| <= h for every u0 in [a,b]
         let i0 = qx.partition_point(|&v| v <  b-hh);
@@ -746,22 +761,30 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
         // `u1act` sweeps the same windows in u1 as the cells of the strip advance, so a cell only
         // ever looks at the pieces whose window it actually meets.  `full` rescans instead (used
         // once for the empty strip, whose single cell spans the whole strip).
-        let anchor_credit = |c0: i128, c1: i128, u1act: &mut Vec<usize>, ptr1: &mut usize, full: bool| -> (i128, Vec<usize>) {
-            let (ab, an) = match anc { Some(v) => v, None => return (0, Vec::new()) };
-            if aact.is_empty() { return (0, Vec::new()); }
-            let c0s = fdiv(cmul(c0, ASC), den_int); let c1s = cdiv(cmul(c1, ASC), den_int);
+        let anchor_credit = |c0: i128, c1: i128, u1act: &mut Vec<usize>, ptr1: &mut usize, full: bool,
+                             part: &mut Vec<usize>, done: &mut Vec<usize>| -> i128 {
+            part.clear(); done.clear();
+            let (ab, an) = match anc { Some(v) => v, None => return 0 };
+            if aact.is_empty() { return 0; }
+            // the sweep and the window test run in the sweep's own units (no division per cell);
+            // only a cell that survives them is converted to the anchor grid
             if full { u1act.clear(); u1act.extend(aact.iter().copied()); }
             else {
-                while *ptr1 < aact.len() && awin[aact[*ptr1]].2 <= c1s { u1act.push(aact[*ptr1]); *ptr1 += 1; }
-                if !u1act.is_empty() { u1act.retain(|&pi| awin[pi].3 >= c0s); }
+                while *ptr1 < aact.len() && awind[aact[*ptr1]].2 <= c1 { u1act.push(aact[*ptr1]); *ptr1 += 1; }
+                if !u1act.is_empty() { u1act.retain(|&pi| awind[pi].3 >= c0); }
             }
-            let mut credit = 0i128; let mut done: Vec<usize> = Vec::new(); let mut part: Vec<usize> = Vec::new();
+            if u1act.is_empty() { return 0; }
+            let c0s = fdiv(cmul(c0, ASC), den_int); let c1s = cdiv(cmul(c1, ASC), den_int);
+            let mut credit = 0i128;
             for &pi in u1act.iter() {
                 let (w0l, w0h, w1l, w1h) = awin[pi];
                 if c1s < w1l || c0s > w1h || w0h < a0s { continue; }   // the cell cannot meet the piece
                 let (cid, ai, ref filt) = an.pieces[pi];
                 let mut ok = a0s >= w0l && b0s <= w0h && c0s >= w1l && c1s <= w1h;
-                if ok {
+                // fast path: a cell `core_margin` inside the window is in the core by the estimate
+                // above, so only the cells in a thin band around a piece's boundary are tested
+                if ok && !(a0s >= w0l + core_margin && b0s <= w0h - core_margin
+                           && c0s >= w1l + core_margin && c1s <= w1h - core_margin) {
                     // contains: every corner of (anchor endpoint - cell) lies in the exact bin core
                     let z = &ab[ai];
                     'ep: for j in 0..2 {
@@ -790,7 +813,7 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
                 }
                 if ok { if !done.contains(&cid) { credit = cadd(credit, an.w[cid]); done.push(cid); } } else { part.push(pi); }
             }
-            (credit, part)
+            credit
         };
         // f64: is the pose (centre u0,u1 in the bin's frame, angle theta_k) in piece `pi`?  Only the
         // witness uses this, so floats are harmless: the verdict never depends on it.
@@ -865,7 +888,7 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
             let cy = ((sn as f64)*u0 + (cn as f64)*u1)/(g as f64)/dn;
             let (may, inside) = flags(ylo, yhi);
             let (ccred, partial) = clique_credit(ylo, yhi);
-            let (acred, apart) = anchor_credit(ylo, yhi, &mut u1act, &mut ptr1, true);
+            let acred = anchor_credit(ylo, yhi, &mut u1act, &mut ptr1, true, &mut apart, &mut adone);
             let v = ccred + acred - required(may, inside);
             let (cx, cy) = if tight.is_none() { witness(ylo, yhi, inside, &partial, &apart) } else { (cx, cy) };
             if let Some(t) = tight.as_mut() {
@@ -904,11 +927,11 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
             // where they cannot change anything: `required` and every witness threshold are at most
             // W + max(0, lambda_j over the boxes met), so a cell already at that weight neither
             // fails nor produces a witness whatever the (non-negative) anchor credit is.
-            let mut apart: Vec<usize> = Vec::new();
+            apart.clear();
             if !aact.is_empty() {
                 let mut cap = 0i128;
                 if may != 0 { for j in 0..4 { if may & (1 << j) != 0 && lams[j] > cap { cap = lams[j]; } } }
-                if sum < c.wd + cap { let (acred, ap) = anchor_credit(c0, c1, &mut u1act, &mut ptr1, false); sum += acred; apart = ap; }
+                if sum < c.wd + cap { sum += anchor_credit(c0, c1, &mut u1act, &mut ptr1, false, &mut apart, &mut adone); }
             }
             let v = sum - required(may, inside);
             if v < best { best = v;
