@@ -7,7 +7,14 @@ Read against `search/CLIQUE_CONTINUUM.md` (task G) and `search/ANCHOR.md` (task 
 
 ## Verdict
 
-*(filled in at the end — see §5)*
+**Neither published number is the anchor family's number: task G's `0.10` is inflated by a pose
+pricer that is blind to its own cut duals and by a matched-pure that is an upper bound; task I's
+`0.0004` is deflated by a separator that cannot express the cliques these packings actually
+violate.  Fixing the separator raises the cover-side matched gain at `t = 3.99` from `≈ 0.000` to
+`+0.064` in four rounds, and the best certifiable clique on the exactly certified extremal measure
+from `1.024` to `1.2201` — above the unrestricted-clique number `CLIQUE_CONTINUUM.md`'s own search
+found.  No certificate below 12 was produced; see §6 for what is verified, what is heuristic and
+what to do next.**
 
 ## 0. The question
 
@@ -380,7 +387,58 @@ not started to settle; the pure reference at this container is `>= 12.0281608` e
 
 ## 6. Verdict
 
-*(in progress)*
+**Neither of the two numbers the brief set against each other is the anchor family's number, and
+the reconciliation turned up something better than either: the family is roughly twice as strong
+as `CLIQUE_CONTINUUM.md` measured and 150 times as strong as `ANCHOR.md` measured, because both
+searches were looking only in the wall band.  No certificate below 12 was produced at `t = 3.99`,
+so `V(3.99) < 12` is still open in both directions; but the cover-side matched gain — the number
+that does not need convergence — is `+0.06` and rising where task I measured `+0.0004`.**
+
+What is **verified** (exact arithmetic, or two independent implementations agreeing):
+
+* the cover LP and the packing LP of one finite instance have the same value, to `2–5e-15`, on
+  three separate instances (§1b, §3, §4);
+* the two membership implementations (`clique_family` on an exact pose, `anchorclique` on a
+  verifier cell) agree exactly at `h = 1/2` on 828,998 memberships, and the cover side is
+  conservative by `0.12 %` at `N = 2000` (§1c);
+* `verify/` and `xcheck.py` both accept an interior general-segment anchor clique, agree on the
+  minimum covered weight (`10000022/10000000` against `5000011/5000000`), and both check Lemma 0
+  exactly for every pair of pieces; `tests/rejection_tests.sh` still passes, 136 checks (§2);
+* the interior cliques are cliques: every ordered pair of members of the five largest was tested
+  with an independent scalar SAT predicate — **0 non-intersecting pairs** (§2).
+
+What is **measured but heuristic** (float LPs, restricted pose/row sets, heuristic separation —
+no bound in either direction unless said otherwise):
+
+* task G's pose pricer offers its clique LP columns of reduced cost `0.00–0.07` while poses it
+  never proposes have `0.34–0.36` (§1d);
+* the cover that task G's `11.937` buys leaves `12.7 %` of random admissible poses covered to less
+  than 1, and `46 %` of its own support's immediate neighbours (§1e);
+* task G's matched-pure protocol overstates the gain by `1.9×` on its own pose set: `0.066`, not
+  `0.124` (§3);
+* the best certifiable anchor clique on the exactly certified extremal measures at `t = 3.99` is
+  `1.2201` and `1.2163` — interior, segment-anchored, region-shaped (§2);
+* the cover-side matched gain at `t = 3.99` with the interior separator is `+0.0506`, `+0.0635` at
+  rounds 2 and 3, against `+0.000–0.005` for the wall separator over eight rounds (§5).
+
+What is a **bound**: `nu_f(399/100) >= 12.0281608` exactly (`CLIQUE_CONTINUUM.md` §3), so the pure
+method cannot go below 12 at `3.99`; and `V(3.99) >= 11.9015` exactly (an anchor-clique-feasible
+measure, `CLIQUE_CONTINUUM.md` §3).  Nothing in this task moves either.
+
+**What to do next**, in order:
+
+1. `branch.py --cq-interior --matched` on the `k = 4` leaf at `3.98` to convergence — `runs/J16`
+   is that run, started here and not finished.  If the matched gain there follows the `3.99` pure
+   cover to `0.05+`, the leaf's `12.000024` has `0.05` of room and `s(12) >= 3.98` follows from
+   the leaf certificates.
+2. Fix the two defects in place rather than around them: `clique_continuum.py`'s `h = 0` pricer
+   must rank on the true reduced cost (`reduced_cost` already computes it; the `h > 0` path uses
+   it), and its matched pure value must converge its own rows.  Until then no number from that
+   script's `anchor` mode should be quoted.
+3. Re-run `CLIQUE_CONTINUUM.md` §4's "how big can the family ever be" (`clique_family.py kset`,
+   `anchorvol`) at interior anchor points: §5 of that write-up tabulates `vol K(p) \ P_p` only for
+   `p` within distance 1 of a wall, and reports `0` at distance `>= 1` — which is the same Lemma-1
+   reading, and the same mistake, in the volume computation.
 
 ## Reproduce
 
