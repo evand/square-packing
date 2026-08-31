@@ -223,6 +223,32 @@ lemma clique_of_cores {ι : Type*} (B : ι → ℝ × ℝ → ℝ → Prop) (cor
   rintro c c' θ θ' ⟨i, hi⟩ ⟨j, hj⟩
   exact (hmeet i j).mono (Set.inter_subset_inter (hcore i c θ hi) (hcore j c' θ' hj))
 
+/-- **Anchor cliques are cliques** (Lemma 0 of `notes/clique-family.md`).  The poses of the family
+are split into pieces `P i`; piece `i` holds only poses whose square *contains* the anchor `anc i`
+(`hcontains`) and *meets* the anchor `anc j` for every `j` that piece `i` filters (`hmeets`).  The
+well-formedness hypothesis `hpair` is what the verifier checks for an `anchors` block: for every
+ordered pair of pieces, either the two anchors intersect or one of the pieces filters the other's
+anchor.  Then any two squares of the family share a point — three cases, no geometry, no shrink
+lemma.  (`clique_of_cores` stays for box cliques: it is the case of pairwise meeting anchors with
+no filters.) -/
+lemma clique_of_anchors {ι : Type*} (P : ι → ℝ × ℝ → ℝ → Prop) (anc : ι → Set (ℝ × ℝ))
+    (Filters : ι → ι → Prop)
+    (hcontains : ∀ i (c : ℝ × ℝ) (θ : ℝ), P i c θ → anc i ⊆ sq c θ 1)
+    (hmeets : ∀ i j (c : ℝ × ℝ) (θ : ℝ), P i c θ → Filters i j → (sq c θ 1 ∩ anc j).Nonempty)
+    (hpair : ∀ i j, (anc i ∩ anc j).Nonempty ∨ Filters i j ∨ Filters j i) :
+    ∀ (c c' : ℝ × ℝ) (θ θ' : ℝ), (∃ i, P i c θ) → (∃ j, P j c' θ') →
+      (sq c θ 1 ∩ sq c' θ' 1).Nonempty := by
+  rintro c c' θ θ' ⟨i, hi⟩ ⟨j, hj⟩
+  rcases hpair i j with h | h | h
+  · -- the anchors share a point, and each square contains its own anchor
+    exact h.mono (Set.inter_subset_inter (hcontains i c θ hi) (hcontains j c' θ' hj))
+  · -- the first square meets `anc j`, which the second square contains
+    obtain ⟨p, hp1, hp2⟩ := hmeets i j c θ hi h
+    exact ⟨p, hp1, hcontains j c' θ' hj hp2⟩
+  · -- symmetrically
+    obtain ⟨p, hp1, hp2⟩ := hmeets j i c' θ' hj h
+    exact ⟨p, hcontains i c θ hi hp2, hp1⟩
+
 /-- **Clique reduction.**  Points `A` with weights `w ≥ 0` and cliques `K j` with weights `v j ≥ 0`
 (`j : Fin m`): if every closed unit square inside `C` is covered by weight `≥ 1` by the points it
 contains together with the cliques it belongs to, then a packing of `n` squares of side `L > 1`
@@ -259,6 +285,92 @@ theorem packing_le_weight_cliques
   have h2 : ∑ j : Fin m, v j * (((univ : Finset (Fin n)).filter
       (fun i => K j (ctr i) (ang i))).card : ℝ) ≤ ∑ j : Fin m, v j :=
     Finset.sum_le_sum fun j _ => hcard j
+  rw [hsum] at h
+  linarith
+
+/-- **Anchor-clique certificate, end to end.**  `m` anchor cliques, the `j`-th a union of pieces
+`P j i` with anchors `anc j i` and filter relation `Filters j`, all satisfying Lemma 0's
+hypotheses; a pose belongs to clique `j` iff it belongs to one of its pieces.  If every closed unit
+square inside `C` captures weight `≥ 1` from the points it contains together with the cliques it
+belongs to, then a packing of `n` squares of side `L > 1` in `C` has `n ≤ ∑ w + ∑ v`.  This is
+`packing_le_weight_cliques` with its clique hypothesis discharged by `clique_of_anchors`, i.e.
+exactly what a certificate with an `anchors` block asserts (`certificates/FORMAT.md`). -/
+theorem packing_le_weight_anchor_cliques
+    (A : Finset (ℝ × ℝ)) (w : ℝ × ℝ → ℝ) (hw : ∀ a ∈ A, 0 ≤ w a)
+    (C : Set (ℝ × ℝ)) (m : ℕ) {ι : Type*}
+    (P : Fin m → ι → ℝ × ℝ → ℝ → Prop) (anc : Fin m → ι → Set (ℝ × ℝ))
+    (Filters : Fin m → ι → ι → Prop) (v : Fin m → ℝ) (hv : ∀ j, 0 ≤ v j)
+    (hcontains : ∀ j i (c : ℝ × ℝ) (θ : ℝ), P j i c θ → anc j i ⊆ sq c θ 1)
+    (hmeets : ∀ j i i' (c : ℝ × ℝ) (θ : ℝ),
+        P j i c θ → Filters j i i' → (sq c θ 1 ∩ anc j i').Nonempty)
+    (hpair : ∀ j i i', (anc j i ∩ anc j i').Nonempty ∨ Filters j i i' ∨ Filters j i' i)
+    (hcover : ∀ (c : ℝ × ℝ) (θ : ℝ), sq c θ 1 ⊆ C →
+        1 ≤ ∑ a ∈ A.filter (fun a => a ∈ sq c θ 1), w a
+              + ∑ j : Fin m, (if ∃ i, P j i c θ then v j else 0))
+    (n : ℕ) (L : ℝ) (hL : 1 < L) (ctr : Fin n → ℝ × ℝ) (ang : Fin n → ℝ)
+    (hsub : ∀ i, sq (ctr i) (ang i) L ⊆ C)
+    (hdisj : ∀ i j, i ≠ j → Disjoint (sqInt (ctr i) (ang i) L) (sqInt (ctr j) (ang j) L)) :
+    (n : ℝ) ≤ ∑ a ∈ A, w a + ∑ j : Fin m, v j :=
+  packing_le_weight_cliques A w hw C m (fun j c θ => ∃ i, P j i c θ) v hv
+    (fun j => clique_of_anchors (P j) (anc j) (Filters j) (hcontains j) (hmeets j) (hpair j))
+    hcover n L hL ctr ang hsub hdisj
+
+/-- **Regions and cliques together.**  This is what a *branch* certificate carrying a clique block
+asserts (`certificates/FORMAT.md`), which is what `search/branch.py --cliques` produces: points `A`
+with weights `w ≥ 0`, regions `R j` with multipliers `lam j`, cliques `K i` with weights `v i ≥ 0`,
+and every closed unit square inside `C` capturing `1 + ∑_j [pose ∈ R j]·lam j` from the points it
+contains together with the cliques it belongs to.  Then a packing of `n` squares of side `L > 1`
+satisfies `n + ∑_j lam j · #{i : pose i ∈ R j} ≤ ∑ w + ∑ v`, so a certificate whose
+`∑ w + ∑ v − ∑_j lam j k_j` is `< n` refutes every packing with that occupancy pattern.  It is
+`packing_le_weight_regions` and `packing_le_weight_cliques` in one. -/
+theorem packing_le_weight_regions_cliques
+    (A : Finset (ℝ × ℝ)) (w : ℝ × ℝ → ℝ) (hw : ∀ a ∈ A, 0 ≤ w a)
+    (C : Set (ℝ × ℝ)) (mr : ℕ) (R : Fin mr → ℝ × ℝ → ℝ → Prop) (lam : Fin mr → ℝ)
+    (mk : ℕ) (K : Fin mk → ℝ × ℝ → ℝ → Prop) (v : Fin mk → ℝ) (hv : ∀ i, 0 ≤ v i)
+    (hK : ∀ i (c c' : ℝ × ℝ) (θ θ' : ℝ), K i c θ → K i c' θ' → (sq c θ 1 ∩ sq c' θ' 1).Nonempty)
+    (hcover : ∀ (c : ℝ × ℝ) (θ : ℝ), sq c θ 1 ⊆ C →
+        1 + ∑ j : Fin mr, (if R j c θ then lam j else 0)
+          ≤ ∑ a ∈ A.filter (fun a => a ∈ sq c θ 1), w a
+              + ∑ i : Fin mk, (if K i c θ then v i else 0))
+    (n : ℕ) (L : ℝ) (hL : 1 < L) (ctr : Fin n → ℝ × ℝ) (ang : Fin n → ℝ)
+    (hsub : ∀ i, sq (ctr i) (ang i) L ⊆ C)
+    (hdisj : ∀ i j, i ≠ j → Disjoint (sqInt (ctr i) (ang i) L) (sqInt (ctr j) (ang j) L)) :
+    (n : ℝ) + ∑ j : Fin mr, lam j * (((univ : Finset (Fin n)).filter
+        (fun i => R j (ctr i) (ang i))).card : ℝ) ≤ ∑ a ∈ A, w a + ∑ i : Fin mk, v i := by
+  have h := packing_le_weight_thresh A w hw C
+    (fun c θ => 1 + ∑ j : Fin mr, (if R j c θ then lam j else 0)
+                  - ∑ i : Fin mk, (if K i c θ then v i else 0))
+    (fun c θ hc => by linarith [hcover c θ hc]) n L hL ctr ang hsub hdisj
+  have e1 : ∑ i : Fin n, (1 + ∑ j : Fin mr, (if R j (ctr i) (ang i) then lam j else 0))
+      = (n : ℝ) + ∑ j : Fin mr, lam j * (((univ : Finset (Fin n)).filter
+          (fun i => R j (ctr i) (ang i))).card : ℝ) := by
+    rw [Finset.sum_add_distrib, Finset.sum_comm]
+    simp only [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul, mul_one]
+    congr 1
+    refine Finset.sum_congr rfl fun j _ => ?_
+    rw [← Finset.sum_filter, Finset.sum_const, nsmul_eq_mul, mul_comm]
+  have e2 : ∑ i : Fin n, ∑ l : Fin mk, (if K l (ctr i) (ang i) then v l else 0)
+      = ∑ l : Fin mk, v l * (((univ : Finset (Fin n)).filter
+          (fun i => K l (ctr i) (ang i))).card : ℝ) := by
+    rw [Finset.sum_comm]
+    refine Finset.sum_congr rfl fun l _ => ?_
+    rw [← Finset.sum_filter, Finset.sum_const, nsmul_eq_mul, mul_comm]
+  have hsum : ∑ i : Fin n, (1 + ∑ j : Fin mr, (if R j (ctr i) (ang i) then lam j else 0)
+                              - ∑ l : Fin mk, (if K l (ctr i) (ang i) then v l else 0))
+      = ((n : ℝ) + ∑ j : Fin mr, lam j * (((univ : Finset (Fin n)).filter
+            (fun i => R j (ctr i) (ang i))).card : ℝ))
+        - ∑ l : Fin mk, v l * (((univ : Finset (Fin n)).filter
+            (fun i => K l (ctr i) (ang i))).card : ℝ) := by
+    rw [Finset.sum_sub_distrib, e1, e2]
+  have hcard : ∀ l : Fin mk, v l * (((univ : Finset (Fin n)).filter
+      (fun i => K l (ctr i) (ang i))).card : ℝ) ≤ v l := by
+    intro l
+    have h1 : (((univ : Finset (Fin n)).filter (fun i => K l (ctr i) (ang i))).card : ℝ) ≤ 1 := by
+      exact_mod_cast card_filter_clique_le_one L hL ctr ang hdisj (K l) (hK l)
+    nlinarith [hv l]
+  have h2 : ∑ l : Fin mk, v l * (((univ : Finset (Fin n)).filter
+      (fun i => K l (ctr i) (ang i))).card : ℝ) ≤ ∑ l : Fin mk, v l :=
+    Finset.sum_le_sum fun l _ => hcard l
   rw [hsum] at h
   linarith
 

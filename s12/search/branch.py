@@ -44,6 +44,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import tighten as T
 import nu_f as NF
+import anchorclique as AC
+import anchorsep as ASEP
 
 LAM_FREE = -2.0          # multiplier of a box with K_j = 0: its rows are vacuous (A x >= -1 + margin)
 SOLVER = os.environ.get('BRANCH_SOLVER', 'highs-ipm')   # scipy method: 'highs', 'highs-ds', 'highs-ipm'; 'warm' = highspy dual simplex with a carried basis (measured: a 40k-iteration phase 1 per round, no gain -- search/LPSPEED.md); 'restricted' = column-sifted master (see solve_restricted; the measured win)
@@ -63,6 +65,11 @@ class BModel(T.Model):
 
     def __init__(self, K, D, orbits_int, r, kreg, sym):
         super().__init__(K, D, orbits_int)
+        # anchor-clique columns (search/anchorclique.py), appended after the point columns:
+        # column n_orb + j is the D4 orbit of clique j, of cost = number of distinct images and
+        # entry (number of images containing the row's pose) -- exactly like a point orbit.
+        self.cliques = []; self.cparams = []; self.ckey = {}
+        self.csizes = np.zeros(0); self.CR = []; self.CC = []; self.CV = []
         self.r = float(r); self.rfrac = Fraction(r); self.rflag = []; self.rowkeys = []; self.sym = sym
         self.row_grid = (1e-7, 1e-8)     # (position, angle) rounding of the row key: rows closer than this are one row
         if isinstance(kreg, (tuple, list)):
@@ -70,6 +77,41 @@ class BModel(T.Model):
         else:
             self.perbox = False; self.kvec = [int(kreg)] * 4; assert 0 <= int(kreg) <= 4
         self.nl = 4 if self.perbox else 1
+
+    def ncols(self):
+        return len(self.orbits) + len(self.cliques)
+
+    def costv(self):
+        """objective coefficients of all columns: orbit sizes, then clique-orbit sizes"""
+        return np.concatenate([self.sizes, self.csizes])
+
+    def matrix(self):
+        A = super().matrix()
+        if not self.cliques: return A
+        nr = len(self.rows); nc = len(self.cliques)
+        if self.CR:
+            R = np.concatenate(self.CR); C = np.concatenate(self.CC); V = np.concatenate(self.CV)
+            B = sp.coo_matrix((V, (R, C)), shape=(nr, nc)).tocsr()
+        else:
+            B = sp.csr_matrix((nr, nc))
+        return sp.hstack([A, B]).tocsr()
+
+    def add_clique(self, cl, params=None):
+        """add the D4 orbit of an anchor clique as one column (single clique if the model is not
+        symmetric); returns False if it is already there"""
+        k = AC.key(cl)
+        if k in self.ckey: return False
+        sfr = Fraction(self.K, self.D)
+        imgs = AC.images(sfr, cl) if self.sym else [cl]
+        j = len(self.cliques); self.ckey[k] = j
+        self.cliques.append(imgs); self.cparams.append(params)
+        self.csizes = np.append(self.csizes, float(len(imgs)))
+        if self.rows:
+            Q = np.array(self.rows); v = AC.coeff(imgs, Q)
+            hit = np.nonzero(v)[0]
+            if hit.size:
+                self.CR.append(hit.astype(np.int32)); self.CC.append(np.full(hit.size, j, dtype=np.int32)); self.CV.append(v[hit])
+        return True
 
     def box_of(self, cx, cy, eps=1e-9):
         s, r = self.s, self.r
@@ -105,6 +147,13 @@ class BModel(T.Model):
             if idx.size:
                 self.R.append(np.full(idx.size, r, dtype=np.int32)); self.C.append(idx.astype(np.int32)); self.V.append(cnt[idx].astype(float))
             added += 1
+        if self.cliques and added:
+            n0 = len(self.rows) - added
+            Q = np.array(self.rows[n0:]); rot = AC._rot(Q)
+            for j, imgs in enumerate(self.cliques):
+                v = AC.coeff(imgs, Q, rot); hit = np.nonzero(v)[0]
+                if hit.size:
+                    self.CR.append((hit + n0).astype(np.int32)); self.CC.append(np.full(hit.size, j, dtype=np.int32)); self.CV.append(v[hit])
         return added
 
     def add_orbit(self, X, Y):
@@ -127,6 +176,11 @@ class BModel(T.Model):
         return True
 
     def prune(self, keep):
+        if self.CR:
+            idx = np.full(len(self.rows), -1, dtype=np.int64); idx[np.nonzero(keep)[0]] = np.arange(int(keep.sum()))
+            R = np.concatenate(self.CR); C = np.concatenate(self.CC); V = np.concatenate(self.CV)
+            nr = idx[R]; sel = nr >= 0
+            self.CR = [nr[sel].astype(np.int32)]; self.CC = [C[sel]]; self.CV = [V[sel]]
         super().prune(keep)
         self.rflag = [f for f, k in zip(self.rflag, keep) if k]
         self.rowkeys = [rk for rk, k in zip(self.rowkeys, keep) if k]
@@ -151,12 +205,12 @@ class BModel(T.Model):
             return self.solve_warm(margin)
         if SOLVER == 'restricted' and plain:
             return self.solve_restricted(margin)
-        A = self.matrix(); n = len(self.orbits); nr = len(self.rows); nl = self.nl
-        c = np.concatenate([self.sizes.copy() if cost is None else np.asarray(cost, dtype=float), -self.kcoef()])
+        A = self.matrix(); n = self.ncols(); nr = len(self.rows); nl = self.nl
+        c = np.concatenate([self.costv() if cost is None else np.asarray(cost, dtype=float), -self.kcoef()])
         Aub = sp.hstack([-A, self.flagmat()]).tocsr(); bub = -np.full(nr, 1.0 + margin)
         extra_A = []; extra_b = []
         if budget is not None:
-            extra_A.append(np.concatenate([self.sizes, np.zeros(nl)]).reshape(1, -1)); extra_b.append(budget)
+            extra_A.append(np.concatenate([self.costv(), np.zeros(nl)]).reshape(1, -1)); extra_b.append(budget)
         if fixed_zero is not None and len(fixed_zero):
             Z = sp.csr_matrix((np.ones(len(fixed_zero)), (np.arange(len(fixed_zero)), np.asarray(fixed_zero))), shape=(len(fixed_zero), n + nl))
             extra_A.append(Z); extra_b += [0.0] * len(fixed_zero)
@@ -177,12 +231,12 @@ def _solve_warm(self, margin):
     rows are only ever appended (new rows start basic, i.e. their slack is in the basis) or deleted
     (prune, handled by index bookkeeping), columns only appended (new columns start nonbasic at 0),
     so the previous basis is a valid, near-optimal starting basis and the re-solve is cheap."""
-    A = self.matrix(); n = len(self.orbits); nr = len(self.rows); nl = self.nl
+    A = self.matrix(); n = self.ncols(); nr = len(self.rows); nl = self.nl
     M = sp.hstack([A, -self.flagmat()]).tocsc()          # A x - F lam >= 1 + margin
     kc = self.kcoef()
     lp = highspy.HighsLp()
     lp.num_col_ = n + nl; lp.num_row_ = nr
-    lp.col_cost_ = np.concatenate([self.sizes, -kc])
+    lp.col_cost_ = np.concatenate([self.costv(), -kc])
     lo = np.concatenate([np.zeros(n), [LAM_FREE if kc[j] == 0 else LAM_LO for j in range(nl)]])
     hi = np.concatenate([np.full(n, highspy.kHighsInf), [LAM_FREE if kc[j] == 0 else LAM_HI for j in range(nl)]])
     lp.col_lower_ = lo; lp.col_upper_ = hi
@@ -215,7 +269,7 @@ def _solve_warm(self, margin):
 BModel.solve_warm = _solve_warm
 
 
-def _solve_restricted(self, margin, log=None):
+def _solve_restricted(self, margin, log=None, no_cliques=False):
     """column-sifted master (search/LPSPEED.md).  The IPM's cost per iteration is ~ (columns)^1.5 here
     and only ~10 % of the columns ever carry weight, so: solve the LP over an ACTIVE column set (the
     previous support, this round's new columns, and whatever was priced in) with scipy highs-ipm, price
@@ -225,14 +279,16 @@ def _solve_restricted(self, margin, log=None):
     across rounds in self._active; columns that leave the support stay active until the set is trimmed
     (trim: drop zero-weight columns not added in the last 3 rounds).  The dual y and the multipliers
     are those of the master, which is what the loop's pricing and verifier need."""
-    A = self.matrix(); n = len(self.orbits); nr = len(self.rows); nl = self.nl
-    kc = self.kcoef(); c_full = np.concatenate([self.sizes, -kc])
+    A = self.matrix(); n = self.ncols(); npt = len(self.orbits); ncl = len(self.cliques)
+    nr = len(self.rows); nl = self.nl
+    kc = self.kcoef(); c_full = np.concatenate([self.costv(), -kc])
     lo = np.concatenate([np.zeros(n), [LAM_FREE if kc[j] == 0 else LAM_LO for j in range(nl)]])
     hi = np.concatenate([np.full(n, np.inf), [LAM_FREE if kc[j] == 0 else LAM_HI for j in range(nl)]])
     M = sp.hstack([A, -self.flagmat()]).tocsr(); Mt = M.T.tocsr(); b = np.full(nr, 1.0 + margin)
+    # the active set is over the POINT columns only; the (few) clique columns are always in
     act = getattr(self, '_active', None)
-    if act is None or len(act) != n:
-        new = np.zeros(n, dtype=bool)
+    if act is None or len(act) != npt:
+        new = np.zeros(npt, dtype=bool)
         if act is not None:
             new[:len(act)] = act; new[len(act):] = True         # columns added since the last solve are in
         elif n <= 3000: new[:] = True
@@ -240,20 +296,23 @@ def _solve_restricted(self, margin, log=None):
         # (run() seeds _active with the input certificate's support)
         act = new
     age = getattr(self, '_age', None)
-    if age is None or len(age) != n:
-        a2 = np.zeros(n, dtype=np.int64)
+    if age is None or len(age) != npt:
+        a2 = np.zeros(npt, dtype=np.int64)
         if age is not None: a2[:len(age)] = age
         age = a2
     # feasibility: every row needs an active column with a positive entry
-    Pb = A.copy(); Pb.data = (Pb.data > 0).astype(float)
-    unc = (Pb @ act.astype(float)) <= 0
+    Pb = A[:, :npt].copy(); Pb.data = (Pb.data > 0).astype(float)
+    fixed = (A[:, npt:] @ np.ones(ncl)) if ncl else np.zeros(nr)
+    unc = (Pb @ act.astype(float) + fixed) <= 0
     while unc.any():
         hits = Pb[unc].sum(axis=0).A1; j = int(np.argmax(hits))
         if hits[j] <= 0: break
         act[j] = True; unc &= (Pb[:, j].toarray().ravel() <= 0)
     passes = 0; t0 = time.time(); res = None
+    if no_cliques: act = act.copy()          # the matched pure solve must not disturb the master
     while True:
-        cols = np.concatenate([np.nonzero(act)[0], np.arange(n, n + nl)])
+        cols = np.concatenate([np.nonzero(act)[0], np.zeros(0, dtype=np.int64) if no_cliques else npt + np.arange(ncl),
+                               np.arange(n, n + nl)])
         Mc = M[:, cols].tocsr()
         bounds = [(l, None if not np.isfinite(h) else h) for l, h in zip(lo[cols], hi[cols])]
         with warnings.catch_warnings():
@@ -261,16 +320,24 @@ def _solve_restricted(self, margin, log=None):
             res = linprog(c=c_full[cols], A_ub=-Mc, b_ub=-b, bounds=bounds, method='highs-ipm', options=dict(T.HIGHS))
         passes += 1
         if not res.success: return None
+        # the matched pure solve must use exactly the master's own column set, or it prices in
+        # columns the clique solve never saw and comes out LOWER (measured: -0.09)
+        if no_cliques:
+            if os.environ.get('CQDBG'): print(f"    [matched] pure cols={len(cols)-nl} obj={res.fun:.6f}", flush=True)
+            break
         y = np.maximum(-res.ineqlin.marginals, 0.0)
         rc = c_full - (Mt @ y); rc[cols] = np.inf
-        neg = np.nonzero(rc[:n] < -RESTRICTED_TOL)[0]
-        if log: log(f"    restricted pass {passes}: {len(cols)-nl} cols obj={res.fun:.7f} neg_rc={len(neg)} min_rc={rc[:n].min() if len(neg) else 0:+.2e} t={time.time()-t0:.0f}s")
+        neg = np.nonzero(rc[:npt] < -RESTRICTED_TOL)[0]
+        if os.environ.get('CQDBG') and not no_cliques: print(f"    [main] pass {passes} cols={len(cols)-nl} obj={res.fun:.6f}", flush=True)
+        if log: log(f"    restricted pass {passes}: {len(cols)-nl} cols obj={res.fun:.7f} neg_rc={len(neg)} min_rc={rc[:npt].min() if len(neg) else 0:+.2e} t={time.time()-t0:.0f}s")
         if len(neg) == 0 or (RESTRICTED_PASSES and passes >= RESTRICTED_PASSES): break
         pick = neg[np.argsort(rc[neg])[:RESTRICTED_ADD]]; act[pick] = True; age[pick] = 0
     x = np.zeros(n); x[cols[:-nl]] = res.x[:-nl]; lam = np.array(res.x[-nl:])
+    if no_cliques: return res.fun, x, lam, np.maximum(-res.ineqlin.marginals, 0.0)
     # trim: zero-weight columns that have been idle for 3 rounds leave the master (they stay in the model and are priced every round)
-    age[act & (x <= 1e-12)] += 1; age[x > 1e-12] = 0
-    act &= ~((x <= 1e-12) & (age > 3))
+    xp = x[:npt]
+    age[act & (xp <= 1e-12)] += 1; age[xp > 1e-12] = 0
+    act &= ~((xp <= 1e-12) & (age > 3))
     self._active = act; self._age = age; self._restricted_info = dict(passes=passes, cols=int(act.sum()), neg_rc=int(len(neg)), t=time.time() - t0)
     return res.fun, x, lam, y
 BModel.solve_restricted = _solve_restricted
@@ -328,9 +395,28 @@ def export(m, x, lam, path, WD=10 ** 7, factor=1.0, up=True):
         w = int(math.ceil(v - 1e-9)) if up else int(math.floor(v))
         if w <= 0: continue
         for X, Y in o: lines.append(f"{X} {Y} {w}"); tot += w
+    cls = []; clw = []                                    # one file clique per image, same weight
+    n_orb = len(m.orb_int)
+    for j, imgs in enumerate(getattr(m, 'cliques', [])):
+        v = x[n_orb + j] * factor * WD
+        w = int(math.ceil(v - 1e-9)) if up else int(math.floor(v))
+        if w <= 0: continue
+        for im in imgs: cls.append(im); clw.append(w); tot += w
+    # Every anchor point is emitted as a ZERO-WEIGHT atom.  It carries no weight, but the sweep's
+    # cells are the atoms' breakpoints and a cell is credited only if it lies WHOLLY inside a piece:
+    # without them the cells straddle the boundary of {S : p in S} and of {S : A subseteq S} and a
+    # band around each loses the credit -- which is exactly where the covering is tight.
+    extra = set()
+    for cl in cls:
+        for anc in cl[0]:
+            for (vx, vy) in ([(anc[1], anc[2])] if anc[0] == 'P' else [(anc[1], anc[2]), (anc[3], anc[4])]):
+                gx = Fraction(vx) * m.D; gy = Fraction(vy) * m.D
+                if gx.denominator == 1 and gy.denominator == 1: extra.add((int(gx), int(gy)))
+    for (X, Y) in sorted(extra): lines.append(f"{X} {Y} 0")
     Ls = [int(math.floor(l * factor * WD)) if up else int(math.ceil(l * factor * WD)) for l in lam]
     with open(path, 'w') as f:
         f.write(f"{s.numerator} {s.denominator}\n{m.D}\n{WD}\n{len(lines)}\n" + "\n".join(lines) + "\n")
+        if cls: f.write(AC.block(cls, clw, m.D))
         f.write(f"region corner {m.rfrac.numerator} {m.rfrac.denominator}\nlambda {' '.join(str(L) for L in Ls)}\nk {' '.join(str(v) for v in (m.kvec if m.perbox else [m.kvec[0]]))}\n")
     return tot / WD, len(lines), np.array(Ls) / WD
 
@@ -404,6 +490,57 @@ def price_asym(m, y, pitch=0.02, want=200, ysup=1e-9):
     return cand
 
 
+CQ_MAX = int(os.environ.get('BRANCH_CQ_MAX', '400'))     # cap on the number of clique-orbit columns
+
+
+def price_cliques(m, y, x, want=40, thr=1e-7, pitch=0.01, top=600, fracs=(0.95, 0.85, 0.7, 0.55, 0.4, 0.25), log=None):
+    """Price anchor-clique columns `K(p, A)` on the current dual (search/anchorsep.py).
+
+    The dual `y` is a fractional packing on the rows (D4-averaged for a symmetric model), so the
+    reduced cost of the clique orbit is `|orbit| (1 - ybar(K))` and a column is worth adding iff
+    `ybar(K) > 1` -- which is the same statement as "the packing violates the clique constraint
+    `mu(K) <= 1`".  Candidates are wall points `p` (Lemma 1: nowhere else can a clique beat the
+    coverage row at `p`) on a grid, ranked by their coverage, each with the Lemma-2 anchors for
+    several `eps`; `K(p, A)` then contains the whole point clique of `p`, so the column dominates
+    the point column of `p` and what it adds is the dual mass of `{S : A subseteq S}` outside
+    `P_p`.  Returns (number added, best ybar seen, best ybar of the corresponding point row)."""
+    want = min(want, CQ_MAX - len(m.cliques))
+    if want <= 0 or not len(m.rows): return 0, None, None
+    Q = np.array(m.rows); sup = y > 1e-9
+    if not sup.any(): return 0, None, None
+    best = ASEP.separate(Q[sup], y[sup], float(Fraction(m.K, m.D)), m.D, pitch=pitch, top=top,
+                         fracs=fracs, sym=m.sym)
+    added = 0
+    for (mk, mp, params, cl) in best:
+        if mk <= 1.0 + thr or added >= want: break
+        if AC.key(cl) in m.ckey: continue
+        if m.add_clique(cl, params): added += 1
+    return added, (best[0][0] if best else None), (best[0][1] if best else None)
+
+
+def save_cliques(m, path):
+    """checkpoint the anchor-clique columns as their generating parameters (exact integers)"""
+    with open(path + ".tmp", 'w') as f:
+        f.write(f"{m.K} {m.D} {int(m.sym)}\n")
+        for p in m.cparams:
+            if p is not None: f.write(" ".join(str(int(v)) for v in p) + "\n")
+    os.replace(path + ".tmp", path)
+
+
+def load_cliques(m, path):
+    n = 0
+    with open(path) as f:
+        K, D, sym = (int(v) for v in f.readline().split())
+        assert K == m.K and D == m.D, f"clique file {path} is for container {K}/{D}, model is {m.K}/{m.D}"
+        sfr = Fraction(m.K, m.D)
+        for line in f:
+            q = [int(v) for v in line.split()]
+            if len(q) != 5: continue
+            cl = AC.kpa(sfr, m.D, q[0], q[1], q[2], q[3], q[4])
+            if cl is not None and m.add_clique(cl, tuple(q)): n += 1
+    return n
+
+
 def dump_dual(m, y, lam, val, path, thr=1e-9):
     """the LP dual at this round as a fractional packing: one line per row with y > thr,
     `cx cy theta h flag y`.  For a symmetric model the measure is y/8 on each D4 image of the
@@ -428,10 +565,10 @@ def write_lp_dump(m, margin, path, val=None, x=None, lam=None, y=None):
     """the LP of this round, exactly as solve() builds it, as `path.npz` + `path_A.npz`:
     min c.z  s.t.  M z >= b,  lo <= z <= hi,  z = (x, lambda);  M = [A, -F] (csr), plus the row keys
     and flags, and the solution if given.  Read back with load_lp_dump()."""
-    A = m.matrix(); n = len(m.orbits); nr = len(m.rows); nl = self_nl = m.nl
+    A = m.matrix(); n = m.ncols(); nr = len(m.rows); nl = m.nl
     M = sp.hstack([A, -m.flagmat()]).tocsr()
     kc = m.kcoef()
-    c = np.concatenate([m.sizes, -kc])
+    c = np.concatenate([m.costv(), -kc])
     lo = np.concatenate([np.zeros(n), [LAM_FREE if kc[j] == 0 else LAM_LO for j in range(nl)]])
     hi = np.concatenate([np.full(n, np.inf), [LAM_FREE if kc[j] == 0 else LAM_HI for j in range(nl)]])
     b = np.full(nr, 1.0 + margin)
@@ -465,7 +602,8 @@ def load_cols(m, path, raw=False):
 
 
 def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe_margin=None, x0=None,
-         prune_at=None, colgen=0, cg_want=200, cg_pitch=0.01, n=12, threads=None, dump_lp=None):
+         prune_at=None, colgen=0, cg_want=200, cg_pitch=0.01, n=12, threads=None, dump_lp=None,
+         cliques=0, cq_want=40, cq_pitch=0.01, matched=False):
     """cutting-plane loop; returns (x, lam, obj, info).  Asymmetric models sweep [0,90deg), i.e.
     2.4x the bins: fewer witnesses per bin and a higher prune threshold keep the row set stable
     (pruning every round makes the LP vertex jump and the dropped rows come straight back)."""
@@ -478,36 +616,54 @@ def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe
         t1 = time.time(); out = m.solve(margin); t_lp = time.time() - t1
         if out is None:
             log(f"  it{it} LP infeasible/failed (rows={len(m.rows)})"); return None, None, None, dict(status='infeasible')
-        val, x, lam, y = out; tw = float(m.sizes @ x)
+        val, x, lam, y = out; tw = float(m.costv() @ x)
+        # the matched pure value: the SAME master with the clique columns removed.  It has to run
+        # here, before this round's column generation: a column added in between is marked active
+        # by the next solve, and the "pure" LP then has MORE columns than the clique one and comes
+        # out lower (measured: 328 columns against 168, and a gain of -0.02).
+        pureval = None
+        if matched and m.cliques and SOLVER == 'restricted':
+            o2 = m.solve_restricted(margin, no_cliques=True)
+            if o2 is not None: pureval = o2[0]
         dump_dual(m, y, lam, val, f"runs/branch_{tag}_dual.txt")
         if dump_lp: write_lp_dump(m, margin, f"{dump_lp}_it{it}", val=val, x=x, lam=lam, y=y)
         export(m, x, lam, tmp, WD=10 ** 12, factor=1.0 / (1.0 + probe_margin), up=False)
         t1 = time.time(); mv, ok = T.run_verifier(tmp, N, topk=topk, sep=sep, n=n, threads=threads or T.NPROC); t_ver = time.time() - t1
         wit = read_witnesses(sep, N) if os.path.exists(sep) else []
         if os.path.exists(sep): os.remove(sep)
-        nz = int((x > 1e-12).sum()); natoms = int(m.sizes[x > 1e-12].sum())
-        ncol = 0; Mcov = None; t_cg = 0.0
+        n_orb = len(m.orb_int); xo = x[:n_orb]
+        nz = int((xo > 1e-12).sum()); natoms = int(m.sizes[xo > 1e-12].sum())
+        ncol = 0; Mcov = None; t_cg = 0.0; cand = []
         if it < colgen:
             t1 = time.time()
             cand = T.price(m, y, pitch=cg_pitch, want=cg_want) if m.sym else price_asym(m, y, pitch=max(cg_pitch, 0.02), want=cg_want)
             Mcov = cand[0][0] if cand else 1.0
             for (cv, X, Y) in cand: ncol += m.add_orbit(X, Y)
             t_cg = time.time() - t1
+        wcl = float(m.csizes[:len(x) - n_orb] @ x[n_orb:]) if len(x) > n_orb else 0.0
+        ncl_used = int((x[n_orb:] > 1e-12).sum()) if len(x) > n_orb else 0
+        ncq = 0; cqmass = None; cqpt = None; t_cq = 0.0
+        if it < cliques:
+            t1 = time.time(); ncq, cqmass, cqpt = price_cliques(m, y, x, want=cq_want, pitch=cq_pitch); t_cq = time.time() - t1
         t1 = time.time(); added = m.add_rows(wit); t_rows = time.time() - t1
         save_cols(m, f"runs/branch_{tag}_cols.txt")          # checkpoint: every column, weight or not, so a restart loses nothing
+        if m.cliques: save_cliques(m, f"runs/branch_{tag}_cliques.txt")
         nR = sum(1 for f in m.rflag if f)
         lamtxt = ",".join(f"{l:+.4f}" for l in lam)
         ri = getattr(m, '_restricted_info', None) if SOLVER == 'restricted' else None
         log(f"  it{it} total={tw:.6f} lam=[{lamtxt}] obj={val:.6f} probe_min={float(mv):.7f} viol={len(wit)} new_rows={added} rows={len(m.rows)} (inR {nR}) support={nz} cols/{natoms} atoms"
-            + (f" dualcov={Mcov:.4f} new_cols={ncol} cols={len(m.orbits)}" if Mcov is not None else "") + f" t={time.time()-t0:.0f}s [lp {t_lp:.0f}s ver {t_ver:.0f}s cg {t_cg:.0f}s rows {t_rows:.0f}s]"
+            + (f" dualcov={Mcov:.4f} new_cols={ncol} cols={len(m.orbits)}" if Mcov is not None else "")
+            + (f" pure={pureval:.6f} gain={pureval - val:+.6f}" if pureval is not None else "")
+            + (f" cliques={len(m.cliques)} (+{ncq}, used {ncl_used}, weight {wcl:.6f}" + (f", ybar {cqmass:.4f} vs point {cqpt:.4f})" if cqmass is not None else ")") if (m.cliques or ncq) else "")
+            + f" t={time.time()-t0:.0f}s [lp {t_lp:.0f}s ver {t_ver:.0f}s cg {t_cg:.0f}s cq {t_cq:.0f}s rows {t_rows:.0f}s]"
             + (f" [restricted: {ri['cols']} active cols, {ri['passes']} passes, {ri['neg_rc']} neg rc left]" if ri else ""))
-        if added == 0 and mv >= 1 and ncol == 0: break
+        if added == 0 and mv >= 1 and ncol == 0 and ncq == 0: break
         if len(m.rows) > prune_at:
             # keep rows with positive dual, rows that are nearly tight (zero dual but no slack --
             # pruning those re-violates them next round and the loop cycles), the rows added this
             # iteration (y does not cover them; x does not cover this iteration's new columns), and
             # the most recent 30000
-            xp = np.zeros(len(m.orbits)); xp[:len(x)] = x
+            xp = np.zeros(m.ncols()); xp[:len(x)] = x
             A = m.matrix(); ny = len(y)
             slack = A[:ny] @ xp - (m.flagmat()[:ny] @ lam) - (1.0 + margin)
             keep = np.ones(len(m.rows), dtype=bool); keep[:ny] = (y > 1e-12) | (slack < 2e-2); keep[-15000:] = True
@@ -537,7 +693,8 @@ def finalize(m, x, lam, tag, out_path, N=6000, log=print, WD=10 ** 7, margin=2e-
 
 
 def run(cert, tag, kreg, r, Dp=None, mul=1, N=6000, topk=6, margin=2e-6, log=print, warm=True, out=None,
-        colgen=0, cg_want=200, cg_pitch=0.01, n=12, threads=None, cols=None, warm_thr=1.05, prune_at=None, row_grid=None, max_iters=None, dump_lp=None, cols_raw=False):
+        colgen=0, cg_want=200, cg_pitch=0.01, n=12, threads=None, cols=None, warm_thr=1.05, prune_at=None, row_grid=None, max_iters=None, dump_lp=None, cols_raw=False,
+        cliques=0, cq_want=40, cq_load=None, cq_pitch=0.01, matched=False):
     m, w0, s = build_model(cert, r, kreg, Dp, mul, raw_points=cols_raw)
     if row_grid: m.row_grid = tuple(row_grid)
     log(f"[{tag}] {cert}: {len(m.orbits)} columns / {len(m.P)} atoms ({'D4 orbits' if m.sym else 'single points'}), container {s} = {float(s):.7f}, r = {m.rfrac} = {m.r:.4f}, k = {kreg}, input total {float(m.sizes @ w0):.6f}")
@@ -547,13 +704,15 @@ def run(cert, tag, kreg, r, Dp=None, mul=1, N=6000, topk=6, margin=2e-6, log=pri
         m.add_rows(lr); log(f"[{tag}] warm start: {len(m.rows)} lattice rows (capture < {warm_thr} under the input weights), {sum(1 for f in m.rflag if f)} in boxes ({time.time()-t0:.0f}s)")
     for cf in (cols or []):
         nc = load_cols(m, cf, raw=cols_raw); log(f"[{tag}] columns from {cf}{' (raw)' if cols_raw else ''}: +{nc} -> {len(m.orbits)} columns")
+    for cf in (cq_load or []):
+        nc = load_cliques(m, cf); log(f"[{tag}] anchor cliques from {cf}: +{nc} -> {len(m.cliques)} clique columns")
     if SOLVER == 'restricted':
         # the restricted master starts from the input certificate's support; checkpoint columns (mostly
         # dead) are in the model but priced in only when their reduced cost says so
         m._active = np.concatenate([w0 > 0, np.zeros(len(m.orbits) - len(w0), dtype=bool)])
         log(f"[{tag}] restricted master: {int(m._active.sum())} of {len(m.orbits)} columns active at start")
     x, lam, val, info = loop(m, tag, margin=margin, N=N, topk=topk, log=log, colgen=colgen, cg_want=cg_want, cg_pitch=cg_pitch, n=n, threads=threads, prune_at=prune_at,
-                             max_iters=max_iters if max_iters is not None else 400, dump_lp=dump_lp)
+                             max_iters=max_iters if max_iters is not None else 400, dump_lp=dump_lp, cliques=cliques, cq_want=cq_want, cq_pitch=cq_pitch, matched=matched)
     if x is None: log(f"[{tag}] FAILED"); return None
     if max_iters is not None:
         log(f"[{tag}] stopped after {info.get('iters')} rounds (--max-iters): LP value {val:.7f}, dual in runs/branch_{tag}_dual.txt; no finalize")
@@ -584,13 +743,20 @@ def main():
     ap.add_argument('--warm-thr', type=float, default=1.05, help='warm start with lattice poses capturing < this under the input weights (use ~3 when restarting from a converged probe)')
     ap.add_argument('--prune-at', type=int, default=None, help='prune the row set when it exceeds this (default 40000 symmetric / 60000 asymmetric; asymmetric leaves converge better unpruned)')
     ap.add_argument('--lam-hi', type=float, default=None, help='upper bound on the multipliers (default 1.5; the k = 4 leaf sits at the cap, so a higher cap can only lower its value)')
+    ap.add_argument('--lam-lo', type=float, default=None, help='lower bound on the multipliers (default -1); --lam-lo 0 --lam-hi 0 pins every multiplier at 0, i.e. runs the PURE cover LP with a vacuous trailer')
     ap.add_argument('--max-iters', type=int, default=None, help='stop the cutting-plane loop after this many rounds and skip finalize (diagnostic runs: the dual of every round is in runs/branch_TAG_dual.txt)')
     ap.add_argument('--row-grid', type=float, nargs=2, default=None, metavar=('POS', 'ANG'), help='merge rows whose centre/angle agree to this resolution (default 1e-7 1e-8; e.g. 0.002 0.005 keeps the LP small)')
     ap.add_argument('--cols-raw', action='store_true', help='asymmetric leaves: take the certificate\'s and --cols\' points as they are (no D4 images); use when restarting a leaf from its own probe + checkpoint, which already list every column')
+    ap.add_argument('--cliques', type=int, default=0, metavar='ROUNDS', help='price anchor-clique columns K(p,A) (search/anchorclique.py, certificates/FORMAT.md) for this many rounds')
+    ap.add_argument('--cq-want', type=int, default=40, help='anchor-clique columns added per round (default 40)')
+    ap.add_argument('--matched', action='store_true', help='every round, also solve the SAME LP with the clique columns removed and log the pure value and the gain (search/CLIQUE_CONTINUUM.md calls this a matched pair)')
+    ap.add_argument('--cq-pitch', type=float, default=0.01, help='grid pitch of the anchor-clique separator (default 0.01)')
+    ap.add_argument('--cq-load', action='append', default=None, help='anchor-clique checkpoint file(s) (runs/branch_TAG_cliques.txt) to start from')
     ap.add_argument('--dump-lp', default=None, metavar='PREFIX', help='write the LP of every round of the cutting-plane loop as PREFIX_itN.npz + PREFIX_itN_A.npz (see write_lp_dump / load_lp_dump; used by search/lp_bench.py)')
     a = ap.parse_args()
-    global LAM_HI
+    global LAM_HI, LAM_LO
     if a.lam_hi is not None: LAM_HI = float(a.lam_hi)
+    if a.lam_lo is not None: LAM_LO = float(a.lam_lo)
     r = Fraction(a.r); assert (2 * r - 1) ** 2 < 2, "r too large: (2r-1)^2 < 2 needed"
     kreg = parse_k(a.k)
     T.HIGHS['random_seed'] = a.seed
@@ -600,7 +766,8 @@ def main():
         print(msg, flush=True); lf.write(msg + '\n'); lf.flush()
     log(f"branch.py {' '.join(sys.argv[1:])}")
     res = run(a.cert, a.tag, kreg, r, Dp=a.Dp, mul=a.mul, N=a.N, topk=a.topk, margin=a.margin, log=log, warm=not a.no_warm, out=a.out,
-              colgen=a.colgen, cg_want=a.cg_want, cg_pitch=a.cg_pitch, n=a.n, threads=a.threads, cols=a.cols, warm_thr=a.warm_thr, prune_at=a.prune_at, row_grid=a.row_grid, max_iters=a.max_iters, dump_lp=a.dump_lp, cols_raw=a.cols_raw)
+              colgen=a.colgen, cg_want=a.cg_want, cg_pitch=a.cg_pitch, n=a.n, threads=a.threads, cols=a.cols, warm_thr=a.warm_thr, prune_at=a.prune_at, row_grid=a.row_grid, max_iters=a.max_iters, dump_lp=a.dump_lp, cols_raw=a.cols_raw,
+              cliques=a.cliques, cq_want=a.cq_want, cq_load=a.cq_load, cq_pitch=a.cq_pitch, matched=a.matched)
     if res: json.dump(res, open(f"runs/branch_{a.tag}.json", 'w'), indent=1)
 
 

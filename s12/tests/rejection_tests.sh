@@ -352,5 +352,137 @@ check "one box shifted by 0.9 (cores apart)"       ERROR   $T/t20a.txt 12
 awk 'f && NF==2 {print 0, $2; next} /^cliques/{f=1} {print}' "$B" > $T/t20b.txt
 check "clique weights zeroed"                     VERIFIED $T/t20b.txt 12
 
+echo "-- anchor cliques: the anchors block (FORMAT.md, 'Anchor cliques'; notes/clique-family.md)"
+# 21. The point clique of (2,2) written as a one-piece anchor clique of weight 1/5: harmless
+#     (total 11.4 for n=13), reported as an anchor-clique certificate, full [0,90) sweep.
+( cat "$C"; printf 'anchors 1 1\nanchorP 800 800 400\n1 1\npiece 0 0\n' ) > $T/t21a.txt
+check "point clique as an anchor clique, n=13"    VERIFIED $T/t21a.txt 13
+expect_out "  ...reported as an anchor-clique certificate" "^ANCHOR-CLIQUE certificate: 1 cliques with 1 pieces"
+expect_out "  ...swept over [0,90) deg"             "angles cover \[0,90) deg"
+expect_out "  ...total counts the clique (11.4)"    "total weight (points + cliques) = 57/5"
+#     the clique weight counts in the total: 4/5 more makes 12 = n
+( cat "$C"; printf 'anchors 1 1\nanchorP 800 800 400\n4 1\npiece 0 0\n' ) > $T/t21b.txt
+check "anchor weight 4/5: total reaches 12"        REJECT  $T/t21b.txt 12
+expect_out "  ...for the stated reason"             "^WEIGHT NOT"
+# 22. THE CREDIT IS EXACT, NOT APPROXIMATE.  Delete the point (375,395) -- the file then fails with
+#     4/5 -- and put an anchor clique of the same weight at exactly that point: the point clique of
+#     p is credited to exactly the same poses, so the file verifies again with min 5/5.  Displace
+#     the anchor by 0.05 instead and it must NOT verify: the cells that straddle the boundary of
+#     the piece get nothing (a verifier that credited a cell merely MEETING a piece would pass).
+awk 'NR==4{print $1-1; next} NR==5{next} {print}' "$C" > $T/t22a.txt
+check "one point deleted (baseline)"              REJECT  $T/t22a.txt 12
+( cat $T/t22a.txt; printf 'anchors 1 1\nanchorP 375 395 400\n1 1\npiece 0 0\n' ) > $T/t22b.txt
+check "  ...replaced by its exact point clique"    VERIFIED $T/t22b.txt 12
+expect_out "  ...and the minimum is back to 1"      "min covered weight over ALL placements = 5/5"
+( cat $T/t22a.txt; printf 'anchors 1 1\nanchorP 395 395 400\n1 1\npiece 0 0\n' ) > $T/t22c.txt
+check "  ...anchor displaced by 0.05: straddling"  REJECT  $T/t22c.txt 12
+# 23. A two-piece K(p, A) with A a transversal segment: valid, and the filter is really tested --
+#     with A moved far away the first piece is empty (no square contains p and meets A), so the
+#     deleted point is NOT recovered and the file stays rejected.
+( cat "$C"; printf 'anchors 2 1\nanchorP 800 800 400\nanchorS 820 760 820 840 400\n1 2\npiece 0 1 1\npiece 1 0\n' ) > $T/t23a.txt
+check "K(p,A), p=(2,2), A a segment at x=2.05"     VERIFIED $T/t23a.txt 13
+expect_out "  ...two pieces over two anchors"       "^ANCHOR-CLIQUE certificate: 1 cliques with 2 pieces over 2 anchors (1 segments"
+( cat $T/t22a.txt; printf 'anchors 2 1\nanchorP 375 395 400\nanchorS 1400 400 1400 800 400\n1 2\npiece 0 1 1\npiece 1 0\n' ) > $T/t23b.txt
+check "  ...unmeetable filter: no credit at p"     REJECT  $T/t23b.txt 12
+# 24. Well-formedness.  Every one of these is an ERROR (no verdict), not a rejection.
+( cat "$C"; printf 'anchors 2 1\nanchorP 800 800 400\nanchorS 820 760 820 840 400\n1 2\npiece 0 0\npiece 1 0\n' ) > $T/t24a.txt
+check "pieces that neither meet nor filter"        ERROR   $T/t24a.txt 13
+( cat "$C"; printf 'anchors 1 1\nanchorP 800 800 400\n1 1\npiece 0 1 0\n' ) > $T/t24b.txt
+check "a piece whose filter names its own anchor"  ERROR   $T/t24b.txt 13
+( cat "$C"; printf 'anchors 1 1\nanchorP 800 800 400\n1 1\npiece 0 1 1\n' ) > $T/t24c.txt
+check "a filter naming a missing anchor"           ERROR   $T/t24c.txt 13
+( cat "$C"; printf 'anchors 1 1\nanchorP 800 800 400\n1 1\npiece 1 0\n' ) > $T/t24d.txt
+check "a piece naming a missing anchor"            ERROR   $T/t24d.txt 13
+( cat "$C"; printf 'anchors 1 1\nanchorS 1500 800 1600 800 400\n1 1\npiece 0 0\n' ) > $T/t24e.txt
+check "a segment anchor outside the container"     ERROR   $T/t24e.txt 13
+( cat "$C"; printf 'anchors 1 1\nanchorP 800 -800 400\n1 1\npiece 0 0\n' ) > $T/t24f.txt
+check "a point anchor with a negative coordinate"  ERROR   $T/t24f.txt 13
+( cat "$C"; printf 'anchors 1 1\nanchorP 800 800 400\n-1 1\npiece 0 0\n' ) > $T/t24g.txt
+check "negative anchor-clique weight"              ERROR   $T/t24g.txt 13
+( cat "$C"; printf 'anchors 1 1\nanchorP 800 800 400\n1 0\n' ) > $T/t24h.txt
+check "an anchor clique with no pieces"            ERROR   $T/t24h.txt 13
+( cat "$C"; printf 'anchors 1 1\nanchorP 800 800 0\n1 1\npiece 0 0\n' ) > $T/t24i.txt
+check "anchor denominator 0"                       ERROR   $T/t24i.txt 13
+( cat "$C"; printf 'anchors 1 2\nanchorP 800 800 400\n1 1\npiece 0 0\n' ) > $T/t24j.txt
+check "two cliques declared, one given"            ERROR   $T/t24j.txt 13
+( cat "$C"; printf 'anchors 1 1\nanchorX 800 800 400\n1 1\npiece 0 0\n' ) > $T/t24k.txt
+check "an unknown anchor keyword"                  ERROR   $T/t24k.txt 13
+( cat "$C"; printf 'anchors 1 1\nanchorP 800 800 400\n1 1\npeace 0 0\n' ) > $T/t24l.txt
+check "a misspelt piece keyword"                   ERROR   $T/t24l.txt 13
+( cat "$C"; printf 'anchors 0 1\n1 1\npiece 0 0\n' ) > $T/t24m.txt
+check "an anchors block with no anchors"           ERROR   $T/t24m.txt 13
+( cat "$C"; printf 'region corner 6 5\nlambda 0\nk 4\nanchors 1 1\nanchorP 800 800 400\n1 1\npiece 0 0\n' ) > $T/t24n.txt
+check "anchors block after the region trailer"     ERROR   $T/t24n.txt 13
+( cat "$C"; printf 'anchors 1 1\nanchorP 800 800 400\n1 1\npiece 0 0\nregion corner 6 5\nlambda 0\nk 4\n' ) > $T/t24o.txt
+check "anchors block, then region trailer"         VERIFIED $T/t24o.txt 13
+expect_out "  ...reported as branch k=4"            "^VERIFIED: (branch k=4)"
+# 25. Zeroed anchor weights: the points alone must still verify (no leak of clique weight), and a
+#     clique of weight 1 sitting where nothing fails must not repair the one-point-deleted mutant.
+( cat "$C"; printf 'anchors 1 1\nanchorP 800 800 400\n0 1\npiece 0 0\n' ) > $T/t25a.txt
+check "anchor weights zeroed"                     VERIFIED $T/t25a.txt 12
+( cat $T/t1.txt; printf 'anchors 1 1\nanchorP 800 800 400\n5 1\npiece 0 0\n' ) > $T/t25b.txt
+check "deleted point + anchor clique elsewhere"   REJECT  $T/t25b.txt 12 8 $T/t25b.sep
+if python3 - $T/t25b.sep <<'EOF2'
+import sys
+rows = [l.split() for l in open(sys.argv[1]) if l.strip()]
+ok = rows and all(len(q) == 5 and q[4] == '0' for q in rows)
+print("      %d witnesses, all flagged 0: %s" % (len(rows), ok)); sys.exit(0 if ok else 1)
+EOF2
+then ok "  ...witnesses all flagged 0" "yes"; else bad "  ...witnesses all flagged 0" "no" "yes"; fi
+# 26. Both blocks at once: a box clique and an anchor clique, and the totals add.
+( cat "$C"; printf 'cliques 2000 1000 1\n1 1\n0 1890 1910 1890 1910\nanchors 1 1\nanchorP 800 800 400\n1 1\npiece 0 0\n' ) > $T/t26a.txt
+check "a box clique and an anchor clique together" VERIFIED $T/t26a.txt 13
+expect_out "  ...both blocks reported"              "^ANCHOR-CLIQUE certificate: 1 cliques"
+expect_out "  ...total counts both (11.6)"          "total weight (points + cliques) = 58/5"
+
+# 27. The independent exact checker must agree, cell by cell, on the same files (N = 400, both
+#     exhaustive): xcheck.py re-derives the anchor predicates in Fractions with the anchors
+#     inflated, so it credits at least what the Rust credits -- equality is the check.
+cmpmin() {  # name, file, n, [N]
+  NN=${4:-400}
+  $V "$2" "$3" $NN 4 0 > $T/cmp.rust 2>&1
+  python3 xcheck.py "$2" $NN --all --n "$3" -j 4 > $T/cmp.py 2>&1
+  if python3 - $T/cmp.rust $T/cmp.py <<'EOF3'
+import sys, re
+def get(p, pat):
+    for l in open(p):
+        m = re.search(pat, l)
+        if m: return float(m.group(1))
+    return None
+a = get(sys.argv[1], r"min covered weight.*= (-?[0-9.]+)\s+\(at angle")
+b = get(sys.argv[2], r"minimum covered weight.*= (-?[0-9.]+)\s")
+print("      rust %s   xcheck %s" % (a, b))
+sys.exit(0 if a is not None and b is not None and abs(a-b) < 1e-6 else 1)
+EOF3
+  then ok "$1" "agree"; else bad "$1" "differ" "same minimum"; fi
+}
+cmpmin "xcheck agrees: point clique as anchor clique" $T/t21a.txt 13
+cmpmin "xcheck agrees: exact point clique replacement" $T/t22b.txt 12
+cmpmin "xcheck agrees: displaced anchor (rejected)"   $T/t22c.txt 12
+cmpmin "xcheck agrees: K(p,A) with a segment filter"  $T/t23a.txt 13
+cmpmin "xcheck agrees: unmeetable filter"             $T/t23b.txt 12
+cmpmin "xcheck agrees: box + anchor cliques together" $T/t26a.txt 13 2000
+
+# 28. The shipped anchor-clique demonstration (FORMAT.md).  It needs N = 6000 (the 224 points it
+#     is built from do not cover at N = 2000), so these three run the verifier directly.
+A=certificates/s12_anchorclique_demo_3.9318.txt
+runN() {  # file, n, N -> $got
+  $V "$1" "$2" "$3" 4 0 >"$LAST" 2>&1; rc=$?
+  if grep -q 'panicked at' "$LAST" || [ "$rc" -ge 100 ]; then got=PANIC; panics=$((panics+1))
+  elif grep -q '^NOT VERIFIED' "$LAST"; then got=REJECT
+  elif grep -q '^VERIFIED:' "$LAST" && [ "$rc" -eq 0 ]; then got=VERIFIED
+  elif [ "$rc" -ne 0 ] && ! grep -q 'VERIFIED' "$LAST"; then got=ERROR
+  else got="UNKNOWN(rc=$rc)"; fi
+}
+checkN() { runN "$3" "$4" "$5"; if [ "$got" = "$2" ]; then ok "$1" "$got"; else bad "$1" "$got" "$2"; fi; }
+checkN "shipped anchor-clique demo (N=6000)"      VERIFIED "$A" 12 6000
+expect_out "  ...one clique of two pieces"          "^ANCHOR-CLIQUE certificate: 1 cliques with 2 pieces"
+#     the clique is load-bearing: zero its weight and the covering breaks (a box clique never was)
+sed 's/^1198148 2$/0 2/' "$A" > $T/t28a.txt
+checkN "  ...clique weight zeroed: covering breaks" REJECT  $T/t28a.txt 12 6000
+#     move the anchor point by 0.05: the piece no longer holds the poses through p
+sed 's/^anchorP 1375 3875 1994$/anchorP 1475 3875 1994/' "$A" > $T/t28b.txt
+checkN "  ...anchor point displaced by 0.05"        REJECT  $T/t28b.txt 12 6000
+
 echo "  ---- $pass passed, $fail failed, $panics panics"
 [ "$fail" -eq 0 ] && [ "$panics" -eq 0 ]

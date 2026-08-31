@@ -42,6 +42,12 @@ echo "=== box-clique demonstration certificate (points + 8 clique orbits; FORMAT
 chk $V certificates/s12_boxclique_demo_3.9318_N2000.txt 12 2000 "$(nproc)" 0
 python3 xcheck.py certificates/s12_boxclique_demo_3.9318_N2000.txt 2000 --all --n 12
 echo
+echo "=== anchor-clique demonstration certificate (223 points + 3 zero-weight anchor atoms + one"
+echo "    K(p,A); the clique carries 0.1198 of the total and IS load-bearing; FORMAT.md 'Anchor"
+echo "    cliques'.  Unlike a box clique it does not refer to the angle net, so any N works) ==="
+chk $V certificates/s12_anchorclique_demo_3.9318.txt 12 6000 "$(nproc)" 0
+chk $V certificates/s12_anchorclique_demo_3.9318.txt 12 12000 "$(nproc)" 0
+echo
 echo "=== independent exact re-check (Python, exact rationals, EVERY angle bin) ==="
 # Exhaustive: all 829 bins of the N=2000 net (the same net the Rust run above used, so the
 # per-bin minima are directly comparable).  56 points -> well under a minute even on 2 cores;
