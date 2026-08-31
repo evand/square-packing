@@ -247,7 +247,9 @@ atoms=248 total weight (points + cliques) = 11.983445; min covered = 1.000002; V
 ```
 
 so the block passes the Lemma-0 refusal, leaks no weight at weight 0, and is accounted for exactly
-at positive weight.  `tests/rejection_tests.sh` (136 checks) still passes unchanged.
+at positive weight.  `xcheck.py runs/J14_kseg_w10.txt 6000 200 --n 12` agrees exactly —
+`5000011/5000000 = 1.0000022` against the Rust's `10000022/10000000`, "Lemma 0 checked exactly for
+every pair of pieces" — and `tests/rejection_tests.sh` (136 checks) still passes unchanged.
 
 ## 3. Step 1 — the ladder with a correct pricer
 
