@@ -80,7 +80,10 @@ matter:
 | six of the files re-checked with `xcheck.py` | same minimum | independent implementation |
 
 **`xcheck.py`** re-derives both predicates in `Fraction`s with the anchors inflated (exact `σ_k`,
-exact anchor coordinates, no outward rounding), so it credits at least what the Rust credits.  One
+exact anchor coordinates, no outward rounding), so it credits at least what the Rust credits.  On
+the shipped demonstration certificate (§3a) an **exhaustive** run — all 6000 bins of the `N = 6000`
+net, 1783 s — gives minimum covered weight `5000011/5000000 = 1.0000022`, exactly the Rust's
+`10000022/10000000`; the two implementations agree cell for cell on a real anchor certificate.  One
 real defect was found this way and fixed: the verifier's `y`-breakpoints contain `ylo` and `yhi`,
 so its cells never stick out of the admissible range, while `xcheck`'s did — the anchor credit now
 sees the clipped cell.  Before the fix the two disagreed (`4/5` against `5/5`) on the
