@@ -95,7 +95,10 @@ Liang–Barsky clipping for `meets`).  **0 failures.**
 `Classical.choice`, `Quot.sound` — unchanged): `clique_of_anchors` is Lemma 0 (three-way case
 split, no geometry), and `packing_le_weight_anchor_cliques` instantiates
 `packing_le_weight_cliques` with it, so the reduction from an anchor-clique certificate to
-`n ≤ Σ w + Σ v` is machine-checked end to end.
+`n ≤ Σ w + Σ v` is machine-checked end to end.  A gap left by the box-clique work is closed at the
+same time: the leaf certificate is a *branch* certificate carrying a clique block, and that
+combination had no theorem — `packing_le_weight_regions_cliques` now proves
+`n + Σ_j λ_j·#{i : pose_i ∈ R_j} ≤ Σ w + Σ v`, which is exactly what such a file asserts.
 
 ## 3. The LP side
 
