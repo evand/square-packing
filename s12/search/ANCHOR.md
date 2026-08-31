@@ -313,9 +313,9 @@ python3 search/anchorstress.py --n 40000 --samples 25
 M=/home/evand/math/square-packing/s12/runs
 python3 search/anchorsep.py $M/branch_t398hk4_dual_it16.txt --pitch 0.01 --out runs/cq_seed_k4.txt
 python3 search/anchordemo.py certificates/s12_lower_3.931795_sparse.txt out.txt --i 0 --D 1994
-# the k = 4 leaf (runs/leafk4h.sh; `runs/` is gitignored, so the command in full):
-BRANCH_SOLVER=restricted BRANCH_RESTRICTED_PASSES=0 BRANCH_CQ_MAX=3000 \
-python3 search/branch.py runs/branch_t398ik4g_probe.txt t398ik4h --k 4 --r 1 --N 2000 \
-    --cols runs/branch_t398ik4g_cols.txt --warm-thr 3 --cliques 400 --colgen 400 --cq-want 60 \
-    --cq-load runs/cq_seed_g.txt --prune-at 250000 --topk 3 --threads 8
+# the k = 4 leaf (`runs/` is gitignored, so the command in full; add --matched for the pair):
+BRANCH_SOLVER=restricted BRANCH_RESTRICTED_PASSES=2 BRANCH_CQ_MAX=3000 \
+python3 search/branch.py runs/branch_t398ik4n_probe.txt t398ik4p --k 4 --r 1 --N 2000 \
+    --cols runs/branch_t398ik4n_cols.txt --warm-thr 3 --cliques 400 --colgen 400 --cq-want 60 \
+    --cq-load runs/branch_t398ik4n_cliques.txt --prune-at 250000 --topk 3 --threads 8
 ```
