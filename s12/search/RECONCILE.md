@@ -23,11 +23,25 @@ gain of `0.104–0.120` at `t = 3.99`; task I measured a cover-side gain of `0.0
 0.0004` at the `t = 3.98` leaf.  Both cannot be a property of one instance, so the question is
 which of *pose set* and *separation depth* accounts for the difference.
 
-**Answer, in one line: the pose set — and the reason is a pricing defect.  Task G's clique LP is
-column-starved, because in the `h = 0` (exact-centre) path of `clique_continuum.py` the pose
-pricer ranks candidates by *capture*, which is the pure LP's reduced cost, while 85 % of the
-clique LP's dual weight sits on the cut rows the pricer never sees.  Measured: of the 540 poses
-that pricer adds per stage, **zero** have positive reduced cost in the clique LP.**
+**Answer: both, and neither published number is the anchor family's number.**
+
+* **Task G's `0.10–0.12` is inflated, twice over.**  Its clique LP is column-starved — the `h = 0`
+  pose pricer ranks candidates by *capture*, which is the *pure* LP's reduced cost, and never sees
+  the cut duals, so the "8.5× pose refinement" of `CLIQUE_CONTINUUM.md` §2 added ~5900 orbits the
+  clique LP could not use (§1d).  And its matched pure value is computed on a row set converged
+  only for the clique solution, which makes it an upper bound: on task G's own pose set the honest
+  matched gain is `0.066`, not `0.124` (§3).
+* **Task I's `0.0004` is deflated, by a search restriction.**  `anchorsep.separate` scans only
+  wall points with a wall-perpendicular anchor, because Lemma 1 was read as "nowhere else can a
+  clique help".  Lemma 1 says an interior point clique cannot be *enlarged*; it does not say a
+  differently shaped clique there cannot be *violated* — and on the very packing that pins the
+  `k = 4` leaf, **every one of the 1265 violated cliques found sits at wall distance `>= 1`**, with
+  `ȳ(K)` up to `1.143` against task I's best of `1.054` (§2).  Fixing the separator raises the
+  cover-side matched gain on the same run from `≈ 0.000` to `+0.05` (§5).
+* **The family is much stronger than either task reported.**  On the exactly certified extremal
+  measure at `t = 3.99` the best *certifiable, certificate-representable* anchor clique is
+  `1.220`, against the `1.024` of `CLIQUE_CONTINUUM.md` §4 and the `1.327` of the *unrestricted*
+  cliques of `search/CLIQUE.md` (§2).  Independently re-verified pair by pair.
 
 ## 1. Step 1 — the same instance on both sides
 
@@ -40,7 +54,7 @@ was rebuilt from what task G left behind: the `r10` support of `runs/cq_A99sw5_s
 arrangement-vertex certifier (`packing_dual.Model.certify`) and the same separator
 (`clique_continuum.separate`) run to convergence.  The support contains an optimal basis of the
 stage, so this reproduces the stage's LP value; it is not the 4739-orbit pose set (a faithful
-replay of that is §1e).
+replay of that run, `runs/cq_JG99*`, is in §4).
 
 ### 1b. Duality: the two implementations agree exactly
 
