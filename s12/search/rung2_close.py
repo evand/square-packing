@@ -67,6 +67,11 @@ def main():
         log(f"[{a.tag}] round {r} LP={val:.6f} rows={len(m.rows)} stress_min={vmin:.7f} "
             f"worst=({wp[0]:.5f},{wp[1]:.5f},{wp[2]:.4f}deg) t={time.time()-t0:.0f}s")
         json.dump(dict(s=s, args=vars(a), hist=hist), open(f"runs/closed4_{a.tag}.json", 'w'), indent=1)
+        # checkpoint every round (2026-08-30 coordinator note): never lose a plateau's weights to
+        # a kill/timeout -- the caller is responsible for then scaling this by 1/stress_min (or a
+        # safety factor above it) if it wants a candidate valid cover; this file alone is NOT one
+        # (stress_min < 1 means it is a known-incomplete cover as exported).
+        C.export(m, x, f"runs/closed4_{a.tag}_last.txt", WD=10 ** 7, up=True)
         if vmin >= 1 - 1e-7:
             log(f"[{a.tag}] CONVERGED: stress min {vmin:.9f} >= 1"); best = (val, r); break
         if val > a.cap:

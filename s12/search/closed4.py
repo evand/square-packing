@@ -484,6 +484,9 @@ def run(a, log=print):
             + (f" dualcov={Mcov:.4f}" if Mcov is not None else "") + f" t={time.time()-t0:.0f}s")
         if n1 + n2 == 0: best = (val, it)                       # LP value with no violated pose found
         json.dump(dict(s=s, args=vars(a), hist=hist), open(f"runs/closed4_{a.tag}.json", 'w'), indent=1)
+        # checkpoint every round (2026-08-30 coordinator note): so a kill/timeout mid-run never
+        # loses the current LP weights -- NOT itself a certified cover (rows are a finite sample).
+        export(m, x, f"runs/closed4_{a.tag}_last.txt", WD=10 ** 7, up=True)
         if n1 + n2 == 0 and ncols == 0:
             log(f"[{a.tag}] converged (no violated pose found, no priced column)"); break
         if time.time() - t0 > a.time: log(f"[{a.tag}] time limit"); break

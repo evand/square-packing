@@ -257,3 +257,31 @@ violation of about half a percent that reweighting alone cannot remove.  No tilt
 but nonzero margin, the same region CLOSED4.md already flagged, so the two-region primitive
 (ZEROMARGIN §4 item 4 / §5(ii)) was not needed for what was found — closing the gap looks like it
 needs new columns (points) at the persistent violation loci, which this run did not attempt.
+
+**Coordinator follow-up (2026-08-30): scale the cover instead of reweighting it.** Captured
+weight is linear in the point weights, so a cover with true minimum `mu` everywhere becomes valid
+after multiplying every weight by any `lambda >= 1/mu` (`search/scale_cover.py`, exact rational
+scaling of the integer weight numerator/denominator, no floats). This should dispose of *every*
+ordinary small-margin pose at once and isolate only genuinely tight or actually-worse poses.
+Scaled `runs/closed4_best.txt` by `x1.02` and `x1.03` (totals `12.666` and `12.790`, both `< 13`)
+and re-ran the exact checker to depth 8/10/12/14(/17): **still not verified** — uncertified counts
+oscillate (`42k -> 55k -> 32k -> 51k -> 96k` at x1.02; `33k -> 34k -> 21k -> 37k` at x1.03)
+rather than shrinking cleanly, so the ladder was stopped per the "boxes stop shrinking" criterion
+rather than pushed on faith. The exact `pose` mode shows this is **not** a residual violation: at
+the recurring hot spot (a wall-touching square, left edge on `x=0`, right edge on the interior
+line `x=1`, `cy approx 1.5`, `theta -> 0`) the captured weight is `1.0655` (x1.02) / `1.0759`
+(x1.03) — comfortably `>= 1`. Direct inspection of `cert_p1`/`cert_core` on the corresponding
+uncertified box shows *why* convergence is slow there: this cover splits its weight on the `x=1`
+line to points at `y=1.45`/`y=1.55` rather than placing one exactly at the wall-square's natural
+witness `y=1.5` (the same "cusp" structure as §4 item 3, here at a wall rather than an interior
+square), so P1's wall shortcut (`0.533` of the needed `1`) and the exact CORE test (`0.306`) both
+undershoot until the box shrinks much further than expected — and the admissible-width margin
+`w(theta)/2 - 1/2` grows *linearly*, not quadratically, near a wall pose (unlike the pure corner
+of item 1), so position precision demands disproportionately fine angle bins, which the "split the
+longest dimension" subdivider does not prioritise. This is an **engineering gap in `cert_p1` /
+`cert_core`**, not evidence of a mathematical obstruction or an unhandled tight family: a wall
+lemma for *off-centre* witness pairs (generalising item 2's `(1,y)`-or-`(1+x,y)` disjunction),
+angle-biased subdivision near `theta=0`, or brute additional depth are the candidate fixes, none
+implemented in this session. Full depth table and exact reproduction commands:
+`search/FAMILY.md` §2b. `search/rung2_close.py` and `search/closed4.py run` now also checkpoint
+`runs/<tag>_last.txt` every round so a plateau's weights are never lost to a kill/timeout.
