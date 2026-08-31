@@ -242,6 +242,12 @@ number that write-up's own search found** — not the `1.024` it records as "the
 "factor of ten" of that write-up's §4 ("the region-shaped violation is `+0.024`, not `+0.33`") is
 an artefact of the search restriction, not a property of the family.
 
+These are region cliques, not measure-zero ones: the `1.220095` clique splits as **115 support
+images through `p` that reach `A`** and **48 that contain `A`** — `{S : A subseteq S}` is a fat set
+of poses, which is what a cover can be paid for.  (`CLIQUE_CONTINUUM.md` §4's complaint about the
+`1.057` clique it found — "its `A` is a whole support square, so `{S : A ⊆ S}` is a single pose" —
+does not apply to any of these.)
+
 Two counts that say how systematic this is:
 
 * on the certified `12.008` measure, the uncapped scan found **4683 violated cliques**, of which
