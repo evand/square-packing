@@ -396,10 +396,9 @@ def cmd_xmember(a, log):
     D = 100000
     Ns = [int(v) for v in a.Ns.split(',')]
     hs = [('exact 1/2', 0.5)] + [(f'sigma_k/2 N={N}', None) for N in Ns]
-    log("# clique                                  poses  G-in  I-in  G\\I   I\\G   mass_G   mass_I")
     tot = {k: [0, 0, 0] for k, _ in hs}
     ncl = 0
-    for trial in range(a.n):
+    for _ in range(a.n):
         # a wall point p and the Lemma-2 anchor, exactly as anchorsep/branch.py builds them
         d = float(rng.uniform(0.35, 0.995))
         py = float(rng.uniform(1.0, t / 2))
@@ -438,9 +437,6 @@ def cmd_xmember(a, log):
             tot[name][0] += int(mG.sum())
             tot[name][1] += int(mI.sum())
             tot[name][2] += int((mG & ~mI).sum())
-        if trial < a.show:
-            for name, hv in hs:
-                pass
     log(f"# {ncl} cliques x {a.poses} random poses each")
     for name, _ in hs:
         g, i, gi = tot[name]
@@ -701,7 +697,7 @@ def main():
     ap.add_argument('--Ns', default='2000,6000', help='xmember: verifier nets to compare')
     ap.add_argument('--seed', type=int, default=1)
     ap.add_argument('--probe-n', type=int, default=200000, help='probe: random poses')
-    ap.add_argument('--show', type=int, default=0)
+    ap.add_argument('--show', type=int, default=20, help='dualsep: rows of the table to print')
     ap.add_argument('--sweep-too', action='store_true',
                     help="also add task G's sweep candidates (capture-ranked), for comparison")
     a = ap.parse_args()
