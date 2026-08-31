@@ -244,3 +244,90 @@ weights `w_j >= 0` such that every admissible pose is covered by weight `>= 1` b
 cliques together, a packing of `n` squares of side `L > 1` has `n <= sum w`.  The box-core
 property above is exactly the pairwise-intersection hypothesis.  `search/boxclique.py` produces
 these certificates (`search/BOXCLIQUE.md`).
+
+## Anchor cliques (`anchors …` block)
+
+A box clique can never contain a point clique (the "core" of *all* poses through `p` is `{p}`, and
+the verifier's cores are inward-rounded rectangles).  The second clique family in the format is the
+one of `notes/clique-family.md`, which does contain point cliques and is what
+`search/ANCHOR.md` uses.
+
+An **anchor** is a point or a closed segment with rational coordinates.  A **piece** is the set of
+poses
+
+    { S : A_a subseteq S  and  S ∩ A_f != empty for every f in the piece's filter list }
+
+and an **anchor clique** is the union of finitely many pieces; a pose belongs to it iff it belongs
+to one of them.  The two-line reason such a union is a clique (**Lemma 0**,
+`notes/clique-family.md`): let `S` be in piece `i` and `S'` in piece `j`.  If `A_{a_i}` and
+`A_{a_j}` have a common point, both squares contain it.  If `a_j` is in `filt(i)` then
+`S ∩ A_{a_j} != empty` and `A_{a_j} subseteq S'`, so `S ∩ S' != empty`; symmetrically if `a_i` is
+in `filt(j)`.  So the family is a clique as soon as **every ordered pair of its pieces is covered
+by one of those three cases**, and that is exactly what the verifier checks — nothing else about an
+anchor clique is trusted.  The special case `A = {p}` with one piece and no filter is the point
+clique of `p`, i.e. the coverage constraint at `p`; `K(p, A) = {S : p ∈ S, S ∩ A != empty} ∪
+{S : A subseteq S}` is the two-piece case that gives the family its name.
+
+After the `m` point lines and any `cliques` block (and before an optional `region` trailer) the
+file may continue with
+
+```
+anchors A c                 # A anchors (>= 1), c anchor cliques (>= 0)
+anchorP X Y D               # A anchor lines, indices 0..A-1 in this order:
+anchorS X0 Y0 X1 Y1 D       #   the point (X/D, Y/D), or the closed segment between the two points
+...
+w_1 P_1                     # clique 1: weight numerator over W (>= 0), number of pieces (>= 1)
+piece a r f_1 … f_r         # P_1 piece lines: { S : A_a subseteq S and S meets A_{f_i} for all i }
+...                         #   a and the f_i are anchor indices, r >= 0 is their count
+w_2 P_2
+...
+```
+
+and asserts, as for box cliques,
+
+> every closed unit square `S` inside `[0, s]^2` captures
+> `sum_{p ∈ S} w_p + sum_{K ∋ S} w_K >= 1` (plus the region thresholds, if any), and
+> `sum_p w_p + sum_K w_K (− λ·k) < n`,
+
+where `K` now ranges over box cliques and anchor cliques together and each clique counts **once**.
+
+**Well-formedness** (`ERROR`, no verdict, if violated): `A >= 1`, `c >= 0`, every `D > 0`, every
+weight `>= 0`, every clique has at least one piece, every anchor index in a piece is in `0..A-1`,
+a filter list does not name its piece's own anchor and does not repeat an anchor, every anchor
+endpoint lies in the closed container, and — the substantive one — **for every ordered pair of
+pieces `(i, j)` of the same clique, the anchors `A_{a_i}` and `A_{a_j}` intersect (exact rational
+segment intersection, closed, touching counts) or `a_j` is in `filt(i)` or `a_i` is in `filt(j)`**.
+This is Lemma 0's hypothesis and the analogue of the box cliques' "cores pairwise meet".
+
+**How it is verified.**  In the sweep of bin `k = [θ_k, θ_{k+1}]` a cell is a rectangle of centres
+in the frame of the bin.  It is credited `w_K` iff **one piece of `K` provably holds every pose of
+the cell**, which needs two exact `i128` predicates per (cell, anchor); a cell that only partly
+satisfies them gets nothing (conservative), and its witness for the LP is placed at a pose of the
+cell outside the piece.
+
+* `contains` — *every pose of the cell contains the anchor*.  For a fixed centre `c`, the
+  intersection over the bin of the closed unit squares is the **exact bin core**
+  `core = R_{θ_k} Q ∩ R_{θ_{k+1}} Q ∩ { x : dir(x) mod 90° ∈ [θ_k, θ_{k+1}] ⇒ |x| <= 1/2 }`
+  (`search/ZEROMARGIN.md` §2), which is convex, so it is enough that the four corners of
+  (anchor endpoint − cell) lie in it — a rotated-square test at each end of the bin, a rational
+  sector test and one squared norm, all exact.  A segment is contained iff both endpoints are
+  (the square is convex).  The core is strictly larger than the `σ_k`-square the point sweep uses:
+  an edge midpoint (`|x| = 1/2`, direction 0) belongs to *every* rotation of the square and is kept
+  here, which is what makes a point anchor's piece an exact point clique.
+* `meets` — *every pose of the cell meets the anchor*.  Every pose of the bin contains the
+  concentric `σ_k`-square, so it is enough that the cell lies inside `A ⊕ [−h, h]²` (`h = σ_k/2`,
+  in the frame of the bin), a hexagon: four half-planes from the anchor's bounding box and **two
+  from the segment's own normal** — the axis whose omission is the recorded near miss of
+  `notes/clique-family.md` §7.  This is conservative twice over (`σ_k` is rounded down and a pose
+  is larger than its `σ_k`-square), which is sound: under-crediting only makes the check harder.
+
+Both predicates are evaluated on the cell and the anchors rounded **outward** to a grid of
+`10^-9` container units in the bin's frame, so that the arithmetic stays far from `i128` overflow
+(any overflow is an `ERROR`, never a verdict); outward rounding can only shrink the credited
+region.  Unlike box cliques, anchors do not refer to the angle net, so an `anchors` block carries
+no `N` and is meaningful at every `N` — a finer net simply credits more cells.  Cliques still have
+no representable images under the container's symmetries, so a certificate carrying them is swept
+over the full `[0°, 90°]`.
+
+`search/anchorclique.py` (via `search/branch.py --cliques`) produces these certificates;
+`search/ANCHOR.md` reports what they are worth.

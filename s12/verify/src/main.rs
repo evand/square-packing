@@ -82,8 +82,36 @@ struct Region { r_num: i128, r_den: i128, lam: [i128;4], k: [i128;4], kdot: i128
 #[derive(Clone)]
 struct Cliques { n: i128, q: i128, w: Vec<i128>, boxes: Vec<(usize, i128, i128, i128, i128, i128)> }  // (clique, k, lo0, hi0, lo1, hi1)
 
+/// Optional ANCHOR-CLIQUE block (certificates/FORMAT.md, "Anchor cliques"; notes/clique-family.md).
+/// An *anchor* is a point or a closed segment with rational coordinates over its own denominator
+/// `d` (a point is stored as a degenerate segment).  A *piece* is the pose set
+/// `{ S : A_a subseteq S and S meets A_f for every f in the filter list }` and a clique is the
+/// union of its pieces.  Lemma 0 (notes/clique-family.md): that union is a clique as soon as, for
+/// every ordered pair of pieces `(i, j)`, either the anchors `A_{a_i}` and `A_{a_j}` intersect or
+/// `a_j` is in `filt(i)` or `a_i` is in `filt(j)`.  That is the only thing trusted about an anchor
+/// clique, and `check_anchor_cliques` refuses the block otherwise.  Unlike box cliques the anchors
+/// do not refer to the angle net, so the block is meaningful at every `N`.
+/// `nx, ny` is the (reduced) normal of the segment, `(0, 0)` for a point.
 #[derive(Clone)]
-struct Cert { s_num: i128, s_den: i128, d: i128, wd: i128, atoms: Vec<(i128,i128,i128)>, region: Option<Region>, cliques: Option<Cliques> }
+struct Anchor { x0: i128, y0: i128, x1: i128, y1: i128, d: i128, nx: i128, ny: i128, seg: bool }
+
+#[derive(Clone)]
+struct Anchors { anc: Vec<Anchor>, w: Vec<i128>, pieces: Vec<(usize, usize, Vec<usize>)> }   // (clique, contains-anchor, filter anchors)
+
+#[derive(Clone)]
+struct Cert { s_num: i128, s_den: i128, d: i128, wd: i128, atoms: Vec<(i128,i128,i128)>, region: Option<Region>, cliques: Option<Cliques>, anchors: Option<Anchors> }
+
+/// Scale of the anchor/cell grid in the bin's rotated frame: every anchor endpoint and every cell
+/// side is rounded OUTWARD to a multiple of 1/ASC container units before the exact anchor tests, so
+/// that all of them run on numbers of size ~10^10 instead of the sweep's ~10^26.  Outward rounding
+/// only ever shrinks the credited region (soundness), and 10^-9 is four orders below the
+/// coordinate unit of any certificate here.
+const ASC: i128 = 1_000_000_000;
+
+/// floor / ceiling of a/b for b > 0
+fn fdiv(a: i128, b: i128) -> i128 { let q = a / b; if a % b != 0 && a < 0 { q - 1 } else { q } }
+fn cdiv(a: i128, b: i128) -> i128 { let q = a / b; if a % b != 0 && a > 0 { q + 1 } else { q } }
+fn gcd(a: i128, b: i128) -> i128 { if b == 0 { a } else { gcd(b, a % b) } }
 
 /// checked i128 arithmetic: an overflow is an error, never a wrong verdict
 fn cmul(a: i128, b: i128) -> i128 { a.checked_mul(b).unwrap_or_else(|| die("integer overflow in clique arithmetic (Q or N too large)".to_string())) }
@@ -151,6 +179,56 @@ fn read_cert(path: &str) -> Cert {
         }
         _ => None,
     };
+    // optional anchor-clique block
+    let anchors = match nxt {
+        Some("anchors") => {
+            let na = tok(&mut it, "anchors: anchor count"); let c = tok(&mut it, "anchors: clique count");
+            if na < 1 || c < 0 { die("anchor block: at least one anchor and a non-negative clique count are required".to_string()); }
+            let mut anc: Vec<Anchor> = Vec::new();
+            for i in 0..na as usize {
+                let (x0, y0, x1, y1, dd, seg) = match it.next() {
+                    Some("anchorP") => { let x = tok(&mut it, "anchorP X"); let y = tok(&mut it, "anchorP Y"); let dd = tok(&mut it, "anchorP D"); (x, y, x, y, dd, false) }
+                    Some("anchorS") => { let x0 = tok(&mut it, "anchorS X0"); let y0 = tok(&mut it, "anchorS Y0"); let x1 = tok(&mut it, "anchorS X1"); let y1 = tok(&mut it, "anchorS Y1"); let dd = tok(&mut it, "anchorS D"); (x0, y0, x1, y1, dd, true) }
+                    other => die(format!("anchor {}: expected `anchorP X Y D` or `anchorS X0 Y0 X1 Y1 D`, got {:?}", i + 1, other)),
+                };
+                if dd <= 0 { die(format!("anchor {}: denominator D = {} must be positive", i + 1, dd)); }
+                for &(x, y) in &[(x0, y0), (x1, y1)] {
+                    if x < 0 || y < 0 || cmul(x, s_den) > cmul(s_num, dd) || cmul(y, s_den) > cmul(s_num, dd) {
+                        die(format!("anchor {} has an endpoint ({}, {})/{} outside the container [0, {}/{}]^2", i + 1, x, y, dd, s_num, s_den));
+                    }
+                }
+                let (mut nx, mut ny) = (cadd(y0, -y1), cadd(x1, -x0));      // normal of the segment
+                let gg = gcd(nx.abs(), ny.abs()); if gg > 1 { nx /= gg; ny /= gg; }
+                anc.push(Anchor { x0, y0, x1, y1, d: dd, nx, ny, seg });
+            }
+            let mut w = Vec::new(); let mut pieces: Vec<(usize, usize, Vec<usize>)> = Vec::new();
+            for ci in 0..c as usize {
+                let wc = tok(&mut it, &format!("weight of anchor clique {}", ci + 1));
+                let np = tok(&mut it, &format!("piece count of anchor clique {}", ci + 1));
+                if wc < 0 { die(format!("anchor clique {} has negative weight {}: weights must be >= 0", ci + 1, wc)); }
+                if np < 1 { die(format!("anchor clique {} has no pieces", ci + 1)); }
+                w.push(wc);
+                for pj in 0..np as usize {
+                    match it.next() { Some("piece") => (), other => die(format!("anchor clique {}: expected `piece a r f_1 ... f_r`, got {:?}", ci + 1, other)) }
+                    let a = tok(&mut it, "piece: anchor index"); let r = tok(&mut it, "piece: filter count");
+                    if a < 0 || a >= na { die(format!("piece {} of anchor clique {}: anchor index {} is out of range 0..{}", pj + 1, ci + 1, a, na - 1)); }
+                    if r < 0 || r > na { die(format!("piece {} of anchor clique {}: filter count {} is out of range 0..{}", pj + 1, ci + 1, r, na)); }
+                    let mut f: Vec<usize> = Vec::new();
+                    for _ in 0..r {
+                        let fi = tok(&mut it, "piece: filter anchor index");
+                        if fi < 0 || fi >= na { die(format!("piece {} of anchor clique {}: filter anchor index {} is out of range 0..{}", pj + 1, ci + 1, fi, na - 1)); }
+                        if fi == a { die(format!("piece {} of anchor clique {}: its filter list names its own anchor {}", pj + 1, ci + 1, a)); }
+                        if f.contains(&(fi as usize)) { die(format!("piece {} of anchor clique {}: filter anchor {} is listed twice", pj + 1, ci + 1, fi)); }
+                        f.push(fi as usize);
+                    }
+                    pieces.push((ci, a as usize, f));
+                }
+            }
+            nxt = it.next();
+            Some(Anchors { anc, w, pieces })
+        }
+        _ => None,
+    };
     let region = match nxt {
         None => None,
         Some("region") => {
@@ -192,7 +270,7 @@ fn read_cert(path: &str) -> Cert {
         }
         Some(t) => die(format!("malformed certificate: trailing data after the {} points declared in the header (got {:?})", m, t)),
     };
-    Cert{s_num,s_den,d,wd,atoms,region,cliques}
+    Cert{s_num,s_den,d,wd,atoms,region,cliques,anchors}
 }
 
 /// Shrink parameters of bin k of the N-net, as used by the sweep: rotation (cn, sn, g) of
@@ -264,6 +342,88 @@ fn check_cliques(cl: &Cliques, big_n: i128) {
         } }
         start = end;
     }
+}
+
+/// Do two anchors intersect (closed segments, possibly degenerate)?  Exact, over the common
+/// denominator `a.d * b.d`: the standard orientation test, whose degenerate branches (a zero
+/// cross product plus a bounding-box test) also decide a point against a segment and a point
+/// against a point.  This is Lemma 0's hypothesis `A_i cap A_j != empty`.
+fn cross3(o: (i128, i128), a: (i128, i128), b: (i128, i128)) -> i128 {
+    cadd(cmul(cadd(a.0, -o.0), cadd(b.1, -o.1)), -cmul(cadd(a.1, -o.1), cadd(b.0, -o.0)))
+}
+fn on_seg(p: (i128, i128), q: (i128, i128), r: (i128, i128)) -> bool {
+    r.0 >= p.0.min(q.0) && r.0 <= p.0.max(q.0) && r.1 >= p.1.min(q.1) && r.1 <= p.1.max(q.1)
+}
+fn anchors_meet(a: &Anchor, b: &Anchor) -> bool {
+    let p0 = (cmul(a.x0, b.d), cmul(a.y0, b.d)); let p1 = (cmul(a.x1, b.d), cmul(a.y1, b.d));
+    let q0 = (cmul(b.x0, a.d), cmul(b.y0, a.d)); let q1 = (cmul(b.x1, a.d), cmul(b.y1, a.d));
+    let d1 = cross3(q0, q1, p0); let d2 = cross3(q0, q1, p1);
+    let d3 = cross3(p0, p1, q0); let d4 = cross3(p0, p1, q1);
+    if ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0)) { return true; }
+    (d1 == 0 && on_seg(q0, q1, p0)) || (d2 == 0 && on_seg(q0, q1, p1))
+        || (d3 == 0 && on_seg(p0, p1, q0)) || (d4 == 0 && on_seg(p0, p1, q1))
+}
+
+/// Refuse any anchor clique that Lemma 0 does not certify: for every ordered pair of pieces of the
+/// same clique the anchors must intersect or one piece must filter the other's anchor.
+fn check_anchor_cliques(an: &Anchors) {
+    let mut start = 0;
+    while start < an.pieces.len() {
+        let cid = an.pieces[start].0; let mut end = start;
+        while end < an.pieces.len() && an.pieces[end].0 == cid { end += 1; }
+        for i in start..end { for j in i..end {
+            let (ai, aj) = (an.pieces[i].1, an.pieces[j].1);
+            if !(anchors_meet(&an.anc[ai], &an.anc[aj]) || an.pieces[i].2.contains(&aj) || an.pieces[j].2.contains(&ai)) {
+                die(format!("anchor clique {}: pieces {} and {} are not covered by Lemma 0 -- their anchors {} and {} do not intersect and neither filters the other, so the family is not certified to be a clique",
+                            cid + 1, i - start + 1, j - start + 1, ai, aj));
+            }
+        } }
+        start = end;
+    }
+}
+
+/// One anchor in the rotated frame of one bin, at scale ASC.  `e[j] = [u0lo, u0hi, u1lo, u1hi]` are
+/// OUTWARD-rounded bounds for endpoint `j` (so the anchor is only ever treated as a slightly larger
+/// set for `contains` and a slightly smaller one for `meets` -- both conservative), and `(n0, n1)`
+/// is the segment's normal in that frame, scaled by `g` (zero for a point).
+#[derive(Clone)]
+struct ABin { e: [[i128;4];2], n0: i128, n1: i128, nabs: i128 }
+
+fn anchor_bin(a: &Anchor, cn: i128, sn: i128, g: i128) -> ABin {
+    let den = cmul(g, a.d);
+    let mut e = [[0i128;4];2];
+    for (j, &(x, y)) in [(a.x0, a.y0), (a.x1, a.y1)].iter().enumerate() {
+        let n0 = cmul(cadd(cmul(cn, x), cmul(sn, y)), ASC);
+        let n1 = cmul(cadd(-cmul(sn, x), cmul(cn, y)), ASC);
+        e[j] = [fdiv(n0, den), cdiv(n0, den), fdiv(n1, den), cdiv(n1, den)];
+    }
+    let n0 = cadd(cmul(cn, a.nx), cmul(sn, a.ny));
+    let n1 = cadd(-cmul(sn, a.nx), cmul(cn, a.ny));
+    ABin { e, n0, n1, nabs: cadd(n0.abs(), n1.abs()) }
+}
+
+/// Is the point `v` (in the bin's frame, over ASC, relative to a centre) in the EXACT BIN CORE
+/// `core(theta_k, theta_{k+1}) = R_0 Q cap R_delta Q cap { x : dir(x) mod 90deg in [0, delta] =>
+/// |x| <= 1/2 }` (search/ZEROMARGIN.md 2)?  Every closed unit square with an angle in the bin and
+/// centre `c` contains `c + core`, so this is the exact test of "every pose of the bin at this
+/// centre offset contains the point".  It is strictly larger than the sigma_k-square -- an edge
+/// midpoint (|v| = 1/2, direction 0) is in every rotation of the square and is kept here.
+/// `cd, sd` are cos, sin of the bin width over `gg = g_k g_{k+1}`; `h2 = ASC/2`.
+fn in_core(v0: i128, v1: i128, h2: i128, cd: i128, sd: i128, gg: i128) -> bool {
+    if v0.abs() > h2 || v1.abs() > h2 { return false; }                       // R_0 Q
+    let hg = cmul(h2, gg);
+    let t0 = cadd(cmul(v0, cd), cmul(v1, sd));
+    if t0.abs() > hg { return false; }                                        // R_delta Q, axis 1
+    let t1 = cadd(-cmul(v0, sd), cmul(v1, cd));
+    if t1.abs() > hg { return false; }                                        // R_delta Q, axis 2
+    // direction of v modulo 90 deg: fold by -90 deg rotations to a representative with
+    // u0 > 0, u1 >= 0 (direction in [0, 90deg)); the zero vector is in the sector and passes.
+    let (mut a, mut b) = (v0, v1);
+    for _ in 0..4 { if a > 0 && b >= 0 { break; } let t = a; a = b; b = -t; }
+    if cmul(b, cd) <= cmul(a, sd) {                       // direction <= delta: the sector applies
+        if cadd(cmul(v0, v0), cmul(v1, v1)) > cmul(h2, h2) { return false; }
+    }
+    true
 }
 
 /// u1-range of the convex polygon `poly` (in u-space) over the vertical strip u0 in [af, bf];
@@ -402,7 +562,8 @@ impl Tight {
 /// inside it gets nothing, and if it is violated its witness is taken outside that box so that
 /// the LP learns the box does not reach there.
 fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm_n: i128, wm_d: i128, topk: usize,
-               mut tight: Option<&mut Tight>, cl: Option<(&[(usize,i128,i128,i128,i128)], &[i128], i128)>) -> (i128, Vec<(i128,f64,f64,u8)>) {
+               mut tight: Option<&mut Tight>, cl: Option<(&[(usize,i128,i128,i128,i128)], &[i128], i128)>,
+               anc: Option<(&[ABin], &Anchors)>, cd: i128, sd: i128, gg: i128) -> (i128, Vec<(i128,f64,f64,u8)>) {
     // sg_n/sg_d = sigma (side of shrunken square), wm_n/wm_d = lower bound on min width
     let m = c.atoms.len();
     // Scaling.  Positions have denominator d.  Rotation has denominator g.  sigma = sg_n/sg_d.
@@ -448,6 +609,33 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
         if inside < 4 { return lams[inside]; }
         let mut req = 0; for j in 0..4 { if may & (1 << j) != 0 && lams[j] > req { req = lams[j]; } } req
     };
+    // ---- anchor cliques ----------------------------------------------------------------
+    // Per piece, a rectangle window in the bin's frame (numerators over ASC) outside which the
+    // piece cannot credit a cell: `contains` needs the whole cell within 1/2 of every endpoint of
+    // its anchor (condition (i) of the bin core), `meets` needs it inside the filter anchor's
+    // bounding box grown by h = sigma_k/2 (the four box half-planes of the hexagon A + [-h,h]^2).
+    // A cell inside the window still has to pass the exact tests; a cell merely MEETING the window
+    // may contain poses of the piece and is recorded as "partial" for the witness.
+    let den_int: i128 = 2*sg_d*wm_d*c.d*g;
+    let h2: i128 = ASC / 2;
+    let hsc: i128 = sg_n * ASC / (2 * sg_d);            // sigma_k/2 over ASC, rounded DOWN (conservative)
+    let mut awin: Vec<(i128,i128,i128,i128)> = Vec::new();
+    let mut aord: Vec<(i128, usize)> = Vec::new();      // (window u0 lo, piece), swept with the strips
+    if let Some((ab, an)) = anc {
+        for p in an.pieces.iter() {
+            let z = &ab[p.1];
+            let mut w0l = z.e[0][1].max(z.e[1][1]) - h2; let mut w0h = z.e[0][0].min(z.e[1][0]) + h2;
+            let mut w1l = z.e[0][3].max(z.e[1][3]) - h2; let mut w1h = z.e[0][2].min(z.e[1][2]) + h2;
+            for &f in &p.2 {
+                let y = &ab[f];
+                w0l = w0l.max(y.e[0][1].min(y.e[1][1]) - hsc); w0h = w0h.min(y.e[0][0].max(y.e[1][0]) + hsc);
+                w1l = w1l.max(y.e[0][3].min(y.e[1][3]) - hsc); w1h = w1h.min(y.e[0][2].max(y.e[1][2]) + hsc);
+            }
+            awin.push((w0l, w0h, w1l, w1h)); aord.push((w0l, awin.len() - 1));
+        }
+        aord.sort_unstable();
+    }
+    let mut aptr = 0usize; let mut aact: Vec<usize> = Vec::new();
     // x-breakpoints
     let mut bx: Vec<i128> = Vec::with_capacity(2*m+2);
     for t in &q { bx.push(t.0-hh); bx.push(t.0+hh); }
@@ -462,6 +650,18 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
     for w in 0..bx.len()-1 {
         let (a,b) = (bx[w], bx[w+1]);
         if b <= px0 || a >= px1 { continue; }
+        // anchor pieces whose u0-window meets this strip (the windows are sorted by their lower end
+        // and both a and b increase, so this is a sweep)
+        let (a0s, b0s) = if anc.is_some() { (fdiv(cmul(a, ASC), den_int), cdiv(cmul(b, ASC), den_int)) } else { (0, 0) };
+        if anc.is_some() {
+            let n_before = aact.len();
+            while aptr < aord.len() && aord[aptr].0 <= b0s { aact.push(aord[aptr].1); aptr += 1; }
+            if aact.len() != n_before {
+                aact.retain(|&pi| awin[pi].1 >= a0s);
+                aact.sort_unstable_by_key(|&pi| awin[pi].2);       // by the window's u1 lower end
+            }
+        }
+        let mut u1act: Vec<usize> = Vec::new(); let mut ptr1 = 0usize;
         // active: q0 in (b-h, a+h)   [strict: covered for every centre in the CLOSED cell]
         // CLOSED squares: atom counts iff |q0 - u0| <= h for every u0 in [a,b]
         let i0 = qx.partition_point(|&v| v <  b-hh);
@@ -540,16 +740,92 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
             }
             (credit, partial)
         };
+        // Anchor-clique credit of the cell [a,b] x [c0,c1]: each clique once, iff one of its
+        // pieces provably holds EVERY pose of the cell -- the exact bin core for `contains`, the
+        // sigma_k-square for `meets` -- and the pieces the cell only meets, for the witness.
+        // `u1act` sweeps the same windows in u1 as the cells of the strip advance, so a cell only
+        // ever looks at the pieces whose window it actually meets.  `full` rescans instead (used
+        // once for the empty strip, whose single cell spans the whole strip).
+        let anchor_credit = |c0: i128, c1: i128, u1act: &mut Vec<usize>, ptr1: &mut usize, full: bool| -> (i128, Vec<usize>) {
+            let (ab, an) = match anc { Some(v) => v, None => return (0, Vec::new()) };
+            if aact.is_empty() { return (0, Vec::new()); }
+            let c0s = fdiv(cmul(c0, ASC), den_int); let c1s = cdiv(cmul(c1, ASC), den_int);
+            if full { u1act.clear(); u1act.extend(aact.iter().copied()); }
+            else {
+                while *ptr1 < aact.len() && awin[aact[*ptr1]].2 <= c1s { u1act.push(aact[*ptr1]); *ptr1 += 1; }
+                if !u1act.is_empty() { u1act.retain(|&pi| awin[pi].3 >= c0s); }
+            }
+            let mut credit = 0i128; let mut done: Vec<usize> = Vec::new(); let mut part: Vec<usize> = Vec::new();
+            for &pi in u1act.iter() {
+                let (w0l, w0h, w1l, w1h) = awin[pi];
+                if c1s < w1l || c0s > w1h || w0h < a0s { continue; }   // the cell cannot meet the piece
+                let (cid, ai, ref filt) = an.pieces[pi];
+                let mut ok = a0s >= w0l && b0s <= w0h && c0s >= w1l && c1s <= w1h;
+                if ok {
+                    // contains: every corner of (anchor endpoint - cell) lies in the exact bin core
+                    let z = &ab[ai];
+                    'ep: for j in 0..2 {
+                        let (v0l, v0h) = (z.e[j][0] - b0s, z.e[j][1] - a0s);
+                        let (v1l, v1h) = (z.e[j][2] - c1s, z.e[j][3] - c0s);
+                        for &v0 in &[v0l, v0h] { for &v1 in &[v1l, v1h] {
+                            if !in_core(v0, v1, h2, cd, sd, gg) { ok = false; break 'ep; }
+                        } }
+                    }
+                }
+                if ok {
+                    // meets: the cell lies in (filter anchor) + [-h,h]^2.  The four box half-planes
+                    // are the window; what is left is the segment's own normal (two half-planes),
+                    // which is what the near miss of notes/clique-family.md 7 forgot.
+                    for &f in filt.iter() {
+                        let y = &ab[f];
+                        if y.nabs == 0 { continue; }
+                        let (p0l, p0h) = (y.e[0][0], y.e[0][1]); let (p1l, p1h) = (y.e[0][2], y.e[0][3]);
+                        let (r0l, r0h) = (a0s - p0h, b0s - p0l); let (r1l, r1h) = (c0s - p1h, c1s - p1l);
+                        let (t00, t01) = (cmul(y.n0, r0l), cmul(y.n0, r0h));
+                        let (t10, t11) = (cmul(y.n1, r1l), cmul(y.n1, r1h));
+                        let lo = cadd(t00.min(t01), t10.min(t11)); let hi = cadd(t00.max(t01), t10.max(t11));
+                        let bnd = cmul(hsc, y.nabs);
+                        if lo < -bnd || hi > bnd { ok = false; break; }
+                    }
+                }
+                if ok { if !done.contains(&cid) { credit = cadd(credit, an.w[cid]); done.push(cid); } } else { part.push(pi); }
+            }
+            (credit, part)
+        };
+        // f64: is the pose (centre u0,u1 in the bin's frame, angle theta_k) in piece `pi`?  Only the
+        // witness uses this, so floats are harmless: the verdict never depends on it.
+        let pose_in_piece = |pi: usize, u0: f64, u1: f64| -> bool {
+            let (ab, an) = match anc { Some(v) => v, None => return false };
+            let sc2 = 2.0 * ASC as f64;
+            let (_, ai, ref filt) = an.pieces[pi];
+            let z = &ab[ai];
+            for j in 0..2 {
+                let (zx, zy) = ((z.e[j][0] + z.e[j][1]) as f64 / sc2, (z.e[j][2] + z.e[j][3]) as f64 / sc2);
+                if (zx - u0).abs() > 0.5 || (zy - u1).abs() > 0.5 { return false; }
+            }
+            for &f in filt.iter() {
+                let y = &ab[f];
+                let (px, py) = ((y.e[0][0] + y.e[0][1]) as f64 / sc2, (y.e[0][2] + y.e[0][3]) as f64 / sc2);
+                let (qx, qy) = ((y.e[1][0] + y.e[1][1]) as f64 / sc2, (y.e[1][2] + y.e[1][3]) as f64 / sc2);
+                if u0 > px.max(qx) + 0.5 || u0 < px.min(qx) - 0.5 || u1 > py.max(qy) + 0.5 || u1 < py.min(qy) - 0.5 { return false; }
+                if y.nabs != 0 {
+                    let (n0, n1) = (y.n0 as f64, y.n1 as f64);
+                    if ((u0 - px)*n0 + (u1 - py)*n1).abs() > 0.5*(n0.abs() + n1.abs()) { return false; }
+                }
+            }
+            true
+        };
         // want_in: the box index the witness should lie in, or 4 for "outside every box";
-        // partial: clique boxes the cell meets without lying inside -- the witness avoids them
-        let witness = |c0: i128, c1: i128, want_in: usize, partial: &[(f64,f64,f64,f64)]| -> (f64, f64) {
+        // partial: clique boxes / anchor pieces the cell meets without lying inside -- avoided
+        let witness = |c0: i128, c1: i128, want_in: usize, partial: &[(f64,f64,f64,f64)], apart: &[usize]| -> (f64, f64) {
             // vertices of the cell clipped to the admissible polygon, absolute container units of u-space
             let (oa, oc) = (a as f64/den_all, c0 as f64/den_all);
             let verts: Vec<(f64,f64)> = clip_rect_poly(a, b, c0, c1, &rot, den_all).iter().map(|v| (v[0]+oa, v[1]+oc)).collect();
-            if !partial.is_empty() && verts.len() >= 3 {
+            if (!partial.is_empty() || !apart.is_empty()) && verts.len() >= 3 {
                 let n = verts.len() as f64;
                 let (m0, m1) = (verts.iter().map(|v| v.0).sum::<f64>()/n, verts.iter().map(|v| v.1).sum::<f64>()/n);
-                let outside = |u0: f64, u1: f64| partial.iter().all(|&(l0,h0,l1,h1)| u0 < l0 - RPAD || u0 > h0 + RPAD || u1 < l1 - RPAD || u1 > h1 + RPAD);
+                let outside = |u0: f64, u1: f64| partial.iter().all(|&(l0,h0,l1,h1)| u0 < l0 - RPAD || u0 > h0 + RPAD || u1 < l1 - RPAD || u1 > h1 + RPAD)
+                    && apart.iter().all(|&pi| !pose_in_piece(pi, u0, u1));
                 for &f in &[0.98f64, 1.0] {
                     for &(x0, y0) in &verts {
                         let (u0, u1) = (f*x0 + (1.0-f)*m0, f*y0 + (1.0-f)*m1);
@@ -589,8 +865,9 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
             let cy = ((sn as f64)*u0 + (cn as f64)*u1)/(g as f64)/dn;
             let (may, inside) = flags(ylo, yhi);
             let (ccred, partial) = clique_credit(ylo, yhi);
-            let v = ccred - required(may, inside);
-            let (cx, cy) = if tight.is_none() { witness(ylo, yhi, inside, &partial) } else { (cx, cy) };
+            let (acred, apart) = anchor_credit(ylo, yhi, &mut u1act, &mut ptr1, true);
+            let v = ccred + acred - required(may, inside);
+            let (cx, cy) = if tight.is_none() { witness(ylo, yhi, inside, &partial, &apart) } else { (cx, cy) };
             if let Some(t) = tight.as_mut() {
                 // dump mode: record the empty strip as one cell of sum 0 and keep sweeping
                 if 0 <= t.thresh {
@@ -621,8 +898,18 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
             let j1 = yv.partition_point(|&v| v <= c0+hh);
             let sum = if j1>j0 { pre[j1]-pre[j0] } else { 0 };
             let (ccred, partial) = clique_credit(c0, c1);
-            let sum = sum + ccred;
+            let mut sum = sum + ccred;
             let (may, inside) = flags(c0, c1);
+            // The anchor tests are the only per-cell work that is not O(1), so they are skipped
+            // where they cannot change anything: `required` and every witness threshold are at most
+            // W + max(0, lambda_j over the boxes met), so a cell already at that weight neither
+            // fails nor produces a witness whatever the (non-negative) anchor credit is.
+            let mut apart: Vec<usize> = Vec::new();
+            if !aact.is_empty() {
+                let mut cap = 0i128;
+                if may != 0 { for j in 0..4 { if may & (1 << j) != 0 && lams[j] > cap { cap = lams[j]; } } }
+                if sum < c.wd + cap { let (acred, ap) = anchor_credit(c0, c1, &mut u1act, &mut ptr1, false); sum += acred; apart = ap; }
+            }
             let v = sum - required(may, inside);
             if v < best { best = v;
                 if std::env::var("DBG").is_ok() {
@@ -649,8 +936,8 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
                 // One witness per violated threshold: flag 1 = "needs 1 + lambda" (cell meets the
                 // region), flag 0 = "needs 1" (cell is not entirely inside the region).
                 // flag j+1 = "needs 1 + lambda_j" (cell meets box j), flag 0 = "needs 1" (cell not inside a box)
-                for j in 0..4 { if may & (1 << j) != 0 && sum < c.wd + lams[j] { let (cx, cy) = witness(c0, c1, j, &partial); heap.push((sum - lams[j], cx, cy, (j + 1) as u8)); } }
-                if inside == 4 && sum < c.wd { let (cx, cy) = witness(c0, c1, 4, &partial); heap.push((sum, cx, cy, 0)); }
+                for j in 0..4 { if may & (1 << j) != 0 && sum < c.wd + lams[j] { let (cx, cy) = witness(c0, c1, j, &partial, &apart); heap.push((sum - lams[j], cx, cy, (j + 1) as u8)); } }
+                if inside == 4 && sum < c.wd { let (cx, cy) = witness(c0, c1, 4, &partial, &apart); heap.push((sum, cx, cy, 0)); }
                 if heap.len()>4*topk { heap.sort_unstable_by_key(|t| t.0); heap.truncate(topk); }
             }
         }
@@ -709,17 +996,28 @@ fn main() {
     let sym_lam = cert.region.as_ref().map(|r| r.lam.iter().all(|&l| l == r.lam[0])).unwrap_or(true);
     // clique boxes are tied to the angle net and have no representable images under the
     // container's symmetries, so a certificate with cliques is always swept over [0, 90).
-    let sym = sym_atoms && sym_lam && cert.cliques.is_none();
+    let has_cl = cert.cliques.is_some() || cert.anchors.is_some();
+    let sym = sym_atoms && sym_lam && !has_cl;
     println!("D4-symmetric atom set: {}{}{}  -> angles cover {}", sym_atoms, if sym_lam {""} else {" (but per-box lambdas differ)"},
-             if cert.cliques.is_some() {" (clique block present: no symmetry reduction)"} else {""}, if sym {"[0,45] deg"} else {"[0,90) deg"});
+             if has_cl {" (clique block present: no symmetry reduction)"} else {""}, if sym {"[0,45] deg"} else {"[0,90) deg"});
     let total_atoms: i128 = cert.atoms.iter().map(|a| a.2).sum();
     let total_cl: i128 = cert.cliques.as_ref().map(|cl| cl.w.iter().sum()).unwrap_or(0);
-    let total = total_atoms + total_cl;
+    let total_anc: i128 = cert.anchors.as_ref().map(|an| an.w.iter().sum()).unwrap_or(0);
+    let total = total_atoms + total_cl + total_anc;
     if let Some(cl) = &cert.cliques {
         if tight_thresh.is_some() { die("TIGHT_DUMP is not supported for clique certificates".to_string()); }
         check_cliques(cl, bigN);
         println!("CLIQUE certificate: {} cliques with {} boxes (net N={}, Q={}), clique weight {}/{} = {:.6}; every clique certified by pairwise core intersection",
                  cl.w.len(), cl.boxes.len(), cl.n, cl.q, total_cl, cert.wd, total_cl as f64/cert.wd as f64);
+    }
+    if let Some(an) = &cert.anchors {
+        if tight_thresh.is_some() { die("TIGHT_DUMP is not supported for clique certificates".to_string()); }
+        check_anchor_cliques(an);
+        let nseg = an.anc.iter().filter(|a| a.nx != 0 || a.ny != 0).count();
+        println!("ANCHOR-CLIQUE certificate: {} cliques with {} pieces over {} anchors ({} segments, {} points), weight {}/{} = {:.6}; every clique certified by Lemma 0 (for each pair of pieces the anchors meet, or one filters the other's anchor)",
+                 an.w.len(), an.pieces.len(), an.anc.len(), nseg, an.anc.len() - nseg, total_anc, cert.wd, total_anc as f64/cert.wd as f64);
+    }
+    if has_cl {
         println!("atoms={} total weight (points + cliques) = {}/{} = {:.6}", cert.atoms.len(), total, cert.wd, total as f64/cert.wd as f64);
     } else {
         println!("atoms={} total weight = {}/{} = {:.6}", cert.atoms.len(), total, cert.wd, total as f64/cert.wd as f64);
@@ -788,7 +1086,11 @@ fn main() {
                             s: (cert.s_num as f64)/(cert.s_den as f64), rng: 0x9E3779B97F4A7C15u64 ^ ((k as u64 + 1) * 0x2545F4914F6CDD1Du64) }
                 });
                 let clk = cert.cliques.as_ref().map(|cl| (per_bin[k as usize].as_slice(), cl.w.as_slice(), cl.q));
-                let (v, wit) = min_cover_k(&cert, c0, s0, g0, sg_n, sg_d, wm_n, wm_d, topk, tstate.as_mut(), clk);
+                // the anchors in this bin's frame (they do not refer to the net, so this is the only
+                // per-bin work an anchor clique costs outside the sweep)
+                let abins: Option<Vec<ABin>> = cert.anchors.as_ref().map(|an| an.anc.iter().map(|a| anchor_bin(a, c0, s0, g0)).collect());
+                let ancp = match (&abins, &cert.anchors) { (Some(v), Some(an)) => Some((v.as_slice(), an)), _ => None };
+                let (v, wit) = min_cover_k(&cert, c0, s0, g0, sg_n, sg_d, wm_n, wm_d, topk, tstate.as_mut(), clk, ancp, cd, sd, g0*g1);
                 if let (Some(tw), Some(ts)) = (&tight_out, &tstate) {
                     use std::io::Write;
                     let den = 2*sg_d*wm_d*cert.d*g0;
@@ -843,7 +1145,7 @@ fn main() {
     if bad.load(Ordering::Relaxed)==0 && weight_ok {
         match &cert.region {
             None => println!("VERIFIED: every CLOSED unit square inside C covers weight >= 1{}, and total weight < {}.\n==> {} unit squares cannot be packed into any square of side < {}/{} = {:.9},\n    i.e.  s({}) >= {:.9}",
-                             if cert.cliques.is_some() {" (points plus cliques)"} else {""}, nn, nn, cert.s_num, cert.s_den, cert.s_num as f64/cert.s_den as f64, nn, cert.s_num as f64/cert.s_den as f64),
+                             if has_cl {" (points plus cliques)"} else {""}, nn, nn, cert.s_num, cert.s_den, cert.s_num as f64/cert.s_den as f64, nn, cert.s_num as f64/cert.s_den as f64),
             Some(r) => if r.single {
                 println!("VERIFIED: (branch k={}) every CLOSED unit square inside C centred in a corner box covers weight >= 1 + lambda, every other one >= 1, and total - lambda*k < {}.\n==> no packing of {} unit squares with exactly {} squares centred in the corner boxes [0, {}/{}]^2 (and images) fits in any square of side < {}/{} = {:.9}", r.ktot, nn, nn, r.ktot, r.r_num, r.r_den, cert.s_num, cert.s_den, cert.s_num as f64/cert.s_den as f64)
             } else {
