@@ -322,10 +322,13 @@ def _solve_restricted(self, margin, log=None, no_cliques=False):
         if not res.success: return None
         # the matched pure solve must use exactly the master's own column set, or it prices in
         # columns the clique solve never saw and comes out LOWER (measured: -0.09)
-        if no_cliques: break
+        if no_cliques:
+            if os.environ.get('CQDBG'): print(f"    [matched] pure cols={len(cols)-nl} obj={res.fun:.6f}", flush=True)
+            break
         y = np.maximum(-res.ineqlin.marginals, 0.0)
         rc = c_full - (Mt @ y); rc[cols] = np.inf
         neg = np.nonzero(rc[:npt] < -RESTRICTED_TOL)[0]
+        if os.environ.get('CQDBG') and not no_cliques: print(f"    [main] pass {passes} cols={len(cols)-nl} obj={res.fun:.6f}", flush=True)
         if log: log(f"    restricted pass {passes}: {len(cols)-nl} cols obj={res.fun:.7f} neg_rc={len(neg)} min_rc={rc[:npt].min() if len(neg) else 0:+.2e} t={time.time()-t0:.0f}s")
         if len(neg) == 0 or (RESTRICTED_PASSES and passes >= RESTRICTED_PASSES): break
         pick = neg[np.argsort(rc[neg])[:RESTRICTED_ADD]]; act[pick] = True; age[pick] = 0
@@ -614,6 +617,14 @@ def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe
         if out is None:
             log(f"  it{it} LP infeasible/failed (rows={len(m.rows)})"); return None, None, None, dict(status='infeasible')
         val, x, lam, y = out; tw = float(m.costv() @ x)
+        # the matched pure value: the SAME master with the clique columns removed.  It has to run
+        # here, before this round's column generation: a column added in between is marked active
+        # by the next solve, and the "pure" LP then has MORE columns than the clique one and comes
+        # out lower (measured: 328 columns against 168, and a gain of -0.02).
+        pureval = None
+        if matched and m.cliques and SOLVER == 'restricted':
+            o2 = m.solve_restricted(margin, no_cliques=True)
+            if o2 is not None: pureval = o2[0]
         dump_dual(m, y, lam, val, f"runs/branch_{tag}_dual.txt")
         if dump_lp: write_lp_dump(m, margin, f"{dump_lp}_it{it}", val=val, x=x, lam=lam, y=y)
         export(m, x, lam, tmp, WD=10 ** 12, factor=1.0 / (1.0 + probe_margin), up=False)
@@ -629,10 +640,6 @@ def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe
             Mcov = cand[0][0] if cand else 1.0
             for (cv, X, Y) in cand: ncol += m.add_orbit(X, Y)
             t_cg = time.time() - t1
-        pureval = None
-        if matched and m.cliques and SOLVER == 'restricted':
-            t1 = time.time(); o2 = m.solve_restricted(margin, no_cliques=True); t_pure = time.time() - t1
-            if o2 is not None: pureval = o2[0]
         wcl = float(m.csizes[:len(x) - n_orb] @ x[n_orb:]) if len(x) > n_orb else 0.0
         ncl_used = int((x[n_orb:] > 1e-12).sum()) if len(x) > n_orb else 0
         ncq = 0; cqmass = None; cqpt = None; t_cq = 0.0
