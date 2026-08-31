@@ -76,15 +76,29 @@ def kpa(s, D, X, Y, wall, eps_n, rho_n):
     return ((('P', px, py), A), ((0, (1,)), (1, ())))
 
 
-def cand_params(s, D, X, Y, frac=0.95, slack=0.10, pad=0.002):
+def cand_params(s, D, X, Y, frac=0.95, slack=0.10, pad=0.002, wallpad=0.0005):
     """the (wall, eps_n, rho_n) of the widest Lemma-2 anchor at p = (X/D, Y/D): eps a fraction
-    `frac` of its cap 1 - d, rho = (1+slack) rho* + pad (the pad covers the sigma_k erosion of the
-    verifier's `meets` test, which is a shade stricter than Lemma 2's unit square)."""
+    `frac` of its cap 1 - d, rho = (1+slack) rho* + pad.
+
+    Both pads exist because the verifier's `meets` test is a shade stricter than Lemma 2, which is
+    about the *unit* square: it uses the concentric sigma_k-square, and it tests centres down to
+    `w_lo/2` (the bin's smallest admissible bound), i.e. a sliver of slightly inadmissible poses.
+    `pad` covers that in the rho direction.  `wallpad` covers it in the eps direction, and it is the
+    one that matters: with `eps` at its cap `1 - d` the anchor sits exactly on the far edge of the
+    unit square of a pose jammed against the wall, so the sigma_k-square of that pose misses it by
+    ~1e-4 and the clique then does NOT contain the whole point clique of `p` -- which is the one
+    property (Lemma 2) that makes the column dominate the point column.  Measured on the k = 4
+    leaf's dual: with `eps` at the cap, one wall-jammed row of dual mass 0.06 fell out of every
+    clique -- more, there, than the extra mass the clique gained, and the LP never used a clique
+    column.  `wallpad` is deliberately small (it only bites when `frac` is essentially 1): the
+    honest way to choose `eps` is to price several of them, since `ybar(K)` already accounts for
+    both what a longer reach gains and what it loses, and that is what `anchorsep.separate` does."""
     px, py = X / D, Y / D; sf = float(s)
     out = []
     for wall, d in ((0, px), (1, sf - px), (2, py), (3, sf - py)):
         if not (0.05 < d < 1.0): continue
-        eps = frac * (1.0 - d)
+        eps = min(frac * (1.0 - d), (1.0 - d) - wallpad)
+        if eps <= 0: continue
         rho = (1.0 + slack) * rho_star(d, eps) + pad
         if rho >= 0.5: continue                       # a unit square cannot contain the segment
         en = int(math.floor(eps * D)); rn = int(math.ceil(rho * D))

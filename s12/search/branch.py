@@ -484,7 +484,7 @@ def price_asym(m, y, pitch=0.02, want=200, ysup=1e-9):
 CQ_MAX = int(os.environ.get('BRANCH_CQ_MAX', '400'))     # cap on the number of clique-orbit columns
 
 
-def price_cliques(m, y, x, want=40, thr=1e-7, pitch=0.01, top=300, fracs=(0.95, 0.8, 0.6, 0.4, 0.2), log=None):
+def price_cliques(m, y, x, want=40, thr=1e-7, pitch=0.01, top=600, fracs=(0.95, 0.85, 0.7, 0.55, 0.4, 0.25), log=None):
     """Price anchor-clique columns `K(p, A)` on the current dual (search/anchorsep.py).
 
     The dual `y` is a fractional packing on the rows (D4-averaged for a symmetric model), so the

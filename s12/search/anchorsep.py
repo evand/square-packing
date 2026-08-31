@@ -46,7 +46,7 @@ def cover_grid(R, y, G):
     return out
 
 
-def separate(R, y, s, D, pitch=0.01, top=300, fracs=(0.95, 0.8, 0.6, 0.4, 0.2),
+def separate(R, y, s, D, pitch=0.01, top=600, fracs=(0.95, 0.85, 0.7, 0.55, 0.4, 0.25),
              slack=0.10, pad=0.002, band=1.0, sym=True):
     """Scan the wall bands of the container for anchor cliques the packing `y` violates.
     Returns [(ybar(K), ybar(P_p), (X, Y, wall, eps, rho), clique), ...] sorted by ybar(K).
@@ -89,8 +89,8 @@ def separate(R, y, s, D, pitch=0.01, top=300, fracs=(0.95, 0.8, 0.6, 0.4, 0.2),
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('dual'); ap.add_argument('--pitch', type=float, default=0.01)
-    ap.add_argument('--top', type=int, default=300); ap.add_argument('--show', type=int, default=25)
-    ap.add_argument('--fracs', default='0.95,0.8,0.6,0.4,0.2')
+    ap.add_argument('--top', type=int, default=600); ap.add_argument('--show', type=int, default=25)
+    ap.add_argument('--fracs', default='0.95,0.85,0.7,0.55,0.4,0.25')
     ap.add_argument('--slack', type=float, default=0.10); ap.add_argument('--pad', type=float, default=0.002)
     ap.add_argument('--band', type=float, default=1.0, help='only wall distances below this')
     ap.add_argument('--out', default=None, help='write the best cliques as a branch clique checkpoint')
