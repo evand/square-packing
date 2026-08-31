@@ -115,7 +115,7 @@ gap is a real optimality certificate for the LP over `{all admissible centres} �
 | lattice `(h, dθ)` | pure value (stage sequence) | calibration |
 |---|---|---|
 | `h = 0` (exact centres), `dθ = 1°` | `12.0083, 12.0095, 12.0166, 12.0227, 12.0282` — passes at **round 0** and keeps rising | **PASS** |
-| `h = 0.01`, `dθ = 1°` | `11.878, 11.914, 11.956, 11.981, …` (rising, not converged) | **FAIL so far** (`0.027` low) |
+| `h = 0.01`, `dθ = 1°` | `11.878, 11.914, 11.956, 11.981, 12.006, …` (rising, not converged) | **marginal** (`0.0025` low after 5 stages, still climbing) |
 | `h = 0.02`, `dθ = 2°` | `11.746, 11.913, 11.966` / restarted `11.909, 11.963, …` | **FAIL** (`0.045` low) |
 
 So the clique numbers below were computed **only** on the lattice that passes calibration, which
@@ -145,12 +145,15 @@ across lattices (`runs/cq_A99sw5.log`):
 | `r1` | 965 | 458 | `12.011310` | `11.902459` | `0.109` | `≈ 1.00` (converged) |
 | `r2` | 1340 | 490 | `12.011327` | `11.903163` | `0.108` | `≈ 1.00` (converged) |
 | `r3` | 1787 | 545 | `12.011641` | `11.907901` | `0.104` | `≈ 1.00` (converged) |
+| `r4` | 2204 | 709 | `12.015987` | `11.895710` | `0.120` | `≈ 1.00`; row loop hit its cap (`maxcov 1.0013`), so this stage is a little optimistic |
+| `r5` | 2649 | 784 | `12.018611` | `11.901056` | `0.118` | `≈ 1.00` (converged) |
 
 Every pure value clears the calibration target `12.008`, and the certifiable clique family costs
-the LP `0.104–0.115` — **thirteen to fourteen times** the pure method's entire excess over 12 at
-`t = 3.99`.  **The ladder is flat**: the pose set grows by a factor of 3.2 across these stages and
-the clique value moves by `0.011`, upward, while the pure value on the same poses moves by
-`0.0003`.  That is the qualitative difference from task A, whose stage values drifted `11.19 → 11.36 →
+the LP `0.104–0.120` — **thirteen to fifteen times** the pure method's entire excess over 12 at
+`t = 3.99`.  **The ladder is flat.**  Over these six stages the pose set grows by a factor of
+**4.7** (558 → 2649 orbits) and the clique value stays pinned at `11.90 ± 0.006`, while the pure
+value on the very same poses climbs from `12.0115` to `12.0186`.  The gap does not close; it
+widens slightly.  That is the qualitative difference from task A, whose stage values drifted `11.19 → 11.36 →
 11.45` over a comparable pose refinement: A's cuts were explicit lists of poses, so every new
 column arrived outside every cut; these cuts are geometric regions, so a new column that lands
 inside one is charged and the LP has to move it out of the region — which it evidently cannot do
@@ -314,6 +317,8 @@ the four corner boxes `[0,1]²` equals 4) with its dual `λ` in the pricing, exa
 | stage | poses | anchor cuts | pure value on the same poses | anchor-clique value | gain |
 |---|---|---|---|---|---|
 | `r0` | 1207 | 260 | `11.913925` | `11.810839` | `0.103` |
+| `r1` | 1598 | 416 | `11.916397` | `11.811548` | `0.105` |
+| `r2` | 2012 | 447 | `11.918038` | `11.813884` | `0.104` |
 
 The **gain is the same size as at `t = 3.99`**, which is the interesting part.  The run is not yet
 calibrated: the leaf's pure value is known to be `12.000 ± 0.001` (`CLIQUE.md`) and this pose set
