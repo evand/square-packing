@@ -299,6 +299,111 @@ five reaching **obj = 12.139560**:
 * **`--stab`** needs a better rule (a real in–out with the stability centre updated only on
   progress, or a proximal term in the LP) before it earns its place.
 
+## 6. Follow-up: why the float oracle was optimistic on branch leaves, and the fix
+
+Reported from production: on leaves with a positive multiplier the float oracle claimed far less
+deficit than the exact round that followed — J16g float 0.91 → exact 0.714 and float 0.99 → exact
+0.823; L99k4f float 0.985 → exact 0.794; L1110f float 0.988 → exact 0.636 — while the pure cover
+run J12g (`lambda = 0`) was fine.  The pattern pointed at the region multipliers.  **It was not
+the multipliers.**
+
+### Diagnosis (`runs/diag_floatsep.py`)
+
+Take the exact verifier's own witness poses on a checkpoint and evaluate each of them exactly as
+`floatsep.py` would.  On `runs/branch_L1110f_probe.txt` (exact minimum 0.636114, `lambda =
+[+1.5, +1.5, +1.5, -2]`, 2579 atoms, 214 cliques):
+
+| exact witness value | float value at the same pose | flag | distance to nearest box | angle |
+|---|---|---|---|---|
+| 0.63611 | 0.63611 | 0 | 0.513 | 87.63° |
+| 0.63611 | 0.63611 | 0 | 0.513 | 87.66° |
+| … (the twelve worst are all like this) | | | | |
+
+The float oracle computes the **same value to five decimals** at the poses the exact sweep calls
+worst, and those poses are 0.51 away from any corner box with flag 0 — the region threshold plays
+no part.  The same on `runs/branch_J16g_probe.txt`: of 5964 witnesses only 29 would be called
+satisfied at their own pose, all at flag 0, all at wall distance ≥ 1.5, and the region rule
+changes the minimum by nothing (identical for every band from 0 to 0.05).
+
+So the pointwise evaluation was right and the **sampling** was wrong.  Two gaps, both pushing the
+value up, both worsening as the cover converges and the true deficits shrink toward the
+discretisation error — exactly the reported trend:
+
+1. **The angle net.**  `--sep-dtheta 0.4` looks at 213 of 2000 bins.  Measured on L1110f:
+
+   | bins scanned | float_min | scan |
+   |---|---|---|
+   | 213 (0.4°) | 0.9504 | 60 s |
+   | 409 (0.2°) | 0.6882 | 94 s |
+   | 770 (0.1°) | 0.6882 | 154 s |
+   | 2000 (every bin) | 0.6882 | 403 s |
+   | **exact** | **0.636114** | |
+
+   The worst pose is at bin 1919 (87.63°), which 0.4° skips — that alone is 0.31 of the 0.35 gap.
+
+2. **The centre grid.**  Even every bin leaves 0.688 against 0.636: a pitch of 0.004 does not land
+   on the worst centre.  Halving the pitch costs 4× and still only approaches it.
+
+### What did *not* work
+
+Making the scan evaluate the grid **cell** rather than the pose — shrinking the half-side to
+`h - pitch/2`, which is what the verifier's cell semantics literally ask for — is catastrophic on
+a converged certificate, because the cutting-plane loop puts its atoms *exactly on* the tight
+rows' square boundaries.  On L1110f the pose (3.48, 0.5) at θ = 0 captures 42 atoms of weight
+**2.499999** at `h = 0.499501` and 2 atoms of weight **0.013433** at `h - 0.002`.  With the shrink
+every leaf reports `float_min ≈ -lambda` (measured: −1.4866) and the oracle is useless.  Reverted,
+with the measurement recorded in `scan_bin`'s docstring so it is not tried again.
+
+### The fix
+
+* **Seeded local descent** (`floatsep.descend`, wired in `branch.py` as `seeds`): last round's rows
+  are the poses that were worst last round, and they barely move.  Descending from each of them —
+  three levels, each a small window at a quarter of the previous pitch, with the bin's atoms
+  sorted once per bin — recovers the resolution a global grid could only buy at `O(pitch^-2)`.
+  **On L1110f, with the previous round's 6000 rows as seeds and the coarse 0.4° net:
+  `float_min = 0.6361137` against the exact `0.636114` — inside 1e-6 — in 108 s.**
+* **Two-tier confirmation** (`branch.py`, `float_sep_two_tier`, `--sep-dtheta-full`, default 0.0 =
+  every bin): the coarse scan chooses rows every round, but the moment it reports `probe_min >= 1`
+  the scan is repeated over the whole angle net and *that* number decides whether the round counts
+  as clean.  A coarse "clean" can no longer spend an exact round to be told the deficit was 0.64.
+* **The region rule** (`floatsep.region_required`) is fixed anyway, because it was a genuine
+  conservativeness hole even though it is not what bit here.  The verifier requires `1 + lambda_j`
+  of any cell that *may meet* box `j` and only gives a negative `lambda` (a box switched off,
+  −2) to a cell wholly inside that box; the old rule charged by "is the centre in the box?", which
+  charged nothing in the outside band and handed the −2 discount to poses a cell-width inside the
+  free box.  Now the threshold is `max_j max(lambda_j, 0)` over the boxes within `band` (= the
+  grid pitch) of the pose, with the negative `lambda` applied only strictly deeper than `band`
+  inside.  On these two checkpoints it changes the minimum by nothing.
+* **An int64 overflow** in `bin_geometry`, found on the way: `g0*g1*SCALE` is ~6e19 at `N = 2000`
+  and `k` near `N`.  Called with a numpy integer — as any caller iterating over an array of bins
+  does — it wrapped silently and returned a garbage `sigma_k` and admissible box.  The production
+  path passed Python ints and was unaffected; the arguments are now coerced.
+
+### Validation
+
+| checkpoint | exact minimum | float, coarse 0.4°, no seeds | float, coarse 0.4° **+ seeds** | verdict |
+|---|---|---|---|---|
+| `runs/branch_L1110f_probe.txt` (2579 atoms, 214 cliques, per-box lambda) | 0.636114 | 0.9504417 | **0.6361137** | within 1e-6 |
+| `runs/branch_J16g_probe.txt` (5704 atoms, 144 cliques, lambda = +1.5) | 0.956688 | 0.9596716 | **0.9566882** | within 1e-6 |
+
+Cost of the seeded pass, 6 threads: L1110f 60 s grid-only → 108 s with 6000 seeds; J16g 10 s →
+77 s.  In the loop the seeds are the previous round's rows, which in a float round is a few
+hundred, not six thousand.
+
+Same-LP-value check re-run with the fixed oracle (`runs/rounds.sh`, `runs/rounds_out2.txt`): the
+`k = 4` leaf of `branch_t398hk4_*` still converges to **obj = 12.139560** in all five variants
+(exact; exact + corner rows; float; float + stab; exact + seed-from), each stopping on an exact
+verdict.  The clique cross-check (`runs/check_floatsep.py`) is unchanged: 732 k poses, 0
+mismatches.  `verify/src/main.rs` is untouched by this follow-up, so the bit-identity, rejection
+and `verify.sh` gates from section 3 still stand.
+
+### What is still approximate
+
+The full-net float scan is still not a lower bound: on the small `t398hk4` leaf it reported
+`1.0000010` at it4 where the exact sweep then found `0.9722230`.  That is the residual
+pose-versus-cell gap, and it is why the loop still only ever **stops** on an exact verdict — the
+float oracle's "clean" is a scheduling hint, never a claim.
+
 ## Reproducing
 
 ```sh
@@ -307,6 +412,8 @@ sh runs/fsep_bench.sh 0.004 0.4     # the float oracle on the same instances
 sh runs/rounds.sh                   # rounds-to-converge: corner rows / float / stab / seed-from
 sh runs/e2e.sh                      # tighten.py reopt both ways, then verify + xcheck both files
 python3 runs/check_floatsep.py certificates/s12_anchorclique_demo_3.9318.txt
+python3 runs/diag_floatsep.py runs/inst/branch_L1110f_probe.txt   # section 6's diagnosis
+sh runs/sweep_sep.sh runs/inst/branch_L1110f_probe.txt 0.636114   # float_min vs the angle net
 sh tests/bitid.sh runs/verify_ref   # the guardrail
 sh tests/rejection_tests.sh
 ```

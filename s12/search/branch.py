@@ -656,7 +656,7 @@ def load_cols(m, path, raw=False):
     return n
 
 
-def float_rows(m, x, lam, N, topk, probe_margin, pitch, dtheta, pool, nproc):
+def float_rows(m, x, lam, N, topk, probe_margin, pitch, dtheta, pool, nproc, seeds=None):
     """the float separation oracle of search/floatsep.py on the current LP point, in exactly the
     units the probe file would be written in.  Returns (min value, rows, info).  Only which rows
     are added depends on this; validity of a row does not (see floatsep's "Rows are valid")."""
@@ -666,13 +666,33 @@ def float_rows(m, x, lam, N, topk, probe_margin, pitch, dtheta, pool, nproc):
     lamv = [float(l) * f for l in (lam if m.perbox else [lam[0]] * 4)]
     ks = FS.bin_list(N, m.sym and not m.cliques, math.radians(dtheta))
     return FS.separate(m.P, w, m.s, N, ks, topk=topk, pitch=pitch, cliques=cq, lam=lamv, r=m.r,
-                       pool=pool, nproc=nproc)
+                       pool=pool, nproc=nproc, seeds=seeds)
+
+
+def float_sep_two_tier(m, x, lam, N, topk, probe_margin, pitch, dtheta, dtheta_full, pool, nproc, log=None, seeds=None):
+    """The float oracle at the coarse angle pitch, CONFIRMED at the full one before it is allowed
+    to report `probe_min >= 1` (task K follow-up; see search/LOOPSPEED.md 6).
+
+    A coarse scan looks at a tenth of the angle net, and on a converged leaf the worst poses live
+    in the bins it skips: measured on `runs/branch_L1110f_probe.txt`, whose exact minimum is
+    0.636114, the scan reports 0.950 at 0.4 deg, 0.688 at 0.2 deg and 0.636 at every bin.  Taking
+    the coarse number as "clean" is what made the loop spend an exact round to be told the deficit
+    was 0.64, not 0.99.  So: separate coarsely every round (that is only about choosing rows), and
+    the moment the coarse scan says it is clean, re-scan every bin and believe THAT."""
+    mv, rows, info = float_rows(m, x, lam, N, topk, probe_margin, pitch, dtheta, pool, nproc, seeds)
+    info['coarse_min'] = mv; info['full'] = False
+    if mv >= 1.0 and dtheta_full != dtheta:
+        mv2, rows2, info2 = float_rows(m, x, lam, N, topk, probe_margin, pitch, dtheta_full, pool, nproc, seeds)
+        info = dict(info2); info['coarse_min'] = mv; info['full'] = True
+        if log: log(f"    float: coarse ({info2['bins']} of the net) said {mv:.7f}, full net says {mv2:.7f}")
+        return mv2, rows2, info
+    return mv, rows, info
 
 
 def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe_margin=None, x0=None,
          prune_at=None, colgen=0, cg_want=200, cg_pitch=0.01, n=12, threads=None, dump_lp=None,
          cliques=0, cq_want=40, cq_pitch=0.01, matched=False, cq_interior=False,
-         sep_mode='exact', exact_every=5, sep_pitch=0.004, sep_dtheta=0.4, stab=0.0):
+         sep_mode='exact', exact_every=5, sep_pitch=0.004, sep_dtheta=0.4, sep_dtheta_full=0.0, stab=0.0):
     """cutting-plane loop; returns (x, lam, obj, info).  Asymmetric models sweep [0,90deg), i.e.
     2.4x the bins: fewer witnesses per bin and a higher prune threshold keep the row set stable
     (pruning every round makes the LP vertex jump and the dropped rows come straight back).
@@ -686,7 +706,7 @@ def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe
     if prune_at is None: prune_at = 40000 if m.sym else 60000       # solve time is superlinear in rows: ~20 s at 30k, hours at 120k
     tmp = f"runs/branch_{tag}_probe.txt"; sep = f"runs/branch_{tag}_sep.txt"
     t0 = time.time(); x = x0; lam = None; val = None; it = 0
-    pool = None; fclean = 0; xstab = None; lamstab = None
+    pool = None; fclean = 0; xstab = None; lamstab = None; seeds = []
     if sep_mode == 'float':
         import multiprocessing as mp
         pool = mp.get_context('fork').Pool(threads or 8)
@@ -725,7 +745,9 @@ def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe
                 xs = x; lams = lam
             xstab = xs.copy(); lamstab = np.asarray(lams).copy()
             t1 = time.time()
-            mvf, fwit, finfo = float_rows(m, xs, lams, N, topk, probe_margin, sep_pitch, sep_dtheta, pool, threads or 8)
+            mvf, fwit, finfo = float_sep_two_tier(m, xs, lams, N, topk, probe_margin, sep_pitch,
+                                                  sep_dtheta, sep_dtheta_full, pool, threads or 8, log=log,
+                                                  seeds=seeds)
             t_fsep = time.time() - t1; nfviol = len(fwit)
             fclean = fclean + 1 if mvf >= 1.0 else 0
             if fclean >= 2: want_exact = True
@@ -753,6 +775,9 @@ def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe
         ncq = 0; cqmass = None; cqpt = None; t_cq = 0.0
         if it < cliques:
             t1 = time.time(); ncq, cqmass, cqpt = price_cliques(m, y, x, want=cq_want, pitch=cq_pitch, interior=cq_interior); t_cq = time.time() - t1
+        # the poses that were worst this round seed next round's local descent: they barely move,
+        # and a grid alone will not land on them again (search/LOOPSPEED.md 6)
+        if sep_mode == 'float': seeds = list(wit[:4000])
         t1 = time.time(); added = m.add_rows(wit); t_rows = time.time() - t1
         save_cols(m, f"runs/branch_{tag}_cols.txt")          # checkpoint: every column, weight or not, so a restart loses nothing
         if m.cliques: save_cliques(m, f"runs/branch_{tag}_cliques.txt")
@@ -765,7 +790,7 @@ def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe
             + (f" pure={pureval:.6f} gain={pureval - val:+.6f}" if pureval is not None else "")
             + (f" cliques={len(m.cliques)} (+{ncq}, used {ncl_used}, weight {wcl:.6f}" + (f", ybar {cqmass:.4f} vs point {cqpt:.4f})" if cqmass is not None else ")") if (m.cliques or ncq) else "")
             + f" t={time.time()-t0:.0f}s [lp {t_lp:.0f}s ver {t_ver:.0f}s fsep {t_fsep:.0f}s cg {t_cg:.0f}s cq {t_cq:.0f}s rows {t_rows:.0f}s]"
-            + (f" [sep float_min={mvf:.7f} fviol={nfviol} clean={fclean}{' exact' if mv is not None else ''}]" if sep_mode == 'float' else "")
+            + (f" [sep float_min={mvf:.7f} fviol={nfviol} clean={fclean}{' full' if finfo.get('full') else ''}{' exact' if mv is not None else ''}]" if sep_mode == 'float' else "")
             + (f" [restricted: {ri['cols']} active cols, {ri['passes']} passes, {ri['neg_rc']} neg rc left]" if ri else ""))
         # only an EXACT verdict may stop the loop
         if added == 0 and mv is not None and mv >= 1 and ncol == 0 and ncq == 0: break
@@ -807,7 +832,7 @@ def finalize(m, x, lam, tag, out_path, N=6000, log=print, WD=10 ** 7, margin=2e-
 def run(cert, tag, kreg, r, Dp=None, mul=1, N=6000, topk=6, margin=2e-6, log=print, warm=True, out=None,
         colgen=0, cg_want=200, cg_pitch=0.01, n=12, threads=None, cols=None, warm_thr=1.05, prune_at=None, row_grid=None, max_iters=None, dump_lp=None, cols_raw=False,
         cliques=0, cq_want=40, cq_load=None, cq_pitch=0.01, matched=False, cq_interior=False,
-        sep_mode='exact', exact_every=5, sep_pitch=0.004, sep_dtheta=0.4, stab=0.0, seed_from=None, corner_rows_on=False):
+        sep_mode='exact', exact_every=5, sep_pitch=0.004, sep_dtheta=0.4, sep_dtheta_full=0.0, stab=0.0, seed_from=None, corner_rows_on=False):
     m, w0, s = build_model(cert, r, kreg, Dp, mul, raw_points=cols_raw)
     if row_grid: m.row_grid = tuple(row_grid)
     log(f"[{tag}] {cert}: {len(m.orbits)} columns / {len(m.P)} atoms ({'D4 orbits' if m.sym else 'single points'}), container {s} = {float(s):.7f}, r = {m.rfrac} = {m.r:.4f}, k = {kreg}, input total {float(m.sizes @ w0):.6f}")
@@ -839,7 +864,8 @@ def run(cert, tag, kreg, r, Dp=None, mul=1, N=6000, topk=6, margin=2e-6, log=pri
         log(f"[{tag}] restricted master: {int(m._active.sum())} of {len(m.orbits)} columns active at start")
     x, lam, val, info = loop(m, tag, margin=margin, N=N, topk=topk, log=log, colgen=colgen, cg_want=cg_want, cg_pitch=cg_pitch, n=n, threads=threads, prune_at=prune_at,
                              max_iters=max_iters if max_iters is not None else 400, dump_lp=dump_lp, cliques=cliques, cq_want=cq_want, cq_pitch=cq_pitch, matched=matched, cq_interior=cq_interior,
-                             sep_mode=sep_mode, exact_every=exact_every, sep_pitch=sep_pitch, sep_dtheta=sep_dtheta, stab=stab)
+                             sep_mode=sep_mode, exact_every=exact_every, sep_pitch=sep_pitch, sep_dtheta=sep_dtheta,
+                             sep_dtheta_full=sep_dtheta_full, stab=stab)
     if x is None: log(f"[{tag}] FAILED"); return None
     if max_iters is not None:
         log(f"[{tag}] stopped after {info.get('iters')} rounds (--max-iters): LP value {val:.7f}, dual in runs/branch_{tag}_dual.txt; no finalize")
@@ -887,7 +913,8 @@ def main():
                     help="separation oracle: 'exact' (default) runs the Rust verifier every round, as before; 'float' runs the numpy oracle of search/floatsep.py every round and the verifier only every --exact-every rounds and at convergence.  The loop still only STOPS on an exact verdict, and the final file is verified unchanged")
     ap.add_argument('--exact-every', type=int, default=5, help='--sep float: run the exact verifier every this many rounds (default 5; round 0 is always exact)')
     ap.add_argument('--sep-pitch', type=float, default=0.004, help='--sep float: centre pitch of the dense scan (default 0.004)')
-    ap.add_argument('--sep-dtheta', type=float, default=0.4, help='--sep float: angle pitch of the dense scan, in degrees (default 0.4)')
+    ap.add_argument('--sep-dtheta', type=float, default=0.4, help='--sep float: angle pitch of the dense scan, in degrees (default 0.4).  Only which rows are added depends on it')
+    ap.add_argument('--sep-dtheta-full', type=float, default=0.0, help="--sep float: angle pitch of the CONFIRMING scan, run whenever the coarse one reports probe_min >= 1 (default 0.0 = every bin of the net).  Set equal to --sep-dtheta to switch the confirmation off")
     ap.add_argument('--stab', type=float, default=0.0, help='in-out stabilisation: separate at (1-stab)*x + stab*(previous separation point) in the float rounds, to damp the probe sawtooth (0 = off, the default; 0.3 is a reasonable value)')
     ap.add_argument('--seed-from', action='append', default=None, metavar='LEAF', help='start from a sibling leaf\'s checkpoint: its columns, clique columns and the rows of its dual (runs/branch_LEAF_{cols,cliques,dual}.txt, or a path prefix).  The per-slot leaves differ only in the multipliers, so a converged sibling\'s binding rows are almost the right row set')
     ap.add_argument('--corner-rows', action='store_true', help='seed the warm start with poses centred in the ACTIVE corner boxes (lattice, h = 1/2).  Without them round 0 has no row charged to any multiplier and lambda goes straight to its cap')
@@ -906,7 +933,8 @@ def main():
     res = run(a.cert, a.tag, kreg, r, Dp=a.Dp, mul=a.mul, N=a.N, topk=a.topk, margin=a.margin, log=log, warm=not a.no_warm, out=a.out,
               colgen=a.colgen, cg_want=a.cg_want, cg_pitch=a.cg_pitch, n=a.n, threads=a.threads, cols=a.cols, warm_thr=a.warm_thr, prune_at=a.prune_at, row_grid=a.row_grid, max_iters=a.max_iters, dump_lp=a.dump_lp, cols_raw=a.cols_raw,
               cliques=a.cliques, cq_want=a.cq_want, cq_load=a.cq_load, cq_pitch=a.cq_pitch, matched=a.matched, cq_interior=a.cq_interior,
-              sep_mode=a.sep_mode, exact_every=a.exact_every, sep_pitch=a.sep_pitch, sep_dtheta=a.sep_dtheta, stab=a.stab,
+              sep_mode=a.sep_mode, exact_every=a.exact_every, sep_pitch=a.sep_pitch, sep_dtheta=a.sep_dtheta,
+              sep_dtheta_full=a.sep_dtheta_full, stab=a.stab,
               seed_from=a.seed_from, corner_rows_on=a.corner_rows)
     if res: json.dump(res, open(f"runs/branch_{a.tag}.json", 'w'), indent=1)
 
