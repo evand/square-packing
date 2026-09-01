@@ -783,6 +783,41 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
         }
         aord.sort_unstable();
     }
+    // Flat, cache-friendly form of the per-piece data the credit test needs (task K).  Measured,
+    // ~95 % of the (cell, piece) tests SUCCEED, so the cost is the test itself, not the search:
+    // the filter lists live behind a `Vec` per piece (a pointer chase per test), the `meets`
+    // half-plane test recomputes its u0 half every cell although the strip fixes it, and the
+    // "already credited" check was a linear scan of the cliques credited so far.
+    // `fo[pi]..fo[pi+1]` indexes the piece's filters with a segment normal (the others are
+    // skipped by the test anyway); `fn0/fn1/fp0l/fp0h/fp1l/fp1h/fbnd` are their numbers.
+    let (mut fo, mut fn0, mut fn1, mut fp0l, mut fp0h, mut fp1l, mut fp1h, mut fbnd, mut pcid, mut pai)
+        : (Vec<usize>, Vec<i128>, Vec<i128>, Vec<i128>, Vec<i128>, Vec<i128>, Vec<i128>, Vec<i128>, Vec<usize>, Vec<usize>)
+        = (vec![0], Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new());
+    if let Some((ab, an)) = anc {
+        for p in an.pieces.iter() {
+            pcid.push(p.0); pai.push(p.1);
+            for &f in &p.2 {
+                let y = &ab[f];
+                if y.nabs == 0 { continue; }
+                fn0.push(y.n0); fn1.push(y.n1);
+                fp0l.push(y.e[0][0]); fp0h.push(y.e[0][1]); fp1l.push(y.e[0][2]); fp1h.push(y.e[0][3]);
+                fbnd.push(cmul(hsc, y.nabs));
+            }
+            fo.push(fn0.len());
+        }
+    }
+    // per-strip cache: the u0 half of each filter's half-plane test, and the strip's verdict on the
+    // piece's u0 window.  Only the pieces of `aact` are refreshed, so this is ~30 entries a strip.
+    let np = anc.map(|(_, an)| an.pieces.len()).unwrap_or(0);
+    let mut sg_guard: Vec<bool> = vec![false; np];      // w0h >= a0s  (else the cell cannot meet the piece)
+    let mut sg_u0: Vec<bool> = vec![false; np];         // a0s >= w0l && b0s <= w0h
+    let mut sg_u0cm: Vec<bool> = vec![false; np];       // ... and core_margin inside
+    let mut flo: Vec<i128> = vec![0; fn0.len()];        // min(n0*(a0s-p0h), n0*(b0s-p0l))
+    let mut fhi: Vec<i128> = vec![0; fn0.len()];        // max(...)
+    // "already credited in this cell": a stamp per clique instead of a linear scan
+    let ncq = anc.map(|(_, an)| an.w.len()).unwrap_or(0);
+    let dstamp: Vec<std::cell::Cell<u64>> = (0..ncq).map(|_| std::cell::Cell::new(0u64)).collect();
+    let cellid = std::cell::Cell::new(0u64);
     // `core_margin`: a point with |v0|, |v1| <= h2 - core_margin is in the bin core whatever else
     // holds, so a cell that far inside a piece's window needs no per-corner test.  Both remaining
     // conditions of `in_core` are O(delta) corrections to |v| <= 1/2:
@@ -824,6 +859,18 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
             if aact.len() != n_before {
                 aact.retain(|&pi| awind[pi].1 >= a);
                 aact.sort_unstable_by_key(|&pi| awind[pi].2);      // by the window's u1 lower end
+            }
+            // refresh the per-strip cache for the pieces this strip can see
+            for &pi in aact.iter() {
+                let (w0l, w0h, _, _) = awin[pi];
+                sg_guard[pi] = w0h >= a0s;
+                sg_u0[pi] = a0s >= w0l && b0s <= w0h;
+                sg_u0cm[pi] = a0s >= w0l + core_margin && b0s <= w0h - core_margin;
+                for fi in fo[pi]..fo[pi+1] {
+                    let (r0l, r0h) = (a0s - fp0h[fi], b0s - fp0l[fi]);
+                    let (t00, t01) = (cmul(fn0[fi], r0l), cmul(fn0[fi], r0h));
+                    flo[fi] = t00.min(t01); fhi[fi] = t00.max(t01);
+                }
             }
         }
         let mut u1act: Vec<usize> = Vec::new(); let mut ptr1 = 0usize;
@@ -915,18 +962,18 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
             n_ancc.set(n_ancc.get() + 1); n_anct.set(n_anct.get() + u1act.len() as u64);
             let c0s = fdiv(cmul(c0, ASC), den_int); let c1s = cdiv(cmul(c1, ASC), den_int);
             let mut credit = 0i128;
+            cellid.set(cellid.get() + 1); let cid_now = cellid.get();
             for &pi in u1act.iter() {
-                let (w0l, w0h, w1l, w1h) = awin[pi];
-                if c1s < w1l || c0s > w1h || w0h < a0s { n_ancskip.set(n_ancskip.get() + 1); continue; }   // the cell cannot meet the piece
-                let (cid, ai, ref filt) = an.pieces[pi];
-                let mut ok = a0s >= w0l && b0s <= w0h && c0s >= w1l && c1s <= w1h;
+                let (_, _, w1l, w1h) = awin[pi];
+                if c1s < w1l || c0s > w1h || !sg_guard[pi] { n_ancskip.set(n_ancskip.get() + 1); continue; }   // the cell cannot meet the piece
+                let cid = pcid[pi];
+                let mut ok = sg_u0[pi] && c0s >= w1l && c1s <= w1h;
                 // fast path: a cell `core_margin` inside the window is in the core by the estimate
                 // above, so only the cells in a thin band around a piece's boundary are tested
-                if ok && !(a0s >= w0l + core_margin && b0s <= w0h - core_margin
-                           && c0s >= w1l + core_margin && c1s <= w1h - core_margin) {
+                if ok && !(sg_u0cm[pi] && c0s >= w1l + core_margin && c1s <= w1h - core_margin) {
                     // contains: every corner of (anchor endpoint - cell) lies in the exact bin core
                     n_anccore.set(n_anccore.get() + 1);
-                    let z = &ab[ai];
+                    let z = &ab[pai[pi]];
                     'ep: for j in 0..2 {
                         let (v0l, v0h) = (z.e[j][0] - b0s, z.e[j][1] - a0s);
                         let (v1l, v1h) = (z.e[j][2] - c1s, z.e[j][3] - c0s);
@@ -939,19 +986,15 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
                     // meets: the cell lies in (filter anchor) + [-h,h]^2.  The four box half-planes
                     // are the window; what is left is the segment's own normal (two half-planes),
                     // which is what the near miss of notes/clique-family.md 7 forgot.
-                    for &f in filt.iter() {
-                        let y = &ab[f];
-                        if y.nabs == 0 { continue; }
-                        let (p0l, p0h) = (y.e[0][0], y.e[0][1]); let (p1l, p1h) = (y.e[0][2], y.e[0][3]);
-                        let (r0l, r0h) = (a0s - p0h, b0s - p0l); let (r1l, r1h) = (c0s - p1h, c1s - p1l);
-                        let (t00, t01) = (cmul(y.n0, r0l), cmul(y.n0, r0h));
-                        let (t10, t11) = (cmul(y.n1, r1l), cmul(y.n1, r1h));
-                        let lo = cadd(t00.min(t01), t10.min(t11)); let hi = cadd(t00.max(t01), t10.max(t11));
-                        let bnd = cmul(hsc, y.nabs);
-                        if lo < -bnd || hi > bnd { ok = false; break; }
+                    // The u0 half of each half-plane is a constant of the strip (`flo`/`fhi`).
+                    for fi in fo[pi]..fo[pi+1] {
+                        let (r1l, r1h) = (c0s - fp1h[fi], c1s - fp1l[fi]);
+                        let (t10, t11) = (cmul(fn1[fi], r1l), cmul(fn1[fi], r1h));
+                        let lo = cadd(flo[fi], t10.min(t11)); let hi = cadd(fhi[fi], t10.max(t11));
+                        if lo < -fbnd[fi] || hi > fbnd[fi] { ok = false; break; }
                     }
                 }
-                if ok { n_ancok.set(n_ancok.get() + 1); if !done.contains(&cid) { credit = cadd(credit, an.w[cid]); done.push(cid); } } else { part.push(pi); }
+                if ok { n_ancok.set(n_ancok.get() + 1); if dstamp[cid].get() != cid_now { dstamp[cid].set(cid_now); credit = cadd(credit, an.w[cid]); } } else { part.push(pi); }
             }
             credit
         };
