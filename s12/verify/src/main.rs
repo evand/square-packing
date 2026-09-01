@@ -513,17 +513,29 @@ fn clip_rect_area(a: i128, b: i128, c0: i128, c1: i128, poly: &[[i128;2]], den: 
 /// `poly` (ccw), by Sutherland-Hodgman in f64; vertices are returned RELATIVE to (a, c0), in
 /// container units (the shift keeps the cell's full precision).  Empty if they do not meet.
 fn clip_rect_poly(a: i128, b: i128, c0: i128, c1: i128, poly: &[[i128;2]], den: f64) -> Vec<[f64;2]> {
+    let mut cur: Vec<[f64;2]> = Vec::new(); let mut inp: Vec<[f64;2]> = Vec::new();
+    clip_rect_poly_buf(a, b, c0, c1, poly, den, &mut cur, &mut inp);
+    cur
+}
+/// The same clip in caller-supplied scratch buffers.  The witness of every violated cell calls
+/// this, so the six `Vec` allocations the allocating version made per call were a large part of
+/// the whole sweep (task K).  The arithmetic and the order of operations are unchanged; the
+/// result is left in `cur`.
+fn clip_rect_poly_buf(a: i128, b: i128, c0: i128, c1: i128, poly: &[[i128;2]], den: f64,
+                      cur: &mut Vec<[f64;2]>, inp: &mut Vec<[f64;2]>) {
     let sh = |p: [i128;2]| [ (p[0]-a) as f64 / den, (p[1]-c0) as f64 / den ];
-    let mut cur: Vec<[f64;2]> = vec![[0.0,0.0], [(b-a) as f64/den, 0.0], [(b-a) as f64/den, (c1-c0) as f64/den], [0.0, (c1-c0) as f64/den]];
+    cur.clear();
+    cur.push([0.0,0.0]); cur.push([(b-a) as f64/den, 0.0]);
+    cur.push([(b-a) as f64/den, (c1-c0) as f64/den]); cur.push([0.0, (c1-c0) as f64/den]);
     let n = poly.len();
     for i in 0..n {
         let p = sh(poly[i]); let q = sh(poly[(i+1)%n]);
         let (ex, ey) = (q[0]-p[0], q[1]-p[1]);
         let side = |v: [f64;2]| ex*(v[1]-p[1]) - ey*(v[0]-p[0]);   // >= 0 : inside (left of the edge)
-        let inp = std::mem::take(&mut cur);
-        if inp.is_empty() { return cur; }
+        std::mem::swap(cur, inp); cur.clear();
+        if inp.is_empty() { return; }
         let mut sp = inp[inp.len()-1]; let mut dp = side(sp);
-        for &v in &inp {
+        for &v in inp.iter() {
             let dv = side(v);
             if dv >= 0.0 {
                 if dp < 0.0 { let t = dp/(dp-dv); cur.push([sp[0]+t*(v[0]-sp[0]), sp[1]+t*(v[1]-sp[1])]); }
@@ -532,7 +544,6 @@ fn clip_rect_poly(a: i128, b: i128, c0: i128, c1: i128, poly: &[[i128;2]], den: 
             sp = v; dp = dv;
         }
     }
-    cur
 }
 
 impl Tight {
@@ -553,6 +564,133 @@ impl Tight {
     }
 }
 
+/// The branch-region data a bin's sweep needs: (r, lambda, the four boxes' lower-left corners,
+/// the four boxes rotated into the bin's frame).  `None` for a plain certificate.
+type Reg = Option<(f64, [i128;4], [[f64;2];4], Vec<[[f64;2];4]>)>;
+
+/// f64: is the pose (centre u0, u1 in the bin's frame, angle theta_k) in piece `pi`?  Only the
+/// witness uses this, so floats are harmless: the verdict never depends on it.
+fn pose_in_piece(anc: Option<(&[ABin], &Anchors)>, pi: usize, u0: f64, u1: f64) -> bool {
+    let (ab, an) = match anc { Some(v) => v, None => return false };
+    let sc2 = 2.0 * ASC as f64;
+    let (_, ai, ref filt) = an.pieces[pi];
+    let z = &ab[ai];
+    for j in 0..2 {
+        let (zx, zy) = ((z.e[j][0] + z.e[j][1]) as f64 / sc2, (z.e[j][2] + z.e[j][3]) as f64 / sc2);
+        if (zx - u0).abs() > 0.5 || (zy - u1).abs() > 0.5 { return false; }
+    }
+    for &f in filt.iter() {
+        let y = &ab[f];
+        let (px, py) = ((y.e[0][0] + y.e[0][1]) as f64 / sc2, (y.e[0][2] + y.e[0][3]) as f64 / sc2);
+        let (qx, qy) = ((y.e[1][0] + y.e[1][1]) as f64 / sc2, (y.e[1][2] + y.e[1][3]) as f64 / sc2);
+        if u0 > px.max(qx) + 0.5 || u0 < px.min(qx) - 0.5 || u1 > py.max(qy) + 0.5 || u1 < py.min(qy) - 0.5 { return false; }
+        if y.nabs != 0 {
+            let (n0, n1) = (y.n0 as f64, y.n1 as f64);
+            if ((u0 - px)*n0 + (u1 - py)*n1).abs() > 0.5*(n0.abs() + n1.abs()) { return false; }
+        }
+    }
+    true
+}
+
+/// Some(j) = the pose is inside corner box j, Some(4) = outside every box, None = too close to call.
+fn pt_in_r(reg: &Reg, cnf: f64, snf: f64, gf: f64, u0: f64, u1: f64) -> Option<usize> {
+    const RPAD: f64 = 1e-7;
+    match reg {
+        None => Some(4),
+        Some((rf, _, boxes, _)) => {
+            let x = (cnf*u0 - snf*u1)/gf; let y = (snf*u0 + cnf*u1)/gf;
+            let mut ins = 4usize; let mut near = false;
+            for (j, bb) in boxes.iter().enumerate() {
+                if x >= bb[0]+RPAD && x <= bb[0]+rf-RPAD && y >= bb[1]+RPAD && y <= bb[1]+rf-RPAD { ins = j; }
+                if x >= bb[0]-RPAD && x <= bb[0]+rf+RPAD && y >= bb[1]-RPAD && y <= bb[1]+rf+RPAD { near = true; }
+            }
+            if ins < 4 { Some(ins) } else if !near { Some(4) } else { None }
+        }
+    }
+}
+
+/// The LP witness of one cell: a pose strictly inside the cell clipped to the admissible box, on
+/// the required side of the region boundary when the cell straddles it (`want_in` = the box index
+/// it should lie in, or 4 for "outside every box"), and avoiding the clique boxes / anchor pieces
+/// the cell only meets (`partial`, `apart`) so that the LP learns they do not reach there.
+///
+/// It runs once per violated cell -- in an unconverged probe that is a third of the arrangement,
+/// and measured (task K, `search/LOOPSPEED.md`) it was ~3/4 of the sweep on a certificate without
+/// cliques.  Almost all of that was the six heap allocations of the Sutherland-Hodgman clip, so
+/// the clip now runs in caller-supplied scratch buffers (`cur`, `inp`, `verts`).  The arithmetic
+/// is unchanged, hence so is every witness.
+/// Only the LP heuristics depend on this; the verdict does not.
+#[allow(clippy::too_many_arguments)]
+fn witness_of(a: i128, b: i128, c0: i128, c1: i128, ylo: i128, yhi: i128, want_in: usize,
+              partial: &[(f64,f64,f64,f64)], apart: &[usize],
+              rot: &[[i128;2]], den_all: f64, reg: &Reg, cnf: f64, snf: f64, gf: f64,
+              anc: Option<(&[ABin], &Anchors)>,
+              cur: &mut Vec<[f64;2]>, inp: &mut Vec<[f64;2]>, verts: &mut Vec<(f64,f64)>) -> (f64, f64) {
+    const RPAD: f64 = 1e-7;
+    // vertices of the cell clipped to the admissible polygon, absolute container units of u-space
+    let (oa, oc) = (a as f64/den_all, c0 as f64/den_all);
+    clip_rect_poly_buf(a, b, c0, c1, rot, den_all, cur, inp);
+    verts.clear(); verts.extend(cur.iter().map(|v| (v[0]+oa, v[1]+oc)));
+    let verts: &Vec<(f64,f64)> = verts;
+    if (!partial.is_empty() || !apart.is_empty()) && verts.len() >= 3 {
+        let n = verts.len() as f64;
+        let (m0, m1) = (verts.iter().map(|v| v.0).sum::<f64>()/n, verts.iter().map(|v| v.1).sum::<f64>()/n);
+        let outside = |u0: f64, u1: f64| partial.iter().all(|&(l0,h0,l1,h1)| u0 < l0 - RPAD || u0 > h0 + RPAD || u1 < l1 - RPAD || u1 > h1 + RPAD)
+            && apart.iter().all(|&pi| !pose_in_piece(anc, pi, u0, u1));
+        for &f in &[0.98f64, 1.0] {
+            for &(x0, y0) in verts.iter() {
+                let (u0, u1) = (f*x0 + (1.0-f)*m0, f*y0 + (1.0-f)*m1);
+                if outside(u0, u1) && (reg.is_none() || pt_in_r(reg, cnf, snf, gf, u0, u1) == Some(want_in)) { return ((cnf*u0 - snf*u1)/gf, (snf*u0 + cnf*u1)/gf); }
+            }
+        }
+    }
+    let mut pick = if verts.len() >= 3 {
+        let n = verts.len() as f64;
+        (verts.iter().map(|v| v.0).sum::<f64>()/n, verts.iter().map(|v| v.1).sum::<f64>()/n)
+    } else {
+        let (cc0, cc1) = (c0.max(ylo), c1.min(yhi));
+        (((a+b)/2) as f64/den_all, ((cc0+cc1)/2) as f64/den_all)
+    };
+    if reg.is_some() && verts.len() >= 3 && pt_in_r(reg, cnf, snf, gf, pick.0, pick.1) != Some(want_in) {
+        let (m0, m1) = pick;
+        'outer: for &f in &[0.75f64, 0.5, 0.9, 0.99, 1.0] {
+            for &(x0, y0) in verts.iter() {
+                let (u0, u1) = (f*x0 + (1.0-f)*m0, f*y0 + (1.0-f)*m1);
+                if pt_in_r(reg, cnf, snf, gf, u0, u1) == Some(want_in) { pick = (u0, u1); break 'outer; }
+            }
+        }
+    }
+    let (u0, u1) = pick;
+    ((cnf*u0 - snf*u1)/gf, (snf*u0 + cnf*u1)/gf)
+}
+
+/// Counters for the diagnostic summary printed to STDERR when `VERIFY_STATS` is set (task K,
+/// `search/LOOPSPEED.md`).  They are plain `u64` adds in the sweep and never touch stdout, the
+/// witness file or the TIGHT_DUMP, so output is bit-identical with and without `VERIFY_STATS`.
+#[derive(Default, Clone)]
+struct Stats {
+    strips: u64,        // arrangement strips entered (u0-breakpoint intervals inside the centre box)
+    cells: u64,         // cells whose weight was evaluated
+    active: u64,        // sum over strips of the atoms active in u0 (the arrangement's width)
+    band: u64,          // sum over strips of the atoms kept after the u1 band restriction
+    anc_calls: u64,     // cells for which the anchor-clique credit was computed
+    anc_tests: u64,     // (cell, piece) pairs examined by that credit
+    anc_core: u64,      // of those, the ones that needed the exact bin-core corner test
+    anc_skip: u64,      // of those, the ones the window test rejected outright
+    anc_ok: u64,        // of those, the ones that held the whole cell (a credit)
+    cl_cands: u64,      // sum over strips of the clique boxes meeting the strip
+    cl_tests: u64,      // (cell, clique box) pairs examined
+    wits: u64,          // witness placements computed
+}
+impl Stats {
+    fn add(&mut self, o: &Stats) {
+        self.strips += o.strips; self.cells += o.cells; self.active += o.active; self.band += o.band;
+        self.anc_calls += o.anc_calls; self.anc_tests += o.anc_tests; self.anc_core += o.anc_core;
+        self.anc_skip += o.anc_skip; self.anc_ok += o.anc_ok;
+        self.cl_cands += o.cl_cands; self.cl_tests += o.cl_tests; self.wits += o.wits;
+    }
+}
+
 /// `tight`: in dump mode every cell with sum <= thresh is counted (and appended, up to the cap)
 /// as (a, b, c0, c1, sum, cx, cy) -- positions over DEN -- and an EMPTY strip is recorded (sum 0)
 /// instead of returning early.  With `tight == None` the function is exactly the original.
@@ -563,8 +701,13 @@ impl Tight {
 /// the LP learns the box does not reach there.
 fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm_n: i128, wm_d: i128, topk: usize,
                mut tight: Option<&mut Tight>, cl: Option<(&[(usize,i128,i128,i128,i128)], &[i128], i128)>,
-               anc: Option<(&[ABin], &Anchors)>, cd: i128, sd: i128, gg: i128) -> (i128, Vec<(i128,f64,f64,u8)>) {
+               anc: Option<(&[ABin], &Anchors)>, cd: i128, sd: i128, gg: i128) -> (i128, Vec<(i128,f64,f64,u8)>, Stats) {
     // sg_n/sg_d = sigma (side of shrunken square), wm_n/wm_d = lower bound on min width
+    use std::cell::Cell;
+    let (n_strips, n_cells, n_active, n_band) = (Cell::new(0u64), Cell::new(0u64), Cell::new(0u64), Cell::new(0u64));
+    let (n_ancc, n_anct, n_anccore) = (Cell::new(0u64), Cell::new(0u64), Cell::new(0u64));
+    let (n_ancskip, n_ancok) = (Cell::new(0u64), Cell::new(0u64));
+    let (n_clc, n_clt, n_wit) = (Cell::new(0u64), Cell::new(0u64), Cell::new(0u64));
     let m = c.atoms.len();
     // Scaling.  Positions have denominator d.  Rotation has denominator g.  sigma = sg_n/sg_d.
     // Work with numerators over the common denominator  DEN = 2 * sg_d * wm_d * d * g.
@@ -577,7 +720,7 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
     // numerators over DEN/g  (i.e. over 2*sg_d*wm_d*d):
     let l_c: i128 = sg_d * wm_n * c.d;                                   // L * (2 sg_d wm_d d)
     let u_c: i128 = 2*sg_d*wm_d*c.d*c.s_num/c.s_den - sg_d*wm_n*c.d;     // U * (same)
-    if u_c <= l_c { return (i128::MAX, Vec::new()); }
+    if u_c <= l_c { return (i128::MAX, Vec::new(), Stats::default()); }
     // rotate the four corners into u-space: multiply by (cn,sn) -> numerators over DEN
     let corners: [[i128;2];4] = [[l_c,l_c],[u_c,l_c],[u_c,u_c],[l_c,u_c]];
     let rot: Vec<[i128;2]> = corners.iter().map(|p| [ cn*p[0] + sn*p[1], -sn*p[0] + cn*p[1] ]).collect();
@@ -655,13 +798,23 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
     bx.sort_unstable(); bx.dedup();
     let mut qs = q.clone(); qs.sort_unstable_by_key(|t| t.0);
     let qx: Vec<i128> = qs.iter().map(|t| t.0).collect();
+    // the same atoms in u1 order, each with its weight and its index in the u0 order: this is the
+    // per-bin structure that lets every strip build its u1 arrangement without sorting
+    let mut gy: Vec<(i128,i128,u32)> = qs.iter().enumerate().map(|(i,t)| (t.1, t.2, i as u32)).collect();
+    gy.sort_unstable_by_key(|t| t.0);
     let mut best = i128::MAX;
     let mut heap: Vec<(i128,f64,f64,u8)> = Vec::new();
-    let mut den_f = 0.0f64;
     let mut bands: Vec<(f64,f64)> = Vec::new();
+    // scratch for the witness clip (see `witness_of`)
+    let (mut wcur, mut winp, mut wver) = (Vec::<[f64;2]>::new(), Vec::<[f64;2]>::new(), Vec::<(f64,f64)>::new());
+    // reused across strips: a fresh Vec per strip is a heap allocation per strip
+    let mut yv: Vec<i128> = Vec::with_capacity(m + 1);
+    let mut pre: Vec<i128> = Vec::with_capacity(m + 2);
+    let mut by: Vec<i128> = Vec::with_capacity(2*m + 4);
     for w in 0..bx.len()-1 {
         let (a,b) = (bx[w], bx[w+1]);
         if b <= px0 || a >= px1 { continue; }
+        n_strips.set(n_strips.get() + 1);
         // anchor pieces whose u0-window meets this strip (the windows are sorted by their lower end
         // and both a and b increase, so this is a sweep)
         let (a0s, b0s) = if anc.is_some() { (fdiv(cmul(a, ASC), den_int), cdiv(cmul(b, ASC), den_int)) } else { (0, 0) };
@@ -681,6 +834,7 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
         // CLOSED squares: atom counts iff |q0 - u0| <= h for every u0 in [a,b]
         let i0 = qx.partition_point(|&v| v <  b-hh);
         let i1 = qx.partition_point(|&v| v <= a+hh);
+        n_active.set(n_active.get() + (i1.saturating_sub(i0)) as u64);
         // y-range of the admissible (rotated) square over the strip [a,b].
         // Computed in f64 and WIDENED: a superset is always sound (it can only add centres).
         let (af, bf) = (a as f64, b as f64);
@@ -709,24 +863,6 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
                 }
             }
         };
-        // Witness choice for the LP: a pose strictly inside the cell clipped to the admissible
-        // box, on the required side of the region boundary when the cell straddles it (flag 1:
-        // inside a corner box, flag 0: outside all of them); the clipped midpoint otherwise.
-        // Only the LP heuristics depend on this; the verdict does not.
-        let pt_in_r = |u0: f64, u1: f64| -> Option<usize> {      // Some(j)=inside box j, Some(4)=outside all, None=ambiguous
-            match &reg {
-                None => Some(4),
-                Some((rf, _, boxes, _)) => {
-                    let x = (cnf*u0 - snf*u1)/gf; let y = (snf*u0 + cnf*u1)/gf;
-                    let mut ins = 4usize; let mut near = false;
-                    for (j, bb) in boxes.iter().enumerate() {
-                        if x >= bb[0]+RPAD && x <= bb[0]+rf-RPAD && y >= bb[1]+RPAD && y <= bb[1]+rf-RPAD { ins = j; }
-                        if x >= bb[0]-RPAD && x <= bb[0]+rf+RPAD && y >= bb[1]-RPAD && y <= bb[1]+rf+RPAD { near = true; }
-                    }
-                    if ins < 4 { Some(ins) } else if !near { Some(4) } else { None }
-                }
-            }
-        };
         // Clique boxes meeting this strip in u0 (open), each with "contains [a,b] in u0".
         // Comparisons are exact: cell numerators are over DEN, box numerators over Q.
         let den_i: i128 = 2*sg_d*wm_d*c.d*g;
@@ -737,11 +873,13 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
                 let (l0, h0) = (cmul(lo0, den_i), cmul(hi0, den_i));
                 if l0 < bq && aq < h0 { cands.push((cid, l0, h0, cmul(lo1, den_i), cmul(hi1, den_i), l0 <= aq && bq <= h0)); }
             }
+            n_clc.set(n_clc.get() + cands.len() as u64);
         }
         // clique credit of the cell [a,b] x [c0,c1]: each clique once, iff some box contains the
         // cell; also the boxes that meet the cell without containing it (for the witness)
         let clique_credit = |c0: i128, c1: i128| -> (i128, Vec<(f64,f64,f64,f64)>) {
             if cands.is_empty() { return (0, Vec::new()); }
+            n_clt.set(n_clt.get() + cands.len() as u64);
             let (_, cw, q) = cl.unwrap();
             let (c0q, c1q) = (cmul(c0, q), cmul(c1, q));
             let mut credit = 0; let mut last = usize::MAX; let mut partial = Vec::new();
@@ -774,11 +912,12 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
                 if !u1act.is_empty() { u1act.retain(|&pi| awind[pi].3 >= c0); }
             }
             if u1act.is_empty() { return 0; }
+            n_ancc.set(n_ancc.get() + 1); n_anct.set(n_anct.get() + u1act.len() as u64);
             let c0s = fdiv(cmul(c0, ASC), den_int); let c1s = cdiv(cmul(c1, ASC), den_int);
             let mut credit = 0i128;
             for &pi in u1act.iter() {
                 let (w0l, w0h, w1l, w1h) = awin[pi];
-                if c1s < w1l || c0s > w1h || w0h < a0s { continue; }   // the cell cannot meet the piece
+                if c1s < w1l || c0s > w1h || w0h < a0s { n_ancskip.set(n_ancskip.get() + 1); continue; }   // the cell cannot meet the piece
                 let (cid, ai, ref filt) = an.pieces[pi];
                 let mut ok = a0s >= w0l && b0s <= w0h && c0s >= w1l && c1s <= w1h;
                 // fast path: a cell `core_margin` inside the window is in the core by the estimate
@@ -786,6 +925,7 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
                 if ok && !(a0s >= w0l + core_margin && b0s <= w0h - core_margin
                            && c0s >= w1l + core_margin && c1s <= w1h - core_margin) {
                     // contains: every corner of (anchor endpoint - cell) lies in the exact bin core
+                    n_anccore.set(n_anccore.get() + 1);
                     let z = &ab[ai];
                     'ep: for j in 0..2 {
                         let (v0l, v0h) = (z.e[j][0] - b0s, z.e[j][1] - a0s);
@@ -811,69 +951,9 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
                         if lo < -bnd || hi > bnd { ok = false; break; }
                     }
                 }
-                if ok { if !done.contains(&cid) { credit = cadd(credit, an.w[cid]); done.push(cid); } } else { part.push(pi); }
+                if ok { n_ancok.set(n_ancok.get() + 1); if !done.contains(&cid) { credit = cadd(credit, an.w[cid]); done.push(cid); } } else { part.push(pi); }
             }
             credit
-        };
-        // f64: is the pose (centre u0,u1 in the bin's frame, angle theta_k) in piece `pi`?  Only the
-        // witness uses this, so floats are harmless: the verdict never depends on it.
-        let pose_in_piece = |pi: usize, u0: f64, u1: f64| -> bool {
-            let (ab, an) = match anc { Some(v) => v, None => return false };
-            let sc2 = 2.0 * ASC as f64;
-            let (_, ai, ref filt) = an.pieces[pi];
-            let z = &ab[ai];
-            for j in 0..2 {
-                let (zx, zy) = ((z.e[j][0] + z.e[j][1]) as f64 / sc2, (z.e[j][2] + z.e[j][3]) as f64 / sc2);
-                if (zx - u0).abs() > 0.5 || (zy - u1).abs() > 0.5 { return false; }
-            }
-            for &f in filt.iter() {
-                let y = &ab[f];
-                let (px, py) = ((y.e[0][0] + y.e[0][1]) as f64 / sc2, (y.e[0][2] + y.e[0][3]) as f64 / sc2);
-                let (qx, qy) = ((y.e[1][0] + y.e[1][1]) as f64 / sc2, (y.e[1][2] + y.e[1][3]) as f64 / sc2);
-                if u0 > px.max(qx) + 0.5 || u0 < px.min(qx) - 0.5 || u1 > py.max(qy) + 0.5 || u1 < py.min(qy) - 0.5 { return false; }
-                if y.nabs != 0 {
-                    let (n0, n1) = (y.n0 as f64, y.n1 as f64);
-                    if ((u0 - px)*n0 + (u1 - py)*n1).abs() > 0.5*(n0.abs() + n1.abs()) { return false; }
-                }
-            }
-            true
-        };
-        // want_in: the box index the witness should lie in, or 4 for "outside every box";
-        // partial: clique boxes / anchor pieces the cell meets without lying inside -- avoided
-        let witness = |c0: i128, c1: i128, want_in: usize, partial: &[(f64,f64,f64,f64)], apart: &[usize]| -> (f64, f64) {
-            // vertices of the cell clipped to the admissible polygon, absolute container units of u-space
-            let (oa, oc) = (a as f64/den_all, c0 as f64/den_all);
-            let verts: Vec<(f64,f64)> = clip_rect_poly(a, b, c0, c1, &rot, den_all).iter().map(|v| (v[0]+oa, v[1]+oc)).collect();
-            if (!partial.is_empty() || !apart.is_empty()) && verts.len() >= 3 {
-                let n = verts.len() as f64;
-                let (m0, m1) = (verts.iter().map(|v| v.0).sum::<f64>()/n, verts.iter().map(|v| v.1).sum::<f64>()/n);
-                let outside = |u0: f64, u1: f64| partial.iter().all(|&(l0,h0,l1,h1)| u0 < l0 - RPAD || u0 > h0 + RPAD || u1 < l1 - RPAD || u1 > h1 + RPAD)
-                    && apart.iter().all(|&pi| !pose_in_piece(pi, u0, u1));
-                for &f in &[0.98f64, 1.0] {
-                    for &(x0, y0) in &verts {
-                        let (u0, u1) = (f*x0 + (1.0-f)*m0, f*y0 + (1.0-f)*m1);
-                        if outside(u0, u1) && (reg.is_none() || pt_in_r(u0, u1) == Some(want_in)) { return ((cnf*u0 - snf*u1)/gf, (snf*u0 + cnf*u1)/gf); }
-                    }
-                }
-            }
-            let mut pick = if verts.len() >= 3 {
-                let n = verts.len() as f64;
-                (verts.iter().map(|v| v.0).sum::<f64>()/n, verts.iter().map(|v| v.1).sum::<f64>()/n)
-            } else {
-                let (cc0, cc1) = (c0.max(ylo), c1.min(yhi));
-                (((a+b)/2) as f64/den_all, ((cc0+cc1)/2) as f64/den_all)
-            };
-            if reg.is_some() && verts.len() >= 3 && pt_in_r(pick.0, pick.1) != Some(want_in) {
-                let (m0, m1) = pick;
-                'outer: for &f in &[0.75f64, 0.5, 0.9, 0.99, 1.0] {
-                    for &(x0, y0) in &verts {
-                        let (u0, u1) = (f*x0 + (1.0-f)*m0, f*y0 + (1.0-f)*m1);
-                        if pt_in_r(u0, u1) == Some(want_in) { pick = (u0, u1); break 'outer; }
-                    }
-                }
-            }
-            let (u0, u1) = pick;
-            ((cnf*u0 - snf*u1)/gf, (snf*u0 + cnf*u1)/gf)
         };
         if i1 <= i0 {
             if std::env::var("DBG").is_ok() {
@@ -890,7 +970,7 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
             let (ccred, partial) = clique_credit(ylo, yhi);
             let acred = anchor_credit(ylo, yhi, &mut u1act, &mut ptr1, true, &mut apart, &mut adone);
             let v = ccred + acred - required(may, inside);
-            let (cx, cy) = if tight.is_none() { witness(ylo, yhi, inside, &partial, &apart) } else { (cx, cy) };
+            let (cx, cy) = if tight.is_none() { n_wit.set(n_wit.get() + 1); witness_of(a, b, ylo, yhi, ylo, yhi, inside, &partial, &apart, &rot, den_all, &reg, cnf, snf, gf, anc, &mut wcur, &mut winp, &mut wver) } else { (cx, cy) };
             if let Some(t) = tight.as_mut() {
                 // dump mode: record the empty strip as one cell of sum 0 and keep sweeping
                 if 0 <= t.thresh {
@@ -902,23 +982,51 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
             }
             if v < best { best = v; }
             if v >= c.wd { continue; }          // only with lam <= -W and the strip inside the region: the corner is free
-            return (v, vec![(v, cx, cy, if inside < 4 {(inside + 1) as u8} else {0})]);
+            let st = Stats { strips: n_strips.get(), cells: n_cells.get(), active: n_active.get(), band: n_band.get(),
+                             anc_calls: n_ancc.get(), anc_tests: n_anct.get(), anc_core: n_anccore.get(), anc_skip: n_ancskip.get(), anc_ok: n_ancok.get(),
+                             cl_cands: n_clc.get(), cl_tests: n_clt.get(), wits: n_wit.get() };
+            return (v, vec![(v, cx, cy, if inside < 4 {(inside + 1) as u8} else {0})], st);
         }                 // a whole strip of admissible centres covers nothing
-        let mut ys: Vec<(i128,i128)> = qs[i0..i1].iter().map(|t| (t.1, t.2)).collect();
-        ys.sort_unstable();
-        let yv: Vec<i128> = ys.iter().map(|t| t.0).collect();
-        let mut pre: Vec<i128> = Vec::with_capacity(ys.len()+1); pre.push(0);
-        for t in &ys { pre.push(pre.last().unwrap() + t.1); }
-        // y-breakpoints
-        let mut by: Vec<i128> = Vec::with_capacity(2*ys.len()+2);
-        for t in &ys { by.push(t.0-hh); by.push(t.0+hh); }
-        by.push(ylo); by.push(yhi);
-        by.sort_unstable(); by.dedup();
+        // The active atoms in u1 order, WITHOUT a sort (task K).  `gy` is the whole atom set in u1
+        // order, built once per bin; the strip's list is a linear filter of the band of `gy` that
+        // can matter.  An atom with q1 outside [ylo - h, yhi + h] is in no window of any cell of
+        // this strip (a cell has c1 > ylo and c0 < yhi, and the window is [c1 - h, c0 + h]) and
+        // its two breakpoints q1 +- h lie outside [ylo, yhi], where no cell is evaluated.  So
+        // `yv`, `pre` and `by` describe exactly the cells and sums the sort produced.
+        let s0 = gy.partition_point(|t| t.0 < ylo - hh);
+        let s1 = gy.partition_point(|t| t.0 <= yhi + hh);
+        yv.clear(); pre.clear(); pre.push(0);
+        for t in &gy[s0..s1] {
+            let ix = t.2 as usize;
+            if ix >= i0 && ix < i1 { yv.push(t.0); pre.push(*pre.last().unwrap() + t.1); }
+        }
+        n_band.set(n_band.get() + yv.len() as u64);
+        // y-breakpoints in [ylo, yhi]: the two sorted sequences yv - h and yv + h merged with the
+        // pair (ylo, yhi) and deduplicated in one pass -- the sort of 2A i128s is gone.
+        by.clear();
+        {
+            let (mut ia, mut ib, mut ic) = (0usize, 0usize, 0usize);
+            let ex = [ylo, yhi];
+            loop {
+                let mut bv = i128::MAX; let mut src = 3u8;
+                if ia < yv.len() { let v = yv[ia]-hh; if v < bv { bv = v; src = 0; } }
+                if ib < yv.len() { let v = yv[ib]+hh; if v < bv { bv = v; src = 1; } }
+                if ic < 2 { let v = ex[ic]; if v < bv { bv = v; src = 2; } }
+                match src { 0 => ia += 1, 1 => ib += 1, 2 => ic += 1, _ => break }
+                if bv < ylo || bv > yhi { continue; }
+                if by.last() != Some(&bv) { by.push(bv); }
+            }
+        }
+        // j0 / j1 advance monotonically with the cells, so the two binary searches per cell are
+        // two sweeping pointers
+        let (mut p0, mut p1) = (0usize, 0usize);
         for t in 0..by.len()-1 {
             let (c0,c1) = (by[t], by[t+1]);
             if c1 <= ylo || c0 >= yhi { continue; }
-            let j0 = yv.partition_point(|&v| v <  c1-hh);
-            let j1 = yv.partition_point(|&v| v <= c0+hh);
+            n_cells.set(n_cells.get() + 1);
+            while p0 < yv.len() && yv[p0] <  c1-hh { p0 += 1; }
+            while p1 < yv.len() && yv[p1] <= c0+hh { p1 += 1; }
+            let (j0, j1) = (p0, p1);
             let sum = if j1>j0 { pre[j1]-pre[j0] } else { 0 };
             let (ccred, partial) = clique_credit(c0, c1);
             let mut sum = sum + ccred;
@@ -941,7 +1049,7 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
                         (a as f64)/sc, (b as f64)/sc, (c0 as f64)/sc, (c1 as f64)/sc,
                         (ylo as f64)/sc, (yhi as f64)/sc, i1-i0, j1-j0, sum, may, inside);
                     eprintln!("    h = {:.6}", (hh as f64)/sc);
-                    let mut lst: Vec<String> = ys.iter().map(|t| format!("{:.4}", (t.0 as f64)/sc)).collect();
+                    let mut lst: Vec<String> = yv.iter().map(|v| format!("{:.4}", (*v as f64)/sc)).collect();
                     lst.sort(); eprintln!("    active y: {}", lst.join(","));
                 }
             }
@@ -959,14 +1067,23 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
                 // One witness per violated threshold: flag 1 = "needs 1 + lambda" (cell meets the
                 // region), flag 0 = "needs 1" (cell is not entirely inside the region).
                 // flag j+1 = "needs 1 + lambda_j" (cell meets box j), flag 0 = "needs 1" (cell not inside a box)
-                for j in 0..4 { if may & (1 << j) != 0 && sum < c.wd + lams[j] { let (cx, cy) = witness(c0, c1, j, &partial, &apart); heap.push((sum - lams[j], cx, cy, (j + 1) as u8)); } }
-                if inside == 4 && sum < c.wd { let (cx, cy) = witness(c0, c1, 4, &partial, &apart); heap.push((sum, cx, cy, 0)); }
+                for j in 0..4 { if may & (1 << j) != 0 && sum < c.wd + lams[j] {
+                    n_wit.set(n_wit.get() + 1);
+                    let (cx, cy) = witness_of(a, b, c0, c1, ylo, yhi, j, &partial, &apart, &rot, den_all, &reg, cnf, snf, gf, anc, &mut wcur, &mut winp, &mut wver);
+                    heap.push((sum - lams[j], cx, cy, (j + 1) as u8)); } }
+                if inside == 4 && sum < c.wd {
+                    n_wit.set(n_wit.get() + 1);
+                    let (cx, cy) = witness_of(a, b, c0, c1, ylo, yhi, 4, &partial, &apart, &rot, den_all, &reg, cnf, snf, gf, anc, &mut wcur, &mut winp, &mut wver);
+                    heap.push((sum, cx, cy, 0)); }
                 if heap.len()>4*topk { heap.sort_unstable_by_key(|t| t.0); heap.truncate(topk); }
             }
         }
     }
     heap.sort_unstable_by_key(|t| t.0); heap.truncate(topk);
-    (best, heap)
+    let st = Stats { strips: n_strips.get(), cells: n_cells.get(), active: n_active.get(), band: n_band.get(),
+                     anc_calls: n_ancc.get(), anc_tests: n_anct.get(), anc_core: n_anccore.get(), anc_skip: n_ancskip.get(), anc_ok: n_ancok.get(),
+                     cl_cands: n_clc.get(), cl_tests: n_clt.get(), wits: n_wit.get() };
+    (best, heap, st)
 }
 
 fn main() {
@@ -1072,6 +1189,11 @@ fn main() {
     println!("angles: k=0..{} (N={}), covering {}", kk, bigN, if sym {"[0,45deg]"} else {"[0,90deg]"});
     let bad = Arc::new(AtomicI64::new(0));
     let minw = Arc::new(std::sync::Mutex::new((i128::MAX, 0i128)));
+    // VERIFY_STATS: a one-line size/shape summary of the sweep on STDERR after the verdict
+    // (task K instrumentation).  Stdout, the witness file and TIGHT_DUMP are untouched.
+    let stats_on = env::var("VERIFY_STATS").is_ok();
+    let stats: Arc<std::sync::Mutex<Stats>> = Arc::new(std::sync::Mutex::new(Stats::default()));
+    let t_start = std::time::Instant::now();
     // clique boxes by bin (in file order, which is clique order, so each list is sorted by clique id)
     let per_bin: Arc<Vec<Vec<(usize,i128,i128,i128,i128)>>> = Arc::new({
         let mut v: Vec<Vec<(usize,i128,i128,i128,i128)>> = vec![Vec::new(); kk as usize + 1];
@@ -1084,7 +1206,7 @@ fn main() {
     for t in 0..threads {
         let cert = cert.clone(); let bad = bad.clone(); let minw = minw.clone(); let out = out.clone();
         let tight_out = tight_out.clone(); let tight_count = tight_count.clone(); let tight_written = tight_written.clone();
-        let per_bin = per_bin.clone();
+        let per_bin = per_bin.clone(); let stats = stats.clone();
         hs.push(thread::spawn(move || {
             for k in (t*chunk)..(((t+1)*chunk).min(kk as usize)) {
                 let k = k as i128;
@@ -1113,7 +1235,8 @@ fn main() {
                 // per-bin work an anchor clique costs outside the sweep)
                 let abins: Option<Vec<ABin>> = cert.anchors.as_ref().map(|an| an.anc.iter().map(|a| anchor_bin(a, c0, s0, g0)).collect());
                 let ancp = match (&abins, &cert.anchors) { (Some(v), Some(an)) => Some((v.as_slice(), an)), _ => None };
-                let (v, wit) = min_cover_k(&cert, c0, s0, g0, sg_n, sg_d, wm_n, wm_d, topk, tstate.as_mut(), clk, ancp, cd, sd, g0*g1);
+                let (v, wit, bst) = min_cover_k(&cert, c0, s0, g0, sg_n, sg_d, wm_n, wm_d, topk, tstate.as_mut(), clk, ancp, cd, sd, g0*g1);
+                if stats_on { let mut s = stats.lock().unwrap(); s.add(&bst); }
                 if let (Some(tw), Some(ts)) = (&tight_out, &tstate) {
                     use std::io::Write;
                     let den = 2*sg_d*wm_d*cert.d*g0;
@@ -1177,4 +1300,14 @@ fn main() {
             },
         }
     } else { println!("NOT VERIFIED"); }
+    if stats_on {
+        let s = stats.lock().unwrap();
+        let el = t_start.elapsed().as_secs_f64();
+        eprintln!("VERIFY_STATS atoms={} bins={} threads={} wall={:.2}s | strips={} cells={} active={} (avg {:.1}/strip) | anchor: pieces={} calls={} tests={} skip={} ok={} core={} | cliqueboxes: cands={} tests={} | witnesses={} | ns/cell={:.1}",
+                  cert.atoms.len(), kk + 1, threads, el,
+                  s.strips, s.cells, s.active, if s.strips > 0 { s.active as f64 / s.strips as f64 } else { 0.0 },
+                  cert.anchors.as_ref().map(|a| a.pieces.len()).unwrap_or(0), s.anc_calls, s.anc_tests, s.anc_skip, s.anc_ok, s.anc_core,
+                  s.cl_cands, s.cl_tests, s.wits,
+                  if s.cells > 0 { el * 1e9 * threads as f64 / s.cells as f64 } else { 0.0 });
+    }
 }

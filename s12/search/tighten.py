@@ -284,24 +284,47 @@ def price(m, y, pitch=0.01, want=200, ysup=1e-9):
 
 def tighten(m, tag, margin=2e-6, N=6000, topk=6, max_iters=200, log=print, cost=None, budget=None,
             fixed_zero=None, probe_margin=None, final_check=True, x0=None, prune_at=120000,
-            colgen=0, cg_want=200, cg_pitch=0.01, n=12):
+            colgen=0, cg_want=200, cg_pitch=0.01, n=12,
+            sep_mode='exact', exact_every=5, sep_pitch=0.004, sep_dtheta=0.4):
     """cutting-plane loop.  Returns (x, val, info).
     colgen=k: for the first k iterations also generate columns: the dual y is a (D4-symmetrised)
     packing measure on the rows; points where its closed-square coverage exceeds 1 have negative
     reduced cost |orbit|(1 - coverage) < 0.  `price` evaluates the symmetrised coverage on a
-    pitch-grid, refines on the integer grid, and the best `cg_want` points are added."""
+    pitch-grid, refines on the integer grid, and the best `cg_want` points are added.
+    sep_mode='float': separate with search/floatsep.py and run the exact verifier only every
+    `exact_every` rounds and at convergence (task K, search/LOOPSPEED.md).  The loop still only
+    STOPS on an exact verdict, and the final file is verified unchanged."""
     if probe_margin is None: probe_margin = margin / 2
     tmp = f"runs/tight_{tag}_probe.txt"; sep = f"runs/tight_{tag}_sep.txt"
     t0 = time.time(); x = x0; val = None; it = 0
+    pool = None; fclean = 0
+    if sep_mode == 'float':
+        import multiprocessing as mp, floatsep as FS
+        pool = mp.get_context('fork').Pool(NPROC if NPROC <= 8 else 8)
     while it < max_iters:
         out = m.solve(margin, cost=cost, budget=budget, fixed_zero=fixed_zero)
         if out is None:
-            log(f"  it{it} LP infeasible/failed (rows={len(m.rows)})"); return None, None, dict(status='infeasible')
+            log(f"  it{it} LP infeasible/failed (rows={len(m.rows)})")
+            if pool is not None: pool.close(); pool.join()
+            return None, None, dict(status='infeasible')
         val, x, y = out; tw = float(m.sizes @ x)
+        mv = None; mvf = None; wit = []
+        want_exact = (sep_mode != 'float') or (it % exact_every == 0)
+        if sep_mode == 'float':
+            import floatsep as FS
+            f = 1.0 / (1.0 + probe_margin)
+            ks = FS.bin_list(N, True, math.radians(sep_dtheta))
+            mvf, fwit, _ = FS.separate(m.P, x[m.own] * f, m.s, N, ks, topk=topk, pitch=sep_pitch,
+                                       pool=pool, nproc=8)
+            wit = [(cx, cy, th, h) for (cx, cy, th, h, fl) in fwit]
+            fclean = fclean + 1 if mvf >= 1.0 else 0
+            if fclean >= 2: want_exact = True
         export(m, x, tmp, WD=10 ** 12, factor=1.0 / (1.0 + probe_margin), up=False)
-        mv, ok = run_verifier(tmp, N, topk=topk, sep=sep, n=n)
-        wit = read_witnesses(sep, N) if os.path.exists(sep) else []
-        if os.path.exists(sep): os.remove(sep)
+        if want_exact:
+            mv, ok = run_verifier(tmp, N, topk=topk, sep=sep, n=n)
+            wit = read_witnesses(sep, N) if os.path.exists(sep) else []
+            if os.path.exists(sep): os.remove(sep)
+            if mv is not None and mv < 1: fclean = 0
         nz = int((x > 1e-12).sum()); natoms = int(m.sizes[x > 1e-12].sum())
         ncol = 0; Mcov = None
         if it < colgen:                                  # y belongs to the rows BEFORE this iteration's cuts
@@ -310,13 +333,16 @@ def tighten(m, tag, margin=2e-6, N=6000, topk=6, max_iters=200, log=print, cost=
             for (cv, X, Y) in cand:
                 ncol += m.add_orbit(X, Y)
         added = m.add_rows(wit)
-        log(f"  it{it} total={tw:.6f} obj={val:.6f} probe_min={float(mv):.7f} viol={len(wit)} new_rows={added} rows={len(m.rows)} support={nz} orbits/{natoms} atoms"
+        pm = f"{float(mv):.7f}" if mv is not None else f"{mvf:.7f}(float)"
+        log(f"  it{it} total={tw:.6f} obj={val:.6f} probe_min={pm} viol={len(wit)} new_rows={added} rows={len(m.rows)} support={nz} orbits/{natoms} atoms"
             + (f" dualcov={Mcov:.4f} new_orbits={ncol} orbits={len(m.orbits)}" if Mcov is not None else "") + f" t={time.time()-t0:.0f}s")
-        if added == 0 and mv >= 1 and ncol == 0:
+        # only an EXACT verdict may stop the loop
+        if added == 0 and mv is not None and mv >= 1 and ncol == 0:
             break
         if len(m.rows) > prune_at:
             keep = y > 1e-12; keep[-30000:] = True; m.prune(keep); log(f"   pruned to {len(m.rows)} rows")
         it += 1
+    if pool is not None: pool.close(); pool.join()
     return x, val, dict(iters=it, rows=len(m.rows), t=time.time() - t0)
 
 
@@ -340,14 +366,16 @@ def finalize(m, x, tag, out_path, N=6000, log=print, WD=10 ** 7, margin=2e-6, co
     return None
 
 
-def reopt(cert, tag, Dp=None, mul=1, N=6000, topk=6, margin=2e-6, log=print, warm=True, out=None, colgen=0, cg_want=200, cg_pitch=0.01, n=12):
+def reopt(cert, tag, Dp=None, mul=1, N=6000, topk=6, margin=2e-6, log=print, warm=True, out=None, colgen=0, cg_want=200, cg_pitch=0.01, n=12,
+          sep_mode='exact', exact_every=5, sep_pitch=0.004, sep_dtheta=0.4):
     m, w0, s = build_model(cert, Dp, mul)
     log(f"[{tag}] {cert}: {len(m.orbits)} orbits / {len(m.P)} atoms, container {s} = {float(s):.7f}, input total {float(m.sizes @ w0):.6f}")
     t0 = time.time()
     if warm:
         lr = lattice_rows(m, w0[m.own], thr=1.05)
         m.add_rows(lr); log(f"[{tag}] warm start: {len(m.rows)} lattice rows ({time.time()-t0:.0f}s)")
-    x, val, info = tighten(m, tag, margin=margin, N=N, topk=topk, log=log, colgen=colgen, cg_want=cg_want, cg_pitch=cg_pitch, n=n)
+    x, val, info = tighten(m, tag, margin=margin, N=N, topk=topk, log=log, colgen=colgen, cg_want=cg_want, cg_pitch=cg_pitch, n=n,
+                           sep_mode=sep_mode, exact_every=exact_every, sep_pitch=sep_pitch, sep_dtheta=sep_dtheta)
     if x is None: log(f"[{tag}] FAILED"); return None
     out = out or f"runs/tight_{tag}.txt"
     res = finalize(m, x, tag, out, N=N, log=log, margin=margin, n=n)
@@ -406,6 +434,11 @@ def main():
     ap.add_argument('--colgen', type=int, default=0, help='number of column-generation iterations (reopt)')
     ap.add_argument('--cg-want', type=int, default=200); ap.add_argument('--cg-pitch', type=float, default=0.01)
     ap.add_argument('--n', type=int, default=12, help='number of squares to rule out (only the weight threshold: verifier n and the "not a certificate" test)')
+    # task K (search/LOOPSPEED.md); the defaults keep today's behaviour
+    ap.add_argument('--sep', dest='sep_mode', choices=['exact', 'float'], default='exact',
+                    help="separation oracle: 'exact' (default) runs the Rust verifier every round; 'float' runs search/floatsep.py every round and the verifier only every --exact-every rounds and at convergence")
+    ap.add_argument('--exact-every', type=int, default=5, help='--sep float: exact verifier every this many rounds (default 5)')
+    ap.add_argument('--sep-pitch', type=float, default=0.004); ap.add_argument('--sep-dtheta', type=float, default=0.4)
     a = ap.parse_args()
     HIGHS['random_seed'] = a.seed
     os.makedirs('runs', exist_ok=True)
@@ -414,7 +447,8 @@ def main():
         print(msg, flush=True); lf.write(msg + '\n'); lf.flush()
     log(f"tighten.py {' '.join(sys.argv[1:])}")
     if a.mode == 'reopt':
-        r = reopt(a.cert, a.tag, Dp=a.Dp, mul=a.mul, N=a.N, topk=a.topk, margin=a.margin, log=log, out=a.out, colgen=a.colgen, cg_want=a.cg_want, cg_pitch=a.cg_pitch, n=a.n)
+        r = reopt(a.cert, a.tag, Dp=a.Dp, mul=a.mul, N=a.N, topk=a.topk, margin=a.margin, log=log, out=a.out, colgen=a.colgen, cg_want=a.cg_want, cg_pitch=a.cg_pitch, n=a.n,
+                  sep_mode=a.sep_mode, exact_every=a.exact_every, sep_pitch=a.sep_pitch, sep_dtheta=a.sep_dtheta)
         if r: r.pop('model'); r.pop('x'); json.dump(r, open(f"runs/tight_{a.tag}.json", 'w'), indent=1)
     elif a.mode == 'sparsify':
         r = sparsify(a.cert, a.tag, a.budget, Dp=a.Dp, mul=a.mul, N=a.N, topk=a.topk, margin=a.margin, rounds=a.rounds, eps=a.eps, log=log, out=a.out, n=a.n)

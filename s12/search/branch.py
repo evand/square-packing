@@ -46,6 +46,7 @@ import tighten as T
 import nu_f as NF
 import anchorclique as AC
 import anchorsep as ASEP
+import floatsep as FS
 
 LAM_FREE = -2.0          # multiplier of a box with K_j = 0: its rows are vacuous (A x >= -1 + margin)
 SOLVER = os.environ.get('BRANCH_SOLVER', 'highs-ipm')   # scipy method: 'highs', 'highs-ds', 'highs-ipm'; 'warm' = highspy dual simplex with a carried basis (measured: a 40k-iteration phase 1 per round, no gain -- search/LPSPEED.md); 'restricted' = column-sifted master (see solve_restricted; the measured win)
@@ -452,6 +453,49 @@ def lattice_rows(m, w, eta=0.01, dt=0.01, thr=1.05, perang=400, B=6, nproc=8):
     return out
 
 
+def corner_rows(m, eta=0.05, dt=0.05):
+    """Poses whose CENTRE lies in a corner box, on an (eta, dt) lattice, whatever they capture
+    (task K deliverable 4a).  The lattice warm start of `lattice_rows` keeps only the poses that
+    capture least under the input weights, and on the k = 4 leaves that is never a corner pose:
+    round 0 therefore has no row charged to any multiplier, lambda goes straight to its cap and
+    the first LP value is meaningless.  These rows are ordinary unit-square constraints
+    (h = 1/2, admissible centre), so they are valid whatever the LP does with them."""
+    s = m.s; r = m.r; out = []
+    boxes = [(0.0, 0.0), (s - r, 0.0), (0.0, s - r), (s - r, s - r)]
+    # A symmetric model has D4 orbits as columns, so a pose and its D4 image have the SAME
+    # coefficient vector: box 0 with theta in [0, 45deg] already generates every distinct row
+    # (the map (x,y) -> (y,x) fixes box 0 and sends theta to 90deg - theta).
+    top = math.pi / 4 if m.sym else math.pi / 2
+    thetas = np.arange(0.0, top + (dt if m.sym else 0.0) * 0.5, dt)
+    if m.sym: boxes = boxes[:1]
+    for tm in thetas:
+        wid = abs(math.cos(tm)) + abs(math.sin(tm)); lo = wid / 2; hi = s - wid / 2
+        for j, (bx, by) in enumerate(boxes):
+            if not m.row_active(j + 1): continue
+            x0 = max(lo, bx); x1 = min(hi, bx + r); y0 = max(lo, by); y1 = min(hi, by + r)
+            if x1 < x0 or y1 < y0: continue
+            gx = np.arange(x0, x1 + 1e-12, eta); gy = np.arange(y0, y1 + 1e-12, eta)
+            if len(gx) == 0 or len(gy) == 0: continue
+            if gx[-1] < x1 - 1e-12: gx = np.append(gx, x1)
+            if gy[-1] < y1 - 1e-12: gy = np.append(gy, y1)
+            for cx in gx:
+                for cy in gy: out.append((float(cx), float(cy), float(tm), 0.5, j + 1))
+    return out
+
+
+def seed_rows(path):
+    """rows of a sibling leaf's dual checkpoint (runs/branch_TAG_dual.txt: `cx cy theta h flag y`,
+    written every round) -- the binding row set of a converged leaf, which is what makes a sibling
+    start where the sibling finished instead of at the lattice warm start."""
+    out = []
+    for line in open(path):
+        if line.startswith('#'): continue
+        q = line.split()
+        if len(q) < 5: continue
+        out.append((float(q[0]), float(q[1]), float(q[2]), float(q[3]), int(q[4])))
+    return out
+
+
 def price_asym(m, y, pitch=0.02, want=200, ysup=1e-9):
     """reduced-cost pricing without symmetry: the dual y is a packing measure on the rows; the
     reduced cost of the point p is 1 - cov(p), cov(p) = sum_r y_r [p in Q_r].  Evaluates cov on a
@@ -612,21 +656,46 @@ def load_cols(m, path, raw=False):
     return n
 
 
+def float_rows(m, x, lam, N, topk, probe_margin, pitch, dtheta, pool, nproc):
+    """the float separation oracle of search/floatsep.py on the current LP point, in exactly the
+    units the probe file would be written in.  Returns (min value, rows, info).  Only which rows
+    are added depends on this; validity of a row does not (see floatsep's "Rows are valid")."""
+    n_orb = len(m.orb_int); f = 1.0 / (1.0 + probe_margin)
+    w = x[:n_orb][m.own] * f
+    cq = [(float(x[n_orb + j]) * f, imgs) for j, imgs in enumerate(m.cliques) if x[n_orb + j] > 1e-12]
+    lamv = [float(l) * f for l in (lam if m.perbox else [lam[0]] * 4)]
+    ks = FS.bin_list(N, m.sym and not m.cliques, math.radians(dtheta))
+    return FS.separate(m.P, w, m.s, N, ks, topk=topk, pitch=pitch, cliques=cq, lam=lamv, r=m.r,
+                       pool=pool, nproc=nproc)
+
+
 def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe_margin=None, x0=None,
          prune_at=None, colgen=0, cg_want=200, cg_pitch=0.01, n=12, threads=None, dump_lp=None,
-         cliques=0, cq_want=40, cq_pitch=0.01, matched=False, cq_interior=False):
+         cliques=0, cq_want=40, cq_pitch=0.01, matched=False, cq_interior=False,
+         sep_mode='exact', exact_every=5, sep_pitch=0.004, sep_dtheta=0.4, stab=0.0):
     """cutting-plane loop; returns (x, lam, obj, info).  Asymmetric models sweep [0,90deg), i.e.
     2.4x the bins: fewer witnesses per bin and a higher prune threshold keep the row set stable
-    (pruning every round makes the LP vertex jump and the dropped rows come straight back)."""
+    (pruning every round makes the LP vertex jump and the dropped rows come straight back).
+
+    `sep_mode='float'` separates with search/floatsep.py instead and runs the exact verifier only
+    every `exact_every` rounds and at convergence (the float oracle clean twice running).  The
+    loop still only ever STOPS on an exact verdict, and nothing is claimed until the final file
+    passes `verify` + `xcheck.py`."""
     if probe_margin is None: probe_margin = margin / 2
     if topk is None: topk = 6 if m.sym else 3
     if prune_at is None: prune_at = 40000 if m.sym else 60000       # solve time is superlinear in rows: ~20 s at 30k, hours at 120k
     tmp = f"runs/branch_{tag}_probe.txt"; sep = f"runs/branch_{tag}_sep.txt"
     t0 = time.time(); x = x0; lam = None; val = None; it = 0
+    pool = None; fclean = 0; xstab = None; lamstab = None
+    if sep_mode == 'float':
+        import multiprocessing as mp
+        pool = mp.get_context('fork').Pool(threads or 8)
     while it < max_iters:
         t1 = time.time(); out = m.solve(margin); t_lp = time.time() - t1
         if out is None:
-            log(f"  it{it} LP infeasible/failed (rows={len(m.rows)})"); return None, None, None, dict(status='infeasible')
+            log(f"  it{it} LP infeasible/failed (rows={len(m.rows)})")
+            if pool is not None: pool.close(); pool.join()
+            return None, None, None, dict(status='infeasible')
         val, x, lam, y = out; tw = float(m.costv() @ x)
         # the matched pure value: the SAME master with the clique columns removed.  It has to run
         # here, before this round's column generation: a column added in between is marked active
@@ -638,10 +707,38 @@ def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe
             if o2 is not None: pureval = o2[0]
         dump_dual(m, y, lam, val, f"runs/branch_{tag}_dual.txt")
         if dump_lp: write_lp_dump(m, margin, f"{dump_lp}_it{it}", val=val, x=x, lam=lam, y=y)
-        export(m, x, lam, tmp, WD=10 ** 12, factor=1.0 / (1.0 + probe_margin), up=False)
-        t1 = time.time(); mv, ok = T.run_verifier(tmp, N, topk=topk, sep=sep, n=n, threads=threads or T.NPROC); t_ver = time.time() - t1
-        wit = read_witnesses(sep, N) if os.path.exists(sep) else []
-        if os.path.exists(sep): os.remove(sep)
+        # ---- separation ------------------------------------------------------------------
+        # `sep_mode='exact'` (default) is the original: export the probe and run the verifier.
+        # `sep_mode='float'` runs the numpy oracle every round and the verifier only every
+        # `exact_every` rounds or once the float oracle has been clean twice running; the loop
+        # only ever STOPS on an exact verdict.
+        mv = None; mvf = None; t_ver = 0.0; t_fsep = 0.0; nfviol = 0; wit = []
+        want_exact = (sep_mode != 'float') or (it % exact_every == 0)
+        if sep_mode == 'float':
+            # in-out stabilisation (--stab): separate at a convex combination of this round's LP
+            # point and the previous separation point.  Rows are valid at any point, and the
+            # exact rounds always separate at the true LP point, so the stopping rule is unchanged.
+            if stab > 0 and xstab is not None and not want_exact:
+                nx0 = min(len(x), len(xstab)); xs = x.copy(); xs[:nx0] = (1 - stab) * x[:nx0] + stab * xstab[:nx0]
+                lams = (1 - stab) * np.asarray(lam) + stab * np.asarray(lamstab)
+            else:
+                xs = x; lams = lam
+            xstab = xs.copy(); lamstab = np.asarray(lams).copy()
+            t1 = time.time()
+            mvf, fwit, finfo = float_rows(m, xs, lams, N, topk, probe_margin, sep_pitch, sep_dtheta, pool, threads or 8)
+            t_fsep = time.time() - t1; nfviol = len(fwit)
+            fclean = fclean + 1 if mvf >= 1.0 else 0
+            if fclean >= 2: want_exact = True
+            wit = fwit
+        if want_exact:
+            export(m, x, lam, tmp, WD=10 ** 12, factor=1.0 / (1.0 + probe_margin), up=False)
+            t1 = time.time(); mv, ok = T.run_verifier(tmp, N, topk=topk, sep=sep, n=n, threads=threads or T.NPROC); t_ver = time.time() - t1
+            wit = read_witnesses(sep, N) if os.path.exists(sep) else []
+            if os.path.exists(sep): os.remove(sep)
+            if mv is not None and mv < 1: fclean = 0
+        elif sep_mode == 'float':
+            # keep the probe checkpoint fresh even in float rounds (a restart reads it)
+            export(m, x, lam, tmp, WD=10 ** 12, factor=1.0 / (1.0 + probe_margin), up=False)
         n_orb = len(m.orb_int); xo = x[:n_orb]
         nz = int((xo > 1e-12).sum()); natoms = int(m.sizes[xo > 1e-12].sum())
         ncol = 0; Mcov = None; t_cg = 0.0; cand = []
@@ -662,13 +759,16 @@ def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe
         nR = sum(1 for f in m.rflag if f)
         lamtxt = ",".join(f"{l:+.4f}" for l in lam)
         ri = getattr(m, '_restricted_info', None) if SOLVER == 'restricted' else None
-        log(f"  it{it} total={tw:.6f} lam=[{lamtxt}] obj={val:.6f} probe_min={float(mv):.7f} viol={len(wit)} new_rows={added} rows={len(m.rows)} (inR {nR}) support={nz} cols/{natoms} atoms"
+        pm = f"{float(mv):.7f}" if mv is not None else f"{mvf:.7f}(float)"
+        log(f"  it{it} total={tw:.6f} lam=[{lamtxt}] obj={val:.6f} probe_min={pm} viol={len(wit)} new_rows={added} rows={len(m.rows)} (inR {nR}) support={nz} cols/{natoms} atoms"
             + (f" dualcov={Mcov:.4f} new_cols={ncol} cols={len(m.orbits)}" if Mcov is not None else "")
             + (f" pure={pureval:.6f} gain={pureval - val:+.6f}" if pureval is not None else "")
             + (f" cliques={len(m.cliques)} (+{ncq}, used {ncl_used}, weight {wcl:.6f}" + (f", ybar {cqmass:.4f} vs point {cqpt:.4f})" if cqmass is not None else ")") if (m.cliques or ncq) else "")
-            + f" t={time.time()-t0:.0f}s [lp {t_lp:.0f}s ver {t_ver:.0f}s cg {t_cg:.0f}s cq {t_cq:.0f}s rows {t_rows:.0f}s]"
+            + f" t={time.time()-t0:.0f}s [lp {t_lp:.0f}s ver {t_ver:.0f}s fsep {t_fsep:.0f}s cg {t_cg:.0f}s cq {t_cq:.0f}s rows {t_rows:.0f}s]"
+            + (f" [sep float_min={mvf:.7f} fviol={nfviol} clean={fclean}{' exact' if mv is not None else ''}]" if sep_mode == 'float' else "")
             + (f" [restricted: {ri['cols']} active cols, {ri['passes']} passes, {ri['neg_rc']} neg rc left]" if ri else ""))
-        if added == 0 and mv >= 1 and ncol == 0 and ncq == 0: break
+        # only an EXACT verdict may stop the loop
+        if added == 0 and mv is not None and mv >= 1 and ncol == 0 and ncq == 0: break
         if len(m.rows) > prune_at:
             # keep rows with positive dual, rows that are nearly tight (zero dual but no slack --
             # pruning those re-violates them next round and the loop cycles), the rows added this
@@ -680,6 +780,7 @@ def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe
             keep = np.ones(len(m.rows), dtype=bool); keep[:ny] = (y > 1e-12) | (slack < 2e-2); keep[-15000:] = True
             m.prune(keep); log(f"   pruned to {len(m.rows)} rows")
         it += 1
+    if pool is not None: pool.close(); pool.join()
     return x, lam, val, dict(iters=it, rows=len(m.rows), t=time.time() - t0)
 
 
@@ -705,7 +806,8 @@ def finalize(m, x, lam, tag, out_path, N=6000, log=print, WD=10 ** 7, margin=2e-
 
 def run(cert, tag, kreg, r, Dp=None, mul=1, N=6000, topk=6, margin=2e-6, log=print, warm=True, out=None,
         colgen=0, cg_want=200, cg_pitch=0.01, n=12, threads=None, cols=None, warm_thr=1.05, prune_at=None, row_grid=None, max_iters=None, dump_lp=None, cols_raw=False,
-        cliques=0, cq_want=40, cq_load=None, cq_pitch=0.01, matched=False, cq_interior=False):
+        cliques=0, cq_want=40, cq_load=None, cq_pitch=0.01, matched=False, cq_interior=False,
+        sep_mode='exact', exact_every=5, sep_pitch=0.004, sep_dtheta=0.4, stab=0.0, seed_from=None, corner_rows_on=False):
     m, w0, s = build_model(cert, r, kreg, Dp, mul, raw_points=cols_raw)
     if row_grid: m.row_grid = tuple(row_grid)
     log(f"[{tag}] {cert}: {len(m.orbits)} columns / {len(m.P)} atoms ({'D4 orbits' if m.sym else 'single points'}), container {s} = {float(s):.7f}, r = {m.rfrac} = {m.r:.4f}, k = {kreg}, input total {float(m.sizes @ w0):.6f}")
@@ -713,6 +815,19 @@ def run(cert, tag, kreg, r, Dp=None, mul=1, N=6000, topk=6, margin=2e-6, log=pri
     if warm:
         lr = lattice_rows(m, w0[m.own], thr=warm_thr)
         m.add_rows(lr); log(f"[{tag}] warm start: {len(m.rows)} lattice rows (capture < {warm_thr} under the input weights), {sum(1 for f in m.rflag if f)} in boxes ({time.time()-t0:.0f}s)")
+    if corner_rows_on:
+        nb = m.add_rows(corner_rows(m))
+        log(f"[{tag}] corner rows: +{nb} poses centred in the active corner boxes -> {len(m.rows)} rows, {sum(1 for f in m.rflag if f)} in boxes")
+    for sf in (seed_from or []):
+        base = sf if os.path.sep in sf else f"runs/branch_{sf}"
+        for suf, fn, what in (("_cols.txt", lambda p: load_cols(m, p, raw=cols_raw), "columns"),
+                              ("_cliques.txt", lambda p: load_cliques(m, p), "clique columns"),
+                              ("_dual.txt", lambda p: m.add_rows(seed_rows(p)), "rows")):
+            p = base + suf
+            if os.path.exists(p):
+                k = fn(p); log(f"[{tag}] seed-from {p}: +{k} {what}")
+            else:
+                log(f"[{tag}] seed-from: {p} does not exist, skipped")
     for cf in (cols or []):
         nc = load_cols(m, cf, raw=cols_raw); log(f"[{tag}] columns from {cf}{' (raw)' if cols_raw else ''}: +{nc} -> {len(m.orbits)} columns")
     for cf in (cq_load or []):
@@ -723,7 +838,8 @@ def run(cert, tag, kreg, r, Dp=None, mul=1, N=6000, topk=6, margin=2e-6, log=pri
         m._active = np.concatenate([w0 > 0, np.zeros(len(m.orbits) - len(w0), dtype=bool)])
         log(f"[{tag}] restricted master: {int(m._active.sum())} of {len(m.orbits)} columns active at start")
     x, lam, val, info = loop(m, tag, margin=margin, N=N, topk=topk, log=log, colgen=colgen, cg_want=cg_want, cg_pitch=cg_pitch, n=n, threads=threads, prune_at=prune_at,
-                             max_iters=max_iters if max_iters is not None else 400, dump_lp=dump_lp, cliques=cliques, cq_want=cq_want, cq_pitch=cq_pitch, matched=matched, cq_interior=cq_interior)
+                             max_iters=max_iters if max_iters is not None else 400, dump_lp=dump_lp, cliques=cliques, cq_want=cq_want, cq_pitch=cq_pitch, matched=matched, cq_interior=cq_interior,
+                             sep_mode=sep_mode, exact_every=exact_every, sep_pitch=sep_pitch, sep_dtheta=sep_dtheta, stab=stab)
     if x is None: log(f"[{tag}] FAILED"); return None
     if max_iters is not None:
         log(f"[{tag}] stopped after {info.get('iters')} rounds (--max-iters): LP value {val:.7f}, dual in runs/branch_{tag}_dual.txt; no finalize")
@@ -765,6 +881,16 @@ def main():
     ap.add_argument('--cq-interior', action='store_true', help='also separate anchor cliques at INTERIOR anchor points and arbitrary anchor directions (search/anchorsep.py separate_interior; search/RECONCILE.md -- the largest violations are at wall distance > 1)')
     ap.add_argument('--cq-load', action='append', default=None, help='anchor-clique checkpoint file(s) (runs/branch_TAG_cliques.txt) to start from')
     ap.add_argument('--dump-lp', default=None, metavar='PREFIX', help='write the LP of every round of the cutting-plane loop as PREFIX_itN.npz + PREFIX_itN_A.npz (see write_lp_dump / load_lp_dump; used by search/lp_bench.py)')
+    # ---- task K (search/LOOPSPEED.md): the separation oracle, and fewer rounds.  Every default
+    # here reproduces the old behaviour exactly; nothing changes unless a flag is given.
+    ap.add_argument('--sep', dest='sep_mode', choices=['exact', 'float'], default='exact',
+                    help="separation oracle: 'exact' (default) runs the Rust verifier every round, as before; 'float' runs the numpy oracle of search/floatsep.py every round and the verifier only every --exact-every rounds and at convergence.  The loop still only STOPS on an exact verdict, and the final file is verified unchanged")
+    ap.add_argument('--exact-every', type=int, default=5, help='--sep float: run the exact verifier every this many rounds (default 5; round 0 is always exact)')
+    ap.add_argument('--sep-pitch', type=float, default=0.004, help='--sep float: centre pitch of the dense scan (default 0.004)')
+    ap.add_argument('--sep-dtheta', type=float, default=0.4, help='--sep float: angle pitch of the dense scan, in degrees (default 0.4)')
+    ap.add_argument('--stab', type=float, default=0.0, help='in-out stabilisation: separate at (1-stab)*x + stab*(previous separation point) in the float rounds, to damp the probe sawtooth (0 = off, the default; 0.3 is a reasonable value)')
+    ap.add_argument('--seed-from', action='append', default=None, metavar='LEAF', help='start from a sibling leaf\'s checkpoint: its columns, clique columns and the rows of its dual (runs/branch_LEAF_{cols,cliques,dual}.txt, or a path prefix).  The per-slot leaves differ only in the multipliers, so a converged sibling\'s binding rows are almost the right row set')
+    ap.add_argument('--corner-rows', action='store_true', help='seed the warm start with poses centred in the ACTIVE corner boxes (lattice, h = 1/2).  Without them round 0 has no row charged to any multiplier and lambda goes straight to its cap')
     a = ap.parse_args()
     global LAM_HI, LAM_LO
     if a.lam_hi is not None: LAM_HI = float(a.lam_hi)
@@ -779,7 +905,9 @@ def main():
     log(f"branch.py {' '.join(sys.argv[1:])}")
     res = run(a.cert, a.tag, kreg, r, Dp=a.Dp, mul=a.mul, N=a.N, topk=a.topk, margin=a.margin, log=log, warm=not a.no_warm, out=a.out,
               colgen=a.colgen, cg_want=a.cg_want, cg_pitch=a.cg_pitch, n=a.n, threads=a.threads, cols=a.cols, warm_thr=a.warm_thr, prune_at=a.prune_at, row_grid=a.row_grid, max_iters=a.max_iters, dump_lp=a.dump_lp, cols_raw=a.cols_raw,
-              cliques=a.cliques, cq_want=a.cq_want, cq_load=a.cq_load, cq_pitch=a.cq_pitch, matched=a.matched, cq_interior=a.cq_interior)
+              cliques=a.cliques, cq_want=a.cq_want, cq_load=a.cq_load, cq_pitch=a.cq_pitch, matched=a.matched, cq_interior=a.cq_interior,
+              sep_mode=a.sep_mode, exact_every=a.exact_every, sep_pitch=a.sep_pitch, sep_dtheta=a.sep_dtheta, stab=a.stab,
+              seed_from=a.seed_from, corner_rows_on=a.corner_rows)
     if res: json.dump(res, open(f"runs/branch_{a.tag}.json", 'w'), indent=1)
 
 
