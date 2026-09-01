@@ -227,7 +227,9 @@ because the piece tests are still the dominant term there; see "What is still sl
   demo, a per-box branch trailer, and the five real leaves (`t398ik4n`, `J12`, `J6`, `j1110`,
   `corner_k1`) in witness mode — **QUICK ALL IDENTICAL** at every stage of the change.
 * `tests/rejection_tests.sh`: **136 passed, 0 failed, 0 panics.**
-* `verify.sh`: green (see below).
+* `verify.sh`: **exit 0**, 24 `VERIFIED:` verdicts, no `REJECTED` and no `NOT VERIFIED`
+  (`runs/verify_sh_full.txt`) — every shipped certificate re-verified from scratch, including the
+  main one at `N = 6000` and `N = 12000`, plus the rejection suite and the JSON round-trips.
 
 One thing bit-identity does *not* cover, and did bite once: the per-bin top-`k` selection is
 `sort_unstable_by_key` on a `Vec` whose element type is `(i128, f64, f64, u8)`, and Rust's unstable
