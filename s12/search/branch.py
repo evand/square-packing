@@ -277,33 +277,38 @@ def _solve_restricted(self, margin, log=None, no_cliques=False):
     every column of the model by its reduced cost c_j - y.A_j under the master's dual, add the most
     negative RESTRICTED_ADD, repeat for RESTRICTED_PASSES passes (0 = until none is below
     -RESTRICTED_TOL, which is the exact full-LP optimum).  Rows are all kept.  The active set persists
-    across rounds in self._active; columns that leave the support stay active until the set is trimmed
-    (trim: drop zero-weight columns not added in the last 3 rounds).  The dual y and the multipliers
-    are those of the master, which is what the loop's pricing and verifier need."""
+    across rounds in self._active (points) and self._active_cl (cliques); columns that leave the
+    support stay active until the set is trimmed (trim: drop zero-weight columns not added in the
+    last 3 rounds).  Clique columns are sifted like point columns since 2026-09-01: they are DENSE
+    (a clique holds thousands of poses) and a master carrying 1,500 of them took an hour per solve
+    (runs/branch_J16h.log), so only the ones in the support or with negative reduced cost are in;
+    a newly separated clique is active for its first solves.  The dual y and the multipliers are
+    those of the master, which is what the loop's pricing and verifier need."""
     A = self.matrix(); n = self.ncols(); npt = len(self.orbits); ncl = len(self.cliques)
     nr = len(self.rows); nl = self.nl
     kc = self.kcoef(); c_full = np.concatenate([self.costv(), -kc])
     lo = np.concatenate([np.zeros(n), [LAM_FREE if kc[j] == 0 else LAM_LO for j in range(nl)]])
     hi = np.concatenate([np.full(n, np.inf), [LAM_FREE if kc[j] == 0 else LAM_HI for j in range(nl)]])
     M = sp.hstack([A, -self.flagmat()]).tocsr(); Mt = M.T.tocsr(); b = np.full(nr, 1.0 + margin)
-    # the active set is over the POINT columns only; the (few) clique columns are always in
-    act = getattr(self, '_active', None)
-    if act is None or len(act) != npt:
-        new = np.zeros(npt, dtype=bool)
-        if act is not None:
-            new[:len(act)] = act; new[len(act):] = True         # columns added since the last solve are in
-        elif n <= 3000: new[:] = True
-        # else: start empty; the greedy row cover below and the pricing passes fill the master
-        # (run() seeds _active with the input certificate's support)
-        act = new
-    age = getattr(self, '_age', None)
-    if age is None or len(age) != npt:
-        a2 = np.zeros(npt, dtype=np.int64)
-        if age is not None: a2[:len(age)] = age
-        age = a2
+    def grow(mask, m, default_new, default_all):
+        if mask is None or len(mask) != m:
+            new = np.full(m, default_all if mask is None else default_new, dtype=bool)
+            if mask is not None: new[:len(mask)] = mask
+            return new
+        return mask
+    def grow_age(age, m):
+        if age is None or len(age) != m:
+            a2 = np.zeros(m, dtype=np.int64)
+            if age is not None: a2[:len(age)] = age
+            return a2
+        return age
+    act = grow(getattr(self, '_active', None), npt, True, n <= 3000)   # start empty if large: greedy cover + pricing fill it
+    age = grow_age(getattr(self, '_age', None), npt)
+    actc = grow(getattr(self, '_active_cl', None), ncl, True, True)     # new cliques are in for their first solves
+    agec = grow_age(getattr(self, '_age_cl', None), ncl)
     # feasibility: every row needs an active column with a positive entry
     Pb = A[:, :npt].copy(); Pb.data = (Pb.data > 0).astype(float)
-    fixed = (A[:, npt:] @ np.ones(ncl)) if ncl else np.zeros(nr)
+    fixed = (A[:, npt:] @ actc.astype(float)) if ncl else np.zeros(nr)
     unc = (Pb @ act.astype(float) + fixed) <= 0
     while unc.any():
         hits = Pb[unc].sum(axis=0).A1; j = int(np.argmax(hits))
@@ -312,7 +317,7 @@ def _solve_restricted(self, margin, log=None, no_cliques=False):
     passes = 0; t0 = time.time(); res = None
     if no_cliques: act = act.copy()          # the matched pure solve must not disturb the master
     while True:
-        cols = np.concatenate([np.nonzero(act)[0], np.zeros(0, dtype=np.int64) if no_cliques else npt + np.arange(ncl),
+        cols = np.concatenate([np.nonzero(act)[0], np.zeros(0, dtype=np.int64) if no_cliques else npt + np.nonzero(actc)[0],
                                np.arange(n, n + nl)])
         Mc = M[:, cols].tocsr()
         bounds = [(l, None if not np.isfinite(h) else h) for l, h in zip(lo[cols], hi[cols])]
@@ -329,17 +334,22 @@ def _solve_restricted(self, margin, log=None, no_cliques=False):
         y = np.maximum(-res.ineqlin.marginals, 0.0)
         rc = c_full - (Mt @ y); rc[cols] = np.inf
         neg = np.nonzero(rc[:npt] < -RESTRICTED_TOL)[0]
+        negc = np.nonzero(rc[npt:n] < -RESTRICTED_TOL)[0]
         if os.environ.get('CQDBG') and not no_cliques: print(f"    [main] pass {passes} cols={len(cols)-nl} obj={res.fun:.6f}", flush=True)
-        if log: log(f"    restricted pass {passes}: {len(cols)-nl} cols obj={res.fun:.7f} neg_rc={len(neg)} min_rc={rc[:npt].min() if len(neg) else 0:+.2e} t={time.time()-t0:.0f}s")
-        if len(neg) == 0 or (RESTRICTED_PASSES and passes >= RESTRICTED_PASSES): break
+        if log: log(f"    restricted pass {passes}: {len(cols)-nl} cols ({int(actc.sum())} cliques) obj={res.fun:.7f} neg_rc={len(neg)}+{len(negc)}cl min_rc={rc[:n].min() if (len(neg) or len(negc)) else 0:+.2e} t={time.time()-t0:.0f}s")
+        if (len(neg) == 0 and len(negc) == 0) or (RESTRICTED_PASSES and passes >= RESTRICTED_PASSES): break
         pick = neg[np.argsort(rc[neg])[:RESTRICTED_ADD]]; act[pick] = True; age[pick] = 0
+        actc[negc] = True; agec[negc] = 0                  # cliques are few: every improving one comes in
     x = np.zeros(n); x[cols[:-nl]] = res.x[:-nl]; lam = np.array(res.x[-nl:])
     if no_cliques: return res.fun, x, lam, np.maximum(-res.ineqlin.marginals, 0.0)
     # trim: zero-weight columns that have been idle for 3 rounds leave the master (they stay in the model and are priced every round)
-    xp = x[:npt]
+    xp = x[:npt]; xc = x[npt:n]
     age[act & (xp <= 1e-12)] += 1; age[xp > 1e-12] = 0
     act &= ~((xp <= 1e-12) & (age > 3))
-    self._active = act; self._age = age; self._restricted_info = dict(passes=passes, cols=int(act.sum()), neg_rc=int(len(neg)), t=time.time() - t0)
+    agec[actc & (xc <= 1e-12)] += 1; agec[xc > 1e-12] = 0
+    actc &= ~((xc <= 1e-12) & (agec > 3))
+    self._active = act; self._age = age; self._active_cl = actc; self._age_cl = agec
+    self._restricted_info = dict(passes=passes, cols=int(act.sum()) + int(actc.sum()), neg_rc=int(len(neg) + len(negc)), t=time.time() - t0)
     return res.fun, x, lam, y
 BModel.solve_restricted = _solve_restricted
 
