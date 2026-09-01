@@ -257,7 +257,7 @@ def grid_values(P, w, s, ct, st, h, hc, g0, g1, CQ, lam4, r, band, lo, hi, pre=N
     return np.where(ok, vals, 9e9), flag
 
 
-def scan_bin(P, w, s, N, k, pitch, CQ, lam, r, topk, block, thr, refine=2, rfac=4):
+def scan_bin(P, w, s, N, k, pitch, CQ, lam, r, topk, block, thr, refine=0, rfac=4):
     """one bin: returns (min value seen, [(value, cx, cy, theta_k, h, flag), ...] worst first).
 
     The half-side is `h`, NOT `h` shrunk to the grid cell.  Shrinking looks like the conservative
@@ -271,9 +271,10 @@ def scan_bin(P, w, s, N, k, pitch, CQ, lam, r, topk, block, thr, refine=2, rfac=
     the pose while their cell does not) and it is not what made the oracle optimistic in
     production -- the angle net was (`search/LOOPSPEED.md`).
 
-    `refine`: after the grid pass the worst `refine * topk` cells are re-scanned on a local grid
-    at `pitch / rfac` -- the descent step, which is where a minimum sitting between grid lines
-    (on a region-box boundary, or hard against a wall) is picked up."""
+    `refine`: after the grid pass, re-scan the worst `refine * topk` cells on a local grid at
+    `pitch / rfac`.  OFF by default: measured on `branch_L1110f_probe.txt` it cost 2.5x the scan
+    (24 s -> 60 s coarse, 162 s -> 403 s over the whole net) and moved the minimum in neither case.
+    `descend`, seeded from last round's rows, is the local search that actually pays."""
     fr = bin_frame(s, N, k)
     if fr is None: return None, []
     ct, st, h, th, lo, hi = fr
@@ -382,7 +383,7 @@ def _chunk(args):
 
 
 def separate(P, w, s, N, ks, topk=6, pitch=0.004, cliques=None, lam=None, r=1.0,
-             block=8, thr=1.0, pool=None, nproc=1, refine=2, keep_value=False, seeds=None):
+             block=8, thr=1.0, pool=None, nproc=1, refine=0, keep_value=False, seeds=None):
     """dense float separation over the bins `ks`.  Returns (min value, rows, info) with
     rows = [(cx, cy, theta_k, h, flag), ...] worst first."""
     CQ = prep_cliques(cliques or [])
@@ -469,7 +470,7 @@ def main():
     ap.add_argument('--pitch', type=float, default=0.004)
     ap.add_argument('--dtheta', type=float, default=0.4, help='angle pitch in degrees')
     ap.add_argument('--topk', type=int, default=6); ap.add_argument('--threads', type=int, default=8)
-    ap.add_argument('--refine', type=int, default=2, help='local descent: re-scan the worst refine*topk cells at pitch/4 (0 = off)')
+    ap.add_argument('--refine', type=int, default=0, help='re-scan the worst refine*topk grid cells at pitch/4 (default 0 = off: it cost 2.5x and moved nothing; --seeds is the local search that pays)')
     ap.add_argument('--seeds', default=None, help="a witness file (v theta cx cy flag) to descend from as well -- in the loop these are last round's rows")
     ap.add_argument('--out', default=None, help='write the rows as a witness file (v theta cx cy flag)')
     a = ap.parse_args()

@@ -342,7 +342,10 @@ discretisation error — exactly the reported trend:
    The worst pose is at bin 1919 (87.63°), which 0.4° skips — that alone is 0.31 of the 0.35 gap.
 
 2. **The centre grid.**  Even every bin leaves 0.688 against 0.636: a pitch of 0.004 does not land
-   on the worst centre.  Halving the pitch costs 4× and still only approaches it.
+   on the worst centre.  Halving it to 0.002 over the whole net does essentially close the gap
+   — `float_min = 0.6367267` against the exact `0.636114` — but takes **1136 s**, which is no
+   longer a cheap oracle.  The seeded descent below reaches the same answer from the coarse net
+   in 108 s.
 
 ### What did *not* work
 
@@ -386,8 +389,14 @@ with the measurement recorded in `scan_bin`'s docstring so it is not tried again
 | `runs/branch_L1110f_probe.txt` (2579 atoms, 214 cliques, per-box lambda) | 0.636114 | 0.9504417 | **0.6361137** | within 1e-6 |
 | `runs/branch_J16g_probe.txt` (5704 atoms, 144 cliques, lambda = +1.5) | 0.956688 | 0.9596716 | **0.9566882** | within 1e-6 |
 
-Cost of the seeded pass, 6 threads: L1110f 60 s grid-only → 108 s with 6000 seeds; J16g 10 s →
-77 s.  In the loop the seeds are the previous round's rows, which in a float round is a few
+Cost of the seeded pass, 6 threads: L1110f 24 s grid-only → 108 s with 6000 seeds; J16g 10 s →
+77 s.
+
+The grid-candidate refinement (`--refine`, re-scanning the worst `refine*topk` cells of the
+grid) is now **off by default**: it cost 2.5× the scan on L1110f (24 s → 60 s coarse, 162 s →
+403 s over the whole net) and moved the minimum in neither case, while `descend` from last
+round's rows moves it from 0.9504 to 0.6361137.  Seeding beats refining because the worst pose
+is where it was last round, not near where this round's grid happens to dip.  In the loop the seeds are the previous round's rows, which in a float round is a few
 hundred, not six thousand.
 
 Same-LP-value check re-run with the fixed oracle (`runs/rounds.sh`, `runs/rounds_out2.txt`): the
