@@ -46,19 +46,19 @@ def table(paths):
             if r.get('it') != 'final':
                 continue
             rows.append((tag, r))
-    hdr = (f"{'tag':<11} {'st':>3} {'pattern':<9} {'LP':>11} {'M':>9} {'kmax':>8} "
-           f"{'pure':>11} {'nochord':>11} {'p+nc':>11} {'int':>8} {'strips':>22} "
-           f"{'cols':>6} {'poses':>6} {'rows':>6} {'cq':>5} {'bnd':>7} conv")
+    hdr = (f"{'tag':<12} {'st':>3} {'pattern':<9} {'LP':>11} {'M':>9} {'kmax':>8} "
+           f"{'pure':>11} {'nolines':>11} {'pure_nolin':>11} {'lines':>8} {'int':>8} "
+           f"{'cols':>6} {'rows':>6} {'cq':>5} {'ldual':>7} conv")
     print(hdr)
     for tag, r in rows:
-        st = r.get('strips') or [0] * 4
-        print(f"{tag:<11} {r.get('stage', -1):>3} {r.get('pattern', ''):<9} {r['LP']:>11.6f} "
+        ln = r.get('lines') or {}
+        print(f"{tag:<12} {r.get('stage', -1):>3} {r.get('pattern', ''):<9} {r['LP']:>11.6f} "
               f"{r['M']:>9.6f} {r['kmax']:>8.5f} "
-              f"{r.get('LP_pure', float('nan')):>11.6f} {r.get('LP_nochord', float('nan')):>11.6f} "
-              f"{r.get('LP_pure_nochord', float('nan')):>11.6f} {r['interior']:>8.5f} "
-              + '[' + ' '.join(f'{v:.3f}' for v in st) + '] '
-              + f"{r['cols']:>6} {r.get('poses', 0):>6} {r['rows']:>6} {r['cq']:>5} "
-                f"{r.get('bnd', 0):>7.4f} {int(bool(r.get('converged')))}")
+              f"{r.get('LP_pure', float('nan')):>11.6f} {r.get('LP_nolines', float('nan')):>11.6f} "
+              f"{r.get('LP_pure_nolines', float('nan')):>11.6f} "
+              f"{r.get('lines_worth', float('nan')):>8.5f} {r['interior']:>8.5f} "
+              + f"{r['cols']:>6} {r['rows']:>6} {r['cq']:>5} "
+                f"{ln.get('dualsum', float('nan')):>7.4f} {int(bool(r.get('converged')))}")
 
 
 def anatomy(path, r0, do_cliques, top, cluster):
