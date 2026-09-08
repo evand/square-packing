@@ -425,8 +425,16 @@ incidences — the LP value does **not** fall away from 12 as the rows close in:
 | 11 | 81,819 | `12.000000000` | `1.010823166` | 199 |
 | 12 | 82,018 | `12.000000000` | `1.010026368` | 131 |
 
-(the tail is degenerate — `M` sits at `1.010 +- 0.004` and the violated count oscillates between 57
-and 200 while the row set grows by ~150 a round, at 10–25 minutes a round.)
+(the tail is degenerate — through round 16 `M` oscillates in `1.005–1.032` and the violated count
+between 57 and 570 while the row set grows by only ~150 a round, at 10–25 minutes a round.  The LP
+keeps moving the mass onto a different set of poses whose violated vertices are new ones, which is
+the same degeneracy `search/CLIQUE_CEILING.md` §"Reading" item 3 reports on the cut side.)
+
+**Read the cap.**  `snap --polish` stops after `--polish-rounds` (default 30) whether or not the
+rows have closed, and if `M > 1` at that point the fallback scales the measure by `1/M` and rounds
+down — which for `M = 1.03` would report `~11.6`, *worse* than the converged `11.939983685` of the
+smaller union, not better.  So a value from a capped run is not comparable with a converged one:
+read the "0 violated vertices" line, or the run said nothing.  Raise `--polish-rounds` and rerun.
 
 Until it reaches 0 violated vertices this is exactly the same non-statement as `T4SCREEN.md`'s
 (`LP` on an unconverged row set is an upper bound on a restricted value), with one difference that
