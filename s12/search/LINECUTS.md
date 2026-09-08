@@ -21,13 +21,16 @@ already sit at `6.7 – 8.0` on that quantity.**
 | instance | with line cuts | matched, without them | line cuts worth | certified? |
 |---|---|---|---|---|
 | (a) `k = 4` corner leaf, cliques (`L1B40K` st0) | `11.992612` | `11.992612` | **`0.000000`** | `M = 1.0370` no |
-| (a') the same, **no cliques** — the smeared grid | `12.000000` | `12.000000` | **`0.000000`** | no |
-| (b) **pure relaxation, no branch**, cliques (`L2PURE` st0) | `12.129881` | `12.129881` | **`0.000000`** | `M = 1.0036` no |
-| (c) leaf `01010101`, cliques (`L3A01010101` st0) | **`11.742058`** | `11.742058` | **`0.000000`** | `M = 1.000000000`, `kmax = 1.000000` **yes** |
+| (a) the same, best stage (`L1B40K` st1) | **`11.995221`** | not valued | — | `M = 1.000000000`, `kmax = 1.000000` **yes** |
+| (a') `k = 4`, **no cliques** — the smeared grid (st0) | `12.000000` | `12.000000` | **`0.000000`** | no |
+| (b) **pure relaxation, no branch**, cliques (`L2PURE` st1) | `12.153620` | `12.153620` | **`0.000000`** | `M = 1.0377` no |
+| (c) leaf `01010101`, cliques, best stage (`L3A01010101` st2) | `11.773816` | `11.773816` | **`0.000000`** | `M = 1.000000000`, `kmax = 1.0097` no |
+| (c) the same, best *certified* stage (`L3A01010101` st0) | **`11.742058`** | `11.742058` | **`0.000000`** | `M = 1.000000000`, `kmax = 1.000000` **yes** |
 
-(§5 has the trajectories, the matched `2 x 2`, and the convergence flags.  Row (c) is a genuine
-lower bound on the leaf's value over its pose set — and a slightly *better*-certified one than
-`T4LEAF.md`'s `11.745193`, which still had an anchor clique violated by `8.6e-4`.)
+(§5 has the trajectories, the matched `2 x 2`, and the convergence flags.  The two bold rows are
+genuine lower bounds on their instance's value over its pose set; `L3A01010101` st0 is a slightly
+*better*-certified leaf bound than `T4LEAF.md`'s `11.745193`, which still had an anchor clique
+violated by `8.6e-4`, and `L1B40K` st1 improves on `T4LEAF.md`'s certified `11.988925`.)
 **Nothing goes below 12 that was not already below 12, and (b) — "pure + line cuts `< 12` would
 mean no branching tree is needed at all" — fails decisively: the certified `dual_PC1` measure of
 mass `12.163060670` satisfies every one of `8 002` line cuts at pitch `0.001` with `0.05` to
@@ -401,26 +404,21 @@ settle solve, i.e. the value is then a genuine lower bound on the instance over 
 ```
 tag           st pattern            LP         M     kmax        pure     nolines  pure_nolin    lines      int   cols   rows    cq   ldual conv
 L1B40K         0 ........    11.992612  1.037041  1.00718   12.000000   11.992612   12.000000  0.00000  3.99261   8670  17749   247  0.0045  no
+L1B40K         1 ........    11.995221  1.000000  1.00000      (not valued: --variant-every 2)  3.99522   8024  24037   208  0.7649 YES
 L2PURE         0 ........    12.129881  1.003563  1.00307   12.204111   12.129881   12.204111  0.00000  3.62481   9115  24583   459  0.0005  no
+L2PURE         1 ........    12.153620  1.037718  1.00207         ---    12.153620         ---  0.00000  3.62974   8046  28871   511  0.0000  no
 L3A01010101    0 01010101    11.742058  1.000000  1.00000   11.877321   11.742058   11.877321  0.00000  3.74206   8572  14634   165  5.1015 YES
 L3A01010101    1 01010101    11.759752  1.104573  1.01388      (not valued: --variant-every 2)  3.75975   8090  19160   206  6.6343  no
+L3A01010101    2 01010101    11.773816  1.000000  1.00972   11.873041   11.773816   11.873041  0.00000  3.77382   8075  21704   131 10.1972  no
 ```
 
-Each run then ran out of its `5 100 s` budget inside the next stage's row loop; the last inner-loop
-record of each (not a settled stage, so no matched variant) was
+Each run stopped when its `5 100 s` budget ran out inside the following stage's row loop, after
+settling the stage above.  The trajectories, all still rising:
 
 ```
-L1B40K       s1.17  LP 11.995237  M 1.003157  kmax 1.012330   3 lines carry dual, sum 0.766
-L2PURE       s1.8   LP 12.154382  M 1.002504  kmax 1.022629   0 lines carry dual, max excess -1.8e-3
-L3A01010101  s2.12  LP 11.773816  M 1.000000000 (bad = 0)  kmax 1.041507   12 lines, dual sum 22.67
-```
-
-so the trajectories, all still rising, are
-
-```
-L1 (k = 4 control, cliques + lines)   11.9926 -> 11.9952
-L2 (pure relaxation, cliques + lines) 12.1299 -> 12.1544        (towards nu_f(4) = 12.163061 from below)
-L3 (leaf 01010101, cliques + lines)   11.7421 -> 11.7598 -> 11.7738
+L1 (k = 4 control, cliques + lines)   11.992612 -> 11.995221   (+0.0026; st1 fully certified)
+L2 (pure relaxation, cliques + lines) 12.129881 -> 12.153620   (+0.0237; towards the certified 12.163061 from below)
+L3 (leaf 01010101, cliques + lines)   11.742058 -> 11.759752 -> 11.773816   (+0.0177, +0.0141)
 ```
 
 `L2PURE` climbing to `12.1544` with `M = 1.0025` against the certified `12.163061` of
@@ -437,9 +435,15 @@ situation §3 predicts.
 Which lines bind, when any do (`L3A01010101` stage 0, the largest line duals of any record):
 
 ```
-x=0.76  v=1.0278  mu=3.0000      x=3.22  v=0.7658  mu=3.0000      y=3.1   v=0.3100  mu=3.0000
-y=3.12  v=0.8823  mu=3.0000      x=3.1   v=0.7307  mu=3.0000      y=0.8   v=0.0756  mu=3.0000
-x=0.78  v=0.8216  mu=3.0000      y=3.22  v=0.3948  mu=3.0000
+L3A01010101 st0 (10 lines, dual sum 5.101465)   L3A01010101 st2 (11 lines, dual sum 10.197214)
+  x=0.76 v=1.0278 mu=3.0000                      x=3.16 v=4.3263 mu=3.0000
+  y=3.12 v=0.8823 mu=3.0000                      x=3.12 v=1.6566 mu=3.0000
+  x=0.78 v=0.8216 mu=3.0000                      y=3.12 v=1.0225 mu=3.0000
+  x=3.22 v=0.7658 mu=3.0000                      x=3.2  v=0.8104 mu=3.0000
+  x=3.1  v=0.7307 mu=3.0000                      x=0.84 v=0.5934 mu=3.0000
+  y=3.22 v=0.3948 mu=3.0000                      y=3.1  v=0.4324 mu=3.0000
+  y=3.1  v=0.3100 mu=3.0000                      x=0.82 v=0.4146 mu=3.0000
+  y=0.8  v=0.0756 mu=3.0000                      y=3.26 v=0.2980 mu=3.0000
 ```
 
 — all of them axis-parallel lines *through the wall bands*, at `mu(B_L) = 3.000000` exactly, i.e.
@@ -458,7 +462,9 @@ solve of each stage, by `--variants` (`LP`, `LP_pure`, `LP_nolines`, `LP_pure_no
 |---|---|---|---|---|---|---|
 | (a) `L1B40K` st0 | `11.992612` | `11.992612` | `12.000000` | `12.000000` | `+0.007388` | `0.000000` |
 | (b) `L2PURE` st0 | `12.129881` | `12.129881` | `12.204111` | `12.204111` | `+0.074230` | `0.000000` |
+| (b) `L2PURE` st1 | `12.153620` | `12.153620` | (not valued) | (not valued) | — | `0.000000` |
 | (c) `L3A01010101` st0 | `11.742058` | `11.742058` | `11.877321` | `11.877321` | `+0.135263` | `0.000000` |
+| (c) `L3A01010101` st2 | `11.773816` | `11.773816` | `11.873041` | `11.873041` | `+0.099225` | `0.000000` |
 
 The two levers are **not** complementary; the line lever is simply zero.  The clique lever is worth
 `0.007 – 0.135`, and the chord rows (`LP_nochord` in the trajectory) are worth `0.000000`
@@ -527,12 +533,15 @@ exactly `12.000000` with them off, and the measure attaining it — `T4LEAF.md` 
 smeared — has `mu(B_L) <= 3.000000000` on every one of `8 002` lines at pitch `0.001`, with a
 largest excess of `+9.7e-13`.
 
-*Does anything go below 12?*  Only what already was: the `k = 4` control (`11.9926`) and the leaf
-(`11.7421`), by exactly the amounts the anchor cliques buy.  Nothing new.
+*Does anything go below 12?*  Only what already was: the `k = 4` control (a certified `11.995221`)
+and the leaf (a certified `11.742058`, rising to `11.773816` with the coverage rows certified and
+one clique violated by `9.7e-3`), by exactly the amounts the anchor cliques buy.  Nothing new — and
+the pure relaxation is at `12.153620` and climbing towards `12.163061`.
 
-*Which lines bind?*  Only axis-parallel lines through the wall bands, at `mu(B_L) = 3.000000`
-exactly, and only degenerately — they carry dual but do not move the objective.  No interior line
-and no diagonal line ever carried a dual.
+*Which lines bind?*  Only axis-parallel lines through the wall bands (`x, y ∈ [0.76, 0.84]` and
+`[3.10, 3.26]`), at `mu(B_L) = 3.000000` exactly, and only degenerately — they carry dual (up to
+`4.33` on one line, `10.2` summed) but do not move the objective by `1e-6`.  **No line through the
+interior `[1,3]^2` and no diagonal line ever carried a dual, in any record of any run.**
 
 *Why, structurally?*  §3.  The whole horizontal family, aggregated with any weights, can say no
 more than `mu(axis-parallel poses) <= 9`, and `9` is attained by the three lines `y = 1, 2, 3` —
