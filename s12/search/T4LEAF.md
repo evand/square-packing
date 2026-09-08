@@ -14,36 +14,41 @@ task), `notes/level2-design.md` §2–§5 (the branch), `search/CLIQUE_CEILING.m
 
 ## 0. Verdict, up front
 
-**(c) still rising when the budget ran out — but the picture has changed, and not in the branch's
-favour.  The gap the level-2 slot branch buys at `t = 4` is `0.06 – 0.26`, not the `0.4 – 1.7` the
-screen measured, and the leaf's certified value is within `0.08` of 12 on the no-clique side.**
+**(c) still rising when the budget ran out.  Nothing reached 12: the leaf keeps `0.25` of margin
+with the anchor cliques on and `0.08` without.  But the level-2 slot branch turns out to be worth
+`0.08 – 0.25` at `t = 4`, not the `0.4 – 1.7` the screen measured, and the corner leaf above it is
+already at `11.99` and climbing.**
 
-Three converged numbers, all at `t = 4.0`, closed semantics, `r = 1`, corner leaf `k = 4`, with the
+The numbers, all at `t = 4.0`, closed semantics, `r = 1`, four corner boxes pinned at 1, with the
 verifier-compatible boundary semantics of §1.1 and the chord rows of §1.2 present:
 
-| what | value | `M` | `kmax` | interior | converged |
+| what | value | `M` | `kmax` | interior | bound? |
 |---|---|---|---|---|---|
-| leaf `01010101`, anchor cliques on (`A01010101`) | `11.730895` | `1.0207` | `1.0038` | `3.730895` | rows not quite |
-| leaf `01010101`, **no cliques** (`C01010101P`) | **`11.919...`** | `1.000000` | — | `3.919...` | **yes** |
-| corner leaf `k = 4` only, slots free, cliques on (`B40K`) | **`11.988925`** | `1.000000` | `1.000000` | `3.988925` | **yes** |
+| leaf `01010101`, anchor cliques on (`A01010101` st2) | **`11.745193`** | `1.000000000` | `1.000859` | `3.745193` | up to one clique violated by `8.6e-4` |
+| leaf `01010101`, **no cliques** (`C01010101P` st2 / `E01010101NB` st0) | **`11.914756` / `11.920067`** | `1.000000000` | — | `3.914756` / `3.920067` | **yes** |
+| corner leaf `k = 4`, slots free, cliques on (`B40K` st2) | **`11.988925`** | `1.000000000` | `1.000000` | `3.988925` | **yes** |
 
-and none of the three had stopped moving.  Every one of them is a lower bound on its own quantity
-over its own pose set (§1), so the leaf's true value is **at least** `11.73` with cliques and **at
-least** `11.92` without, and nothing here reaches 12.
+Each is a lower bound on its own quantity over its own pose set (§1), so the leaf's true value is
+**at least** `11.745` with cliques and **at least** `11.920` without.  None of the three had
+stopped moving: the last increments were `+0.014`, `+0.005` and `+0.007` per pricing stage.
 
 What is new, and what matters for the family:
 
 1. **The slot branch is worth far less than the screen said.**  Against the `k = 4` control on the
-   same instrument, the branch now buys `11.9889 - 11.7309 = 0.258` with cliques and about
-   `12.00 - 11.92 = 0.08` without — where `T4SCREEN.md` §4.1 reported `0.4 – 1.7`.  Most of that
-   collapse is the boundary semantics (§3.2): the screen's branch was decided by a `1e-14`
-   tie-break at the slot boundary, and once a boundary pose is allowed the choice a verifier would
-   have to give it, `0.45 – 0.61` of the leaf optimum's mass moves there.
-2. **The chord inequality `mu(wall strip) <= 3` buys nothing in an `m = 4` leaf, exactly** — its
+   same instrument the branch buys `11.9889 - 11.7452 = 0.244` with cliques and `~0.08` without,
+   where `T4SCREEN.md` §4.1 reported `0.4 – 1.7` and `notes/level2-design.md` §4.3 measured `0.489`
+   at `t = 3.98`.  The cause is the **pose set**, not the semantics: the screen's leaves ran on pose
+   sets its own interior calibration showed to be short by `3.5`.
+2. **`T4SCREEN.md` §5's boundary obstacle is real but free.**  `0.47 – 0.68` of the leaf optimum's
+   mass sits within `1e-7` of a region boundary and the packing does use the freedom the
+   verifier-compatible rule gives it — but the converged value is the same to `0.005` either way
+   (§3.2).  So the branch can be made verifier-compatible at no cost in leaf value.
+3. **The chord inequality `mu(wall strip) <= 3` buys nothing in an `m = 4` leaf, exactly** — its
    dual is `0` at every iteration of every leaf run, because the leaf's own region equalities
-   already pin each wall strip at `3` (§3.1).  It is worth `0.61` on a starved row set and `0` once
-   the coverage rows converge.  The hypothesis being proved elsewhere does not help this leaf.
-3. **`T4SCREEN.md`'s "`k = 4` pure reads exactly `12.000000` six times" is not a value.**  Those
+   already pin each wall strip at `3` (§3.1).  In the `k = 4` control it is worth `0.61` on a
+   starved row set and `0` once the coverage rows converge.  The hypothesis being proved elsewhere
+   is needed for exhaustiveness, but it is not a cut here.
+4. **`T4SCREEN.md`'s "`k = 4` pure reads exactly `12.000000` six times" is not a value.**  Those
    matched-pure numbers share the clique run's row set, and the measure that attains them has
    certified maximum coverage `M = 1.5186` and a violated anchor clique `mu(K) = 1.2310` (§4).  It
    is an upper bound on the pure restricted-pose value and a bound on nothing else.  Its anatomy is
@@ -51,8 +56,9 @@ What is new, and what matters for the family:
    (§4).
 
 So the family is not refuted here, and it is not vindicated either.  What the run does establish is
-that at `t = 4` the honest, verifier-compatible level-2 branch is a **small** cut on top of the
-corner branch, and that the corner branch alone is already at `11.99` and climbing towards 12.
+that at `t = 4` the honest level-2 branch is a **small** cut on top of the corner branch, that
+almost all of the leaf's remaining margin is bought by the anchor cliques rather than by the slot
+branch, and that the corner branch alone is already at `11.99` and climbing towards 12.
 
 ---
 
@@ -204,12 +210,14 @@ A01010101     2 01010101  11.745193  1.000000  1.00086          -  11.745193  3.
 C01010101P    0 01010101  11.894316  1.000000        -          -  11.894316  3.89432 [3.000 3.000 3.000 3.000]  8497   8316  12877    0  0.5440  YES
 C01010101P    1 01010101  11.909254  1.000000        -          -  11.909254  3.90925 [3.000 3.000 3.000 3.000]  8117   7910  17373    0  0.5524  YES
 C01010101P    2 01010101  11.914756  1.000000        -          -  11.914756  3.91476 [3.000 3.000 3.000 3.000]  8132   7915  19543    0  0.5734  YES
+C01010101P    3 01010101  11.920049  1.024053        -          -          -  3.92005 [3.000 3.000 3.000 3.000]  8071   7857  24256    0  0.4996  no
 E01010101NB   0 01010101  11.920067  1.000000        -          -  11.920067  3.92007 [3.000 3.000 3.000 3.000]  8341   8341  13289    0  0.2810  YES
 E01010101NB   1 01010101  11.922396  1.019849        -          -  11.922396  3.92240 [3.000 3.000 3.000 3.000]  8000   8000  19375    0  0.2775  no
 B40K          0 ........  11.962637  1.001354  1.00040  12.000000  11.962637  3.96264 [3.000 3.000 3.000 3.000] 13006  12872  25836  293  0.1042  no
 B40K          1 ........  11.977428  1.000000  1.00000          -          -  3.97743 [3.000 3.000 3.000 3.000]  8006   7875  42294  232  0.0840  YES
 B40K          2 ........  11.988925  1.000000  1.00000          -          -  3.98893 [3.000 3.000 3.000 3.000]  8018   7882  55580  341  0.0708  YES
 B40K          3 ........  11.995681  1.000508  1.00000  12.000000  11.995681  3.99568 [3.000 3.000 3.000 3.000]  8017   7905  63926  201  0.0641  no
+D40KNC        0 ........  11.992299  1.000201  1.00067  12.000000     (none)  3.99230 [3.000 3.000 3.000 3.000]  8670   8517  18327  285  0.0668  no
 ```
 
 `st = -1` is the stage of the run before the last restart, on the larger (12 828-column) pose set.
@@ -224,7 +232,7 @@ violated by `8.6e-4`.
 
 ```
 A (leaf, cliques)              11.7139 -> 11.7309 -> 11.7452              +0.0170 +0.0143
-C (leaf, no cliques)           11.8943 -> 11.9093 -> 11.9148              +0.0150 +0.0055   (11.8750 before)
+C (leaf, no cliques)           11.8943 -> 11.9093 -> 11.9148 -> 11.9200  +0.0150 +0.0055 +0.0053  (11.8750 before)
 E (leaf, no cliques, no bnd)   11.9201 -> 11.9224                         +0.0023
 B (k = 4 control)              11.9626 -> 11.9774 -> 11.9889 -> 11.9957   +0.0148 +0.0115 +0.0068
 ```
@@ -254,7 +262,10 @@ In the `k = 4` control the slots are free, so the inequality is not implied, and
 row set it is worth a lot: on the calibration instance of §1.3, `12.105337` with the chord rows
 against `12.719713` without — a cut of `0.614`.  Once the coverage rows converge that cut is gone:
 `B40K` stages 0 and 3 both give `LP_nochord = LP` to all printed digits (`11.962637`, `11.995681`),
-and the control's own optimum puts exactly `3` in every wall strip unprompted.  **At `t = 4` the
+and the control's own optimum puts exactly `3` in every wall strip unprompted.  `D40KNC` is the
+same control run with the chord rows removed from the model altogether, warm-started from `B`'s
+checkpoint: it reaches `11.992299` (`M = 1.000201`, `kmax = 1.000666`) on a third of `B`'s rows,
+i.e. the same place `B` is, from below.  **At `t = 4` the
 chord bound is implied by the closed-square coverage constraint at the optimum.**  It remains what
 makes the leaf *set* exhaustive (`notes/level2-design.md` §2.3) — that is not an LP statement — but
 as a cut it is worth zero here.
@@ -264,7 +275,7 @@ as a cut it is worth zero here.
 `T4SCREEN.md` §5 found the leaf optima parking `1 – 11 %` of their mass — in two converged leaves a
 whole unit at a single pose — exactly on a slot boundary, with the branch decided by
 `level2_regions.classify`'s `1e-14` tie-break.  That is a real obstacle for a cell-based verifier
-(§1.1), and the mass is still there: `0.55 – 0.68` of the leaf optimum sits within `1e-7` of a
+(§1.1), and the mass is still there: `0.47 – 0.68` of the leaf optimum sits within `1e-7` of a
 region boundary, and the duplication is used — in `C`'s stage-2 optimum `0.18` of mass sits at
 `c_x = 2` labelled `W_5`, where `classify` would have said `W_4` (empty), and `0.095` likewise at
 the left wall.  (`classify` happens to favour the *occupied* slot on the bottom and right walls and
@@ -288,9 +299,10 @@ value: making the branch verifier-compatible is free.**
 
 | | with anchor cliques | without cliques |
 |---|---|---|
-| corner leaf `k = 4`, slots free (`B40K`) | `11.995681` (`M = 1.0005`) | `12.000000` (**not** a bound — §4) |
-| leaf `01010101` | `11.745193` (`M = 1.000000`, `kmax = 1.00086`) | `11.920067` (`M = 1.000000`) |
-| **slot branch is worth** | **`0.2505`** | **`~0.08`** |
+| corner leaf `k = 4`, slots free, best **certified** (`B40K` st2) | `11.988925` (`M = 1`, `kmax = 1`) | `12.000000` (**not** a bound — §4) |
+| corner leaf `k = 4`, last stage (`B40K` st3) | `11.995681` (`M = 1.0005`) | `12.000000` (not a bound) |
+| leaf `01010101`, best (`A` st2 / `E` st0) | `11.745193` (`M = 1.000000`, `kmax = 1.00086`) | `11.920067` (`M = 1.000000`) |
+| **slot branch is worth** | **`0.244` – `0.251`** | **`~0.08`** |
 
 `T4SCREEN.md` §4.1 put the same branch at `0.4 – 1.7`, and `notes/level2-design.md` §4.3 measured
 `0.489` for this leaf at `t = 3.98`.  The collapse is a pose-set effect, not a semantics effect
