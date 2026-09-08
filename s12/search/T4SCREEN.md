@@ -15,7 +15,8 @@ is the one that matters) and `search/DUAL_EXACT.md` / `search/CLOSED4.md` (the c
 
 ## 0. Verdict, up front
 
-**Undecided, leaning GO — with a new obstacle that has nothing to do with the value.**
+**UNDECIDED — no leaf reached 12, but the pose sets are demonstrably starved, so this is not
+evidence for a go either.  Plus a new obstacle that has nothing to do with the value.**
 
 Nothing in this screen reached 12.  At `t = 4.0`, closed semantics, on pose sets of 3.4k–6.6k poses
 with 8k–34k certified coverage rows and 250–2100 anchor-clique rows: the pure relaxation sits at
@@ -29,16 +30,26 @@ branch.
 
 The arithmetic in an `m = 4` leaf is exact and explicit (§4.2): the branch pins `4` in the corner
 boxes and `4` in the slots, so **`leaf value = 8 + interior mass`, and the leaf fails to close iff
-the interior `[1,3]^2` can carry `>= 4`**.  The interior *on its own*, with the whole frame pinned to
-zero, carries exactly `4.000000` here — converged, `M = 1`, `kmax = 1`.  With the frame present it
-carries `2.3–3.5`.  **The leaves miss 12 by exactly what the frame costs the interior.**
+the interior `[1,3]^2` can carry `>= 4`**.  Measured interior mass in the four leaves: `2.3 – 3.5`.
 
-That is a **weak** go, and weak for the reason `CLIQUE_CEILING.md` already recorded: nearly every
-number is an LP value on a restricted pose set, the inner loop does not converge (`M` and `kmax`
-still `1.02–1.7` in most rows) so most values bound nothing in either direction, and the values
-climb slowly under refinement (`01010101`: `11.376 -> 11.404 -> 11.410 -> 11.477`).  Five of the
-forty-odd stage values are genuinely converged; the interior's `4.000000` is one of them, and it
-sits exactly on the threshold.
+**And that is exactly where the screen shows its own limits.**  The interior sub-problem — the same
+LP with the whole frame pinned to zero, so that every pose carrying mass is interior-centred — has
+an independent witness, and the LP is short of it:
+
+| interior mass at `t = 4` | value |
+|---|---|
+| LP, 3500 poses, one unrefined evaluation, `M = 1`, `kmax = 1` (**converged**) | `4.000000` |
+| LP, 1471-pose seed, priced against its own dual, `M = 1`, `kmax = 1` (**converged**) | `5.000000` |
+| the same after **one** pricing round (4000 poses) | `5.78 – 6.03` |
+| independent witness: **six** unit squares with centres in `[1,3]^2`, pairwise disjoint with margin `+0.0567`, all inside `[0,4]^2` (`level2_capacity.py --t 4.0 --box 1 3 1 3 --k 6`) — mass 1 on each is a feasible measure | **`>= 6`** |
+
+So a *converged* LP value here is tight for its pose set and can be **2 below the truth**; one round
+of column generation moves it by `+0.8`.  Every leaf number in §3 is a lower bound of exactly that
+kind, and none of them is a bound in the direction that would decide the question.  With the values
+already climbing under refinement (`01010101`: `11.376 -> 11.404 -> 11.410 -> 11.477`) and the
+deficit to 12 only `0.5 – 1.0`, **this screen cannot tell a leaf that closes from one that does
+not.**  What it *can* say is that nothing here produced the decisive `>= 12`, and that the
+level-2 slot branch — not the cliques — is what moves the value.
 
 **The new obstacle is that the leaf optima are not certificate-shaped.**  `1–11 %` of the mass of
 every `m = 4` leaf optimum — and, in the two leaves whose value is actually converged, a **whole
@@ -265,36 +276,54 @@ corners `[1,1,1,1]`, slots summing to `4.000000`, interior `3.403693`, total `11
 leaf fails to close **iff the interior can carry fractional mass `>= 4`** beside the pinned frame.
 Measured interior mass in the four leaves: `2.3 – 3.5`.
 
-**And the interior on its own reaches exactly the threshold.**  Run with the four corner boxes and
-all eight slots pinned to 0, so that every pose carrying mass is interior-centred
-(`runs/t4_INT40.log`, pattern `00000000`, 3500 poses, 9751 rows, 362 cliques):
+**The interior sub-problem is where the instrument can be checked against ground truth, and it
+fails the check.**  Run with the four corner boxes and all eight slots pinned to 0, so that every
+pose carrying mass is interior-centred:
 
-```
-LP = 4.000000   M = 1.000000000   kmax = 1.000000   matched pure 4.000000   -- rows AND cliques converged
-```
+| run | poses | LP | `M` | `kmax` | |
+|---|---|---|---|---|---|
+| `INT40` pattern `00000000` (one unrefined evaluation, on a row set built for a different pattern) | 3500 | **4.000000** | `1.000000` | `1.000000` | converged |
+| `INTP` stage 0 (seed pose set, priced against its own dual) | 1471 | **5.000000** | `1.000000` | `1.000000` | converged |
+| `INTP` stage 1 (after one pricing round) | 4000 | `6.026 -> 5.778` | `1.19` | `1.33` | rows still open |
+| **witness** (`level2_capacity.py --t 4.0 --box 1 3 1 3 --k 6`) | — | **`>= 6`** | — | — | six unit squares, centres in `[1,3]^2`, pairwise margin `+0.0567`, all inside `[0,4]^2`; mass 1 on each is a feasible measure |
 
-`4.000000` exactly, and it is one of the five converged values here, so it is a genuine lower bound
-on the interior's fractional capacity over that pose set.  (The same run with the slots left *free*
-and only the corners pinned to 0 gives `10.52`, `M = 1.20` — that is the whole frame-free container,
-not the interior, and is the number not to confuse this with.)
+Two *converged* LP values (`4.000000` and `5.000000`) that are `2` and `1` below a witness anyone
+can check in four lines.  This is the honest calibration of the whole screen: **converged means
+tight for the pose set, not tight**, and on a sub-problem where the answer is independently known
+the gap was `2`.  (`level2-design.md` §5 records the same six-square configuration at `t = 3.98`,
+margin `+0.0884`, "six squares at 34–44 degrees leaning out of the interior into the wall gaps" —
+poses a `0.25 / 15 deg` seed grid does not contain and one round of `0.04 / 2.5 deg` pricing only
+half finds.)
 
-So the arithmetic of an `m = 4` leaf at `t = 4` is knife-edge and completely explicit:
+So the arithmetic of an `m = 4` leaf at `t = 4` is explicit and the answer turns on a quantity this
+screen measures badly:
 
-> `leaf value = 8 + interior mass`; the interior *alone* carries `4.000000`; with the frame pinned
-> it carries `2.3 – 3.5`.  **The four `m = 4` leaves miss 12 by exactly what the frame costs the
-> interior**, which these runs measure as `0.5 – 1.7`.
+> `leaf value = 8 + interior mass`; the leaf fails to close iff the interior carries `>= 4`.  With
+> the frame pinned the LP gives `2.3 – 3.5`; the same LP under-reports the *frame-free* interior by
+> `1 – 2`.
 
-The frame costs something because the corner and slot squares stick into `[0.3, 3.7]^2` and eat the
-coverage budget the interior squares need — but "something" is all that is established, and the
-margin is the whole answer.
+The frame does cost the interior something — the corner and slot squares stick into `[0.3, 3.7]^2`
+and eat the coverage budget the interior squares need — and the leaves do come in below 12.  But
+`0.5 – 1.0` of deficit against an instrument with a demonstrated `1 – 2` of pose-set slack is not a
+verdict.
 
-### 4.3 Why this is only a weak go
+One thing the leaf values *cannot* be beaten by, at least: an **integral** witness.  Twelve unit
+squares in a leaf's region pattern with all pairwise margins bounded away from zero would give a
+feasible measure of mass exactly 12 — but such a configuration can be scaled to twelve squares of
+side `> 1` in `[0,4]^2`, i.e. it would refute `s(12) = 4` outright.  So a leaf value `>= 12` has to
+come from the *fractional* excess, which is what the pure method has at `t = 4` (`12.163`) and what
+the branch and the cliques are trying to remove.  (The same argument with `s(13) = 4`, which is a
+theorem, rules out an integral witness of mass 13.)
 
+### 4.3 Why this settles nothing
+
+* **The instrument is short by `1 – 2` where it can be checked** (§4.2).  That is the governing
+  caveat; everything below is secondary to it.
 * **Almost nothing converged.**  Of the stage values in §3, five have `M <= 1` and `kmax <= 1`
-  simultaneously and are therefore genuine lower bounds on their leaf; the rest have `M` in
-  `1.02 – 1.3` and are upper bounds on the restricted-pose value and bounds on nothing else.  The
-  best *converged* leaf values are `11.000000` (`01011010`, `01100110`) and the best unconverged
-  ones `11.48` (`01010101`).
+  simultaneously and are therefore genuine lower bounds on their leaf *over their own pose set*;
+  the rest have `M` in `1.02 – 1.7` and are upper bounds on the restricted-pose value and bounds on
+  nothing else.  The best *converged* leaf values are `11.000000` (`01011010`, `01100110`) and the
+  best unconverged ones `11.48` (`01010101`).
 * **The values climb under refinement, slowly.**  `01010101`: `11.376 -> 11.404 -> 11.410 -> 11.477`
   over four pricing stages (3383 -> 5640 poses); `k = 4` with cliques: `11.945 -> 11.982`
   (3383 -> 6643 poses).  That is `+0.03` to `+0.10` per stage against a `0.5 – 1.0` deficit to 12 —
