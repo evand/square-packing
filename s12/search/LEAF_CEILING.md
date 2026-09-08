@@ -404,6 +404,41 @@ evidence here, is the *first* LP value in the row-generation sequence — the un
 exactly `12.000000` on 27,413 rows and 14,515 violated vertices, and falls to `11.9400` as the rows
 close in.
 
+**A larger pose set is holding `12.000000000`, and that run is still going.**  Repeating the polish
+on `src_UNION2` — the union of the three supports above with the leaf-search agent's own
+`tl_B40K` corner-leaf support, 2,177 poses, `1,986,909` arrangement vertices, `4.5 x 10^8`
+incidences — the LP value does **not** fall away from 12 as the rows close in:
+
+| round | rows | LP mass | exact `M` after rounding down | violated vertices |
+|---|---|---|---|---|
+| 0 | 32,954 | `12.000000000` | `1.209357953` | 62,695 |
+| 1 | 52,954 | `12.000000000` | `1.075943947` | 20,224 |
+| 2 | 72,954 | `12.000000000` | `1.031414475` | 2,859 |
+| 3 | 75,813 | `12.000000000` | `1.074857129` | 1,635 |
+| 4 | 77,448 | `12.000000000` | `1.036800365` | 1,177 |
+| 5 | 78,625 | `12.000000000` | `1.069820242` | 1,542 |
+| 6 | 80,167 | `12.000000000` | `1.044268913` | 663 |
+| 7 | 80,830 | `12.000000000` | `1.018134836` | 675 |
+| 8 | 81,505 | `12.000000000` | `1.011657967` | **126** |
+| 9 | 81,631 | `12.000000000` | `1.008471983` | 131 |
+| 10 | 81,762 | `12.000000000` | `1.014484956` | **57** |
+| 11 | 81,819 | `12.000000000` | `1.010823166` | 199 |
+| 12 | 82,018 | `12.000000000` | `1.010026368` | 131 |
+
+(the tail is degenerate — `M` sits at `1.010 +- 0.004` and the violated count oscillates between 57
+and 200 while the row set grows by ~150 a round, at 10–25 minutes a round.)
+
+Until it reaches 0 violated vertices this is exactly the same non-statement as `T4SCREEN.md`'s
+(`LP` on an unconverged row set is an upper bound on a restricted value), with one difference that
+matters: the row set here is drawn from the **complete** exact vertex set, so the loop must
+terminate, and when it does the number is exact and final.  If it terminates at `12.000000000`, that
+is a certified corner-leaf measure of mass 12 at `t = 4`: **no certificate built from points and the
+four corner-box multipliers can close the corner leaf at `t = 4`** — the corner branch alone is dead,
+and only the cliques (which this measure violates, see below) or the slot branch could revive it.
+If it falls, the honest number is the `11.939983685` above.  The run is detached
+(`runs/lc_union2.out`, `runs/lc_UNION2k4_snap.log`); at 80k rows x 2177 columns each round is
+10–25 minutes.
+
 The anchor cliques of those measures are far from feasible.  On the two certified measures the
 exact local ascent reaches
 
