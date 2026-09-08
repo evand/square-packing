@@ -549,3 +549,9 @@ reached, and the number that matters for it:
 | `U40`, `P40` | pure, cliques | 3 / 2 stages, LP `12.12 – 12.20` |
 | `C98` | the `t = 3.98` calibration | 1 stage, LP `11.79`, matched pure `11.90`, both `<= 11.96` ✓ |
 | `INT40`, `INTP` | the interior alone | `4.000000` (converged, unrefined), then `5.000000 -> 5.731 -> 6.000` |
+| `S01010101` | follow-up 2: the hardest leaf warm-started from `INTP`'s refined interior poses (38 745 poses, row ageing off) | started; first iterate `LP = 12.000000` at `M = 2.65` on the bare seed row set, i.e. nothing yet — the row generation has not begun to bite.  **Left running.** |
+
+Nothing here is a certificate, an exact computation, or a bound on `V(4)` in the decisive
+direction.  What is exact: the `12.163061` pure reference (`DUAL.md`), the `s(13) = 4` and
+`s(12) = 4` arguments in §4.2 that rule out integral witnesses, and the twelve-square grid
+configuration of §4.3.  Everything else is a float LP on a restricted pose set.
