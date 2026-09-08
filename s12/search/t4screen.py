@@ -515,22 +515,34 @@ def main():
     hist = []
 
     def value(kc, kw, tag):
-        """row + clique generation to convergence; returns the trajectory's last record"""
+        """row + clique generation to convergence; returns the trajectory's last record.
+
+        Ordering matters: the sifts (which REINDEX rows and cliques) run at the TOP of the loop,
+        against the previous solve's mu / y, so that after the final solve only APPENDS have
+        happened.  Otherwise the returned point duals `y` no longer line up with `leaf.pts` and
+        the pricer sees garbage -- which is exactly what the `rc-check` diagnostic caught
+        (`rc = +1.0`, pricing gap `+8.0`, on the first row-aged runs)."""
         rec = None
+        pmu = py = None
         for it in range(a.rowloops):
+            ndrop = ndrop_r = 0
+            if a.cliques or leaf.pool:
+                ndrop = leaf.sift_cliques(a.cq_age)
+            if pmu is not None and py is not None and len(py) <= len(leaf.pts):
+                # rows added since that solve have no dual yet and are never stale
+                ypad = np.concatenate([py, np.zeros(len(leaf.pts) - len(py))])
+                ndrop_r = leaf.sift_rows(pmu, ypad, a.row_age)
             sol = leaf.solve(kc, kw, a.method)
             if sol is None:
                 log(f'   [{tag}.{it}] LP infeasible/failed')
                 return None
             mu, y, val, lam = sol
+            pmu, py = mu, y
             M, bad, nv, ovf = leaf.certify(mu)
             kmax, ncq, best = (0.0, 0, None)
-            ndrop = 0
             if a.cliques or leaf.pool:
-                ndrop = leaf.sift_cliques(a.cq_age)
                 room = max(a.cq_max - len(leaf.cliques), 0)
                 kmax, ncq, best = leaf.separate(mu, a, log, want=min(a.cq_want, room))
-            ndrop_r = leaf.sift_rows(mu, y, a.row_age)
             L = val / max(M, kmax, 1.0)
             log(f'   [{tag}.{it}] cols={len(leaf.poses)} rows={len(leaf.pts)} cq={len(leaf.cliques)} '
                 f'LP={val:.6f} M={M:.9f} kmax={kmax:.6f} L={L:.6f} bad={len(bad)} +cq={ncq} -cq={ndrop} -row={ndrop_r} '
