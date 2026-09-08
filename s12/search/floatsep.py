@@ -338,7 +338,8 @@ def descend(P, w, s, N, seeds, pitch, CQ, lam, r, thr, levels=3, rfac=4, half=2.
     if len(seeds) == 0: return 9e9, []
     CQ = CQ or []
     byk = {}
-    for (cx, cy, th, _h, _fl) in seeds:
+    for row in seeds:                       # (cx, cy, theta, h, flag[, credit]) -- see branch.read_witnesses
+        cx, cy, th = row[0], row[1], row[2]
         k = int(round(N * math.tan(th / 2.0)))
         byk.setdefault(k, []).append((cx, cy))
     mn = 9e9; out = []

@@ -58,6 +58,11 @@ try:
 except ImportError:
     highspy = None
     if SOLVER == 'warm': SOLVER = 'highs'
+# 'cell' (the default) builds an exact-verifier row from the credit the SWEEP gave the cell the
+# witness came from, and never deduplicates such a row on the --row-grid; 'pose' is the rule from
+# before 2026-09-07 -- anchorclique.coeff at the witness pose, dedup as for any other row -- kept
+# only so that the two can be run back to back on one checkpoint (search/WITNESS.md).
+WITNESS_CREDIT = os.environ.get('BRANCH_WITNESS_CREDIT', 'cell')
 LAM_LO, LAM_HI = -1.0, 1.5   # the LP has a free direction (corner-only atoms up, lambda up); the cap keeps certificates sane (--lam-hi overrides; the k = 4 leaf sits at the cap)
 
 
@@ -72,6 +77,9 @@ class BModel(T.Model):
         self.cliques = []; self.cparams = []; self.ckey = {}
         self.csizes = np.zeros(0); self.CR = []; self.CC = []; self.CV = []
         self.r = float(r); self.rfrac = Fraction(r); self.rflag = []; self.rowkeys = []; self.sym = sym
+        # rexact[i]: row i came from the EXACT verifier and its clique coefficients are the credit
+        # the sweep gave the cell it came from (see add_rows / add_clique)
+        self.rexact = []
         self.row_grid = (1e-7, 1e-8)     # (position, angle) rounding of the row key: rows closer than this are one row
         if isinstance(kreg, (tuple, list)):
             self.perbox = True; self.kvec = [int(v) for v in kreg]; assert len(self.kvec) == 4 and all(v in (0, 1) for v in self.kvec)
@@ -99,7 +107,15 @@ class BModel(T.Model):
 
     def add_clique(self, cl, params=None):
         """add the D4 orbit of an anchor clique as one column (single clique if the model is not
-        symmetric); returns False if it is already there"""
+        symmetric); returns False if it is already there.
+
+        On the EXACT rows the new column gets coefficient 0, not `AC.coeff`.  Those rows carry the
+        credit the verifier's sweep actually gave the cell they came from, for the cliques that were
+        in the certificate at the time; a clique separated afterwards was not in that file and gave
+        that cell nothing, so 0 is the truthful entry, and the invariant "an exact row's clique
+        coefficients are the verifier's own" is what makes the loop's stopping test mean something.
+        The new column gets its credit on those poses at the next exact round, which re-emits them
+        (exact witnesses are never deduplicated, `add_rows`).  See `search/WITNESS.md`."""
         k = AC.key(cl)
         if k in self.ckey: return False
         sfr = Fraction(self.K, self.D)
@@ -108,10 +124,13 @@ class BModel(T.Model):
         self.cliques.append(imgs); self.cparams.append(params)
         self.csizes = np.append(self.csizes, float(len(imgs)))
         if self.rows:
-            Q = np.array(self.rows); v = AC.coeff(imgs, Q)
-            hit = np.nonzero(v)[0]
-            if hit.size:
-                self.CR.append(hit.astype(np.int32)); self.CC.append(np.full(hit.size, j, dtype=np.int32)); self.CV.append(v[hit])
+            rex = np.zeros(len(self.rows), dtype=bool); rex[:len(self.rexact)] = self.rexact
+            heur = np.nonzero(~rex)[0]
+            if heur.size:
+                Q = np.array(self.rows)[heur]; v = AC.coeff(imgs, Q)
+                hit = np.nonzero(v)[0]
+                if hit.size:
+                    self.CR.append(heur[hit].astype(np.int32)); self.CC.append(np.full(hit.size, j, dtype=np.int32)); self.CV.append(v[hit])
         return True
 
     def box_of(self, cx, cy, eps=1e-9):
@@ -129,32 +148,62 @@ class BModel(T.Model):
         return self.kvec[flag - 1] != 0 if self.perbox else self.kvec[0] != 0
 
     def add_rows(self, pl):
-        """pl: iterable of (cx, cy, theta, h) or (cx, cy, theta, h, flag).  Returns number added."""
+        """pl: iterable of (cx, cy, theta, h), (cx, cy, theta, h, flag) or
+        (cx, cy, theta, h, flag, credit).  Returns number added.
+
+        `credit` (from `read_witnesses`) is the anchor-clique credit the EXACT verifier gave the
+        cell the pose came from, as {clique orbit: number of credited images}.  Such a row gets
+        exactly those clique coefficients -- not `AC.coeff`, which decides membership of the single
+        pose and credits weight the verifier refuses whenever the cell straddles a piece's boundary.
+        Rows with `credit is None` (the float oracle, the lattice warm start, a sibling's dual) keep
+        `AC.coeff`: they are heuristic row choices, and the exact rounds are the safety net -- the
+        loop only ever stops on an exact verdict, and an exact round re-emits any pose whose cell is
+        still short, with the verifier's own numbers.
+
+        Exact rows also bypass the `--row-grid` deduplication.  There are at most topk x bins of
+        them a round, and the grid (0.002 in position, 0.005 rad in angle on the 1110 leaf) is far
+        too coarse to identify a row: 11,661 witnesses collapsed to 4,196 keys, so a witness at
+        0.986 was silently dropped because an older, differently placed row shared its key and the
+        pose the verifier is failing on was never in the LP at all.  See `search/WITNESS.md`."""
         P, own = self.P, self.own; added = 0
+        heur = []; exact = []
         for row in pl:
             cx, cy, tm, h = row[:4]
             flag = int(row[4]) if len(row) > 4 else self.box_of(cx, cy)
+            cred = row[5] if (len(row) > 5 and WITNESS_CREDIT == 'cell') else None
             if not self.row_active(flag): continue
             gp, ga = self.row_grid
             key = (round(cx / gp), round(cy / gp), round(tm / ga), round(h * 1e7), flag)
-            if key in self.rkey: continue
-            self.rkey.add(key)
+            if cred is None:
+                if key in self.rkey: continue
+                self.rkey.add(key)
+            else:
+                key = key + (tuple(sorted(cred.items())),)
             ct, st = math.cos(tm), math.sin(tm)
             u0 = cx * ct + cy * st; u1 = -cx * st + cy * ct
             q0 = P[:, 0] * ct + P[:, 1] * st; q1 = -P[:, 0] * st + P[:, 1] * ct
             ok = np.maximum(np.abs(q0 - u0), np.abs(q1 - u1)) <= h - T.TOL
             cnt = np.bincount(own[ok], minlength=len(self.orbits)); idx = np.nonzero(cnt)[0]
             r = len(self.rows); self.rows.append((cx, cy, tm, h)); self.rflag.append(flag); self.rowkeys.append(key)
+            self.rexact.append(cred is not None)
             if idx.size:
                 self.R.append(np.full(idx.size, r, dtype=np.int32)); self.C.append(idx.astype(np.int32)); self.V.append(cnt[idx].astype(float))
+            (exact if cred is not None else heur).append((r, cred))
             added += 1
-        if self.cliques and added:
-            n0 = len(self.rows) - added
-            Q = np.array(self.rows[n0:]); rot = AC._rot(Q)
+        if self.cliques and heur:
+            hr = np.array([r for r, _ in heur], dtype=np.int32)
+            Q = np.array([self.rows[r] for r in hr]); rot = AC._rot(Q)
             for j, imgs in enumerate(self.cliques):
                 v = AC.coeff(imgs, Q, rot); hit = np.nonzero(v)[0]
                 if hit.size:
-                    self.CR.append((hit + n0).astype(np.int32)); self.CC.append(np.full(hit.size, j, dtype=np.int32)); self.CV.append(v[hit])
+                    self.CR.append(hr[hit]); self.CC.append(np.full(hit.size, j, dtype=np.int32)); self.CV.append(v[hit])
+        if self.cliques and exact:
+            R = []; C = []; V = []
+            for r, cred in exact:
+                for j, n in cred.items():
+                    if n and 0 <= j < len(self.cliques): R.append(r); C.append(j); V.append(float(n))
+            if R:
+                self.CR.append(np.array(R, dtype=np.int32)); self.CC.append(np.array(C, dtype=np.int32)); self.CV.append(np.array(V, dtype=float))
         return added
 
     def add_orbit(self, X, Y):
@@ -184,8 +233,12 @@ class BModel(T.Model):
             self.CR = [nr[sel].astype(np.int32)]; self.CC = [C[sel]]; self.CV = [V[sel]]
         super().prune(keep)
         self.rflag = [f for f, k in zip(self.rflag, keep) if k]
+        rex = [e for e, k in zip(self.rexact, keep) if k]
         self.rowkeys = [rk for rk, k in zip(self.rowkeys, keep) if k]
-        self.rkey = set(self.rowkeys)
+        self.rexact = rex
+        # only the float/lattice rows take part in the row-grid dedup (an exact row's key carries
+        # its credited set and is never looked up), so the exact ones stay out of `rkey`
+        self.rkey = set(rk for rk, e in zip(self.rowkeys, rex) if not e)
 
     def flagmat(self):
         """rows x nl matrix F with F[r, j] = 1 iff row r is charged multiplier j"""
@@ -408,11 +461,18 @@ def export(m, x, lam, path, WD=10 ** 7, factor=1.0, up=True):
         for X, Y in o: lines.append(f"{X} {Y} {w}"); tot += w
     cls = []; clw = []                                    # one file clique per image, same weight
     n_orb = len(m.orb_int)
+    # cqmap[i] = the clique ORBIT j of file clique i (the file carries one clique per image, the LP
+    # one column per orbit).  The verifier's witnesses name file cliques, so a row's coefficient on
+    # orbit j is the number of credited file cliques that map to j -- exactly the "number of images
+    # containing the pose" AC.coeff computes, except read off the sweep instead of a pose predicate
+    # (`search/WITNESS.md`).  Orbit indices, not matrix columns: column generation may append point
+    # orbits between this export and the row that uses the map, which moves n_orb but not j.
+    cqmap = []
     for j, imgs in enumerate(getattr(m, 'cliques', [])):
         v = x[n_orb + j] * factor * WD
         w = int(math.ceil(v - 1e-9)) if up else int(math.floor(v))
         if w <= 0: continue
-        for im in imgs: cls.append(im); clw.append(w); tot += w
+        for im in imgs: cls.append(im); clw.append(w); cqmap.append(j); tot += w
     # Every anchor point is emitted as a ZERO-WEIGHT atom.  It carries no weight, but the sweep's
     # cells are the atoms' breakpoints and a cell is credited only if it lies WHOLLY inside a piece:
     # without them the cells straddle the boundary of {S : p in S} and of {S : A subseteq S} and a
@@ -429,20 +489,49 @@ def export(m, x, lam, path, WD=10 ** 7, factor=1.0, up=True):
         f.write(f"{s.numerator} {s.denominator}\n{m.D}\n{WD}\n{len(lines)}\n" + "\n".join(lines) + "\n")
         if cls: f.write(AC.block(cls, clw, m.D))
         f.write(f"region corner {m.rfrac.numerator} {m.rfrac.denominator}\nlambda {' '.join(str(L) for L in Ls)}\nk {' '.join(str(v) for v in (m.kvec if m.perbox else [m.kvec[0]]))}\n")
+    # the map is what `read_witnesses` needs to turn the verifier's file-clique indices back into
+    # model columns; it is kept on the model (the loop verifies the file it has just written) and
+    # dropped next to the probe so a diagnostic can reconstruct the same rows offline
+    m._cqmap = cqmap
+    if cqmap:
+        with open(path + '.cqmap', 'w') as f:
+            f.write("# file_clique_index clique_orbit   (written by branch.export; see search/WITNESS.md)\n")
+            for i, j in enumerate(cqmap): f.write(f"{i} {j}\n")
     return tot / WD, len(lines), np.array(Ls) / WD
 
 
-def read_witnesses(path, N):
-    """verifier witness file (v theta cx cy flag) -> rows (cx, cy, theta_k, sigma_k/2, flag)"""
+def read_witnesses(path, N, cqmap=None):
+    """verifier witness file -> rows (cx, cy, theta_k, sigma_k/2, flag, credit).
+
+    Columns are `v theta cx cy flag`, and for a certificate carrying an `anchors` block two more:
+    the number of anchor cliques the sweep CREDITED to the cell the witness came from, and their
+    file indices.  `credit` is None when the file carries no such column (a plain certificate, or an
+    old binary) or when no `cqmap` is supplied, and otherwise a dict {clique orbit: coefficient}
+    obtained by mapping the file indices through `cqmap` (`export` writes it) and counting -- i.e.
+    the number of credited images of each clique orbit, which is what the LP column wants.
+
+    Why this matters: the verifier credits a clique to a CELL only if one piece provably holds every
+    pose of it, while `anchorclique.coeff` decides membership of the single witness POSE, which can
+    sit inside the piece when the cell straddles its boundary.  Building the row from the pose then
+    hands the LP credit the verifier will never give, the LP believes the row is satisfied, and the
+    cell is never fixed (`search/WITNESS.md`)."""
     out = []
     for line in open(path):
         q = line.split()
-        if len(q) not in (4, 5): continue
-        v, th, cx, cy = map(float, q[:4]); fl = int(q[4]) if len(q) == 5 else 0
+        if len(q) < 4: continue
+        v, th, cx, cy = map(float, q[:4]); fl = int(q[4]) if len(q) > 4 else 0
+        cred = None
+        if len(q) > 5 and cqmap is not None:
+            nc = int(q[5]); ids = [int(t) for t in q[6:6 + nc]]
+            assert len(ids) == nc, f"{path}: witness line claims {nc} credited cliques, has {len(ids)}"
+            cred = {}
+            for i in ids:
+                assert 0 <= i < len(cqmap), f"{path}: credited clique {i} is not in the cqmap ({len(cqmap)} file cliques)"
+                cred[cqmap[i]] = cred.get(cqmap[i], 0) + 1
         k = int(round(N * math.tan(th / 2)))
-        out.append((v, th, cx, cy, k, fl))
-    out.sort()
-    return [(cx, cy, th, T.sigma_k(N, k) / 2, fl) for v, th, cx, cy, k, fl in out]
+        out.append((v, th, cx, cy, k, fl, cred))
+    out.sort(key=lambda r: r[:6])
+    return [(cx, cy, th, T.sigma_k(N, k) / 2, fl, cred) for v, th, cx, cy, k, fl, cred in out]
 
 
 def lattice_rows(m, w, eta=0.01, dt=0.01, thr=1.05, perang=400, B=6, nproc=8):
@@ -765,7 +854,9 @@ def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe
         if want_exact:
             export(m, x, lam, tmp, WD=10 ** 12, factor=1.0 / (1.0 + probe_margin), up=False)
             t1 = time.time(); mv, ok = T.run_verifier(tmp, N, topk=topk, sep=sep, n=n, threads=threads or T.NPROC); t_ver = time.time() - t1
-            wit = read_witnesses(sep, N) if os.path.exists(sep) else []
+            # the credited-clique columns of the witness file are indices into the probe
+            # file's cliques; `export` has just written the map for THIS file
+            wit = read_witnesses(sep, N, getattr(m, '_cqmap', None)) if os.path.exists(sep) else []
             if os.path.exists(sep): os.remove(sep)
             if mv is not None and mv < 1: fclean = 0
         elif sep_mode == 'float':
@@ -787,7 +878,7 @@ def loop(m, tag, margin=2e-6, N=6000, topk=None, max_iters=400, log=print, probe
             t1 = time.time(); ncq, cqmass, cqpt = price_cliques(m, y, x, want=cq_want, pitch=cq_pitch, interior=cq_interior); t_cq = time.time() - t1
         # the poses that were worst this round seed next round's local descent: they barely move,
         # and a grid alone will not land on them again (search/LOOPSPEED.md 6)
-        if sep_mode == 'float': seeds = list(wit[:4000])
+        if sep_mode == 'float': seeds = [tuple(w[:5]) for w in wit[:4000]]
         t1 = time.time(); added = m.add_rows(wit); t_rows = time.time() - t1
         save_cols(m, f"runs/branch_{tag}_cols.txt")          # checkpoint: every column, weight or not, so a restart loses nothing
         if m.cliques: save_cliques(m, f"runs/branch_{tag}_cliques.txt")
@@ -825,7 +916,7 @@ def finalize(m, x, lam, tag, out_path, N=6000, log=print, WD=10 ** 7, margin=2e-
         mv1, ok1 = T.run_verifier(out_path, N, n=n, threads=threads or T.NPROC)
         sep = f"runs/branch_{tag}_sep2.txt"
         mv2, ok2 = T.run_verifier(out_path, 2 * N, topk=6, sep=sep, n=n, threads=threads or T.NPROC)
-        wit = read_witnesses(sep, 2 * N) if os.path.exists(sep) else []
+        wit = read_witnesses(sep, 2 * N, getattr(m, '_cqmap', None)) if os.path.exists(sep) else []
         if os.path.exists(sep): os.remove(sep)
         eff = tw - float(m.kcoef() @ L)
         log(f"  final[{rnd}] {out_path}: points={npts} total={tw:.7f} lambda=[{','.join(f'{l:+.7f}' for l in L)}] k={m.kvec if m.perbox else m.kvec[0]} total-lambda.k={eff:.7f} min@{N}={float(mv1):.7f} {'OK' if ok1 else 'FAIL'}  min@{2*N}={float(mv2):.7f} {'OK' if ok2 else 'FAIL'} (viol {len(wit)})")

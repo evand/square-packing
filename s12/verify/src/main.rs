@@ -691,6 +691,37 @@ impl Stats {
     }
 }
 
+/// The anchor cliques the sweep actually CREDITED to the cell a witness came from, recorded
+/// against that witness so that the LP can build its row with the verifier's own credit instead of
+/// re-deriving it from the single witness pose (`search/WITNESS.md`).  The two are not the same
+/// object: the verifier credits a clique to a CELL only when one piece provably holds *every* pose
+/// of it, while a pose-level predicate can put the witness inside the piece and credit weight the
+/// verifier refuses -- which is how the cutting-plane loop came to believe a row was satisfied that
+/// the verifier keeps failing.
+///
+/// It is kept OUT of the top-`k` heap on purpose.  The per-bin selection is
+/// `sort_unstable_by_key` on a `Vec<(i128,f64,f64,u8)>`, and Rust's unstable sort permutes equal
+/// keys differently for a different element type (measured, task K), so growing that tuple would
+/// change the witness file of certificates that have no anchors at all.  The map is keyed by the
+/// heap entry's own bits, pruned whenever the heap is, and only ever written when the certificate
+/// carries an `anchors` block, so a run without one is bit-identical.  Every witness is recorded,
+/// including the ones that were credited nothing: leaving those out would let a stale entry from a
+/// different cell that happened to hash to the same bits be read back as *that* witness's credit,
+/// which is the one direction (over-credit) this whole change exists to close.
+type CredKey = (i128, u64, u64, u8);
+fn record_cred(map: &mut std::collections::HashMap<CredKey, Vec<u32>>,
+               v: i128, cx: f64, cy: f64, fl: u8, done: &[usize]) {
+    let mut ids: Vec<u32> = done.iter().map(|&c| c as u32).collect();
+    ids.sort_unstable();
+    match map.entry((v, cx.to_bits(), cy.to_bits(), fl)) {
+        std::collections::hash_map::Entry::Vacant(e) => { e.insert(ids); }
+        // two cells with the same value, the same witness pose and the same flag: keep the
+        // INTERSECTION, which is credit the verifier gave in either case (under-crediting a row
+        // only ever makes it stricter, which is the safe direction).
+        std::collections::hash_map::Entry::Occupied(mut e) => { e.get_mut().retain(|x| ids.binary_search(x).is_ok()); }
+    }
+}
+
 /// `tight`: in dump mode every cell with sum <= thresh is counted (and appended, up to the cap)
 /// as (a, b, c0, c1, sum, cx, cy) -- positions over DEN -- and an EMPTY strip is recorded (sum 0)
 /// instead of returning early.  With `tight == None` the function is exactly the original.
@@ -701,7 +732,7 @@ impl Stats {
 /// the LP learns the box does not reach there.
 fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm_n: i128, wm_d: i128, topk: usize,
                mut tight: Option<&mut Tight>, cl: Option<(&[(usize,i128,i128,i128,i128)], &[i128], i128)>,
-               anc: Option<(&[ABin], &Anchors)>, cd: i128, sd: i128, gg: i128) -> (i128, Vec<(i128,f64,f64,u8)>, Stats) {
+               anc: Option<(&[ABin], &Anchors)>, cd: i128, sd: i128, gg: i128) -> (i128, Vec<(i128,f64,f64,u8)>, Vec<Vec<u32>>, Stats) {
     // sg_n/sg_d = sigma (side of shrunken square), wm_n/wm_d = lower bound on min width
     use std::cell::Cell;
     let (n_strips, n_cells, n_active, n_band) = (Cell::new(0u64), Cell::new(0u64), Cell::new(0u64), Cell::new(0u64));
@@ -720,7 +751,7 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
     // numerators over DEN/g  (i.e. over 2*sg_d*wm_d*d):
     let l_c: i128 = sg_d * wm_n * c.d;                                   // L * (2 sg_d wm_d d)
     let u_c: i128 = 2*sg_d*wm_d*c.d*c.s_num/c.s_den - sg_d*wm_n*c.d;     // U * (same)
-    if u_c <= l_c { return (i128::MAX, Vec::new(), Stats::default()); }
+    if u_c <= l_c { return (i128::MAX, Vec::new(), Vec::new(), Stats::default()); }
     // rotate the four corners into u-space: multiply by (cn,sn) -> numerators over DEN
     let corners: [[i128;2];4] = [[l_c,l_c],[u_c,l_c],[u_c,u_c],[l_c,u_c]];
     let rot: Vec<[i128;2]> = corners.iter().map(|p| [ cn*p[0] + sn*p[1], -sn*p[0] + cn*p[1] ]).collect();
@@ -839,6 +870,10 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
     gy.sort_unstable_by_key(|t| t.0);
     let mut best = i128::MAX;
     let mut heap: Vec<(i128,f64,f64,u8)> = Vec::new();
+    // the anchor cliques the sweep credited to each witness's cell (see `record_cred`); empty and
+    // never touched unless the certificate carries an `anchors` block
+    let mut wcred: std::collections::HashMap<CredKey, Vec<u32>> = std::collections::HashMap::new();
+    let track_cred = anc.is_some() && topk > 0;
     let mut bands: Vec<(f64,f64)> = Vec::new();
     // scratch for the witness clip (see `witness_of`)
     let (mut wcur, mut winp, mut wver) = (Vec::<[f64;2]>::new(), Vec::<[f64;2]>::new(), Vec::<(f64,f64)>::new());
@@ -994,7 +1029,7 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
                         if lo < -fbnd[fi] || hi > fbnd[fi] { ok = false; break; }
                     }
                 }
-                if ok { n_ancok.set(n_ancok.get() + 1); if dstamp[cid].get() != cid_now { dstamp[cid].set(cid_now); credit = cadd(credit, an.w[cid]); } } else { part.push(pi); }
+                if ok { n_ancok.set(n_ancok.get() + 1); if dstamp[cid].get() != cid_now { dstamp[cid].set(cid_now); credit = cadd(credit, an.w[cid]); done.push(cid); } } else { part.push(pi); }
             }
             credit
         };
@@ -1028,7 +1063,8 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
             let st = Stats { strips: n_strips.get(), cells: n_cells.get(), active: n_active.get(), band: n_band.get(),
                              anc_calls: n_ancc.get(), anc_tests: n_anct.get(), anc_core: n_anccore.get(), anc_skip: n_ancskip.get(), anc_ok: n_ancok.get(),
                              cl_cands: n_clc.get(), cl_tests: n_clt.get(), wits: n_wit.get() };
-            return (v, vec![(v, cx, cy, if inside < 4 {(inside + 1) as u8} else {0})], st);
+            let mut ids: Vec<u32> = adone.iter().map(|&c| c as u32).collect(); ids.sort_unstable();
+            return (v, vec![(v, cx, cy, if inside < 4 {(inside + 1) as u8} else {0})], vec![ids], st);
         }                 // a whole strip of admissible centres covers nothing
         // The active atoms in u1 order, WITHOUT a sort (task K).  `gy` is the whole atom set in u1
         // order, built once per bin; the strip's list is a linear filter of the band of `gy` that
@@ -1078,7 +1114,7 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
             // where they cannot change anything: `required` and every witness threshold are at most
             // W + max(0, lambda_j over the boxes met), so a cell already at that weight neither
             // fails nor produces a witness whatever the (non-negative) anchor credit is.
-            apart.clear();
+            apart.clear(); adone.clear();
             if !aact.is_empty() {
                 let mut cap = 0i128;
                 if may != 0 { for j in 0..4 { if may & (1 << j) != 0 && lams[j] > cap { cap = lams[j]; } } }
@@ -1113,20 +1149,27 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
                 for j in 0..4 { if may & (1 << j) != 0 && sum < c.wd + lams[j] {
                     n_wit.set(n_wit.get() + 1);
                     let (cx, cy) = witness_of(a, b, c0, c1, ylo, yhi, j, &partial, &apart, &rot, den_all, &reg, cnf, snf, gf, anc, &mut wcur, &mut winp, &mut wver);
-                    heap.push((sum - lams[j], cx, cy, (j + 1) as u8)); } }
+                    heap.push((sum - lams[j], cx, cy, (j + 1) as u8));
+                    if track_cred { record_cred(&mut wcred, sum - lams[j], cx, cy, (j + 1) as u8, &adone); } } }
                 if inside == 4 && sum < c.wd {
                     n_wit.set(n_wit.get() + 1);
                     let (cx, cy) = witness_of(a, b, c0, c1, ylo, yhi, 4, &partial, &apart, &rot, den_all, &reg, cnf, snf, gf, anc, &mut wcur, &mut winp, &mut wver);
-                    heap.push((sum, cx, cy, 0)); }
-                if heap.len()>4*topk { heap.sort_unstable_by_key(|t| t.0); heap.truncate(topk); }
+                    heap.push((sum, cx, cy, 0));
+                    if track_cred { record_cred(&mut wcred, sum, cx, cy, 0, &adone); } }
+                if heap.len()>4*topk { heap.sort_unstable_by_key(|t| t.0); heap.truncate(topk);
+                    if !wcred.is_empty() {
+                        let keep: std::collections::HashSet<CredKey> = heap.iter().map(|t| (t.0, t.1.to_bits(), t.2.to_bits(), t.3)).collect();
+                        wcred.retain(|k, _| keep.contains(k)); } }
             }
         }
     }
     heap.sort_unstable_by_key(|t| t.0); heap.truncate(topk);
+    let creds: Vec<Vec<u32>> = heap.iter()
+        .map(|t| wcred.get(&(t.0, t.1.to_bits(), t.2.to_bits(), t.3)).cloned().unwrap_or_default()).collect();
     let st = Stats { strips: n_strips.get(), cells: n_cells.get(), active: n_active.get(), band: n_band.get(),
                      anc_calls: n_ancc.get(), anc_tests: n_anct.get(), anc_core: n_anccore.get(), anc_skip: n_ancskip.get(), anc_ok: n_ancok.get(),
                      cl_cands: n_clc.get(), cl_tests: n_clt.get(), wits: n_wit.get() };
-    (best, heap, st)
+    (best, heap, creds, st)
 }
 
 fn main() {
@@ -1172,7 +1215,10 @@ fn main() {
     };
     let tight_count = Arc::new(AtomicI64::new(0));
     let tight_written = Arc::new(AtomicI64::new(0));
-    let out: Arc<std::sync::Mutex<Vec<(i128,f64,f64,f64,u8)>>> = Arc::new(std::sync::Mutex::new(Vec::new()));
+    // (value, theta_k, cx, cy, region flag, the anchor cliques the sweep credited to the witness's
+    // cell).  The last field is written to the witness file only for a certificate with an
+    // `anchors` block, so every other file's witness output is byte-identical (search/WITNESS.md).
+    let out: Arc<std::sync::Mutex<Vec<(i128,f64,f64,f64,u8,Vec<u32>)>>> = Arc::new(std::sync::Mutex::new(Vec::new()));
     // D4 symmetry lets us restrict angles to [0,45]; without it we cover [0,90).  A branch
     // certificate with unequal per-box lambdas has a non-symmetric threshold: full range too.
     let sym_atoms = check_symmetry(&cert);
@@ -1288,7 +1334,7 @@ fn main() {
                 // per-bin work an anchor clique costs outside the sweep)
                 let abins: Option<Vec<ABin>> = cert.anchors.as_ref().map(|an| an.anc.iter().map(|a| anchor_bin(a, c0, s0, g0)).collect());
                 let ancp = match (&abins, &cert.anchors) { (Some(v), Some(an)) => Some((v.as_slice(), an)), _ => None };
-                let (v, wit, bst) = min_cover_k(&cert, c0, s0, g0, sg_n, sg_d, wm_n, wm_d, topk, tstate.as_mut(), clk, ancp, cd, sd, g0*g1);
+                let (v, wit, wcr, bst) = min_cover_k(&cert, c0, s0, g0, sg_n, sg_d, wm_n, wm_d, topk, tstate.as_mut(), clk, ancp, cd, sd, g0*g1);
                 if stats_on { let mut s = stats.lock().unwrap(); s.add(&bst); }
                 if let (Some(tw), Some(ts)) = (&tight_out, &tstate) {
                     use std::io::Write;
@@ -1312,7 +1358,8 @@ fn main() {
                 }
                 if topk>0 { let th = 2.0*((k as f64)/(bigN as f64)).atan();
                     let mut o=out.lock().unwrap();
-                    for (val,cx,cy,fl) in wit { o.push((val, th, cx, cy, fl)); } }
+                    let mut wcr = wcr.into_iter();
+                    for (val,cx,cy,fl) in wit { o.push((val, th, cx, cy, fl, wcr.next().unwrap_or_default())); } }
                 let mut mg = minw.lock().unwrap();
                 if v < mg.0 { *mg = (v, k); }
                 drop(mg);
@@ -1332,7 +1379,21 @@ fn main() {
         let mut o = out.lock().unwrap();
         o.sort_by(|a,b| a.0.cmp(&b.0));
         let mut f = String::new();
-        for (v,th,cx,cy,fl) in o.iter() { f.push_str(&format!("{} {} {} {} {}\n", *v as f64/cert.wd as f64, th, cx, cy, fl)); }
+        // Columns 1-5 (value, theta_k, cx, cy, region flag) are unchanged.  When the certificate
+        // carries an `anchors` block two more fields follow: the NUMBER of anchor cliques the sweep
+        // credited to the cell this witness came from, and their file indices (0-based, in the
+        // order of the `anchors` block).  The count is always written for such a file, even when it
+        // is 0, so a reader can tell "credited nothing" from "an old binary said nothing".  This is
+        // what lets the LP build the row with the verifier's own credit rather than a pose-level
+        // predicate that credits more (search/WITNESS.md).  Box cliques are not listed: no producer
+        // of this repo puts them in a cutting-plane run, and omitting a credit only ever makes the
+        // LP's row stricter than the verifier's, which is the safe direction.
+        let with_cred = cert.anchors.is_some();
+        for (v,th,cx,cy,fl,cr) in o.iter() {
+            f.push_str(&format!("{} {} {} {} {}", *v as f64/cert.wd as f64, th, cx, cy, fl));
+            if with_cred { f.push_str(&format!(" {}", cr.len())); for c in cr.iter() { f.push_str(&format!(" {}", c)); } }
+            f.push('\n');
+        }
         let outp = if args.len()>6 { args[6].clone() } else { "sep.txt".to_string() }; fs::write(&outp, f).unwrap();
         println!("wrote {} violated placements", o.len());
     }

@@ -1,6 +1,7 @@
 #!/bin/sh
-# Bit-identity of the anchor-clique verifier against the pre-change binary on certificates with
-# no anchor block.  Usage: sh runs/bitid.sh <old-binary>
+# Bit-identity of the verifier against a pre-change binary.  Everything without an anchor block
+# must be byte-identical; a file WITH one must be identical up to the credited-clique columns the
+# witness file gained on 2026-09-07 (search/WITNESS.md).  Usage: sh tests/bitid.sh <old-binary>
 cd "$(dirname "$0")/.."
 B=$1
 V=verify/target/release/verify
@@ -33,6 +34,18 @@ if diff -q $T/br.wbase $T/br.wnew >/dev/null && diff -q $T/br.sepbase $T/br.sepn
 then echo "  identical  per-box branch trailer (witness mode)"; else echo "  DIFFERS    per-box branch trailer"; fail=1; fi
 # a real branch certificate
 one "branch_k1" certificates/branch/s12_t3.98_corner_k1.txt 12 120 1 0
+# An ANCHOR-CLIQUE certificate in witness mode is the one place the output is meant to change
+# (search/WITNESS.md): stdout must still be identical, and the witness file must be the old one
+# with the credited-clique columns appended, so cutting it back to five fields reproduces it.
+awk 'NR==5{print $1, $2, 0; next} {print}' certificates/s12_56points_3.8.txt > $T/anc.txt
+printf 'anchors 1 1\nanchorP 375 395 400\n0 1\npiece 0 0\n' >> $T/anc.txt
+$B $T/anc.txt 12 200 1 6 $T/anc.sepbase > $T/anc.wbase 2>&1
+$V $T/anc.txt 12 200 1 6 $T/anc.sepnew  > $T/anc.wnew  2>&1
+cut -d' ' -f1-5 $T/anc.sepnew > $T/anc.sepcut
+ncred=$(awk '{n+=$6} END{print n+0}' $T/anc.sepnew)
+if diff -q $T/anc.wbase $T/anc.wnew >/dev/null && diff -q $T/anc.sepbase $T/anc.sepcut >/dev/null
+then echo "  identical  anchor clique (stdout, and witnesses up to the $ncred credited-clique columns)"
+else echo "  DIFFERS    anchor clique (witness mode)"; diff $T/anc.sepbase $T/anc.sepcut | head -4; fail=1; fi
 # TIGHT_DUMP mode
 TIGHT_DUMP=$T/td.base TIGHT_THRESH=10000000 TIGHT_MAX=20000 $B certificates/s12_56points_3.8.txt 12 200 1 0 > $T/td.wbase 2>&1
 TIGHT_DUMP=$T/td.new  TIGHT_THRESH=10000000 TIGHT_MAX=20000 $V certificates/s12_56points_3.8.txt 12 200 1 0 > $T/td.wnew  2>&1

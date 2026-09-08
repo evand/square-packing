@@ -413,6 +413,19 @@ The full-net float scan is still not a lower bound: on the small `t398hk4` leaf 
 pose-versus-cell gap, and it is why the loop still only ever **stops** on an exact verdict — the
 float oracle's "clean" is a scheduling hint, never a claim.
 
+## 7. Follow-up (2026-09-07): the rows the exact rounds produce
+
+Section 6 fixed the float oracle's *sampling*.  A second, independent defect was found on the same
+`L1110f` checkpoint and is written up in **`search/WITNESS.md`**: the rows the loop built from the
+**exact** verifier's witnesses credited anchor cliques by a *pose* predicate while the verifier
+credits a *cell*, so 2,133 of 11,661 witnesses were over-credited (by up to `+0.227`) and 2,047 of
+them were rows the LP called satisfied while the verifier was failing on them; and the
+`--row-grid` dedup collapsed those 11,661 witnesses to 4,196 keys, dropping most of the rest before
+they ever reached the LP.  The verifier now records, on each witness line of a file with an
+`anchors` block, the cliques it actually credited that cell; `branch.py` builds the row from that
+and never deduplicates an exact witness.  Bit-identity is unaffected for every certificate without
+an anchor block.
+
 ## Reproducing
 
 ```sh

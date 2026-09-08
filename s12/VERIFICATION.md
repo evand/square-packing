@@ -31,6 +31,18 @@ arrangement cells below a captured-weight threshold (`search/TIGHTSET.md`).  Wit
 unset the code path and output are unchanged: the default output for the main certificate at
 N=6000 was diffed against the previous binary, and `verify.sh` plus the 42 rejection tests pass.
 
+## Witness file: credited cliques (2026-09-07)
+`verify/src/main.rs` now records, on each line of the optional witness file (`topk > 0`), the
+anchor cliques its sweep credited to the cell that witness came from — two extra columns, a count
+and the file indices, and **only** for a certificate carrying an `anchors` block.  The verdict
+path, the exit codes and stdout are untouched, and the witness file of every certificate without
+such a block is byte-identical: `tests/bitid.sh` against the previous binary is ALL IDENTICAL on
+ten cases (plain, witness, `TIGHT_DUMP`, branch trailer, box cliques), and on an anchor-clique file
+the new witness lines cut back to five fields reproduce the old ones exactly.  The rejection suite
+is 138 checks, 0 failures, 0 panics, and `verify.sh` is exit 0 with 24 VERIFIED verdicts.  Why: the cutting-plane loop was building its LP rows with a
+*pose* predicate while the verifier credits a *cell*, so the LP believed rows the verifier keeps
+failing — `search/WITNESS.md` has the defect, the fix and the numbers.
+
 ## Checks performed on the original 788-point certificate (2026-08-23)
 ## Companion certificate (weaker but human-readable)
 `certificates/s12_56points_3.8.txt` — 56 points in [0,19/5]^2 (scales up to [0,1520/397]^2), weight 1/5 each (total 56/5 = 11.2).

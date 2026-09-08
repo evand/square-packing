@@ -302,6 +302,16 @@ run stands at `11.967276` with probe minimum `0.94` and rising ~`0.0002`/round a
 now pins the multipliers at zero, which is the pure cover LP with a vacuous trailer, so the same
 driver can do it.
 
+## 6. Follow-up (2026-09-07): the LP was not being told what the sweep credited
+
+`search/WITNESS.md`.  The loop built its rows from the exact verifier's witnesses with
+`anchorclique.coeff`, a **pose** predicate, while the verifier credits a **cell** and only when one
+piece holds every pose of it.  On the `1110` leaf checkpoint that over-credited 2,133 of 11,661
+witnesses (up to `+0.227`), 2,047 of them rows the LP called satisfied while the verifier was
+failing on exactly those cells, and the `--row-grid` dedup dropped most of the rest.  The verifier
+now records the cliques it credited each witness's cell and `branch.py` builds the row from that.
+Nothing about the certificate object, the predicates or the verdict changes.
+
 ## Reproduce
 
 ```sh

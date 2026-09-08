@@ -422,13 +422,37 @@ expect_out "  ...reported as branch k=4"            "^VERIFIED: (branch k=4)"
 check "anchor weights zeroed"                     VERIFIED $T/t25a.txt 12
 ( cat $T/t1.txt; printf 'anchors 1 1\nanchorP 800 800 400\n5 1\npiece 0 0\n' ) > $T/t25b.txt
 check "deleted point + anchor clique elsewhere"   REJECT  $T/t25b.txt 12 8 $T/t25b.sep
+#     A file with an anchors block also gets the credited-clique columns (search/WITNESS.md):
+#     `... flag nc id_1 .. id_nc`, the anchor cliques the sweep credited to the cell the witness
+#     came from.  Here the single clique sits where nothing fails, so nothing may be credited.
 if python3 - $T/t25b.sep <<'EOF2'
 import sys
 rows = [l.split() for l in open(sys.argv[1]) if l.strip()]
-ok = rows and all(len(q) == 5 and q[4] == '0' for q in rows)
-print("      %d witnesses, all flagged 0: %s" % (len(rows), ok)); sys.exit(0 if ok else 1)
+ok = rows and all(len(q) >= 6 and q[4] == '0' for q in rows)
+ok = ok and all(len(q) == 6 + int(q[5]) and all(0 <= int(t) < 1 for t in q[6:]) for q in rows)
+ncred = sum(int(q[5]) for q in rows)
+print("      %d witnesses, all flagged 0 with a credit list: %s (%d credited cliques in total)" % (len(rows), ok, ncred))
+sys.exit(0 if ok and ncred == 0 else 1)
 EOF2
-then ok "  ...witnesses all flagged 0" "yes"; else bad "  ...witnesses all flagged 0" "no" "yes"; fi
+then ok "  ...witnesses all flagged 0, credit list present and empty" "yes"; else bad "  ...witnesses all flagged 0, credit list present and empty" "no" "yes"; fi
+#     ... and the credit is non-empty exactly where the sweep does credit the clique.  Set the
+#     point (375,395) to weight ZERO (it stays in the file, so the cells still break at its
+#     square's boundary) and put its own point clique there, also at weight 0: the file fails at
+#     4/5 exactly on the cells that used to hold that point, and those are precisely the cells
+#     the piece {S : p in S} holds -- so the witnesses must name clique 0 in their credit list.
+#     The credit list records what the sweep credited, not what it weighed, so weight 0 is enough.
+awk 'NR==5{print $1, $2, 0; next} {print}' "$C" > $T/t25c0.txt
+( cat $T/t25c0.txt; printf 'anchors 1 1\nanchorP 375 395 400\n0 1\npiece 0 0\n' ) > $T/t25c.txt
+check "zero-weight point plus its own point clique" REJECT $T/t25c.txt 12 8 $T/t25c.sep
+if python3 - $T/t25c.sep <<'EOF2'
+import sys
+rows = [l.split() for l in open(sys.argv[1]) if l.strip()]
+ok = rows and all(len(q) >= 6 and len(q) == 6 + int(q[5]) for q in rows)
+ncred = sum(1 for q in rows if int(q[5]) > 0)
+print("      %d witnesses, %d of them with the clique credited to their cell (shape ok: %s)" % (len(rows), ncred, ok))
+sys.exit(0 if ok and ncred > 0.5 * len(rows) else 1)
+EOF2
+then ok "  ...most witnesses carry the credited clique" "yes"; else bad "  ...most witnesses carry the credited clique" "no" "yes"; fi
 # 26. Both blocks at once: a box clique and an anchor clique, and the totals add.
 ( cat "$C"; printf 'cliques 2000 1000 1\n1 1\n0 1890 1910 1890 1910\nanchors 1 1\nanchorP 800 800 400\n1 1\npiece 0 0\n' ) > $T/t26a.txt
 check "a box clique and an anchor clique together" VERIFIED $T/t26a.txt 13

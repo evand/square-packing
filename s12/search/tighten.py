@@ -210,11 +210,16 @@ def run_verifier(path, N, topk=0, sep=None, threads=NPROC, n=12):
 
 
 def read_witnesses(path, N):
-    """verifier witness file -> rows (cx, cy, theta_k, sigma_k/2), canonical order"""
+    """verifier witness file -> rows (cx, cy, theta_k, sigma_k/2), canonical order.
+
+    Columns beyond the first four are ignored here: the 5th is the region flag (branch.py), and a
+    certificate with an `anchors` block appends the anchor cliques the sweep credited to the cell
+    (`search/WITNESS.md`) -- which `branch.read_witnesses` uses to build the row and this model,
+    which has no clique columns, does not need."""
     out = []
     for line in open(path):
         q = line.split()
-        if len(q) not in (4, 5): continue          # 5th column = region flag (branch.py); ignored here
+        if len(q) < 4: continue
         v, th, cx, cy = map(float, q[:4])
         k = int(round(N * math.tan(th / 2)))
         out.append((v, th, cx, cy, k))

@@ -304,7 +304,10 @@ This is Lemma 0's hypothesis and the analogue of the box cliques' "cores pairwis
 in the frame of the bin.  It is credited `w_K` iff **one piece of `K` provably holds every pose of
 the cell**, which needs two exact `i128` predicates per (cell, anchor); a cell that only partly
 satisfies them gets nothing (conservative), and its witness for the LP is placed at a pose of the
-cell outside the piece.
+cell outside the piece.  A witness line of a file with an `anchors` block also carries, after the
+region flag, the number of anchor cliques the sweep credited that cell and their indices in this
+block, so that the LP builds its row with the verifier's own credit instead of a pose predicate,
+which credits more wherever the cell straddles a piece's boundary (`search/WITNESS.md`).
 
 * `contains` — *every pose of the cell contains the anchor*.  For a fixed centre `c`, the
   intersection over the bin of the closed unit squares is the **exact bin core**
