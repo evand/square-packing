@@ -76,6 +76,7 @@ class Hi:
         self.rk = []
         self.pos = {}
         self.iters = 0
+        self.basis = False
         import highspy
         self.hp = highspy
         self.INF = highspy.kHighsInf
@@ -89,6 +90,7 @@ class Hi:
         h.changeColsCost(ncols, np.arange(ncols, dtype=np.int32), -np.ones(ncols))
         self.h, self.ncols = h, ncols
         self.rk, self.pos = [], {}
+        self.basis = False
 
     def append(self, keys, lo, hi, mat):
         if not len(keys):
@@ -118,9 +120,18 @@ class Hi:
                                 np.full(len(idx), float(hi)))
 
     def run(self):
-        self.h.setOptionValue('solver', self.solver)
+        # a fresh model has no basis, and cold dual simplex on a 10k x 10k coverage LP is far
+        # slower than interior point: use ipm+crossover for the first solve after a rebuild (it
+        # leaves a basis behind), then warm-started simplex for every incremental solve
+        if not self.basis:
+            self.h.setOptionValue('solver', 'ipm')
+            self.h.setOptionValue('run_crossover', 'on')
+        else:
+            self.h.setOptionValue('solver', self.solver)
         st = self.h.run()
         ms = self.h.getModelStatus()
+        if ms == self.hp.HighsModelStatus.kOptimal:
+            self.basis = True
         if ms != self.hp.HighsModelStatus.kOptimal:
             self.log(f'   [HiGHS {self.solver} -> {ms}; retrying ipm+crossover]')
             self.h.setOptionValue('solver', 'ipm')
