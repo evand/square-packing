@@ -20,26 +20,34 @@ is the one that matters) and `search/DUAL_EXACT.md` / `search/CLOSED4.md` (the c
 Nothing in this screen reached 12.  At `t = 4.0`, closed semantics, on pose sets of 3.4k–6.6k poses
 with 8k–34k certified coverage rows and 250–2100 anchor-clique rows: the pure relaxation sits at
 `12.12–12.26`, the corner leaf `k = 4` at `11.95–11.98` (its *pure* value landing on exactly
-`12.000000` in three independent runs), and **all four `m = 4` slot leaves at `10.3–11.4`, i.e.
-`0.6–1.7` below 12**, two of them at a fully converged `11.000000` (certified coverage `M = 1`
-exactly and no anchor clique the separator can violate).  So no leaf produced the decisive
+`12.000000` in three independent runs), and **all four `m = 4` slot leaves between `10.29` and
+`11.48`, i.e. `0.5–1.7` below 12**, two of them at a fully converged `11.000000` (certified coverage
+`M = 1` exactly and no anchor clique the separator can violate).  So no leaf produced the decisive
 `>= 12`, and the level-2 slot branch — not the cliques — is what does the work: the matched clique
-gain at `t = 4` is `+0.02` to `+0.56`, while the slot branch is worth `0.6–1.7` on top of the
-corner branch.
+gain at `t = 4` is `+0.02` to `+0.56`, while the slot branch is worth `0.5–1.7` on top of the corner
+branch.
 
-That is a **weak** go, and it is weak for the reason `CLIQUE_CEILING.md` already recorded: every
-number is an LP value on a restricted pose set with a large residual pricing gap, and the
-inner loop does not converge (`M` and `kmax` still `1.02–1.3` in most rows), so most of the values
-are not bounds in either direction.  The clean exceptions are the two `11.000000` rows.
+The arithmetic in an `m = 4` leaf is exact and explicit (§4.2): the branch pins `4` in the corner
+boxes and `4` in the slots, so **`leaf value = 8 + interior mass`, and the leaf fails to close iff
+the interior `[1,3]^2` can carry `>= 4`**.  The interior *on its own*, with the whole frame pinned to
+zero, carries exactly `4.000000` here — converged, `M = 1`, `kmax = 1`.  With the frame present it
+carries `2.3–3.5`.  **The leaves miss 12 by exactly what the frame costs the interior.**
 
-**The new obstacle is that the leaf optima are not certificate-shaped.**  `7–9 %` of the mass of
-every `m = 4` leaf optimum — and in two of the four leaves a *whole unit* of it, at a single pose —
-sits **exactly on a slot boundary**, `c_x` or `c_y` equal to `t/2 = 2` to within `1e-14`.  The
-level-2 branch is a partition only through a tie-break at that boundary, and no cell-based verifier
-can implement a `1e-14` tie-break.  `notes/level2-design.md` 9 checked that the *cover's tight
-poses* (the `4 x 4` grid centres) are `0.5` from every boundary; the *packing side's* optimum goes
-straight to the boundary instead.  Any follow-up has to deal with this before it can deal with the
-value.
+That is a **weak** go, and weak for the reason `CLIQUE_CEILING.md` already recorded: nearly every
+number is an LP value on a restricted pose set, the inner loop does not converge (`M` and `kmax`
+still `1.02–1.7` in most rows) so most values bound nothing in either direction, and the values
+climb slowly under refinement (`01010101`: `11.376 -> 11.404 -> 11.410 -> 11.477`).  Five of the
+forty-odd stage values are genuinely converged; the interior's `4.000000` is one of them, and it
+sits exactly on the threshold.
+
+**The new obstacle is that the leaf optima are not certificate-shaped.**  `1–11 %` of the mass of
+every `m = 4` leaf optimum — and, in the two leaves whose value is actually converged, a **whole
+unit** of it at a single pose — sits **exactly on a slot boundary**, `c_x` or `c_y` equal to
+`t/2 = 2` to within `1e-14`.  The level-2 branch is a partition only through a tie-break at that
+boundary, and no cell-based verifier can implement a `1e-14` tie-break.
+`notes/level2-design.md` §9 checked that the *cover's* tight poses (the `4 x 4` grid centres) sit
+`0.5` from every boundary; the *packing side's* optimum goes straight to the boundary instead.  A
+follow-up has to settle this before the value means anything for a certificate.
 
 ---
 
@@ -168,22 +176,269 @@ the chunked driver restarts the counter, and `t4screen_table.py` renumbers).  `L
 says which of the two generation loops had actually closed when the value was taken — only
 `rows cliq` rows are bounds.
 
-*(TABLE)*
+```
+tag         t     corn  pattern   cq  step         LP         M     kmax   LP_pure     gain  poses   rows  cliq  converged
+B40         4.0   1111  ........  1   0     11.945452  1.106717  1.09922 12.000000 +0.054548   3383  19506  1798    .   .  
+B40         4.0   1111  ........  1   1     11.982171  1.063609  1.13609 12.000000 +0.017829   6643  21491  2135    .   .  
+C98         3.98  1111  ........  1   0     11.790666  1.022454  1.05264 11.904472 +0.113806   7835  26763   750    .   .  
+INT40       4.0   0000  ........  1   0     10.000000  1.314039  1.08078 10.333333 +0.333333   3383   8718   460    .   .  
+INT40       4.0   0000  ........  1   1     10.427699  1.162163  1.13569 10.559732 +0.132033   3500   9223   408    .   .  
+INT40       4.0   0000  00000000  1   0      4.000000  1.000000  1.00000  4.000000 +0.000000   3500   9751   362  rows cliq
+INT40       4.0   0000  ........  1   2     10.524676  1.200683  1.17459 10.698892 +0.174216   3500   9429   479    .   .  
+K40         4.0   1111  ........  1   0     11.977689  1.160045  1.15082 12.000000 +0.022311   3383  11604   500    .   .  
+K40         4.0   1111  ........  1   1     11.961620  1.285862  1.07017 12.000000 +0.038380   3500  12201   396    .   .  
+L01010101   4.0   1111  01010101  1   0     11.376102  1.118124  1.15800 11.605192 +0.229090   3383   8727   340    .   .  
+L01010101   4.0   1111  01010101  1   1     11.403693  1.075974  1.12692 11.678834 +0.275141   3500   8793   235    .   .  
+L01010101   4.0   1111  01010101  1   2     11.410038  1.098586  1.04252 11.709679 +0.299641   5640   9402   413    .   .  
+L01010101   4.0   1111  01010101  1   3     11.477424  1.183062  1.05936 11.689063 +0.211638   3500   9356   186    .   .  
+L01010110   4.0   1111  01010110  1   0     11.064935  1.112554  1.12987 11.625000 +0.560065   3383   7704   397    .   .  
+L01010110   4.0   1111  01010110  1   1     11.250000  1.250000  1.10000 11.545455 +0.295455   3500   7948   398    .   .  
+L01010110   4.0   1111  01010110  1   2     11.246964  1.230769  1.24696 11.581132 +0.334169   3500   7975   324    .   .  
+L01010110   4.0   1111  01010110  1   3     11.000000  1.131579  1.30263 11.387097 +0.387097   3500   7798   456    .   .  
+L01010110   4.0   1111  01010110  1   4     11.300000  1.337500  1.20000 11.589041 +0.289041   6580   8332   500    .   .  
+L01010110   4.0   1111  01010110  1   5     11.260000  1.180000  1.22000 11.632653 +0.372653   3500   7945   496    .   .  
+L01010110   4.0   1111  01010110  1   6     11.285714  1.285714  1.21429 11.500000 +0.214286   3500   8177   393    .   .  
+L01011010   4.0   1111  01011010  1   0     11.142857  1.142857  1.21429 11.500000 +0.357143   3383   7871   327    .   .  
+L01011010   4.0   1111  01011010  1   1     11.000000  1.000000  1.00000 11.500000 +0.500000   3500   7958   272  rows cliq
+L01011010   4.0   1111  01011010  1   2     11.000000  2.000000  1.00000 11.000000 +0.000000   3500   7931     7    .  cliq
+L01011010   4.0   1111  01011010  1   3     10.285714  1.142857  1.07143 10.500000 +0.214286   3500   7494    78    .   .  
+L01011010   4.0   1111  01011010  1   4     11.142857  1.142857  1.08811 11.597403 +0.454545   6370   8573   499    .   .  
+L01011010   4.0   1111  01011010  1   5     11.166667  1.359539  1.24686 11.500000 +0.333333   3500   8191   468    .   .  
+L01011010   4.0   1111  01011010  1   6     11.259366  1.714697  1.25937 11.403101 +0.143735   3500   8356   500    .   .  
+L01100110   4.0   1111  01100110  1   0     11.000000  1.000000  1.00000 11.000000 +0.000000   3383   8088   246  rows cliq
+L01100110   4.0   1111  01100110  1   1     11.000000  1.234155  1.22711 11.000000 +0.000000   3383   7586   447    .   .  
+L01100110   4.0   1111  01100110  1   2     11.000000  1.500000  1.50000 11.000000 -0.000000   3500   7537   316    .   .  
+L01100110   4.0   1111  01100110  1   3     11.000000  1.000000  1.00000 11.000000 +0.000000   3500   7685   237  rows cliq
+L01100110   4.0   1111  01100110  1   4     11.000000  1.000000  1.00000 11.000000 +0.000000   3500   7638     8  rows cliq
+L01100110   4.0   1111  01100110  1   5     11.000000  2.000000  2.00000 11.000000 -0.000000   6459   7983   390    .   .  
+L01100110   4.0   1111  01100110  1   6     10.500000  1.250000  1.25000 10.777778 +0.277778   3500   7744     6    .   .  
+L01100110   4.0   1111  01100110  1   7     10.833333  1.000000  1.00000 10.894737 +0.061404   3500   7707   184  rows cliq
+L01100110   4.0   1111  01100110  1   8     10.888889  1.285714  1.77778 10.920000 +0.031111   3500   7841   361    .   .  
+L01100110   4.0   1111  01100110  1   9     11.000000  2.000000  1.00000 11.000000 -0.000000   6578   8038   282    .  cliq
+L01100110   4.0   1111  01100110  1   10    10.000000  1.000000  1.00000 10.250000 +0.250000   3500   7650   115  rows cliq
+L01100110   4.0   1111  01100110  1   11    10.500000  1.000000  1.00000 10.500000 +0.000000   3500   7635    41  rows cliq
+L01100110   4.0   1111  01100110  1   12    10.000000  1.000000  1.00000 10.666667 +0.666667   3500   7653   300  rows cliq
+P40         4.0   ....  ........  1   0     12.118529  1.016779  1.10425 12.194538 +0.076009   3383  24195  1736    .   .  
+P40         4.0   ....  ........  1   1     12.193344  1.321445  1.07602 12.259214 +0.065870   6616  32389  2036    .   .  
+T0          4.0   1111  ........  0   0     11.896104  1.009984  0.00000         -        -   1471  13518     0    .  cliq
+T0          4.0   1111  01010101  0   0     11.385844  1.000000  0.00000         -        -   1471  14461     0  rows cliq
+U40         4.0   ....  ........  1   0     12.141385  1.021979  1.07433 12.196598 +0.055213   3383  20805   500    .   .  
+U40         4.0   ....  ........  1   1     12.121542  1.036364  1.05170 12.202884 +0.081342   3383  19644   499    .   .  
+U40         4.0   ....  ........  1   2     12.197049  1.422294  1.12369 12.242251 +0.045202   3500  19808   492    .   .
+```
 
 ---
 
 ## 4. Reading
 
-*(READING)*
+### 4.1 What the branch is worth, and what the cliques are worth
+
+At `t = 4` the corner branch and the slot branch do almost all of the work and the cliques do
+little:
+
+| step | value at `t = 4` |
+|---|---|
+| pure fractional packing, certified exactly over ALL poses (`DUAL.md`, `dual_PC1_support.txt`) | **12.163061** |
+| pure, restricted poses + anchor cliques (`U40`, `P40`) | `12.12 – 12.19`; matched pure `12.19 – 12.26` |
+| + corner branch `k = 4` (`B40`, `K40`), pure | **12.000000** (three independent runs) |
+| + corner branch `k = 4` + cliques | `11.95 – 11.98` |
+| + level-2 slot branch, the four `m = 4` leaves, + cliques | **`10.3 – 11.5`** |
+
+The matched clique gain (same poses, same rows, clique rows off) is `+0.02 – 0.08` in the pure and
+corner-leaf rows and `+0.06 – 0.56` in the slot leaves — the same order as `RECONCILE.md` §5's
+`+0.05 – 0.095` on the cover side at `3.99`, and consistent with `CLIQUE_CONTINUUM.md`'s `0.10`
+having been an over-estimate.  **Cliques alone do not take `t = 4` below 12**: the pure
+clique-strengthened value sits at `12.12 – 12.19` on 3.4k–6.6k poses, which is where
+`CLIQUE_CEILING.md` left it (`11.8 – 12.0`, drifting up, with box cliques).  What takes it below 12
+is the *slot* branch, worth `0.5 – 1.7` on top of the corner branch — the same half-unit-to-unit
+that `level2-design.md` §4.4 measured, now measured with cliques as well and on a 2.3× larger pose
+set.
+
+### 4.2 The sharp form of the question in an `m = 4` leaf
+
+In an `m = 4` leaf the four corner boxes carry 1 each and the four occupied slots carry 1 each, so
+
+> **leaf value = 8 + (mass centred in the interior `[1,3]^2`)**,
+
+which the region split of every leaf optimum confirms to twelve digits (e.g. `L01010101` at step 2:
+corners `[1,1,1,1]`, slots summing to `4.000000`, interior `3.403693`, total `11.403693`).  So a
+leaf fails to close **iff the interior can carry fractional mass `>= 4`** beside the pinned frame.
+Measured interior mass in the four leaves: `2.3 – 3.5`.
+
+**And the interior on its own reaches exactly the threshold.**  Run with the four corner boxes and
+all eight slots pinned to 0, so that every pose carrying mass is interior-centred
+(`runs/t4_INT40.log`, pattern `00000000`, 3500 poses, 9751 rows, 362 cliques):
+
+```
+LP = 4.000000   M = 1.000000000   kmax = 1.000000   matched pure 4.000000   -- rows AND cliques converged
+```
+
+`4.000000` exactly, and it is one of the five converged values here, so it is a genuine lower bound
+on the interior's fractional capacity over that pose set.  (The same run with the slots left *free*
+and only the corners pinned to 0 gives `10.52`, `M = 1.20` — that is the whole frame-free container,
+not the interior, and is the number not to confuse this with.)
+
+So the arithmetic of an `m = 4` leaf at `t = 4` is knife-edge and completely explicit:
+
+> `leaf value = 8 + interior mass`; the interior *alone* carries `4.000000`; with the frame pinned
+> it carries `2.3 – 3.5`.  **The four `m = 4` leaves miss 12 by exactly what the frame costs the
+> interior**, which these runs measure as `0.5 – 1.7`.
+
+The frame costs something because the corner and slot squares stick into `[0.3, 3.7]^2` and eat the
+coverage budget the interior squares need — but "something" is all that is established, and the
+margin is the whole answer.
+
+### 4.3 Why this is only a weak go
+
+* **Almost nothing converged.**  Of the stage values in §3, five have `M <= 1` and `kmax <= 1`
+  simultaneously and are therefore genuine lower bounds on their leaf; the rest have `M` in
+  `1.02 – 1.3` and are upper bounds on the restricted-pose value and bounds on nothing else.  The
+  best *converged* leaf values are `11.000000` (`01011010`, `01100110`) and the best unconverged
+  ones `11.48` (`01010101`).
+* **The values climb under refinement, slowly.**  `01010101`: `11.376 -> 11.404 -> 11.410 -> 11.477`
+  over four pricing stages (3383 -> 5640 poses); `k = 4` with cliques: `11.945 -> 11.982`
+  (3383 -> 6643 poses).  That is `+0.03` to `+0.10` per stage against a `0.5 – 1.0` deficit to 12 —
+  but the trend is up, and `CLIQUE_CEILING.md`'s warning that these values "drift up slowly with
+  pose refinement" applies verbatim.
+* **The pricing gap does not bound the remainder, and here it is worse than uninformative.**  In a
+  region-constrained LP the equality's multiplier is free; a candidate pose in a region the branch
+  forces mass into has reduced cost `1 - capture + |lam_R|`, which reached `+172` in these runs
+  while the objective moved by `0`.  So the gap says nothing.  (It also biased the pricer badly
+  until fixed — §6.)
+* **The tree screened here is one corner leaf.**  At `t = 4` no corner leaf closes on its own, so a
+  real proof needs the slot tree under `k = 0,1,2,3` as well, where the chord lemma gives
+  `2 k_strip + slots <= 3` per wall and the leaf count is in the hundreds (`level2-design.md` §3).
+  Nothing here says anything about those.
+* **All four `m = 4` leaves are non-empty at `t = 4`, and by the worst possible object.**  Take the
+  `4 x 4` grid of unit squares in `[0,4]^2` and delete one slot square per wall: the remaining
+  twelve have pairwise disjoint interiors, sit `4` in the corner boxes, `4` in the slots (one per
+  wall) and `4` in the interior, and each wall strip carries exactly `3` centres, saturating the
+  chord bound.  The sixteen ways of choosing which slot per wall give, up to `D4`, exactly the four
+  `m = 4` patterns.  So no `m = 4` leaf can be refuted by capacity; the LP value has to do all of
+  it, and the object it has to beat is the `4 x 4` grid itself — the configuration the whole
+  `s(12) = 4` question is about.
 
 ---
 
 ## 5. The obstacle: the leaf optimum sits on the slot boundary
 
-*(BOUNDARY)*
+`level2-design.md` §9 reassures that at `t = 4` "the sixteen grid poses sit `0.5` from every
+boundary, so the region membership tests are not zero-margin at the tight poses".  That is a
+statement about the *cover's* tight poses.  The **packing side's optimum goes to the boundary**.
+
+Mass within `1e-7` of a region boundary in the centre plane (`c_x` or `c_y` in `{1, 2, 3}`), on the
+leaf optima:
+
+| leaf | leaf mass | mass on a boundary | share | heaviest single boundary pose |
+|---|---|---|---|---|
+| `01010101` | `11.410038` | `0.733798` | `6.4 %` | `0.182` at `(2.0, 0.5, 0 deg)` |
+| `01010110` | `11.000000` | `0.460526` | `4.2 %` | `0.197` at `(2.0, 0.5086, 1 deg)` |
+| `01011010` | `11.142857` | `1.233684` | `11.1 %` | `0.230` at `(0.6579, 2.0, -23.5 deg)` |
+| `01100110` | `10.888889` | `0.095238` | `0.9 %` | `0.032` at `(2.0, 0.6549, -22.5 deg)` |
+
+and, at the two stages whose value is a genuine bound (`M = 1`, `kmax = 1`):
+
+| leaf | converged value | boundary mass | where |
+|---|---|---|---|
+| `01011010` step 1 | `11.000000` | **`1.000000` — a whole unit at one pose** | `(3.499547, 2.000000)`, the `W_2 / W_3` boundary |
+| `01100110` step 0 | `11.000000` | **`1.000000` — a whole unit at one pose** | `(2.000000, 0.500453)`, the `W_0 / W_1` boundary |
+
+There `c_y = 2.0 = t/2` (resp. `c_x`) to within `1e-14`: the pose sits on the mid-wall line that
+separates an *occupied* slot from an *empty* one, and it satisfies `mu(W_3) = 1` and `mu(W_2) = 0`
+only because `level2_regions.classify` breaks the tie one way rather than the other.  This bites in
+practice: printing the pose checkpoint to 13 decimals instead of 17 flipped the pose's region on
+read-back, which is how it was noticed.  `save_poses` now writes 17 significant digits.
+
+Three consequences.
+
+1. **A cell-based verifier cannot implement this branch as it stands.**  `verify/`'s region test is
+   "is this cell's bounding box inside the box?", exact for convex cells; a cell straddling the
+   `W_2 / W_3` boundary is in neither box.  The branch is exhaustive only if every pose is assigned
+   to exactly one slot, and at the boundary that assignment is being decided at `1e-14`.
+2. **This is `level2-design.md` §2.5's mid-wall escape**, in its extreme form.  That note observed
+   that about `4 %` of the `t = 3.98` wall mass already sat at `c_y ~ t/2`, and proposed Design B
+   (slots shortened to `sqrt3/2`, leaving a `0.268` gap at the middle of each wall) as the fallback.
+   At `t = 4` the packing-side optimum does not merely graze the mid-wall — it parks a *unit* of
+   mass there.  Design B avoids the tie-break, at the price of `43` leaves instead of `15` and of a
+   gap the LP can hide mass in, which raises the leaf values.
+3. **It makes the go verdict softer than the numbers look.**  The two `11.000000` values — the only
+   fully converged leaf bounds here — are attained by a measure a certificate could not carry.  What
+   a *robust* branch (one whose region test a verifier can decide) is worth at `t = 4` is unmeasured,
+   and is the first thing a follow-up should measure.
 
 ---
 
 ## 6. Reproduce
 
-*(REPRODUCE)*
+```sh
+M=/home/evand/math/square-packing/s12/runs     # the main tree's runs/, read-only
+
+# regression against notes/level2-design.md 4.4 (control 11.896104, 01010101 11.385844)
+python3 search/t4screen.py 4.0 T0 --corners 1111 --patterns 01010101 --stages 1 --warm-stages 0 \
+    --rowloops 14 --warm $M/dual_PC1_support.txt --threads 2 --method highs
+
+# calibration against the cover side at t = 3.98 (must come in <= ~11.96)
+python3 search/t4screen.py 3.98 C98 --corners 1111 --cliques --cq-interior --patterns "........" \
+    --stages 8 --warm-stages 8 --rowloops 12 --warm $M/dual_PD1_support.txt \
+    --warm $M/branch_J16i_dual.txt --cq-load $M/branch_J16i_cliques.txt --threads 2 --time 780
+
+# the t = 4 screen: one process per table row, 1 thread each, 5 chunks of 450 s
+N=5 S=450 sh search/t4screen_phase2.sh
+
+# the interior alone (corner boxes and all eight slots pinned to 0)
+sh search/t4screen_loop.sh 4.0 INT40 3 450 --corners 0000 --patterns 00000000 \
+    --warm $M/dual_PC1_support.txt --warm $M/cqx_PURE99_support.txt --cliques --cq-wall \
+    --cq-interior --cq-max 500 --cq-age 3 --row-age 3 --pose-max 3500 --threads 1 \
+    --rowloops 10 --stages 4 --row-cap 6000
+
+# the table
+python3 search/t4screen_table.py runs/t4_*.log
+```
+
+Determinism: a single `t4screen.py` invocation is a pure function of its arguments except for the
+`--time` cut (numpy, HiGHS and the separators are deterministic and every sort is stable), so a run
+with `--time` large and `--stages` / `--rowloops` as the only stopping rule reproduces bit for bit.
+The chunked driver is not, because the cut lands mid-loop.
+
+**Two defects found by the built-in diagnostics**, both fixed and both worth recording because they
+are easy to reintroduce:
+
+* `rc-check` (the maximum `|reduced cost|` over columns carrying mass, which must be `0` at an
+  optimum) read `+1.0` to `+4.5` on the first row-aged runs.  Cause: row ageing reindexes the point
+  rows, so the dual vector returned by the inner loop no longer lined up with them and the pricer
+  worked on garbage.  Both sifts now run at the *top* of the inner loop, leaving only appends after
+  the last solve.  `rc-check` reads `1e-14` since.
+* The pricer ranked candidates by plain reduced cost, which in a region-constrained LP is dominated
+  by `|lam_R|` — so it offered only frame poses and never priced the interior, the one region that
+  can raise an `m = 4` leaf's objective.  Pricing and column sifting are now stratified by region.
+  The `01010101` trajectory (`11.376 -> 11.477`) is with the fix in the later stages.
+
+**Compute actually spent**: about two hours on `<= 8` threads (7 single-threaded processes at the
+peak), plus three earlier two-thread runs.  Two of those three overran the 15-minute per-process cap
+(`B40` 16.7 min, `C98` 17.5 min) because the time check only fires between inner iterations and a
+single 7835-pose LP solve took over four minutes; the chunk length was then cut to 450 s with a hard
+`timeout` of 690 s, and nothing since has come near the cap.
+
+---
+
+## 7. What a follow-up would need
+
+1. **Decide the region test before anything else** (§5).  Either make `verify/`'s cell-vs-box test
+   agree with a declared tie-break at the slot boundary, or move to Design B and re-measure the leaf
+   values with the mid-wall gap present.  Until then the `m = 4` leaf values here are values of an
+   LP no certificate can dualise.
+2. **Converge one leaf.**  `01010101` is the hardest (`11.48` and climbing) and never converged its
+   rows.  One leaf run to `M <= 1` and `kmax <= 1` on a 20k-pose set with the stratified pricer would
+   turn its number into an actual lower bound.  That is a cover-side-sized computation
+   (`level2-design.md` §8: 13–27 h per leaf), not a screen.
+3. **A ceiling attempt, the only decisive direction available on this side.**  Exhibit, in one leaf,
+   a measure exactly certified feasible (coverage `<= 1` at every exact arrangement vertex,
+   `mu(K) <= 1` for every anchor clique, region masses exactly the leaf's counts) with mass `>= 12`.
+   `clique_ceiling.py --exact` already does the coverage and clique half in exact rationals; what is
+   missing is the region equality (its `--kmass` top-up does not survive the scaling step) and an
+   exact anchor-clique maximiser.  Forty core-hours of that at `t = 3.99–4.0` found nothing above 12
+   (`CLIQUE_CEILING.md`); this screen adds the corner and slot branches to the same negative.
+4. **The rest of the tree.**  The slot tree under `k = 0,1,2,3` (`level2-design.md` §3) is untouched
+   and is where the leaf count explodes.
+5. **The chord lemma** is what restricts attention to the four `m = 4` patterns; it is still
+   unproved in this repo (`level2-design.md` §10, item 1).
