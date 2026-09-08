@@ -48,6 +48,7 @@ import packing_dual as pd                                            # noqa: E40
 import level2_lp as L2                                               # noqa: E402
 import anchorclique as AC                                            # noqa: E402
 import t4screen as T4                                                # noqa: E402
+import linecuts as LC                                                # noqa: E402
 from level2_regions import classify                                  # noqa: E402
 
 RUNS = os.path.join(REPO, 'runs')
@@ -163,10 +164,14 @@ class BLeaf(T4.CLeaf):
     """`t4screen.CLeaf` with boundary duplication, chord rows and the HiGHS backend."""
 
     def __init__(self, t, r, lib, threads, log, D=1000000, delta=1e-6, chord=True,
-                 backend='highs', hs_solver='simplex', lp_tlim=300.0):
+                 backend='highs', hs_solver='simplex', lp_tlim=300.0, lines=None,
+                 line_eps=-1e-12):
         super().__init__(t, r, lib, threads, log, D=D)
         self.delta = float(delta)
         self.chord = bool(chord)
+        self.lines = lines                    # a linecuts.LineFamily, or None
+        self.line_eps = float(line_eps)
+        self.line_dual = np.zeros(len(lines) if lines is not None else 0)
         self.gkey = []                        # pose key of each COLUMN (duplicates share one)
         self.backend = backend
         self.hi = Hi(threads, log, hs_solver, lp_tlim) if backend == 'highs' else None
@@ -277,6 +282,41 @@ class BLeaf(T4.CLeaf):
              P[:, 0] <= self.r + e, P[:, 0] >= self.t - self.r - e]
         return sp.csr_matrix(np.array([q.astype(float) for q in m]))
 
+    # ---------------------------------------------------------------- the line-cut rows
+    def line_matrix(self, poses=None):
+        """`mu(B_L) <= cap(L)` for every line of the family, where `B_L` is the set of poses whose
+        chord on `L` has length >= 1 (`linecuts.member`, with the SUBSET boundary convention of
+        `search/LINECUTS.md` 2).  Built from the pose coordinates, like the chord rows."""
+        P = np.asarray(poses if poses is not None else self.poses, dtype=float).reshape(-1, 3)
+        return sp.csr_matrix(LC.member(self.lines, P, self.line_eps).astype(float))
+
+    def line_cost(self, cand):
+        """the line part of a candidate pose's reduced cost: `sum_L v_L [pose in B_L]`.  Without
+        this the pricer is blind to the cuts and prices poses that the cuts forbid."""
+        n = len(cand)
+        if self.lines is None or not len(self.line_dual) or n == 0:
+            return np.zeros(n)
+        idx = np.nonzero(self.line_dual > 1e-12)[0]
+        if not len(idx):
+            return np.zeros(n)
+        P = np.asarray(cand, dtype=float).reshape(-1, 3)
+        sub = LC.LineFamily(self.t)
+        sub.nx, sub.ny, sub.c0 = self.lines.nx[idx], self.lines.ny[idx], self.lines.c0[idx]
+        sub.phi, sub.cap = self.lines.phi[idx], self.lines.cap[idx]
+        return LC.member(sub, P, self.line_eps).astype(float).T @ self.line_dual[idx]
+
+    def clique_cost(self, cand, zmin=1e-9, topz=500):
+        """`t4screen.price`, `pose_rc` and `rc_check` all take the non-coverage part of a pose's
+        reduced cost from here, so folding the line duals in makes all three line-aware at once."""
+        return super().clique_cost(cand, zmin, topz) + self.line_cost(cand)
+
+    def line_report(self, mu):
+        if self.lines is None:
+            return None
+        m = self.line_matrix() @ np.asarray(mu, dtype=float)
+        v = m - self.lines.cap
+        return m, v
+
     def eq_matrix(self, kc, kw):
         reg = np.array(self.reg)
         rows, vals = [], []
@@ -289,15 +329,15 @@ class BLeaf(T4.CLeaf):
         return (sp.csr_matrix(np.array(rows)) if rows else None), np.array(vals)
 
     # ---------------------------------------------------------------- LP
-    def solve(self, kc, kw, method='highs', no_cliques=False, no_chord=False):
+    def solve(self, kc, kw, method='highs', no_cliques=False, no_chord=False, no_lines=False):
         if self.backend != 'highs':
-            return self._solve_scipy(kc, kw, method, no_cliques, no_chord)
+            return self._solve_scipy(kc, kw, method, no_cliques, no_chord, no_lines)
         t0 = time.time()
-        out = self._solve_highs(kc, kw, no_cliques, no_chord)
+        out = self._solve_highs(kc, kw, no_cliques, no_chord, no_lines)
         self.lp_secs = time.time() - t0
         return out
 
-    def _solve_fresh(self, kc, kw, no_cliques, no_chord):
+    def _solve_fresh(self, kc, kw, no_cliques, no_chord, no_lines=False):
         """the matched variants (clique rows and/or chord rows switched off) on a ONE-SHOT model.
 
         Relaxing rows in place by widening their bounds to +-inf leaves the warm basis with
@@ -322,6 +362,11 @@ class BLeaf(T4.CLeaf):
         if self.chord and not no_chord:
             blocks.append(self.chord_matrix())
             lo.append(np.full(4, -INF)); hi.append(np.full(4, 3.0))
+        nL = 0
+        if self.lines is not None and not no_lines:
+            nL = len(self.lines)
+            blocks.append(self.line_matrix())
+            lo.append(np.full(nL, -INF)); hi.append(self.lines.cap.copy())
         blocks.append(self.A)
         lo.append(np.full(len(self.pts), -INF)); hi.append(np.ones(len(self.pts)))
         if self.cliques and not no_cliques:
@@ -338,14 +383,14 @@ class BLeaf(T4.CLeaf):
         mu = np.maximum(np.asarray(sol.col_value, dtype=float), 0.0)
         d = np.asarray(sol.row_dual, dtype=float)
         ne = E.shape[0] if E is not None else 0
-        o = ne + (4 if (self.chord and not no_chord) else 0)
+        o = ne + (4 if (self.chord and not no_chord) else 0) + nL
         y = np.maximum(-d[o:o + len(self.pts)], 0.0)
         lam = -d[:ne]
         return mu, y, -float(info.objective_function_value), lam
 
-    def _solve_highs(self, kc, kw, no_cliques, no_chord):
-        if no_cliques or no_chord:
-            return self._solve_fresh(kc, kw, no_cliques, no_chord)
+    def _solve_highs(self, kc, kw, no_cliques, no_chord, no_lines=False):
+        if no_cliques or no_chord or no_lines:
+            return self._solve_fresh(kc, kw, no_cliques, no_chord, no_lines)
         n = len(self.poses)
         pat = (tuple(kc), tuple(kw))
         use_cq = bool(self.cliques)
@@ -363,6 +408,10 @@ class BLeaf(T4.CLeaf):
             if self.chord:
                 C = self.chord_matrix()
                 self.hi.append([('D', i) for i in range(4)], np.full(4, -INF), np.full(4, 3.0), C)
+            if self.lines is not None:
+                nL = len(self.lines)
+                self.hi.append([('L', i) for i in range(nL)], np.full(nL, -INF),
+                               self.lines.cap.copy(), self.line_matrix())
             self.hi.append([('P', i) for i in range(len(self.pts))],
                            np.full(len(self.pts), -INF), np.ones(len(self.pts)), self.A)
             self.hi_npts = len(self.pts)
@@ -406,6 +455,7 @@ class BLeaf(T4.CLeaf):
         z = np.zeros(len(self.cliques))
         lam = np.zeros(self.nvar)
         chd = np.zeros(4)
+        lnd = np.zeros(len(self.lines) if self.lines is not None else 0)
         ci = {k: i for i, k in enumerate(cur)}
         for mi, k in enumerate(self.hi.rk):
             v = -d[mi]
@@ -415,22 +465,29 @@ class BLeaf(T4.CLeaf):
                 lam[k[1]] = v
             elif k[0] == 'D':
                 chd[k[1]] = max(v, 0.0)
+            elif k[0] == 'L':
+                lnd[k[1]] = max(v, 0.0)
             elif k[0] == 'C':
                 z[ci[k[1]]] = max(v, 0.0)
         self.chord_dual = chd
+        self.line_dual = lnd
         if not no_cliques:
             self.z = z if use_cq else np.zeros(0)
             if use_cq and len(self.z) == len(self.cage):
                 self.cage = np.where(self.z > 1e-9, 0, self.cage + 1)
         return mu, y, obj, lam
 
-    def _solve_scipy(self, kc, kw, method, no_cliques, no_chord):
+    def _solve_scipy(self, kc, kw, method, no_cliques, no_chord, no_lines=False):
         from scipy.optimize import linprog
         n = len(self.poses)
         E, ev = self.eq_matrix(kc, kw)
         blocks, ub = [], []
         if self.chord and not no_chord:
             blocks.append(self.chord_matrix()); ub.append(np.full(4, 3.0))
+        nL = 0
+        if self.lines is not None and not no_lines:
+            nL = len(self.lines)
+            blocks.append(self.line_matrix()); ub.append(self.lines.cap.copy())
         blocks.append(self.A); ub.append(np.ones(len(self.pts)))
         if self.cliques and not no_cliques:
             blocks.append(self.K); ub.append(np.ones(len(self.cliques)))
@@ -451,6 +508,8 @@ class BLeaf(T4.CLeaf):
         o = 0
         if self.chord and not no_chord:
             self.chord_dual = yz[:4]; o = 4
+        if nL:
+            self.line_dual = yz[o:o + nL]; o += nL
         y = yz[o:o + len(self.pts)]
         if not no_cliques:
             self.z = yz[o + len(self.pts):] if (self.cliques and not no_cliques) else np.zeros(0)
@@ -535,6 +594,20 @@ def main():
     ap.add_argument('--bnd-delta', type=float, default=1e-6,
                     help='a pose within this of a region boundary gets one column per adjacent region')
     ap.add_argument('--chord', action='store_true', help='add mu(wall strip) <= 3 (a HYPOTHESIS)')
+    # --- the general-line chord cuts (search/LINECUTS.md)
+    ap.add_argument('--lines', action='store_true',
+                    help='add mu({chord of S on L >= 1}) <= ceil(Lam_L) - 1 for a family of lines')
+    ap.add_argument('--line-pitch', type=float, default=0.05,
+                    help='pitch of the horizontal/vertical line grid (0 = no axis-parallel lines)')
+    ap.add_argument('--line-diag-pitch', type=float, default=0.0,
+                    help='pitch of the two 45 deg line families (0 = off)')
+    ap.add_argument('--line-exact', default='1,2,3',
+                    help='extra axis-parallel lines at exactly these offsets')
+    ap.add_argument('--line-eps', type=float, default=-1e-12,
+                    help='<0: exclude poses on the boundary d = D(psi) (a SUBSET of the true set, '
+                         'hence unconditionally valid).  0: the exact closed criterion.')
+    ap.add_argument('--line-maxcap', type=int, default=3,
+                    help='skip lines whose bound is above this (they are valid but weak)')
     ap.add_argument('--variants', action='store_true',
                     help='at each stage also value the same instance with cliques and/or the chord rows off')
     ap.add_argument('--variant-every', type=int, default=1,
@@ -576,11 +649,23 @@ def main():
 
     T0 = time.time()
     lib = pd.build_lib()
+    F = None
+    if a.lines:
+        ex = [float(v) for v in a.line_exact.split(',') if v.strip()]
+        F = LC.build(t, a.line_pitch, exact=ex, diag_pitch=a.line_diag_pitch,
+                     maxcap=a.line_maxcap, hv=(a.line_pitch > 0))
     leaf = BLeaf(t, a.r, lib, a.threads, log, D=a.D, delta=a.bnd_delta, chord=a.chord,
-                 backend=a.backend, hs_solver=a.hs_solver, lp_tlim=a.lp_tlim)
+                 backend=a.backend, hs_solver=a.hs_solver, lp_tlim=a.lp_tlim, lines=F,
+                 line_eps=a.line_eps)
     kc = [None if c == '.' else float(c) for c in a.corners]
     log(f'# t4leaf t={t} r={a.r} corners={a.corners} patterns={a.patterns} chord={a.chord} '
         f'bnd_delta={a.bnd_delta} backend={a.backend} args={vars(a)}')
+    if F is not None:
+        caps = {}
+        for i in range(len(F)):
+            caps[int(F.cap[i])] = caps.get(int(F.cap[i]), 0) + 1
+        log(f'   line family: {len(F)} lines, caps {sorted(caps.items())}, eps={a.line_eps:g} '
+            f'({"subset, valid" if a.line_eps < 0 else "closed criterion"})')
 
     # ---- rows and columns
     g = np.arange(a.row_pitch / 2, t, a.row_pitch)
@@ -614,6 +699,17 @@ def main():
     last_ck = [time.time()]
     varflag = [True]
 
+    def line_stats(mu):
+        """(number of lines carrying dual, sum of the line duals, largest mu(B_L) - cap)"""
+        if leaf.lines is None:
+            return None
+        m, v = leaf.line_report(mu)
+        nz = int((leaf.line_dual > 1e-9).sum())
+        return dict(nz=nz, dualsum=float(leaf.line_dual.sum()),
+                    tight=int((v > -1e-9).sum()), maxexc=float(v.max()),
+                    top=[[leaf.lines.tag[i], float(leaf.line_dual[i]), float(m[i])]
+                         for i in np.argsort(-leaf.line_dual)[:8] if leaf.line_dual[i] > 1e-9])
+
     def checkpoint(mu, y):
         T4.save_poses(leaf, mu, os.path.join(RUNS, f'tl_{a.TAG}_poses.txt'), t)
         if leaf.cliques:
@@ -644,11 +740,14 @@ def main():
                 kmax, ncq, best = leaf.separate(mu, a, log, want=min(a.cq_want, room))
             mc, mw, mi = split(leaf, mu)
             L = val / max(M, kmax, 1.0)
+            ls = line_stats(mu)
             log(f'   [{tag}.{it}] cols={len(leaf.poses)} rows={len(leaf.pts)} cq={len(leaf.cliques)} '
                 f'LP={val:.6f} M={M:.9f} kmax={kmax:.6f} L={L:.6f} bad={len(bad)} +cq={ncq} '
                 f'-cq={ndrop} int={mi:.6f} bnd={leaf.boundary_mass(mu):.6f} '
                 f'chd={np.round(leaf.chord_dual, 4).tolist() if leaf.chord else "-"} '
-                f'(lp {leaf.lp_secs:.1f}s it{leaf.hi.iters if leaf.hi else 0}, {time.time()-T0:.0f}s)')
+                + (f'lin=nz{ls["nz"]}/dsum{ls["dualsum"]:.4f}/tight{ls["tight"]}/'
+                   f'exc{ls["maxexc"]:+.2e} ' if ls else '')
+                + f'(lp {leaf.lp_secs:.1f}s it{leaf.hi.iters if leaf.hi else 0}, {time.time()-T0:.0f}s)')
             rec = dict(tag=tag, it=it, LP=val, M=M, kmax=kmax, L=L, cols=len(leaf.poses),
                        poses=len(set(leaf.gkey)), rows=len(leaf.pts), cq=len(leaf.cliques),
                        bad=len(bad), interior=mi, corners=mc, slots=mw,
@@ -687,11 +786,17 @@ def main():
                    cq=len(leaf.cliques), bad=len(bad), interior=mi, corners=mc, slots=mw,
                    strips=strips(leaf, mu), bnd=leaf.boundary_mass(mu),
                    chord_dual=[float(v) for v in leaf.chord_dual] if leaf.chord else None,
+                   lines=line_stats(mu),
                    secs=time.time() - T0,
                    converged=bool(M <= 1 + 1e-9 and kmax <= 1 + a.ktol))
         log(f'   [{tag}.final] cols={len(leaf.poses)} rows={len(leaf.pts)} cq={len(leaf.cliques)} '
             f'LP={val:.6f} M={M:.9f} kmax={kmax:.6f} int={mi:.6f} '
             f'bnd={rec["bnd"]:.6f} conv={rec["converged"]} (lp {leaf.lp_secs:.1f}s)')
+        if rec['lines']:
+            log(f'   [{tag}.lines] {rec["lines"]["nz"]} of {len(leaf.lines)} lines carry dual, '
+                f'sum {rec["lines"]["dualsum"]:.6f}, {rec["lines"]["tight"]} tight, '
+                f'max excess {rec["lines"]["maxexc"]:+.3e}; top '
+                + ', '.join(f'{q[0]} v={q[1]:.4f} mu={q[2]:.4f}' for q in rec['lines']['top']))
         # matched variants on the SAME columns and the SAME rows.  Relaxing every clique row at
         # once throws the warm basis away, so this is by far the most expensive solve of a stage
         # (25 min against 4 s for the base model on a 12.8k x 22.8k instance); `--variant-every`
@@ -702,18 +807,32 @@ def main():
             rec['LP_nochord'] = val
             rec['chord_worth'] = 0.0
             rec['nochord_by_dual'] = True
+        # the same dual argument for the line rows: if every line dual is 0, the optimal dual
+        # solution of this model is feasible for the model WITHOUT the line rows and has the same
+        # objective, so `LP_nolines = LP` exactly -- no solve needed.
+        if leaf.lines is not None and float(np.max(leaf.line_dual)) <= 1e-12:
+            rec['LP_nolines'] = val
+            rec['lines_worth'] = 0.0
+            rec['nolines_by_dual'] = True
         if a.variants:
-            for (nc, nd, name) in ((True, False, 'pure'), (False, True, 'nochord'),
-                                   (True, True, 'pure_nochord')):
+            for (nc, nd, nl, name) in ((True, False, False, 'pure'),
+                                       (False, True, False, 'nochord'),
+                                       (False, False, True, 'nolines'),
+                                       (True, False, True, 'pure_nolines'),
+                                       (True, True, True, 'pure_nochord')):
                 if nc and not leaf.cliques:
                     continue
                 if nd and not leaf.chord:
                     continue
-                if nd and rec.get('nochord_by_dual') and not nc:
+                if nl and leaf.lines is None:
+                    continue
+                if nd and rec.get('nochord_by_dual') and not (nc or nl):
                     continue                     # already known exactly, from the duals
+                if nl and rec.get('nolines_by_dual') and not (nc or nd):
+                    continue
                 if not varflag[0]:
                     continue
-                s2 = leaf.solve(kc, kw, a.method, no_cliques=nc, no_chord=nd)
+                s2 = leaf.solve(kc, kw, a.method, no_cliques=nc, no_chord=nd, no_lines=nl)
                 if s2 is None:
                     continue
                 mu2, _, val2, _ = s2
@@ -728,6 +847,8 @@ def main():
                     rec['gain'] = val2 - rec['LP']
                 if name == 'nochord':
                     rec['chord_worth'] = val2 - rec['LP']
+                if name == 'nolines':
+                    rec['lines_worth'] = val2 - rec['LP']
         elif leaf.cliques and varflag[0]:
             s2 = leaf.solve(kc, kw, a.method, no_cliques=True)
             if s2 is not None:
@@ -766,7 +887,8 @@ def main():
             if pat == ppat:
                 pmu, py, plam = mu, y, lam_map(kw, lam)
             extra = ''.join(f' | {k[3:]} LP={rec[k]:.6f}' for k in
-                            ('LP_pure', 'LP_nochord', 'LP_pure_nochord') if k in rec)
+                            ('LP_pure', 'LP_nochord', 'LP_nolines', 'LP_pure_nolines',
+                             'LP_pure_nochord') if k in rec)
             log(f'   STAGE {stage} {pat}: LP={rec["LP"]:.6f} M={rec["M"]:.9f} kmax={rec["kmax"]:.6f} '
                 f'cols={rec["cols"]} rows={rec["rows"]} cq={rec["cq"]} int={rec["interior"]:.6f} '
                 f'strips={np.round(rec["strips"], 4).tolist()} conv={rec["converged"]}' + extra)
@@ -814,6 +936,7 @@ def main():
         + ' '.join((f'{k}=LP{v["LP"]:.6f}/M{v["M"]:.6f}/K{v["kmax"]:.4f}'
                     + (f'/pure{v["LP_pure"]:.6f}' if 'LP_pure' in v else '')
                     + (f'/nochord{v["LP_nochord"]:.6f}' if 'LP_nochord' in v else '')
+                    + (f'/nolines{v["LP_nolines"]:.6f}' if 'LP_nolines' in v else '')
                     + f'/int{v["interior"]:.6f}') if v else f'{k}=FAIL'
                    for k, v in results.items())
         + f' cols={len(leaf.poses)} rows={len(leaf.pts)} cq={len(leaf.cliques)} '
