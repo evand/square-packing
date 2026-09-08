@@ -288,7 +288,55 @@ class BLeaf(T4.CLeaf):
         self.lp_secs = time.time() - t0
         return out
 
+    def _solve_fresh(self, kc, kw, no_cliques, no_chord):
+        """the matched variants (clique rows and/or chord rows switched off) on a ONE-SHOT model.
+
+        Relaxing rows in place by widening their bounds to +-inf leaves the warm basis with
+        nonbasic-at-bound logicals whose bounds no longer exist; HiGHS then spends longer repairing
+        that than solving the model outright (26 min against 4 s for the base model on a
+        12.8k x 22.8k instance).  A fresh model solved by ipm+crossover is predictable, and it
+        leaves the main model's basis alone."""
+        import highspy
+        n = len(self.poses)
+        INF = highspy.kHighsInf
+        h = highspy.Highs()
+        h.setOptionValue('output_flag', False)
+        h.setOptionValue('threads', self.threads)
+        h.setOptionValue('solver', 'ipm')
+        h.setOptionValue('run_crossover', 'on')
+        h.addVars(n, np.zeros(n), np.full(n, INF))
+        h.changeColsCost(n, np.arange(n, dtype=np.int32), -np.ones(n))
+        E, ev = self.eq_matrix(kc, kw)
+        blocks, lo, hi = [], [], []
+        if E is not None:
+            blocks.append(E); lo.append(ev); hi.append(ev)
+        if self.chord and not no_chord:
+            blocks.append(self.chord_matrix())
+            lo.append(np.full(4, -INF)); hi.append(np.full(4, 3.0))
+        blocks.append(self.A)
+        lo.append(np.full(len(self.pts), -INF)); hi.append(np.ones(len(self.pts)))
+        if self.cliques and not no_cliques:
+            blocks.append(self.K)
+            lo.append(np.full(len(self.cliques), -INF)); hi.append(np.ones(len(self.cliques)))
+        M = sp.vstack(blocks, format='csr')
+        h.addRows(M.shape[0], np.concatenate(lo), np.concatenate(hi), M.nnz,
+                  M.indptr.astype(np.int32), M.indices.astype(np.int32), M.data.astype(float))
+        h.run()
+        if h.getModelStatus() != highspy.HighsModelStatus.kOptimal:
+            return None
+        sol = h.getSolution()
+        info = h.getInfo()
+        mu = np.maximum(np.asarray(sol.col_value, dtype=float), 0.0)
+        d = np.asarray(sol.row_dual, dtype=float)
+        ne = E.shape[0] if E is not None else 0
+        o = ne + (4 if (self.chord and not no_chord) else 0)
+        y = np.maximum(-d[o:o + len(self.pts)], 0.0)
+        lam = -d[:ne]
+        return mu, y, -float(info.objective_function_value), lam
+
     def _solve_highs(self, kc, kw, no_cliques, no_chord):
+        if no_cliques or no_chord:
+            return self._solve_fresh(kc, kw, no_cliques, no_chord)
         n = len(self.poses)
         pat = (tuple(kc), tuple(kw))
         use_cq = bool(self.cliques)
@@ -478,6 +526,10 @@ def main():
     ap.add_argument('--chord', action='store_true', help='add mu(wall strip) <= 3 (a HYPOTHESIS)')
     ap.add_argument('--variants', action='store_true',
                     help='at each stage also value the same instance with cliques and/or the chord rows off')
+    ap.add_argument('--variant-every', type=int, default=1,
+                    help='with --variants: only on every Nth stage (the pure solve is expensive)')
+    ap.add_argument('--load-rows', action='append', default=[],
+                    help='seed the row set from a t4leaf dual checkpoint (`x y dual` lines)')
     # --- cliques (as t4screen.py)
     ap.add_argument('--cliques', action='store_true')
     ap.add_argument('--cq-wall', action='store_true')
@@ -530,6 +582,10 @@ def main():
         cand += T4.load_poses(w)
     n = leaf.add_poses(cand)
     leaf.add_points(L2.pose_corners(leaf.poses[:a.corner_rows]))
+    for rf in a.load_rows:
+        pts = [[float(q[0]), float(q[1])] for q in
+               (l.split() for l in open(rf)) if len(q) >= 2 and not q[0].startswith('#')]
+        log(f'   +{leaf.add_points(np.array(pts))} rows from {os.path.basename(rf)}')
     leaf.rfix = len(leaf.pts)
     ndup = len(leaf.poses) - len(set(leaf.gkey))
     log(f'   seed: {n} columns for {len(set(leaf.gkey))} poses ({ndup} boundary duplicates), '
@@ -545,6 +601,7 @@ def main():
         except Exception:
             hist = []
     last_ck = [time.time()]
+    varflag = [True]
 
     def checkpoint(mu, y):
         T4.save_poses(leaf, mu, os.path.join(RUNS, f'tl_{a.TAG}_poses.txt'), t)
@@ -624,13 +681,26 @@ def main():
         log(f'   [{tag}.final] cols={len(leaf.poses)} rows={len(leaf.pts)} cq={len(leaf.cliques)} '
             f'LP={val:.6f} M={M:.9f} kmax={kmax:.6f} int={mi:.6f} '
             f'bnd={rec["bnd"]:.6f} conv={rec["converged"]} (lp {leaf.lp_secs:.1f}s)')
-        # matched variants on the SAME columns and the SAME rows
+        # matched variants on the SAME columns and the SAME rows.  Relaxing every clique row at
+        # once throws the warm basis away, so this is by far the most expensive solve of a stage
+        # (25 min against 4 s for the base model on a 12.8k x 22.8k instance); `--variant-every`
+        # keeps it off the critical path.  The chord variant needs no solve at all when the chord
+        # rows carry zero dual: that dual solution is feasible for the model without them and has
+        # the same objective, so `LP_nochord = LP` exactly.
+        if leaf.chord and float(np.max(leaf.chord_dual)) <= 1e-12:
+            rec['LP_nochord'] = val
+            rec['chord_worth'] = 0.0
+            rec['nochord_by_dual'] = True
         if a.variants:
             for (nc, nd, name) in ((True, False, 'pure'), (False, True, 'nochord'),
                                    (True, True, 'pure_nochord')):
                 if nc and not leaf.cliques:
                     continue
                 if nd and not leaf.chord:
+                    continue
+                if nd and rec.get('nochord_by_dual') and not nc:
+                    continue                     # already known exactly, from the duals
+                if not varflag[0]:
                     continue
                 s2 = leaf.solve(kc, kw, a.method, no_cliques=nc, no_chord=nd)
                 if s2 is None:
@@ -647,7 +717,7 @@ def main():
                     rec['gain'] = val2 - rec['LP']
                 if name == 'nochord':
                     rec['chord_worth'] = val2 - rec['LP']
-        elif leaf.cliques:
+        elif leaf.cliques and varflag[0]:
             s2 = leaf.solve(kc, kw, a.method, no_cliques=True)
             if s2 is not None:
                 mu2, _, val2, _ = s2
@@ -671,6 +741,7 @@ def main():
     for stage in range(a.stages):
         pats = [ppat] if stage < a.warm_stages else ([ppat] + [p for p in patterns if p != ppat])
         pmu = py = plam = None
+        varflag[0] = bool(a.variant_every and stage % a.variant_every == 0)
         for pat in pats:
             kw = [None if c == '.' else float(c) for c in pat]
             out = value(kc, kw, f's{stage}.{pat}')
