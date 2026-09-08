@@ -493,18 +493,24 @@ single 7835-pose LP solve took over four minutes; the chunk length was then cut 
    agree with a declared tie-break at the slot boundary, or move to Design B and re-measure the leaf
    values with the mid-wall gap present.  Until then the `m = 4` leaf values here are values of an
    LP no certificate can dualise.
-2. **Converge one leaf.**  `01010101` is the hardest (`11.48` and climbing) and never converged its
-   rows.  One leaf run to `M <= 1` and `kmax <= 1` on a 20k-pose set with the stratified pricer would
-   turn its number into an actual lower bound.  That is a cover-side-sized computation
-   (`level2-design.md` §8: 13–27 h per leaf), not a screen.
-3. **A ceiling attempt, the only decisive direction available on this side.**  Exhibit, in one leaf,
+2. **Feed the leaves the interior poses they are missing, and see how far they move.**  §4.2 shows
+   the interior sub-problem is under-measured by `1 – 2` on these pose sets, and the four leaf
+   values sit `0.4 – 1.0` below 12.  The cheapest decisive-ish experiment is to warm-start each
+   `m = 4` leaf from the *refined interior* pose set (`--warm runs/t4_INTP_poses.txt`, which
+   contains the `34–60 deg` configurations the seed grid misses) and re-measure.  If the leaf values
+   do not move, the frame really is what limits them; if they jump, this screen said nothing.
+3. **Converge one leaf.**  `01010101` is the hardest (`11.56` and climbing, `M = 1.5`) and never
+   converged its rows.  One leaf run to `M <= 1` and `kmax <= 1` on a 20k-pose set with the
+   stratified pricer and row ageing OFF would turn its number into an actual lower bound.  That is a
+   cover-side-sized computation (`level2-design.md` §8: 13–27 h per leaf), not a screen.
+4. **A ceiling attempt, the only decisive direction available on this side.**  Exhibit, in one leaf,
    a measure exactly certified feasible (coverage `<= 1` at every exact arrangement vertex,
    `mu(K) <= 1` for every anchor clique, region masses exactly the leaf's counts) with mass `>= 12`.
    `clique_ceiling.py --exact` already does the coverage and clique half in exact rationals; what is
    missing is the region equality (its `--kmass` top-up does not survive the scaling step) and an
    exact anchor-clique maximiser.  Forty core-hours of that at `t = 3.99–4.0` found nothing above 12
    (`CLIQUE_CEILING.md`); this screen adds the corner and slot branches to the same negative.
-4. **The rest of the tree.**  The slot tree under `k = 0,1,2,3` (`level2-design.md` §3) is untouched
+5. **The rest of the tree.**  The slot tree under `k = 0,1,2,3` (`level2-design.md` §3) is untouched
    and is where the leaf count explodes.
-5. **The chord lemma** is what restricts attention to the four `m = 4` patterns; it is still
+6. **The chord lemma** is what restricts attention to the four `m = 4` patterns; it is still
    unproved in this repo (`level2-design.md` §10, item 1).
