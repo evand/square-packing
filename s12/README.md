@@ -160,6 +160,15 @@ reduction, a demonstration certificate), and an exact zero-margin checker for cl
 re-proves `s(15) = 4` from Friedman's 14 points (`search/ZEROMARGIN.md`).  Pure covers, for the
 record: `COVER(3.99) = 12.2009` (converged), `COVER(3.98) ≈ 12.02`, `COVER(3.975) ≈ 11.96`.
 
+**At the container itself (2026-09-07/08).**  Measured at `t = 4` in closed semantics, the whole
+family — corner branch, per-slot branch, anchor cliques, the chord lemma (now proved in Lean,
+`notes/chord-lemma.md`) and line-chord count cuts — leaves the hardest leaf at `11.75–11.78`
+(certified `11.776`) and the corner leaf at `11.996`, every margin shrinking under refinement,
+and no certified fractional packing of mass `>= 12` either; the extremal object is always the
+`4×4` grid smeared and tilted.  The full corner × slot tree has 4213 leaves.  Notes:
+`search/T4SCREEN.md`, `T4LEAF.md`, `LEAF_CEILING.md`, `LINECUTS.md`, `WITNESS.md`,
+`notes/branch-semantics.md`, `notes/review-2026-09-07.md`; the plan is in `TODO.md`.
+
 ## Credits and prior art
 
 The unavoidable-point-set method is due to Göbel, and was developed by Stromquist, Friedman,
