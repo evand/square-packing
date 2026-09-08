@@ -214,10 +214,6 @@ lemma no_four_spread {N : ℕ} (hN : 3 < N) (x : Fin N → ℝ)
     rcases abs_cases (u - v) with ⟨he, -⟩ | ⟨he, -⟩
     · exact Or.inl (he ▸ h)
     · exact Or.inr (by rw [he] at h; linarith)
-  have i0 : Fin N := ⟨0, by omega⟩
-  have i1 : Fin N := ⟨1, by omega⟩
-  have i2 : Fin N := ⟨2, by omega⟩
-  have i3 : Fin N := ⟨3, by omega⟩
   have n01 : (⟨0, by omega⟩ : Fin N) ≠ ⟨1, by omega⟩ := by simp [Fin.ext_iff]
   have n02 : (⟨0, by omega⟩ : Fin N) ≠ ⟨2, by omega⟩ := by simp [Fin.ext_iff]
   have n03 : (⟨0, by omega⟩ : Fin N) ≠ ⟨3, by omega⟩ := by simp [Fin.ext_iff]
