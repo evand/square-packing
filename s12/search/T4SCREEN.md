@@ -44,15 +44,17 @@ an independent witness, and the LP is short of it:
 |---|---|
 | LP, 3500 poses, one unrefined evaluation, `M = 1`, `kmax = 1` (**converged**) | `4.000000` |
 | LP, 1471-pose seed, priced against its own dual, `M = 1`, `kmax = 1` (**converged**) | `5.000000` |
-| the same after one and two pricing rounds (4000 poses) | `5.730642`, then **`6.000000`** |
-| independent witness: **six** unit squares with centres in `[1,3]^2`, pairwise disjoint with margin `+0.0567`, all inside `[0,4]^2` (`level2_capacity.py --t 4.0 --box 1 3 1 3 --k 6`) — mass 1 on each is a feasible measure | **`>= 6`** |
+| independent witness: **six** unit squares with centres in `[1,3]^2`, pairwise disjoint with margin `+0.0567`, all inside `[0,4]^2` (`level2_capacity.py --t 4.0 --box 1 3 1 3 --k 6`) | `>= 6` |
+| the same LP after 22 pricing stages (`INTP`), converged again at stages 17, 20, 21 | **`7.433677`, `7.508327`, `7.528038`** — and `7.583` at stage 22, still climbing `+0.05`/stage |
 
-So a *converged* LP value here is tight for its pose set and was **2 below the truth**; two rounds
-of column generation walked it up to the witness.  Every leaf number in §3 is a lower bound of exactly that
-kind, and none of them is a bound in the direction that would decide the question.  With the values
-already climbing under refinement (`01010101`: `11.376 -> 11.404 -> 11.410 -> 11.477`) and the
-deficit to 12 only `0.5 – 1.0`, **this screen cannot tell a leaf that closes from one that does
-not.**  What it *can* say is that nothing here produced the decisive `>= 12`, and that the
+**A converged LP value on the seed pose set was `4.000000`; the same LP on the same problem is at
+`7.53` after column generation and has not stopped.**  That is the calibration of this whole screen,
+and it is brutal: `M <= 1` and `kmax <= 1` certify only that the measure is feasible, never that the
+pose set was rich enough, and here the pose set was short by `3.5` on a quantity whose threshold is
+`4`.  Every leaf number in §3 is a lower bound of exactly that kind.  With the deficit to 12 only
+`0.4 – 1.0` and the leaf values still rising when the budget ran out (`01010101`:
+`11.376 -> 11.591`, matched pure `11.837`), **this screen cannot tell a leaf that closes from one
+that does not.**  What it *can* say is that nothing here produced the decisive `>= 12`, and that the
 level-2 slot branch — not the cliques — is what moves the value.
 
 **The new obstacle is that the leaf optima are not certificate-shaped.**  `1–11 %` of the mass of
@@ -213,10 +215,24 @@ INTP        4.0   0000  00000000  1   7      6.778140  1.172920  1.16313  6.9103
 INTP        4.0   0000  00000000  1   8      6.825854  1.122486  1.09718  6.934089 +0.108234   4000   8416   399    .   .  
 INTP        4.0   0000  00000000  1   9      6.911492  1.146670  1.04381  7.056314 +0.144822   4000   8458   174    .   .  
 INTP        4.0   0000  00000000  1   10     6.955914  1.067662  1.07738  7.125739 +0.169825   4000   8570   242    .   .  
+INTP        4.0   0000  00000000  1   11     7.086535  1.106948  1.14044  7.188158 +0.101623   4000   8921   226    .   .  
+INTP        4.0   0000  00000000  1   12     7.099437  1.100939  1.09197  7.205677 +0.106241   4972   9206   306    .   .  
+INTP        4.0   0000  00000000  1   13     7.228561  1.043921  1.01692  7.298233 +0.069672   4000   9213   169    .   .  
+INTP        4.0   0000  00000000  1   14     7.314452  1.019972  1.03612  7.368554 +0.054102   4000   9921   129    .   .  
+INTP        4.0   0000  00000000  1   15     7.323647  1.065391  1.04493  7.405091 +0.081444   4000  10627   127    .   .  
+INTP        4.0   0000  00000000  1   16     7.386122  1.061973  1.05410  7.440140 +0.054019   4000  10997    85    .   .  
+INTP        4.0   0000  00000000  1   17     7.433677  1.000000  1.02138  7.490635 +0.056958   4000  11927   256  rows  .  
+INTP        4.0   0000  00000000  1   18     7.435097  1.077152  1.08192  7.492751 +0.057654   5014  11849   136    .   .  
+INTP        4.0   0000  00000000  1   19     7.472754  1.015389  1.00721  7.508579 +0.035826   4000  12668   110    .   .  
+INTP        4.0   0000  00000000  1   20     7.508327  1.000000  1.00000  7.541727 +0.033400   4000  13888   199  rows cliq
+INTP        4.0   0000  00000000  1   21     7.528038  1.000000  1.00000  7.558828 +0.030790   4000  15269   111  rows cliq
+INTP        4.0   0000  00000000  1   22     7.583111  1.045685  1.05356  7.603425 +0.020314   4000  21020   405    .   .  
 K40         4.0   1111  ........  1   0     11.977689  1.160045  1.15082 12.000000 +0.022311   3383  11604   500    .   .  
 K40         4.0   1111  ........  1   1     11.961620  1.285862  1.07017 12.000000 +0.038380   3500  12201   396    .   .  
 K40         4.0   1111  ........  1   2     11.969832  1.086818  1.01944 12.000000 +0.030168   5516  16292   500    .   .  
 K40         4.0   1111  ........  1   3     11.966539  1.092303  1.09743 12.000000 +0.033461   5516  14058   496    .   .  
+K40         4.0   1111  ........  1   4     11.965357  1.082535  1.02590 12.000000 +0.034643   5516  15091   499    .   .  
+K40         4.0   1111  ........  1   5     11.963270  1.197913  1.03814 12.000000 +0.036730   5516  14408   499    .   .  
 L01010101   4.0   1111  01010101  1   0     11.376102  1.118124  1.15800 11.605192 +0.229090   3383   8727   340    .   .  
 L01010101   4.0   1111  01010101  1   1     11.403693  1.075974  1.12692 11.678834 +0.275141   3500   8793   235    .   .  
 L01010101   4.0   1111  01010101  1   2     11.410038  1.098586  1.04252 11.709679 +0.299641   5640   9402   413    .   .  
@@ -228,6 +244,8 @@ L01010101   4.0   1111  01010101  1   7     11.561721  1.533589  1.14435 11.7778
 L01010101   4.0   1111  01010101  1   8     11.560737  1.518808  1.06648 11.738728 +0.177991   3500   8750   212    .   .  
 L01010101   4.0   1111  01010101  1   9     11.579788  1.279641  1.11443 11.730414 +0.150625   3500   9404   498    .   .  
 L01010101   4.0   1111  01010101  1   10    11.591026  1.056408  1.08454 11.837009 +0.245983   6047  10140   388    .   .  
+L01010101   4.0   1111  01010101  1   11    11.591807  1.467476  1.01509 11.808795 +0.216988   3500   9127   178    .   .  
+L01010101   4.0   1111  01010101  1   12    11.605211  1.467106  1.08081 11.806248 +0.201037   3500   8952   219    .   .  
 L01010110   4.0   1111  01010110  1   0     11.064935  1.112554  1.12987 11.625000 +0.560065   3383   7704   397    .   .  
 L01010110   4.0   1111  01010110  1   1     11.250000  1.250000  1.10000 11.545455 +0.295455   3500   7948   398    .   .  
 L01010110   4.0   1111  01010110  1   2     11.246964  1.230769  1.24696 11.581132 +0.334169   3500   7975   324    .   .  
@@ -244,6 +262,9 @@ L01010110   4.0   1111  01010110  1   12    11.270270  1.317568  1.21622 11.5000
 L01010110   4.0   1111  01010110  1   13    11.263158  1.368421  1.05263 11.481132 +0.217974   3500   7904   233    .   .  
 L01010110   4.0   1111  01010110  1   14    11.250000  1.250000  1.25000 11.500000 +0.250000   3500   7725   117    .   .  
 L01010110   4.0   1111  01010110  1   15    11.300000  1.293333  1.30000 11.666667 +0.366667   6294   8396   496    .   .  
+L01010110   4.0   1111  01010110  1   16    11.200000  1.533333  1.10667 11.470588 +0.270588   3500   7818   214    .   .  
+L01010110   4.0   1111  01010110  1   17    11.235294  1.117647  1.00000 11.444444 +0.209150   3500   7764    93    .  cliq
+L01010110   4.0   1111  01010110  1   18    11.291667  1.500000  1.20833 11.500000 +0.208333   3500   7809   135    .   .  
 L01011010   4.0   1111  01011010  1   0     11.142857  1.142857  1.21429 11.500000 +0.357143   3383   7871   327    .   .  
 L01011010   4.0   1111  01011010  1   1     11.000000  1.000000  1.00000 11.500000 +0.500000   3500   7958   272  rows cliq
 L01011010   4.0   1111  01011010  1   2     11.000000  2.000000  1.00000 11.000000 +0.000000   3500   7931     7    .  cliq
@@ -259,6 +280,9 @@ L01011010   4.0   1111  01011010  1   11    11.283599  1.273884  1.06674 11.5714
 L01011010   4.0   1111  01011010  1   12    11.000000  1.692308  1.15385 11.500000 +0.500000   3500   7848   373    .   .  
 L01011010   4.0   1111  01011010  1   13    11.000000  1.200000  1.20000 11.333333 +0.333333   3500   7737   293    .   .  
 L01011010   4.0   1111  01011010  1   14    11.166667  1.407683  1.16667 11.557627 +0.390960   6221   8682   499    .   .  
+L01011010   4.0   1111  01011010  1   15    11.000000  1.252941  1.37353 11.400000 +0.400000   3500   7889   388    .   .  
+L01011010   4.0   1111  01011010  1   16    11.000000  1.426667  1.18667 11.329114 +0.329114   3500   7804   500    .   .  
+L01011010   4.0   1111  01011010  1   17    11.000000  1.090909  1.27273 11.216667 +0.216667   3500   7831   141    .   .  
 L01100110   4.0   1111  01100110  1   0     11.000000  1.000000  1.00000 11.000000 +0.000000   3383   8088   246  rows cliq
 L01100110   4.0   1111  01100110  1   1     11.000000  1.234155  1.22711 11.000000 +0.000000   3383   7586   447    .   .  
 L01100110   4.0   1111  01100110  1   2     11.000000  1.500000  1.50000 11.000000 -0.000000   3500   7537   316    .   .  
@@ -282,7 +306,8 @@ T0          4.0   1111  ........  0   0     11.896104  1.009984  0.00000        
 T0          4.0   1111  01010101  0   0     11.385844  1.000000  0.00000         -        -   1471  14461     0  rows cliq
 U40         4.0   ....  ........  1   0     12.141385  1.021979  1.07433 12.196598 +0.055213   3383  20805   500    .   .  
 U40         4.0   ....  ........  1   1     12.121542  1.036364  1.05170 12.202884 +0.081342   3383  19644   499    .   .  
-U40         4.0   ....  ........  1   2     12.197049  1.422294  1.12369 12.242251 +0.045202   3500  19808   492    .   .
+U40         4.0   ....  ........  1   2     12.197049  1.422294  1.12369 12.242251 +0.045202   3500  19808   492    .   .  
+U40         4.0   ....  ........  1   3     12.197919  1.168081  1.17712 12.225492 +0.027572   5798  22753   498    .   .
 ```
 
 ---
@@ -329,17 +354,26 @@ pose carrying mass is interior-centred:
 
 | run | poses | LP | `M` | `kmax` | |
 |---|---|---|---|---|---|
-| `INT40` pattern `00000000` (one unrefined evaluation, on a row set built for a different pattern) | 3500 | **4.000000** | `1.000000` | `1.000000` | converged |
-| `INTP` stage 0 (seed pose set, priced against its own dual) | 1471 | **5.000000** | `1.000000` | `1.000000` | converged |
-| `INTP` stage 1 (one pricing round) | 4000 | `5.730642` | `1.34` | `1.15` | rows still open |
-| `INTP` stage 2 (two pricing rounds) | 4000 | **`6.000000`** | `1.23` | `1.17` | rows still open |
-| **witness** (`level2_capacity.py --t 4.0 --box 1 3 1 3 --k 6`) | — | **`>= 6`** | — | — | six unit squares, centres in `[1,3]^2`, pairwise margin `+0.0567`, all inside `[0,4]^2`; mass 1 on each is a feasible measure |
+| `INT40` pattern `00000000` (one unrefined evaluation, on a row set built for a different pattern) | 3500 | **4.000000** | `1.000000` | `1.000000` | **converged** |
+| `INTP` stage 0 (seed pose set, priced against its own dual) | 1471 | **5.000000** | `1.000000` | `1.000000` | **converged** |
+| **witness** (`level2_capacity.py --t 4.0 --box 1 3 1 3 --k 6`) | — | `>= 6` | — | — | six unit squares, centres in `[1,3]^2`, pairwise margin `+0.0567`, all inside `[0,4]^2`; mass 1 on each is a feasible measure |
+| `INTP` stage 17 | 4000 | `7.433677` | `1.000000` | `1.02` | rows converged |
+| `INTP` stage 20 | 4000 | `7.508327` | `1.000000` | `1.000000` | **converged** |
+| `INTP` stage 21 | 4000 | **`7.528038`** | `1.000000` | `1.000000` | **converged** |
+| `INTP` stage 22 | 4000 | `7.583111` | `1.05` | `1.05` | still climbing `+0.05`/stage |
 
-Two *converged* LP values (`4.000000` and `5.000000`) that are `2` and `1` below a witness anyone
-can check in four lines — and two rounds of column generation then walk the LP right up to the
-witness, `5.000 -> 5.731 -> 6.000`.  This is the honest calibration of the whole screen:
-**converged means tight for the pose set, not tight**, and on the one sub-problem here where the
-answer is independently known the gap was `2` (`33 %`).  (`level2-design.md` §5 records the same six-square configuration at `t = 3.98`,
+The whole trajectory, one pricing stage per step, `4000` poses throughout after the first:
+
+```
+5.000  5.731  6.000  6.189  6.394  6.580  6.654  6.778  6.826  6.911  6.956
+7.087  7.099  7.229  7.314  7.324  7.386  7.434  7.435  7.473  7.508  7.528  7.583
+```
+
+Monotone, no sign of stopping.  **A converged LP value on the seed pose set was `4.000000`; the same
+LP on the same problem is at `7.53` after 21 rounds of column generation and still rising.**  This is
+the honest calibration of the whole screen: `M <= 1` and `kmax <= 1` certify that the *measure* is
+feasible, never that the *pose set* was rich enough, and here the pose set was short by `3.5` on a
+quantity whose threshold is `4`.  (`level2-design.md` §5 records the same six-square configuration at `t = 3.98`,
 margin `+0.0884`, "six squares at 34–44 degrees leaning out of the interior into the wall gaps" —
 poses a `0.25 / 15 deg` seed grid does not contain and one round of `0.04 / 2.5 deg` pricing only
 half finds.)
@@ -348,13 +382,13 @@ So the arithmetic of an `m = 4` leaf at `t = 4` is explicit and the answer turns
 screen measures badly:
 
 > `leaf value = 8 + interior mass`; the leaf fails to close iff the interior carries `>= 4`.  With
-> the frame pinned the LP gives `2.3 – 3.5`; the same LP under-reports the *frame-free* interior by
-> `1 – 2`.
+> the frame pinned the LP gives `2.3 – 3.5`; the same LP under-reported the *frame-free* interior by
+> `3.5` on the pose set the leaf runs use.
 
 The frame does cost the interior something — the corner and slot squares stick into `[0.3, 3.7]^2`
 and eat the coverage budget the interior squares need — and the leaves do come in below 12.  But
-`0.5 – 1.0` of deficit against an instrument with a demonstrated `1 – 2` of pose-set slack is not a
-verdict.
+`0.4 – 1.0` of deficit against an instrument with a demonstrated `3.5` of pose-set slack on the very
+quantity in question is not a verdict.
 
 One thing the leaf values *cannot* be beaten by, at least: an **integral** witness.  Twelve unit
 squares in a leaf's region pattern with all pairwise margins bounded away from zero would give a
@@ -545,11 +579,11 @@ reached, and the number that matters for it:
 | `L01010110` | leaf `01010110` | 7 stages, LP `11.29`, `M = 1.29` |
 | `L01011010` | leaf `01011010` | 7 stages, LP `11.26`, `M = 1.71`; best converged `11.000000` |
 | `L01100110` | leaf `01100110` | 13 stages, best converged `11.000000` (attained six times) |
-| `K40` | corner leaf `k = 4`, cliques | 3 stages, LP `11.97`, matched pure `12.000000` throughout |
-| `U40`, `P40` | pure, cliques | 3 / 2 stages, LP `12.12 – 12.20` |
+| `K40` | corner leaf `k = 4`, cliques | 6 stages, LP `11.963 – 11.978` (flat), matched pure `12.000000` at **every** stage |
+| `U40`, `P40` | pure, cliques | 4 / 2 stages, LP `12.12 – 12.20` |
 | `C98` | the `t = 3.98` calibration | 1 stage, LP `11.79`, matched pure `11.90`, both `<= 11.96` ✓ |
-| `INT40`, `INTP` | the interior alone | `4.000000` (converged, unrefined), then `5.000000 -> 5.731 -> 6.000` |
-| `S01010101` | follow-up 2: the hardest leaf warm-started from `INTP`'s refined interior poses (38 745 poses, row ageing off) | started; first iterate `LP = 12.000000` at `M = 2.65` on the bare seed row set, i.e. nothing yet — the row generation has not begun to bite.  **Left running.** |
+| `INT40`, `INTP` | the interior alone | `4.000000` (converged, unrefined) → **`7.528038`** (converged, 21 pricing stages) → `7.583`, still rising |
+| `S01010101` | follow-up 2: the hardest leaf warm-started from `INTP`'s refined interior poses (38 745 poses, row ageing off) | 3 iterates, `12.000000, 12.000000, 11.949104` with `M` falling `2.65 -> 2.00 -> 1.42` — the row generation had not caught up, so `11.949` is an upper bound on the restricted value and a bound on nothing.  **Left running.**  Note the chunking failure mode it exposes: at `240 s` per LP a `450 s` chunk never completes a stage, so it never checkpoints and the next chunk starts over.  Give this run one long process, not chunks. |
 
 Nothing here is a certificate, an exact computation, or a bound on `V(4)` in the decisive
 direction.  What is exact: the `12.163061` pure reference (`DUAL.md`), the `s(13) = 4` and
