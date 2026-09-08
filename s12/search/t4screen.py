@@ -348,15 +348,35 @@ def price(leaf, y, lam_of_region, a, log, tag=''):
 
     cand = L2.seed_poses_full(leaf.t, a.price_pitch, a.price_dth)
     rc = rc_of(cand)
-    idx = np.argsort(-rc)[:a.cg_want]
-    idx = idx[rc[idx] > a.price_tol]
+    # STRATIFY BY REGION.  With an equality `mu(R) = k` the region's multiplier `lam_R` is free and
+    # can be strongly negative (the branch forces mass into a region the LP does not want it in),
+    # so the reduced cost of a candidate centred there is `1 - capture + |lam_R|` and can be in the
+    # hundreds -- while adding such a column only redistributes the region's fixed mass `k` and
+    # moves the objective by nothing.  A plain top-`cg_want` by reduced cost is then entirely
+    # frame poses, and the only region that can actually raise the objective in an `m = 4` leaf --
+    # the interior, whose multiplier is 0 because it carries no equality -- never gets priced.
+    creg = np.array([leaf.region_of(p) for p in cand])
+    idx = []
+    regs = sorted(set(int(v) for v in creg))
+    quota = max(a.cg_want // max(len(regs), 1), 1)
+    for rr in regs:
+        w = np.nonzero(creg == rr)[0]
+        if not len(w):
+            continue
+        o = w[np.argsort(-rc[w])[:quota]]
+        idx += [int(i) for i in o if rc[i] > a.price_tol]
+    extra = [int(i) for i in np.argsort(-rc) if rc[i] > a.price_tol and int(i) not in set(idx)]
+    idx = (idx + extra)[:a.cg_want]
     best = [cand[i] for i in idx]
     # coordinate descent on the point-capture part only (the clique part is not differentiable
     # on a grid; the refined poses are re-priced honestly below)
     ref = pd.refine(leaf.lib, ax, ay, aw, best, leaf.t, leaf.threads) if best else []
     out = list(best) + list(ref)
     gap = float(rc.max())
-    log(f'   pricing{tag}: {len(cand)} candidates, best rc {gap:+.6f}, kept {len(best)} (+{len(ref)} refined)')
+    gi = np.nonzero(creg == 12)[0]
+    gint = float(rc[gi].max()) if len(gi) else float('nan')
+    log(f'   pricing{tag}: {len(cand)} candidates, best rc {gap:+.6f} (interior {gint:+.6f}), '
+        f'kept {len(best)} over {len(regs)} regions (+{len(ref)} refined)')
     return out, gap, (ax, ay, aw)
 
 
@@ -402,7 +422,9 @@ def save_poses(leaf, mu, path, t):
     with open(path + '.tmp', 'w') as f:
         f.write(f'# t4screen poses t={t} n={len(leaf.poses)} mass={float(mu.sum()):.9f}\n')
         for i, (cx, cy, th) in enumerate(leaf.poses):
-            f.write(f'pose {cx:.13f} {cy:.13f} {math.degrees(th):.11f} {mu[i]:.12f}\n')
+            # 17 significant digits: the LP parks mass on region boundaries (cy = t/2 to within
+            # 1e-14), so a checkpoint printed to fewer digits changes a pose's region on read-back
+            f.write(f'pose {cx:.17g} {cy:.17g} {math.degrees(th):.17g} {mu[i]:.12g}\n')
     os.replace(path + '.tmp', path)
 
 
@@ -513,6 +535,12 @@ def main():
         leaf.load_pool(cf, log)
 
     hist = []
+    _hj = os.path.join(RUNS, f't4_{a.TAG}.json')
+    if os.path.exists(_hj):                       # keep the trajectory across chunked restarts
+        try:
+            hist = json.load(open(_hj)).get('hist', [])
+        except Exception:
+            hist = []
 
     def value(kc, kw, tag):
         """row + clique generation to convergence; returns the trajectory's last record.
@@ -630,9 +658,18 @@ def main():
             keep = np.zeros(len(leaf.poses), bool)
             keep[:len(pmu)] = pmu > 1e-9                  # everything carrying mass survives
             room = a.pose_max - int(keep.sum())
-            if room > 0:
-                cand = np.nonzero(~keep)[0]
-                keep[cand[np.argsort(-rc_all[cand])[:room]]] = True
+            if room > 0:                                  # stratified, for the reason in `price`
+                preg = np.array(leaf.reg)
+                regs = sorted(set(int(v) for v in preg))
+                q = max(room // max(len(regs), 1), 1)
+                for rr in regs:
+                    w = np.nonzero((preg == rr) & ~keep)[0]
+                    if len(w):
+                        keep[w[np.argsort(-rc_all[w])[:q]]] = True
+                room2 = a.pose_max - int(keep.sum())
+                if room2 > 0:
+                    w = np.nonzero(~keep)[0]
+                    keep[w[np.argsort(-rc_all[w])[:room2]]] = True
             ndp = leaf.sift_poses(keep)
         log(f'   stage {stage}: +{nn} columns, -{ndp} sifted -> {len(leaf.poses)} '
             f'(pricing gap {gap:+.6f})')
