@@ -191,6 +191,57 @@ theorem packing_le_weight_regions
     rw [← Finset.sum_filter, Finset.sum_const, nsmul_eq_mul, mul_comm]
   simpa [hsum] using h
 
+/-- **Several regions, choice form.**  This is the hypothesis a *cell-based* verifier can actually
+discharge, and it is weaker than `packing_le_weight_regions`'s: it asks only that a square whose
+pose lies in `R j` capture `1 + lam j`, *separately for each* `j` containing the pose, i.e. that
+it capture `1 + max {lam j : pose ∈ R j}`.  The regions need be neither disjoint nor exhaustive.
+
+The conclusion is then relative to an arbitrary *assignment* `σ` of each square of the packing to
+one region containing its pose: `n + ∑ i, lam (σ i) ≤ W`.  So a certificate satisfying this
+hypothesis refutes the occupancy pattern `k` **for every tie-break at a region boundary at once**:
+a pose lying in two regions may be booked to either one, and the certificate is valid for both
+readings.  With disjoint regions `σ` is unique and this is `packing_le_weight_regions`.
+
+See `notes/branch-semantics.md`; `∑ i, lam (σ i) = ∑ j, lam j * #{i | σ i = j}` is
+`sum_assign_eq_sum_counts` below. -/
+theorem packing_le_weight_regions_choice
+    (A : Finset (ℝ × ℝ)) (w : ℝ × ℝ → ℝ) (hw : ∀ a ∈ A, 0 ≤ w a)
+    (C : Set (ℝ × ℝ)) (m : ℕ) (R : Fin m → ℝ × ℝ → ℝ → Prop) (lam : Fin m → ℝ)
+    (hcover : ∀ (c : ℝ × ℝ) (θ : ℝ), sq c θ 1 ⊆ C → ∀ j : Fin m, R j c θ →
+        1 + lam j ≤ ∑ a ∈ A.filter (fun a => a ∈ sq c θ 1), w a)
+    (n : ℕ) (L : ℝ) (hL : 1 < L) (ctr : Fin n → ℝ × ℝ) (ang : Fin n → ℝ)
+    (hin : ∀ i, sq (ctr i) (ang i) L ⊆ C)
+    (hdisj : ∀ i j, i ≠ j → Disjoint (sqInt (ctr i) (ang i) L) (sqInt (ctr j) (ang j) L))
+    (σ : Fin n → Fin m) (hσ : ∀ i, R (σ i) (ctr i) (ang i)) :
+    (n : ℝ) + ∑ i : Fin n, lam (σ i) ≤ ∑ a ∈ A, w a := by
+  -- the threshold form with `t` = the captured weight itself is a tautology, and gives
+  -- `∑ i, capture i ≤ W`
+  have h := packing_le_weight_thresh A w hw C
+    (fun c θ => ∑ a ∈ A.filter (fun a => a ∈ sq c θ 1), w a) (fun _ _ _ => le_rfl)
+    n L hL ctr ang hin hdisj
+  -- every unit square of the packing is inside `C` (the same step as in `packing_le_weight_thresh`)
+  have hIntSub : ∀ (c : ℝ × ℝ) (θ : ℝ), sqInt c θ L ⊆ sq c θ L := by
+    rintro c θ p ⟨h1, h2⟩; exact ⟨le_of_lt h1, le_of_lt h2⟩
+  have hU : ∀ i, sq (ctr i) (ang i) 1 ⊆ C := fun i =>
+    subset_trans (subset_trans (unit_subset_interior hL) (hIntSub _ _)) (hin i)
+  have h1 : ∑ i : Fin n, (1 + lam (σ i))
+      ≤ ∑ i : Fin n, ∑ a ∈ A.filter (fun a => a ∈ sq (ctr i) (ang i) 1), w a :=
+    Finset.sum_le_sum fun i _ => hcover (ctr i) (ang i) (hU i) (σ i) (hσ i)
+  have h2 : ∑ i : Fin n, ((1 : ℝ) + lam (σ i)) = (n : ℝ) + ∑ i : Fin n, lam (σ i) := by
+    rw [Finset.sum_add_distrib]; simp
+  linarith [h2 ▸ h1]
+
+/-- Bookkeeping: an assignment's total multiplier is the multipliers weighted by the counts. -/
+lemma sum_assign_eq_sum_counts {n m : ℕ} (lam : Fin m → ℝ) (σ : Fin n → Fin m) :
+    ∑ i : Fin n, lam (σ i)
+      = ∑ j : Fin m, lam j * (((univ : Finset (Fin n)).filter (fun i => σ i = j)).card : ℝ) := by
+  have e : ∀ i : Fin n, lam (σ i) = ∑ j : Fin m, (if σ i = j then lam j else 0) := by
+    intro i; simp
+  simp_rw [e]
+  rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun j _ => ?_
+  rw [← Finset.sum_filter, Finset.sum_const, nsmul_eq_mul, mul_comm]
+
 /-- **Cliques.**  A set of poses `K` is a *clique* if any two closed unit squares with poses in it
 share a point.  In a packing (pairwise disjoint interiors of `L`-squares, `L > 1`) at most one
 square has its pose in a clique: the concentric closed unit squares of two such squares would

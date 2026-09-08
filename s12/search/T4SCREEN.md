@@ -438,6 +438,13 @@ theorem, rules out an integral witness of mass 13.)
 
 ## 5. The obstacle: the leaf optimum sits on the slot boundary
 
+> **Follow-up, 2026-09-07 (`notes/branch-semantics.md` §3):** consequence 1 below is withdrawn.  The
+> verifier's straddling rule is "meet *every* adjacent region's threshold", which is sound for every
+> tie-break at once (`packing_le_weight_regions_choice`, Lean); no `1e-14` tie-break has to be
+> implemented, and the leaf values here *are* values of an LP a certificate can dualise.  What the
+> boundary mass does show is that the branch buys nothing on the mid-wall line — the packing side may
+> book that mass to whichever slot it likes — which is an argument for Design B on value grounds.
+
 `level2-design.md` §9 reassures that at `t = 4` "the sixteen grid poses sit `0.5` from every
 boundary, so the region membership tests are not zero-margin at the tight poses".  That is a
 statement about the *cover's* tight poses.  The **packing side's optimum goes to the boundary**.

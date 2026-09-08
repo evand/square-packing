@@ -1,0 +1,5 @@
+import Sqpack
+#print axioms SquarePacking.wall_strip_le_three
+#print axioms SquarePacking.wall_strip_le_three_of_packing
+#print axioms SquarePacking.packing_le_weight_regions_choice
+#print axioms SquarePacking.sum_assign_eq_sum_counts

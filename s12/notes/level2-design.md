@@ -163,7 +163,11 @@ absence; a comfortably negative maximum over a large search is evidence, not pro
 | interior `[1,2.98]^2` | 5 | +0.3951 | |
 | interior `[1,2.98]^2` | 6 | +0.0884 | `alpha(I) >= 6`; the interior gives no useful cap |
 
-**The one that matters is a classical lemma.**
+**The one that matters is a classical lemma.**  (**Proved and formalised, 2026-09-07**:
+`notes/chord-lemma.md`, Lean `wall_strip_le_three_of_packing` in `lean/Sqpack/Chord.lean`.  The
+sketch below is correct in outline; the write-up fixes the cut height to any
+`a ∈ [(3-√2)/2, √2-1/2]` and the chord bound to `>= 1`, not `> 1`, which is why closed
+disjointness — not interior disjointness — is the hypothesis at `t = 4`.)
 
 > **Wall-strip capacity.**  In a packing of squares of side `L > 1` inside `[0,t]^2` with `t <= 4`,
 > at most **3** squares have their centres within 1 of a given wall.
@@ -615,8 +619,9 @@ of `search/ZEROMARGIN.md`) and whether their tight poses are of the kinds it han
 
 ## 10. What to do
 
-1. Prove (or formalise) the wall-strip chord lemma.  It is worth a factor 3 in the tree and it is
-   the only new mathematics the design needs.
+1. ~~Prove (or formalise) the wall-strip chord lemma.~~  **Done** (2026-09-07):
+   `notes/chord-lemma.md`, Lean `wall_strip_le_three_of_packing`.  `notes/branch-semantics.md` §4
+   redoes the leaf enumeration with it, for every corner leaf and not only `k = 4`.
 2. Do not build a symmetric or per-wall level-2 branch: §1 shows the `k = 4` optimum is integral on
    both aggregates.
 3. Screen all 15 Design-A leaves with `search/level2_lp.py` on one shared model before committing
