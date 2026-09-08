@@ -69,8 +69,8 @@ class Hi:
     `self.pos` the inverse map; both are rebuilt after every deletion.
     """
 
-    def __init__(self, threads, log, solver='simplex'):
-        self.threads, self.log, self.solver = threads, log, solver
+    def __init__(self, threads, log, solver='simplex', tlim=300.0):
+        self.threads, self.log, self.solver, self.tlim = threads, log, solver, float(tlim)
         self.h = None
         self.ncols = 0
         self.rk = []
@@ -126,21 +126,30 @@ class Hi:
         if not self.basis:
             self.h.setOptionValue('solver', 'ipm')
             self.h.setOptionValue('run_crossover', 'on')
+            self.h.setOptionValue('time_limit', 1e30)
         else:
+            # A warm dual-simplex reoptimisation is usually seconds, but on this LP it sometimes
+            # does not terminate at all: after a model REBUILD the basis comes from an interior
+            # point crossover, and appending rows to it can send the simplex into a degenerate
+            # crawl (measured: 25+ minutes against 4 s for the same model built incrementally).
+            # Cap it and fall back to the interior point solver, which is slower but bounded.
             self.h.setOptionValue('solver', self.solver)
+            self.h.setOptionValue('time_limit', self.tlim)
         st = self.h.run()
         ms = self.h.getModelStatus()
         if ms == self.hp.HighsModelStatus.kOptimal:
             self.basis = True
         if ms != self.hp.HighsModelStatus.kOptimal:
-            self.log(f'   [HiGHS {self.solver} -> {ms}; retrying ipm+crossover]')
+            self.log(f'   [HiGHS {self.solver} -> {ms} after {self.tlim:.0f}s; ipm+crossover]')
             self.h.setOptionValue('solver', 'ipm')
             self.h.setOptionValue('run_crossover', 'on')
+            self.h.setOptionValue('time_limit', 1e30)
             self.h.run()
             self.h.setOptionValue('solver', self.solver)
             ms = self.h.getModelStatus()
             if ms != self.hp.HighsModelStatus.kOptimal:
                 return None
+            self.basis = True
         sol = self.h.getSolution()
         info = self.h.getInfo()
         self.iters = int(info.simplex_iteration_count)
@@ -154,13 +163,13 @@ class BLeaf(T4.CLeaf):
     """`t4screen.CLeaf` with boundary duplication, chord rows and the HiGHS backend."""
 
     def __init__(self, t, r, lib, threads, log, D=1000000, delta=1e-6, chord=True,
-                 backend='highs', hs_solver='simplex'):
+                 backend='highs', hs_solver='simplex', lp_tlim=300.0):
         super().__init__(t, r, lib, threads, log, D=D)
         self.delta = float(delta)
         self.chord = bool(chord)
         self.gkey = []                        # pose key of each COLUMN (duplicates share one)
         self.backend = backend
-        self.hi = Hi(threads, log, hs_solver) if backend == 'highs' else None
+        self.hi = Hi(threads, log, hs_solver, lp_tlim) if backend == 'highs' else None
         self.hi_pattern = None                # (tuple(kc), tuple(kw)) currently in the model
         self.hi_npts = 0
         self.hi_cq = []                       # clique keys currently in the model, in model order
@@ -517,6 +526,8 @@ def main():
     ap.add_argument('--method', default='highs-ipm', help='scipy backend only')
     ap.add_argument('--backend', default='highs', choices=('highs', 'scipy'))
     ap.add_argument('--hs-solver', default='simplex', choices=('simplex', 'ipm'))
+    ap.add_argument('--lp-tlim', type=float, default=300.0,
+                    help='seconds before a warm simplex solve is abandoned for ipm+crossover')
     ap.add_argument('--threads', type=int, default=4)
     ap.add_argument('--time', type=float, default=21000)
     ap.add_argument('--ckpt-secs', type=float, default=600, help='checkpoint at least this often')
@@ -566,7 +577,7 @@ def main():
     T0 = time.time()
     lib = pd.build_lib()
     leaf = BLeaf(t, a.r, lib, a.threads, log, D=a.D, delta=a.bnd_delta, chord=a.chord,
-                 backend=a.backend, hs_solver=a.hs_solver)
+                 backend=a.backend, hs_solver=a.hs_solver, lp_tlim=a.lp_tlim)
     kc = [None if c == '.' else float(c) for c in a.corners]
     log(f'# t4leaf t={t} r={a.r} corners={a.corners} patterns={a.patterns} chord={a.chord} '
         f'bnd_delta={a.bnd_delta} backend={a.backend} args={vars(a)}')
