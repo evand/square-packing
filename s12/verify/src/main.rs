@@ -1230,6 +1230,15 @@ fn main() {
     let mut kk: i128 = 0;
     if sym { while (kk + bigN)*(kk + bigN) < 2*bigN*bigN { kk += 1; } } else { kk = bigN; }
     println!("angles: k=0..{} (N={}), covering {}", kk, bigN, if sym {"[0,45deg]"} else {"[0,90deg]"});
+    // VERIFY_BINS=lo:hi (diagnostic only): sweep only the bins lo..=hi.  Such a run is PARTIAL and can
+    // never print VERIFIED; it exists to time and profile individual bins.
+    let (kb_lo, kb_hi): (usize, usize) = match env::var("VERIFY_BINS") {
+        Ok(v) => { let p: Vec<usize> = v.split(':').map(|x| x.trim().parse::<usize>().unwrap_or_else(|_| die("VERIFY_BINS must be lo:hi".to_string()))).collect();
+                   if p.len() != 2 || p[0] > p[1] || p[1] >= kk as usize { die(format!("VERIFY_BINS must be lo:hi with 0 <= lo <= hi < {}", kk)); } (p[0], p[1]) }
+        Err(_) => (0, kk as usize - 1) };
+    let partial = kb_lo != 0 || kb_hi != kk as usize - 1;
+    if partial { println!("PARTIAL RUN: VERIFY_BINS={}:{} -- only these bins are swept; this run cannot verify anything", kb_lo, kb_hi); }
+    let nbins = kb_hi - kb_lo + 1;
     let bad = Arc::new(AtomicI64::new(0));
     let minw = Arc::new(std::sync::Mutex::new((i128::MAX, 0i128)));
     // VERIFY_STATS: a one-line size/shape summary of the sweep on STDERR after the verdict
@@ -1245,14 +1254,15 @@ fn main() {
     });
     let cert = Arc::new(cert);
     let mut hs = Vec::new();
-    let chunk = (kk as usize + threads) / threads;
+    let chunk = (nbins + threads - 1) / threads;
     for t in 0..threads {
         let cert = cert.clone(); let bad = bad.clone(); let minw = minw.clone(); let out = out.clone();
         let tight_out = tight_out.clone(); let tight_count = tight_count.clone(); let tight_written = tight_written.clone();
         let per_bin = per_bin.clone(); let stats = stats.clone();
         hs.push(thread::spawn(move || {
-            for k in (t*chunk)..(((t+1)*chunk).min(kk as usize)) {
-                let k = k as i128;
+            let t_thr = std::time::Instant::now();
+            for kb in (t*chunk)..(((t+1)*chunk).min(nbins)) {
+                let k = (kb_lo + kb) as i128;
                 let (c0,s0,g0) = (bigN*bigN - k*k, 2*k*bigN, bigN*bigN + k*k);
                 let k2 = k+1;
                 let (c1,s1,g1) = (bigN*bigN - k2*k2, 2*k2*bigN, bigN*bigN + k2*k2);
@@ -1308,6 +1318,7 @@ fn main() {
                 drop(mg);
                 if v < cert.wd { bad.fetch_add(1, Ordering::Relaxed); if topk==0 && bad.load(Ordering::Relaxed)<8 { println!("  FAIL at angle k={}: covered {}/{}", k, v, cert.wd); } }
             }
+            if stats_on { eprintln!("VERIFY_STATS thread {} bins {}..{} wall {:.1}s", t, kb_lo + t*chunk, kb_lo + ((t+1)*chunk).min(nbins), t_thr.elapsed().as_secs_f64()); }
         }));
     }
     for h in hs { h.join().unwrap(); }
@@ -1331,7 +1342,9 @@ fn main() {
     } else {
         println!("min covered weight over ALL placements = {}/{} = {:.6}  (at angle k={})", mg.0, cert.wd, mg.0 as f64/cert.wd as f64, mg.1);
     }
-    if bad.load(Ordering::Relaxed)==0 && weight_ok {
+    if partial {
+        println!("NOT VERIFIED (PARTIAL RUN: only bins {}..{} of 0..{} were swept)", kb_lo, kb_hi, kk - 1);
+    } else if bad.load(Ordering::Relaxed)==0 && weight_ok {
         match &cert.region {
             None => println!("VERIFIED: every CLOSED unit square inside C covers weight >= 1{}, and total weight < {}.\n==> {} unit squares cannot be packed into any square of side < {}/{} = {:.9},\n    i.e.  s({}) >= {:.9}",
                              if has_cl {" (points plus cliques)"} else {""}, nn, nn, cert.s_num, cert.s_den, cert.s_num as f64/cert.s_den as f64, nn, cert.s_num as f64/cert.s_den as f64),
