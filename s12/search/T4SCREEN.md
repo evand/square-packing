@@ -583,7 +583,7 @@ reached, and the number that matters for it:
 | `U40`, `P40` | pure, cliques | 4 / 2 stages, LP `12.12 – 12.20` |
 | `C98` | the `t = 3.98` calibration | 1 stage, LP `11.79`, matched pure `11.90`, both `<= 11.96` ✓ |
 | `INT40`, `INTP` | the interior alone | `4.000000` (converged, unrefined) → **`7.528038`** (converged, 21 pricing stages) → `7.583`, still rising |
-| `S01010101` | follow-up 2: the hardest leaf warm-started from `INTP`'s refined interior poses (38 745 poses, row ageing off) | 3 iterates, `12.000000, 12.000000, 11.949104` with `M` falling `2.65 -> 2.00 -> 1.42` — the row generation had not caught up, so `11.949` is an upper bound on the restricted value and a bound on nothing.  **Left running.**  Note the chunking failure mode it exposes: at `240 s` per LP a `450 s` chunk never completes a stage, so it never checkpoints and the next chunk starts over.  Give this run one long process, not chunks. |
+| `S01010101` | follow-up 2: the hardest leaf warm-started from `INTP`'s refined interior poses (38 745 poses, row ageing off) | chunk 1: `12.000000, 12.000000, 11.949104`, `M` falling `2.65 -> 2.00 -> 1.42`; chunk 2 (39 454 poses, from scratch): `12.000000, 11.985510`, `M` `2.39 -> 1.57`.  The row generation never caught up, so every one of these is an upper bound on the restricted value and a bound on nothing.  **Left running.**  It exposes a chunking failure mode: at `100 – 310 s` per LP a `450 s` chunk never completes a stage, so it never checkpoints and the next chunk starts over.  Give this run one long process, not chunks. |
 
 Nothing here is a certificate, an exact computation, or a bound on `V(4)` in the decisive
 direction.  What is exact: the `12.163061` pure reference (`DUAL.md`), the `s(13) = 4` and
