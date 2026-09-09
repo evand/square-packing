@@ -192,8 +192,10 @@ def _parse_t(text):
     return None
 
 
-def read_measure(path, t_override=None):
-    """-> (t, sym, [(p, q, cx, cy, mass)])  with exact Fraction cx, cy, mass"""
+def read_measure(path, t_override=None, labels=None):
+    """-> (t, sym, [(p, q, cx, cy, mass)])  with exact Fraction cx, cy, mass.  A trailing
+    `# LABEL` on a pose line (written by `snap` from a t4leaf measure file) is the region the
+    LP booked the pose to; with `labels` a list, it receives that name per pose (None if absent)."""
     t = None
     sym = None
     poses = []
@@ -217,13 +219,17 @@ def read_measure(path, t_override=None):
                         except ValueError:
                             pass
             continue
-        q = s.split()
+        body, _, comment = s.partition('#')
+        q = body.split()
         if q[0] == 't':
             t = Fr(q[1]) if '/' in q[1] else Fr(int(q[1]))
         elif q[0] == 'sym':
             sym = int(q[1])
         elif q[0] == 'pose' and len(q) == 6:
             poses.append((int(q[1]), int(q[2]), Fr(q[3]), Fr(q[4]), Fr(q[5])))
+            if labels is not None:
+                c = comment.split()
+                labels.append(c[0] if len(c) == 1 and c[0][0] in 'CWIQ' else None)
         elif q[0] == 'pose':
             raise SystemExit(f'{path}: `pose` line with {len(q)-1} fields; this reader needs the '
                              f'exact form `pose p q cx cy mass` (use `leaf_ceiling.py snap` first)')
@@ -503,9 +509,11 @@ def max_coverage(Inc, squares, DM):
 
 
 # ============================================================================ (c) region masses
-def region_boxes(t, r):
+def region_boxes(t, r, quad=False):
     """the 13 closed regions of a level-2 leaf as (label, xlo, xhi, ylo, yhi), exact Fractions.
-    Numbering follows `search/level2_regions.classify`."""
+    Numbering follows `search/level2_regions.classify`.  With `quad`, also the four closed
+    quadrants Q0..Q3 of the interior (`search/DEPTH.md`; `t4leaf.py --quad`), which overlap the
+    interior box I and each other on their boundaries -- `regions_of` handles that."""
     h = t / 2
     lo, hi = Fr(r), t - Fr(r)
     B = []
@@ -522,14 +530,21 @@ def region_boxes(t, r):
     B.append(('W6', Fr(0), lo, h, hi))
     B.append(('W7', Fr(0), lo, lo, h))
     B.append(('I', lo, hi, lo, hi))
+    if quad:
+        B.append(('Q0', lo, h, lo, h))
+        B.append(('Q1', h, hi, lo, h))
+        B.append(('Q2', lo, h, h, hi))
+        B.append(('Q3', h, hi, h, hi))
     return B
 
 
 def region_targets(t, args):
-    """{label: Fraction} from --corners / --patterns ('.' = the region is free)"""
+    """{label: Fraction} from --corners / --patterns ('.' = the region is free), plus the
+    quadrant counts of --quad when --quad-mode is eq (the caps of the le mode are `region_caps`)"""
     cs = getattr(args, 'corners', None)
     ps = getattr(args, 'patterns', None)
-    if not cs and not ps:
+    qs = getattr(args, 'quad', None)
+    if not cs and not ps and not qs:
         return None
     out = {}
     for i, ch in enumerate(cs or '....'):
@@ -538,6 +553,22 @@ def region_targets(t, args):
     for j, ch in enumerate(ps or '........'):
         if ch.isdigit():
             out[f'W{j}'] = Fr(int(ch))
+    if qs and getattr(args, 'quad_mode', 'eq') == 'eq':
+        for i, ch in enumerate(qs):
+            if ch.isdigit():
+                out[f'Q{i}'] = Fr(int(ch))
+    return out or None
+
+
+def region_caps(args):
+    """{label: Fraction} upper bounds: the quadrant counts of --quad in --quad-mode le"""
+    qs = getattr(args, 'quad', None)
+    if not qs or getattr(args, 'quad_mode', 'eq') != 'le':
+        return None
+    out = {}
+    for i, ch in enumerate(qs):
+        if ch.isdigit():
+            out[f'Q{i}'] = Fr(int(ch))
     return out or None
 
 
@@ -547,23 +578,42 @@ def regions_of(cx, cy, boxes):
     return [lab for (lab, x0, x1, y0, y1) in boxes if x0 <= cx <= x1 and y0 <= cy <= y1]
 
 
-def region_report(squares_meta, boxes, target, DM):
+def region_report(squares_meta, boxes, target, DM, caps=None, booked=None):
     """squares_meta: [(cx, cy, mass_int)].  target: {label: Fraction} for the labels that are
-    pinned.  Returns (ok, assigned_masses, ambiguous, note)."""
+    pinned; caps: {label: Fraction} for the labels that are bounded above (the quadrant cap
+    relaxation); booked: an optional label per square, the region the LP declared it in, which
+    is then taken as its assignment (it must be one of the regions containing the centre).
+    Returns (ok, assigned_masses, ambiguous, note).
+
+    With the quadrant boxes present a centre lies in the interior box I AND in one or more of
+    Q0..Q3: the quadrants refine I, so the assignment is to a quadrant (or to a frame region on
+    the frame boundary) and I is credited alongside.  `regions_of` therefore returns the labels
+    of the finest boxes only, when a quadrant is among them."""
+    has_q = any(lab.startswith('Q') for (lab, *_) in boxes)
     forced = {lab: 0 for (lab, *_ ) in boxes}
     amb = []
-    for (cx, cy, m) in squares_meta:
+    for k, (cx, cy, m) in enumerate(squares_meta):
         labs = regions_of(cx, cy, boxes)
         assert labs, f'centre ({cx}, {cy}) is in no region'
+        if has_q and 'I' in labs and any(l.startswith('Q') for l in labs):
+            labs = [l for l in labs if l != 'I']
+        if booked is not None and booked[k] is not None:
+            assert booked[k] in labs, f'pose {k} booked to {booked[k]} but its centre is in {labs}'
+            labs = [booked[k]]
         if len(labs) == 1:
             forced[labs[0]] += m
         else:
             amb.append((m, labs, cx, cy))
-    if target is None:
+    if has_q:
+        forced['I'] = sum(forced[f'Q{i}'] for i in range(4))
+    if target is None and caps is None:
         return True, forced, amb, 'no region equalities requested'
-    tgt = {lab: int(v * DM) for lab, v in target.items()}
-    for lab, v in target.items():
+    tgt = {lab: int(v * DM) for lab, v in (target or {}).items()}
+    cap = {lab: int(v * DM) for lab, v in (caps or {}).items()}
+    for lab, v in (target or {}).items():
         assert Fr(tgt[lab], DM) == v, 'region target is not a multiple of 1/DM'
+    for lab, v in (caps or {}).items():
+        assert Fr(cap[lab], DM) == v, 'region cap is not a multiple of 1/DM'
     # exact search over the assignment of the ambiguous poses (few, and each has <= 4 choices)
     labs_pinned = sorted(tgt)
     order = sorted(range(len(amb)), key=lambda i: -amb[i][0])
@@ -576,38 +626,43 @@ def region_report(squares_meta, boxes, target, DM):
         if best[0] is not None:
             return
         if i == len(amb):
-            if all(cur.get(lab, 0) == tgt[lab] for lab in labs_pinned):
+            if all(cur.get(lab, 0) == tgt[lab] for lab in labs_pinned) and \
+               all(cur.get(lab, 0) <= cap[lab] for lab in cap):
                 best[0] = dict(cur)
             return
         deficit = sum(max(0, tgt[lab] - cur.get(lab, 0)) for lab in labs_pinned)
         if deficit > rest[i]:
             return
-        for lab in labs_pinned + [None]:
-            m, labs, _, _ = amb[order[i]]
-            if lab is None:
-                for l2 in labs:
-                    if l2 not in tgt:
-                        cur[l2] = cur.get(l2, 0) + m
-                        rec(i + 1, cur)
-                        cur[l2] -= m
-                        if best[0] is not None:
-                            return
-                        break
-                continue
-            if lab not in labs:
-                continue
-            if cur.get(lab, 0) + m > tgt[lab]:
-                continue
+        m, labs, _, _ = amb[order[i]]
+        seen_free = False
+        for lab in labs:
+            if lab in tgt:
+                if cur.get(lab, 0) + m > tgt[lab]:
+                    continue
+            elif lab in cap:
+                if cur.get(lab, 0) + m > cap[lab]:
+                    continue
+            else:
+                if seen_free:                # free labels are interchangeable for the check
+                    continue
+                seen_free = True
             cur[lab] = cur.get(lab, 0) + m
             rec(i + 1, cur)
             cur[lab] -= m
             if best[0] is not None:
                 return
 
-    rec(0, dict(forced))
+    start = dict(forced)
+    if any(start.get(lab, 0) > cap[lab] for lab in cap) or \
+       any(start.get(lab, 0) > tgt[lab] for lab in tgt):
+        return False, forced, amb, 'the unambiguous poses alone exceed a region target or cap'
+    rec(0, start)
     if best[0] is None:
         return False, forced, amb, 'no assignment of the boundary poses meets the region targets'
-    return True, best[0], amb, 'assignment found'
+    asg = best[0]
+    if has_q:
+        asg['I'] = sum(asg.get(f'Q{i}', 0) for i in range(4))
+    return True, asg, amb, 'assignment found'
 
 
 # ============================================================================ (b) anchor cliques
@@ -1151,8 +1206,13 @@ def exhaust(squares, Inc, DM, w, V, t, budget, incumbent=None, verbose=True, nbr
 def certify(args):
     global LOG
     t_all = time.time()
-    t, sym, poses = read_measure(args.FILE, Fr(args.t) if args.t else None)
+    booked0 = []
+    t, sym, poses = read_measure(args.FILE, Fr(args.t) if args.t else None, booked0)
     squares, DM, pose_of = build_squares(t, sym, poses)
+    # bookings per SQUARE (a D4-symmetrised file has none; a flat file may)
+    booked = None
+    if sym == 1 and booked0 and any(b is not None for b in booked0):
+        booked = [booked0[k] for k in pose_of]
     mass = Fr(sum(s[8] for s in squares), DM)
     log(f"leaf_ceiling: {args.FILE}")
     log(f"  t = {t} = {float(t):.6f}; sym = {sym}; {len(poses)} poses -> {len(squares)} squares "
@@ -1175,20 +1235,25 @@ def certify(args):
 
     # ---------------------------------------------------------------- (c) regions
     meta = [(Fr(s[0], s[2]), Fr(s[1], s[2]), s[8]) for s in squares]
-    boxes = region_boxes(t, Fr(args.r))
+    boxes = region_boxes(t, Fr(args.r), quad=bool(getattr(args, 'quad', None)))
     target = region_targets(t, args)
-    ok, assigned, amb, note = region_report(meta, boxes, target, DM)
+    caps = region_caps(args)
+    ok, assigned, amb, note = region_report(meta, boxes, target, DM, caps, booked)
+    if booked is not None:
+        note += f' (bookings of the file honoured for {sum(b is not None for b in booked)} squares)'
     labs = [b[0] for b in boxes]
     log(f"  (c) REGIONS   " + "  ".join(
         f"{lab}={float(Fr(assigned.get(lab, 0), DM)):.6f}" for lab in labs))
     log(f"                {len(amb)} poses with the centre on a region boundary "
         f"(mass {float(Fr(sum(a[0] for a in amb), DM)):.6f}); {note}")
-    if target:
-        log(f"      targets {', '.join(f'{k}={v}' for k, v in sorted(target.items()))}: "
-            f"{'OK' if ok else 'FAIL'}")
+    if target or caps:
+        log(f"      targets {', '.join(f'{k}={v}' for k, v in sorted((target or {}).items()))}"
+            + (f"  caps {', '.join(f'{k}<={v}' for k, v in sorted(caps.items()))}" if caps else '')
+            + f": {'OK' if ok else 'FAIL'}")
     res.update(regions={lab: str(Fr(assigned.get(lab, 0), DM)) for lab in labs},
                regions_ok=bool(ok), ambiguous=len(amb),
-               region_target={k: str(v) for k, v in (target or {}).items()})
+               region_target={k: str(v) for k, v in (target or {}).items()},
+               region_cap={k: str(v) for k, v in (caps or {}).items()})
     chord_ok = None
     if args.chord:
         # mu(wall strip) for the four strips [0,t]x[0,r] and images
@@ -1324,8 +1389,15 @@ def snap_pose(cx, cy, th_rad, t, Q, Dc):
     return p, q, x, y
 
 
-def read_float_poses(path):
-    """`pose cx cy theta_deg mu` (t4screen / packing_dual support files)"""
+REGION_NAMES = ['C0', 'C1', 'C2', 'C3', 'W0', 'W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'I']
+
+
+def read_float_poses(path, labels=None, quad=False):
+    """`pose cx cy theta_deg mu` (t4screen / packing_dual support files).  A `t4leaf.py`
+    measure file carries `# region N` after each pose -- the region the LP BOOKED that column to
+    (`N` = 0..3 corner box, 4..11 slot, 12 interior, or 12..15 the interior quadrant Q0..Q3 when
+    the run had `--quad`, which `quad` says); if `labels` is a list it receives that name per
+    pose (None when absent)."""
     out = []
     t = None
     for line in open(path):
@@ -1338,26 +1410,76 @@ def read_float_poses(path):
                     except ValueError:
                         pass
             continue
-        q = s.split()
+        body, _, comment = s.partition('#')
+        q = body.split()
         if q and q[0] == 'pose' and len(q) == 5:
             out.append((float(q[1]), float(q[2]), math.radians(float(q[3])), float(q[4])))
+            if labels is not None:
+                c = comment.split()
+                lab = None
+                if len(c) >= 2 and c[0] == 'region' and c[1].isdigit():
+                    n = int(c[1])
+                    lab = REGION_NAMES[n] if n < 12 else (f'Q{n - 12}' if quad else 'I')
+                labels.append(lab)
     return t, out
 
 
 def cmd_snap(args):
     t = Fr(args.t)
-    tf, src = read_float_poses(args.FILE)
-    src = [z for z in src if z[3] > 1e-12]
+    labs0 = []
+    tf, src = read_float_poses(args.FILE, labs0, quad=bool(getattr(args, 'quad', None)))
+    keep = [i for i, z in enumerate(src) if z[3] > 1e-12]
+    src = [src[i] for i in keep]
+    labs0 = [labs0[i] for i in keep]
+    # the LP's own booking of each column (CHOICE semantics, notes/branch-semantics.md 3.3): with
+    # it, a boundary pose counts in the one region the LP declared it in, exactly as `check`'s
+    # assignment search would let it; without it, it counts in every region containing its
+    # centre (the sum semantics, a restriction).  Used only when every pose carries a label.
+    booked = labs0 if (labs0 and all(l is not None for l in labs0) and not args.no_labels) else None
     log(f"snap: {len(src)} float poses with positive mass from {args.FILE}; t = {t}; "
-        f"Q = {args.Q}, Dc = {args.Dc}, DM = {args.DM}")
+        f"Q = {args.Q}, Dc = {args.Dc}, DM = {args.DM}; region labels "
+        f"{'used (choice semantics)' if booked else 'absent (sum semantics on boundary poses)'}")
     poses = []
     dmax = 0.0
-    for cx, cy, th, mu in src:
+    boxes_b = region_boxes(t, Fr(args.r), quad=bool(getattr(args, 'quad', None)))
+    bvals = (Fr(args.r), t / 2, t - Fr(args.r))
+    nmoved = 0
+    for i, (cx, cy, th, mu) in enumerate(src):
         p, q, x, y = snap_pose(cx, cy, th, t, args.Q, args.Dc)
+        if booked is not None:
+            # `t4leaf.py` books a pose WITHIN --bnd-delta of a region boundary to either side
+            # (T4LEAF.md 1.1); exact arithmetic sees one side only.  Put such a centre ON the
+            # boundary, exactly -- a displacement <= delta whose effect on coverage the exact
+            # check below measures -- and only then insist that the booking is consistent.
+            labs = regions_of(x, y, boxes_b)
+            if booked[i] not in labs:
+                x2, y2 = x, y
+                for bv in bvals:
+                    if abs(x - bv) <= args.bnd_delta:
+                        x2 = bv
+                    if abs(y - bv) <= args.bnd_delta:
+                        y2 = bv
+                if booked[i] in regions_of(x2, y2, boxes_b):
+                    x, y = x2, y2
+                    nmoved += 1
+                else:
+                    raise SystemExit(f'pose {i} at ({float(x):.9f}, {float(y):.9f}) is booked to '
+                                     f'{booked[i]} but lies in {labs} (more than {args.bnd_delta} '
+                                     f'from a boundary)')
         a, b, r = cos_sin(p, q)
         dmax = max(dmax, abs(math.atan2(b, a) - th), abs(float(x) - cx), abs(float(y) - cy))
         poses.append((p, q, x, y, mu))
-    log(f"  max snap displacement (angle rad / centre): {dmax:.2e}")
+    log(f"  max snap displacement (angle rad / centre): {dmax:.2e}"
+        + (f"; {nmoved} centres within {args.bnd_delta:g} of a boundary moved onto it to match "
+           f"their booking" if nmoved else ''))
+
+    def in_region(i, lab, boxes):
+        """does pose i count in region `lab`?  by its booking when known (a quadrant booking
+        also counts in I), else by its centre"""
+        if booked is not None:
+            b = booked[i]
+            return b == lab or (lab == 'I' and b.startswith('Q'))
+        return lab in regions_of(poses[i][2], poses[i][3], boxes)
     squares, _, _ = build_squares(t, 1, [(p, q, x, y, Fr(1)) for (p, q, x, y, _) in poses], DM=1)
     log(f"  {len(squares)} squares, all exactly admissible")
     V = enumerate_vertices(squares, t, procs=args.procs)
@@ -1374,20 +1496,38 @@ def cmd_snap(args):
         # (Lemma 1): the LP value is a value the poses really attain, not an over-estimate on a
         # sampled row set.  Floats only CHOOSE the masses; everything is re-checked exactly below.
         from scipy.optimize import linprog
+        import scipy.sparse as sps
         Aeq = beq = None
+        Acap = None
+        bcap = np.zeros(0)
         tgt0 = region_targets(t, args)
+        cap0 = region_caps(args)
+        boxes0 = region_boxes(t, Fr(args.r), quad=bool(getattr(args, 'quad', None)))
+        # a pose whose centre lies on a region boundary counts in EVERY region containing it
+        # here (the sum semantics): a restriction of the choice semantics, so the polished value
+        # is a value the measure attains under either reading
         if tgt0:
-            boxes0 = region_boxes(t, Fr(args.r))
             erows = []
             vals = []
             for lab, kv in sorted(tgt0.items()):
-                erows.append(np.array([1.0 if lab in regions_of(x, y, boxes0) else 0.0
-                                       for (p, q, x, y, _) in poses]))
+                erows.append(np.array([1.0 if in_region(i, lab, boxes0) else 0.0
+                                       for i in range(len(poses))]))
                 vals.append(float(kv))
             Aeq = np.array(erows)
             beq = np.array(vals)
             log(f"  polish: {len(vals)} region equalities "
                 + ", ".join(f"{k}={v}" for k, v in sorted(tgt0.items())))
+        if cap0:
+            crows = []
+            cvals = []
+            for lab, kv in sorted(cap0.items()):
+                crows.append(np.array([1.0 if in_region(i, lab, boxes0) else 0.0
+                                       for i in range(len(poses))]))
+                cvals.append(float(kv))
+            Acap = sps.csr_matrix(np.array(crows))
+            bcap = np.array(cvals)
+            log(f"  polish: {len(cvals)} region caps "
+                + ", ".join(f"{k}<={v}" for k, v in sorted(cap0.items())))
         # ROW GENERATION over the EXACT vertex set.  The vertex set is complete for every
         # sub-measure of this pose set (Lemma 1), so when no vertex is violated the LP value is a
         # value the poses really attain -- and the whole vertex set (10^5-10^6 rows, 10^8
@@ -1399,8 +1539,11 @@ def cmd_snap(args):
         rows = np.unique(np.concatenate(rows))
         for it in range(args.polish_rounds):
             A = Inc.to_csr(rows)
-            res = linprog(-np.ones(len(poses)), A_ub=A,
-                          b_ub=np.full(A.shape[0], 1.0 - args.margin),
+            b = np.full(A.shape[0], 1.0 - args.margin)
+            if Acap is not None:
+                A = sps.vstack([Acap, A], format='csr')
+                b = np.concatenate([bcap, b])
+            res = linprog(-np.ones(len(poses)), A_ub=A, b_ub=b,
                           A_eq=Aeq, b_eq=beq, bounds=(0, None), method='highs')
             if res.status != 0:
                 log(f"  polish {it}: LP failed ({res.message}); keeping the previous masses")
@@ -1434,13 +1577,12 @@ def cmd_snap(args):
     # (1 - cov(v)), and adding d <= slack_i to pose i keeps coverage <= 1 exactly.
     target = region_targets(t, args)
     if target:
-        boxes = region_boxes(t, Fr(args.r))
+        boxes = region_boxes(t, Fr(args.r), quad=bool(getattr(args, 'quad', None)))
         cap = int(DM)                       # 1 unit of mass, in integer units
         for lab, kv in sorted(target.items()):
             want = int(kv * DM)
             assert Fr(want, DM) == kv
-            idx = [i for i, (p, q, x, y, _) in enumerate(poses)
-                   if lab in regions_of(x, y, boxes)]
+            idx = [i for i in range(len(poses)) if in_region(i, lab, boxes)]
             have = sum(MU[i] for i in idx)
             d = want - have
             if d == 0:
@@ -1448,7 +1590,8 @@ def cmd_snap(args):
                 continue
             if d < 0:
                 # too much: take it off the heaviest pose that is only in this region
-                only = [i for i in idx if regions_of(poses[i][2], poses[i][3], boxes) == [lab]]
+                only = [i for i in idx if booked is not None
+                        or regions_of(poses[i][2], poses[i][3], boxes) == [lab]]
                 for i in sorted(only, key=lambda i: -MU[i]):
                     take = min(MU[i], -d)
                     MU[i] -= take
@@ -1483,15 +1626,25 @@ def cmd_snap(args):
         M = Fr(int(cov.max()), DM)
         log(f"  after region top-up: mass {sum(MU) / DM:.9f}, exact M = {float(M):.12f}")
         assert M <= 1
+    caps_out = region_caps(args)
+    if caps_out:
+        # rounding down and the top-up (which only touches pinned regions) keep every cap; say so
+        boxes = region_boxes(t, Fr(args.r), quad=True)
+        for lab, kv in sorted(caps_out.items()):
+            have = Fr(sum(MU[i] for i in range(len(poses)) if in_region(i, lab, boxes)), DM)
+            log(f"  region {lab}: {float(have):.9f} <= {kv} {'OK' if have <= kv else 'FAIL'}")
+            assert have <= kv
 
     with open(args.out, 'w') as f:
         f.write(f"# leaf_ceiling measure; t = {t}; sym 1; snapped from "
                 f"{os.path.basename(args.FILE)} (Q={args.Q}, Dc={args.Dc}, DM={DM})\n")
         f.write(f"# mass = {Fr(sum(MU), DM)} = {sum(MU) / DM:.12f}; M = {M}\n")
-        f.write("# pose p q cx cy mass : theta = 2 arctan(p/q)\n")
-        for (p, q, x, y, _), m in zip(poses, MU):
+        f.write("# pose p q cx cy mass : theta = 2 arctan(p/q)"
+                + ("   # region = the LP's booking\n" if booked else "\n"))
+        for i, ((p, q, x, y, _), m) in enumerate(zip(poses, MU)):
             if m > 0:
-                f.write(f"pose {p} {q} {x} {y} {Fr(m, DM)}\n")
+                f.write(f"pose {p} {q} {x} {y} {Fr(m, DM)}"
+                        + (f"   # {booked[i]}\n" if booked else "\n"))
     log(f"  wrote {args.out}: {sum(1 for m in MU if m > 0)} poses, mass {sum(MU) / DM:.9f}")
 
 
@@ -1659,6 +1812,10 @@ def main():
     c.add_argument('--r', default='1')
     c.add_argument('--corners', default=None, help="e.g. 1111 ('.' = free)")
     c.add_argument('--patterns', default=None, help="e.g. 01010101 ('.' = free)")
+    c.add_argument('--quad', default=None,
+                   help="interior quadrant counts Q0..Q3, e.g. 1111 ('.' = free); search/DEPTH.md")
+    c.add_argument('--quad-mode', default='eq', choices=['eq', 'le'],
+                   help='eq: mu(Q_i) = q_i;  le: mu(Q_i) <= q_i (the cap relaxation)')
     c.add_argument('--chord', action='store_true', help='also check mu(wall strip) <= 3')
     c.add_argument('--anchor', default='all', choices=['none', 'scan', 'exhaust', 'clique', 'all'])
     c.add_argument('--budget', type=float, default=1800.0, help='seconds for the exhaustive search')
@@ -1693,6 +1850,13 @@ def main():
     s.add_argument('--row-cap', type=int, default=20000, help='rows added per polish round')
     s.add_argument('--polish-rounds', type=int, default=30)
     s.add_argument('--patterns', default=None, help="region top-up target, e.g. 01010101")
+    s.add_argument('--quad', default=None, help="interior quadrant counts Q0..Q3, e.g. 1111")
+    s.add_argument('--quad-mode', default='eq', choices=['eq', 'le'],
+                   help='eq: equalities (polished and topped up);  le: caps (polished only)')
+    s.add_argument('--no-labels', action='store_true',
+                   help='ignore the `# region N` bookings of a t4leaf measure file (sum semantics)')
+    s.add_argument('--bnd-delta', type=float, default=1e-6,
+                   help='a booked centre within this of a region boundary is moved onto it')
     s.add_argument('--log', default=None)
 
     sub.add_parser('selftest')
