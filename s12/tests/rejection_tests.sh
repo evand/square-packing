@@ -508,5 +508,111 @@ checkN "  ...clique weight zeroed: covering breaks" REJECT  $T/t28a.txt 12 6000
 sed 's/^anchorP 1375 3875 1994$/anchorP 1475 3875 1994/' "$A" > $T/t28b.txt
 checkN "  ...anchor point displaced by 0.05"        REJECT  $T/t28b.txt 12 6000
 
+echo "-- verifier speed-up (search/VERIFYSPEED.md): the three levers must not over-credit"
+expect_not_out() {  # name, grep pattern that must NOT appear in the LAST output
+  if grep -q -- "$2" "$LAST"; then bad "$1" "seen" "'$2' absent"; else ok "$1" "absent"; fi
+}
+# 29. LEVER 1, the [0,45] reduction with an anchor block.  Test 8's family again: the scaled
+#     56-point set fails only at 39.8 deg (four rotated families) and is repaired by the D4 orbit
+#     of r; here the eight repair points are zero-weight atoms and the repair is done by eight
+#     anchor point cliques of weight 1/5, one at each image.  With all eight the family is
+#     D4-closed and the verifier may stop at 45 deg.  Without the ONE image rmirror = (2.06,0.90)
+#     the family is not closed and the remaining failure lies only above 45 deg (test 8): a
+#     verifier that reduced to [0,45] because the ATOMS are symmetric would print VERIFIED for it.
+python3 - "$C" "$T" <<'EOF'
+import sys
+t = open(sys.argv[1]).read().split(); T = sys.argv[2]
+pts = [(10*int(t[5+3*i]), 10*int(t[6+3*i])) for i in range(56)]
+SD, r, rmirror = 15200, (11636, 7030), (8170, 3564)
+orbit = sorted({q for p in [r, (SD-r[0], r[1]), (r[0], SD-r[1]), (SD-r[0], SD-r[1])] for q in (p, (p[1], p[0]))})
+assert len(orbit) == 8 and rmirror in orbit
+def write(name, cliques, weights):
+    with open(f"{T}/t29_{name}.txt", "w") as f:
+        f.write(f"3800 993\n3972\n5\n{56+8}\n")
+        for x, y in pts: f.write(f"{x} {y} 1\n")
+        for x, y in orbit: f.write(f"{x} {y} 0\n")          # the atoms stay D4-symmetric
+        f.write(f"anchors {len(cliques)} {len(cliques)}\n")
+        for x, y in cliques: f.write(f"anchorP {x} {y} 3972\n")
+        for i, w in enumerate(weights): f.write(f"{w} 1\npiece {i} 0\n")
+write("full", orbit, [1]*8)                                        # closed: eight images, equal weights
+write("A", [p for p in orbit if p != rmirror], [1]*7)               # seven: fails only above 45 deg
+write("Actl", [p for p in orbit if p != r], [1]*7)                  # control: fails only below 45 deg
+write("w0", orbit, [1 if p != rmirror else 0 for p in orbit])       # eight images, the mirror image at weight 0
+EOF
+check "8 anchor point cliques (D4 orbit): verified"    VERIFIED $T/t29_full.txt 13
+expect_out "  ...family D4-closed: [0,45] path"          'anchor cliques D4-closed.*angles cover \[0,45\] deg'
+expect_out "  ...bins 0..829 only"                       'angles: k=0\.\.829 '
+check "7 cliques, missing the mirror image"            REJECT   $T/t29_A.txt 13 100000 $T/t29_A.sep
+expect_out "  ...not closed: swept over [0,90)"          'clique block present: no symmetry reduction.*angles cover \[0,90) deg'
+angles "  ...every violation above 45 deg"               $T/t29_A.sep above
+check "control: 7 cliques, missing r itself"           REJECT   $T/t29_Actl.txt 13 100000 $T/t29_Actl.sep
+angles "  ...every violation below 45 deg"               $T/t29_Actl.sep below
+#     the weights are part of the closure test: the same eight anchors with one weight zeroed
+#     is not a D4-invariant family, and its hole is real
+check "8 images, one with weight 0"                    REJECT   $T/t29_w0.txt 13
+expect_out "  ...not closed: swept over [0,90)"          'angles cover \[0,90) deg'
+#     VERIFY_FULLSWEEP=1 forces the full range on a closed family (always sound): same verdict
+export VERIFY_FULLSWEEP=1
+check "closed family, full sweep forced"               VERIFIED $T/t29_full.txt 13
+expect_out "  ...over [0,90)"                            'VERIFY_FULLSWEEP set.*angles cover \[0,90) deg'
+unset VERIFY_FULLSWEEP
+#     segments and filters go through the same canonical form: a two-piece K(p, A) at the centre
+#     (760,760)/400 = (1.9,1.9) with a vertical A through it is fixed by both axis reflections but
+#     not by the diagonal (its image has a horizontal A), so alone it is not closed; with both it is.
+( cat "$C"; printf 'anchors 3 1\nanchorP 760 760 400\nanchorS 760 720 760 800 400\nanchorS 720 760 800 760 400\n1 2\npiece 0 1 1\npiece 1 0\n' ) > $T/t29_s1.txt
+check "K(p,A) at the centre, vertical A only"          VERIFIED $T/t29_s1.txt 13
+expect_out "  ...not closed under the diagonal"          'no symmetry reduction.*angles cover \[0,90) deg'
+( cat "$C"; printf 'anchors 3 2\nanchorP 760 760 400\nanchorS 760 720 760 800 400\nanchorS 720 760 800 760 400\n1 2\npiece 0 1 1\npiece 1 0\n1 2\npiece 0 1 2\npiece 2 0\n' ) > $T/t29_s2.txt
+check "  ...plus its image with a horizontal A"        VERIFIED $T/t29_s2.txt 13
+expect_out "  ...closed: [0,45] path"                    'anchor cliques D4-closed.*angles cover \[0,45\] deg'
+#     box cliques never reduce, even next to a closed anchor family (a harmless box of weight 0)
+python3 - $T/t29_s2.txt $T/t29_s3.txt <<'EOF'
+import sys
+src = open(sys.argv[1]).read().split("\n")
+i = src.index("anchors 3 2")
+out = src[:i] + ["cliques 2000 100 1", "0 1", "0 180 190 180 190"] + src[i:]
+open(sys.argv[2], "w").write("\n".join(out))
+EOF
+check "  ...with a box clique block as well"           VERIFIED $T/t29_s3.txt 13
+expect_out "  ...no reduction with box cliques"          'no symmetry reduction.*angles cover \[0,90) deg'
+# 30. LEVER 2, the incremental anchor credit.  VERIFY_ANCHOR_XCHECK=1 re-runs the old per-cell
+#     test at every cell and exits 3 (no verdict) on any difference in the credit, the credited
+#     cliques or the pieces the cell only meets: the verdicts below are therefore also a cell-by-
+#     cell agreement between the two implementations, on point and segment anchors, filters,
+#     straddling cells and a region trailer.
+export VERIFY_ANCHOR_XCHECK=1
+check "xcheck: exact point clique replacement"         VERIFIED $T/t22b.txt 12
+expect_not_out "  ...no disagreement"                    'INTERNAL ERROR'
+check "xcheck: displaced anchor (rejected)"            REJECT   $T/t22c.txt 12
+expect_not_out "  ...no disagreement"                    'INTERNAL ERROR'
+check "xcheck: K(p,A) with a segment filter"           VERIFIED $T/t23a.txt 13
+expect_not_out "  ...no disagreement"                    'INTERNAL ERROR'
+check "xcheck: unmeetable filter"                      REJECT   $T/t23b.txt 12
+expect_not_out "  ...no disagreement"                    'INTERNAL ERROR'
+check "xcheck: 7-image family (witness mode)"          REJECT   $T/t29_A.txt 13 6 $T/t29_Ax.sep
+expect_not_out "  ...no disagreement"                    'INTERNAL ERROR'
+( cat $T/t22b.txt; printf 'region corner 6 5\nlambda -5 -5 0 0\nk 0 0 1 1\n' ) > $T/t30_r.txt
+check "xcheck: anchor clique with a per-box trailer"   VERIFIED $T/t30_r.txt 12 6 $T/t30_r.sep
+expect_not_out "  ...no disagreement"                    'INTERNAL ERROR'
+unset VERIFY_ANCHOR_XCHECK
+#     A cell is credited only when a piece holds EVERY pose of it.  The shipped demonstration
+#     keeps its anchors' points as zero-weight atoms so that the cells stop at the pieces'
+#     boundaries (FORMAT.md); without them the cells straddle those boundaries, the band around
+#     them loses the credit and the file is rejected (0.958 at N = 6000).  An incremental credit
+#     that credited a cell for merely meeting a piece would pass it.
+awk 'NR==4{print $1-3; next} NR>=228 && NR<=230{next} {print}' "$A" > $T/t30_nz.txt
+checkN "demo without its zero-weight anchor atoms"     REJECT   $T/t30_nz.txt 12 6000
+expect_out "  ...the straddling band loses the credit"  'min covered weight over ALL placements = 958'
+# 31. LEVER 3, dynamic scheduling: the witness file and the reported minimum no longer depend on
+#     the thread count or the schedule (one witness list per bin, concatenated in bin order).
+$V $T/t22a.txt 12 2000 1 6 $T/t31_1.sep > $T/t31_1.out 2>&1
+$V $T/t22a.txt 12 2000 4 6 $T/t31_4.sep > $T/t31_4.out 2>&1
+VERIFY_STATIC=1 $V $T/t22a.txt 12 2000 4 6 $T/t31_s.sep > $T/t31_s.out 2>&1
+if [ "$(wc -l < $T/t31_1.sep)" -gt 100 ] && cmp -s $T/t31_1.sep $T/t31_4.sep && cmp -s $T/t31_1.sep $T/t31_s.sep
+then ok "witness file identical at 1 and 4 threads, both schedules" "$(wc -l < $T/t31_1.sep) witnesses"
+else bad "witness file identical at 1 and 4 threads, both schedules" "differs" "identical"; fi
+if [ "$(grep '^min covered' $T/t31_1.out)" = "$(grep '^min covered' $T/t31_4.out)" ] && [ "$(grep '^min covered' $T/t31_1.out)" = "$(grep '^min covered' $T/t31_s.out)" ]
+then ok "minimum and its bin identical at 1 and 4 threads" "same"; else bad "minimum and its bin identical at 1 and 4 threads" "differ" "same"; fi
+
 echo "  ---- $pass passed, $fail failed, $panics panics"
 [ "$fail" -eq 0 ] && [ "$panics" -eq 0 ]

@@ -329,9 +329,15 @@ Both predicates are evaluated on the cell and the anchors rounded **outward** to
 `10^-9` container units in the bin's frame, so that the arithmetic stays far from `i128` overflow
 (any overflow is an `ERROR`, never a verdict); outward rounding can only shrink the credited
 region.  Unlike box cliques, anchors do not refer to the angle net, so an `anchors` block carries
-no `N` and is meaningful at every `N` — a finer net simply credits more cells.  Cliques still have
+no `N` and is meaningful at every `N` — a finer net simply credits more cells.  Box cliques have
 no representable images under the container's symmetries, so a certificate carrying them is swept
-over the full `[0°, 90°]`.
+over the full `[0°, 90°]`.  Anchor cliques do have images (a symmetry of the container maps the
+anchors, and with them every piece and clique, to anchors), so when the atoms are D4-symmetric, the
+region thresholds are equal and the anchor-clique family is **D4-closed** — for each generator of
+the group, the multiset of (weight, clique) is mapped to itself, cliques compared exactly as sorted
+lists of pieces over canonical rational anchors — the covered weight is D4-invariant and the
+verifier sweeps `[0°, 45°]` only, as for a plain symmetric certificate; otherwise the full range
+(`search/VERIFYSPEED.md`; `VERIFY_FULLSWEEP=1` forces the full range).
 
 **A practical note: the anchors' own points belong in the file as zero-weight atoms.**  They carry
 no weight, but the sweep's cells are the atoms' breakpoints and a cell is credited only if it lies

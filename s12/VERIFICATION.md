@@ -43,6 +43,21 @@ is 138 checks, 0 failures, 0 panics, and `verify.sh` is exit 0 with 24 VERIFIED 
 *pose* predicate while the verifier credits a *cell*, so the LP believed rows the verifier keeps
 failing — `search/WITNESS.md` has the defect, the fix and the numbers.
 
+## Verifier speed-up (2026-09-08)
+`verify/src/main.rs`: three changes for the anchor-clique certificates of the cutting-plane loop
+(`search/VERIFYSPEED.md`): the `[0°, 45°]` reduction is applied again when the atoms AND the
+anchor-clique family are D4-invariant (a new exact closure check, `anchors_d4_closed`); the anchor
+credit of a strip's cells is computed once per (strip, piece) as a cell range instead of once per
+(cell, piece), with the per-cell test kept as an optional cross-check (`VERIFY_ANCHOR_XCHECK=1`);
+bins are scheduled dynamically over the threads, and the witness file and the reported minimum
+are now independent of the thread count.  Checks: `tests/bitid.sh` against the previous binary is
+ALL IDENTICAL (11 cases, single thread, plain / witness / `TIGHT_DUMP` / branch / box-clique /
+anchor-clique modes); `./verify.sh` at 4 threads is exit 0 with the same 24 VERIFIED verdicts; the rejection suite is 172
+checks (was 138; the 34 new ones are the levers' over-credit traps), 0 failures, 0 panics; on the
+`k = 4` and `1110` probes the per-bin output (stdout and witness file) is byte-identical to the
+old binary on every bin compared, and the incremental credit agrees with the per-cell test at
+every cell of those bins.  Whole-probe before/after numbers are in `search/VERIFYSPEED.md`.
+
 ## Checks performed on the original 788-point certificate (2026-08-23)
 ## Companion certificate (weaker but human-readable)
 `certificates/s12_56points_3.8.txt` — 56 points in [0,19/5]^2 (scales up to [0,1520/397]^2), weight 1/5 each (total 56/5 = 11.2).

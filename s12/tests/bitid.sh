@@ -43,9 +43,13 @@ $B $T/anc.txt 12 200 1 6 $T/anc.sepbase > $T/anc.wbase 2>&1
 $V $T/anc.txt 12 200 1 6 $T/anc.sepnew  > $T/anc.wnew  2>&1
 cut -d' ' -f1-5 $T/anc.sepnew > $T/anc.sepcut
 ncred=$(awk '{n+=$6} END{print n+0}' $T/anc.sepnew)
-if diff -q $T/anc.wbase $T/anc.wnew >/dev/null && diff -q $T/anc.sepbase $T/anc.sepcut >/dev/null
+# a reference binary from after 2026-09-07 writes the two columns itself: then the files must be
+# identical in full (the cut comparison is for a reference from before that date)
+if diff -q $T/anc.wbase $T/anc.wnew >/dev/null && diff -q $T/anc.sepbase $T/anc.sepnew >/dev/null
+then echo "  identical  anchor clique (stdout and the full witness file, $ncred credited-clique columns)"
+elif diff -q $T/anc.wbase $T/anc.wnew >/dev/null && diff -q $T/anc.sepbase $T/anc.sepcut >/dev/null
 then echo "  identical  anchor clique (stdout, and witnesses up to the $ncred credited-clique columns)"
-else echo "  DIFFERS    anchor clique (witness mode)"; diff $T/anc.sepbase $T/anc.sepcut | head -4; fail=1; fi
+else echo "  DIFFERS    anchor clique (witness mode)"; diff $T/anc.sepbase $T/anc.sepnew | head -4; fail=1; fi
 # TIGHT_DUMP mode
 TIGHT_DUMP=$T/td.base TIGHT_THRESH=10000000 TIGHT_MAX=20000 $B certificates/s12_56points_3.8.txt 12 200 1 0 > $T/td.wbase 2>&1
 TIGHT_DUMP=$T/td.new  TIGHT_THRESH=10000000 TIGHT_MAX=20000 $V certificates/s12_56points_3.8.txt 12 200 1 0 > $T/td.wnew  2>&1

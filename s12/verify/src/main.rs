@@ -20,6 +20,17 @@
 //!     (an endpoint, since cos+sin is unimodal on [0,90deg]).
 //!   * input is validated: weights >= 0, points inside the container, s_den | s_num*D.
 //!
+//! Speed (search/VERIFYSPEED.md): a certificate whose atoms AND anchor-clique family are
+//! D4-invariant is swept over [0,45deg] like a plain symmetric one (`anchors_d4_closed`); the
+//! anchor credit of a strip's cells is computed once per (strip, piece) as a cell range instead of
+//! once per (cell, piece) (`min_cover_k`); bins are handed to threads dynamically, with the
+//! witness file and the reported minimum made independent of the schedule.  Diagnostic
+//! environment variables, all default off and none of them able to make the check weaker:
+//! VERIFY_FULLSWEEP=1 (sweep [0,90) whatever the symmetry), VERIFY_STATIC=1 (the old static split
+//! of the bins over the threads), VERIFY_ANCHOR_XCHECK=1 (re-run the per-cell anchor test at every
+//! cell and exit 3 on any disagreement with the incremental credit), VERIFY_BINS=lo:hi (partial
+//! sweep, never VERIFIED), VERIFY_STATS=1 (counters on stderr).
+//!
 //! Optional diagnostic mode (off unless the environment variable TIGHT_DUMP is set; when off,
 //! behaviour and output are unchanged):
 //!     TIGHT_DUMP=<path> TIGHT_THRESH=<integer>  verify CERT n N threads topk
@@ -111,6 +122,46 @@ const ASC: i128 = 1_000_000_000;
 /// floor / ceiling of a/b for b > 0
 fn fdiv(a: i128, b: i128) -> i128 { let q = a / b; if a % b != 0 && a < 0 { q - 1 } else { q } }
 fn cdiv(a: i128, b: i128) -> i128 { let q = a / b; if a % b != 0 && a > 0 { q + 1 } else { q } }
+/// floor(x * ASC / den) and ceil(x * ASC / den) for den > 0 WITHOUT a 128-bit division: an f64
+/// estimate corrected by exact multiplications until q*den <= x*ASC < (q+1)*den holds.  The
+/// result is exactly fdiv(x*ASC, den) (the loop is the definition); the estimate only decides
+/// how many steps it takes (`scale` = ASC/den as f64).
+fn floor_scaled(x: i128, den: i128, scale: f64) -> i128 {
+    let mut q = (x as f64 * scale).floor() as i128;
+    let xa = cmul(x, ASC);
+    while cmul(q, den) > xa { q -= 1; }
+    while cmul(q + 1, den) <= xa { q += 1; }
+    q
+}
+fn ceil_scaled(x: i128, den: i128, scale: f64) -> i128 {
+    let xa = cmul(x, ASC);
+    let f = floor_scaled(x, den, scale);
+    if cmul(f, den) == xa { f } else { f + 1 }
+}
+/// `v.partition_point(|&e| e < x)` (the first index whose element is >= x, or v.len()) for a
+/// sorted `v`, found by exponential search from `hint`: the pieces of a strip are visited in
+/// u1 order, so consecutive targets are a few cells apart and this takes O(log gap) steps.
+fn gallop_ge(v: &[i128], x: i128, hint: isize) -> isize {
+    let n = v.len() as isize;
+    let h = hint.clamp(0, n);
+    if h < n && v[h as usize] < x {
+        let (mut lo, mut step) = (h, 1isize);                       // v[lo] < x
+        loop {
+            let nx = lo + step;
+            if nx >= n { return lo + 1 + v[(lo + 1) as usize..].partition_point(|&e| e < x) as isize; }
+            if v[nx as usize] >= x { return lo + 1 + v[(lo + 1) as usize..nx as usize].partition_point(|&e| e < x) as isize; }
+            lo = nx; step *= 2;
+        }
+    } else {
+        let (mut hi, mut step) = (h, 1isize);                       // v[hi] >= x (or hi == n)
+        loop {
+            let nx = hi - step;
+            if nx < 0 { return v[..hi as usize].partition_point(|&e| e < x) as isize; }
+            if v[nx as usize] < x { return nx + 1 + v[(nx + 1) as usize..hi as usize].partition_point(|&e| e < x) as isize; }
+            hi = nx; step *= 2;
+        }
+    }
+}
 fn gcd(a: i128, b: i128) -> i128 { if b == 0 { a } else { gcd(b, a % b) } }
 
 /// checked i128 arithmetic: an overflow is an error, never a wrong verdict
@@ -483,6 +534,50 @@ fn check_symmetry(c: &Cert) -> bool {
     f(&|x,y| (sd-x, y)) && f(&|x,y| (x, sd-y)) && f(&|x,y| (y, x))
 }
 
+/// Is the anchor-clique family invariant under the dihedral group of the container (as a
+/// weighted multiset of POSE SETS)?  This is what lets the sweep of a certificate with an
+/// `anchors` block stop at 45 degrees (search/VERIFYSPEED.md, lever 1): for a symmetry `g` of the
+/// container, `g` maps closed unit squares to closed unit squares, `A subseteq S  iff  gA subseteq gS`
+/// and `S meets A  iff  gS meets gA`, so the image of the piece `{S : A_a subseteq S, S meets A_f}`
+/// is the piece with anchors `gA_a`, `gA_f`, and the image of a clique is the clique with every
+/// anchor mapped.  If, for each generator `g`, the multiset `{(w_K, gK)}` equals `{(w_K, K)}`, then
+/// the clique credit of a pose is the same as that of its image, and with D4-symmetric atoms and
+/// equal region thresholds the whole covered weight is D4-invariant; every pose at an angle in
+/// [45, 90) is the diagonal image of one at an angle in (0, 45], so the bins covering [0, 45]
+/// suffice.  The comparison is exact: anchors are canonicalised as unordered pairs of reduced
+/// rational endpoints, pieces as (anchor, sorted filter anchors), cliques as sorted piece lists.
+/// A family that is closed but written differently (a duplicated piece, say) is reported as not
+/// closed -- a false negative only costs the full sweep, which is always sound.
+fn anchors_d4_closed(c: &Cert) -> bool {
+    let an = match &c.anchors { Some(a) => a, None => return true };
+    type Q = (i128, i128);                       // reduced rational, denominator > 0
+    type Pt = (Q, Q);
+    let red = |n: i128, d: i128| -> Q { let g = gcd(n.abs(), d); if g > 1 { (n / g, d / g) } else { (n, d) } };
+    let (sn, sd) = (c.s_num, c.s_den);
+    // the generators of D4 on a rational point (x/d, y/d): reflections in x, in y, in the diagonal
+    let gens: [&dyn Fn(i128, i128, i128) -> Pt; 3] = [
+        &|x, y, d| (red(cadd(cmul(sn, d), -cmul(x, sd)), cmul(sd, d)), red(y, d)),
+        &|x, y, d| (red(x, d), red(cadd(cmul(sn, d), -cmul(y, sd)), cmul(sd, d))),
+        &|x, y, d| (red(y, d), red(x, d)),
+    ];
+    let ident = |x: i128, y: i128, d: i128| -> Pt { (red(x, d), red(y, d)) };
+    let canon = |g: &dyn Fn(i128, i128, i128) -> Pt| -> Vec<(i128, Vec<(( Pt, Pt), Vec<(Pt, Pt)>)>)> {
+        let anc: Vec<(Pt, Pt)> = an.anc.iter().map(|a| {
+            let p = g(a.x0, a.y0, a.d); let q = g(a.x1, a.y1, a.d);
+            if p <= q { (p, q) } else { (q, p) }
+        }).collect();
+        let mut cl: Vec<(i128, Vec<((Pt, Pt), Vec<(Pt, Pt)>)>)> = an.w.iter().map(|&w| (w, Vec::new())).collect();
+        for &(cid, a, ref filt) in an.pieces.iter() {
+            let mut f: Vec<(Pt, Pt)> = filt.iter().map(|&i| anc[i]).collect(); f.sort();
+            cl[cid].1.push((anc[a], f));
+        }
+        for k in cl.iter_mut() { k.1.sort(); }
+        cl.sort(); cl
+    };
+    let base = canon(&ident);
+    gens.iter().all(|g| canon(*g) == base)
+}
+
 /// exact minimum covered weight over admissible centers, for one angle.
 /// Rotation (cos,sin) = (cn,sn)/g.  Square side sigma = sg_n/sg_d.  Returns (min_num, min_den)
 /// as weight numerator over c.wd, plus a witness.  All coordinates are handled over the common
@@ -673,11 +768,13 @@ struct Stats {
     cells: u64,         // cells whose weight was evaluated
     active: u64,        // sum over strips of the atoms active in u0 (the arrangement's width)
     band: u64,          // sum over strips of the atoms kept after the u1 band restriction
-    anc_calls: u64,     // cells for which the anchor-clique credit was computed
-    anc_tests: u64,     // (cell, piece) pairs examined by that credit
-    anc_core: u64,      // of those, the ones that needed the exact bin-core corner test
-    anc_skip: u64,      // of those, the ones the window test rejected outright
-    anc_ok: u64,        // of those, the ones that held the whole cell (a credit)
+    // anchor-clique credit (event-driven since search/VERIFYSPEED.md; the old per-cell meaning
+    // of these five is kept only for the empty-strip cell and the VERIFY_ANCHOR_XCHECK re-run)
+    anc_calls: u64,     // cells that took the anchor-clique credit (point weight below the threshold)
+    anc_tests: u64,     // (strip, piece) pairs whose credited cell range was computed
+    anc_core: u64,      // (cell, piece) pairs that needed the exact bin-core corner test
+    anc_skip: u64,      // (strip, piece) pairs the windows rejected outright
+    anc_ok: u64,        // (strip, piece) pairs that credited at least one cell
     cl_cands: u64,      // sum over strips of the clique boxes meeting the strip
     cl_tests: u64,      // (cell, clique box) pairs examined
     wits: u64,          // witness placements computed
@@ -856,7 +953,34 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
     //   the sector: it only applies when the direction of v is within delta of an axis, and there
     //               |v| <= |v0'|/cos d <= (h2 - m)/cos d <= h2           as soon as m >= h2 (1-cos d).
     let core_margin: i128 = if anc.is_some() { cdiv(cmul(h2, sd), gg) + cdiv(cmul(h2, cadd(gg, -cd)), gg) + 2 } else { 0 };
+    // The strip-independent thresholds of every piece in the sweep's own units (over DEN), once
+    // per bin: the cells with  c1s >= w1l, c0s <= w1h  (not skipped),  c0s >= w1l, c1s <= w1h
+    // (inside the window) and  c0s >= w1l + m, c1s <= w1h - m  (the fast path), as bounds on c1,
+    // c0, c0, c1, c0, c1 respectively.  (c0s = fdiv(c0 ASC, DEN), c1s = cdiv(c1 ASC, DEN), so
+    // c0s >= A <=> c0 >= cdiv(A DEN, ASC),  c0s <= B <=> c0 <= cdiv((B+1) DEN, ASC) - 1,
+    // c1s >= A <=> c1 >= fdiv((A-1) DEN, ASC) + 1,  c1s <= B <=> c1 <= fdiv(B DEN, ASC).)
+    let athr: Vec<[i128; 6]> = awin.iter().map(|&(_, _, w1l, w1h)| [
+        fdiv(cmul(w1l - 1, den_int), ASC) + 1, cdiv(cmul(w1h + 1, den_int), ASC) - 1,
+        cdiv(cmul(w1l, den_int), ASC), fdiv(cmul(w1h, den_int), ASC),
+        cdiv(cmul(w1l + core_margin, den_int), ASC), fdiv(cmul(w1h - core_margin, den_int), ASC)]).collect();
+    let asc_scale = ASC as f64 / den_int as f64;
     let mut aptr = 0usize; let mut aact: Vec<usize> = Vec::new();
+    // ---- event-driven anchor credit (search/VERIFYSPEED.md, lever 2) --------------------------
+    // Every condition of the per-cell (cell, piece) test is an interval condition on the cell's
+    // rounded sides c0s, c1s (the u1 window, the filters' half-planes -- linear in c0s, c1s --
+    // and the fast path), so for a fixed strip the cells a piece credits are computed ONCE, as an
+    // index range into the strip's breakpoints `by`, the exact corner test being run per cell only
+    // in the thin band where the fast path does not apply.  The cell loop then keeps the credited
+    // cliques up to date by start/end events instead of re-testing ~10^2 pieces at every cell.
+    // The decision per (cell, piece) is identical to the per-cell test's by construction
+    // (VERIFY_ANCHOR_XCHECK=1 re-runs that test at every cell and aborts on any difference).
+    let mut ev_s: Vec<(u32, u32)> = Vec::new(); let mut ev_e: Vec<(u32, u32)> = Vec::new();   // (cell, piece): credited runs
+    let mut wv_s: Vec<(u32, u32)> = Vec::new(); let mut wv_e: Vec<(u32, u32)> = Vec::new();   // (cell, piece): window runs (for `part`)
+    let mut ccnt: Vec<u32> = vec![0; ncq];  let mut cact: Vec<usize> = Vec::new(); let mut cpos: Vec<u32> = vec![u32::MAX; ncq];   // credited cliques
+    let mut pcnt: Vec<u32> = vec![0; np];
+    let mut wact: Vec<usize> = Vec::new(); let mut wpos: Vec<u32> = vec![u32::MAX; np];                                           // pieces whose window holds the cell
+    let xcheck = anc.is_some() && std::env::var("VERIFY_ANCHOR_XCHECK").is_ok();
+    let (mut xpart, mut xdone): (Vec<usize>, Vec<usize>) = (Vec::new(), Vec::new());
     // x-breakpoints
     let mut bx: Vec<i128> = Vec::with_capacity(2*m+2);
     for t in &q { bx.push(t.0-hh); bx.push(t.0+hh); }
@@ -981,6 +1105,10 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
         // `u1act` sweeps the same windows in u1 as the cells of the strip advance, so a cell only
         // ever looks at the pieces whose window it actually meets.  `full` rescans instead (used
         // once for the empty strip, whose single cell spans the whole strip).
+        // This PER-CELL form is the reference semantics.  The regular cells no longer call it:
+        // their credit comes from the event-driven ranges below (search/VERIFYSPEED.md), which
+        // decide every (cell, piece) pair exactly as this closure does; it is still used for the
+        // empty strip and, under VERIFY_ANCHOR_XCHECK=1, re-run at every cell as a cross-check.
         let anchor_credit = |c0: i128, c1: i128, u1act: &mut Vec<usize>, ptr1: &mut usize, full: bool,
                              part: &mut Vec<usize>, done: &mut Vec<usize>| -> i128 {
             part.clear(); done.clear();
@@ -1096,12 +1224,127 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
                 if by.last() != Some(&bv) { by.push(bv); }
             }
         }
+        // The strip's anchor events.  For each piece that can see the strip: the cells for which
+        // the per-cell test would run and not skip (the "window" run, needed for `part`), and
+        // within them the cells it credits, as runs of cell indices.  Cell t is [by[t], by[t+1]].
+        ev_s.clear(); ev_e.clear(); wv_s.clear(); wv_e.clear();
+        let ncell: isize = by.len() as isize - 1;
+        if let (Some((ab, _)), true) = (anc, ncell > 0 && !aact.is_empty()) {
+            // first t with by[t] >= x, last t with by[t] <= x (as isize; the callers clamp), by
+            // exponential search from a hint: `hl` follows the lower ends and `hh` the upper ends
+            // of the pieces' runs, which are visited in u1 order
+            let (mut hl, mut hh): (isize, isize) = (0, 0);
+            let first_ge = |x: i128, h: isize| -> isize { gallop_ge(&by, x, h) };
+            let last_le = |x: i128, h: isize| -> isize { gallop_ge(&by, x + 1, h) - 1 };
+            // c0s >= A  <=>  c0 >= cdiv(A den, ASC);   c0s <= B  <=>  c0 <= cdiv((B+1) den, ASC) - 1;
+            // c1s >= A  <=>  c1 >= fdiv((A-1) den, ASC) + 1;   c1s <= B  <=>  c1 <= fdiv(B den, ASC).
+            let t_c0s_ge = |a: i128, h: isize| -> isize { first_ge(cdiv(cmul(a, den_int), ASC), h) };
+            let t_c0s_le = |b: i128, h: isize| -> isize { last_le(cdiv(cmul(b + 1, den_int), ASC) - 1, h) };
+            let t_c1s_ge = |a: i128, h: isize| -> isize { first_ge(fdiv(cmul(a - 1, den_int), ASC) + 1, h) - 1 };
+            let t_c1s_le = |b: i128, h: isize| -> isize { last_le(fdiv(cmul(b, den_int), ASC), h) - 1 };
+            let (ylo_s, yhi_s) = (fdiv(cmul(ylo, ASC), den_int), cdiv(cmul(yhi, ASC), den_int));
+            // The exact corner test of one cell against one piece (the per-cell test's `'ep` loop;
+            // a point anchor's two endpoints are the same numbers, so they are tested once).  A
+            // corner is provably in the core, and its `in_core` call skipped, when |v0| <= h2 - m
+            // (the strip is `core_margin` inside the u0 window: `sg_u0cm`) and |v1| <= h2 - m1,
+            // where m1 = ceil((|v0| sin d - h2 (1 - cos d)) / cos d)^+ + ceil(h2 (1 - cos d)) + 2
+            // (VERIFYSPEED.md, lever 2: R_d Q's second axis needs |v1| cos d <= h2 - |v0| sin d, the
+            // sector near the v1-axis needs |v1| <= h2 cos d, and the other conditions follow from
+            // |v0| <= h2 - m as in the fast path).  `m1` is taken for the largest |v0| of the piece.
+            let corners_ok = |pi: usize, c0s: i128, c1s: i128, v0ok: bool, m1: i128| -> bool {
+                let z = &ab[pai[pi]];
+                let nj = if z.e[0] == z.e[1] { 1 } else { 2 };
+                let lim = h2 - m1;
+                for j in 0..nj {
+                    let (v0l, v0h) = (z.e[j][0] - b0s, z.e[j][1] - a0s);
+                    let (v1l, v1h) = (z.e[j][2] - c1s, z.e[j][3] - c0s);
+                    for &v1 in &[v1l, v1h] {
+                        if v0ok && v1.abs() <= lim { continue; }
+                        for &v0 in &[v0l, v0h] {
+                            if !in_core(v0, v1, h2, cd, sd, gg) { return false; }
+                        }
+                    }
+                }
+                true
+            };
+            let m1_sector = cdiv(cmul(h2, cadd(gg, -cd)), gg) + 2;
+            for &pi in aact.iter() {
+                n_anct.set(n_anct.get() + 1);
+                if !sg_guard[pi] { n_ancskip.set(n_ancskip.get() + 1); continue; }
+                // window run: u1act membership (awind over DEN) and not skipped (c1s >= w1l, c0s <= w1h)
+                let th = &athr[pi];
+                let tw_lo = (first_ge(awind[pi].2.max(th[0]), hl) - 1).max(0);
+                let tw_hi = last_le(awind[pi].3.min(th[1]), hh).min(ncell - 1);
+                hl = tw_lo; hh = tw_hi.max(tw_lo);
+                if tw_lo > tw_hi { n_ancskip.set(n_ancskip.get() + 1); continue; }
+                wv_s.push((tw_lo as u32, pi as u32)); wv_e.push((tw_hi as u32, pi as u32));
+                if !sg_u0[pi] { continue; }
+                // candidate run: c0s >= w1l, c1s <= w1h (strip-independent: `athr`), and every
+                // filter half-plane pair, as bounds on c0s in [a0,b0] and c1s in [a1,b1]
+                let (mut a0, mut b0, mut a1, mut b1) = (ylo_s, yhi_s, ylo_s, yhi_s);
+                let mut empty = false;
+                for fi in fo[pi]..fo[pi+1] {
+                    // G(r) := flo + n1 r >= -bnd  and  fhi + n1 r <= bnd, for r = c0s - fp1h and r = c1s - fp1l
+                    let (n1, x, y) = (fn1[fi], cadd(-fbnd[fi], -flo[fi]), cadd(fbnd[fi], -fhi[fi]));   // n1 r >= x, n1 r <= y
+                    let (rlo, rhi) = if n1 > 0 { (cdiv(x, n1), fdiv(y, n1)) }
+                                     else if n1 < 0 { (cdiv(-y, -n1), fdiv(-x, -n1)) }
+                                     else if x <= 0 && 0 <= y { (i128::MIN / 4, i128::MAX / 4) } else { empty = true; break };
+                    a0 = a0.max(cadd(rlo, fp1h[fi])); b0 = b0.min(cadd(rhi, fp1h[fi]));
+                    a1 = a1.max(cadd(rlo, fp1l[fi])); b1 = b1.min(cadd(rhi, fp1l[fi]));
+                }
+                if empty { continue; }
+                // every cell of the strip has ylo_s <= c0s <= c1s <= yhi_s, so clamping the bounds
+                // to that range changes nothing and keeps the conversions below far from overflow
+                let (a0, b0, a1, b1) = (a0.max(ylo_s), b0.min(yhi_s), a1.max(ylo_s), b1.min(yhi_s));
+                if a0 > b0 || a1 > b1 { continue; }
+                let mut tc_lo = first_ge(th[2], hl).max(tw_lo); let mut tc_hi = (last_le(th[3], hh) - 1).min(tw_hi);
+                if a0 > ylo_s { tc_lo = tc_lo.max(t_c0s_ge(a0, tc_lo)); }
+                if a1 > ylo_s { tc_lo = tc_lo.max(t_c1s_ge(a1, tc_lo)); }
+                if b0 < yhi_s { tc_hi = tc_hi.min(t_c0s_le(b0, tc_hi)); }
+                if b1 < yhi_s { tc_hi = tc_hi.min(t_c1s_le(b1, tc_hi)); }
+                if tc_lo > tc_hi { continue; }
+                // sure run (fast path): sg_u0cm, c0s >= w1l + m, c1s <= w1h - m; empty otherwise
+                let (ts_lo, ts_hi) = if sg_u0cm[pi] { (first_ge(th[4], tc_lo).max(tc_lo), (last_le(th[5], tc_hi) - 1).min(tc_hi)) } else { (1, 0) };
+                // the v1 margin of the corner test for this piece and strip (largest |v0| of its corners)
+                let m1 = {
+                    let z = &ab[pai[pi]];
+                    let vmax = [z.e[0][0] - b0s, z.e[0][1] - a0s, z.e[1][0] - b0s, z.e[1][1] - a0s].iter().map(|v| v.abs()).max().unwrap();
+                    cdiv(cadd(cmul(vmax, sd), -cmul(h2, cadd(gg, -cd))), cd).max(0) + m1_sector
+                };
+                // walk the candidate run; the corner test decides the cells outside the sure run
+                let mut run: isize = -1; let mut any = false;
+                let mut t = tc_lo;
+                while t <= tc_hi {
+                    let pass = if ts_lo <= ts_hi && t >= ts_lo && t <= ts_hi {
+                        if run < 0 { run = t; } t = ts_hi; true
+                    } else {
+                        n_anccore.set(n_anccore.get() + 1);
+                        corners_ok(pi, floor_scaled(by[t as usize], den_int, asc_scale), ceil_scaled(by[t as usize + 1], den_int, asc_scale), sg_u0cm[pi], m1)
+                    };
+                    if pass { if run < 0 { run = t; } }
+                    else if run >= 0 { ev_s.push((run as u32, pi as u32)); ev_e.push(((t - 1) as u32, pi as u32)); run = -1; any = true; }
+                    t += 1;
+                }
+                if run >= 0 { ev_s.push((run as u32, pi as u32)); ev_e.push((tc_hi as u32, pi as u32)); any = true; }
+                if any { n_ancok.set(n_ancok.get() + 1); }
+            }
+            ev_s.sort_unstable(); ev_e.sort_unstable(); wv_s.sort_unstable(); wv_e.sort_unstable();
+        }
+        let (mut es, mut ee, mut ws, mut we) = (0usize, 0usize, 0usize, 0usize);
+        let mut acredit: i128 = 0;                   // clique weight credited to the current cell
         // j0 / j1 advance monotonically with the cells, so the two binary searches per cell are
         // two sweeping pointers
         let (mut p0, mut p1) = (0usize, 0usize);
         for t in 0..by.len()-1 {
             let (c0,c1) = (by[t], by[t+1]);
-            if c1 <= ylo || c0 >= yhi { continue; }
+            // start events of cell t: pieces whose window / credited run begins here
+            while ws < wv_s.len() && wv_s[ws].0 as usize == t { let pi = wv_s[ws].1 as usize; wpos[pi] = wact.len() as u32; wact.push(pi); ws += 1; }
+            while es < ev_s.len() && ev_s[es].0 as usize == t {
+                let pi = ev_s[es].1 as usize; let cid = pcid[pi]; pcnt[pi] += 1;
+                if ccnt[cid] == 0 { acredit = cadd(acredit, anc.unwrap().1.w[cid]); cpos[cid] = cact.len() as u32; cact.push(cid); }
+                ccnt[cid] += 1; es += 1;
+            }
+            if !(c1 <= ylo || c0 >= yhi) {
             n_cells.set(n_cells.get() + 1);
             while p0 < yv.len() && yv[p0] <  c1-hh { p0 += 1; }
             while p1 < yv.len() && yv[p1] <= c0+hh { p1 += 1; }
@@ -1115,10 +1358,21 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
             // W + max(0, lambda_j over the boxes met), so a cell already at that weight neither
             // fails nor produces a witness whatever the (non-negative) anchor credit is.
             apart.clear(); adone.clear();
+            let mut credited = false;
             if !aact.is_empty() {
                 let mut cap = 0i128;
                 if may != 0 { for j in 0..4 { if may & (1 << j) != 0 && lams[j] > cap { cap = lams[j]; } } }
-                if sum < c.wd + cap { sum += anchor_credit(c0, c1, &mut u1act, &mut ptr1, false, &mut apart, &mut adone); }
+                if sum < c.wd + cap { sum += acredit; credited = true; n_ancc.set(n_ancc.get() + 1); }
+                if xcheck {
+                    // diagnostic: the per-cell test must give the same credit and the same sets
+                    let old = anchor_credit(c0, c1, &mut u1act, &mut ptr1, false, &mut xpart, &mut xdone);
+                    let mut nd: Vec<usize> = cact.clone(); nd.sort_unstable(); xdone.sort_unstable();
+                    let mut npart: Vec<usize> = wact.iter().copied().filter(|&pi| pcnt[pi] == 0).collect(); npart.sort_unstable(); xpart.sort_unstable();
+                    if old != acredit || nd != xdone || npart != xpart {
+                        eprintln!("INTERNAL ERROR: incremental anchor credit disagrees with the per-cell test at strip [{}, {}] cell [{}, {}]: credit {} vs {}, done {:?} vs {:?}, part {:?} vs {:?}", a, b, c0, c1, acredit, old, nd, xdone, npart, xpart);
+                        std::process::exit(3);
+                    }
+                }
             }
             let v = sum - required(may, inside);
             if v < best { best = v;
@@ -1142,6 +1396,12 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
                 t.add((a, b, c0, c1, sum, cx, cy, area));
             } }
             if topk>0 && v < c.wd {
+                // the pieces the cell only meets and the cliques it was credited, from the running
+                // sets (only a cell that took the credit can be violated: see `cap` above)
+                if credited {
+                    adone.extend(cact.iter().copied());
+                    apart.extend(wact.iter().copied().filter(|&pi| pcnt[pi] == 0));
+                }
                 // witness centre: midpoint of the cell, rotated back to original coordinates.
                 // One witness per violated threshold: flag 1 = "needs 1 + lambda" (cell meets the
                 // region), flag 0 = "needs 1" (cell is not entirely inside the region).
@@ -1161,7 +1421,26 @@ fn min_cover_k(c: &Cert, cn: i128, sn: i128, g: i128, sg_n: i128, sg_d: i128, wm
                         let keep: std::collections::HashSet<CredKey> = heap.iter().map(|t| (t.0, t.1.to_bits(), t.2.to_bits(), t.3)).collect();
                         wcred.retain(|k, _| keep.contains(k)); } }
             }
+            }   // end of the evaluated cell
+            // end events of cell t
+            while ee < ev_e.len() && ev_e[ee].0 as usize == t {
+                let pi = ev_e[ee].1 as usize; let cid = pcid[pi]; pcnt[pi] -= 1; ccnt[cid] -= 1;
+                if ccnt[cid] == 0 {
+                    acredit = cadd(acredit, -anc.unwrap().1.w[cid]);
+                    let p = cpos[cid] as usize; let last = cact.pop().unwrap();
+                    if p < cact.len() { cact[p] = last; cpos[last] = p as u32; }
+                    cpos[cid] = u32::MAX;
+                }
+                ee += 1;
+            }
+            while we < wv_e.len() && wv_e[we].0 as usize == t {
+                let pi = wv_e[we].1 as usize;
+                let p = wpos[pi] as usize; let last = wact.pop().unwrap();
+                if p < wact.len() { wact[p] = last; wpos[last] = p as u32; }
+                wpos[pi] = u32::MAX; we += 1;
+            }
         }
+        debug_assert!(cact.is_empty() && wact.is_empty() && acredit == 0);
     }
     heap.sort_unstable_by_key(|t| t.0); heap.truncate(topk);
     let creds: Vec<Vec<u32>> = heap.iter()
@@ -1218,17 +1497,27 @@ fn main() {
     // (value, theta_k, cx, cy, region flag, the anchor cliques the sweep credited to the witness's
     // cell).  The last field is written to the witness file only for a certificate with an
     // `anchors` block, so every other file's witness output is byte-identical (search/WITNESS.md).
-    let out: Arc<std::sync::Mutex<Vec<(i128,f64,f64,f64,u8,Vec<u32>)>>> = Arc::new(std::sync::Mutex::new(Vec::new()));
+    // Each entry also carries (bin, index within the bin) so that the witness file is written in
+    // the order a single-threaded sweep produces, whatever the thread count and schedule.
+    let out: Arc<std::sync::Mutex<Vec<((u32, u32), (i128,f64,f64,f64,u8,Vec<u32>))>>> = Arc::new(std::sync::Mutex::new(Vec::new()));
     // D4 symmetry lets us restrict angles to [0,45]; without it we cover [0,90).  A branch
     // certificate with unequal per-box lambdas has a non-symmetric threshold: full range too.
     let sym_atoms = check_symmetry(&cert);
     let sym_lam = cert.region.as_ref().map(|r| r.lam.iter().all(|&l| l == r.lam[0])).unwrap_or(true);
-    // clique boxes are tied to the angle net and have no representable images under the
-    // container's symmetries, so a certificate with cliques is always swept over [0, 90).
+    // Box cliques are tied to the angle net and have no representable images under the
+    // container's symmetries, so a certificate with box cliques is always swept over [0, 90).
+    // Anchor cliques do not refer to the net: if the family is D4-closed (`anchors_d4_closed`),
+    // the clique credit is D4-invariant like the atoms and the [0,45] reduction applies again
+    // (search/VERIFYSPEED.md, lever 1).  VERIFY_FULLSWEEP=1 (diagnostic) forces the full range,
+    // which is always sound.
     let has_cl = cert.cliques.is_some() || cert.anchors.is_some();
-    let sym = sym_atoms && sym_lam && !has_cl;
-    println!("D4-symmetric atom set: {}{}{}  -> angles cover {}", sym_atoms, if sym_lam {""} else {" (but per-box lambdas differ)"},
-             if has_cl {" (clique block present: no symmetry reduction)"} else {""}, if sym {"[0,45] deg"} else {"[0,90) deg"});
+    let anc_closed = cert.anchors.is_some() && cert.cliques.is_none() && sym_atoms && sym_lam && anchors_d4_closed(&cert);
+    let full_forced = env::var("VERIFY_FULLSWEEP").is_ok();
+    let sym = sym_atoms && sym_lam && (!has_cl || anc_closed) && !full_forced;
+    println!("D4-symmetric atom set: {}{}{}{}  -> angles cover {}", sym_atoms, if sym_lam {""} else {" (but per-box lambdas differ)"},
+             if anc_closed {" (anchor cliques D4-closed: symmetry reduction applies)"} else if has_cl {" (clique block present: no symmetry reduction)"} else {""},
+             if full_forced {" (VERIFY_FULLSWEEP set: full range)"} else {""},
+             if sym {"[0,45] deg"} else {"[0,90) deg"});
     let total_atoms: i128 = cert.atoms.iter().map(|a| a.2).sum();
     let total_cl: i128 = cert.cliques.as_ref().map(|cl| cl.w.iter().sum()).unwrap_or(0);
     let total_anc: i128 = cert.anchors.as_ref().map(|an| an.w.iter().sum()).unwrap_or(0);
@@ -1300,14 +1589,28 @@ fn main() {
     });
     let cert = Arc::new(cert);
     let mut hs = Vec::new();
+    // Dynamic scheduling (search/VERIFYSPEED.md, lever 3): bins are handed out one at a time from
+    // a shared counter, in increasing order, so no thread is left holding a contiguous block of
+    // expensive bins while the others idle.  Nothing semantic depends on which thread sweeps a
+    // bin; the minimum is taken lexicographically in (value, bin) and the witnesses are re-ordered
+    // by bin below, so the output is that of a sequential sweep.
+    let next_bin = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    // VERIFY_STATIC=1 (diagnostic, for measuring the scheduler): the old static split, thread t
+    // sweeping the contiguous block t*chunk .. (t+1)*chunk
+    let static_sched = env::var("VERIFY_STATIC").is_ok();
     let chunk = (nbins + threads - 1) / threads;
     for t in 0..threads {
         let cert = cert.clone(); let bad = bad.clone(); let minw = minw.clone(); let out = out.clone();
         let tight_out = tight_out.clone(); let tight_count = tight_count.clone(); let tight_written = tight_written.clone();
-        let per_bin = per_bin.clone(); let stats = stats.clone();
+        let per_bin = per_bin.clone(); let stats = stats.clone(); let next_bin = next_bin.clone();
         hs.push(thread::spawn(move || {
             let t_thr = std::time::Instant::now();
-            for kb in (t*chunk)..(((t+1)*chunk).min(nbins)) {
+            let mut n_done = 0usize;
+            let (mut s_next, s_end) = (t * chunk, ((t + 1) * chunk).min(nbins));
+            loop {
+                let kb = if static_sched { let k = s_next; s_next += 1; k } else { next_bin.fetch_add(1, Ordering::Relaxed) };
+                if kb >= nbins || (static_sched && kb >= s_end) { break; }
+                n_done += 1;
                 let k = (kb_lo + kb) as i128;
                 let (c0,s0,g0) = (bigN*bigN - k*k, 2*k*bigN, bigN*bigN + k*k);
                 let k2 = k+1;
@@ -1359,13 +1662,13 @@ fn main() {
                 if topk>0 { let th = 2.0*((k as f64)/(bigN as f64)).atan();
                     let mut o=out.lock().unwrap();
                     let mut wcr = wcr.into_iter();
-                    for (val,cx,cy,fl) in wit { o.push((val, th, cx, cy, fl, wcr.next().unwrap_or_default())); } }
+                    for (i, (val,cx,cy,fl)) in wit.into_iter().enumerate() { o.push(((kb as u32, i as u32), (val, th, cx, cy, fl, wcr.next().unwrap_or_default()))); } }
                 let mut mg = minw.lock().unwrap();
-                if v < mg.0 { *mg = (v, k); }
+                if v < mg.0 || (v == mg.0 && k < mg.1) { *mg = (v, k); }
                 drop(mg);
                 if v < cert.wd { bad.fetch_add(1, Ordering::Relaxed); if topk==0 && bad.load(Ordering::Relaxed)<8 { println!("  FAIL at angle k={}: covered {}/{}", k, v, cert.wd); } }
             }
-            if stats_on { eprintln!("VERIFY_STATS thread {} bins {}..{} wall {:.1}s", t, kb_lo + t*chunk, kb_lo + ((t+1)*chunk).min(nbins), t_thr.elapsed().as_secs_f64()); }
+            if stats_on { eprintln!("VERIFY_STATS thread {} swept {} bins, wall {:.1}s", t, n_done, t_thr.elapsed().as_secs_f64()); }
         }));
     }
     for h in hs { h.join().unwrap(); }
@@ -1377,6 +1680,10 @@ fn main() {
     }
     if topk>0 {
         let mut o = out.lock().unwrap();
+        // sequential order first (bin, index within the bin), then the stable sort by value that
+        // the single-threaded sweep always produced: the file no longer depends on the schedule
+        o.sort_by_key(|e| e.0);
+        let mut o: Vec<(i128,f64,f64,f64,u8,Vec<u32>)> = o.drain(..).map(|e| e.1).collect();
         o.sort_by(|a,b| a.0.cmp(&b.0));
         let mut f = String::new();
         // Columns 1-5 (value, theta_k, cx, cy, region flag) are unchanged.  When the certificate
