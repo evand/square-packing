@@ -227,6 +227,14 @@ one new maximal clique per iteration) but not within the budget.  What is establ
 > (lower bound: the exactly certified stage-(2) measure, which is feasible for `P_1`; upper
 > bound: the LP value on a subset of the rows, up to the solver tolerance `1e-6`).
 
+**Follow-up (detached run `A0101L1`, `--cq-age 0`, 400 iterations, 2396 s).**  The loop terminated:
+the last ~100 iterations found **no violated clique** (`kmax = 1.000000`, `cq +0`), the LP stayed at
+`317/28 = 11.321429` with `M = 1.000000002`, and the snapped measure is exactly certified at
+`11.321429` (`runs/cl_A0101L1_exact.txt`).  So the bracket closes:
+
+> `QSTAB(P_1) = 11.321429` on the 8,452-pose post-pricing set (exact lower bound; the upper bound
+> is the terminated LP up to solver tolerance).
+
 So the pricing gap of `+0.53` on the reduced cost translates into `+0.02` of value: the columns
 the pricer wants are the columns the cliques forbid (they enter the extended rows), which is the
 T4SCREEN calibration failure mode running in the *opposite* direction from the one the brief
