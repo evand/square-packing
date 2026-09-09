@@ -149,6 +149,7 @@ class Hi:
             self.h.setOptionValue('solver', self.solver)
             ms = self.h.getModelStatus()
             if ms != self.hp.HighsModelStatus.kOptimal:
+                self.log(f'   [HiGHS ipm+crossover -> {ms}: no solution]')
                 return None
             self.basis = True
         sol = self.h.getSolution()
@@ -165,10 +166,19 @@ class BLeaf(T4.CLeaf):
 
     def __init__(self, t, r, lib, threads, log, D=1000000, delta=1e-6, chord=True,
                  backend='highs', hs_solver='simplex', lp_tlim=300.0, lines=None,
-                 line_eps=-1e-12):
+                 line_eps=-1e-12, quad=None, quad_mode='eq'):
         super().__init__(t, r, lib, threads, log, D=D)
         self.delta = float(delta)
         self.chord = bool(chord)
+        # --- interior quadrant counts (tasks/depth-test).  `quad` is None (OFF: every code path
+        # below is then bit for bit the one without it) or a list of four entries, one per
+        # quadrant Q0 = [r,t/2]^2, Q1 = [t/2,t-r]x[r,t/2], Q2 = [r,t/2]x[t/2,t-r], Q3 = [t/2,t-r]^2
+        # of the interior (label 12 + i), each a count or None (free).  `quad_mode` is 'eq'
+        # (mu(Q_i) = q_i, the branch's own semantics) or 'le' (mu(Q_i) <= q_i, the cap
+        # relaxation; see search/DEPTH.md 1 for why both are needed).
+        self.kq = None if quad is None else list(quad)
+        self.quad_mode = quad_mode
+        self.nq = 0                           # quadrant rows in the model
         self.lines = lines                    # a linecuts.LineFamily, or None
         self.line_eps = float(line_eps)
         self.line_dual = np.zeros(len(lines) if lines is not None else 0)
@@ -180,6 +190,28 @@ class BLeaf(T4.CLeaf):
         self.hi_cq = []                       # clique keys currently in the model, in model order
         self.nvar = 0                         # number of equality rows in the model
         self.chord_dual = np.zeros(4)
+
+    # ---------------------------------------------------------------- interior quadrants
+    def quad_of(self, x, y):
+        """0..3 for a centre strictly inside a quadrant of the interior (Q0 bottom-left, Q1
+        bottom-right, Q2 top-left, Q3 top-right); the boundaries `x = t/2`, `y = t/2` are handled
+        by `region_labels`, which never calls this on them."""
+        h = self.t / 2.0
+        return (1 if x > h else 0) + (2 if y > h else 0)
+
+    def label_at(self, x, y):
+        """region label of a centre: 0..3 corner box, 4..11 slot, 12 interior -- or, with the
+        quadrant counts on, 12 + quadrant."""
+        k, j = classify(x, y, self.t, self.r)
+        lab = j if k == 'C' else (4 + j if k == 'W' else 12)
+        if lab == 12 and self.kq is not None:
+            lab = 12 + self.quad_of(x, y)
+        return lab
+
+    def region_of(self, p):
+        """`level2_lp.Leaf.region_of` (used by the pricer and the reduced-cost check), made
+        quadrant-aware; identical to it when the quadrant counts are off."""
+        return self.label_at(p[0], p[1])
 
     # ---------------------------------------------------------------- boundary semantics
     def region_labels(self, q):
@@ -200,8 +232,7 @@ class BLeaf(T4.CLeaf):
         out = []
         for x in xs:
             for y in ys:
-                k, j = classify(x, y, self.t, self.r)
-                lab = j if k == 'C' else (4 + j if k == 'W' else 12)
+                lab = self.label_at(x, y)
                 if lab not in out:
                     out.append(lab)
         return out
@@ -328,6 +359,21 @@ class BLeaf(T4.CLeaf):
                 rows.append((reg == 4 + j).astype(float)); vals.append(kw[j])
         return (sp.csr_matrix(np.array(rows)) if rows else None), np.array(vals)
 
+    def quad_matrix(self):
+        """the quadrant rows `mu({reg == 12 + i}) (= or <=) q_i`, in the order i = 0..3 over the
+        pinned quadrants; (None, empty) when the quadrant counts are off."""
+        if self.kq is None:
+            return None, np.zeros(0)
+        reg = np.array(self.reg)
+        rows, vals = [], []
+        for i in range(4):
+            if self.kq[i] is not None:
+                rows.append((reg == 12 + i).astype(float)); vals.append(float(self.kq[i]))
+        if not rows:
+            return None, np.zeros(0)
+        self.nq = len(rows)
+        return sp.csr_matrix(np.array(rows)), np.array(vals)
+
     # ---------------------------------------------------------------- LP
     def solve(self, kc, kw, method='highs', no_cliques=False, no_chord=False, no_lines=False):
         if self.backend != 'highs':
@@ -359,6 +405,12 @@ class BLeaf(T4.CLeaf):
         blocks, lo, hi = [], [], []
         if E is not None:
             blocks.append(E); lo.append(ev); hi.append(ev)
+        Qm, qv = self.quad_matrix()
+        nq = 0
+        if Qm is not None:
+            nq = Qm.shape[0]
+            blocks.append(Qm)
+            lo.append(qv.copy() if self.quad_mode == 'eq' else np.full(nq, -INF)); hi.append(qv)
         if self.chord and not no_chord:
             blocks.append(self.chord_matrix())
             lo.append(np.full(4, -INF)); hi.append(np.full(4, 3.0))
@@ -382,7 +434,7 @@ class BLeaf(T4.CLeaf):
         info = h.getInfo()
         mu = np.maximum(np.asarray(sol.col_value, dtype=float), 0.0)
         d = np.asarray(sol.row_dual, dtype=float)
-        ne = E.shape[0] if E is not None else 0
+        ne = (E.shape[0] if E is not None else 0) + nq
         o = ne + (4 if (self.chord and not no_chord) else 0) + nL
         y = np.maximum(-d[o:o + len(self.pts)], 0.0)
         lam = -d[:ne]
@@ -392,7 +444,7 @@ class BLeaf(T4.CLeaf):
         if no_cliques or no_chord or no_lines:
             return self._solve_fresh(kc, kw, no_cliques, no_chord, no_lines)
         n = len(self.poses)
-        pat = (tuple(kc), tuple(kw))
+        pat = (tuple(kc), tuple(kw), None if self.kq is None else tuple(self.kq), self.quad_mode)
         use_cq = bool(self.cliques)
         rebuild = (self.hi.h is None or self.hi.ncols != n or self.hi_pattern != pat
                    or self.hi_npts > len(self.pts))
@@ -405,6 +457,14 @@ class BLeaf(T4.CLeaf):
                 self.nvar = E.shape[0]
             else:
                 self.nvar = 0
+            Qm, qv = self.quad_matrix()
+            self.nq = 0
+            if Qm is not None:
+                self.nq = Qm.shape[0]
+                self.hi.append([('Q', i) for i in range(self.nq)],
+                               qv.copy() if self.quad_mode == 'eq' else np.full(self.nq, -INF),
+                               qv, Qm)
+                self.nvar += self.nq
             if self.chord:
                 C = self.chord_matrix()
                 self.hi.append([('D', i) for i in range(4)], np.full(4, -INF), np.full(4, 3.0), C)
@@ -463,6 +523,8 @@ class BLeaf(T4.CLeaf):
                 y[k[1]] = max(v, 0.0)
             elif k[0] == 'E':
                 lam[k[1]] = v
+            elif k[0] == 'Q':
+                lam[self.nvar - self.nq + k[1]] = v
             elif k[0] == 'D':
                 chd[k[1]] = max(v, 0.0)
             elif k[0] == 'L':
@@ -481,7 +543,17 @@ class BLeaf(T4.CLeaf):
         from scipy.optimize import linprog
         n = len(self.poses)
         E, ev = self.eq_matrix(kc, kw)
+        Qm, qv = self.quad_matrix()
+        nq_le = 0
+        if Qm is not None:
+            if self.quad_mode == 'eq':
+                E = Qm if E is None else sp.vstack([E, Qm], format='csr')
+                ev = np.concatenate([ev, qv]) if len(ev) else qv
+            else:
+                nq_le = Qm.shape[0]
         blocks, ub = [], []
+        if nq_le:
+            blocks.append(Qm); ub.append(qv)
         if self.chord and not no_chord:
             blocks.append(self.chord_matrix()); ub.append(np.full(4, 3.0))
         nL = 0
@@ -506,8 +578,11 @@ class BLeaf(T4.CLeaf):
         mu = np.maximum(res.x, 0.0)
         yz = np.maximum(-res.ineqlin.marginals, 0.0)
         o = 0
+        qlam = np.zeros(0)
+        if nq_le:
+            qlam = yz[:nq_le]; o = nq_le
         if self.chord and not no_chord:
-            self.chord_dual = yz[:4]; o = 4
+            self.chord_dual = yz[o:o + 4]; o += 4
         if nL:
             self.line_dual = yz[o:o + nL]; o += nL
         y = yz[o:o + len(self.pts)]
@@ -516,6 +591,8 @@ class BLeaf(T4.CLeaf):
             if self.cliques and len(self.z) == len(self.cage):
                 self.cage = np.where(self.z > 1e-9, 0, self.cage + 1)
         lam = -res.eqlin.marginals if E is not None else np.zeros(0)
+        if nq_le:
+            lam = np.concatenate([lam, qlam])
         return mu, y, -res.fun, lam
 
 
@@ -525,8 +602,16 @@ def split(leaf, mu):
     reg = np.array(leaf.reg)
     mc = [float(mu[reg == i].sum()) for i in range(4)]
     mw = [float(mu[reg == 4 + j].sum()) for j in range(8)]
-    mi = float(mu[reg == 12].sum())
+    mi = float(mu[reg >= 12].sum())            # 12 alone, or 12..15 with the quadrants on
     return mc, mw, mi
+
+
+def quads(leaf, mu):
+    """mass per interior quadrant (by column label), or None with the quadrant counts off"""
+    if leaf.kq is None:
+        return None
+    reg = np.array(leaf.reg)
+    return [float(mu[reg == 12 + i].sum()) for i in range(4)]
 
 
 def strips(leaf, mu):
@@ -594,6 +679,20 @@ def main():
     ap.add_argument('--bnd-delta', type=float, default=1e-6,
                     help='a pose within this of a region boundary gets one column per adjacent region')
     ap.add_argument('--chord', action='store_true', help='add mu(wall strip) <= 3 (a HYPOTHESIS)')
+    # --- the interior quadrant counts (tasks/depth-test, search/DEPTH.md)
+    ap.add_argument('--quad', default=None,
+                    help='four digits, the count pinned in each interior quadrant Q0..Q3 '
+                         '(bottom-left, bottom-right, top-left, top-right; "." = free).  A pose '
+                         'within --bnd-delta of x = t/2 or y = t/2 gets one column per adjacent '
+                         'quadrant, as on the slot boundaries.  Off (default): no change at all.')
+    ap.add_argument('--quad-mode', default='eq', choices=('eq', 'le'),
+                    help='eq: mu(Q_i) = q_i (the branch; with sum q = 4 the LP is then 12 or '
+                         'infeasible).  le: mu(Q_i) <= q_i, the cap relaxation whose value is a '
+                         'continuous margin (>= 12 iff the eq child is feasible).')
+    ap.add_argument('--load-poses-c4', action='append', default=[],
+                    help='like --load-poses, but only the poses carrying mass in the checkpoint, '
+                         'together with their three images under the C4 rotations about the '
+                         'centre (the symmetry of a C4-invariant slot pattern)')
     # --- the general-line chord cuts (search/LINECUTS.md)
     ap.add_argument('--lines', action='store_true',
                     help='add mu({chord of S on L >= 1}) <= ceil(Lam_L) - 1 for a family of lines')
@@ -654,12 +753,19 @@ def main():
         ex = [float(v) for v in a.line_exact.split(',') if v.strip()]
         F = LC.build(t, a.line_pitch, exact=ex, diag_pitch=a.line_diag_pitch,
                      maxcap=a.line_maxcap, hv=(a.line_pitch > 0))
+    kq = None
+    if a.quad is not None:
+        if len(a.quad) != 4:
+            raise SystemExit('--quad wants four characters, e.g. 1111 or 2..0')
+        kq = [None if c == '.' else float(c) for c in a.quad]
     leaf = BLeaf(t, a.r, lib, a.threads, log, D=a.D, delta=a.bnd_delta, chord=a.chord,
                  backend=a.backend, hs_solver=a.hs_solver, lp_tlim=a.lp_tlim, lines=F,
-                 line_eps=a.line_eps)
+                 line_eps=a.line_eps, quad=kq, quad_mode=a.quad_mode)
     kc = [None if c == '.' else float(c) for c in a.corners]
     log(f'# t4leaf t={t} r={a.r} corners={a.corners} patterns={a.patterns} chord={a.chord} '
         f'bnd_delta={a.bnd_delta} backend={a.backend} args={vars(a)}')
+    if kq is not None:
+        log(f'   interior quadrants: {a.quad} ({a.quad_mode}); labels 12..15 = Q0..Q3')
     if F is not None:
         caps = {}
         for i in range(len(F)):
@@ -676,6 +782,14 @@ def main():
         cand += L2.read_measure_poses(w, t)
     for w in a.load_poses:
         cand += T4.load_poses(w)
+    for w in a.load_poses_c4:
+        sup = [(float(q[1]), float(q[2]), math.radians(float(q[3]))) for q in
+               (l.split() for l in open(w)) if len(q) >= 5 and q[0] == 'pose' and float(q[4]) > 1e-9]
+        imgs = []
+        for (x, y, th) in sup:              # a square's angle is unchanged by a quarter turn
+            imgs += [(x, y, th), (t - y, x, th), (t - x, t - y, th), (y, t - x, th)]
+        log(f'   +{len(imgs)} C4 images of {len(sup)} support poses from {os.path.basename(w)}')
+        cand += imgs
     n = leaf.add_poses(cand)
     leaf.add_points(L2.pose_corners(leaf.poses[:a.corner_rows]))
     for rf in a.load_rows:
@@ -750,7 +864,7 @@ def main():
                 + f'(lp {leaf.lp_secs:.1f}s it{leaf.hi.iters if leaf.hi else 0}, {time.time()-T0:.0f}s)')
             rec = dict(tag=tag, it=it, LP=val, M=M, kmax=kmax, L=L, cols=len(leaf.poses),
                        poses=len(set(leaf.gkey)), rows=len(leaf.pts), cq=len(leaf.cliques),
-                       bad=len(bad), interior=mi, corners=mc, slots=mw,
+                       bad=len(bad), interior=mi, corners=mc, slots=mw, quads=quads(leaf, mu),
                        strips=strips(leaf, mu), bnd=leaf.boundary_mass(mu),
                        chord_dual=[float(v) for v in leaf.chord_dual] if leaf.chord else None,
                        secs=time.time() - T0)
@@ -784,6 +898,8 @@ def main():
         rec = dict(tag=tag, it='final', LP=val, M=M, kmax=kmax, L=val / max(M, kmax, 1.0),
                    cols=len(leaf.poses), poses=len(set(leaf.gkey)), rows=len(leaf.pts),
                    cq=len(leaf.cliques), bad=len(bad), interior=mi, corners=mc, slots=mw,
+                   quads=quads(leaf, mu), quad_dual=(None if leaf.kq is None else
+                                                     [float(v) for v in lam[len(lam) - leaf.nq:]]),
                    strips=strips(leaf, mu), bnd=leaf.boundary_mass(mu),
                    chord_dual=[float(v) for v in leaf.chord_dual] if leaf.chord else None,
                    lines=line_stats(mu),
@@ -791,7 +907,9 @@ def main():
                    converged=bool(M <= 1 + 1e-9 and kmax <= 1 + a.ktol))
         log(f'   [{tag}.final] cols={len(leaf.poses)} rows={len(leaf.pts)} cq={len(leaf.cliques)} '
             f'LP={val:.6f} M={M:.9f} kmax={kmax:.6f} int={mi:.6f} '
-            f'bnd={rec["bnd"]:.6f} conv={rec["converged"]} (lp {leaf.lp_secs:.1f}s)')
+            f'bnd={rec["bnd"]:.6f} conv={rec["converged"]} (lp {leaf.lp_secs:.1f}s)'
+            + (f' quads={np.round(rec["quads"], 6).tolist()} '
+               f'qdual={np.round(rec["quad_dual"], 4).tolist()}' if rec['quads'] else ''))
         if rec['lines']:
             log(f'   [{tag}.lines] {rec["lines"]["nz"]} of {len(leaf.lines)} lines carry dual, '
                 f'sum {rec["lines"]["dualsum"]:.6f}, {rec["lines"]["tight"]} tight, '
@@ -866,6 +984,10 @@ def main():
         for j in range(8):
             if kw[j] is not None:
                 out[4 + j] = float(lam[idx]); idx += 1
+        if leaf.kq is not None:
+            for i in range(4):
+                if leaf.kq[i] is not None:
+                    out[12 + i] = float(lam[idx]); idx += 1
         return out
 
     results = {}
@@ -891,7 +1013,9 @@ def main():
                              'LP_pure_nochord') if k in rec)
             log(f'   STAGE {stage} {pat}: LP={rec["LP"]:.6f} M={rec["M"]:.9f} kmax={rec["kmax"]:.6f} '
                 f'cols={rec["cols"]} rows={rec["rows"]} cq={rec["cq"]} int={rec["interior"]:.6f} '
-                f'strips={np.round(rec["strips"], 4).tolist()} conv={rec["converged"]}' + extra)
+                f'strips={np.round(rec["strips"], 4).tolist()} conv={rec["converged"]}'
+                + (f' quads={np.round(rec["quads"], 4).tolist()}' if rec.get('quads') else '')
+                + extra)
             if time.time() - T0 > a.time:
                 break
         if pmu is not None:
