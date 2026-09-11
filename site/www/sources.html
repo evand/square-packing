@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sources · Squares in Squares</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
+<style>
+.wrap{max-width:900px;margin:0 auto;padding:28px 20px 80px;display:flex;flex-direction:column;gap:32px}
+.wrap h1{font-size:2rem}
+.wrap h2{font-size:1.25rem;margin-top:4px}
+.wrap p{max-width:70ch}
+section{display:flex;flex-direction:column;gap:10px}
+.lede{font-size:1.05rem;color:var(--muted);max-width:70ch}
+.refs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.refs li{padding:9px 0;border-bottom:1px solid var(--rule);font-size:.95rem;max-width:76ch}
+.refs li:last-child{border-bottom:none}
+.refs .venue{color:var(--muted)}
+.refs a{font-weight:600}
+.tbl{border-collapse:collapse;font-size:.9rem;margin-top:4px}
+.tbl th,.tbl td{text-align:left;padding:3px 16px 3px 0;border-bottom:1px solid var(--rule)}
+.tbl th{font-family:"IBM Plex Mono",monospace;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.tbl td.n{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.small{font-size:.85rem;color:var(--muted);max-width:70ch}
+.tagline{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="brand">Squares in Squares</span>
+  <nav><a href="index.html">Overview</a><a href="explore.html">Explore</a><a href="compare.html">Compare</a><a href="bounds.html">Bounds</a><a href="proofs.html">Proofs</a><a href="sources.html" class="here">Sources</a></nav>
+</div>
+<div class="wrap">
+  <section>
+    <div class="eyebrow">where everything on this site comes from</div>
+    <h1>Sources</h1>
+    <p class="lede">Nothing here is original except the interactive parts and the contact/rigidity analysis. The packings are Ellsworth's, the proofs are the cited authors', and the 2026 lower-bound preprints are unrefereed. This page tries to say precisely which is which.</p>
+  </section>
+
+  <section>
+    <h2>1 · The catalogue this site is built on</h2>
+    <p>Every packing drawn on this site — coordinates, angles, side length — comes from the exact constants in David Ellsworth's SVG files. Dates and "found by" attributions shown elsewhere on this site are quoted from his wording, not independently re-derived.</p>
+    <ul class="refs">
+      <li>Erich Friedman, 1998–2009 (maintained), <a href="https://doi.org/10.37236/28">Packing unit squares in squares: a survey and new results</a>, <span class="venue">Electronic Journal of Combinatorics, Dynamic Survey #7</span> — the founding survey: the table of best-known s(n), the unavoidable-set proofs, and the technical lemmas the whole field reuses. Maintained copy: <a href="https://erich-friedman.github.io/papers/squares/squares.html">erich-friedman.github.io</a>, itself a <a href="https://github.com/erich-friedman/erich-friedman.github.io">GitHub Pages repository</a>.</li>
+      <li>David Ellsworth, 2023–2026 (maintained), <a href="https://kingbird.myphotos.cc/packing/squares_in_squares.html">Squares in Squares</a>, <span class="venue">kingbird.myphotos.cc</span> — the current record table, up to very large n, with high-precision side lengths, exact forms where known, and dated attributions; some records are built by directly minimising the side length analytically rather than by search.</li>
+      <li>— sub-pages: <a href="https://kingbird.myphotos.cc/packing/squares_in_squares__triangular_table.html">triangular table</a>, <a href="https://kingbird.myphotos.cc/packing/squares_in_squares__compared.html">older / alternative packings</a>, <a href="https://kingbird.myphotos.cc/packing/squares_in_squares__rigid.html">rigid packings</a>, <a href="https://kingbird.myphotos.cc/packing/squares_in_squares__Göbel_strips.html">Göbel strips</a>, <a href="https://kingbird.myphotos.cc/packing/squares_in_squares__Göbel_squares.html">Göbel squares</a>, and the <a href="https://kingbird.myphotos.cc/packing/squares_in_squares__n^2-n-1.html">n²−n−1 family</a>.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>2 · Origins</h2>
+    <ul class="refs">
+      <li>F. Göbel, 1979, Geometrical packing and covering problems, in <span class="venue">Packing and Covering in Combinatorics</span> (A. Schrijver, ed.), Math. Centre Tracts 106, pp. 179–199 — the paper that started it: s(2)=s(3)=2, s(5)=2+1/√2, the Göbel-strip family, and the unavoidable-point method every later proof uses.</li>
+      <li>Martin Gardner, Oct 1979, "Some packing problems that cannot be solved by sitting on the suitcase," Mathematical Games, <span class="venue">Scientific American</span> 241(4) — brought Göbel's packings to a wide audience and set off a wave of reader submissions (indexed in the <a href="https://en.wikipedia.org/wiki/List_of_Martin_Gardner_Mathematical_Games_columns">list of Gardner's columns</a>).</li>
+      <li>Martin Gardner, 1992, <span class="venue">Fractal Music, Hypercards and More</span>, W. H. Freeman, ch. "Packing Squares," pp. 289–306 — book reprint of the column plus reader addenda; the version MathWorld and Friedman cite.</li>
+      <li>Walter Trump, 1979, n = 11 packing, s ≈ 3.877084 — <a href="https://en.wikipedia.org/wiki/Walter_Trump">background</a>. Independently rediscovered by several of Gardner's readers; Trump's <a href="https://www.researchgate.net/publication/368988287_Packing_of_11_unit_squares_in_a_square_with_minimum_size">2023 note</a> argues it cannot be improved within its combinatorial type.</li>
+    </ul>
+    <p class="small">The rest of the early field reached Gardner by reader mail and has no separate web presence: Pertti Hämäläinen (1980, improved n = 17–18), Robert Wainwright (1979, n = 19), Charles F. Cottingham (1979, diagonal-strip packings up to n ≈ 49), Evert Stenlund (1980, records for nearly all n ≤ 100), and Mats Gustafsson (1981, an alternative n = 18). Their attributions here follow Friedman's survey and Ellsworth's page.</p>
+  </section>
+
+  <section>
+    <h2>3 · Proofs: exact values and lower bounds</h2>
+    <ul class="refs">
+      <li>W. Stromquist, 1984, "Packing unit squares inside squares" memoranda I–III, Daniel H. Wagner Associates — unpublished but online: <a href="http://walterstromquist.com/papers/squares1.pdf">I</a>, <a href="http://walterstromquist.com/papers/squares2.pdf">II</a>, <a href="http://walterstromquist.com/papers/squares3.pdf">III</a>; settled s(6) and s(10) and first argued Gardner's n = 11 conjecture.</li>
+      <li>M. J. Kearney and P. Shiu, 2002, <a href="https://www.combinatorics.org/ojs/index.php/eljc/article/view/v9i1r14">Efficient packing of unit squares in a square</a>, <span class="venue">Electron. J. Combin. 9, #R14</span> — first published proof of s(6)=3 (Ellsworth dates it June 2001), by a duality argument.</li>
+      <li>S. El Moumni, 1999, "Optimal packings of unit squares in a square," <span class="venue">Studia Sci. Math. Hungar. 35(3–4), 281–290</span> — independent proofs of s(7)=s(8)=3 and s(15)=4.</li>
+      <li>W. Stromquist, 2003, <a href="https://www.combinatorics.org/ojs/index.php/eljc/article/view/v10i1r8">Packing 10 or 11 unit squares in a square</a>, <span class="venue">Electron. J. Combin. 10, #R8</span> — s(10)=3+1/√2 and s(11) ≥ 2+4/√5, which by monotonicity is also the classical bound for s(12).</li>
+      <li>H. Nagamochi, 2005, <a href="https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37">Packing unit squares in a rectangle</a>, <span class="venue">Electron. J. Combin. 12, #R37</span> — proves s(n²−2)=s(n²−1)=n for every n, using weighted points, segments and areas as "resources."</li>
+      <li>W. Bentz, 2010, <a href="https://www.combinatorics.org/ojs/index.php/eljc/article/view/v17i1r126">Optimal packings of 13 and 46 unit squares in a square</a>, <span class="venue">Electron. J. Combin. 17, #R126</span> — s(13)=4 and s(46)=7; s(13)=4 is what makes n=12 the open boundary case.</li>
+      <li>W. Bentz, 2016 (v2 2018), <a href="https://arxiv.org/abs/1606.03746">Optimal packings of 22 and 33 unit squares in a square</a>, <span class="venue">arXiv:1606.03746</span> — s(22)=5, s(33)=6, via continuously varying families of unavoidable sets; no journal version found, cite as arXiv.</li>
+      <li>Erich Friedman's survey (§1) supplies Theorems 1–8: the unavoidable- and almost-unavoidable-set proofs of s(7), s(8), s(14), s(15), s(24) and s(35), plus bounds for s(13), s(19)–s(21).</li>
+      <li>T. Green, 2000, private communication to Friedman, unpublished — lower-bound theorems for the n²+1 and n²+⌊n/2⌋+1 families (Theorems 9–10 of the survey) and specific bounds for n = 17–18, 22, 26–30.</li>
+      <li>P. Erdős and R. L. Graham, 1975, <a href="https://www.sciencedirect.com/science/article/pii/0097316575900990">On packing squares with equal squares</a>, <span class="venue">J. Combin. Theory Ser. A 19, 119–123</span> — wasted area W(x)=O(x^{7/11}) via tilted strips; opened the asymptotic question.</li>
+      <li>K. F. Roth and R. C. Vaughan, 1978, <a href="https://doi.org/10.1016/0097-3165(78)90005-5">Inefficiency in packing squares with unit squares</a>, <span class="venue">J. Combin. Theory Ser. A 24(2), 170–186</span> — the matching lower bound, W(x) ≫ √x at half-integer sides.</li>
+      <li>F. Chung and R. Graham, 2009, <a href="https://doi.org/10.1016/j.jcta.2009.02.005">Packing equal squares into a large square</a>, <span class="venue">J. Combin. Theory Ser. A 116(6), 1167–1175</span> — improved the exponent to about 0.6306.</li>
+      <li>F. Chung and R. Graham, 2020, <a href="https://doi.org/10.1007/s00454-019-00088-9">Efficient packings of unit squares in a large square</a>, <span class="venue">Discrete Comput. Geom. 64, 690–699</span> — claimed W(x)=O(x^{3/5}).</li>
+      <li>M. Z. Arslanov and H. D. Bui, 2025, <a href="https://doi.org/10.1007/s00454-025-00767-w">Note on "Efficient packings of unit squares in a large square"</a>, <span class="venue">Discrete Comput. Geom.</span> — finds an angle-computation error that invalidates the 2020 exponent.</li>
+      <li>H. D. Bui, 2025, <a href="https://arxiv.org/abs/2504.09489">Square packing with asymptotically smallest waste only needs good squares</a>, <span class="venue">arXiv:2504.09489</span>, and <a href="https://arxiv.org/abs/2508.04603">Square packing with O(x^{0.6}) wasted area</a>, <span class="venue">arXiv:2508.04603</span> — repairs the 3/5 exponent with a new construction.</li>
+      <li>R. McClenagan, 2024/2026, MSc thesis (Univ. of Northern British Columbia, DOI 10.24124/2024/59553) and <a href="https://arxiv.org/abs/2602.01484">Optimally packing a large square by unit squares</a>, <span class="venue">arXiv:2602.01484</span> — an independent O(x^{3/5}) proof. The exponent is currently pinned between 1/2 and 3/5.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>4 · Packers and their tools</h2>
+    <p>Below are the people whose packings the record table stands on and how they found them, in the order the field usually cites them.</p>
+    <ul class="refs">
+      <li>John Bidwell, 1998, University of Hawaii undergraduate — found n = 17 (s ≈ 4.6755), still the record, based on a 1980 packing by Pertti Hämäläinen.</li>
+      <li>David W. Cantrell, 2002–2005 and 2024–2026, sci.math and private communication — n = 19, 26, 37, 39, 41, 53, 54, 55, 68, 70, 71, 87, 88 and others; five records still stand.</li>
+      <li>Joe DeVincentis, Apr 2014, private communication — n = 41 and an alternative n = 54/70/71 extension.</li>
+      <li>Károly Hajba, 2009 and Sep–Nov 2024 — n = 51 (first s(51) &lt; 7+1/√2), and 83, 102, 107, 108, 131, 172, 240 in a burst of 2024 improvements.</li>
+      <li>Maurizio Morandi, 2010, private communication — n = 69.</li>
+      <li>T. Gensane and P. Ryckelynck, 2005 (online 2004), <a href="https://doi.org/10.1007/s00454-004-1129-z">Improved dense packings of congruent squares in a square</a>, <span class="venue">Discrete Comput. Geom. 34, 97–109</span> — an "inflation" search algorithm; new packings for n = 11 (rediscovery), 29, 37 and an alternative n = 18.</li>
+      <li>Thomas Schadt, Dec 2025–2026 — a simulated-annealing program, "starting from randomness"; program not public; records for n = 28, 29, 39, 41, 50, 51, 55, 68, 71, 103, 105, 126 and more.</li>
+      <li>David Ellsworth, 2023–2026 — maintains the record page, refines Schadt's finds, and finds his own records (including by direct analytic optimisation rather than search); currently credited with the largest share of the table.</li>
+    </ul>
+    <p class="tagline">Current records by finder</p>
+    <table class="tbl">
+      <tr><th>Finder</th><th>Records</th></tr>
+      <tr><td>David Ellsworth</td><td class="n">46</td></tr>
+      <tr><td>Thomas Schadt</td><td class="n">9</td></tr>
+      <tr><td>Frits Göbel</td><td class="n">7</td></tr>
+      <tr><td>M. Z. Arslanov, S. A. Mustafin &amp; Z. K. Shangitbayev (joint)</td><td class="n">7</td></tr>
+      <tr><td>Károly Hajba</td><td class="n">6</td></tr>
+      <tr><td>David W. Cantrell</td><td class="n">5</td></tr>
+      <tr><td>Evert Stenlund</td><td class="n">4</td></tr>
+      <tr><td>Erich Friedman</td><td class="n">3</td></tr>
+      <tr><td>David Ellsworth &amp; David W. Cantrell (joint)</td><td class="n">2</td></tr>
+      <tr><td>Michael J. Kearney &amp; Peter Shiu (joint)</td><td class="n">1</td></tr>
+      <tr><td>Walter Trump, John Bidwell, Pertti Hämäläinen, Robert Wainwright, Sigvart Brendberg, Maurizio Morandi, Joe DeVincentis</td><td class="n">1 each</td></tr>
+    </table>
+    <p class="small">Counted from the "Found by" (or "Found first by") line on each row of Ellsworth's main table (not the sub-pages), one credit per current record; a joint find is one credit for the pair, not one each. This is a tally of attribution text, not a claim about who actually deserves credit for disputed or independently-rediscovered packings.</p>
+  </section>
+
+  <section>
+    <h2>5 · Computer-checked lower bounds (2026, unrefereed)</h2>
+    <p>All five items below are preprints or blog posts, none peer-reviewed, all with published code or a verifier so the claims can be checked independently.</p>
+    <ul class="refs">
+      <li>S. Burns, 6 Aug 2026, <a href="https://sam-burns.com/posts/proposing-better-lower-bound-for-n17-square-packing/">Proposing a Better Lower Bound for n=17 Square Packing</a>, <span class="venue">sam-burns.com (blog)</span> — s(17) ≥ 4.4811 from 268 weighted points, a certificate developed with ChatGPT and verified in exact rational arithmetic; code at <a href="https://github.com/sam-bee/squarl">github.com/sam-bee/squarl</a>.</li>
+      <li>G. Massaccesi, 21 Aug 2026, <a href="https://gus-massa.blogspot.com/2026/08/another-better-lower-bound-for-n17.html">Another Better Lower Bound for n=17 Square Packing</a>, <span class="venue">gus-massa.blogspot.com</span> — s(17) ≥ 4.5058 from 168 LP-optimised weighted points; methodology in a <a href="https://gus-massa.blogspot.com/2026/08/linear-programing-for-square-packing.html">companion post</a>.</li>
+      <li>S. Fort, <a href="https://github.com/stanislavfort/17squares">github.com/stanislavfort/17squares</a> — s(17) &gt; 4.456575 from unweighted points and an exact subdivision of pose space; the repository states it was produced by an AI model whose correctness the author does not personally vouch for.</li>
+      <li>Mira, <a href="https://github.com/Mira-acc/17squares">github.com/Mira-acc/17squares</a> — s(17) &gt; 4.468292 from 16 unweighted points and a dyadic subdivision of pose space, with three independent checkers and a <a href="https://github.com/Mira-acc/17squares/blob/main/paper/17squares-lower-bound.pdf">write-up</a>; later raised to 4.613028635886… with 1,620 rational-weighted atoms.</li>
+      <li>evand, 2026, <a href="https://github.com/evand/square-packing/tree/main/s12">square-packing (s12/)</a>, <span class="venue">GitHub repository</span> — s(12) ≥ 15680/3951 ≈ 3.9686 from 1,736 LP-optimised weighted points, verified exactly over the full continuum of positions and angles; <a href="s12/">write-up</a>. Builds directly on Burns's and Massaccesi's method, applied to n = 12.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>6 · Explainers and popular coverage</h2>
+    <ul class="refs">
+      <li>Deckard, 27 Sep 2025, <a href="https://www.youtube.com/watch?v=uL5wuiy34rs">Packing Squares Inside The Smallest Square Possible</a>, <span class="venue">YouTube</span> — the original explainer; discussed on <a href="https://news.ycombinator.com/item?id=45405476">Hacker News</a>.</li>
+      <li>Deckard, 2026, <a href="https://www.youtube.com/watch?v=beFC3qRBG4E">NEW SQUARE PACKING SOLUTIONS</a>, <span class="venue">YouTube</span> — a sequel covering the Schadt/Ellsworth 2025–26 records.</li>
+      <li>Randall Munroe, 20 Feb 2023, <a href="https://xkcd.com/2740/">xkcd #2740, "Square Packing"</a> — a joke about n = 11 and a hydraulic press; annotated at <a href="https://www.explainxkcd.com/wiki/index.php/2740:_Square_Packing">explainxkcd</a>.</li>
+      <li>Daniel Piker (@KangarooPhysics), 14 Feb 2023, <a href="https://x.com/KangarooPhysics/status/1625423951156375553">repost of the n = 17 packing</a> and a <a href="https://x.com/KangarooPhysics/status/1625627324296175617">rigidity follow-up</a>, <span class="venue">X (Twitter)</span> — the post that made the n = 17 packing a meme, with the observation that three squares can slide and one has room to wiggle.</li>
+      <li>Eric Weisstein, <a href="https://mathworld.wolfram.com/SquarePacking.html">Square Packing</a>, <span class="venue">MathWorld</span> — a reference table of best-known s(n) with asterisks marking proven values.</li>
+      <li>Wikipedia, <a href="https://en.wikipedia.org/wiki/Square_packing">Square packing</a> — a general-audience summary with its own reference list.</li>
+      <li>Hacker News threads: <a href="https://news.ycombinator.com/item?id=34809023">"Squares in Squares" (kingbird)</a>, Feb 2023; <a href="https://news.ycombinator.com/item?id=45405476">Deckard's video</a>, Sep 2025; <a href="https://news.ycombinator.com/item?id=49390775">Massaccesi's n = 17 bound</a>, Aug 2026.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>7 · This site</h2>
+    <p>Built in 2026. The packings themselves are Ellsworth's (§1); the parsing, contact-graph, and rigidity analysis that drive the Explore, Compare and Bounds pages are ours, written independently of his. Free-square and gap measurements are computed in double precision from his published 30-digit constants; the "exact contact" flags shown elsewhere are checked at 50 digits of precision, to keep floating-point roundoff from ever being mistaken for a touching pair. Code: <a href="https://github.com/evand/square-packing">github.com/evand/square-packing</a>.</p>
+    <p class="note" id="rigidcheck">Checking our rigidity analysis against Ellsworth's own "Rigid" marks…</p>
+    <script>
+    // The one external check the site has: Ellsworth marks some packings "Rigid" on his pages, and
+    // our analysis decides rigidity from the contact geometry alone.  Report the comparison as it
+    // actually comes out, whichever way that is.
+    fetch('data/index.json').then(r => r.json()).then(idx => {
+      const c = idx.checks, el = document.getElementById('rigidcheck');
+      if (!c) { el.textContent = ''; return; }
+      const a = c.rigid_yes_disagree || [], b = c.rigid_no_disagree || [];
+      const name = f => f.replace('square-', 'n = ').replace('.svg', '');
+      el.textContent =
+        `Ellsworth's rigid page shows ${c.rigid_yes} packings he calls rigid alongside ${c.rigid_no} he calls not rigid or only semi-rigid. ` +
+        (a.length ? `${c.rigid_yes - a.length} of the first group come out rigid in our analysis; ${a.length} do not (${a.map(name).join(', ')}). `
+                  : 'Our analysis finds all of the first group rigid. ') +
+        (b.length ? `${b.length} of the second come out rigid here (${b.map(name).join(', ')}).`
+                  : 'It finds none of the second group rigid.');
+    }).catch(() => { document.getElementById('rigidcheck').textContent = ''; });
+    </script>
+  </section>
+</div>
+</body>
+</html>

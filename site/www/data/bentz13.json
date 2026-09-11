@@ -1,0 +1,204 @@
+{
+  "title": "Bentz's proof that 13 unit squares need a 4×4 box",
+  "source": {
+    "citation": "W. Bentz, \"Optimal packings of 13 and 46 unit squares in a square\", Electron. J. Combin. 17 (2010) #R126, pp. 4–10 (§3, Theorem 9).",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v17i1r126",
+    "note": "Coordinates below are transcribed from §3 of the published paper. Points obtained by mirroring are expanded explicitly here; the paper states them as images under x↦4−x, y↦4−y and x↔y."
+  },
+  "glossary": "A box is the inside of a square of side a little more than 1. Bentz proves that 13 boxes never fit in the closed square [0,4]², which is the same statement as s(13) = 4.",
+  "nodes": [
+    {
+      "id": "root", "depth": 0,
+      "parent": null,
+      "title": "The 16 starting points",
+      "ref": "Bentz 2010, §3, Figure 2",
+      "text": "The container is the square [0,4]². Suppose 13 boxes are packed inside it; a box is the inside of a square of side a little more than 1, so ruling out 13 boxes is the same as proving that 13 unit squares need side 4. Bentz starts with 16 points, built from A(1, 0.914), B(0.914, 1), C(0.914, 2) and D(1.65, 1.65) by mirroring in x = 2, y = 2 and y = x. Standard non-avoidance lemmas cover every region of the picture, so every box, wherever it sits and however it is turned, contains at least one of the 16 points.",
+      "points": [[1,0.914],[3,0.914],[1,3.086],[3,3.086],[0.914,1],[3.086,1],[0.914,3],[3.086,3],[0.914,2],[3.086,2],[2,0.914],[2,3.086],[1.65,1.65],[2.35,1.65],[1.65,2.35],[2.35,2.35]],
+      "spent": [],
+      "labels": [{"p":[1,0.914],"t":"A"},{"p":[0.914,1],"t":"B","dx":-0.26,"dy":-0.02},{"p":[0.914,2],"t":"C","dx":-0.26,"dy":-0.02},{"p":[1.65,1.65],"t":"D"}],
+      "boxes": [],
+      "regions": [],
+      "budget": {"line": "13 boxes against 16 points — only 3 points of slack", "free": 16, "placed": 0}
+    },
+    {
+      "id": "count", "depth": 0,
+      "parent": "root",
+      "title": "Counting: two lonely corner boxes",
+      "ref": "Bentz 2010, §3, p. 4",
+      "text": "Every box holds a point, so 13 boxes use up 13 points. Only 3 points are left over, which means at most 3 boxes can afford a second point and at least 10 boxes hold exactly one. Eight of the 16 points sit near the corners, two per corner (ringed here). Doing the arithmetic on those eight, at least two of them lie in a box that contains no other point of the set; Bentz calls such a box corner-restricted.",
+      "points": [[1,0.914],[3,0.914],[1,3.086],[3,3.086],[0.914,1],[3.086,1],[0.914,3],[3.086,3],[0.914,2],[3.086,2],[2,0.914],[2,3.086],[1.65,1.65],[2.35,1.65],[1.65,2.35],[2.35,2.35]],
+      "spent": [],
+      "emph": [[1,0.914],[3,0.914],[1,3.086],[3,3.086],[0.914,1],[3.086,1],[0.914,3],[3.086,3]],
+      "labels": [{"p":[1,0.914],"t":"A"},{"p":[0.914,1],"t":"B","dx":-0.26,"dy":-0.02}],
+      "boxes": [],
+      "regions": [],
+      "budget": {"line": "16 points − 13 boxes = 3 spare ⇒ at least 2 corner-restricted boxes", "free": 16, "placed": 0}
+    },
+    {
+      "id": "lemma10", "depth": 0,
+      "parent": "count",
+      "title": "The replacement trick (Lemma 10)",
+      "ref": "Bentz 2010, Lemma 10, p. 5",
+      "text": "Take a box that contains A(1, 0.914) and no other point of the 16. Replacing A by (1.12, 1) leaves the set unavoidable, so that box has to contain (1.12, 1) as well — otherwise the repaired set would be dodged. The same argument works for (1, 1.74) and (1.87, 0.76), so the box covers the whole shaded triangle they span. The trick needs a box that is alone with A, and that is exactly what the counting step delivered.",
+      "points": [[1,0.914],[3,0.914],[1,3.086],[3,3.086],[0.914,1],[3.086,1],[0.914,3],[3.086,3],[0.914,2],[3.086,2],[2,0.914],[2,3.086],[1.65,1.65],[2.35,1.65],[1.65,2.35],[2.35,2.35],[1.12,1],[1,1.74],[1.87,0.76]],
+      "spent": [],
+      "labels": [{"p":[1,0.914],"t":"A"}],
+      "boxes": [{"label": "T", "kind": "forced", "poly": [[1,0.914],[1.87,0.76],[1,1.74]], "note": "everything this box must cover"}],
+      "regions": [],
+      "budget": {"line": "no counting here — this lemma is the currency the two cases spend", "free": 0, "placed": 0}
+    },
+    {
+      "id": "na", "depth": 0,
+      "parent": "lemma10",
+      "title": "Case A · corner-restricted boxes at different corners",
+      "ref": "Bentz 2010, §3.1, Figure 3",
+      "text": "Assume one corner-restricted box holds A, and the second one does not hold B — so the two sit at different corners. Bentz rebuilds the point set: ten fixed points (1, 1.74), (2, 1.74), (1.6, 1) and their mirrors in x = 2 and y = 2, plus four alternative pairs {A, B} and their mirrors, one point taken from each pair (the unchosen partners are the hollow circles). That gives 14 points, and the lemmas cover every region except the two shaded rectangles [1,2]×[1.74,2.26] and [2,3]×[1.74,2.26]. Each corner-restricted box holds its pair point and, by Lemma 10, a second point of the set — four points inside two boxes.",
+      "note": "The picture makes a representative choice: the two corner-restricted boxes are drawn at the bottom-left and bottom-right corners, and the A-type point is taken from every pair. The shaded wedges are what Lemma 10 forces those boxes to cover; Bentz only claims credit for two points per box, which is why (1.6, 1) and (2.4, 1) are still counted as free.",
+      "points": [[1,1.74],[3,1.74],[1,2.26],[3,2.26],[2,1.74],[2,2.26],[1.6,1],[2.4,1],[1.6,3],[2.4,3],[1,0.914],[3,0.914],[1,3.086],[3,3.086]],
+      "spent": [[1,0.914],[1,1.74],[3,0.914],[3,1.74]],
+      "alts": [[0.914,1],[3.086,1],[0.914,3],[3.086,3]],
+      "labels": [{"p":[1,0.914],"t":"A","dx":-0.3,"dy":-0.02}],
+      "boxes": [
+        {"label": "T₁", "kind": "forced", "poly": [[1,0.914],[1.87,0.76],[1,1.74]]},
+        {"label": "T₂", "kind": "forced", "poly": [[3,0.914],[2.13,0.76],[3,1.74]]}
+      ],
+      "regions": [
+        {"label": "critical", "poly": [[1,1.74],[2,1.74],[2,2.26],[1,2.26]]},
+        {"label": "critical", "poly": [[2,1.74],[3,1.74],[3,2.26],[2,2.26]]}
+      ],
+      "budget": {"line": "10 free points + 2 placed boxes = 12 < 13 ⇒ some box holds no point at all", "free": 10, "placed": 2}
+    },
+    {
+      "id": "na2", "depth": 1,
+      "parent": "na",
+      "title": "Case A · the second set closes it",
+      "ref": "Bentz 2010, §3.1, Figure 4",
+      "leaf": true,
+      "text": "The point-free box has its centre in one of the two critical rectangles; by symmetry take [1,2]×[1.74,2.26]. Bentz now swaps in a second configuration: eleven points (1.6, 1), (2.26, 1), (3, 1.6), (1, 1.74), (1.78, 1.74), (2.26, 2) and their mirrors in y = 2, plus the same four alternative pairs, so 15 points that no box can dodge. The two corner-restricted boxes still cover two points each, and the box sitting in the shaded rectangle is forced by Corollary 3 to cover both (1.78, 1.74) and (1.78, 2.26). Six of the 15 points are inside three boxes, so only nine more boxes can be added: twelve in all, not thirteen.",
+      "points": [[1.6,1],[1.6,3],[2.26,1],[2.26,3],[3,1.6],[3,2.4],[1,1.74],[1,2.26],[1.78,1.74],[1.78,2.26],[2.26,2],[1,0.914],[3,0.914],[1,3.086],[3,3.086]],
+      "spent": [[1,0.914],[1,1.74],[3,0.914],[3,1.6],[1.78,1.74],[1.78,2.26]],
+      "alts": [[0.914,1],[3.086,1],[0.914,3],[3.086,3]],
+      "labels": [],
+      "boxes": [
+        {"label": "T₁", "kind": "forced", "poly": [[1,0.914],[1.87,0.76],[1,1.74]]},
+        {"label": "T₂", "kind": "forced", "poly": [[3,0.914],[2.13,0.76],[3,1.74]]},
+        {"label": "T′", "kind": "region", "poly": [[1,1.74],[2,1.74],[2,2.26],[1,2.26]], "note": "centre of the point-free box lies here"}
+      ],
+      "regions": [],
+      "budget": {"line": "9 free points + 3 placed boxes = 12 < 13", "free": 9, "placed": 3}
+    },
+    {
+      "id": "adj", "depth": 0,
+      "parent": "lemma10",
+      "title": "Case B · both boxes at the same corner",
+      "ref": "Bentz 2010, §3.2, Figure 5",
+      "text": "Now one corner-restricted box T_A holds A and the other, T_B, holds B. At most one of them can contain (1, 1), so Lemma 11 applies to the other; say T_B. Between them the two boxes are pinned to nine points: S_A = {A, (1.13, 1), (1.4, 1), (1.74, 1), (1.87, 0.76)} inside T_A, and S_B = {B, (1, 1.13), (1, 1.82), (0.76, 1.96)} inside T_B. Adding (2.5, 1), (3, 1) and the grid {1,2,3}×{1.82, 2.36, 3.09} makes an unavoidable set whose only uncovered regions are the four rectangles R₁ to R₄, numbered clockwise from the top left.",
+      "points": [[1,0.914],[1.13,1],[1.4,1],[1.74,1],[1.87,0.76],[0.914,1],[1,1.13],[1,1.82],[0.76,1.96],[2.5,1],[3,1],[2,1.82],[3,1.82],[1,2.36],[2,2.36],[3,2.36],[1,3.09],[2,3.09],[3,3.09]],
+      "spent": [[1,0.914],[1.13,1],[1.4,1],[1.74,1],[1.87,0.76],[0.914,1],[1,1.13],[1,1.82],[0.76,1.96]],
+      "labels": [{"p":[1,0.914],"t":"A"},{"p":[0.914,1],"t":"B","dx":-0.26,"dy":-0.02}],
+      "boxes": [
+        {"label": "T_A", "kind": "forced", "poly": [[1,0.914],[1.13,1],[1.74,1],[1.87,0.76]], "label_at": [2.05,0.82]},
+        {"label": "T_B", "kind": "forced", "poly": [[0.914,1],[1,1.13],[1,1.82],[0.76,1.96]], "label_at": [0.42,1.5]}
+      ],
+      "regions": [
+        {"label": "R₁", "poly": [[1,2.36],[2,2.36],[2,3.09],[1,3.09]]},
+        {"label": "R₂", "poly": [[2,2.36],[3,2.36],[3,3.09],[2,3.09]]},
+        {"label": "R₃", "poly": [[2,1.82],[3,1.82],[3,2.36],[2,2.36]]},
+        {"label": "R₄", "poly": [[1,1.82],[2,1.82],[2,2.36],[1,2.36]]}
+      ],
+      "budget": {"line": "10 free points + 2 placed boxes = 12 < 13 ⇒ a third box T′ holds no point", "free": 10, "placed": 2}
+    },
+    {
+      "id": "r1", "depth": 1,
+      "parent": "adj",
+      "title": "B1 · T′ in R₁",
+      "ref": "Bentz 2010, §3.2.1, Figure 6",
+      "leaf": true,
+      "text": "The point-free box T′ has its centre in R₁ = [1,2]×[2.36,3.09]. Corollary 3 forces it to cover the midpoints of the two long edges of R₁, and Corollary 7 says it must overlap the line x = 1 in length at least 0.09, so it covers (1, 3) or meets the segment {1}×[2.45, 2.91]. Bentz handles both at once with a sliding point Z anywhere on {1}×[2.36, 2.92] (red segment): the set stays unavoidable wherever Z is put, so put Z where T′ meets the line. Whichever of (1, 3) and Z the box swallows, nine points are left over.",
+      "note": "The paper introduces this list as \"18 points\"; counting the named sets gives 20, plus Z. The count that matters — nine points not covered by T_A, T_B or T′ — is unaffected.",
+      "points": [[1,0.914],[1.13,1],[1.4,1],[1.74,1],[1.87,0.76],[0.914,1],[1,1.13],[1,1.82],[0.76,1.96],[1.5,2.36],[1.5,3.09],[2.5,1],[3,1],[2,1.82],[3,1.82],[2.3,2.5],[3,2.5],[1,3],[2.3,3],[3,3],[1,2.7]],
+      "spent": [[1,0.914],[1.13,1],[1.4,1],[1.74,1],[1.87,0.76],[0.914,1],[1,1.13],[1,1.82],[0.76,1.96],[1.5,2.36],[1.5,3.09],[1,3]],
+      "labels": [{"p":[1,2.7],"t":"Z"}],
+      "boxes": [
+        {"label": "T_A", "kind": "forced", "poly": [[1,0.914],[1.13,1],[1.74,1],[1.87,0.76]], "label_at": [2.05,0.82]},
+        {"label": "T_B", "kind": "forced", "poly": [[0.914,1],[1,1.13],[1,1.82],[0.76,1.96]], "label_at": [0.42,1.5]},
+        {"label": "T′", "kind": "region", "poly": [[1,2.36],[2,2.36],[2,3.09],[1,3.09]], "note": "centre of the point-free box lies here"}
+      ],
+      "regions": [],
+      "segments": [{"label": "Z slides here", "a": [1,2.36], "b": [1,2.92]}],
+      "budget": {"line": "9 free points + 3 placed boxes = 12 < 13", "free": 9, "placed": 3}
+    },
+    {
+      "id": "r2a", "depth": 1,
+      "parent": "adj",
+      "title": "B2a · T′ in R₂, covering (2, 2.72)",
+      "ref": "Bentz 2010, §3.2.2 (1), Figure 7",
+      "leaf": true,
+      "text": "T′ has its centre in R₂ = [2,3]×[2.36,3.09]. Split on whether it covers (2, 2.72), the midpoint of the left edge of R₂; this branch says it does. Together with the two edge midpoints from Corollary 3 the box is credited with three points, and the rest of the configuration is rearranged around it. Only eight points are left free — this branch closes with room to spare.",
+      "points": [[1,0.914],[1.13,1],[1.4,1],[1.74,1],[1.87,0.76],[0.914,1],[1,1.13],[1,1.82],[0.76,1.96],[2.5,2.36],[2.5,3.09],[2,2.72],[2.5,1],[3.1,1],[2.5,1.6],[1.6,1.95],[3.1,2],[1,2.72],[1,3],[1.8,3]],
+      "spent": [[1,0.914],[1.13,1],[1.4,1],[1.74,1],[1.87,0.76],[0.914,1],[1,1.13],[1,1.82],[0.76,1.96],[2.5,2.36],[2.5,3.09],[2,2.72]],
+      "labels": [],
+      "boxes": [
+        {"label": "T_A", "kind": "forced", "poly": [[1,0.914],[1.13,1],[1.74,1],[1.87,0.76]], "label_at": [2.05,0.82]},
+        {"label": "T_B", "kind": "forced", "poly": [[0.914,1],[1,1.13],[1,1.82],[0.76,1.96]], "label_at": [0.42,1.5]},
+        {"label": "T′", "kind": "region", "poly": [[2,2.36],[3,2.36],[3,3.09],[2,3.09]], "note": "centre of the point-free box lies here"}
+      ],
+      "regions": [],
+      "budget": {"line": "8 free points + 3 placed boxes = 11 < 13", "free": 8, "placed": 3}
+    },
+    {
+      "id": "r2b", "depth": 1,
+      "parent": "adj",
+      "title": "B2b · T′ in R₂, missing (2, 2.72)",
+      "ref": "Bentz 2010, §3.2.2 (2), Figure 8",
+      "leaf": true,
+      "text": "This is the other half of R₂: T′ does not cover (2, 2.72). Then its overlap with the left edge of R₂ is shorter than 0.37, and Corollary 7 says the two vertical overlaps add up to at least 0.828, so the overlap with the right edge is at least 0.45. An interval that long inside {3}×[2.36, 3.09] has to contain (3, 2.64), so T′ covers that point too. Nine points remain free.",
+      "points": [[1,0.914],[1.13,1],[1.4,1],[1.74,1],[1.87,0.76],[0.914,1],[1,1.13],[1,1.82],[0.76,1.96],[2.5,2.36],[2.5,3.09],[3,2.64],[2.5,1],[3,1],[2,1.82],[3,1.82],[1,2.36],[1.5,2.36],[1,3],[1.8,3],[3,3]],
+      "spent": [[1,0.914],[1.13,1],[1.4,1],[1.74,1],[1.87,0.76],[0.914,1],[1,1.13],[1,1.82],[0.76,1.96],[2.5,2.36],[2.5,3.09],[3,2.64]],
+      "labels": [],
+      "boxes": [
+        {"label": "T_A", "kind": "forced", "poly": [[1,0.914],[1.13,1],[1.74,1],[1.87,0.76]], "label_at": [2.05,0.82]},
+        {"label": "T_B", "kind": "forced", "poly": [[0.914,1],[1,1.13],[1,1.82],[0.76,1.96]], "label_at": [0.42,1.5]},
+        {"label": "T′", "kind": "region", "poly": [[2,2.36],[3,2.36],[3,3.09],[2,3.09]], "note": "centre of the point-free box lies here"}
+      ],
+      "regions": [],
+      "budget": {"line": "9 free points + 3 placed boxes = 12 < 13", "free": 9, "placed": 3}
+    },
+    {
+      "id": "r3", "depth": 1,
+      "parent": "adj",
+      "title": "B3 · T′ in R₃",
+      "ref": "Bentz 2010, §3.2.3, Figure 9",
+      "leaf": true,
+      "text": "R₃ = [2,3]×[1.82,2.36] is only 0.54 tall, so Corollary 7 bites harder: the overlap with each vertical edge is at least 0.28, which pins (3, 2.10). The same bookkeeping shows the left overlap exceeds 0.32 or the right overlap exceeds 0.50, so T′ also covers (2, 2.14) or (3, 1.86) — the picture greys the first of the two. With the two edge midpoints of R₃ that is four points inside T′, leaving nine free.",
+      "points": [[1,0.914],[1.13,1],[1.4,1],[1.74,1],[1.87,0.76],[0.914,1],[1,1.13],[1,1.82],[0.76,1.96],[2.5,1.82],[2.5,2.36],[3,2.1],[2.3,1],[3.05,1],[1.8,1.8],[3,1.86],[1,2.14],[2,2.14],[1,3],[1.5,3],[2.3,3],[3.1,3]],
+      "spent": [[1,0.914],[1.13,1],[1.4,1],[1.74,1],[1.87,0.76],[0.914,1],[1,1.13],[1,1.82],[0.76,1.96],[2.5,1.82],[2.5,2.36],[3,2.1],[2,2.14]],
+      "labels": [],
+      "boxes": [
+        {"label": "T_A", "kind": "forced", "poly": [[1,0.914],[1.13,1],[1.74,1],[1.87,0.76]], "label_at": [2.05,0.82]},
+        {"label": "T_B", "kind": "forced", "poly": [[0.914,1],[1,1.13],[1,1.82],[0.76,1.96]], "label_at": [0.42,1.5]},
+        {"label": "T′", "kind": "region", "poly": [[2,1.82],[3,1.82],[3,2.36],[2,2.36]], "note": "centre of the point-free box lies here"}
+      ],
+      "regions": [],
+      "budget": {"line": "9 free points + 3 placed boxes = 12 < 13", "free": 9, "placed": 3}
+    },
+    {
+      "id": "r4", "depth": 1,
+      "parent": "adj",
+      "title": "B4 · T′ in R₄",
+      "ref": "Bentz 2010, §3.2.4, Figure 10",
+      "leaf": true,
+      "text": "R₄ = [1,2]×[1.82,2.36] is the mirror situation of R₃, and the same edge-overlap argument pins both (1, 2.10) and (2, 2.10) inside T′. With the two midpoints of the long edges of R₄ that is four points, on top of the nine held by T_A and T_B. Nine points are left free, and the last branch closes.",
+      "points": [[1,0.914],[1.13,1],[1.4,1],[1.74,1],[1.87,0.76],[0.914,1],[1,1.13],[1,1.82],[0.76,1.96],[1.5,1.82],[1.5,2.36],[1,2.1],[2,2.1],[2.5,1],[3.1,1],[2.4,1.6],[3.1,2],[2.4,2.5],[0.9,3],[1.7,3],[2.5,3],[3.1,3]],
+      "spent": [[1,0.914],[1.13,1],[1.4,1],[1.74,1],[1.87,0.76],[0.914,1],[1,1.13],[1,1.82],[0.76,1.96],[1.5,1.82],[1.5,2.36],[1,2.1],[2,2.1]],
+      "labels": [],
+      "boxes": [
+        {"label": "T_A", "kind": "forced", "poly": [[1,0.914],[1.13,1],[1.74,1],[1.87,0.76]], "label_at": [2.05,0.82]},
+        {"label": "T_B", "kind": "forced", "poly": [[0.914,1],[1,1.13],[1,1.82],[0.76,1.96]], "label_at": [0.42,1.5]},
+        {"label": "T′", "kind": "region", "poly": [[1,1.82],[2,1.82],[2,2.36],[1,2.36]], "note": "centre of the point-free box lies here"}
+      ],
+      "regions": [],
+      "budget": {"line": "9 free points + 3 placed boxes = 12 < 13", "free": 9, "placed": 3}
+    }
+  ]
+}

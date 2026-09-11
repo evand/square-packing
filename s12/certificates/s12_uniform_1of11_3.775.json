@@ -1,0 +1,58 @@
+{
+  "schema": "s12-points-json/1",
+  "problem": "packing 12 unit squares in a square",
+  "theorem": "s(12) >= 185/49",
+  "bound": "185/49",
+  "n": 12,
+  "container_side": {
+    "numerator": 185,
+    "denominator": 49,
+    "decimal": 3.7755102040816326
+  },
+  "point_denominator": 7840,
+  "weight_denominator": 1,
+  "points": [
+    [5975, 14309],
+    [7835, 21764],
+    [7836, 7739],
+    [11325, 14752],
+    [14473, 21925],
+    [14612, 7643],
+    [16748, 11915],
+    [18666, 15813],
+    [21775, 22513],
+    [21776, 7327],
+    [23696, 14922]
+  ],
+  "weights": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "total_weight": {
+    "numerator": 11,
+    "denominator": 1,
+    "decimal": 11.0
+  },
+  "convention": {
+    "squares": "closed",
+    "boundary_points_count": true,
+    "claim": "every closed unit square contained in the closed container [0, s]^2, at every centre and every angle, contains points of total weight >= 1",
+    "argument": "concentric shrink: a packing of n unit squares in a container of side s' < s, rescaled by s/s' > 1, gives n squares each strictly containing a concentric closed unit square; those have pairwise disjoint interiors, so no point is counted twice and n <= total_weight < n is a contradiction",
+    "note": "this differs from the open-square / pigeonhole convention of the unweighted family (Fort, Mira): a certificate for one convention does not verify under the other's checker",
+    "reference": "certificates/FORMAT.md"
+  },
+  "source": {
+    "file": "s12_uniform_1of11_3.775.txt",
+    "sha256": "fb204a0f3bb49f34b6ed10a2b442c2467833cc12ea599f985f9f4a77ea03fbcd",
+    "format": "certificates/FORMAT.md"
+  }
+}

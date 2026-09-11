@@ -1,0 +1,90 @@
+== certificates/s12_uniform_1of11_3.775.txt
+185 49 7840 1 11 
+verify N=2000: VERIFIED: every CLOSED unit square inside C covers weight >= 1, and total weight < 12. real	0m0.036s 
+verify N=8000: VERIFIED: every CLOSED unit square inside C covers weight >= 1, and total weight < 12. real	0m0.064s 
+xcheck N=2000 --all: minimum covered weight over ALL bins = 1 = 1.0000000   (at bin k=0) VERIFIED: every closed unit square inside [0,185/49]^2 covers weight >= 1, and total weight < 12 real	0m0.692s 
+wrote certificates/s12_uniform_1of11_3.775.json  (11 points, total weight 11/1)
+roundtrip OK  s12_uniform_1of11_3.775.txt <-> s12_uniform_1of11_3.775.json  (11 points, total weight 11, sha256 fb204a0f3bb49f34...)
+critical D = 7840
+best container side = 185/49 = 3.775510204
+==> s(12) >= 185/49 = 3.775510204
+== certificates/s12_uniform_2of23_3.767.txt
+2701 717 4302 2 23 
+verify N=2000: VERIFIED: every CLOSED unit square inside C covers weight >= 1, and total weight < 12. real	0m0.037s 
+verify N=8000: VERIFIED: every CLOSED unit square inside C covers weight >= 1, and total weight < 12. real	0m0.095s 
+xcheck N=2000 --all: minimum covered weight over ALL bins = 1 = 1.0000000   (at bin k=0) VERIFIED: every closed unit square inside [0,2701/717]^2 covers weight >= 1, and total weight < 12 real	0m1.065s 
+wrote certificates/s12_uniform_2of23_3.767.json  (23 points, total weight 23/2)
+roundtrip OK  s12_uniform_2of23_3.767.txt <-> s12_uniform_2of23_3.767.json  (23 points, total weight 23/2, sha256 b40ef136e19adbb1...)
+critical D = 4302
+best container side = 2701/717 = 3.767085077
+==> s(12) >= 2701/717 = 3.767085077
+== certificates/s12_uniform_3of33_3.808.txt
+5000 1313 7878 3 33 
+verify N=2000: VERIFIED: every CLOSED unit square inside C covers weight >= 1, and total weight < 12. real	0m0.045s 
+verify N=8000: VERIFIED: every CLOSED unit square inside C covers weight >= 1, and total weight < 12. real	0m0.078s 
+xcheck N=2000 --all: minimum covered weight over ALL bins = 1 = 1.0000000   (at bin k=0) VERIFIED: every closed unit square inside [0,5000/1313]^2 covers weight >= 1, and total weight < 12 real	0m0.697s 
+wrote certificates/s12_uniform_3of33_3.808.json  (33 points, total weight 11/1)
+roundtrip OK  s12_uniform_3of33_3.808.txt <-> s12_uniform_3of33_3.808.json  (33 points, total weight 11, sha256 5d3bf037b85e8751...)
+critical D = 7878
+best container side = 5000/1313 = 3.808073115
+==> s(12) >= 5000/1313 = 3.808073115
+== certificates/s12_uniform_4of45_3.793.txt
+29600 7803 7803 4 45 
+verify N=2000: VERIFIED: every CLOSED unit square inside C covers weight >= 1, and total weight < 12. real	0m0.083s 
+verify N=8000: VERIFIED: every CLOSED unit square inside C covers weight >= 1, and total weight < 12. real	0m0.123s 
+xcheck N=2000 --all: minimum covered weight over ALL bins = 1 = 1.0000000   (at bin k=0) VERIFIED: every closed unit square inside [0,29600/7803]^2 covers weight >= 1, and total weight < 12 real	0m0.956s 
+wrote certificates/s12_uniform_4of45_3.793.json  (45 points, total weight 45/4)
+roundtrip OK  s12_uniform_4of45_3.793.txt <-> s12_uniform_4of45_3.793.json  (45 points, total weight 45/4, sha256 a885328e9b4e42f6...)
+critical D = 7803
+best container side = 29600/7803 = 3.793412790
+==> s(12) >= 29600/7803 = 3.793412790
+== certificates/s12_uniform_5of56_3.852.txt
+7600 1973 3946 5 56 
+verify N=2000: VERIFIED: every CLOSED unit square inside C covers weight >= 1, and total weight < 12. real	0m0.065s 
+verify N=8000: VERIFIED: every CLOSED unit square inside C covers weight >= 1, and total weight < 12. real	0m0.136s 
+xcheck N=2000 --all: minimum covered weight over ALL bins = 1 = 1.0000000   (at bin k=0) VERIFIED: every closed unit square inside [0,7600/1973]^2 covers weight >= 1, and total weight < 12 real	0m0.826s 
+wrote certificates/s12_uniform_5of56_3.852.json  (56 points, total weight 56/5)
+roundtrip OK  s12_uniform_5of56_3.852.txt <-> s12_uniform_5of56_3.852.json  (56 points, total weight 56/5, sha256 15c8d7d26c9e9be4...)
+critical D = 3946
+best container side = 7600/1973 = 3.852002027
+==> s(12) >= 7600/1973 = 3.852002027
+== certificates/s12_uniform_5of57_3.852.txt
+3040 789 7890 5 57 
+verify N=2000: VERIFIED: every CLOSED unit square inside C covers weight >= 1, and total weight < 12. real	0m0.055s 
+verify N=8000: VERIFIED: every CLOSED unit square inside C covers weight >= 1, and total weight < 12. real	0m0.115s 
+xcheck N=2000 --all: minimum covered weight over ALL bins = 1 = 1.0000000   (at bin k=0) VERIFIED: every closed unit square inside [0,3040/789]^2 covers weight >= 1, and total weight < 12 real	0m0.881s 
+wrote certificates/s12_uniform_5of57_3.852.json  (57 points, total weight 57/5)
+roundtrip OK  s12_uniform_5of57_3.852.txt <-> s12_uniform_5of57_3.852.json  (57 points, total weight 57/5, sha256 9580f0872d594aca...)
+critical D = 7890
+best container side = 3040/789 = 3.852978454
+==> s(12) >= 3040/789 = 3.852978454
+== certificates/s12_uniform_6of69_3.815.txt
+15000 3931 7862 6 69 
+verify N=2000: VERIFIED: every CLOSED unit square inside C covers weight >= 1, and total weight < 12. real	0m0.114s 
+verify N=8000: VERIFIED: every CLOSED unit square inside C covers weight >= 1, and total weight < 12. real	0m0.196s 
+xcheck N=2000 --all: minimum covered weight over ALL bins = 1 = 1.0000000   (at bin k=0) VERIFIED: every closed unit square inside [0,15000/3931]^2 covers weight >= 1, and total weight < 12 real	0m1.392s 
+wrote certificates/s12_uniform_6of69_3.815.json  (69 points, total weight 23/2)
+roundtrip OK  s12_uniform_6of69_3.815.txt <-> s12_uniform_6of69_3.815.json  (69 points, total weight 23/2, sha256 ef7acf4696abd3a2...)
+critical D = 7862
+best container side = 15000/3931 = 3.815822946
+==> s(12) >= 15000/3931 = 3.815822946
+== certificates/s12_uniform_7of81_3.888.txt
+35 9 7920 7 81 
+verify N=2000: VERIFIED: every CLOSED unit square inside C covers weight >= 1, and total weight < 12. real	0m0.116s 
+verify N=8000: VERIFIED: every CLOSED unit square inside C covers weight >= 1, and total weight < 12. real	0m0.247s 
+xcheck N=2000 --all: minimum covered weight over ALL bins = 1 = 1.0000000   (at bin k=0) VERIFIED: every closed unit square inside [0,35/9]^2 covers weight >= 1, and total weight < 12 real	0m1.285s 
+wrote certificates/s12_uniform_7of81_3.888.json  (81 points, total weight 81/7)
+roundtrip OK  s12_uniform_7of81_3.888.txt <-> s12_uniform_7of81_3.888.json  (81 points, total weight 81/7, sha256 728a681fb90a81be...)
+critical D = 7920
+best container side = 35/9 = 3.888888889
+==> s(12) >= 35/9 = 3.888888889
+== certificates/s12_uniform_8of93_3.848.txt
+29223 7594 15188 8 93 
+verify N=2000: VERIFIED: every CLOSED unit square inside C covers weight >= 1, and total weight < 12. real	0m0.107s 
+verify N=8000: VERIFIED: every CLOSED unit square inside C covers weight >= 1, and total weight < 12. real	0m0.212s 
+xcheck N=2000 --all: minimum covered weight over ALL bins = 1 = 1.0000000   (at bin k=0) VERIFIED: every closed unit square inside [0,29223/7594]^2 covers weight >= 1, and total weight < 12 real	0m1.183s 
+wrote certificates/s12_uniform_8of93_3.848.json  (93 points, total weight 93/8)
+roundtrip OK  s12_uniform_8of93_3.848.txt <-> s12_uniform_8of93_3.848.json  (93 points, total weight 93/8, sha256 6483fbc4a92176e8...)
+critical D = 15188
+best container side = 29223/7594 = 3.848169608
+==> s(12) >= 29223/7594 = 3.848169608

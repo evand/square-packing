@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Packing Twelve Squares</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --paper:#F2F4F1; --surface:#FBFCFA; --ink:#131A1E; --muted:#5F6B70; --rule:#D6DCD7;
+  --accent:#0E7490; --accent-soft:#DCEDF1; --gold:#9C6410; --gold-soft:#F5EBDA; --green:#2A6E4F; --green-soft:#DFEDE5;
+  --shadow:0 1px 2px rgba(19,26,30,.05),0 8px 24px -12px rgba(19,26,30,.14);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E1316; --surface:#151C20; --ink:#E4EBEA; --muted:#96A4A8; --rule:#263238;
+    --accent:#54C3D6; --accent-soft:#0F3138; --gold:#DBA745; --gold-soft:#33280F; --green:#63BE92; --green-soft:#122B20;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E1316; --surface:#151C20; --ink:#E4EBEA; --muted:#96A4A8; --rule:#263238;
+  --accent:#54C3D6; --accent-soft:#0F3138; --gold:#DBA745; --gold-soft:#33280F; --green:#63BE92; --green-soft:#122B20;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:Spectral,Georgia,"Times New Roman",serif;font-size:17.5px;line-height:1.65;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:760px;margin:0 auto;padding:64px 24px 96px}
+h1,h2,h3{text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:clamp(2.1rem,5.2vw,3rem);font-weight:700;letter-spacing:-.015em}
+h2{font-size:1.55rem;font-weight:600;margin-top:0}
+h3{font-size:1.1rem;font-weight:600}
+p{margin:0}
+a{color:var(--accent);text-decoration-thickness:.08em;text-underline-offset:.18em}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted);font-weight:500}
+header{display:flex;flex-direction:column;gap:18px;padding-bottom:34px;border-bottom:1px solid var(--rule)}
+.lede{font-size:1.16rem;color:var(--muted);max-width:60ch}
+section{display:flex;flex-direction:column;gap:18px;padding:44px 0;border-bottom:1px solid var(--rule)}
+section:last-of-type{border-bottom:none}
+.sechead{display:flex;flex-direction:column;gap:6px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:24px;box-shadow:var(--shadow)}
+.thm{border-left:3px solid var(--accent);display:flex;flex-direction:column;gap:14px}
+.thm .stmt{font-size:1.22rem;line-height:1.5}
+.big{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-weight:600;
+  font-size:clamp(1.9rem,5vw,2.5rem);color:var(--accent);letter-spacing:-.02em}
+.tag{display:inline-flex;align-items:center;gap:7px;font-family:"IBM Plex Mono",monospace;font-size:.72rem;
+  letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:999px;font-weight:500}
+.tag.ok{background:var(--green-soft);color:var(--green)}
+.tag.open{background:var(--gold-soft);color:var(--gold)}
+.tag.neutral{background:var(--accent-soft);color:var(--accent)}
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+.tablewrap{overflow-x:auto}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);font-weight:500}
+td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+figure{margin:0;display:flex;flex-direction:column;gap:12px}
+figcaption{font-size:.9rem;color:var(--muted)}
+.figbox{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:18px}
+pre{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:16px;overflow-x:auto;
+  font-family:"IBM Plex Mono",monospace;font-size:.83rem;line-height:1.6;margin:0}
+code{font-family:"IBM Plex Mono",monospace;font-size:.9em;background:var(--accent-soft);
+  padding:.1em .35em;border-radius:2px}
+pre code{background:none;padding:0;font-size:1em}
+ul{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:9px}
+li::marker{color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.axis{width:100%;height:96px}
+.footnote{font-size:.87rem;color:var(--muted)}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+<header>
+  <span class="eyebrow">Discrete geometry · computer-assisted proof</span>
+  <h1>Packing Twelve Squares</h1>
+  <p class="lede">Nobody knows whether twelve unit squares fit inside a square of side less than 4.
+  The best proven barrier had stood since 2003, at 3.7889. Here is a new one at 3.9686, machine-checked
+  from end to end — closing about 85% of the remaining gap, and an honest account of how far it does
+  <em>not</em> go.</p>
+  <div class="tags">
+    <span class="tag ok">Lower bound improved</span>
+    <span class="tag open">Main conjecture still open</span>
+    <span class="tag neutral">Certificate verified exactly</span>
+    <a class="tag neutral" href="https://github.com/evand/square-packing/tree/main/s12">Code, certificates &amp; verifier on GitHub →</a>
+  </div>
+</header>
+
+<section>
+  <div class="sechead"><span class="eyebrow">01 · The result</span><h2>A new lower bound for s(12)</h2></div>
+  <div class="card thm">
+    <p class="stmt"><strong>Theorem.</strong> Twelve unit squares cannot be packed into any square of
+    side smaller than <span class="mono">15680/3951</span>. That is, <span class="mono">s(12) ≥ 3.968616…</span>.</p>
+    <p class="big">3.788854 &nbsp;→&nbsp; 3.968616</p>
+    <p class="footnote">Previous published bound: <span class="mono">2 + 4/√5 = 3.788854…</span>
+    (Stromquist 2003, inherited from n = 11 by monotonicity, and listed as the record for n = 11–12 in
+    Friedman's dynamic survey DS7). The conjectured truth is <span class="mono">s(12) = 4</span>.</p>
+  </div>
+  <p>The proof is a <em>weighted unavoidable set</em>: a finite set of points carrying weights, such
+  that every unit square inside the container — at every position and every angle — captures total
+  weight at least 1. Twelve squares with disjoint interiors would then capture at least 12, so a
+  certificate weighing less than 12 rules them out.</p>
+  <div class="card">
+    <p>The certificate has <strong>1736 points</strong> with rational coordinates of denominator 3951,
+    in a container of side <span class="mono">15680/3951</span>, and total weight
+    <span class="mono">11.9738036</span> — under the threshold by <span class="mono">0.026</span>.
+    A 764-point certificate proves <span class="mono">s(12) ≥ 980/247 = 3.967611</span>, and the
+    first bound published here, <span class="mono">3920/997 = 3.931795</span>, now needs only 224 points.</p>
+  </div>
+  <p>A weaker certificate is far prettier, and worth stating because a human can hold it in their head.
+  Insist that every point carry the <em>same</em> weight, and the best one found is:</p>
+  <div class="card">
+    <p><strong>81 points</strong> in <span class="mono">[0, 35/9]²</span> such that <strong>every</strong>
+    closed unit square inside that container, at every angle, contains <strong>at least 7</strong> of them.</p>
+  </div>
+  <p>Twelve squares with disjoint interiors would need <span class="mono">12 × 7 = 84</span> point-slots
+  and only 81 points exist, so at most <span class="mono">⌊81/7⌋ = 11</span> fit — hence
+  <span class="mono">s(12) ≥ 35/9 = 3.888…</span>, already past the 2003 bound. Everything after that
+  sentence is arithmetic a computer checks exactly.</p>
+</section>
+
+<section>
+  <div class="sechead"><span class="eyebrow">02 · Context</span><h2>Where the problem stands</h2></div>
+  <p>Let <span class="mono">s(n)</span> be the side of the smallest square holding <span class="mono">n</span>
+  unit squares, rotations allowed. It is known exactly for surprisingly few <span class="mono">n</span>.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>n</th><th>s(n)</th><th>status</th></tr></thead>
+    <tbody>
+      <tr><td class="num">10</td><td class="num">3.707107…</td><td>proved — Stromquist 2003</td></tr>
+      <tr><td class="num">11</td><td class="num">3.877084…</td><td>best packing (Trump 1979); <strong>optimality open</strong></td></tr>
+      <tr><td class="num">12</td><td class="num">4 &nbsp;(conjectured)</td><td><strong>open</strong> — bound raised here to 3.9686</td></tr>
+      <tr><td class="num">13</td><td class="num">4</td><td>proved — Bentz 2010</td></tr>
+      <tr><td class="num">14, 15, 16</td><td class="num">4</td><td>proved — El Moumni, Nagamochi, area</td></tr>
+    </tbody>
+  </table></div>
+  <p>Because <span class="mono">s(13) = 4</span> is proved and <span class="mono">s(11) &lt; 4</span>,
+  the largest <span class="mono">n</span> with <span class="mono">s(n) &lt; 4</span> is either 11 or 12 —
+  and deciding which <em>is</em> the open problem. The gap for n = 12 was
+  <span class="mono">[3.788854, 4]</span>; it is now <span class="mono">[3.9686, 4]</span>.</p>
+</section>
+
+<section>
+  <div class="sechead"><span class="eyebrow">03 · The other direction</span><h2>No packing below 4 was found</h2></div>
+  <p>The conjecture could also fall the other way — a clever tilted packing of 12 squares into
+  something smaller than 4 would settle it immediately. It doesn't appear to exist.</p>
+  <p>An L-BFGS + basin-hopping optimiser over the 36-dimensional configuration space
+  <span class="mono">(x, y, θ) × 12</span>, validated by reproducing the known optima for
+  n = 5, 10 and 11 to five decimal places, was run at container sides 3.90 through 3.999.
+  Every run collapsed to the same attractor: the compressed <span class="mono">4 × 4</span> grid,
+  with residual overlap energy exactly <span class="mono">0.2 ε²</span> at side
+  <span class="mono">4 − ε</span>. Nothing below 4 turned up — consistent with the
+  2025–26 simulated-annealing campaigns of Schadt and Ellsworth, which improved records at
+  n = 28, 29, 39, 41, 50… but never at 12.</p>
+</section>
+
+<section>
+  <div class="sechead"><span class="eyebrow">04 · The certificate</span><h2>What the 81 points look like</h2></div>
+  <figure>
+    <div class="figbox"><svg viewBox="0 0 560 560" width="100%" role="img" aria-label="81-point certificate in a square of side 35/9">
+<defs><pattern id="gp" width="26.1" height="26.1" patternUnits="userSpaceOnUse"><path d="M 26.1 0 L 0 0 0 26.1" fill="none" stroke="var(--rule)" stroke-width="0.5"/></pattern></defs>
+<rect x="26.0" y="26.0" width="508.0" height="508.0" fill="url(#gp)" stroke="var(--ink)" stroke-width="1.4"/>
+<polygon points="130.5,462.2 261.1,462.2 261.1,331.5 130.5,331.5" fill="var(--accent)" fill-opacity="0.10" stroke="var(--accent)" stroke-width="1.6"/>
+<polygon points="320.1,304.2 442.8,259.5 398.1,136.8 275.4,181.5" fill="var(--gold)" fill-opacity="0.10" stroke="var(--gold)" stroke-width="1.6"/>
+<polygon points="208.9,273.7 301.2,181.3 208.9,88.9 116.5,181.3" fill="var(--green)" fill-opacity="0.10" stroke="var(--green)" stroke-width="1.6"/>
+<circle cx="113.3" cy="403.5" r="2.6" fill="var(--muted)"/>
+<circle cx="113.3" cy="156.5" r="2.6" fill="var(--muted)"/>
+<circle cx="113.9" cy="280.0" r="2.6" fill="var(--muted)"/>
+<circle cx="138.9" cy="286.0" r="2.6" fill="var(--muted)"/>
+<circle cx="138.9" cy="274.0" r="2.6" fill="var(--muted)"/>
+<circle cx="140.2" cy="404.0" r="4.2" fill="var(--accent)"/>
+<circle cx="140.2" cy="156.0" r="2.6" fill="var(--muted)"/>
+<circle cx="149.7" cy="404.1" r="4.2" fill="var(--accent)"/>
+<circle cx="149.7" cy="155.9" r="4.2" fill="var(--green)"/>
+<circle cx="155.9" cy="410.3" r="4.2" fill="var(--accent)"/>
+<circle cx="155.9" cy="149.7" r="4.2" fill="var(--green)"/>
+<circle cx="156.0" cy="419.8" r="4.2" fill="var(--accent)"/>
+<circle cx="156.0" cy="140.2" r="2.6" fill="var(--muted)"/>
+<circle cx="156.1" cy="313.8" r="2.6" fill="var(--muted)"/>
+<circle cx="156.1" cy="246.2" r="2.6" fill="var(--muted)"/>
+<circle cx="156.4" cy="285.8" r="2.6" fill="var(--muted)"/>
+<circle cx="156.4" cy="274.2" r="2.6" fill="var(--muted)"/>
+<circle cx="156.5" cy="446.7" r="4.2" fill="var(--accent)"/>
+<circle cx="156.5" cy="113.3" r="2.6" fill="var(--muted)"/>
+<circle cx="156.6" cy="403.4" r="4.2" fill="var(--accent)"/>
+<circle cx="156.6" cy="351.9" r="4.2" fill="var(--accent)"/>
+<circle cx="156.6" cy="208.1" r="4.2" fill="var(--green)"/>
+<circle cx="156.6" cy="156.6" r="4.2" fill="var(--green)"/>
+<circle cx="208.1" cy="403.4" r="4.2" fill="var(--accent)"/>
+<circle cx="208.1" cy="156.6" r="4.2" fill="var(--green)"/>
+<circle cx="215.6" cy="287.0" r="2.6" fill="var(--muted)"/>
+<circle cx="215.6" cy="273.0" r="2.6" fill="var(--muted)"/>
+<circle cx="223.0" cy="304.8" r="2.6" fill="var(--muted)"/>
+<circle cx="223.0" cy="255.2" r="4.2" fill="var(--green)"/>
+<circle cx="246.2" cy="403.9" r="4.2" fill="var(--accent)"/>
+<circle cx="246.2" cy="156.1" r="4.2" fill="var(--green)"/>
+<circle cx="255.2" cy="337.0" r="4.2" fill="var(--accent)"/>
+<circle cx="255.2" cy="223.0" r="4.2" fill="var(--green)"/>
+<circle cx="273.0" cy="344.4" r="2.6" fill="var(--muted)"/>
+<circle cx="273.0" cy="215.6" r="2.6" fill="var(--muted)"/>
+<circle cx="274.0" cy="421.1" r="2.6" fill="var(--muted)"/>
+<circle cx="274.0" cy="138.9" r="2.6" fill="var(--muted)"/>
+<circle cx="274.2" cy="403.6" r="2.6" fill="var(--muted)"/>
+<circle cx="274.2" cy="156.4" r="4.2" fill="var(--green)"/>
+<circle cx="280.0" cy="446.1" r="2.6" fill="var(--muted)"/>
+<circle cx="280.0" cy="280.0" r="2.6" fill="var(--muted)"/>
+<circle cx="280.0" cy="113.9" r="2.6" fill="var(--muted)"/>
+<circle cx="285.8" cy="403.6" r="2.6" fill="var(--muted)"/>
+<circle cx="285.8" cy="156.4" r="2.6" fill="var(--muted)"/>
+<circle cx="286.0" cy="421.1" r="2.6" fill="var(--muted)"/>
+<circle cx="286.0" cy="138.9" r="2.6" fill="var(--muted)"/>
+<circle cx="287.0" cy="344.4" r="2.6" fill="var(--muted)"/>
+<circle cx="287.0" cy="215.6" r="2.6" fill="var(--muted)"/>
+<circle cx="304.8" cy="337.0" r="2.6" fill="var(--muted)"/>
+<circle cx="304.8" cy="223.0" r="4.2" fill="var(--gold)"/>
+<circle cx="313.8" cy="403.9" r="2.6" fill="var(--muted)"/>
+<circle cx="313.8" cy="156.1" r="2.6" fill="var(--muted)"/>
+<circle cx="337.0" cy="304.8" r="2.6" fill="var(--muted)"/>
+<circle cx="337.0" cy="255.2" r="4.2" fill="var(--gold)"/>
+<circle cx="344.4" cy="287.0" r="4.2" fill="var(--gold)"/>
+<circle cx="344.4" cy="273.0" r="4.2" fill="var(--gold)"/>
+<circle cx="351.9" cy="403.4" r="2.6" fill="var(--muted)"/>
+<circle cx="351.9" cy="156.6" r="4.2" fill="var(--gold)"/>
+<circle cx="403.4" cy="403.4" r="2.6" fill="var(--muted)"/>
+<circle cx="403.4" cy="351.9" r="2.6" fill="var(--muted)"/>
+<circle cx="403.4" cy="208.1" r="4.2" fill="var(--gold)"/>
+<circle cx="403.4" cy="156.6" r="4.2" fill="var(--gold)"/>
+<circle cx="403.5" cy="446.7" r="2.6" fill="var(--muted)"/>
+<circle cx="403.5" cy="113.3" r="2.6" fill="var(--muted)"/>
+<circle cx="403.6" cy="285.8" r="2.6" fill="var(--muted)"/>
+<circle cx="403.6" cy="274.2" r="2.6" fill="var(--muted)"/>
+<circle cx="403.9" cy="313.8" r="2.6" fill="var(--muted)"/>
+<circle cx="403.9" cy="246.2" r="4.2" fill="var(--gold)"/>
+<circle cx="404.0" cy="419.8" r="2.6" fill="var(--muted)"/>
+<circle cx="404.0" cy="140.2" r="2.6" fill="var(--muted)"/>
+<circle cx="404.1" cy="410.3" r="2.6" fill="var(--muted)"/>
+<circle cx="404.1" cy="149.7" r="2.6" fill="var(--muted)"/>
+<circle cx="410.3" cy="404.1" r="2.6" fill="var(--muted)"/>
+<circle cx="410.3" cy="155.9" r="2.6" fill="var(--muted)"/>
+<circle cx="419.8" cy="404.0" r="2.6" fill="var(--muted)"/>
+<circle cx="419.8" cy="156.0" r="2.6" fill="var(--muted)"/>
+<circle cx="421.1" cy="286.0" r="2.6" fill="var(--muted)"/>
+<circle cx="421.1" cy="274.0" r="2.6" fill="var(--muted)"/>
+<circle cx="446.1" cy="280.0" r="2.6" fill="var(--muted)"/>
+<circle cx="446.7" cy="403.5" r="2.6" fill="var(--muted)"/>
+<circle cx="446.7" cy="156.5" r="2.6" fill="var(--muted)"/>
+<text x="195.8" y="401.8" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600" fill="var(--accent)">10</text>
+<text x="359.1" y="225.5" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600" fill="var(--gold)">8</text>
+<text x="208.9" y="186.3" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600" fill="var(--green)">9</text>
+<text x="26.0" y="554" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--muted)">0</text>
+<text x="510.0" y="554" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--muted)">35/9</text>
+</svg></div>
+    <figcaption>The 81-point uniform certificate at side 35/9 (the 3.9686 certificate has 1736
+    weighted points and does not draw as cleanly). Three sample unit squares are
+    drawn — axis-aligned, tilted 20°, tilted 45° — with the points each one captures highlighted and
+    counted. No placement anywhere, at any angle, captures fewer than 7. Every uniform certificate
+    found, for 1 to 8 points per square, has the same skeleton: a <span class="mono">#</span> of lines
+    one unit from each wall, and a small ring about the centre.</figcaption>
+  </figure>
+  <p>The headline number was sharpened in three steps after the first certificate was found. A
+  certificate can be <em>scaled up linearly</em> — points and container together — until some
+  square's captured weight first falls below 1; that took the first LP solution from 3.92 to
+  3.9318. Re-optimising the weights on fixed points, with the exact verifier supplying the
+  violated placements as cutting planes, reached 3.9486 and then hit a cliff. Growing the point set
+  by column generation at a larger container removed the cliff and reached 3.9686. Just above that,
+  at 3.9696, column generation no longer gets under 12, so the method appears to be close to its limit here.</p>
+  <p>The points were found by linear programming. Classical proofs in this area (Göbel, Stromquist,
+  Friedman, Nagamochi, Bentz) hand-design a set of points that every unit square must contain;
+  the LP formulation instead lets weights be fractional and optimises them, with the covering
+  condition enforced by cutting planes generated over a rigorous cell decomposition of the
+  placement space, and with the point locations themselves chosen by column generation over a
+  fine candidate grid. The uniform certificates come from a separate integer program that forces
+  every weight to be equal — <span class="mono">1/7</span> each for the 81-point set, so a square must
+  capture 7 points — which is why their statement is a plain counting argument.</p>
+</section>
+
+<section>
+  <div class="sechead"><span class="eyebrow">05 · Verification</span><h2>How it is checked</h2></div>
+  <p>A lower bound of this kind is only worth what its verification is worth, so the covering
+  property is established three independent ways.</p>
+  <div class="grid2">
+    <div class="card">
+      <h3>Lean 4 + Mathlib</h3>
+      <p class="footnote">The reduction step — an unavoidable set of total weight <span class="mono">W</span>
+      implies at most <span class="mono">W</span> squares — is fully formalised, including the scaling
+      argument that lets a <em>closed</em>-square certificate control a packing. 0 sorries; axioms are
+      only <span class="mono">propext, Classical.choice, Quot.sound</span>.</p>
+    </div>
+    <div class="card">
+      <h3>Exact integer verifier (Rust)</h3>
+      <p class="footnote">Checks the covering property over the entire continuum of placements.
+      Angles are enumerated as rational rotations <span class="mono">θ_k = 2·arctan(k/N)</span>, so all
+      trigonometry is rational; for each bin, a unit square at any angle in the bin contains the
+      concentric square of side <span class="mono">σ_k = 1/(cos δ + sin δ)</span> at angle
+      <span class="mono">θ_k</span>. For each such angle the minimum over the continuum of centres is
+      computed exactly by an arrangement sweep — no sampling. All arithmetic in <span class="mono">i128</span>.</p>
+    </div>
+    <div class="card">
+      <h3>Two independent re-checks</h3>
+      <p class="footnote">A separately written Python implementation in exact
+      <span class="mono">Fraction</span> arithmetic checks every angle bin exhaustively and agrees bin by bin on every certificate. A third check — a dense float scan over 181 angles spanning the full
+      <span class="mono">0°–90°</span> range, ~500k centres each, not using the symmetry reduction —
+      returns the same minimum for the original 788-point certificate, <span class="mono">1.0000023</span>, as the exact checks do.</p>
+    </div>
+    <div class="card">
+      <h3>Resolution robustness</h3>
+      <p class="footnote">The main certificate is verified at <span class="mono">N = 6000</span> and
+      <span class="mono">12000</span>; on coarser nets the angle-bin shrink exceeds its slack and the verifier
+      refuses it. The uniform certificates are verified at <span class="mono">N = 2000</span> and
+      <span class="mono">8000</span>. The D4 symmetry of the point set — itself checked — reduces angles to
+      <span class="mono">[0°, 45°]</span>.</p>
+    </div>
+  </div>
+  <pre><code>$ ./verify/target/release/verify certificates/s12_lower_3.9686.txt 12 6000 32 0
+D4-symmetric atom set: true  -&gt; angles cover [0,45] deg
+atoms=1736 total weight = 119738036/10000000 = 11.973804
+s = 15680/3951 = 3.968616
+angles: k=0..2486 (N=6000), covering [0,45deg]
+min covered weight over ALL placements = 10000056/10000000 = 1.000006  (at angle k=0)
+VERIFIED: every CLOSED unit square inside C covers weight &gt;= 1, and total weight &lt; 12.
+==&gt; 12 unit squares cannot be packed into any square of side &lt; 15680/3951 = 3.968615540,
+    i.e.  s(12) &gt;= 3.968615540</code></pre>
+</section>
+
+<section>
+  <div class="sechead"><span class="eyebrow">06 · Limits</span><h2>What this does not do</h2></div>
+  <p>It does not prove <span class="mono">s(12) = 4</span>. Weighted points alone appear to be close to
+  their limit, and closing the rest of the gap needs a different kind of argument.</p>
+  <p>By LP duality, the total weight of any such certificate at container side
+  <span class="mono">s</span> is at least the <em>fractional packing number</em>
+  <span class="mono">ν_f(s)</span> — the largest total mass of a measure on unit-square placements whose
+  covering density never exceeds 1 — so the method can prove <span class="mono">s(12) ≥ s</span> only where
+  <span class="mono">ν_f(s) &lt; 12</span>. Numerically that runs out close to the bound proved here:
+  at <span class="mono">s = 3.9696</span> column generation no longer finds a certificate below 12.
+  Exactly where the limit lies is not settled here. So:</p>
+  <ul>
+    <li>whatever distance remains to that limit is computation, not mathematics: each certificate is a
+      large cutting-plane computation that must be driven to convergence against an exact separator over
+      a three-dimensional continuum of placements;</li>
+    <li>closing the remaining gap to 4 needs what Bentz used for n = 13: case analysis layered on top
+      of the certificate — <em>"either some square sits in this region at this angle, or a modified
+      certificate applies"</em>. The LP gives a natural handle on that, because when the total weight
+      <span class="mono">W</span> sits just above 12 the excess <span class="mono">W − 12</span> bounds
+      how much slack the whole packing has, and every square must sit in a near-binding placement.
+      That is the obvious next step, and it is a real research project, not a longer run.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="sechead"><span class="eyebrow">07 · Reproduce</span><h2>Artifacts</h2></div>
+  <p>Everything is in the repository <a href="https://github.com/evand/square-packing/tree/main/s12">evand/square-packing</a> (directory <span class="mono">s12/</span>); <span class="mono">./verify.sh</span> rebuilds the verifier and re-checks every certificate, and CI does the same on every push.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>path</th><th>what</th></tr></thead>
+    <tbody>
+      <tr><td class="num">certificates/s12_lower_3.9686.txt</td><td>the main certificate: 1736 weighted points, s = 15680/3951</td></tr>
+      <tr><td class="num">certificates/s12_uniform_7of81_3.888.txt</td><td>the pretty one: 81 points, 7 per square, s = 35/9</td></tr>
+      <tr><td class="num">tests/rejection_tests.sh</td><td>42 inputs the verifier must refuse</td></tr>
+      <tr><td class="num">verify/</td><td>exact integer verifier (Rust)</td></tr>
+      <tr><td class="num">xcheck.py</td><td>independent exact re-check (Python Fractions)</td></tr>
+      <tr><td class="num">lean/Sqpack/Basic.lean</td><td>formalised reduction theorem, 0 sorries</td></tr>
+      <tr><td class="num">search/lp_search.py</td><td>LP certificate search (cell cuts); <span class="mono">search/tighten.py</span> adds column generation</td></tr>
+      <tr><td class="num">search/pack_src/</td><td>packing optimiser used for the upper-bound search</td></tr>
+    </tbody>
+  </table></div>
+  <p class="footnote">Caveats worth stating plainly: the result rests on a computation, not on a proof a human can check by hand. The literature survey behind
+  the "previous record" claim is DS7 plus David Ellsworth's current record tables; if a better published
+  bound for n = 12 exists somewhere I did not find it. Nothing here has been peer reviewed.</p>
+</section>
+</div>
+
+</body>
+</html>

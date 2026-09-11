@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Squares in Squares</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
+<style>
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px;display:flex;flex-direction:column;gap:22px}
+.lede{font-size:1.08rem;max-width:64ch;color:var(--muted)}
+.intro{display:flex;flex-direction:column;gap:10px}
+.intro h1{font-size:2rem}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:14px;font-size:.9rem;padding:10px 14px;background:var(--surface);border:1px solid var(--rule);border-radius:3px}
+.controls label{display:inline-flex;align-items:center;gap:6px}
+.controls input[type=range]{width:260px}
+.grid{display:grid;grid-template-columns:repeat(18,1fr);gap:3px}
+.tile{position:relative;aspect-ratio:1;border-radius:2px;display:flex;align-items:center;justify-content:center;font-family:"IBM Plex Mono",monospace;font-size:.72rem;color:var(--ink);cursor:pointer;border:1px solid transparent;text-decoration:none}
+.tile:hover{border-color:var(--ink);z-index:1}
+.tile.nolink{cursor:default}
+.tile.nolink:hover{border-color:var(--rule)}
+.tile.sq{font-weight:600}
+.tile.proved::after{content:"";position:absolute;right:2px;bottom:2px;width:5px;height:5px;border-radius:50%;background:var(--ink);opacity:.7}
+.legend{display:flex;flex-direction:row;flex-wrap:wrap;gap:12px 18px;font-size:.86rem}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:14px;border-radius:2px;display:inline-block;border:1px solid var(--rule)}
+.tip{position:fixed}
+@media (max-width:720px){.grid{grid-template-columns:repeat(12,1fr)}.tile{font-size:.6rem}}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:16px;display:flex;flex-direction:column;gap:6px;text-decoration:none;color:inherit}
+.card:hover{border-color:var(--accent)}
+.card h3{color:var(--accent)}
+.card p{font-size:.9rem;color:var(--muted)}
+.foot{font-size:.86rem;color:var(--muted);max-width:70ch}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="brand">Squares in Squares</span>
+  <nav><a href="index.html" class="here">Overview</a><a href="explore.html">Explore</a><a href="compare.html">Compare</a><a href="bounds.html">Bounds</a><a href="proofs.html">Proofs</a><a href="sources.html">Sources</a></nav>
+</div>
+<div class="wrap">
+  <div class="intro">
+    <div class="eyebrow">an open problem you can hold in your hands</div>
+    <h1>How small a square can hold <i>n</i> unit squares?</h1>
+    <p class="lede">Call the answer <span class="mono">s(n)</span>. For a perfect square number of squares the answer is obvious. For most other <i>n</i> nobody knows: we only know the best packing anyone has found, and a proven floor below which no packing can go. This site collects the record packings (from Erich Friedman's and David Ellsworth's catalogue), lets you take them apart, and walks through how the few exact results are proved.</p>
+  </div>
+
+  <div class="controls">
+    <label>colour by
+      <select id="mode">
+        <option value="cat">kind of packing</option>
+        <option value="sym">symmetry</option>
+        <option value="free">free squares</option>
+        <option value="year">year of record</option>
+        <option value="waste">wasted area</option>
+      </select></label>
+    <label>records as of <span class="mono" id="yearv">today</span> <input id="year" type="range" min="1979" max="2026" value="2026"></label>
+    <span class="hint">hover a tile · click one to explore, where the catalogue has an entry · dot = proved optimal</span>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div class="grid" id="grid"></div>
+  <div class="tip" id="tip"></div>
+
+  <div class="cards">
+    <a class="card" href="explore.html?n=17"><h3>Explore</h3><p>Every record packing, with its angles, contacts, free squares and smallest gaps measured. Start with the famous 17.</p></a>
+    <a class="card" href="bounds.html"><h3>Bounds</h3><p>Best packing versus proven floor for <i>n</i> up to 100, and how the gap has closed over time.</p></a>
+    <a class="card" href="proofs.html"><h3>Proofs</h3><p>How you prove no better packing exists: unavoidable points, with a playground for the 12-square case.</p></a>
+    <a class="card" href="sources.html"><h3>Sources</h3><p>Who found what, when; papers, pages, videos. One list.</p></a>
+  </div>
+  <p class="foot" id="foot"></p>
+</div>
+<script src="js/overview.js"></script>
+</body>
+</html>

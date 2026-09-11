@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bounds · Squares in Squares</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
+<style>
+.wrap{max-width:1100px;margin:0 auto;padding:28px 20px 80px;display:flex;flex-direction:column;gap:30px}
+.wrap h1{font-size:2rem}
+.wrap h2{font-size:1.3rem}
+.wrap p{max-width:66ch}
+section{display:flex;flex-direction:column;gap:12px}
+.lede{font-size:1.08rem;color:var(--muted)}
+.chart{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:14px 10px 6px;position:relative}
+.chart svg{width:100%;height:auto;display:block;font-family:"IBM Plex Mono",monospace}
+.chart .tt{position:absolute;pointer-events:none;background:var(--ink);color:var(--paper);font-family:"IBM Plex Mono",monospace;font-size:.76rem;padding:6px 9px;border-radius:3px;white-space:pre;display:none;line-height:1.45;z-index:3}
+.ctl{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:.9rem}
+.ctl label{display:inline-flex;align-items:center;gap:6px}
+.ctl input[type=number]{width:70px;padding:3px 6px;border:1px solid var(--rule);border-radius:3px;background:var(--paper);font-family:"IBM Plex Mono",monospace}
+.legend{display:flex;flex-direction:row;flex-wrap:wrap;gap:14px;font-size:.84rem;font-family:"IBM Plex Mono",monospace}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:3px;display:inline-block;border-radius:2px}
+.legend i.dot{width:9px;height:9px;border-radius:50%}
+.axis text{fill:var(--muted);font-size:11px}
+.axis line,.axis path{stroke:var(--rule)}
+.grid line{stroke:var(--rule);stroke-dasharray:2 3}
+details{font-size:.9rem}
+summary{cursor:pointer;color:var(--chart-a)}
+table{border-collapse:collapse;width:100%;font-size:.86rem;margin-top:8px}
+th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500}
+td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tablewrap{overflow-x:auto;max-height:420px;overflow-y:auto;border:1px solid var(--rule);border-radius:3px}
+.story{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.story div{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:12px 14px;font-size:.9rem}
+.story b{font-family:"IBM Plex Mono",monospace;color:var(--chart-a)}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="brand">Squares in Squares</span>
+  <nav><a href="index.html">Overview</a><a href="explore.html">Explore</a><a href="compare.html">Compare</a><a href="bounds.html" class="here">Bounds</a><a href="proofs.html">Proofs</a><a href="sources.html">Sources</a></nav>
+</div>
+<div class="wrap">
+  <section>
+    <div class="eyebrow">what is known, exactly</div>
+    <h1>The best packing and the proven floor</h1>
+    <p class="lede">Lower bounds are collected for <i>n</i> up to 100; above that only the record packings are known. For each <i>n</i> here two numbers are known: the side of the best packing anyone has found (an upper bound on <span class="mono">s(n)</span>), and a floor that a proof says no packing can beat. Where they meet, <span class="mono">s(n)</span> is settled. Everywhere else the truth is somewhere in the gap — and for most <i>n</i> the gap has barely moved in forty years.</p>
+  </section>
+
+  <section>
+    <h2>The gap, for <i>n</i> up to 100</h2>
+    <div class="ctl">
+      <label>show <i>n</i> up to <input id="nmax" type="number" min="10" max="100" value="60"></label>
+      <label><input type="checkbox" id="rel"> as a percentage of the side</label>
+      <label><input type="checkbox" id="dropTrivial" checked> hide <i>n</i> where the floor and the grid agree (settled trivially)</label>
+    </div>
+    <div class="legend"><span><i class="dot" style="background:var(--chart-a)"></i>best packing found</span><span><i class="dot" style="background:var(--chart-b)"></i>proven floor</span><span><i style="background:var(--rule);height:6px"></i>gap</span><span><i class="dot" style="background:var(--ink)"></i>settled (equal)</span></div>
+    <div class="chart" id="c1"><div class="tt"></div></div>
+    <p class="note" id="c1note"></p>
+  </section>
+
+  <section>
+    <h2>How one <i>n</i> closed over time</h2>
+    <div class="ctl"><label><i>n</i> = <input id="npick" type="number" min="2" max="100" value="17"></label><span class="hint" id="npickhint"></span></div>
+    <div class="legend"><span><i style="background:var(--chart-a)"></i>best packing (upper bound)</span><span><i style="background:var(--chart-b)"></i>proven floor (lower bound)</span></div>
+    <div class="chart" id="c2"><div class="tt"></div></div>
+    <div class="story" id="story"></div>
+  </section>
+
+  <section>
+    <h2>Table</h2>
+    <details open><summary>all <i>n</i> up to 100</summary>
+      <div class="tablewrap"><table id="tbl"><thead><tr><th>n</th><th>best packing</th><th>found by</th><th>proven floor</th><th>proved by</th><th>gap</th><th>status</th></tr></thead><tbody></tbody></table></div>
+    </details>
+    <p class="note">Upper bounds and their dates are read from David Ellsworth's catalogue; lower bounds from Erich Friedman's survey and the papers it cites, with the 2026 computer-checked certificates (unrefereed) marked. Bounds of the form ⌈√n⌉ that follow from area alone or from Nagamochi's general theorem are labelled as such.</p>
+  </section>
+</div>
+<script src="js/bounds.js"></script>
+</body>
+</html>

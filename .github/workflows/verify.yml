@@ -1,0 +1,41 @@
+name: verify
+
+# The point of the s(12) proof is that the claim is checkable, so it is checked whenever it
+# changes.  If this badge is not green, do not believe the number.
+
+on:
+  push:
+    paths: ['s12/**', '.github/workflows/verify.yml']
+  pull_request:
+    paths: ['s12/**', '.github/workflows/verify.yml']
+  workflow_dispatch:
+  schedule:
+    # Monthly, so bit-rot in the toolchain surfaces before someone else finds it.
+    - cron: '0 6 1 * *'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: s12
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            s12/verify/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('s12/verify/Cargo.lock') }}
+
+      - name: Check certificate hashes
+        run: sha256sum -c certificates/SHA256SUMS
+
+      - name: Verify every certificate, and the rejection tests
+        run: ./verify.sh

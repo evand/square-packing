@@ -1,0 +1,3662 @@
+{
+ "1": {
+  "best": {
+   "value": 1.0,
+   "exact_form": "1",
+   "source": "trivial-square",
+   "year": 1975,
+   "status": "proved",
+   "url": null,
+   "note": "n=1==1^2, trivial grid packing meets area bound"
+  },
+  "history": [
+   {
+    "value": 1.0,
+    "exact_form": "sqrt(1)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 1.0,
+    "exact_form": "1",
+    "source": "trivial-square",
+    "year": 1975,
+    "status": "proved",
+    "url": null,
+    "note": "n=1==1^2, trivial grid packing meets area bound"
+   }
+  ]
+ },
+ "2": {
+  "best": {
+   "value": 2.0,
+   "exact_form": "2",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "n=2==2^2-2; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+  },
+  "history": [
+   {
+    "value": 1.4142135623730951,
+    "exact_form": "sqrt(2)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 2.0,
+    "exact_form": "2",
+    "source": "Gobel1979",
+    "year": 1979,
+    "status": "proved",
+    "url": null,
+    "note": null
+   },
+   {
+    "value": 2.0,
+    "exact_form": "2",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "n=2==2^2-2; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+   }
+  ]
+ },
+ "3": {
+  "best": {
+   "value": 2.0,
+   "exact_form": "2",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "n=3==2^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+  },
+  "history": [
+   {
+    "value": 1.7320508075688772,
+    "exact_form": "sqrt(3)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 2.0,
+    "exact_form": "2",
+    "source": "Gobel1979",
+    "year": 1979,
+    "status": "proved",
+    "url": null,
+    "note": null
+   },
+   {
+    "value": 2.0,
+    "exact_form": "2",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "n=3==2^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+   }
+  ]
+ },
+ "4": {
+  "best": {
+   "value": 2.0,
+   "exact_form": "2",
+   "source": "trivial-square",
+   "year": 1975,
+   "status": "proved",
+   "url": null,
+   "note": "n=4==2^2, trivial grid packing meets area bound"
+  },
+  "history": [
+   {
+    "value": 2.0,
+    "exact_form": "sqrt(4)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 2.0,
+    "exact_form": "2",
+    "source": "trivial-square",
+    "year": 1975,
+    "status": "proved",
+    "url": null,
+    "note": "n=4==2^2, trivial grid packing meets area bound"
+   }
+  ]
+ },
+ "5": {
+  "best": {
+   "value": 2.7071067811865475,
+   "exact_form": "2+1/sqrt(2)",
+   "source": "Gobel1979",
+   "year": 1979,
+   "status": "proved",
+   "url": null,
+   "note": null
+  },
+  "history": [
+   {
+    "value": 2.23606797749979,
+    "exact_form": "sqrt(5)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 2.7071067811865475,
+    "exact_form": "2+1/sqrt(2)",
+    "source": "Gobel1979",
+    "year": 1979,
+    "status": "proved",
+    "url": null,
+    "note": null
+   },
+   {
+    "value": 2.414213562373095,
+    "exact_form": "sqrt(5 - 2*floor(sqrt(5)) + 1) + 1 = sqrt(2)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "6": {
+  "best": {
+   "value": 3.0,
+   "exact_form": "3",
+   "source": "KearneyShiu2002",
+   "year": 2002,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v9i1r14",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 2.449489742783178,
+    "exact_form": "sqrt(6)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 3.0,
+    "exact_form": "3",
+    "source": "KearneyShiu2002",
+    "year": 2002,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v9i1r14",
+    "note": null
+   },
+   {
+    "value": 2.732050807568877,
+    "exact_form": "sqrt(6 - 2*floor(sqrt(6)) + 1) + 1 = sqrt(3)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "7": {
+  "best": {
+   "value": 3.0,
+   "exact_form": "3",
+   "source": "FriedmanDS7",
+   "year": 2009,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 2.6457513110645907,
+    "exact_form": "sqrt(7)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 3.0,
+    "exact_form": "3",
+    "source": "ElMoumni1999",
+    "year": 1999,
+    "status": "proved",
+    "url": null,
+    "note": null
+   },
+   {
+    "value": 3.0,
+    "exact_form": "3",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "n=7==3^2-2; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+   },
+   {
+    "value": 3.0,
+    "exact_form": "3",
+    "source": "FriedmanDS7",
+    "year": 2009,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   }
+  ]
+ },
+ "8": {
+  "best": {
+   "value": 3.0,
+   "exact_form": "3",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "n=8==3^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+  },
+  "history": [
+   {
+    "value": 2.8284271247461903,
+    "exact_form": "sqrt(8)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 3.0,
+    "exact_form": "3",
+    "source": "Friedman1998",
+    "year": 1998,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/files/Surveys/ds7/ds7v1-1998.pdf",
+    "note": null
+   },
+   {
+    "value": 3.0,
+    "exact_form": "3",
+    "source": "ElMoumni1999",
+    "year": 1999,
+    "status": "proved",
+    "url": null,
+    "note": null
+   },
+   {
+    "value": 3.0,
+    "exact_form": "3",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "n=8==3^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+   }
+  ]
+ },
+ "9": {
+  "best": {
+   "value": 3.0,
+   "exact_form": "3",
+   "source": "trivial-square",
+   "year": 1975,
+   "status": "proved",
+   "url": null,
+   "note": "n=9==3^2, trivial grid packing meets area bound"
+  },
+  "history": [
+   {
+    "value": 3.0,
+    "exact_form": "sqrt(9)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 3.0,
+    "exact_form": "3",
+    "source": "trivial-square",
+    "year": 1975,
+    "status": "proved",
+    "url": null,
+    "note": "n=9==3^2, trivial grid packing meets area bound"
+   }
+  ]
+ },
+ "10": {
+  "best": {
+   "value": 3.7071067811865475,
+   "exact_form": "3+1/sqrt(2)",
+   "source": "Stromquist2003",
+   "year": 2003,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v10i1r8",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 3.1622776601683795,
+    "exact_form": "sqrt(10)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 3.7071067811865475,
+    "exact_form": "3+1/sqrt(2)",
+    "source": "Stromquist2003",
+    "year": 2003,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v10i1r8",
+    "note": null
+   },
+   {
+    "value": 3.23606797749979,
+    "exact_form": "sqrt(10 - 2*floor(sqrt(10)) + 1) + 1 = sqrt(5)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "11": {
+  "best": {
+   "value": 3.7888543819998315,
+   "exact_form": "2+4/sqrt(5)",
+   "source": "Stromquist2003",
+   "year": 2003,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v10i1r8",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 3.3166247903554,
+    "exact_form": "sqrt(11)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 3.7888543819998315,
+    "exact_form": "2+4/sqrt(5)",
+    "source": "Stromquist2003",
+    "year": 2003,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v10i1r8",
+    "note": null
+   },
+   {
+    "value": 3.449489742783178,
+    "exact_form": "sqrt(11 - 2*floor(sqrt(11)) + 1) + 1 = sqrt(6)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "12": {
+  "best": {
+   "value": 3.9686155403695267,
+   "exact_form": "15680/3951",
+   "source": "EvanDaniel2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/evand/square-packing/tree/main/s12",
+   "note": "2026-08-26; 1736-point certificate, current best claimed value; repo states 'nothing here has been peer reviewed'",
+   "date": "2026-08-26"
+  },
+  "history": [
+   {
+    "value": 3.4641016151377544,
+    "exact_form": "sqrt(12)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 3.7888543819998315,
+    "exact_form": "2+4/sqrt(5)",
+    "source": "Stromquist2003",
+    "year": 2003,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v10i1r8",
+    "note": null
+   },
+   {
+    "value": 3.6457513110645907,
+    "exact_form": "sqrt(12 - 2*floor(sqrt(12)) + 1) + 1 = sqrt(7)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 3.9317953861584756,
+    "exact_form": "3920/997",
+    "source": "EvanDaniel2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/evand/square-packing/tree/main/s12",
+    "note": "2026-08-24; first certificate",
+    "date": "2026-08-24"
+   },
+   {
+    "value": 3.967611336032389,
+    "exact_form": "980/247",
+    "source": "EvanDaniel2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/evand/square-packing/tree/main/s12",
+    "note": "2026-08-26; 764-point sparsified certificate",
+    "date": "2026-08-26"
+   },
+   {
+    "value": 3.9686155403695267,
+    "exact_form": "15680/3951",
+    "source": "EvanDaniel2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/evand/square-packing/tree/main/s12",
+    "note": "2026-08-26; 1736-point certificate, current best claimed value; repo states 'nothing here has been peer reviewed'",
+    "date": "2026-08-26"
+   }
+  ]
+ },
+ "13": {
+  "best": {
+   "value": 4.0,
+   "exact_form": "4",
+   "source": "Bentz2010",
+   "year": 2010,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v17i1r126",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 3.605551275463989,
+    "exact_form": "sqrt(13)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 3.8284271247461903,
+    "exact_form": "sqrt(13 - 2*floor(sqrt(13)) + 1) + 1 = sqrt(8)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 3.8437,
+    "exact_form": null,
+    "source": "FriedmanDS7",
+    "year": 2009,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": "superseded by exact value 4 (Bentz 2010)"
+   },
+   {
+    "value": 4.0,
+    "exact_form": "4",
+    "source": "Bentz2010",
+    "year": 2010,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v17i1r126",
+    "note": null
+   }
+  ]
+ },
+ "14": {
+  "best": {
+   "value": 4.0,
+   "exact_form": "4",
+   "source": "FriedmanDS7",
+   "year": 2009,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 3.7416573867739413,
+    "exact_form": "sqrt(14)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 4.0,
+    "exact_form": "4",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "n=14==4^2-2; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+   },
+   {
+    "value": 4.0,
+    "exact_form": "4",
+    "source": "FriedmanDS7",
+    "year": 2009,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   }
+  ]
+ },
+ "15": {
+  "best": {
+   "value": 4.0,
+   "exact_form": "4",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "n=15==4^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+  },
+  "history": [
+   {
+    "value": 3.872983346207417,
+    "exact_form": "sqrt(15)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 4.0,
+    "exact_form": "4",
+    "source": "Friedman1998",
+    "year": 1998,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/files/Surveys/ds7/ds7v1-1998.pdf",
+    "note": null
+   },
+   {
+    "value": 4.0,
+    "exact_form": "4",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "n=15==4^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+   }
+  ]
+ },
+ "16": {
+  "best": {
+   "value": 4.0,
+   "exact_form": "4",
+   "source": "trivial-square",
+   "year": 1975,
+   "status": "proved",
+   "url": null,
+   "note": "n=16==4^2, trivial grid packing meets area bound"
+  },
+  "history": [
+   {
+    "value": 4.0,
+    "exact_form": "sqrt(16)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 4.0,
+    "exact_form": "4",
+    "source": "trivial-square",
+    "year": 1975,
+    "status": "proved",
+    "url": null,
+    "note": "n=16==4^2, trivial grid packing meets area bound"
+   }
+  ]
+ },
+ "17": {
+  "best": {
+   "value": 4.613028635886111,
+   "exact_form": "sqrt(17650291964463886688094912400/829429719507765981945905041)",
+   "source": "MiraAcc2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/Mira-acc/17squares",
+   "note": "2026-09-08 (later same day); 'reviewed' weighted certificate, 1620 atoms, current best claimed value; external peer review still pending per repo",
+   "date": "2026-09-08"
+  },
+  "history": [
+   {
+    "value": 4.123105625617661,
+    "exact_form": "sqrt(17)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 4.445208382054341,
+    "exact_form": "(40*sqrt(2)+19)/17",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": "n=17 superseded by 2026 computer-assisted preprints; n=18 not affected by those (they target n=17 only)"
+   },
+   {
+    "value": 4.16227766016838,
+    "exact_form": "sqrt(17 - 2*floor(sqrt(17)) + 1) + 1 = sqrt(10)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 4.4811,
+    "exact_form": null,
+    "source": "Burns2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://sam-burns.com/posts/proposing-better-lower-bound-for-n17-square-packing/",
+    "note": "2026-08-06; weighted-point certificate, 268 atoms; produced with ChatGPT (GPT-5.6 Pro); not independently verified",
+    "date": "2026-08-06"
+   },
+   {
+    "value": 4.456575,
+    "exact_form": null,
+    "source": "Fort2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/stanislavfort/17squares",
+    "note": "2026-08-11; 16 rational witness points; author states 'I don't really understand it => can't vouch for its correctness'",
+    "date": "2026-08-11"
+   },
+   {
+    "value": 4.468292,
+    "exact_form": null,
+    "source": "MiraAcc2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/Mira-acc/17squares",
+    "note": "2026-08-12; 'exact lower bound' commit",
+    "date": "2026-08-12"
+   },
+   {
+    "value": 4.5058,
+    "exact_form": null,
+    "source": "Massaccesi2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://gus-massa.blogspot.com/2026/08/another-better-lower-bound-for-n17.html",
+    "note": "2026-08-21; LP-optimized weights over 168 points in a 29x29 grid; explicitly improves on Burns' 4.4811",
+    "date": "2026-08-21"
+   },
+   {
+    "value": 4.6070286,
+    "exact_form": null,
+    "source": "MiraAcc2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/Mira-acc/17squares",
+    "note": "2026-09-08 (early); weighted lower bound update",
+    "date": "2026-09-08"
+   },
+   {
+    "value": 4.613028635886111,
+    "exact_form": "sqrt(17650291964463886688094912400/829429719507765981945905041)",
+    "source": "MiraAcc2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/Mira-acc/17squares",
+    "note": "2026-09-08 (later same day); 'reviewed' weighted certificate, 1620 atoms, current best claimed value; external peer review still pending per repo",
+    "date": "2026-09-08"
+   }
+  ]
+ },
+ "18": {
+  "best": {
+   "value": 4.445208382054341,
+   "exact_form": "(40*sqrt(2)+19)/17",
+   "source": "Green2000",
+   "year": 2000,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": "n=17 superseded by 2026 computer-assisted preprints; n=18 not affected by those (they target n=17 only)"
+  },
+  "history": [
+   {
+    "value": 4.242640687119285,
+    "exact_form": "sqrt(18)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 4.445208382054341,
+    "exact_form": "(40*sqrt(2)+19)/17",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": "n=17 superseded by 2026 computer-assisted preprints; n=18 not affected by those (they target n=17 only)"
+   },
+   {
+    "value": 4.3166247903554,
+    "exact_form": "sqrt(18 - 2*floor(sqrt(18)) + 1) + 1 = sqrt(11)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "19": {
+  "best": {
+   "value": 4.485281374238571,
+   "exact_form": "6*sqrt(2)-4",
+   "source": "FriedmanDS7",
+   "year": 2009,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 4.358898943540674,
+    "exact_form": "sqrt(19)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 4.464101615137754,
+    "exact_form": "sqrt(19 - 2*floor(sqrt(19)) + 1) + 1 = sqrt(12)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 4.485281374238571,
+    "exact_form": "6*sqrt(2)-4",
+    "source": "FriedmanDS7",
+    "year": 2009,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   }
+  ]
+ },
+ "20": {
+  "best": {
+   "value": 4.60555127546399,
+   "exact_form": "sqrt(20 - 2*floor(sqrt(20)) + 1) + 1 = sqrt(13)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 4.47213595499958,
+    "exact_form": "sqrt(20)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 4.60555127546399,
+    "exact_form": "sqrt(20 - 2*floor(sqrt(20)) + 1) + 1 = sqrt(13)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 4.485281374238571,
+    "exact_form": "6*sqrt(2)-4",
+    "source": "FriedmanDS7",
+    "year": 2009,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   }
+  ]
+ },
+ "21": {
+  "best": {
+   "value": 4.7438,
+   "exact_form": null,
+   "source": "FriedmanDS7",
+   "year": 2009,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 4.58257569495584,
+    "exact_form": "sqrt(21)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 4.741657386773941,
+    "exact_form": "sqrt(21 - 2*floor(sqrt(21)) + 1) + 1 = sqrt(14)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 4.7438,
+    "exact_form": null,
+    "source": "FriedmanDS7",
+    "year": 2009,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   }
+  ]
+ },
+ "22": {
+  "best": {
+   "value": 5.0,
+   "exact_form": "5",
+   "source": "Bentz2016",
+   "year": 2016,
+   "status": "proved",
+   "url": "https://arxiv.org/abs/1606.03746",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 4.69041575982343,
+    "exact_form": "sqrt(22)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 4.82842712474619,
+    "exact_form": "2*sqrt(2)+2",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": "superseded by exact value 5 (Bentz 2016)"
+   },
+   {
+    "value": 4.872983346207417,
+    "exact_form": "sqrt(22 - 2*floor(sqrt(22)) + 1) + 1 = sqrt(15)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 5.0,
+    "exact_form": "5",
+    "source": "Bentz2016",
+    "year": 2016,
+    "status": "proved",
+    "url": "https://arxiv.org/abs/1606.03746",
+    "note": null
+   }
+  ]
+ },
+ "23": {
+  "best": {
+   "value": 5.0,
+   "exact_form": "5",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 4.795831523312719,
+    "exact_form": "sqrt(23)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 5.0,
+    "exact_form": "5",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": null
+   }
+  ]
+ },
+ "24": {
+  "best": {
+   "value": 5.0,
+   "exact_form": "5",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "n=24==5^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+  },
+  "history": [
+   {
+    "value": 4.898979485566356,
+    "exact_form": "sqrt(24)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 5.0,
+    "exact_form": "5",
+    "source": "Friedman1998",
+    "year": 1998,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/files/Surveys/ds7/ds7v1-1998.pdf",
+    "note": null
+   },
+   {
+    "value": 5.0,
+    "exact_form": "5",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "n=24==5^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+   }
+  ]
+ },
+ "25": {
+  "best": {
+   "value": 5.0,
+   "exact_form": "5",
+   "source": "trivial-square",
+   "year": 1975,
+   "status": "proved",
+   "url": null,
+   "note": "n=25==5^2, trivial grid packing meets area bound"
+  },
+  "history": [
+   {
+    "value": 5.0,
+    "exact_form": "sqrt(25)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 5.0,
+    "exact_form": "5",
+    "source": "trivial-square",
+    "year": 1975,
+    "status": "proved",
+    "url": null,
+    "note": "n=25==5^2, trivial grid packing meets area bound"
+   }
+  ]
+ },
+ "26": {
+  "best": {
+   "value": 5.391854457079787,
+   "exact_form": "2*sqrt(2)+(27+2*sqrt(10))/13",
+   "source": "Green2000",
+   "year": 2000,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 5.0990195135927845,
+    "exact_form": "sqrt(26)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 5.391854457079787,
+    "exact_form": "2*sqrt(2)+(27+2*sqrt(10))/13",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   },
+   {
+    "value": 5.123105625617661,
+    "exact_form": "sqrt(26 - 2*floor(sqrt(26)) + 1) + 1 = sqrt(17)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "27": {
+  "best": {
+   "value": 5.391854457079787,
+   "exact_form": "2*sqrt(2)+(27+2*sqrt(10))/13",
+   "source": "Green2000",
+   "year": 2000,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 5.196152422706632,
+    "exact_form": "sqrt(27)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 5.391854457079787,
+    "exact_form": "2*sqrt(2)+(27+2*sqrt(10))/13",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   },
+   {
+    "value": 5.242640687119285,
+    "exact_form": "sqrt(27 - 2*floor(sqrt(27)) + 1) + 1 = sqrt(18)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "28": {
+  "best": {
+   "value": 5.511708697745938,
+   "exact_form": "2*sqrt(2)+6/sqrt(5)",
+   "source": "Green2000",
+   "year": 2000,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 5.291502622129181,
+    "exact_form": "sqrt(28)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 5.511708697745938,
+    "exact_form": "2*sqrt(2)+6/sqrt(5)",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   },
+   {
+    "value": 5.358898943540674,
+    "exact_form": "sqrt(28 - 2*floor(sqrt(28)) + 1) + 1 = sqrt(19)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "29": {
+  "best": {
+   "value": 5.511708697745938,
+   "exact_form": "2*sqrt(2)+6/sqrt(5)",
+   "source": "Green2000",
+   "year": 2000,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 5.385164807134504,
+    "exact_form": "sqrt(29)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 5.511708697745938,
+    "exact_form": "2*sqrt(2)+6/sqrt(5)",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   },
+   {
+    "value": 5.47213595499958,
+    "exact_form": "sqrt(29 - 2*floor(sqrt(29)) + 1) + 1 = sqrt(20)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "30": {
+  "best": {
+   "value": 5.58257569495584,
+   "exact_form": "sqrt(30 - 2*floor(sqrt(30)) + 1) + 1 = sqrt(21)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 5.477225575051661,
+    "exact_form": "sqrt(30)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 5.511708697745938,
+    "exact_form": "2*sqrt(2)+6/sqrt(5)",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   },
+   {
+    "value": 5.58257569495584,
+    "exact_form": "sqrt(30 - 2*floor(sqrt(30)) + 1) + 1 = sqrt(21)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "31": {
+  "best": {
+   "value": 5.69041575982343,
+   "exact_form": "sqrt(31 - 2*floor(sqrt(31)) + 1) + 1 = sqrt(22)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 5.5677643628300215,
+    "exact_form": "sqrt(31)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 5.6415,
+    "exact_form": null,
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   },
+   {
+    "value": 5.69041575982343,
+    "exact_form": "sqrt(31 - 2*floor(sqrt(31)) + 1) + 1 = sqrt(22)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "32": {
+  "best": {
+   "value": 5.795831523312719,
+   "exact_form": "sqrt(32 - 2*floor(sqrt(32)) + 1) + 1 = sqrt(23)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 5.656854249492381,
+    "exact_form": "sqrt(32)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 5.795831523312719,
+    "exact_form": "sqrt(32 - 2*floor(sqrt(32)) + 1) + 1 = sqrt(23)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "33": {
+  "best": {
+   "value": 6.0,
+   "exact_form": "6",
+   "source": "Bentz2016",
+   "year": 2016,
+   "status": "proved",
+   "url": "https://arxiv.org/abs/1606.03746",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 5.744562646538029,
+    "exact_form": "sqrt(33)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 5.898979485566356,
+    "exact_form": "sqrt(33 - 2*floor(sqrt(33)) + 1) + 1 = sqrt(24)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 6.0,
+    "exact_form": "6",
+    "source": "Bentz2016",
+    "year": 2016,
+    "status": "proved",
+    "url": "https://arxiv.org/abs/1606.03746",
+    "note": null
+   }
+  ]
+ },
+ "34": {
+  "best": {
+   "value": 6.0,
+   "exact_form": "6",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 5.830951894845301,
+    "exact_form": "sqrt(34)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 6.0,
+    "exact_form": "6",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": null
+   }
+  ]
+ },
+ "35": {
+  "best": {
+   "value": 6.0,
+   "exact_form": "6",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "n=35==6^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+  },
+  "history": [
+   {
+    "value": 5.916079783099616,
+    "exact_form": "sqrt(35)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 6.0,
+    "exact_form": "6",
+    "source": "Friedman1998",
+    "year": 1998,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/files/Surveys/ds7/ds7v1-1998.pdf",
+    "note": null
+   },
+   {
+    "value": 6.0,
+    "exact_form": "6",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "n=35==6^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+   }
+  ]
+ },
+ "36": {
+  "best": {
+   "value": 6.0,
+   "exact_form": "6",
+   "source": "trivial-square",
+   "year": 1975,
+   "status": "proved",
+   "url": null,
+   "note": "n=36==6^2, trivial grid packing meets area bound"
+  },
+  "history": [
+   {
+    "value": 6.0,
+    "exact_form": "sqrt(36)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 6.0,
+    "exact_form": "6",
+    "source": "trivial-square",
+    "year": 1975,
+    "status": "proved",
+    "url": null,
+    "note": "n=36==6^2, trivial grid packing meets area bound"
+   }
+  ]
+ },
+ "37": {
+  "best": {
+   "value": 6.350603018683724,
+   "exact_form": "2*sqrt(2)+(113+10*sqrt(3))/37",
+   "source": "Green2000",
+   "year": 2000,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 6.082762530298219,
+    "exact_form": "sqrt(37)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 6.350603018683724,
+    "exact_form": "2*sqrt(2)+(113+10*sqrt(3))/37",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   },
+   {
+    "value": 6.0990195135927845,
+    "exact_form": "sqrt(37 - 2*floor(sqrt(37)) + 1) + 1 = sqrt(26)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "38": {
+  "best": {
+   "value": 6.350603018683724,
+   "exact_form": "2*sqrt(2)+(113+10*sqrt(3))/37",
+   "source": "Green2000",
+   "year": 2000,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 6.164414002968976,
+    "exact_form": "sqrt(38)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 6.350603018683724,
+    "exact_form": "2*sqrt(2)+(113+10*sqrt(3))/37",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   },
+   {
+    "value": 6.196152422706632,
+    "exact_form": "sqrt(38 - 2*floor(sqrt(38)) + 1) + 1 = sqrt(27)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "39": {
+  "best": {
+   "value": 6.350603018683724,
+   "exact_form": "2*sqrt(2)+(113+10*sqrt(3))/37",
+   "source": "Green2000",
+   "year": 2000,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 6.244997998398398,
+    "exact_form": "sqrt(39)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 6.350603018683724,
+    "exact_form": "2*sqrt(2)+(113+10*sqrt(3))/37",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   },
+   {
+    "value": 6.291502622129181,
+    "exact_form": "sqrt(39 - 2*floor(sqrt(39)) + 1) + 1 = sqrt(28)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "40": {
+  "best": {
+   "value": 6.406135888745854,
+   "exact_form": "2*sqrt(2)+8/sqrt(5)",
+   "source": "Green2000",
+   "year": 2000,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 6.324555320336759,
+    "exact_form": "sqrt(40)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 6.406135888745854,
+    "exact_form": "2*sqrt(2)+8/sqrt(5)",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   },
+   {
+    "value": 6.385164807134504,
+    "exact_form": "sqrt(40 - 2*floor(sqrt(40)) + 1) + 1 = sqrt(29)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "41": {
+  "best": {
+   "value": 6.477225575051661,
+   "exact_form": "sqrt(41 - 2*floor(sqrt(41)) + 1) + 1 = sqrt(30)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 6.4031242374328485,
+    "exact_form": "sqrt(41)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 6.406135888745854,
+    "exact_form": "2*sqrt(2)+8/sqrt(5)",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   },
+   {
+    "value": 6.477225575051661,
+    "exact_form": "sqrt(41 - 2*floor(sqrt(41)) + 1) + 1 = sqrt(30)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "42": {
+  "best": {
+   "value": 6.5677643628300215,
+   "exact_form": "sqrt(42 - 2*floor(sqrt(42)) + 1) + 1 = sqrt(31)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 6.48074069840786,
+    "exact_form": "sqrt(42)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 6.5677643628300215,
+    "exact_form": "sqrt(42 - 2*floor(sqrt(42)) + 1) + 1 = sqrt(31)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "43": {
+  "best": {
+   "value": 6.656854249492381,
+   "exact_form": "sqrt(43 - 2*floor(sqrt(43)) + 1) + 1 = sqrt(32)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 6.557438524302,
+    "exact_form": "sqrt(43)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 6.656854249492381,
+    "exact_form": "sqrt(43 - 2*floor(sqrt(43)) + 1) + 1 = sqrt(32)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "44": {
+  "best": {
+   "value": 6.744562646538029,
+   "exact_form": "sqrt(44 - 2*floor(sqrt(44)) + 1) + 1 = sqrt(33)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 6.6332495807108,
+    "exact_form": "sqrt(44)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 6.744562646538029,
+    "exact_form": "sqrt(44 - 2*floor(sqrt(44)) + 1) + 1 = sqrt(33)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "45": {
+  "best": {
+   "value": 6.830951894845301,
+   "exact_form": "sqrt(45 - 2*floor(sqrt(45)) + 1) + 1 = sqrt(34)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 6.708203932499369,
+    "exact_form": "sqrt(45)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 6.830951894845301,
+    "exact_form": "sqrt(45 - 2*floor(sqrt(45)) + 1) + 1 = sqrt(34)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "46": {
+  "best": {
+   "value": 7.0,
+   "exact_form": "7",
+   "source": "Bentz2010",
+   "year": 2010,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v17i1r126",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 6.782329983125268,
+    "exact_form": "sqrt(46)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 6.916079783099616,
+    "exact_form": "sqrt(46 - 2*floor(sqrt(46)) + 1) + 1 = sqrt(35)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 7.0,
+    "exact_form": "7",
+    "source": "Bentz2010",
+    "year": 2010,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v17i1r126",
+    "note": null
+   }
+  ]
+ },
+ "47": {
+  "best": {
+   "value": 7.0,
+   "exact_form": "7",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 6.855654600401044,
+    "exact_form": "sqrt(47)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 7.0,
+    "exact_form": "7",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": null
+   }
+  ]
+ },
+ "48": {
+  "best": {
+   "value": 7.0,
+   "exact_form": "7",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 6.928203230275509,
+    "exact_form": "sqrt(48)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 7.0,
+    "exact_form": "7",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": null
+   }
+  ]
+ },
+ "49": {
+  "best": {
+   "value": 7.0,
+   "exact_form": "7",
+   "source": "trivial-square",
+   "year": 1975,
+   "status": "proved",
+   "url": null,
+   "note": "n=49==7^2, trivial grid packing meets area bound"
+  },
+  "history": [
+   {
+    "value": 7.0,
+    "exact_form": "sqrt(49)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 7.0,
+    "exact_form": "7",
+    "source": "trivial-square",
+    "year": 1975,
+    "status": "proved",
+    "url": null,
+    "note": "n=49==7^2, trivial grid packing meets area bound"
+   }
+  ]
+ },
+ "50": {
+  "best": {
+   "value": 7.317426011159064,
+   "exact_form": "2*sqrt(2)+(101+3*sqrt(14))/25",
+   "source": "Green2000",
+   "year": 2000,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 7.0710678118654755,
+    "exact_form": "sqrt(50)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 7.317426011159064,
+    "exact_form": "2*sqrt(2)+(101+3*sqrt(14))/25",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   },
+   {
+    "value": 7.082762530298219,
+    "exact_form": "sqrt(50 - 2*floor(sqrt(50)) + 1) + 1 = sqrt(37)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "51": {
+  "best": {
+   "value": 7.317426011159064,
+   "exact_form": "2*sqrt(2)+(101+3*sqrt(14))/25",
+   "source": "Green2000",
+   "year": 2000,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 7.14142842854285,
+    "exact_form": "sqrt(51)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 7.317426011159064,
+    "exact_form": "2*sqrt(2)+(101+3*sqrt(14))/25",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   },
+   {
+    "value": 7.164414002968976,
+    "exact_form": "sqrt(51 - 2*floor(sqrt(51)) + 1) + 1 = sqrt(38)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "52": {
+  "best": {
+   "value": 7.317426011159064,
+   "exact_form": "2*sqrt(2)+(101+3*sqrt(14))/25",
+   "source": "Green2000",
+   "year": 2000,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 7.211102550927978,
+    "exact_form": "sqrt(52)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 7.317426011159064,
+    "exact_form": "2*sqrt(2)+(101+3*sqrt(14))/25",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   },
+   {
+    "value": 7.244997998398398,
+    "exact_form": "sqrt(52 - 2*floor(sqrt(52)) + 1) + 1 = sqrt(39)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "53": {
+  "best": {
+   "value": 7.324555320336759,
+   "exact_form": "sqrt(53 - 2*floor(sqrt(53)) + 1) + 1 = sqrt(40)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 7.280109889280518,
+    "exact_form": "sqrt(53)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 7.317426011159064,
+    "exact_form": "2*sqrt(2)+(101+3*sqrt(14))/25",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   },
+   {
+    "value": 7.324555320336759,
+    "exact_form": "sqrt(53 - 2*floor(sqrt(53)) + 1) + 1 = sqrt(40)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "54": {
+  "best": {
+   "value": 7.4031242374328485,
+   "exact_form": "sqrt(54 - 2*floor(sqrt(54)) + 1) + 1 = sqrt(41)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 7.3484692283495345,
+    "exact_form": "sqrt(54)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 7.4031242374328485,
+    "exact_form": "sqrt(54 - 2*floor(sqrt(54)) + 1) + 1 = sqrt(41)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "55": {
+  "best": {
+   "value": 7.48074069840786,
+   "exact_form": "sqrt(55 - 2*floor(sqrt(55)) + 1) + 1 = sqrt(42)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 7.416198487095663,
+    "exact_form": "sqrt(55)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 7.48074069840786,
+    "exact_form": "sqrt(55 - 2*floor(sqrt(55)) + 1) + 1 = sqrt(42)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "56": {
+  "best": {
+   "value": 7.557438524302,
+   "exact_form": "sqrt(56 - 2*floor(sqrt(56)) + 1) + 1 = sqrt(43)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 7.483314773547883,
+    "exact_form": "sqrt(56)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 7.557438524302,
+    "exact_form": "sqrt(56 - 2*floor(sqrt(56)) + 1) + 1 = sqrt(43)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "57": {
+  "best": {
+   "value": 7.6332495807108,
+   "exact_form": "sqrt(57 - 2*floor(sqrt(57)) + 1) + 1 = sqrt(44)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 7.54983443527075,
+    "exact_form": "sqrt(57)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 7.6332495807108,
+    "exact_form": "sqrt(57 - 2*floor(sqrt(57)) + 1) + 1 = sqrt(44)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "58": {
+  "best": {
+   "value": 7.708203932499369,
+   "exact_form": "sqrt(58 - 2*floor(sqrt(58)) + 1) + 1 = sqrt(45)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 7.615773105863909,
+    "exact_form": "sqrt(58)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 7.708203932499369,
+    "exact_form": "sqrt(58 - 2*floor(sqrt(58)) + 1) + 1 = sqrt(45)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "59": {
+  "best": {
+   "value": 7.782329983125268,
+   "exact_form": "sqrt(59 - 2*floor(sqrt(59)) + 1) + 1 = sqrt(46)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 7.681145747868608,
+    "exact_form": "sqrt(59)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 7.782329983125268,
+    "exact_form": "sqrt(59 - 2*floor(sqrt(59)) + 1) + 1 = sqrt(46)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "60": {
+  "best": {
+   "value": 7.855654600401044,
+   "exact_form": "sqrt(60 - 2*floor(sqrt(60)) + 1) + 1 = sqrt(47)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 7.745966692414834,
+    "exact_form": "sqrt(60)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 7.855654600401044,
+    "exact_form": "sqrt(60 - 2*floor(sqrt(60)) + 1) + 1 = sqrt(47)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "61": {
+  "best": {
+   "value": 7.928203230275509,
+   "exact_form": "sqrt(61 - 2*floor(sqrt(61)) + 1) + 1 = sqrt(48)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 7.810249675906654,
+    "exact_form": "sqrt(61)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 7.928203230275509,
+    "exact_form": "sqrt(61 - 2*floor(sqrt(61)) + 1) + 1 = sqrt(48)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "62": {
+  "best": {
+   "value": 8.0,
+   "exact_form": "8",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 7.874007874011811,
+    "exact_form": "sqrt(62)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 8.0,
+    "exact_form": "8",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": null
+   }
+  ]
+ },
+ "63": {
+  "best": {
+   "value": 8.0,
+   "exact_form": "8",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 7.937253933193772,
+    "exact_form": "sqrt(63)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 8.0,
+    "exact_form": "8",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": null
+   }
+  ]
+ },
+ "64": {
+  "best": {
+   "value": 8.0,
+   "exact_form": "8",
+   "source": "trivial-square",
+   "year": 1975,
+   "status": "proved",
+   "url": null,
+   "note": "n=64==8^2, trivial grid packing meets area bound"
+  },
+  "history": [
+   {
+    "value": 8.0,
+    "exact_form": "sqrt(64)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 8.0,
+    "exact_form": "8",
+    "source": "trivial-square",
+    "year": 1975,
+    "status": "proved",
+    "url": null,
+    "note": "n=64==8^2, trivial grid packing meets area bound"
+   }
+  ]
+ },
+ "65": {
+  "best": {
+   "value": 8.289965586284652,
+   "exact_form": "2*sqrt(2)+71/13",
+   "source": "Green2000",
+   "year": 2000,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 8.06225774829855,
+    "exact_form": "sqrt(65)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 8.289965586284652,
+    "exact_form": "2*sqrt(2)+71/13",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   },
+   {
+    "value": 8.071067811865476,
+    "exact_form": "sqrt(65 - 2*floor(sqrt(65)) + 1) + 1 = sqrt(50)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "66": {
+  "best": {
+   "value": 8.289965586284652,
+   "exact_form": "2*sqrt(2)+71/13",
+   "source": "Green2000",
+   "year": 2000,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 8.12403840463596,
+    "exact_form": "sqrt(66)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 8.289965586284652,
+    "exact_form": "2*sqrt(2)+71/13",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   },
+   {
+    "value": 8.14142842854285,
+    "exact_form": "sqrt(66 - 2*floor(sqrt(66)) + 1) + 1 = sqrt(51)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "67": {
+  "best": {
+   "value": 8.289965586284652,
+   "exact_form": "2*sqrt(2)+71/13",
+   "source": "Green2000",
+   "year": 2000,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 8.18535277187245,
+    "exact_form": "sqrt(67)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 8.289965586284652,
+    "exact_form": "2*sqrt(2)+71/13",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   },
+   {
+    "value": 8.21110255092798,
+    "exact_form": "sqrt(67 - 2*floor(sqrt(67)) + 1) + 1 = sqrt(52)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "68": {
+  "best": {
+   "value": 8.289965586284652,
+   "exact_form": "2*sqrt(2)+71/13",
+   "source": "Green2000",
+   "year": 2000,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 8.246211251235321,
+    "exact_form": "sqrt(68)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 8.289965586284652,
+    "exact_form": "2*sqrt(2)+71/13",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": null
+   },
+   {
+    "value": 8.280109889280517,
+    "exact_form": "sqrt(68 - 2*floor(sqrt(68)) + 1) + 1 = sqrt(53)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "69": {
+  "best": {
+   "value": 8.348469228349535,
+   "exact_form": "sqrt(69 - 2*floor(sqrt(69)) + 1) + 1 = sqrt(54)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 8.306623862918075,
+    "exact_form": "sqrt(69)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 8.348469228349535,
+    "exact_form": "sqrt(69 - 2*floor(sqrt(69)) + 1) + 1 = sqrt(54)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "70": {
+  "best": {
+   "value": 8.416198487095663,
+   "exact_form": "sqrt(70 - 2*floor(sqrt(70)) + 1) + 1 = sqrt(55)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 8.366600265340756,
+    "exact_form": "sqrt(70)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 8.416198487095663,
+    "exact_form": "sqrt(70 - 2*floor(sqrt(70)) + 1) + 1 = sqrt(55)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "71": {
+  "best": {
+   "value": 8.483314773547882,
+   "exact_form": "sqrt(71 - 2*floor(sqrt(71)) + 1) + 1 = sqrt(56)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 8.426149773176359,
+    "exact_form": "sqrt(71)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 8.483314773547882,
+    "exact_form": "sqrt(71 - 2*floor(sqrt(71)) + 1) + 1 = sqrt(56)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "72": {
+  "best": {
+   "value": 8.54983443527075,
+   "exact_form": "sqrt(72 - 2*floor(sqrt(72)) + 1) + 1 = sqrt(57)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 8.48528137423857,
+    "exact_form": "sqrt(72)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 8.54983443527075,
+    "exact_form": "sqrt(72 - 2*floor(sqrt(72)) + 1) + 1 = sqrt(57)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "73": {
+  "best": {
+   "value": 8.615773105863909,
+   "exact_form": "sqrt(73 - 2*floor(sqrt(73)) + 1) + 1 = sqrt(58)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 8.54400374531753,
+    "exact_form": "sqrt(73)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 8.615773105863909,
+    "exact_form": "sqrt(73 - 2*floor(sqrt(73)) + 1) + 1 = sqrt(58)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "74": {
+  "best": {
+   "value": 8.681145747868609,
+   "exact_form": "sqrt(74 - 2*floor(sqrt(74)) + 1) + 1 = sqrt(59)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 8.602325267042627,
+    "exact_form": "sqrt(74)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 8.681145747868609,
+    "exact_form": "sqrt(74 - 2*floor(sqrt(74)) + 1) + 1 = sqrt(59)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "75": {
+  "best": {
+   "value": 8.745966692414834,
+   "exact_form": "sqrt(75 - 2*floor(sqrt(75)) + 1) + 1 = sqrt(60)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 8.660254037844387,
+    "exact_form": "sqrt(75)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 8.745966692414834,
+    "exact_form": "sqrt(75 - 2*floor(sqrt(75)) + 1) + 1 = sqrt(60)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "76": {
+  "best": {
+   "value": 8.810249675906654,
+   "exact_form": "sqrt(76 - 2*floor(sqrt(76)) + 1) + 1 = sqrt(61)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 8.717797887081348,
+    "exact_form": "sqrt(76)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 8.810249675906654,
+    "exact_form": "sqrt(76 - 2*floor(sqrt(76)) + 1) + 1 = sqrt(61)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "77": {
+  "best": {
+   "value": 8.874007874011811,
+   "exact_form": "sqrt(77 - 2*floor(sqrt(77)) + 1) + 1 = sqrt(62)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 8.774964387392123,
+    "exact_form": "sqrt(77)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 8.874007874011811,
+    "exact_form": "sqrt(77 - 2*floor(sqrt(77)) + 1) + 1 = sqrt(62)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "78": {
+  "best": {
+   "value": 8.937253933193773,
+   "exact_form": "sqrt(78 - 2*floor(sqrt(78)) + 1) + 1 = sqrt(63)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 8.831760866327848,
+    "exact_form": "sqrt(78)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 8.937253933193773,
+    "exact_form": "sqrt(78 - 2*floor(sqrt(78)) + 1) + 1 = sqrt(63)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "79": {
+  "best": {
+   "value": 9.0,
+   "exact_form": "9",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 8.888194417315589,
+    "exact_form": "sqrt(79)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 9.0,
+    "exact_form": "9",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": null
+   }
+  ]
+ },
+ "80": {
+  "best": {
+   "value": 9.0,
+   "exact_form": "9",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": null
+  },
+  "history": [
+   {
+    "value": 8.94427190999916,
+    "exact_form": "sqrt(80)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 9.0,
+    "exact_form": "9",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": null
+   }
+  ]
+ },
+ "81": {
+  "best": {
+   "value": 9.0,
+   "exact_form": "9",
+   "source": "trivial-square",
+   "year": 1975,
+   "status": "proved",
+   "url": null,
+   "note": "n=81==9^2, trivial grid packing meets area bound"
+  },
+  "history": [
+   {
+    "value": 9.0,
+    "exact_form": "sqrt(81)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 9.0,
+    "exact_form": "9",
+    "source": "trivial-square",
+    "year": 1975,
+    "status": "proved",
+    "url": null,
+    "note": "n=81==9^2, trivial grid packing meets area bound"
+   }
+  ]
+ },
+ "82": {
+  "best": {
+   "value": 9.2667,
+   "exact_form": "2*sqrt(2)+(288+12*sqrt(3))/41 [UNRELIABLE -- see notes]",
+   "source": "Green2000",
+   "year": 2000,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": "Friedman's table gives this closed form as ~= 9.2667, but the expression as printed evaluates to ~= 10.3598, which exceeds the trivial upper bound ceil(sqrt(82)) = 10; the stated decimal 9.2667 is used as the value and the closed form is flagged as unreliable. See lower-bounds-notes.md."
+  },
+  "history": [
+   {
+    "value": 9.055385138137417,
+    "exact_form": "sqrt(82)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 9.2667,
+    "exact_form": "2*sqrt(2)+(288+12*sqrt(3))/41 [UNRELIABLE -- see notes]",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": "Friedman's table gives this closed form as ~= 9.2667, but the expression as printed evaluates to ~= 10.3598, which exceeds the trivial upper bound ceil(sqrt(82)) = 10; the stated decimal 9.2667 is used as the value and the closed form is flagged as unreliable. See lower-bounds-notes.md."
+   },
+   {
+    "value": 9.06225774829855,
+    "exact_form": "sqrt(82 - 2*floor(sqrt(82)) + 1) + 1 = sqrt(65)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "83": {
+  "best": {
+   "value": 9.2667,
+   "exact_form": "2*sqrt(2)+(288+12*sqrt(3))/41 [UNRELIABLE -- see notes]",
+   "source": "Green2000",
+   "year": 2000,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": "Friedman's table gives this closed form as ~= 9.2667, but the expression as printed evaluates to ~= 10.3598, which exceeds the trivial upper bound ceil(sqrt(82)) = 10; the stated decimal 9.2667 is used as the value and the closed form is flagged as unreliable. See lower-bounds-notes.md."
+  },
+  "history": [
+   {
+    "value": 9.1104335791443,
+    "exact_form": "sqrt(83)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 9.2667,
+    "exact_form": "2*sqrt(2)+(288+12*sqrt(3))/41 [UNRELIABLE -- see notes]",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": "Friedman's table gives this closed form as ~= 9.2667, but the expression as printed evaluates to ~= 10.3598, which exceeds the trivial upper bound ceil(sqrt(82)) = 10; the stated decimal 9.2667 is used as the value and the closed form is flagged as unreliable. See lower-bounds-notes.md."
+   },
+   {
+    "value": 9.12403840463596,
+    "exact_form": "sqrt(83 - 2*floor(sqrt(83)) + 1) + 1 = sqrt(66)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "84": {
+  "best": {
+   "value": 9.2667,
+   "exact_form": "2*sqrt(2)+(288+12*sqrt(3))/41 [UNRELIABLE -- see notes]",
+   "source": "Green2000",
+   "year": 2000,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": "Friedman's table gives this closed form as ~= 9.2667, but the expression as printed evaluates to ~= 10.3598, which exceeds the trivial upper bound ceil(sqrt(82)) = 10; the stated decimal 9.2667 is used as the value and the closed form is flagged as unreliable. See lower-bounds-notes.md."
+  },
+  "history": [
+   {
+    "value": 9.16515138991168,
+    "exact_form": "sqrt(84)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 9.2667,
+    "exact_form": "2*sqrt(2)+(288+12*sqrt(3))/41 [UNRELIABLE -- see notes]",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": "Friedman's table gives this closed form as ~= 9.2667, but the expression as printed evaluates to ~= 10.3598, which exceeds the trivial upper bound ceil(sqrt(82)) = 10; the stated decimal 9.2667 is used as the value and the closed form is flagged as unreliable. See lower-bounds-notes.md."
+   },
+   {
+    "value": 9.18535277187245,
+    "exact_form": "sqrt(84 - 2*floor(sqrt(84)) + 1) + 1 = sqrt(67)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "85": {
+  "best": {
+   "value": 9.2667,
+   "exact_form": "2*sqrt(2)+(288+12*sqrt(3))/41 [UNRELIABLE -- see notes]",
+   "source": "Green2000",
+   "year": 2000,
+   "status": "proved",
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+   "note": "Friedman's table gives this closed form as ~= 9.2667, but the expression as printed evaluates to ~= 10.3598, which exceeds the trivial upper bound ceil(sqrt(82)) = 10; the stated decimal 9.2667 is used as the value and the closed form is flagged as unreliable. See lower-bounds-notes.md."
+  },
+  "history": [
+   {
+    "value": 9.219544457292887,
+    "exact_form": "sqrt(85)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 9.2667,
+    "exact_form": "2*sqrt(2)+(288+12*sqrt(3))/41 [UNRELIABLE -- see notes]",
+    "source": "Green2000",
+    "year": 2000,
+    "status": "proved",
+    "url": "https://erich-friedman.github.io/papers/squares/squares.html",
+    "note": "Friedman's table gives this closed form as ~= 9.2667, but the expression as printed evaluates to ~= 10.3598, which exceeds the trivial upper bound ceil(sqrt(82)) = 10; the stated decimal 9.2667 is used as the value and the closed form is flagged as unreliable. See lower-bounds-notes.md."
+   },
+   {
+    "value": 9.246211251235321,
+    "exact_form": "sqrt(85 - 2*floor(sqrt(85)) + 1) + 1 = sqrt(68)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "86": {
+  "best": {
+   "value": 9.306623862918075,
+   "exact_form": "sqrt(86 - 2*floor(sqrt(86)) + 1) + 1 = sqrt(69)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 9.273618495495704,
+    "exact_form": "sqrt(86)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 9.306623862918075,
+    "exact_form": "sqrt(86 - 2*floor(sqrt(86)) + 1) + 1 = sqrt(69)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "87": {
+  "best": {
+   "value": 9.366600265340756,
+   "exact_form": "sqrt(87 - 2*floor(sqrt(87)) + 1) + 1 = sqrt(70)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 9.327379053088816,
+    "exact_form": "sqrt(87)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 9.366600265340756,
+    "exact_form": "sqrt(87 - 2*floor(sqrt(87)) + 1) + 1 = sqrt(70)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "88": {
+  "best": {
+   "value": 9.426149773176359,
+   "exact_form": "sqrt(88 - 2*floor(sqrt(88)) + 1) + 1 = sqrt(71)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 9.38083151964686,
+    "exact_form": "sqrt(88)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 9.426149773176359,
+    "exact_form": "sqrt(88 - 2*floor(sqrt(88)) + 1) + 1 = sqrt(71)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "89": {
+  "best": {
+   "value": 9.48528137423857,
+   "exact_form": "sqrt(89 - 2*floor(sqrt(89)) + 1) + 1 = sqrt(72)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 9.433981132056603,
+    "exact_form": "sqrt(89)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 9.48528137423857,
+    "exact_form": "sqrt(89 - 2*floor(sqrt(89)) + 1) + 1 = sqrt(72)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "90": {
+  "best": {
+   "value": 9.54400374531753,
+   "exact_form": "sqrt(90 - 2*floor(sqrt(90)) + 1) + 1 = sqrt(73)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 9.486832980505138,
+    "exact_form": "sqrt(90)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 9.54400374531753,
+    "exact_form": "sqrt(90 - 2*floor(sqrt(90)) + 1) + 1 = sqrt(73)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "91": {
+  "best": {
+   "value": 9.602325267042627,
+   "exact_form": "sqrt(91 - 2*floor(sqrt(91)) + 1) + 1 = sqrt(74)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 9.539392014169456,
+    "exact_form": "sqrt(91)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 9.602325267042627,
+    "exact_form": "sqrt(91 - 2*floor(sqrt(91)) + 1) + 1 = sqrt(74)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "92": {
+  "best": {
+   "value": 9.660254037844387,
+   "exact_form": "sqrt(92 - 2*floor(sqrt(92)) + 1) + 1 = sqrt(75)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 9.591663046625438,
+    "exact_form": "sqrt(92)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 9.660254037844387,
+    "exact_form": "sqrt(92 - 2*floor(sqrt(92)) + 1) + 1 = sqrt(75)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "93": {
+  "best": {
+   "value": 9.717797887081348,
+   "exact_form": "sqrt(93 - 2*floor(sqrt(93)) + 1) + 1 = sqrt(76)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 9.643650760992955,
+    "exact_form": "sqrt(93)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 9.717797887081348,
+    "exact_form": "sqrt(93 - 2*floor(sqrt(93)) + 1) + 1 = sqrt(76)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "94": {
+  "best": {
+   "value": 9.774964387392123,
+   "exact_form": "sqrt(94 - 2*floor(sqrt(94)) + 1) + 1 = sqrt(77)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 9.695359714832659,
+    "exact_form": "sqrt(94)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 9.774964387392123,
+    "exact_form": "sqrt(94 - 2*floor(sqrt(94)) + 1) + 1 = sqrt(77)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "95": {
+  "best": {
+   "value": 9.831760866327848,
+   "exact_form": "sqrt(95 - 2*floor(sqrt(95)) + 1) + 1 = sqrt(78)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 9.746794344808963,
+    "exact_form": "sqrt(95)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 9.831760866327848,
+    "exact_form": "sqrt(95 - 2*floor(sqrt(95)) + 1) + 1 = sqrt(78)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "96": {
+  "best": {
+   "value": 9.888194417315589,
+   "exact_form": "sqrt(96 - 2*floor(sqrt(96)) + 1) + 1 = sqrt(79)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 9.797958971132712,
+    "exact_form": "sqrt(96)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 9.888194417315589,
+    "exact_form": "sqrt(96 - 2*floor(sqrt(96)) + 1) + 1 = sqrt(79)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "97": {
+  "best": {
+   "value": 9.94427190999916,
+   "exact_form": "sqrt(97 - 2*floor(sqrt(97)) + 1) + 1 = sqrt(80)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
+  },
+  "history": [
+   {
+    "value": 9.848857801796104,
+    "exact_form": "sqrt(97)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 9.94427190999916,
+    "exact_form": "sqrt(97 - 2*floor(sqrt(97)) + 1) + 1 = sqrt(80)+1",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "general lower bound, Theorem 2(ii)"
+   }
+  ]
+ },
+ "98": {
+  "best": {
+   "value": 10.0,
+   "exact_form": "10",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "n=98==10^2-2; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+  },
+  "history": [
+   {
+    "value": 9.899494936611665,
+    "exact_form": "sqrt(98)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 10.0,
+    "exact_form": "10",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "n=98==10^2-2; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+   }
+  ]
+ },
+ "99": {
+  "best": {
+   "value": 10.0,
+   "exact_form": "10",
+   "source": "Nagamochi2005",
+   "year": 2005,
+   "status": "proved",
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "n=99==10^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+  },
+  "history": [
+   {
+    "value": 9.9498743710662,
+    "exact_form": "sqrt(99)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 10.0,
+    "exact_form": "10",
+    "source": "Nagamochi2005",
+    "year": 2005,
+    "status": "proved",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+    "note": "n=99==10^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+   }
+  ]
+ },
+ "100": {
+  "best": {
+   "value": 10.0,
+   "exact_form": "10",
+   "source": "trivial-square",
+   "year": 1975,
+   "status": "proved",
+   "url": null,
+   "note": "n=100==10^2, trivial grid packing meets area bound"
+  },
+  "history": [
+   {
+    "value": 10.0,
+    "exact_form": "sqrt(100)",
+    "source": "area-bound",
+    "year": 1975,
+    "status": "proved",
+    "url": null
+   },
+   {
+    "value": 10.0,
+    "exact_form": "10",
+    "source": "trivial-square",
+    "year": 1975,
+    "status": "proved",
+    "url": null,
+    "note": "n=100==10^2, trivial grid packing meets area bound"
+   }
+  ]
+ },
+ "sources": {
+  "area-bound": {
+   "authors": "folklore (area argument)",
+   "title": "s(n) >= sqrt(n) trivially, since n disjoint unit squares have total area n",
+   "venue": "classical; see H.T. Croft, K.J. Falconer, R.K. Guy, Unsolved Problems in Geometry",
+   "year": 1991,
+   "url": null
+  },
+  "trivial-square": {
+   "authors": "folklore",
+   "title": "s(n^2) = n exactly: n x n grid packing meets the area bound sqrt(n^2)=n",
+   "venue": "classical",
+   "year": 1975,
+   "url": null
+  },
+  "Gobel1979": {
+   "authors": "F. G\u00f6bel",
+   "title": "Geometrical Packing and Covering Problems",
+   "venue": "in A. Schrijver (ed.), Packing and Covering in Combinatorics, Math Centrum Tracts 106, pp. 179-199",
+   "year": 1979,
+   "url": null
+  },
+  "KearneyShiu2002": {
+   "authors": "M. Kearney, P. Shiu",
+   "title": "Efficient Packing of Unit Squares in a Square",
+   "venue": "Electronic Journal of Combinatorics, 9, #R14",
+   "year": 2002,
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v9i1r14"
+  },
+  "ElMoumni1999": {
+   "authors": "S. El Moumni",
+   "title": "Optimal Packings of Unit Squares in a Square",
+   "venue": "Studia Scientiarum Mathematicarum Hungarica, 35(3-4), 281-290",
+   "year": 1999,
+   "url": null
+  },
+  "Stromquist2003": {
+   "authors": "W. Stromquist",
+   "title": "Packing 10 or 11 Unit Squares in a Square",
+   "venue": "Electronic Journal of Combinatorics, 10, #R8",
+   "year": 2003,
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v10i1r8"
+  },
+  "Nagamochi2005": {
+   "authors": "H. Nagamochi",
+   "title": "Packing Unit Squares in a Rectangle",
+   "venue": "Electronic Journal of Combinatorics, 12, #R37",
+   "year": 2005,
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37"
+  },
+  "Bentz2010": {
+   "authors": "W. Bentz",
+   "title": "Optimal Packings of 13 and 46 Unit Squares in a Square",
+   "venue": "Electronic Journal of Combinatorics, 17, #R126",
+   "year": 2010,
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v17i1r126"
+  },
+  "Bentz2016": {
+   "authors": "W. Bentz",
+   "title": "Optimal Packings of 22 and 33 Unit Squares in a Square",
+   "venue": "arXiv:1606.03746 [math.CO]",
+   "year": 2016,
+   "url": "https://arxiv.org/abs/1606.03746"
+  },
+  "Friedman1998": {
+   "authors": "E. Friedman",
+   "title": "Packing Unit Squares in Squares: A Survey and New Results (original version; proofs for n=2,3,5,8,15,24,35)",
+   "venue": "Electronic Journal of Combinatorics, Dynamic Survey DS7, v1",
+   "year": 1998,
+   "url": "https://www.combinatorics.org/files/Surveys/ds7/ds7v1-1998.pdf"
+  },
+  "FriedmanDS7": {
+   "authors": "E. Friedman",
+   "title": "Packing Unit Squares in Squares: A Survey and New Results (updated; adds proofs for n=7,14 and lower-bound Table 2 entries)",
+   "venue": "Electronic Journal of Combinatorics, Dynamic Survey DS7 (v5, 2009) / maintained copy",
+   "year": 2009,
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html"
+  },
+  "Green2000": {
+   "authors": "T. Green (via E. Friedman's survey)",
+   "title": "Lower bound constructions reported as private communication in Friedman's DS7 Table 2",
+   "venue": "private communication, cited in EJC Dynamic Survey DS7",
+   "year": 2000,
+   "url": "https://erich-friedman.github.io/papers/squares/squares.html"
+  },
+  "Burns2026": {
+   "authors": "Sam Burns",
+   "title": "Proposing a better lower bound for n=17 square packing",
+   "venue": "blog post (computer-assisted, unrefereed; certificate produced with ChatGPT/GPT-5.6 Pro)",
+   "year": 2026,
+   "url": "https://sam-burns.com/posts/proposing-better-lower-bound-for-n17-square-packing/"
+  },
+  "Fort2026": {
+   "authors": "Stanislav Fort",
+   "title": "17squares: exact certificate for s(17) > 4.456575",
+   "venue": "GitHub repository (computer-assisted, unrefereed; author states he cannot personally vouch for correctness)",
+   "year": 2026,
+   "url": "https://github.com/stanislavfort/17squares"
+  },
+  "MiraAcc2026": {
+   "authors": "Mira-acc (GitHub user)",
+   "title": "17squares: weighted-point lower-bound certificates for s(17)",
+   "venue": "GitHub repository (computer-assisted, unrefereed; 'external peer review remains pending')",
+   "year": 2026,
+   "url": "https://github.com/Mira-acc/17squares"
+  },
+  "Massaccesi2026": {
+   "authors": "Gustavo Massaccesi",
+   "title": "Another better lower bound for n=17",
+   "venue": "blog post (computer-assisted, unrefereed; linear-programming weight certificate)",
+   "year": 2026,
+   "url": "https://gus-massa.blogspot.com/2026/08/another-better-lower-bound-for-n17.html"
+  },
+  "EvanDaniel2026": {
+   "authors": "Evan Daniel (evand)",
+   "title": "square-packing (s12/): exact certificate for s(12) >= 15680/3951",
+   "venue": "GitHub repository + write-up (computer-assisted, unrefereed)",
+   "year": 2026,
+   "url": "https://github.com/evand/square-packing/tree/main/s12"
+  }
+ },
+ "meta": {
+  "description": "Best-known PROVEN lower bounds for s(n), the side of the smallest square that can contain n non-overlapping axis-free unit squares, for n=1..100.",
+  "generated": "2026-09-08",
+  "caveats": "See site/notes/lower-bounds-notes.md for sourcing notes and uncertainties. Entries with status 'preprint' are computer-assisted 2026 results that have not been refereed.",
+  "precision": "`value` is the full double-precision evaluation of `exact_form`, not a rounded decimal: storing the n=5 floor as 2.7071068 put it ABOVE the true 2+1/sqrt(2)=2.707106781..., so it compared as greater than the matching upper bound and s(5) and s(10) were reported open with a gap of -0.0000. Entries whose exact_form is absent or flagged unreliable keep their curated decimal."
+ }
+}

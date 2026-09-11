@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+
+# site: fetched third-party pages/SVGs and intermediate build products (site/build.sh regenerates them)
+site/data/ellsworth/*
+!site/data/ellsworth/fetch.sh
+site/data/packings.json
+site/data/records_raw.json
+site/data/timeline.json
+site/data/*.log
+site/data/*.stdout
+
+# local Pages assembly
+_site/

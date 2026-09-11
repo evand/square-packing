@@ -1,0 +1,82 @@
+{
+  "schema": "s12-points-json/1",
+  "problem": "packing 12 unit squares in a square",
+  "theorem": "s(12) >= 2701/717",
+  "bound": "2701/717",
+  "n": 12,
+  "container_side": {
+    "numerator": 2701,
+    "denominator": 717,
+    "decimal": 3.767085076708508
+  },
+  "point_denominator": 4302,
+  "weight_denominator": 2,
+  "points": [
+    [2283, 10825],
+    [2310, 13512],
+    [2371, 8011],
+    [2978, 6078],
+    [4075, 11935],
+    [4294, 3980],
+    [4294, 4296],
+    [4298, 8084],
+    [4504, 11984],
+    [6264, 8103],
+    [8059, 13343],
+    [8151, 6181],
+    [8156, 9974],
+    [8157, 4262],
+    [8159, 11954],
+    [8213, 2703],
+    [10071, 8106],
+    [11907, 12066],
+    [11915, 4120],
+    [11999, 8089],
+    [12056, 4296],
+    [12075, 11907],
+    [13103, 8235]
+  ],
+  "weights": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "total_weight": {
+    "numerator": 23,
+    "denominator": 2,
+    "decimal": 11.5
+  },
+  "convention": {
+    "squares": "closed",
+    "boundary_points_count": true,
+    "claim": "every closed unit square contained in the closed container [0, s]^2, at every centre and every angle, contains points of total weight >= 1",
+    "argument": "concentric shrink: a packing of n unit squares in a container of side s' < s, rescaled by s/s' > 1, gives n squares each strictly containing a concentric closed unit square; those have pairwise disjoint interiors, so no point is counted twice and n <= total_weight < n is a contradiction",
+    "note": "this differs from the open-square / pigeonhole convention of the unweighted family (Fort, Mira): a certificate for one convention does not verify under the other's checker",
+    "reference": "certificates/FORMAT.md"
+  },
+  "source": {
+    "file": "s12_uniform_2of23_3.767.txt",
+    "sha256": "b40ef136e19adbb115f4c0de6426c6c28ce428e9c5e3d0a0bce6942bc1187c7f",
+    "format": "certificates/FORMAT.md"
+  }
+}

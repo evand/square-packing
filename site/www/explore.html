@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Explore a packing · Squares in Squares</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<div class="topbar">
+  <span class="brand">Squares in Squares</span>
+  <nav><a href="index.html">Overview</a><a href="explore.html" class="here">Explore</a><a href="compare.html">Compare</a><a href="bounds.html">Bounds</a><a href="proofs.html">Proofs</a><a href="sources.html">Sources</a></nav>
+</div>
+<div class="explore">
+  <div class="stage">
+    <div class="toolbar">
+      <div class="nav"><button id="prev" title="previous n">‹</button><input id="nbox" class="mono" type="text" inputmode="numeric"><button id="next" title="next n">›</button>
+        <select id="variant" title="which packing for this n"></select></div>
+      <span class="sep"></span>
+      <label>colour <select id="colormode"><option value="angle">by angle</option><option value="group">by rotation group</option><option value="none">plain</option></select></label>
+      <label title="squares whose angles differ by less than this are counted as one rotation">merge &lt; <span id="tolv" class="mono">0</span>° <input id="tol" type="range" min="0" max="100" value="0"></label>
+      <span class="sep"></span>
+      <label><input type="checkbox" id="L_free" checked> free squares</label>
+      <label><input type="checkbox" id="L_contacts"> contacts</label>
+      <label><input type="checkbox" id="L_gaps"> gaps</label>
+      <label><input type="checkbox" id="L_sym"> symmetry</label>
+      <label><input type="checkbox" id="L_idx"> numbers</label>
+      <span class="sep"></span>
+      <button id="reset" title="reset zoom">fit</button>
+      <span class="hint">scroll to zoom · drag to pan · hover a square</span>
+    </div>
+    <svg id="view" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="tip" id="tip"></div>
+  </div>
+  <aside class="side" id="side">
+    <div id="panelerr" class="note err"></div>
+    <section>
+      <div class="eyebrow">best known packing</div>
+      <h1 id="title">—</h1>
+      <div class="big" id="sval">—</div>
+      <div class="note" id="shownfor"></div>
+      <div id="sform" class="prose"></div>
+      <div id="tags"></div>
+      <div id="prose" class="prose"></div>
+      <div class="note" id="srcline"></div>
+    </section>
+    <section>
+      <h2>Rotations</h2>
+      <div id="rotsum" class="note"></div>
+      <div class="legend" id="legend"></div>
+    </section>
+    <section>
+      <h2>Freedom</h2>
+      <div id="freesum" class="note"></div>
+      <div id="rigidcheck" class="note"></div>
+      <div class="legend" id="freelist"></div>
+    </section>
+    <section>
+      <h2>Smallest gaps</h2>
+      <div class="note" id="gapnote">Distances between squares that don't touch. Click to zoom in.</div>
+      <div class="gaplist" id="gaps"></div>
+    </section>
+    <section>
+      <h2>Shape</h2>
+      <dl class="kv" id="stats"></dl>
+    </section>
+    <section>
+      <h2>Selected square</h2>
+      <div id="sel" class="note">Click a square.</div>
+    </section>
+  </aside>
+</div>
+<script src="js/viewer.js"></script>
+</body>
+</html>

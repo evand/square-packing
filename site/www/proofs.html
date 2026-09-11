@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Proofs · Squares in Squares</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
+<style>
+.wrap{max-width:900px;margin:0 auto;padding:28px 20px 80px;display:flex;flex-direction:column;gap:36px}
+.wrap h1{font-size:2rem}
+.wrap h2{font-size:1.4rem;margin-top:8px}
+.wrap p{max-width:66ch}
+section{display:flex;flex-direction:column;gap:14px}
+.lede{font-size:1.08rem;color:var(--muted)}
+.play{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start}
+@media (max-width:800px){.play{grid-template-columns:1fr}}
+.play svg{width:100%;aspect-ratio:1;background:var(--surface);border:1px solid var(--rule);border-radius:3px;touch-action:none;cursor:grab}
+.panel{display:flex;flex-direction:column;gap:12px;font-size:.92rem}
+.count{font-family:"IBM Plex Mono",monospace;font-size:2.6rem;font-weight:600;line-height:1;color:var(--accent)}
+.count.low{color:var(--red)}
+.panel label{display:flex;flex-direction:column;gap:4px}
+.panel input[type=range]{width:100%}
+.land{display:flex;flex-direction:column;gap:8px}
+.land canvas{width:100%;aspect-ratio:1;image-rendering:pixelated;border:1px solid var(--rule);border-radius:3px;background:var(--surface)}
+.keys{display:flex;gap:12px;flex-wrap:wrap;font-size:.84rem;font-family:"IBM Plex Mono",monospace}
+.keys i{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-1px;margin-right:4px}
+.thm{border-left:3px solid var(--accent);background:var(--surface);padding:14px 18px;border-radius:3px;font-size:1.02rem}
+.aside{font-size:.9rem;color:var(--muted);border-left:3px solid var(--rule);padding-left:14px}
+.steps{display:flex;flex-direction:column;gap:10px;counter-reset:s}
+.steps div{display:grid;grid-template-columns:28px 1fr;gap:10px}
+.steps div::before{counter-increment:s;content:counter(s);font-family:"IBM Plex Mono",monospace;color:var(--accent);font-weight:600}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="brand">Squares in Squares</span>
+  <nav><a href="index.html">Overview</a><a href="explore.html">Explore</a><a href="compare.html">Compare</a><a href="bounds.html">Bounds</a><a href="proofs.html" class="here">Proofs</a><a href="sources.html">Sources</a></nav>
+</div>
+<div class="wrap">
+  <section>
+    <div class="eyebrow">how a floor gets proved</div>
+    <h1>Proving that no better packing exists</h1>
+    <p class="lede">Finding a good packing is a search. Proving that nothing smaller can work is a different job: you have to rule out every arrangement at once, including ones nobody has thought of. Almost every proof in this subject uses one trick, due to Frits Göbel (1979): <b>unavoidable points</b>.</p>
+  </section>
+
+  <section>
+    <h2>The trick</h2>
+    <p>Suppose you want to show that <i>n</i> unit squares can't fit in a square box of side <i>s</i>. Scatter some points in the box so that <em>every possible position of a unit square</em> — anywhere, at any angle — covers at least one of them. If you managed it with fewer than <i>n</i> points, you're done: <i>n</i> squares with no overlap would each need their own point, and there aren't enough to go round.</p>
+    <p>The whole art is choosing the points. Near a wall a unit square can't tilt much without poking out, so a row of points about 0.9 from each wall catches everything there. In the middle, a triangle of points with sides ≤ 1 can't be dodged (a unit square whose centre is in the triangle must cover a corner of it). Stitching such lemmas together over the whole box is the proof.</p>
+    <p>A sharper version asks each point to be hit not once but <i>k</i> times: if every unit square covers at least <i>k</i> of <i>m</i> points, then at most ⌊<i>m</i>/<i>k</i>⌋ squares fit. Below is a real one.</p>
+  </section>
+
+  <section>
+    <h2>Try it: 81 points, every square catches 7</h2>
+    <div class="thm">In a box of side 35/9 ≈ 3.889 there are 81 points such that <b>every</b> unit square inside the box, at every position and angle, contains at least 7 of them. Twelve squares would need 12 × 7 = 84. So twelve unit squares fit in no box smaller than this: <span class="mono">s(12) ≥ 35/9</span>.</div>
+    <p>Drag the square around and rotate it. The points it covers light up and the count is shown. Try to get it below 7 — you can't, but the places where it is <em>exactly</em> 7 tell you what the points are for.</p>
+    <div class="play">
+      <svg id="pl" viewBox="0 0 1 1"></svg>
+      <div class="panel">
+        <div><div class="eyebrow">points covered</div><div class="count" id="cnt">—</div><div class="note" id="cntnote"></div></div>
+        <label>angle <span class="mono" id="angv">0°</span><input id="ang" type="range" min="0" max="90" step="0.1" value="0"></label>
+        <label><input type="checkbox" id="showland" checked> show the count everywhere at this angle</label>
+        <div class="land"><canvas id="land" width="120" height="120"></canvas>
+          <div class="keys"><span><i style="background:#B4322A"></i>exactly 7</span><span><i style="background:#F5EBDA"></i>8</span><span><i style="background:#DCEDF1"></i>9–10</span><span><i style="background:#0E7490"></i>11+</span></div>
+          <div class="note" id="landnote"></div></div>
+        <button id="scan">check all angles</button><div class="note" id="scannote"></div>
+        <label>point set <select id="cert"><option value="cert_81.txt">81 points, 7 each, box 35/9</option><option value="cert_56.txt">56 points, 5 each, box 19/5</option></select></label>
+      </div>
+    </div>
+    <p class="aside">The map samples 120 × 120 positions; the real proof checks the whole continuum of positions and angles with exact integer arithmetic (an <a href="https://github.com/evand/square-packing/tree/main/s12">open-source verifier</a>), and a proof assistant checks the counting step. Points exactly on the square's edge count as covered. That convention is what lets a packing in any smaller box be scaled up into this one and refuted, which is why the conclusion covers every box smaller than 35/9. The skeleton is the same in every such set found: a <span class="mono">#</span> of lines one unit from each wall, and a small ring at the centre.</p>
+  </section>
+
+  <section>
+    <h2>Why twelve is still open</h2>
+    <p>Everyone believes <span class="mono">s(12) = 4</span>: the plain 4 × 4 grid with four squares missing. The best proven floor is now 3.9686 — <a href="s12/">our own result</a>, computer-checked but not refereed — from a weighted version of the same argument where points carry fractional weights chosen by a linear program, an idea from Sam Burns's and Gustavo Massaccesi's 2026 work on n = 17 (<a href="sources.html">Sources</a> §5). Weighted points alone appear to run out close to that floor, so closing the last 0.03 is expected to need case analysis on top — the kind used to prove <span class="mono">s(13) = 4</span>, which is next.</p>
+  </section>
+
+<section>
+  <h2>Walkthrough: how Bentz ruled out thirteen</h2>
+  <p>Bentz works in the square <span class="mono">[0,4]²</span> with <b>boxes</b> — the inside of a square of side a little more than 1. If 13 boxes never fit in <span class="mono">[0,4]²</span>, then 13 unit squares need a container of side at least 4, which is <span class="mono">s(13) = 4</span>. He starts with 16 unavoidable points: <span class="mono">A(1, 0.914)</span>, <span class="mono">B(0.914, 1)</span>, <span class="mono">C(0.914, 2)</span> and <span class="mono">D(1.65, 1.65)</span>, mirrored in <span class="mono">x = 2</span>, <span class="mono">y = 2</span> and <span class="mono">y = x</span> — eight points near the corners, four near the middles of the walls, four in the interior. Thirteen boxes against sixteen points leaves only three points of slack, which is enough to force at least two boxes to be alone with a corner point. A box in that position is very restricted: swapping its point for a nearby one leaves the set unavoidable, so the box has to cover that nearby point too (the replacement lemma). From there the argument splits on whether those two lonely boxes sit at the same corner or at different ones, and the split has six leaves.</p>
+  <div id="bentz"></div>
+  <p>Click through the leaves and watch the number in the tree: every branch ends at <b>12</b>. The bookkeeping is "free points + boxes already placed", and a contradiction needs that total to be under 13. Each configuration Bentz builds is, in effect, a certificate worth exactly 12 — so it kills a thirteenth box and nothing more. For 12 squares every leaf would have to come out at 11 instead, and only one of the six does. The loss starts at the very first step: with 12 boxes and 16 points the slack is 4, all eight corner points can pair up in four boxes, and there is no lonely box for the replacement lemma to work on. That single missing unit is why the same proof says nothing about <span class="mono">s(12)</span>.</p>
+  
+</section>
+</div>
+<script src="js/playground.js"></script>
+<script src="js/bentz.js"></script>
+</body>
+</html>
