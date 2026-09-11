@@ -123,8 +123,11 @@ class Hi:
     def run(self):
         # a fresh model has no basis, and cold dual simplex on a 10k x 10k coverage LP is far
         # slower than interior point: use ipm+crossover for the first solve after a rebuild (it
-        # leaves a basis behind), then warm-started simplex for every incremental solve
-        if not self.basis:
+        # leaves a basis behind), then warm-started simplex for every incremental solve.
+        # `tlim <= 0` skips the warm simplex attempt altogether and goes straight to ipm+crossover:
+        # on the big clique LPs the warm dual simplex makes ZERO pivots and burns the whole limit
+        # before the ipm fallback runs anyway (search/CLMASTER.md, search/LPSPEED.md).
+        if not self.basis or self.tlim <= 0:
             self.h.setOptionValue('solver', 'ipm')
             self.h.setOptionValue('run_crossover', 'on')
             self.h.setOptionValue('time_limit', 1e30)
