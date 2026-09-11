@@ -5,7 +5,7 @@ handful of *n*.  This repository has two parts:
 
 | | |
 |---|---|
-| [`site/`](site/) | An explorer for the record packings in David Ellsworth's catalogue: every packing drawn and analysed (angles, contacts, free squares, gaps, symmetry, rigidity), how the records changed over time, the proven lower bounds, and how the exact results are proved.  **https://evand.github.io/square-packing/** |
+| [`site/`](site/) | **Square Packing Atlas**, an explorer for the record packings in David Ellsworth's catalogue: every packing drawn and analysed (angles, contacts, free squares, gaps, symmetry, rigidity), how the records changed over time, the proven lower bounds, and how the exact results are proved.  **https://evand.github.io/square-packing/** |
 | [`s12/`](s12/) | A machine-checked lower bound **s(12) ≥ 15680/3951 = 3.968616…**: an exact certificate, a Rust verifier over the full continuum of placements, an independent Python re-check, and a Lean formalisation of the reduction.  Write-up: **https://evand.github.io/square-packing/s12/** |
 
 [![verify](https://github.com/evand/square-packing/actions/workflows/verify.yml/badge.svg)](https://github.com/evand/square-packing/actions/workflows/verify.yml)

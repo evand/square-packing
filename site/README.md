@@ -1,4 +1,4 @@
-# Squares in Squares — an explainer site
+# Square Packing Atlas
 
 A static site about the problem *how small a square can hold n unit squares?* (`s(n)`): the record
 packings, what can be said about them (angles, contacts, free squares, gaps, symmetry), how the

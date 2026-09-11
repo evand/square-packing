@@ -5,7 +5,8 @@
 Readable write-up with the point diagram: **https://evand.github.io/square-packing/s12/**
 
 This directory is the s(12) proof as published on 2026-08-25.  The rest of the
-[square-packing](../README.md) repository is an explorer for the record packings.
+[square-packing](../README.md) repository is the Square Packing Atlas, an explorer for the
+record packings (https://evand.github.io/square-packing/).
 
 `s(n)` is the side of the smallest square into which `n` unit squares can be packed, with
 rotations allowed.  `s(12) = 4` is conjectured but **open**: `s(13) = 4` is proved (Bentz 2010)
