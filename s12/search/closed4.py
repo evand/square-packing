@@ -42,6 +42,12 @@ from scipy.optimize import linprog
 from fractions import Fraction
 
 TOL = 1e-9           # closed containment: |q - u|_inf <= 1/2 + TOL counts (safe direction for the cover)
+# --margin MU sets TOL = -MU: a point then counts only if it lies in the CONCENTRIC square of side
+# 1 - 2*MU, i.e. at distance >= MU inside every edge of the unit square.  This is the "stable"
+# (margin-MU) cover problem of search/RUNG2.md: a solution of it is a closed cover with a uniform
+# geometric margin, which is exactly what the box checker search/zeromargin.py needs in order to
+# terminate (a witness set fixed over a whole pose box).  Equivalently, by scaling, it is the
+# ordinary closed cover problem for the container [0, s/(1-2MU)]^2.
 WALL = 1e-7          # rows are placed >= WALL inside the open admissible box
 HIGHS = {'random_seed': 0}
 
@@ -79,8 +85,9 @@ def angle_list(deg_step=1.0):
 
 
 # ----------------------------------------------------------------------------- geometry
-def captured(P, w, poses, tol=TOL, chunk=256):
+def captured(P, w, poses, tol=None, chunk=256):
     """captured weight of the CLOSED unit square at each pose (cx, cy, theta); brute force."""
+    if tol is None: tol = TOL
     poses = np.asarray(poses, dtype=float).reshape(-1, 3); out = np.empty(len(poses))
     for i in range(0, len(poses), chunk):
         B = poses[i:i + chunk]; ct = np.cos(B[:, 2]); st = np.sin(B[:, 2])
@@ -97,11 +104,12 @@ def admissible_box(s, th):
     return wid / 2, s - wid / 2
 
 
-def scan_angle(P, w, s, th, pitch, tol=TOL, band=True):
+def scan_angle(P, w, s, th, pitch, tol=None, band=True):
     """captured weight on a lattice of centres of pitch `pitch` in the rotated frame (u = R(-th) c),
     restricted to the OPEN admissible box (offset WALL), plus (band=True) explicit rows along the
     four walls at offset WALL (c-space lattice), i.e. the near-wall limits.
     Returns (values, poses (m,3))."""
+    if tol is None: tol = TOL
     ct, st = math.cos(th), math.sin(th)
     q0 = P[:, 0] * ct + P[:, 1] * st; q1 = -P[:, 0] * st + P[:, 1] * ct
     lo, hi = admissible_box(s, th); lo += WALL; hi -= WALL
@@ -486,7 +494,9 @@ def run(a, log=print):
         json.dump(dict(s=s, args=vars(a), hist=hist), open(f"runs/closed4_{a.tag}.json", 'w'), indent=1)
         # checkpoint every round (2026-08-30 coordinator note): so a kill/timeout mid-run never
         # loses the current LP weights -- NOT itself a certified cover (rows are a finite sample).
-        export(m, x, f"runs/closed4_{a.tag}_last.txt", WD=10 ** 7, up=True)
+        # (column generation may have widened the model since `x` was solved: pad with zeros)
+        xe = x if len(x) == len(m.orbits) else np.r_[x, np.zeros(len(m.orbits) - len(x))]
+        export(m, xe, f"runs/closed4_{a.tag}_last.txt", WD=10 ** 7, up=True)
         if n1 + n2 == 0 and ncols == 0:
             log(f"[{a.tag}] converged (no violated pose found, no priced column)"); break
         if time.time() - t0 > a.time: log(f"[{a.tag}] time limit"); break
@@ -645,9 +655,18 @@ def main():
     ap.add_argument('--prune-at', type=int, default=90000); ap.add_argument('--prune-keep', type=int, default=30000)
     ap.add_argument('--stress-pitch', type=float, default=0.005); ap.add_argument('--nrand', type=int, default=200)
     ap.add_argument('--seed', type=int, default=0)
+    ap.add_argument('--margin', type=float, default=None,
+                    help='solve the STABLE (margin-mu) cover problem: a point counts only if it is at '
+                         'distance >= mu inside every edge of the unit square (sets TOL = -mu).  A cover '
+                         'found this way is a closed cover with uniform geometric margin mu, which the '
+                         'exact box checker search/zeromargin.py can certify; see search/RUNG2.md.')
     ap.add_argument('--K', type=int, default=3000, help='lower: tightest placements added to the packing support')
     ap.add_argument('--seg-pitch', type=float, default=0.01, help='discretisation pitch of Nagamochi segments/area (nagamochi mode)')
     a = ap.parse_args()
+    if a.margin is not None:
+        global TOL
+        TOL = -float(a.margin)
+        print(f"MARGIN MODE: a point counts only if inside by >= {a.margin} (TOL = {TOL})")
     HIGHS['random_seed'] = a.seed
     os.makedirs('runs', exist_ok=True)
     lf = open(f"runs/closed4_{a.tag}.log", 'a')

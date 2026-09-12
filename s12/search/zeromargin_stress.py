@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """Float stress test of a zeromargin.py leaf dump: sample poses inside every certified leaf and
-check its claimed witness directly (CORE/P1: the point is in the square; TRI: some vertex is).
-Also random tests of the three primitives themselves.  Independent of the exact code paths.
+check its claimed witness directly (ADM/CORE/P1/MIX: some listed point is in the square; TRI: some
+vertex is).  Also random tests of the four primitives themselves.  Independent of the exact code
+paths (plain floats, no Fractions, no shared helper).
 
-usage: python3 search/zeromargin_stress.py runs/zeromargin_friedman14_leaves.txt [samples_per_leaf]
+usage: python3 search/zeromargin_stress.py LEAVES.txt [samples_per_leaf] [--cert CERT.txt]
+
+With no --cert the point set is Friedman's 14 (rung 1).  For a weighted cover pass the same
+certificate file that produced the dump.
 """
 import sys, math, random, ast
 from fractions import Fraction as F
@@ -14,11 +18,25 @@ def inside(p, c, th, tol=1e-9):
     x = dx * math.cos(th) + dy * math.sin(th); y = -dx * math.sin(th) + dy * math.cos(th)
     return abs(x) <= 0.5 + tol and abs(y) <= 0.5 + tol
 
-P = [(1, 1), (1.6, 1), (2.4, 1), (3, 1), (1, 1.8), (2, 1.8), (3, 1.8), (1, 2.2), (2, 2.2), (3, 2.2),
-     (1, 3), (1.6, 3), (2.4, 3), (3, 3)]
-m = 4.0
-path = sys.argv[1]; nsamp = int(sys.argv[2]) if len(sys.argv) > 2 else 20
-bad = 0; n = {'CORE': 0, 'P1': 0, 'TRI': 0, 'EMPTY': 0}
+FRIED = [(1, 1), (1.6, 1), (2.4, 1), (3, 1), (1, 1.8), (2, 1.8), (3, 1.8), (1, 2.2), (2, 2.2),
+         (3, 2.2), (1, 3), (1.6, 3), (2.4, 3), (3, 3)]
+
+def read_cert(path):
+    tok = open(path).read().split()
+    sn, sd, D, W, n = map(int, tok[:5])
+    P = []
+    for i in range(n):
+        X, Y, w = map(int, tok[5 + 3 * i: 8 + 3 * i])
+        P.append((X / D, Y / D))
+    return sn / sd, P
+
+args = [a for a in sys.argv[1:] if not a.startswith('--')]
+path = args[0]; nsamp = int(args[1]) if len(args) > 1 else 20
+m = 4.0; P = FRIED
+if '--cert' in sys.argv:
+    m, P = read_cert(sys.argv[sys.argv.index('--cert') + 1])
+
+bad = 0; n = {'ADM': 0, 'CORE': 0, 'P1': 0, 'MIX': 0, 'TRI': 0, 'EMPTY': 0}
 for line in open(path):
     if line.startswith('#'): continue
     boxs, kind, wit = [t.strip() for t in line.split(';')]
@@ -36,12 +54,12 @@ for line in open(path):
         if kind == 'EMPTY':
             if adm: bad += 1; print("EMPTY box has admissible pose", box, cx, cy, th)
             continue
-        if kind == 'P1' and not adm: continue          # P1 only claims admissible poses
+        if kind in ('P1', 'ADM', 'MIX') and not adm: continue   # they only claim admissible poses
         if kind == 'CORE':
             # CORE claims every pose of the box clipped to the widest admissible range of the bin
             lo = min(math.cos(th0) + math.sin(th0), math.cos(th1) + math.sin(th1)) / 2
             if not (lo - 1e-12 <= cx <= m - lo + 1e-12 and lo - 1e-12 <= cy <= m - lo + 1e-12): continue
-        if kind in ('CORE', 'P1'):
+        if kind in ('CORE', 'P1', 'ADM', 'MIX'):
             ok = any(inside(P[k], (cx, cy), th) for k in wit)
         else:
             ok = any(inside((float(v[0]), float(v[1])), (cx, cy), th) for v in wit)
@@ -51,7 +69,7 @@ for line in open(path):
 print("leaves:", n, "samples per leaf:", nsamp, "failures:", bad)
 
 # --- the primitives themselves on random inputs ----------------------------------------------
-fails = 0; counts = {'P1': 0, 'core': 0, 'tri': 0}
+fails = 0; counts = {'P1': 0, 'core': 0, 'tri': 0, 'adm': 0}
 for _ in range(200000):
     th = random.uniform(0, math.pi / 2); w = math.cos(th) + math.sin(th)
     # P1: |c-p|_inf <= 1 - w/2  =>  p in S
@@ -80,3 +98,41 @@ for _ in range(200000):
         counts['tri'] += 1
         if not any(inside(v, cc, th) for v in (A, B, C)): fails += 1; print("TRI fail", A, B, C, cc, th)
 print("primitive random tests:", counts, "failures", fails)
+
+# --- ADM (search/RUNG2.md Lemma A+B) on random boxes, checked against brute-force sampling -----
+# Lemma A/B claim: if the four corner inequalities hold for every theta of the bin -- with the
+# centre bounds A_x = max(cx0, w/2), B_x = min(cx1, m - w/2) etc. -- then p is in Q(c, theta) at
+# EVERY admissible pose of the box.  Here the four inequalities are evaluated directly in floats on
+# a fine theta grid (no polynomials, no Bernstein) and the conclusion is tested by sampling poses.
+mfl = 4.0; afail = 0; atests = 0; atrue = 0
+rng = random.Random(7)
+for _ in range(40000):
+    cx0 = rng.uniform(0, mfl); cx1 = cx0 + rng.choice([0.0, 0.001, 0.01, 0.1]) * rng.random()
+    cy0 = rng.uniform(0, mfl); cy1 = cy0 + rng.choice([0.0, 0.001, 0.01, 0.1]) * rng.random()
+    t0 = rng.uniform(0, math.pi / 2); t1 = min(math.pi / 2, t0 + rng.choice([1e-4, 1e-2, 0.1, 0.4]) * rng.random())
+    px = rng.uniform(0, mfl); py = rng.uniform(0, mfl)
+    TH = [t0 + (t1 - t0) * k / 200 for k in range(201)]
+    ok = True
+    for th in TH:
+        w = math.cos(th) + math.sin(th); c, s = math.cos(th), math.sin(th)
+        Ax = max(cx0, w / 2); Bx = min(cx1, mfl - w / 2)
+        Ay = max(cy0, w / 2); By = min(cy1, mfl - w / 2)
+        if (px - Ax) * c + (py - Ay) * s > 0.5 + 1e-12: ok = False; break
+        if (px - Bx) * c + (py - By) * s < -0.5 - 1e-12: ok = False; break
+        if -(px - Bx) * s + (py - Ay) * c > 0.5 + 1e-12: ok = False; break
+        if -(px - Ax) * s + (py - By) * c < -0.5 - 1e-12: ok = False; break
+    if not ok: continue
+    atrue += 1
+    for _ in range(40):                      # the claim: p is captured at every admissible pose
+        th = rng.choice([t0, t1, rng.uniform(t0, t1)])
+        w = math.cos(th) + math.sin(th)
+        lo, hi = w / 2, mfl - w / 2
+        a, b = max(cx0, lo), min(cx1, hi)
+        cc, dd = max(cy0, lo), min(cy1, hi)
+        if a > b or cc > dd: continue
+        cxs = rng.choice([a, b, rng.uniform(a, b)]); cys = rng.choice([cc, dd, rng.uniform(cc, dd)])
+        atests += 1
+        if not inside((px, py), (cxs, cys), th, tol=1e-9):
+            afail += 1
+            if afail <= 5: print("ADM fail", (cx0, cx1, cy0, cy1, t0, t1), (px, py), (cxs, cys, th))
+print(f"ADM lemma random tests: {atrue} certifying (point, box) pairs, {atests} pose samples, failures {afail}")

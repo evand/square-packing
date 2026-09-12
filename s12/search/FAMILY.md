@@ -305,3 +305,16 @@ To reproduce the exact counterexample: `python3 search/zeromargin.py pose runs/c
 positive-margin check: `python3 search/zeromargin.py pose runs/closed4_best_x102.txt --cx 0.5015625
 --cy 1.4969 --u 0.000872665`. To reproduce a depth-check on a scaled cover: `python3
 search/zeromargin.py cert runs/closed4_best_x102.txt --depth 14 --nproc 8`.
+
+**Superseded diagnosis (2026-09-11, task rung2-s13 -- see `search/RUNG2.md`).**  The reading above,
+that the wall-adjacent boxes are an *engineering* gap in `cert_p1`/`cert_core` ("case (b)"), is
+wrong.  `RUNG2.md` Theorem 1: a cover certified only by primitives that exhibit a *fixed* witness
+set for a whole pose box -- `CORE`, `P1`, the new `ADM`, and any union of them -- must have total
+weight `>= m^2 = 16`.  The stuck boxes at `cx ~ 0.5`, `cy ~ 1.5`, `theta -> 0` are the pose
+`(0.5, 1.5, 0)`, where the largest such witness set of `closed4_best_x103.txt` weighs exactly
+`5661189/10000000 = 0.566119` and does **not** grow as the box shrinks; 24 of the 36 analogous
+"one-sided tile pose" constraints are violated (`python3 search/rung2_bound.py check
+runs/closed4_best_x103.txt`).  Scaling cannot fix it (`lambda >= 1.82`, i.e. `W >= 22.6`), and
+neither can angle-biased subdivision, an off-centre wall lemma, or more depth.  Rung 2 needs a
+*disjunctive* primitive (the weighted analogue of `TRI`).  Friedman's 14 points fail the same test
+at exactly 6 poses -- which is exactly why rung 1 does not terminate without `--tri`.

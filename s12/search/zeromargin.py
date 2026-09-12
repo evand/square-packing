@@ -59,6 +59,63 @@ def bin_data(u0, u1):
     wlo = min(w0, w1)
     return dict(c0=c0, s0=s0, c1=c1, s1=s1, cD=cD, sD=sD, whi=whi, wlo=wlo)
 
+# ------------------------------------------------------------------ ADM primitive (Lemma A/B/C)
+# A point p is certified for a pose box (rect x u-bin) when four scalar inequalities hold for every
+# u in the bin; each inequality, after clearing the positive denominator (1+u^2)^2, is a polynomial
+# of degree <= 4 in u with rational coefficients.  See search/RUNG2.md Lemma A (monotone corners),
+# Lemma B (the wall bounds) and Lemma C (the Bernstein enclosure).
+COMB = [[1, 0, 0, 0, 0], [1, 1, 0, 0, 0], [1, 2, 1, 0, 0], [1, 3, 3, 1, 0], [1, 4, 6, 4, 1]]
+
+def _max_quad(a0, a1, a2, u0, u1):
+    """exact max of a0 + a1 u + a2 u^2 over [u0, u1] (Fractions)."""
+    v = a0 + a1 * u0 + a2 * u0 * u0
+    v1 = a0 + a1 * u1 + a2 * u1 * u1
+    if v1 > v: v = v1
+    if a2 < 0:
+        uv = -a1 / (2 * a2)
+        if u0 < uv < u1:
+            vv = a0 + a1 * uv + a2 * uv * uv
+            if vv > v: v = vv
+    return v
+
+def _max_bern(a, u0, u1):
+    """Bernstein (convex-hull) upper bound for max of sum_k a[k] u^k, deg <= 4, over [u0, u1].
+    Exact at the endpoints; the overestimate is O((u1-u0)^2).  Sound: the polynomial is a convex
+    combination of its Bernstein coefficients at every point of the interval."""
+    h = u1 - u0
+    b = []
+    hp = F(1)
+    for j in range(5):
+        sj = F(0)
+        for k in range(j, 5):
+            if a[k]:
+                sj += a[k] * COMB[k][j] * (u0 ** (k - j))
+        b.append(sj * hp)
+        hp *= h
+    best = b[0]
+    for i in range(1, 5):
+        bi = F(0)
+        for j in range(i + 1):
+            bi += F(COMB[i][j], COMB[4][j]) * b[j]
+        if bi > best: best = bi
+    return best
+
+def _poly_ok(a, u0, u1):
+    """True if max_{[u0,u1]} sum a[k] u^k <= 0, by the exact quadratic max when deg <= 2 and by the
+    Bernstein bound otherwise (sound in both cases)."""
+    if a[3] == 0 and a[4] == 0:
+        return _max_quad(a[0], a[1], a[2], u0, u1) <= 0
+    return _max_bern(a, u0, u1) <= 0
+
+# The centre bounds, as c = Xn(u) / (2 (1+u^2)) with Xn a quadratic in u:
+#   'R' a: a constant rational bound a          -> Xn = 2a (1+u^2)
+#   'W':   the near-wall bound  c >= w(theta)/2 -> Xn = (1-u^2) + 2u
+#   'M':   the far-wall bound   c <= m - w/2    -> Xn = 2m(1+u^2) - (1-u^2) - 2u
+def _xn(kind, val, m):
+    if kind == 'R': return (2 * val, F(0), 2 * val)
+    if kind == 'W': return (F(1), F(2), F(-1))
+    return (2 * m - 1, F(-2), 2 * m + 1)
+
 def in_rot_square(a, b, c, s):
     """(a,b) in R_theta Q  (closed unit square centred at 0, angle theta with cos c, sin s)."""
     x = a * c + b * s
@@ -116,12 +173,15 @@ def in_core_f_vec(a, b, Bf, tol=1e-9):
     return ok
 
 class Checker:
-    def __init__(self, m, points, weights=None, use_tri=False, max_depth=16, dump=None):
+    def __init__(self, m, points, weights=None, use_tri=False, max_depth=16, dump=None,
+                 use_adm=True, theta_bias=1):
         self.m = F(m)
         self.P = [(F(x), F(y)) for x, y in points]
         self.W = [F(w) for w in weights] if weights else [F(1)] * len(self.P)
         self.Pf = [(float(x), float(y)) for x, y in self.P]
         self.use_tri = use_tri
+        self.use_adm = use_adm
+        self.theta_bias = theta_bias
         self.max_depth = max_depth
         self.tris = self._triangles() if use_tri else []
         self.dump = dump
@@ -181,29 +241,171 @@ class Checker:
                 if total >= 1: return ('CORE', used)
         return (None, None)
 
-    def cert_p1(self, box, B):
+    # ---- ADM: the admissible-box primitive (RUNG2.md Lemmas A-C) ---------------------------
+    def _adm_specs(self, box, B):
+        """For each of the four centre bounds return the list of sound polynomial bounds available
+        on this bin: 'R' (the box side), 'W'/'M' (the near/far container wall).  max(cx0, w/2) is
+        not a polynomial in u, so when the two cross inside the bin both are offered and each
+        inequality may use whichever of them certifies it (each is separately a sound bound)."""
+        cx0, cx1, cy0, cy1, u0, u1 = box
+        m = self.m; whi2 = B['whi'] / 2; wlo2 = B['wlo'] / 2
+        def lo(c0):
+            if c0 >= whi2: return (('R', c0),)          # the wall bound is dominated: skip it
+            return (('R', c0), ('W', None))
+        def hi(c1):
+            if c1 <= m - whi2: return (('R', c1),)
+            return (('R', c1), ('M', None))
+        return lo(cx0), hi(cx1), lo(cy0), hi(cy1)
+
+    @staticmethod
+    def _cond_poly(U, V, cond, both_rect):
+        """The polynomial G with  G(u) <= 0 on the bin  <=>  the condition holds for every
+        theta = 2 atan u in the bin.  U = 2(1+u^2) p_x - Xn, V = 2(1+u^2) p_y - Yn."""
+        U0, U1, U2 = U; V0, V1, V2 = V
+        if both_rect:                      # U = U0 (1+u^2), V = V0 (1+u^2): divide out (1+u^2) > 0
+            if cond == 0: g = (U0 - 1, 2 * V0, -U0 - 1)
+            elif cond == 1: g = (-U0 - 1, -2 * V0, U0 - 1)
+            elif cond == 2: g = (V0 - 1, -2 * U0, -V0 - 1)
+            else: g = (-V0 - 1, 2 * U0, V0 - 1)
+            return (g[0], g[1], g[2], 0, 0)
+        if cond == 0:   # X <= 1/2
+            return (U0 - 1, U1 + 2 * V0, U2 - U0 + 2 * V1 - 2, -U1 + 2 * V2, -U2 - 1)
+        if cond == 1:   # X >= -1/2
+            return (-U0 - 1, -U1 - 2 * V0, U0 - U2 - 2 * V1 - 2, U1 - 2 * V2, U2 - 1)
+        if cond == 2:   # Y <= 1/2
+            return (V0 - 1, V1 - 2 * U0, V2 - V0 - 2 * U1 - 2, -V1 - 2 * U2, -V2 - 1)
+        return (-V0 - 1, 2 * U0 - V1, V0 - V2 + 2 * U1 - 2, V1 + 2 * U2, V2 - 1)
+
+    def _adm_exact(self, px, py, specs, u0, u1):
+        m = self.m
+        Axs, Bxs, Ays, Bys = specs
+        # condition -> (x-slot, y-slot): X<=1/2 at (Ax,Ay); X>=-1/2 at (Bx,By);
+        #              Y<=1/2 at (Bx,Ay);  Y>=-1/2 at (Ax,By)
+        for cond, (xs, ys) in enumerate(((Axs, Ays), (Bxs, Bys), (Bxs, Ays), (Axs, Bys))):
+            ok = False
+            for xk in xs:
+                Xn = _xn(xk[0], xk[1], m)
+                U = (2 * px - Xn[0], -Xn[1], 2 * px - Xn[2])
+                for yk in ys:
+                    Yn = _xn(yk[0], yk[1], m)
+                    V = (2 * py - Yn[0], -Yn[1], 2 * py - Yn[2])
+                    g = self._cond_poly(U, V, cond, xk[0] == 'R' and yk[0] == 'R')
+                    if _poly_ok(g, u0, u1): ok = True; break
+                if ok: break
+            if not ok: return False
+        return True
+
+    def _adm_mask(self, specs, u0, u1):
+        """numpy pre-filter: a lenient superset of _adm_exact over the whole point set."""
+        f0, f1 = float(u0), float(u1); h = f1 - f0
+        Px, Py = self.Pxf, self.Pyf; mf = float(self.m)
+        tol = 1e-9
+        def xn(k, v):
+            if k[0] == 'R': fv = float(k[1]); return (2 * fv, 0.0, 2 * fv)
+            if k[0] == 'W': return (1.0, 2.0, -1.0)
+            return (2 * mf - 1, -2.0, 2 * mf + 1)
+        def bound(a, both_rect):
+            if both_rect:
+                v = np.maximum(a[0] + a[1] * f0 + a[2] * f0 * f0, a[0] + a[1] * f1 + a[2] * f1 * f1)
+                with np.errstate(divide='ignore', invalid='ignore'):
+                    uv = np.where(a[2] < 0, -a[1] / (2 * a[2]), f0 - 1.0)
+                inr = (uv > f0) & (uv < f1)
+                return np.where(inr, a[0] + a[1] * uv + a[2] * uv * uv, v)
+            b = []; hp = 1.0
+            for j in range(5):
+                sj = 0.0
+                for k in range(j, 5):
+                    if k == j: sj = sj + a[k]
+                    else: sj = sj + a[k] * COMB[k][j] * (f0 ** (k - j))
+                b.append(sj * hp); hp *= h
+            best = b[0]
+            for i in range(1, 5):
+                bi = 0.0
+                for j in range(i + 1):
+                    bi = bi + (COMB[i][j] / COMB[4][j]) * b[j]
+                best = np.maximum(best, bi)
+            return best
+        Axs, Bxs, Ays, Bys = specs
+        mask = np.ones(len(Px), dtype=bool)
+        for cond, (xs, ys) in enumerate(((Axs, Ays), (Bxs, Bys), (Bxs, Ays), (Axs, Bys))):
+            best = None
+            for xk in xs:
+                Xn = xn(xk, None)
+                U = (2 * Px - Xn[0], -Xn[1], 2 * Px - Xn[2])
+                for yk in ys:
+                    Yn = xn(yk, None)
+                    V = (2 * Py - Yn[0], -Yn[1], 2 * Py - Yn[2])
+                    br = (xk[0] == 'R' and yk[0] == 'R')
+                    g = self._cond_poly(U, V, cond, br)
+                    bv = bound(g, br)
+                    best = bv if best is None else np.minimum(best, bv)
+            mask &= (best <= tol)
+            if not mask.any(): break
+        return mask
+
+    def cert_adm(self, box, B):
+        u0, u1 = box[4], box[5]
+        specs = self._adm_specs(box, B)
+        mask = self._adm_mask(specs, u0, u1)
+        if not mask.any() or self.Wf[mask].sum() < 1.0: return (None, None)
+        total = F(0); used = []
+        for k in self.order:
+            if not mask[k]: continue
+            px, py = self.P[k]
+            if self._adm_exact(px, py, specs, u0, u1):
+                total += self.W[k]; used.append(int(k))
+                if total >= 1: return ('ADM', used)
+        return (None, None)
+
+    def _p1_mask(self, box, B):
         cx0, cx1, cy0, cy1 = box[:4]
         t = 1 - B['whi'] / 2
-        m = self.m
-        tf = float(t); mf = float(m); eps = 1e-9
+        tf = float(t); mf = float(self.m); eps = 1e-9
         cxf0, cxf1, cyf0, cyf1 = float(cx0), float(cx1), float(cy0), float(cy1)
         cond1 = (self.Pxf - 1 <= eps) | (cxf0 >= self.Pxf - tf - eps)
         cond2 = (self.Pxf + 1 >= mf - eps) | (cxf1 <= self.Pxf + tf + eps)
         cond3 = (self.Pyf - 1 <= eps) | (cyf0 >= self.Pyf - tf - eps)
         cond4 = (self.Pyf + 1 >= mf - eps) | (cyf1 <= self.Pyf + tf + eps)
-        mask = cond1 & cond2 & cond3 & cond4
+        return cond1 & cond2 & cond3 & cond4
+
+    def _p1_exact(self, px, py, box, t):
+        cx0, cx1, cy0, cy1 = box[:4]; m = self.m
+        return ((px - 1 <= 0 or cx0 >= px - t) and (px + 1 >= m or cx1 <= px + t)
+                and (py - 1 <= 0 or cy0 >= py - t) and (py + 1 >= m or cy1 <= py + t))
+
+    def cert_p1(self, box, B):
+        mask = self._p1_mask(box, B)
         if not mask.any() or self.Wf[mask].sum() < 1.0:
             return (None, None)
+        t = 1 - B['whi'] / 2
         total = F(0); used = []
         for k in self.order:
             if not mask[k]: continue
             px, py = self.P[k]
-            if not (px - 1 <= 0 or cx0 >= px - t): continue
-            if not (px + 1 >= m or cx1 <= px + t): continue
-            if not (py - 1 <= 0 or cy0 >= py - t): continue
-            if not (py + 1 >= m or cy1 <= py + t): continue
+            if not self._p1_exact(px, py, box, t): continue
             total += self.W[k]; used.append(int(k))
             if total >= 1: return ('P1', used)
+        return (None, None)
+
+    def cert_mix(self, box, B):
+        """ADM and P1 certify DIFFERENT points of the same box; their union is a legitimate
+        witness set (each of its points lies in Q for every admissible pose of the box), so a box
+        neither primitive can carry alone is still certified if the union reaches weight 1."""
+        u0, u1 = box[4], box[5]
+        specs = self._adm_specs(box, B)
+        ma = self._adm_mask(specs, u0, u1)
+        mp = self._p1_mask(box, B)
+        mask = ma | mp
+        if not mask.any() or self.Wf[mask].sum() < 1.0: return (None, None)
+        t = 1 - B['whi'] / 2
+        total = F(0); used = []
+        for k in self.order:
+            if not mask[k]: continue
+            px, py = self.P[k]
+            if (mp[k] and self._p1_exact(px, py, box, t)) or \
+               (ma[k] and self._adm_exact(px, py, specs, u0, u1)):
+                total += self.W[k]; used.append(int(k))
+                if total >= 1: return ('MIX', used)
         return (None, None)
 
     def cert_tri(self, box):
@@ -224,7 +426,8 @@ class Checker:
     # ---- recursion --------------------------------------------------------------------------
     def run_box(self, root):
         """Certify one root box; returns stats dict and the list of uncertified boxes."""
-        stats = {'CORE': 0, 'P1': 0, 'TRI': 0, 'EMPTY': 0, 'UNCERT': 0, 'boxes': 0, 'maxdepth': 0}
+        stats = {'ADM': 0, 'CORE': 0, 'P1': 0, 'MIX': 0, 'TRI': 0, 'EMPTY': 0, 'UNCERT': 0,
+                 'boxes': 0, 'maxdepth': 0}
         unc = []; leaves = []
         stack = [(root, 0)]
         bincache = {}
@@ -243,9 +446,14 @@ class Checker:
             lo = B['wlo'] / 2
             if cx1 < lo or cx0 > self.m - lo or cy1 < lo or cy0 > self.m - lo:
                 stats['EMPTY'] += 1; leaves.append((box, 'EMPTY', None)); continue
-            kind, wit = self.cert_core(box, B, Bf)
+            if self.use_adm:
+                kind, wit = self.cert_adm(box, B)
+            else:
+                kind, wit = self.cert_core(box, B, Bf)
             if kind is None:
                 kind, wit = self.cert_p1(box, B)
+            if kind is None and self.use_adm:
+                kind, wit = self.cert_mix(box, B)
             if kind is None and self.use_tri:
                 kind, wit = self.cert_tri(box)
             if kind is not None:
@@ -254,8 +462,15 @@ class Checker:
                 continue
             if depth >= self.max_depth:
                 stats['UNCERT'] += 1; unc.append(box); continue
-            # split the longest dimension (theta measured in radians ~ 2 du)
+            # split the longest dimension (theta measured in radians ~ 2 du); near a wall with
+            # theta small the admissible width margin w(theta)/2 - 1/2 grows linearly in theta, so
+            # precision in the centre needs precision in the angle: bias the split towards u there
+            # (ZEROMARGIN.md sec 7 / FAMILY.md sec 2b diagnosis).
             dx, dy, du = cx1 - cx0, cy1 - cy0, 2 * (u1 - u0)
+            if self.theta_bias > 1 and u0 * 2 < B['wlo'] and (
+                    cx0 < B['whi'] / 2 or cx1 > self.m - B['whi'] / 2 or
+                    cy0 < B['whi'] / 2 or cy1 > self.m - B['whi'] / 2):
+                du = du * self.theta_bias
             if dx >= dy and dx >= du:
                 mid = (cx0 + cx1) / 2
                 stack.append(((cx0, mid, cy0, cy1, u0, u1), depth + 1))
@@ -305,6 +520,10 @@ def main():
     ap.add_argument('what', help='friedman14 | cert | pose')
     ap.add_argument('path', nargs='?')
     ap.add_argument('--tri', action='store_true')
+    ap.add_argument('--no-adm', action='store_true', help='use the old CORE primitive instead of ADM')
+    ap.add_argument('--theta-bias', type=int, default=4,
+                    help='near a container wall with theta small, weight the u-dimension by this '
+                         'factor when choosing which dimension to halve (1 = the old rule)')
     ap.add_argument('--depth', type=int, default=16)
     ap.add_argument('--nproc', type=int, default=4)
     ap.add_argument('--pitch', type=str, default='1/10')
@@ -347,7 +566,8 @@ def main():
         m, pts, ws = 4, FRIEDMAN14, None
     else:
         m, pts, ws = read_cert(a.path)
-    chk = Checker(m, pts, ws, use_tri=a.tri, max_depth=a.depth, dump=a.dump)
+    chk = Checker(m, pts, ws, use_tri=a.tri, max_depth=a.depth, dump=a.dump,
+                  use_adm=not a.no_adm, theta_bias=a.theta_bias)
     sym = chk.symmetric()
     print(f"container [0,{m}]^2, {len(pts)} points, total weight {float(sum(chk.W)):.6f}, "
           f"symmetric under x->m-x and y->m-y: {sym}, triangles: {len(chk.tris) if a.tri else 'off'}")
@@ -361,7 +581,8 @@ def main():
         R = roots(m, pitch, a.ubins)
     print(f"{len(R)} root boxes, depth limit {a.depth}, pitch {pitch}, u-bins {a.ubins}")
     t0 = time.time()
-    tot = {'CORE': 0, 'P1': 0, 'TRI': 0, 'EMPTY': 0, 'UNCERT': 0, 'boxes': 0, 'maxdepth': 0}
+    tot = {'ADM': 0, 'CORE': 0, 'P1': 0, 'MIX': 0, 'TRI': 0, 'EMPTY': 0, 'UNCERT': 0,
+           'boxes': 0, 'maxdepth': 0}
     unc_all = []; leaves_all = []
     with Pool(a.nproc) as pool:
         for i, (st, unc, leaves) in enumerate(pool.imap_unordered(_worker, [(chk, r) for r in R], chunksize=4)):
@@ -371,7 +592,8 @@ def main():
             if (i + 1) % 500 == 0:
                 print(f"  {i+1}/{len(R)} roots, {tot['boxes']} boxes, uncert {tot['UNCERT']}, {time.time()-t0:.0f}s", flush=True)
     print(f"done in {time.time()-t0:.0f}s: boxes {tot['boxes']}, max depth {tot['maxdepth']}")
-    print(f"  leaves: CORE {tot['CORE']}  P1 {tot['P1']}  TRI {tot['TRI']}  EMPTY {tot['EMPTY']}  UNCERTIFIED {tot['UNCERT']}")
+    print(f"  leaves: ADM {tot['ADM']}  CORE {tot['CORE']}  P1 {tot['P1']}  MIX {tot['MIX']}  "
+          f"TRI {tot['TRI']}  EMPTY {tot['EMPTY']}  UNCERTIFIED {tot['UNCERT']}")
     if unc_all:
         print("uncertified boxes (cx0 cx1 cy0 cy1 u0 u1 -> theta0 theta1 deg):")
         for b in sorted(unc_all)[:40]:
