@@ -54,7 +54,9 @@ of `p − rect` lie in `core(θ₀, θ₁)`: two rotated-square tests (rational 
 one sector test (fold `R_{−θ₀}(p − c)` into the first quadrant mod 90°; angle `≤ θ₁ − θ₀` ⇔
 `q cos Δ ≤ p sin Δ` with `cos Δ, sin Δ` rational) plus `|v|² ≤ ¼`.  Weighted: sum `w_p` over the
 points passing; leaf if `≥ 1`.  The centre rectangle is first clipped to the widest admissible
-range on the bin (`cx, cy ∈ [w_lo/2, m − w_lo/2]`); the poses that this still over-tests are
+range on the bin (`cx, cy ∈ [w_lo/2, m − w_lo/2]`) — **superseded**: this clip is a completeness
+bug at margin zero (no wall box is certifiable at any depth), fixed by `clip_bin`, `RUNG2.md`
+§4.6, which intersects the bin with the box's admissible range instead; the poses that this still over-tests are
 inadmissible ones in a sliver of width `≈ (w(θ₁) − w(θ₀))/2`, which is sound and, at positive
 margin, harmless.
 

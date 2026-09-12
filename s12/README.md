@@ -169,6 +169,21 @@ and no certified fractional packing of mass `>= 12` either; the extremal object 
 `search/T4SCREEN.md`, `T4LEAF.md`, `LEAF_CEILING.md`, `LINECUTS.md`, `WITNESS.md`,
 `notes/branch-semantics.md`, `notes/review-2026-09-07.md`; the plan is in `TODO.md`.
 
+**`s(13) = 4` without case analysis (2026-09-12).**  As a milestone for the `t = 4` verifier, the
+same machinery re-proves Bentz's `s(13) = 4` from a single object: a weighted closed cover of
+`[0,4]²` with 3,621 points and total weight `12.955972 < 13` (`certificates/rung2/`), verified
+exhaustively at margin zero by two independent exact checkers — `search/zeromargin.py` (Python
+`Fraction`, `search/RUNG2.md`) and `verify2/zmcheck` (`i128` Rust, written from the lemmas, full
+domain, 17 min; `search/RUNG2_XCHECK.md`) — with 23 rejection tests and the checkers' soundness
+lemmas in Lean (`lean/Sqpack/ZeroMargin.lean`).  Theorem 1 of `RUNG2.md` explains why the proof
+has to be disjunctive: no fixed-witness checker can certify any cover of `[0,4]²` below weight 16.
+
+**What the `t = 4` numbers for `n = 12` are worth (2026-09-12).**  Read as covers over the
+continuum, the sub-12 packing-side duals cost 18–20, because the cliques carrying them are
+non-Helly (grazing tangencies) and no sound positive-volume rule can credit them; without cliques
+the certifiable family sits at exactly 12 on the corner leaf and above 12 on the pure instance
+(`search/HONEST.md`, `notes/review-2026-09-12.md`).  `TODO.md` has the current critical path.
+
 ## Credits and prior art
 
 The unavoidable-point-set method is due to Göbel, and was developed by Stromquist, Friedman,

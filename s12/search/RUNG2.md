@@ -40,7 +40,22 @@ subsumes all three — and `TRI` is 0, since the weighted cover has no unit-weig
 below `m² = 16` can be certified by fixed-witness primitives at any depth, so a cover of weight
 12.96 *must* be certified disjunctively almost everywhere.
 
+**Domain.**  The census above is over `zeromargin.py`'s *reduced* domain (`u ∈ [0, ½]`,
+`c_y ∈ [0, 2]`, `c_x ∈ [0, 4]`), which is legitimate because the checker first verifies **exactly**
+that the point set is invariant under `x ↦ 4-x` and `y ↦ 4-y` (`Checker.symmetric`; it refuses to
+run reduced otherwise) — the reflection `x ↦ 4-x` maps `θ ↦ 90° - θ`, so `u ≤ ½` (`θ ≤ 53.1°`) and
+its image cover `[0°, 90°]`.  The independent checker below runs the **unreduced** domain and
+checks no symmetry.
+
 **Independent checks.**
+* **`verify2/zmcheck` (2026-09-12, `search/RUNG2_XCHECK.md`)** — a second exhaustive checker in
+  exact `i128` Rust, written from the lemmas of this note and sharing no code, no subdivision rule
+  and no primitive set with `zeromargin.py`: full domain, `done in 1017s: boxes 30258, max depth
+  10; ADM 5114 DISJ 9477 EMPTY 6938 UNCERTIFIED 0; VERIFIED`, deterministic across thread counts,
+  23 rejection tests; its disjunctive primitive carries 65 % of the non-empty leaves, the same
+  fraction `CHAIN` carries here.  The soundness lemmas of both checkers (A–C, E–H, `clip_bin`)
+  are in Lean, `lean/Sqpack/ZeroMargin.lean` (36 theorems, standard axioms only;
+  `notes/lean-zeromargin.md`).
 * `python3 search/zeromargin_stress.py runs/leaves.txt 40 --cert …` — 40 sampled admissible poses
   per leaf, each leaf's own recorded witness re-verified in floats with no shared code path; plus
   random tests of `P1`, the core lemma, the triangle lemma, `ADM` (Lemma A) and `CHAIN`'s violation
@@ -169,8 +184,8 @@ Consequently the witness set `S` of `B*` satisfies `w(S) ≥ 1` and
 **Lemma 1 (the cusp computation).**  Let `1 ≤ i, j ≤ m-2` (an interior tile), `d = p - m_{ij}`.
 Then `p ∈ PIN(i,j,σ)` iff `p ∈ T_{ij}` and
 
-  (a) `σ_x d_x < ½` **or** `d_x = σ_x ½` **and** the edge condition below holds — precisely:
-      `p_x ∈ (i, i+1]` if `σ_x = +1`, `p_x ∈ [i, i+1)` if `σ_x = -1`; likewise in `y`;
+  (a) `p_x ∈ (i, i+1]` if `σ_x = +1`, `p_x ∈ [i, i+1)` if `σ_x = -1`, and likewise in `y`
+      (that is, `σ_x d_x < ½`, or `d_x = σ_x·½` on the edge that survives, subject to (b)–(d));
   (b) on the vertical edge that survives (`x = i+1` when `σ_x = +1`, `x = i` when `σ_x = -1`):
       `σ_x d_y ≤ 0`, **strictly** when `σ_y = -σ_x`;
   (c) on the horizontal edge that survives (`y = j+1` when `σ_y = +1`, `y = j` when `σ_y = -1`):
@@ -364,7 +379,9 @@ because `cos θ, sin θ ≥ 0`, so `X ≤ X(A_x,A_y) ≤ ½` by (i) and `X ≥ X
 (The four inequalities are evaluated at four *different* corners; that is strictly stronger than
 `CORE`, which tests all four corners against all four inequalities.  If `A_x > B_x` the admissible
 set at that `θ` is empty and the conclusion is vacuous but the test is still sound, since each
-inequality is checked at the correct extreme of the — possibly empty — interval.)
+inequality is checked at the correct extreme of the — possibly empty — interval.  Sound and
+useless: a box pressed against a wall whose bin is not clipped to its admissible range is exactly
+this case, and it is certifiable at no depth — §4.6, `clip_bin`.)
 
 **This is what the brief's "off-centre wall witness" asks for, and more.**  Take a left-wall box,
 `cx₀ ≤ w/2`, so `A_x = w/2`, and a witness at `p_x = 1` (the first interior grid line) at height
@@ -414,9 +431,11 @@ below is exact — so `ADM` reduces to `CORE` with a centre rectangle clipped at
 > **Lemma C.**  For `deg ≤ 2` the maximum of `G` on `[u₀,u₁]` is attained at an endpoint or, if
 > the leading coefficient is negative, at the vertex `-a₁/(2a₂)` when it lies inside — an exact
 > rational computation.  For `deg 3, 4`, write `G` in the Bernstein basis of degree 4 on `[u₀,u₁]`:
-> `b_j = Σ_{k≥j} a_k C(k,j) u₀^{k-j} h^j` (`h = u₁-u₀`), `β_i = Σ_{j≤i} [C(i,j)/C(4,j)] b_j`.  Then
-> `max_{[u₀,u₁]} G ≤ max_i β_i`, with equality at the endpoints (`β₀ = G(u₀)`, `β₄ = G(u₁)`), and
-> the overestimate is `O(h²)`.
+> `b_j = Σ_{k≥j} a_k C(k,j) u₀^{k-j} h^j` (`h = u₁-u₀`; these are the Taylor coefficients of
+> `G(u₀ + h t)` in `t`, not Bernstein coefficients), `β_i = Σ_{j≤i} [C(i,j)/C(4,j)] b_j` (the
+> Bernstein coefficients).  Then `max_{[u₀,u₁]} G ≤ max_i β_i`, with equality at the endpoints
+> (`β₀ = G(u₀)`, `β₄ = G(u₁)`) — so the bound is exact whenever the maximum is at an endpoint —
+> and the interior overestimate is `O(h²)`.
 
 *Proof.*  A polynomial of degree `n` equals `Σ_i β_i B_{i,n}(t)` with `B_{i,n} ≥ 0`, `Σ B_{i,n} = 1`
 (the convex-hull property of the Bernstein basis), so it is a convex combination of the `β_i`. ∎
@@ -635,6 +654,56 @@ Both are properties of the cover, not of the primitives.  (The run's printed lis
 40 boxes; the full list was not dumped because `--oracle` was not passed, and the cover it
 describes is being replaced rather than repaired.)
 
+### 4.5 The subtree cache, measured: no speedup
+
+`--cx-lo/--cx-hi` (new) restricts the sweep to a band of root columns; it prints `PARTIAL SWEEP`
+on entry and `VERIFIED (PARTIAL: ...)` in the verdict, so a restricted run cannot be mistaken for
+a verification.  Running the same certificate and settings (`--depth 14 --disj --chain-from 0`)
+over the same band, with and without the §4.2 cache:
+
+| run | code | procs | band | roots | boxes | wall | core-s / root |
+|---|---|---|---|---|---|---|---|
+| `runs/x103_chain.log` (uncached) | pre-`eee2680` | 8 | roots 2,000–2,500 of the full sweep (`c_x ∈ [1.25, 1.56]`) | 500 | 4,040 | 1,129 s | **18.1** |
+| `runs/x103_cached_interior.log` (cached) | `eee2680` | 6 | the first 500 of `--cx-lo 1.25 --cx-hi 2.75` (`c_x ∈ [1.2, 1.52]`) | 500 | 3,120 | 1,764 s | **21.2** |
+
+(Root index is `160·i + 8·j + k` with `i` the `c_x` column, so columns 12–15 are roots 1,920–2,560;
+the two bands overlap in all but ~80 roots at either end.  Worker CPU was ~97 % for the 8-process
+run and ~86 % for the 6-process one on a machine at load 28, so the honest reading of the two
+numbers is *the same*, ±5 %.)
+
+**The cache is exact but not the bottleneck.**  It removes the `_adm_exact` re-confirmation of
+points already certified at an ancestor — but `cert_chain`'s cost is dominated by the two things it
+does *not* touch: the candidate screen (`_adm_cond_ok` on the points that are *not* in `T`, which
+is precisely the set that changes from box to box) and the `O(|cand| log k)` `_gmax` calls of the
+up-set and empty-region binary searches.  Keeping it is still right — it is exact, it never changes
+a verdict, and it costs nothing — but the next speed-up has to come from the screen and the
+searches (memoising `_gmax` on `(point, kind, box)` across the `λ` values, and reusing a parent's
+chain order, which is inherited for the same reason the certifications are).
+
+**Per-box behaviour of `CHAIN`** (direct calls, `runs/closed4_best_x103.txt`):
+
+| box | `ADM` | `MIX` | `CHAIN` | time |
+|---|---|---|---|---|
+| `[0.5,0.51] × [1.49,1.5] × [0°,0.11°]` (the worst pose) | — | — | **CHAIN**, 196 points | 0.39 s |
+| `[0.4875,0.5] × [1.4875,1.5] × [0°,1.8°]` | — | — | **CHAIN**, 196 points | 0.40 s |
+| `[0.5,0.6] × [1.4,1.5] × [0°,7.2°]` (the root box there) | — | — | — (needs subdivision) | 0.63 s |
+| `[1.5,1.6] × [1.4,1.5] × [0°,1.8°]` (interior tile pose, root box) | — | — | — (needs subdivision) | 6.5 s |
+| 11 of the 12 `(±,±)` octant boxes at `(1.5,1.5,0)`, bins `2⁻⁶, 2⁻⁸, 2⁻¹²` | — | — | **CHAIN** (product of two chains) | 5.0–5.8 s |
+
+The interior-tile boxes need the *product* of two chains and the empty-region test of Lemma H; a
+single chain fails there, which is what forced the two-chain extension.
+
+**Independent float stress (`search/zeromargin_stress.py`, no shared code path).**
+`runs/zm_f14_adm.txt` (6,810 `ADM` + 74 `TRI` leaves), 40 sampled poses per leaf including the box
+corners: **0 failures**.  Primitive tests: `P1` 200,000 instances, core lemma 68,569 (21 angles
+each), triangle 72,358 — 0 failures.  `ADM` (Lemma A) on 40,000 random `(box, point)` pairs with
+the four inequalities evaluated directly in floats on a 201-point `θ` grid: 2,713 certifying pairs,
+43,859 pose samples, **0 failures**.  `CHAIN`: the violation polynomials against the geometry on
+200,000 random `(point, pose)` pairs — **0 disagreements**; the `_gmax` enclosure (Lemma E) on
+20,000 random `(box, nonnegative combination)` pairs × 30 interior poses — **0 violations**.
+
+---
+
 ### 4.6 The right-wall family was a completeness bug in the checker (`clip_bin`)
 
 The right-hand 103 boxes were *not* a new pose type.  Sweeping the single root column
@@ -719,56 +788,6 @@ python3 search/closed4.py stress certificates/rung2/s13_closed_cover_4.txt
 STRESS: total=12.955972  min=1.0313820  cost=12.561759
 ```
 
-### 4.5 The subtree cache, measured: no speedup
-
-`--cx-lo/--cx-hi` (new) restricts the sweep to a band of root columns; it prints `PARTIAL SWEEP`
-on entry and `VERIFIED (PARTIAL: ...)` in the verdict, so a restricted run cannot be mistaken for
-a verification.  Running the same certificate and settings (`--depth 14 --disj --chain-from 0`)
-over the same band, with and without the §4.2 cache:
-
-| run | code | procs | band | roots | boxes | wall | core-s / root |
-|---|---|---|---|---|---|---|---|
-| `runs/x103_chain.log` (uncached) | pre-`eee2680` | 8 | roots 2,000–2,500 of the full sweep (`c_x ∈ [1.25, 1.56]`) | 500 | 4,040 | 1,129 s | **18.1** |
-| `runs/x103_cached_interior.log` (cached) | `eee2680` | 6 | the first 500 of `--cx-lo 1.25 --cx-hi 2.75` (`c_x ∈ [1.2, 1.52]`) | 500 | 3,120 | 1,764 s | **21.2** |
-
-(Root index is `160·i + 8·j + k` with `i` the `c_x` column, so columns 12–15 are roots 1,920–2,560;
-the two bands overlap in all but ~80 roots at either end.  Worker CPU was ~97 % for the 8-process
-run and ~86 % for the 6-process one on a machine at load 28, so the honest reading of the two
-numbers is *the same*, ±5 %.)
-
-**The cache is exact but not the bottleneck.**  It removes the `_adm_exact` re-confirmation of
-points already certified at an ancestor — but `cert_chain`'s cost is dominated by the two things it
-does *not* touch: the candidate screen (`_adm_cond_ok` on the points that are *not* in `T`, which
-is precisely the set that changes from box to box) and the `O(|cand| log k)` `_gmax` calls of the
-up-set and empty-region binary searches.  Keeping it is still right — it is exact, it never changes
-a verdict, and it costs nothing — but the next speed-up has to come from the screen and the
-searches (memoising `_gmax` on `(point, kind, box)` across the `λ` values, and reusing a parent's
-chain order, which is inherited for the same reason the certifications are).
-
-**Per-box behaviour of `CHAIN`** (direct calls, `runs/closed4_best_x103.txt`):
-
-| box | `ADM` | `MIX` | `CHAIN` | time |
-|---|---|---|---|---|
-| `[0.5,0.51] × [1.49,1.5] × [0°,0.11°]` (the worst pose) | — | — | **CHAIN**, 196 points | 0.39 s |
-| `[0.4875,0.5] × [1.4875,1.5] × [0°,1.8°]` | — | — | **CHAIN**, 196 points | 0.40 s |
-| `[0.5,0.6] × [1.4,1.5] × [0°,7.2°]` (the root box there) | — | — | — (needs subdivision) | 0.63 s |
-| `[1.5,1.6] × [1.4,1.5] × [0°,1.8°]` (interior tile pose, root box) | — | — | — (needs subdivision) | 6.5 s |
-| 11 of the 12 `(±,±)` octant boxes at `(1.5,1.5,0)`, bins `2⁻⁶, 2⁻⁸, 2⁻¹²` | — | — | **CHAIN** (product of two chains) | 5.0–5.8 s |
-
-The interior-tile boxes need the *product* of two chains and the empty-region test of Lemma H; a
-single chain fails there, which is what forced the two-chain extension.
-
-**Independent float stress (`search/zeromargin_stress.py`, no shared code path).**
-`runs/zm_f14_adm.txt` (6,810 `ADM` + 74 `TRI` leaves), 40 sampled poses per leaf including the box
-corners: **0 failures**.  Primitive tests: `P1` 200,000 instances, core lemma 68,569 (21 angles
-each), triangle 72,358 — 0 failures.  `ADM` (Lemma A) on 40,000 random `(box, point)` pairs with
-the four inequalities evaluated directly in floats on a 201-point `θ` grid: 2,713 certifying pairs,
-43,859 pose samples, **0 failures**.  `CHAIN`: the violation polynomials against the geometry on
-200,000 random `(point, pose)` pairs — **0 disagreements**; the `_gmax` enclosure (Lemma E) on
-20,000 random `(box, nonnegative combination)` pairs × 30 interior poses — **0 violations**.
-
----
-
 ## 5. Two routes that are now closed, with the numbers
 
 **(a) Scaling the cover (`FAMILY.md` §2b) cannot work.**  Captured weight is linear in the weights,
@@ -849,7 +868,8 @@ For a point `p` and a pose `(c_x, c_y, u)`, with `a = p_x - c_x`, `b = p_y - c_y
 
 so that `p ∈ Q(c,θ)` iff `G_{p,k} ≤ 0` for all four `k` (multiply `|X| ≤ ½`, `|Y| ≤ ½` by `2N > 0`).
 
-> **Lemma E (exact maximum).**  Every nonnegative combination `Σ λ_r G_{p_r, k_r}` is **affine** in
+> **Lemma E (exact maximum).**  Every real combination `Σ λ_r G_{p_r, k_r}` (the signs of the `λ_r`
+> play no role; `cert_chain` uses `λ = -1` for the chain comparison of Lemma F) is **affine** in
 > `(c_x, c_y)` and **quadratic** in `u`.  Hence its maximum over a pose box is
 > `max` over the four corners of the centre rectangle of the exact quadratic maximum over
 > `[u₀,u₁]` — a finite exact `Fraction` computation, with no Bernstein slack and no subdivision.
@@ -890,8 +910,13 @@ is in `R_r` and in no other.  On `R_r`, `G_{q_j} ≤ G_{q_r} ≤ 0` for `j ≤ r
    keeping a point only when the exact test of Lemma F passes against the previous one.
 3. For every candidate `a`, binary-search the largest `r` with "Lemma G certifies `a` from
    `q_r`" — the set of such `r` is a prefix because `G_{q_r}` is non-decreasing along the chain —
-   using `λ ∈ {1, ½, 2}`.
-4. Require `w(T) + w({q_1,…,q_r}) + w(U_{r+1}) ≥ 1` for every region `r`.
+   using `λ ∈ {1, ½, 2}`.  Call the resulting set of candidates certified on `R_r` (those with
+   largest index `≥ r+1`, i.e. certified from the pivot `q_{r+1}` that is *violated* on `R_r`) the
+   **up-set** `U_{r+1}`.
+4. Require `w(T) + w(D_r) + w(U_{r+1}) ≥ 1` for every region `r`, where `D_r ⊇ {q_1,…,q_r}` is the
+   **down-set** of §6.4.  (A candidate with *two* failing `ADM` inequalities is not a swing point
+   and is never certified by a chain; `verify2/` (`RUNG2_XCHECK.md` §2.4) handles such points by a
+   recursive sign split instead, which is one reason its leaf census differs.)
 
 **Two chains.**  At a *wall* pose one cut slides and one chain suffices.  At an *interior* tile pose
 two cuts slide independently — with `c = (3/2 + α, 3/2 + β)` the row `x = 2` is captured for
@@ -920,6 +945,17 @@ certifications, never create one.
   stress test knows nothing about the regions) — see §4 for the counts.
 
 ---
+
+### 6.4 The down-set is a suffix, not the chain prefix
+
+On the region `R_r = {G_{q_r} ≤ 0 < G_{q_{r+1}}}` Lemma F only promises the chain members
+`q_1, …, q_r`.  But **every** candidate `p` (chain member or not) with `max_B (G_p - G_{q_r}) ≤ 0`
+satisfies its own swing inequality there, since `G_p ≤ G_{q_r} ≤ 0`.  Because `G_{q_r}` is
+non-decreasing along the chain, the set of `r` for which this holds for a given `p` is a
+**suffix** `{r_p, …, k}`, found by one binary search per candidate (`analyse` in `cert_chain`);
+the down-set of region `r` is `D_r = {p : r_p ≤ r}`.  The first version of `CHAIN` used only the
+prefix `{q_1, …, q_r}` and threw away most of the available weight — this is the second of the two
+completeness fixes listed in §0 (the other is `clip_bin`, §4.6).
 
 ## 7. What is exact, what is float
 
