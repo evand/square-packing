@@ -172,7 +172,7 @@ def _climb(M, w, k, rhs_int, rng, restarts, seeds, deadline):
     `union_i (piece from segment [A_i, A_{i+1}])`.  Returns every local optimum above rhs_int."""
     nc = M.shape[0]
     found = {}
-    starts = [list(s) for s in seeds if len(s) == k]
+    starts = [list(s) for s in seeds if len(s) == k and all(0 <= v < nc for v in s)]
     starts += [[int(rng.randrange(nc)) for _ in range(k)] for _ in range(restarts)]
     for idx in starts:
         if time.time() > deadline:
@@ -223,14 +223,28 @@ def separate(lever, sup, squares, V, Inc, w, mu, it):
     deadline = t0 + a.pent_time
     rng = lever.pent_rng
     M, verts = _cand_masks(squares, V, Inc, np.asarray(w, dtype=np.int64), a.pent_cands)
+    # The candidate list is rebuilt from the current support every iteration, so an index from
+    # the previous iteration means nothing.  Carry the previous best anchors as POINTS and give
+    # them their own columns in the current candidate matrix.
+    pool = list(dict.fromkeys(p for seqs in lever.pent_seeds.values() for s in seqs for p in s))
+    pos = {}
+    if pool:
+        add = np.zeros((len(pool), len(squares)), dtype=bool)
+        for r, (X, Y, D) in enumerate(pool):
+            for c, s in enumerate(squares):
+                add[r, c] = lc.sq_contains(s, X, Y, D)
+        pos = {p: len(verts) + r for r, p in enumerate(pool)}
+        M = np.vstack([M, add])
+        verts = list(verts) + list(pool)
     nnew, nfound, best = 0, 0, None
+    newseeds = {}
     for k in a.pent:
         rhs_int = (k - 1) // 2 * DM
-        seeds = lever.pent_seeds.get(k, [])
+        seeds = [[pos[p] for p in s] for s in lever.pent_seeds.get(k, [])]
         cands = _climb(M, np.asarray(w, dtype=np.int64), k, int(rhs_int * (1 + a.ktol)), rng,
                        a.pent_restarts, seeds, deadline)
         nfound += len(cands)
-        lever.pent_seeds[k] = [c[1] for c in cands[:3]]
+        newseeds[k] = [tuple(verts[i] for i in c[1]) for c in cands[:2]]
         for (val, idx) in cands[:a.pent_want]:
             pts = [verts[i] for i in idx]
             mem = row_members(ps, pts)
@@ -253,7 +267,28 @@ def separate(lever, sup, squares, V, Inc, w, mu, it):
                 nnew += 1
                 if best is None:
                     best = info
+    lever.pent_seeds = newseeds
     return nnew, best, time.time() - t0, nfound
+
+
+def regrow(lever):
+    """the pose set has grown (a pricing stage or `--lattice-every`): re-derive every polygon row
+    over the new pose set so the rows stay MAXIMAL.  A row over a subset stays valid, so this is
+    a strengthening, not a correctness requirement.  Returns the number of new memberships."""
+    import scipy.sparse as sp
+    ps = lever.ps
+    rows, nmem = [], 0
+    for c in lever.pgons:
+        mem = row_members(ps, c['pts'])
+        nmem += len(mem) - len(c['members'])
+        c['members'] = mem
+        cols = [cc for i in mem for cc in ps.cols_of[i]]
+        rows.append(sp.csr_matrix((np.ones(len(cols)), (np.zeros(len(cols), dtype=int), cols)),
+                                  shape=(1, ps.ncol)))
+    lever.PG = sp.vstack(rows, format='csr') if rows else sp.csr_matrix((0, ps.ncol))
+    lever._PGcsc = None
+    lever.pgkeys = set(frozenset(c['members']) for c in lever.pgons)
+    return nmem
 
 
 # ====================================================================== finalisation guards

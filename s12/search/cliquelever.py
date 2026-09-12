@@ -156,13 +156,18 @@ class Poses:
         self.col_reg_a = np.array(self.col_reg, dtype=np.int64)
 
     # ---------------------------------------------------------------- float geometry
-    def contains_rows(self, pts):
+    def contains_rows(self, pts, pose_lo=0, col_lo=0):
         """coverage-row coefficients for exact points [(X, Y, D)]: R x ncol sparse 0/1.
-        Float test with the exact integer test on |margin| <= FTOL."""
+        Float test with the exact integer test on |margin| <= FTOL.
+
+        `pose_lo`/`col_lo` (both 0 = the whole pose set, the only thing the row/stage code uses)
+        restrict the scan to poses `>= pose_lo` and return the `R x (ncol - col_lo)` BLOCK of those
+        columns: poses are only ever appended and never move, so after a pricing pass the old
+        block of `A` is unchanged and only the new one has to be computed (`--lattice-every`)."""
         R = len(pts)
         rows, cols = [], []
         nex = 0
-        F = self.F
+        F = self.F[pose_lo:]
         for lo in range(0, R, 256):
             chunk = pts[lo:lo + 256]
             x = np.array([X / D for (X, Y, D) in chunk])
@@ -177,14 +182,14 @@ class Poses:
             for (ri, j) in zip(*np.nonzero(border)):
                 X, Y, D = chunk[ri]
                 nex += 1
-                if lc.sq_contains(self.sq[j], X, Y, D):
+                if lc.sq_contains(self.sq[pose_lo + j], X, Y, D):
                     inside[ri, j] = True
             ri, j = np.nonzero(inside)
             for a, b in zip(ri, j):
-                for c in self.cols_of[b]:
+                for c in self.cols_of[pose_lo + b]:
                     rows.append(lo + a)
-                    cols.append(c)
-        A = sp.csr_matrix((np.ones(len(rows)), (rows, cols)), shape=(R, self.ncol))
+                    cols.append(c - col_lo)
+        A = sp.csr_matrix((np.ones(len(rows)), (rows, cols)), shape=(R, self.ncol - col_lo))
         return A, nex
 
     def meet_margin(self, i, J):
@@ -248,6 +253,21 @@ class Poses:
                 continue
             added.append(j)
         return members + added
+
+    def joins_all(self, cand, members):
+        """the subset of `cand` (pose indices, ORDER PRESERVED) that closed-meets every member.
+
+        Same predicate as `[j for j in cand if self.meets_all(j, members).all()]` and, since the
+        closed-intersection margin is symmetric in the two squares, the same float comparisons --
+        but vectorised over the candidates with an early exit, so a clique row is extended in a
+        handful of numpy calls instead of one per candidate.  (2,645 clique rows x 1,200 new poses
+        is 3M calls the other way round: minutes per pricing pass.)"""
+        cand = np.asarray(cand, dtype=np.int64)
+        for k in members:
+            if not len(cand):
+                break
+            cand = cand[self.meets_all(int(k), cand)]
+        return cand
 
     def verify_clique(self, members, exact=False):
         """pairwise closed intersection of every unordered pair; float with exact fallback, or
@@ -317,6 +337,22 @@ class Lever:
         self.hi_pg = []
         self.pent_seeds = {}
         self.pent_rng = random.Random(getattr(args, 'pent_seed', 20260911))
+        # ---- restricted master (--master, search/CLMASTER.md).  All OFF by default.
+        self.master = bool(getattr(args, 'master', False))
+        self.act = None           # bool over the COLUMNS: the active (master) set
+        self.colage = None        # consecutive zero-mass solves per active column
+        self.rc = None            # reduced cost of every loaded column under the last duals
+        self.rc_npos = 0          # inactive loaded columns with rc > price_tol
+        self.rc_max = 0.0
+        self.mcols = None         # column index array currently in the HiGHS model (None = all)
+        self.master_n = 0
+        self.master_grew = 0
+        self.master_passes_used = 0
+        self.force_full_master = False   # set once the separation is done: close the master exactly
+        self._Acsc = None         # column-sliceable cache of self.A
+        self._Kcsc = None         # column-sliceable cache of self.K
+        self._PGcsc = None        # column-sliceable cache of self.PG
+        self._chordM = None
 
     # ---------------------------------------------------------------- fixed rows
     def eq_matrix(self):
@@ -330,6 +366,11 @@ class Lever:
         if not rows:
             return None, np.zeros(0)
         return sp.csr_matrix(np.array(rows)), np.array(vals)
+
+    def chord_matrix_cached(self):
+        if self._chordM is None or self._chordM.shape[1] != self.ps.ncol:
+            self._chordM = self.chord_matrix()
+        return self._chordM
 
     def chord_matrix(self):
         ps = self.ps
@@ -355,6 +396,7 @@ class Lever:
             self.rowkey.add(p)
         An, nex = self.ps.contains_rows(new)
         self.A = sp.vstack([self.A, An], format='csr') if self.A.shape[0] else An
+        self._Acsc = None
         self.rows += new
         return len(new)
 
@@ -425,6 +467,7 @@ class Lever:
         info['members'] = list(members)
         self.cliques.append(info)
         self.cage = np.concatenate([self.cage, [0]])
+        self._Kcsc = None
         return True
 
     # ---------------------------------------------------------------- rank-family rows
@@ -452,31 +495,302 @@ class Lever:
         self.cliques = [self.cliques[i] for i in idx]
         self.ckeys = set(frozenset(c['members']) for c in self.cliques)
         self.K = self.K[idx]
+        self._Kcsc = None
         self.cage = self.cage[idx]
         self.z = self.z[idx] if len(self.z) == len(keep) else np.zeros(len(idx))
         return int((~keep).sum())
 
     # ---------------------------------------------------------------- LP
-    def rebuild(self):
+    def rebuild(self, cols=None):
+        """build the HiGHS model from scratch.  `cols` = None is the full model (the default path,
+        unchanged); an index array restricts it to those columns (the restricted master)."""
         ps = self.ps
         INF = self.hi.INF
-        self.hi.reset(ps.ncol)
+        self.mcols = cols
+        ncol = ps.ncol if cols is None else len(cols)
+        self.hi.reset(ncol)
+
+        def sub(M):
+            return M if cols is None else M[:, cols]
+
         E, ev = self.eq_matrix()
         self.nE = 0
         if E is not None:
-            self.hi.append([('E', i) for i in range(E.shape[0])], ev, ev, E)
+            self.hi.append([('E', i) for i in range(E.shape[0])], ev, ev, sub(E))
             self.nE = E.shape[0]
         if self.chord:
             self.hi.append([('D', i) for i in range(4)], np.full(4, -INF), np.full(4, 3.0),
-                           self.chord_matrix())
+                           sub(self.chord_matrix_cached() if cols is not None else self.chord_matrix()))
         if len(self.rows):
+            if self._Acsc is None or self._Acsc.shape[1] != ps.ncol:
+                self._Acsc = self.A.tocsc() if cols is not None else None
+            A = self.A if cols is None else self._Acsc[:, cols].tocsr()
             self.hi.append([('P', i) for i in range(len(self.rows))],
-                           np.full(len(self.rows), -INF), np.ones(len(self.rows)), self.A)
+                           np.full(len(self.rows), -INF), np.ones(len(self.rows)), A)
         self.hi_nrows = len(self.rows)
         self.hi_cq = []
         self.hi_pg = []
+        if cols is not None and len(self.cliques):
+            if self._Kcsc is None or self._Kcsc.shape != self.K.shape or self._Kcsc.nnz != self.K.nnz:
+                self._Kcsc = self.K.tocsc()
+            K = self._Kcsc[:, cols].tocsr()
+            cur = [frozenset(c['members']) for c in self.cliques]
+            self.hi.append([('C', k) for k in cur], np.full(len(cur), -INF), np.ones(len(cur)), K)
+            self.hi_cq = list(cur)
+        if len(self.pgons):                       # rank-family rows (search/rankfamily.py)
+            if self._PGcsc is None or self._PGcsc.shape != self.PG.shape \
+                    or self._PGcsc.nnz != self.PG.nnz:
+                self._PGcsc = self.PG.tocsc()
+            PG = self.PG if cols is None else self._PGcsc[:, cols].tocsr()
+            gi = list(range(len(self.pgons)))
+            self.hi.append([('G', i) for i in gi], np.full(len(gi), -INF),
+                           np.array([self.pgons[i]['rhs'] for i in gi]), PG)
+            self.hi_pg = gi
 
     def solve(self):
+        if self.master:
+            return self.solve_master()
+        return self.solve_full()
+
+    # ---------------------------------------------------------------- the restricted master
+    @staticmethod
+    def _grow(arr, n, dtype, fill):
+        if arr is None:
+            return np.full(n, fill, dtype=dtype)
+        if len(arr) == n:
+            return arr
+        out = np.full(n, fill, dtype=dtype)
+        out[:len(arr)] = arr
+        return out
+
+    def cover_regions(self, nper=64):
+        """the master is infeasible iff a pinned region cannot reach its count on the active
+        columns; the cheap necessary condition is that it has NO active column at all.  Cover such
+        a region greedily with its best-priced columns (`_solve_restricted` in search/branch.py)."""
+        if not self.target:
+            return 0
+        reg = self.ps.col_reg_a
+        n = 0
+        for lab, kv in sorted(self.target.items()):
+            if float(kv) <= 0:
+                continue
+            idx = np.nonzero(reg == LABS.index(lab))[0]
+            if not len(idx) or self.act[idx].any():
+                continue
+            sc = self.rc[idx] if (self.rc is not None and len(self.rc) == len(reg)) else np.zeros(len(idx))
+            take = idx[np.argsort(-sc)[:nper]]
+            self.act[take] = True
+            self.colage[take] = 0
+            n += len(take)
+        return n
+
+    def price_columns(self):
+        """reduced cost of EVERY loaded column under the master's duals,
+
+            rc_j = 1 - sum_r y_r A[r,j] - sum_k z_k K[k,j] - lam(region j) - sum_d chd_d D[d,j],
+
+        i.e. exactly the quantity `price()` evaluates on new lattice candidates, but on the loaded
+        columns and with their own region label and their own clique memberships.  The LP is a
+        MAXIMISATION, so `rc_j > 0` is the improving direction.  Two sparse mat-vecs."""
+        ps = self.ps
+        rc = np.ones(ps.ncol)
+        if self.A.shape[0] and len(self.y) == self.A.shape[0]:
+            rc -= self.A.T.dot(self.y)
+        if self.K.shape[0] and len(self.z) == self.K.shape[0]:
+            rc -= self.K.T.dot(self.z)
+        if self.PG.shape[0] and len(self.pgz) == self.PG.shape[0]:
+            rc -= self.PG.T.dot(self.pgz)          # rank-family rows (search/rankfamily.py)
+        if self.lam:
+            lamv = np.zeros(len(LABS))
+            for li, v in self.lam.items():
+                lamv[li] = v
+            rc -= lamv[ps.col_reg_a]
+        if self.chord and np.any(self.chord_dual):
+            rc -= np.asarray(self.chord_matrix_cached().T.dot(self.chord_dual)).ravel()
+        return rc
+
+    def solve_master(self):
+        """the restricted master.  Active columns = the current support, the columns that entered
+        this iteration, and the `--master-add` loaded columns with the most positive reduced cost;
+        all rows kept; ipm+crossover on the small model.  After each solve EVERY loaded column is
+        priced by its reduced cost (two sparse mat-vecs) and the improving ones are added, for up
+        to `--master-passes` passes (0 = always to convergence).  The cap is LIFTED on any
+        iteration whose separation found nothing (`force_full_master`), so the loop can only stop
+        at the exact full-LP optimum of the loaded column set, while the iterations that still
+        have rows to separate pay for at most `--master-passes` small ipm solves instead of the
+        8-12 the dual chase needs to close a capped master exactly.
+        Columns at zero mass for `--master-trim` consecutive solves and with NON-positive reduced
+        cost leave the master; they stay LOADED and are priced again every solve.  (Trimming on
+        mass alone cycles: the LP is dual-degenerate, so a zero-mass column can carry rc = +0.4 and
+        must stay in -- measured on `lc_A0101.txt`, which never terminated.)"""
+        ps = self.ps
+        a = self.a
+        if self.act is None:
+            # the first master is the SUPPORT of the loaded masses (a checkpoint carries a few
+            # hundred positive-mass poses among its 8k), which is what "current support" means at
+            # iteration 0; pricing brings in whatever else is needed.  No masses -> everything.
+            m0 = np.array(ps.mu0, dtype=float)
+            seed = (m0[ps.col_pose_a] > 1e-12) if m0.size else np.zeros(ps.ncol, bool)
+            self.act = seed if seed.any() else np.ones(ps.ncol, bool)
+        self.act = self._grow(self.act, ps.ncol, bool, True)
+        self.colage = self._grow(self.colage, ps.ncol, np.int64, 0)
+        cap = 200 if (a.master_passes <= 0 or self.force_full_master) else a.master_passes
+        grew = 0
+        passes = 0
+        lp_secs = 0.0
+        build_secs = 0.0
+        res = None
+        cols = None
+        x = None
+        while True:
+            if self.rc is not None and len(self.rc) == ps.ncol and a.master_add:
+                cand = np.nonzero((~self.act) & (self.rc > a.price_tol))[0]
+                if len(cand):
+                    # closing the master exactly (nothing left to separate): take EVERY improving
+                    # column at once.  One ipm solve at n columns costs what n/2000 of them cost
+                    # (t ~ n^1.5 with a small constant: 3 s at 750 columns, 23 s at 2,149, 260 s at
+                    # 9,669 on the B40KL2 resume), so wide jumps beat many narrow ones.
+                    lim = len(cand) if self.force_full_master else a.master_add
+                    pick = cand[np.argsort(-self.rc[cand])[:lim]]
+                    self.act[pick] = True
+                    self.colage[pick] = 0
+                    grew += len(pick)
+            grew += self.cover_regions()
+            res = None
+            for attempt in range(3):
+                cols = np.nonzero(self.act)[0]
+                if not len(cols):
+                    self.act[:] = True
+                    continue
+                tb = time.time()
+                self.rebuild(cols)
+                t0 = time.time()
+                res = self.hi.run()
+                lp_secs += time.time() - t0
+                build_secs += t0 - tb
+                if os.environ.get('CLDBG'):
+                    self.log(f'      [master pass {passes + 1}] {len(cols)} cols: '
+                             f'build {t0 - tb:.1f}s solve {time.time() - t0:.1f}s')
+                if res is not None:
+                    break
+                if attempt == 0:
+                    self.log('   [master: LP failed; activating every pinned-region column '
+                             'and the 5000 best-priced]')
+                    if self.target:
+                        reg = ps.col_reg_a
+                        for lab in self.target:
+                            self.act[reg == LABS.index(lab)] = True
+                    if self.rc is not None and len(self.rc) == ps.ncol:
+                        self.act[np.argsort(-self.rc)[:5000]] = True
+                else:
+                    self.log('   [master: LP failed twice; falling back to the FULL column set]')
+                    self.act[:] = True
+            if res is None:
+                self.lp_secs = lp_secs
+                return None
+            passes += 1
+            xs, d, obj = res
+            x = np.zeros(ps.ncol)
+            x[cols] = xs
+            self.read_duals(d)
+            self.rc = self.price_columns()
+            inact = ~self.act
+            self.rc_npos = int((inact & (self.rc > a.price_tol)).sum())
+            self.rc_max = float(self.rc[inact].max()) if inact.any() else 0.0
+            if self.rc_npos == 0 or passes >= cap:
+                break
+        self.lp_secs = lp_secs + build_secs
+        self.master_build_secs = build_secs
+        self.master_passes_used = passes
+        self.master_grew = grew
+        zero = x <= 1e-12
+        self.colage[self.act & zero] += 1
+        self.colage[~zero] = 0
+        if a.master_trim > 0:
+            self.act &= ~(zero & (self.colage > a.master_trim) & (self.rc <= a.price_tol))
+        self.master_n = int(len(cols))
+        return x, obj
+
+    def read_duals(self, d):
+        """scatter the HiGHS row duals into y (coverage), z (cliques), lam (regions), chord"""
+        cur = [frozenset(c['members']) for c in self.cliques]
+        y = np.zeros(len(self.rows))
+        z = np.zeros(len(self.cliques))
+        pgz = np.zeros(len(self.pgons))
+        lam = np.zeros(self.nE)
+        chd = np.zeros(4)
+        ci = {k: i for i, k in enumerate(cur)}
+        for mi, k in enumerate(self.hi.rk):
+            v = -d[mi]
+            if k[0] == 'P':
+                y[k[1]] = max(v, 0.0)
+            elif k[0] == 'E':
+                lam[k[1]] = v
+            elif k[0] == 'D':
+                chd[k[1]] = max(v, 0.0)
+            elif k[0] == 'C':
+                z[ci[k[1]]] = max(v, 0.0)
+            elif k[0] == 'G':
+                pgz[k[1]] = max(v, 0.0)
+        self.pgz = pgz
+        self.z = z
+        self.cage = np.where(self.z > 1e-9, 0, self.cage + 1)
+        self.y = y
+        self.chord_dual = chd
+        self.lam = {}
+        if self.target:
+            for i, (lab, kv) in enumerate(sorted(self.target.items())):
+                self.lam[LABS.index(lab)] = float(lam[i])
+
+    # ---------------------------------------------------------------- lattice pricing in the loop
+    def lattice_price(self, x, mu):
+        """`--lattice-every`: one pass of the stage pricer (the `price_pitch`/`price_dth` lattice
+        with clique charging) INSIDE the loop -- the new poses join the LOADED column set, the
+        coverage rows get their new block and every clique row is extended to the new poses that
+        closed-meet all of its members, exactly as the stage code does at a stage boundary."""
+        ps = self.ps
+        a = self.a
+        n0, c0 = ps.n, ps.ncol
+        # inside the loop the cliques separated after the last solve have no dual yet (the stage
+        # code only ever priced a CONVERGED iterate, where the two always matched): give them 0
+        if len(self.z) < len(self.cliques):
+            self.z = np.concatenate([self.z, np.zeros(len(self.cliques) - len(self.z))])
+        new, gap = price(self, x, mu, a, self.log)
+        idx = ps.add_float_poses(new, a.Q, a.Dc)
+        ps.finish()
+        if not idx:
+            return 0, gap, 0
+        An, _ = ps.contains_rows(self.rows, pose_lo=n0, col_lo=c0)
+        self.A = sp.hstack([self.A, An], format='csr') if self.A.shape[0] else An
+        self._Acsc = None
+        self._chordM = None
+        K = []
+        nmem = 0
+        for c in self.cliques:
+            mem = c['members']
+            add = ps.joins_all(idx, mem)
+            kept = []
+            for j in add:
+                j = int(j)
+                if not kept or ps.meets_all(j, np.array(kept)).all():
+                    kept.append(j)
+            c['members'] = mem + kept
+            nmem += len(kept)
+            cols = [cc for i in c['members'] for cc in ps.cols_of[i]]
+            K.append(sp.csr_matrix((np.ones(len(cols)), (np.zeros(len(cols), dtype=int), cols)),
+                                   shape=(1, ps.ncol)))
+        self.ckeys = set(frozenset(c['members']) for c in self.cliques)
+        self.K = sp.vstack(K, format='csr') if K else sp.csr_matrix((0, ps.ncol))
+        self._Kcsc = None
+        if self.pgons:
+            nmem += rankfamily.regrow(self)        # keep the polygon rows maximal too
+        self.act = self._grow(self.act, ps.ncol, bool, True)        # new columns enter the master
+        self.colage = self._grow(self.colage, ps.ncol, np.int64, 0)
+        self.rc = None
+        self.hi.h = None
+        return len(idx), gap, nmem
+
+    def solve_full(self):
         ps = self.ps
         INF = self.hi.INF
         if self.hi.h is None or self.hi.ncols != ps.ncol:
@@ -511,33 +825,7 @@ class Lever:
         if res is None:
             return None
         x, d, obj = res
-        y = np.zeros(len(self.rows))
-        z = np.zeros(len(self.cliques))
-        pgz = np.zeros(len(self.pgons))
-        lam = np.zeros(self.nE)
-        chd = np.zeros(4)
-        ci = {k: i for i, k in enumerate(cur)}
-        for mi, k in enumerate(self.hi.rk):
-            v = -d[mi]
-            if k[0] == 'P':
-                y[k[1]] = max(v, 0.0)
-            elif k[0] == 'E':
-                lam[k[1]] = v
-            elif k[0] == 'D':
-                chd[k[1]] = max(v, 0.0)
-            elif k[0] == 'C':
-                z[ci[k[1]]] = max(v, 0.0)
-            elif k[0] == 'G':
-                pgz[k[1]] = max(v, 0.0)
-        self.pgz = pgz
-        self.z = z
-        self.cage = np.where(self.z > 1e-9, 0, self.cage + 1)
-        self.y = y
-        self.chord_dual = chd
-        self.lam = {}
-        if self.target:
-            for i, (lab, kv) in enumerate(sorted(self.target.items())):
-                self.lam[LABS.index(lab)] = float(lam[i])
+        self.read_duals(d)
         return x, obj
 
     # ---------------------------------------------------------------- per-pose masses
@@ -662,20 +950,50 @@ class Lever:
                        lp_secs=self.lp_secs, secs=time.time() - T0,
                        best=(None if best is None else dict(mass0=best['mass0'], size0=best['size0'],
                                                              size=best['size'])))
+            if self.master:
+                rec.update(master_cols=self.master_n, master_new=self.master_grew,
+                           master_passes=self.master_passes_used,
+                           rc_npos=self.rc_npos, rc_max=self.rc_max)
             hist.append(rec)
             self.log(f'   [{tag}.{it}] LP={val:.6f} M={M:.9f} kmax={kmax:.6f}{"" if allc else "*"} '
                      f'rows={len(self.rows)}(+{nrow}) cq={len(self.cliques)}(+{ncq}/{nfound},-{ndrop}) '
                      f'sup={len(sup)} verts={len(V)} int={R[12]:.6f} '
+                     + (f'master={self.master_n}/{self.ps.ncol}(+{self.master_grew}'
+                        f'/{self.master_passes_used}p) rc+={self.rc_npos}/{self.rc_max:+.2e} '
+                        if self.master else '')
                      + (f'best={best["mass0"]:.4f}/{best["size0"]}->{best["size"]} ' if best else '')
-                     + (f'pg={len(self.pgons)}(+{npg}) ' if a.pent else '')
+                     + (f'pg={len(self.pgons)}(+{npg}) ' if getattr(a, 'pent', None) else '')
                      + (f'pbest=k{pbest["k"]}:{pbest["mass0"]:.4f}/{pbest["rhs"]:.1f}'
                         f'(+{pbest["excess"]:.4f})/{pbest["size"]} ' if pbest else '')
                      + f'(lp {self.lp_secs:.1f}s it{self.hi.iters}, sep {sep_secs:.1f}s'
-                     + (f', pg {pg_secs:.1f}s' if a.pent else '') + f', {time.time() - T0:.0f}s)')
+                     + (f', pg {pg_secs:.1f}s' if getattr(a, 'pent', None) else '')
+                     + f', {time.time() - T0:.0f}s)')
             rec['pg'] = len(self.pgons)
             rec['npg'] = npg
             rec['pbest'] = pbest
-            done = (nrow == 0 and ncq == 0 and npg == 0 and M <= 1 + 1e-9 and kmax <= 1 + a.ktol)
+            geo = (nrow == 0 and ncq == 0 and npg == 0 and M <= 1 + 1e-9 and kmax <= 1 + a.ktol)
+            # nothing left to separate: the next master solve runs to full pricing convergence,
+            # so the loop can only terminate on the exact full-LP optimum of the loaded columns
+            self.force_full_master = bool(geo)
+            done = geo and (not self.master or self.rc_npos == 0)
+            # --lattice-every: price the full lattice every M iterations, and whenever the row/clique
+            # separation has stalled (no new row of either kind), so that a run never spins
+            stall = (nrow == 0 and ncq == 0)
+            if a.lattice_every > 0 and (stall or it % a.lattice_every == a.lattice_every - 1):
+                npos, gap, nmem = self.lattice_price(x, mu)
+                self.log(f'   [{tag}.{it}] lattice: +{npos} poses -> {self.ps.n} poses, '
+                         f'{self.ps.ncol} columns (gap {gap:+.6f}, {nmem} new clique memberships, '
+                         f'{time.time() - T0:.0f}s)')
+                rec['lattice'] = dict(new=npos, gap=gap, memberships=nmem,
+                                      poses=self.ps.n, cols=self.ps.ncol)
+                if npos:
+                    # the pose set just grew: pad this iterate onto the new columns (they carry no
+                    # mass in it) so that the checkpoint, `region_split` and `finalize` -- all of
+                    # which index by the CURRENT ps.ncol / ps.n -- stay in step with it
+                    x = np.concatenate([x, np.zeros(self.ps.ncol - len(x))])
+                    mu = np.concatenate([mu, np.zeros(self.ps.n - len(mu))])
+                if npos:
+                    done = False
             rec['converged'] = bool(done and allc)
             if done:
                 if not allc:
@@ -924,6 +1242,10 @@ def price(lever, x, mu, a, log):
         return j if k == 'C' else (4 + j if k == 'W' else 12)
 
     def clique_cost(cand):
+        # identical arithmetic to the original mask version, but carried on the SHRINKING index
+        # set of surviving candidates instead of the full 170k-long mask: the member loop is
+        # 800-deep on a wide clique row and the survivors are a handful, so this is the difference
+        # between ~20 min and a few seconds per pricing pass (search/CLMASTER.md)
         out = np.zeros(len(cand))
         if not zi or not len(cand):
             return out
@@ -935,22 +1257,24 @@ def price(lever, x, mu, a, log):
             # bounding box of the member centres, expanded by sqrt(2)
             bx0, bx1 = ps.F[mem, 0].min() - 1.4143, ps.F[mem, 0].max() + 1.4143
             by0, by1 = ps.F[mem, 1].min() - 1.4143, ps.F[mem, 1].max() + 1.4143
-            m = (G[:, 0] >= bx0) & (G[:, 0] <= bx1) & (G[:, 1] >= by0) & (G[:, 1] <= by1)
+            sel = np.nonzero((G[:, 0] >= bx0) & (G[:, 0] <= bx1)
+                             & (G[:, 1] >= by0) & (G[:, 1] <= by1))[0]
             for k in mem:
-                if not m.any():
+                if not len(sel):
                     break
                 Fk = ps.F[k]
-                cr = Fk[2] * G[:, 2] + Fk[3] * G[:, 3]
-                sr = Fk[2] * G[:, 3] - Fk[3] * G[:, 2]
+                g0, g1, g2, g3 = G[sel, 0], G[sel, 1], G[sel, 2], G[sel, 3]
+                cr = Fk[2] * g2 + Fk[3] * g3
+                sr = Fk[2] * g3 - Fk[3] * g2
                 wj = 0.5 * (np.abs(cr) + np.abs(sr))
-                ddx = G[:, 0] - Fk[0]
-                ddy = G[:, 1] - Fk[1]
+                ddx = g0 - Fk[0]
+                ddy = g1 - Fk[1]
                 m1 = 0.5 + wj - np.abs(ddx * Fk[2] + ddy * Fk[3])
                 m2 = 0.5 + wj - np.abs(-ddx * Fk[3] + ddy * Fk[2])
-                m3 = 0.5 + wj - np.abs(ddx * G[:, 2] + ddy * G[:, 3])
-                m4 = 0.5 + wj - np.abs(-ddx * G[:, 3] + ddy * G[:, 2])
-                m &= np.minimum(np.minimum(m1, m2), np.minimum(m3, m4)) >= 0
-            out[m] += lever.z[ci]
+                m3 = 0.5 + wj - np.abs(ddx * g2 + ddy * g3)
+                m4 = 0.5 + wj - np.abs(-ddx * g3 + ddy * g2)
+                sel = sel[np.minimum(np.minimum(m1, m2), np.minimum(m3, m4)) >= 0]
+            out[sel] += lever.z[ci]
         return out
 
     def rc_of(poses):
@@ -1084,10 +1408,11 @@ def cmd_run(a):
         next_ = 0
         for c in lever.cliques:
             mem = c['members']
-            add = [j for j in idx if ps.meets_all(j, np.array(mem)).all()]
+            add = ps.joins_all(idx, mem)
             # the new members must also meet each other: greedy, as in extend_clique
             kept = []
             for j in add:
+                j = int(j)
                 if not kept or ps.meets_all(j, np.array(kept)).all():
                     kept.append(j)
             c['members'] = mem + kept
@@ -1098,6 +1423,9 @@ def cmd_run(a):
         lever.ckeys = set(frozenset(c['members']) for c in lever.cliques)
         lever.K = sp.vstack(K, format='csr') if K else sp.csr_matrix((0, ps.ncol))
         log(f'   stage {stage}: clique rows extended by {next_} memberships')
+        if lever.pgons:
+            log(f'   stage {stage}: {len(lever.pgons)} polygon rows re-derived over the new pose '
+                f'set, +{rankfamily.regrow(lever)} memberships')
         lever.hi.h = None
         stage += 1
 
@@ -1186,7 +1514,10 @@ def selftest():
                             finalize=True, anatomy=0, rows0=1000, row_pitch=0.5, load_rows=[],
                             exact=[f], load_poses=[], Q=10 ** 5, Dc=10 ** 6,
                             pent=[5], pent_want=4, pent_cands=60, pent_restarts=20,
-                            pent_time=20.0, pent_seed=1)
+                            pent_time=20.0, pent_seed=1,
+                            master=False, master_add=2000, master_trim=3, master_passes=2,
+                            lattice_every=0,
+                            price_tol=1e-7, price_pitch=0.04, price_dth=2.5, cg_want=400)
     ps = Poses(Fr(4), Fr(1), 1e-6)
     ps.add_exact_file(f)
     ps.finish()
@@ -1200,6 +1531,22 @@ def selftest():
     ok2 = abs(rec['LP'] - 1.0) < 1e-6 and rec['converged']
     fin = lever.finalize(x, mu, 1)
     ok3 = fin['certified'] and abs(fin['mass_float'] - 1.0) < 1e-6
+    # the restricted master must reach the same value, with the same exact certificate
+    ns2 = argparse.Namespace(**dict(vars(ns), master=True, lp_tlim=0.0))
+    ps2 = Poses(Fr(4), Fr(1), 1e-6)
+    ps2.add_exact_file(f)
+    ps2.finish()
+    lv2 = Lever(ps2, ns2, print)
+    lv2.add_grid_rows(0.5)
+    s2, sq2, V2, I2, M2, c2, w2 = lv2.certify(np.array(ps2.mu0), 1)
+    lv2.add_rows(V2)
+    h2 = lv2.run_stage('pinM')
+    x2, mu2, rec2 = lv2.last
+    fin2 = lv2.finalize(x2, mu2, 1)
+    ok5 = (abs(rec2['LP'] - 1.0) < 1e-6 and rec2['converged'] and fin2['certified']
+           and abs(fin2['mass_float'] - 1.0) < 1e-6 and lv2.rc_npos == 0)
+    print(f'selftest: master converged to {rec2["LP"]:.9f} in {len(h2)} it, '
+          f'master cols {lv2.master_n}/{ps2.ncol}, rc+ {lv2.rc_npos}: {ok5}')
     # a pose that meets all three (a big axis-parallel square at the centre) must be picked up by
     # the extension; one far away must not
     j = ps.add(0, 1, Fr(2), Fr(2))
@@ -1208,8 +1555,8 @@ def selftest():
     ext = ps.extend_clique([0, 1, 2], np.zeros(ps.n))
     ok4 = (j in ext) and (k not in ext) and ps.verify_clique(ext, exact=True) == 0
     print(f'selftest: first LP 1.5 with clique 1.5: {ok1}; converged to 1.0: {ok2}; exact: {ok3}; '
-          f'extension: {ok4}')
-    return 0 if (ok1 and ok2 and ok3 and ok4) else 1
+          f'extension: {ok4}; master: {ok5}')
+    return 0 if (ok1 and ok2 and ok3 and ok4 and ok5) else 1
 
 
 def main():
@@ -1265,6 +1612,26 @@ def main():
     c.add_argument('--pent-restarts', type=int, default=60, help='hill-climb restarts per k')
     c.add_argument('--pent-time', type=float, default=90.0, help='separation budget per iteration')
     c.add_argument('--pent-seed', type=int, default=20260911)
+    # ---- restricted master and continuous lattice pricing (search/CLMASTER.md); all default OFF
+    c.add_argument('--no-warm', action='store_true',
+                   help='skip the warm dual-simplex attempt and go straight to ipm+crossover '
+                        '(same as --lp-tlim 0)')
+    c.add_argument('--master', action='store_true',
+                   help='restricted master: solve over the support + the newly priced-in columns '
+                        'only, pricing every loaded column by reduced cost each iteration')
+    c.add_argument('--master-add', type=int, default=2000,
+                   help='columns with the most positive reduced cost added to the master per pass '
+                        '(no cap on the pass that closes the master exactly)')
+    c.add_argument('--master-passes', type=int, default=2,
+                   help='price-and-resolve passes per iteration (0 = always to convergence).  The '
+                        'cap is lifted automatically on any iteration where the row and clique '
+                        'separation found nothing, so the loop can only STOP at the exact full-LP '
+                        'optimum of the loaded column set')
+    c.add_argument('--master-trim', type=int, default=3,
+                   help='drop a master column after this many consecutive zero-mass solves (0 = never)')
+    c.add_argument('--lattice-every', type=int, default=0,
+                   help='price the price-pitch/price-dth lattice every M iterations (0 = off) and '
+                        'add the --cg-want best poses to the LOADED set, without ending the stage')
 
     c = sub.add_parser('raw')
     c.add_argument('FILE')
@@ -1281,6 +1648,8 @@ def main():
         if any(k < 5 or k % 2 == 0 for k in a.pent):
             sys.exit('--pent takes odd k >= 5 (k = 3 is a clique row)')
     if a.cmd == 'run':
+        if a.no_warm:
+            a.lp_tlim = 0.0
         cmd_run(a)
     elif a.cmd == 'raw':
         cmd_raw(a)
