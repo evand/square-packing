@@ -112,9 +112,9 @@ direction.  `price_columns` is two sparse mat-vecs plus a gather, `0.05–0.3 s`
 instance here.
 
 Per iteration: active columns = the current support (columns at positive mass), whatever entered
-from `--lattice-every`, and the `--master-add` (default 1000) loaded columns of most positive
+from `--lattice-every`, and the `--master-add` (default 2000) loaded columns of most positive
 reduced cost; all rows are kept; ipm+crossover on the small model.  After the solve every loaded
-column is priced and the improving ones are added, for up to `--master-passes` (default 4) passes.
+column is priced and the improving ones are added, for up to `--master-passes` (default 2) passes.
 Columns at zero mass for `--master-trim` (default 3) consecutive solves **and** non-positive reduced
 cost leave the master; they stay loaded and are priced again every solve.  The first master of a run
 is the support of the loaded masses (a `t4screen` or `cl_*` checkpoint carries 400–1100 positive-mass
@@ -210,7 +210,7 @@ what an idle machine would give.  `old` = today's default path (`--lp-tlim 10`),
 | | V1new | `11.100000` | `1387499999/125000000 = 11.099999992` | 1 | 1 (complete) | 7 | 1.4 (1.0) | **32 s** |
 | (2) leaf `01010101`, 7,845 poses / 8,087 cols | V2old | `11.303030` | `2260606057/200000000 = 11.303030285` | 1 | 1 (complete) | 34 | 46.7 (45.2) | **1,635 s** |
 | | V2new | `11.303030` | `11303030287/1000000000 = 11.303030287` | 1 | 1 (complete) | 31 | **12.2 (11.0)** | **440 s** |
-| (3) corner control `k = 4`, 7,829 poses / 7,941 cols | V3old | (not finished) | — | — | — | 21+ | 78.6 (76.5) | — |
+| (3) corner control `k = 4`, 7,829 poses / 7,941 cols | V3old | `11.673913` at it 38, still cutting a `1.0109` clique at it 40 | (not reached) | — | — | 41+ | 78.6 rising to 90.1 (76.5 -> 88.2) | **> 3,514 s** |
 | | V3new | `11.673913` | `5836956497/500000000 = 11.673912994` | 1 | 1 (complete) | 53 | **9.1 (7.7)** | **560 s** |
 
 Every one of the five certified measures was re-checked by `leaf_ceiling.py check --anchor clique`
@@ -244,7 +244,10 @@ recorded control took 47 + 13); the converged value does not.
 | (1) 235 columns | 32.5k x 235 | 0.7 s | 1.4 s | 0.5x |
 
 and per run, on the only pair that both finished, **1,635 s -> 440 s = 3.7x** (with the master
-taking three *fewer* iterations).  (1) is the control on the other side: with 235 columns there is
+taking three *fewer* iterations).  The control's old run is worse than that ratio suggests: its
+per-iteration cost climbs with the clique rows (78.6 s over the first 21 iterations, 90.1 s over
+41), and after 41 iterations and 3,514 s it was still cutting `1.0109`-mass cliques on the
+degenerate `537/46` face that `--master` had finished with at 482 s.  (1) is the control on the other side: with 235 columns there is
 nothing to restrict, the master is the whole LP, and the four rebuilds an iteration make it twice
 as slow — `--master` is for the 8k–15k-column LPs it was built for.
 
