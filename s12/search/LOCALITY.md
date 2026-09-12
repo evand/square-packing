@@ -31,8 +31,8 @@ Three findings, in order of how much they change the plan.
 2. **`D = 3.5` is already the whole container, and `D = 3` is nearly so.**  Every admissible centre
    lies in `[1/2, 7/2]^2`, and the box `[0, 3.5]^2` is a member of the `D = 3.5`, pitch-`0.875`
    grid, so at `D = 3.5` the inclusion-maximal window family is a **single** window containing all
-   `10,175` poses: `LOC_3.5 = LOC_4 = max{mass : mu in conv(packings), regions pinned} <= alpha(P)
-   = 11`.  At `D = 3` only four windows survive, of `5,240`–`6,132` poses.  The table's interesting
+   `10,175` poses: `LOC_3.5 = LOC_4 = max{mass : mu in conv(packings of P), regions pinned}`, which
+   is at most `alpha(P)`.  At `D = 3` only four windows survive, of `5,240`–`6,132` poses.  The table's interesting
    rows are therefore `D = 1.5, 2, 2.5` — and, as (3) shows, they all carry the *same* obstruction.
 
 3. **The obstruction is the pentagon, and it is worth exactly `5/4`.**  `locality.py check` takes a
@@ -48,7 +48,11 @@ Three findings, in order of how much they change the plan.
    | measure | mass | `D = 1.5` | `D = 2` | `D = 2.5` | worst window | its mass |
    |---|---|---|---|---|---|---|
    | leaf `01010101` (`cl_A0101L2_exact`) | `11.435484` | **`1.249999995`** | **`1.249999995`** | **`1.249999995`** | `[1, 3] x [1.5, 3.5]` (D=2) | `3.548387` |
-   | corner `k = 4` (`cl_B40KL2_exact`) | `11.785783` | **`1.161807219`** | — | — | `[2.25, 3.75] x [1.125, 2.625]` (D=1.5) | `2.550602` |
+   | corner `k = 4` (`cl_B40KL2_exact`) | `11.785783` | **`1.161807219`** | `>= 1.233674684` | (running) | `[2.25, 3.75] x [1.125, 2.625]` (D=1.5) | `2.550602` |
+
+   (the corner `D = 2` entry is a partial sweep: five of the nine windows had been certified when
+   the time ran out, at `z = 1.1597, 1.1599, 1.2307, 1.2316, 1.2337` — every one of them `> 1`, so
+   the conclusion "not window-consistent" is already settled there too, only the maximum is not.)
 
    `249999999/200000000 = 1.249999995` is `5/4` to the last digit the `/10^9` measure can carry.
    The QSTAB optimum is therefore **not** window-consistent at any of these `D`, and by a wide
@@ -185,13 +189,20 @@ table is pinned by §0(1) with no LP at all,
 
 | pose set | `D = 1.5` | `D = 2` | `D = 2.5` | `D = 3` | `D = 3.5` | `D = 4` |
 |---|---|---|---|---|---|---|
-| leaf `01010101` | `<= 11.9148` (no clique implication) | `<= 11.435484` | `<= 11.435484` | `<= 11.435484` | `= LOC_4 <= 11` | `= alpha = 11` |
-| corner `k = 4` | `<= 11.9149` | `<= 11.785783` | `<= 11.785783` | `<= 11.785783` | `= LOC_4 <= 11` | `= alpha = 11` |
+| leaf `01010101` | `<= 11.914756` | **`<= 11.435484`** | **`<= 11.435484`** | **`<= 11.435484`** | `= LOC_4` | `= LOC_4` |
+| corner `k = 4` | `<= 11.988925` | **`<= 11.785783`** | **`<= 11.785783`** | **`<= 11.785783`** | `= LOC_4` | `= LOC_4` |
 
-(the `D = 1.5` entries are the pure coverage+region LP values of `T4LEAF.md`; the `>= alpha = 11`
-lower bound holds in every column, from `RANKDIAG.md` §0's complete branch and bound.)  And the
-*discriminating* measurement — is the QSTAB optimum itself window-consistent? — is answered
-exactly, and negatively, by `5/4`.
+The `D >= 2` entries are §0(1): the clique family is implied, so `LOC_D <= QSTAB(P)`, and `QSTAB(P)`
+is `CLIQUELEVER.md`'s converged value on each pose set.  At `D = 1.5` only cliques of centre-extent
+`<= 1.125` are implied, so the bound falls back to the pure coverage+region LP (`T4LEAF.md`
+`11.914756` on the leaf; `11.988925`, the anchor-clique value, on the corner control).  `D = 3.5`
+and `D = 4` are literally the same relaxation, both being the single window that is the whole pose
+set.  The lower end, `LOC_D >= alpha(P)`, is `11` if `alpha(P) = 11` as the brief states (this task
+did not recompute `alpha` over the full 10,175-pose set; `RANKDIAG.md` §0 proves it on the QSTAB
+supports, and note that it is the REGION PINS, not the container, that make `12` hard here — a
+`4 x 4` box holds 16 axis-parallel unit squares, but not with corner counts `1,1,1,1` and slot
+counts `0,1,0,1,0,1,0,1`).  And the *discriminating* measurement — is the QSTAB optimum itself
+window-consistent? — is answered exactly, and negatively, by `5/4`.
 
 **The smallest `D` at which the leaf reaches `alpha = 11` is therefore known only as `<= 3.5`**, and
 at `D = 3.5` it is a degeneracy of the container rather than a fact about locality (the window is
