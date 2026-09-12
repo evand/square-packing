@@ -717,6 +717,21 @@ class Loc:
             for I in ncols:
                 keep.add(frozenset(int(P[loc[k]]) for k in I))
             self.wcols[j] = set(sorted(keep, key=sorted)[-a.warm_cols:]) if len(keep) > a.warm_cols else keep
+            # multi-scale: the subproblem on the heaviest k poses of the window is a DIFFERENT
+            # valid inequality (a restriction of the rows lowers the cover value but the dual is
+            # still valid for the sub-support, hence for the window), and a sparser one, which is
+            # what a degenerate optimal face needs -- one cut per window per iteration only walks
+            # the LP to the next vertex of the same value.
+            for k in a.sep_scales:
+                if k >= len(loc):
+                    continue
+                sl = loc[np.argsort(-mu[P][loc])[:k]]
+                zk, pik, _c2, ck = cover_lp_cg(sub[np.ix_(sl, sl)], mu[P][sl], tol=a.cut_tol,
+                                               budget=a.sep_time / 2)
+                if zk is None or zk <= 1 + a.cut_tol:
+                    continue
+                Tk = sl[pik > 1e-12]
+                cuts.append((j, P[Tk], pik[pik > 1e-12]))
             allc &= bool(comp)
             if z is None:
                 allc = False
@@ -808,7 +823,9 @@ def cut_anatomy(ps, ADJ, P, S, mi, log, tag=''):
     for k in T:
         vals.setdefault(round(float(pi[k]), 6), []).append(int(k))
     out = dict(z=float(z), complete=bool(comp), support=len(T), alpha=int(aw),
-               alpha_complete=bool(ac), classes=[], pi_values=sorted(vals, reverse=True))
+               alpha_complete=bool(ac), classes=[], pi_values=sorted(vals, reverse=True),
+               poses=[int(S[k]) for k in T], pi=[float(pi[k]) for k in T],
+               mu=[str(Fr(int(mi[S[k]]), DM)) for k in T])
     log(f'   {tag}cut: z = {z:.9f}, {len(T)} poses carry pi > 0, alpha(cut support) = {aw} '
         f'(complete {ac}), {len(vals)} distinct pi values')
     for v in sorted(vals, reverse=True):
@@ -1143,11 +1160,15 @@ def cmd_check(a):
             zs = [Fr(c['value']) for c in cert if c['poses']]
             zmax = max(zs) if zs else Fr(0)
             worst = max(cert, key=lambda c: float(c['value_float']))
-            if float(worst['value_float']) > 1 + 1e-9:
-                Pw = wins[worst['window']][1]
+            # every violated window, not just the worst: each one is a separate local facet, and
+            # `anchorfit.py` is run on all of them
+            for c in sorted(cert, key=lambda c: -float(c['value_float'])):
+                if float(c['value_float']) <= 1 + 1e-9 or not c['poses']:
+                    continue
+                Pw = wins[c['window']][1]
                 Sw = [int(i) for i in Pw if mi[i] > 0]
-                worst['anatomy'] = cut_anatomy(ps, ADJ, Pw, Sw, mi, log,
-                                               tag=f'D={D} {shape} window {worst["window"]} ')
+                c['anatomy'] = cut_anatomy(ps, ADJ, Pw, Sw, mi, log,
+                                           tag=f'D={D} {shape} window {c["window"]} ')
             log(f'## D = {D} {shape}: {len(wins)} windows, max_j z_j = {zmax} = '
                 f'{float(zmax):.9f} at window {worst["window"]} {tuple(worst["geo"])} '
                 f'(mass {worst["mass_float"]:.6f}, {worst["poses"]} support poses) -> the measure '
@@ -1243,6 +1264,8 @@ def main():
     c.add_argument('--ckpt', type=int, default=5)
     c.add_argument('--cov-sep', dest='cov_sep', action='store_true', default=None)
     c.add_argument('--no-cov-sep', dest='cov_sep', action='store_false')
+    c.add_argument('--sep-scales', type=int, nargs='*', default=[12, 24, 48],
+                   help='also separate on the heaviest k poses of each window, for each k')
     c.add_argument('--sep-time', type=float, default=25.0,
                    help='seconds per window subproblem')
     c.add_argument('--warm-cols', type=int, default=4000,
