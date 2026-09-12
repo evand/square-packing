@@ -404,21 +404,43 @@ root-level box `[0.5,0.6] × [1.4,1.5] × [0°,7.2°]` no longer certifies (it h
 double-counted weight) while its subdivisions still do, so the correction is material and the
 earlier leaf counts are void.
 
-### 4.1 State at the report deadline
+### 4.1 State of the post-fix run
 
-* `--chain-from 0`, depth 12, 6 processes, the *pre-fix* build: 2,000 of 6,400 root boxes,
-  3,116 boxes, **0 uncertified** — that prefix covers `cx ∈ [0, 1.25]`, i.e. the entire left-wall
-  region including the worst pose `(0.5, 1.5, 0)` and the tile poses of columns 0 and 1.  Not a
-  result to rely on (see the bug above), but it shows `CHAIN` prunes: the same prefix costs 6,580
-  boxes at `--chain-from 5` and would be ~30,000 with the monotone primitives alone.
-* the post-fix run (`--depth 14 --nproc 8 --disj --chain-from 0`, `runs/x103_chain.log`) was
-  launched at the deadline; it had not produced its summary line.
-* Per-box evidence that the primitive does what Theorem 1 requires (post-fix, exact): the four
-  `(±,±)` octant boxes at the interior tile pose `(1.5,1.5,0)` certify by the **product of two
-  chains** at bins `u₁ = 2⁻⁸` and `2⁻¹²` (11 of the 12 boxes tried; the twelfth fails at the
-  coarsest bin `2⁻⁶` and certifies once subdivided), and the wall boxes at `(0.5,1.5,0)` certify by
-  a **single chain** down to `u₁ = 10⁻³`.  Those are exactly the poses at which Theorem 1 says
-  every monotone primitive must fail for ever, and they are now leaves.
+`taskset -c 22-29 python3 search/zeromargin.py cert runs/closed4_best_x103.txt --depth 14
+--nproc 8 --disj --chain-from 0 --dump runs/x103_chain_leaves.txt` (`runs/x103_chain.log`):
+
+| roots done | boxes | uncertified | wall |
+|---|---|---|---|
+| 500 / 6,400 | 500 | 0 | 1 s |
+| 1,000 | 1,020 | 0 | 6 s |
+| 1,500 | 2,566 | 0 | 131 s |
+| 2,000 | 3,770 | **0** | 163 s |
+| 2,500 | 7,810 | **60** | 1,292 s |
+
+The root boxes are ordered by `c_x` (pitch `1/10`, `c_y` inner, `u` innermost, `160` roots per
+`c_x` column), so `2,000` roots is `c_x ≤ 1.25`: **the whole left-wall region — including the worst
+pose `(0.5, 1.5, 0)` of §2 and every tile pose of columns 0 and 1 — is certified with 0
+uncertified boxes.**  Those are exactly the poses Theorem 1 proves no monotone primitive can ever
+reach, and `CHAIN` reaches them.
+
+The first uncertified boxes (60 of them) appear in `c_x ∈ [1.25, 1.56]`, i.e. approaching the
+*interior* tile pose `(1.5, 1.5, 0)`, where the certificate needs the product of two chains.  The
+run is compute-bound there — a single root box of that column takes minutes, because `CHAIN` is
+attempted at every box of the subtree that the cheap primitives fail — and it had not reached its
+summary line within the session.  It is not stuck: the per-box tests are exact and terminating;
+the cost is the ~5 s two-chain construction repeated over a deep subtree.  §4.2 is the fix.
+
+### 4.2 Why it is slow, and the exact cache that helps
+
+Profile of one `cert_chain` call on an interior box: the candidate screen calls `_adm_cond_ok`
+(exact, `Fraction`) for up to three conditions of each of ~200 reachable points, and the up-set
+and empty-region searches call `_gmax` `O(|cand| log k)` times per chain.  The first of those is
+now avoided across a subtree: **a sub-box has a subset of its parent's admissible poses, so a
+point proved to lie in `Q` at every admissible pose of the parent lies in `Q` at every admissible
+pose of the child** — the proof is inherited verbatim, exactly, and `run_box` threads that set
+down the stack (`cert_chain` computes it in full for every box it handles, which is exactly the
+boxes that get subdivided).  Rung 1 is byte-identical with the cache on, and the `CHAIN` probe
+boxes give the same verdicts, as they must.  The run reported above predates the cache.
 
 **Per-box behaviour of `CHAIN`** (direct calls, `runs/closed4_best_x103.txt`):
 
