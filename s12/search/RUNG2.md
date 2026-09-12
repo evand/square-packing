@@ -686,6 +686,13 @@ with total `≥ 1` (`≥ 1 + λ_j` for the four corner tiles, whose poses `(½,�
 corner boxes, since a corner box `[0,r]²` has `r > ½` — the verifier's own `(2r-1)² < 2` forces
 `½ < r < (1+√2)/2`).  No other tile pose is in a corner box (`r < 1.208 < 1.5`).
 
+*The argument applies to the shipped verifier's own cells, not only to `zeromargin.py`'s boxes.*
+`verify/`'s sweep works per angle bin `k` and per rectangle of centres **in the rotated frame of
+bin `k`**.  A tile pose has `θ = 0`, which lies in bin `0`, and `R(−θ_0) = R(0)` is the identity —
+so the cells around a tile pose are ordinary axis-parallel rectangles in `(c_x, c_y)` crossed with
+`[0, θ_1]`, and Lemma 0 applies verbatim.  (A certificate carrying cliques is swept over the full
+`[0°, 90°]` anyway, so no symmetry reduction is in play.)
+
 The one new question is **how many tile germs one clique can serve**.  A clique is a
 pairwise-intersecting family of poses, so it can contain two germs only if every square of one
 meets every square of the other.
@@ -722,7 +729,10 @@ The tile compatibility graph therefore has no triangle, and a **clique column** 
 maximal pairwise-compatible set of `(tile, σ)` constraints: either all the constraints of one tile,
 or, for an orthogonally adjacent pair, the half of each tile's constraints with the right sign.
 `rung2_bound.py credit` enumerates all 28 of them at `m = 4` (16 of size 4, 12 of size 2) and
-checks pairwise compatibility (0 violations).  Allowing *any* pairwise-intersecting family — rather
+checks pairwise compatibility (0 violations).  The *point clique* of a point `p` — the anchor
+clique `{S : p ∈ S}`, which `notes/clique-family.md` notes the anchor family contains — is
+already a point column of the LP, since the germ lies in it exactly when `p ∈ PIN(i,j,σ)`; so
+nothing is lost by treating points and cliques as separate column types.  Allowing *any* pairwise-intersecting family — rather
 than only the box/anchor cliques the format can express — only lowers the LP, so the number below
 is a valid lower bound for real certificates.
 
