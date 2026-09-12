@@ -1280,7 +1280,8 @@ def price(lever, x, mu, a, log):
     def rc_of(poses):
         cap = pd.capture(lib, ax, ay, aw, poses, a.threads)
         lam = np.array([lever.lam.get(region_of(p), 0.0) for p in poses])
-        return 1.0 - cap - lam - clique_cost(poses)
+        # the rank-family rows charge a candidate exactly when they extend to it (rankfamily.py)
+        return 1.0 - cap - lam - clique_cost(poses) - rankfamily.pgon_cost(lever, poses)
 
     # rc check on the support COLUMNS (should be ~0 at an optimum): the column's own region label
     # and its actual clique rows, not the geometric proxies used for new candidates
@@ -1290,7 +1291,9 @@ def price(lever, x, mu, a, log):
     capc = pd.capture(lib, ax, ay, aw, scp, a.threads)
     lamc = np.array([lever.lam.get(int(ps.col_reg[c]), 0.0) for c in sc])
     zc = np.asarray(lever.K[:, sc].T @ lever.z).ravel() if len(lever.z) else np.zeros(len(sc))
-    rcs = 1.0 - capc - lamc - zc
+    gc = (np.asarray(lever.PG[:, sc].T @ lever.pgz).ravel()
+          if len(lever.pgz) and lever.PG.shape[0] else np.zeros(len(sc)))
+    rcs = 1.0 - capc - lamc - zc - gc
     log(f'   pricing: rc on the {len(sc)} support columns: max |rc| = {np.abs(rcs).max():.2e} '
         f'(mean {rcs.mean():+.2e})')
     supp = [tuple(map(float, (ps.F[i, 0], ps.F[i, 1], math.atan2(ps.F[i, 3], ps.F[i, 2]))))
