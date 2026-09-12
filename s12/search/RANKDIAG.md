@@ -997,9 +997,17 @@ poses and the pricer immediately finds fresh ones priced just as well.  **Column
 `0.04 / 2.5 deg` lattice does not terminate for these instances, and `rc < 0.01` is not reachable
 by running it longer** — the floor is five to seventy times that.
 
-`E2Bg` ran its full budget: 59 iterations, 11 injections, `22,257 s`, LP `11.838127 -> 11.789374`,
-final measure `11.769663780` but **uncertified** (max clique `1.0194`, regions FAIL — it stopped
-mid-loop as ever).  `E2Pg` is at iteration 44 with 8 injections, LP `11.921003 -> 11.865961`.
+Both ran their full `21,600 s` budgets and both stopped mid-loop, so neither final measure
+certifies — the familiar pattern of §14:
+
+| run | iterations | injections | LP | final measure | why not certified |
+|---|---|---|---|---|---|
+| `E2Bg` (corner) | 59 | 11 | `11.838127 -> 11.789374` | `11.769663780` | max clique `1.0194`, regions FAIL |
+| `E2Pg` (pure) | 44 | 8 | `11.921003 -> 11.865961` | `11.843084501` | max clique `1.0518` |
+
+In both, every polygon row was satisfied and re-derived from its exact anchors (`2,002` rows on
+`E2Pg`, worst violation `-0.000034`; `1,919` on `E2Bg`).  The certified numbers for these two
+states come from the support route as always (`SUPEPG`, `SUPEBG`).
 
 **What this does and does not change.**  It does not touch any certified number: those are
 `QSTAB(P) + rank rows` for explicit finite `P` and remain rigorous lower bounds on the continuum
