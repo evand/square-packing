@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""EXACT (rational, integer-only) certification of the packing lower bound  L(399/100) >= 12.
+"""EXACT (rational, integer-only) certification of the packing lower bound  L(t) <= nu_f(t).
+
+The container side is  t = --t  (an exact fraction; default 399/100, the certificate of
+search/DUAL_EXACT.md -- `--t 4` is the certificate of search/COVER4.md).
 
 Everything load-bearing is Python integers / Fractions:
 
@@ -27,13 +30,19 @@ Floating point is used ONLY to choose the masses (a HiGHS LP over the exact inci
 are then rounded DOWN to rationals and everything is re-checked exactly.
 
 Usage
-    python3 search/dual_exact.py build [--Q 100000] [--Dc 1000000] [--procs 4]
-        reads runs/dual_PA2_support.txt, snaps, enumerates, polishes, certifies, writes
-        runs/dual_exact_3.99_support.txt (+ .json, .log)
-    python3 search/dual_exact.py check runs/dual_exact_3.99_support.txt [--full] [--procs 4]
-        independent exact re-certification from the exact support file (no LP)
+    python3 search/dual_exact.py build [--t 399/100] [--tag TAG] [--src FILE]
+                                       [--Q 100000] [--Dc 1000000] [--procs 4]
+        reads a float support (default runs/dual_PA2_support.txt), snaps, enumerates, polishes,
+        certifies, writes runs/dual_exact_<TAG>_support.txt (+ .json, .log); TAG defaults to t
+    python3 search/dual_exact.py check runs/dual_exact_3.99_support.txt [--t T] [--full] [--procs 4]
+        independent exact re-certification from the exact support file (no LP); t is read from the
+        file's "# t = p/q" header unless --t is given
+
+The angle snap Q is the binding approximation: the LP optimum is degenerate on tight vertices, so
+Q = 10^5 can cost 0.3 of mass on a support the float search polished.  Q = 10^7 reproduces the
+float value to 8 decimals at t = 4 (COVER4.md) at ~3x the integer cost.
 """
-import sys, os, math, time, json, argparse
+import sys, os, re, math, time, json, argparse
 from fractions import Fraction as Fr
 from math import gcd, lcm
 from collections import Counter
@@ -42,8 +51,15 @@ from multiprocessing import Pool
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 RUNS = os.path.join(REPO, 'runs')
-TN, TD = 399, 100                     # container side t = TN/TD = 3.99 exactly
+TN, TD = 399, 100                     # container side t = TN/TD (default 3.99; --t sets it)
 T = Fr(TN, TD)
+TAG = '3.99'                          # file tag for runs/dual_exact_<TAG>_*
+
+def set_t(frac, tag=None):
+    """set the container side t = TN/TD exactly (a Fraction) and the output file tag"""
+    global TN, TD, T, TAG
+    T = Fr(frac); TN, TD = T.numerator, T.denominator
+    TAG = tag if tag is not None else (str(TN) if TD == 1 else f"{float(T):g}")
 G_EDGE = 5                            # grid resolution for the edge-pair prefilter (exact floors)
 G_SQ = 10                             # grid resolution for the vertex -> square prefilter
 
@@ -122,7 +138,7 @@ def intersect(e1, e2):
 
 def in_F(v):
     X, Y, D = v
-    return X >= 0 and X <= Y and 200 * Y <= 399 * D
+    return X >= 0 and X <= Y and 2 * TD * Y <= TN * D
 
 # globals shared with forked workers
 EDGES = []; EMIN = []; EBUCKET = {}; SQ = []; SBUCKET = {}; VERTS = []; REGION_F = True
@@ -249,6 +265,13 @@ def read_float_support(path):
         if q[0] == 'pose': poses.append((float(q[1]), float(q[2]), math.radians(float(q[3])), float(q[4])))
     return poses
 
+def support_t(path):
+    """container side recorded in the header of an exact support file, or None"""
+    for line in open(path):
+        m = re.match(r'#\s*t\s*=\s*(-?\d+(?:/\d+)?)', line)
+        if m: return Fr(m.group(1))
+    return None
+
 def read_exact_support(path):
     poses = []
     for line in open(path):
@@ -279,7 +302,7 @@ def build_squares(poses):
 # ============================================================================== modes
 def cmd_build(args):
     global LOG
-    LOG = open(os.path.join(RUNS, 'dual_exact_3.99.log'), 'w')
+    LOG = open(os.path.join(RUNS, f'dual_exact_{TAG}.log'), 'w')
     t_all = time.time()
     src = read_float_support(args.src)
     log(f"build: {len(src)} float poses from {args.src}; snap Q={args.Q} (angle), Dc={args.Dc} (centre); t={TN}/{TD}")
@@ -329,20 +352,20 @@ def cmd_build(args):
     log(f"  EXACT: mass = {mass} = {float(mass):.12f};  M = {M};  L = mass/M = {L} = {float(L):.12f}  "
         f"({'>=' if L >= 12 else '<'} 12; L - 12 = {float(L - 12):+.3e})")
     log(f"  support: {sum(1 for m in MU if m > 0)} poses with positive mass; worst vertex pattern {key}")
-    out = os.path.join(RUNS, 'dual_exact_3.99_support.txt')
+    out = os.path.join(RUNS, f'dual_exact_{TAG}_support.txt')
     write_exact_support(out, poses, MU, DM, M, L, f"snapped from {os.path.basename(args.src)} with Q={args.Q}, Dc={args.Dc}")
     js = dict(t=f"{TN}/{TD}", Q=args.Q, Dc=args.Dc, DM=DM, poses=len(poses), poses_positive=sum(1 for m in MU if m > 0),
               images=len(squares), vertices_F=len(verts), incidence_pairs=sum(map(len, inc)), lp_rows=len(keys),
               mass=str(mass), mass_float=float(mass), M=str(M), M_float=float(M), L=str(L), L_float=float(L),
               L_minus_12=str(L - 12), M_before_polish=str(M0), seconds=time.time() - t_all)
-    json.dump(js, open(os.path.join(RUNS, 'dual_exact_3.99.json'), 'w'), indent=1)
+    json.dump(js, open(os.path.join(RUNS, f'dual_exact_{TAG}.json'), 'w'), indent=1)
     log(f"  wrote {out}; total {time.time() - t_all:.1f} s")
     return L
 
 def cmd_check(args):
     global LOG
     tag = 'full' if args.full else 'F'
-    LOG = open(os.path.join(RUNS, f'dual_exact_3.99_check_{tag}.log'), 'w')
+    LOG = open(os.path.join(RUNS, f'dual_exact_{TAG}_check_{tag}.log'), 'w')
     t_all = time.time()
     sup = read_exact_support(args.support)
     poses = [(p, q, cx, cy) for (p, q, cx, cy, m) in sup]
@@ -373,6 +396,8 @@ def main():
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest='cmd', required=True)
     b = sub.add_parser('build')
+    b.add_argument('--t', default='399/100', help='container side (exact fraction, e.g. 4 or 399/100)')
+    b.add_argument('--tag', default=None, help='output file tag (default: from t)')
     b.add_argument('--src', default=os.path.join(RUNS, 'dual_PA2_support.txt'))
     b.add_argument('--Q', type=int, default=100000, help='denominator of p/q ~ tan(theta/2)')
     b.add_argument('--Dc', type=int, default=1000000, help='denominator of the centre coordinates')
@@ -380,12 +405,20 @@ def main():
     b.add_argument('--procs', type=int, default=4)
     c = sub.add_parser('check')
     c.add_argument('support')
+    c.add_argument('--t', default=None, help='container side (default: read from the support file header)')
+    c.add_argument('--tag', default=None)
     c.add_argument('--full', action='store_true', help='whole container instead of the fundamental domain')
     c.add_argument('--procs', type=int, default=4)
     args = ap.parse_args()
     sys.set_int_max_str_digits(0)
-    if args.cmd == 'build': cmd_build(args)
-    else: cmd_check(args)
+    if args.cmd == 'build':
+        set_t(Fr(args.t), args.tag)
+        cmd_build(args)
+    else:
+        t = Fr(args.t) if args.t else support_t(args.support)
+        assert t is not None, 'no "# t = p/q" header in the support file; pass --t'
+        set_t(t, args.tag)
+        cmd_check(args)
 
 if __name__ == '__main__':
     main()
