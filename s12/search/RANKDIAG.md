@@ -372,7 +372,13 @@ membership from the anchors and its independence number by a fresh unseeded B&B.
 | corner `k = 4` | its converged 149-pose support | `11.785783` | **`11.470839217`** | 11 |
 | **pure, no branch** | `E2P`'s 666-pose support | `~11.90` (`PUREM`) | **`11.759344530`** | 11 |
 | corner, under lattice pricing | `E2B`'s 425-pose support | — | **`11.691140747`** | 11 |
+| corner, 11 more injections | `E2Bg`'s 737-pose support | — | **`11.754916927`** | 11 |
 | leaf, under lattice pricing | `E2A`'s 355-pose support | — | **`11.261889022`** | 11 |
+
+The two corner rows are the same instance at two points of its column generation, and they show
+the direction the pricing pushes: `E2B`'s 425-pose support certifies at `11.691140747`, and after
+eleven more lattice injections `E2Bg`'s 737-pose support certifies at `11.754916927` — **up** by
+`0.064`, because a bigger `P` raises `QSTAB(P)`.  The pure instance runs the other way (§17).
 
 **What these numbers are.**  Each is `QSTAB(P) + rank rows` for a finite pose set `P`, so each is a
 rigorous **lower** bound on the continuum value of the relaxation (restricting the poses lowers
