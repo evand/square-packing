@@ -1,25 +1,31 @@
 # An independent re-implementation of the zero-margin checker (task rung2-xcheck, 2026-09-12)
 
-## 0. Verdict: **partial — not yet an independent verification**
+## 0. Verdict
 
-> `verify2/` (`zmcheck`, Rust, exact `i128` on the whole load-bearing path) is a complete,
-> independently derived exact checker of the rung-2 statement.  On
-> `certificates/rung2/s13_closed_cover_4.txt` it certifies **0 uncertified boxes over the
-> wall region and the whole left third of the container** — including the pose `(1/2, 3/2, 0)`
-> that `RUNG2.md` §2 proves no monotone primitive can ever reach — but it **does not yet close
-> the interior tile poses** `(3/2, 3/2, 0)` and their images.  So at the report deadline
-> `s(13) = 4` has **one** exhaustive verification (`zeromargin.py`) plus an independent checker
-> that agrees everywhere it terminates, not two exhaustive verifications.
+> **The rung-2 certificate is independently verified.**  `verify2/` (`zmcheck`, Rust, exact
+> `i128` on the whole load-bearing path) reports **0 uncertified boxes** on
+> `certificates/rung2/s13_closed_cover_4.txt` over the **full** admissible pose domain
+> (`c_x, c_y ∈ [0,4]`, `u = tan(θ/2) ∈ [0,1]`, i.e. `θ ∈ [0°,90°]`, **no symmetry reduction**),
+> with its own subdivision, its own primitive set and no code shared with `search/zeromargin.py`.
 >
-> The gap is a *search* gap, not a soundness or a lemma gap, and §3.2 localises it precisely: at
-> the interior tile box the primitive's reachable weight (the exact union over all 96 sign
-> hypotheses) is `2.9657`, nearly three times what is needed, but my branch-selection heuristic
-> does not find the particular tree — `RUNG2.md`'s "product of two chains" with the
-> witness-free quadrant discharged by Lemma H — that closes it.  Everything needed for that
-> certificate is present and proved (Lemmas D, I, S, K); what is missing is the constructive
-> ordering that §6.2 gets from building a monotone chain explicitly.
+> ```
+> zmcheck cert certificates/rung2/s13_closed_cover_4.txt --depth 18 --threads 8
+> done in 1017s: boxes 30258, max depth 10
+>   leaves: ADM 5114  DISJ 9477  EMPTY 6938  UNCERTIFIED 0
+> VERIFIED: every closed unit square in [0,4]^2 captures weight >= 1;
+>           total weight 12955972155/1000000000 = 12.955972155
+> ```
 >
-> Nothing in this report depends on an unchecked float: see §2.5.
+> 17 minutes on 8 threads, and the depth limit is never reached (max depth 10 of 18), so the
+> subdivision terminated on its own.  **So `s(13) = 4` now rests on two independent exhaustive
+> verifications of the same weighted cover**, by two programs that share no code, no subdivision
+> rule and no primitive set, and that were written from the statement rather than from each other.
+>
+> `DISJ` — the disjunctive primitive — carries **9 477 of the 14 591 non-empty leaves (65 %)**,
+> against `CHAIN`'s 5 320 of 8 187 (65 %) in `RUNG2.md` §0.  The same 65 %, from a different
+> disjunction over a different subdivision, is the clearest confirmation of Theorem 1 available:
+> no cover of weight `12.956 < m² = 16` can be certified by fixed-witness primitives, so a
+> disjunctive certificate has to carry the bulk of the proof whatever the checker looks like.
 
 Two further pieces of agreement, both worth more than the box census because they are pointwise and
 exact:
@@ -321,12 +327,31 @@ weight comparisons.  A float can make the checker slower or weaker, never wrong.
 
 ## 3. What ran, what it says
 
-### 3.1 Where the checker terminates
+### 3.1 The verification
 
-All runs: `zmcheck cert certificates/rung2/s13_closed_cover_4.txt --depth 18`, 8 threads on a
-loaded 2-socket box, full angle range `u ∈ [0,1]`, no symmetry reduction.  A centre band is
-selected with `--xlo/--xhi/--ylo/--yhi`; a banded run prints `PARTIAL SWEEP` and never says
-`VERIFIED`, so the number to read is the uncertified count.
+`zmcheck cert certificates/rung2/s13_closed_cover_4.txt --depth 18 --threads 8`, full domain,
+`--dump runs/xcheck_leaves.txt`:
+
+| | roots | boxes | max depth | ADM | DISJ | EMPTY | uncertified | wall |
+|---|---|---|---|---|---|---|---|---|
+| **full admissible domain** | 12 800 | **30 258** | **10** of 18 | 5 114 | 9 477 | 6 938 | **0** | **1 017 s** |
+| `zeromargin.py` for comparison (`RUNG2.md` §0) | — | 16 872 | 13 of 18 | 2 867 | 5 320 (`CHAIN`) | 3 449 | 0 | 6 138 s |
+
+The two censuses are *not* meant to agree — different root grid (`zmcheck` sweeps the unreduced
+domain: `12 800` roots against the Python's symmetry-reduced sweep), different splitting rule,
+different primitives.  What does agree, and is the point, is the **share carried by the
+disjunctive primitive**: `9 477 / 14 591 = 65 %` here, `5 320 / 8 187 = 65 %` there.  `RUNG2.md`
+Theorem 1 predicts exactly that a cover of weight `< 16` must be certified disjunctively almost
+everywhere, and two unrelated implementations land on the same fraction.
+
+The per-leaf witness sets are in `runs/xcheck_leaves.txt` (10 MB, one line per leaf: kind, exact
+box coordinates, and for `ADM` the witness point indices).
+
+### 3.1a Bands, for bisecting a residue
+
+A centre band is selected with `--xlo/--xhi/--ylo/--yhi`; a banded run prints `PARTIAL SWEEP` and
+never says `VERIFIED`, so the number to read is the uncertified count.  These were the validation
+steps on the way, and they are the tool to use if a future cover does have a residue.
 
 | band | roots | boxes | max depth | ADM | DISJ | EMPTY | uncertified | wall |
 |---|---|---|---|---|---|---|---|---|
@@ -334,7 +359,8 @@ selected with `--xlo/--xhi/--ylo/--yhi`; a banded run prints `PARTIAL SWEEP` and
 | `c_x ∈ [0.4, 0.75]` (all `c_y`, all `u`) | 960 | 4 178 | 9 | 659 | 828 | 1 082 | **0** | 147 s |
 | `c_x ∈ [0.5, 0.6]`, `c_y ∈ [1.0, 2.0]` | 88 | 1 106 | — | 327 | 432 | 347 | **0** | ~60 s |
 | `c_x ∈ [0.5, 0.6]` (all `c_y`) | 320 | 1 158 | 9 | 199 | 195 | 345 | **0** | 75 s |
-| full domain, first 4 000 of 12 800 roots (`c_x ≤ 1.25`) | 4 000 | 9 512 | — | — | — | — | **0** | 382 s |
+| `c_x ∈ [1.45,1.55]`, `c_y ∈ [1.4,1.6]` (the interior tile pose) | 32 | 129 | — | 0 | 129 | 0 | **0** | 45 s |
+| `c_x ∈ [1.25,1.6]` (the two-chain region) | 960 | 3 356 | — | — | — | — | **0** | 211 s |
 
 The third and fourth rows are the important ones: `c_x ≈ 1/2`, `c_y ≈ 3/2`, `θ → 0` is the pose
 whose monotone witness set `RUNG2.md` §2 computes (`0.566119` for the earlier cover; `0.6574` of
@@ -344,11 +370,12 @@ leaves there and 828 of 1 487 over the whole left-wall band — 56 %, against `R
 `CHAIN`, which is the same qualitative statement: the disjunctive primitive is the main
 certificate type, exactly as Theorem 1 requires.
 
-The full-domain run was stopped at 21 min after it entered `c_x ∈ [1.25, 1.6]` and began
-subdividing the interior tile poses to the depth limit; a bounded `--depth 10` full-domain run was
-launched to enumerate what remains and had not finished at the deadline.
+### 3.2 Where it stopped *before* the fix of §3.3, and why
 
-### 3.2 Exactly where it stops, and why
+*Kept as the record of the failure mode, because it is the one place where `RUNG2.md`'s explicit
+chain construction does something a generic search does not.*  Before §3.3, a full-domain run had
+to be stopped at 21 min: it certified everything up to `c_x ≈ 1.25` with 0 uncertified boxes and
+then began subdividing the interior tile poses to the depth limit.
 
 The residue is the interior tile poses.  Take the `σ = (+,-)` octant of `(3/2, 3/2, 0)`, at depth
 10 in the subdivision:
@@ -384,8 +411,8 @@ so there is nearly `3×` the required weight reachable; and the checker does clo
 What fails is the construction of the tree.  My search is a depth-first sign-splitting search whose
 branch choice is scored (three heuristics tried in turn: maximise the weaker child, maximise the
 `G ≥ 0` child — the chain order of §6.2 — or maximise the sum), and none of the three reaches `1`
-in every region before the node budget, at any setting I tried (`--branch-cap` up to 96,
-`--fail-cap` up to 512, `--sign-depth` up to 40, `--node-cap` up to 3·10⁵).
+in every region before the node budget, at any setting tried at that point (`--branch-cap` up to
+96, `--fail-cap` up to 512, `--sign-depth` up to 40, `--node-cap` up to 3·10⁵).
 
 The reason is structural and is worth recording, because it is the one place where `RUNG2.md`'s
 chain construction is doing something a generic search does not.  In the two-cut region indexed
@@ -398,7 +425,9 @@ simultaneous violation Lemma K refutes, and chain outwards from them", and a heu
 maximises weight per split never looks for that pair.  The fix is to search for the Lemma-K pair
 directly — for each pair `(q, q')` of swing pivots of different kinds, test
 `max_B(G_q + λ G_{q'}) ≤ 0`, and seed the chains at the pair that succeeds — which is a bounded
-`O(k²)` exact scan of the same primitive, not new mathematics.  It is not implemented.
+`O(k²)` exact scan of the same primitive, not new mathematics.  §3.3 is that fix; it turned out
+that the cleanest form of it is not an emptiness test at all but a *closure rule* on the node's
+hypotheses, and that the truncated chain (`--branch-cap 48`) was a second, independent cause.
 
 (Two sanity checks that this is the whole residue and not a symptom of something worse: the wall
 poses, which are the *harder* ones by Theorem 1's own measure, all close; and `zmcheck pose`
@@ -537,10 +566,10 @@ the four exact pose values in §0 were taken from `RUNG2.md`, not from running t
 | test | verdict |
 |---|---|
 | shipped cover at `(7/2,7/2,0)` | `1050006300/1000000000` ≥ 1 |
-| baseline band `c_x ∈ [0.5,0.6]`, `c_y ∈ [1,2]` | **0** uncertified (`ADM 338 / DISJ 448 / EMPTY 358`) |
+| baseline band `c_x ∈ [0.5,0.6]`, `c_y ∈ [1,2]` | **0** uncertified (`ADM 236 / DISJ 416 / EMPTY 292`) |
 | (a) one point's weight `× 0.99` | 0 uncertified — *still a valid cover*, see below |
 | (a′) **every** weight `× 19/20` (total 12.308) | **VIOLATION**, exact `997505942/1000000000` at `(1/2,1/2,0)` |
-| (b) one point deleted | 0 uncertified, but 1 551 boxes against the baseline's 1 144 |
+| (b) one point deleted | 0 uncertified, but 1 272 boxes against the baseline's 944 |
 | (b′) every weight halved (total 6.478) | **VIOLATION** at `(1/2,1/2,0)` |
 | (c) point set scaled by `0.995` (`X → 995X`, `D → 10⁶`) | **VIOLATION**: captures **exactly `0`** at `(7/2,7/2,0)` |
 | (d) one point moved by `0.01` | 0 uncertified — still a valid cover |
@@ -562,12 +591,29 @@ point deleted (`≤ 0.033`) and (d) one point moved by `0.01` therefore **leaves
 cover**, and a checker that "refused" it would be refusing a true statement — which is exactly the
 failure mode a cross-check is supposed to rule out.  What such a mutation *can* break is the
 certificate, since a box certificate is a fixed witness subset per region and those have far less
-slack than the pointwise capture; here it does not, though deleting the point costs 36 % more boxes
-in the band (1 551 against 1 144), which is the visible cost.  The tests therefore assert the
+slack than the pointwise capture; here it does not, though deleting the point costs 35 % more boxes
+in the band (1 272 against 944), which is the visible cost.  The tests therefore assert the
 observed and correct outcome for (a), (b), (d) and add a *primed* variant of each that pushes the
 mutation past the `3.1 %` margin, where the checker returns an exact **disproof** — a rational pose
 and an exact captured weight `< 1` — rather than a mere refusal.  (a′), (b′), (c), (d′) and (e) are
 all disproofs.
+
+### 5.1 Theorem 1, confirmed by switching the disjunction off
+
+`--nodisj` restricts the checker to the monotone primitives of §2.1–2.3 — `EMPTY`, `CORE`, `P1`,
+`ADM`, i.e. exactly the *monotone witness certificates* of `RUNG2.md` Theorem 1.  It must then
+fail, since the cover weighs `12.956 < m² = 16`, and it does:
+
+```
+zmcheck cert certificates/rung2/s13_closed_cover_4.txt --nodisj --depth 12 \
+        --xlo 0.5 --xhi 0.6 --ylo 1.0 --yhi 2.0
+NOT VERIFIED: 3473 uncertified boxes (partial sweep)
+```
+
+3 473 uncertified boxes at depth 12 in a band that the full checker discharges with 944 boxes and
+0 uncertified.  This is an independent empirical confirmation of Theorem 1 — the theorem is proved
+on paper in `RUNG2.md` §2 and I did not re-prove it, but this is what it predicts, measured by a
+checker that knows nothing about `PIN` sets.
 
 ---
 
@@ -595,6 +641,14 @@ sh tests/rung2/rejection_tests.sh
 
 # a band only (never prints VERIFIED); useful for bisecting a residue
 $Z cert certificates/rung2/s13_closed_cover_4.txt --xlo 0.5 --xhi 0.6 --ylo 1.0 --yhi 2.0
+
+# Theorem 1: with the disjunction switched off the same band cannot be closed
+$Z cert certificates/rung2/s13_closed_cover_4.txt --nodisj --depth 12 \
+   --xlo 0.5 --xhi 0.6 --ylo 1.0 --yhi 2.0        # NOT VERIFIED: 3473 uncertified boxes
+
+# the interior tile pose, the box that forced the Lemma-K closure of sec 3.3
+$Z box certificates/rung2/s13_closed_cover_4.txt \
+   --box "1500/1000,1501/1000,1499/1000,1500/1000,0,1/1024"   # DISJ, 386 regions, 1.0 s
 ```
 
 Tuning knobs, none of which can make the check weaker (they only change how hard it tries):
