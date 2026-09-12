@@ -200,6 +200,148 @@ def fit_wheel(ps, poses, w, mu, M, pts, k, rng, restarts=60, deadline=None):
     return out
 
 
+
+# ====================================================================== template-free fitting
+def best_pi(H, mass, m, cap=None):
+    """for FIXED anchors, the best weights.
+
+        max_pi  sum_v pi_v mass_v - alpha_pi(H)      over pi >= 0
+
+    `alpha_pi(H) = max_{I independent} sum_{v in I} pi_v`, so with one variable `t` for it this is
+    the LP
+
+        max  sum_v mass_v pi_v - t   s.t.  t >= sum_{v in I} pi_v for every independent set I,
+                                            pi >= 0,  pi <= 1
+
+    -- one row per independent set of `H`, which for `m <= 12` is at most a few thousand and is
+    enumerated exactly.  `pi <= 1` normalises (the objective is positively homogeneous of degree 1,
+    so without a bound it is unbounded whenever any pi can pay for itself).  Returns (pi, alpha,
+    excess)."""
+    from scipy.optimize import linprog
+    idx = [I for r in range(m + 1) for I in combinations(range(m), r)
+           if all((u, v) not in H and (v, u) not in H for u, v in combinations(I, 2))]
+    if cap is not None and len(idx) > cap:
+        return None, None, None
+    A = np.zeros((len(idx), m + 1))
+    for k, I in enumerate(idx):
+        for v in I:
+            A[k, v] = 1.0
+        A[k, m] = -1.0
+    c = np.concatenate([-np.asarray(mass, float), [1.0]])
+    r = linprog(c, A_ub=A, b_ub=np.zeros(len(idx)),
+                bounds=[(0, 1)] * m + [(0, None)], method='highs')
+    if not r.success:
+        return None, None, None
+    pi = list(np.maximum(r.x[:m], 0.0))
+    al = alpha_pi(H, pi)
+    return pi, al, sum(pi[v] * mass[v] for v in range(m)) - al
+
+
+def fit_free(ps, poses, w, mu, M, pts, a, rng, deadline=None, seed_anchors=None):
+    """TEMPLATE-FREE anchor search: anchors first, weights afterwards, no `H` prescribed.
+
+    **Point anchors alone are void** -- two distinct point anchors never meet, so `H` is edgeless,
+    `alpha_pi = sum_v pi_v`, and the inequality degenerates to the point cliques it is made of.  The
+    anchors here are therefore SEGMENTS `[P_u, P_v]` over the candidate points (a point anchor being
+    the degenerate `u = v`), which is what puts edges in `H`.
+
+    The search is a greedy grow-and-swap seeded by the best templated `C5` (so it can only improve
+    on it): repeatedly add the anchor that most increases the excess, then sweep each slot over the
+    candidate pool, re-optimising `pi` with `best_pi` at every step -- an LP over the independent
+    sets of the exact graph `H` the anchors give.  Returns one entry per size reached."""
+    dl = deadline if deadline is not None else time.time() + 120
+    wa = np.asarray(w, float)
+    top = list(np.argsort(-(M @ wa))[:a.free_top])
+    pool = []                                   # the anchor pool: points and segments
+    for u in top:
+        pool.append((pts[int(u)], pts[int(u)]))
+    for x in range(len(top)):
+        for y in range(x + 1, len(top)):
+            pool.append((pts[int(top[x])], pts[int(top[y])]))
+    if seed_anchors:
+        pool = list(seed_anchors) + pool
+    memb = {}
+
+    def mem_of(k):
+        if k not in memb:
+            memb[k] = piece_members(ps, pool[k])
+        return memb[k]
+
+    def score(sel):
+        anchors = [pool[k] for k in sel]
+        H = build_H(anchors)
+        taken = np.zeros(ps.n, dtype=bool)
+        mass = []
+        for k in sel:
+            own = mem_of(k) & ~taken
+            taken |= own
+            mass.append(float(mu[own].sum()))
+        pi, al, exc = best_pi(H, mass, len(sel), cap=a.free_iscap)
+        if pi is None:
+            return None
+        return exc, pi, al, H, mass, anchors
+
+    sel = list(range(len(seed_anchors))) if seed_anchors else []
+    out = []
+    mmax = max(a.free_sizes) if a.free_sizes else 0
+    while len(sel) < mmax and time.time() < dl:
+        bestadd, bestexc = None, None
+        cur = score(sel) if sel else None
+        base = cur[0] if cur else 0.0
+        for k in range(len(pool)):
+            if k in sel or time.time() > dl:
+                continue
+            r = score(sel + [k])
+            if r is not None and (bestexc is None or r[0] > bestexc):
+                bestexc, bestadd = r[0], k
+        if bestadd is None or bestexc <= base + 1e-12:
+            break
+        sel.append(bestadd)
+        # one sweep: try replacing each slot by a better pool member
+        for _ in range(a.free_rounds):
+            improved = False
+            for pos in range(len(sel)):
+                cur = score(sel)
+                if cur is None:
+                    break
+                for k in range(len(pool)):
+                    if k in sel or time.time() > dl:
+                        continue
+                    trial = list(sel)
+                    trial[pos] = k
+                    r = score(trial)
+                    if r is not None and r[0] > cur[0] + 1e-12:
+                        sel, cur, improved = trial, r, True
+            if not improved or time.time() > dl:
+                break
+        if len(sel) in a.free_sizes:
+            r = score(sel)
+            if r is not None:
+                exc, pi, al, H, mass, anchors = r
+                taken = np.zeros(ps.n, dtype=bool)
+                sizes = []
+                for k in sel:
+                    own = mem_of(k) & ~taken
+                    taken |= own
+                    sizes.append(int(own.sum()))
+                out.append((f'free{len(sel)}', anchors, pi, sum(pi[k] * mass[k]
+                                                                for k in range(len(sel))),
+                            al, H, sizes, mass))
+    if not out and sel:
+        r = score(sel)
+        if r is not None:
+            exc, pi, al, H, mass, anchors = r
+            taken = np.zeros(ps.n, dtype=bool)
+            sizes = []
+            for k in sel:
+                own = mem_of(k) & ~taken
+                taken |= own
+                sizes.append(int(own.sum()))
+            out.append((f'free{len(sel)}', anchors, pi,
+                        sum(pi[k] * mass[k] for k in range(len(sel))), al, H, sizes, mass))
+    return out
+
+
 # ====================================================================== driver
 def fit_cut(ps, mu, cut, a, log, tag=''):
     """every family in the menu, best first"""
@@ -218,6 +360,14 @@ def fit_cut(ps, mu, cut, a, log, tag=''):
     for k in a.cycles:
         cand += fit_cycle(ps, poses, w, mu, M, pts, k, rng, a.restarts, dl)
         cand += fit_wheel(ps, poses, w, mu, M, pts, k, rng, a.restarts, dl)
+    if a.free_sizes:
+        # seed the free search with the best templated C5 so it can only improve on it
+        seed = None
+        best5 = [c for c in cand if c[0].startswith('C5')]
+        if best5:
+            seed = max(best5, key=lambda c: c[3] - c[4])[1]
+        cand += fit_free(ps, poses, w, mu, M, pts, a, rng, time.time() + a.free_time,
+                         seed_anchors=seed)
     viol = cut['z'] - 1.0
     best = None
     rows = []
@@ -316,6 +466,14 @@ def selftest():
     W5 = {(0, 1), (0, 2), (0, 3), (0, 4), (0, 5),
           (1, 2), (2, 3), (3, 4), (4, 5), (1, 5)}
     chk('alpha_pi(W5, hub 1 rim 1/2) = 1', alpha_pi(W5, [1.0] + [0.5] * 5) == 1.0)
+    # best_pi: the weights the LP picks for fixed anchors
+    pi, al, exc = best_pi(C5, [0.5] * 5, 5)
+    chk('best_pi C5 at mass 1/2', al == 2 and abs(exc - 0.5) < 1e-9 and min(pi) > 0.99, f'{exc:.6f}')
+    K5 = {(u, v) for u in range(5) for v in range(u + 1, 5)}
+    pi, al, exc = best_pi(K5, [0.3] * 5, 5)
+    chk('best_pi K5 at mass 0.3', al == 1 and abs(exc - 0.5) < 1e-9, f'{exc:.6f}')
+    pi, al, exc = best_pi(C5, [0.4] * 5, 5)
+    chk('best_pi C5 at mass 0.4 is tight', abs(exc) < 1e-9, f'{exc:.6f}')
     C7 = {(i, (i + 1) % 7) for i in range(7)}
     chk('alpha_pi(C7, 1) = 3', alpha_pi(C7, [1.0] * 7) == 3.0)
     W7 = {(0, v) for v in range(1, 8)} | {(i, i % 7 + 1) for i in range(1, 8)}
@@ -344,6 +502,14 @@ def main():
     c.add_argument('--per-family', action='store_true',
                    help='log the best row of each family instead of the overall best few')
     c.add_argument('--limit', type=int, default=0)
+    c.add_argument('--free-sizes', type=int, nargs='*', default=[],
+                   help='template-free anchor search at these numbers of anchors (m <= 12)')
+    c.add_argument('--free-time', type=float, default=240.0)
+    c.add_argument('--free-rounds', type=int, default=4)
+    c.add_argument('--free-top', type=int, default=12,
+                   help='candidate points whose pairs form the anchor pool for the free search')
+    c.add_argument('--free-iscap', type=int, default=60000)
+    c.add_argument('--mfree', type=int, default=12)
     c.add_argument('--min-viol', type=float, default=0.0,
                    help='skip cuts violated by less than this (a clique row barely over 1 is a '
                         'residue of the source loop, not a new family)')

@@ -517,6 +517,63 @@ convergence and it takes the leaf from `11.435484` to `11.303071` — and then i
 The next certifiable family, if there is one, is an antiweb/comb family at window `1.5`; the
 alternative is that the last stretch to `alpha = 11` is where global counting has to enter.
 
+### 7.7 Template-free fitting: certifiable-local is EXHAUSTED at `11.303071` on this leaf
+
+The ladder cuts of §7.6 have no `C5`/`C7`/`W5`/`W7` description, so the templates were dropped.
+`anchorfit.py --free-sizes` searches the anchor graph directly: anchors first, weights afterwards,
+no `H` prescribed.
+
+* **Point anchors alone are void** and the search must not use them: two distinct point anchors
+  never meet, so `H` is edgeless, `alpha_pi = sum_v pi_v`, and the inequality degenerates into the
+  point cliques it is made of.  The anchor pool is therefore the `--free-top` heaviest candidate
+  points *and every segment between two of them* (11 points + 55 segments = 66 anchors).
+* **Weights by LP.**  For fixed anchors, `max_pi sum_v pi_v mass_v - alpha_pi(H)` over `pi in
+  [0,1]^m` is the linear program `max sum mass_v pi_v - t` subject to `t >= sum_{v in I} pi_v` for
+  every independent set `I` of `H` — one row per independent set, enumerated exactly (`m <= 12`, so
+  at most `4096`).  `best_pi`; selftest checks it returns `pi = 1, alpha = 2, excess = 1/2` on a
+  `C5` at mass `1/2`, `alpha = 1, excess = 1/2` on a `K5` at mass `0.3`, and exactly `0` on a `C5`
+  at mass `0.4` (tight).
+* **Search.**  Seeded with the best templated `C5`, so it can only improve on it; greedy grow to
+  `m <= 10`, then a swap sweep over the pool, `pi` re-optimised at every step, `H` rebuilt from the
+  exact anchor intersections each time.
+
+**Control first.**  On the leaf's QSTAB measure the free search reproduces the templated pentagon
+*to the digit* on all seven cuts tried — `free5` excess `+0.435484`, `+0.387097`, `+0.306452`,
+`+0.290323`, the same numbers as `C5` — and finds nothing better.  The machinery works and its
+optimum is the pentagon where the pentagon is the answer.
+
+**And on the pentagon-converged measure it finds nothing at all.**  Fourteen cuts, including the
+four the ladder question was about:
+
+| cut | `z` | violation | best anchor graph found | excess | captured |
+|---|---|---|---|---|---|
+| `D=1.5` w13 | `1.170998` | `0.170998` | `free5` | **`+0.000000`** | `0.0 %` |
+| `D=1.5` w2 | `1.168754` | `0.168754` | `free5` | **`+0.000000`** | `0.0 %` |
+| `D=1.5` w18 | `1.154157` | `0.154157` | `free5` | **`-0.000000`** | `0.0 %` |
+| `D=1.5` w32 | `1.146976` | `0.146976` | `free5` | **`+0.000000`** | `0.0 %` |
+| `D=1.5` w12, `D=2` w0–w8 (10 more) | `1.153`–`1.290` | `0.153`–`0.290` | `free5` | `0.000000` | `0.0 %` |
+
+Zero is not "a poor fit": it is the LP answering `pi = 0`.  On the very anchors of the best
+templated `C5` — the one that reaches `1.955705` against its right-hand side `2` — the optimal
+weights are `pi = 0`, because **no** assignment of weights to those pieces makes the inequality
+violated, and no anchor added from the pool changes that.  The pentagon is not merely saturated
+(§7.6); with optimal weights it is exactly tight, and the whole anchor-graph family with it.
+
+> **Verdict.  Certifiable-local reasoning is exhausted at `11.303071` on this leaf.**  Every local
+> facet of the QSTAB optimum is a pentagon and the anchor family captures it (§7.2); run that family
+> to convergence and the leaf reaches `11.303071`; at that point the window subproblem still reports
+> `z = 1.15`–`1.29` of *local* inconsistency in every window, but not one unit of it has any
+> anchor-graph description — points, segments, any graph on up to ten pieces, any weights.  The
+> remaining `0.30` to `alpha = 11` is not reachable by the certifiable local families this project
+> has, and the search says it is not reachable by any of that shape.  Either a genuinely different
+> certificate is needed (the `alpha = 3, 4, 5` supports with `1/7`, `1/13`, `1/48` weight ladders
+> look like antiwebs, whose validity proof is not the anchor argument), or the endgame is global.
+
+Caveat, stated plainly: the free search is a heuristic over a 66-anchor pool with a greedy grow and
+one swap sweep, so this is "no anchor graph was found", not "no anchor graph exists".  What makes it
+a fair search is the control — the identical procedure recovers the pentagon exactly, with the right
+weights, wherever a pentagon is there to be found.
+
 ## 5. Reproduce
 
 ```
