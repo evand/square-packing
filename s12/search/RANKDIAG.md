@@ -838,7 +838,18 @@ accumulated ones stay enforced — and converges on coverage and cliques alone, 
 | run | resumed from | rows resumed | result |
 |---|---|---|---|
 | `E2Pf` | `E2P` (11,963 columns) | 840, 0 dropped | LP `11.874646`; measure `11.753906` but max clique `1.075` FAIL — the clique separation had not finished in `3,000 s` |
-| `SUPP` | `E2P`'s own support, 666 poses | separated fresh | **`11.759344530`, certified**, `conv1` |
+| `E2Af` | `E2A` (13,126 columns) | 631, 0 dropped | LP `11.417622` after 3 iterations; stopped to free cores |
+| `E2Bf` | `E2B` (12,201 columns) | 534, 0 dropped | LP `11.844451` after 2 iterations; stopped to free cores |
+
+On a 12–13k-column model each iteration costs `200–700 s` (the master closes exactly, and 500–850
+polygon rows add `1.5M` nonzeros), so a finish pass at that size does not converge in an hour.  The
+cheap, certifiable route is the one §10.1 used: **converge on the run's own support**.
+
+| run | support of | poses | **certified QSTAB + polygons** | `M` | max clique | rows |
+|---|---|---|---|---|---|---|
+| `SUPP` | `E2P` (pure) | 666 | **`11.759344530`** | `0.999999998` OK | `0.999999998` (complete) OK | 542 |
+| `SUPEB` | `E2B` (corner) | 425 | **`11.691140747`** | `1` OK | `1` (complete) OK | 476 |
+| `SUPEA` | `E2A` (leaf) | 355 | **`11.261889`** (LP pinned, `kmax = 1.000000`, no new rows) | `1` OK | `1` | 527 |
 
 `SUPP` is the pure instance's analogue of §10.1's support experiment: take the support `E2P`'s
 measure actually uses and converge QSTAB + polygons on it.  It converged in 72 iterations
