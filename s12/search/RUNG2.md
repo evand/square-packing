@@ -1,6 +1,73 @@
-# Rung 2 (`s(13) = 4` by a weighted closed cover of `[0,4]²`, `W < 13`) — task rung2-s13, 2026-09-11
+# Rung 2 (`s(13) = 4` by a weighted closed cover of `[0,4]²`, `W < 13`) — task rung2-s13
 
-**Verdict.**  Three results: two obstruction theorems and the primitive they force.
+## 0. Achieved: `s(13) = 4`, case-free, verified exactly
+
+> **Theorem.**  The weighted point set `certificates/rung2/s13_closed_cover_4.txt` — 3,621 points
+> of `[0,4]²` with rational coordinates (`D = 1000`) and rational weights (`W = 10⁹`), of total
+> weight
+>
+>     2591194431/200000000  =  12.955972155  <  13
+>
+> — has the property that **every closed unit square contained in `[0,4]²`, at every centre and
+> every angle, captures total weight `≥ 1`** (closed containment: a point on `∂Q` counts).
+> Consequently no 13 unit squares fit in a square of side `< 4`, and since 16 of them tile
+> `[0,4]²`,  **`s(13) = 4`.**
+
+Verified exhaustively by `search/zeromargin.py`, in `fractions.Fraction` throughout:
+
+```
+python3 search/zeromargin.py cert certificates/rung2/s13_closed_cover_4.txt \
+        --depth 18 --nproc 8 --disj --chain-from 0 --dump runs/leaves.txt
+
+done in 6138s: boxes 16872, max depth 13
+  leaves: ADM 2867  CORE 0  P1 0  MIX 0  CHAIN 5320  TRI 0  EMPTY 3449  UNCERTIFIED 0
+VERIFIED
+```
+
+**0 uncertified boxes**, 1 h 42 min on 8 processes, and the depth limit is never reached (max depth
+13 of 18), so the subdivision terminated on its own.  This is a case-free machine proof: one cover,
+one exhaustive verification, no branch tree — where Bentz 2010 needs a 6-leaf case analysis and
+DS7's pure sets cost 14.
+
+**Leaf census.**  `ADM` 2,867 and `CHAIN` 5,320 of the 8,187 non-empty leaves: **`CHAIN`, the
+disjunctive primitive, carries 65 %** of the proof.  `CORE`, `P1` and `MIX` are 0 — `ADM` (§3)
+subsumes all three — and `TRI` is 0, since the weighted cover has no unit-weight triangles.  That
+`CHAIN` dominates is not an accident but a theorem: **Theorem 1 (§2)** says no cover of total weight
+below `m² = 16` can be certified by fixed-witness primitives at any depth, so a cover of weight
+12.96 *must* be certified disjunctively almost everywhere.
+
+**Independent checks.**
+* `python3 search/zeromargin_stress.py runs/leaves.txt 40 --cert …` — 40 sampled admissible poses
+  per leaf, each leaf's own recorded witness re-verified in floats with no shared code path; plus
+  random tests of `P1`, the core lemma, the triangle lemma, `ADM` (Lemma A) and `CHAIN`'s violation
+  polynomials and `_gmax` enclosure (Lemma E).  See §4.7.
+* `python3 search/closed4.py stress certificates/rung2/s13_closed_cover_4.txt` — a dense float scan
+  of the cover itself: minimum captured weight **`1.0313820`**, i.e. a 3.1 % margin, honest cost
+  `total/min = 12.5618`.
+* `search/COVER4.md` proves `COVER^closed(4) ≥ 24537607710/1999999999 = 12.2688038611` exactly, so
+  this cover is within 5.6 % of optimal and no cover argument can go below `12.2688`.
+
+**What it took.**  Three things, none of which existed at the start of the task, and each of which
+was forced by a measurement rather than guessed:
+
+1. **`ADM`** (§3), an exact primitive that couples admissibility to the angle, subsuming `CORE`
+   and `P1`;
+2. **`CHAIN`** (§6), the weighted disjunctive primitive that Theorem 1 proves is unavoidable — a
+   monotone chain of pivot inequalities partitions a pose box and each region gets its own witness
+   set, with two chains multiplied where two cuts slide independently;
+3. **the missing rows** (§4.3, §10): every earlier candidate cover was *invalid*, by
+   `9420217/10000000 = 0.9420217` at `(3/2, 1461/2000, θ → 0)` and its dihedral images — the
+   `ZEROMARGIN.md` §4 item-3 family, which `closed4.py`'s row lattice steps over.  `search/family_rows.py`
+   emits it explicitly; with those rows and column generation the LP produces a cover that is valid
+   with 4 % margin.
+
+plus two checker completeness fixes found on the way: `clip_bin` (§4.6), which intersects a box's
+angle bin with its admissible range — without it *no* box pressed against a wall is certifiable at
+any depth — and the suffix down-set in `CHAIN` (§6.4).
+
+---
+
+**Verdict of the earlier rounds, kept because the obstruction theorems stand.**  Three results: two obstruction theorems and the primitive they force.
 
 > **Theorem 1 (§2).**  If every leaf of a finite, closed, space-filling subdivision of the
 > admissible pose space of `[0,m]²` (`m ≥ 4`) carries a *monotone witness certificate* — a fixed
@@ -620,6 +687,34 @@ that was never intersected with the admissibility region.  Any V1 checker inheri
 pressed against a wall of the container has an admissible set of lower dimension, and a primitive
 that quantifies over the box's full bin certifies none of them, at any depth.
 
+### 4.7 Independent checks of the shipped certificate
+
+`search/zeromargin_stress.py` re-verifies the leaf dump in floats, with no shared code path with
+the exact checker, and re-tests every primitive on random instances:
+
+```
+python3 search/zeromargin_stress.py runs/r5_x105_d18_leaves.txt 40 --cert runs/r5_x105.txt
+
+leaves: {'ADM': 2867, 'CORE': 0, 'P1': 0, 'MIX': 0, 'CHAIN': 5320, 'TRI': 0, 'EMPTY': 3449}
+        samples per leaf: 40   failures: 0
+primitive random tests: {'P1': 200000, 'core': 68545, 'tri': 72175}   failures 0
+ADM lemma random tests: 2713 certifying (point, box) pairs, 43859 pose samples, failures 0
+CHAIN violation polynomials: 200000 random (point, pose) pairs, sign disagreements: 0
+CHAIN _gmax enclosure: 20000 random (box, combination) pairs x 30 interior poses, violations: 0
+```
+
+For a `CHAIN` leaf the stress test knows nothing about the leaf's regions: it checks that at every
+sampled admissible pose the weight captured *from the leaf's own recorded witness list* reaches 1 —
+a different subset doing it in each region.  `EMPTY` leaves are checked by sampling for an
+admissible pose that should not exist.  **0 failures on all 11,636 leaves.**
+
+And a dense float scan of the cover itself, independent of the box machinery:
+
+```
+python3 search/closed4.py stress certificates/rung2/s13_closed_cover_4.txt
+STRESS: total=12.955972  min=1.0313820  cost=12.561759
+```
+
 ### 4.5 The subtree cache, measured: no speedup
 
 `--cx-lo/--cx-hi` (new) restricts the sweep to a band of root columns; it prints `PARTIAL SWEEP`
@@ -860,6 +955,14 @@ python3 search/zeromargin.py friedman14 --tri --depth 14 --nproc 4
 python3 search/zeromargin.py friedman14 --tri --depth 14 --nproc 4 --dump runs/zm_f14_adm.txt
 python3 search/zeromargin_stress.py runs/zm_f14_adm.txt 40       # 0 failures everywhere
 
+# THE SHIPPED CERTIFICATE: s(13) = 4, 0 uncertified boxes (1 h 42 min on 8 processes)
+python3 search/zeromargin.py cert certificates/rung2/s13_closed_cover_4.txt --depth 18 \
+        --nproc 8 --disj --chain-from 0 --dump runs/leaves.txt
+python3 search/zeromargin_stress.py runs/leaves.txt 40 --cert certificates/rung2/s13_closed_cover_4.txt
+python3 search/closed4.py stress certificates/rung2/s13_closed_cover_4.txt
+# classify any residual box in one command
+python3 search/zeromargin.py diag certificates/rung2/s13_closed_cover_4.txt --box "239/160,3/2,27/40,109/160,0,1/256"
+
 # rung 2 with ADM alone (5 min on 8 processes) and with ADM + CHAIN
 taskset -c 16-23 python3 search/zeromargin.py cert runs/closed4_best_x103.txt --depth 10 --nproc 8
 taskset -c 8-15  python3 search/zeromargin.py cert runs/closed4_best_x103.txt --depth 14 \
@@ -1063,3 +1166,47 @@ conjunction of the *same* kind of polynomial:
 
 The cost is one more polynomial family in `_gmax` (segment anchors need the `min`/`max` of two
 endpoint forms) and a per-clique membership test in the region loop; no new mathematics.
+
+---
+
+## 10. How the cover was built (the separation loop that finally closed it)
+
+Every earlier candidate was invalid at the `ZEROMARGIN.md` §4 item-3 family (§4.3), because
+`closed4.py` samples its rows on a `--pitch` lattice (0.02) at each angle of `angle_list()` and the
+dip is a few thousandths wide in the free coordinate.  Three additions fixed that:
+
+* **`search/family_rows.py`** emits the families the lattice steps over, in the `cx cy theta_rad`
+  format that `closed4.py --seed-rows` reads and that `zeromargin.py --oracle` writes: item 3
+  (`c_x` on each half-integer line, so both square edges sit on grid lines, `c_y` free on a fine
+  pitch, a geometric ladder of small angles, and the transpose), plus local clusters around named
+  tilted poses and all their `D4` images.  61,656 poses at pitch `0.004`.
+* **`closed4.py --seed-rows`** adds them as hard rows before the first solve — and, being the same
+  format the checker's `--oracle` emits, lets the exact checker be used as the separation oracle.
+* **`search/rung2_oracle.sh`** is one turn of that loop: scale the LP's current weights, run the
+  exact checker at a shallow depth, write its uncertified-box poses as the next rows.
+
+The run of record:
+
+```
+python3 search/family_rows.py runs/seedrows.txt --pitch 0.004 --tilted
+python3 search/closed4.py run --s 4 --from-cert runs/closed4_best.txt --tag r5 \
+        --seed-rows runs/seedrows.txt --nproc 2 --time 9000
+#   it0  LP=12.303463  orb=319   atoms=1972
+#   ...  column generation on throughout
+#   fin  LP=12.338773  orb=1487  atoms=10353
+python3 search/scale_cover.py runs/closed4_r5_last.txt 105 100 runs/r5_x105.txt
+#   total 12339021110/1000000000 -> 12955972155/1000000000 = 12.955972
+```
+
+Column generation is what the 2026-08-30 attempt lacked (`FAMILY.md` §2: "`--allow-colgen` was
+stubbed as a CLI flag but the column-adding logic itself was not implemented"): the orbit count
+grew `319 → 1,487` and the atom count `1,972 → 10,353`, and those new points are exactly what
+closes the item-3 hole.  The `×21/20` scaling is exact rational arithmetic (`scale_cover.py`) and
+buys the margin the checker needs: **4 %** on every item-3 line and **3.1 %** in the dense stress
+scan, against `0.9420217` — a violation — for the old `×1.03` file.
+
+Scaling choice: `×1.03` gives total `12.698` and only `0.5 %` margin, which verifies far more
+slowly; `×1.05` gives `12.956`, still `0.044` under the budget, and verifies in 1 h 42 min.  The
+floor `COVER^closed(4) ≥ 12.2688038611` (`search/COVER4.md`) leaves no room to do much better with
+a cover argument.
+
