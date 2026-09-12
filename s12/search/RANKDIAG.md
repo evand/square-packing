@@ -452,6 +452,31 @@ enter the LP, but none of them carries dual at convergence in either support run
 freedom of a longer cycle does not buy anything here; the geometry is a corner, and a corner needs
 five anchors.
 
+### 10.3 The pricing stage brings back nothing
+
+`CLIQUELEVER.md` §0's clique result had a sting in it: one pricing stage on the leaf brought the
+value back up by `+0.02` and the loop then sat on a degenerate optimal face for 60 iterations
+without moving.  The same experiment with the rank family (`SUPAP`: `SUPA` plus `--price 1`):
+
+| stage | poses | columns | LP | `M` | max clique | converged | exactly certified |
+|---|---|---|---|---|---|---|---|
+| 0 | 94 | 94 | **`11.000000`** | `1` | `1` (complete) | yes, 9 it | `10.999999998` |
+| pricing | +559 new poses (lattice gap `+1.000000`); clique rows extended by 3,084 memberships; **the 131 polygon rows re-derived over the new pose set, +14,865 memberships** |
+| 1 | 653 | 670 | **`11.000000`** | `1` | `1` (complete) | yes, 10 it | `10.999999997` |
+
+**The value does not climb.**  Stage 1 converges at exactly `11.000000` again, on a support of 11
+pairwise-disjoint squares, with 273 polygon rows (140 tight, none violated, every one re-derived
+from its exact rational anchors) and `leaf_ceiling.py check --anchor clique` giving
+`coverage OK, regions OK, anchor cliques PROVED <= 1`.  The pricing delta is **`+0.000000`**,
+against `+0.02` for the clique family.
+
+That is the qualitative difference between the two families on this leaf.  Clique rows cut the
+non-Helly mass down to `11.30–11.79` and then the pricer finds new poses that rebuild a fractional
+optimum just above it.  The polygon rows cut to the *integer* optimum, and there is nothing for the
+pricer to rebuild: any new pose is either already in some polygon row (the rows are re-derived
+maximal over the enlarged set, which is what `rankfamily.regrow` is for) or does not help.  On the
+leaf's own pose set, `alpha = 11` is not merely the floor — it is where the relaxation lands.
+
 ## 9. Spec: what the verifier and Lean would need
 
 No verifier or Lean change has been made.  This is the spec for when the family earns it.
