@@ -591,6 +591,8 @@ struct Checker {
     try_branches: usize,
     rank_exact: usize,
     fail_cap: usize,
+    seed_cap: usize,
+    heur_cap: usize,
     noscreen: bool,
 }
 
@@ -855,13 +857,25 @@ struct Hyp {
     le: bool,
 }
 
+/// A node's certified-condition cover: the bitset over condition slots, plus a note of which
+/// candidates' `le` masks the Lemma-K closure has already folded in (so the closure is not
+/// re-applied from scratch at every node).
+#[derive(Clone)]
+struct Cov {
+    m: Vec<u64>,
+    added: Vec<bool>,
+}
+
 struct Disj<'a> {
     ck: &'a Checker,
     b: Bx,
     bp: &'a BoxPoly,
     /// points not in T, with the list of their failing conditions, and their float coordinates
     fails: Vec<(u32, Vec<u8>, f64, f64)>,
-    branches: Vec<(u32, u8, f64, f64)>,
+    /// branch candidates `(point, condition, x, y, slot)`; `slot = 4*fi+k` is the condition
+    /// slot of the candidate's own (single) failing condition, i.e. the bit that says
+    /// "`G_{q,k} <= 0` has been proved at this node"
+    branches: Vec<(u32, u8, f64, f64, usize)>,
     /// float pre-screen, one bitset over condition slots `4*fi+k` per hypothesis (see
     /// `build_plaus`); `emask` is the same thing computed exactly, on demand.
     pmask: Vec<Vec<u64>>,
@@ -877,6 +891,9 @@ struct Disj<'a> {
     target: I,
     nodes: usize,
     node_cap: usize,
+    /// a forced prefix of branch decisions (a Lemma-K seed pair)
+    forced: Vec<usize>,
+    fail_reports: usize,
 }
 
 impl<'a> Disj<'a> {
@@ -971,7 +988,7 @@ impl<'a> Disj<'a> {
             for &k in &ks {
                 let slot = fi * 4 + k as usize;
                 for bi in 0..nb {
-                    let (q, kq, qx, qy) = self.branches[bi];
+                    let (q, kq, qx, qy, _) = self.branches[bi];
                     if q == p && kq == k {
                         // the hypothesis G_{p,k} <= 0 certifies condition k of p outright
                         self.pmask[bi * 2][slot / 64] |= 1u64 << (slot % 64);
@@ -994,7 +1011,7 @@ impl<'a> Disj<'a> {
         if self.emask[hi].is_none() {
             let nf = self.fails.len();
             let (bi, le) = (hi / 2, hi % 2 == 0);
-            let (q, kq, _, _) = self.branches[bi];
+            let (q, kq, _, _, _) = self.branches[bi];
             let mut m = vec![0u64; self.nw];
             for fi in 0..nf {
                 let p = self.fails[fi].0;
@@ -1054,18 +1071,169 @@ impl<'a> Disj<'a> {
         }
     }
 
-    fn search(&mut self, active: &mut Vec<usize>, pcov: &[u64], ecov: &[u64], depth: u32,
+    #[inline]
+    fn has(m: &[u64], slot: usize) -> bool {
+        m[slot / 64] & (1u64 << (slot % 64)) != 0
+    }
+
+    /// **Lemma K closure.**  `active` lists the node's branch decisions as hypothesis indices
+    /// `2*bi + si` (`si = 0` is `G_{q_bi} <= 0`, `si = 1` is `G_{q_bi} >= 0`).  Start from the
+    /// union of their masks; then, whenever the node has the hypothesis `G_q >= 0` for a
+    /// candidate `q` *and* the cover already proves `G_q <= 0` (its own slot is set --- which is
+    /// exactly what `RUNG2.md` Lemma H establishes when two pivots cannot both be violated),
+    /// `G_q = 0` holds at every pose of the node, so `G_q <= 0` may be *added as a hypothesis*
+    /// and everything its `le` mask certifies becomes available too.  Iterated to a fixpoint.
+    ///
+    /// This is the step the earlier version was missing: it is what makes the witness-free
+    /// quadrant of two independent sliding cuts (the interior tile poses) certifiable instead of
+    /// merely "provably empty".
+    fn cover(&mut self, active: &[usize], exact: bool) -> Vec<u64> {
+        let mut cov = Cov { m: vec![0u64; self.nw], added: vec![false; self.branches.len()] };
+        for i in 0..active.len() {
+            cov = self.cover_child(&cov, &active[..=i], exact);
+        }
+        cov.m
+    }
+
+    /// One step of the closure: the parent's cover plus the mask of the hypothesis just pushed
+    /// (`active.last()`), then the Lemma-K closure re-run over the node's `ge` hypotheses.
+    fn cover_child(&mut self, parent: &Cov, active: &[usize], exact: bool) -> Cov {
+        let mut cov = parent.clone();
+        let hi = *active.last().unwrap();
+        if exact {
+            let m = self.exact_mask(hi).clone();
+            Self::or_into(&mut cov.m, &m);
+        } else {
+            let m = self.pmask[hi].clone();
+            Self::or_into(&mut cov.m, &m);
+        }
+        loop {
+            let mut grew = false;
+            for idx in 0..active.len() {
+                let h = active[idx];
+                if h % 2 == 0 {
+                    continue; // already the `le` hypothesis
+                }
+                let bi = h / 2;
+                if cov.added[bi] {
+                    continue;
+                }
+                if Self::has(&cov.m, self.branches[bi].4) {
+                    cov.added[bi] = true;
+                    let le = bi * 2;
+                    if exact {
+                        let m = self.exact_mask(le).clone();
+                        Self::or_into(&mut cov.m, &m);
+                    } else {
+                        let m = self.pmask[le].clone();
+                        Self::or_into(&mut cov.m, &m);
+                    }
+                    grew = true;
+                }
+            }
+            if !grew {
+                break;
+            }
+        }
+        cov
+    }
+
+    /// The chain order of `RUNG2.md` sec 6.2, in floats: within one kind `k`, sort the branch
+    /// candidates by an estimate of `max_B G_{q,k}` ascending.  Lemma F wants `G_{q_1} <= ... <=
+    /// G_{q_k}` on `B`, and this is the cheap proxy for it; the ordering is a heuristic, every
+    /// certification is still the exact Lemma I.
+    fn chain_order(&self) -> Vec<Vec<usize>> {
+        let mut by_kind: Vec<Vec<(f64, usize)>> = vec![Vec::new(); 4];
+        for bi in 0..self.branches.len() {
+            let (_, kq, qx, qy, _) = self.branches[bi];
+            let mut m = f64::NEG_INFINITY;
+            for &pose in &self.bp.poses {
+                m = m.max(gval(kq, qx, qy, pose));
+            }
+            by_kind[kq as usize].push((m, bi));
+        }
+        let mut out: Vec<Vec<usize>> = Vec::new();
+        for g in by_kind.iter_mut() {
+            if g.is_empty() {
+                continue;
+            }
+            g.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+            out.push(g.iter().map(|e| e.1).collect());
+        }
+        // the biggest families first: they are the sliding cuts
+        out.sort_by_key(|v| -(v.len() as i64));
+        out
+    }
+
+    /// Float-plausible Lemma-K pairs: `(bi, bj)` such that the screen cannot rule out that the
+    /// hypothesis `G_{q_bj} >= 0` certifies `G_{q_bi} <= 0` (and symmetrically).  These are the
+    /// seeds of the two-chain certificate; `search_seeded` forces them to the top of the tree.
+    fn kpairs(&self) -> Vec<(usize, usize)> {
+        let nb = self.branches.len();
+        let mut out = Vec::new();
+        for bi in 0..nb {
+            for bj in 0..nb {
+                if bi == bj {
+                    continue;
+                }
+                if self.branches[bi].1 == self.branches[bj].1 {
+                    continue; // same kind: a chain, not a product
+                }
+                if Self::has(&self.pmask[bj * 2 + 1], self.branches[bi].4) {
+                    out.push((bi, bj));
+                }
+            }
+        }
+        out
+    }
+
+    fn search(&mut self, active: &mut Vec<usize>, pc: &Cov, ec: &Cov, depth: u32,
               regions: &mut usize) -> bool {
         self.nodes += 1;
         if self.nodes > self.node_cap {
             return false;
         }
-        if self.weight_of(pcov) >= self.target && self.weight_of(ecov) >= self.target {
+        if self.weight_of(&pc.m) >= self.target && self.weight_of(&ec.m) >= self.target {
             *regions += 1;
             return true;
         }
         if depth == 0 {
             return false;
+        }
+        if active.len() < self.forced.len() {
+            // a seeded prefix: no ranking needed, the pair to split on is fixed
+            let bi = self.forced[active.len()];
+            let mut ok = true;
+            for si in 0..2 {
+                let hi = bi * 2 + si;
+                active.push(hi);
+                let pcc = self.cover_child(pc, active, false);
+                let ecc = self.cover_child(ec, active, true);
+                let r = self.search(active, &pcc, &ecc, depth - 1, regions);
+                active.pop();
+                if !r {
+                    ok = false;
+                    break;
+                }
+            }
+            if !ok && self.dbg && self.fail_reports < 6 {
+                self.fail_reports += 1;
+                let ecx = self.cover(active, true);
+                let sg: String = active
+                    .iter()
+                    .map(|&h| {
+                        format!("{}{}", if h % 2 == 0 { "-" } else { "+" }, self.branches[h / 2].0)
+                    })
+                    .collect::<Vec<_>>()
+                    .join(",");
+                eprintln!(
+                    "    FORCED FAIL depth={} w={:.6} signs=[{}]",
+                    active.len(),
+                    self.weight_of(&ecx) as f64 / self.ck.cert.w as f64,
+                    sg
+                );
+            }
+            return ok;
         }
         // rank the branch candidates: cheaply by the float masks, then exactly for the best few.
         // Heuristic only --- the acceptance above is the exact test.
@@ -1077,12 +1245,12 @@ impl<'a> Disj<'a> {
         let mut scored: Vec<(I, usize)> = Vec::new();
         let mut tmp = vec![0u64; self.nw];
         for bi in 0..self.branches.len() {
-            if active.contains(&bi) {
+            if active.contains(&(bi * 2)) || active.contains(&(bi * 2 + 1)) {
                 continue;
             }
             let mut w = [0 as I; 2];
             for si in 0..2 {
-                tmp.copy_from_slice(pcov);
+                tmp.copy_from_slice(&pc.m);
                 Self::or_into(&mut tmp, &self.pmask[bi * 2 + si]);
                 w[si] = self.weight_of(&tmp);
             }
@@ -1095,7 +1263,7 @@ impl<'a> Disj<'a> {
             let mut w = [0 as I; 2];
             for si in 0..2 {
                 let hm = self.exact_mask(bi * 2 + si).clone();
-                tmp.copy_from_slice(ecov);
+                tmp.copy_from_slice(&ec.m);
                 Self::or_into(&mut tmp, &hm);
                 w[si] = self.weight_of(&tmp);
             }
@@ -1111,17 +1279,22 @@ impl<'a> Disj<'a> {
                 );
             }
         }
-        for &(_, bi) in scored.iter().take(self.ck.try_branches) {
+        let order: Vec<usize> = if active.len() < self.forced.len() {
+            vec![self.forced[active.len()]]
+        } else {
+            scored.iter().take(self.ck.try_branches).map(|e| e.1).collect()
+        };
+        for bi in order {
+            if active.contains(&(bi * 2)) || active.contains(&(bi * 2 + 1)) {
+                continue;
+            }
             let mut ok = true;
             for si in 0..2 {
                 let hi = bi * 2 + si;
-                let mut pc = pcov.to_vec();
-                Self::or_into(&mut pc, &self.pmask[hi]);
-                let hm = self.exact_mask(hi).clone();
-                let mut ec = ecov.to_vec();
-                Self::or_into(&mut ec, &hm);
-                active.push(bi);
-                let r = self.search(active, &pc, &ec, depth - 1, regions);
+                active.push(hi);
+                let pcc = self.cover_child(pc, active, false);
+                let ecc = self.cover_child(ec, active, true);
+                let r = self.search(active, &pcc, &ecc, depth - 1, regions);
                 active.pop();
                 if !r {
                     ok = false;
@@ -1191,10 +1364,11 @@ impl Checker {
         if ub < self.wtarget() {
             return (Leaf::Split, None);
         }
-        let mut branches: Vec<(u32, u8, f64, f64)> = fails
+        let mut branches: Vec<(u32, u8, f64, f64, usize)> = fails
             .iter()
-            .filter(|f| f.1.len() == 1)
-            .map(|f| (f.0, f.1[0], f.2, f.3))
+            .enumerate()
+            .filter(|(_, f)| f.1.len() == 1)
+            .map(|(fi, f)| (f.0, f.1[0], f.2, f.3, fi * 4 + f.1[0] as usize))
             .collect();
         branches.sort_by_key(|b| -(self.cert.wt[b.0 as usize]));
         branches.truncate(self.branch_cap);
@@ -1219,6 +1393,8 @@ impl Checker {
             target: self.wtarget(),
             nodes: 0,
             node_cap: self.node_cap,
+            forced: Vec::new(),
+            fail_reports: 0,
         };
         d.build_plaus();
         {
@@ -1261,7 +1437,7 @@ impl Checker {
                 d.twt
             );
         }
-        let zero = vec![0u64; d.nw];
+        let zero = Cov { m: vec![0u64; d.nw], added: vec![false; d.branches.len()] };
         let z2 = zero.clone();
         let mut total_nodes = 0usize;
         for score in 0..3u8 {
@@ -1269,6 +1445,7 @@ impl Checker {
             let mut regions = 0usize;
             d.score = score;
             d.nodes = 0;
+            d.node_cap = self.node_cap.min(self.heur_cap);
             let ok = d.search(&mut active, &zero, &z2, self.sign_depth, &mut regions);
             total_nodes += d.nodes;
             if ok {
@@ -1277,7 +1454,103 @@ impl Checker {
                 return (Leaf::Disj(regions), Some(desc));
             }
         }
+        // ... and then with a Lemma-K seed pair forced to the top of the tree.  Two sliding cuts
+        // of different kinds (the interior tile poses) leave a quadrant with no witness at all,
+        // and the only thing that discharges it is Lemma K on the pair of pivots that cannot
+        // both be violated; a weight-greedy branch choice never looks for that pair, so the
+        // pairs are enumerated (an O(k^2) float scan, confirmed exactly inside `cover`) and
+        // each is tried as a forced prefix.
+        let pairs = d.kpairs();
+        if d.dbg {
+            eprintln!("  DISJ: {} float-plausible Lemma-K pairs", pairs.len());
+        }
+        let mut seeds: Vec<(I, usize, usize)> = Vec::new();
+        for &(bi, bj) in pairs.iter() {
+            let act = vec![bi * 2 + 1, bj * 2 + 1];
+            let w = {
+                let c = d.cover(&act, false);
+                d.weight_of(&c)
+            };
+            seeds.push((w, bi, bj));
+        }
+        seeds.sort_by(|a, b| b.0.cmp(&a.0));
+        if d.dbg {
+            for &(w, bi, bj) in seeds.iter().take(8) {
+                let act = vec![bi * 2 + 1, bj * 2 + 1];
+                let ce = d.cover(&act, true);
+                eprintln!(
+                    "    seed ({},{}) pts ({},{}) kinds ({},{}) float-cov={:.6} exact-cov={:.6}",
+                    bi, bj, d.branches[bi].0, d.branches[bj].0,
+                    d.branches[bi].1, d.branches[bj].1,
+                    w as f64 / self.cert.w as f64,
+                    d.weight_of(&ce) as f64 / self.cert.w as f64
+                );
+            }
+        }
+        seeds.truncate(self.ck_seed_cap());
+        for &(_, bi, bj) in seeds.iter() {
+            for fo in [vec![bi, bj], vec![bj, bi]] {
+                let mut active: Vec<usize> = Vec::new();
+                let mut regions = 0usize;
+                d.score = 0;
+                d.nodes = 0;
+                d.node_cap = self.node_cap.min(self.heur_cap);
+                d.forced = fo;
+                let ok = d.search(&mut active, &zero, &z2, self.sign_depth, &mut regions);
+                total_nodes += d.nodes;
+                if ok {
+                    let desc = format!(
+                        "DISJ regions={} nodes={} seed=({},{})",
+                        regions, total_nodes, bi, bj
+                    );
+                    return (Leaf::Disj(regions), Some(desc));
+                }
+            }
+        }
+        // ... and finally the full two-chain enumeration: interleave the chain orders of the two
+        // largest kinds and force that whole sequence.  The recursion then visits exactly the
+        // product regions `R_r x R'_s` of `RUNG2.md` sec 6.2, with the inconsistent and
+        // witness-free ones discharged by the Lemma-K closure in `cover` instead of by a
+        // separate emptiness test.
+        let chains = d.chain_order();
+        if !chains.is_empty() {
+            let mut forced: Vec<usize> = Vec::new();
+            if chains.len() == 1 {
+                forced = chains[0].clone();
+            } else {
+                let (a, b) = (&chains[0], &chains[1]);
+                let n = a.len().max(b.len());
+                for i in 0..n {
+                    if i < a.len() {
+                        forced.push(a[i]);
+                    }
+                    if i < b.len() {
+                        forced.push(b[i]);
+                    }
+                }
+            }
+            let dep = forced.len() as u32 + 4;
+            let mut active: Vec<usize> = Vec::new();
+            let mut regions = 0usize;
+            d.score = 0;
+            d.nodes = 0;
+            d.node_cap = self.node_cap;
+            d.forced = forced;
+            let ok = d.search(&mut active, &zero, &z2, dep, &mut regions);
+            total_nodes += d.nodes;
+            if d.dbg {
+                eprintln!("  DISJ: two-chain forced order, nodes={} ok={}", d.nodes, ok);
+            }
+            if ok {
+                let desc = format!("DISJ regions={} nodes={} chains", regions, total_nodes);
+                return (Leaf::Disj(regions), Some(desc));
+            }
+        }
         (Leaf::Split, None)
+    }
+
+    fn ck_seed_cap(&self) -> usize {
+        self.seed_cap
     }
 
     fn split(&self, b: &Bx) -> (Bx, Bx) {
@@ -1522,11 +1795,13 @@ fn main() {
     let mut yhi: Option<f64> = None;
     let mut theta_bias = 4.0f64;
     let mut sign_depth = 14u32;
-    let mut node_cap = 4000usize;
-    let mut branch_cap = 48usize;
+    let mut node_cap = 400000usize;
+    let mut branch_cap = 160usize;
     let mut try_branches = 3usize;
     let mut rank_exact = 64usize;
-    let mut fail_cap = 256usize;
+    let mut fail_cap = 1024usize;
+    let mut seed_cap = 0usize;
+    let mut heur_cap = 3000usize;
     let mut px = None;
     let mut py = None;
     let mut pu = None;
@@ -1554,6 +1829,12 @@ fn main() {
                 sign_depth = need().parse().unwrap_or_else(|_| die("bad --sign-depth"))
             }
             "--node-cap" => node_cap = need().parse().unwrap_or_else(|_| die("bad --node-cap")),
+            "--heur-cap" => {
+                heur_cap = need().parse().unwrap_or_else(|_| die("bad --heur-cap"))
+            }
+            "--seed-cap" => {
+                seed_cap = need().parse().unwrap_or_else(|_| die("bad --seed-cap"))
+            }
             "--fail-cap" => {
                 fail_cap = need().parse().unwrap_or_else(|_| die("bad --fail-cap"))
             }
@@ -1609,6 +1890,8 @@ fn main() {
         try_branches,
         rank_exact,
         fail_cap,
+        seed_cap,
+        heur_cap,
         noscreen: std::env::var("ZM_NOSCREEN").is_ok(),
     };
 
