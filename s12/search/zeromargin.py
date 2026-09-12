@@ -593,9 +593,21 @@ class Checker:
             """prefix weights of the chain's down-sets, and the up-set weight/members per pivot"""
             kk = len(ch)
             n = len(self.P)
+            # DOWN-SET.  On the region {G_{q_r} <= 0} every point p with max_B (G_p - G_{q_r}) <= 0
+            # satisfies its own swing inequality, not just the chain members: G_p <= G_{q_r} <= 0.
+            # G_{q_r} is non-decreasing along the chain, so the set of r that work for a given p is
+            # a SUFFIX, found by one binary search -- and taking only {q_1..q_r} instead, as the
+            # first version did, threw away most of the available weight (RUNG2.md sec 6.4).
             down = [np.zeros(n, dtype=bool) for _ in range(kk + 1)]
-            for r in range(1, kk + 1):
-                down[r] = down[r - 1].copy(); down[r][ch[r - 1][0]] = True
+            for (k, kind) in cand:
+                lo, hi = 1, kk + 1                    # smallest r with G_k <= G_{q_r} on the box
+                while lo < hi:
+                    mid = (lo + hi) // 2
+                    kq, kdq = ch[mid - 1]
+                    if kq == k or self._gmax([(F(1), k, kind), (F(-1), kq, kdq)], box) <= 0:
+                        hi = mid
+                    else: lo = mid + 1
+                for r in range(lo, kk + 1): down[r][k] = True
             up = [np.zeros(n, dtype=bool) for _ in range(kk + 2)]
             for (k, kind) in cand:
                 lo, hi = 0, kk
