@@ -700,12 +700,17 @@ def _worker(args):
     chk, root = args
     return chk.run_box(root)
 
-def roots(m, pitch=F(1, 10), ubins=8, cy_max=None):
-    """Root boxes aligned to the pitch grid (so tight poses sit on box boundaries)."""
+def roots(m, pitch=F(1, 10), ubins=8, cy_max=None, cx_lo=None, cx_hi=None):
+    """Root boxes aligned to the pitch grid (so tight poses sit on box boundaries).
+    cx_lo/cx_hi restrict the sweep to a band of centre-x columns -- a *partial* run, useful for
+    timing or for isolating a region; it proves nothing about the poses it skips, and the summary
+    says so."""
     m = F(m); cy_max = m / 2 if cy_max is None else F(cy_max)
     nx = int(m / pitch); ny = int(cy_max / pitch)
     R = []
     for i in range(nx):
+        if cx_lo is not None and (i + 1) * pitch <= F(cx_lo): continue
+        if cx_hi is not None and i * pitch >= F(cx_hi): continue
         for j in range(ny):
             for k in range(ubins):
                 R.append((i * pitch, (i + 1) * pitch, j * pitch, (j + 1) * pitch,
@@ -752,6 +757,10 @@ def main():
                           'endpoints, floats derived from the exact box) as (cx, cy, theta_rad) rows, '
                           'one per line, for use as separating cutting planes in a cover LP')
     ap.add_argument('--full', action='store_true', help='no symmetry reduction (cy up to m, u up to 1)')
+    ap.add_argument('--cx-lo', type=str, default=None,
+                    help='restrict the sweep to root columns with cx >= this (a PARTIAL run: it '
+                         'proves nothing about the columns it skips)')
+    ap.add_argument('--cx-hi', type=str, default=None, help='... and cx <= this')
     ap.add_argument('--u', type=str, default=None, help='pose mode: u = tan(theta/2), as a Fraction-parseable string ("1/3", "0.3333")')
     ap.add_argument('--cx', type=str, default=None, help='pose mode: centre x, Fraction-parseable')
     ap.add_argument('--cy', type=str, default=None, help='pose mode: centre y, Fraction-parseable')
@@ -794,10 +803,13 @@ def main():
         print("point set not symmetric: use --full"); sys.exit(2)
     pitch = F(a.pitch)
     if a.full:
-        R = roots(m, pitch, a.ubins * 2, cy_max=m)
+        R = roots(m, pitch, a.ubins * 2, cy_max=m, cx_lo=a.cx_lo, cx_hi=a.cx_hi)
         R = [(x0, x1, y0, y1, u0 * 2, u1 * 2) for (x0, x1, y0, y1, u0, u1) in R]  # u in [0,1]: theta to 90deg
     else:
-        R = roots(m, pitch, a.ubins)
+        R = roots(m, pitch, a.ubins, cx_lo=a.cx_lo, cx_hi=a.cx_hi)
+    if a.cx_lo is not None or a.cx_hi is not None:
+        print(f"PARTIAL SWEEP: cx restricted to [{a.cx_lo}, {a.cx_hi}] -- this is not a verification "
+              f"of the whole container")
     print(f"{len(R)} root boxes, depth limit {a.depth}, pitch {pitch}, u-bins {a.ubins}")
     t0 = time.time()
     tot = {'ADM': 0, 'CORE': 0, 'P1': 0, 'MIX': 0, 'CHAIN': 0, 'TRI': 0, 'EMPTY': 0, 'UNCERT': 0,
@@ -840,7 +852,9 @@ def main():
                             f.write(f"{cxv!r} {cyv!r} {thv!r}\n")
         print(f"oracle rows (uncertified-box corner/centre poses) written to {a.oracle}: "
               f"{len(unc_all)} boxes -> up to {len(unc_all) * 27} poses")
-    print("VERIFIED" if tot['UNCERT'] == 0 else "NOT VERIFIED")
+    partial = a.cx_lo is not None or a.cx_hi is not None
+    print(("VERIFIED" if tot['UNCERT'] == 0 else "NOT VERIFIED")
+          + (f" (PARTIAL: cx in [{a.cx_lo}, {a.cx_hi}] only)" if partial else ""))
 
 if __name__ == '__main__':
     main()

@@ -416,6 +416,7 @@ earlier leaf counts are void.
 | 1,500 | 2,566 | 0 | 131 s |
 | 2,000 | 3,770 | **0** | 163 s |
 | 2,500 | 7,810 | **60** | 1,292 s |
+| 3,000 | 14,684 | **60** (no new ones) | 4,290 s |
 
 The root boxes are ordered by `c_x` (pitch `1/10`, `c_y` inner, `u` innermost, `160` roots per
 `c_x` column), so `2,000` roots is `c_x ≤ 1.25`: **the whole left-wall region — including the worst
@@ -441,6 +442,32 @@ pose of the child** — the proof is inherited verbatim, exactly, and `run_box` 
 down the stack (`cert_chain` computes it in full for every box it handles, which is exactly the
 boxes that get subdivided).  Rung 1 is byte-identical with the cache on, and the `CHAIN` probe
 boxes give the same verdicts, as they must.  The run reported above predates the cache.
+
+### 4.3 The subtree cache, measured: no speedup
+
+`--cx-lo/--cx-hi` (new) restricts the sweep to a band of root columns; it prints `PARTIAL SWEEP`
+on entry and `VERIFIED (PARTIAL: ...)` in the verdict, so a restricted run cannot be mistaken for
+a verification.  Running the same certificate and settings (`--depth 14 --disj --chain-from 0`)
+over the same band, with and without the §4.2 cache:
+
+| run | code | procs | band | roots | boxes | wall | core-s / root |
+|---|---|---|---|---|---|---|---|
+| `runs/x103_chain.log` (uncached) | pre-`eee2680` | 8 | roots 2,000–2,500 of the full sweep (`c_x ∈ [1.25, 1.56]`) | 500 | 4,040 | 1,129 s | **18.1** |
+| `runs/x103_cached_interior.log` (cached) | `eee2680` | 6 | the first 500 of `--cx-lo 1.25 --cx-hi 2.75` (`c_x ∈ [1.2, 1.52]`) | 500 | 3,120 | 1,764 s | **21.2** |
+
+(Root index is `160·i + 8·j + k` with `i` the `c_x` column, so columns 12–15 are roots 1,920–2,560;
+the two bands overlap in all but ~80 roots at either end.  Worker CPU was ~97 % for the 8-process
+run and ~86 % for the 6-process one on a machine at load 28, so the honest reading of the two
+numbers is *the same*, ±5 %.)
+
+**The cache is exact but not the bottleneck.**  It removes the `_adm_exact` re-confirmation of
+points already certified at an ancestor — but `cert_chain`'s cost is dominated by the two things it
+does *not* touch: the candidate screen (`_adm_cond_ok` on the points that are *not* in `T`, which
+is precisely the set that changes from box to box) and the `O(|cand| log k)` `_gmax` calls of the
+up-set and empty-region binary searches.  Keeping it is still right — it is exact, it never changes
+a verdict, and it costs nothing — but the next speed-up has to come from the screen and the
+searches (memoising `_gmax` on `(point, kind, box)` across the `λ` values, and reusing a parent's
+chain order, which is inherited for the same reason the certifications are).
 
 **Per-box behaviour of `CHAIN`** (direct calls, `runs/closed4_best_x103.txt`):
 
