@@ -729,7 +729,9 @@ The tile compatibility graph therefore has no triangle, and a **clique column** 
 maximal pairwise-compatible set of `(tile, σ)` constraints: either all the constraints of one tile,
 or, for an orthogonally adjacent pair, the half of each tile's constraints with the right sign.
 `rung2_bound.py credit` enumerates all 28 of them at `m = 4` (16 of size 4, 12 of size 2) and
-checks pairwise compatibility (0 violations).  The *point clique* of a point `p` — the anchor
+checks pairwise compatibility (0 violations); `--check-columns` re-derives them by brute force
+over every subset of every tile pair and confirms the list is exactly the set of maximal
+pairwise-compatible sets (28 found, 0 missing, 0 non-maximal).  The *point clique* of a point `p` — the anchor
 clique `{S : p ∈ S}`, which `notes/clique-family.md` notes the anchor family contains — is
 already a point column of the LP, since the germ lies in it exactly when `p ∈ PIN(i,j,σ)`; so
 nothing is lost by treating points and cliques as separate column types.  Allowing *any* pairwise-intersecting family — rather

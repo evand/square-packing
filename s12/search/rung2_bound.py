@@ -264,6 +264,21 @@ def credit(a):
     A_pt = np.array([pin_mask(X, Y, m, t[0], t[1], thetas, s[0], s[1]).astype(float)
                      for t, s in cons])                     # (ncon, npoints)
     cols = _clique_columns(cons)
+    if a.check_columns:
+        import itertools
+        idx = {c: k for k, c in enumerate(cons)}
+        tiles = sorted({c[0] for c in cons})
+        allsets = set()
+        for pair in list(itertools.combinations(tiles, 2)) + [(t, t) for t in tiles]:
+            S = [c for c in cons if c[0] in set(pair)]
+            for r in range(1, len(S) + 1):
+                for sub in itertools.combinations(S, r):
+                    if all(_compatible(x[0], x[1], y[0], y[1]) for x in sub for y in sub):
+                        allsets.add(frozenset(idx[c] for c in sub))
+        maximal = {c for c in allsets if not any(c < d for d in allsets)}
+        print(f"  column check: {len(maximal)} maximal compatible sets by brute force, "
+              f"{len(cols)} produced, {len(maximal - set(cols))} missing, "
+              f"{len(set(cols) - maximal)} non-maximal")
     A_cl = np.zeros((len(cons), len(cols)))
     for c, S in enumerate(cols):
         for r in S: A_cl[r, c] = 1.0
@@ -308,6 +323,9 @@ def main():
     ap.add_argument('--switch', type=int, default=None,
                     help='dual: the last column with sigma_x = +1 (default 1: the switch sits '
                          'between columns 1 and 2, both interior, which Lemma 2 requires)')
+    ap.add_argument('--check-columns', action='store_true',
+                    help='credit: also enumerate the maximal pairwise-compatible constraint sets by '
+                         'brute force and compare with the constructed clique columns')
     ap.add_argument('--k', type=str, default=None,
                     help="credit: the branch occupancy pattern K_1,..,K_4 (e.g. '1,1,1,1' for the "
                          "corner leaf k = 4; default '0,0,0,0', the no-branch case)")
