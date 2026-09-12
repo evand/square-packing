@@ -1,6 +1,6 @@
 # Rung 2 (`s(13) = 4` by a weighted closed cover of `[0,4]²`, `W < 13`) — task rung2-s13, 2026-09-11
 
-**Verdict.**  Two results, one negative and one positive.
+**Verdict.**  Three results: two obstruction theorems and the primitive they force.
 
 > **Theorem 1 (§2).**  If every leaf of a finite, closed, space-filling subdivision of the
 > admissible pose space of `[0,m]²` (`m ≥ 4`) carries a *monotone witness certificate* — a fixed
@@ -663,6 +663,7 @@ taskset -c 8-15  python3 search/zeromargin.py cert runs/closed4_best_x103.txt --
 python3 search/zeromargin_stress.py runs/x103_disj_leaves.txt 40 --cert runs/closed4_best_x103.txt
 
 # T2: credited certificates (points + cliques + region trailer), sec 9
+python3 search/rung2_bound.py credit --m 4 --check-columns # 12.000000 + the column check
 python3 search/rung2_bound.py credit --m 4                 # 12.000000, no region trailer
 python3 search/rung2_bound.py credit --m 4 --k 1,1,1,1     # 12.000000, the corner leaf k = 4
 python3 search/rung2_bound.py credit --m 4 --k 1,0,0,0     # 11.000000 (a non-binding leaf)
