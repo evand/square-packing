@@ -418,6 +418,7 @@ earlier leaf counts are void.
 | 2,500 | 7,810 | **60** | 1,292 s |
 | 3,000 | 14,684 | **60** (no new ones) | 4,290 s |
 | 3,500 | 17,340 | **60** | 5,139 s |
+| 4,000 | 26,586 | **60** | 8,312 s |
 
 The root boxes are ordered by `c_x` (pitch `1/10`, `c_y` inner, `u` innermost, `160` roots per
 `c_x` column), so `2,000` roots is `c_x ≤ 1.25`: **the whole left-wall region — including the worst
@@ -470,6 +471,22 @@ columns 12–15); both were still running at the report deadline.
 The spread in the table is itself a check on the theory: the four octants of one pose need depths 2
 to 10, because the cover is symmetric under `x → 4−x, y → 4−y` but not under `x ↔ y`, and Lemma 1's
 pinwheel is not symmetric under `σ → −σ` either.
+
+**Bisecting the band.**  Two independent runs agree on the count: exactly **60** uncertified boxes,
+and the restricted run reaches 60 by its root 1,000, so all of them have `c_x ≤ 1.9`.  A depth-14
+sweep of columns 12–13 alone (`--cx-lo 1.25 --cx-hi 1.35`, `runs/x103_narrow.log`) is
+
+```
+done in 2878s: boxes 2474, max depth 12
+  leaves: ADM 204  CORE 0  P1 0  MIX 0  CHAIN 1094  TRI 0  EMPTY 99  UNCERTIFIED 0
+VERIFIED (PARTIAL: cx in [1.25, 1.35] only)
+```
+
+— **clean, and it never even reaches the depth limit** (max depth 12 of 14).  Note the leaf mix:
+`CHAIN` carries 1,094 of the 1,397 leaves against `ADM`'s 204 and `P1`'s 0.  That is the whole
+point of §6 — in the interior of this cover almost every leaf needs a disjunctive certificate, as
+Theorem 1 says it must.  So the residue is confined to columns 14–18, `c_x ∈ [1.4, 1.9]`; the next
+bisection (columns 14–15) was running at the report deadline.
 
 ### 4.4 The subtree cache, measured: no speedup
 
