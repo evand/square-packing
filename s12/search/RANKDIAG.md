@@ -447,10 +447,13 @@ and `1.000` wall**, and the wall half splits again across the two wall regions t
 separates (`W6 + W7`, `W2 + W3`, `W0 + W1`).  A polygon wrapped around the corner of an
 axis-parallel wall square is exactly an object that says "the interior square and the wall square
 here cannot both be replaced by two" — which no clique row can say, because no point lies in all
-28–30 members.  Third, **only `k = 5` ever binds**: `k = 7` and `k = 9` rows are separated and
-enter the LP, but none of them carries dual at convergence in either support run.  The extra
-freedom of a longer cycle does not buy anything here; the geometry is a corner, and a corner needs
-five anchors.
+28–30 members.  Third, **`k = 5` is what binds**.  The separator finds and adds plenty of longer
+polygons — `SUPB2` ends with 291 `k = 5`, 38 `k = 7` and 33 `k = 9` rows, `PGA` with 100 / 65 / 76
+— and many of them are tight at intermediate solves, but at convergence the rows carrying positive
+dual are 50 of `k = 5` and exactly **one** of `k = 7` (`SUPB2`), none of `k = 9`; on `SUPA`,
+`SUPAP`, `SUPB` and `PGA` every dual-carrying row is `k = 5`.  The extra freedom of a longer cycle
+buys almost nothing here: the geometry being cut is a wall-square corner, and a corner needs five
+anchors.  A verifier that only ever learned the `k = 5` block would lose very little.
 
 ### 10.3 The pricing stage brings back nothing
 
