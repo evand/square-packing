@@ -559,3 +559,33 @@ The existing proof goes through verbatim: `hsum` is unchanged, and `hcard` becom
 `v j * card ≤ v j * r j` by the same `nlinarith`.  `packing_le_weight_cliques` is the case
 `r = 1` with `hK` discharged by `card_filter_clique_le_one`; the cycle block is the case
 `r j = k_j / 2` with `hK` discharged by `card_filter_cycle_le`.  No existing lemma is touched.
+
+## 11. Reproduce (round 2)
+
+```sh
+python3 search/rankfamily.py                  # the k-ring selftest for k = 5, 7, 9
+python3 search/cliquelever.py selftest        # the pinwheel, old path AND --master, with --pent on
+R=runs
+# the support experiment (minutes): QSTAB alone, then QSTAB + the rank family, on the pose set
+# the converged measure itself uses
+sh search/rankfamily_launch.sh support        # SUPA0/SUPA (leaf), SUPB0/SUPB (corner)
+# one pricing stage on top of the leaf's converged 11.000000
+sh search/rankfamily_launch.sh price          # SUPAP
+# the loop experiment on the full recorded pose sets, restricted master (CLMASTER.md 4)
+T=9000 sh search/rankfamily_launch.sh loop    # PGA (leaf, --price 1), PGB (corner)
+
+# independent re-checks of any converged measure
+python3 search/leaf_ceiling.py check $R/cl_SUPA_exact.txt --corners 1111 \
+    --patterns 01010101 --chord --anchor clique
+python3 search/rankdiag.py --pgons $R/cl_SUPA_pgons.json $R/cl_SUPA_exact.txt --anat 6
+python3 search/rankdiag.py --step 1 $R/cl_SUPA_exact.txt      # alpha of the new support
+```
+
+`--pent 5,7,9` turns the family on; `--pent-restarts` is the one setting that matters (300 per `k`
+converges the corner support at `11.519638`, 2,500 at `11.470839`), `--pent-cands` the number of
+candidate anchor points, `--pent-time` the per-iteration budget, `--pent-want` the rows added per
+`k` per iteration.  With `--pent` absent the loop is exactly the one `CLMASTER.md` describes.
+
+Every converged run writes `runs/cl_<TAG>_pgons.json`: for each polygon row its `k`, its members,
+its dual, its mass at the last solve, and **its anchors as exact rationals**, which is all
+`rankdiag.py --pgons` needs to rebuild and re-check the row from scratch.
