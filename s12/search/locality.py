@@ -309,7 +309,8 @@ class Model:
     row blocks (region equalities, chord rows, window convexity, window linking) plus the coverage
     rows appended by separation."""
 
-    def __init__(self, threads, log):
+    def __init__(self, threads, log, crossover=False):
+        self.crossover = bool(crossover)
         import highspy
         self.hp = highspy
         self.INF = highspy.kHighsInf
@@ -354,7 +355,10 @@ class Model:
         h = self.h
         warm = self.basis and tlim > 0
         h.setOptionValue('solver', 'simplex' if warm else 'ipm')
-        h.setOptionValue('run_crossover', 'on')
+        # The cutting-plane loop never reads the outer LP's duals -- separation works on `mu`
+        # alone -- so the crossover is pure cost on a 6k x 10k coverage LP with a large degenerate
+        # optimal face.  Off by default; `--crossover` restores it.
+        h.setOptionValue('run_crossover', 'on' if self.crossover else 'off')
         h.setOptionValue('time_limit', tlim if warm else 1e30)
         h.run()
         ms = h.getModelStatus()
@@ -529,7 +533,7 @@ class Loc:
         self.cuts = []                            # (window, pose array, pi array)
         self.cutkey = set()
         self.implied = bool(getattr(a, 'implied', False))
-        self.m = Model(a.threads, log)
+        self.m = Model(a.threads, log, getattr(a, 'crossover', False))
         self.build()
 
     def sub(self, j):
@@ -1210,6 +1214,8 @@ def main():
                    help='cl_*_rows.txt checkpoint (X Y D): valid coverage rows, seeds the descent')
     c.add_argument('--resume-cliques', action='append', default=[],
                    help='cl_*_cliques.txt checkpoint; --poses must be the pose file it indexes')
+    c.add_argument('--crossover', action='store_true',
+                   help='run the ipm crossover (off by default: the loop never reads the duals)')
     c.add_argument('--lp-tlim', type=float, default=0.0,
                    help='warm dual-simplex budget per solve after the first (0 = always ipm)')
     c.add_argument('--tight', type=float, default=0.0,

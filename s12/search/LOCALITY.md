@@ -227,11 +227,23 @@ re-verifies every row pairwise (exact integer SAT on the borderline pairs) befor
 
 The full `25,012`-row seed is not affordable: a generic container point lies in 500–2,000 of the
 `10,175` poses, so the row block is ~6M nonzeros and one ipm+crossover on `26,140 x 10,463` ran for
-**22 minutes** without finishing.  `--tight 1e-6` keeps only the rows the seed measure already
-saturates — **`4,952` of `25,012`** — which is the same warm start at a fifth of the cost: the
-dropped rows carry no dual at the seed measure, and they are still implied by the windows, and the
-coverage separation would re-add any that bite.  `--lp-tlim` adds `t4leaf.Hi`'s rule (ipm+crossover
-on the first solve, warm dual simplex afterwards).
+**22 minutes** without finishing.  Three economies, in the order they matter:
+
+* `--tight 1e-6` keeps only the rows the seed measure already saturates — **`4,952` of `25,012`**
+  on the leaf, **`4,811` of `32,191`** on the corner control.  Same warm start at a fifth of the
+  cost: the dropped rows carry no dual at the seed measure, they are still implied by the windows,
+  and the coverage separation would re-add any that bite.
+* **no crossover.**  The cutting-plane loop never reads the outer LP's duals — the window
+  subproblem separates on `mu` alone — so the crossover is pure cost on a `6k x 10k` coverage LP
+  with a large degenerate optimal face.  Off by default now (`--crossover` restores it).
+* `--lp-tlim` adds `t4leaf.Hi`'s rule (warm dual simplex after the first solve, ipm fallback).  On
+  these LPs it is `CLMASTER.md` §2.1 again — the simplex burned the whole 45 s budget and the ipm
+  ran anyway, every single iteration — so `--lp-tlim 0` (always ipm) is the right setting.
+
+**The seed does exactly what it was meant to do: iteration 0 of the seeded run is
+`LP = 11.435484`**, the converged QSTAB value of `CLIQUELEVER.md` reproduced to the digit, with
+`zmax = 1.532258` — i.e. before any window cut the outer LP *is* the QSTAB LP, as §0(1) predicts,
+and the vertex it sits on is even further from window-consistent than the certified measure.
 
 ### 6.2 The window subproblem's optimal dual, named
 
