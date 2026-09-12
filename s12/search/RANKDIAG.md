@@ -418,7 +418,12 @@ certified and re-checked by `leaf_ceiling.py check --anchor clique`:
   regions `C=1,1,1,1`, slots `0,1,0,1,0,1,0,1`, chord strips `3,3,3,3` — **on 11 poses whose
   closed-intersection graph has 0 edges**.  The LP has walked all the way down to an *integral*
   packing: eleven pairwise-disjoint unit squares in the leaf's own region pattern.  43 polygon rows,
-  all satisfied, 27 of them tight, every one re-derived from its exact rational anchors.
+  all satisfied, 27 of them tight, every one re-derived from its exact rational anchors.  The
+  measure is `runs/cl_SUPA_exact.txt` and it is small enough to read: the four corner squares, four
+  axis-parallel wall squares at `(2, 3.5)`, `(3.5, 2.413091)`, `(2.4808, 0.5)`, `(0.5, 1.9992)`,
+  and three tilted interior ones — `(1.500001, 2.499999)` at `0°`, `(1.475021, 1.265851)` at
+  `-39.1°` and `(2.54401, 1.697772)` at `+32.5°` — each of mass 1.  On this pose set the rank
+  relaxation is **integral**: its optimum is the integer optimum.
 * **`SUPB2`**: `11.470839`, `M = 1`, max clique `= 1` (complete), regions OK; 362 polygon rows, all
   satisfied, every one re-derived.  `alpha` of its own support is again 11, so `0.47` of gap is
   left — the separator stops finding violated polygons before the LP reaches the integer optimum.
