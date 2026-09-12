@@ -50,6 +50,7 @@ import argparse
 import json
 import math
 import os
+import random
 import sys
 import time
 from fractions import Fraction as Fr
@@ -61,6 +62,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 import leaf_ceiling as lc                                            # noqa: E402
+import rankfamily                                                    # noqa: E402
 
 RUNS = os.path.join(REPO, 'runs')
 LABS = ['C0', 'C1', 'C2', 'C3', 'W0', 'W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'I']
@@ -307,6 +309,14 @@ class Lever:
         self.y = np.zeros(0)
         self.chord_dual = np.zeros(4)
         self.found = []           # every violated support clique found, with its anatomy
+        # ---- rank-family (odd-polygon) rows, right-hand side (k-1)/2; see search/rankfamily.py
+        self.pgons = []           # dict(members, rhs, pts, k, ...)
+        self.pgkeys = set()
+        self.PG = sp.csr_matrix((0, ps.ncol))
+        self.pgz = np.zeros(0)
+        self.hi_pg = []
+        self.pent_seeds = {}
+        self.pent_rng = random.Random(getattr(args, 'pent_seed', 20260911))
 
     # ---------------------------------------------------------------- fixed rows
     def eq_matrix(self):
@@ -417,6 +427,21 @@ class Lever:
         self.cage = np.concatenate([self.cage, [0]])
         return True
 
+    # ---------------------------------------------------------------- rank-family rows
+    def add_pgon(self, members, rhs, info, pts):
+        """an odd-polygon row `mu(members) <= rhs`, rhs = (k-1)/2 (see search/rankfamily.py).
+        Same column expansion as a clique row; never aged out."""
+        key = frozenset(members)
+        if key in self.pgkeys:
+            return False
+        self.pgkeys.add(key)
+        cols = [c for i in members for c in self.ps.cols_of[i]]
+        row = sp.csr_matrix((np.ones(len(cols)), (np.zeros(len(cols), dtype=int), cols)),
+                            shape=(1, self.ps.ncol))
+        self.PG = sp.vstack([self.PG, row], format='csr') if self.PG.shape[0] else row
+        self.pgons.append(dict(info, members=list(members), rhs=float(rhs), pts=list(pts)))
+        return True
+
     def sift_cliques(self, age, keep_min=0):
         if not self.cliques or age <= 0:
             return 0
@@ -449,6 +474,7 @@ class Lever:
                            np.full(len(self.rows), -INF), np.ones(len(self.rows)), self.A)
         self.hi_nrows = len(self.rows)
         self.hi_cq = []
+        self.hi_pg = []
 
     def solve(self):
         ps = self.ps
@@ -473,6 +499,12 @@ class Lever:
             self.hi.append([('C', cur[i]) for i in addi], np.full(len(addi), -INF),
                            np.ones(len(addi)), self.K[addi])
             self.hi_cq += [cur[i] for i in addi]
+        if len(self.pgons) > len(self.hi_pg):                 # rank-family rows, never removed
+            g0 = len(self.hi_pg)
+            gi = list(range(g0, len(self.pgons)))
+            self.hi.append([('G', i) for i in gi], np.full(len(gi), -INF),
+                           np.array([self.pgons[i]['rhs'] for i in gi]), self.PG[g0:])
+            self.hi_pg = list(range(len(self.pgons)))
         t0 = time.time()
         res = self.hi.run()
         self.lp_secs = time.time() - t0
@@ -481,6 +513,7 @@ class Lever:
         x, d, obj = res
         y = np.zeros(len(self.rows))
         z = np.zeros(len(self.cliques))
+        pgz = np.zeros(len(self.pgons))
         lam = np.zeros(self.nE)
         chd = np.zeros(4)
         ci = {k: i for i, k in enumerate(cur)}
@@ -494,6 +527,9 @@ class Lever:
                 chd[k[1]] = max(v, 0.0)
             elif k[0] == 'C':
                 z[ci[k[1]]] = max(v, 0.0)
+            elif k[0] == 'G':
+                pgz[k[1]] = max(v, 0.0)
+        self.pgz = pgz
         self.z = z
         self.cage = np.where(self.z > 1e-9, 0, self.cage + 1)
         self.y = y
@@ -614,6 +650,10 @@ class Lever:
                 nrow = self.add_rows([V[i] for i in o])
             kmax, allc, ncq, best, sep_secs, nfound = self.separate(
                 sup, squares, w, mu, it, a.cq_want, a.clique_time, a.cq_top, a.ktol, Inc=Inc)
+            npg, pbest, pg_secs = 0, None, 0.0
+            if getattr(a, "pent", None):    # rank-family (odd-polygon) rows, RHS (k-1)/2
+                npg, pbest, pg_secs, _pf = rankfamily.separate(
+                    self, sup, squares, V, Inc, w, mu, it)
             R = self.region_split(x)
             rec = dict(tag=tag, it=it, LP=float(val), M=M, kmax=float(kmax), complete=bool(allc),
                        rows=len(self.rows), cq=len(self.cliques), nsup=len(sup), nverts=len(V),
@@ -627,9 +667,15 @@ class Lever:
                      f'rows={len(self.rows)}(+{nrow}) cq={len(self.cliques)}(+{ncq}/{nfound},-{ndrop}) '
                      f'sup={len(sup)} verts={len(V)} int={R[12]:.6f} '
                      + (f'best={best["mass0"]:.4f}/{best["size0"]}->{best["size"]} ' if best else '')
-                     + f'(lp {self.lp_secs:.1f}s it{self.hi.iters}, sep {sep_secs:.1f}s, '
-                       f'{time.time() - T0:.0f}s)')
-            done = (nrow == 0 and ncq == 0 and M <= 1 + 1e-9 and kmax <= 1 + a.ktol)
+                     + (f'pg={len(self.pgons)}(+{npg}) ' if a.pent else '')
+                     + (f'pbest=k{pbest["k"]}:{pbest["mass0"]:.4f}/{pbest["rhs"]:.1f}'
+                        f'(+{pbest["excess"]:.4f})/{pbest["size"]} ' if pbest else '')
+                     + f'(lp {self.lp_secs:.1f}s it{self.hi.iters}, sep {sep_secs:.1f}s'
+                     + (f', pg {pg_secs:.1f}s' if a.pent else '') + f', {time.time() - T0:.0f}s)')
+            rec['pg'] = len(self.pgons)
+            rec['npg'] = npg
+            rec['pbest'] = pbest
+            done = (nrow == 0 and ncq == 0 and npg == 0 and M <= 1 + 1e-9 and kmax <= 1 + a.ktol)
             rec['converged'] = bool(done and allc)
             if done:
                 if not allc:
@@ -676,6 +722,13 @@ class Lever:
         # every violated clique found so far, with its anatomy at the time it was separated
         json.dump([{k: v for k, v in c.items() if k != 'members'} for c in self.found],
                   open(base + '_found.json', 'w'), indent=0)
+        if self.pgons:
+            json.dump([dict({k: v for k, v in c.items() if k not in ('members', 'pts')},
+                            members=c['members'],
+                            dual=float(self.pgz[i]) if i < len(self.pgz) else 0.0,
+                            mass_now=float(sum(mu[j] for j in c['members'])))
+                       for i, c in enumerate(self.pgons)],
+                      open(base + '_pgons.json', 'w'), indent=1)
 
     # ---------------------------------------------------------------- exact final certification
     def finalize(self, x, mu, procs):
@@ -715,7 +768,8 @@ class Lever:
         nbr = lc.closed_graph(squares, verbose=False)
         wl = [int(v) for v in w]
         pos = {i: k for k, i in enumerate(sup)}
-        # ---- region top-up on exact slack
+        # ---- region top-up on exact slack (coverage, cliques AND the rank-family rows)
+        pg = rankfamily.TopUpGuard(self, mi)
         if self.target:
             for lab, kv in sorted(self.target.items()):
                 li = LABS.index(lab)
@@ -739,7 +793,7 @@ class Lever:
                             continue
                         Kw, _, comp = max_clique_through_members(nbr, wl, k, 30.0, lb=0)
                         ks = DM - Kw if comp else 0
-                        s = min(cs, ks)
+                        s = min(cs, ks, pg.slack(i))
                         if s > bests:
                             bestc, bests = c, s
                         if bests >= d:
@@ -750,6 +804,7 @@ class Lever:
                     xc[bestc] += add
                     d -= add
                     i = ps.col_pose[bestc]
+                    pg.credit(i, add)
                     k = pos[i]
                     wl[k] += add
                     w[k] += add
@@ -765,6 +820,13 @@ class Lever:
         mass = Fr(sum(mi), DM)
         meta = [(Fr(s[0], s[2]), Fr(s[1], s[2]), s[8]) for s in squares]
         ok, assigned, amb, note = lc.region_report(meta, ps.boxes, self.target, DM)
+        pgok, pgworst, pgrep = rankfamily.check_final(self, mi)
+        if self.pgons:
+            tight = [r for r in pgrep if r['slack'] <= 1e-9]
+            self.log(f'   FINAL EXACT: {len(self.pgons)} rank-family rows: '
+                     f'{"OK" if pgok else "FAIL"} (worst violation {pgworst:+.9f}, '
+                     f'{len(tight)} tight, all re-derived from their exact anchors: '
+                     f'{all(r["rederived"] for r in pgrep)})')
         self.log(f'   FINAL EXACT: mass = {mass} = {float(mass):.9f}; M = {M} = {float(M):.12f} '
                  f'{"OK" if M <= 1 else "FAIL"}; max clique = {Kq} = {float(Kq):.9f} '
                  f'(size {len(Km)}, complete {comp}) {"OK" if Kq <= 1 else "FAIL"}; '
@@ -773,7 +835,9 @@ class Lever:
                    clique=str(Kq), clique_float=float(Kq), clique_complete=bool(comp),
                    clique_size=len(Km), regions_ok=bool(ok), poses=len(sup), vertices=len(V),
                    regions={lab: str(Fr(assigned.get(lab, 0), DM)) for lab in LABS},
-                   certified=bool(M <= 1 and Kq <= 1 and comp and ok))
+                   pgons=len(self.pgons), pgons_ok=bool(pgok), pgons_worst=pgworst,
+                   pgon_rows=pgrep,
+                   certified=bool(M <= 1 and Kq <= 1 and comp and ok and pgok))
         path = os.path.join(RUNS, f'cl_{self.a.TAG}_exact.txt')
         self.write_measure(path, mi, note=f'exactly certified: M = {M}, max clique = {Kq} (complete {comp})')
         res['file'] = path
@@ -1120,7 +1184,9 @@ def selftest():
                             iters=20, row_cap=1000, cq_want=10, clique_time=10.0, cq_top=5,
                             ktol=1e-6, cq_age=0, procs=1, time=60, ckpt=0, price=0,
                             finalize=True, anatomy=0, rows0=1000, row_pitch=0.5, load_rows=[],
-                            exact=[f], load_poses=[], Q=10 ** 5, Dc=10 ** 6)
+                            exact=[f], load_poses=[], Q=10 ** 5, Dc=10 ** 6,
+                            pent=[5], pent_want=4, pent_cands=60, pent_restarts=20,
+                            pent_time=20.0, pent_seed=1)
     ps = Poses(Fr(4), Fr(1), 1e-6)
     ps.add_exact_file(f)
     ps.finish()
@@ -1192,6 +1258,13 @@ def main():
     c.add_argument('--price-tol', type=float, default=1e-7)
     c.add_argument('--cg-want', type=int, default=400)
     c.add_argument('--no-finalize', dest='finalize', action='store_false')
+    # ---- rank family: odd-polygon rows mu(X) <= (k-1)/2 (search/rankfamily.py); off by default
+    c.add_argument('--pent', default='', help='comma-separated odd k (e.g. 5,7,9); empty = off')
+    c.add_argument('--pent-want', type=int, default=6, help='polygon rows added per iteration per k')
+    c.add_argument('--pent-cands', type=int, default=240, help='candidate anchor points')
+    c.add_argument('--pent-restarts', type=int, default=60, help='hill-climb restarts per k')
+    c.add_argument('--pent-time', type=float, default=90.0, help='separation budget per iteration')
+    c.add_argument('--pent-seed', type=int, default=20260911)
 
     c = sub.add_parser('raw')
     c.add_argument('FILE')
@@ -1203,6 +1276,10 @@ def main():
     sub.add_parser('selftest')
     a = ap.parse_args()
     sys.set_int_max_str_digits(0)
+    if getattr(a, 'pent', None) is not None:
+        a.pent = [int(v) for v in str(a.pent).replace(',', ' ').split()]
+        if any(k < 5 or k % 2 == 0 for k in a.pent):
+            sys.exit('--pent takes odd k >= 5 (k = 3 is a clique row)')
     if a.cmd == 'run':
         cmd_run(a)
     elif a.cmd == 'raw':
