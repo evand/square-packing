@@ -417,6 +417,7 @@ earlier leaf counts are void.
 | 2,000 | 3,770 | **0** | 163 s |
 | 2,500 | 7,810 | **60** | 1,292 s |
 | 3,000 | 14,684 | **60** (no new ones) | 4,290 s |
+| 3,500 | 17,340 | **60** | 5,139 s |
 
 The root boxes are ordered by `c_x` (pitch `1/10`, `c_y` inner, `u` innermost, `160` roots per
 `c_x` column), so `2,000` roots is `c_x ≤ 1.25`: **the whole left-wall region — including the worst
@@ -443,7 +444,34 @@ down the stack (`cert_chain` computes it in full for every box it handles, which
 boxes that get subdivided).  Rung 1 is byte-identical with the cache on, and the `CHAIN` probe
 boxes give the same verdicts, as they must.  The run reported above predates the cache.
 
-### 4.3 The subtree cache, measured: no speedup
+### 4.3 The residue is not at a tile pose
+
+The 60 uncertified boxes of the full-domain run all lie in `c_x ∈ [1.25, 1.56]` and none appeared
+later (still 60 at 3,500 of 6,400 roots), so the obvious suspect was the interior tile pose
+`(1.5, 1.5, 0)`, whose four `PIN` sets are the worst-violated of the container after the wall ones.
+It is **not** the culprit.  Descending from each of the four root boxes that meet that pose, always
+into the child that still contains it, and certifying every box on the way (`ADM` → `P1` → `MIX` →
+`CHAIN`, exact, one process):
+
+| octant | depth at which the box becomes a leaf | primitive |
+|---|---|---|
+| `σ = (−,−)` | 2 | `CHAIN` |
+| `σ = (+,+)` | 4 | `CHAIN` |
+| `σ = (+,−)` | 6 | `CHAIN` |
+| `σ = (−,+)` | 10 | `CHAIN` |
+
+(and the wall tile pose `(0.5, 1.5, 0)` at depths 0, 0, 2 and `EMPTY`; the edge tile pose
+`(1.5, 0.5, 0)` at depth 2 by `ADM` in all four octants.)  So every tile pose in the band is a leaf
+well inside the depth budget, and the residue at depth 14 is **somewhere new** — not a pose
+Theorem 1 predicts.  Its location is being pinned down by two restricted sweeps
+(`runs/x103_narrow.log`, depth 14 over columns 12–13; `runs/x103_shallow_probe.log`, depth 10 over
+columns 12–15); both were still running at the report deadline.
+
+The spread in the table is itself a check on the theory: the four octants of one pose need depths 2
+to 10, because the cover is symmetric under `x → 4−x, y → 4−y` but not under `x ↔ y`, and Lemma 1's
+pinwheel is not symmetric under `σ → −σ` either.
+
+### 4.4 The subtree cache, measured: no speedup
 
 `--cx-lo/--cx-hi` (new) restricts the sweep to a band of root columns; it prints `PARTIAL SWEEP`
 on entry and `VERIFIED (PARTIAL: ...)` in the verdict, so a restricted run cannot be mistaken for
