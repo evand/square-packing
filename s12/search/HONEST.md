@@ -16,8 +16,8 @@ it fires under every variant of the measurement I could construct.
 
 | dual | `Theta` = LP | min capture, clique rule `meet` | **honest** | min capture, clique rule `core` | honest |
 |---|---|---|---|---|---|
-| `E2Pg` (14,611 poses, the full loaded set) | `11.864926892` | **`0.655199`** | **`18.109`** | `0` | `inf` |
-| `E2Pg`, a second dual of the same optimum | `11.864926892` | `0.622941` | `19.047` | `0` | `inf` |
+| `E2Pg` (14,611 poses, the full loaded set) | `11.864926892` | **`0.655199`** | **`18.109`** | `0.073029` | `162.47` |
+| `E2Pg`, a second dual of the same optimum | `11.864926892` | `0.622941` | `19.047` | — | — |
 | `SUPEPGF` (956-pose certified support) | `11.800418089` | **`0.585278`** | **`20.162`** | `0` | `inf` |
 | `SUPEPGF` + one repair round (1,312 poses) | `11.835811134` | `0.735603` | `16.090` | — | — |
 
@@ -49,8 +49,10 @@ measurement is `15.8`.
    independently by a max-margin LP over the member half-planes: the deficits are `-0.0007` to
    `-0.042`, a genuine non-Helly gap, not a rounding artefact.  Under the sound `core` rule the
    clique mass credits nobody at all off the pose set, `min capture` reaches exactly `0` (an
-   axis-parallel square at `(1.5, 2.5)` captures *nothing* of `SUPEPGF`'s dual), and
-   `honest = inf`.  The two rules do not "differ materially"; they differ maximally, and nothing in
+   axis-parallel square at `(1.5, 2.5)` captures *nothing* of `SUPEPGF`'s dual — its whole point
+   mass is 67 atoms), `honest = inf` there and `162.47` on `E2Pg`, whose 403 atoms and 44 polygon
+   rows leave every square at least `0.073029`.
+   The two rules do not "differ materially"; they differ maximally, and nothing in
    between exists in the repo today.  Cliques being non-Helly is the whole reason they are a lever
    (`CLIQUELEVER.md` §0, `CLIQUE.md`) — and it is exactly what makes them uncreditable.
 3. **The `0.04 / 2.5 deg` pose lattice hides the worst poses by a factor of six.**  On `E2Pg` the
@@ -62,7 +64,8 @@ measurement is `15.8`.
    tiling, nudged `1e-7` off the grid lines**: `(1.5000001, 3.4999999, 0 deg)`, the closed square
    `[1.0000001, 2.0000001] x [2.9999999, 3.9999999]`.  At `(1.5, 3.5, 0)` exactly, capture is
    `1.045`; `1e-7` to the right it is `0.655`, because the square then misses every atom on the
-   line `x = 1` (51 atoms, mass `0.420`).  This is `RUNG2.md` §4.3 repeating itself one level up,
+   line `x = 1` (the dual has 51 of them, mass `0.420`; `0.158` of that lies in this square's
+   `y`-range) and, separately, clique rows worth `0.232`.  This is `RUNG2.md` §4.3 one level up,
    and it is the same fix: `family_rows.py` already emits these poses, and the pricer does not
    look at them.
 
@@ -120,9 +123,11 @@ and 19 clique rows that iteration added but never solved with.  More rows, lower
 way — closing the restricted master exactly (`honestcost.py dual --master`, 24 min instead of
 19 min) — lands on the **same** objective `11.864926892` with a visibly **different** dual (points
 `3.808723` vs `3.709598`, cliques `7.511191` vs `7.610316`, 631 vs 638 rows with dual).  Its honest
-cost is `19.047`, i.e. slightly worse, and its `0.04` lattice minimum is `0.945215040` — identical
-to nine places to the first dual's.  So the number reported is the one HiGHS returns, as the brief
-allows, and the non-uniqueness moves it by `1` in `18`, not by `6`.
+cost is `19.047` (min capture `0.622941`), i.e. slightly worse, at the **same** minimising pose
+`(1.5000001, 3.4999999, 0 deg)`, with the **same** clique credit there (`0.465143` from 43 rows, to
+six places) and less point credit (`0.148462` against `0.180720`); its `0.04` lattice minimum is
+`0.945215040`, identical to nine places to the first dual's.  So the number reported is the one
+HiGHS returns, as the brief allows, and the non-uniqueness moves it by `1` in `18`, not by `6`.
 
 **Self-test (step 1).**  `Theta` reproduces the LP to `1e-12` on both states, and under `meet`
 
@@ -155,13 +160,19 @@ clique mass; `4.6 %` is polygon mass.**
 | the 400 heaviest coverage-row points as centres, 36 angles | 14,400 | `0.968330` | `12.253` |
 | pattern search, 400 seeds, steps `0.04 -> 1.5e-5` | 400 | `0.655199` | `18.109` |
 | knife-edge refinement, `+-eps` at `1e-4 .. 1e-9` | 100 | `0.655199` | `18.109` |
-| dense `0.02 / 1 deg` lattice | 1,689,197 | `RUNNING` | |
+| dense `0.02 / 1 deg` lattice | 1,689,197 | `0.801930` | `14.795` |
+| pattern search + knife edge from the dense worst 400 | 400 | `0.781059` | `15.191` |
 
 The descent does not move off `0.655199393` at any step size from `0.04` down to `1.5e-5`, nor
-under `+-eps` probes at `1e-4, 1e-5, 1e-6, 1e-7, 1e-8, 1e-9` in all three coordinates: this is a
-plateau, not a knife edge (see the profile in §3).  The 1.69M-pose dense lattice is not expected to
-find it — `0.02 / 1 deg` is still a lattice and the minimum lives in a `1e-6`-wide band — and it
-cannot raise the reported minimum, only lower it.
+under `+-eps` probes at `1e-4, 1e-5, 1e-6, 1e-7, 1e-8, 1e-9` in all three coordinates: a plateau,
+not a knife edge (see the profile in §3).  The 1.69M-pose dense pass at `0.02 / 1 deg` gets to
+`0.801930` — better than the coarse lattice's `0.945215` and still `0.15` above the family's
+`0.655199`, which is the point of §3: refining a lattice does not reach a `1e-6`-wide dip.
+
+The `core` rule on the same candidate sets: lattice `0.099474`, families `0.092799`, the poses of
+`P` themselves `0.088385`, descent + knife edge `0.073029` (honest `162.47`), at
+`(2.50023, 1.50093, 0.141 deg)` — `0.030124` from 7 point atoms, `0.042906` from 5 polygon rows,
+and **`0` from all 638 clique rows**.
 
 ### 2.2 `SUPEPGF` — the certified 956-pose support (LP `11.800418089`)
 
@@ -179,7 +190,9 @@ cannot raise the reported minimum, only lower it.
 | dense `0.02 / 1 deg` lattice | 1,689,197 | `0.585278` | `20.162` |
 
 Here the dense scan and the descent agree to nine places: on a 956-pose support the dual is short
-almost everywhere, so the lattice has no trouble finding the bottom.
+almost everywhere, so a lattice has no trouble finding the bottom.  Under `core`, `min capture` is
+exactly `0` at `(1.49999, 2.50001, 89.995 deg)` — an axis-parallel square in the middle of the left
+half of the container that captures none of the 67 atoms and none of the 40 polygon rows.
 
 ### 2.3 The minimisers, and what they capture
 
@@ -196,9 +209,24 @@ almost everywhere, so the lattice has no trouble finding the bottom.
 The atoms it does see are all on `y = 3` and `x = 2` (`(2.0, 3.0486)`, `(1.5409, 3.0004)`,
 `(1.6415, 3.0004)`, `(1.7886, 3.0)`, ...) — the dual's point mass sits on the wall-square corner
 lines `x, y in {1, 2, 3}`, exactly where `RANKDIAG.md` §5 says the binding pentagons wrap — and a
-square whose left edge has just left `x = 1` sees only the `y = 3` half of it.  The whole
-axis-parallel item-3 family is short: **all four "corner-cell" tiling squares and their transposes
-capture `0.655-0.669`.**
+square whose left edge has just left `x = 1` sees only the `y = 3` half of it.
+
+The cleanest way to see how short this dual is: take the **16 unit squares of the trivial `4 x 4`
+tiling of `[0,4]^2`** and evaluate `capture` at each, first exactly and then nudged `1e-7` (the best
+of the admissible sign choices).  Rows are `cy = 3.5` down to `cy = 0.5`, columns `cx = 0.5 .. 3.5`:
+
+| exactly on the tiling | | | | | nudged `1e-7` | | | |
+|---|---|---|---|---|---|---|---|---|
+| `1.0000` | `1.0451` | `1.1045` | `1.0000` | | **`1.0000`** | **`0.6552`** | **`0.7220`** | **`1.0000`** |
+| `1.0337` | `2.0368` | `1.9334` | `1.0915` | | `0.6638` | `0.8335` | `0.8460` | `0.7247` |
+| `1.1354` | `2.1108` | `2.0498` | `1.0527` | | `0.7396` | `0.9524` | `0.8352` | `0.6672` |
+| `1.0000` | `1.0572` | `1.1089` | `1.0000` | | `1.0000` | `0.6694` | `0.7334` | `1.0000` |
+
+Exactly on the tiling every square is captured `>= 1` — the four container corners at exactly
+`1.0000`, the four interior cells at `1.93-2.11`, which is the dual paying twice for the poses it
+knows about.  Nudge by `1e-7` and **12 of the 16 fall below 1**, as low as `0.6552`; only the four
+corner squares survive, and they survive because there is nowhere for them to go (every admissible
+nudge keeps the two container-boundary edges).  That is the whole story of this dual in one table.
 
 **`SUPEPGF`** — a `45-55 deg` square pressed against the right wall, halfway up:
 
@@ -320,13 +348,14 @@ python3 search/honestcost.py dual E2Pg    --threads 6 --master --out-tag E2PgM  
 # the scan: lattice + families + descent + knife edge + a 1.69M-pose dense confirmation
 python3 search/honestcost.py scan SUPEPGF --rule meet --threads 4      # ~4 min
 python3 search/honestcost.py scan SUPEPGF --rule core --threads 4      # seconds
-python3 search/honestcost.py scan E2Pg    --rule meet --threads 8      # ~1 h (the dense pass)
+python3 search/honestcost.py scan E2Pg    --rule meet --threads 8      # 3,363 s (the dense pass)
 python3 search/honestcost.py scan E2Pg    --rule core --threads 8
 #   -> runs/hc_TAG_RULE_scan.json  (every candidate set's min, the minimisers' anatomy)
 #      runs/hc_TAG_RULE_worst.txt  (the 400 worst poses, for repair)
 
 # the knife-edge stage alone, from a finished scan's worst poses (minutes)
-python3 search/honestcost.py fine E2Pg --rule meet --threads 6
+python3 search/honestcost.py fine E2Pg  --rule meet --threads 6
+python3 search/honestcost.py fine E2PgM --rule meet --threads 6
 
 # is the `meet` rule a valid cover rule at all?  (100 s / 210 s)
 python3 search/honestcost.py sound SUPEPGF --ncliques 400 --sample 200
