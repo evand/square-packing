@@ -215,6 +215,77 @@ the descent starts at `11.4355` instead of `12`; then only the window cuts have 
 question becomes how far below `11.4355` they push.  `locality.py` already has `--row-pitch` and
 would need a `--resume-rows/--resume-cliques` pair copied from `cliquelever.Lever`.
 
+## 6. Round 2: the seeded `LOC_2` descent, and the cut the window subproblem actually writes down
+
+### 6.1 Seeding the outer LP (`--resume-rows`, `--resume-cliques`, `--tight`)
+
+§4's route, implemented.  A coverage row is part of the definition of `LOC_D`, and a clique row
+`mu(K) <= 1` is the `pi = 1_K` case of a window cut — implied by `LOC_D` whenever the clique fits
+in a window, which at `D = 2` is always (§0(1)).  Both are therefore valid for `LOC_D` and seeding
+with them only starts the descent lower; they cannot change the value.  `--resume-cliques`
+re-verifies every row pairwise (exact integer SAT on the borderline pairs) before it enters the LP.
+
+The full `25,012`-row seed is not affordable: a generic container point lies in 500–2,000 of the
+`10,175` poses, so the row block is ~6M nonzeros and one ipm+crossover on `26,140 x 10,463` ran for
+**22 minutes** without finishing.  `--tight 1e-6` keeps only the rows the seed measure already
+saturates — **`4,952` of `25,012`** — which is the same warm start at a fifth of the cost: the
+dropped rows carry no dual at the seed measure, and they are still implied by the windows, and the
+coverage separation would re-add any that bite.  `--lp-tlim` adds `t4leaf.Hi`'s rule (ipm+crossover
+on the first solve, warm dual simplex afterwards).
+
+### 6.2 The window subproblem's optimal dual, named
+
+`locality.py check` now reports the *shape* of the separating inequality, not just its violation:
+the dual `pi >= 0` of the window subproblem, its distinct values, the independence number of its
+support (complete B&B), and the centroid / angle range / region split of each `pi`-class.  The
+reading is mechanical — `pi = 1` on a clique is a clique row; `pi = 1/r` on a support with
+`alpha = r` is a rank inequality `mu(X) <= r`, and with `2r+1` classes it is the odd polygon of
+`RANKDIAG.md`; anything else is new.
+
+**On the leaf's certified QSTAB measure (`11.435484`), at `D = 1.5` and at `D = 2`, the cut is
+literally the same object:**
+
+> `pi = 1/2` on **33 poses**, `alpha` of that support `= 2` (complete branch and bound),
+> `mu(X) = 2.500000` exactly, so the inequality is the **rank inequality `mu(X) <= 2`**, violated by
+> `0.5`, and `z = 2.5/2 = 5/4`.  Centroid `(1.831, 2.859)`, angles spanning `0.00–89.96` degrees,
+> regions `I: 22, W5: 10, W4: 1`.
+
+That is `RANKDIAG.md` §0's pentagon in its exact-rank closure: same place (the box wrapping the
+grid vertex `(2,3)`), same regions (interior plus the adjacent wall region `W5`), 33 poses against
+the pentagon's 32, and `2.500000` of mass against the pentagon's `2.435484`.  The pentagon
+*undercounts the obstruction by `0.065`*; the rank inequality on the window subproblem's support is
+the sharp form.
+
+### 6.3 What the pentagon family leaves behind
+
+`cl_PGA_measure.txt`, the rank agent's leaf run with QSTAB + odd polygons at `LP = 11.313432`
+(iteration 33, not yet converged), `230` support poses:
+
+| measure | mass | `z_max` at `D = 1.5` | witness window | its mass / support |
+|---|---|---|---|---|
+| `cl_A0101L2_exact` (QSTAB) | `11.435484` | `1.249999995` | `[1.125, 2.625] x [2.25, 3.75]` | `2.564516` / 35 |
+| `cl_PGA_measure` (QSTAB + polygons) | `11.313432` | **`1.240874607`** | `[0.375, 1.875] x [1.125, 2.625]` | `2.651778` / 82 |
+
+**The odd-polygon family removes `0.122` of mass and essentially none of the window
+inconsistency**: `z_max` moves `1.250 -> 1.241`.  Local reasoning is *not* exhausted by the polygon
+family at `D = 1.5`.
+
+And the cut that now separates is **not** an anchor polygon.  It has two levels:
+
+> `pi = 1` on a **24-pose clique** (mass `0.530137`, centroid `(1.460, 1.741)`, regions `I: 22,
+> W7: 2`) **plus** `pi = 1/2` on a **47-pose rank-2 set** (mass `1.434513`, centroid
+> `(1.077, 1.883)`, regions `I: 28, W7: 17, W6: 2`), with `alpha` of the whole 71-pose support
+> `= 2` (complete B&B).  `pi . mu = 1.247394`.
+
+Read as an inequality, `mu(K) + (1/2) mu(X) <= 1`: an independent set that uses a member of the
+clique `K` can use nothing of `X`, and one that avoids `K` can use at most two of `X`.  It is
+*strictly stronger than rank on the same support* — `mu(K union X) = 1.9647 < 2 = alpha`, so the
+plain rank inequality `mu <= 2` does **not** fire there — and it is not an odd hole, wheel or
+antihole of poses either (`RANKDIAG.md` §0 item 2 already found those worth zero).  It is the
+join of a clique and a rank-2 set, which is the next family to build if the polygon family is to
+be pushed further.  Geometrically it is again the interior against a wall region, this time `W7`
+and the left wall, one window over from the pentagon.
+
 ## 5. Reproduce
 
 ```
@@ -227,10 +298,14 @@ python3 search/locality.py check QA --poses runs/cl_A0101L2_poses.txt \
     --measure runs/cl_A0101L2_exact.txt --D 1.5 2 2.5 3 3.5
 python3 search/locality.py check QB --poses runs/cl_B40KL2_poses.txt \
     --measure runs/cl_B40KL2_exact.txt --D 1.5 2 2.5 3 3.5
+python3 search/locality.py check PGAm --poses runs/cl_PGA_poses.txt \
+    --measure runs/cl_PGA_measure.txt --D 1.5 2        # a pentagon-cut measure
 
-# the LOC_D loop itself (does not converge in minutes; see 4)
-python3 search/locality.py run A20b --poses runs/cl_A0101L2_poses.txt \
-    --corners 1111 --patterns 01010101 --chord --D 2 --shape box --threads 2 --procs 2
+# the LOC_D loop, seeded with the recorded rows and clique rows (6.1)
+python3 search/locality.py run A2S --poses runs/cl_A0101L2_poses.txt \
+    --resume-rows runs/cl_A0101L2_rows.txt --resume-cliques runs/cl_A0101L2_cliques.txt \
+    --tight 1e-6 --corners 1111 --patterns 01010101 --chord --D 2 --shape box \
+    --threads 2 --procs 2 --lp-tlim 45
 bash search/locality_launch.sh A 2400            # the whole D row, detached, 2 threads each
 ```
 
