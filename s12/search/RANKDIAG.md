@@ -376,10 +376,13 @@ membership from the anchors and its independence number by a fresh unseeded B&B.
 
 **What these numbers are.**  Each is `QSTAB(P) + rank rows` for a finite pose set `P`, so each is a
 rigorous **lower** bound on the continuum value of the relaxation (restricting the poses lowers
-the value: `T4SCREEN.md` §1.2).  The CG-converged lattice value is therefore the best
-*packing-side* estimate of the continuum value we have — it is where the relaxation lands when the
-pricer can no longer find an improving pose, not a proven ceiling.  Nothing here bounds `s(12)`
-from above on its own; what it bounds is how far this relaxation can be pushed.
+the value: `T4SCREEN.md` §1.2).  Nothing here bounds `s(12)` from above on its own; what it bounds
+is how far this relaxation can be pushed.  There is **no CG-converged lattice value** to quote
+alongside them: §17 shows the pricer's best reduced cost floors at `0.05-0.07` (pure) and `~0.70`
+(corner) rather than decaying to zero, so column generation on the `0.04 / 2.5 deg` lattice does
+not terminate and the packing-side estimate of the continuum value is a descending sequence, not a
+number.  Its direction is the useful part: with polygon rows on, the pure instance is still going
+down (`11.921 -> 11.866` over 44 iterations) while its clique-only twin settles at `11.902`.
 
 ### The lattice is not what is holding the value down (§16)
 
@@ -964,33 +967,49 @@ pinned; what is pinned is that a *finer* lattice offers the pricer nothing the c
 Second, both stage-1 numbers are upper bounds, not certificates; the certified number of this
 round is `SUPP`'s `11.759344530`.
 
-## 17. Round 5: driving the column generation on the pure instance
+## 17. Round 5: the column generation does NOT converge on this lattice
 
-§16 settles the *pitch*: halving it buys the pricer nothing.  What it does not settle is the
-*column-generation* limit — `E2P` was stopped at `5,742 s` with its best lattice reduced cost still
-falling:
+§16 settles the *pitch*: halving it buys the pricer nothing.  Round 5 was meant to settle the
+*column-generation* limit — `E2P` had been stopped with its best lattice reduced cost still
+falling, and its first seven injections looked like a clean geometric decay:
 
 | `E2P` injection | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
 |---|---|---|---|---|---|---|---|
 | best lattice rc | `+0.423367` | `+0.326009` | `+0.234435` | `+0.211374` | `+0.128997` | `+0.127616` | `+0.084796` |
 
-That is a clean geometric decay, roughly `x0.75` per injection, with no sign of a floor — the pure
-instance is *converging* on the `0.04 / 2.5 deg` lattice at around `11.90`, not being held there by
-a starved pricer.  `E2Pg` and `E2Bg` (`search/rankfamily_cg.sh`) resume `E2P` and `E2B` from their
+Extrapolating that decay says `rc < 0.01` is eight to ten injections away.  **The extrapolation is
+wrong.**  `E2Pg` and `E2Bg` (`search/rankfamily_cg.sh`) resumed `E2P` and `E2B` from those
 checkpoints — poses, coverage rows, clique rows and all 840 / 534 polygon rows rebuilt from their
-exact anchors — with `--lattice-every 5` still on, to drive the rc below `0.01`.  Extrapolating the
-decay, that is eight to ten more injections, i.e. forty to fifty iterations of a 12k-column model
-at `120-700 s` apiece: a multi-hour run, and it was launched with a `21,600 s` budget.  Its
-trajectory is in `runs/E2Pg.out` and `runs/E2Bg.out`; `python3 search/rankfamily_traj.py` prints
-it with the injections and their reduced costs marked.
+exact anchors — with `--lattice-every 5` still on.  What the reduced costs actually do is **floor**:
 
-**What can be said now, precisely.**  The certified numbers of §15 are `QSTAB(P) + rank rows` for
-finite pose sets `P`, hence rigorous **lower** bounds on the continuum value of this relaxation.
-The CG-converged lattice value — the value the loop reaches when the pricer can no longer find an
-improving pose on the lattice — is the best *packing-side* estimate of that continuum value; it is
-not a proven ceiling for it, because the lattice is a discretisation and the pricer is a heuristic
-over it.  What §16 adds is that the discretisation is not the binding constraint: the `0.02 /
-1.25 deg` lattice, eight times larger, returns the identical best reduced cost.  So the honest
-statement of where the pure instance sits is: **certified at `11.759344530` on `E2P`'s support,
-estimated at `11.90` or below on the full lattice once column generation closes, and `0.1-0.24`
-below 12 either way.**
+| `E2Pg` injection (continuing `E2P`) | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 |
+|---|---|---|---|---|---|---|---|---|
+| best lattice rc | `+0.092850` | `+0.056406` | `+0.050663` | `+0.055473` | `+0.067294` | `+0.067114` | `+0.051298` | `+0.066388` |
+
+| `E2Bg` injection (continuing `E2B`) | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| best lattice rc | `+0.638241` | `+0.616409` | `+0.602398` | `+0.636446` | `+0.676966` | `+0.676234` | `+0.689115` | `+0.695942` | `+0.704265` | `+0.696133` | `+0.704633` |
+
+On the pure instance the rc drops once more, from `0.085` to about `0.05`, and then sits between
+`0.05` and `0.07` for eight injections with no downward trend.  On the corner instance it does not
+even do that: it **rises**, from `0.64` to a plateau around `0.70`.  Every injection adds 400-600
+poses and the pricer immediately finds fresh ones priced just as well.  **Column generation on the
+`0.04 / 2.5 deg` lattice does not terminate for these instances, and `rc < 0.01` is not reachable
+by running it longer** — the floor is five to seventy times that.
+
+`E2Bg` ran its full budget: 59 iterations, 11 injections, `22,257 s`, LP `11.838127 -> 11.789374`,
+final measure `11.769663780` but **uncertified** (max clique `1.0194`, regions FAIL — it stopped
+mid-loop as ever).  `E2Pg` is at iteration 44 with 8 injections, LP `11.921003 -> 11.865961`.
+
+**What this does and does not change.**  It does not touch any certified number: those are
+`QSTAB(P) + rank rows` for explicit finite `P` and remain rigorous lower bounds on the continuum
+value of the relaxation.  It does not touch §16 either: the finer lattice still returns the
+identical best reduced cost, so the *discretisation* is not what binds.  What it changes is the
+status of the phrase "the CG-converged lattice value": **there isn't one to report.**  The pricer
+never runs out of improving columns at this pitch, so the lattice LP value is approached from above
+without a computable stopping point, and the best packing-side estimate of the continuum value is
+not a converged number but a descending sequence.  The useful reading of that sequence is the
+direction: with polygon rows on, the pure instance goes **down** under continuous pricing
+(`11.921 -> 11.866` over 44 iterations and 8 injections, still falling), while its clique-only twin
+`PUREM` settles at about `11.902` and stops moving.  The two are now `0.036` apart and separating.
+
