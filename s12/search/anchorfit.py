@@ -156,7 +156,7 @@ def cut_candidates(ps, poses, w, ncand=90):
     """candidate anchor POINTS for a cut: the arrangement vertices of the cut's support, kept by
     the weight of the poses containing them (`rankfamily._cand_masks`'s rule), plus the pose
     centres.  Returns (M, pts) with `M[j, i]` = "cut pose i contains candidate j"."""
-    squares = [ps.sq[i][:8] + (max(int(round(w[k] * 10 ** 6)), 1),) for k, i in enumerate(poses)]
+    squares = [ps.sq[i][:8] + (max(int(round(w[k] * 10 ** 9)), 1),) for k, i in enumerate(poses)]
     V = lc.enumerate_vertices(squares, ps.t, verbose=False, procs=1)
     Inc = lc.incidences(squares, V, verbose=False, procs=1)
     ww = np.array([s[8] for s in squares], dtype=np.int64)
@@ -166,7 +166,7 @@ def cut_candidates(ps, poses, w, ncand=90):
 def fit_cycle(ps, poses, w, mu, M, pts, k, rng, restarts=60, deadline=None):
     """`H = C_k`, `pi = 1`: the odd polygon.  `rankfamily._climb` maximises the cut-weighted mass
     of the union of the k pieces; the anchors are the k sides of the polygon."""
-    wi = np.maximum(np.round(np.asarray(w) * 10 ** 6).astype(np.int64), 0)
+    wi = np.maximum(np.round(np.asarray(w) * 10 ** 9).astype(np.int64), 0)
     dl = deadline if deadline is not None else time.time() + 60
     found = rf._climb(M, wi, k, 0, rng, restarts, [], dl)
     out = []
@@ -181,7 +181,7 @@ def fit_wheel(ps, poses, w, mu, M, pts, k, rng, restarts=60, deadline=None):
     """`H = K1 join C_k` (the odd wheel) and its clique-hub generalisation: a POINT anchor for the
     hub, the k sides of a polygon for the rim, `pi = 1` on the hub and `1/2` on the rim.  The hub
     is the candidate point of heaviest cut mass among the poses the cycle does not already take."""
-    wi = np.maximum(np.round(np.asarray(w) * 10 ** 6).astype(np.int64), 0)
+    wi = np.maximum(np.round(np.asarray(w) * 10 ** 9).astype(np.int64), 0)
     dl = deadline if deadline is not None else time.time() + 60
     found = rf._climb(M, wi, k, 0, rng, restarts, [], dl)
     out = []
@@ -204,8 +204,11 @@ def fit_wheel(ps, poses, w, mu, M, pts, k, rng, restarts=60, deadline=None):
 def fit_cut(ps, mu, cut, a, log, tag=''):
     """every family in the menu, best first"""
     poses = [int(v) for v in cut['poses']]
-    w = [float(v) for v in cut['pi']]
-    if len(poses) < 3:
+    pi_c = [float(v) for v in cut['pi']]
+    # the climb maximises the CONTRIBUTION a pose makes to the cut, pi_i * mu_i, not pi_i alone:
+    # an anchor is worth having only where the measure actually sits
+    w = [pi_c[k] * float(mu[i]) for k, i in enumerate(poses)]
+    if len(poses) < 3 or max(w) <= 0:
         return None
     t0 = time.time()
     M, pts = cut_candidates(ps, poses, w, a.ncand)
@@ -228,15 +231,21 @@ def fit_cut(ps, mu, cut, a, log, tag=''):
         if best is None or exc > best['excess']:
             best = rec
     rows.sort(key=lambda r: -r['excess'])
+    # keep the best row of EVERY family as well as the overall top few, so the table can say what
+    # each family was worth and not only which one won
+    perfam = {}
+    for r in rows:
+        if r['family'] not in perfam:
+            perfam[r['family']] = r
     log(f'   {tag}cut z = {cut["z"]:.9f} ({len(poses)} poses, pi values '
-        f'{sorted(set(round(v, 4) for v in w), reverse=True)}), violation {viol:.6f}')
-    for r in rows[:a.show]:
+        f'{sorted(set(round(v, 4) for v in pi_c), reverse=True)}), violation {viol:.6f}')
+    for r in list(perfam.values())[:a.show] if a.per_family else rows[:a.show]:
         log(f'     {r["family"]:8s} value {r["value"]:.6f} vs alpha_pi {r["alpha"]:.2f} '
             f'-> excess {r["excess"]:+.6f}, captured {100 * r["captured"]:.1f} %, '
             f'|E(H)| = {r["edges"]}, pieces {r["sizes"]}')
     return dict(z=cut['z'], violation=viol, poses=len(poses),
-                pi_values=sorted(set(round(v, 6) for v in w), reverse=True),
-                best=best, all=rows[:a.show], secs=time.time() - t0)
+                pi_values=sorted(set(round(v, 6) for v in pi_c), reverse=True),
+                best=best, by_family=perfam, all=rows[:a.show], secs=time.time() - t0)
 
 
 def cmd_fit(a):
@@ -332,6 +341,8 @@ def main():
     c.add_argument('--restarts', type=int, default=60)
     c.add_argument('--fit-time', type=float, default=90.0)
     c.add_argument('--show', type=int, default=4)
+    c.add_argument('--per-family', action='store_true',
+                   help='log the best row of each family instead of the overall best few')
     c.add_argument('--limit', type=int, default=0)
     sub.add_parser('selftest')
     a = ap.parse_args()

@@ -321,6 +321,109 @@ these LPs carry `10,463` columns of which `1,500`–`3,800` are ever active, and
 duals, which is exactly what pricing loaded columns requires), and adding it is the next piece of
 work on this file.
 
+## 7. Round 3: fitting a certifiable anchor family to the exact window cut (`search/anchorfit.py`)
+
+### 7.1 The family, and why it is certifiable
+
+The window subproblem's dual `pi` is the exact local facet on the support, but a verifier cannot
+check "this list of 33 poses has independence number 2".  The certifiable form is the ANCHOR GRAPH.
+Let `H` be a graph whose vertices carry anchors `A_v` (a point or a closed segment), let
+`X_v = {S admissible : A_v subset S}`, and **assign every square to the LEAST `v` with
+`A_v subset S`**, so the pieces are pairwise disjoint by a rule a verifier can apply.  Then for any
+weights `pi_v >= 0` and any packing `P`:
+
+* two squares of `P` cannot both lie in `X_v` — both contain `A_v`, so they meet;
+* if `uv` is an edge of `H`, certified by `A_u cap A_v != {}`, a square of `P` in `X_u` and one in
+  `X_v` both contain a common point, so they meet; being in disjoint pieces they are distinct,
+  which is impossible.
+
+So `S -> (its piece)` injects `P cap (union X_v)` into an independent set of `H`, each square paying
+its own piece's weight, and
+
+> **`sum_v pi_v mu(X_v) <= alpha_pi(H) := max{ sum_{v in I} pi_v : I independent in H }`**
+
+is valid for every packing of disjoint closed unit squares, with no geometry beyond "a convex set
+contains a segment iff it contains both endpoints" and the exact intersection test on `H`'s edges —
+`cores_meet` on `H`'s edges plus the credit `alpha_pi(H)`, exactly as the brief's Lemma 0 predicts.
+`H = C_k`, `pi = 1` is `rankfamily.py`'s odd polygon (`alpha_pi = (k-1)/2`); `H = K1 join C_5` with
+`pi = 1` on the hub and `1/2` on the rim is the odd wheel, `alpha_pi = 1`.  The disjoint-assignment
+rule is what makes the WEIGHTED form valid: with overlapping pieces a square would pay several
+weights and the injection argument bounds only the union.
+
+`anchorfit.py fit` takes a cut from `locality.py check`, hill-climbs anchors on the arrangement
+vertices of the cut's support (`rankfamily._cand_masks` / `_climb`, imported, not forked), builds
+`H` from the EXACT anchor intersections — a non-edge is never assumed, and an unplanned edge only
+lowers `alpha_pi` — computes `alpha_pi(H)` by brute force over the independent sets of a graph with
+at most 8 vertices, extends the pieces over the WHOLE loaded pose set (maximal rows), and reports
+
+    captured = (sum_v pi_v mu(X_v) - alpha_pi(H)) / (pi . mu - 1).
+
+`selftest` covers the exact anchor-intersection predicate (crossing, touching, collinear overlap,
+point-on-segment) and `alpha_pi` on `C5`, `C7`, `W5`, `W7`: **10/10**.
+
+### 7.2 The table: cut -> fitted `H` -> captured fraction
+
+The leaf's certified QSTAB measure (`cl_A0101L2_exact`, `11.435484`).  **Every one of the nine
+`D = 2` windows is violated**, and so are eight of the 36 at `D = 1.5`; every cut but one is a pure
+rank-2 facet, `pi = 1/2` on 26–33 poses with `alpha = 2` under a complete branch and bound.
+
+| cut | `z` | violation | `pi` | fitted | excess | **captured** |
+|---|---|---|---|---|---|---|
+| `D=2` w0 | `1.217742` | `0.217742` | `1/2` | `C5` | `+0.435484` | **`200.0 %`** |
+| `D=2` w1 | `1.096774` | `0.096774` | `1/2` | `C5` | `+0.129032` | `133.3 %` |
+| `D=2` w2 | `1.217742` | `0.217742` | `1/2` | `C5` | `+0.387097` | `177.8 %` |
+| `D=2` w3 | `1.250000` | `0.250000` | `1/2` | `C5` | `+0.435484` | `174.2 %` |
+| `D=2` w4 | `1.217742` | `0.217742` | `1/2` | `C5` | `+0.306452` | `140.7 %` |
+| `D=2` w5 | `1.161290` | `0.161290` | `1/2` | `C5` | `+0.322581` | `200.0 %` |
+| `D=2` w6 | `1.193548` | `0.193548` | `1/2` | `C5` | `+0.177419` | `91.7 %` |
+| `D=2` w7 | `1.209677` | `0.209677` | `1/2` | `C5` | `+0.274194` | `130.8 %` |
+| `D=2` w8 | `1.217742` | `0.217742` | `1/2` | `C5` | `+0.290323` | `133.3 %` |
+| `D=1.5` w2 | `1.217742` | `0.217742` | `1/2` | `C5` | `+0.387097` | `177.8 %` |
+| `D=1.5` w12 | `1.161290` | `0.161290` | `1/2` | `C5` | `+0.306452` | `190.0 %` |
+| `D=1.5` w13 | `1.250000` | `0.250000` | `1/2` | `C5` | `+0.435484` | `174.2 %` |
+| `D=1.5` w15 | `1.137097` | `0.137097` | `1/2` | `C5` | `+0.145161` | `105.9 %` |
+| `D=1.5` w18 | `1.193548` | `0.193548` | `1/2` | `C5` | `+0.177419` | `91.7 %` |
+| `D=1.5` w32 | `1.209677` | `0.209677` | `1, 1/2` | `C5` | `+0.274194` | `130.8 %` |
+| `D=1.5` w34 | `1.185484` | `0.185484` | `1, 1/2` | `C5` | `+0.209677` | `113.0 %` |
+| `D=1.5` w28 | `1.024194` | `0.024194` | `1, 1/2` | **none** | `-0.500000` | **`< 0`** |
+
+**16 of 17 cuts are captured by a plain `C5`, at 92–200 %.**  Over 100 % is not a rounding artefact:
+the cut is confined to the window's support, while the fitted polygon row is *maximal over all
+10,175 poses*, so the certified inequality is **stronger** than the exact local facet that produced
+it.  The best fit on `D=1.5` window 13 — the `5/4` window at the grid vertex `(2,3)` — is
+`mu(X) = 2.435484` against `alpha(C5) = 2`, which is `RANKDIAG.md` §0's pentagon for this measure
+**to the last digit**: the fitter, starting only from the window subproblem's dual, rediscovers the
+hand-found pentagon.
+
+### 7.3 What does not fit, and why the wheel is not realisable
+
+`C7`, `K1 join C5` and `K1 join C7` **never fire**: on every one of the 17 cuts their excess is
+negative.  For `C7` the reason is arithmetic — the fitted seven pieces reach `2.44–2.56` of mass
+against `alpha(C7) = 3`.  For the wheels the reason is geometric and worth recording:
+
+> the fitted hub anchor never meets the rim segments, so `build_H` certifies no hub–rim edge and
+> `alpha_pi` comes out `2` (hub `1` plus two opposite rim vertices at `1/2`) instead of the wheel's
+> `1`.  A genuine `W5` needs a point that lies on **all five** sides of the pentagon; but the rim
+> edges of `W5` are the cyclic ones, so the five anchors must also meet consecutively — and five
+> segments through one common point form a CLIQUE, not a cycle.  **`W5` has no anchor realisation
+> with point/segment anchors in this configuration**, which is why the two-level cut
+> `mu(K) + (1/2) mu(X) <= 1` found in round 2 has no small anchor description.
+
+Where the measure's cut is two-level (`pi in {1, 1/2}`, windows 32 and 34 at `D = 1.5`) a plain
+`C5` fitted to the half-level still captures `113–131 %`, so nothing is lost there.  The one cut
+that defeats the menu is `D = 1.5` window 28, the *smallest* violation in the table
+(`z = 1.024194`, `0.0242`): its best `C5` is `1.500000` against `alpha = 2`, i.e. `-0.50`.
+
+### 7.4 Reading
+
+**The anchor-graph family is the certifiable closure of local reasoning on this measure, and the
+odd pentagon alone is very nearly all of it.**  Every substantial local facet the window
+subproblem produces — violations from `0.097` to `0.250` — is matched, and usually beaten, by a
+single `C5` anchor row that the verifier can already check with `cores_meet` and a right-hand side
+of `2`.  The residue is one cut of violation `0.024` with no small anchor description; whether that
+is a fitting failure or a genuinely new family is the open question, and it is a `0.024` question,
+not a `0.4` one.
+
 ## 5. Reproduce
 
 ```
