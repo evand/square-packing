@@ -424,6 +424,47 @@ of `2`.  The residue is one cut of violation `0.024` with no small anchor descri
 is a fitting failure or a genuinely new family is the open question, and it is a `0.024` question,
 not a `0.4` one.
 
+### 7.5 The same instrument on the pentagon-loop measure: nothing fits
+
+`cl_PGA_measure.txt` — the rank agent's leaf loop with QSTAB **plus** odd polygons, `LP = 11.313432`
+(iteration 33; PGA/PGB were at iteration 44, `11.306280` / `11.716220`, with no `_exact.txt` yet, so
+this is a float checkpoint and `check --fast` was used: float cover value, exact anatomy).
+
+The cuts change character completely.  On the QSTAB measure every one of the 17 cuts was a rank-2
+facet with a single weight `1/2`.  Here, of the 31 violated windows (22 with violation `>= 0.02`):
+
+| | leaf QSTAB measure | pentagon-loop measure |
+|---|---|---|
+| `z_max`, `D = 2` | `1.250000` | `1.343676` |
+| `z_max`, `D = 1.5` | `1.250000` | `1.247394` |
+| violated windows, `D = 2` | 9 of 9 | 9 of 9 |
+| violated windows, `D = 1.5` | 8 of 36 | 22 of 36 |
+| `alpha` of the cut support | `2` on every cut | `1, 2, 3, 4, 5` |
+| distinct `pi` values per cut | `1` (or `2`) | `1` to **`35`** |
+| **captured by the anchor menu** | **16 of 17, at 92–200 %** | **0 of 22** |
+
+Not one cut fits.  The best of all 22 is `D = 1.5` window 32, a `C5` at excess `-0.056982`
+(`-44.6 %`); the rest run from `-100 %` to `-3700 %`.  The `pi` spectra say why: at `D = 2` they are
+ladders — `0.56, 0.52, 0.48, … , 0.04` (step `1/25`), `7/9, 6/9, … , 1/9`, `1, 5/6, 4/6, … , 1/6` —
+on supports of 67–105 poses with `alpha = 3, 4, 5` under a complete branch and bound.  A `C_k` or a
+wheel has one or two weight levels and `alpha <= 3`; these facets have a dozen levels and
+`alpha = 5`.  The fitted pieces come back lopsided (one large piece, two or three empty), which is
+the geometric statement that no five or seven anchors carry the mass.
+
+Three of the 22 (`D = 1.5` windows 17, 23, 30; `alpha = 1`, single weight `1`, violations
+`0.023–0.050`) are plain CLIQUE rows — residue of a loop that has not finished its own clique
+separation, not new families.  The other nineteen are not.
+
+**Reading.**  The anchor-graph family is the certifiable closure of local reasoning *on the QSTAB
+measure* — the pentagon is essentially all of it, and `anchorfit` recovers `RANKDIAG.md`'s pentagon
+from the window dual alone.  But it is **not** the closure of local reasoning full stop: once the
+polygon family has been applied, the local facets that remain are higher-rank (`alpha` up to `5`)
+and many-levelled, and no `C5`, `C7`, `W5`, `W7` or `K join C5` describes any of them.  Either a
+genuinely wider certifiable family is needed for the last `0.3` — the ladder spectra suggest
+antiwebs or comb inequalities rather than polygons — or that last `0.3` is where global counting
+finally has to enter.  This is the first measurement in the project that separates "local" from
+"certifiable-local".
+
 ## 5. Reproduce
 
 ```

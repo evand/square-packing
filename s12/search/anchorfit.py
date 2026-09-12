@@ -273,7 +273,7 @@ def cmd_fit(a):
     for key, blk in sorted(D.items()):
         for c in blk['cert']:
             an = c.get('anatomy')
-            if not an or an['z'] <= 1 + 1e-9:
+            if not an or an['z'] <= 1 + max(1e-9, a.min_viol):
                 continue
             r = fit_cut(ps, mu, an, a, log, tag=f'{key} window {c["window"]} ')
             if r:
@@ -344,6 +344,9 @@ def main():
     c.add_argument('--per-family', action='store_true',
                    help='log the best row of each family instead of the overall best few')
     c.add_argument('--limit', type=int, default=0)
+    c.add_argument('--min-viol', type=float, default=0.0,
+                   help='skip cuts violated by less than this (a clique row barely over 1 is a '
+                        'residue of the source loop, not a new family)')
     sub.add_parser('selftest')
     a = ap.parse_args()
     sys.set_int_max_str_digits(0)
