@@ -43,9 +43,16 @@ smaller, i.e. they err on the side of the cover looking good.
 
 Commands
 --------
-    dual  TAG   re-solve the state's LP, dump y/z/zeta to runs/hc_TAG_dual.npz
-    scan  TAG   minimise capture over the admissible poses; writes runs/hc_TAG_scan.json
-    repair TAG  add the worst poses found by `scan` as rows, re-solve, re-scan (step 4)
+    dual   TAG  re-solve the state's LP, dump y/z/zeta to runs/hc_TAG_dual.npz, and self-test
+                (Theta = LP, and capture >= 1 on every pose of P)
+    scan   TAG  minimise capture over the admissible poses: the 0.04/2.5deg lattice, the
+                `family_rows.py` families, the poses of P, the row points as centres, a pattern
+                search, a knife-edge (+-eps) refinement and a 1.69M-pose dense confirmation
+    fine   TAG  the knife-edge stage alone, from a finished scan's worst poses
+    sound  TAG  is the `meet` rule a valid cover rule?  looks for two DISJOINT admissible squares
+                that both credit one clique row
+    repair TAG  add the worst poses found by `scan` as columns of the packing LP (= rows of the
+                cover), re-solve, then re-scan (step 4 of the brief)
 """
 import argparse
 import json
