@@ -666,3 +666,49 @@ candidate anchor points, `--pent-time` the per-iteration budget, `--pent-want` t
 Every converged run writes `runs/cl_<TAG>_pgons.json`: for each polygon row its `k`, its members,
 its dual, its mass at the last solve, and **its anchors as exact rationals**, which is all
 `rankdiag.py --pgons` needs to rebuild and re-check the row from scratch.
+
+---
+
+# Round 3: E2 — the family under continuous lattice pricing
+
+`search/rankfamily_e2.sh`.  Round 2 measured the family on a *fixed* pose set.  E2 lets the pose
+set grow while the rank rows cut: `--master --lp-tlim 0 --lattice-every 5`, so every fifth
+iteration (and whenever separation stalls) the full `price_pitch`/`price_dth` lattice is priced
+and the best `--cg-want` poses join the loaded column set (`CLMASTER.md` §2.3).  That is the
+regime in which the clique-only loop stops descending and starts climbing back.
+
+Two pieces of plumbing had to be right for the measurement to mean anything, and both are new in
+round 3:
+
+* **The lattice pricer charges polygon duals** (`rankfamily.pgon_cost`, wired into
+  `cliquelever.price`'s `rc_of` next to `clique_cost`, and into the support-column `rc`
+  diagnostic).  A candidate pose is charged a row's dual exactly when the row extends to it —
+  when its square contains one of the row's sides.  Without this every candidate that lands
+  inside a tight polygon row prices as if the row did not exist, and the pricer loads columns
+  that cannot help.
+* **Every injection re-derives every polygon row** over the enlarged pose set
+  (`rankfamily.regrow`, called from `Lever.lattice_price` and at each `--price` stage boundary),
+  so the rows stay MAXIMAL as the column set grows.  The lattice log line now reports the count:
+  on the 94-pose smoke test, four injections added `123`, `1,122`, `1,778` and `2,959` new
+  polygon memberships — the rows grow much faster than the clique rows do, which is the point.
+
+`rankfamily_traj.py` prints the trajectory of any such run: LP against loaded columns, with the
+injections marked.
+
+## 12. The three E2 runs
+
+| run | instance | branch | resumed from |
+|---|---|---|---|
+| `E2A` | leaf `01010101` | `--corners 1111 --patterns 01010101 --chord` | `cl_A0101L2_{poses,rows,cliques}` |
+| `E2B` | corner leaf `k = 4` | `--corners 1111 --patterns ........ --chord` | `cl_B40KL2_{poses,rows,cliques}` |
+| `E2P` | **no branch at all** | `--corners .... --patterns ........`, no chord | `tl_L2PURE_{poses,dual}` |
+
+`E2P` is the one that decides something.  Its clique-only twin `PUREM`
+(`runs/launch_master.sh`, another task's run, same loop, same inputs) starts at `12.214062` and
+runs a sawtooth: each block of five iterations descends, each lattice injection lifts it back.
+Its peaks decay — `12.214, 12.028, 12.006, 11.990, 11.971, 11.947, 11.950, 11.937, 11.935` — but
+its troughs have stopped falling and have started to drift up: `11.9316, 11.8746, 11.8965,
+11.9027, 11.9146, 11.9087, 11.9136, 11.9112, 11.9185`.  A clique-only pure run is settling
+somewhere around `11.91–11.94`, i.e. **below 12 but not by much, and no longer moving down**.
+If the same instance with polygon rows settles clearly below 12, a no-tree proof shape is back on
+the table; if it drifts up the same way, the tree is not optional.
