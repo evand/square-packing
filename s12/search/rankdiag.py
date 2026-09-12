@@ -953,6 +953,61 @@ def recheck(path):
     return 0 if allok else 1
 
 
+def cmd_pgons(pgjson, measure, args):
+    """anatomy of the odd-polygon rows of a `cliquelever --pent` run against a measure.
+
+    The rows are rebuilt from their stored EXACT rational anchors (not from the member index
+    lists, which index the run's pose set), so this shares nothing with the run: for each row,
+    which support poses contain one of the k segments, the row's exact mass against its
+    right-hand side (k-1)/2, the independence number of those members by a complete B&B, and
+    the anatomy (centres, angles, regions, grid vertex) of the binding ones."""
+    sup = Support(measure, r=args.r)
+    rows = json.load(open(pgjson))
+    log(f"  {os.path.basename(measure)}: {sup.n} poses, mass {sup.f(sup.total):.6f}")
+    log(f"  {len(rows)} polygon rows from {os.path.basename(pgjson)}")
+    out = []
+    for r in rows:
+        pts = []
+        for (sx, sy) in r['anchors']:
+            x, y = Fr(sx), Fr(sy)
+            D = x.denominator * y.denominator
+            pts.append((x.numerator * y.denominator, y.numerator * x.denominator, D))
+        k = len(pts)
+        mem = [i for i, s in enumerate(sup.squares)
+               if any(lc.sq_contains(s, *pts[j]) and lc.sq_contains(s, *pts[(j + 1) % k])
+                      for j in range(k))]
+        m_int = sum(sup.w[i] for i in mem)
+        bnd = (k - 1) // 2 * sup.DM
+        a, _, comp = max_clique_bits(sup.cadj, sum(1 << i for i in mem), time_limit=args.time)
+        d = dict(k=k, dual=r.get('dual', 0.0), size=len(mem), mass=sup.f(m_int),
+                 rhs=(k - 1) / 2, slack=sup.f(bnd - m_int), alpha=a, alpha_complete=comp,
+                 satisfied=bool(m_int <= bnd), alpha_ok=bool(a <= (k - 1) // 2 or not comp),
+                 anchors=[[float(Fr(p[0], p[2])), float(Fr(p[1], p[2]))] for p in pts],
+                 members=mem)
+        if mem:
+            d['anatomy'] = strip(anatomy(sup, mem, f'polygon k={k}', bnd))
+        out.append(d)
+    out.sort(key=lambda d: (-d['dual'], d['slack']))
+    nbad = sum(1 for d in out if not d['alpha_ok'])          # would be a bug in the lemma
+    nviol = sum(1 for d in out if not d['satisfied'])        # the measure breaks the row
+    ntight = sum(1 for d in out if abs(d['slack']) <= 1e-9)
+    log(f"  {ntight} tight on this measure, {nviol} violated by it, "
+        f"{sum(1 for d in out if d['dual'] > 1e-9)} carry dual; "
+        f"alpha(G[X]) <= (k-1)/2 fails on {nbad} (must be 0)")
+    for d in out[:args.anat]:
+        log(f"    k={d['k']} dual={d['dual']:.5f} |X|={d['size']:4d} mu={d['mass']:.6f} "
+            f"<= {d['rhs']:.1f} (slack {d['slack']:+.6f}) alpha={d['alpha']} "
+            f"{'complete' if d['alpha_complete'] else 'INCOMPLETE'}")
+        log(f"      anchors {[[round(x, 4), round(y, 4)] for x, y in d['anchors']]}")
+        if 'anatomy' in d:
+            log(fmt_struct(sup, {**d['anatomy'],
+                                 'centres': [tuple(c) for c in d['anatomy']['centres']]}))
+    if args.json:
+        json.dump(out, open(args.json, 'w'), indent=1)
+        log(f"  wrote {args.json}")
+    return 0 if nbad == 0 else 1
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -971,11 +1026,16 @@ def main():
     ap.add_argument('--selftest', action='store_true')
     ap.add_argument('--recheck', default=None,
                     help='re-verify the pentagons of a results JSON from scratch and exit')
+    ap.add_argument('--pgons', nargs=2, default=None, metavar=('PGONS.json', 'MEASURE.txt'),
+                    help='anatomy + exact re-check of a --pent run\'s polygon rows on a measure')
+    ap.add_argument('--anat', type=int, default=6, help='polygon rows to print in full')
     args = ap.parse_args()
     if args.selftest:
         return selftest()
     if args.recheck:
         return recheck(args.recheck)
+    if args.pgons:
+        return cmd_pgons(args.pgons[0], args.pgons[1], args)
     if not args.files:
         ap.error('give at least one measure file (or --selftest)')
     out = []

@@ -342,3 +342,327 @@ python3 search/rankdiag.py --step 1 $R/cl_*_exact.txt
 the pentagon separation.  The JSON carries, per measure, the maximum independent set, every
 reported structure with its members, the size-vs-excess front, and the pentagon's anchors as exact
 rationals (`anchors_exact`) so the inequality can be rebuilt without rerunning the search.
+
+---
+
+# Round 2: the family in the loop
+
+Code: `search/rankfamily.py` (all of it) and a hook in `search/cliquelever.py` behind `--pent`
+(imports, `Lever.add_pgon` plus one LP block, one separator call in `run_stage`, two guard lines
+in `finalize`, the CLI flags).  With `--pent` empty — the default — the loop is bit-for-bit what
+it was.
+
+## Round-2 verdict
+
+**The family is worth building, and on the leaf's own pose set it is worth everything.**
+
+* On the pose set the converged QSTAB measure itself uses (94 poses), QSTAB + odd-polygon rows
+  converges at **exactly `11.000000 = alpha`** — an integral packing of 11 pairwise-disjoint unit
+  squares, exactly certified, in the leaf's own region pattern.  The clique relaxation on the same
+  poses is `11.435484`.  The family closes **100 %** of `mass - alpha`.
+* One pricing stage on top of that brings back **`+0.000000`** (the clique family's pricing stage
+  brought back `+0.02` and then cycled): stage 1 re-converges at exactly `11.000000` on 653 poses.
+* On the corner-leaf support (149 poses) it closes `0.314944` of `0.785783`, **40 %**, converging at
+  `11.470839217` (exactly certified, `M = 1`, max clique `1` complete, 362 polygon rows all
+  satisfied and all re-derived from their exact anchors; `alpha` of the new support is again 11).
+  The remainder is a separator limit, not a family limit — 300 restarts per `k` converge at
+  `11.519638`, 2,500 at `11.470839`.
+* On the full recorded pose sets (10,463 and 9,669 columns), where the LP has three orders of
+  magnitude more freedom to dodge a row, the descent is real but slow: `11.435484 -> 11.322628`
+  on the leaf and `11.785783 -> 11.722739` on the corner after 48 minutes of separation, still
+  falling monotonically, every value a rigorous upper bound (§10.4).
+
+The verifier and Lean cost is the smallest it could be: a box clique whose cores meet *cyclically*
+instead of pairwise, credited `(k-1)/2` instead of 1 (§9).  And `k = 5` is essentially the whole
+family — longer polygons are separated freely but almost never carry dual (§10.2).
+
+## 8. The generalised family: odd polygons of `k` anchors
+
+§5's pentagon is the case `k = 5` of
+
+> **Definition.**  For `k` odd and points `A_0 … A_{k-1}`, let `E_i = [A_i, A_{i+1 mod k}]` be the
+> `k` sides of the polygon they span and `X_i = { S admissible : E_i ⊆ S }`.
+>
+> **Lemma.**  `mu(X_0 ∪ … ∪ X_{k-1}) <= alpha(C_k) = (k-1)/2` for every packing of pairwise
+> disjoint closed unit squares.
+>
+> *Proof.*  Two members of `X_i` both contain `A_i`.  A member of `X_i` and one of `X_{i+1}` both
+> contain `A_{i+1} ∈ E_i ∩ E_{i+1}`.  So a pairwise-disjoint subfamily of the union hits each
+> piece at most once and never two cyclically consecutive pieces: choosing one index per member
+> injects it into an independent set of `C_k`, whose size is at most `⌊k/2⌋ = (k-1)/2`. ∎
+
+`k = 3` is a clique row (`(k-1)/2 = 1`); `k = 5, 7, 9` are the new ones.  **The only
+well-formedness condition is `E_i ∩ E_{i+1} ≠ ∅`** — the sides need not be the sides of a convex
+polygon, need not be short, and the `A_i` need not be distinct; taking them to be the sides of a
+closed walk on `k` points makes the condition automatic, which is why the separator is
+parameterised that way.  Degenerate choices are harmless: `A_i = A_{i+1}` makes `X_i` a point
+clique and the row weaker, never invalid.
+
+**Separation** (`rankfamily.separate`, called where the clique separator is called).  The
+candidate anchors are the exact arrangement vertices of the current support, reduced to distinct
+point cliques and ranked by point mass (top `--pent-cands`, default 240).  For each `k` in
+`--pent`, coordinate descent on the `k` anchor indices maximises the support mass of the union;
+it is fully vectorised (for one anchor position, the two sides that touch it are swept over all
+candidates at once as a boolean matrix product), so a sweep is five to nine numpy operations and
+the whole separation costs `0.1–0.5 s` per iteration.  Restarts are random plus the previous
+iteration's best anchors (`--pent-restarts`, default 60; `--pent-time` caps the budget).
+
+**Rows are maximal over the whole pose set**, as clique rows are: a pose is in the row iff its
+square contains some `E_i`, i.e. contains both endpoints of that side (a square is convex).  The
+membership test is `leaf_ceiling.sq_contains` in integers, with a float prefilter trusted only
+outside a `1e-7` band.  Before a row enters the LP it is (a) **re-derived exactly** — every listed
+member must pass the integer containment test on some side — and (b) its support members' exact
+independence number is computed by a complete branch and bound and checked against `(k-1)/2`.  A
+row failing either test is dropped with a log line.  The hill climb is a heuristic and can only
+fail to find a row, never produce an invalid one.  `finalize`'s region top-up now also respects
+polygon slack, and the final exact certification re-derives every polygon row from its stored
+rational anchors and reports its exact mass and slack.
+
+## 10. The number: what the family is worth in the loop
+
+Two experiments.  The **support experiment** puts the family on the pose set the converged QSTAB
+measure actually uses (94 and 149 poses) — small LPs, minutes, and the question is clean because
+`alpha` of that very pose set is known exactly (§2: 11 in both cases).  The **loop experiment**
+puts it on the full recorded pose sets of `CLIQUELEVER.md` §3 (10,175 and 9,551 columns), resumed
+exactly as `runs/launch_2026-09-11.sh` resumes them, on the restricted master of
+`search/CLMASTER.md` §4.
+
+### 10.1 Support experiment: the family closes the whole gap on the leaf
+
+| support | poses | `alpha` | QSTAB (cliques only) | **QSTAB + odd polygons** | drop | share of `mass - alpha` |
+|---|---|---|---|---|---|---|
+| leaf `01010101` (`cl_A0101L2`) | 94 | **11** | `11.435484` (`SUPA0`) | **`11.000000`** (`SUPA`) | `0.435484` | **100 %** |
+| corner `k = 4` (`cl_B40KL2`) | 149 | **11** | `11.785783` (`SUPB0`) | **`11.470839`** (`SUPB2`) | `0.314944` | **40 %** |
+
+(`SUPA0` and `SUPB0` are the same runs without `--pent`; both pin at the measure's own value, which
+is the check that the support experiment starts where `CLIQUELEVER.md` left off.)
+
+Both `SUPA` and `SUPB2` **converged** (no violated coverage vertex, no clique of mass `> 1` with a
+complete B&B, and no violated polygon the separator can find) and both final measures were exactly
+certified and re-checked by `leaf_ceiling.py check --anchor clique`:
+
+* **`SUPA`**: `mass = 10999999997/1000000000 = 10.999999997`, `M = 1`, max clique `= 1` (complete),
+  regions `C=1,1,1,1`, slots `0,1,0,1,0,1,0,1`, chord strips `3,3,3,3` — **on 11 poses whose
+  closed-intersection graph has 0 edges**.  The LP has walked all the way down to an *integral*
+  packing: eleven pairwise-disjoint unit squares in the leaf's own region pattern.  43 polygon rows,
+  all satisfied, 27 of them tight, every one re-derived from its exact rational anchors.  The
+  measure is `runs/cl_SUPA_exact.txt` and it is small enough to read: the four corner squares, four
+  axis-parallel wall squares at `(2, 3.5)`, `(3.5, 2.413091)`, `(2.4808, 0.5)`, `(0.5, 1.9992)`,
+  and three tilted interior ones — `(1.500001, 2.499999)` at `0°`, `(1.475021, 1.265851)` at
+  `-39.1°` and `(2.54401, 1.697772)` at `+32.5°` — each of mass 1.  On this pose set the rank
+  relaxation is **integral**: its optimum is the integer optimum.
+* **`SUPB2`**: `mass = 11470839217/1000000000 = 11.470839217` on 98 poses, `M = 1`, max clique
+  `= 1` (complete), regions OK, chord strips OK; 362 polygon rows (51 with dual), all satisfied,
+  worst violation `-9e-9`, every one re-derived from its exact anchors, and `rankdiag.py --pgons`
+  finds **0** rows with `alpha(G[X]) > (k-1)/2` under a complete B&B.  `alpha` of the new support
+  is again 11, so `0.47` of gap is left: the separator stops finding violated polygons before the
+  LP reaches the integer optimum.
+
+The separator's restart budget matters a great deal: on the corner support, 300 restarts per `k`
+converge at `11.519638`, 2,500 restarts at `11.470839`.  Everything reported here is therefore an
+UPPER bound on what the family can do — a better separator can only push it lower.
+
+### 10.2 Anatomy of the binding polygons at convergence
+
+`rankdiag.py --pgons` rebuilds every row from its stored exact rational anchors and re-checks it.
+On `SUPB` (124 rows, 38 with positive dual): **0 violated, 0 with `alpha(G[X]) > (k-1)/2`**.
+Every binding row is a `k = 5` polygon, and every one of them sits exactly where §5 said the
+round-1 pentagons sat:
+
+| binding row | dual | `\|X\|` | `mu` | `alpha` | anchors | grid vertex | regions of the mass | angles |
+|---|---|---|---|---|---|---|---|---|
+| 1 | `0.322` | 30 | `2.000000` | 2 | four on the line `x = 1`, one interior | **`(1,2)`** (9 of 30) | `I 1.000`, `W6 0.505`, `W7 0.495` | 18 |
+| 2 | `0.289` | 28 | `2.000000` | 2 | three on `x = 3`, two interior | **`(3,2)`** (9 of 28) | `I 1.000`, `W2 0.569`, `W3 0.431` | 18 |
+| 3 | `0.210` | 28 | `2.000000` | 2 | two on `y = 1`, three interior | **`(2,1)`** (9 of 28) | `I 1.000`, `W1 0.552`, `W0 0.448` | 18 |
+
+Three things are worth naming.  First, **the binding rows are tight to the last digit**: `mu`
+is exactly `2.000000` on each, so the right-hand side `2` is doing real work — these are facets of
+the relaxation as the LP sees it, not slack decoration.  Second, **the mass splits `1.000` interior
+and `1.000` wall**, and the wall half splits again across the two wall regions the grid vertex
+separates (`W6 + W7`, `W2 + W3`, `W0 + W1`).  A polygon wrapped around the corner of an
+axis-parallel wall square is exactly an object that says "the interior square and the wall square
+here cannot both be replaced by two" — which no clique row can say, because no point lies in all
+28–30 members.  Third, **`k = 5` is what binds**.  The separator finds and adds plenty of longer
+polygons — `SUPB2` ends with 291 `k = 5`, 38 `k = 7` and 33 `k = 9` rows, `PGA` with 100 / 65 / 76
+— and many of them are tight at intermediate solves, but at convergence the rows carrying positive
+dual are 50 of `k = 5` and exactly **one** of `k = 7` (`SUPB2`), none of `k = 9`; on `SUPA`,
+`SUPAP`, `SUPB` and `PGA` every dual-carrying row is `k = 5`.  The extra freedom of a longer cycle
+buys almost nothing here: the geometry being cut is a wall-square corner, and a corner needs five
+anchors.  A verifier that only ever learned the `k = 5` block would lose very little.
+
+### 10.3 The pricing stage brings back nothing
+
+`CLIQUELEVER.md` §0's clique result had a sting in it: one pricing stage on the leaf brought the
+value back up by `+0.02` and the loop then sat on a degenerate optimal face for 60 iterations
+without moving.  The same experiment with the rank family (`SUPAP`: `SUPA` plus `--price 1`):
+
+| stage | poses | columns | LP | `M` | max clique | converged | exactly certified |
+|---|---|---|---|---|---|---|---|
+| 0 | 94 | 94 | **`11.000000`** | `1` | `1` (complete) | yes, 9 it | `10.999999998` |
+| pricing | +559 new poses (lattice gap `+1.000000`); clique rows extended by 3,084 memberships; **the 131 polygon rows re-derived over the new pose set, +14,865 memberships** |
+| 1 | 653 | 670 | **`11.000000`** | `1` | `1` (complete) | yes, 10 it | `10.999999997` |
+
+**The value does not climb.**  Stage 1 converges at exactly `11.000000` again, on a support of 11
+pairwise-disjoint squares, with 273 polygon rows (140 tight, none violated, every one re-derived
+from its exact rational anchors) and `leaf_ceiling.py check --anchor clique` giving
+`coverage OK, regions OK, anchor cliques PROVED <= 1`.  The pricing delta is **`+0.000000`**,
+against `+0.02` for the clique family.
+
+That is the qualitative difference between the two families on this leaf.  Clique rows cut the
+non-Helly mass down to `11.30–11.79` and then the pricer finds new poses that rebuild a fractional
+optimum just above it.  The polygon rows cut to the *integer* optimum, and there is nothing for the
+pricer to rebuild: any new pose is either already in some polygon row (the rows are re-derived
+maximal over the enlarged set, which is what `rankfamily.regrow` is for) or does not help.  On the
+leaf's own pose set, `alpha = 11` is not merely the floor — it is where the relaxation lands.
+
+### 10.4 Loop experiment: the full recorded pose sets
+
+`PGA` / `PGB` resume `cl_A0101L2_*` and `cl_B40KL2_*` exactly as `runs/launch_2026-09-11.sh` does
+(10,175 and 9,551 poses; 10,463 and 9,669 columns; 25,012 and 32,191 resumed coverage rows; 1,128
+and 2,645 resumed clique rows, each re-verified pairwise), on the restricted master of
+`search/CLMASTER.md` §4 (`--master --lp-tlim 0`), with `--pent 5,7,9` on top.  Here the LP has
+three orders of magnitude more columns to move mass onto than the support experiment, so a polygon
+row that was fatal on 94 poses is merely expensive on 10,463.
+
+| run | poses / columns | start (QSTAB) | at `2,100 s` | at `2,850 s` | polygon rows | drop so far |
+|---|---|---|---|---|---|---|
+| `PGA` (leaf) | 10,175 / 10,463 | `11.435484` | `11.332203` (it 21) | **`11.322628`** (it 26) | 398 | `0.112856` (26 % of the gap) |
+| `PGB` (corner) | 9,551 / 9,669 | `11.785783` | `11.740678` (it 19) | **`11.722739`** (it 25) | 475 | `0.063044` (8 % of the gap) |
+
+Both are still descending monotonically at roughly `0.002-0.005` per iteration and `110 s` per
+iteration, and both were launched with a `9,000 s` budget, so the numbers above are a snapshot,
+not a convergence; the runs write `runs/PGA.out` and `runs/PGB.out` and their final `RESULT` lines
+will be lower still.  **Every one of these values is a rigorous upper bound** on the QSTAB + rank value of its
+loaded pose set, at every iteration and regardless of convergence, because rows only ever relax
+(`CLIQUELEVER.md` §0's direction argument is untouched by adding valid rows) — so the leaf's
+QSTAB + rank value on its full recorded pose set is already known to be `<= 11.322628`, against
+`11.435484` with cliques alone and `alpha = 11` below.
+
+The rows themselves are the same objects as in the support runs.  `rankdiag.py --pgons` on `PGA`'s
+checkpoint (307 rows at that point): **0 with `alpha(G[X]) > (k-1)/2`** under a complete B&B; the
+heaviest dual-carrying row is a `k = 5` polygon with four anchors on the line `y = 3` and one at
+`(1.99, 2.14)`, mass exactly `2.000000` on 67 support poses across 38 distinct angles, split
+`I 1.043` / `W5 0.823` / `W4,W5 0.133` — wrapped around the grid vertex `(2,3)`, which 23 of its
+67 members contain.  The loop's rows are bigger than the support runs' (67 support members, 1,100–1,800
+members over the whole pose set, against 28–30) because they are maximal over 10,463 columns;
+that is what makes them expensive to satisfy and what makes the descent slow rather than absent.
+
+**What the two experiments together say.**  The family is not weak on the big pose set — it is
+*slow* there, for the same reason a cutting-plane loop is always slow when the column set is large
+and the separator is a heuristic hill climb.  The support experiment is the clean measurement of
+what the inequalities are worth (`100 %` and `40 %` of `mass - alpha`); the loop experiment is a
+measurement of separator throughput, and it says a production run wants a better anchor search
+(or the pentagon rows seeded from a support run) rather than more LP time.
+
+## 9. Spec: what the verifier and Lean would need
+
+No verifier or Lean change has been made.  This is the spec for when the family earns it.
+
+### 9.1 `verify/`: a cyclic block next to `cliques`
+
+`search/BOXCLIQUE.md` already has every primitive.  A **box clique** is a union of boxes; the
+verifier computes each box's **core** (the concentric shrunk rectangle every unit square with a
+pose in that box contains — the shrink lemma), refuses the block unless **every** pair of cores
+meets (`cores_meet`, an exact separating-axis test between two rotated rectangles in `i128`),
+credits a swept cell the weight `w_K` iff the cell lies inside one of the boxes, and adds `w_K`
+once to the bound total.
+
+A **cycle block** is the same object with two rules changed:
+
+| | `cliques` block (today) | `cycle` block (proposed) |
+|---|---|---|
+| boxes | any number, unordered | `k` boxes in a **stated cyclic order**, `k` odd, `k >= 5` |
+| core test | `cores_meet(i, j)` for **every** pair `i <= j` | `cores_meet(i, i+1 mod k)` for the `k` consecutive pairs, plus each core non-empty |
+| sweep credit | cell inside some box gets `w` | unchanged |
+| bound total | `+ w` | `+ w * (k-1)/2` |
+
+Everything else — the parser, the empty-core refusal, the "a cell that merely *meets* a box gets
+nothing and its LP witness is placed outside the box" rule, the no-symmetry-images rule that forces
+a `[0°, 90°]` sweep — carries over unchanged, because none of it depends on how many pairs of cores
+were required to meet.  The rejection tests gain the mirror images of the existing ones: a cycle
+whose `cores_meet(i, i+1)` fails for one `i`, an even `k`, a `k < 5`, a repeated box index, and a
+cycle credited `(k+1)/2` instead of `(k-1)/2`.  `certificates/FORMAT.md` gains one block type whose
+body is the existing box list plus the cyclic order.
+
+The separator here emits point anchors, i.e. degenerate cores; the verifier's cores are inward
+rounded rectangles, so a certificate would use short segment/rectangle cores around each `A_i` —
+`cores_meet` on consecutive pairs is then exactly `E_i ∩ E_{i+1} ≠ ∅` with slack.
+
+### 9.2 `lean/`: the sibling of `clique_of_cores`
+
+Two lemmas, both short.  First the combinatorics, which is where all the new content is:
+
+```lean
+/-- An independent set of the cycle `C_k` has at most `k / 2` elements: the translates
+    `{s, s+1}` for `s ∈ S` are pairwise disjoint (a shared element would force two members
+    of `S` to be equal or cyclically adjacent), each has 2 elements, and all lie in `ZMod k`. -/
+lemma card_le_of_cycle_independent {k : ℕ} (hk : 2 ≤ k) (S : Finset (ZMod k))
+    (hS : ∀ s ∈ S, ∀ s' ∈ S, s ≠ s' → s' ≠ s + 1) : 2 * S.card ≤ k
+```
+
+Then the geometric sibling of `clique_of_cores`, with `card_filter_clique_le_one` generalised from
+`1` to `(k-1)/2`:
+
+```lean
+/-- **Cyclic core families.**  Pieces `B : Fin k → pose → Prop` with cores `core i` contained in
+    every closed unit square of piece `i` (`hcore`, the verifier's shrink lemma), and consecutive
+    cores meeting (`hmeet i : (core i ∩ core (i+1)).Nonempty`).  In a packing at most `k / 2`
+    squares have a pose in the union. -/
+lemma card_filter_cycle_le {n k : ℕ} (L : ℝ) (hL : 1 < L) (ctr ang) (hdisj …)
+    (B : Fin k → ℝ × ℝ → ℝ → Prop) (core : Fin k → Set (ℝ × ℝ))
+    (hcore : ∀ i c θ, B i c θ → core i ⊆ sq c θ 1)
+    (hmeet : ∀ i : ZMod k, (core i ∩ core (i + 1)).Nonempty) :
+    ((univ : Finset (Fin n)).filter (fun i => ∃ j, B j (ctr i) (ang i))).card ≤ k / 2
+```
+
+*Proof.*  Choose for each packed square in the union a piece index (`Finset.exists_of_filter` /
+choice).  The index map is injective on the filtered set and its image is cycle-independent: two
+squares with equal or cyclically adjacent indices both contain a common point of the corresponding
+cores (exactly the two cases of `clique_of_cores`' one-line proof), so their `L`-interiors would
+meet, contradicting `hdisj` via `unit_subset_interior`.  Apply `card_le_of_cycle_independent`. ∎
+
+Finally `packing_le_weight_cliques` generalises by replacing the scalar `1` in its `hcard` step
+with a per-family cap `r j`:
+
+```lean
+theorem packing_le_weight_ranks
+    (A w hw C) (m) (K : Fin m → ℝ × ℝ → ℝ → Prop) (v : Fin m → ℝ) (hv : ∀ j, 0 ≤ v j)
+    (r : Fin m → ℕ)
+    (hK : ∀ j, ((univ : Finset (Fin n)).filter (fun i => K j (ctr i) (ang i))).card ≤ r j)
+    (hcover : …) : (n : ℝ) ≤ ∑ a ∈ A, w a + ∑ j, v j * r j
+```
+
+The existing proof goes through verbatim: `hsum` is unchanged, and `hcard` becomes
+`v j * card ≤ v j * r j` by the same `nlinarith`.  `packing_le_weight_cliques` is the case
+`r = 1` with `hK` discharged by `card_filter_clique_le_one`; the cycle block is the case
+`r j = k_j / 2` with `hK` discharged by `card_filter_cycle_le`.  No existing lemma is touched.
+
+## 11. Reproduce (round 2)
+
+```sh
+python3 search/rankfamily.py                  # the k-ring selftest for k = 5, 7, 9
+python3 search/cliquelever.py selftest        # the pinwheel, old path AND --master, with --pent on
+R=runs
+# the support experiment (minutes): QSTAB alone, then QSTAB + the rank family, on the pose set
+# the converged measure itself uses
+sh search/rankfamily_launch.sh support        # SUPA0/SUPA (leaf), SUPB0/SUPB (corner)
+# one pricing stage on top of the leaf's converged 11.000000
+sh search/rankfamily_launch.sh price          # SUPAP
+# the loop experiment on the full recorded pose sets, restricted master (CLMASTER.md 4)
+T=9000 sh search/rankfamily_launch.sh loop    # PGA (leaf, --price 1), PGB (corner)
+
+# independent re-checks of any converged measure
+python3 search/leaf_ceiling.py check $R/cl_SUPA_exact.txt --corners 1111 \
+    --patterns 01010101 --chord --anchor clique
+python3 search/rankdiag.py --pgons $R/cl_SUPA_pgons.json $R/cl_SUPA_exact.txt --anat 6
+python3 search/rankdiag.py --step 1 $R/cl_SUPA_exact.txt      # alpha of the new support
+```
+
+`--pent 5,7,9` turns the family on; `--pent-restarts` is the one setting that matters (300 per `k`
+converges the corner support at `11.519638`, 2,500 at `11.470839`), `--pent-cands` the number of
+candidate anchor points, `--pent-time` the per-iteration budget, `--pent-want` the rows added per
+`k` per iteration.  With `--pent` absent the loop is exactly the one `CLMASTER.md` describes.
+
+Every converged run writes `runs/cl_<TAG>_pgons.json`: for each polygon row its `k`, its members,
+its dual, its mass at the last solve, and **its anchors as exact rationals**, which is all
+`rankdiag.py --pgons` needs to rebuild and re-check the row from scratch.
