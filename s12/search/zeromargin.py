@@ -507,7 +507,7 @@ class Checker:
                 if best is None or v > best: best = v
         return best
 
-    def cert_chain(self, box, B, lams=(F(1), F(1, 2), F(2)), inh=None):
+    def cert_chain(self, box, B, lams=(F(1), F(1, 2), F(2)), inh=None, diag=None):
         """Disjunctive certification by monotone chains of pivots (RUNG2.md secs 6-7).
 
         T = the points ADM/P1 certify for the whole box.  A *swing* point is one whose four
@@ -539,6 +539,7 @@ class Checker:
                (ma[k] and self._adm_exact(px, py, specs, u0, u1)):
                 inT[k] = True; wT += self.W[k]
         self._last_inT = inT              # the per-subtree cache handed to this box's children
+        if diag is not None: diag['wT'] = wT
         if wT >= 1: return ('ADM', [int(k) for k in np.nonzero(inT)[0]])
         # --- reachable: |p - c| <= sqrt2/2 + (box diagonal)/2 for some centre c of the box
         cxm, cym = float((cx0 + cx1) / 2), float((cy0 + cy1) / 2)
@@ -565,6 +566,8 @@ class Checker:
                     bad = c
             if bad is None or bad < 0: continue
             cand.append((int(k), bad))
+        if diag is not None:
+            diag['cand'] = [(int(k), int(kd), float(self.W[k])) for k, kd in cand]
         if len(cand) < 2: return (None, None)
         if float(wT) + sum(self.Wf[k] for k, _ in cand) < 1.0: return (None, None)
 
@@ -587,6 +590,8 @@ class Checker:
                 if self._gmax([(F(1), ch[-1][0], ch[-1][1]), (F(-1), ck[0], ck[1])], box) <= 0:
                     ch.append(ck)
             if len(ch) >= 1: chains.append(ch)
+        if diag is not None:
+            diag['chains'] = [[(int(k), int(kd)) for k, kd in ch] for ch in chains]
         if not chains: return (None, None)
 
         def analyse(ch):
@@ -625,7 +630,18 @@ class Checker:
             u = masks[0].copy()
             for mk in masks[1:]: u |= mk
             return int(self.Wnum[u].sum()) >= self.Wden
+        def wsum(*masks):
+            u = masks[0].copy()
+            for mk in masks[1:]: u |= mk
+            return F(int(self.Wnum[u].sum()), self.Wden)
         info = [analyse(ch) for ch in chains]
+        if diag is not None:
+            diag['single'] = []
+            for ci, ch in enumerate(chains):
+                down, up = info[ci]; kk = len(ch)
+                reg = [wsum(inT, down[r], up[r + 1]) for r in range(kk + 1)]
+                diag['single'].append(dict(kind=ch[0][1], k=kk, worst=min(reg),
+                                           argworst=int(min(range(len(reg)), key=lambda r: reg[r]))))
         # --- single chain
         for ci, ch in enumerate(chains):
             down, up = info[ci]; kk = len(ch)
@@ -651,13 +667,22 @@ class Checker:
                         if good: lo = mid
                         else: hi = mid - 1
                     empt[r] = lo
-                ok = True
+                ok = True; worst = None
                 for r in range(ka + 1):
                     for sdx in range(kb + 1):
                         if r < ka and sdx < kb and empt[r] >= sdx + 1: continue   # region is empty
+                        if diag is not None:
+                            v = wsum(inT, downA[r], downB[sdx], upA[r + 1], upB[sdx + 1])
+                            if worst is None or v < worst[0]: worst = (v, r, sdx)
                         if not enough(inT, downA[r], downB[sdx], upA[r + 1], upB[sdx + 1]):
-                            ok = False; break
-                    if not ok: break
+                            ok = False
+                            if diag is None: break
+                    if not ok and diag is None: break
+                if diag is not None:
+                    diag.setdefault('pairs', []).append(
+                        dict(kinds=(A[0][1], Bc[0][1]), ka=ka, kb=kb,
+                             worst=(worst[0] if worst else None),
+                             argworst=((worst[1], worst[2]) if worst else None), ok=ok))
                 if ok:
                     used = inT | downA[ka] | downB[kb]
                     for r in range(1, ka + 1): used = used | upA[r]
@@ -787,7 +812,7 @@ def read_cert(path):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('what', help='friedman14 | cert | pose')
+    ap.add_argument('what', help='friedman14 | cert | pose | diag')
     ap.add_argument('path', nargs='?')
     ap.add_argument('--tri', action='store_true')
     ap.add_argument('--no-adm', action='store_true', help='use the old CORE primitive instead of ADM')
@@ -820,6 +845,10 @@ def main():
     ap.add_argument('--u', type=str, default=None, help='pose mode: u = tan(theta/2), as a Fraction-parseable string ("1/3", "0.3333")')
     ap.add_argument('--cx', type=str, default=None, help='pose mode: centre x, Fraction-parseable')
     ap.add_argument('--cy', type=str, default=None, help='pose mode: centre y, Fraction-parseable')
+    ap.add_argument('--box', type=str, default=None,
+                    help='diag mode: cx0,cx1,cy0,cy1,u0,u1 (Fraction-parseable), the box to classify')
+    ap.add_argument('--samples', type=int, default=8,
+                    help='diag mode: grid resolution per axis for the single-pose capture scan')
     a = ap.parse_args()
     if a.what == 'pose':
         # exact captured weight at one rational pose (cx, cy, theta = 2*atan(u)): a rigorous,
@@ -844,6 +873,76 @@ def main():
         print(f"EXACT captured weight = {total} = {float(total):.12f}  "
               f"({'OK: >= 1' if total >= 1 else '*** VIOLATION: < 1 ***'})")
         print(f"captured points ({len(used)}): {[(k, str(px), str(py), str(w)) for k, px, py, w in used]}")
+        sys.exit(0)
+    if a.what == 'diag':
+        # ---- classify ONE pose box: is a residue the cover's fault or the primitives'? -----
+        m, pts, ws = read_cert(a.path)
+        box = tuple(F(t) for t in a.box.split(','))
+        chk = Checker(m, pts, ws, max_depth=a.depth, use_chain=True, chain_from=0)
+        cx0, cx1, cy0, cy1, u0, u1 = box
+        cu1 = clip_bin(box, chk.m) if u1 > u0 else u1
+        if cu1 < u1:
+            print(f"clip_bin: bin [{float(u0):.6e}, {float(u1):.6e}] -> [{float(u0):.6e}, {float(cu1):.6e}]")
+            u1 = cu1; box = (cx0, cx1, cy0, cy1, u0, u1)
+        B = bin_data(u0, u1)
+        print(f"box cx[{float(cx0):.7f},{float(cx1):.7f}] cy[{float(cy0):.7f},{float(cy1):.7f}] "
+              f"theta[{math.degrees(2*math.atan(float(u0))):.5f},{math.degrees(2*math.atan(float(u1))):.5f}]deg")
+        # (1) the COVER: the least weight any single admissible pose of the box captures
+        Xf = chk.Pxf; Yf = chk.Pyf; Wf = chk.Wf
+        best = None; nsamp = 0
+        for i in range(a.samples + 1):
+            uu = u0 + (u1 - u0) * F(i, max(a.samples, 1))
+            c, sn = trig(uu); w = c + sn
+            lo1, hi1 = max(cx0, w / 2), min(cx1, chk.m - w / 2)
+            lo2, hi2 = max(cy0, w / 2), min(cy1, chk.m - w / 2)
+            if lo1 > hi1 or lo2 > hi2: continue
+            fc, fs = float(c), float(sn)
+            for j in range(a.samples + 1):
+                for k in range(a.samples + 1):
+                    ax = float(lo1) + (float(hi1) - float(lo1)) * j / max(a.samples, 1)
+                    ay = float(lo2) + (float(hi2) - float(lo2)) * k / max(a.samples, 1)
+                    dx, dy = Xf - ax, Yf - ay
+                    v = Wf[(np.abs(dx * fc + dy * fs) <= 0.5 + 1e-12) &
+                           (np.abs(-dx * fs + dy * fc) <= 0.5 + 1e-12)].sum()
+                    nsamp += 1
+                    if best is None or v < best[0]: best = (v, ax, ay, float(uu))
+        if best is None:
+            print("  no admissible pose in the box (EMPTY)"); sys.exit(0)
+        print(f"  COVER: min captured weight over {nsamp} admissible poses = {best[0]:.9f} "
+              f"at cx={best[1]:.7f} cy={best[2]:.7f} u={best[3]:.6e}"
+              f"   {'*** the COVER is short here ***' if best[0] < 1 else ''}")
+        # (2) the PRIMITIVES
+        d = {}
+        res = {}
+        res['ADM'] = chk.cert_adm(box, B)[0]
+        res['P1'] = chk.cert_p1(box, B)[0]
+        res['MIX'] = chk.cert_mix(box, B)[0]
+        res['CHAIN'] = chk.cert_chain(box, B, diag=d)[0]
+        print(f"  primitives: " + "  ".join(f"{k}={v}" for k, v in res.items()))
+        if 'wT' in d:
+            print(f"  monotone witness set (ADM u P1): weight {float(d['wT']):.9f}"
+                  f"   {'(>= 1: ADM alone suffices)' if d['wT'] >= 1 else ''}")
+        if 'cand' in d:
+            from collections import Counter
+            cw = {}
+            for k, kd, w in d['cand']: cw[kd] = cw.get(kd, 0.0) + w
+            print(f"  swing candidates: {len(d['cand'])}, weight by inequality kind "
+                  f"{ {k: round(v, 6) for k, v in sorted(cw.items())} }  "
+                  f"(0: X<=1/2, 1: X>=-1/2, 2: Y<=1/2, 3: Y>=-1/2)")
+        if 'chains' in d:
+            print("  chains built: " + ", ".join(f"kind {ch[0][1]}: {len(ch)} pivots" for ch in d['chains']))
+        for r in d.get('single', []):
+            print(f"  ONE-CUT chain on kind {r['kind']} ({r['k']} pivots): worst region "
+                  f"{float(r['worst']):.9f} at r={r['argworst']}"
+                  f"   {'OK' if r['worst'] >= 1 else 'SHORT by %.6f' % float(1 - r['worst'])}")
+        for r in d.get('pairs', []):
+            print(f"  TWO-CUT product of kinds {r['kinds']} ({r['ka']}x{r['kb']} pivots): worst region "
+                  f"{float(r['worst']) if r['worst'] is not None else float('nan'):.9f} at {r['argworst']}"
+                  f"   {'OK' if r['ok'] else 'SHORT'}")
+        print("VERDICT:", "the COVER is short at this box -- no primitive can certify it"
+              if best[0] < 1 else
+              ("certified by " + [k for k, v in res.items() if v][0]) if any(res.values()) else
+              "the cover is fine here; the box needs a better disjunction (or a finer box)")
         sys.exit(0)
     if a.what == 'friedman14':
         m, pts, ws = 4, FRIEDMAN14, None
