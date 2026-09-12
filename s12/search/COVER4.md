@@ -44,9 +44,11 @@ measure is admissible and has the same maximum coverage:
 | `COVER^closed(4)` heuristic cover LP | `12.39 - 12.42` total (`CLOSED4.md`, `FAMILY.md` §2) | heuristic |
 | **`U` (best honest heuristic cover cost on record)** | **`~12.46`** (`FAMILY.md` §1: the rung-2 closing loop plateaus at `12.3883` LP total / `0.9958` stress minimum); the only *exported* point set, `runs/closed4_best.txt`, is `12.417` total / **`12.509`** honest | heuristic, **not** a proved upper bound |
 
-    12.2688038611  <=  COVER^closed(4)  <=  ~12.46   (upper end heuristic)
+    12.2688038611  <=  COVER^closed(4)  <=  14          (both ends proved; 14 is Friedman / Nagamochi)
+    12.2688038611  <=  COVER^closed(4)  <=  U ~ 12.46   (U is the best honest heuristic cover cost, NOT a proof)
 
-So `COVER^closed(4)` is pinned into a window of width `< 0.2`, and the LP proof of `s(13) = 4`
+So the working bracket is `[L, U] = [12.2688038611, ~12.46]`, of width `< 0.2` — but only its left
+end is a theorem.  The LP proof of `s(13) = 4`
 (rung 2, `tasks/rung2-s13`, `search/RUNG2.md`) provably costs **at least `0.2688` more than 12** —
 but `12.2688 < 13`, so nothing here rules rung 2 out.  What it does rule out is any hope that the
 cover LP at `s = 4` gets near 12: it cannot go below `12.2688`, and the heuristic upper side has
@@ -125,10 +127,10 @@ the best step is kept; each certified value is a theorem regardless of the ones 
 | `PC1` (86 poses) snapped at `Q = 10^5` | `11.834552382` |
 | `PC1` snapped at `Q = 10^7` | `12.163060631` |
 | `C1` + `PC1` (265 poses), `Q = 10^7` | `12.187432785` |
-| exact restricted-master CG, 4 batches | `12.203964875` |
-| + the `3.99` support rescaled to 4 | `12.206881232` |
-| + `E1` rounds 0-8 | `12.236230778` |
-| + `E1` rounds 9-15 | `12.247647654` |
+| exact restricted-master CG over that pool (3 batches) | `12.203964875` |
+| + the `3.99` exact support rescaled to 4 (3 batches) | `12.206881232` |
+| + the `E1` supports of its first ~9 rounds (3 batches) | `12.236230778` |
+| + the `E1` supports up to round 16 (8 batches) | `12.247647654` |
 | **`E1` round 19 support (311 poses), `Q = 10^7`** | **`12.268803861`** |
 
 ## The measure (294 poses, mass 12.2688)
