@@ -926,6 +926,12 @@ class Lever:
                 rec['lattice'] = dict(new=npos, gap=gap, memberships=nmem,
                                       poses=self.ps.n, cols=self.ps.ncol)
                 if npos:
+                    # the pose set just grew: pad this iterate onto the new columns (they carry no
+                    # mass in it) so that the checkpoint, `region_split` and `finalize` -- all of
+                    # which index by the CURRENT ps.ncol / ps.n -- stay in step with it
+                    x = np.concatenate([x, np.zeros(self.ps.ncol - len(x))])
+                    mu = np.concatenate([mu, np.zeros(self.ps.n - len(mu))])
+                if npos:
                     done = False
             rec['converged'] = bool(done and allc)
             if done:
