@@ -605,6 +605,15 @@ Effect on that column: **160 boxes, max depth 0, `ADM 16 / EMPTY 144`, 0 uncerti
 `14224 / 280 / 12540 / 0`; the old `CORE` path `0`), and `--no-clip` restores the previous counts
 exactly.
 
+**And the rest of the right-hand family is the same violation.**  With the clip in place, a
+depth-14 sweep of the whole right half (`--cx-lo 3.05 --cx-hi 3.95`, 1,600 roots, 194 s on 6
+processes: 4,044 boxes, `ADM 993 / CHAIN 389 / EMPTY 1,338`) leaves 102 boxes, and they are at
+`c_x ∈ [3.2156, 3.3375]`, `c_y ∈ [1.49375, 1.50625]`, `θ ∈ [0°, 0.224°]` — the **transpose** of the
+item-3 family (`c_y = 3/2`, so both *horizontal* edges lie on `y = 1` and `y = 2`, with `c_x`
+free), whose worst pose is the D4 image `(3.2695, 3/2, θ → 0)` of §4.3's violation, capture
+`9420217/10000000` again.  So after `clip_bin` the entire 163-box residue is **one family, one
+violation, and its dihedral images** — there is no second phenomenon.
+
 **Why this matters more than rung 2.**  This is the first case where the checker failed on a pose
 with genuine positive margin, and the cause was neither the cover nor a missing lemma but a bin
 that was never intersected with the admissibility region.  Any V1 checker inherits it: every box
