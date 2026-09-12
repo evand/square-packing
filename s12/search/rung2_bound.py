@@ -125,15 +125,52 @@ def check(path):
           "OBSTRUCTED -- this cover cannot be certified by CORE/P1/ADM at any depth")
 
 
+def dual(a):
+    """The explicit dual certificate of Theorem 1, verified on a complete set of cell
+    representatives.  PIN-membership depends only on the position of a point relative to the
+    half-integer grid, so it is constant on every cell of that arrangement, and the 1/4-lattice
+    contains a representative of every cell (2-cells at (k+1/2)/2, 1-cells at their midpoints,
+    0-cells themselves).  Checking `multiplicity <= 1` on the 1/4-lattice therefore checks it on
+    ALL of [0,m]^2 -- the bound that follows holds for every cover, not only lattice ones."""
+    m = a.m
+    sx = [1, 1] + [-1] * (m - 2)       # the sign pattern of Theorem 1: the +/- switch must sit
+                                       # between two INTERIOR columns (Lemma 2, case (iv))
+    sy = list(sx)
+    if a.switch is not None:
+        sx = [1] * (a.switch + 1) + [-1] * (m - a.switch - 1); sy = list(sx)
+    g = np.arange(0, m * 4 + 1) / 4
+    GX, GY = np.meshgrid(g, g, indexing='ij')
+    X, Y = GX.ravel(), GY.ravel()
+    thetas = [0.0, 1e-5, 1e-4, 1e-3]
+    mult = np.zeros(len(X), dtype=int)
+    for i in range(m):
+        for j in range(m):
+            mult += pin_mask(X, Y, m, i, j, thetas, sx[i], sy[j]).astype(int)
+    print(f"container [0,{m}]^2; dual certificate lambda = 1 on the {m*m} constraints")
+    print(f"  sigma_x per column: {sx}")
+    print(f"  sigma_y per row:    {sy}")
+    print(f"sum of lambda = {m*m}")
+    print(f"max multiplicity over the 1/4-lattice ({len(X)} cell representatives) = {mult.max()}")
+    bad = np.nonzero(mult > 1)[0]
+    for k in bad[:10]: print(f"   OVERLAP at ({X[k]}, {Y[k]}): multiplicity {mult[k]}")
+    print("VERDICT:", f"the {m*m} PIN sets are pairwise disjoint  =>  every monotone-witness-"
+          f"certifiable cover of [0,{m}]^2 has total weight >= {m*m}" if mult.max() <= 1 else
+          "NOT disjoint for this sign pattern")
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('mode', choices=['bound', 'check'])
+    ap.add_argument('mode', choices=['bound', 'check', 'dual'])
     ap.add_argument('cert', nargs='?')
     ap.add_argument('--m', type=int, default=4)
     ap.add_argument('--pitch', type=int, default=20)
     ap.add_argument('--octants', action='store_true')
+    ap.add_argument('--switch', type=int, default=None,
+                    help='dual: the last column with sigma_x = +1 (default 1: the switch sits '
+                         'between columns 1 and 2, both interior, which Lemma 2 requires)')
     a = ap.parse_args()
     if a.mode == 'bound': bound(a)
+    elif a.mode == 'dual': dual(a)
     else: check(a.cert)
 
 

@@ -24,19 +24,19 @@ FRIED = [(1, 1), (1.6, 1), (2.4, 1), (3, 1), (1, 1.8), (2, 1.8), (3, 1.8), (1, 2
 def read_cert(path):
     tok = open(path).read().split()
     sn, sd, D, W, n = map(int, tok[:5])
-    P = []
+    P = []; WT = []
     for i in range(n):
         X, Y, w = map(int, tok[5 + 3 * i: 8 + 3 * i])
-        P.append((X / D, Y / D))
-    return sn / sd, P
+        P.append((X / D, Y / D)); WT.append(w / W)
+    return sn / sd, P, WT
 
 args = [a for a in sys.argv[1:] if not a.startswith('--')]
 path = args[0]; nsamp = int(args[1]) if len(args) > 1 else 20
-m = 4.0; P = FRIED
+m = 4.0; P = FRIED; WT = [1.0] * len(FRIED)
 if '--cert' in sys.argv:
-    m, P = read_cert(sys.argv[sys.argv.index('--cert') + 1])
+    m, P, WT = read_cert(sys.argv[sys.argv.index('--cert') + 1])
 
-bad = 0; n = {'ADM': 0, 'CORE': 0, 'P1': 0, 'MIX': 0, 'TRI': 0, 'EMPTY': 0}
+bad = 0; n = {'ADM': 0, 'CORE': 0, 'P1': 0, 'MIX': 0, 'CHAIN': 0, 'TRI': 0, 'EMPTY': 0}
 for line in open(path):
     if line.startswith('#'): continue
     boxs, kind, wit = [t.strip() for t in line.split(';')]
@@ -54,12 +54,18 @@ for line in open(path):
         if kind == 'EMPTY':
             if adm: bad += 1; print("EMPTY box has admissible pose", box, cx, cy, th)
             continue
-        if kind in ('P1', 'ADM', 'MIX') and not adm: continue   # they only claim admissible poses
+        if kind in ('P1', 'ADM', 'MIX', 'CHAIN') and not adm: continue  # admissible poses only
         if kind == 'CORE':
             # CORE claims every pose of the box clipped to the widest admissible range of the bin
             lo = min(math.cos(th0) + math.sin(th0), math.cos(th1) + math.sin(th1)) / 2
             if not (lo - 1e-12 <= cx <= m - lo + 1e-12 and lo - 1e-12 <= cy <= m - lo + 1e-12): continue
-        if kind in ('CORE', 'P1', 'ADM', 'MIX'):
+        if kind == 'CHAIN':
+            # the witness list of a CHAIN leaf is the UNION over its regions; the claim it makes
+            # is that at every admissible pose of the box the captured weight drawn from that list
+            # reaches 1 (a different subset does it in each region).  That is what is checked here,
+            # with no knowledge of the regions themselves.
+            ok = sum(WT[k] for k in wit if inside(P[k], (cx, cy), th)) >= 1.0 - 1e-9
+        elif kind in ('CORE', 'P1', 'ADM', 'MIX'):
             ok = any(inside(P[k], (cx, cy), th) for k in wit)
         else:
             ok = any(inside((float(v[0]), float(v[1])), (cx, cy), th) for v in wit)
@@ -136,3 +142,59 @@ for _ in range(40000):
             afail += 1
             if afail <= 5: print("ADM fail", (cx0, cx1, cy0, cy1, t0, t1), (px, py), (cxs, cys, th))
 print(f"ADM lemma random tests: {atrue} certifying (point, box) pairs, {atests} pose samples, failures {afail}")
+
+# --- the CHAIN algebra (RUNG2.md Lemmas E-G): the violation polynomials and their exact maximum ---
+# G_{p,k} > 0 must mean "p violates the k-th containment inequality", and _gmax must be an upper
+# bound for any nonnegative combination of them over the whole pose box.  Both are re-derived here
+# from the geometry, in floats, with no reference to zeromargin.py's Fraction code path.
+import importlib.util as _ilu
+_sp = _ilu.spec_from_file_location('zm', __file__.rsplit('/', 1)[0] + '/zeromargin.py')
+_zm = _ilu.module_from_spec(_sp); _sp.loader.exec_module(_zm)
+from fractions import Fraction as _F
+
+def gfloat(kind, px, py, cx, cy, u):
+    a, b = px - cx, py - cy
+    C, S, N = 1 - u * u, 2 * u, 1 + u * u
+    if kind == 0: return 2 * a * C + 2 * b * S - N
+    if kind == 1: return -2 * a * C - 2 * b * S - N
+    if kind == 2: return -2 * a * S + 2 * b * C - N
+    return 2 * a * S - 2 * b * C - N
+
+rng2 = random.Random(11)
+sgn_fail = 0; sgn_n = 0
+for _ in range(200000):
+    px, py = rng2.uniform(0, 4), rng2.uniform(0, 4)
+    cx, cy = rng2.uniform(0, 4), rng2.uniform(0, 4)
+    u = rng2.uniform(0, 1); th = 2 * math.atan(u)
+    g = [gfloat(k, px, py, cx, cy, u) for k in range(4)]
+    ins = inside((px, py), (cx, cy), th, tol=0.0)
+    if max(g) > 1e-9 and ins: sgn_fail += 1
+    if max(g) < -1e-9 and not ins: sgn_fail += 1
+    sgn_n += 1
+print(f"CHAIN violation polynomials: {sgn_n} random (point, pose) pairs, "
+      f"sign disagreements with the geometry: {sgn_fail}")
+
+chk = _zm.Checker(4, [(0, 0)], None)
+gm_fail = 0; gm_n = 0
+for _ in range(20000):
+    pts = [(_F(rng2.randrange(0, 4001), 1000), _F(rng2.randrange(0, 4001), 1000)) for _ in range(3)]
+    chk.P = pts
+    cx0 = _F(rng2.randrange(0, 4001), 1000); cx1 = cx0 + _F(rng2.randrange(0, 300), 1000)
+    cy0 = _F(rng2.randrange(0, 4001), 1000); cy1 = cy0 + _F(rng2.randrange(0, 300), 1000)
+    u0 = _F(rng2.randrange(0, 1000), 1000); u1 = u0 + _F(rng2.randrange(0, 200), 1000)
+    box = (cx0, cx1, cy0, cy1, u0, u1)
+    terms = [(_F(rng2.choice([1, 1, 2, 1]), rng2.choice([1, 2, 1])), i, rng2.randrange(4))
+             for i in range(rng2.randrange(1, 3))]
+    bnd = float(chk._gmax(terms, box))
+    gm_n += 1
+    for _ in range(30):
+        cx = rng2.uniform(float(cx0), float(cx1)); cy = rng2.uniform(float(cy0), float(cy1))
+        u = rng2.uniform(float(u0), float(u1))
+        v = sum(float(lam) * gfloat(kd, float(pts[i][0]), float(pts[i][1]), cx, cy, u)
+                for lam, i, kd in terms)
+        if v > bnd + 1e-9:
+            gm_fail += 1
+            if gm_fail <= 5: print("  _gmax fail", box, terms, v, bnd)
+            break
+print(f"CHAIN _gmax enclosure: {gm_n} random (box, combination) pairs x 30 interior poses, "
+      f"violations of the exact bound: {gm_fail}")
