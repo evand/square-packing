@@ -368,8 +368,8 @@ it was.
   The remainder is a separator limit, not a family limit — 300 restarts per `k` converge at
   `11.519638`, 2,500 at `11.470839`.
 * On the full recorded pose sets (10,463 and 9,669 columns), where the LP has three orders of
-  magnitude more freedom to dodge a row, the descent is real but slow: `11.435484 -> 11.332203`
-  on the leaf and `11.785783 -> 11.740678` on the corner after 35 minutes of separation, still
+  magnitude more freedom to dodge a row, the descent is real but slow: `11.435484 -> 11.322628`
+  on the leaf and `11.785783 -> 11.722739` on the corner after 48 minutes of separation, still
   falling monotonically, every value a rigorous upper bound (§10.4).
 
 The verifier and Lean cost is the smallest it could be: a box clique whose cores meet *cyclically*
@@ -524,17 +524,18 @@ and 2,645 resumed clique rows, each re-verified pairwise), on the restricted mas
 three orders of magnitude more columns to move mass onto than the support experiment, so a polygon
 row that was fatal on 94 poses is merely expensive on 10,463.
 
-| run | poses / columns | start (QSTAB) | after 35 min of separation | polygon rows | drop so far |
-|---|---|---|---|---|---|
-| `PGA` (leaf) | 10,175 / 10,463 | `11.435484` | `11.332203` (it 21) | 349 | `0.103281` (24 % of the gap) |
-| `PGB` (corner) | 9,551 / 9,669 | `11.785783` | `11.740678` (it 19) | 404 | `0.045105` (6 % of the gap) |
+| run | poses / columns | start (QSTAB) | at `2,100 s` | at `2,850 s` | polygon rows | drop so far |
+|---|---|---|---|---|---|---|
+| `PGA` (leaf) | 10,175 / 10,463 | `11.435484` | `11.332203` (it 21) | **`11.322628`** (it 26) | 398 | `0.112856` (26 % of the gap) |
+| `PGB` (corner) | 9,551 / 9,669 | `11.785783` | `11.740678` (it 19) | **`11.722739`** (it 25) | 475 | `0.063044` (8 % of the gap) |
 
-Both are still descending monotonically at roughly `0.005` per iteration and `100 s` per
-iteration, and both were launched with a `9,000 s` budget; the numbers above are the state at
-`~2,100 s`.  **Every one of them is a rigorous upper bound** on the QSTAB + rank value of its
+Both are still descending monotonically at roughly `0.002-0.005` per iteration and `110 s` per
+iteration, and both were launched with a `9,000 s` budget, so the numbers above are a snapshot,
+not a convergence; the runs write `runs/PGA.out` and `runs/PGB.out` and their final `RESULT` lines
+will be lower still.  **Every one of these values is a rigorous upper bound** on the QSTAB + rank value of its
 loaded pose set, at every iteration and regardless of convergence, because rows only ever relax
 (`CLIQUELEVER.md` §0's direction argument is untouched by adding valid rows) — so the leaf's
-QSTAB + rank value on its full recorded pose set is already known to be `<= 11.332203`, against
+QSTAB + rank value on its full recorded pose set is already known to be `<= 11.322628`, against
 `11.435484` with cliques alone and `alpha = 11` below.
 
 The rows themselves are the same objects as in the support runs.  `rankdiag.py --pgons` on `PGA`'s
