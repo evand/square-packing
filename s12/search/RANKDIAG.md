@@ -372,7 +372,7 @@ membership from the anchors and its independence number by a fresh unseeded B&B.
 | corner `k = 4` | its converged 149-pose support | `11.785783` | **`11.470839217`** | 11 |
 | **pure, no branch** | `E2P`'s 666-pose support | `~11.90` (`PUREM`) | **`11.759344530`** | 11 |
 | corner, under lattice pricing | `E2B`'s 425-pose support | — | **`11.691140747`** | 11 |
-| leaf, under lattice pricing | `E2A`'s 355-pose support | — | `11.261889` | 11 |
+| leaf, under lattice pricing | `E2A`'s 355-pose support | — | **`11.261889022`** | 11 |
 
 **What these numbers are.**  Each is `QSTAB(P) + rank rows` for a finite pose set `P`, so each is a
 rigorous **lower** bound on the continuum value of the relaxation (restricting the poses lowers
@@ -899,7 +899,7 @@ cheap, certifiable route is the one §10.1 used: **converge on the run's own sup
 |---|---|---|---|---|---|---|
 | `SUPP` | `E2P` (pure) | 666 | **`11.759344530`** | `0.999999998` OK | `0.999999998` (complete) OK | 542 |
 | `SUPEB` | `E2B` (corner) | 425 | **`11.691140747`** | `1` OK | `1` (complete) OK | 476 |
-| `SUPEA` | `E2A` (leaf) | 355 | **`11.261889`** (LP pinned, `kmax = 1.000000`, no new rows) | `1` OK | `1` | 527 |
+| `SUPEA` | `E2A` (leaf) | 355 | **`11.261889022`** | `1` OK | `1` (complete) OK | 527 |
 
 `SUPP` is the pure instance's analogue of §10.1's support experiment: take the support `E2P`'s
 measure actually uses and converge QSTAB + polygons on it.  It converged in 72 iterations
@@ -963,3 +963,34 @@ over seven injections) when it was stopped at `5,742 s`, so the full-lattice pur
 pinned; what is pinned is that a *finer* lattice offers the pricer nothing the coarse one does not.
 Second, both stage-1 numbers are upper bounds, not certificates; the certified number of this
 round is `SUPP`'s `11.759344530`.
+
+## 17. Round 5: driving the column generation on the pure instance
+
+§16 settles the *pitch*: halving it buys the pricer nothing.  What it does not settle is the
+*column-generation* limit — `E2P` was stopped at `5,742 s` with its best lattice reduced cost still
+falling:
+
+| `E2P` injection | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+|---|---|---|---|---|---|---|---|
+| best lattice rc | `+0.423367` | `+0.326009` | `+0.234435` | `+0.211374` | `+0.128997` | `+0.127616` | `+0.084796` |
+
+That is a clean geometric decay, roughly `x0.75` per injection, with no sign of a floor — the pure
+instance is *converging* on the `0.04 / 2.5 deg` lattice at around `11.90`, not being held there by
+a starved pricer.  `E2Pg` and `E2Bg` (`search/rankfamily_cg.sh`) resume `E2P` and `E2B` from their
+checkpoints — poses, coverage rows, clique rows and all 840 / 534 polygon rows rebuilt from their
+exact anchors — with `--lattice-every 5` still on, to drive the rc below `0.01`.  Extrapolating the
+decay, that is eight to ten more injections, i.e. forty to fifty iterations of a 12k-column model
+at `120-700 s` apiece: a multi-hour run, and it was launched with a `21,600 s` budget.  Its
+trajectory is in `runs/E2Pg.out` and `runs/E2Bg.out`; `python3 search/rankfamily_traj.py` prints
+it with the injections and their reduced costs marked.
+
+**What can be said now, precisely.**  The certified numbers of §15 are `QSTAB(P) + rank rows` for
+finite pose sets `P`, hence rigorous **lower** bounds on the continuum value of this relaxation.
+The CG-converged lattice value — the value the loop reaches when the pricer can no longer find an
+improving pose on the lattice — is the best *packing-side* estimate of that continuum value; it is
+not a proven ceiling for it, because the lattice is a discretisation and the pricer is a heuristic
+over it.  What §16 adds is that the discretisation is not the binding constraint: the `0.02 /
+1.25 deg` lattice, eight times larger, returns the identical best reduced cost.  So the honest
+statement of where the pure instance sits is: **certified at `11.759344530` on `E2P`'s support,
+estimated at `11.90` or below on the full lattice once column generation closes, and `0.1-0.24`
+below 12 either way.**
