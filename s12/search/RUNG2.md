@@ -530,7 +530,41 @@ point of §6 — in the interior of this cover almost every leaf needs a disjunc
 Theorem 1 says it must.  So the residue is confined to columns 14–18, `c_x ∈ [1.4, 1.9]`; the next
 bisection (columns 14–15) was running at the report deadline.
 
-### 4.4 The subtree cache, measured: no speedup
+### 4.4 The full-domain run, finished
+
+```
+python3 search/zeromargin.py cert runs/closed4_best_x103.txt --depth 14 --nproc 8 --disj \
+        --chain-from 0 --dump runs/x103_chain_leaves.txt        # taskset -c 22-29
+done in 13318s: boxes 39494, max depth 14
+  leaves: ADM 4726  CORE 0  P1 0  MIX 0  CHAIN 14212  TRI 0  EMPTY 3846  UNCERTIFIED 163
+NOT VERIFIED
+```
+
+3 h 42 min on 8 processes.  `CORE`, `P1`, `MIX` and `TRI` are all **0**: `ADM` subsumes the first
+three everywhere, and `CHAIN` carries **14,212 of the 22,784 non-empty leaves (75 %)** — the
+disjunctive primitive is not a patch for a few hard poses, it is the main certificate type for a
+weighted cover, exactly as Theorem 1 requires.
+
+The 163 uncertified boxes are in two families, and **neither is a limitation of the checker**:
+
+| family | location | base-cover capture there (exact) |
+|---|---|---|
+| left, 60 boxes | `c_x ∈ {[1.49375, 1.5], [1.5, 1.503125]}`, `c_y` sweeping `[0.5125, 0.7875]` in `1/160` steps at `θ ∈ [0°, 0.224°]`, plus a 10-box tilted cluster at `c_y ≈ 0.53`, `θ ∈ [3.24°, 4.25°]` | **`9420217/10000000 = 0.9420217` — a violation** |
+| right, 103 boxes | `c_x ∈ [3.05, 3.5]` and the far-right band, `θ → 0` | **`500001/500000 = 1.000002` — exactly tight** |
+
+```
+python3 search/zeromargin.py pose runs/closed4_best.txt --cx 3.4877 --cy 0.52138 --u 253/10000000
+EXACT captured weight = 500001/500000 = 1.000002000000  (OK: >= 1)
+```
+
+So the left family is a hole in the cover (§4.3) and the right family is a *zero-margin* pose: the
+base cover has two parts in a million of slack there, so the `×1.03` scaling leaves only 3 %, and
+a `CHAIN` region — which gives up the weight on the edges it loses — cannot reach `1` on 3 %.
+Both are properties of the cover, not of the primitives.  (The run's printed list is truncated at
+40 boxes; the full list was not dumped because `--oracle` was not passed, and the cover it
+describes is being replaced rather than repaired.)
+
+### 4.5 The subtree cache, measured: no speedup
 
 `--cx-lo/--cx-hi` (new) restricts the sweep to a band of root columns; it prints `PARTIAL SWEEP`
 on entry and `VERIFIED (PARTIAL: ...)` in the verdict, so a restricted run cannot be mistaken for

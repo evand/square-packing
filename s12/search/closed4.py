@@ -415,6 +415,26 @@ def weight_breakdown(P, w, s, D=1000):
                 n_points=int((w > 0).sum()))
 
 
+def read_poses(path, s=None):
+    """read `cx cy theta_rad` rows (the format search/zeromargin.py --oracle writes, and the one
+    family_rows.py writes); '#' starts a comment.  Poses outside the admissible box of their angle
+    are clipped into it, so a pose named at the very edge still becomes a usable row."""
+    out = []
+    for line in open(path):
+        line = line.split('#')[0].strip()
+        if not line: continue
+        f = line.split()
+        if len(f) < 3: continue
+        cx, cy, th = float(f[0]), float(f[1]), float(f[2])
+        if s is not None:
+            lo, hi = admissible_box(s, th)
+            lo += WALL; hi -= WALL
+            if hi <= lo: continue
+            cx = min(max(cx, lo), hi); cy = min(max(cy, lo), hi)
+        out.append((cx, cy, th))
+    return np.array(out, dtype=float).reshape(-1, 3)
+
+
 # ----------------------------------------------------------------------------- the LP loop
 def run(a, log=print):
     import multiprocessing as mp
@@ -443,6 +463,11 @@ def run(a, log=print):
         gmin, nviol, poses, vals = separate(m.P, w0, s, thetas, a.pitch * 5, perang=a.perang, block=a.pitch * 5, pool=pool)
     m.add_rows(poses)
     log(f"[{a.tag}] initial rows: {len(m.rows)}")
+    for f in (a.seed_rows or '').split(','):
+        if not f.strip(): continue
+        P = read_poses(f.strip(), s)
+        n = m.add_rows(P)
+        log(f"[{a.tag}] seed rows from {f.strip()}: {len(P)} poses, {n} new; rows now {len(m.rows)}")
     hist = []; best = None
     for it in range(a.max_iters):
         out = m.solve()
@@ -655,6 +680,12 @@ def main():
     ap.add_argument('--prune-at', type=int, default=90000); ap.add_argument('--prune-keep', type=int, default=30000)
     ap.add_argument('--stress-pitch', type=float, default=0.005); ap.add_argument('--nrand', type=int, default=200)
     ap.add_argument('--seed', type=int, default=0)
+    ap.add_argument('--seed-rows', type=str, default=None,
+                    help='comma-separated files of `cx cy theta_rad` poses to add as hard rows '
+                         'before the first solve -- the format search/zeromargin.py --oracle writes, '
+                         'so the exact checker can be used as the separation oracle, and the format '
+                         'search/family_rows.py writes for the ZEROMARGIN sec 4 item-3 family that '
+                         "closed4.py's own row lattice steps over (search/RUNG2.md sec 4.3)")
     ap.add_argument('--margin', type=float, default=None,
                     help='solve the STABLE (margin-mu) cover problem: a point counts only if it is at '
                          'distance >= mu inside every edge of the unit square (sets TOL = -mu).  A cover '
