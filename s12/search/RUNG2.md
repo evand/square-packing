@@ -383,17 +383,42 @@ is unchanged to 1 % — those boxes are the obstructed ones, and Theorem 1 says 
 monotone cleverness removes them.  All 34,542 sit at the 24 violated PIN sets of §2.
 
 **Rung 2 with `CHAIN`** (`--depth 14 --nproc 8 --disj --chain-from 5`, `taskset -c 8-15`).
-CHAIN_RESULT_PLACEHOLDER
+The run had not finished within the session's time budget; the honest state at the
+report deadline is below (§4.1).  Two earlier runs (`--chain-from 5` and `--chain-from 0`) were
+invalidated mid-flight by a soundness bug found by inspection and fixed: in the product branch the
+two chains' up-sets, and in the single-chain branch the down-set and the up-set, can share points,
+and their weights were being **added** rather than unioned.  The region test now totals the weight
+of the *union* of the index sets, exactly, with integer weight numerators over a common
+denominator (`Checker.Wnum`/`Wden`) so that a numpy `int64` sum decides it.  After the fix the
+root-level box `[0.5,0.6] × [1.4,1.5] × [0°,7.2°]` no longer certifies (it had been carried by
+double-counted weight) while its subdivisions still do, so the correction is material and the
+earlier leaf counts are void.
+
+### 4.1 State at the report deadline
+
+* `--chain-from 0`, depth 12, 6 processes, the *pre-fix* build: 2,000 of 6,400 root boxes,
+  3,116 boxes, **0 uncertified** — that prefix covers `cx ∈ [0, 1.25]`, i.e. the entire left-wall
+  region including the worst pose `(0.5, 1.5, 0)` and the tile poses of columns 0 and 1.  Not a
+  result to rely on (see the bug above), but it shows `CHAIN` prunes: the same prefix costs 6,580
+  boxes at `--chain-from 5` and would be ~30,000 with the monotone primitives alone.
+* the post-fix run (`--depth 14 --nproc 8 --disj --chain-from 0`, `runs/x103_chain.log`) was
+  launched at the deadline; it had not produced its summary line.
+* Per-box evidence that the primitive does what Theorem 1 requires (post-fix, exact): the four
+  `(±,±)` octant boxes at the interior tile pose `(1.5,1.5,0)` certify by the **product of two
+  chains** at bins `u₁ = 2⁻⁸` and `2⁻¹²` (11 of the 12 boxes tried; the twelfth fails at the
+  coarsest bin `2⁻⁶` and certifies once subdivided), and the wall boxes at `(0.5,1.5,0)` certify by
+  a **single chain** down to `u₁ = 10⁻³`.  Those are exactly the poses at which Theorem 1 says
+  every monotone primitive must fail for ever, and they are now leaves.
 
 **Per-box behaviour of `CHAIN`** (direct calls, `runs/closed4_best_x103.txt`):
 
 | box | `ADM` | `MIX` | `CHAIN` | time |
 |---|---|---|---|---|
-| `[0.5,0.6] × [1.4,1.5] × [0°,7.2°]` (the root box at the worst pose) | — | — | **CHAIN**, 197 points | 0.34 s |
-| `[0.5,0.51] × [1.49,1.5] × [0°,0.11°]` | — | — | **CHAIN**, 196 points | 0.23 s |
-| `[0.4875,0.5] × [1.4875,1.5] × [0°,1.8°]` | — | — | **CHAIN**, 196 points | 0.25 s |
-| `[1.5,1.6] × [1.4,1.5] × [0°,1.8°]` (interior tile pose) | — | — | **CHAIN**, 402 points | 3.1 s |
-| the four `(±,±)` octants at `(1.5,1.5,0)`, bins down to `u₁ = 2⁻¹²` | — | — | **CHAIN** (product of two chains) | 2.7–3.2 s |
+| `[0.5,0.51] × [1.49,1.5] × [0°,0.11°]` (the worst pose) | — | — | **CHAIN**, 196 points | 0.39 s |
+| `[0.4875,0.5] × [1.4875,1.5] × [0°,1.8°]` | — | — | **CHAIN**, 196 points | 0.40 s |
+| `[0.5,0.6] × [1.4,1.5] × [0°,7.2°]` (the root box there) | — | — | — (needs subdivision) | 0.63 s |
+| `[1.5,1.6] × [1.4,1.5] × [0°,1.8°]` (interior tile pose, root box) | — | — | — (needs subdivision) | 6.5 s |
+| 11 of the 12 `(±,±)` octant boxes at `(1.5,1.5,0)`, bins `2⁻⁶, 2⁻⁸, 2⁻¹²` | — | — | **CHAIN** (product of two chains) | 5.0–5.8 s |
 
 The interior-tile boxes need the *product* of two chains and the empty-region test of Lemma H; a
 single chain fails there, which is what forced the two-chain extension.

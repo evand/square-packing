@@ -194,6 +194,18 @@ class Checker:
         self.Pxf = np.array([p[0] for p in self.Pf], dtype=float) if n else np.zeros(0)
         self.Pyf = np.array([p[1] for p in self.Pf], dtype=float) if n else np.zeros(0)
         self.Wf = np.array([float(w) for w in self.W], dtype=float) if n else np.zeros(0)
+        # exact integer numerators over a common denominator: lets CHAIN total the weight of a
+        # UNION of index sets with numpy (one int64 sum) instead of adding Fractions one by one,
+        # which is what makes the per-region test affordable -- and correct, since the regions'
+        # witness sets overlap and their weights must NOT simply be added.
+        den = 1
+        for w in self.W:
+            d = w.denominator
+            den = den * d // math.gcd(den, d)
+            if den > 10 ** 15: den = 0; break
+        self.Wden = den
+        self.Wnum = (np.array([int(w * den) for w in self.W], dtype=np.int64) if (den and n)
+                     else np.zeros(n, dtype=np.int64))
         self.order = np.argsort(-self.Wf) if n else np.zeros(0, dtype=np.int64)
 
     def _triangles(self):
@@ -535,9 +547,11 @@ class Checker:
         def analyse(ch):
             """prefix weights of the chain's down-sets, and the up-set weight/members per pivot"""
             kk = len(ch)
-            pre = [F(0)] * (kk + 1)
-            for r in range(1, kk + 1): pre[r] = pre[r - 1] + self.W[ch[r - 1][0]]
-            up = [F(0)] * (kk + 2); ups = [[] for _ in range(kk + 2)]
+            n = len(self.P)
+            down = [np.zeros(n, dtype=bool) for _ in range(kk + 1)]
+            for r in range(1, kk + 1):
+                down[r] = down[r - 1].copy(); down[r][ch[r - 1][0]] = True
+            up = [np.zeros(n, dtype=bool) for _ in range(kk + 2)]
             for (k, kind) in cand:
                 lo, hi = 0, kk
                 while lo < hi:
@@ -546,24 +560,27 @@ class Checker:
                     good = kq != k and any(gmax1(k, kind, kq, kdq, lam) <= 0 for lam in lams)
                     if good: lo = mid
                     else: hi = mid - 1
-                for r in range(1, lo + 1):
-                    up[r] += self.W[k]; ups[r].append(k)
-            return pre, up, ups
+                for r in range(1, lo + 1): up[r][k] = True
+            return down, up
 
+        if not self.Wden: return (None, None)         # no common denominator: CHAIN unavailable
+        def enough(*masks):
+            u = masks[0].copy()
+            for mk in masks[1:]: u |= mk
+            return int(self.Wnum[u].sum()) >= self.Wden
         info = [analyse(ch) for ch in chains]
         # --- single chain
         for ci, ch in enumerate(chains):
-            pre, up, ups = info[ci]; kk = len(ch)
-            if all(wT + pre[r] + up[r + 1] >= 1 for r in range(kk + 1)):
-                used = set(int(v) for v in np.nonzero(inT)[0])
-                used.update(int(c[0]) for c in ch)
-                for r in range(1, kk + 1): used.update(int(v) for v in ups[r])
-                return ('CHAIN', sorted(used))
+            down, up = info[ci]; kk = len(ch)
+            if all(enough(inT, down[r], up[r + 1]) for r in range(kk + 1)):
+                used = inT | down[kk]
+                for r in range(1, kk + 1): used = used | up[r]
+                return ('CHAIN', sorted(int(v) for v in np.nonzero(used)[0]))
         # --- product of two chains of different kinds
         for i in range(len(chains)):
             for j in range(i + 1, len(chains)):
                 A, Bc = chains[i], chains[j]
-                (preA, upA, upsA), (preB, upB, upsB) = info[i], info[j]
+                (downA, upA), (downB, upB) = info[i], info[j]
                 ka, kb = len(A), len(Bc)
                 # empty[r] = the largest s such that region (r, s) is provably empty (a staircase:
                 # G_A and G_B are both non-decreasing along their chains, so is G_A + lam G_B)
@@ -581,16 +598,14 @@ class Checker:
                 for r in range(ka + 1):
                     for sdx in range(kb + 1):
                         if r < ka and sdx < kb and empt[r] >= sdx + 1: continue   # region is empty
-                        tot = wT + preA[r] + preB[sdx] + (upA[r + 1] if r < ka else F(0)) \
-                              + (upB[sdx + 1] if sdx < kb else F(0))
-                        if tot < 1: ok = False; break
+                        if not enough(inT, downA[r], downB[sdx], upA[r + 1], upB[sdx + 1]):
+                            ok = False; break
                     if not ok: break
                 if ok:
-                    used = set(int(v) for v in np.nonzero(inT)[0])
-                    used.update(int(c[0]) for c in A); used.update(int(c[0]) for c in Bc)
-                    for r in range(1, ka + 1): used.update(int(v) for v in upsA[r])
-                    for r in range(1, kb + 1): used.update(int(v) for v in upsB[r])
-                    return ('CHAIN', sorted(used))
+                    used = inT | downA[ka] | downB[kb]
+                    for r in range(1, ka + 1): used = used | upA[r]
+                    for r in range(1, kb + 1): used = used | upB[r]
+                    return ('CHAIN', sorted(int(v) for v in np.nonzero(used)[0]))
         return (None, None)
 
     def cert_tri(self, box):
