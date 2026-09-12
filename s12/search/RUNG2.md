@@ -564,6 +564,53 @@ Both are properties of the cover, not of the primitives.  (The run's printed lis
 40 boxes; the full list was not dumped because `--oracle` was not passed, and the cover it
 describes is being replaced rather than repaired.)
 
+### 4.6 The right-wall family was a completeness bug in the checker (`clip_bin`)
+
+The right-hand 103 boxes were *not* a new pose type.  Sweeping the single root column
+`c_x ∈ [3.5, 3.6]` reduced the whole family to one box,
+
+    cx in [7/2, 7/2 + 1/160],  cy in [3/2, 3/2 + 1/160],  theta in [0, 0.112 deg],
+
+and the diagnosis is unambiguous.  A pose of that box is admissible iff
+`w(θ)/2 ≤ c_x ≤ m − w(θ)/2`, and `m − w(θ)/2 = 3.499024 < 7/2` as soon as `θ > 0`, so **the box's
+only admissible poses are `(7/2, c_y, 0)`** — and their captures are fine:
+
+| pose | exact capture |
+|---|---|
+| `(7/2, 3/2, 0)` | `1.562914790` |
+| `(7/2, 3/2 + 1/320, 0)` | `1.036922939` |
+| `(7/2, 3/2 + 1/160, 0)` | `1.036922939` |
+| every corner with `u > 0`, and every corner with `c_x = 7/2 + 1/160` | **inadmissible — constrains nothing** |
+
+while `ADM`, `P1`, `MIX` and `CHAIN` all returned `None` with witness weight `0`.  Collapsing the
+bin to `u ∈ [0,0]` — the box's actual admissible sub-bin — makes `ADM` certify it immediately with
+witness weight `1.000308396`.  So the failure was Lemma A being applied over a bin on which almost
+every pose is inadmissible: the conditions are checked at `A_x(θ) = max(c_{x0}, w/2)` and
+`B_x(θ) = min(c_{x1}, m − w/2)` even where `A_x > B_x`, which is *sound* (§3.1) but vacuously
+conservative, and no amount of subdivision repairs it — the sub-boxes inherit the same bin.
+
+**The fix, `clip_bin` (`search/zeromargin.py`).**  A pose of the box is admissible iff
+`w(θ) ≤ K` with `K = 2 min(c_{x1}, m − c_{x0}, c_{y1}, m − c_{y0})`.  On `[0°, 45°]` `w` is
+strictly increasing, so the admissible angles are `[u₀, u⁻]` with `w(u⁻) = K`, and everything above
+`u⁻` may be discarded.  `clip_bin` returns a rational `u* ≥ u⁻` by bisection — **from above**, so
+no admissible pose is ever dropped — and returns `u₀` exactly when `w(u₀) = K`, which is the case
+that matters: at a wall the admissible bin is the *single* angle `u₀`, and only a degenerate bin
+lets the primitives see it.  Clipping to any `u* > u⁻` does not help there, because the offending
+inequality fails for every `θ > 0` however small.  The clip is skipped when the bin reaches past
+45°, where `w` is not monotone.
+
+Effect on that column: **160 boxes, max depth 0, `ADM 16 / EMPTY 144`, 0 uncertified, instant**
+(was 202 boxes to depth 14 with 1 uncertified).  Rung 1 is unchanged in verdict on every path
+(reduced `6,782` boxes `3496 ADM / 74 TRI / 3212 EMPTY / 0`; full domain `27,044` /
+`14224 / 280 / 12540 / 0`; the old `CORE` path `0`), and `--no-clip` restores the previous counts
+exactly.
+
+**Why this matters more than rung 2.**  This is the first case where the checker failed on a pose
+with genuine positive margin, and the cause was neither the cover nor a missing lemma but a bin
+that was never intersected with the admissibility region.  Any V1 checker inherits it: every box
+pressed against a wall of the container has an admissible set of lower dimension, and a primitive
+that quantifies over the box's full bin certifies none of them, at any depth.
+
 ### 4.5 The subtree cache, measured: no speedup
 
 `--cx-lo/--cx-hi` (new) restricts the sweep to a band of root columns; it prints `PARTIAL SWEEP`

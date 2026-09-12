@@ -59,6 +59,43 @@ def bin_data(u0, u1):
     wlo = min(w0, w1)
     return dict(c0=c0, s0=s0, c1=c1, s1=s1, cD=cD, sD=sD, whi=whi, wlo=wlo)
 
+def clip_bin(box, m, steps=28):
+    """Shrink a box's angle bin to a sub-bin that still contains every ADMISSIBLE pose of the box.
+
+    A pose (c, theta) of the box is admissible iff  w(theta)/2 <= c_x <= m - w(theta)/2  and the
+    same in y, i.e. iff  w(theta) <= K  with
+
+        K = 2 min(cx1, m - cx0, cy1, m - cy0).
+
+    On [0, 45deg] w is strictly increasing, so {u : w(u) <= K} = [0, u-] and every pose of the box
+    with u > u- is inadmissible and constrains nothing.  Returns a rational u* >= u- found by
+    bisection (so no admissible pose is ever dropped -- the clip is sound in the direction that
+    matters), or u1 unchanged when the bin is not inside [0, 45deg], where w is not monotone.
+
+    Without this, a box pressed against a wall -- e.g. cx in [7/2, 7/2 + 1/160] at m = 4, whose
+    only admissible poses are (7/2, cy, 0) -- is tested over its whole bin, where every pose is
+    inadmissible, and no primitive can certify it however deep the subdivision goes.  See
+    search/RUNG2.md sec 4.6.
+    """
+    cx0, cx1, cy0, cy1, u0, u1 = box
+    if u1 * u1 + 2 * u1 - 1 > 0:          # the bin reaches past 45deg: w is not monotone on it
+        return u1
+    K = 2 * min(cx1, m - cx0, cy1, m - cy0)
+    if K <= 0: return u1
+    def w(u):
+        c, s = trig(u)
+        return c + s
+    if w(u1) <= K: return u1              # the whole bin can hold admissible poses
+    lo, hi = u0, u1                       # w(lo) <= K < w(hi) is the invariant (w(u0) <= K, else EMPTY)
+    if w(lo) > K: return u0               # nothing admissible at all; EMPTY will catch it
+    if w(lo) == K: return lo              # u- = u0 exactly: the admissible bin is the single angle
+    for _ in range(steps):                # u0, and only a DEGENERATE bin lets the primitives see
+        mid = (lo + hi) / 2               # it -- at a wall this is the whole content of the box
+        if w(mid) <= K: lo = mid
+        else: hi = mid
+    return lo if w(lo) == K else hi       # hi >= u-, so no admissible pose is ever dropped
+
+
 # ------------------------------------------------------------------ ADM primitive (Lemma A/B/C)
 # A point p is certified for a pose box (rect x u-bin) when four scalar inequalities hold for every
 # u in the bin; each inequality, after clearing the positive denominator (1+u^2)^2, is a polynomial
@@ -174,13 +211,14 @@ def in_core_f_vec(a, b, Bf, tol=1e-9):
 
 class Checker:
     def __init__(self, m, points, weights=None, use_tri=False, max_depth=16, dump=None,
-                 use_adm=True, theta_bias=1, use_chain=False, chain_from=0):
+                 use_adm=True, theta_bias=1, use_chain=False, chain_from=0, clip=True):
         self.m = F(m)
         self.P = [(F(x), F(y)) for x, y in points]
         self.W = [F(w) for w in weights] if weights else [F(1)] * len(self.P)
         self.Pf = [(float(x), float(y)) for x, y in self.P]
         self.use_tri = use_tri
         self.use_adm = use_adm
+        self.clip = clip
         self._last_inT = None
         self.use_chain = use_chain
         self.chain_from = chain_from
@@ -643,6 +681,10 @@ class Checker:
             stats['boxes'] += 1
             stats['maxdepth'] = max(stats['maxdepth'], depth)
             cx0, cx1, cy0, cy1, u0, u1 = box
+            if self.clip and u1 > u0:
+                cu1 = clip_bin(box, self.m)
+                if cu1 < u1:
+                    u1 = cu1; box = (cx0, cx1, cy0, cy1, u0, u1)
             key = (u0, u1)
             if key not in bincache:
                 B = bin_data(u0, u1)
@@ -737,6 +779,8 @@ def main():
     ap.add_argument('path', nargs='?')
     ap.add_argument('--tri', action='store_true')
     ap.add_argument('--no-adm', action='store_true', help='use the old CORE primitive instead of ADM')
+    ap.add_argument('--no-clip', action='store_true',
+                    help='do not shrink a box angle bin to its admissible sub-bin (clip_bin)')
     ap.add_argument('--disj', action='store_true',
                     help='enable the CHAIN disjunctive primitive (RUNG2.md sec 6): a monotone chain '
                          'of pivot inequalities partitions the box and each region gets its own '
@@ -795,7 +839,7 @@ def main():
         m, pts, ws = read_cert(a.path)
     chk = Checker(m, pts, ws, use_tri=a.tri, max_depth=a.depth, dump=a.dump,
                   use_adm=not a.no_adm, theta_bias=a.theta_bias,
-                  use_chain=a.disj, chain_from=a.chain_from)
+                  use_chain=a.disj, chain_from=a.chain_from, clip=not a.no_clip)
     sym = chk.symmetric()
     print(f"container [0,{m}]^2, {len(pts)} points, total weight {float(sum(chk.W)):.6f}, "
           f"symmetric under x->m-x and y->m-y: {sym}, triangles: {len(chk.tris) if a.tri else 'off'}")
