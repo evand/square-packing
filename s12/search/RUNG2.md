@@ -472,6 +472,48 @@ The spread in the table is itself a check on the theory: the four octants of one
 to 10, because the cover is symmetric under `x → 4−x, y → 4−y` but not under `x ↔ y`, and Lemma 1's
 pinwheel is not symmetric under `σ → −σ` either.
 
+**The residue is an exact violation of the cover, not a gap in the primitives.**  Bisecting the
+band located all 60 of the left-half uncertified boxes at `c_x ≈ 3/2` (a sliver of width `1/320`
+on either side of it), `θ ∈ [0°, 0.224°]`, and `c_y` sweeping a band — 50 of them in a continuous
+run `c_y ∈ [0.5125, 0.7875]` in steps of `1/160`, the remaining 10 a small tilted cluster at
+`c_y ≈ 0.53`, `θ ∈ [3.24°, 4.25°]`.  That is the `ZEROMARGIN.md` §4 item 3 family — an
+axis-parallel square `[1,2] × [c_y-½, c_y+½]` with **both** vertical edges on the heavy grid lines
+`x = 1` and `x = 2` — but sliding in `c_y`, which is *not* on the box lattice, so every box
+straddles it.  Item 3 anticipated exactly this: "with a root pitch not commensurable with the
+coordinates the boxes straddle the family and CORE alone would not terminate."
+
+Checking the capture directly in that box gave a single-pose minimum **below 1**, and the exact
+`pose` mode confirms it:
+
+```
+python3 search/zeromargin.py pose runs/closed4_best_x103.txt --cx 3/2 --cy 1461/2000 --u 1/40000
+container [0,4]^2; pose cx=3/2 cy=1461/2000 u=1/40000 theta=0.002864789 deg; admissible: True
+EXACT captured weight = 970282351/1000000000 = 0.970282351  *** VIOLATION: < 1 ***
+```
+
+So `runs/closed4_best_x103.txt` **is not a valid cover**, and no primitive — monotone, disjunctive
+or otherwise — can ever certify those boxes.  The checker was right and the cover is wrong.  On the
+three files, at that one pose (`Fraction`, 175 points captured):
+
+| file | total | exact capture at `(3/2, 1461/2000, u = 1/40000)` |
+|---|---|---|
+| `closed4_best.txt` | `12.4174836` | `9420217/10000000 = 0.9420217` |
+| `closed4_best_x102.txt` | `12.665833` | `480431067/500000000 = 0.960862134` |
+| `closed4_best_x103.txt` | `12.790008` | `970282351/1000000000 = 0.970282351` |
+
+**This kills the scaling route outright, and by a wider margin than §5(a) said.**  `FAMILY.md` §2's
+worst known pose was `0.9926744`, needing `λ ≥ 1.00738`.  The true worst is `0.9420217`, needing
+
+    λ ≥ 10000000/9420217 = 1.06154667…,   λ · 12.4174836 = 124174836/9420217 = 13.18173838…
+
+so **every scaling of `closed4_best.txt` that is a valid cover has total > 13.18 — over the rung-2
+budget by 0.18.**  The `x1.02` and `x1.03` files were never candidates; §2's "Machine confirmation
+1" measured their monotone-witness deficit, which is real, but the operative fact is simpler: they
+do not cover.  A rung-2 attempt has to start from a *valid* cover, which means re-running the
+separation loop with this pose family (`c_x = 3/2`, `θ → 0`, `c_y` free) in the row set — it is
+precisely the family `closed4.py`'s row lattice samples badly, since the rows sit on a `0.02`
+pitch and the violation is `0.03` wide in `c_y` at `θ = 0.0029°`.
+
 **Bisecting the band.**  Two independent runs agree on the count: exactly **60** uncertified boxes,
 and the restricted run reaches 60 by its root 1,000, so all of them have `c_x ≤ 1.9`.  A depth-14
 sweep of columns 12–13 alone (`--cx-lo 1.25 --cx-hi 1.35`, `runs/x103_narrow.log`) is
