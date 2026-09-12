@@ -181,6 +181,7 @@ class Checker:
         self.Pf = [(float(x), float(y)) for x, y in self.P]
         self.use_tri = use_tri
         self.use_adm = use_adm
+        self._last_inT = None
         self.use_chain = use_chain
         self.chain_from = chain_from
         self.theta_bias = theta_bias
@@ -365,16 +366,19 @@ class Checker:
             if not per_cond and not mask.any(): break
         return (mask, conds) if per_cond else mask
 
-    def cert_adm(self, box, B):
+    def cert_adm(self, box, B, inh=None):
+        """`inh` is a set of points already proved (at an ancestor box) to lie in Q at every
+        admissible pose there.  A sub-box has a SUBSET of those poses, so the proof is inherited
+        verbatim -- this is the per-subtree cache, and it is exact, not a heuristic."""
         u0, u1 = box[4], box[5]
         specs = self._adm_specs(box, B)
         mask = self._adm_mask(specs, u0, u1)
-        if not mask.any() or self.Wf[mask].sum() < 1.0: return (None, None)
+        cand = mask if inh is None else (mask | inh)
+        if not cand.any() or self.Wf[cand].sum() < 1.0: return (None, None)
         total = F(0); used = []
         for k in self.order:
-            if not mask[k]: continue
-            px, py = self.P[k]
-            if self._adm_exact(px, py, specs, u0, u1):
+            if not cand[k]: continue
+            if (inh is not None and inh[k]) or self._adm_exact(*self.P[k], specs, u0, u1):
                 total += self.W[k]; used.append(int(k))
                 if total >= 1: return ('ADM', used)
         return (None, None)
@@ -409,7 +413,7 @@ class Checker:
             if total >= 1: return ('P1', used)
         return (None, None)
 
-    def cert_mix(self, box, B):
+    def cert_mix(self, box, B, inh=None):
         """ADM and P1 certify DIFFERENT points of the same box; their union is a legitimate
         witness set (each of its points lies in Q for every admissible pose of the box), so a box
         neither primitive can carry alone is still certified if the union reaches weight 1."""
@@ -417,14 +421,15 @@ class Checker:
         specs = self._adm_specs(box, B)
         ma = self._adm_mask(specs, u0, u1)
         mp = self._p1_mask(box, B)
-        mask = ma | mp
+        mask = ma | mp if inh is None else (ma | mp | inh)
         if not mask.any() or self.Wf[mask].sum() < 1.0: return (None, None)
         t = 1 - B['whi'] / 2
         total = F(0); used = []
         for k in self.order:
             if not mask[k]: continue
             px, py = self.P[k]
-            if (mp[k] and self._p1_exact(px, py, box, t)) or \
+            if (inh is not None and inh[k]) or \
+               (mp[k] and self._p1_exact(px, py, box, t)) or \
                (ma[k] and self._adm_exact(px, py, specs, u0, u1)):
                 total += self.W[k]; used.append(int(k))
                 if total >= 1: return ('MIX', used)
@@ -464,7 +469,7 @@ class Checker:
                 if best is None or v > best: best = v
         return best
 
-    def cert_chain(self, box, B, lams=(F(1), F(1, 2), F(2))):
+    def cert_chain(self, box, B, lams=(F(1), F(1, 2), F(2)), inh=None):
         """Disjunctive certification by monotone chains of pivots (RUNG2.md secs 6-7).
 
         T = the points ADM/P1 certify for the whole box.  A *swing* point is one whose four
@@ -489,11 +494,13 @@ class Checker:
         inT = np.zeros(len(self.P), dtype=bool)
         wT = F(0)
         for k in self.order:
-            if not (ma[k] or mp[k]): continue
+            if not (ma[k] or mp[k] or (inh is not None and inh[k])): continue
             px, py = self.P[k]
-            if (mp[k] and self._p1_exact(px, py, box, t)) or \
+            if (inh is not None and inh[k]) or \
+               (mp[k] and self._p1_exact(px, py, box, t)) or \
                (ma[k] and self._adm_exact(px, py, specs, u0, u1)):
                 inT[k] = True; wT += self.W[k]
+        self._last_inT = inT              # the per-subtree cache handed to this box's children
         if wT >= 1: return ('ADM', [int(k) for k in np.nonzero(inT)[0]])
         # --- reachable: |p - c| <= sqrt2/2 + (box diagonal)/2 for some centre c of the box
         cxm, cym = float((cx0 + cx1) / 2), float((cy0 + cy1) / 2)
@@ -629,10 +636,10 @@ class Checker:
         stats = {'ADM': 0, 'CORE': 0, 'P1': 0, 'MIX': 0, 'CHAIN': 0, 'TRI': 0, 'EMPTY': 0,
                  'UNCERT': 0, 'boxes': 0, 'maxdepth': 0}
         unc = []; leaves = []
-        stack = [(root, 0)]
+        stack = [(root, 0, None)]
         bincache = {}
         while stack:
-            box, depth = stack.pop()
+            box, depth, inh = stack.pop()
             stats['boxes'] += 1
             stats['maxdepth'] = max(stats['maxdepth'], depth)
             cx0, cx1, cy0, cy1, u0, u1 = box
@@ -646,16 +653,17 @@ class Checker:
             lo = B['wlo'] / 2
             if cx1 < lo or cx0 > self.m - lo or cy1 < lo or cy0 > self.m - lo:
                 stats['EMPTY'] += 1; leaves.append((box, 'EMPTY', None)); continue
+            self._last_inT = None
             if self.use_adm:
-                kind, wit = self.cert_adm(box, B)
+                kind, wit = self.cert_adm(box, B, inh)
             else:
                 kind, wit = self.cert_core(box, B, Bf)
             if kind is None:
                 kind, wit = self.cert_p1(box, B)
             if kind is None and self.use_adm:
-                kind, wit = self.cert_mix(box, B)
+                kind, wit = self.cert_mix(box, B, inh)
             if kind is None and self.use_chain and depth >= self.chain_from:
-                kind, wit = self.cert_chain(box, B)
+                kind, wit = self.cert_chain(box, B, inh=inh)
             if kind is None and self.use_tri:
                 kind, wit = self.cert_tri(box)
             if kind is not None:
@@ -673,18 +681,19 @@ class Checker:
                     cx0 < B['whi'] / 2 or cx1 > self.m - B['whi'] / 2 or
                     cy0 < B['whi'] / 2 or cy1 > self.m - B['whi'] / 2):
                 du = du * self.theta_bias
+            kid = self._last_inT if self._last_inT is not None else inh
             if dx >= dy and dx >= du:
                 mid = (cx0 + cx1) / 2
-                stack.append(((cx0, mid, cy0, cy1, u0, u1), depth + 1))
-                stack.append(((mid, cx1, cy0, cy1, u0, u1), depth + 1))
+                stack.append(((cx0, mid, cy0, cy1, u0, u1), depth + 1, kid))
+                stack.append(((mid, cx1, cy0, cy1, u0, u1), depth + 1, kid))
             elif dy >= du:
                 mid = (cy0 + cy1) / 2
-                stack.append(((cx0, cx1, cy0, mid, u0, u1), depth + 1))
-                stack.append(((cx0, cx1, mid, cy1, u0, u1), depth + 1))
+                stack.append(((cx0, cx1, cy0, mid, u0, u1), depth + 1, kid))
+                stack.append(((cx0, cx1, mid, cy1, u0, u1), depth + 1, kid))
             else:
                 mid = (u0 + u1) / 2
-                stack.append(((cx0, cx1, cy0, cy1, u0, mid), depth + 1))
-                stack.append(((cx0, cx1, cy0, cy1, mid, u1), depth + 1))
+                stack.append(((cx0, cx1, cy0, cy1, u0, mid), depth + 1, kid))
+                stack.append(((cx0, cx1, cy0, cy1, mid, u1), depth + 1, kid))
         return stats, unc, leaves
 
 def _worker(args):
