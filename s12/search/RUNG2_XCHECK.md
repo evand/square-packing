@@ -479,18 +479,43 @@ the four exact pose values in §0 were taken from `RUNG2.md`, not from running t
 
 ## 5. Rejection tests
 
-`tests/rung2/rejection_tests.sh` (in the style of `tests/rejection_tests.sh`).  `REJECTIONS`
+`tests/rung2/rejection_tests.sh` (in the style of `tests/rejection_tests.sh`): **23 passed,
+0 failed, 0 panics**, about 4 minutes.
 
-**A note on what "refuses" can mean here.**  The shipped cover has about `3.1 %` of *capture*
-margin (`RUNG2.md` §4.7: the minimum captured weight over a dense scan is `1.03138`), and its
-heaviest point weighs `0.0331`, its typical point `0.003–0.010`.  So mutations (a), (b) and (d) —
-each of which moves at most `0.01` of weight — **leave the file a valid cover**: no sound checker
-can disprove them, and a checker that claimed to would be unsound.  What they do break is the
-*certificate*: a box certificate is a fixed witness subset per region, and those have far less
-slack than the pointwise capture.  The correct verdict for (a), (b), (d) is therefore
-"`NOT VERIFIED`: *n* uncertified boxes" — a refusal to certify, which is what the tests assert.
-Mutations (c) and (e) are genuinely false, and for those `zmcheck pose` returns an exact
-**disproof**: a rational pose and an exact captured weight `< 1`.
+| test | verdict |
+|---|---|
+| shipped cover at `(7/2,7/2,0)` | `1050006300/1000000000` ≥ 1 |
+| baseline band `c_x ∈ [0.5,0.6]`, `c_y ∈ [1,2]` | **0** uncertified (`ADM 338 / DISJ 448 / EMPTY 358`) |
+| (a) one point's weight `× 0.99` | 0 uncertified — *still a valid cover*, see below |
+| (a′) **every** weight `× 19/20` (total 12.308) | **VIOLATION**, exact `997505942/1000000000` at `(1/2,1/2,0)` |
+| (b) one point deleted | 0 uncertified, but 1 551 boxes against the baseline's 1 144 |
+| (b′) every weight halved (total 6.478) | **VIOLATION** at `(1/2,1/2,0)` |
+| (c) point set scaled by `0.995` (`X → 995X`, `D → 10⁶`) | **VIOLATION**: captures **exactly `0`** at `(7/2,7/2,0)` |
+| (d) one point moved by `0.01` | 0 uncertified — still a valid cover |
+| (d′) the whole set translated by `0.01` | **VIOLATION** at `(1/2,1/2,0)` |
+| (e) `closed4_best_x103.txt` | **VIOLATION**, exact `970282351/1000000000` at `(3/2, 1461/2000, u = 1/40000)` — `RUNG2.md` §4.3's number |
+| (e′) `closed4_best.txt`, same pose | **VIOLATION**, exact `9420217/10000000` |
+| 9 malformed inputs (negative weight, point outside the container, truncated, `s_den ∤ s_num·D`, trailing data, `W = 0`, non-integer header, missing file, `u ∉ [0,1]`) | `ERROR`, exit 2, no verdict word, **no panics** |
+
+Test (c) deserves a note: the shipped cover puts *all* of its corner-tile weight on the lines
+`x = 3` and `y = 3` — no point of the 3 621 has both coordinates above `3.015` — so shrinking the
+set by half a per cent leaves the corner square `[3,4]²` with **nothing at all** inside it.  The
+exact capture at `(7/2,7/2,0)` is `0`, which is as decisive as a rejection gets.
+
+**Mutations (a), (b) and (d) are not refused, and must not be.**  This is a finding, not a gap.
+The shipped cover has about `3.1 %` of *capture* margin (`RUNG2.md` §4.7: the minimum captured
+weight over a dense float scan is `1.03138`), its heaviest point weighs `0.0331` and a typical one
+`0.003–0.010`.  Each of the brief's mutations (a) `−1 %` of one weight (`8.7 × 10⁻⁵`), (b) one
+point deleted (`≤ 0.033`) and (d) one point moved by `0.01` therefore **leaves the file a valid
+cover**, and a checker that "refused" it would be refusing a true statement — which is exactly the
+failure mode a cross-check is supposed to rule out.  What such a mutation *can* break is the
+certificate, since a box certificate is a fixed witness subset per region and those have far less
+slack than the pointwise capture; here it does not, though deleting the point costs 36 % more boxes
+in the band (1 551 against 1 144), which is the visible cost.  The tests therefore assert the
+observed and correct outcome for (a), (b), (d) and add a *primed* variant of each that pushes the
+mutation past the `3.1 %` margin, where the checker returns an exact **disproof** — a rational pose
+and an exact captured weight `< 1` — rather than a mere refusal.  (a′), (b′), (c), (d′) and (e) are
+all disproofs.
 
 ---
 
