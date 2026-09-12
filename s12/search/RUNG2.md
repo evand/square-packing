@@ -28,6 +28,16 @@ build, which is the second result:
 > only `0.845828` of the needed `1`, while a chain cutting between every pair of consecutive
 > coordinates (56 regions) reaches `1.013756`.  That measurement is what fixes the design.
 
+> **Theorem 2 (§9).**  The same argument extended to the endgame's certificate type — points,
+> box/anchor cliques and a region trailer, under the *monotone* credit rule the sweep verifier and
+> `xcheck.py` implement — gives, at `[0,4]²`, accounting total `Θ = Σw_p + Σw_K − Σλ_j K_j ≥ 12`,
+> at the corner leaf `k = 4` and with no region trailer alike.  Cliques buy exactly the four units
+> between `16` and `12` (a clique serves at most two tiles, and only orthogonally adjacent ones —
+> Lemma T); the branch credit buys **nothing** at the binding leaf.  So monotone crediting still
+> allows rung 2 (`Θ < 13`) — a new and cheap route — but **is exactly the obstruction for the
+> `s(12)` endgame (`Θ < 12`)**: the sweep verifier's credit rule cannot be reused for V1, and
+> disjunctive crediting has to carry cliques and regions too (§9.4).
+
 Result on the target: see §4.  Everything load-bearing is `fractions.Fraction`; floats appear only
 as pre-filters (documented supersets of the exact test, which can only lose certifications) and in
 the independent stress tests.  Semantics unchanged (`ZEROMARGIN.md` §1: closed unit squares, closed
@@ -630,6 +640,11 @@ taskset -c 8-15  python3 search/zeromargin.py cert runs/closed4_best_x103.txt --
                  --nproc 8 --disj --chain-from 5 --dump runs/x103_disj_leaves.txt
 python3 search/zeromargin_stress.py runs/x103_disj_leaves.txt 40 --cert runs/closed4_best_x103.txt
 
+# T2: credited certificates (points + cliques + region trailer), sec 9
+python3 search/rung2_bound.py credit --m 4                 # 12.000000, no region trailer
+python3 search/rung2_bound.py credit --m 4 --k 1,1,1,1     # 12.000000, the corner leaf k = 4
+python3 search/rung2_bound.py credit --m 4 --k 1,0,0,0     # 11.000000 (a non-binding leaf)
+
 # the margin LP (the route Theorem 1 closes)
 python3 search/closed4.py axis --s 4 --margin 0.01 --tag ax010 --nproc 1    # = 16
 ```
@@ -638,3 +653,174 @@ Files: `search/zeromargin.py` (`ADM`, `MIX`, `CHAIN`, `--disj`, `--chain-from`, 
 `--no-adm`), `search/zeromargin_stress.py` (the `ADM` and `CHAIN` random tests, `--cert` for
 weighted covers), `search/rung2_bound.py` (new: `bound`, `check`, `dual`),
 `search/closed4.py` (`--margin`, checkpoint-export fix).
+
+---
+
+## 9. T2: Theorem 1 for credited certificates (points + cliques + regions)
+
+Theorem 1 is about point covers.  The `s(12)` endgame's certificate type carries more
+(`certificates/FORMAT.md`): **clique columns** (box cliques and anchor cliques) and a **region
+trailer** (corner boxes with multipliers `λ_j` and an occupancy pattern `K_j`).  The accounting is
+
+    Θ  =  Σ_p w_p  +  Σ_K w_K  −  Σ_j λ_j K_j ,
+
+and the assertion is that every admissible pose captures `Σ_{p ∈ S} w_p + Σ_{K ∋ S} w_K ≥ 1`, and
+`≥ 1 + λ_j` when its centre lies in corner box `j`.  *Monotone crediting* is the rule the sweep
+verifier and `xcheck.py` implement: a cell is credited a clique, or held to the higher region
+threshold, only when **every** pose of the cell is a member — "a cell that only partially satisfies
+a predicate gets **no** credit" (`notes/clique-family.md` §5; `FORMAT.md`: "a cell that straddles a
+box boundary gets nothing (conservative)").
+
+### 9.1 The constraint sets
+
+Lemma 0 of §2.1 is unchanged: the leaf `B*` that carries the germ `γ([0,η]³)` of the tile pose
+`(m_{ij}, 0)` exists and is a leaf the verifier must discharge.  Under monotone crediting its
+certificate is
+
+* a set of points `S`, every one of which lies in `Q` at **every** admissible pose of `B*` — so
+  `S ⊆ PIN(i,j,σ)` exactly as before; plus
+* a set of cliques `K`, every one of which contains **every** admissible pose of `B*` — so
+  `γ([0,η]³) ⊆ K`;
+
+with total `≥ 1` (`≥ 1 + λ_j` for the four corner tiles, whose poses `(½,½,0)` etc. lie in the
+corner boxes, since a corner box `[0,r]²` has `r > ½` — the verifier's own `(2r-1)² < 2` forces
+`½ < r < (1+√2)/2`).  No other tile pose is in a corner box (`r < 1.208 < 1.5`).
+
+The one new question is **how many tile germs one clique can serve**.  A clique is a
+pairwise-intersecting family of poses, so it can contain two germs only if every square of one
+meets every square of the other.
+
+> **Lemma T.**  Let `G = γ_{i,j,σ}([0,η]³)` and `G' = γ_{i',j',σ'}([0,η]³)` be two tile germs,
+> `η` small.  Every square of `G` meets every square of `G'` iff
+> (i) `(i,j) = (i',j')` (any signs); or
+> (ii) `(i',j') = (i±1, j)` with `σ_x = +1` on the left tile and `σ_x = -1` on the right one; or
+> (iii) `(i',j') = (i, j±1)` with `σ_y = +1` on the lower tile and `σ_y = -1` on the upper one.
+> In particular two **diagonally** adjacent tiles are never compatible, and a clique serves at most
+> two tiles.
+
+*Proof.*  (i) All squares of one tile's germ have centres within `2η` of `m_{ij}` and angles `≤ η`,
+so any two of them share a neighbourhood of `m_{ij}`.
+
+(ii)/(not-(ii)) At `θ = θ' = 0` the squares are `[i + σ_x t, i+1 + σ_x t]` and
+`[i' + σ'_x t', i'+1 + σ'_x t']` in `x`.  If `|i - i'| ≥ 2` these are disjoint for `η < ½`.  If
+`i' = i+1` they meet iff `σ_x t ≥ σ'_x t'` for all `t, t' ∈ [0,η]`; putting `t = 0` forces
+`σ'_x = -1` and `t' = 0` forces `σ_x = +1`.  Conversely, with those signs and any
+`θ, θ' ∈ [0, η]`, the separating-axis test over the eight edge normals never separates: along the
+first square's normal `e = (\cos θ, \sin θ)` the centre gap projects to
+`(1 - t - t')\cos θ + (s'-s)\sin θ ≤ 1`, while the half-widths sum to
+`½ + w(θ'-θ)/2 ≥ 1`; along `(1,0)` the half-widths sum to `(w(θ)+w(θ'))/2 ≥ 1` against a gap of
+`1 - t - t' ≤ 1`; the remaining directions are dominated.  So they meet.
+
+(not diagonal) For `(i',j') = (i+1,j+1)` the signs must be `σ = (+,+)`, `σ' = (-,-)` by the above
+applied in each coordinate.  Project on `(1,1)`: `max_{G}(x+y) = (i+j+1+t+s) + \cos θ` and
+`min_{G'}(x+y) = (i+j+3-t'-s') - \cos θ'` (the support of a unit square in the direction `(1,1)` is
+`\cos θ` for `θ ∈ [0°,45°]`).  They meet only if
+`t+s+t'+s' + \cos θ + \cos θ' ≥ 2`, which fails at `t=s=t'=s'=0`, `θ = θ' = η > 0`.  The
+anti-diagonal is the same computation on `(1,-1)`.  ∎
+
+The tile compatibility graph therefore has no triangle, and a **clique column** of the LP is a
+maximal pairwise-compatible set of `(tile, σ)` constraints: either all the constraints of one tile,
+or, for an orthogonally adjacent pair, the half of each tile's constraints with the right sign.
+`rung2_bound.py credit` enumerates all 28 of them at `m = 4` (16 of size 4, 12 of size 2) and
+checks pairwise compatibility (0 violations).  Allowing *any* pairwise-intersecting family — rather
+than only the box/anchor cliques the format can express — only lowers the LP, so the number below
+is a valid lower bound for real certificates.
+
+### 9.2 The number
+
+```
+python3 search/rung2_bound.py credit --m 4                  # no region trailer
+python3 search/rung2_bound.py credit --m 4 --k 1,1,1,1      # the corner leaf k = 4
+```
+
+| case | `Θ_min` | λ at the optimum |
+|---|---|---|
+| no region trailer (`λ = 0`) | **12.000000** | — |
+| corner leaf `k = 4` (`K = (1,1,1,1)`) | **12.000000** | `0,0,0,0` |
+| `k = 3` (`1,1,1,0`) | 12.000000 | `0,-1,0,-1` |
+| `k = 2` opposite (`1,0,0,1`) | 12.000000 | `-1,-1,-1,-1` |
+| `k = 2` adjacent (`1,1,0,0`) | 11.000000 | `0,0,-1,-1` |
+| `k = 1` (`1,0,0,0`) | 11.000000 | `-1,-1,-1,-1` |
+
+**The branch credit buys nothing at the binding leaf.**  At `k = 4` the optimum takes `λ = 0`: the
+four corner-tile constraints rise to `1 + λ` and the accounting gives exactly `4λ` back, so the two
+cancel.  The patterns that reach `11` do so only by making an *unoccupied* box's threshold vacuous
+(`λ_j = -1`, `K_j = 0`), which is legal but does not help the family: the sixteen patterns must all
+be refuted, and `max over patterns of Θ_min = 12`, attained at `k = 4`.
+
+**Cliques buy exactly 4.**  With point columns only the same LP is `16` (§2.3).  The optimum at
+`12` is structurally transparent:
+
+* **8 points, on the lines `x = 1` and `x = 3`, each serving two tiles.**  The solver puts them at
+  `(1, j + ¾)` and `(3, j + ¼)`.  By Lemma 1'(ii) the wall tile `(0,j)` keeps its *whole* interior
+  edge `x = 1`, while the tile `(1,j)` taken with `σ_x = -1` keeps its left edge `x = 1` for
+  `d_y ≥ 0`; a point on `x = 1` above the row midpoint is in both `PIN`s.  This is exactly the
+  wall adjacency that Lemma 2 had to forbid to get disjointness — here it is the *saving*.
+  These 8 points discharge every constraint of columns `0` and `3`, and the `σ_x = -1` half of
+  column `1` and the `σ_x = +1` half of column `2`.
+* **4 cliques of weight 1** discharge what is left — the `σ_x = +1` half of column `1` together
+  with the `σ_x = -1` half of column `2`, which is precisely a Lemma T (ii) compatible pair:
+  `{(1,j), σ_x = +1} ∪ {(2,j), σ_x = -1}` for `j = 0,1,2,3`.
+
+and the dual certifies it: `λ = 1` on 12 of the 36 constraints — one sign pair on each of 12 tiles,
+all but one 4-element rotation orbit `{(0,2),(1,0),(3,1),(2,3)}` — chosen so that (a) their `PIN`
+sets are pairwise disjoint (point multiplicity `≤ 1`, checked on the quarter-lattice cell system of
+§2.3) and (b) no two of them are Lemma-T compatible (clique multiplicity `≤ 1`).  The signs are
+
+| tile | σ | tile | σ | tile | σ | tile | σ |
+|---|---|---|---|---|---|---|---|
+| (0,0) | (+,+) | (0,1) | (+,+) | (0,3) | (+,−) | (1,1) | (+,−) |
+| (1,2) | (−,−) | (1,3) | (+,−) | (2,0) | (−,+) | (2,1) | (+,+) |
+| (2,2) | (−,+) | (3,0) | (−,+) | (3,2) | (−,−) | (3,3) | (−,−) |
+
+> **Theorem 2.**  A monotone-credited certificate at `[0,4]²` — points, box or anchor cliques, and a
+> region trailer with any occupancy pattern — has accounting total `Θ ≥ 12`, with `Θ ≥ 12` in
+> particular at the corner leaf `k = 4` and with no region trailer.
+
+### 9.3 What this says
+
+* **For rung 2 it is not an obstruction.**  The target is `Θ < 13`, and `12 < 13`: cliques buy
+  exactly the four units between Theorem 1's `16` and `12`, which is enough room.  So a
+  monotone-credited clique certificate *could* in principle prove `s(13) = 4` where a point cover
+  provably cannot.  That is a new route, and a cheap one to try: the saving is concentrated at the
+  wall lines `x = 1, 3` and `y = 1, 3`, which is where `closed4.py`'s covers already put most of
+  their weight.
+* **For the `s(12)` endgame (V1) it is exactly the obstruction.**  There the target is `Θ < 12`,
+  and Theorem 2 says `Θ ≥ 12`.  **The sweep verifier's monotone credit rule cannot be reused for
+  V1**, at `t = 4`, for any certificate of the present format — no matter how many cliques, how
+  clever the anchors, or which branch leaf.  Disjunctive crediting has to carry cliques and regions
+  too.
+
+### 9.4 What a disjunctive credit region looks like
+
+`CHAIN` (§6) already has the right machinery, because every predicate in the format is a
+conjunction of the *same* kind of polynomial:
+
+* **A region box.**  "The centre lies in `[0,r]²`" is `c_x ≤ r ∧ c_y ≤ r` — affine in the centre,
+  constant in `u`.  A leaf that straddles `c_x = r` is split by the pivot `g = c_x - r`; on
+  `{g ≤ 0}` the threshold is `1 + λ_j` and on `{g ≥ 0}` it is `1`.  The present verifier requires
+  a straddling cell to reach *both*, which is the monotone rule and is what makes the branch credit
+  cancel in §9.2; the disjunctive rule requires each side only its own threshold, and the pivot is
+  the cheapest possible (degree 1, exact at four corners).
+* **An anchor clique piece**, `{S : A_a ⊆ S and S ∩ A_f ≠ ∅ for every f}`.
+  * `A_a ⊆ S` for a point anchor `a` is exactly `G_{a,k} ≤ 0` for `k = 0..3` — the four violation
+    polynomials `CHAIN` already uses.  For a segment anchor it is the same four inequalities at
+    both endpoints (the square is convex), i.e. eight polynomials.
+  * `S ∩ A_f ≠ ∅` for a point anchor is again `G_{f,k} ≤ 0`, `k = 0..3`.  For a segment anchor
+    `[P,Q]` it is the negation of the separating-axis test: the square's two axes give
+    `min(⟨P,e⟩, ⟨Q,e⟩) ≤ ⟨c,e⟩ + ½` and `max(…) ≥ ⟨c,e⟩ - ½` for `e` the two rotated axes
+    (four inequalities, each a `min`/`max` of two polynomials of the same shape), and the segment's
+    own normal gives one more.  Every one of them is affine in `(c_x, c_y)` and quadratic in `u`
+    after clearing `(1+u²)`, so Lemma E applies verbatim: exact maximum at four corners.
+  * A clique is a union of pieces, so its membership is a **disjunction** of conjunctions — which
+    is exactly the shape `CHAIN` regions already have.
+* **The credit rule.**  Replace "the cell is credited `w_K` iff every pose of the cell is in `K`"
+  by "in region `R_r` of the leaf's chain partition, `w_K` is credited iff every pose of `R_r` is
+  in `K`", and discharge that with Lemma G: for each membership polynomial `g_i` of the piece,
+  exhibit `λ ≥ 0` with `max_B (g_i + λ G_{q_{r+1}}) ≤ 0`, where `G_{q_{r+1}} > 0` is the region's
+  own defining inequality.  The germ argument of §9.1 then no longer confines the credit — a region
+  can be a thin wedge that the germ leaves — so Theorem 2 does not apply, exactly as Theorem 1 does
+  not apply to `CHAIN`.
+
+The cost is one more polynomial family in `_gmax` (segment anchors need the `min`/`max` of two
+endpoint forms) and a per-clique membership test in the region loop; no new mathematics.

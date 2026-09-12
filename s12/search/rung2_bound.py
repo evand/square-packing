@@ -158,9 +158,149 @@ def dual(a):
           "NOT disjoint for this sign pattern")
 
 
+
+# ------------------------------------------------------------------ T2: credited certificates
+# A *monotone-credited* certificate (certificates/FORMAT.md "Clique certificates", "Anchor
+# cliques", "Branch certificates"; notes/clique-family.md sec 5) carries points p with weights
+# w_p, cliques K with weights w_K, and optionally corner-region multipliers lambda_j.  It asserts
+# that every admissible pose captures  sum_{p in S} w_p + sum_{K ni S} w_K >= 1  (>= 1 + lambda_j
+# if the centre is in corner box j), and its accounting total is
+#     Theta = sum_p w_p + sum_K w_K - sum_j lambda_j K_j.
+# *Monotone* crediting is the rule the sweep verifier and xcheck.py implement: a cell is credited
+# a clique (or the region threshold) only when EVERY pose of the cell is a member -- "a cell that
+# only partially satisfies a predicate gets no credit" (clique-family.md sec 5).
+#
+# Lemma 0 of sec 2 applies verbatim: the leaf that carries the germ of the tile pose can only be
+# credited a clique K with germ ⊆ K.  A clique is a pairwise-intersecting family of poses, so a
+# clique may serve two tile germs only if every square of one germ meets every square of the
+# other.  Lemma T (search/RUNG2.md sec 9) settles which pairs those are:
+#   * same tile, any signs               -- always compatible;
+#   * tiles (i,j), (i+1,j)               -- compatible iff sigma_x = +1 on the left tile and
+#                                           -1 on the right one (and likewise in y);
+#   * diagonal or farther apart          -- never.
+# Since the compatibility graph on tiles has no triangle, a clique serves at most two tiles, and
+# a clique column of the LP below is a maximal pairwise-compatible set of (tile, sign) constraints.
+
+def _compatible(t1, s1, t2, s2):
+    """Lemma T: may one clique contain the germs of (tile t1, signs s1) and (tile t2, signs s2)?"""
+    (i, j), (i2, j2) = t1, t2
+    if (i, j) == (i2, j2): return True
+    di, dj = i2 - i, j2 - j
+    if abs(di) > 1 or abs(dj) > 1: return False
+    if di != 0 and dj != 0: return False                  # diagonal: separated by (1, ±1)
+    if di == 1: return s1[0] == 1 and s2[0] == -1
+    if di == -1: return s2[0] == 1 and s1[0] == -1
+    if dj == 1: return s1[1] == 1 and s2[1] == -1
+    return s2[1] == 1 and s1[1] == -1
+
+
+def _constraints(m):
+    """the (tile, signs) constraints: sigma_x is forced at the wall columns, free inside"""
+    out = []
+    for i in range(m):
+        for j in range(m):
+            sxs = [1] if i == 0 else [-1] if i == m - 1 else [1, -1]
+            sys_ = [1] if j == 0 else [-1] if j == m - 1 else [1, -1]
+            for sx in sxs:
+                for sy in sys_:
+                    out.append(((i, j), (sx, sy)))
+    return out
+
+
+def _clique_columns(cons):
+    """every maximal pairwise-compatible set of constraints (at most two tiles, by Lemma T)"""
+    idx = {c: k for k, c in enumerate(cons)}
+    cands = set()
+    tiles = sorted({c[0] for c in cons})
+    for t in tiles:                                        # single-tile cliques
+        cands.add(frozenset(idx[c] for c in cons if c[0] == t))
+    for t in tiles:                                        # two-tile cliques
+        for t2 in tiles:
+            if t2 <= t: continue
+            S = [c for c in cons if c[0] in (t, t2)]
+            grp = frozenset(idx[c] for c in S
+                            if all(_compatible(c[0], c[1], d[0], d[1]) for d in S
+                                   if idx[d] in [idx[e] for e in S]))
+            # build properly: greedily keep the constraints that are pairwise compatible
+            keep = []
+            for c in S:
+                if all(_compatible(c[0], c[1], d[0], d[1]) for d in keep):
+                    keep.append(c)
+            # only two-tile sets that really use both tiles are interesting
+            if len({c[0] for c in keep}) == 2:
+                cands.add(frozenset(idx[c] for c in keep))
+            # the sign-symmetric variant (start from the other tile)
+            keep = []
+            for c in reversed(S):
+                if all(_compatible(c[0], c[1], d[0], d[1]) for d in keep):
+                    keep.append(c)
+            if len({c[0] for c in keep}) == 2:
+                cands.add(frozenset(idx[c] for c in keep))
+            # and the canonical one: all (t, sx=+1) plus all (t2, sx=-1) when they are adjacent
+            for A, Bt in ((t, t2), (t2, t)):
+                di, dj = Bt[0] - A[0], Bt[1] - A[1]
+                if (abs(di), abs(dj)) not in ((1, 0), (0, 1)): continue
+                sel = []
+                for c in cons:
+                    if c[0] == A and ((di == 1 and c[1][0] == 1) or (dj == 1 and c[1][1] == 1)):
+                        sel.append(c)
+                    if c[0] == Bt and ((di == 1 and c[1][0] == -1) or (dj == 1 and c[1][1] == -1)):
+                        sel.append(c)
+                if len({c[0] for c in sel}) == 2:
+                    cands.add(frozenset(idx[c] for c in sel))
+    # drop non-maximal ones
+    out = [c for c in cands if not any(c < d for d in cands)]
+    return sorted(out, key=lambda s: (-len(s), sorted(s)))
+
+
+def credit(a):
+    from scipy.optimize import linprog
+    m = a.m
+    g = np.arange(0, m * 4 + 1) / 4          # a complete set of cell representatives (sec 2.3)
+    GX, GY = np.meshgrid(g, g, indexing='ij')
+    X, Y = GX.ravel(), GY.ravel()
+    thetas = [0.0, 1e-5, 1e-4, 1e-3]
+    cons = _constraints(m)
+    A_pt = np.array([pin_mask(X, Y, m, t[0], t[1], thetas, s[0], s[1]).astype(float)
+                     for t, s in cons])                     # (ncon, npoints)
+    cols = _clique_columns(cons)
+    A_cl = np.zeros((len(cons), len(cols)))
+    for c, S in enumerate(cols):
+        for r in S: A_cl[r, c] = 1.0
+    corners = [(0, 0), (m - 1, 0), (0, m - 1), (m - 1, m - 1)]
+    Ks = [int(x) for x in a.k.split(',')] if a.k else [0, 0, 0, 0]
+    # variables: point weights (npoints), clique weights (ncols), lambda_1..4 (free)
+    npt, ncl = A_pt.shape[1], len(cols)
+    nl = 4
+    Aub = np.hstack([-A_pt.T.T, -A_cl, np.zeros((len(cons), nl))])
+    for r, (t, s) in enumerate(cons):
+        if t in corners: Aub[r, npt + ncl + corners.index(t)] = 1.0   # ... - lambda_j >= 1
+    bub = -np.ones(len(cons))
+    c = np.r_[np.ones(npt), np.ones(ncl), -np.array(Ks, dtype=float)]
+    # with no region trailer there are no multipliers at all: lambda = 0.  With one, lambda may
+    # be any sign (FORMAT.md: "a multiplier ... may be negative").
+    bounds = [(0, None)] * (npt + ncl) + ([(None, None)] * nl if a.k else [(0, 0)] * nl)
+    res = linprog(c=c, A_ub=Aub, b_ub=bub, bounds=bounds, method='highs')
+    print(f"container [0,{m}]^2, monotone-credited certificates")
+    print(f"  {len(cons)} (tile, sign) constraints, {npt} point columns, {ncl} clique columns "
+          f"(max size {max(len(s) for s in cols)}), "
+          + (f"branch occupancy k = {Ks}" if a.k else "no region trailer (lambda = 0)"))
+    print(f"  MINIMUM accounting total Theta = sum w_p + sum w_K - sum lambda_j K_j "
+          f"= {res.fun:.6f}")
+    lam = res.x[npt + ncl:]
+    print(f"  lambda = {np.round(lam, 6).tolist()}")
+    pw = res.x[:npt].sum(); cw = res.x[npt:npt + ncl].sum()
+    print(f"  points {pw:.6f}, cliques {cw:.6f}")
+    used = [(len(cols[k]), float(res.x[npt + k]), sorted(cons[r] for r in cols[k]))
+            for k in range(ncl) if res.x[npt + k] > 1e-9]
+    print(f"  clique columns used: {len(used)}")
+    for sz, v, S in used[:12]:
+        tt = sorted({t for t, _ in S})
+        print(f"    w={v:.4f} over tiles {tt} ({sz} constraints)")
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('mode', choices=['bound', 'check', 'dual'])
+    ap.add_argument('mode', choices=['bound', 'check', 'dual', 'credit'])
     ap.add_argument('cert', nargs='?')
     ap.add_argument('--m', type=int, default=4)
     ap.add_argument('--pitch', type=int, default=20)
@@ -168,8 +308,12 @@ def main():
     ap.add_argument('--switch', type=int, default=None,
                     help='dual: the last column with sigma_x = +1 (default 1: the switch sits '
                          'between columns 1 and 2, both interior, which Lemma 2 requires)')
+    ap.add_argument('--k', type=str, default=None,
+                    help="credit: the branch occupancy pattern K_1,..,K_4 (e.g. '1,1,1,1' for the "
+                         "corner leaf k = 4; default '0,0,0,0', the no-branch case)")
     a = ap.parse_args()
-    if a.mode == 'bound': bound(a)
+    if a.mode == 'credit': credit(a)
+    elif a.mode == 'bound': bound(a)
     elif a.mode == 'dual': dual(a)
     else: check(a.cert)
 
