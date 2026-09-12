@@ -73,9 +73,28 @@
 //! `DISJ` in detail.  Branching on the sign of a violation polynomial `G_q` splits `B` into the
 //! two **closed** halves `{G_q <= 0}` and `{G_q >= 0}`, which cover `B`; each becomes a
 //! hypothesis of its child.  In `{G_q <= 0}` the point `q` gains its missing condition; in
-//! `{G_q >= 0}` other points gain theirs by Lemma I with `mu > 0` (this is `RUNG2.md` Lemma G),
-//! and a child whose hypotheses force `G_q = G_{q'} = 0` certifies *both* `q` and `q'` (Lemma H
-//! of `RUNG2.md` becomes a special case of Lemma I, so no "empty region" test is needed).
+//! `{G_q >= 0}` other points gain theirs by Lemma I with `mu > 0` (this is `RUNG2.md` Lemma G).
+//!
+//! Two things make this reach the *interior tile* poses `(3/2, 3/2, 0)`, where two cuts slide
+//! independently and the region with both at their minimum has no witness set of weight `1`:
+//!
+//! * **the Lemma-K closure** (`Disj::cover_child`).  A node's certified-condition cover is not
+//!   just the union of its hypotheses' masks: whenever the node carries `G_q >= 0` for a
+//!   candidate `q` *and* the cover already proves `G_q <= 0` --- which is exactly what
+//!   `RUNG2.md` Lemma H establishes for a pair of pivots that cannot both be violated --- then
+//!   `G_q = 0` at every pose of the node, so `G_q <= 0` may be *added as a hypothesis* and
+//!   everything its `le` mask certifies (the chain's whole down-set) becomes available.  Iterated
+//!   to a fixpoint.  So the witness-free region is *certified* rather than shown empty, and the
+//!   checker contains no emptiness test at all.
+//! * **the forced two-chain order** (`Disj::chain_order`).  Within one kind the candidates are
+//!   sorted by a float estimate of `max_B G` (`RUNG2.md` sec 6.2's chain order), the two largest
+//!   families are interleaved, and that sequence is forced as the branch order, so that the
+//!   recursion visits exactly the product regions `R_r x R'_s` of sec 6.2.  A weight-greedy
+//!   branch choice never finds this; the greedy heuristics are still tried first, with a small
+//!   node budget (`--heur-cap`), because they close the one-cut (wall) boxes in ~17 nodes.
+//!
+//! Measured on the shipped certificate: the wall pose `(1/2, 3/2, 0)` closes with 9 regions in
+//! 17 nodes, the interior tile pose with 386 regions in 9 837 nodes.
 //!
 //! ## What is exact and what is float
 //!
@@ -92,7 +111,11 @@
 //!
 //! ## Usage
 //!
-//!     zmcheck cert  FILE [--depth D] [--threads T] [--nodisj] [--dump F] [--xlo A --xhi B]
+//!     zmcheck cert  FILE [--depth D] [--threads T] [--nodisj] [--dump F]
+//!                        [--xlo A --xhi B --ylo A --yhi B]    (a band; never says VERIFIED)
+//!                        [--theta-bias K] [--sign-depth S] [--branch-cap N] [--fail-cap N]
+//!                        [--node-cap N] [--heur-cap N] [--seed-cap N] [--rank-exact N]
+//!                        [--try-branches N]
 //!     zmcheck pose  FILE --x NUM/DEN --y NUM/DEN --u NUM/DEN
 //!     zmcheck box   FILE --box "x0,x1,y0,y1,u0,u1"     (rationals; one box, verbose)
 //!

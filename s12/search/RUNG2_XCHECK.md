@@ -347,6 +347,14 @@ everywhere, and two unrelated implementations land on the same fraction.
 The per-leaf witness sets are in `runs/xcheck_leaves.txt` (10 MB, one line per leaf: kind, exact
 box coordinates, and for `ADM` the witness point indices).
 
+**Determinism.**  The sweep hands root boxes to threads from a shared queue, but each root's
+subtree is independent and the census is a sum, so the result cannot depend on the schedule.
+Checked: the band `c_x ∈ [0.4, 0.65]` gives `1402` boxes, `ADM 243 / DISJ 190 / EMPTY 588 / 0`,
+max depth 6, identically at `--threads 1` (110 s), `--threads 3` (54 s) and `--threads 8` (24 s).
+And the full-domain run was repeated end to end: `done in 1447s: boxes 30258, max depth 10 /
+ADM 5114 DISJ 9477 EMPTY 6938 UNCERTIFIED 0` — **the same census to the last box**, on a machine
+under a different load (1 447 s against 1 017 s).  Nothing in the checker is randomised.
+
 ### 3.1a Bands, for bisecting a residue
 
 A centre band is selected with `--xlo/--xhi/--ylo/--yhi`; a banded run prints `PARTIAL SWEEP` and
