@@ -755,11 +755,13 @@ class Lever:
         # code only ever priced a CONVERGED iterate, where the two always matched): give them 0
         if len(self.z) < len(self.cliques):
             self.z = np.concatenate([self.z, np.zeros(len(self.cliques) - len(self.z))])
+        if len(self.pgz) < len(self.pgons):          # ditto for the rank-family rows
+            self.pgz = np.concatenate([self.pgz, np.zeros(len(self.pgons) - len(self.pgz))])
         new, gap = price(self, x, mu, a, self.log)
         idx = ps.add_float_poses(new, a.Q, a.Dc)
         ps.finish()
         if not idx:
-            return 0, gap, 0
+            return 0, gap, 0, 0
         An, _ = ps.contains_rows(self.rows, pose_lo=n0, col_lo=c0)
         self.A = sp.hstack([self.A, An], format='csr') if self.A.shape[0] else An
         self._Acsc = None
@@ -782,13 +784,12 @@ class Lever:
         self.ckeys = set(frozenset(c['members']) for c in self.cliques)
         self.K = sp.vstack(K, format='csr') if K else sp.csr_matrix((0, ps.ncol))
         self._Kcsc = None
-        if self.pgons:
-            nmem += rankfamily.regrow(self)        # keep the polygon rows maximal too
+        pmem = rankfamily.regrow(self) if self.pgons else 0   # keep polygon rows maximal too
         self.act = self._grow(self.act, ps.ncol, bool, True)        # new columns enter the master
         self.colage = self._grow(self.colage, ps.ncol, np.int64, 0)
         self.rc = None
         self.hi.h = None
-        return len(idx), gap, nmem
+        return len(idx), gap, nmem, pmem
 
     def solve_full(self):
         ps = self.ps
@@ -980,11 +981,12 @@ class Lever:
             # separation has stalled (no new row of either kind), so that a run never spins
             stall = (nrow == 0 and ncq == 0)
             if a.lattice_every > 0 and (stall or it % a.lattice_every == a.lattice_every - 1):
-                npos, gap, nmem = self.lattice_price(x, mu)
+                npos, gap, nmem, pmem = self.lattice_price(x, mu)
                 self.log(f'   [{tag}.{it}] lattice: +{npos} poses -> {self.ps.n} poses, '
-                         f'{self.ps.ncol} columns (gap {gap:+.6f}, {nmem} new clique memberships, '
-                         f'{time.time() - T0:.0f}s)')
-                rec['lattice'] = dict(new=npos, gap=gap, memberships=nmem,
+                         f'{self.ps.ncol} columns (gap {gap:+.6f}, {nmem} new clique memberships'
+                         + (f', {pmem} new polygon memberships' if self.pgons else '')
+                         + f', {time.time() - T0:.0f}s)')
+                rec['lattice'] = dict(new=npos, gap=gap, memberships=nmem, pgon_memberships=pmem,
                                       poses=self.ps.n, cols=self.ps.ncol)
                 if npos:
                     # the pose set just grew: pad this iterate onto the new columns (they carry no
@@ -1280,7 +1282,8 @@ def price(lever, x, mu, a, log):
     def rc_of(poses):
         cap = pd.capture(lib, ax, ay, aw, poses, a.threads)
         lam = np.array([lever.lam.get(region_of(p), 0.0) for p in poses])
-        return 1.0 - cap - lam - clique_cost(poses)
+        # the rank-family rows charge a candidate exactly when they extend to it (rankfamily.py)
+        return 1.0 - cap - lam - clique_cost(poses) - rankfamily.pgon_cost(lever, poses)
 
     # rc check on the support COLUMNS (should be ~0 at an optimum): the column's own region label
     # and its actual clique rows, not the geometric proxies used for new candidates
@@ -1290,7 +1293,9 @@ def price(lever, x, mu, a, log):
     capc = pd.capture(lib, ax, ay, aw, scp, a.threads)
     lamc = np.array([lever.lam.get(int(ps.col_reg[c]), 0.0) for c in sc])
     zc = np.asarray(lever.K[:, sc].T @ lever.z).ravel() if len(lever.z) else np.zeros(len(sc))
-    rcs = 1.0 - capc - lamc - zc
+    gc = (np.asarray(lever.PG[:, sc].T @ lever.pgz).ravel()
+          if len(lever.pgz) == lever.PG.shape[0] and lever.PG.shape[0] else np.zeros(len(sc)))
+    rcs = 1.0 - capc - lamc - zc - gc
     log(f'   pricing: rc on the {len(sc)} support columns: max |rc| = {np.abs(rcs).max():.2e} '
         f'(mean {rcs.mean():+.2e})')
     supp = [tuple(map(float, (ps.F[i, 0], ps.F[i, 1], math.atan2(ps.F[i, 3], ps.F[i, 2]))))

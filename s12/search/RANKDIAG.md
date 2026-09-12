@@ -666,3 +666,156 @@ candidate anchor points, `--pent-time` the per-iteration budget, `--pent-want` t
 Every converged run writes `runs/cl_<TAG>_pgons.json`: for each polygon row its `k`, its members,
 its dual, its mass at the last solve, and **its anchors as exact rationals**, which is all
 `rankdiag.py --pgons` needs to rebuild and re-check the row from scratch.
+
+---
+
+# Round 3: E2 — the family under continuous lattice pricing
+
+`search/rankfamily_e2.sh`.  Round 2 measured the family on a *fixed* pose set.  E2 lets the pose
+set grow while the rank rows cut: `--master --lp-tlim 0 --lattice-every 5`, so every fifth
+iteration (and whenever separation stalls) the full `price_pitch`/`price_dth` lattice is priced
+and the best `--cg-want` poses join the loaded column set (`CLMASTER.md` §2.3).  That is the
+regime in which the clique-only loop stops descending and starts climbing back.
+
+Two pieces of plumbing had to be right for the measurement to mean anything, and both are new in
+round 3:
+
+* **The lattice pricer charges polygon duals** (`rankfamily.pgon_cost`, wired into
+  `cliquelever.price`'s `rc_of` next to `clique_cost`, and into the support-column `rc`
+  diagnostic).  A candidate pose is charged a row's dual exactly when the row extends to it —
+  when its square contains one of the row's sides.  Without this every candidate that lands
+  inside a tight polygon row prices as if the row did not exist, and the pricer loads columns
+  that cannot help.
+* **Every injection re-derives every polygon row** over the enlarged pose set
+  (`rankfamily.regrow`, called from `Lever.lattice_price` and at each `--price` stage boundary),
+  so the rows stay MAXIMAL as the column set grows.  The lattice log line now reports the count:
+  on the 94-pose smoke test, four injections added `123`, `1,122`, `1,778` and `2,959` new
+  polygon memberships — the rows grow much faster than the clique rows do, which is the point.
+
+`rankfamily_traj.py` prints the trajectory of any such run: LP against loaded columns, with the
+injections marked.
+
+## 12. The three E2 runs
+
+| run | instance | branch | resumed from |
+|---|---|---|---|
+| `E2A` | leaf `01010101` | `--corners 1111 --patterns 01010101 --chord` | `cl_A0101L2_{poses,rows,cliques}` |
+| `E2B` | corner leaf `k = 4` | `--corners 1111 --patterns ........ --chord` | `cl_B40KL2_{poses,rows,cliques}` |
+| `E2P` | **no branch at all** | `--corners .... --patterns ........`, no chord | `tl_L2PURE_{poses,dual}` |
+
+**Snapshot at `~1.6 h`** (the runs carry a `25,200 s` budget and continue; `runs/{E2A,E2B,E2P}.out`,
+read with `python3 search/rankfamily_traj.py`):
+
+| run | start | iterations | injections | poses / columns now | LP now | polygon rows |
+|---|---|---|---|---|---|---|
+| `E2A` (leaf)   | `11.435484` | 26 | 5 | 12,799 / 13,126 (from 10,175 / 10,463) | `11.419810` | 300+ |
+| `E2B` (corner) | `11.785783` | 22 | 5 | 12,076 / 12,201 (from 9,546 / 9,669) | `11.836465` | 200+ |
+| `E2P` (pure)   | `12.214062` | 35 | 6 | 11,374 / 11,453 (from 7,910 / 7,977)  | **`11.898182`** | 600+ |
+
+On the branched runs the two forces roughly cancel so far: `--lattice-every` adds 2,500-2,600
+poses, which *raises* `QSTAB(P)` (a bigger `P` is a better lower bound on the continuum value),
+and the polygon rows cut it back.  `E2A` is `0.016` below its start on a pose set 26 % larger;
+`E2B` is `0.051` above its start on a pose set 26 % larger — for comparison, the clique-only twin
+of `E2B` (`B40KM`) is the run `CLMASTER.md` §0 quotes as having gone `11.785783 -> 11.792824` on
+its first injection alone.
+
+`E2P` is the one that decides something.  Its clique-only twin `PUREM`
+(`runs/launch_master.sh`, another task's run, same loop, same inputs) starts at `12.214062` and
+runs a sawtooth: each block of five iterations descends, each lattice injection lifts it back.
+Its peaks decay — `12.214, 12.028, 12.006, 11.990, 11.971, 11.947, 11.950, 11.937, 11.935` — but
+its troughs have stopped falling and have started to drift up: `11.9316, 11.8746, 11.8965,
+11.9027, 11.9146, 11.9087, 11.9136, 11.9112, 11.9185`.  A clique-only pure run is settling
+somewhere around `11.91–11.94`, i.e. **below 12 but not by much, and no longer moving down**.
+If the same instance with polygon rows settles clearly below 12, a no-tree proof shape is back on
+the table; if it drifts up the same way, the tree is not optional.
+
+## 13. E2P against PUREM: the pure instance, head to head
+
+Both runs start from the same checkpoint (`tl_L2PURE_{poses,dual}`, 7,977 columns), run the same
+loop with the same `--lattice-every 5`, and differ only in whether the odd-polygon rows are
+separated.  The value is a sawtooth: each block of five iterations descends, each lattice
+injection enlarges the pose set and lifts the value (which is sound and expected — a bigger `P`
+raises `QSTAB(P)`, `CLMASTER.md` §1).  What matters is the envelope.
+
+| cycle (iterations) | `PUREM` peak → trough | `E2P` peak → trough | E2P − PUREM at the trough |
+|---|---|---|---|
+| 1 (0–4)   | `12.214062 → 11.931591` | `12.214062 → 11.925605` | `-0.005986` |
+| 2 (5–9)   | `12.028041 → 11.874565` | `12.012574 → 11.886981` | `+0.012416` |
+| 3 (10–14) | `12.006345 → 11.896465` | `11.974067 → 11.868504` | `-0.027961` |
+| 4 (15–19) | `11.990440 → 11.902707` | `11.955857 → 11.871374` | `-0.031333` |
+| 5 (20–24) | `11.971448 → 11.914557` | `11.962590 → 11.894858` | `-0.019699` |
+| 6 (25–29) | `11.947165 → 11.908749` | `11.944647 → 11.896548` | `-0.012201` |
+
+**The honest reading, and it is not the dramatic one.**  Neither run is climbing toward 12.  Both
+are settling, and they are settling in the same neighbourhood, a little above `11.87`:
+
+* `PUREM`'s troughs: `11.9316, 11.8746, 11.8965, 11.9027, 11.9146, 11.9087, 11.9136, 11.9112,
+  11.9113, 11.9075, 11.9023` over eleven cycles (65 iterations) — a shallow rise after cycle 2 and
+  then a slow drift back down, converging on about `11.90`, i.e. **`0.10` below 12 and stable**.
+* `E2P`'s troughs: `11.9256, 11.8870, 11.8685, 11.8714, 11.8949, 11.8965, …` over six cycles (34
+  iterations) — the same shape, sitting `0.01–0.03` lower.
+
+At equal iteration count `E2P` is below `PUREM` at `33` of the first `34` iterations, by up to
+`0.031` and by `0.017` at iteration 33 (`11.902640` against `11.919881`).  The polygon rows buy a
+consistent but modest `0.01–0.03` on the pure instance, and they buy it *early* — `E2P` is under
+`11.87` by iteration 14, which `PUREM` never quite reaches.
+
+**So: the pure instance stays clearly below 12 under continuous pricing, with or without the
+polygon rows** — around `11.90` after an hour and a half of pricing, and not rising.  That is the
+fact that matters for the no-tree question, and the rank family is not what delivers it; it
+improves the margin from about `0.09` to about `0.11`.  What the family delivers decisively is on
+the *branched* supports (§10.1: the whole gap on the leaf), where the pose set is fixed.
+
+**Why the family helps at all here, and why it should help more with time.**  At each injection
+the polygon rows absorb the new poses several times faster than the clique rows do:
+
+| injection | new poses | new clique memberships | new **polygon** memberships | ratio |
+|---|---|---|---|---|
+| after it 4  | 669 | 3,669 | **15,140** | 4.1x |
+| after it 9  | 602 | 7,886 | **29,270** | 3.7x |
+| after it 14 | 540 | 10,072 | **43,562** | 4.3x |
+| after it 19 | 568 | 17,430 | **70,193** | 4.0x |
+| after it 24 | 555 | 20,422 | **87,425** | 4.3x |
+| after it 29 | 528 | 25,401 | **104,289** | 4.1x |
+
+A clique row grows only by poses that meet *every* existing member; a polygon row grows by every
+pose whose square contains *one* of five short segments, and the lattice keeps producing those.
+So the family's grip tightens as `P` grows, which is the opposite of how the clique family
+behaves, and it is why `E2P`'s envelope sits below `PUREM`'s rather than converging onto it.
+
+**Anatomy on the pure instance.**  `rankdiag.py --pgons` on the `E2P` checkpoint at iteration 9
+(201 rows): **0 rows with `alpha(G[X]) > (k-1)/2`** under a complete unseeded B&B.  The heaviest
+dual-carrying row is a `k = 5` polygon with three anchors on the line `x = 3` and two interior,
+76 members at 54 distinct angles, mass exactly `2.000000`, split `I 1.022` / `W3 0.540` /
+`W2 0.438`, wrapping the grid vertex `(3,2)` (26 of its 76 members contain it).  **This is the
+pure instance — no corner counts, no slot pattern, no chord rows, no branch of any kind** — and
+the object the LP is forced to pay for is still the corner of an axis-parallel wall square.  The
+`(3,2)` pentagon is a property of the geometry at `t = 4`, not of the level-2 tree.  The same
+check on the `E2A` and `E2B` checkpoints (233 and 124 rows) is likewise clean: **0 of 558 rows
+checked across the three runs has `alpha(G[X]) > (k-1)/2`**.
+
+## 14. The round-2 loop runs, finished
+
+`PGA` and `PGB` (round 2 §10.4: the full recorded pose sets, restricted master, **no** lattice
+pricing) ran out their `9,000 s` budgets:
+
+| run | start | iterations | final LP | `M` | max clique | certified? |
+|---|---|---|---|---|---|---|
+| `PGA` (leaf) | `11.435484` | 76 | **`11.303071`** | `1` OK | `1` (complete) OK | no — see below |
+| `PGB` (corner) | `11.785783` | 79 | **`11.713225`** | `1` OK | `1.006327` FAIL | no |
+
+`PGA` fell `0.132413`, **30 %** of its `0.435484` gap, and its last five iterations sat on
+`11.303071` with `kmax = 1.000000` — the clique separation had finished and only polygon rows were
+still being added.  `PGB` fell `0.072558`, **9 %** of `0.785783`.  Both LP values are rigorous
+upper bounds on the QSTAB + rank value of their loaded pose sets.
+
+**Neither final measure is certified, and the reason is worth stating** because it will recur.
+Both runs stopped on the wall clock *inside* the loop — between a separation and the resolve that
+would have answered it.  `rankfamily.check_final` then checks **every** polygon row against the
+finalised measure, including the rows the last iteration had just separated, which are violated by
+construction: `PGA` reports 1 of 644 rows violated by `+0.057`, `PGB` 1 of 657 by `+0.029`.
+(`PGB` also still had `max clique = 1.006327`, and `PGA`'s region top-up could not reach its
+targets.)  A run that stops because it has nothing left to separate has no such rows — `SUPA`,
+`SUPAP`, `SUPB` and `SUPB2` all certified cleanly with every row satisfied and re-derived.  The
+check is deliberately stricter than the clique check, which only tests the max-weight clique of
+the *support*.

@@ -271,6 +271,53 @@ def separate(lever, sup, squares, V, Inc, w, mu, it):
     return nnew, best, time.time() - t0, nfound
 
 
+def pgon_cost(lever, cand):
+    """the polygon-row dual a CANDIDATE pose (cx, cy, theta) must be charged in the lattice
+    pricer, i.e. the sum of `z_G` over the rows whose row the candidate would join.
+
+    Same role and same legitimacy argument as `cliquelever.price`'s `clique_cost`: charging a
+    candidate a row's dual is legitimate exactly when the row extends to it, and a polygon row
+    extends to a pose iff its square contains one of the row's sides -- which is precisely what
+    `regrow` re-derives (exactly) after the injection.  The test here is the float one, on
+    candidates that have not been snapped yet; an error can only change WHICH poses get loaded,
+    never the validity of a row or the LP value on the loaded set.
+
+    Prefilter: a unit square containing a point has its centre within `sqrt(2)/2` of it, so only
+    candidates inside the row's anchor bounding box grown by `0.7072` can be charged."""
+    out = np.zeros(len(cand))
+    if not len(cand) or not lever.pgons or not len(lever.pgz):
+        return out
+    if len(lever.pgz) < len(lever.pgons):        # rows separated since the last solve: dual 0
+        lever.pgz = np.concatenate([lever.pgz,
+                                    np.zeros(len(lever.pgons) - len(lever.pgz))])
+    C = np.asarray(cand, dtype=float).reshape(-1, 3)
+    cx, cy = C[:, 0], C[:, 1]
+    co, si = np.cos(C[:, 2]), np.sin(C[:, 2])
+    for gi, c in enumerate(lever.pgons):
+        z = float(lever.pgz[gi]) if gi < len(lever.pgz) else 0.0
+        if z <= 1e-9:
+            continue
+        P = np.array([[p[0] / p[2], p[1] / p[2]] for p in c['pts']])
+        sel = np.nonzero((cx >= P[:, 0].min() - 0.7072) & (cx <= P[:, 0].max() + 0.7072)
+                         & (cy >= P[:, 1].min() - 0.7072) & (cy <= P[:, 1].max() + 0.7072))[0]
+        if not len(sel):
+            continue
+        cs, ss = co[sel], si[sel]
+        xs, ys = cx[sel], cy[sel]
+        cont = []
+        for (px, py) in P:
+            dx, dy = px - xs, py - ys
+            u = np.abs(dx * cs + dy * ss)
+            v = np.abs(-dx * ss + dy * cs)
+            cont.append(np.maximum(u, v) <= 0.5)
+        k = len(P)
+        inrow = np.zeros(len(sel), bool)
+        for i in range(k):
+            inrow |= cont[i] & cont[(i + 1) % k]
+        out[sel[inrow]] += z
+    return out
+
+
 def regrow(lever):
     """the pose set has grown (a pricing stage or `--lattice-every`): re-derive every polygon row
     over the new pose set so the rows stay MAXIMAL.  A row over a subset stays valid, so this is
@@ -397,6 +444,21 @@ def selftest():
         # a square far away must NOT be in the row
         ps2 = _Shim(8, poses + [(0, 1, Fr(1, 2), Fr(1, 2))])
         chk(f'k={k}: a distant square is excluded', k not in row_members(ps2, pts))
+
+        # the lattice pricer's charge: every ring member must be charged the row's dual, a
+        # distant candidate nothing, and the charge must add up over two rows
+        class _L:
+            pass
+        L = _L()
+        L.pgons = [dict(pts=pts, k=k), dict(pts=pts, k=k)]
+        L.pgz = np.array([0.25, 0.5])
+        cand = [(float(cs[i][0]), float(cs[i][1]), 0.0) for i in range(k)] + [(0.5, 0.5, 0.0)]
+        cost = pgon_cost(L, cand)
+        chk(f'k={k}: every member charged 0.75', np.allclose(cost[:k], 0.75),
+            f'(got {np.round(cost[:k], 4).tolist()})')
+        chk(f'k={k}: a distant candidate charged 0', cost[k] == 0.0)
+        L.pgz = np.array([0.0, 0.0])
+        chk(f'k={k}: dual-free rows charge nothing', not pgon_cost(L, cand).any())
     print('rankfamily selftest ' + ('PASSED' if ok else 'FAILED'))
     return 0 if ok else 1
 
