@@ -865,7 +865,7 @@ def describe_cut(out):
 
 
 # ====================================================================== exact certification
-def window_certificates(ps, ADJ, wins, mi, log, cut_tol=1e-9):
+def window_certificates(ps, ADJ, wins, mi, log, cut_tol=1e-9, fast=False):
     """for every window, an EXACT rational independent-set decomposition of the restriction of the
     integer measure `mi` (numerators over DM).  The columns come from `cover_lp_cg` (whose last
     pricing max-weight independent set PROVES that no column is missing when it is complete), and
@@ -886,7 +886,12 @@ def window_certificates(ps, ADJ, wins, mi, log, cut_tol=1e-9):
         _z, _pi, cols, comp = cover_lp_cg(sub, muf, tol=cut_tol)
         cols = [frozenset(int(v) for v in I) for I in cols]
         mu = [Fr(int(mi[i]), DM) for i in S]
-        val, sol = exact_cover_lp(cols, mu, len(S))
+        if fast:
+            # float value only: the exact rational simplex on a 110-pose support with 500+ columns
+            # is minutes, and the ANATOMY (which is what `anchorfit` consumes) does not need it
+            val, sol = Fr(int(round(_z * 10 ** 9)), 10 ** 9), {}
+        else:
+            val, sol = exact_cover_lp(cols, mu, len(S))
         ok = val is not None and val <= 1
         badp = 0
         for cj in (sol or {}):
@@ -898,7 +903,8 @@ def window_certificates(ps, ADJ, wins, mi, log, cut_tol=1e-9):
         ok = bool(ok and badp == 0)
         okall &= ok
         out.append(dict(window=j, geo=list(geo), poses=len(S), nsets=len(cols),
-                        complete=bool(comp), value=str(val), value_float=float(val),
+                        complete=bool(comp), exact=not fast,
+                        value=str(val), value_float=float(val),
                         support=len(sol or {}), bad_pairs=badp, ok=ok,
                         mass=str(sum(mu)), mass_float=float(sum(mu))))
         log(f'     window {j:3d} {geo}: {len(S)} support poses, {len(cols)} independent-set '
@@ -1156,7 +1162,7 @@ def cmd_check(a):
     for shape in a.shape:
         for D in a.D:
             wins = make_windows(ps, D, shape, a.pitch, log)
-            cert, ok = window_certificates(ps, ADJ, wins, mi, log)
+            cert, ok = window_certificates(ps, ADJ, wins, mi, log, fast=a.fast)
             zs = [Fr(c['value']) for c in cert if c['poses']]
             zmax = max(zs) if zs else Fr(0)
             worst = max(cert, key=lambda c: float(c['value_float']))
@@ -1285,6 +1291,9 @@ def main():
     c.add_argument('--shape', nargs='+', default=['box'])
     c.add_argument('--pitch', type=float, default=0.25)
     c.add_argument('--cut-tol', type=float, default=1e-9)
+    c.add_argument('--fast', action='store_true',
+                   help='float cover value only (skip the exact rational simplex); the cut anatomy '
+                        'that anchorfit consumes is unaffected')
     sub.add_parser('selftest')
     a = ap.parse_args()
     sys.set_int_max_str_digits(0)
