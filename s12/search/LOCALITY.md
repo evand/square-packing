@@ -298,6 +298,29 @@ join of a clique and a rank-2 set, which is the next family to build if the poly
 be pushed further.  Geometrically it is again the interior against a wall region, this time `W7`
 and the left wall, one window over from the pentagon.
 
+### 6.4 `LOC_2`, seeded: what the runs show
+
+Both seeded runs reproduce their pose set's QSTAB value at iteration 0 and then cut:
+
+| run | pose set | it 0 | it 1 | it 2 | `zmax` | rows / cuts at it 0 | s / it |
+|---|---|---|---|---|---|---|---|
+| `A2S` | leaf `01010101` | `11.435484` | `11.435484` | — | `1.532258 -> 1.645161` | `4,952` / `1,146` | `61` |
+| `B2S` | corner `k = 4` | `11.785783` | `11.785783` | `11.785783` | `1.239277 -> 1.272771` | `4,811` / `2,663` | `85` |
+
+`LOC_2` is therefore **not yet pinned numerically**: the value sits on a wide degenerate optimal
+face — `11.435484` and `11.785783` unchanged over the first iterations while `zmax` moves, and in
+fact RISES, because each cut pushes the LP onto a neighbouring vertex of the same value that is
+even less window-consistent (`1.53 -> 1.65` on the leaf) — which is the behaviour `CLIQUELEVER.md` §4 records for the
+clique loop on the same instances (`317/28` and `537/46` held for 15–60 iterations while rows were
+cut one vertex at a time).  Each iteration adds two cuts per window (the raw dual and its maximal
+extension), 18 in all.
+
+**What is still missing is a restricted master over the COLUMNS.**  `CLMASTER.md` §2.2 is the fix:
+these LPs carry `10,463` columns of which `1,500`–`3,800` are ever active, and the ipm is
+`t ~ n^1.5`.  `locality.py` does not have it (the cutting-plane loop was written not to need the
+duals, which is exactly what pricing loaded columns requires), and adding it is the next piece of
+work on this file.
+
 ## 5. Reproduce
 
 ```
