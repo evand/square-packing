@@ -352,29 +352,79 @@ Code: `search/rankfamily.py` (all of it) and a hook in `search/cliquelever.py` b
 in `finalize`, the CLI flags).  With `--pent` empty — the default — the loop is bit-for-bit what
 it was.
 
-## Round-2 verdict
+## Verdict after rounds 2-5
 
-**The family is worth building, and on the leaf's own pose set it is worth everything.**
+**The odd-polygon rank family is real, cheap to certify, and it is what takes the `t = 4` relaxation
+from "just under 12" to "comfortably under 12" — including on the instance with no branch at all.**
 
-* On the pose set the converged QSTAB measure itself uses (94 poses), QSTAB + odd-polygon rows
-  converges at **exactly `11.000000 = alpha`** — an integral packing of 11 pairwise-disjoint unit
-  squares, exactly certified, in the leaf's own region pattern.  The clique relaxation on the same
-  poses is `11.435484`.  The family closes **100 %** of `mass - alpha`.
-* One pricing stage on top of that brings back **`+0.000000`** (the clique family's pricing stage
-  brought back `+0.02` and then cycled): stage 1 re-converges at exactly `11.000000` on 653 poses.
-* On the corner-leaf support (149 poses) it closes `0.314944` of `0.785783`, **40 %**, converging at
-  `11.470839217` (exactly certified, `M = 1`, max clique `1` complete, 362 polygon rows all
-  satisfied and all re-derived from their exact anchors; `alpha` of the new support is again 11).
-  The remainder is a separator limit, not a family limit — 300 restarts per `k` converge at
-  `11.519638`, 2,500 at `11.470839`.
-* On the full recorded pose sets (10,463 and 9,669 columns), where the LP has three orders of
-  magnitude more freedom to dodge a row, the descent is real but slow: `11.435484 -> 11.322628`
-  on the leaf and `11.785783 -> 11.722739` on the corner after 48 minutes of separation, still
-  falling monotonically, every value a rigorous upper bound (§10.4).
+### The certified numbers
 
-The verifier and Lean cost is the smallest it could be: a box clique whose cores meet *cyclically*
-instead of pairwise, credited `(k-1)/2` instead of 1 (§9).  And `k = 5` is essentially the whole
-family — longer polygons are separated freely but almost never carry dual (§10.2).
+Every one of these is a `leaf_ceiling.py`-format measure with `M <= 1` and max-weight clique `<= 1`
+under a **complete** branch and bound, region targets met, and **every** polygon row satisfied and
+re-derived from its exact rational anchors; each was re-checked independently by
+`leaf_ceiling.py check --anchor clique` and by `rankdiag.py --pgons`, which recomputes each row's
+membership from the anchors and its independence number by a fresh unseeded B&B.
+
+| instance | pose set | cliques only | **+ odd polygons** | `alpha` |
+|---|---|---|---|---|
+| leaf `01010101` | its converged 94-pose support | `11.435484` | **`11.000000`** (integral: 11 disjoint squares) | 11 |
+| leaf, + one pricing stage | 653 poses | — | **`11.000000`** (rise `+0.000000`) | 11 |
+| corner `k = 4` | its converged 149-pose support | `11.785783` | **`11.470839217`** | 11 |
+| **pure, no branch** | `E2P`'s 666-pose support | `~11.90` (`PUREM`) | **`11.759344530`** | 11 |
+| corner, under lattice pricing | `E2B`'s 425-pose support | — | **`11.691140747`** | 11 |
+| leaf, under lattice pricing | `E2A`'s 355-pose support | — | `11.261889` | 11 |
+
+**What these numbers are.**  Each is `QSTAB(P) + rank rows` for a finite pose set `P`, so each is a
+rigorous **lower** bound on the continuum value of the relaxation (restricting the poses lowers
+the value: `T4SCREEN.md` §1.2).  The CG-converged lattice value is therefore the best
+*packing-side* estimate of the continuum value we have — it is where the relaxation lands when the
+pricer can no longer find an improving pose, not a proven ceiling.  Nothing here bounds `s(12)`
+from above on its own; what it bounds is how far this relaxation can be pushed.
+
+### The lattice is not what is holding the value down (§16)
+
+From one certified state, one pricing pass on each lattice, everything else identical:
+
+| lattice | candidates priced | **best reduced cost** |
+|---|---|---|
+| `0.04` / `2.5 deg` | 169,538 | **`+0.534263`** |
+| `0.02` / `1.25 deg` | **1,350,226** | **`+0.534263`** |
+
+Identical to six decimals, same maximiser.  Injecting and re-converging agrees: the coarse lattice
+lifts the value by `+0.012175`, the fine lattice by `+0.006876` — the finer one by *less*.  Halving
+the pitch and the angular step buys the pricer nothing.
+
+### Why the family keeps working as the pose set grows
+
+At every lattice injection the polygon rows absorb the new poses about four times faster than the
+clique rows do, because a clique row grows only by poses meeting **every** member while a polygon
+row grows by every pose containing **one** of five short segments:
+
+| `E2P` injection | new poses | new clique memberships | new **polygon** memberships | ratio |
+|---|---|---|---|---|
+| 1 | 669 | 3,669 | 15,140 | 4.1x |
+| 2 | 602 | 7,886 | 29,270 | 3.7x |
+| 3 | 540 | 10,072 | 43,562 | 4.3x |
+| 4 | 568 | 17,430 | 70,193 | 4.0x |
+| 5 | 555 | 20,422 | 87,425 | 4.3x |
+| 6 | 528 | 25,401 | 104,289 | 4.1x |
+
+This is the property the clique family does not have, and it is why the polygon run's sawtooth
+envelope separates from the clique-only run's instead of converging onto it (§13).
+
+### Shape and cost
+
+`k = 5` is essentially the whole family: `k = 7` and `k = 9` rows are separated freely but almost
+never carry dual at convergence (§10.2).  Every binding pentagon wraps the corner of an
+axis-parallel wall square — `(3,2)`, `(2,3)` or `(1,2)` — with three or four anchors on the line
+`x` or `y` in `{1,2,3}`, mass exactly `2.000000`, split about half interior and half wall, across
+14-54 distinct angles, with no point common to all members.  **That holds on the pure instance
+too**, where there are no corner counts, no slot pattern and no chord rows: the corner pentagon is
+a property of the geometry at `t = 4`, not of the level-2 tree (§13).
+
+The verifier and Lean cost is the smallest it could be (§9): a box clique whose cores meet
+**cyclically** instead of pairwise, credited `(k-1)/2` instead of 1.  `cores_meet` is already the
+test; what changes is which pairs it is asked about and what right-hand side the row carries.
 
 ## 8. The generalised family: odd polygons of `k` anchors
 
