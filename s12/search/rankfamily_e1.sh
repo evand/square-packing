@@ -26,10 +26,14 @@ case "$2" in
   *) echo "usage: $0 {finish|fine} {A|B|P}"; exit 1 ;;
 esac
 
+# The finish pass separates NO new polygon rows: it resumes the ones the E2 run accumulated and
+# converges on coverage + cliques only.  That is what makes the final measure certifiable -- a run
+# that is still separating stops between a separation and the resolve that would answer it, and
+# `check_final` then (correctly) reports the just-separated rows as violated, as PGA/PGB did.
 case "$1" in
-  finish) TAG=${SRC}f;  FROM=$SRC;      EXTRA="--price 0" ;;
+  finish) TAG=${SRC}f;  FROM=$SRC;      EXTRA="--price 0"; PENT="" ;;
   fine)   TAG=${SRC}n;  FROM=${SRC}f;   EXTRA="--price 1 --price-pitch 0.02 --price-dth 1.25 \
-                                               --cg-want 400" ;;
+                                               --cg-want 400"; PENT="" ;;
   *) echo "usage: $0 {finish|fine} {A|B|P}"; exit 1 ;;
 esac
 
