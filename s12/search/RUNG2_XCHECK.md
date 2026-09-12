@@ -405,6 +405,58 @@ poses, which are the *harder* ones by Theorem 1's own measure, all close; and `z
 confirms the cover itself is fine there — at `(3/2, 3/2, 0)` it captures
 `2019213840/1000000000 = 2.019213840 ≥ 1` (782 points).)
 
+
+### 3.3 The fix, and what it changed
+
+Everything in §3.2 above is kept as the record of what failed; this section is what was done about
+it.  Three changes, all in the *search*; the polynomial class, Lemma D, Lemma I and every exact
+test are untouched.
+
+1. **The Lemma-K closure** (`Disj::cover_child`).  A node's certified-condition cover used to be
+   the union of its hypotheses' masks.  It now *closes*: whenever the node carries the hypothesis
+   `G_q ≥ 0` for a candidate `q` **and** the cover already proves `G_q ≤ 0`, then `G_q = 0` at
+   every pose of the node, so `G_q ≤ 0` may be **added as a hypothesis** and everything its `le`
+   mask certifies — the whole down-set of the chain through `q` — becomes available.  Iterated to a
+   fixpoint.  The premise "the cover already proves `G_q ≤ 0`" is precisely what `RUNG2.md`
+   Lemma H establishes for a pair of pivots that cannot both be violated, and it is detected for
+   free, because `q`'s own condition slot is a bit of the mask of the *other* pivot's `ge`
+   hypothesis.  So the witness-free quadrant is *certified*, not shown empty, and the checker still
+   contains no emptiness test.
+
+   Soundness: the added hypothesis is a proved consequence of the node's hypotheses, so Lemma I
+   applies to it verbatim.
+
+2. **The forced two-chain order** (`Disj::chain_order`).  Within one kind `k`, the branch
+   candidates are sorted by a float estimate of `max_B G_{q,k}` ascending — `RUNG2.md` §6.2's
+   chain order — the two largest families are interleaved, and that whole sequence is *forced* as
+   the branch order, with the search depth set to its length.  The recursion then visits exactly
+   the product regions `R_r × R'_s` of §6.2.  `kpairs()` additionally enumerates the
+   float-plausible Lemma-K pairs (`O(k²)`, confirmed exactly inside `cover`) and offers each as a
+   two-element forced prefix (`--seed-cap`, default off now that the full order subsumes it).
+
+3. Covers are carried down the recursion incrementally (a `Cov` = bitset + closure flags), and the
+   three greedy heuristics get a small node budget (`--heur-cap`, 3 000) with the full budget
+   reserved for the forced order.  Without that split, three failing greedy attempts cost 30× the
+   successful one.
+
+Two defaults had to be raised, and one of them was the whole difference between failing and
+succeeding: **`--branch-cap` 48 → 160**.  With 96 candidates the two chains are *truncated* and
+the worst region stalls at `0.984808` of the needed `1` — 1.5 % short, and visibly not improving
+with more nodes, more depth or a larger `--fail-cap`; with 160 it closes.  (`--fail-cap` 256 →
+1024, `--node-cap` 4 000 → 400 000.)
+
+Measured:
+
+| box | before | after |
+|---|---|---|
+| wall pose `(1/2,3/2,0)`, `[0.5,0.51] × [1.49,1.5] × [0,1/128]` | DISJ, 9 regions, 17 nodes, 12 ms | unchanged |
+| interior tile pose `(3/2,3/2,0)`, `σ=(+,-)` octant at depth 10 | not certified at any setting | **DISJ, 386 regions, 9 837 nodes, 1.0 s** |
+| depth-18 sweep of the centre cell `c_x ∈ [1.45,1.55]`, `c_y ∈ [1.4,1.6]` | — | 129 boxes, all `DISJ`, **0 uncertified**, 45 s |
+
+The interior tile pose needing 386 regions against the wall pose's 9 is the two-cut structure
+made visible: one sliding cut gives a chain, two independent ones give a product, and the product
+is where `RUNG2.md`'s "56 regions reach 1.013756" measurement lives.
+
 ---
 
 ## 4. Where the note is ambiguous, wrong, or missing
