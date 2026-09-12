@@ -342,3 +342,137 @@ python3 search/rankdiag.py --step 1 $R/cl_*_exact.txt
 the pentagon separation.  The JSON carries, per measure, the maximum independent set, every
 reported structure with its members, the size-vs-excess front, and the pentagon's anchors as exact
 rationals (`anchors_exact`) so the inequality can be rebuilt without rerunning the search.
+
+---
+
+# Round 2: the family in the loop
+
+Code: `search/rankfamily.py` (all of it) and a hook in `search/cliquelever.py` behind `--pent`
+(imports, `Lever.add_pgon` plus one LP block, one separator call in `run_stage`, two guard lines
+in `finalize`, the CLI flags).  With `--pent` empty — the default — the loop is bit-for-bit what
+it was.
+
+## 8. The generalised family: odd polygons of `k` anchors
+
+§5's pentagon is the case `k = 5` of
+
+> **Definition.**  For `k` odd and points `A_0 … A_{k-1}`, let `E_i = [A_i, A_{i+1 mod k}]` be the
+> `k` sides of the polygon they span and `X_i = { S admissible : E_i ⊆ S }`.
+>
+> **Lemma.**  `mu(X_0 ∪ … ∪ X_{k-1}) <= alpha(C_k) = (k-1)/2` for every packing of pairwise
+> disjoint closed unit squares.
+>
+> *Proof.*  Two members of `X_i` both contain `A_i`.  A member of `X_i` and one of `X_{i+1}` both
+> contain `A_{i+1} ∈ E_i ∩ E_{i+1}`.  So a pairwise-disjoint subfamily of the union hits each
+> piece at most once and never two cyclically consecutive pieces: choosing one index per member
+> injects it into an independent set of `C_k`, whose size is at most `⌊k/2⌋ = (k-1)/2`. ∎
+
+`k = 3` is a clique row (`(k-1)/2 = 1`); `k = 5, 7, 9` are the new ones.  **The only
+well-formedness condition is `E_i ∩ E_{i+1} ≠ ∅`** — the sides need not be the sides of a convex
+polygon, need not be short, and the `A_i` need not be distinct; taking them to be the sides of a
+closed walk on `k` points makes the condition automatic, which is why the separator is
+parameterised that way.  Degenerate choices are harmless: `A_i = A_{i+1}` makes `X_i` a point
+clique and the row weaker, never invalid.
+
+**Separation** (`rankfamily.separate`, called where the clique separator is called).  The
+candidate anchors are the exact arrangement vertices of the current support, reduced to distinct
+point cliques and ranked by point mass (top `--pent-cands`, default 240).  For each `k` in
+`--pent`, coordinate descent on the `k` anchor indices maximises the support mass of the union;
+it is fully vectorised (for one anchor position, the two sides that touch it are swept over all
+candidates at once as a boolean matrix product), so a sweep is five to nine numpy operations and
+the whole separation costs `0.1–0.5 s` per iteration.  Restarts are random plus the previous
+iteration's best anchors (`--pent-restarts`, default 60; `--pent-time` caps the budget).
+
+**Rows are maximal over the whole pose set**, as clique rows are: a pose is in the row iff its
+square contains some `E_i`, i.e. contains both endpoints of that side (a square is convex).  The
+membership test is `leaf_ceiling.sq_contains` in integers, with a float prefilter trusted only
+outside a `1e-7` band.  Before a row enters the LP it is (a) **re-derived exactly** — every listed
+member must pass the integer containment test on some side — and (b) its support members' exact
+independence number is computed by a complete branch and bound and checked against `(k-1)/2`.  A
+row failing either test is dropped with a log line.  The hill climb is a heuristic and can only
+fail to find a row, never produce an invalid one.  `finalize`'s region top-up now also respects
+polygon slack, and the final exact certification re-derives every polygon row from its stored
+rational anchors and reports its exact mass and slack.
+
+## 9. Spec: what the verifier and Lean would need
+
+No verifier or Lean change has been made.  This is the spec for when the family earns it.
+
+### 9.1 `verify/`: a cyclic block next to `cliques`
+
+`search/BOXCLIQUE.md` already has every primitive.  A **box clique** is a union of boxes; the
+verifier computes each box's **core** (the concentric shrunk rectangle every unit square with a
+pose in that box contains — the shrink lemma), refuses the block unless **every** pair of cores
+meets (`cores_meet`, an exact separating-axis test between two rotated rectangles in `i128`),
+credits a swept cell the weight `w_K` iff the cell lies inside one of the boxes, and adds `w_K`
+once to the bound total.
+
+A **cycle block** is the same object with two rules changed:
+
+| | `cliques` block (today) | `cycle` block (proposed) |
+|---|---|---|
+| boxes | any number, unordered | `k` boxes in a **stated cyclic order**, `k` odd, `k >= 5` |
+| core test | `cores_meet(i, j)` for **every** pair `i <= j` | `cores_meet(i, i+1 mod k)` for the `k` consecutive pairs, plus each core non-empty |
+| sweep credit | cell inside some box gets `w` | unchanged |
+| bound total | `+ w` | `+ w * (k-1)/2` |
+
+Everything else — the parser, the empty-core refusal, the "a cell that merely *meets* a box gets
+nothing and its LP witness is placed outside the box" rule, the no-symmetry-images rule that forces
+a `[0°, 90°]` sweep — carries over unchanged, because none of it depends on how many pairs of cores
+were required to meet.  The rejection tests gain the mirror images of the existing ones: a cycle
+whose `cores_meet(i, i+1)` fails for one `i`, an even `k`, a `k < 5`, a repeated box index, and a
+cycle credited `(k+1)/2` instead of `(k-1)/2`.  `certificates/FORMAT.md` gains one block type whose
+body is the existing box list plus the cyclic order.
+
+The separator here emits point anchors, i.e. degenerate cores; the verifier's cores are inward
+rounded rectangles, so a certificate would use short segment/rectangle cores around each `A_i` —
+`cores_meet` on consecutive pairs is then exactly `E_i ∩ E_{i+1} ≠ ∅` with slack.
+
+### 9.2 `lean/`: the sibling of `clique_of_cores`
+
+Two lemmas, both short.  First the combinatorics, which is where all the new content is:
+
+```lean
+/-- An independent set of the cycle `C_k` has at most `k / 2` elements: the translates
+    `{s, s+1}` for `s ∈ S` are pairwise disjoint (a shared element would force two members
+    of `S` to be equal or cyclically adjacent), each has 2 elements, and all lie in `ZMod k`. -/
+lemma card_le_of_cycle_independent {k : ℕ} (hk : 2 ≤ k) (S : Finset (ZMod k))
+    (hS : ∀ s ∈ S, ∀ s' ∈ S, s ≠ s' → s' ≠ s + 1) : 2 * S.card ≤ k
+```
+
+Then the geometric sibling of `clique_of_cores`, with `card_filter_clique_le_one` generalised from
+`1` to `(k-1)/2`:
+
+```lean
+/-- **Cyclic core families.**  Pieces `B : Fin k → pose → Prop` with cores `core i` contained in
+    every closed unit square of piece `i` (`hcore`, the verifier's shrink lemma), and consecutive
+    cores meeting (`hmeet i : (core i ∩ core (i+1)).Nonempty`).  In a packing at most `k / 2`
+    squares have a pose in the union. -/
+lemma card_filter_cycle_le {n k : ℕ} (L : ℝ) (hL : 1 < L) (ctr ang) (hdisj …)
+    (B : Fin k → ℝ × ℝ → ℝ → Prop) (core : Fin k → Set (ℝ × ℝ))
+    (hcore : ∀ i c θ, B i c θ → core i ⊆ sq c θ 1)
+    (hmeet : ∀ i : ZMod k, (core i ∩ core (i + 1)).Nonempty) :
+    ((univ : Finset (Fin n)).filter (fun i => ∃ j, B j (ctr i) (ang i))).card ≤ k / 2
+```
+
+*Proof.*  Choose for each packed square in the union a piece index (`Finset.exists_of_filter` /
+choice).  The index map is injective on the filtered set and its image is cycle-independent: two
+squares with equal or cyclically adjacent indices both contain a common point of the corresponding
+cores (exactly the two cases of `clique_of_cores`' one-line proof), so their `L`-interiors would
+meet, contradicting `hdisj` via `unit_subset_interior`.  Apply `card_le_of_cycle_independent`. ∎
+
+Finally `packing_le_weight_cliques` generalises by replacing the scalar `1` in its `hcard` step
+with a per-family cap `r j`:
+
+```lean
+theorem packing_le_weight_ranks
+    (A w hw C) (m) (K : Fin m → ℝ × ℝ → ℝ → Prop) (v : Fin m → ℝ) (hv : ∀ j, 0 ≤ v j)
+    (r : Fin m → ℕ)
+    (hK : ∀ j, ((univ : Finset (Fin n)).filter (fun i => K j (ctr i) (ang i))).card ≤ r j)
+    (hcover : …) : (n : ℝ) ≤ ∑ a ∈ A, w a + ∑ j, v j * r j
+```
+
+The existing proof goes through verbatim: `hsum` is unchanged, and `hcard` becomes
+`v j * card ≤ v j * r j` by the same `nlinarith`.  `packing_le_weight_cliques` is the case
+`r = 1` with `hK` discharged by `card_filter_clique_le_one`; the cycle block is the case
+`r j = k_j / 2` with `hK` discharged by `card_filter_cycle_le`.  No existing lemma is touched.

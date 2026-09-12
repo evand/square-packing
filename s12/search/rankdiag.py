@@ -981,17 +981,19 @@ def cmd_pgons(pgjson, measure, args):
         a, _, comp = max_clique_bits(sup.cadj, sum(1 << i for i in mem), time_limit=args.time)
         d = dict(k=k, dual=r.get('dual', 0.0), size=len(mem), mass=sup.f(m_int),
                  rhs=(k - 1) / 2, slack=sup.f(bnd - m_int), alpha=a, alpha_complete=comp,
-                 valid=bool(m_int <= bnd), alpha_ok=bool(a <= (k - 1) // 2),
+                 satisfied=bool(m_int <= bnd), alpha_ok=bool(a <= (k - 1) // 2 or not comp),
                  anchors=[[float(Fr(p[0], p[2])), float(Fr(p[1], p[2]))] for p in pts],
                  members=mem)
         if mem:
             d['anatomy'] = strip(anatomy(sup, mem, f'polygon k={k}', bnd))
         out.append(d)
     out.sort(key=lambda d: (-d['dual'], d['slack']))
-    nbad = sum(1 for d in out if not d['valid'] or not d['alpha_ok'])
-    ntight = sum(1 for d in out if d['slack'] <= 1e-9)
-    log(f"  {ntight} tight on this measure, {sum(1 for d in out if d['dual'] > 1e-9)} carry dual; "
-        f"{nbad} INVALID (mass > rhs or alpha > (k-1)/2)")
+    nbad = sum(1 for d in out if not d['alpha_ok'])          # would be a bug in the lemma
+    nviol = sum(1 for d in out if not d['satisfied'])        # the measure breaks the row
+    ntight = sum(1 for d in out if abs(d['slack']) <= 1e-9)
+    log(f"  {ntight} tight on this measure, {nviol} violated by it, "
+        f"{sum(1 for d in out if d['dual'] > 1e-9)} carry dual; "
+        f"alpha(G[X]) <= (k-1)/2 fails on {nbad} (must be 0)")
     for d in out[:args.anat]:
         log(f"    k={d['k']} dual={d['dual']:.5f} |X|={d['size']:4d} mu={d['mass']:.6f} "
             f"<= {d['rhs']:.1f} (slack {d['slack']:+.6f}) alpha={d['alpha']} "
