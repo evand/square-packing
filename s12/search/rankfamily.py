@@ -287,6 +287,9 @@ def pgon_cost(lever, cand):
     out = np.zeros(len(cand))
     if not len(cand) or not lever.pgons or not len(lever.pgz):
         return out
+    if len(lever.pgz) < len(lever.pgons):        # rows separated since the last solve: dual 0
+        lever.pgz = np.concatenate([lever.pgz,
+                                    np.zeros(len(lever.pgons) - len(lever.pgz))])
     C = np.asarray(cand, dtype=float).reshape(-1, 3)
     cx, cy = C[:, 0], C[:, 1]
     co, si = np.cos(C[:, 2]), np.sin(C[:, 2])
