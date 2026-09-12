@@ -40,7 +40,7 @@ iteration where no loaded column has reduced cost `> --price-tol`.
 **And the runs this replaces had stopped converging at all.**  `cl_B40KL2.log` ends with 400
 iterations at `LP = 11.785783` adding nothing, 0.4 s apiece; `cl_B40KL3.log` (pid 921360) was in
 that state 5 minutes after it launched.  With `--lattice-every` the same resume prices the full
-169,538-candidate lattice the moment separation stalls (88 s: 499 new poses, 72,959 new clique
+169,538-candidate lattice the moment separation stalls (63 s: 499 new poses, 72,959 new clique
 memberships) and the next solve moves: `11.785783 -> 11.792824`, 12 fresh violated cliques to cut.
 
 ## 1. What is and is not a bound (semantics, unchanged)
@@ -191,8 +191,11 @@ changes a default:
 Measured together on the B40KM instance (37,133 rows, 2,645 clique rows, 9,669 columns, one core):
 one full in-loop lattice pass — 169,538 candidates priced with clique charging, 400 kept per region
 plus 400 refined and the neighbours of the support, 499 new poses snapped in, the coverage rows
-extended to them and **72,959 new clique memberships** — takes **88 s**, against 127 s before
-`joins_all` and against the ~3 hours a `--price` stage used to sit between two pricings.
+extended to them and **72,959 new clique memberships** — takes **63 s** (`cl_V5dry.log`: the
+trailing seconds in a log line are CUMULATIVE stage time, `25s` at the end of `s0.0` and `88s` at
+the end of its lattice pass), against **127 s** for the same pass before `joins_all`, and against
+the ~3 hours a `--price` stage used to sit between two pricings.  In production on the leaf resume
+(1,246 clique rows, 11,584 columns) a pass is **84 s** (`cl_A0101M.log` `s0.14`: `1884s -> 1968s`).
 
 ## 3. Validation
 
