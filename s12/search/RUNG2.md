@@ -25,7 +25,11 @@ VERIFIED
 ```
 
 **0 uncertified boxes**, 1 h 42 min on 8 processes, and the depth limit is never reached (max depth
-13 of 18), so the subdivision terminated on its own.  This is a case-free machine proof: one cover,
+13 of 18), so the subdivision terminated on its own.  Re-run from the committed path
+(`certificates/rung2/s13_closed_cover_4.txt`, byte-identical by `md5sum` to the file that was
+checked during development) it reproduces the census exactly -- `done in 5828s: boxes 16872 ...
+ADM 2867 / CHAIN 5320 / EMPTY 3449 / UNCERTIFIED 0, VERIFIED` -- so the check is deterministic and
+the shipped file is the one that verifies.  This is a case-free machine proof: one cover,
 one exhaustive verification, no branch tree — where Bentz 2010 needs a 6-leaf case analysis and
 DS7's pure sets cost 14.
 
