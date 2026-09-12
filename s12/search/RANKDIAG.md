@@ -703,6 +703,22 @@ injections marked.
 | `E2B` | corner leaf `k = 4` | `--corners 1111 --patterns ........ --chord` | `cl_B40KL2_{poses,rows,cliques}` |
 | `E2P` | **no branch at all** | `--corners .... --patterns ........`, no chord | `tl_L2PURE_{poses,dual}` |
 
+**Snapshot at `~1.6 h`** (the runs carry a `25,200 s` budget and continue; `runs/{E2A,E2B,E2P}.out`,
+read with `python3 search/rankfamily_traj.py`):
+
+| run | start | iterations | injections | poses / columns now | LP now | polygon rows |
+|---|---|---|---|---|---|---|
+| `E2A` (leaf)   | `11.435484` | 26 | 5 | 12,799 / 13,126 (from 10,175 / 10,463) | `11.419810` | 300+ |
+| `E2B` (corner) | `11.785783` | 22 | 5 | 12,076 / 12,201 (from 9,546 / 9,669) | `11.836465` | 200+ |
+| `E2P` (pure)   | `12.214062` | 35 | 6 | 11,374 / 11,453 (from 7,910 / 7,977)  | **`11.898182`** | 600+ |
+
+On the branched runs the two forces roughly cancel so far: `--lattice-every` adds 2,500-2,600
+poses, which *raises* `QSTAB(P)` (a bigger `P` is a better lower bound on the continuum value),
+and the polygon rows cut it back.  `E2A` is `0.016` below its start on a pose set 26 % larger;
+`E2B` is `0.051` above its start on a pose set 26 % larger — for comparison, the clique-only twin
+of `E2B` (`B40KM`) is the run `CLMASTER.md` §0 quotes as having gone `11.785783 -> 11.792824` on
+its first injection alone.
+
 `E2P` is the one that decides something.  Its clique-only twin `PUREM`
 (`runs/launch_master.sh`, another task's run, same loop, same inputs) starts at `12.214062` and
 runs a sawtooth: each block of five iterations descends, each lattice injection lifts it back.
