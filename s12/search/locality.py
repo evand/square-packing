@@ -309,7 +309,8 @@ class Model:
     row blocks (region equalities, chord rows, window convexity, window linking) plus the coverage
     rows appended by separation."""
 
-    def __init__(self, threads, log):
+    def __init__(self, threads, log, crossover=False):
+        self.crossover = bool(crossover)
         import highspy
         self.hp = highspy
         self.INF = highspy.kHighsInf
@@ -327,6 +328,7 @@ class Model:
         h.changeColsCost(ncol, np.arange(ncol, dtype=np.int32), -np.ones(ncol))
         self.h, self.ncol = h, ncol
         self.nrow = 0
+        self.basis = False
 
     def add_rows(self, lo, hi, M):
         M = sp.csr_matrix(M)
@@ -346,16 +348,30 @@ class Model:
                        M.data.astype(float))
         self.ncol += k
 
-    def run(self, ipm=True):
+    def run(self, tlim=0.0):
+        """ipm + crossover on the first solve (a fresh model has no basis, and cold dual simplex on
+        a 26k x 10k coverage LP is far slower); afterwards a warm dual simplex capped at `tlim`
+        seconds, falling back to ipm -- `t4leaf.Hi.run`'s rule.  `tlim <= 0` always uses ipm."""
         h = self.h
-        h.setOptionValue('solver', 'ipm' if ipm else 'simplex')
-        h.setOptionValue('run_crossover', 'on')
-        h.setOptionValue('time_limit', 1e30)
+        warm = self.basis and tlim > 0
+        h.setOptionValue('solver', 'simplex' if warm else 'ipm')
+        # The cutting-plane loop never reads the outer LP's duals -- separation works on `mu`
+        # alone -- so the crossover is pure cost on a 6k x 10k coverage LP with a large degenerate
+        # optimal face.  Off by default; `--crossover` restores it.
+        h.setOptionValue('run_crossover', 'on' if self.crossover else 'off')
+        h.setOptionValue('time_limit', tlim if warm else 1e30)
         h.run()
         ms = h.getModelStatus()
+        if ms != self.hp.HighsModelStatus.kOptimal and warm:
+            self.log(f'   [HiGHS simplex -> {ms} after {tlim:.0f}s; ipm+crossover]')
+            h.setOptionValue('solver', 'ipm')
+            h.setOptionValue('time_limit', 1e30)
+            h.run()
+            ms = h.getModelStatus()
         if ms != self.hp.HighsModelStatus.kOptimal:
             self.log(f'   [HiGHS -> {ms}]')
             return None
+        self.basis = True
         sol = h.getSolution()
         info = h.getInfo()
         self.iters = int(info.simplex_iteration_count)
@@ -517,7 +533,7 @@ class Loc:
         self.cuts = []                            # (window, pose array, pi array)
         self.cutkey = set()
         self.implied = bool(getattr(a, 'implied', False))
-        self.m = Model(a.threads, log)
+        self.m = Model(a.threads, log, getattr(a, 'crossover', False))
         self.build()
 
     def sub(self, j):
@@ -576,7 +592,7 @@ class Loc:
         rr, cc, vv = [], [], []
         keep = []
         for (j, T, pi) in cuts:
-            key = (j, tuple(int(v) for v in T), tuple(round(float(v), 9) for v in pi))
+            key = (j, tuple(int(v) for v in T), tuple(round(float(v), 6) for v in pi))
             if key in self.cutkey:
                 continue
             self.cutkey.add(key)
@@ -593,6 +609,61 @@ class Loc:
         self.m.add_rows(np.full(len(keep), -self.m.INF), np.ones(len(keep)), A)
         self.cuts += keep
         return len(keep)
+
+    def resume_rows(self, path, tight=0.0, mu0=None):
+        """exact coverage rows `X Y D` from a `cl_*_rows.txt` checkpoint.  A coverage row is valid
+        for LOC_D (it is part of its definition), so seeding with the rows a `cliquelever` run
+        accumulated only starts the descent lower -- it never changes the value.
+
+        `tight`: keep only the rows the SEED measure `mu0` already saturates (coverage
+        `>= 1 - tight`).  A converged `cliquelever` measure saturates a few thousand of its 25,012
+        rows and the rest carry no dual; the LP is quadratic in the row count and those rows are the
+        densest in the model, so the tight subset is the same warm start at a fraction of the cost.
+        Nothing about validity changes -- the dropped rows are still implied by the windows
+        whenever `D(1-pitch) >= sqrt 2`, and the coverage separation would re-add any that bite."""
+        pts = []
+        for line in open(path):
+            q = line.split()
+            if len(q) == 3 and not q[0].startswith('#'):
+                pts.append((int(q[0]), int(q[1]), int(q[2])))
+        if tight > 0 and mu0 is not None and mu0.sum() > 0:
+            A, _ = self.ps.contains_rows(pts)
+            w = np.zeros(self.ps.ncol)
+            for i in range(self.ps.n):
+                cs = self.ps.cols_of[i]
+                if cs:
+                    w[cs[0]] = mu0[i]
+            cov = A.dot(w)
+            keep = np.nonzero(cov >= 1.0 - tight)[0]
+            self.log(f'   [resume: {len(keep)} of {len(pts)} coverage rows are tight for the seed '
+                     f'measure (coverage >= {1 - tight:.6f}); the rest are dropped]')
+            pts = [pts[i] for i in keep]
+        return self.add_cov_rows(pts)
+
+    def resume_cliques(self, path):
+        """clique rows from a `cl_*_cliques.txt` checkpoint: pose indices into the pose file the
+        checkpoint was written with, which must be this run's `--poses`.  `mu(K) <= 1` is the
+        `pi = 1_K` case of a window cut and is implied by LOC_D whenever the clique fits in a window
+        (`D(1-pitch) >= sqrt 2`), so these rows are valid and only accelerate the descent.  Every
+        row is re-verified pairwise before it enters the LP."""
+        n, bad = 0, 0
+        rows = []
+        for line in open(path):
+            q = line.split()
+            if not q or q[0].startswith('#'):
+                continue
+            mem = [int(v) for v in q]
+            if max(mem) >= self.ps.n:
+                raise SystemExit(f'{path}: pose index {max(mem)} beyond the {self.ps.n} poses')
+            if self.ps.verify_clique(mem):
+                bad += 1
+                continue
+            rows.append((-1, np.array(mem, dtype=np.int64), np.ones(len(mem))))
+            n += 1
+        if bad:
+            self.log(f'   [resume: {bad} checkpoint cliques FAILED the pairwise check, dropped]')
+        self.add_cuts(rows)
+        return n
 
     def pose_mass(self, x):
         mu = np.zeros(self.ps.n)
@@ -670,7 +741,7 @@ class Loc:
         hist = []
         x = None
         for it in range(a.iters):
-            res = self.m.run()
+            res = self.m.run(a.lp_tlim)
             if res is None:
                 return hist, x
             x, _y, val = res
@@ -715,6 +786,66 @@ class Loc:
                 json.dump(hist, open(os.path.join(RUNS, f'loc_{a.TAG}_hist.json'), 'w'), indent=0)
         self.last_x = x
         return hist, x
+
+
+# ====================================================================== the shape of a window cut
+def cut_anatomy(ps, ADJ, P, S, mi, log, tag=''):
+    """the separating inequality of one window, named.
+
+    `S` are the support poses of the window; the window subproblem's optimal dual `pi >= 0` has
+    `sum_{i in I} pi_i <= 1` for every independent set, so `sum pi_i mu_i <= 1` is the cut.  Its
+    SHAPE is read off the values `pi` takes: `pi = 1` on a clique is a clique row; `pi = 1/2` on
+    five classes with `alpha = 2` is `RANKDIAG.md`'s pentagon (`alpha(C5) = 2`); `1/3` on seven
+    classes with `alpha = 3` is the heptagon; anything else is new."""
+    sub = ADJ[np.ix_(S, S)]
+    muf = np.array([mi[i] / DM for i in S])
+    z, pi, cols, comp = cover_lp_cg(sub, muf, tol=1e-9)
+    if pi is None:
+        return None
+    T = np.nonzero(pi > 1e-9)[0]
+    aw, am, ac = mwis_exact(sub[np.ix_(T, T)], [1] * len(T), 60.0, lb=0)
+    vals = {}
+    for k in T:
+        vals.setdefault(round(float(pi[k]), 6), []).append(int(k))
+    out = dict(z=float(z), complete=bool(comp), support=len(T), alpha=int(aw),
+               alpha_complete=bool(ac), classes=[], pi_values=sorted(vals, reverse=True))
+    log(f'   {tag}cut: z = {z:.9f}, {len(T)} poses carry pi > 0, alpha(cut support) = {aw} '
+        f'(complete {ac}), {len(vals)} distinct pi values')
+    for v in sorted(vals, reverse=True):
+        ks = vals[v]
+        cx = np.mean([float(ps.P[S[k]][2]) for k in ks])
+        cy = np.mean([float(ps.P[S[k]][3]) for k in ks])
+        th = sorted(round(math.degrees(math.atan2(ps.F[S[k], 3], ps.F[S[k], 2])) % 90, 2)
+                    for k in ks)
+        m = sum(mi[S[k]] for k in ks) / DM
+        regs = {}
+        for k in ks:
+            lab = lc.regions_of(ps.P[S[k]][2], ps.P[S[k]][3], ps.boxes)[0]
+            regs[lab] = regs.get(lab, 0) + 1
+        out['classes'].append(dict(pi=v, poses=len(ks), mu=m, centre=[round(cx, 4), round(cy, 4)],
+                                   theta=[th[0], th[-1]], regions=regs))
+        log(f'     pi = {v:.6f} x {len(ks):3d} poses, mu = {m:.6f}, centroid '
+            f'({cx:.3f}, {cy:.3f}), theta {th[0]:.2f}..{th[-1]:.2f} deg, regions {regs}')
+    log(f'     -> pi . mu = {sum(pi[k] * muf[k] for k in T):.9f}; the inequality is '
+        f'"{describe_cut(out)}"')
+    out['name'] = describe_cut(out)
+    return out
+
+
+def describe_cut(out):
+    """name the family a cut belongs to from its dual values and the independence number of its
+    support: 1/r on 2r+1 classes with alpha = r is the odd (2r+1)-gon rank inequality."""
+    vs = out['pi_values']
+    a = out['alpha']
+    if len(vs) == 1 and abs(vs[0] - 1.0) < 1e-6 and a == 1:
+        return 'a clique row mu(K) <= 1'
+    if len(vs) == 1 and a >= 2 and abs(vs[0] - 1.0 / a) < 1e-6:
+        n = len(out['classes'][0]['poses'] and out['classes']) and out['support']
+        return (f'a rank inequality at level 1/{a}: mu(X) <= {a} over {n} poses with alpha = {a} '
+                f'-- the odd {2 * a + 1}-gon shape of RANKDIAG.md if the classes number {2 * a + 1}')
+    return (f'mixed: pi takes {len(vs)} values {["%.4f" % v for v in vs[:6]]} on a support with '
+            f'alpha = {a}')
+
 
 # ====================================================================== exact certification
 def window_certificates(ps, ADJ, wins, mi, log, cut_tol=1e-9):
@@ -917,6 +1048,7 @@ def cmd_run(a):
         f'(D(1-pitch) = {a.D * (1 - a.pitch):.4f} vs sqrt 2 = {math.sqrt(2):.4f}); '
         f'coverage separation {"on" if a.cov_sep else "off"}')
     loc = Loc(ps, wins, ADJ, a, log)
+    mu0 = np.array(ps.mu0)
     # seed rows and columns
     if a.row_pitch > 0:
         Dg = 1000
@@ -925,12 +1057,18 @@ def cmd_run(a):
         pts = [lc.reduce3(X, Y, Dg) for X in range(step // 2, tn, step)
                for Y in range(step // 2, tn, step)]
         log(f'   +{loc.add_cov_rows(pts)} grid coverage rows (pitch {a.row_pitch})')
-    mu0 = np.array(ps.mu0)
     if mu0.sum() > 0 and a.rows0 > 0:
         sup, V, cov, M0 = loc.certify_cov(mu0, a.procs)
         o = np.argsort(-cov)[:a.rows0]
         log(f'   +{loc.add_cov_rows([V[i] for i in o])} rows at the heaviest arrangement vertices '
             f'of the seed support ({len(sup)} poses, {len(V)} vertices, M0 = {M0:.6f})')
+    for f in a.resume_rows:
+        log(f'   +{loc.resume_rows(f, a.tight, mu0)} exact coverage rows resumed from '
+            f'{os.path.basename(f)}')
+    for f in a.resume_cliques:
+        log(f'   +{loc.resume_cliques(f)} clique rows resumed from {os.path.basename(f)} '
+            f'(each re-verified pairwise; valid for LOC_D, and implied by it when '
+            f'D(1-pitch) >= sqrt 2)')
     # A seed of coverage rows is needed even when the windows imply them: without any row the LP
     # is unbounded on the free interior.  The `--row-pitch` grid does it; separation adds the rest.
     if not loc.rows:
@@ -1005,6 +1143,11 @@ def cmd_check(a):
             zs = [Fr(c['value']) for c in cert if c['poses']]
             zmax = max(zs) if zs else Fr(0)
             worst = max(cert, key=lambda c: float(c['value_float']))
+            if float(worst['value_float']) > 1 + 1e-9:
+                Pw = wins[worst['window']][1]
+                Sw = [int(i) for i in Pw if mi[i] > 0]
+                worst['anatomy'] = cut_anatomy(ps, ADJ, Pw, Sw, mi, log,
+                                               tag=f'D={D} {shape} window {worst["window"]} ')
             log(f'## D = {D} {shape}: {len(wins)} windows, max_j z_j = {zmax} = '
                 f'{float(zmax):.9f} at window {worst["window"]} {tuple(worst["geo"])} '
                 f'(mass {worst["mass_float"]:.6f}, {worst["poses"]} support poses) -> the measure '
@@ -1067,6 +1210,16 @@ def main():
     c.add_argument('--D', type=float, required=True)
     c.add_argument('--shape', default='box', choices=['box', 'disc'])
     c.add_argument('--pitch', type=float, default=0.25, help='window pitch as a fraction of D')
+    c.add_argument('--resume-rows', action='append', default=[],
+                   help='cl_*_rows.txt checkpoint (X Y D): valid coverage rows, seeds the descent')
+    c.add_argument('--resume-cliques', action='append', default=[],
+                   help='cl_*_cliques.txt checkpoint; --poses must be the pose file it indexes')
+    c.add_argument('--crossover', action='store_true',
+                   help='run the ipm crossover (off by default: the loop never reads the duals)')
+    c.add_argument('--lp-tlim', type=float, default=0.0,
+                   help='warm dual-simplex budget per solve after the first (0 = always ipm)')
+    c.add_argument('--tight', type=float, default=0.0,
+                   help='keep only resumed coverage rows the seed measure saturates to this slack')
     c.add_argument('--slack', type=float, default=0.0,
                    help='convexity rows are sum lam <= 1 - slack (room for the exact top-up)')
     c.add_argument('--threads', type=int, default=2)
