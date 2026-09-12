@@ -717,10 +717,9 @@ the table; if it drifts up the same way, the tree is not optional.
 
 Both runs start from the same checkpoint (`tl_L2PURE_{poses,dual}`, 7,977 columns), run the same
 loop with the same `--lattice-every 5`, and differ only in whether the odd-polygon rows are
-separated.  Per-iteration values are directly comparable for the first cycle and drift apart
-afterwards because the two pricers load different poses — so the thing to read is the **sawtooth
-envelope**: each block of five iterations descends, each lattice injection lifts the value, and
-what matters is where the peaks and troughs go.
+separated.  The value is a sawtooth: each block of five iterations descends, each lattice
+injection enlarges the pose set and lifts the value (which is sound and expected — a bigger `P`
+raises `QSTAB(P)`, `CLMASTER.md` §1).  What matters is the envelope.
 
 | cycle (iterations) | `PUREM` peak → trough | `E2P` peak → trough | E2P − PUREM at the trough |
 |---|---|---|---|
@@ -728,34 +727,45 @@ what matters is where the peaks and troughs go.
 | 2 (5–9)   | `12.028041 → 11.874565` | `12.012574 → 11.886981` | `+0.012416` |
 | 3 (10–14) | `12.006345 → 11.896465` | `11.974067 → 11.868504` | `-0.027961` |
 | 4 (15–19) | `11.990440 → 11.902707` | `11.955857 → 11.871374` | `-0.031333` |
-| 5 (20–…)  | `11.971448 → 11.914557` | `11.962590 → …`         | |
+| 5 (20–24) | `11.971448 → 11.914557` | `11.962590 → 11.894858` | `-0.019699` |
+| 6 (25–29) | `11.947165 → 11.908749` | `11.944647 → 11.896548` | `-0.012201` |
 
-**The peaks.**  `PUREM`: `12.2141, 12.0280, 12.0063, 11.9904, 11.9715, 11.9472, 11.9499, 11.9369,
-11.9351` — decaying, but by less and less, and it has already gone back up once (`11.9472 →
-11.9499`).  `E2P`: `12.2141, 12.0126, 11.9741, 11.9559, 11.9626` — every one of them below the clique-only
-peak of the same cycle, by `0.015, 0.032, 0.035, 0.009`.
+**The honest reading, and it is not the dramatic one.**  Neither run is climbing toward 12.  Both
+are settling, and they are settling in the same neighbourhood, a little above `11.87`:
 
-**The troughs.**  This is the number that decides the shape of a no-tree proof, and it is the one
-that has turned.  `PUREM`'s troughs stopped falling after cycle 2 and started to climb:
-`11.9316, 11.8746, 11.8965, 11.9027, 11.9146, 11.9087, 11.9136, 11.9112, 11.9185` — a clique-only
-pure run is settling at about `11.91–11.92`.  `E2P`'s troughs sit below `PUREM`'s from cycle 3 on and have not turned up:
-`11.9256, 11.8870, 11.8685, 11.8714` against `11.9316, 11.8746, 11.8965, 11.9027`.  At cycle 4 the
-polygon run is `0.031` lower and, unlike the clique-only run, it is not climbing.
+* `PUREM`'s troughs: `11.9316, 11.8746, 11.8965, 11.9027, 11.9146, 11.9087, 11.9136, 11.9112,
+  11.9113, 11.9075, 11.9023` over eleven cycles (65 iterations) — a shallow rise after cycle 2 and
+  then a slow drift back down, converging on about `11.90`, i.e. **`0.10` below 12 and stable**.
+* `E2P`'s troughs: `11.9256, 11.8870, 11.8685, 11.8714, 11.8949, 11.8965, …` over six cycles (34
+  iterations) — the same shape, sitting `0.01–0.03` lower.
 
-**Why.**  The mechanism is visible in the injection lines.  At each lattice injection the polygon
-rows absorb the new poses several times faster than the clique rows do:
+At equal iteration count `E2P` is below `PUREM` at `33` of the first `34` iterations, by up to
+`0.031` and by `0.017` at iteration 33 (`11.902640` against `11.919881`).  The polygon rows buy a
+consistent but modest `0.01–0.03` on the pure instance, and they buy it *early* — `E2P` is under
+`11.87` by iteration 14, which `PUREM` never quite reaches.
 
-| injection | new poses | new clique memberships | new **polygon** memberships |
-|---|---|---|---|
-| after it 4 | 669 | 3,669 | **15,140** |
-| after it 9 | 602 | 7,886 | **29,270** |
-| after it 14 | 540 | 10,072 | **43,562** |
-| after it 19 | 568 | 17,430 | **70,193** |
+**So: the pure instance stays clearly below 12 under continuous pricing, with or without the
+polygon rows** — around `11.90` after an hour and a half of pricing, and not rising.  That is the
+fact that matters for the no-tree question, and the rank family is not what delivers it; it
+improves the margin from about `0.09` to about `0.11`.  What the family delivers decisively is on
+the *branched* supports (§10.1: the whole gap on the leaf), where the pose set is fixed.
 
-A clique row only grows by poses that meet *every* existing member; a polygon row grows by every
+**Why the family helps at all here, and why it should help more with time.**  At each injection
+the polygon rows absorb the new poses several times faster than the clique rows do:
+
+| injection | new poses | new clique memberships | new **polygon** memberships | ratio |
+|---|---|---|---|---|
+| after it 4  | 669 | 3,669 | **15,140** | 4.1x |
+| after it 9  | 602 | 7,886 | **29,270** | 3.7x |
+| after it 14 | 540 | 10,072 | **43,562** | 4.3x |
+| after it 19 | 568 | 17,430 | **70,193** | 4.0x |
+| after it 24 | 555 | 20,422 | **87,425** | 4.3x |
+| after it 29 | 528 | 25,401 | **104,289** | 4.1x |
+
+A clique row grows only by poses that meet *every* existing member; a polygon row grows by every
 pose whose square contains *one* of five short segments, and the lattice keeps producing those.
-So the family's grip tightens as the pose set grows, which is exactly the property the clique
-family does not have — and it is why the two sawtooths separate instead of converging.
+So the family's grip tightens as `P` grows, which is the opposite of how the clique family
+behaves, and it is why `E2P`'s envelope sits below `PUREM`'s rather than converging onto it.
 
 **Anatomy on the pure instance.**  `rankdiag.py --pgons` on the `E2P` checkpoint at iteration 9
 (201 rows): **0 rows with `alpha(G[X]) > (k-1)/2`** under a complete unseeded B&B.  The heaviest
@@ -764,4 +774,32 @@ dual-carrying row is a `k = 5` polygon with three anchors on the line `x = 3` an
 `W2 0.438`, wrapping the grid vertex `(3,2)` (26 of its 76 members contain it).  **This is the
 pure instance — no corner counts, no slot pattern, no chord rows, no branch of any kind** — and
 the object the LP is forced to pay for is still the corner of an axis-parallel wall square.  The
-`(3,2)` pentagon is a property of the geometry at `t = 4`, not of the level-2 tree.
+`(3,2)` pentagon is a property of the geometry at `t = 4`, not of the level-2 tree.  The same
+check on the `E2A` and `E2B` checkpoints (233 and 124 rows) is likewise clean: **0 of 558 rows
+checked across the three runs has `alpha(G[X]) > (k-1)/2`**.
+
+## 14. The round-2 loop runs, finished
+
+`PGA` and `PGB` (round 2 §10.4: the full recorded pose sets, restricted master, **no** lattice
+pricing) ran out their `9,000 s` budgets:
+
+| run | start | iterations | final LP | `M` | max clique | certified? |
+|---|---|---|---|---|---|---|
+| `PGA` (leaf) | `11.435484` | 76 | **`11.303071`** | `1` OK | `1` (complete) OK | no — see below |
+| `PGB` (corner) | `11.785783` | 79 | **`11.713225`** | `1` OK | `1.006327` FAIL | no |
+
+`PGA` fell `0.132413`, **30 %** of its `0.435484` gap, and its last five iterations sat on
+`11.303071` with `kmax = 1.000000` — the clique separation had finished and only polygon rows were
+still being added.  `PGB` fell `0.072558`, **9 %** of `0.785783`.  Both LP values are rigorous
+upper bounds on the QSTAB + rank value of their loaded pose sets.
+
+**Neither final measure is certified, and the reason is worth stating** because it will recur.
+Both runs stopped on the wall clock *inside* the loop — between a separation and the resolve that
+would have answered it.  `rankfamily.check_final` then checks **every** polygon row against the
+finalised measure, including the rows the last iteration had just separated, which are violated by
+construction: `PGA` reports 1 of 644 rows violated by `+0.057`, `PGB` 1 of 657 by `+0.029`.
+(`PGB` also still had `max clique = 1.006327`, and `PGA`'s region top-up could not reach its
+targets.)  A run that stops because it has nothing left to separate has no such rows — `SUPA`,
+`SUPAP`, `SUPB` and `SUPB2` all certified cleanly with every row satisfied and re-derived.  The
+check is deliberately stricter than the clique check, which only tests the max-weight clique of
+the *support*.
