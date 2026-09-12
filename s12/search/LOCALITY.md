@@ -465,6 +465,58 @@ antiwebs or comb inequalities rather than polygons — or that last `0.3` is whe
 finally has to enter.  This is the first measurement in the project that separates "local" from
 "certifiable-local".
 
+### 7.6 The converged pentagon measures: the polygon family is SATURATED, and `0.15` of local
+violation survives it
+
+`cl_PGA_exact.txt` and `cl_PGB_exact.txt` landed (the rank agent's QSTAB + odd-polygon loops,
+`RESULT tag=PGA s0=LP11.303071/M1.000000/K1.000000`): the leaf at **`11.303071`** on 201 poses,
+exactly certified `M = 1`, max clique `= 1` with a complete branch and bound; the corner control at
+`11.713225` on 380 poses (its max clique certifies at `1.006327`, so that one is not clique-clean
+and its numbers below are read with that caveat).
+
+| measure | mass | `z_max`, `D = 1.5` | `z_max`, `D = 2` | violated windows `D=1.5 / D=2` |
+|---|---|---|---|---|
+| leaf QSTAB `cl_A0101L2_exact` | `11.435484` | `1.250000` | `1.250000` | 8/36, 9/9 |
+| leaf **+ polygons** `cl_PGA_exact` | `11.303071` | **`1.170998`** | **`1.290264`** | 19/36, 9/9 |
+| corner QSTAB `cl_B40KL2_exact` | `11.785783` | `1.161807` | `>= 1.233675` | —, 9/9 |
+| corner **+ polygons** `cl_PGB_exact` | `11.713225` | `1.256771` | `1.664832` | —, 9/9 |
+
+Two things happen at once.  At `D = 1.5` the polygon family **does** reduce the local inconsistency,
+`1.250000 -> 1.170998` — a third of the way from `5/4` to `1`, in the same window 13 that wraps the
+grid vertex `(2,3)`.  At `D = 2` it makes it **worse**, `1.250000 -> 1.290264`: the LP, cut by rows
+the polygon family can write, moves mass into a configuration those rows do not see but the exact
+`D = 2` window facet does.
+
+And the fit says the family is spent.  Of the 19 cuts with violation `>= 0.02`, **none is captured**
+— but the near misses are now very tight:
+
+| cut | `z` | violation | best fit | its value vs `alpha_pi` | excess | captured |
+|---|---|---|---|---|---|---|
+| `D=1.5` w13 | `1.170998` | `0.170998` | `C5` | `1.985575` vs `2` | `-0.014425` | `-8.4 %` |
+| `D=1.5` w2 | `1.168754` | `0.168754` | `C5` | `1.957039` vs `2` | `-0.042961` | `-25.5 %` |
+| `D=1.5` w18 | `1.154157` | `0.154157` | `C5` | — | `-0.083260` | `-54.0 %` |
+| `D=1.5` w32 | `1.146976` | `0.146976` | `C5` | — | `-0.086941` | `-59.2 %` |
+| `D=2` w1 | `1.205023` | `0.205023` | `C5` | — | `-0.154676` | `-75.4 %` |
+| … 14 more | `1.022`–`1.290` | — | `C5` / `K1+C5` | — | `-0.17` … `-0.77` | `-75 %` … `-2440 %` |
+
+**The best pentagon anywhere on this measure reaches `1.985575` against its right-hand side `2`.**
+That is the definition of a saturated family: the loop has pushed every fittable `C5` to within
+`0.014` of its bound, exactly as a converged polygon separator should, and the exact local facet is
+*still* violated by `0.171` in the same window.  The residual is not a pentagon the search missed;
+there is no pentagon left to find.
+
+What the residual is instead: `alpha` of the cut support runs `2, 3, 4, 5` (complete B&B) and the
+dual takes up to **30 distinct values**, in ladders — `1, 6/7, 5/7, … , 1/7` on `D=1.5` w15,
+`1, 12/13, 10/13, … , 1/13` on `D=2` w4, a `1/48` ladder on `D=2` w7.  Those are antiweb- or
+comb-shaped weights, not polygon-shaped ones.
+
+**Reading, final.**  On the QSTAB measure the anchor-graph family *is* the certifiable closure of
+local reasoning and the pentagon is essentially all of it (§7.2).  Run the pentagon family to
+convergence and it takes the leaf from `11.435484` to `11.303071` — and then it is exhausted, with
+`0.15–0.17` of local violation per window left over in facets with no small anchor description.
+The next certifiable family, if there is one, is an antiweb/comb family at window `1.5`; the
+alternative is that the last stretch to `alpha = 11` is where global counting has to enter.
+
 ## 5. Reproduce
 
 ```
