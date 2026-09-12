@@ -371,14 +371,20 @@ membership from the anchors and its independence number by a fresh unseeded B&B.
 | leaf, + one pricing stage | 653 poses | — | **`11.000000`** (rise `+0.000000`) | 11 |
 | corner `k = 4` | its converged 149-pose support | `11.785783` | **`11.470839217`** | 11 |
 | **pure, no branch** | `E2P`'s 666-pose support | `~11.90` (`PUREM`) | **`11.759344530`** | 11 |
+| pure, 8 more injections | `E2Pg`'s 956-pose support | — | **`11.800417910`** | 11 |
 | corner, under lattice pricing | `E2B`'s 425-pose support | — | **`11.691140747`** | 11 |
 | corner, 11 more injections | `E2Bg`'s 737-pose support | — | **`11.754916927`** | 11 |
 | leaf, under lattice pricing | `E2A`'s 355-pose support | — | **`11.261889022`** | 11 |
 
-The two corner rows are the same instance at two points of its column generation, and they show
-the direction the pricing pushes: `E2B`'s 425-pose support certifies at `11.691140747`, and after
-eleven more lattice injections `E2Bg`'s 737-pose support certifies at `11.754916927` — **up** by
-`0.064`, because a bigger `P` raises `QSTAB(P)`.  The pure instance runs the other way (§17).
+The paired rows are the same instance at two points of its column generation, and they show the
+direction the pricing pushes the **bound**: the corner goes `11.691140747` (425 poses) ->
+`11.754916927` (737 poses), the pure `11.759344530` (666) -> `11.800417910` (956).  Both rise,
+because a bigger `P` raises `QSTAB(P)` and these are lower bounds climbing toward the continuum
+value.  That is not in tension with §17's falling LP values on the un-certified full pose sets:
+the bound climbs from below as poses are added while the rank separation pushes the relaxation
+down from above, and the truth is between them.  The pure instance is bracketed by
+**`11.800417910` (certified, below) and `11.865961` (E2Pg's LP, above)** — a window of `0.065`,
+entirely below 12.
 
 **What these numbers are.**  Each is `QSTAB(P) + rank rows` for a finite pose set `P`, so each is a
 rigorous **lower** bound on the continuum value of the relaxation (restricting the poses lowers
