@@ -352,6 +352,30 @@ Code: `search/rankfamily.py` (all of it) and a hook in `search/cliquelever.py` b
 in `finalize`, the CLI flags).  With `--pent` empty — the default — the loop is bit-for-bit what
 it was.
 
+## Round-2 verdict
+
+**The family is worth building, and on the leaf's own pose set it is worth everything.**
+
+* On the pose set the converged QSTAB measure itself uses (94 poses), QSTAB + odd-polygon rows
+  converges at **exactly `11.000000 = alpha`** — an integral packing of 11 pairwise-disjoint unit
+  squares, exactly certified, in the leaf's own region pattern.  The clique relaxation on the same
+  poses is `11.435484`.  The family closes **100 %** of `mass - alpha`.
+* One pricing stage on top of that brings back **`+0.000000`** (the clique family's pricing stage
+  brought back `+0.02` and then cycled): stage 1 re-converges at exactly `11.000000` on 653 poses.
+* On the corner-leaf support (149 poses) it closes `0.314944` of `0.785783`, **40 %**, converging at
+  `11.470839217` (exactly certified, `M = 1`, max clique `1` complete, 362 polygon rows all
+  satisfied and all re-derived from their exact anchors; `alpha` of the new support is again 11).
+  The remainder is a separator limit, not a family limit — 300 restarts per `k` converge at
+  `11.519638`, 2,500 at `11.470839`.
+* On the full recorded pose sets (10,463 and 9,669 columns), where the LP has three orders of
+  magnitude more freedom to dodge a row, the descent is real but slow: `11.435484 -> 11.332203`
+  on the leaf and `11.785783 -> 11.740678` on the corner after 35 minutes of separation, still
+  falling monotonically, every value a rigorous upper bound (§10.4).
+
+The verifier and Lean cost is the smallest it could be: a box clique whose cores meet *cyclically*
+instead of pairwise, credited `(k-1)/2` instead of 1 (§9).  And `k = 5` is essentially the whole
+family — longer polygons are separated freely but almost never carry dual (§10.2).
+
 ## 8. The generalised family: odd polygons of `k` anchors
 
 §5's pentagon is the case `k = 5` of
@@ -410,6 +434,9 @@ exactly as `runs/launch_2026-09-11.sh` resumes them, on the restricted master of
 | leaf `01010101` (`cl_A0101L2`) | 94 | **11** | `11.435484` (`SUPA0`) | **`11.000000`** (`SUPA`) | `0.435484` | **100 %** |
 | corner `k = 4` (`cl_B40KL2`) | 149 | **11** | `11.785783` (`SUPB0`) | **`11.470839`** (`SUPB2`) | `0.314944` | **40 %** |
 
+(`SUPA0` and `SUPB0` are the same runs without `--pent`; both pin at the measure's own value, which
+is the check that the support experiment starts where `CLIQUELEVER.md` left off.)
+
 Both `SUPA` and `SUPB2` **converged** (no violated coverage vertex, no clique of mass `> 1` with a
 complete B&B, and no violated polygon the separator can find) and both final measures were exactly
 certified and re-checked by `leaf_ceiling.py check --anchor clique`:
@@ -424,9 +451,12 @@ certified and re-checked by `leaf_ceiling.py check --anchor clique`:
   and three tilted interior ones — `(1.500001, 2.499999)` at `0°`, `(1.475021, 1.265851)` at
   `-39.1°` and `(2.54401, 1.697772)` at `+32.5°` — each of mass 1.  On this pose set the rank
   relaxation is **integral**: its optimum is the integer optimum.
-* **`SUPB2`**: `11.470839`, `M = 1`, max clique `= 1` (complete), regions OK; 362 polygon rows, all
-  satisfied, every one re-derived.  `alpha` of its own support is again 11, so `0.47` of gap is
-  left — the separator stops finding violated polygons before the LP reaches the integer optimum.
+* **`SUPB2`**: `mass = 11470839217/1000000000 = 11.470839217` on 98 poses, `M = 1`, max clique
+  `= 1` (complete), regions OK, chord strips OK; 362 polygon rows (51 with dual), all satisfied,
+  worst violation `-9e-9`, every one re-derived from its exact anchors, and `rankdiag.py --pgons`
+  finds **0** rows with `alpha(G[X]) > (k-1)/2` under a complete B&B.  `alpha` of the new support
+  is again 11, so `0.47` of gap is left: the separator stops finding violated polygons before the
+  LP reaches the integer optimum.
 
 The separator's restart budget matters a great deal: on the corner support, 300 restarts per `k`
 converge at `11.519638`, 2,500 restarts at `11.470839`.  Everything reported here is therefore an
@@ -484,6 +514,44 @@ optimum just above it.  The polygon rows cut to the *integer* optimum, and there
 pricer to rebuild: any new pose is either already in some polygon row (the rows are re-derived
 maximal over the enlarged set, which is what `rankfamily.regrow` is for) or does not help.  On the
 leaf's own pose set, `alpha = 11` is not merely the floor — it is where the relaxation lands.
+
+### 10.4 Loop experiment: the full recorded pose sets
+
+`PGA` / `PGB` resume `cl_A0101L2_*` and `cl_B40KL2_*` exactly as `runs/launch_2026-09-11.sh` does
+(10,175 and 9,551 poses; 10,463 and 9,669 columns; 25,012 and 32,191 resumed coverage rows; 1,128
+and 2,645 resumed clique rows, each re-verified pairwise), on the restricted master of
+`search/CLMASTER.md` §4 (`--master --lp-tlim 0`), with `--pent 5,7,9` on top.  Here the LP has
+three orders of magnitude more columns to move mass onto than the support experiment, so a polygon
+row that was fatal on 94 poses is merely expensive on 10,463.
+
+| run | poses / columns | start (QSTAB) | after 35 min of separation | polygon rows | drop so far |
+|---|---|---|---|---|---|
+| `PGA` (leaf) | 10,175 / 10,463 | `11.435484` | `11.332203` (it 21) | 349 | `0.103281` (24 % of the gap) |
+| `PGB` (corner) | 9,551 / 9,669 | `11.785783` | `11.740678` (it 19) | 404 | `0.045105` (6 % of the gap) |
+
+Both are still descending monotonically at roughly `0.005` per iteration and `100 s` per
+iteration, and both were launched with a `9,000 s` budget; the numbers above are the state at
+`~2,100 s`.  **Every one of them is a rigorous upper bound** on the QSTAB + rank value of its
+loaded pose set, at every iteration and regardless of convergence, because rows only ever relax
+(`CLIQUELEVER.md` §0's direction argument is untouched by adding valid rows) — so the leaf's
+QSTAB + rank value on its full recorded pose set is already known to be `<= 11.332203`, against
+`11.435484` with cliques alone and `alpha = 11` below.
+
+The rows themselves are the same objects as in the support runs.  `rankdiag.py --pgons` on `PGA`'s
+checkpoint (307 rows at that point): **0 with `alpha(G[X]) > (k-1)/2`** under a complete B&B; the
+heaviest dual-carrying row is a `k = 5` polygon with four anchors on the line `y = 3` and one at
+`(1.99, 2.14)`, mass exactly `2.000000` on 67 support poses across 38 distinct angles, split
+`I 1.043` / `W5 0.823` / `W4,W5 0.133` — wrapped around the grid vertex `(2,3)`, which 23 of its
+67 members contain.  The loop's rows are bigger than the support runs' (67 support members, 1,100–1,800
+members over the whole pose set, against 28–30) because they are maximal over 10,463 columns;
+that is what makes them expensive to satisfy and what makes the descent slow rather than absent.
+
+**What the two experiments together say.**  The family is not weak on the big pose set — it is
+*slow* there, for the same reason a cutting-plane loop is always slow when the column set is large
+and the separator is a heuristic hill climb.  The support experiment is the clean measurement of
+what the inequalities are worth (`100 %` and `40 %` of `mass - alpha`); the loop experiment is a
+measurement of separator throughput, and it says a production run wants a better anchor search
+(or the pentagon rows seeded from a support run) rather than more LP time.
 
 ## 9. Spec: what the verifier and Lean would need
 
