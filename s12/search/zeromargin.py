@@ -174,13 +174,15 @@ def in_core_f_vec(a, b, Bf, tol=1e-9):
 
 class Checker:
     def __init__(self, m, points, weights=None, use_tri=False, max_depth=16, dump=None,
-                 use_adm=True, theta_bias=1):
+                 use_adm=True, theta_bias=1, use_chain=False, chain_from=0):
         self.m = F(m)
         self.P = [(F(x), F(y)) for x, y in points]
         self.W = [F(w) for w in weights] if weights else [F(1)] * len(self.P)
         self.Pf = [(float(x), float(y)) for x, y in self.P]
         self.use_tri = use_tri
         self.use_adm = use_adm
+        self.use_chain = use_chain
+        self.chain_from = chain_from
         self.theta_bias = theta_bias
         self.max_depth = max_depth
         self.tris = self._triangles() if use_tri else []
@@ -276,27 +278,33 @@ class Checker:
             return (V0 - 1, V1 - 2 * U0, V2 - V0 - 2 * U1 - 2, -V1 - 2 * U2, -V2 - 1)
         return (-V0 - 1, 2 * U0 - V1, V0 - V2 + 2 * U1 - 2, V1 + 2 * U2, V2 - 1)
 
-    def _adm_exact(self, px, py, specs, u0, u1):
+    def _adm_cond_ok(self, px, py, specs, cond, u0, u1):
+        """does inequality `cond` hold for p at every admissible pose of the box?  (Lemma A)"""
         m = self.m
         Axs, Bxs, Ays, Bys = specs
         # condition -> (x-slot, y-slot): X<=1/2 at (Ax,Ay); X>=-1/2 at (Bx,By);
         #              Y<=1/2 at (Bx,Ay);  Y>=-1/2 at (Ax,By)
-        for cond, (xs, ys) in enumerate(((Axs, Ays), (Bxs, Bys), (Bxs, Ays), (Axs, Bys))):
-            ok = False
-            for xk in xs:
-                Xn = _xn(xk[0], xk[1], m)
-                U = (2 * px - Xn[0], -Xn[1], 2 * px - Xn[2])
-                for yk in ys:
-                    Yn = _xn(yk[0], yk[1], m)
-                    V = (2 * py - Yn[0], -Yn[1], 2 * py - Yn[2])
-                    g = self._cond_poly(U, V, cond, xk[0] == 'R' and yk[0] == 'R')
-                    if _poly_ok(g, u0, u1): ok = True; break
-                if ok: break
-            if not ok: return False
+        xs, ys = ((Axs, Ays), (Bxs, Bys), (Bxs, Ays), (Axs, Bys))[cond]
+        for xk in xs:
+            Xn = _xn(xk[0], xk[1], m)
+            U = (2 * px - Xn[0], -Xn[1], 2 * px - Xn[2])
+            for yk in ys:
+                Yn = _xn(yk[0], yk[1], m)
+                V = (2 * py - Yn[0], -Yn[1], 2 * py - Yn[2])
+                g = self._cond_poly(U, V, cond, xk[0] == 'R' and yk[0] == 'R')
+                if _poly_ok(g, u0, u1): return True
+        return False
+
+    def _adm_exact(self, px, py, specs, u0, u1):
+        for cond in range(4):
+            if not self._adm_cond_ok(px, py, specs, cond, u0, u1): return False
         return True
 
-    def _adm_mask(self, specs, u0, u1):
-        """numpy pre-filter: a lenient superset of _adm_exact over the whole point set."""
+    def _adm_mask(self, specs, u0, u1, per_cond=False):
+        """numpy pre-filter: a lenient superset of _adm_exact over the whole point set.  With
+        per_cond, also return the four per-condition masks; a point failing one of those FAILS the
+        exact test for that condition too (the float bound is a lenient over-estimate), which is
+        what makes the CHAIN candidate screen cheap."""
         f0, f1 = float(u0), float(u1); h = f1 - f0
         Px, Py = self.Pxf, self.Pyf; mf = float(self.m)
         tol = 1e-9
@@ -326,7 +334,7 @@ class Checker:
                 best = np.maximum(best, bi)
             return best
         Axs, Bxs, Ays, Bys = specs
-        mask = np.ones(len(Px), dtype=bool)
+        mask = np.ones(len(Px), dtype=bool); conds = []
         for cond, (xs, ys) in enumerate(((Axs, Ays), (Bxs, Bys), (Bxs, Ays), (Axs, Bys))):
             best = None
             for xk in xs:
@@ -339,9 +347,11 @@ class Checker:
                     g = self._cond_poly(U, V, cond, br)
                     bv = bound(g, br)
                     best = bv if best is None else np.minimum(best, bv)
-            mask &= (best <= tol)
-            if not mask.any(): break
-        return mask
+            cm = (best <= tol)
+            if per_cond: conds.append(cm)
+            mask &= cm
+            if not per_cond and not mask.any(): break
+        return (mask, conds) if per_cond else mask
 
     def cert_adm(self, box, B):
         u0, u1 = box[4], box[5]
@@ -408,6 +418,181 @@ class Checker:
                 if total >= 1: return ('MIX', used)
         return (None, None)
 
+    # ---- CHAIN: the disjunctive primitive (RUNG2.md Lemmas E-G) -----------------------------
+    # Violation polynomials.  With a = p_x - cx, b = p_y - cy, C = 1-u^2, S = 2u, N = 1+u^2, the
+    # four containment inequalities of p are  G_k <= 0,  k = 0..3, where 2 N^2 X = ... :
+    #   k=0  X <=  1/2 violated:   G = 2a C + 2b S - N = (2a-1) + 4b u + (-2a-1) u^2
+    #   k=1  X >= -1/2 violated:   G = -2a C - 2b S - N = (-2a-1) - 4b u + (2a-1) u^2
+    #   k=2  Y <=  1/2 violated:   G = -2a S + 2b C - N = (2b-1) - 4a u + (-2b-1) u^2
+    #   k=3  Y >= -1/2 violated:   G = 2a S - 2b C - N = (-2b-1) + 4a u + (2b-1) u^2
+    # Each is AFFINE in (cx, cy) and QUADRATIC in u, so any nonnegative combination of them is
+    # too, and its maximum over a pose box is attained at one of the four corners of the centre
+    # rectangle -- there exactly, by the quadratic vertex test.  No Bernstein slack, no depth.
+    @staticmethod
+    def _gcoef(kind, a, b):
+        if kind == 0: return (2 * a - 1, 4 * b, -2 * a - 1)
+        if kind == 1: return (-2 * a - 1, -4 * b, 2 * a - 1)
+        if kind == 2: return (2 * b - 1, -4 * a, -2 * b - 1)
+        return (-2 * b - 1, 4 * a, 2 * b - 1)
+
+    def _gmax(self, terms, box):
+        """exact max over the whole pose box of  sum_i lam_i * G_{p_i, kind_i}  (terms =
+        [(lam, pointindex, kind), ...]).  Sound for the admissible poses too, since they are a
+        subset of the box."""
+        cx0, cx1, cy0, cy1, u0, u1 = box
+        best = None
+        for cx in (cx0, cx1):
+            for cy in (cy0, cy1):
+                c0 = c1 = c2 = F(0)
+                for lam, k, kind in terms:
+                    px, py = self.P[k]
+                    g = self._gcoef(kind, px - cx, py - cy)
+                    c0 += lam * g[0]; c1 += lam * g[1]; c2 += lam * g[2]
+                v = _max_quad(c0, c1, c2, u0, u1)
+                if best is None or v > best: best = v
+        return best
+
+    def cert_chain(self, box, B, lams=(F(1), F(1, 2), F(2))):
+        """Disjunctive certification by monotone chains of pivots (RUNG2.md secs 6-7).
+
+        T = the points ADM/P1 certify for the whole box.  A *swing* point is one whose four
+        containment inequalities all hold on the box except exactly one, `G_p`.  Among the swing
+        points of one kind pick a chain q_1, ..., q_k with G_{q_1} <= ... <= G_{q_k} everywhere on
+        the box (verified exactly on consecutive pairs; transitivity does the rest).  The k+1 sets
+        {G_{q_1} > 0}, {G_{q_r} <= 0 < G_{q_{r+1}}}, {G_{q_k} <= 0} partition the box, and on the
+        r-th of them every q_j with j <= r is captured, as is every point a with
+        G_a + lam G_{q_{r+1}} <= 0 on the box for some lam > 0.
+
+        One chain suffices at a wall pose (one cut slides).  At an interior tile pose two cuts
+        slide independently, so two chains of different kinds are used and the regions are the
+        PRODUCT of the two partitions; a product region can be empty, which is certified by
+        exhibiting lam > 0 with max_B (G_A + lam G_B) <= 0 -- the two pivots cannot both be
+        violated at once -- and an empty region needs no witness."""
+        cx0, cx1, cy0, cy1, u0, u1 = box
+        specs = self._adm_specs(box, B)
+        # --- T: everything ADM or P1 certifies outright
+        ma, cmasks = self._adm_mask(specs, u0, u1, per_cond=True)
+        mp = self._p1_mask(box, B)
+        t = 1 - B['whi'] / 2
+        inT = np.zeros(len(self.P), dtype=bool)
+        wT = F(0)
+        for k in self.order:
+            if not (ma[k] or mp[k]): continue
+            px, py = self.P[k]
+            if (mp[k] and self._p1_exact(px, py, box, t)) or \
+               (ma[k] and self._adm_exact(px, py, specs, u0, u1)):
+                inT[k] = True; wT += self.W[k]
+        if wT >= 1: return ('ADM', [int(k) for k in np.nonzero(inT)[0]])
+        # --- reachable: |p - c| <= sqrt2/2 + (box diagonal)/2 for some centre c of the box
+        cxm, cym = float((cx0 + cx1) / 2), float((cy0 + cy1) / 2)
+        rad = 0.7072 + 0.5 * math.hypot(float(cx1 - cx0), float(cy1 - cy0))
+        reach = (((self.Pxf - cxm) ** 2 + (self.Pyf - cym) ** 2) <= rad * rad) & (~inT) & (self.Wf > 0)
+        if float(wT) + self.Wf[reach].sum() < 1.0: return (None, None)
+        # --- candidate swing points: exactly one of the four inequalities can fail on the box
+        # a condition whose FLOAT bound already fails is exactly failed, so a point with two or
+        # more float-failing conditions is never a single-swing candidate: screen those out with
+        # no Fraction arithmetic at all.
+        nfail = np.zeros(len(self.P), dtype=np.int8)
+        for cm in cmasks: nfail += (~cm)
+        reach &= (nfail <= 1)
+        cand = []
+        for k in np.nonzero(reach)[0]:
+            px, py = self.P[k]
+            bad = None
+            for c in range(4):
+                if not cmasks[c][k]:
+                    if bad is not None: bad = -1; break
+                    bad = c; continue
+                if not self._adm_cond_ok(px, py, specs, c, u0, u1):
+                    if bad is not None: bad = -1; break
+                    bad = c
+            if bad is None or bad < 0: continue
+            cand.append((int(k), bad))
+        if len(cand) < 2: return (None, None)
+        if float(wT) + sum(self.Wf[k] for k, _ in cand) < 1.0: return (None, None)
+
+        def gmax1(k1, d1, k2, d2, lam):
+            return self._gmax([(F(1), k1, d1), (lam, k2, d2)], box)
+
+        # --- one chain per swing kind, heaviest kind first
+        kinds = sorted({kd for _, kd in cand}, key=lambda kd: -sum(self.Wf[k] for k, d in cand if d == kd))
+        chains = []
+        for kd in kinds:
+            grp = [ck for ck in cand if ck[1] == kd]
+            if len(grp) < 2: continue
+            def proxy(ck):
+                g = self._gcoef(ck[1], self.P[ck[0]][0] - F(cxm), self.P[ck[0]][1] - F(cym))
+                return float(g[0] + g[1] * (u0 + u1) / 2)
+            grp.sort(key=proxy)
+            ch = []
+            for ck in grp:
+                if not ch: ch.append(ck); continue
+                if self._gmax([(F(1), ch[-1][0], ch[-1][1]), (F(-1), ck[0], ck[1])], box) <= 0:
+                    ch.append(ck)
+            if len(ch) >= 1: chains.append(ch)
+        if not chains: return (None, None)
+
+        def analyse(ch):
+            """prefix weights of the chain's down-sets, and the up-set weight/members per pivot"""
+            kk = len(ch)
+            pre = [F(0)] * (kk + 1)
+            for r in range(1, kk + 1): pre[r] = pre[r - 1] + self.W[ch[r - 1][0]]
+            up = [F(0)] * (kk + 2); ups = [[] for _ in range(kk + 2)]
+            for (k, kind) in cand:
+                lo, hi = 0, kk
+                while lo < hi:
+                    mid = (lo + hi + 1) // 2
+                    kq, kdq = ch[mid - 1]
+                    good = kq != k and any(gmax1(k, kind, kq, kdq, lam) <= 0 for lam in lams)
+                    if good: lo = mid
+                    else: hi = mid - 1
+                for r in range(1, lo + 1):
+                    up[r] += self.W[k]; ups[r].append(k)
+            return pre, up, ups
+
+        info = [analyse(ch) for ch in chains]
+        # --- single chain
+        for ci, ch in enumerate(chains):
+            pre, up, ups = info[ci]; kk = len(ch)
+            if all(wT + pre[r] + up[r + 1] >= 1 for r in range(kk + 1)):
+                used = set(int(v) for v in np.nonzero(inT)[0])
+                used.update(int(c[0]) for c in ch)
+                for r in range(1, kk + 1): used.update(int(v) for v in ups[r])
+                return ('CHAIN', sorted(used))
+        # --- product of two chains of different kinds
+        for i in range(len(chains)):
+            for j in range(i + 1, len(chains)):
+                A, Bc = chains[i], chains[j]
+                (preA, upA, upsA), (preB, upB, upsB) = info[i], info[j]
+                ka, kb = len(A), len(Bc)
+                # empty[r] = the largest s such that region (r, s) is provably empty (a staircase:
+                # G_A and G_B are both non-decreasing along their chains, so is G_A + lam G_B)
+                empt = [0] * (ka + 1)
+                for r in range(ka):
+                    lo, hi = 0, kb
+                    while lo < hi:
+                        mid = (lo + hi + 1) // 2
+                        good = any(gmax1(A[r][0], A[r][1], Bc[mid - 1][0], Bc[mid - 1][1], lam) <= 0
+                                   for lam in lams)
+                        if good: lo = mid
+                        else: hi = mid - 1
+                    empt[r] = lo
+                ok = True
+                for r in range(ka + 1):
+                    for sdx in range(kb + 1):
+                        if r < ka and sdx < kb and empt[r] >= sdx + 1: continue   # region is empty
+                        tot = wT + preA[r] + preB[sdx] + (upA[r + 1] if r < ka else F(0)) \
+                              + (upB[sdx + 1] if sdx < kb else F(0))
+                        if tot < 1: ok = False; break
+                    if not ok: break
+                if ok:
+                    used = set(int(v) for v in np.nonzero(inT)[0])
+                    used.update(int(c[0]) for c in A); used.update(int(c[0]) for c in Bc)
+                    for r in range(1, ka + 1): used.update(int(v) for v in upsA[r])
+                    for r in range(1, kb + 1): used.update(int(v) for v in upsB[r])
+                    return ('CHAIN', sorted(used))
+        return (None, None)
+
     def cert_tri(self, box):
         cx0, cx1, cy0, cy1 = box[:4]
         corners = [(cx0, cy0), (cx1, cy0), (cx0, cy1), (cx1, cy1)]
@@ -426,8 +611,8 @@ class Checker:
     # ---- recursion --------------------------------------------------------------------------
     def run_box(self, root):
         """Certify one root box; returns stats dict and the list of uncertified boxes."""
-        stats = {'ADM': 0, 'CORE': 0, 'P1': 0, 'MIX': 0, 'TRI': 0, 'EMPTY': 0, 'UNCERT': 0,
-                 'boxes': 0, 'maxdepth': 0}
+        stats = {'ADM': 0, 'CORE': 0, 'P1': 0, 'MIX': 0, 'CHAIN': 0, 'TRI': 0, 'EMPTY': 0,
+                 'UNCERT': 0, 'boxes': 0, 'maxdepth': 0}
         unc = []; leaves = []
         stack = [(root, 0)]
         bincache = {}
@@ -454,6 +639,8 @@ class Checker:
                 kind, wit = self.cert_p1(box, B)
             if kind is None and self.use_adm:
                 kind, wit = self.cert_mix(box, B)
+            if kind is None and self.use_chain and depth >= self.chain_from:
+                kind, wit = self.cert_chain(box, B)
             if kind is None and self.use_tri:
                 kind, wit = self.cert_tri(box)
             if kind is not None:
@@ -521,6 +708,13 @@ def main():
     ap.add_argument('path', nargs='?')
     ap.add_argument('--tri', action='store_true')
     ap.add_argument('--no-adm', action='store_true', help='use the old CORE primitive instead of ADM')
+    ap.add_argument('--disj', action='store_true',
+                    help='enable the CHAIN disjunctive primitive (RUNG2.md sec 6): a monotone chain '
+                         'of pivot inequalities partitions the box and each region gets its own '
+                         'witness set.  Required for any cover of total weight below m^2.')
+    ap.add_argument('--chain-from', type=int, default=0,
+                    help='only attempt CHAIN at subdivision depth >= this (it is the most expensive '
+                         'primitive; the cheap ones handle almost every box)')
     ap.add_argument('--theta-bias', type=int, default=4,
                     help='near a container wall with theta small, weight the u-dimension by this '
                          'factor when choosing which dimension to halve (1 = the old rule)')
@@ -567,7 +761,8 @@ def main():
     else:
         m, pts, ws = read_cert(a.path)
     chk = Checker(m, pts, ws, use_tri=a.tri, max_depth=a.depth, dump=a.dump,
-                  use_adm=not a.no_adm, theta_bias=a.theta_bias)
+                  use_adm=not a.no_adm, theta_bias=a.theta_bias,
+                  use_chain=a.disj, chain_from=a.chain_from)
     sym = chk.symmetric()
     print(f"container [0,{m}]^2, {len(pts)} points, total weight {float(sum(chk.W)):.6f}, "
           f"symmetric under x->m-x and y->m-y: {sym}, triangles: {len(chk.tris) if a.tri else 'off'}")
@@ -581,7 +776,7 @@ def main():
         R = roots(m, pitch, a.ubins)
     print(f"{len(R)} root boxes, depth limit {a.depth}, pitch {pitch}, u-bins {a.ubins}")
     t0 = time.time()
-    tot = {'ADM': 0, 'CORE': 0, 'P1': 0, 'MIX': 0, 'TRI': 0, 'EMPTY': 0, 'UNCERT': 0,
+    tot = {'ADM': 0, 'CORE': 0, 'P1': 0, 'MIX': 0, 'CHAIN': 0, 'TRI': 0, 'EMPTY': 0, 'UNCERT': 0,
            'boxes': 0, 'maxdepth': 0}
     unc_all = []; leaves_all = []
     with Pool(a.nproc) as pool:
@@ -593,7 +788,8 @@ def main():
                 print(f"  {i+1}/{len(R)} roots, {tot['boxes']} boxes, uncert {tot['UNCERT']}, {time.time()-t0:.0f}s", flush=True)
     print(f"done in {time.time()-t0:.0f}s: boxes {tot['boxes']}, max depth {tot['maxdepth']}")
     print(f"  leaves: ADM {tot['ADM']}  CORE {tot['CORE']}  P1 {tot['P1']}  MIX {tot['MIX']}  "
-          f"TRI {tot['TRI']}  EMPTY {tot['EMPTY']}  UNCERTIFIED {tot['UNCERT']}")
+          f"CHAIN {tot['CHAIN']}  TRI {tot['TRI']}  EMPTY {tot['EMPTY']}  "
+          f"UNCERTIFIED {tot['UNCERT']}")
     if unc_all:
         print("uncertified boxes (cx0 cx1 cy0 cy1 u0 u1 -> theta0 theta1 deg):")
         for b in sorted(unc_all)[:40]:
