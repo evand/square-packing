@@ -394,6 +394,64 @@ fail to find a row, never produce an invalid one.  `finalize`'s region top-up no
 polygon slack, and the final exact certification re-derives every polygon row from its stored
 rational anchors and reports its exact mass and slack.
 
+## 10. The number: what the family is worth in the loop
+
+Two experiments.  The **support experiment** puts the family on the pose set the converged QSTAB
+measure actually uses (94 and 149 poses) — small LPs, minutes, and the question is clean because
+`alpha` of that very pose set is known exactly (§2: 11 in both cases).  The **loop experiment**
+puts it on the full recorded pose sets of `CLIQUELEVER.md` §3 (10,175 and 9,551 columns), resumed
+exactly as `runs/launch_2026-09-11.sh` resumes them, on the restricted master of
+`search/CLMASTER.md` §4.
+
+### 10.1 Support experiment: the family closes the whole gap on the leaf
+
+| support | poses | `alpha` | QSTAB (cliques only) | **QSTAB + odd polygons** | drop | share of `mass - alpha` |
+|---|---|---|---|---|---|---|
+| leaf `01010101` (`cl_A0101L2`) | 94 | **11** | `11.435484` (`SUPA0`) | **`11.000000`** (`SUPA`) | `0.435484` | **100 %** |
+| corner `k = 4` (`cl_B40KL2`) | 149 | **11** | `11.785783` (`SUPB0`) | **`11.470839`** (`SUPB2`) | `0.314944` | **40 %** |
+
+Both `SUPA` and `SUPB2` **converged** (no violated coverage vertex, no clique of mass `> 1` with a
+complete B&B, and no violated polygon the separator can find) and both final measures were exactly
+certified and re-checked by `leaf_ceiling.py check --anchor clique`:
+
+* **`SUPA`**: `mass = 10999999997/1000000000 = 10.999999997`, `M = 1`, max clique `= 1` (complete),
+  regions `C=1,1,1,1`, slots `0,1,0,1,0,1,0,1`, chord strips `3,3,3,3` — **on 11 poses whose
+  closed-intersection graph has 0 edges**.  The LP has walked all the way down to an *integral*
+  packing: eleven pairwise-disjoint unit squares in the leaf's own region pattern.  43 polygon rows,
+  all satisfied, 27 of them tight, every one re-derived from its exact rational anchors.
+* **`SUPB2`**: `11.470839`, `M = 1`, max clique `= 1` (complete), regions OK; 362 polygon rows, all
+  satisfied, every one re-derived.  `alpha` of its own support is again 11, so `0.47` of gap is
+  left — the separator stops finding violated polygons before the LP reaches the integer optimum.
+
+The separator's restart budget matters a great deal: on the corner support, 300 restarts per `k`
+converge at `11.519638`, 2,500 restarts at `11.470839`.  Everything reported here is therefore an
+UPPER bound on what the family can do — a better separator can only push it lower.
+
+### 10.2 Anatomy of the binding polygons at convergence
+
+`rankdiag.py --pgons` rebuilds every row from its stored exact rational anchors and re-checks it.
+On `SUPB` (124 rows, 38 with positive dual): **0 violated, 0 with `alpha(G[X]) > (k-1)/2`**.
+Every binding row is a `k = 5` polygon, and every one of them sits exactly where §5 said the
+round-1 pentagons sat:
+
+| binding row | dual | `\|X\|` | `mu` | `alpha` | anchors | grid vertex | regions of the mass | angles |
+|---|---|---|---|---|---|---|---|---|
+| 1 | `0.322` | 30 | `2.000000` | 2 | four on the line `x = 1`, one interior | **`(1,2)`** (9 of 30) | `I 1.000`, `W6 0.505`, `W7 0.495` | 18 |
+| 2 | `0.289` | 28 | `2.000000` | 2 | three on `x = 3`, two interior | **`(3,2)`** (9 of 28) | `I 1.000`, `W2 0.569`, `W3 0.431` | 18 |
+| 3 | `0.210` | 28 | `2.000000` | 2 | two on `y = 1`, three interior | **`(2,1)`** (9 of 28) | `I 1.000`, `W1 0.552`, `W0 0.448` | 18 |
+
+Three things are worth naming.  First, **the binding rows are tight to the last digit**: `mu`
+is exactly `2.000000` on each, so the right-hand side `2` is doing real work — these are facets of
+the relaxation as the LP sees it, not slack decoration.  Second, **the mass splits `1.000` interior
+and `1.000` wall**, and the wall half splits again across the two wall regions the grid vertex
+separates (`W6 + W7`, `W2 + W3`, `W0 + W1`).  A polygon wrapped around the corner of an
+axis-parallel wall square is exactly an object that says "the interior square and the wall square
+here cannot both be replaced by two" — which no clique row can say, because no point lies in all
+28–30 members.  Third, **only `k = 5` ever binds**: `k = 7` and `k = 9` rows are separated and
+enter the LP, but none of them carries dual at convergence in either support run.  The extra
+freedom of a longer cycle does not buy anything here; the geometry is a corner, and a corner needs
+five anchors.
+
 ## 9. Spec: what the verifier and Lean would need
 
 No verifier or Lean change has been made.  This is the spec for when the family earns it.
