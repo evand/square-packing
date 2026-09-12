@@ -1362,6 +1362,10 @@ def cmd_run(a):
     for f in a.resume_cliques:
         log(f'   +{lever.resume_cliques(f)} clique rows resumed from {os.path.basename(f)} '
             f'(each re-verified pairwise)')
+    for f in getattr(a, 'resume_pgons', []) or []:
+        nadd, nbad = rankfamily.resume(lever, f)
+        log(f'   +{nadd} rank-family rows resumed from {os.path.basename(f)} (membership '
+            f're-derived from the exact anchors over the current pose set; {nbad} dropped)')
     # rows at the arrangement vertices of the INITIAL support (from the source masses)
     mu0 = np.array(ps.mu0)
     if mu0.sum() > 0:
@@ -1617,6 +1621,9 @@ def main():
     c.add_argument('--pent-restarts', type=int, default=60, help='hill-climb restarts per k')
     c.add_argument('--pent-time', type=float, default=90.0, help='separation budget per iteration')
     c.add_argument('--pent-seed', type=int, default=20260911)
+    c.add_argument('--resume-pgons', action='append', default=[],
+                   help='cl_*_pgons.json checkpoint; each row is rebuilt from its exact rational '
+                        'anchors over the current pose set and re-verified')
     # ---- restricted master and continuous lattice pricing (search/CLMASTER.md); all default OFF
     c.add_argument('--no-warm', action='store_true',
                    help='skip the warm dual-simplex attempt and go straight to ipm+crossover '

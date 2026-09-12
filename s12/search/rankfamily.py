@@ -318,6 +318,40 @@ def pgon_cost(lever, cand):
     return out
 
 
+def resume(lever, path):
+    """rebuild the polygon rows of a `cl_*_pgons.json` checkpoint on the CURRENT pose set.
+
+    Only the exact rational anchors are read; the membership is re-derived from scratch by
+    `row_members`, so a resumed row is exactly the maximal row its anchors define over whatever
+    poses are loaded now -- it does not depend on the checkpoint's pose indices and cannot
+    inherit a stale member list.  Each row is then re-verified (`verify_row`) and its support
+    members' independence number checked against `(k-1)/2` exactly, as at separation time.
+    Returns (added, dropped)."""
+    import json
+    rows = json.load(open(path))
+    n0 = len(lever.pgons)
+    bad = 0
+    for r in rows:
+        pts = []
+        for (sx, sy) in r['anchors']:
+            x, y = Fr(sx), Fr(sy)
+            D = x.denominator * y.denominator
+            pts.append((x.numerator * y.denominator, y.numerator * x.denominator, D))
+        k = len(pts)
+        if k < 5 or k % 2 == 0:
+            bad += 1
+            continue
+        mem = row_members(lever.ps, pts)
+        if not mem or verify_row(lever.ps, pts, mem):
+            bad += 1
+            continue
+        lever.add_pgon(mem, (k - 1) / 2, dict(it=-1, k=k, rhs=(k - 1) / 2, size=len(mem),
+                                              sup_size=None, mass0=None, excess=None,
+                                              alpha=None, alpha_complete=None,
+                                              anchors=r['anchors']), pts)
+    return len(lever.pgons) - n0, bad
+
+
 def regrow(lever):
     """the pose set has grown (a pricing stage or `--lattice-every`): re-derive every polygon row
     over the new pose set so the rows stay MAXIMAL.  A row over a subset stays valid, so this is

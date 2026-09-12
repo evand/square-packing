@@ -819,3 +819,97 @@ targets.)  A run that stops because it has nothing left to separate has no such 
 `SUPAP`, `SUPB` and `SUPB2` all certified cleanly with every row satisfied and re-derived.  The
 check is deliberately stricter than the clique check, which only tests the max-weight clique of
 the *support*.
+
+---
+
+# Round 4: E1 — does the lattice hide anything?
+
+## 15. Finishing a stopped run so it certifies
+
+A cutting-plane run that stops on the clock stops *between* a separation and the resolve that
+would answer it, so its last-separated rows are violated by construction and nothing certifies
+(§14).  `--resume-pgons` fixes this: it reads a `cl_*_pgons.json` and rebuilds every row **from
+its exact rational anchors** over whatever pose set is now loaded (`rankfamily.resume` →
+`row_members`), so a resumed row is exactly the maximal row its anchors define and cannot inherit
+a stale member list.  A *finish pass* then resumes poses + coverage rows + clique rows + polygon
+rows with `--lattice-every 0` and **`--pent` off** — no new polygon rows are separated, the
+accumulated ones stay enforced — and converges on coverage and cliques alone, which certifies.
+
+| run | resumed from | rows resumed | result |
+|---|---|---|---|
+| `E2Pf` | `E2P` (11,963 columns) | 840, 0 dropped | LP `11.874646`; measure `11.753906` but max clique `1.075` FAIL — the clique separation had not finished in `3,000 s` |
+| `E2Af` | `E2A` (13,126 columns) | 631, 0 dropped | LP `11.417622` after 3 iterations; stopped to free cores |
+| `E2Bf` | `E2B` (12,201 columns) | 534, 0 dropped | LP `11.844451` after 2 iterations; stopped to free cores |
+
+On a 12–13k-column model each iteration costs `200–700 s` (the master closes exactly, and 500–850
+polygon rows add `1.5M` nonzeros), so a finish pass at that size does not converge in an hour.  The
+cheap, certifiable route is the one §10.1 used: **converge on the run's own support**.
+
+| run | support of | poses | **certified QSTAB + polygons** | `M` | max clique | rows |
+|---|---|---|---|---|---|---|
+| `SUPP` | `E2P` (pure) | 666 | **`11.759344530`** | `0.999999998` OK | `0.999999998` (complete) OK | 542 |
+| `SUPEB` | `E2B` (corner) | 425 | **`11.691140747`** | `1` OK | `1` (complete) OK | 476 |
+| `SUPEA` | `E2A` (leaf) | 355 | **`11.261889`** (LP pinned, `kmax = 1.000000`, no new rows) | `1` OK | `1` | 527 |
+
+`SUPP` is the pure instance's analogue of §10.1's support experiment: take the support `E2P`'s
+measure actually uses and converge QSTAB + polygons on it.  It converged in 72 iterations
+(`1,845 s`) and certifies cleanly:
+
+> **pure QSTAB + odd polygons on `E2P`'s 666-pose support = `1175934453/100000000 =
+> 11.759344530`**, `M = 0.999999998 <= 1`, max clique `= 0.999999998 <= 1` (complete B&B, size 7),
+> regions OK (none requested), 284 poses in the support, 542 polygon rows all satisfied and all
+> re-derived from their exact anchors.
+
+Re-checked independently: `leaf_ceiling.py check --anchor clique` gives
+`coverage OK, regions OK, anchor cliques PROVED <= 1`; `rankdiag.py --pgons` finds **0** of the 542
+rows with `alpha(G[X]) > (k-1)/2` under a complete unseeded B&B (36 carry dual); and
+`alpha(G) = 11` on the new support, so the remaining gap is `0.759345`.
+
+For scale: the clique-only pure run (`PUREM`) is settling at about `11.90` and `E2P`'s own LP was
+`11.90-11.93`.  On the pose set `E2P` actually uses, the polygon rows take the pure instance to
+**`11.759345`**, i.e. **`0.24` below 12**, certified.
+
+## 16. The E1 test: the 0.04 lattice against the 0.02 lattice
+
+The question is whether the `0.04 / 2.5 deg` lattice is resolving the continuum optimum or merely
+failing to see better poses.  From the **same** certified state (`SUPP`, LP `11.759345`, reduced
+cost on its own support columns `1.5e-14` — the LP is at its exact optimum), one pricing pass was
+run on each lattice, everything else identical:
+
+| lattice | pitch / dtheta | candidates priced | **best rc** | best interior rc | poses injected |
+|---|---|---|---|---|---|
+| coarse (`SUPPc`) | `0.04` / `2.5 deg` | 169,538 | **`+0.534263`** | `+0.243216` | 661 |
+| fine (`SUPPn`) | `0.02` / `1.25 deg` | **1,350,226** | **`+0.534263`** | `+0.260085` | 679 |
+
+**The best reduced cost is identical to six decimal places.**  Eight times as many candidates, at
+half the pitch and half the angular step, do not contain a single column better than the best the
+coarse lattice already offers; the maximiser is the same pose.  The fine lattice does find a
+slightly better *interior* candidate (`+0.260085` against `+0.243216`, a difference of `0.017`),
+but the global best — which is what the pricer acts on — is unchanged.
+
+Injecting and re-converging says the same thing.  Both stage 1s were capped at 35 iterations and
+so stopped mid-loop (their stage-1 measures are upper bounds, not certificates); both were still
+descending:
+
+| | stage 0 (certified) | stage 1 LP | **rise** | max clique at the stop |
+|---|---|---|---|---|
+| coarse `SUPPc` | `11.759345` | `11.771520` | **`+0.012175`** | `1.000449` |
+| fine `SUPPn` | `11.759345` | `11.766221` | **`+0.006876`** | `1.006126` |
+
+The fine lattice's rise is **smaller** than the coarse lattice's (the two injected different
+601–679-pose samples and the finer one happened to land better), and both are an order of
+magnitude below the `0.05` that would mean the continuum is still open.  Note what each injection
+does to the rows: the coarse pass gave the polygon rows `+76,032` new memberships and the clique
+rows `+21,107`; the fine pass `+74,311` and `+23,175`.  The family keeps its grip under refinement.
+
+**The E1 answer.**  On this instrument, refining the pose lattice from `0.04 / 2.5 deg` to
+`0.02 / 1.25 deg` changes the best reduced cost by `0.000000` and the converged value by less than
+`0.012`.  The pure instance's rank value is around `11.76-11.77`, `0.23-0.24` below 12, and the
+lattice is not what is holding it there.  **The no-tree shape is alive on this evidence.**
+
+Two honest caveats.  First, `SUPP`'s pose set is `E2P`'s support, not the whole `0.04` lattice —
+`E2P`'s own lattice reduced costs were still falling (`0.42, 0.33, 0.23, 0.21, 0.13, 0.13, 0.085`
+over seven injections) when it was stopped at `5,742 s`, so the full-lattice pure value is not yet
+pinned; what is pinned is that a *finer* lattice offers the pricer nothing the coarse one does not.
+Second, both stage-1 numbers are upper bounds, not certificates; the certified number of this
+round is `SUPP`'s `11.759344530`.
