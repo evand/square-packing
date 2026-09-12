@@ -930,6 +930,18 @@ class Lever:
                 self.log(f'   [{tag}.{it}] LP failed')
                 return None
             x, val = sol
+            if getattr(a, 'dump_dual', None):
+                # the dual read as a COVER (task honest-cost, search/HONEST.md): y, z and the
+                # polygon duals with the exact anchors, for `honestcost.py scan`
+                import honestcost
+                honestcost.dump_dual(self, x, float(val), a.dump_dual)
+                self.log(f'   [dump-dual] LP={val:.9f} -> {a.dump_dual}')
+                if getattr(a, 'dump_dual_stop', False):
+                    self.last = (x, self.pose_mass(x), dict(
+                        tag=tag, it=it, LP=float(val), M=float('nan'), kmax=float('nan'),
+                        complete=False, converged=False, rows=len(self.rows),
+                        cq=len(self.cliques)))
+                    return hist
             mu = self.pose_mass(x)
             sup, squares, V, Inc, M, cov, w = self.certify(mu, a.procs)
             bad = np.nonzero(cov > self.DM * (1.0 + 1e-9))[0]
@@ -1641,6 +1653,12 @@ def main():
                         'optimum of the loaded column set')
     c.add_argument('--master-trim', type=int, default=3,
                    help='drop a master column after this many consecutive zero-mass solves (0 = never)')
+    # ---- the dual as a cover (task honest-cost, search/HONEST.md); off by default
+    c.add_argument('--dump-dual', default=None,
+                   help='after each solve, write y / z / the polygon duals (with their exact '
+                        'anchors) to this npz for `honestcost.py scan`')
+    c.add_argument('--dump-dual-stop', action='store_true',
+                   help='stop the stage after the first --dump-dual (one solve, no separation)')
     c.add_argument('--lattice-every', type=int, default=0,
                    help='price the price-pitch/price-dth lattice every M iterations (0 = off) and '
                         'add the --cg-want best poses to the LOADED set, without ending the stage')
