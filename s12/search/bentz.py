@@ -238,7 +238,8 @@ class Filter:
     @property
     def order(self):
         if not hasattr(self, '_order'):
-            self._order = {frozenset(s): i for i, s in enumerate(self.spec.get('patterns', []))}
+            self._order = {frozenset(s): i
+                           for i, s in enumerate(self.spec.get('patterns') or [])}
         return self._order
 
     @property
