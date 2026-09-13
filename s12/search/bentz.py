@@ -505,6 +505,67 @@ def cmd_seed(a):
           + (f' (filter: {filt.describe()})' if filt else ''))
 
 
+def selftest():
+    bad = []
+
+    def ck(name, cond, extra=''):
+        print(f'  {"ok  " if cond else "FAIL"}  {name}' + (f'   {extra}' if extra else ''))
+        if not cond:
+            bad.append(name)
+
+    pts = bentz_points()
+    ipts = as_int_points(pts)
+    ck('P0 has 16 points with a common denominator 500',
+       len(pts) == 16 and ipts[0][3] == 500)
+    ck('P0 is D4-invariant (every group element permutes the indices)',
+       all(sorted(pm) == list(range(16)) for pm in d4_perm(pts)))
+    okc, worst = corner_reach_check()
+    ck('corner lemma: no foreign P0 point within sqrt(2)/2 of a corner box', okc,
+       f'closest d^2 = {worst[0]} ({worst[2]} vs {worst[1]})')
+
+    def pat(cx, cy, p=0, q=1):
+        return pname(pattern_of(lc.make_square(Fr(cx), Fr(cy), p, q, T), ipts), ipts)
+
+    ck('the corner tiling square [0,1]^2 has pattern {a0,b0}', pat(Fr(1, 2), Fr(1, 2)) == '{a0,b0}')
+    ck('the wall tiling square [1,2]x[0,1] has the DOUBLED pattern {a0,c1}',
+       pat(Fr(3, 2), Fr(1, 2)) == '{a0,c1}')
+    ck('nudged +1e-3 it collapses to {c1}', pat(Fr(1501, 1000), Fr(1, 2)) == '{c1}')
+    ck('nudged -1e-3 it collapses to {a0}', pat(Fr(1499, 1000), Fr(1, 2)) == '{a0}')
+    ck('the interior tiling square [1,2]^2 has pattern {d0}', pat(Fr(3, 2), Fr(3, 2)) == '{d0}')
+    # a point ON the edge counts (closed containment): a0 = (1, 0.914) is on x = 1
+    ck('closed containment: a point on the square edge is in the pattern',
+       'a0' in pat(Fr(3, 2), Fr(1, 2)) and 'a0' not in pat(Fr(1501, 1000), Fr(1, 2)))
+
+    spec = leaf_spec('t', corner=[[corner_pattern_sets(ipts)[(i, 'AB')]] for i in range(4)],
+                     glob=[corner_pattern_sets(ipts)[(i, 'AB')] for i in range(4)]
+                     + [frozenset((k,)) for k, (n, *_r) in enumerate(ipts) if n[0] in 'cd'])
+    f = Filter(spec)
+    ck('leaf A admits the corner square and the nudged wall square',
+       f(0, 1, Fr(1, 2), Fr(1, 2)) and f(0, 1, Fr(1501, 1000), Fr(1, 2)))
+    ck('leaf A rejects the un-nudged wall square and the outward nudge',
+       not f(0, 1, Fr(3, 2), Fr(1, 2)) and not f(0, 1, Fr(1499, 1000), Fr(1, 2)))
+
+    g = Filter(dict(kind='axis', t='4', sin_num=0, sin_den=1))
+    ck('the exact axis filter keeps theta = 0 and 90 and drops a 1e-5 tilt',
+       g(0, 1, Fr(2), Fr(2)) and g(1, 0, Fr(2), Fr(2)) and not g(1, 100000, Fr(2), Fr(2)))
+    h = Filter(dict(kind='axis', t='4', sin_num=17453, sin_den=1000000))
+    ck('the 1 deg axis filter keeps 0.9964 deg and drops 1.0052 deg',
+       h(1, 115, Fr(2), Fr(2)) and not h(1, 114, Fr(2), Fr(2)))
+
+    maps = d4_on_tuples(pts)
+    import itertools
+    seen, ncls = set(), 0
+    for tp in itertools.product(CSTATE, repeat=4):
+        if tp in seen:
+            continue
+        seen |= tuple_orbit(tp, maps)
+        ncls += 1
+    ck('the corner-pattern level has 43 D4 classes covering all 256 tuples',
+       ncls == 43 and len(seen) == 256, f'{ncls} classes, {len(seen)} tuples')
+    print('bentz selftest:', 'PASS' if not bad else f'FAIL ({len(bad)})')
+    return 1 if bad else 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -514,6 +575,7 @@ def main():
     c.add_argument('FILE')
     c.add_argument('--min-mass', type=float, default=0.0)
     sub.add_parser('leaves')
+    sub.add_parser('selftest')
     c = sub.add_parser('spec')
     c.add_argument('out')
     c.add_argument('--leaf', required=True, help='four states from AB,A,B,0, e.g. AB,AB,AB,AB')
@@ -538,6 +600,8 @@ def main():
         cmd_spec(a)
     elif a.cmd == 'seed':
         cmd_seed(a)
+    elif a.cmd == 'selftest':
+        sys.exit(selftest())
 
 
 if __name__ == '__main__':
