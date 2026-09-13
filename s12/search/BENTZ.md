@@ -309,6 +309,18 @@ individually realisable; only the combination is not.  This is `notes/proof-anat
 poses and a different fractional optimum could have a different support.  What it does establish is
 that the missing unit is not hiding anywhere subtle.)
 
+Two independent confirmations, both exact.  `python3 search/rankdiag.py --step 1
+runs/pgonly_corner_exact.txt` computes the same graph (`5,397` edges) and the same independence
+number by its own complete B&B: **`alpha(G) = 11`, `gap = mass - alpha = 1.000000` exactly** — the
+number `RANKDIAG.md`'s instrument has been able to print all along, and it is precisely
+`notes/proof-anatomy.md` §7.2's missing unit.  And its rank-family scan finds **no** violated
+`C5`, `C7`, odd antihole or `5`-wheel on this measure at all, so the gap of `1` is not explained by
+any inequality of the certifiable rank family: the LP is at the rank-family optimum and still `1`
+above the integer optimum of its own support.  `python3 search/rankdiag.py --pgons
+runs/inputs-2026-09-12/cl_E2Bg_pgons.json runs/pgonly_corner_exact.txt` re-derives the 1,919
+polygon rows from their exact anchors over this support and reports `2 tight, 0 violated`,
+reproducing the 2026-09-12 number in this worktree without `leaf_ceiling.py`.
+
 **(iv) So level B is decided by one leaf.**  A branch tree closes only if **every** leaf closes.
 `(AB)^4` is one of the 43 classes and it is at `12.000` with an exactly certified measure, so the
 corner-pattern level does not close, and neither does any refinement of it that keeps `(AB)^4`
@@ -413,6 +425,9 @@ python3 search/bentz.py patterns runs/pgonly_corner_exact.txt
 
 # the integrality gap of section 5 (iii): the largest genuine packing inside the optimum's support
 python3 search/bentz.py packing runs/pgonly_corner_exact.txt
+python3 search/rankdiag.py --step 1 runs/pgonly_corner_exact.txt              # alpha = 11, gap 1
+python3 search/rankdiag.py --pgons runs/inputs-2026-09-12/cl_E2Bg_pgons.json \
+                                   runs/pgonly_corner_exact.txt              # 2 tight, 0 violated
 
 # its exact re-check (M, regions, chord)
 sh runs/launch_bentz_check.sh              # -> runs/bentz_A_check.log
