@@ -129,8 +129,10 @@ the shipped certificate, the ceiling `s*` of this entire family of arguments lie
 `L(3.98) ≥ 11.918` and `L(3.97) ≥ 11.807` (`search/DUAL.md`), and column generation at
 `3.9696` no longer gets below 12 (`search/TIGHTEN.md`).  The same measure shows that a
 closed-semantics cover of `[0,4]²` — the object a limit argument at `s = 4` would need —
-costs at least `12.008`; the best explicit one found costs `12.51` (heuristic,
-`search/CLOSED4.md`), with 91 % of its weight on the grid lines `x, y ∈ {1,2,3}`.
+costs at least `12.2688` (exact, `search/COVER4.md`), and the rung-2 cover below shows
+`12.956` is attainable; the earlier heuristic covers of `search/CLOSED4.md` (best `12.51`, 91 % of
+the weight on the grid lines `x, y ∈ {1,2,3}`) turned out to be **invalid** at poses their row
+lattice stepped over (captures of `0.942` and `0.970` exhibited, `search/RUNG2.md` §10).
 
 Closing the remaining gap to 4 therefore needs case analysis layered on top of a certificate,
 in the style of Bentz's `s(13)` proof (`notes/proof-anatomy.md` dissects those proofs).  What
