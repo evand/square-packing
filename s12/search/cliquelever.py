@@ -82,6 +82,8 @@ class Poses:
         self.key = {}
         self.sq = []           # exact square records
         self.mu0 = []          # initial (float) mass per pose, from the source files
+        self.admit = None      # tasks/bentz-incidence: exact pose filter (search/bentz.Filter)
+        self.pidx = []         # pose -> index of its pinned pattern (-1 = none); bentz count rows
         self.cols_of = []      # pose -> list of column indices
         self.col_pose = []     # column -> pose
         self.col_reg = []      # column -> region index (0..12)
@@ -106,11 +108,15 @@ class Poses:
             i = self.key[k]
             self.mu0[i] += float(mass)
             return i
+        if self.admit is not None and not self.admit(p, q, cx, cy):
+            return None        # tasks/bentz-incidence: the leaf deletes this pose
         i = len(self.P)
         self.key[k] = i
         self.P.append(k)
         self.sq.append(lc.make_square(cx, cy, p, q, self.t, 0, tag=i))
         self.mu0.append(float(mass))
+        self.pidx.append(self.admit.pattern_index(p, q, cx, cy)
+                         if self.admit is not None and hasattr(self.admit, 'pattern_index') else -1)
         regs = lc.regions_of(cx, cy, self.boxes)
         self.cols_of.append([])
         for lab in regs:
@@ -154,6 +160,7 @@ class Poses:
         self.n = len(self.P)
         self.col_pose_a = np.array(self.col_pose, dtype=np.int64)
         self.col_reg_a = np.array(self.col_reg, dtype=np.int64)
+        self.col_pidx_a = np.array([self.pidx[i] for i in self.col_pose], dtype=np.int64)
 
     # ---------------------------------------------------------------- float geometry
     def contains_rows(self, pts, pose_lo=0, col_lo=0):
@@ -325,6 +332,9 @@ class Lever:
         self.hi_nrows = 0
         self.hi_cq = []
         self.nE = 0
+        self.counts = []          # tasks/bentz-incidence: [(pattern index, rhs)] equality rows
+        self.n_count = 0
+        self.count_dual = np.zeros(0)   # lam_pi, the multipliers a branch certificate would carry
         self.lam = {}
         self.y = np.zeros(0)
         self.chord_dual = np.zeros(4)
@@ -356,6 +366,10 @@ class Lever:
 
     # ---------------------------------------------------------------- fixed rows
     def eq_matrix(self):
+        """the region equalities of --corners/--patterns, then (tasks/bentz-incidence) the
+        pattern count rows `mu(R_pi) = k_pi` of --pose-filter's spec.  The order matters:
+        `read_duals` reads the first `len(target)` as region multipliers and the rest as the
+        pattern multipliers `lam_pi`."""
         rows, vals = [], []
         if self.target:
             reg = self.ps.col_reg_a
@@ -363,6 +377,13 @@ class Lever:
                 li = LABS.index(lab)
                 rows.append((reg == li).astype(float))
                 vals.append(float(kv))
+        self.n_count = 0
+        if self.counts:
+            pid = self.ps.col_pidx_a
+            for (k, rhs) in self.counts:
+                rows.append((pid == k).astype(float))
+                vals.append(float(rhs))
+            self.n_count = len(self.counts)
         if not rows:
             return None, np.zeros(0)
         return sp.csr_matrix(np.array(rows)), np.array(vals)
@@ -738,9 +759,12 @@ class Lever:
         self.y = y
         self.chord_dual = chd
         self.lam = {}
+        n0 = 0
         if self.target:
             for i, (lab, kv) in enumerate(sorted(self.target.items())):
                 self.lam[LABS.index(lab)] = float(lam[i])
+            n0 = len(self.target)
+        self.count_dual = lam[n0:n0 + self.n_count] if self.n_count else np.zeros(0)
 
     # ---------------------------------------------------------------- lattice pricing in the loop
     def lattice_price(self, x, mu):
@@ -1353,6 +1377,12 @@ def cmd_run(a):
 
     T0 = time.time()
     ps = Poses(Fr(a.t), Fr(a.r), a.bnd_delta)
+    pfilt = None
+    if getattr(a, 'pose_filter', None):
+        import bentz
+        pfilt = bentz.load_filter(a.pose_filter)
+        ps.admit = pfilt
+        log(f'   [pose-filter] {pfilt.describe()}  (exact; applied to loaded AND priced poses)')
     for f in a.exact:
         n = ps.add_exact_file(f)
         log(f'   +{n} exact poses from {os.path.basename(f)}')
@@ -1360,11 +1390,18 @@ def cmd_run(a):
         n = ps.add_float_file(f, a.Q, a.Dc)
         log(f'   +{n} snapped poses from {os.path.basename(f)} (Q={a.Q}, Dc={a.Dc})')
     ps.finish()
+    if pfilt is not None:
+        log(f'   [pose-filter] {pfilt.n_admit} admitted, {pfilt.n_reject} rejected on load')
     nb = sum(1 for i in range(ps.n) if len(ps.cols_of[i]) > 1)
     log(f'# cliquelever t={ps.t} r={ps.r} corners={a.corners} patterns={a.patterns} chord={a.chord} '
         f'extend={a.extend}: {ps.n} poses, {ps.ncol} columns ({nb} boundary poses duplicated), '
         f'initial mass {sum(ps.mu0):.6f}; args={vars(a)}')
     lever = Lever(ps, a, log)
+    if pfilt is not None and pfilt.counts:
+        lever.counts = pfilt.counts
+        log(f'   [pose-filter] +{len(lever.counts)} pattern count rows mu(R_pi) = k_pi; '
+            f'NOTE the lattice pricer\'s reduced cost does NOT charge their duals, so '
+            f'"no improving column" is not a convergence claim in this mode')
     if a.row_pitch > 0:
         log(f'   +{lever.add_grid_rows(a.row_pitch)} grid rows (pitch {a.row_pitch})')
     for f in a.load_rows:
@@ -1402,7 +1439,8 @@ def cmd_run(a):
         log(f'   STAGE {stage}: LP={rec["LP"]:.6f} M={rec["M"]:.9f} kmax={rec["kmax"]:.6f} '
             f'complete={rec["complete"]} conv={rec["converged"]} rows={rec["rows"]} cq={rec["cq"]} '
             f'poses={ps.n} int={R[12]:.6f} corners={np.round(R[:4], 6).tolist()} '
-            f'slots={np.round(R[4:12], 6).tolist()} chord_dual={np.round(lever.chord_dual, 4).tolist()}')
+            f'slots={np.round(R[4:12], 6).tolist()} chord_dual={np.round(lever.chord_dual, 4).tolist()}'
+            + (f' count_dual={np.round(lever.count_dual, 6).tolist()}' if lever.n_count else ''))
         fin = lever.finalize(x, mu, a.procs) if a.finalize else None
         srec = dict(stage=stage, LP=rec['LP'], M=rec['M'], kmax=rec['kmax'], complete=rec['complete'],
                     converged=rec['converged'], rows=rec['rows'], cq=rec['cq'], poses=ps.n,
@@ -1659,6 +1697,11 @@ def main():
                         'anchors) to this npz for `honestcost.py scan`')
     c.add_argument('--dump-dual-stop', action='store_true',
                    help='stop the stage after the first --dump-dual (one solve, no separation)')
+    c.add_argument('--pose-filter', default=None,
+                   help='tasks/bentz-incidence: a search/bentz.py JSON spec (path or literal).  '
+                        'Every pose -- loaded OR priced -- whose exact pattern / angle the spec '
+                        'rejects is dropped from the pose set.  With "counts" in the spec the '
+                        'pattern count rows mu(R_pi) = k_pi are added as equalities.')
     c.add_argument('--lattice-every', type=int, default=0,
                    help='price the price-pitch/price-dth lattice every M iterations (0 = off) and '
                         'add the --cg-want best poses to the LOADED set, without ending the stage')
