@@ -183,9 +183,19 @@ class Filter:
             # with (a, b, r) = (q^2 - p^2, 2pq, q^2 + p^2).  num = 0 <=> exactly axis-parallel.
             self.num = int(spec['sin_num'])
             self.den = int(spec['sin_den'])
-        elif self.kind == 'pattern':
+        elif self.kind in ('pattern', 'leaf'):
             self.ipts = [(n, int(X), int(Y), int(D)) for (n, X, Y, D) in spec['points']]
-            self.allow = set(frozenset(s) for s in spec['patterns'])
+            self.allow = (set(frozenset(s) for s in spec['patterns'])
+                          if spec.get('patterns') is not None else None)
+            # per-corner-box restriction: a pose whose centre is in the CLOSED corner box C_i must
+            # have one of `corner[i]`'s patterns.  Strict at the boundary of C_i (a centre on
+            # c_x = 1 could be declared a wall square instead, and then the leaf does not restrict
+            # it) -- so this DELETES a few legal poses and the LP value is a lower bound on the
+            # leaf's value, which is the direction a ">= 12, does not close" conclusion needs.
+            self.corner = None
+            if spec.get('corner'):
+                self.corner = [set(frozenset(s) for s in cs) for cs in spec['corner']]
+                self.cbox = lc.region_boxes(self.t, Fr(spec.get('r', '1')))[:4]
         else:
             raise SystemExit(f'bentz.Filter: unknown kind {self.kind!r}')
 
@@ -204,13 +214,19 @@ class Filter:
         sq = lc.make_square(Fr(cx), Fr(cy), p, q, self.t)
         pat = pattern_of(sq, self.ipts)
         self._last = ((p, q, cx, cy), pat)
-        return pat in self.allow
+        if self.allow is not None and pat not in self.allow:
+            return False
+        if self.corner is not None:
+            for i, (lab, x0, x1, y0, y1) in enumerate(self.cbox):
+                if x0 <= cx <= x1 and y0 <= cy <= y1 and pat not in self.corner[i]:
+                    return False
+        return True
 
     def pattern_index(self, p, q, cx, cy):
         """for the count rows: the index of this pose's pattern in `spec['patterns']`, or -1.
         Reuses the pattern just computed by `_test` for the same pose (the caller is
         `cliquelever.Poses.add`, which tests admission immediately before)."""
-        if self.kind != 'pattern':
+        if self.kind not in ('pattern', 'leaf') or not self.spec.get('counts'):
             return -1
         key = (p, q, cx, cy)
         if getattr(self, '_last', (None, None))[0] == key:
@@ -237,7 +253,12 @@ class Filter:
             th = math.degrees(math.asin(self.num / self.den))
             return (f'within {th:.7f} deg of axis-parallel '
                     f'(min(|cos|,|sin|) <= {self.num}/{self.den}, exact)')
-        return (f'{len(self.allow)} admitted patterns over {len(self.ipts)} points'
+        return (self.spec.get('name', 'leaf') + ': '
+                + (f'{len(self.allow)} admitted patterns globally' if self.allow is not None
+                   else 'no global pattern restriction')
+                + (f'; corner boxes pinned to {[sorted(len(c) for c in cs) and len(cs) for cs in self.corner]} '
+                   f'patterns each' if self.corner is not None else '')
+                + f'; {len(self.ipts)} points'
                 + (f'; {len(self.spec["counts"])} count rows' if self.spec.get('counts') else ''))
 
 
@@ -288,6 +309,147 @@ def cmd_patterns(a):
         print(f'{pname(pat, ipts):>22} {float(m):11.6f} {n:7d}   '
               f'({float(cx):.6f}, {float(cy):.6f}, {th:+.3f} deg) m={float(mm):.6f}')
     return cen, ipts
+
+
+# ===================================================================== the tree
+def corner_reach_check():
+    """the corner lemma: a closed unit square whose CENTRE is in the corner box C_i contains no
+    point of P0 other than `a_i, b_i`.
+
+    Proof: the square is contained in the closed disc of radius `sqrt(2)/2` about its centre, so
+    it can only contain points within that distance of `C_i`; every other point of `P0` is
+    strictly further.  Checked here exactly: `dist(p, C_i)^2 > 1/2` in Fractions.
+    """
+    pts = bentz_points()
+    boxes = lc.region_boxes(T, Fr(1))[:4]
+    worst = None
+    for i, (lab, x0, x1, y0, y1) in enumerate(boxes):
+        for (n, x, y) in pts:
+            if n in (f'a{i}', f'b{i}'):
+                continue
+            dx = max(x0 - x, 0, x - x1)
+            dy = max(y0 - y, 0, y - y1)
+            d2 = dx * dx + dy * dy
+            if worst is None or d2 < worst[0]:
+                worst = (d2, lab, n)
+    return worst[0] > Fr(1, 2), worst
+
+
+CSTATE = ['AB', 'A', 'B', '0']       # the four patterns of a corner square w.r.t. {a_i, b_i}
+
+
+def corner_pattern_sets(ipts):
+    """-> {(i, state): frozenset of point indices}"""
+    ix = {n: k for k, (n, *_r) in enumerate(ipts)}
+    out = {}
+    for i in range(4):
+        A, B = ix[f'a{i}'], ix[f'b{i}']
+        out[(i, 'AB')] = frozenset((A, B))
+        out[(i, 'A')] = frozenset((A,))
+        out[(i, 'B')] = frozenset((B,))
+        out[(i, '0')] = frozenset()
+    return out
+
+
+def d4_on_tuples(pts):
+    """the D4 action on the 256 corner-state tuples, via the induced permutation of P0"""
+    perms = d4_perm(pts)
+    idx = {n: k for k, (n, _x, _y) in enumerate(pts)}
+    name = {k: n for n, k in idx.items()}
+    maps = []
+    for pm in perms:
+        # a_i -> pm[a_i], which is a_j or b_j; record (j, swapped)
+        m = {}
+        for i in range(4):
+            ta = name[pm[idx[f'a{i}']]]
+            j = int(ta[1])
+            m[i] = (j, ta[0] == 'b')
+        maps.append(m)
+    return maps
+
+
+def tuple_orbit(tp, maps):
+    out = set()
+    for m in maps:
+        img = [None] * 4
+        for i, s in enumerate(tp):
+            j, sw = m[i]
+            img[j] = ('AB' if s == 'AB' else '0' if s == '0'
+                      else ('B' if s == 'A' else 'A') if sw else s)
+        out.add(tuple(img))
+    return out
+
+
+def cmd_leaves(a):
+    pts = bentz_points()
+    ipts = as_int_points(pts)
+    ok, worst = corner_reach_check()
+    d2, lab, n = worst
+    print(f'corner lemma: a square centred in a corner box contains no P0 point outside its own '
+          f'pair -- closest foreign point is {n} at squared distance {d2} = {float(d2):.6f} from '
+          f'{lab}; needed > 1/2: {"OK" if ok else "FAILS"}')
+    maps = d4_on_tuples(pts)
+    seen, classes = set(), []
+    import itertools
+    for tp in itertools.product(CSTATE, repeat=4):
+        if tp in seen:
+            continue
+        orb = tuple_orbit(tp, maps)
+        seen |= orb
+        classes.append((min(orb), len(orb)))
+    print(f'corner-pattern level: {len(CSTATE) ** 4} tuples in {len(classes)} D4 classes '
+          f'(sum of orbit sizes {sum(c[1] for c in classes)})')
+    print('  class representative      |orbit|  doubled  corner points held  K >=  Bentz K+u = 4')
+    for rep, sz in sorted(classes, key=lambda c: (-sum(s == 'AB' for s in c[0]), c[0])):
+        dbl = sum(s == 'AB' for s in rep)
+        held = sum(2 if s == 'AB' else 0 if s == '0' else 1 for s in rep)
+        print(f'  {"".join(f"{s:>2}" for s in rep):>12}   {sz:5d}   {dbl:5d}   {held:12d}'
+              f'   {dbl:4d}   ' + ('K = 4, u = 0 FORCED: every other square is a singleton'
+                                   if dbl == 4 else f'K >= {dbl}, so u <= {4 - dbl}'))
+
+
+def leaf_spec(name, corner=None, glob=None, counts=None, patterns=None):
+    ipts = as_int_points(bentz_points())
+    spec = dict(kind='leaf', name=name, t='4', r='1',
+                points=[[n, X, Y, D] for (n, X, Y, D) in ipts])
+    spec['patterns'] = ([sorted(s) for s in patterns] if patterns is not None
+                        else ([sorted(s) for s in glob] if glob is not None else None))
+    if corner is not None:
+        spec['corner'] = [[sorted(s) for s in cs] for cs in corner]
+    if counts is not None:
+        spec['counts'] = counts
+    return spec
+
+
+def cmd_spec(a):
+    pts = bentz_points()
+    ipts = as_int_points(pts)
+    ix = {n: k for k, (n, *_r) in enumerate(ipts)}
+    cps = corner_pattern_sets(ipts)
+    tp = tuple(a.leaf.split(',')) if ',' in a.leaf else tuple(
+        {'ABABABAB': ('AB',) * 4}.get(a.leaf, ()) or ())
+    if not tp:
+        raise SystemExit('--leaf wants four comma-separated states from AB, A, B, 0')
+    assert len(tp) == 4 and all(s in CSTATE for s in tp), tp
+    corner = [[cps[(i, tp[i])]] for i in range(4)]
+    glob = None
+    counts = None
+    if a.full:
+        # the fully pinned leaf: only possible when all four corners are doubled (then Bentz's
+        # counting forces K = 4, u = 0, so every non-corner square is a singleton on one of the
+        # eight remaining points, one square per point)
+        assert all(s == 'AB' for s in tp), '--full needs the (AB)^4 corner leaf'
+        glob = [cps[(i, 'AB')] for i in range(4)] \
+            + [frozenset((ix[f'c{j}'],)) for j in range(4)] \
+            + [frozenset((ix[f'd{j}'],)) for j in range(4)]
+        counts = [1] * 12 if a.counts else None
+    spec = leaf_spec(a.name or ('leaf_' + '_'.join(tp) + ('_full' if a.full else '')),
+                     corner=corner, glob=glob, counts=counts)
+    json.dump(spec, open(a.out, 'w'), indent=1)
+    f = Filter(spec)
+    print(f'{a.out}: {f.describe()}')
+    if glob is not None:
+        print('  admitted patterns: ' + ', '.join(pname(frozenset(s), ipts) for s in glob))
 
 
 def cmd_seed(a):
@@ -351,6 +513,14 @@ def main():
     c = sub.add_parser('patterns')
     c.add_argument('FILE')
     c.add_argument('--min-mass', type=float, default=0.0)
+    sub.add_parser('leaves')
+    c = sub.add_parser('spec')
+    c.add_argument('out')
+    c.add_argument('--leaf', required=True, help='four states from AB,A,B,0, e.g. AB,AB,AB,AB')
+    c.add_argument('--full', action='store_true',
+                   help='(AB)^4 only: also pin every non-corner square to a singleton pattern')
+    c.add_argument('--counts', action='store_true', help='add the 12 count rows as equalities')
+    c.add_argument('--name', default=None)
     c = sub.add_parser('seed')
     c.add_argument('out')
     c.add_argument('--pitch', type=float, default=0.02)
@@ -362,6 +532,10 @@ def main():
         cmd_points(a)
     elif a.cmd == 'patterns':
         cmd_patterns(a)
+    elif a.cmd == 'leaves':
+        cmd_leaves(a)
+    elif a.cmd == 'spec':
+        cmd_spec(a)
     elif a.cmd == 'seed':
         cmd_seed(a)
 
