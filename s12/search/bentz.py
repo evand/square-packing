@@ -505,6 +505,112 @@ def cmd_seed(a):
           + (f' (filter: {filt.describe()})' if filt else ''))
 
 
+def realizable(pitch, dth, Q=10 ** 5, Dc=10 ** 6):
+    """which subsets of `P0` occur as the pattern of SOME admissible closed unit square.
+
+    A float lattice scan over `(c_x, c_y, theta)` collects the patterns and one witness pose each;
+    every witness is then snapped to a rational pose and its pattern re-derived EXACTLY, so the
+    result is a set of patterns each with an exact certificate of realisability.  The scan cannot
+    prove the list complete (a pattern occupying a sliver of pose space could be missed), and the
+    float test is deliberately permissive at the boundary so that no pattern is lost to rounding --
+    witnesses the exact re-derivation does not confirm are returned separately and dropped.
+
+    -> ({bitmask: (p, q, cx, cy) exact witness}, [(bitmask seen, bitmask after snapping)])
+    """
+    import numpy as np
+    pts = bentz_points()
+    ipts = as_int_points(pts)
+    P = np.array([[X / D, Y / D] for (_n, X, Y, D) in ipts])
+    seen = {}
+    nth = int(round(90.0 / dth))
+    for k in range(nth):
+        th = math.radians(k * dth)
+        c, s = math.cos(th), math.sin(th)
+        w = (abs(c) + abs(s)) / 2
+        xs = np.arange(w, 4 - w + 1e-12, pitch)
+        dx = P[:, 0][:, None] - xs[None, :]
+        dy = P[:, 1][:, None] - xs[None, :]
+        u = np.abs((dx * c)[:, :, None] + (dy * s)[:, None, :])
+        v = np.abs((-dx * s)[:, :, None] + (dy * c)[:, None, :])
+        bits = (((0.5 - np.maximum(u, v)) >= -1e-12) * (1 << np.arange(16))[:, None, None]).sum(0)
+        for b in np.unique(bits):
+            if int(b) in seen:
+                continue
+            i, j = np.unravel_index(int(np.argmax(bits == b)), bits.shape)
+            seen[int(b)] = (float(xs[i]), float(xs[j]), th)
+    ok, drop = {}, []
+    for b, (cx, cy, th) in seen.items():
+        p, q, x, y = lc.snap_pose(cx, cy, th, T, Q, Dc)
+        pat = pattern_of(lc.make_square(x, y, p, q, T), ipts)
+        key = sum(1 << i for i in pat)
+        if key == b:
+            ok[b] = (p, q, x, y)
+        else:
+            drop.append((b, key))
+    return ok, drop, len(seen)
+
+
+def cmd_realize(a):
+    ipts = as_int_points(bentz_points())
+    ok, drop, nseen = realizable(a.pitch, a.dth, a.Q, a.Dc)
+    from collections import Counter
+    print(f'lattice scan: theta step {a.dth} deg over [0,90), centre pitch {a.pitch}; '
+          f'{nseen} patterns seen, {len(ok)} confirmed exactly, {len(drop)} lost to snapping')
+    print('  confirmed by size: '
+          + str(dict(sorted(Counter(bin(b).count("1") for b in ok).items()))))
+    print(f'  empty pattern realised: {0 in ok}  (P0 is a closed cover iff it is not)')
+    for b in sorted(ok, key=lambda b: (-bin(b).count('1'), b)):
+        if bin(b).count('1') < a.min_size:
+            continue
+        p, q, x, y = ok[b]
+        print(f'  {pname(frozenset(i for i in range(16) if b >> i & 1), ipts):<22}'
+              f' witness p/q={p}/{q} c=({x}, {y}) ~ ({float(x):.4f}, {float(y):.4f}, '
+              f'{math.degrees(2 * math.atan2(p, q)):+.2f} deg)')
+
+
+def cmd_tree(a):
+    """how big the full pattern tree is: the number of set-packings of twelve pairwise-disjoint
+    realisable patterns, in total and up to D4.
+
+    Every such family is a leaf of the finest pattern branching on `P0`, and `K + u = 4` holds on
+    each of them identically (`K = sum(|pi| - 1) = sum|pi| - 12`, `u = 16 - sum|pi|`), so the
+    distribution over `K` is the distribution over Bentz's counting cases."""
+    pts = bentz_points()
+    ok, _drop, _n = realizable(a.pitch, a.dth, a.Q, a.Dc)
+    pat = sorted(b for b in ok if b)
+    perms = d4_perm(pts)
+    print(f'{len(pat)} realisable non-empty patterns')
+    reps = []
+
+    def rec(start, used, k, cur):
+        if k == 12:
+            reps.append(tuple(cur))
+            return
+        if 16 - bin(used).count('1') < 12 - k:
+            return
+        for idx in range(start, len(pat)):
+            b = pat[idx]
+            if b & used:
+                continue
+            cur.append(b)
+            rec(idx + 1, used | b, k + 1, cur)
+            cur.pop()
+
+    rec(0, 0, 0, [])
+
+    def img(b, pm):
+        return sum(1 << pm[i] for i in range(16) if b >> i & 1)
+
+    orb = set()
+    for f in reps:
+        orb.add(min(tuple(sorted(img(b, pm) for b in f)) for pm in perms))
+    from collections import Counter
+    print(f'leaves of the full pattern tree (12 pairwise-disjoint realisable patterns): '
+          f'{len(reps)}, {len(orb)} up to D4')
+    print('  by K = sum(|pi| - 1) = 4 - u: '
+          + str(dict(sorted(Counter(sum(bin(b).count('1') - 1 for b in f) for f in reps).items()))))
+
+
 def cmd_packing(a):
     """the largest genuinely pairwise-disjoint (as CLOSED sets) subfamily of a measure's support,
     exactly: the integrality gap of the leaf on its own support.
@@ -664,6 +770,17 @@ def main():
                    help='(AB)^4 only: also pin every non-corner square to a singleton pattern')
     c.add_argument('--counts', action='store_true', help='add the 12 count rows as equalities')
     c.add_argument('--name', default=None)
+    c = sub.add_parser('realize')
+    c.add_argument('--pitch', type=float, default=0.002)
+    c.add_argument('--dth', type=float, default=0.1, help='angle step in degrees')
+    c.add_argument('--min-size', type=int, default=2, help='print patterns of at least this size')
+    c.add_argument('--Q', type=int, default=10 ** 5)
+    c.add_argument('--Dc', type=int, default=10 ** 6)
+    c = sub.add_parser('tree')
+    c.add_argument('--pitch', type=float, default=0.01)
+    c.add_argument('--dth', type=float, default=0.5, help='angle step in degrees')
+    c.add_argument('--Q', type=int, default=10 ** 5)
+    c.add_argument('--Dc', type=int, default=10 ** 6)
     c = sub.add_parser('packing')
     c.add_argument('FILE')
     c = sub.add_parser('seed')
@@ -681,6 +798,10 @@ def main():
         cmd_leaves(a)
     elif a.cmd == 'spec':
         cmd_spec(a)
+    elif a.cmd == 'realize':
+        cmd_realize(a)
+    elif a.cmd == 'tree':
+        cmd_tree(a)
     elif a.cmd == 'packing':
         cmd_packing(a)
     elif a.cmd == 'seed':

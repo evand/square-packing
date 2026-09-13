@@ -173,6 +173,25 @@ induced pinning is forced, not an extra choice.  The other 42 classes have `K >=
 and `u <= 4 - K`, and their set-packings of the remaining points are a genuine further branch; §5
 says why measuring them is beside the point once `(AB)^4` reads 12.
 
+**How big the tree is.**  The branching is bounded by what a square can actually hold.  A lattice
+scan over `(c_x, c_y, theta)` with every witness re-derived exactly
+(`python3 search/bentz.py realize`) finds **93 realisable patterns**, each with an exact rational
+witness pose and none lost to snapping: `16` singletons, `32` pairs, `36` triples, `9` quadruples,
+**no pattern of size 5 or more, and no empty pattern** (§3).  The nine maximal ones are the eight
+`{a_i, b_i, c_j, d_k}` (a corner pair plus one mid-wall and one interior point — e.g.
+`{a0,b0,c1,d0}` at `(1.3855, 1.1655, +19°)`) and, strikingly,
+**`{d_0, d_1, d_2, d_3}`**: the four interior points span a square of side `0.7` about `(2,2)`, so
+one unit square at `(37/20, 37/20, 0)` holds all four.  Hence
+
+> the full pattern tree on `P0` — all families of twelve pairwise-disjoint realisable patterns —
+> has **`86,403` leaves, `10,945` up to `D4`** (`python3 search/bentz.py tree`), distributed over
+> Bentz's counting cases as `K = 0,1,2,3,4` in `1820 / 11648 / 28416 / 31316 / 13203`.
+
+`K + u = 4` holds identically on every one of them, and leaf A is one of the `13,203` with
+`K = 4, u = 0`.  So the answer to the brief's "if yes, how big is the tree" is moot and the answer
+to "if no, what does the extremal measure look like" is §5: the tree has eleven thousand classes
+and the one Bentz's counting singles out is already at 12, so no sub-tree of it closes.
+
 **What a Lean statement of the leaf reduction would be.**
 `packing_le_weight_regions_choice` (`lean/Sqpack/Basic.lean:207`) is the model and it already has
 the right shape: its regions are arbitrary predicates `R : Fin m → (ℝ×ℝ) → ℝ → Prop` on poses, with
@@ -418,8 +437,15 @@ _(live status recorded in §7.1 below at the end of the session)_
   the honest statement for `BZC1B` is "two successive full lattice passes contributed 2 and then 0
   admitted poses, and the LP over the admitted columns is at its exact optimum".
 * **The §3 cover scans** (global and local) are float; they are the reason for saying "no
-  counterexample found", not "certified".  The only exact statement in §3 is the negative one:
-  `zeromargin.py` leaves 3,516 boxes uncertified.
+  counterexample found", not "certified".  Two statements there *are* exact: `zeromargin.py`
+  leaves 3,516 boxes uncertified, and all `94,932` oracle poses of those boxes have a non-empty
+  pattern under the exact test.
+* **The realisability census and the tree size** are half and half.  Each of the 93 patterns comes
+  with an exact rational witness pose whose pattern is re-derived in integers, so "these 93 are
+  realisable" is exact; "and there are no others" is the float lattice scan and could in principle
+  miss a pattern occupying a sliver of pose space (the count is stable from
+  `pitch 0.01 / 0.5°` to `pitch 0.002 / 0.1°`).  The leaf count `86,403 / 10,945` is exact given
+  the 93, and would only grow if the census missed something.
 
 **Not quoted as a bound anywhere**: any number carried by a general clique row.  Every run above is
 `--cq-want 0` and `--ktol 1000`, so the `kmax` field in the logs is decorative and the `certified`
@@ -433,6 +459,11 @@ flag's clique component is meaningless here, exactly as `runs/launch_2026-09-12_
 # the point set, the D4 action, the 43 corner-pattern classes and the corner lemma
 python3 search/bentz.py points
 python3 search/bentz.py leaves
+python3 search/bentz.py selftest
+
+# which patterns a closed unit square can actually hold, and how big the tree therefore is
+python3 search/bentz.py realize --min-size 4     # 93 patterns, max size 4, exact witnesses
+python3 search/bentz.py tree                     # 86403 leaves, 10945 up to D4
 
 # the verdict of section 0: the pattern census of the certified PGCORN measure
 cp /path/to/s12/search/pgonly_corner_exact.txt runs/
