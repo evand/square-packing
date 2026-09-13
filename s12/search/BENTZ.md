@@ -83,16 +83,20 @@ mass `<= 9`.  Witness and certificate meet: **the axis-parallel corner `k = 4` v
 exactly `9`.**  Relaxing to `|theta mod 90 deg| <= 1.0000034 deg` lifts it to at least
 **`10.750000` with `M = 1` exactly** and then, once the pricer had added 47 more near-axis-parallel
 poses, to an uncertified `11.944792` with `M = 1.436` (a violated-coverage iterate, so an upper
-bound on where that pose set will settle, not a lower one — §8).  **So the tilt is essential, and it
-is *infinitesimal* tilt: `3` of the `12` cannot be reached by axis-parallel squares at all, and at
-least `1.75` of those `3` — on the evidence of the second iterate, very nearly all of `3` — is
-bought by tilts of under one degree.**  This
+bound on where that pose set will settle, not a lower one — §8), and is now descending through
+`11.696383` as its coverage rows arrive.  **So the tilt is essential, and it is *infinitesimal*
+tilt: `3` of the `12` cannot be reached by axis-parallel squares at all, at least `1.75` of those
+`3` is bought by tilts of under one degree (certified), and the trajectory points at about
+`2.5–2.7` of the `3`.**  This
 answers the addendum's alternative in the negative: the obstruction is *not* the pure axis-parallel
 smear, and an inequality tested on the axis-parallel case first would be testing a case that is
 already `3` below `12`.
 
-**C2 — corner `k = 3`: still rising, `>= 11.883193` after two iterations (running).**  See §4 for
-the live value and §7 for the detached-run record.
+**C2 — corner `k = 3`: heading for `12` as well, but not yet certified.**  `BZC2` peaked at
+`11.995390` and is descending through `11.971769` as its coverage rows converge (`M` from `1.37`
+to `1.016`); no iterate has `M <= 1` yet, so none of those numbers is a bound.  If it settles at
+`12.000000` like `PGCORN`, **the corner branch has two non-closing leaves** and a corner-count tree
+is dead as well as a pattern tree.  See §4 and §7.1.
 
 **What this says the next branching variable must be** (§6): not incidence with any finite point
 set.  The leaf's mass is carried by `10` to `29` poses per pattern that differ by `1e-3` in centre
@@ -264,8 +268,8 @@ region equalities + chord — the `PGCORN` configuration of `runs/launch_2026-09
 | `PGCORN` (2026-09-12, quoted) | corner `k = 4`, no patterns | `12.000000` | `5999999963/500000000 = 11.999999926` | `1` exact | — | `4.000000` | the baseline |
 | **A** | **`(AB)^4` fully pinned** | **`[11.999999926, 12]` exactly** | the `PGCORN` measure, unchanged | `1` exact | **all 12 hold to `1.3e-8`** | `4.000000` | §0; the leaf deletes `1746/14835` poses and `0` of the optimum's |
 | `BZC1B` | corner `k = 4`, `theta = 0 mod 90°` exactly | **`9.000000`** converged | `9` exactly (9 poses, mass `1` each) | `1` exact | — | `1.000000` | **exactly `9`**: integral witness + the `{1,2,3}^2` cover (§0); 71 s; slots `[0,1,0,1,1,0,0,1]` |
-| `BZC1A` | corner `k = 4`, `\|theta mod 90°\| <= 1.0000034°` | `>= 10.750000` (`s0.0`, `M = 1` **exact**); `11.944792` at `s0.1` with `M = 1.436` — **not a bound**, coverage is violated there | — | `1` exact at `s0.0`, `1.436` at `s0.1` | — | `2.750000` then `3.944792` | running, §7 |
-| `BZC2` | corner `k = 3` (`--corners 1110`) | `>= 11.883193` | — | `1.372` at s0.1 | — | `3.171161` | running, §7 |
+| `BZC1A` | corner `k = 4`, `\|theta mod 90°\| <= 1.0000034°` | `>= 10.750000` (`s0.0`, `M = 1` **exact**); then `11.944792`, `11.696383` at `M = 1.436`, `1.079` — **not bounds**, coverage is violated there | — | `1` exact, then `1.436 -> 1.079` | — | `2.750000`, then `3.944792 -> 3.696383` | running, §7 |
+| `BZC2` | corner `k = 3` (`--corners 1110`) | `11.971769` at `s0.8`, descending from `11.995390` as coverage rows arrive | — | `1.372 -> 1.016` | — | `3.638695` | running, §7; no iterate has `M <= 1` yet, so none of these is a bound |
 | `BZA` | leaf A re-measured, with the 16 points of `P0` added as coverage rows | `12.000000` at **every** iteration `s0.0`–`s0.18` | — | `1.061 -> 1.002716` | — | `4.000000` throughout | running, §7; it starts *at* the cap and never leaves, with `M` descending to `1` — `PGCORN` again, inside the leaf |
 | `BZAC` | leaf A with the 12 count rows as **equalities** | `12.000000` at `s0.1` | — | `1.058` at `s0.1` | feasible as equalities | `4.000000` | running, §7; the equalities cost the LP nothing, which is §0 restated |
 
@@ -386,9 +390,9 @@ Three constraints on it, from the numbers above:
    and a pattern region is a union of clouds by construction.
 2. **The axis-parallel case is not where to test, and the tilt that matters is infinitesimal.**
    `C1` puts the axis-parallel corner `k = 4` leaf at exactly `9`, `3` below `12`, and the `1°`
-   band at `>= 10.75` certified and `11.94` on its next (uncertified) iterate, so at least `1.75`
-   of the missing `3`, and plausibly nearly all of it, is bought by tilts of **under one
-   degree** — the item-3 family again (`HONEST.md` §0 item 3), squares whose edges leave the grid
+   band at `>= 10.75` certified and `11.94 -> 11.70` on its next (uncertified) iterates, so at
+   least `1.75` of the missing `3`, and on the trajectory about `2.5–2.7` of it, is bought by tilts
+   of **under one degree** — the item-3 family again (`HONEST.md` §0 item 3), squares whose edges leave the grid
    lines by `1e-3`.  A new inequality therefore has to survive an arbitrarily small perturbation of
    an axis-parallel configuration, which is exactly the regime in which `ALLMEET.md`'s clique rows
    are non-Helly and `zeromargin.py`'s box primitives lose their margin (§3).  A purely
@@ -428,8 +432,8 @@ lives below one degree.
 
 | tag | pid | log | last value at hand-off | what to look for |
 |---|---|---|---|---|
-| `BZC2` (corner `k = 3`, `--corners 1110`) | `3448075` | `runs/BZC2.out`, `runs/cl_BZC2.json` | `s0.6  LP = 11.981915`, `M = 1.1076`, interior `3.639`, `58,204` rows, support `628` (peak `s0.5` `11.995390`) | whether it settles at `12.000000` like `PGCORN`; then the corner branch has **two** non-closing leaves and a corner-count tree is dead as well as a pattern tree.  The `FINAL EXACT` line at the end of the stage is the certified number. |
-| `BZC1A` (corner `k = 4`, `\|theta mod 90°\| <= 1.0000034°`) | `3465868` | `runs/BZC1A.out` | `s0.0  LP = 10.750000` with `M = 1` **exact** (the only bound so far); `s0.1  LP = 11.944792` with `M = 1.436`, interior `3.944792`, `25,422` poses | the first iterate whose `M` is back at `1` after the pose set grew.  `s0.1` is *above* the true value of its pose set, not below, because 3,000 coverage rows were still to be added; the sequence will descend into the certified range the way `BZC2`'s did.  It is slow (~30 min per iteration: 25k poses against 1,887 polygon rows).  Any certified value `v` gives "tilt under one degree is worth `v - 9`". |
+| `BZC2` (corner `k = 3`, `--corners 1110`) | `3448075` | `runs/BZC2.out`, `runs/cl_BZC2.json` | `11.995390 -> 11.981915 -> 11.973055 -> 11.971769` with `M` descending `1.150 -> 1.108 -> 1.052 -> 1.016`, interior `3.6387`, `60,179` rows, support `663` | whether it settles at or just below `12`; if at `12.000000`, the corner branch has **two** non-closing leaves and a corner-count tree is dead as well as a pattern tree.  The `FINAL EXACT` line at the end of the stage is the certified number — the `M > 1` iterates above are not. |
+| `BZC1A` (corner `k = 4`, `\|theta mod 90°\| <= 1.0000034°`) | `3465868` | `runs/BZC1A.out` | `10.750000` (`M = 1` **exact** — the only bound so far) `-> 11.944792` (`M = 1.436`) `-> 11.696383` (`M = 1.079`, `rc+ = 0`, interior `3.696383`), `25,422` poses | the first iterate whose `M` is back at `1`.  The `M > 1` iterates are *above* the value of their pose set, not below — 3,000 then 417 coverage rows were still to be added — so the sequence is descending into the certified range, and `rc+ = 0` at `s0.2` says the master is already closed on the loaded columns.  It is slow (~30 min per iteration: 25k poses against 1,887 polygon rows).  Any certified value `v` gives "tilt under one degree is worth `v - 9`", and the trajectory points at `v ≈ 11.5–11.7`, i.e. **about `2.5–2.7` of the missing `3`**. |
 | `BZA` (leaf A, 16 point rows added) | `3500408` | `runs/BZA.out` | `s0.18  LP = 12.000000` — **unmoved through all nineteen iterations**, interior exactly `4.000000` throughout, `M` descending `1.061 -> 1.002716`, support down to 179 poses, `29,232` columns | confirmation only, and it is behaving exactly as §0 predicts: pinned *at* the cap while `M` descends to `1`, i.e. `PGCORN` reproduced inside the leaf.  Its `FINAL EXACT` line should read mass `12 - O(1e-7)` with `M = 1`. |
 | `BZAC` (leaf A **with** the 12 count equalities) | `3500409` | `runs/BZAC.out` | `s0.1  LP = 12.000000`, `M = 1.0577`, interior `4.000000` — so the twelve equalities are feasible and cost nothing | the `count_dual` field on its `STAGE` line (only printed at a stage boundary, which it has not reached): the twelve multipliers `lam_pi` a branch certificate would carry.  Slow, because the restricted master had `22,402` columns priced positive on the first solve. |
 
