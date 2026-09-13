@@ -413,7 +413,25 @@ Launch scripts: `runs/launch_bentz_C1.sh` (C1), `runs/launch_bentz_C2.sh` (C2),
 exact re-check).  Each `cliquelever` run writes `runs/<TAG>.out`, `runs/cl_<TAG>.json` and
 checkpoints `runs/cl_<TAG>_{measure,poses,rows,pgons}.*`.
 
-_(live status recorded in §7.1 below at the end of the session)_
+### 7.1 Detached runs left going at the end of the session (2026-09-13)
+
+All four were launched with `setsid nohup … &` from this worktree and are **still running**; each
+has `--time` left on its clock and checkpoints every 5 iterations, so they can simply be read later.
+None of them can change §0's verdict — leaf A is bracketed `[11.999999926, 12]` by an explicit
+measure and a two-line argument, and C1's `9` has a witness and a cover — but `BZC2` decides whether
+the corner branch has a **second** non-closing leaf, and `BZC1A` decides how much of the missing `3`
+lives below one degree.
+
+| tag | pid | log | last value at hand-off | what to look for |
+|---|---|---|---|---|
+| `BZC2` (corner `k = 3`, `--corners 1110`) | `3448075` | `runs/BZC2.out`, `runs/cl_BZC2.json` | `s0.6  LP = 11.981915`, `M = 1.1076`, interior `3.639`, `58,204` rows, support `628` (peak `s0.5` `11.995390`) | whether it settles at `12.000000` like `PGCORN`; then the corner branch has **two** non-closing leaves and a corner-count tree is dead as well as a pattern tree.  The `FINAL EXACT` line at the end of the stage is the certified number. |
+| `BZC1A` (corner `k = 4`, `\|theta mod 90°\| <= 1.0000034°`) | `3465868` | `runs/BZC1A.out` | `s0.0  LP = 10.750000`, `M = 1` **exact**, interior `2.750000`, `25,422` poses | whether it rises above `10.75`.  It is slow (one iteration per ~30 min: 25k poses against 1,887 polygon rows), so expect few iterations.  Any converged value `v` gives "tilt under one degree is worth `v - 9`". |
+| `BZA` (leaf A, 16 point rows added) | `3500408` | `runs/BZA.out` | `s0.7  LP = 12.000000` (unmoved for 8 iterations), `M` falling `1.061 -> 1.016`, interior `4.000000`, `28,803` columns | confirmation only: it should sit at `12.000000` while `M` descends to `1`, exactly as `PGCORN` did, and finish with an exact measure of mass `12 - O(1e-7)`. |
+| `BZAC` (leaf A **with** the 12 count equalities) | `3500409` | `runs/BZAC.out` | `s0.0  LP = 12.000000`, `M = 1.0484`, interior `4.000000` | the `count_dual` field on its `STAGE` line: the twelve multipliers `lam_pi` a branch certificate would carry.  Slow, because the restricted master has `22,402` columns priced positive on the first solve. |
+
+Finished and recorded above: `BZC1B` (`RESULT … LP9.000000/M1.000000/conv1/exact9.000000c`, 71 s),
+the `P0` cover sweep (`runs/bentz16_cover.log`, 15 s, `NOT VERIFIED`, §3), and the exact re-check of
+the `PGCORN` measure (`runs/bentz_A_check.log`, 0.3 s).
 
 ---
 
