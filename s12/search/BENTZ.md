@@ -14,8 +14,10 @@ Read against `notes/proof-anatomy.md` §2.3 and §7.2, `notes/review-2026-09-12.
 
 ## 0. Verdict, up front
 
-**A — the fully pinned pattern leaf does not die, fractionally or otherwise: it is exactly where
-the `PGCORN` optimum already lives.**  The certified `PGCORN` measure
+**A — the fully pinned pattern leaf does not die fractionally: it is exactly where the `PGCORN`
+optimum already lives.  Integrally it dies with a margin of one square, and that one square is
+visible in integers on the optimum's own 162-pose support (§5 (iii)): its largest genuinely
+pairwise-disjoint subfamily has `11` members, not `12`.**  The certified `PGCORN` measure
 (`search/pgonly_corner_exact.txt`, mass `5999999963/500000000 = 11.999999926`) satisfies **every**
 constraint of the fully pinned leaf: all 162 of its poses have one of the twelve admitted patterns,
 and the twelve count rows `mu(R_pi) = 1` hold with deficits between `1e-9` and `1.3e-8` — the
@@ -220,8 +222,8 @@ region equalities + chord — the `PGCORN` configuration of `runs/launch_2026-09
 | `BZC1B` | corner `k = 4`, `theta = 0 mod 90°` exactly | **`9.000000`** converged | `9` exactly (9 poses, mass `1` each) | `1` exact | — | `1.000000` | integral; 71 s; slots `[0,1,0,1,1,0,0,1]` |
 | `BZC1A` | corner `k = 4`, `|theta mod 90°| <= 1.0000034°` | `>= 10.750000` | — | `1` exact at s0.0 | — | `2.750000` | running, §7 |
 | `BZC2` | corner `k = 3` (`--corners 1110`) | `>= 11.883193` | — | `1.372` at s0.1 | — | `3.171161` | running, §7 |
-| `BZA` | leaf A re-measured with the 16 points as coverage rows | — | — | — | — | — | running, §7 (confirmatory) |
-| `BZAC` | leaf A with the 12 count rows as equalities | — | — | — | — | — | running, §7 (confirmatory) |
+| `BZA` | leaf A re-measured, with the 16 points of `P0` added as coverage rows | `12.000000` at `s0.0` | — | `1.061` at `s0.0` | — | `4.000000` | running, §7; it starts *at* the cap, as §0 predicts |
+| `BZAC` | leaf A with the 12 count rows as equalities | — | — | — | — | — | running, §7 (the `lam_pi` duals) |
 
 Notes on the table.
 
@@ -282,7 +284,32 @@ statement about *four pairwise-disjoint squares*, and the only object in the rep
 "these four cannot coexist" is a clique row, which `ALLMEET.md` §0 has already shown is not soundly
 creditable where the mass is.
 
-**(iii) So level B is decided by one leaf.**  A branch tree closes only if **every** leaf closes.
+**(iii) The integrality gap of the leaf, exactly, on its own support: `11`, not `12`.**  Take the
+162 poses of the certified measure and build the exact disjointness graph (`sq_meets_sq`, the
+four-axis integer SAT; `7,644` of the `13,041` pairs are disjoint as closed sets).  A complete
+branch-and-bound over the 162 nodes gives
+
+| the largest pairwise-disjoint (as closed sets) subfamily of the support | size |
+|---|---|
+| over all 162 poses | **11** — one pose of each pattern except one `{d_j}` |
+| restricted to the four corner-pair patterns | 4 of 4 |
+| restricted to the four `{c_j}` patterns | 4 of 4 |
+| restricted to the four `{d_j}` patterns | 4 of 4 |
+| restricted to the eight non-corner patterns `{c_j} ∪ {d_j}` | **7 of 8** |
+| all twelve | **11 of 12** |
+
+So the fractional optimum carries `12` on a support whose largest genuine packing is `11`, and the
+unit that cannot be realised is an **interior** one — the obstruction appears exactly when the four
+wall squares and the four interior squares are asked for *together*, which is Bentz's step verbatim
+("at most one wall square per wall fits between two pinned corners with positive gaps, then four
+interior squares must fit in a region of side `< 2`", `s(4) = 2`).  Each group of four is
+individually realisable; only the combination is not.  This is `notes/proof-anatomy.md` §7.2's
+"exactly one unit of slack", localised to a 162-pose finite object and checked in integers.
+(It is a statement about *this* optimum's support, not about the leaf: the leaf has a continuum of
+poses and a different fractional optimum could have a different support.  What it does establish is
+that the missing unit is not hiding anywhere subtle.)
+
+**(iv) So level B is decided by one leaf.**  A branch tree closes only if **every** leaf closes.
 `(AB)^4` is one of the 43 classes and it is at `12.000` with an exactly certified measure, so the
 corner-pattern level does not close, and neither does any refinement of it that keeps `(AB)^4`
 whole.  The remaining 42 classes are therefore measured (if at all) for tree-size bookkeeping, not
@@ -311,10 +338,13 @@ Three constraints on it, from the numbers above:
    4-square statement, the clique family is the repo's 4-square object, and the clique family is
    uncreditable.  The gap between "`s(4) = 2` kills leaf A integrally" and "the LP sits at 12 on
    it" is exactly one unit of `notes/proof-anatomy.md` §7.2's deficit, and it is now localised to a
-   single, completely explicit object: the four singleton patterns `{d_0}, {d_1}, {d_2}, {d_3}`
-   carrying mass `1` each on `24–29` mutually overlapping poses inside `[1,3]^2`.  A certifiable
-   rule that says "these four cannot each carry `1`" is the whole remaining content of the Bentz
-   template for `n = 12`.
+   single, completely explicit object: the eight singleton patterns `{c_0..c_3}, {d_0..d_3}`,
+   which §5 (iii) shows admit only `7` pairwise-disjoint representatives on the optimum's support
+   while the LP gives them `8`.  A certifiable rule that says "these eight cannot each carry `1`"
+   — equivalently a positive-volume, soundly creditable object expressing `s(4) = 2` on the
+   interior of a leaf with four pinned corners — is the whole remaining content of the Bentz
+   template for `n = 12`.  Note what it must *not* be: a row over pose regions defined by point
+   membership, because §0 shows the LP satisfies every such row at value 12.
 
 ---
 
@@ -380,6 +410,9 @@ python3 search/bentz.py leaves
 # the verdict of section 0: the pattern census of the certified PGCORN measure
 cp /path/to/s12/search/pgonly_corner_exact.txt runs/
 python3 search/bentz.py patterns runs/pgonly_corner_exact.txt
+
+# the integrality gap of section 5 (iii): the largest genuine packing inside the optimum's support
+python3 search/bentz.py packing runs/pgonly_corner_exact.txt
 
 # its exact re-check (M, regions, chord)
 sh runs/launch_bentz_check.sh              # -> runs/bentz_A_check.log

@@ -505,6 +505,87 @@ def cmd_seed(a):
           + (f' (filter: {filt.describe()})' if filt else ''))
 
 
+def cmd_packing(a):
+    """the largest genuinely pairwise-disjoint (as CLOSED sets) subfamily of a measure's support,
+    exactly: the integrality gap of the leaf on its own support.
+
+    The disjointness graph is `leaf_ceiling.sq_meets_sq` (four edge normals, integers only) and the
+    search is a complete branch-and-bound with a cardinality bound, so the answer is a theorem
+    about the file, not a heuristic."""
+    ipts = as_int_points(bentz_points())
+    t, sym, poses = lc.read_measure(a.FILE)
+    assert sym == 1
+    sq = [lc.make_square(cx, cy, p, q, t) for (p, q, cx, cy, _m) in poses]
+    pat = [pname(pattern_of(s, ipts), ipts) for s in sq]
+    n = len(sq)
+    adj = [0] * n
+    npair = 0
+    for i in range(n):
+        for j in range(i + 1, n):
+            if not lc.sq_meets_sq(sq[i], sq[j]):
+                adj[i] |= 1 << j
+                adj[j] |= 1 << i
+                npair += 1
+    print(f'{a.FILE}: {n} support poses, {npair} of {n * (n - 1) // 2} pairs disjoint as closed sets')
+    best = [0, None]
+
+    def bb(cand, cur):
+        if bin(cand).count('1') + len(cur) <= best[0]:
+            return
+        if cand == 0:
+            if len(cur) > best[0]:
+                best[0], best[1] = len(cur), list(cur)
+            return
+        c = cand
+        while c:
+            b = c & -c
+            i = b.bit_length() - 1
+            c ^= b
+            cur.append(i)
+            bb(cand & adj[i] & ~((1 << (i + 1)) - 1), cur)
+            cur.pop()
+            cand ^= b
+            if bin(cand).count('1') + len(cur) <= best[0]:
+                return
+
+    bb((1 << n) - 1, [])
+    print(f'  MAXIMUM pairwise-disjoint subfamily: {best[0]}')
+    print('  its patterns: ' + ', '.join(sorted(pat[i] for i in best[1])))
+    groups = {}
+    for i, p in enumerate(pat):
+        groups.setdefault(p, []).append(i)
+    dis = [[bool(adj[i] >> j & 1) for j in range(n)] for i in range(n)]
+
+    def maxsys(keys):
+        ks = sorted(keys)
+        bst = [0, None]
+
+        def rec(k, cur):
+            if len(cur) + len(ks) - k <= bst[0]:
+                return
+            if k == len(ks):
+                if len(cur) > bst[0]:
+                    bst[0], bst[1] = len(cur), list(cur)
+                return
+            for i in groups.get(ks[k], []):
+                if all(dis[i][j] for j in cur):
+                    rec(k + 1, cur + [i])
+            rec(k + 1, cur)
+        rec(0, [])
+        return bst
+
+    cs = [f'{{c{j}}}' for j in range(4)]
+    ds = [f'{{d{j}}}' for j in range(4)]
+    ab = sorted(k for k in groups if ',' in k)
+    for nm, keys in (('the 4 corner-pair patterns', ab), ('the 4 {c_j} patterns', cs),
+                     ('the 4 {d_j} patterns', ds), ('the 8 non-corner patterns', cs + ds),
+                     ('all patterns present', sorted(groups))):
+        b = maxsys(keys)
+        miss = sorted(set(keys) - set(pat[i] for i in (b[1] or [])))
+        print(f'  one pose per pattern, {nm:<28}: {b[0]} of {len(keys)}'
+              + ('   unrealisable: ' + ','.join(miss) if miss else ''))
+
+
 def selftest():
     bad = []
 
@@ -583,6 +664,8 @@ def main():
                    help='(AB)^4 only: also pin every non-corner square to a singleton pattern')
     c.add_argument('--counts', action='store_true', help='add the 12 count rows as equalities')
     c.add_argument('--name', default=None)
+    c = sub.add_parser('packing')
+    c.add_argument('FILE')
     c = sub.add_parser('seed')
     c.add_argument('out')
     c.add_argument('--pitch', type=float, default=0.02)
@@ -598,6 +681,8 @@ def main():
         cmd_leaves(a)
     elif a.cmd == 'spec':
         cmd_spec(a)
+    elif a.cmd == 'packing':
+        cmd_packing(a)
     elif a.cmd == 'seed':
         cmd_seed(a)
     elif a.cmd == 'selftest':
