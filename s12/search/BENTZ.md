@@ -264,7 +264,7 @@ region equalities + chord — the `PGCORN` configuration of `runs/launch_2026-09
 | `BZC1A` | corner `k = 4`, `|theta mod 90°| <= 1.0000034°` | `>= 10.750000` | — | `1` exact at s0.0 | — | `2.750000` | running, §7 |
 | `BZC2` | corner `k = 3` (`--corners 1110`) | `>= 11.883193` | — | `1.372` at s0.1 | — | `3.171161` | running, §7 |
 | `BZA` | leaf A re-measured, with the 16 points of `P0` added as coverage rows | `12.000000` at `s0.0` | — | `1.061` at `s0.0` | — | `4.000000` | running, §7; it starts *at* the cap, as §0 predicts |
-| `BZAC` | leaf A with the 12 count rows as equalities | — | — | — | — | — | running, §7 (the `lam_pi` duals) |
+| `BZAC` | leaf A with the 12 count rows as **equalities** | `12.000000` at `s0.1` | — | `1.058` at `s0.1` | feasible as equalities | `4.000000` | running, §7; the equalities cost the LP nothing, which is §0 restated |
 
 Notes on the table.
 
@@ -427,7 +427,7 @@ lives below one degree.
 | `BZC2` (corner `k = 3`, `--corners 1110`) | `3448075` | `runs/BZC2.out`, `runs/cl_BZC2.json` | `s0.6  LP = 11.981915`, `M = 1.1076`, interior `3.639`, `58,204` rows, support `628` (peak `s0.5` `11.995390`) | whether it settles at `12.000000` like `PGCORN`; then the corner branch has **two** non-closing leaves and a corner-count tree is dead as well as a pattern tree.  The `FINAL EXACT` line at the end of the stage is the certified number. |
 | `BZC1A` (corner `k = 4`, `\|theta mod 90°\| <= 1.0000034°`) | `3465868` | `runs/BZC1A.out` | `s0.0  LP = 10.750000`, `M = 1` **exact**, interior `2.750000`, `25,422` poses | whether it rises above `10.75`.  It is slow (one iteration per ~30 min: 25k poses against 1,887 polygon rows), so expect few iterations.  Any converged value `v` gives "tilt under one degree is worth `v - 9`". |
 | `BZA` (leaf A, 16 point rows added) | `3500408` | `runs/BZA.out` | `s0.7  LP = 12.000000` (unmoved for 8 iterations), `M` falling `1.061 -> 1.016`, interior `4.000000`, `28,803` columns | confirmation only: it should sit at `12.000000` while `M` descends to `1`, exactly as `PGCORN` did, and finish with an exact measure of mass `12 - O(1e-7)`. |
-| `BZAC` (leaf A **with** the 12 count equalities) | `3500409` | `runs/BZAC.out` | `s0.0  LP = 12.000000`, `M = 1.0484`, interior `4.000000` | the `count_dual` field on its `STAGE` line: the twelve multipliers `lam_pi` a branch certificate would carry.  Slow, because the restricted master has `22,402` columns priced positive on the first solve. |
+| `BZAC` (leaf A **with** the 12 count equalities) | `3500409` | `runs/BZAC.out` | `s0.1  LP = 12.000000`, `M = 1.0577`, interior `4.000000` — so the twelve equalities are feasible and cost nothing | the `count_dual` field on its `STAGE` line (only printed at a stage boundary, which it has not reached): the twelve multipliers `lam_pi` a branch certificate would carry.  Slow, because the restricted master had `22,402` columns priced positive on the first solve. |
 
 Finished and recorded above: `BZC1B` (`RESULT … LP9.000000/M1.000000/conv1/exact9.000000c`, 71 s),
 the `P0` cover sweep (`runs/bentz16_cover.log`, 15 s, `NOT VERIFIED`, §3), and the exact re-check of
