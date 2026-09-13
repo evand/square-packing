@@ -178,6 +178,19 @@ rung-2 suite `23 passed, 0 failed, 0 panics`, the main suite `172 passed, 0 fail
 every `points.json` round-trip byte-identical.  `sha256sum -c certificates/SHA256SUMS`: 36 of 36 OK
 before and after.
 
+## First CI run of the full `verify.sh` including `zmcheck` (2026-09-13)
+`evand/square-packing-research` run 34738582801 (`workflow_dispatch`; push events have never
+triggered a run on that repository — 0 runs in its history before this one).  **Success**, every
+verdict VERIFIED, both `sha256sum -c` steps OK, 4 h 42 min wall in total.  Breakdown: the `verify/`
+certificates and the two rejection suites 28 min; the rung-2 sweep `done in 13229s` (3 h 40 min) on
+the runner against `2015 s` at 4 threads on the development machine — the runner's cores are ~6.5×
+slower for this workload, so `search/S13_WRITEUP.md`'s 4-thread estimate does not transfer.  The
+census is identical (`boxes 30258, max depth 10, ADM 5114 / DISJ 9477 / EMPTY 6938 / 0 uncertified`).
+The job stays under its `timeout-minutes: 300`; since runs are dispatch-only on this repository the
+cost is paid on demand.  If the public repository is to run it on every push, use the fallback
+written into `.github/workflows/verify.yml` (full sweep on dispatch/schedule, rejection suite and a
+restricted-band sweep on push).
+
 ## Checks performed on the original 788-point certificate (2026-08-23)
 ## Companion certificate (weaker but human-readable)
 `certificates/s12_56points_3.8.txt` — 56 points in [0,19/5]^2 (scales up to [0,1520/397]^2), weight 1/5 each (total 56/5 = 11.2).
