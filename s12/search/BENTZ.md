@@ -155,14 +155,17 @@ are **43 classes**.
    bound per class).  ∎
 
 **Bentz's counting at 12 boxes, and why `(AB)^4` is already fully pinned.**  With 12 squares and
-16 points, patterns pairwise disjoint (**P3**) and non-empty (**§3**), write
-`K = Σ_S (|pi(S)| - 1)` and `u = #{points in no square}`.  Then `Σ_S |pi(S)| = 16 - u` and
-`Σ_S |pi(S)| = 12 + K`, so
+16 points and patterns pairwise disjoint (**P3**), write `K = Σ_S (|pi(S)| - 1)` and
+`u = #{points in no square}`.  Disjointness makes the covered points a disjoint union, so
+`Σ_S |pi(S)| = 16 - u`, and by definition `Σ_S |pi(S)| = 12 + K`.  Hence, **unconditionally**,
 
 > **`K + u = 4`**
 
-— Bentz's `k + u <= 3` for 13 boxes (`notes/proof-anatomy.md` §2.3, §7.2), one unit looser, exactly
-as the addendum says.  On the class `(AB)^4` the four corner squares already contribute `K >= 4`,
+and if furthermore every pattern is non-empty (which needs `P0` to be a closed cover, §3) then
+`K >= 0` counts doubled points and this is Bentz's `k + u <= 3` for 13 boxes
+(`notes/proof-anatomy.md` §2.3, §7.2) one unit looser, exactly as the addendum says.  (If `P0` is
+not a cover, a pattern-`empty` square contributes `-1` to `K`, and the identity still holds — the
+budget just moves.)  On the class `(AB)^4` the four corner squares already contribute `K >= 4`,
 so `K = 4` and `u = 0`: **every other square has a singleton pattern, and the eight remaining
 points `c_0..c_3, d_0..d_3` are used once each by the eight non-corner squares.**  So on this class
 the "corner-pattern level" and the "fully pinned leaf" of addendum A are the *same leaf* — the
