@@ -271,7 +271,8 @@ li::marker{color:var(--muted)}
   3.9318. Re-optimising the weights on fixed points, with the exact verifier supplying the
   violated placements as cutting planes, reached 3.9486 and then hit a cliff. Growing the point set
   by column generation at a larger container removed the cliff and reached 3.9686, where the LP
-  itself can no longer get under 12 — the method's ceiling, to within about 0.001.</p>
+  itself no longer gets under 12. How much room the method has left above that is the subject of
+  section 06.</p>
   <p>The points were found by linear programming. Classical proofs in this area (Göbel, Stromquist,
   Friedman, Nagamochi, Bentz) hand-design a set of points that every unit square must contain;
   the LP formulation instead lets weights be fractional and optimises them, with the covering
@@ -333,19 +334,33 @@ VERIFIED: every CLOSED unit square inside C covers weight &gt;= 1, and total wei
   <p>It does not prove <span class="mono">s(12) = 4</span>, and this method never will. Here is the
   precise reason, which is the most useful thing the exercise produced.</p>
   <p>By LP duality, the smallest total weight any such certificate can have at container side
-  <span class="mono">s</span> equals the <em>fractional packing number</em>
+  <span class="mono">s</span> is at least the <em>fractional packing number</em>
   <span class="mono">ν_f(s)</span> — the largest total mass of a measure on unit-square placements whose
-  covering density never exceeds 1. The method proves <span class="mono">s(12) ≥ s</span> exactly when
-  <span class="mono">ν_f(s) &lt; 12</span>. Numerically <span class="mono">ν_f</span> crosses 12 at
-  roughly <span class="mono">s ≈ 3.95</span>, and it jumps to 16 at <span class="mono">s = 4</span>
-  (where the grid tiles). So:</p>
+  covering density never exceeds 1. The method proves <span class="mono">s(12) ≥ s</span> only when
+  <span class="mono">ν_f(s) &lt; 12</span>, so the side at which <span class="mono">ν_f</span> reaches
+  12 is a ceiling on the whole family of arguments. That ceiling is now pinned from above, rigorously:
+  an explicit fractional packing of mass <span class="mono">12.0282</span> at
+  <span class="mono">s = 399/100</span>, certified in exact rational arithmetic, shows that
+  <em>no</em> cover of weight below 12 exists at any <span class="mono">s ≥ 3.99</span> — whatever point
+  set, cell decomposition or verifier is used
+  (<a href="https://github.com/evand/square-packing-12/blob/master/search/DUAL_EXACT.md">search/DUAL_EXACT.md</a>).
+  So:</p>
   <ul>
-    <li>the ceiling of this entire family of arguments for n = 12 is about
-      <span class="mono">3.95–3.96</span> — not 4. The bound proved here is within about
-      <span class="mono">0.02</span> of that ceiling;</li>
-    <li>the remaining distance to that ceiling is computation, not mathematics: each certificate is a
-      large cutting-plane computation that must be driven to convergence against an exact separator over
-      a three-dimensional continuum of placements;</li>
+    <li>the ceiling <span class="mono">s*</span> of this entire family of arguments for n = 12 lies in
+      <span class="mono">[3.968616, 3.99)</span> — the lower end is the bound shipped here, the upper end
+      is a theorem. It is not 4. Runs that have not been driven to convergence suggest the true value is
+      a little below <span class="mono">3.99</span>: <span class="mono">L(3.98) ≥ 11.918</span>
+      (<a href="https://github.com/evand/square-packing-12/blob/master/search/DUAL.md">search/DUAL.md</a>),
+      and column generation at <span class="mono">3.9696</span> no longer gets below 12
+      (<a href="https://github.com/evand/square-packing-12/blob/master/search/TIGHTEN.md">search/TIGHTEN.md</a>);</li>
+    <li>the container of side 4 is not a way round this. A limit argument at
+      <span class="mono">s = 4</span> would need a cover of <span class="mono">[0,4]²</span> in the closed
+      semantics, and no such cover can weigh less than <span class="mono">12.2688</span>
+      (<a href="https://github.com/evand/square-packing-12/blob/master/search/COVER4.md">search/COVER4.md</a>),
+      which is already above 12 — the same floor that section 07 leans on for thirteen squares;</li>
+    <li>whatever part of the bracket is actually reachable is computation, not mathematics: each
+      certificate is a large cutting-plane computation that must be driven to convergence against an
+      exact separator over a three-dimensional continuum of placements;</li>
     <li>closing the remaining gap to 4 needs what Bentz used for n = 13: case analysis layered on top
       of the certificate — <em>"either some square sits in this region at this angle, or a modified
       certificate applies"</em>. The LP gives a natural handle on that, because when the total weight
