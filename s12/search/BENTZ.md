@@ -390,9 +390,11 @@ Three constraints on it, from the numbers above:
    are non-Helly and `zeromargin.py`'s box primitives lose their margin (§3).  A purely
    axis-parallel argument is answering a question that is already answered, three units short.
 3. **It has to be a statement about a few squares at once, with positive volume in pose space.**
-   That is `ALLMEET.md` §5's conjecture from the other side: the `s(4) = 2` step is a
-   4-square statement, the clique family is the repo's 4-square object, and the clique family is
-   uncreditable.  The gap between "`s(4) = 2` kills leaf A integrally" and "the LP sits at 12 on
+   That is `ALLMEET.md` §5's conjecture from the other side.  The measured obstruction couples
+   **eight** squares (the four wall singletons and the four interior singletons; each group of four
+   is individually realisable, §5 (iii)), and the only shape of object in the repo that can say
+   "these `k` cannot be pairwise disjoint" is a clique row — which `ALLMEET.md` §0 proves is not
+   soundly creditable where the mass is.  The gap between "`s(4) = 2` kills leaf A integrally" and "the LP sits at 12 on
    it" is exactly one unit of `notes/proof-anatomy.md` §7.2's deficit, and it is now localised to a
    single, completely explicit object: the eight singleton patterns `{c_0..c_3}, {d_0..d_3}`,
    which §5 (iii) shows admit only `7` pairwise-disjoint representatives on the optimum's support
