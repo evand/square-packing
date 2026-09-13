@@ -316,7 +316,10 @@ def box_admissible(box, t=T):
     x0, x1, y0, y1, u0, u1 = box
     U45 = Fr(41421356, 100000000)          # < sqrt2 - 1 < ...357/10^8
     if u0 <= U45 + Fr(1, 100000000) and u1 >= U45:
-        whi = Fr(141422, 100000)           # > sqrt 2
+        # sqrt2 = 1.414213562373...; this rational exceeds it by 4.4e-9, so a pose box may be
+        # refused only within 2.2e-9 of the true wall (with 1.41422 it was 3.2e-6, and that alone
+        # cost 14 of SUPEPGF's 317 rows their box)
+        whi = Fr(141421357, 100000000)
     else:
         whi = max(sum(cs_of_u(u)) for u in (u0, u1))
     return x0 >= whi / 2 and x1 <= t - whi / 2 and y0 >= whi / 2 and y1 <= t - whi / 2
@@ -741,7 +744,15 @@ class BoxCover(hc.Cover):
     def subrow(self, j):
         """the one-row restriction of this cover, boxes included (`one_row_cover` alone would
         leave `self.boxes[0]` pointing at the wrong row)"""
-        sub = hc.one_row_cover(self, j)
+        sub = BoxCover.__new__(BoxCover)      # NOT hc.one_row_cover: that builds a plain Cover,
+        sub.__dict__.update(self.__dict__)    # whose clique_capture would silently fall back to
+        sub.cz = self.cz[j:j + 1]             # the `meet` rule and report the wrong rows
+        sub.cmem = self.cmem[j:j + 1]
+        sub.ccore = self.ccore[j:j + 1]
+        sub.n_cliques = 1
+        sub.pz = np.zeros(0)
+        sub.ppts = []
+        sub.n_pgons = 0
         sub.boxes = self.boxes[j:j + 1]
         sub.rowsel = self.rowsel[j:j + 1]
         sub.members = False
@@ -831,6 +842,13 @@ def cmd_boxes(a):
             om = np.argsort(margins(np.array([bp]), M)[0])
             members = [PE[int(mem[k])] for k in om]
             box = grow_box((bp[0], bp[1], math.tan(0.5 * bp[2])), members, den=a.den)
+            if box is None:
+                # the maximiser sits ON the admissibility wall `c = w(th)/2` (a 45-degree pose has
+                # it at the irrational `sqrt2 / 2`), where no box centred there is admissible.
+                # Nudge the centre into the strict interior by `pad` and retry once.
+                lo, hi = 0.70710679 + a.pad, 3.29289321 - a.pad
+                box = grow_box((min(max(bp[0], lo), hi), min(max(bp[1], lo), hi),
+                                math.tan(0.5 * bp[2])), members, den=a.den)
             if box is not None:
                 ok, why = certify_box(box, members)
                 assert ok, (ci, why)
@@ -1051,8 +1069,19 @@ def cmd_helly(a):
     # ---- the thickened family
     h = Fr(int(round(a.half * a.den)), a.den)
     hu = Fr(int(round(a.halfu * a.den)), a.den)
-    boxes = [(cx - h, cx + h, cy - h, cy + h, Fr(p, q) - hu, Fr(p, q) + hu)
-             for (p, q, cx, cy) in poses]
+    def urange(p, q):
+        """the box's `u`-interval, shifted to stay inside `[0, 1]` -- outside it the branch
+        analysis of `w_lo_exact` / `w_hi_exact` (which needs `|th - th_k| < 90`) is not valid"""
+        u = Fr(p, q)
+        u0, u1 = u - hu, u + hu
+        if u0 < 0:
+            u0, u1 = Fr(0), 2 * hu
+        if u1 > 1:
+            u0, u1 = 1 - 2 * hu, Fr(1)
+        return u0, u1
+
+    boxes = [(cx - h, cx + h, cy - h, cy + h, *urange(p, q)) for (p, q, cx, cy) in poses]
+    assert all(0 <= b[4] and b[5] <= 1 for b in boxes)
     adm = [box_admissible(b) for b in boxes]
     inside = [box_pairwise_meets(b) for b in boxes]
     across = [[i, j, boxes_meet(boxes[i], boxes[j])] for i in range(3) for j in range(i + 1, 3)]
@@ -1212,6 +1241,8 @@ def main():
     c.add_argument('--mtol', type=float, default=1e-12,
                    help='a max-min margin above this is taken as "A(K) has interior"')
     c.add_argument('--den', type=int, default=10 ** 9)
+    c.add_argument('--pad', type=float, default=1e-6,
+                   help='retry distance from the admissibility wall when the first grow fails')
     c.add_argument('--gtol', type=float, default=1e-6)
     c.add_argument('--cap', type=int, default=600)
     c.add_argument('--nanat', type=int, default=20)
