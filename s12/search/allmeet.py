@@ -94,6 +94,39 @@ def read_exact_poses(tag, base=RUNS, t=T, r=Fr(1), delta=1e-6):
     return P
 
 
+def fold_pose(pose, t=T):
+    """the SAME closed square, re-parametrised so that `u = tan(th/2)` lies in `[0, 1)`.
+
+    A unit square is invariant under a quarter turn, so `th -> th +- 90` leaves the square alone
+    as a point set while moving `u` by `u -> (1+u)/(1-u)` / `u -> (u-1)/(1+u)`.  Both checkpoints
+    carry poses with `th < 0` (`84` of `SUPEPGF`'s 956, `1,998` of `E2Pg`'s 14,611, down to
+    `u = -0.414`), and against those `w_lo_exact`'s branch analysis -- which needs
+    `|th - th_k| < 90` -- is still SOUND (`cos D + sin D <= |cos D| + |sin D|` for every `D`) but
+    badly loose: on E2Pg row 31 it bounds `w >= 0.427` where the truth is `1.348`, and the box
+    test then refuses boxes that plainly meet the member.  Folding first removes that entirely.
+
+    Asserted, per pose, by comparing the exact corner sets of the two squares."""
+    p, q, cx, cy = pose
+    if q < 0:
+        p, q = -p, -q
+    while p < 0:                       # th -> th + 90
+        p, q = p + q, q - p
+    while p >= q:                      # th -> th - 90
+        p, q = p - q, q + p
+    g = math.gcd(abs(p), abs(q))
+    if g > 1:
+        p, q = p // g, q // g
+    return (p, q, cx, cy)
+
+
+def same_square(a, b, t=T):
+    """exact: do two pose records describe the same closed square (as a point set)?"""
+    sa, sb = lc.make_square(a[2], a[3], a[0], a[1], t), lc.make_square(b[2], b[3], b[0], b[1], t)
+    ca = sorted((Fr(X, sa[7]), Fr(Y, sa[7])) for X, Y in sa[6])
+    cb = sorted((Fr(X, sb[7]), Fr(Y, sb[7])) for X, Y in sb[6])
+    return ca == cb
+
+
 def pose_cs(p, q):
     """exact `(cos th, sin th)` of the pose with `u = tan(th/2) = p/q`"""
     a, b, r = lc.cos_sin(p, q)
@@ -822,6 +855,9 @@ def cmd_boxes(a):
     assert FE.shape == cov.F.shape and np.abs(FE - cov.F).max() == 0.0, \
         'exact pose reconstruction does not match the dual dump'
     log(f'   {len(PE)} exact poses reconstructed and matched to the dual dump bit for bit')
+    nfold = sum(1 for q in PE if Fr(q[0], q[1]) < 0)
+    PE = [fold_pose(q) for q in PE]
+    log(f'   {nfold} of them re-parametrised to u in [0,1) by a quarter turn (same square)')
 
     order = np.argsort(-cov.cz)
     rows = []
@@ -953,7 +989,7 @@ def cmd_honest(a):
     # round of this is an optimistic bound on what re-placing the boxes can buy; the new minimum
     # moves elsewhere, which is the point.
     out['refit'] = []
-    PE = read_exact_poses(a.TAG, a.base) if a.refit else None
+    PE = [fold_pose(q) for q in read_exact_poses(a.TAG, a.base)] if a.refit else None
     for rnd in range(a.refit):
         S = DP[int(np.argmin(DV))]
         mg = margins(np.array([S]), cov.F)[0]
@@ -1177,7 +1213,7 @@ def cmd_report(a):
                   f"{g['n_pairs']} |")
         print()
     if a.verify:
-        PE = read_exact_poses(B['tag'], a.base)
+        PE = [fold_pose(q) for q in read_exact_poses(B['tag'], a.base)]
         d2 = np.load(os.path.join(RUNS, f"hc_{B['tag']}_dual.npz"), allow_pickle=True)
         cov2 = hc.Cover(d2, 1e-9, log=lambda m: None)
         nv, nbad, vmax = 0, 0, 0.0
