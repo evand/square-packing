@@ -59,6 +59,16 @@ poses of the corner instance `cl_E2Bg_poses.txt` — **12 %** — and **none** o
 carry the optimum.  That is the whole finding: the leaf whose integral version dies instantly by
 `s(4) = 2` is a leaf whose fractional version the LP was already sitting inside.
 
+**B — the tree it sits in has `10,945` classes, and leaf A is the one Bentz's counting picks out.**
+A closed unit square in `[0,4]^2` can hold only **93** of the `65,536` subsets of `P0` (`16`
+singletons, `32` pairs, `36` triples, `9` quadruples; never five, never none), each certified by an
+exact witness pose (§2).  Twelve pairwise-disjoint such patterns make `86,403` families,
+`10,945` up to `D4`; `K + u = 4` on every one; leaf A is one of the `13,203` with `K = 4, u = 0`.
+Since leaf A does not close, no tree containing it closes, and the other `10,944` classes are
+bookkeeping.  The corner-pattern level of the brief's item 2 is the coarser `43`-class partition of
+§2, and its `(AB)^4` class **is** leaf A — Bentz's counting forces the rest, so there is no further
+branch to take there.
+
 **C1 — axis-parallel only: the value is exactly `9`, and this one is a theorem, not a measurement.**
 The corner `k = 4` leaf at `t = 4` with the pose set restricted to `theta = 0 mod 90 deg` **exactly**
 converges in 71 s to `LP = 9.000000` with `M = 1` exactly, corner regions `[1,1,1,1]`, all 1,872
