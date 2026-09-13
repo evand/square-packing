@@ -3,6 +3,10 @@
 ## Result
 `s(12) >= 15680/3951 = 3.968616`  — 12 unit squares cannot be packed into any square of side < 15680/3951.
 
+Second result, same machinery, separate certificate and separate checker:
+`s(13) = 4`, case-free (Bentz 2010 re-proved without its six-leaf case analysis).  See
+**s(13) = 4 (rung 2) (2026-09-12)** below.
+
 ## Certificates
 | file | s | points | total weight | verify N=6000 min | N=12000 | xcheck --all N=6000 |
 |---|---|---|---|---|---|---|
@@ -57,6 +61,111 @@ checks (was 138; the 34 new ones are the levers' over-credit traps), 0 failures,
 `k = 4` and `1110` probes the per-bin output (stdout and witness file) is byte-identical to the
 old binary on every bin compared, and the incremental credit agrees with the per-cell test at
 every cell of those bins.  Whole-probe before/after numbers are in `search/VERIFYSPEED.md`.
+
+## s(13) = 4 (rung 2) (2026-09-12)
+
+A second, separate result: one weighted closed cover of `[0,4]^2` of total weight < 13, so no 13
+unit squares fit below side 4, and 16 of them tile `[0,4]^2`, so `s(13) = 4` (Bentz 2010) with no
+case analysis.  Note: `verify/` **cannot** check this file — at the container itself the margin is
+exactly 0 and its angle-net erosion is linear against a quadratic margin (`search/ZEROMARGIN.md`
+§1), which is why `verify2/` exists.
+
+| file | container | points | total weight | sha256 |
+|---|---|---|---|---|
+| `certificates/rung2/s13_closed_cover_4.txt` | `[0,4]^2` | 3621 | `2591194431/200000000 = 12.955972155` | `ea303acea08cc17a13cecc24d3714c2df409f91eba048cd5546050ed064b53ed` |
+
+Coordinates have denominator `D = 1000`, weights `10^9`; every number in the file is an integer.
+Now pinned in `certificates/SHA256SUMS`.
+
+**Checker 1 — `search/zeromargin.py`** (Python, `fractions.Fraction` throughout; floats only as
+pre-filters, which can lose a certification but never create one).  Symmetry-reduced domain
+(`c_x in [0,4]`, `c_y in [0,2]`, `u = tan(th/2) in [0,1/2]`), legitimate because the checker first
+verifies **exactly** that the point set is invariant under `x -> 4-x` and `y -> 4-y`
+(`Checker.symmetric`) and refuses to run reduced otherwise.
+
+```
+python3 search/zeromargin.py cert certificates/rung2/s13_closed_cover_4.txt \
+        --depth 18 --nproc 8 --disj --chain-from 0 --dump runs/leaves.txt
+
+done in 6138s: boxes 16872, max depth 13
+  leaves: ADM 2867  CORE 0  P1 0  MIX 0  CHAIN 5320  TRI 0  EMPTY 3449  UNCERTIFIED 0
+VERIFIED
+```
+
+1 h 42 min on 8 processes; depth limit 18 never reached (max 13), so the subdivision terminated on
+its own.  Re-run from the committed path it reproduces the census to the last box
+(`done in 5828s: boxes 16872 ... ADM 2867 / CHAIN 5320 / EMPTY 3449 / UNCERTIFIED 0, VERIFIED`),
+so the check is deterministic and the shipped file is the one that verifies (`search/RUNG2.md` §0).
+
+**Checker 2 — `verify2/zmcheck`** (Rust, exact `i128` on the whole load-bearing path; its own
+subdivision, its own primitive set, no shared code, written from the lemmas rather than from the
+Python).  **Full** domain: `c_x, c_y in [0,4]`, `u in [0,1]` (`th in [0,90]` deg), no symmetry
+assumed or checked.  `runs/zmcheck_main_2026-09-12.log`, main checkout:
+
+```
+verify2/target/release/zmcheck cert certificates/rung2/s13_closed_cover_4.txt \
+        --depth 18 --threads 8
+
+certificate certificates/rung2/s13_closed_cover_4.txt: container [0,4]^2, 3621 points, D=1000 W=1000000000
+total weight = 12955972155/1000000000 = 12.955972155
+12800 root boxes (pitch 1/10 in x,y; 8 bins of u in [0,1]); depth limit 18; disj true; 8 threads
+done in 1065s: boxes 30258, max depth 10
+  leaves: ADM 5114  DISJ 9477  EMPTY 6938  UNCERTIFIED 0
+VERIFIED: every closed unit square in [0,4]^2 captures weight >= 1; total weight 12955972155/1000000000 = 12.955972155
+```
+
+17 min on 8 threads; depth limit never reached (max 10 of 18).  Timed again for this write-up on
+the same machine, same binary, same file: `TIMING_T8` at 8 threads and `TIMING_T4` at 4, identical
+census both times and identical to the run above — the verdict does not depend on the thread count
+(`runs/zmcheck_t8_2026-09-12.log`, `runs/zmcheck_t4_2026-09-12.log`).
+
+Two checkers, two subdivisions, two primitive sets, two domains, `0 uncertified` on the same file.
+The disjunctive primitive carries 65 % of the non-empty leaves in each (`CHAIN` 5320 of 8187;
+`DISJ` 9477 of 14591) — which `search/RUNG2.md` Theorem 1 predicts, since no cover of `[0,4]^2`
+below weight 16 can be certified by fixed-witness primitives at any depth.
+
+**Rejection tests.**  `runs/rung2_rejection_2026-09-12.log`:
+
+```
+./tests/rung2/rejection_tests.sh
+
+23 passed, 0 failed, 0 panics
+REJ_EXIT=0
+```
+
+Five mutations of the certificate and their controls (1 % weight cut: still valid; 5 % cut, halved
+weights, set scaled by 0.995, set translated by 0.01: a violating pose is **exhibited** each time,
+exit 1 with `*** VIOLATION`; one point deleted, one point moved by 0.01: still valid), the two
+invalid covers from the development history at their exact violating weights (`0.970282351`,
+`0.9420217`), and nine malformed inputs that must exit 2 with `ERROR:` and **no verdict word**.
+The mutation sweeps run over the restricted band `c_x in [0.5,0.6]`, `c_y in [1,2]` — which
+contains the pose `(1/2, 3/2, 0)` that `RUNG2.md` §2 identifies as the container's worst
+monotone-witness pose — and are compared on uncertified-box count, because a restricted sweep
+prints `PARTIAL SWEEP` and can never print `VERIFIED`.  One test, the `closed4_best_x103`
+violation, needs a development-history file kept outside the repo and prints `skip` (20 passed)
+when it is absent; that is the case in CI.
+
+**Lean.**  `lean/Sqpack/ZeroMargin.lean`, 970 lines, Mathlib `v4.33.1`
+(`runs/lean_build_2026-09-12.log`):
+
+```
+cd lean && lake build
+Build completed successfully (8710 jobs).
+BUILD_EXIT=0
+```
+
+0 `sorry`; `lean/Axioms.lean` prints `#print axioms` for **36** theorems and every one is
+`[propext, Classical.choice, Quot.sound]`.  Formalised: `sq_subset_box_iff` (admissibility, both
+directions, all four sides), Lemma A (eight-corner form), Lemma B (the degree-4 coefficient rows),
+Lemma C (both branches), Lemma E (the maximum is attained, so the `_gmax <= 0` test is an
+equivalence), Lemmas F–H and the chain covering, `clip_bin_no_loss`.  **Not** formalised, in
+either checker: the subdivision, the exhaustiveness/control flow, the weight bookkeeping, the
+certificate parser, the float pre-filters (`notes/lean-zeromargin.md`).
+
+**In `verify.sh` / CI.**  `verify.sh` now builds `verify2` and runs the `zmcheck` sweep at
+`--depth 18 --threads "$(nproc)"`, failing on `NOT VERIFIED` or `PARTIAL SWEEP` exactly as `chk`
+does for `verify`, then runs `tests/rung2/rejection_tests.sh`.  The `zeromargin.py` sweep is a
+commented slow path next to it.  `search/S13_WRITEUP.md` has the timing table and the CI decision.
 
 ## Checks performed on the original 788-point certificate (2026-08-23)
 ## Companion certificate (weaker but human-readable)

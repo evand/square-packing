@@ -356,19 +356,125 @@ VERIFIED: every CLOSED unit square inside C covers weight &gt;= 1, and total wei
 </section>
 
 <section>
-  <div class="sechead"><span class="eyebrow">07 · Reproduce</span><h2>Artifacts</h2></div>
+  <div class="sechead"><span class="eyebrow">07 · A second result</span><h2>s(13) = 4, without case analysis</h2></div>
+  <p>The same machinery, pointed at the neighbouring problem, gives a genuinely new <em>proof</em> of
+  a known theorem. Thirteen unit squares need a container of side exactly 4: that is Bentz's 2010
+  result, and his argument is a weighted point set plus a six-case analysis of where a square is
+  allowed to sit. Here it falls out of a single object, with no cases at all.</p>
+  <div class="card thm">
+    <p class="stmt"><strong>Theorem.</strong> There are <strong>3621 points</strong> in the square
+    <span class="mono">[0,4]²</span>, carrying rational weights of total
+    <span class="mono">12.955972155</span>, such that <em>every</em> closed unit square inside
+    <span class="mono">[0,4]²</span> — at every position and every angle — captures weight at least 1.</p>
+    <p class="big">12.955972 &nbsp;&lt;&nbsp; 13</p>
+    <p class="footnote">Thirteen squares packed below side 4 would rescale to thirteen
+    <em>pairwise disjoint</em> closed unit squares in <span class="mono">[0,4]²</span>, capturing 13
+    between them without double-counting a single point. They cannot: the whole set weighs less than
+    13. And sixteen unit squares tile <span class="mono">[0,4]²</span>, so 4 is attained —
+    <span class="mono">s(13) = 4</span>. Certificate:
+    <span class="mono">certificates/rung2/s13_closed_cover_4.txt</span>.</p>
+  </div>
+
+  <h3>What a &ldquo;closed cover&rdquo; is, and why weight under 13 is enough</h3>
+  <p>A <em>cover</em> here is the same object as the certificate in section 01 — weighted points that
+  no unit square can avoid — but placed in the container of side 4 itself, rather than in a slightly
+  smaller one. The word <em>closed</em> is the whole of the difficulty. A point sitting exactly on the
+  edge of a square counts as captured. That convention is not a technicality chosen for convenience: it
+  is what every published proof in this literature uses, because they all argue about squares of side
+  <span class="mono">1 + ε</span> for every <span class="mono">ε &gt; 0</span>, and the limit of that is
+  precisely &ldquo;closed square, boundary counts&rdquo;.</p>
+  <p>It is also what makes the number 13 reachable. In the opposite convention — open squares, boundary
+  does not count — the sixteen squares of the <span class="mono">4×4</span> tiling can each be shrunk a
+  hair and become genuinely disjoint, so any cover would have to weigh at least 16 and nothing below 16
+  could ever be proved. In closed semantics those sixteen squares <em>share</em> their boundary grid
+  points, that obstruction evaporates, and a cover of weight 12.96 is possible. It is also close to
+  optimal: no cover of <span class="mono">[0,4]²</span> can weigh less than
+  <span class="mono">12.2688</span>, proved exactly in <span class="mono">search/COVER4.md</span>. The
+  gap between that floor and 13 is the entire room this proof has.</p>
+
+  <h3>&ldquo;Margin zero&rdquo; and &ldquo;exhaustive&rdquo;</h3>
+  <p>The verifier of section 05 works by chopping the range of angles into bins and shrinking each
+  square slightly so that one shrunken square stands in for a whole bin. At the container itself that
+  method provably cannot work: at the corner placement the only point captured lies exactly on the
+  square's boundary, so the slack is <em>zero</em>, and tilting by <span class="mono">ε</span> buys back
+  only about <span class="mono">ε²</span> while any bin of width <span class="mono">ε</span> erodes the
+  square by about <span class="mono">ε</span>. Quadratic margin against linear erosion: no resolution is
+  fine enough.</p>
+  <p>So the cover is checked a different way. The three-dimensional space of placements — two
+  coordinates for the centre, one for the angle — is cut adaptively into boxes with rational corners.
+  For each box the checker must <em>prove</em>, exactly, that every placement in it captures weight at
+  least 1; if it cannot, it splits the box and tries again. <strong>Exhaustive</strong> means the
+  process finished: every box ended up certified, none was abandoned at the depth limit, and zero boxes
+  are left uncertified. There is no sampling anywhere, and no floating-point number on the load-bearing
+  path.</p>
+  <p>One structural fact is worth knowing, because it says why this proof looks the way it does. A
+  theorem in <span class="mono">search/RUNG2.md</span> shows that if every box is certified by a
+  <em>fixed</em> set of witness points — the same points captured at every placement in the box — then
+  the cover must weigh at least 16, always. So a 12.96 cover cannot be proved that way, and most of its
+  boxes have to be certified <em>disjunctively</em> instead: &ldquo;at every placement here, either
+  <em>this</em> set of points is inside the square, or <em>that</em> one is.&rdquo; Both checkers below
+  measure that the disjunctive rule carries 65% of their non-empty boxes — the same fraction, from two
+  different disjunctions over two different subdivisions.</p>
+
+  <h3>Two checkers that share nothing</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th></th><th>search/zeromargin.py</th><th>verify2/zmcheck</th></tr></thead>
+    <tbody>
+      <tr><td>language</td><td>Python, exact <span class="mono">Fraction</span></td><td>Rust, exact <span class="mono">i128</span></td></tr>
+      <tr><td>placements</td><td class="num">reduced by a symmetry it first checks exactly</td><td class="num">full range, no symmetry assumed</td></tr>
+      <tr><td>boxes</td><td class="num">16,872 (max depth 13 of 18)</td><td class="num">30,258 (max depth 10 of 18)</td></tr>
+      <tr><td>uncertified</td><td class="num">0</td><td class="num">0</td></tr>
+      <tr><td>disjunctive share</td><td class="num">5,320 / 8,187 = 65%</td><td class="num">9,477 / 14,591 = 65%</td></tr>
+      <tr><td>time</td><td class="num">1 h 42 min, 8 processes</td><td class="num">17 min, 8 threads</td></tr>
+    </tbody>
+  </table></div>
+  <p>The two were written from the mathematical statement, not from each other: different subdivision
+  rules, different sets of primitives, no shared line of code. They also agree pointwise, which is
+  worth more than the box counts — asked for the exact weight captured at four specific placements,
+  including one where a point sits exactly on the square's edge, they return the same nine-digit
+  rationals. Twenty-three rejection tests check that the Rust checker refuses what it should: mutated
+  certificates, two invalid covers from the project's own history, and nine malformed files, on which
+  it must give no verdict at all rather than a wrong one.</p>
+  <p>The soundness of every primitive both checkers rest on is proved in Lean 4 + Mathlib
+  (<span class="mono">lean/Sqpack/ZeroMargin.lean</span>, 36 theorems, 0 sorries, standard axioms only).
+  What is <em>not</em> in Lean, and should be said plainly: the subdivision itself, the argument that
+  the boxes exhaust the space, the bookkeeping and the file parser, in either checker. What stands
+  behind those is that two independent programs reach zero uncertified boxes on the same file.</p>
+  <pre><code>$ verify2/target/release/zmcheck cert certificates/rung2/s13_closed_cover_4.txt --depth 18 --threads 8
+certificate certificates/rung2/s13_closed_cover_4.txt: container [0,4]^2, 3621 points, D=1000 W=1000000000
+total weight = 12955972155/1000000000 = 12.955972155
+done in 1065s: boxes 30258, max depth 10
+  leaves: ADM 5114  DISJ 9477  EMPTY 6938  UNCERTIFIED 0
+VERIFIED: every closed unit square in [0,4]^2 captures weight &gt;= 1; total weight 12955972155/1000000000 = 12.955972155</code></pre>
+  <p class="footnote">Full account, with the lemmas and the obstruction theorem:
+  <a href="https://github.com/evand/square-packing-12/blob/master/search/RUNG2.md">search/RUNG2.md</a>;
+  the independent checker is written up in
+  <a href="https://github.com/evand/square-packing-12/blob/master/search/RUNG2_XCHECK.md">search/RUNG2_XCHECK.md</a>,
+  and there is a short self-contained note at
+  <a href="https://github.com/evand/square-packing-12/blob/master/notes/s13-casefree.md">notes/s13-casefree.md</a>.
+  None of this moves <span class="mono">s(12)</span>: the floor of 12.2688 on covers of
+  <span class="mono">[0,4]²</span> is above 12, so the same object says nothing about twelve squares.</p>
+</section>
+
+<section>
+  <div class="sechead"><span class="eyebrow">08 · Reproduce</span><h2>Artifacts</h2></div>
   <p>Everything is in the repository <a href="https://github.com/evand/square-packing-12">evand/square-packing-12</a>; <span class="mono">./verify.sh</span> rebuilds the verifier and re-checks every certificate, and CI does the same on every push.</p>
   <div class="tablewrap"><table>
     <thead><tr><th>path</th><th>what</th></tr></thead>
     <tbody>
       <tr><td class="num">certificates/s12_lower_3.9686.txt</td><td>the main certificate: 1736 weighted points, s = 15680/3951</td></tr>
       <tr><td class="num">certificates/s12_uniform_7of81_3.888.txt</td><td>the pretty one: 81 points, 7 per square, s = 35/9</td></tr>
-      <tr><td class="num">tests/rejection_tests.sh</td><td>42 inputs the verifier must refuse</td></tr>
+      <tr><td class="num">certificates/rung2/s13_closed_cover_4.txt</td><td>the s(13) = 4 cover: 3621 weighted points of [0,4]², total weight 12.955972</td></tr>
+      <tr><td class="num">tests/rejection_tests.sh</td><td>inputs the verifier must refuse</td></tr>
+      <tr><td class="num">tests/rung2/rejection_tests.sh</td><td>23 inputs the zero-margin checker must refuse</td></tr>
       <tr><td class="num">verify/</td><td>exact integer verifier (Rust)</td></tr>
+      <tr><td class="num">verify2/</td><td>exact zero-margin checker for the container itself (Rust)</td></tr>
       <tr><td class="num">xcheck.py</td><td>independent exact re-check (Python Fractions)</td></tr>
+      <tr><td class="num">search/zeromargin.py</td><td>the other zero-margin checker (Python Fractions)</td></tr>
       <tr><td class="num">lean/Sqpack/Basic.lean</td><td>formalised reduction theorem, 0 sorries</td></tr>
-      <tr><td class="num">cert5.py</td><td>LP certificate search (cell cuts + column generation)</td></tr>
-      <tr><td class="num">pack/</td><td>packing optimiser used for the upper-bound search</td></tr>
+      <tr><td class="num">lean/Sqpack/ZeroMargin.lean</td><td>formalised soundness of the zero-margin primitives, 0 sorries</td></tr>
+      <tr><td class="num">search/lp_search.py</td><td>LP certificate search (cell cuts + column generation)</td></tr>
+      <tr><td class="num">search/pack_src/</td><td>packing optimiser used for the upper-bound search</td></tr>
     </tbody>
   </table></div>
   <p class="footnote">Caveats worth stating plainly: the result rests on a computation, not on a proof a human can check by hand. The literature survey behind

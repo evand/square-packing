@@ -18,6 +18,12 @@ n = 11 by monotonicity; listed as the record for n = 11–12 in Friedman's Dynam
 Table 2).  The upper bound remains the trivial `4`, so the gap narrows from
 `[3.788854, 4]` to `[3.968616, 4]`.
 
+It also contains a second, independent result produced by the same machinery: a **case-free
+machine proof of `s(13) = 4`** — one weighted closed cover of `[0,4]²` of total weight
+`12.955972 < 13`, verified exhaustively at margin zero by two checkers that share no code, where
+Bentz's 2010 proof needs a six-leaf case analysis.  See
+[`s(13) = 4` without case analysis](#s13--4-without-case-analysis) below.
+
 Run everything with:
 
 ```sh
@@ -56,6 +62,7 @@ of lines one unit from each wall plus a small ring at the centre — and the ori
 | `verify/` | Exact `i128` verifier. Checks the covering property over the **entire continuum** of placements — no sampling. Angles are enumerated as rational rotations `θ_k = 2·arctan(k/N)` (so all trigonometry is rational); a unit square at any angle in `[θ_k, θ_{k+1}]` contains the concentric square of side `σ_k = 1/(cos δ + sin δ)` at angle `θ_k`, and for each such angle the minimum over all centres is computed exactly by an arrangement sweep. Verified at `N` = 6000 and 12000; at `N` ≤ 4000 the net's `σ`-shrink exceeds this certificate's slack and the verifier correctly refuses it (see `VERIFICATION.md`). |
 | `tests/` | 42 rejection tests: mutated, malformed and adversarial certificates that the verifier must refuse.  Writing them found two soundness bugs in the verifier (neither affecting the shipped certificates); see `VERIFICATION.md`. |
 | `xcheck.py` | Independent re-implementation in exact Python, re-derived from the definition rather than from the Rust; checks **every** angle bin (2486 bins at `N` = 6000 for the main certificate) and agrees with the Rust verifier bin by bin. |
+| `verify2/` | Exact `i128` **zero-margin** checker `zmcheck`, for covers of the closed container `[0,4]²` where the margin is exactly 0 and the angle-net verifier above provably cannot work (`search/ZEROMARGIN.md` §1).  Adaptive subdivision of pose space `(c_x, c_y, u = tan(θ/2))` with one polynomial class, one exact-maximum routine and one inference rule; no sampling, no symmetry reduction.  This is what checks the `s(13)` cover; `search/RUNG2_XCHECK.md`.  23 rejection tests in `tests/rung2/`. |
 | — | A third check, a dense float scan over 181 angles spanning the full 0–90° range (~500k centres each, not using the symmetry reduction), returns the same minimum. |
 
 The `D4` symmetry of the point set — which is what reduces angles to `[0°, 45°]` — is itself
@@ -170,19 +177,147 @@ and no certified fractional packing of mass `>= 12` either; the extremal object 
 `notes/branch-semantics.md`, `notes/review-2026-09-07.md`; the plan is in `TODO.md`.
 
 **`s(13) = 4` without case analysis (2026-09-12).**  As a milestone for the `t = 4` verifier, the
-same machinery re-proves Bentz's `s(13) = 4` from a single object: a weighted closed cover of
-`[0,4]²` with 3,621 points and total weight `12.955972 < 13` (`certificates/rung2/`), verified
-exhaustively at margin zero by two independent exact checkers — `search/zeromargin.py` (Python
-`Fraction`, `search/RUNG2.md`) and `verify2/zmcheck` (`i128` Rust, written from the lemmas, full
-domain, 17 min; `search/RUNG2_XCHECK.md`) — with 23 rejection tests and the checkers' soundness
-lemmas in Lean (`lean/Sqpack/ZeroMargin.lean`).  Theorem 1 of `RUNG2.md` explains why the proof
-has to be disjunctive: no fixed-witness checker can certify any cover of `[0,4]²` below weight 16.
+same machinery re-proves Bentz's `s(13) = 4` from a single object.  It is a separate result and
+has its own section below.
 
 **What the `t = 4` numbers for `n = 12` are worth (2026-09-12).**  Read as covers over the
 continuum, the sub-12 packing-side duals cost 18–20, because the cliques carrying them are
 non-Helly (grazing tangencies) and no sound positive-volume rule can credit them; without cliques
 the certifiable family sits at exactly 12 on the corner leaf and above 12 on the pure instance
 (`search/HONEST.md`, `notes/review-2026-09-12.md`).  `TODO.md` has the current critical path.
+
+## s(13) = 4 without case analysis
+
+`s(13) = 4` is Bentz's 2010 theorem.  His proof is a weighted unavoidable set plus a six-leaf case
+analysis on where a square may sit (`notes/proof-anatomy.md` §2.3).  He needs the case tree because
+the best *pure* unavoidable set of `[0,4]²` has 14 points (DS7 Theorem 4) against the 12 the
+argument can afford — a deficit of 2 (`notes/proof-anatomy.md` §7.2).  The machinery built here for
+`s(12)` re-proves the result from a **single object**, with no case tree at all.
+
+> **Theorem.**  `certificates/rung2/s13_closed_cover_4.txt` is a set of **3,621 points** of
+> `[0,4]²` with rational coordinates (denominator `D = 1000`) and rational weights (denominator
+> `10⁹`), of total weight
+>
+>     2591194431/200000000  =  12.955972155  <  13
+>
+> such that **every closed unit square contained in `[0,4]²`, at every centre and every angle,
+> captures total weight `≥ 1`** — closed containment, a point on the boundary of the square counts.
+> Consequently no 13 unit squares fit in a square of side `< 4`; and 16 unit squares tile `[0,4]²`,
+> so **`s(13) = 4`.**
+
+**The arithmetic, in full.**  This is the reduction of `certificates/FORMAT.md` ("What the file
+asserts"), formalised in `lean/Sqpack/Basic.lean`.  Suppose 13 unit squares pack into a container
+of side `s' < 4`.  Rescale the picture by `4/s' > 1`: the 13 squares become squares of side
+`4/s' > 1` with pairwise disjoint interiors inside `[0,4]²`, and each one *strictly* contains a
+concentric closed unit square.  Those 13 closed unit squares are therefore pairwise **disjoint**,
+not merely interior-disjoint, so no point of the cover is counted twice.  Each captures weight
+`≥ 1` by the theorem, so `13 ≤ 12.955972155`, which is false.  Hence `s(13) ≥ 4`; the `4 × 4`
+tiling gives `s(13) ≤ 4`; so `s(13) = 4`, and the bound is **sharp** — the 16 tiling squares are
+what make `4` attainable, and they are also what makes the weight `13` (rather than `16`) the
+thing to beat.
+
+The closed semantics is not a convenience, it is the content.  Every published `s(m²−3)` proof
+works with squares of side `1 + ε` for all `ε > 0`, which in the limit is exactly "closed unit
+square, closed containment" (`notes/proof-anatomy.md` §1, §7.1; DS7 §5).  In *open* semantics the
+16 slightly eroded squares of the tiling are disjoint and the cost of any cover of `[0,4]²` is
+`≥ 16`; in closed semantics the tiling squares share their boundary grid points, that obstruction
+does not exist, and `12.96 < 13` is available.
+
+**Why the proof has to be disjunctive.**  `search/RUNG2.md` **Theorem 1**: if every leaf of a
+finite, closed, space-filling subdivision of the admissible pose space of `[0,m]²` (`m ≥ 4`)
+carries a *monotone witness certificate* — a fixed point set of weight `≥ 1`, every member of
+which lies in the square at *every* admissible pose of that leaf — then the total weight is
+`≥ m²`.  The proof is an explicit dual: for each of the `m²` tiles of the grid, a leaf must
+contain the germ of poses approaching the tile pose from one chosen octant, its witness set is
+forced into an explicit set `PIN(i,j,σ)`, and the `m²` such sets are pairwise disjoint
+(`rung2_bound.py dual --m 4` verifies the disjointness exactly over a complete cell system of 289
+quarter-lattice representatives).  So **no cover of `[0,4]²` with `W < 16` — the rung-2 target
+`W < 13` included — can be certified by fixed-witness primitives at any depth**, and a cover of
+weight `12.96` must be certified *disjunctively* almost everywhere: "at every pose of this box,
+either this witness set is inside the square, or that one is".  Both checkers below measure
+exactly that, independently: the disjunctive primitive carries 65 % of the non-empty leaves in
+each of them.
+
+**The two checkers.**  Two exhaustive checkers, written from the statement rather than from each
+other, sharing no code, no subdivision rule and no primitive set:
+
+| | `search/zeromargin.py` | `verify2/zmcheck` |
+|---|---|---|
+| what | the original checker, `search/ZEROMARGIN.md` + `search/RUNG2.md` | an independent re-implementation, `search/RUNG2_XCHECK.md` |
+| arithmetic | Python `fractions.Fraction` (floats only as pre-filters, which can lose a certification but never create one) | Rust exact `i128` on the whole load-bearing path; refuses any box whose scale could overflow |
+| primitives | `EMPTY`, `CORE`, `P1`, `ADM`, `MIX`, `TRI`, `CHAIN` | one polynomial class `P₄`, one exact-max routine (Lemma D/D′) and one inference rule (Lemma I); every primitive is a special case |
+| domain | **reduced**: `c_x ∈ [0,4]`, `c_y ∈ [0,2]`, `u = tan(θ/2) ∈ [0,½]`, legitimate because the checker first verifies **exactly** that the point set is invariant under `x ↦ 4−x` and `y ↦ 4−y`, and refuses to run reduced otherwise | **full**: `c_x, c_y ∈ [0,4]`, `u ∈ [0,1]` (`θ ∈ [0°,90°]`); no symmetry is assumed or checked |
+| census | `boxes 16872, max depth 13` (limit 18) — `ADM 2867  CORE 0  P1 0  MIX 0  CHAIN 5320  TRI 0  EMPTY 3449  UNCERTIFIED 0` | `boxes 30258, max depth 10` (limit 18) — `ADM 5114  DISJ 9477  EMPTY 6938  UNCERTIFIED 0` |
+| disjunctive share | `CHAIN` 5,320 of 8,187 non-empty leaves = 65 % | `DISJ` 9,477 of 14,591 non-empty leaves = 65 % |
+| time | 6,138 s (1 h 42 min) on 8 processes | 1,065 s (17 min) on 8 threads, 2,048 s (34 min) on 4 |
+| determinism | re-run from the committed path reproduces the census to the last box (`5828 s`, same leaf counts) | identical census at every thread count tried |
+
+Neither run reaches its depth limit, so in both cases the subdivision terminated on its own —
+which is what "exhaustive" means here: every admissible pose of the container lies in some leaf
+whose certificate is exact, and **0 boxes are uncertified**.
+
+Two agreements worth more than the box censuses, because they are pointwise and exact:
+`zmcheck pose` computes the captured weight of one rational pose with no boxes, no subdivision and
+no primitives — just the four inequalities per point — and reproduces all four exact `Fraction`
+values `RUNG2.md` publishes, to the last of nine digits, including a pose where a point sits
+exactly on `∂Q` (`RUNG2_XCHECK.md` §0).  And a dense float scan of the cover by
+`search/closed4.py stress`, which uses none of the box machinery, puts the minimum captured weight
+at `1.0313820` — a 3.1 % margin.
+
+**Rejection tests.**  `tests/rung2/rejection_tests.sh`, 23 checks, all passing: the unmodified
+certificate over the hard band `c_x ∈ [0.5,0.6]`, `c_y ∈ [1,2]` (0 uncertified); five mutations
+and their controls — weights cut 1 % (still valid), all weights cut 5 % (a violating pose is
+exhibited, capture `0.997505942 < 1`), one point deleted (still valid), all weights halved
+(violation), the set scaled by `0.995` (violation), one point moved by `0.01` (still valid), the
+whole set moved by `0.01` (violation); the two invalid covers from the development history, at
+their exact violating weights `0.970282351` and `0.9420217`; and nine malformed inputs — negative
+weight, a point outside the container, a truncated list, `s_den ∤ s_num·D`, trailing data, `W = 0`,
+a non-integer header, a missing file, `u ∉ [0,1]` — each of which must exit 2 with `ERROR:` and
+**no verdict word**, because a checker that gives a verdict on garbage is not refusing.  No panics:
+a panic is not a rejection.
+
+**Lean.**  `lean/Sqpack/ZeroMargin.lean` (970 lines) formalises the **soundness of every primitive
+both checkers rest on**: `sq_subset_box_iff` (the support-function characterisation of
+admissibility, both directions and all four sides), Lemma A in eight-corner form, Lemma B (the
+degree-4 coefficient rows), Lemma C (both branches, Bernstein by explicit degree-4 identities),
+Lemma E (the maximum is attained, so the `_gmax ≤ 0` test is an equivalence), Lemmas F–H and the
+chain covering, and `clip_bin_no_loss`.  **0 `sorry`**; `lean/Axioms.lean` prints the axioms of 36
+theorems and every one is `[propext, Classical.choice, Quot.sound]`.  Mathlib `v4.33.1`;
+`notes/lean-zeromargin.md` maps each theorem to the line of Python it covers.
+
+**What is not machine-checked, plainly.**  The Lean covers the primitives, not the programs.  The
+**subdivision and the exhaustiveness argument of each checker — the control flow that claims the
+leaves cover the pose space, the weight bookkeeping, the certificate parser, the float
+pre-filters — are not in Lean**, in either checker.  What stands behind them is that two programs
+with different subdivisions, different primitive sets and different domains (one reduced by a
+symmetry it checks exactly, one not reduced at all) reach `0 uncertified` on the same file, agree
+to nine digits on individual poses, and refuse 23 things they should refuse.  That is a strong
+claim, and it is not the same claim as a formal proof.  `notes/s13-casefree.md` is the
+self-contained write-up, with a "what would make this wrong" paragraph.
+
+**Where the cover came from, and how good it is.**  The LP that built it is in `search/RUNG2.md`
+§10: a cover LP over `[0,4]²` with column generation, plus the explicit row families of
+`search/family_rows.py` — the poses that the LP's own row lattice steps over, and whose omission
+made every earlier candidate cover *invalid*.  `search/COVER4.md` proves
+`COVER^closed(4) ≥ 24537607710/1999999999 = 12.2688038611` exactly, so this cover is within 5.6 %
+of the best possible and **no cover argument at `[0,4]²` can go below `12.2688`** — comfortably
+under 13, and comfortably over 12, which is why the same object says nothing about `n = 12`.
+
+**Reproduce.**
+
+```sh
+./verify.sh          # includes the zmcheck sweep and the 23 rejection tests
+
+# either checker on its own:
+(cd verify2 && cargo build --release)
+verify2/target/release/zmcheck cert certificates/rung2/s13_closed_cover_4.txt \
+        --depth 18 --threads "$(nproc)"                      # ~17 min on 8 threads
+./tests/rung2/rejection_tests.sh                             # ~4 min
+
+# the slow path: the Python checker, 1 h 42 min on 8 processes
+python3 search/zeromargin.py cert certificates/rung2/s13_closed_cover_4.txt \
+        --depth 18 --nproc 8 --disj --chain-from 0
+```
 
 ## Credits and prior art
 
@@ -212,7 +347,11 @@ with exact reduced-cost pricing and the exact verifier as the separation oracle 
   the previous bound, `s(11) ≥ 2 + 4/√5`, which transfers to `n = 12` by monotonicity.
 * W. Bentz, *Optimal packings of 13 and 46 unit squares in a square*, Electron. J. Combin.
   **17** (2010), #R126.  https://www.combinatorics.org/ojs/index.php/eljc/article/view/v17i1r126 —
-  `s(13) = 4`, which makes `n = 12` the boundary case.
+  `s(13) = 4`, which makes `n = 12` the boundary case.  It is also the result **re-proved
+  case-free** here: Bentz's Theorem 9 is a weighted unavoidable set plus a six-leaf case analysis
+  (dissected in `notes/proof-anatomy.md` §2.3), where the certificate of
+  `certificates/rung2/s13_closed_cover_4.txt` is a single object with no case tree.  The theorem
+  is his; only the proof is new.
 * E. Friedman, *Packing unit squares in squares: a survey and new results*, Electron. J.
   Combin. Dynamic Survey **DS7** (last revised 2009).
   https://www.combinatorics.org/ojs/index.php/eljc/article/view/DS7 — Table 2 is the only
