@@ -27,10 +27,13 @@ round-down of `finalize`, and nothing else.  So
 
 The lower bound is an exact certified measure (`M = 1` exactly over all 14,805 arrangement
 vertices, all four wall strips exactly `3`, all four corner regions `1.000000`, all 1,919 polygon
-rows satisfied).  The upper bound is not a measurement at all: the twelve admitted patterns are
-pairwise distinct, every admitted pose has exactly one of them, and `mu(R_pi) <= mu(R_p) <= 1` for
-any `p in pi` by the clique lemma, so the leaf's objective is `<= 12` on **any** pose set.  There is
-no pose-set-richness caveat on either side.  The leaf is closed as a question: **pattern branching
+rows satisfied).  The upper bound is not a measurement at all: the pattern is a function of the
+pose, so every admitted pose has exactly one of the twelve (pairwise distinct) admitted patterns,
+and `mu(R_pi) <= mu(R_p) <= 1` for any `p in pi` — for a packing by the clique lemma **(P2)**, for
+the LP by the coverage row at `p`.  Hence
+`objective = Σ_{pi} mu(R_pi) <= 12` on **any** pose set, as long as the sixteen points of `P0` are
+among the coverage rows (they are not in `cl_E2Bg_rows.txt`; `BZA` adds them, and starts at exactly
+`12.000000`).  There is no pose-set-richness caveat on either side.  The leaf is closed as a question: **pattern branching
 on Bentz's 16 points has zero power at `t = 4`.**
 
 Per-pattern masses of that measure, exactly (`python3 search/bentz.py patterns runs/pgonly_corner_exact.txt`):
@@ -56,15 +59,21 @@ poses of the corner instance `cl_E2Bg_poses.txt` — **12 %** — and **none** o
 carry the optimum.  That is the whole finding: the leaf whose integral version dies instantly by
 `s(4) = 2` is a leaf whose fractional version the LP was already sitting inside.
 
-**C1 — axis-parallel only: `9.000000` exactly, converged, integral.**  The corner `k = 4` leaf at
-`t = 4` with the pose set restricted to `theta = 0 mod 90 deg` **exactly** converges in 71 s to
-`LP = 9.000000`, support 9 poses each of mass exactly `1`, `M = 1` exactly, corner regions
-`[1,1,1,1]`, all 1,872 polygon rows satisfied.  That is the `3 x 3` staggered packing, and it is
-also what the continuum gives (uniform density `1` over centres in `[1/2, 7/2]^2` has coverage
-exactly `1` and mass `9`).  Relaxing to `|theta mod 90 deg| <= 1.0000034 deg` lifts it to at least
-`10.75` (still running, §4).  **So the tilt is essential, and much more essential than the
-`~4` units of visibly-tilted mass in the smeared optimum suggested: `3` of the `12` cannot be
-reached without tilt at all, and `1.25` of the remainder needs more than a degree of it.**  This
+**C1 — axis-parallel only: the value is exactly `9`, and this one is a theorem, not a measurement.**
+The corner `k = 4` leaf at `t = 4` with the pose set restricted to `theta = 0 mod 90 deg` **exactly**
+converges in 71 s to `LP = 9.000000` with `M = 1` exactly, corner regions `[1,1,1,1]`, all 1,872
+polygon rows satisfied, and a support of nine poses **each of mass exactly `1`** — four corner
+squares at `(1/2, 1/2)` and images, four wall squares at `(1562/625, 1/2)` and images, one interior
+square at `(2499999/10^6, 1500001/10^6)`: a genuine integral packing of nine closed unit squares,
+pairwise disjoint as closed sets.  And `9` is also an upper bound in two lines: **the nine points
+`{1,2,3} x {1,2,3}` are a closed cover for axis-parallel squares** — a square `[a,a+1] x [b,b+1]`
+inside `[0,4]^2` has `a, b in [0,3]`, and `[a, a+1]` contains `1`, `2` or `3` according as
+`a in [0,1]`, `[1,2]` or `[2,3]` — so any measure with coverage `<= 1` at those nine points has
+mass `<= 9`.  Witness and certificate meet: **the axis-parallel corner `k = 4` value at `t = 4` is
+exactly `9`.**  Relaxing to `|theta mod 90 deg| <= 1.0000034 deg` lifts it to at least
+`10.75` (still running, §4).  **So the tilt is essential, and it is mostly *infinitesimal* tilt:
+`3` of the `12` cannot be reached by axis-parallel squares at all; at least `1.75` of those `3` is
+already bought by tilts of under one degree; and at most `1.25` needs more than a degree.**  This
 answers the addendum's alternative in the negative: the obstruction is *not* the pure axis-parallel
 smear, and an inequality tested on the axis-parallel case first would be testing a case that is
 already `3` below `12`.
@@ -219,7 +228,7 @@ region equalities + chord — the `PGCORN` configuration of `runs/launch_2026-09
 |---|---|---|---|---|---|---|---|
 | `PGCORN` (2026-09-12, quoted) | corner `k = 4`, no patterns | `12.000000` | `5999999963/500000000 = 11.999999926` | `1` exact | — | `4.000000` | the baseline |
 | **A** | **`(AB)^4` fully pinned** | **`[11.999999926, 12]` exactly** | the `PGCORN` measure, unchanged | `1` exact | **all 12 hold to `1.3e-8`** | `4.000000` | §0; the leaf deletes `1746/14835` poses and `0` of the optimum's |
-| `BZC1B` | corner `k = 4`, `theta = 0 mod 90°` exactly | **`9.000000`** converged | `9` exactly (9 poses, mass `1` each) | `1` exact | — | `1.000000` | integral; 71 s; slots `[0,1,0,1,1,0,0,1]` |
+| `BZC1B` | corner `k = 4`, `theta = 0 mod 90°` exactly | **`9.000000`** converged | `9` exactly (9 poses, mass `1` each) | `1` exact | — | `1.000000` | **exactly `9`**: integral witness + the `{1,2,3}^2` cover (§0); 71 s; slots `[0,1,0,1,1,0,0,1]` |
 | `BZC1A` | corner `k = 4`, `|theta mod 90°| <= 1.0000034°` | `>= 10.750000` | — | `1` exact at s0.0 | — | `2.750000` | running, §7 |
 | `BZC2` | corner `k = 3` (`--corners 1110`) | `>= 11.883193` | — | `1.372` at s0.1 | — | `3.171161` | running, §7 |
 | `BZA` | leaf A re-measured, with the 16 points of `P0` added as coverage rows | `12.000000` at `s0.0` | — | `1.061` at `s0.0` | — | `4.000000` | running, §7; it starts *at* the cap, as §0 predicts |
@@ -340,11 +349,14 @@ Three constraints on it, from the numbers above:
    Enlarging `P0` cannot help in the direction that matters — more points make more patterns, and
    the optimum's clouds just acquire finer patterns; what a leaf would have to forbid is a *cloud*,
    and a pattern region is a union of clouds by construction.
-2. **The axis-parallel case is not where to test.**  `C1` puts the axis-parallel corner `k = 4`
-   leaf at exactly `9`, `3` below `12`, and the `1°` band at `>= 10.75`.  Every one of the missing
-   `3` units is bought by tilt, and `1.25` of them by tilt of more than a degree.  Any new
-   inequality has to be a statement about tilted squares; a purely axis-parallel argument is
-   answering a question that is already answered.
+2. **The axis-parallel case is not where to test, and the tilt that matters is infinitesimal.**
+   `C1` puts the axis-parallel corner `k = 4` leaf at exactly `9`, `3` below `12`, and the `1°`
+   band at `>= 10.75`, so at least `1.75` of the missing `3` is bought by tilts of **under one
+   degree** — the item-3 family again (`HONEST.md` §0 item 3), squares whose edges leave the grid
+   lines by `1e-3`.  A new inequality therefore has to survive an arbitrarily small perturbation of
+   an axis-parallel configuration, which is exactly the regime in which `ALLMEET.md`'s clique rows
+   are non-Helly and `zeromargin.py`'s box primitives lose their margin (§3).  A purely
+   axis-parallel argument is answering a question that is already answered, three units short.
 3. **It has to be a statement about a few squares at once, with positive volume in pose space.**
    That is `ALLMEET.md` §5's conjecture from the other side: the `s(4) = 2` step is a
    4-square statement, the clique family is the repo's 4-square object, and the clique family is
