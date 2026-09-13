@@ -386,7 +386,9 @@ def maxmin_at_theta(M, th, x0=0.0, x1=4.0, y0=0.0, y1=4.0, sub=None, maxit=12):
     PR = M[:, 0:1] * AX + M[:, 1:2] * AY             # <a_k, e> per (member, axis)
     n = len(M)
     idx = np.arange(n) if sub is None else np.asarray(sub)
-    bounds = [(x0, x1), (y0, y1), (None, None)]
+    # the centre must stay ADMISSIBLE at this angle: cx, cy in [w(th)/2, t - w(th)/2]
+    w2 = 0.5 * (abs(c) + abs(s))
+    bounds = [(max(x0, w2), min(x1, 4.0 - w2)), (max(y0, w2), min(y1, 4.0 - w2)), (None, None)]
     for _ in range(maxit):
         rows, rhs = [], []
         for k in idx:
@@ -441,60 +443,190 @@ def best_allmeet_pose(M, nth=181, refine=3, sub0=64, log=None):
 
 
 # ====================================================================== growing a certified box
+def _maxquad_v(a0, a1, a2, u0, u1):
+    """vectorised float max of `a0 + a1 u + a2 u^2` over `[u0, u1]` (`_max_quad`, elementwise)"""
+    v = np.maximum(a0 + a1 * u0 + a2 * u0 * u0, a0 + a1 * u1 + a2 * u1 * u1)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        uv = np.where(a2 < 0, -a1 / (2 * a2), u0 - 1.0)
+    inr = (uv > u0) & (uv < u1)
+    return np.where(inr, a0 + a1 * uv + a2 * uv * uv, v)
+
+
+class FloatBoxTest:
+    """a fast FLOAT surrogate for `box_meets_square` over a whole member list at once, used to
+    steer the search inside `grow_box`.  It evaluates exactly the same eight polynomials at the
+    same four centre-rectangle corners, in doubles and vectorised over the members.
+
+    It decides nothing.  `grow_box` exactly certifies the box it finally returns (shrinking it
+    until the exact certificate holds, should a double have rounded the wrong way), and
+    `report --verify` re-runs the exact certificate on every box in the json."""
+
+    def __init__(self, members, tol=1e-12):
+        self.ax = np.array([float(m[2]) for m in members])
+        self.ay = np.array([float(m[3]) for m in members])
+        self.uk = np.array([float(Fr(m[0], m[1])) for m in members])
+        cs = np.array([[float(v) for v in pose_cs(m[0], m[1])] for m in members])
+        self.C, self.S = cs[:, 0], cs[:, 1]
+        self.tol = tol
+
+    def wlo(self, u0, u1):
+        """the float image of `w_lo_exact`, vectorised over the members"""
+        uk = self.uk
+        ck, sk = (1 - uk ** 2) / (1 + uk ** 2), 2 * uk / (1 + uk ** 2)
+        w = None
+        for u in (u0, u1):
+            c, s = (1 - u * u) / (1 + u * u), 2 * u / (1 + u * u)
+            cD, sD = c * ck + s * sk, s * ck - c * sk
+            v = np.where(u0 >= uk, cD + sD, cD - sD)
+            w = v if w is None else np.minimum(w, v)
+        return np.where((u0 <= uk) & (uk <= u1), 1.0, w)
+
+    def ok(self, box):
+        x0, x1, y0, y1, u0, u1 = (float(v) for v in box)
+        if not (0.0 <= u0 and u1 <= 1.0 and x1 > x0 and y1 > y0 and u1 > u0):
+            return False
+        K = 0.5 + self.wlo(u0, u1) / 2
+        t = -self.tol
+        for cx in (x0, x1):
+            for cy in (y0, y1):
+                dx, dy = self.ax - cx, self.ay - cy
+                if (np.abs(dx * self.C + dy * self.S) - K > t).any():
+                    return False
+                if (np.abs(-dx * self.S + dy * self.C) - K > t).any():
+                    return False
+                for (a0, a1, a2) in ((dx - K, 2 * dy, -dx - K), (-dx - K, -2 * dy, dx - K),
+                                     (dy - K, -2 * dx, -dy - K), (-dy - K, 2 * dx, dy - K)):
+                    if (_maxquad_v(a0, a1, a2, u0, u1) > t).any():
+                        return False
+        return True
+
+
 def frac_near(x, den):
     return Fr(int(round(x * den)), den)
 
 
-def grow_box(centre, members, den=10 ** 9, lo=0.0, hi=0.5, steps=42):
-    """the largest box of the shape `centre +- s * (1, 1, 1)` (in `(cx, cy, u)`) that passes
-    `certify_box`, by bisection on `s`, followed by one greedy per-coordinate expansion round.
+def grow_box(centre, members, den=10 ** 9, seed=1e-7, rounds=4, cap=(4, 4, 1)):
+    """a maximal-ish certified box around `centre = (cx, cy, u)`: seed a tiny box that passes
+    `certify_box`, then push each of its SIX faces outwards as far as the exact certificate
+    allows (double until it fails, then bisect).
 
-    Float search, EXACT verdict: every candidate is tested by the exact `certify_box`, and the box
-    returned is the one that passed."""
+    Six independent faces rather than one symmetric half-side, because the best all-meeting pose
+    of a row is often pressed against the admissibility wall (`cx = w(th)/2`), where no symmetric
+    box is admissible but a one-sided one is.  The seed is likewise tried in all four `(+-, +-)`
+    centre directions.
+
+    Float search, EXACT verdict: every candidate box is tested by `certify_box`, and the box
+    returned is the last one that passed."""
     cx, cy, cu = (frac_near(v, den) for v in centre)
+    e = frac_near(seed, den)
+    if e <= 0:
+        e = Fr(1, den)
 
-    def mk(sx, sy, su):
-        return (cx - sx, cx + sx, cy - sy, cy + sy, cu - su, cu + su)
+    fast = FloatBoxTest(members)
 
-    def ok(b):
+    def exact(b):
         return certify_box(b, members)[0]
 
-    a, b = Fr(0), frac_near(hi, den)
-    if not ok(mk(b, b, b)):
-        for _ in range(steps):
-            m = frac_near(float(a + b) / 2, den)
-            if m <= a or m >= b:
-                break
-            if ok(mk(m, m, m)):
-                a = m
-            else:
-                b = m
+    def ok(b):
+        # the search test: the exact structural checks (cheap) plus the float surrogate
+        if not (b[1] > b[0] and b[3] > b[2] and b[5] > b[4] and 0 <= b[4] and b[5] <= 1):
+            return False
+        return box_admissible(b) and box_pairwise_meets(b) and fast.ok(b)
+
+    # (a) a BALANCED seed: the largest `centre +- s (1, 1, 1)` that certifies, by bisection.  It
+    # has to come first -- a greedy face sweep from a degenerate seed spends all of a row's meet
+    # slack on whichever face it happens to push first, and returns a sliver.
+    def sym(v):
+        u0, u1 = cu - v, cu + v
+        return (cx - v, cx + v, cy - v, cy + v, max(u0, Fr(0)), min(u1, Fr(1)))
+
+    box = None
+    lo, hi = Fr(0), frac_near(0.5, den)
+    if ok(sym(hi)):
+        lo = hi
     else:
-        a = b
-    if a == 0:
-        return None
-    s = [a, a, a]
-    for it in range(3):                      # greedy per-coordinate expansion
-        for k in range(3):
-            g, gb = s[k], s[k] * 4 + frac_near(1e-6, den)
-            t = list(s)
-            t[k] = gb
-            if ok(mk(*t)):
-                s[k] = gb
-                continue
-            loq, hiq = g, gb
-            for _ in range(24):
-                m = frac_near(float(loq + hiq) / 2, den)
-                if m <= loq or m >= hiq:
+        for _ in range(40):
+            m = frac_near(float(lo + hi) / 2, den)
+            if m <= lo or m >= hi:
+                break
+            if ok(sym(m)):
+                lo = m
+            else:
+                hi = m
+    if lo > 0:
+        box = list(sym(lo))
+    else:
+        # (b) the centre is on an admissibility wall (or the row is that tight): a one-sided seed
+        for sx in (1, -1):
+            for sy in (1, -1):
+                x0, x1 = (cx, cx + e) if sx > 0 else (cx - e, cx)
+                y0, y1 = (cy, cy + e) if sy > 0 else (cy - e, cy)
+                u0, u1 = (cu, cu + e) if cu + e <= 1 else (cu - e, cu)
+                u0, u1 = max(u0, Fr(0)), min(u1, Fr(1))
+                if u1 <= u0:
+                    continue
+                if ok((x0, x1, y0, y1, u0, u1)):
+                    box = [x0, x1, y0, y1, u0, u1]
                     break
-                t = list(s)
-                t[k] = m
-                if ok(mk(*t)):
+            if box:
+                break
+    if box is None:
+        return None
+    # face k of coordinate c: 0 -> lower (decrease), 1 -> upper (increase)
+    faces = [(0, 0, Fr(0)), (1, 0, Fr(cap[0])), (2, 0, Fr(0)), (3, 0, Fr(cap[1])),
+             (4, 0, Fr(0)), (5, 0, Fr(cap[2]))]
+    for _ in range(rounds):
+        moved = False
+        for (k, _z, lim) in faces:
+            sgn = -1 if k % 2 == 0 else 1
+            step = frac_near(1e-4, den)
+            base = box[k]
+            grown = base
+            for _ in range(28):                      # double outwards while the certificate holds
+                cand = list(box)
+                nxt = grown + sgn * step
+                if (sgn < 0 and nxt < lim) or (sgn > 0 and nxt > lim):
+                    nxt = lim
+                if nxt == grown:
+                    break
+                cand[k] = nxt
+                if ok(tuple(cand)):
+                    grown = nxt
+                    if nxt == lim:
+                        break
+                    step *= 2
+                else:
+                    break
+            hiq = grown + sgn * step                 # bisect the last failed step
+            if (sgn < 0 and hiq < lim) or (sgn > 0 and hiq > lim):
+                hiq = lim
+            loq = grown
+            for _ in range(26):
+                m = frac_near(float(loq + hiq) / 2, den)
+                if m == loq or m == hiq:
+                    break
+                cand = list(box)
+                cand[k] = m
+                if ok(tuple(cand)):
                     loq = m
                 else:
                     hiq = m
-            s[k] = loq
-    return mk(*s)
+            if loq != base:
+                box[k] = loq
+                moved = True
+        if not moved:
+            break
+    # the surrogate steered the search; the EXACT certificate decides.  If a double rounded the
+    # wrong way anywhere, shrink the box towards its centre until the exact test passes.
+    box = tuple(box)
+    mid = [(box[0] + box[1]) / 2, (box[2] + box[3]) / 2, (box[4] + box[5]) / 2]
+    for _ in range(60):
+        if exact(box):
+            return box
+        box = tuple(mid[k // 2] + (box[k] - mid[k // 2]) * Fr(4, 5) for k in range(6))
+        if box[1] <= box[0] or box[3] <= box[2] or box[5] <= box[4]:
+            return None
+    return None
 
 
 def box_vol(box):
@@ -571,7 +703,14 @@ def grazing_anatomy(M, tol=1e-6, cap=600, rng=None):
                 max_degree=int(deg[o[0]]) if m else 0,
                 top_degrees=[int(deg[i]) for i in o[:6]],
                 deg_mean=float(deg.mean()) if m else 0.0,
-                n_isolated=int((deg == 0).sum()))
+                n_isolated=int((deg == 0).sum()),
+                # how tight the row really is: the pairwise margin never reaches 0 on these rows,
+                # so a single `graze` tolerance says nothing -- quote the distribution instead
+                pair_quantiles=[float(v) for v in
+                                np.quantile(G[np.triu_indices(m, 1)], [0, .01, .25, .5])]
+                if m > 1 else [],
+                n_below=[int((G[np.triu_indices(m, 1)] < t).sum())
+                         for t in (1e-6, 1e-4, 1e-3, 1e-2)] if m > 1 else [])
 
 
 # ====================================================================== cover with the box rule
@@ -581,11 +720,33 @@ class BoxCover(hc.Cover):
     certified box `B_K`.  `K u B_K` is pairwise meeting by construction (`certify_box`), so
     crediting this way IS a valid weighting -- unlike `honestcost`'s `meet`."""
 
-    def attach_boxes(self, boxes, memtol=1e-9):
-        """`boxes[ci]` = the float box `(x0, x1, y0, y1, u0, u1)` of clique row `ci`, or None"""
-        self.boxes = boxes
-        self.memtol = memtol
+    def attach_boxes(self, boxes, rowsel=None, members=True):
+        """`boxes[j]` = the float box of the `j`-th row of THIS cover object (or None).  `rowsel`,
+        when given, is the index in the parent cover of each of this object's rows -- it is what
+        keeps the box list in step with `honestcost.one_row_cover`'s slicing of `cz`/`cmem`.
+        `members` switches on the `S in K` half of the rule, which needs a dictionary lookup per
+        pose and is only worth paying for on the pose set `P` itself (elsewhere an exact
+        coincidence with a member pose is a measure-zero event that never happens)."""
+        self.boxes = list(boxes)
+        self.rowsel = list(range(len(self.boxes))) if rowsel is None else list(rowsel)
+        self.members = members
+        self.memz = {}
+        if members:
+            for j in range(self.n_cliques):
+                for i in self.cmem[j]:
+                    k = tuple(self.F[i])
+                    self.memz[k] = self.memz.get(k, 0.0) + float(self.cz[j])
         return self
+
+    def subrow(self, j):
+        """the one-row restriction of this cover, boxes included (`one_row_cover` alone would
+        leave `self.boxes[0]` pointing at the wrong row)"""
+        sub = hc.one_row_cover(self, j)
+        sub.boxes = self.boxes[j:j + 1]
+        sub.rowsel = self.rowsel[j:j + 1]
+        sub.members = False
+        sub.memz = {}
+        return sub
 
     def clique_capture(self, poses, rule='boxK'):
         if rule != 'boxK':
@@ -595,23 +756,39 @@ class BoxCover(hc.Cover):
         if not len(P) or not self.n_cliques:
             return out
         u = np.tan(0.5 * np.mod(P[:, 2], math.pi / 2))
-        for ci in range(self.n_cliques):
-            b = self.boxes[ci]
-            if b is not None:
-                inb = ((P[:, 0] >= b[0]) & (P[:, 0] <= b[1]) & (P[:, 1] >= b[2])
-                       & (P[:, 1] <= b[3]) & (u >= b[4]) & (u <= b[5]))
-                out[inb] += self.cz[ci]
-            # the member poses themselves (a measure-zero set, but the self-test needs them)
-            mem = self.cmem[ci]
-            F = self.F[mem]
-            hit = np.zeros(len(P), bool)
-            for k in range(len(mem)):
-                hit |= ((np.abs(P[:, 0] - F[k, 0]) <= self.memtol)
-                        & (np.abs(P[:, 1] - F[k, 1]) <= self.memtol)
-                        & (np.abs(np.cos(P[:, 2]) - F[k, 2]) <= self.memtol)
-                        & (np.abs(np.sin(P[:, 2]) - F[k, 3]) <= self.memtol))
-            out[hit] += self.cz[ci]
+        for j in range(self.n_cliques):
+            b = self.boxes[j]
+            if b is None:
+                continue
+            inb = ((P[:, 0] >= b[0]) & (P[:, 0] <= b[1]) & (P[:, 1] >= b[2])
+                   & (P[:, 1] <= b[3]) & (u >= b[4]) & (u <= b[5]))
+            out[inb] += self.cz[j]
+        if self.members and self.memz:
+            for i in range(len(P)):
+                k = (P[i, 0], P[i, 1], math.cos(P[i, 2]), math.sin(P[i, 2]))
+                z = self.memz.get(k)
+                if z is not None:
+                    out[i] += z
         return out
+
+
+def anatomy_box(cov, pose):
+    """`honestcost.anatomy` for a `BoxCover` (it needs `subrow`, not `one_row_cover`)"""
+    P = np.array(pose, dtype=float).reshape(1, 3)
+    tot, pt, cq, pg = cov.capture(P, 'boxK', 1, parts=True)
+    rows = [(int(j), float(cov.cz[j])) for j in range(cov.n_cliques)
+            if cov.subrow(j).clique_capture(P, 'boxK')[0] > 0]
+    inp = []
+    for i in range(cov.n_atoms):
+        dx, dy = cov.ax[i] - P[0, 0], cov.ay[i] - P[0, 1]
+        co, si = math.cos(P[0, 2]), math.sin(P[0, 2])
+        if max(abs(dx * co + dy * si), abs(-dx * si + dy * co)) <= 0.5 + 1e-8:
+            inp.append((float(cov.ax[i]), float(cov.ay[i]), float(cov.aw[i])))
+    inp.sort(key=lambda r: -r[2])
+    return dict(pose=[float(v) for v in P[0]], theta_deg=math.degrees(P[0, 2]) % 90.0,
+                capture=float(tot[0]), points=float(pt[0]), cliques=float(cq[0]),
+                pgons=float(pg[0]), n_points=len(inp), top_points=inp[:8],
+                n_cliques=len(rows), clique_rows=rows[:10])
 
 
 # ====================================================================== commands
@@ -666,7 +843,7 @@ def cmd_boxes(a):
                 massbox += z
         if box is None:
             rec['vol'] = 0.0
-        if rank < a.nanat or box is not None:
+        if rank < a.nanat:
             rec['core_deficit'] = core_deficit(M, sub=None if len(M) <= a.sub0
                                                else np.arange(min(len(M), a.sub0)))
             rec['graze'] = grazing_anatomy(M, tol=a.gtol, cap=a.cap)
@@ -694,10 +871,12 @@ def cmd_honest(a):
     for r in B['rows']:
         if r.get('box'):
             boxes[r['row']] = [float(v) for v in r['box'][1]]
-    cov.attach_boxes(boxes)
+    cov.attach_boxes(boxes, members=True)
     log(f'# allmeet honest {a.TAG}  (sound rule: credit z_K iff S in K u B_K)')
     log(cov.describe())
-    log(f'   {sum(b is not None for b in boxes)} rows carry a certified positive-volume box')
+    log(f'   {sum(b is not None for b in boxes)} rows carry a certified positive-volume box, '
+        f'carrying {sum(float(cov.cz[j]) for j in range(cov.n_cliques) if boxes[j]):.6f} of '
+        f'{cov.clique_total:.6f} clique dual')
 
     def honest_of(v):
         return cov.theta / v if v > 0 else float('inf')
@@ -707,8 +886,11 @@ def cmd_honest(a):
     PF = d['pf']
     PP = np.column_stack([PF[:, 0], PF[:, 1], np.arctan2(PF[:, 3], PF[:, 2])])
     VP = cov.capture(PP, 'boxK', a.threads)
-    out['poses_of_P'] = dict(n=len(PP), min=float(VP.min()), honest=honest_of(float(VP.min())))
-    log(f'   SELFTEST: min capture over the {len(PP)} poses of P = {VP.min():.9f}')
+    out['poses_of_P'] = dict(n=len(PP), min=float(VP.min()), honest=honest_of(float(VP.min())),
+                             under_one=int((VP < 1 - 1e-9).sum()))
+    log(f'   SELFTEST: min capture over the {len(PP)} poses of P = {VP.min():.9f} '
+        f'({int((VP < 1 - 1e-9).sum())} of {len(PP)} under 1 - 1e-9)')
+    cov.members = False        # off the pose set an exact member coincidence never happens
     allP, allV = [PP], [VP]
     L = hc.lattice(a.pitch, a.dth)
     VL = cov.capture(L, 'boxK', a.threads)
@@ -744,8 +926,43 @@ def cmd_honest(a):
     mn = float(DV[i])
     out['min_capture'] = mn
     out['honest'] = honest_of(mn)
-    out['minimiser'] = hc.anatomy(cov, DP[i], 'boxK')
+    out['minimiser'] = anatomy_box(cov, DP[i])
     log(f'   MIN capture {mn:.9f} at {DP[i].tolist()} -> HONEST = {honest_of(mn):.6f}')
+
+    # ---- how much of this is the PLACEMENT of the boxes?  Re-grow every box that can be re-grown
+    # AROUND the minimiser (the placement most favourable to the cover at that one pose) and
+    # re-descend.  Any single pose can be credited by every row whose A(K) it lies in, so one
+    # round of this is an optimistic bound on what re-placing the boxes can buy; the new minimum
+    # moves elsewhere, which is the point.
+    out['refit'] = []
+    PE = read_exact_poses(a.TAG, a.base) if a.refit else None
+    for rnd in range(a.refit):
+        S = DP[int(np.argmin(DV))]
+        mg = margins(np.array([S]), cov.F)[0]
+        nre = 0
+        for j in range(cov.n_cliques):
+            mem = cov.cmem[j]
+            if mg[mem].min() <= 1e-9:
+                continue
+            om = np.argsort(mg[mem])
+            b = grow_box((S[0], S[1], math.tan(0.5 * (S[2] % (math.pi / 2)))),
+                         [PE[int(mem[k])] for k in om], den=10 ** 9)
+            if b is not None:
+                cov.boxes[j] = [float(v) for v in b]
+                nre += 1
+        log(f'   refit round {rnd}: {nre} boxes re-grown around {S.tolist()}')
+        RP, RV = hc.pattern_search(cov, np.concatenate([DP[np.argsort(DV)[:a.ndescend]],
+                                                        L[np.argsort(VL)[:a.nseed]]]),
+                                   'boxK', a.threads, log=log)
+        RP2, RV2 = hc.eps_refine(cov, RP[np.argsort(RV)[:a.nfine]], 'boxK', a.threads, log=log)
+        DP = np.concatenate([RP, RP2])
+        DV = np.concatenate([RV, RV2])
+        k = int(np.argmin(DV))
+        out['refit'].append(dict(round=rnd, n_refit=nre, min=float(DV[k]),
+                                 honest=honest_of(float(DV[k])),
+                                 pose=[float(v) for v in DP[k]]))
+        log(f'   refit round {rnd}: MIN capture {DV[k]:.9f} -> HONEST '
+            f'{honest_of(float(DV[k])):.6f}')
     p = os.path.join(RUNS, f'am_{a.TAG}_honest.json')
     json.dump(out, open(p, 'w'), indent=1)
     log(f'   wrote {p}')
@@ -868,6 +1085,26 @@ def cmd_helly(a):
     log(f'   wrote {pth}')
 
 
+def pose_volume_sample(n, t=T, rng=None):
+    """`n` poses drawn uniformly from the admissible set `{(cx, cy, u) : the closed square lies in
+    [0,t]^2, u in [0,1]}`, together with that set's exact-enough volume
+    `int_0^1 (t - w(u))^2 du` (trapezoid, float) -- the denominator that turns a credited fraction
+    into a credited volume."""
+    rng = rng or np.random.default_rng(20260912)
+    tf = float(t)
+    u = rng.uniform(0.0, 1.0, n)
+    th = 2 * np.arctan(u)
+    w = np.cos(th) + np.sin(th)
+    lo, hi = w / 2, tf - w / 2
+    P = np.column_stack([rng.uniform(0, 1, n) * (hi - lo) + lo,
+                         rng.uniform(0, 1, n) * (hi - lo) + lo, th])
+    ug = np.linspace(0.0, 1.0, 200001)
+    tg = 2 * np.arctan(ug)
+    vol = float(np.trapezoid((tf - np.cos(tg) - np.sin(tg)) ** 2, ug))
+    # the sample is uniform on u but NOT on (x, y) area, so weight each draw by its slice area
+    return P, vol, (hi - lo) ** 2
+
+
 def cmd_report(a):
     B = json.load(open(os.path.join(RUNS, f'am_{a.TAG}_boxes.json')))
     hp = os.path.join(RUNS, f'am_{a.TAG}_honest.json')
@@ -882,13 +1119,59 @@ def cmd_report(a):
           f"= {100 * sum(r['z'] for r in wb) / zt:.2f} % of the clique dual")
     print(f"   rows with vol(B_K) = 0 : {len(R) - len(wb)}, dual {zs - sum(r['z'] for r in wb):.6f}"
           f" = {100 * (zs - sum(r['z'] for r in wb)) / zt:.2f} %")
+    if a.measure:
+        d = np.load(os.path.join(RUNS, f'hc_{a.TAG}_dual.npz'), allow_pickle=True)
+        cov = hc.Cover(d, 1e-9, log=lambda m: None)
+        S, vol, wgt = pose_volume_sample(a.measure)
+        print(f"   admissible pose volume (cx, cy, u) = {vol:.6f}; estimating vol(A(K)) from "
+              f"{a.measure} uniform poses")
+        for r in R[:a.top]:
+            sub = hc.one_row_cover(cov, r['row'])
+            cred = sub.clique_capture(S, 'meet') > 0
+            vA = float((cred * wgt).sum() / wgt.sum() * vol)
+            r['volA'] = vA
+        print()
+    if a.graze:
+        d3 = np.load(os.path.join(RUNS, f"hc_{B['tag']}_dual.npz"), allow_pickle=True)
+        cov3 = hc.Cover(d3, 1e-9, log=lambda m: None)
+        print('   pairwise meet margins inside the top rows (there is no grazing at 1e-6: these '
+              'rows are ROBUSTLY pairwise overlapping and non-Helly)')
+        print('| rank | row | \\|K\\| | min pair margin | 1 % | median | pairs < 1e-6 / 1e-4 / '
+              '1e-3 / 1e-2 |')
+        print('|---|---|---|---|---|---|---|')
+        for r in R[:a.top]:
+            g = grazing_anatomy(cov3.F[cov3.cmem[r['row']]], cap=a.cap)
+            r['graze'] = g
+            q = g['pair_quantiles']
+            print(f"| {r['rank']} | {r['row']} | {r['size']} | {q[0]:+.6f} | {q[1]:+.6f} | "
+                  f"{q[3]:+.4f} | " + ' / '.join(str(v) for v in g['n_below']) + f" of "
+                  f"{g['n_pairs']} |")
+        print()
+    if a.verify:
+        PE = read_exact_poses(B['tag'], a.base)
+        d2 = np.load(os.path.join(RUNS, f"hc_{B['tag']}_dual.npz"), allow_pickle=True)
+        cov2 = hc.Cover(d2, 1e-9, log=lambda m: None)
+        nv, nbad, vmax = 0, 0, 0.0
+        for r in R:
+            if not r.get('box'):
+                continue
+            box = tuple(Fr(v) for v in r['box'][0])
+            ok, why = certify_box(box, [PE[int(k)] for k in cov2.cmem[r['row']]])
+            nv += 1
+            vmax = max(vmax, box_vol(box))
+            if not ok:
+                nbad += 1
+                print(f"   !! row {r['row']}: {why}")
+        print(f"   EXACT RE-VERIFICATION: {nv} boxes re-certified from the json "
+              f"({nbad} failures); largest vol(B_K) = {vmax:.6f}")
     mm = np.array([r['maxmin_margin'] for r in R])
     print(f"   max-min meet margin over A(K): max {mm.max():+.3e}, median {np.median(mm):+.3e}, "
           f"min {mm.min():+.3e}; {int((mm > 1e-12).sum())} rows with a strictly positive one")
     print()
     print('| rank | row | z_K | \\|K\\| | core deficit | grazing pairs | max graze degree | '
-          'vol(B_K) | min margin on B_K |')
-    print('|---|---|---|---|---|---|---|---|---|')
+          'max-min margin | vol(B_K) | min margin on B_K |'
+          + (' vol(A(K)) |' if a.measure else ''))
+    print('|---|---|---|---|---|---|---|---|---|---|' + ('---|' if a.measure else ''))
     for r in R[:a.top]:
         g = r.get('graze', {})
         print(f"| {r['rank']} | {r['row']} | {r['z']:.6f} | {r['size']} | "
@@ -896,8 +1179,10 @@ def cmd_report(a):
               f"{g.get('n_grazing', 0)} / {g.get('n_pairs', 0)} "
               f"({100 * g.get('graze_frac', 0):.1f} %) | "
               f"{g.get('max_degree', 0)} of {g.get('n_sampled', 0)} | "
+              f"{r['maxmin_margin']:+.4f} | "
               f"{r['vol']:.3e} | "
-              f"{r.get('box_min_margin', float('nan')):+.3e} |")
+              f"{r.get('box_min_margin', float('nan')):+.3e} |"
+              + (f" {r['volA']:.3e} |" if a.measure else ''))
     if H:
         print()
         print(f"### honest cost under `credit z_K iff S in K u B_K` (sound)")
@@ -909,7 +1194,7 @@ def cmd_report(a):
         m = H['minimiser']
         print(f"   at ({m['pose'][0]:.6f}, {m['pose'][1]:.6f}, {m['theta_deg']:.4f} deg): "
               f"points {m['points']:.6f} ({m['n_points']}) + cliques {m['cliques']:.6f} "
-              f"({m['n_cliques']}) + polygons {m['pgons']:.6f} ({m['n_pgons']})")
+              f"({m['n_cliques']}) + polygons {m['pgons']:.6f}")
 
 
 def main():
@@ -941,10 +1226,23 @@ def main():
     c.add_argument('--nseed', type=int, default=400)
     c.add_argument('--ndescend', type=int, default=400)
     c.add_argument('--nfine', type=int, default=100)
+    c.add_argument('--base', default=RUNS)
+    c.add_argument('--refit', type=int, default=0,
+                   help='rounds of re-growing every box around the current minimiser')
 
     c = sub.add_parser('report')
     c.add_argument('TAG')
     c.add_argument('--top', type=int, default=10)
+    c.add_argument('--measure', type=int, default=0,
+                   help='estimate vol(A(K)) for the listed rows from this many uniform poses')
+    c.add_argument('--base', default=RUNS)
+    c.add_argument('--verify', action='store_true', default=True,
+                   help='re-run the exact certificate on every box in the json (default on)')
+    c.add_argument('--graze', action='store_true', default=True,
+                   help='recompute the pairwise-margin distribution of the top rows (default on)')
+    c.add_argument('--no-graze', dest='graze', action='store_false')
+    c.add_argument('--cap', type=int, default=400)
+    c.add_argument('--no-verify', dest='verify', action='store_false')
 
     c = sub.add_parser('helly')
     c.add_argument('--d', type=float, default=0.02)
