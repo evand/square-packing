@@ -134,11 +134,18 @@ costs at least `12.2688` (exact, `search/COVER4.md`), and the rung-2 cover below
 the weight on the grid lines `x, y ∈ {1,2,3}`) turned out to be **invalid** at poses their row
 lattice stepped over (captures of `0.942` and `0.970` exhibited, `search/RUNG2.md` §10).
 
-Closing the remaining gap to 4 therefore needs case analysis layered on top of a certificate,
-in the style of Bentz's `s(13)` proof (`notes/proof-anatomy.md` dissects those proofs).  What
-the LP contributes to that is the size of the excess budget: between `0.008` and about `0.5`,
-against the 3 units that unit-weight point sets leave for `n = 12`.  `TODO.md` separates what
-is established from what is only suggested.
+Closing the remaining gap to 4 therefore needs something beyond a certificate.  Case analysis of
+the kind Bentz used for `s(13)` (`notes/proof-anatomy.md` dissects those proofs) was the natural
+candidate, and it has now been measured at the container: branching on corner-box counts, on
+wall-slot counts, and on incidence patterns with Bentz's own 16 points all leave a leaf whose
+fractional value is `>= 12` (`search/BENTZ.md`, `search/T4LEAF.md`; summary in `TODO.md`).  What
+those measurements do show is *where* the missing unit lives: axis-parallel squares are trivially
+`<= 9` at side 4 (the nine points `{1,2,3}²`), so all three units the LP finds beyond that are
+rotation — at least `2.6` of them from tilts under one degree — and on the extremal measure's own
+support the largest set of pairwise-disjoint squares has 11 members against a fractional mass of 12:
+an integrality gap of exactly one square, carried by eight squares near the wall and interior tiles.
+That rank-8 statement is what a proof has to establish, and no single-square inequality expresses
+it.  `TODO.md` separates what is established from what is only suggested.
 
 Separately, an extensive search for a packing of 12 unit squares into a square of side < 4
 (L-BFGS + basin hopping, validated by reproducing `s(5)`, `s(10)`, `s(11)` to 5 decimals) found
@@ -186,7 +193,18 @@ has its own section below.
 continuum, the sub-12 packing-side duals cost 18–20, because the cliques carrying them are
 non-Helly (grazing tangencies) and no sound positive-volume rule can credit them; without cliques
 the certifiable family sits at exactly 12 on the corner leaf and above 12 on the pure instance
-(`search/HONEST.md`, `notes/review-2026-09-12.md`).  `TODO.md` has the current critical path.
+(`search/HONEST.md`, `notes/review-2026-09-12.md`).
+
+**The Bentz template, measured (2026-09-13).**  Branching on which of Bentz's 16 points each square
+contains — his actual case variable — has no power at `t = 4`: the fully pinned leaf (four corner
+squares holding `{A_i, B_i}`, the other eight each holding exactly one of the `C`/`D` points) is
+bracketed `11.999999926 <= value <= 12` exactly, because the certified corner-leaf measure already
+lies inside it; the tree has 10,945 leaves up to `D4` and this is the one Bentz's counting forces.
+The corner `k = 3` leaf is `>= 12.027` (certified).  Restricted to axis-parallel poses the corner
+leaf is exactly `9`; within one degree of axis-parallel it is `>= 11.599`.  On the extremal
+measure's 162-pose support the largest pairwise-disjoint subfamily has 11 members (`α = 11`, gap
+exactly 1): the eight non-corner singleton patterns admit only seven disjoint squares.
+`search/BENTZ.md`, `notes/review-2026-09-13.md`.  `TODO.md` has the current critical path.
 
 ## s(13) = 4 without case analysis
 

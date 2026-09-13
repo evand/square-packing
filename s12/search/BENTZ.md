@@ -441,6 +441,21 @@ Finished and recorded above: `BZC1B` (`RESULT … LP9.000000/M1.000000/conv1/exa
 the `P0` cover sweep (`runs/bentz16_cover.log`, 15 s, `NOT VERIFIED`, §3), and the exact re-check of
 the `PGCORN` measure (`runs/bentz_A_check.log`, 0.3 s).
 
+### 7.2 Final values (read 2026-09-13 after the runs finished; logs copied to `runs/bentz-2026-09-13/`)
+
+All four runs ended on their 4 h clocks.  The certified numbers are the `FINAL EXACT` lines; the LP
+iterates above them are quoted only as trajectory.
+
+| tag | LP at stop (`M`) | **certified** (rounded-down exact measure) | regions | reading |
+|---|---|---|---|---|
+| `BZC2` corner `k = 3` (`1,1,1,0`) | `12.038258` (`M = 1.0009`), `rc+ 0.06`, not converged | **`3006818329/250000000 = 12.027273316`**, `M = 249999981/250000000 < 1` OK, 1,919 polygon rows OK, 1,049 poses | corner masses `0.9991, 0.9991, 0.9991, 0` — off target by `9.1e-4`, the boundary-pose tie-break (`regions FAIL` in the strict sense), as for `PGCORN` | **the `k = 3` leaf does not close**: `>= 12.027` up to a `1e-3` tie-break, and still rising.  The corner branch at `t = 4` therefore has **two** non-closing leaves (`k = 4` at exactly `12.000`, `k = 3` at `>= 12.03`), against the pure `12.17`. |
+| `BZC1A` `k = 4`, `\|θ mod 90°\| <= 1.0000034°` | `11.937338` (`M = 1.044`) | **`11599390413/10^9 = 11.599390413`**, `M = 1` exactly, regions **OK** (assignment found), 380 poses | `1, 1, 1, 1` | **tilt below one degree is worth at least `2.60` of the missing `3`** (`11.599 − 9`), and the trajectory says `~2.9`. |
+| `BZA` leaf A (+ 16 point rows) | `12.000000` at every one of its iterations, interior `4.000000` throughout (`M` `1.27 → 1.009`) | `11.922849697`, `M = 1`, regions off by `8.6e-3` | — | confirmation only; §0's bracket `[11.999999926, 12]` stands on the `PGCORN` measure and the two-line argument, not on this run. |
+| `BZAC` leaf A + 12 count equalities | `12.000000`, `M = 1.27`; `count_dual = [1, 1, 1, 1, …]` | `9.969347851` (a poor rounding of a far-from-converged iterate) | — | the twelve equalities are feasible at `12.000000` and cost the LP nothing; the multipliers a branch certificate would carry are all `1`. |
+
+Net: **C2 is decided in the negative** (the corner-count tree is dead alongside the pattern tree),
+and C1's "infinitesimal tilt" reading is now certified at `>= 2.6` of `3`.
+
 ---
 
 ## 8. What is exact and what is float

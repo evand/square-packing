@@ -361,12 +361,22 @@ VERIFIED: every CLOSED unit square inside C covers weight &gt;= 1, and total wei
     <li>whatever part of the bracket is actually reachable is computation, not mathematics: each
       certificate is a large cutting-plane computation that must be driven to convergence against an
       exact separator over a three-dimensional continuum of placements;</li>
-    <li>closing the remaining gap to 4 needs what Bentz used for n = 13: case analysis layered on top
-      of the certificate — <em>"either some square sits in this region at this angle, or a modified
-      certificate applies"</em>. The LP gives a natural handle on that, because when the total weight
-      <span class="mono">W</span> sits just above 12 the excess <span class="mono">W − 12</span> bounds
-      how much slack the whole packing has, and every square must sit in a near-binding placement.
-      That is the obvious next step, and it is a real research project, not a longer run.</li>
+    <li>closing the remaining gap to 4 needs more than a certificate. The obvious next step — case
+      analysis layered on top of it, as Bentz did for n = 13 — has been measured at the container
+      and does not work: branching on where the corner squares sit, on which wall slots are used,
+      and on which of Bentz's own sixteen points each square contains all leave a case whose
+      fractional value is still 12
+      (<a href="https://github.com/evand/square-packing-12/blob/master/search/BENTZ.md">search/BENTZ.md</a>).
+      What those measurements do show is where the missing unit lives. Squares that are not rotated
+      are easy: the nine points <span class="mono">{1,2,3}²</span> catch every axis-parallel unit
+      square in the 4×4 box, so at most nine of them fit, and everything the LP finds beyond nine is
+      rotation — most of it rotation by <em>less than one degree</em>, a square nudged a thousandth
+      off the grid and tilted a fraction of a degree so that it dodges every point on the grid lines.
+      And on the LP's own extremal measure the largest set of genuinely disjoint squares has eleven
+      members against a fractional mass of twelve: a gap of exactly one square, carried by eight
+      squares near the wall and interior tiles. A proof has to show that those eight cannot all be
+      placed — a statement about eight squares at once, which no weighting of points can express.
+      That is a real research problem, not a longer run.</li>
   </ul>
 </section>
 
