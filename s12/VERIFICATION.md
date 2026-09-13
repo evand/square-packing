@@ -115,9 +115,13 @@ VERIFIED: every closed unit square in [0,4]^2 captures weight >= 1; total weight
 ```
 
 17 min on 8 threads; depth limit never reached (max 10 of 18).  Timed again for this write-up on
-the same machine, same binary, same file: `TIMING_T8` at 8 threads and `TIMING_T4` at 4, identical
-census both times and identical to the run above — the verdict does not depend on the thread count
-(`runs/zmcheck_t8_2026-09-12.log`, `runs/zmcheck_t4_2026-09-12.log`).
+the same machine, same binary, same file: `done in 1064s` at 8 threads and `done in 2015s` (33 min
+35 s) at 4, both `boxes 30258, max depth 10` with
+`ADM 5114  DISJ 9477  EMPTY 6938  UNCERTIFIED 0` — the census is identical in all three runs, so
+neither the verdict nor the box count depends on the thread count
+(`runs/zmcheck_t8_2026-09-12.log`, `runs/zmcheck_t4_2026-09-12.log`).  4 threads is the GitHub
+runner's core count, and 33.6 min is inside the budget, so `verify.sh` runs the full sweep on
+every push; see `search/S13_WRITEUP.md`.
 
 Two checkers, two subdivisions, two primitive sets, two domains, `0 uncertified` on the same file.
 The disjunctive primitive carries 65 % of the non-empty leaves in each (`CHAIN` 5320 of 8187;
@@ -166,6 +170,13 @@ certificate parser, the float pre-filters (`notes/lean-zeromargin.md`).
 `--depth 18 --threads "$(nproc)"`, failing on `NOT VERIFIED` or `PARTIAL SWEEP` exactly as `chk`
 does for `verify`, then runs `tests/rung2/rejection_tests.sh`.  The `zeromargin.py` sweep is a
 commented slow path next to it.  `search/S13_WRITEUP.md` has the timing table and the CI decision.
+
+`./verify.sh` run end to end at 16 cores after these changes
+(`runs/verify_full_2026-09-12.log`, 1054 s, exit 0): **25 `VERIFIED` verdicts** (was 24; the new
+one is the rung-2 sweep, `done in 626s`, same census), no `NOT VERIFIED`, no `PARTIAL SWEEP`, the
+rung-2 suite `23 passed, 0 failed, 0 panics`, the main suite `172 passed, 0 failed, 0 panics`, and
+every `points.json` round-trip byte-identical.  `sha256sum -c certificates/SHA256SUMS`: 36 of 36 OK
+before and after.
 
 ## Checks performed on the original 788-point certificate (2026-08-23)
 ## Companion certificate (weaker but human-readable)

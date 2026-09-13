@@ -26,21 +26,68 @@ throughout), the same binary and the same file each time:
 
 | threads | wall time | boxes | max depth | leaf census | log |
 |---|---|---|---|---|---|
-| 8 | `T8_TIME` | `T8_BOXES` | `T8_DEPTH` | `T8_CENSUS` | `runs/zmcheck_t8_2026-09-12.log` |
-| 4 | `T4_TIME` | `T4_BOXES` | `T4_DEPTH` | `T4_CENSUS` | `runs/zmcheck_t4_2026-09-12.log` |
-| 8 (earlier, main checkout) | 1065 s | 30258 | 10 | `ADM 5114  DISJ 9477  EMPTY 6938  UNCERTIFIED 0` | `runs/zmcheck_main_2026-09-12.log` |
-| 8 (earlier, worktree; `RUNG2_XCHECK.md` §0) | 1017 s | 30258 | 10 | `ADM 5114  DISJ 9477  EMPTY 6938  UNCERTIFIED 0` | — |
+| **8** | **1064 s** (17 min 44 s) | 30258 | 10 | `ADM 5114  DISJ 9477  EMPTY 6938  UNCERTIFIED 0` | `runs/zmcheck_t8_2026-09-12.log` |
+| **4** | **2015 s** (33 min 35 s) | 30258 | 10 | `ADM 5114  DISJ 9477  EMPTY 6938  UNCERTIFIED 0` | `runs/zmcheck_t4_2026-09-12.log` |
+| 8 (earlier, main checkout) | 1065 s | 30258 | 10 | same | `runs/zmcheck_main_2026-09-12.log` |
+| 8 (earlier, worktree; `RUNG2_XCHECK.md` §0) | 1017 s | 30258 | 10 | same | — |
 
-`SPEEDUP_NOTE`
+The two rows measured here were run **concurrently** (8 + 4 = 12 threads on a 32-core machine that
+also had three unrelated `python3` jobs pinned at 100 % throughout), so both numbers are if
+anything pessimistic; the 8-thread figure came out at `1064 s` against `1065 s` for the earlier
+solo run in the main checkout, which says the contention cost was negligible.  Speed-up from 4 to 8
+threads: `2015/1064 = 1.89×`.
 
-The census is identical in every one of these runs, which is the point: the verdict, the box count
-and the leaf breakdown do not depend on the thread count.
+The census is identical in all four runs, which is the point: the verdict, the box count, the max
+depth and the leaf breakdown do not depend on the thread count.
 
-Full `./verify.sh`, end to end, detached: `runs/verify_full_2026-09-12.log`, `VERIFY_SH_TIME`.
+Full `./verify.sh`, end to end, detached and capped at 16 cores
+(`setsid nohup taskset -c 0-15 ./verify.sh > runs/verify_full_2026-09-12.log 2>&1 &`; the `taskset`
+is because `verify.sh` passes `$(nproc)` and this machine has 32).  **1054 s (17 min 34 s)**,
+21:18:28 → 21:36:02, exit 0, `runs/verify_full_2026-09-12.log`:
+
+* **25 `VERIFIED` verdicts** (was 24 before this task; the new one is the rung-2 sweep), no
+  `NOT VERIFIED`, no `PARTIAL SWEEP`, no `REJECTED`;
+* the rung-2 sweep inside it: `done in 626s: boxes 30258, max depth 10 / ADM 5114  DISJ 9477
+  EMPTY 6938  UNCERTIFIED 0 / VERIFIED` — the same census again, at 16 threads;
+* `23 passed, 0 failed, 0 panics` (rung-2 suite, with the `closed4_best_x103` file present) and
+  `172 passed, 0 failed, 0 panics` (the main suite);
+* every `points.json` round-trip byte-identical.
+
+`sha256sum -c certificates/SHA256SUMS` is clean before and after: 36 of 36 OK.
 
 ## 3. The CI decision
 
-`CI_DECISION`
+**The full sweep runs on every push.**  The measurement is `2015 s = 33.6 min` at 4 threads, the
+GitHub runner's core count — inside the `~45 min` budget the brief set, with about 25 % of headroom.
+So `verify.sh` runs it unconditionally, `.github/workflows/verify.yml` keeps its existing triggers
+(push, pull_request, workflow_dispatch, monthly schedule), and nothing is moved behind
+`workflow_dispatch`.  The only workflow changes are mechanical: `verify2/target` added to the cargo
+cache and `verify2/Cargo.lock` to its key, `timeout-minutes: 300`, and a second `sha256sum -c`
+after the run.
+
+Three things a future reader should know about that decision:
+
+* **A GitHub core is slower than this machine's.**  The 25 % headroom is measured here, not there,
+  and the runner also has to do everything else `verify.sh` does (the `N = 6000` and `N = 12000`
+  sweeps of the `s(12)` certificates, the uniform family, `xcheck.py`, 172 rejection checks) on the
+  same 4 cores.  If the job starts hitting the timeout, the fix is written down in a comment at the
+  top of the job and is the brief's fallback: move the full sweep to `workflow_dispatch` plus the
+  monthly `cron`, and give every push `tests/rung2/rejection_tests.sh` — which already contains a
+  restricted-band sweep over `c_x ∈ [0.5,0.6]`, `c_y ∈ [1,2]`, the container's hardest band — in
+  its place.  `zmcheck` already supports that: `--xlo/--xhi/--ylo/--yhi`.  Nothing needs to be
+  built to take that route.
+* **The restricted-band fallback is not a weak substitute.**  It is the band containing
+  `(½, 3/2, 0)`, which `RUNG2.md` §2 identifies as the worst monotone-witness pose of the
+  container, and it is where every mutation test is discriminated.  What it does *not* do is print
+  `VERIFIED` — a restricted sweep always prints `PARTIAL SWEEP` and then `NOT VERIFIED` — so under
+  that route the green badge would mean "the checker still refuses everything it should, and the
+  hard band is still clean", not "the theorem is re-verified".  That is the reason to prefer the
+  full sweep while it fits.
+* **One rung-2 rejection test skips in CI.**  `tests/rung2/rejection_tests.sh` case (e) needs
+  `runs/inputs-2026-09-11/closed4_best_x103.txt`, a development-history file kept outside the
+  repository (`runs/` is `.gitignore`d).  The script prints `skip` and reports `20 passed` instead
+  of 23 when it is absent, and does not fail.  That is deliberate but undocumented outside the
+  script; it means the CI log will not match the 23 quoted in `README.md` and `VERIFICATION.md`.
 
 ## 4. Inconsistencies found between the documents
 

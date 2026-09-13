@@ -249,7 +249,7 @@ other, sharing no code, no subdivision rule and no primitive set:
 | domain | **reduced**: `c_x ∈ [0,4]`, `c_y ∈ [0,2]`, `u = tan(θ/2) ∈ [0,½]`, legitimate because the checker first verifies **exactly** that the point set is invariant under `x ↦ 4−x` and `y ↦ 4−y`, and refuses to run reduced otherwise | **full**: `c_x, c_y ∈ [0,4]`, `u ∈ [0,1]` (`θ ∈ [0°,90°]`); no symmetry is assumed or checked |
 | census | `boxes 16872, max depth 13` (limit 18) — `ADM 2867  CORE 0  P1 0  MIX 0  CHAIN 5320  TRI 0  EMPTY 3449  UNCERTIFIED 0` | `boxes 30258, max depth 10` (limit 18) — `ADM 5114  DISJ 9477  EMPTY 6938  UNCERTIFIED 0` |
 | disjunctive share | `CHAIN` 5,320 of 8,187 non-empty leaves = 65 % | `DISJ` 9,477 of 14,591 non-empty leaves = 65 % |
-| time | 6,138 s (1 h 42 min) on 8 processes | 1,065 s (17 min) on 8 threads, 2,048 s (34 min) on 4 |
+| time | 6,138 s (1 h 42 min) on 8 processes | 1,064 s (18 min) on 8 threads, 2,015 s (34 min) on 4 |
 | determinism | re-run from the committed path reproduces the census to the last box (`5828 s`, same leaf counts) | identical census at every thread count tried |
 
 Neither run reaches its depth limit, so in both cases the subdivision terminated on its own —
