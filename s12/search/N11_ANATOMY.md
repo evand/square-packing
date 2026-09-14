@@ -1,4 +1,4 @@
-# `n = 11`: what the mass-11 fractional packing is, and a rigorous ceiling `ν_f(3.835) ≥ 11`
+# `n = 11`: what the mass-11 fractional packing is, and a rigorous ceiling `ν_f(3.83375) ≥ 11`
 
 Task: `tasks/s11-anatomy/README.md`.  Read against `search/N11.md` (which found the crossing and
 left this question open), `search/DUAL_EXACT.md` and `search/COVER4.md` (the same instrument at
@@ -57,13 +57,13 @@ That is the answer to the three-way question:
 
 Two results fall out of this that `N11.md` explicitly left unbuilt.
 
-* **A rigorous ceiling for `n = 11`.**  `ν_f(767/200) ≥ 11` exactly
-  (`runs/dual_exact_n11_3.835_support.txt`, the same four-pose shape at `t = 3.835`), hence by weak
-  duality (`search/CEILING.md`) **no weighted unavoidable set of total weight `< 11` exists at any
-  container side `≥ 3.835`** — whatever point set, cell decomposition, LP or verifier is used.
+* **A rigorous ceiling for `n = 11`.**  `ν_f(3067/800) ≥ 11` exactly
+  (`runs/dual_exact_n11_3.83375_support.txt`, the same four-pose shape at `t = 3.83375`), hence by
+  weak duality (`search/CEILING.md`) **no weighted unavoidable set of total weight `< 11` exists at
+  any container side `≥ 3.83375`** — whatever point set, cell decomposition, LP or verifier is used.
   `N11.md` could only say this heuristically ("the LP settles at exactly 11"); with the certificate
   `s(11) ≥ 3040/797 = 3.814304` the ceiling `s*(11) = sup{s : COVER(s) < 11}` of the pure method is
-  now bracketed **`3.814304 ≤ s*(11) ≤ 3.835`**, a window of `0.0207`.
+  now bracketed **`3.814304 ≤ s*(11) ≤ 3.83375`**, a window of `0.0195`.
 * **A better upper bound on `COVER` at `3.85`.**  A converged cover LP with exact-verifier
   separation gives an exact-verified cover of weight **`11.1162388`** at `t = 3800/987 = 3.850051`
   (`runs/n11_cd_CD385_cover.txt`, 520 points, `min covered = 1.000004` at `N = 6000` **and**
@@ -102,15 +102,16 @@ The same shape, re-found independently at other containers by the same pipeline:
 
 | `t` | file | poses with mass | mass | `M` | `L` | note |
 |---|---|---|---|---|---|---|
-| `767/200 = 3.835` | `runs/dual_exact_n11_3.835_support.txt` | 4 | `11` | `1` | **`11`** | `θ = 0, 0, 17.8374°, −1.95131°`; checked full (416 vertices); the smallest container reached |
+| `3067/800 = 3.83375` | `runs/dual_exact_n11_3.83375_support.txt` | 4 | `11` | `1` | **`11`** | `θ = 0, 0, 20.5214°, −2.82966°`; checked full (400 vertices); **the smallest container reached** |
+| `767/200 = 3.835` | `runs/dual_exact_n11_3.835_support.txt` | 4 | `11` | `1` | **`11`** | `θ = 0, 0, 17.8374°, −1.95131°`; checked full (416 vertices) |
 | `96/25 = 3.84` | `runs/dual_exact_n11_3.84_support.txt` | 4 | `11` | `1` | **`11`** | `θ = 0, 0, 17.2032°, −0.93705°`; checked full (432 vertices) |
 | `77/20 = 3.85` | `runs/n11_try385.txt` | 4 | `11` | `1` | **`11`** | the table above |
 | `77/20 = 3.85` | `runs/dual_exact_n11_3.85_support.txt` | 6 | `11` | `1` | **`11`** | polish of a 148-pose union; `θ = 0, 0, 21.400°, 33.800°, 0.015°, 45.000°` |
 | `387/100 = 3.87` | `runs/dual_exact_n11_3.87_support.txt` | 4 | `11 − 10⁻⁹` | `1` | `11 − 10⁻⁹` | the `3.85` shape shifted by `+0.01`; `ν_f` is non-decreasing, so `3.87` adds nothing |
 | `191/50 = 3.82` | `runs/dual_exact_n11_3.82_support.txt` | 28 | `10.545455` | `1 − 6.25·10⁻¹⁰` | `10.545455` | best exact measure obtained at `3.82`; **not** 11 — see §6 |
 
-The `3.835`, `3.84` and the two `3.85` measures agree on the ring (`4 + 4`) to the digit and
-disagree only on how the interior's `3` is split between angles — the LP is degenerate there.  That the interior
+The `3.83375`, `3.835`, `3.84` and the two `3.85` measures agree on the ring (`4 + 4`) to the digit
+and disagree only on how the interior's `3` is split between angles — the LP is degenerate there.  That the interior
 composition is arbitrary and the ring is not is the whole content of the object.
 
 ### Coverage map (`t = 3.85`, `39×39` cell centres; `#` = coverage in `[0.95,1]`, digit = tenths)
@@ -213,8 +214,9 @@ complete branch and bound:
     n = 32 squares, 112 edges (density 0.226),  mass = 11.000000
     α(G) = 10   (complete: True)                gap = mass − α = 1.000000
 
-(the `3.835` measure: 32 squares, 120 edges, `α = 10`, gap `1.000000`; the `3.84` measure: 112
-edges, `α = 10`, gap `1.000000` — the number is the same wherever the shape is.)
+(the `3.83375` measure: 32 squares, 112 edges, `α = 10`, gap `1.000000`; the `3.835` measure: 120
+edges, `α = 10`, gap `1.000000`; the `3.84` measure: 112 edges, `α = 10`, gap `1.000000` — the
+number is the same wherever the shape is, and so is the region split `4 + 4 + 3`.)
 
 A maximum independent set — a genuine packing of **ten** unit squares in `[0, 3.85]²`:
 
@@ -276,12 +278,13 @@ packing on placements that blocks the method.
 
 | tag | `t` | iterations | LP value | converged? | dual |
 |---|---|---|---|---|---|
-| `CD382` | `15200/3979 = 3.820055` | 43+ (still running at the stop) | **`11.000022`** from `it19` on, unmoved | no (`probe_min ≈ 0.86`) | — |
+| `CD382` | `15200/3979 = 3.820055` | 66 (stopped by pid at 35 min) | **`11.000022`** at `it16`–`it65`, **50 consecutive iterations, and never once above it** | no (`probe_min ≈ 0.87`) | — |
 | `CD385` | `3800/987 = 3.850051` | 40 | **`11.1162061`** | **yes** (`probe_min = 1.0000010`, 0 violated placements) | mass `11.1162`, symmetrised coverage `1.114` (not feasible: the point set is not fully priced out) |
 
 `11.000022 = 11·(1 + 2·10⁻⁶)` is `11` times the LP's own coverage margin, i.e. the LP value is
 exactly `11`.  `N11.md` saw this plateau at `D = 3983, 3982, 3980, 3975` (`3.8162–3.8239`); it holds
-at `3.820055` too, over 25 consecutive iterations while 15k cuts per round were added.  At
+at `3.820055` too, over 50 consecutive iterations while ~15k cuts per round were added — the
+maximum over all 66 iterations of the run is exactly `11.000022`.  At
 `3.850051` the same loop passes through exactly `9.000018` (`it3`, `it4`) and exactly `11.000022`
 (`it7`–`it13`) before settling at `11.1162`.
 
@@ -329,7 +332,7 @@ corner and wall parts are integral, so the entire relaxation error is a single n
 `N11.md`), so `ν_f(3.814304) ≤ 10.8147 < 11`.  The threshold `t₁₁ = min{t : ν_f(t) ≥ 11}` therefore
 satisfies
 
-    3.814304  <  t₁₁  ≤  767/200 = 3.835        (the right end is what §1 certifies).
+    3.814304  <  t₁₁  ≤  3067/800 = 3.83375     (the right end is what §1 certifies).
 
 `search/n11_ceiling.py` searches the pose parameters of the family directly — Nelder–Mead over the
 `3k + 1` numbers (the wall offset and `k` free interior poses; the corner pose is fixed at
@@ -339,19 +342,27 @@ downward continuation warm-starts each container from the last one that worked:
 | free interior poses | reaches mass 11 at | fails at | certified exactly |
 |---|---|---|---|
 | `k = 2` | `3.85`, `3.849531` | `3.849063` and below | `3.85` |
-| `k = 4` (`runs/n11_descend_k4.out`) | `3.845`, `3.84`, `3.8375`, **`3.835`** | `3.8325` | `3.84`, **`3.835`** |
+| `k = 4` (`runs/n11_descend_k4.out`) | `3.845`, `3.84`, `3.8375`, `3.835`, **`3.83375`** | `3.8325` | `3.84`, `3.835`, **`3.83375`** |
 | `k = 5` (`runs/n11_descend_k5.out`) | `3.8375`, `3.835` | `3.8325` | — |
+| `k = 5`, corner and wall poses also free | — | `3.8325` | — |
+
+Every successful step keeps the same shape: the corner pose stays at `(1/2, 1/2, 0)` with mass `4`,
+the wall pose stays axis-parallel at `(1/2, y, 0)` with mass `4`, and the interior's `3` is carried
+by one tilted pose at mass `2` (whose angle walks from `33.70°` at `3.85` to `20.52°` at `3.83375`)
+and one near-axis pose at mass `1` (whose angle walks from `+5.00°` to `−2.83°`).  Two of the four
+free interior poses always come out at mass `0`, and letting the corner and wall poses move as well
+does not get past `3.8325` either.
 
 The objective is piecewise constant with a wide plateau at exactly `10`, so these are statements
 about what the search found, not lower bounds on `t₁₁`: a richer family — more interior poses, or a
 wall pose that is allowed to tilt — may well go lower.  What is *not* heuristic is the right end of
-the window: `ν_f(767/200) ≥ 11` is checked in integers at all 416 arrangement vertices of the whole
+the window: `ν_f(3067/800) ≥ 11` is checked in integers at all 400 arrangement vertices of the whole
 container.
 
-Below `3.835` nothing reached 11 here: at `t = 191/50 = 3.82` the best exact measure obtained by
+Below `3.83375` nothing reached 11 here: at `t = 191/50 = 3.82` the best exact measure obtained by
 any route (column generation with `packing_dual.py`, then the exact-arrangement polish of
 `dual_exact.py build` over a 67-pose union) is `10.545455`
-(`runs/dual_exact_n11_3.82_support.txt`).  So **the `0.0207` window `[3.814304, 3.835]` is not
+(`runs/dual_exact_n11_3.82_support.txt`).  So **the `0.0195` window `[3.814304, 3.83375]` is not
 closed**, and the cover LP's plateau at exactly `11` from `3.8162` up (§4) remains the only —
 heuristic — evidence that `t₁₁ ≈ 3.8153`.  Closing it is a well-posed and cheap piece of work: the
 object to find is one more four-to-six-pose measure, and `dual_exact.py check` settles each
@@ -383,13 +394,13 @@ to be trusted.  The hard ceiling on what *any* rank-style family can ever be wor
 is `mass − α = 1.000000` — a full square, against `0.32–0.79` at `n = 12` — and, unlike at `n = 12`,
 every fraction of it converts directly into container side: the pure method dies at
 `COVER(t) = 11`, so a clique-strengthened cover of weight `< 11` at `t` *is* a certificate for
-`s(11) ≥ t`, and the window between the record `3.814304` and the ceiling `3.835` is `0.0207` wide
+`s(11) ≥ t`, and the window between the record `3.814304` and the ceiling `3.83375` is `0.0195` wide
 with the plateau sitting flat at exactly `11` across it.
 
-Concretely: run `clique_ceiling.py` at `t = 3.82, 3.83, 3.84` for `n = 11` to measure the
+Concretely: run `clique_ceiling.py` at `t = 3.82, 3.825, 3.83` for `n = 11` to measure the
 clique-strengthened packing optimum (if it is `< 11` at some `t` in the window, a clique certificate
 exists there), then `boxclique.py` to build one.  Expected purchase: the first `0.25` of the missing
-`1.0` is visible now; whether that is enough to move `s(11)` from `3.8143` towards `3.84` is
+`1.0` is visible now; whether that is enough to move `s(11)` from `3.8143` towards `3.83375` is
 precisely what the ceiling run measures, and it is a one-afternoon experiment because every
 container in the window is `< 4` where the sweep verifier, `branch.py --n 11`, the cliques and the
 polygons all already work.  The `0.75` the clique family cannot reach is the rank-10 statement of
@@ -404,10 +415,10 @@ optimum itself*, not by a case split.
 **Rigorous** (exact integers and `Fraction`s end to end; the only floats *choose* the poses and
 masses, and every chosen object is re-checked exactly):
 
-* `ν_f(767/200) ≥ 11`, `ν_f(96/25) ≥ 11` and `ν_f(77/20) ≥ 11`, hence `COVER(t) ≥ 11` for every
-  `t ≥ 767/200 = 3.835` (`dual_exact.py check` and `check --full` on
-  `runs/dual_exact_n11_3.835_support.txt`, `runs/dual_exact_n11_3.84_support.txt` and
-  `runs/n11_try385.txt`; the argument is `DUAL_EXACT.md`'s, unchanged — upper semicontinuity of a
+* `ν_f(3067/800) ≥ 11`, `ν_f(767/200) ≥ 11`, `ν_f(96/25) ≥ 11` and `ν_f(77/20) ≥ 11`, hence
+  `COVER(t) ≥ 11` for every `t ≥ 3067/800 = 3.83375` (`dual_exact.py check` and `check --full` on
+  `runs/dual_exact_n11_3.83375_support.txt`, `runs/dual_exact_n11_3.835_support.txt`,
+  `runs/dual_exact_n11_3.84_support.txt` and `runs/n11_try385.txt`; the argument is `DUAL_EXACT.md`'s, unchanged — upper semicontinuity of a
   finite closed-square coverage puts its maximum at an arrangement vertex, and every vertex is
   enumerated in integers).
 * `COVER(3800/987) ≤ 11.1162388` (`runs/n11_cd_CD385_cover.txt`, exact verifier at `N = 6000` and
@@ -425,7 +436,7 @@ masses, and every chosen object is re-checked exactly):
 off after 12 pricing rounds at symmetrised dual coverage `1.06`, so it is not a bound in either
 direction); the claim that `t₁₁ ≈ 3.8153`; the claim that the four-pose shape is *the* optimum
 rather than *an* optimum (the LP is degenerate on the interior — three different interior splittings
-of the same `3` were found at `3.84`, `3.85` and `3.85`).  Nothing about `s(11)` itself is claimed:
+of the same `3` were found at `3.83375`, `3.835`, `3.84` and twice at `3.85`).  Nothing about `s(11)` itself is claimed:
 `s(11) ≥ 3040/797` remains the record and the measures here are obstructions, not packings of 11
 squares.
 
@@ -436,13 +447,15 @@ squares.
 ```sh
 cd verify && cargo build --release && cd ..
 
-# the statement:  nu_f(3.85) >= 11  and  nu_f(3.84) >= 11
+# the statement:  nu_f(3067/800) >= 11, and the same shape at 3.835, 3.84, 3.85
 python3 search/dual_exact.py check runs/n11_try385.txt --t 77/20 --tag TRY385           # 58 vertices
 python3 search/dual_exact.py check runs/n11_try385.txt --t 77/20 --tag TRY385 --full    # 400 vertices
 python3 search/dual_exact.py build --t 96/25 --tag n11_3.84 --src runs/n11_cand_3.84.txt --procs 2
 python3 search/dual_exact.py check runs/dual_exact_n11_3.84_support.txt --full --tag n11_3.84
 python3 search/dual_exact.py build --t 767/200 --tag n11_3.835 --src runs/n11_cand_3.83500_k4.txt --procs 2
 python3 search/dual_exact.py check runs/dual_exact_n11_3.835_support.txt --full --tag n11_3.835
+python3 search/dual_exact.py build --t 3067/800 --tag n11_3.83375 --src runs/n11_cand_3.83375_k4.txt --procs 2
+python3 search/dual_exact.py check runs/dual_exact_n11_3.83375_support.txt --full --tag n11_3.83375
 
 # the anatomy
 python3 search/n11_anatomy.py runs/n11_try385.txt --t 77/20 --map 39
@@ -465,8 +478,8 @@ python3 search/n11_ceiling.py --t 77/20 --restarts 6            # re-derives the
 python3 search/n11_ceiling.py --bisect 3.82 3.85 --steps 6 --restarts 10
 ```
 
-`runs/n11_try385.txt`, `runs/dual_exact_n11_3.84_support.txt` and
-`runs/dual_exact_n11_3.835_support.txt` are the load-bearing files; copies that survive the
-gitignored `runs/` are `search/n11_exact_3.835_support.txt`, `search/n11_exact_3.84_support.txt`
-and `search/n11_exact_3.85_support.txt`.  `dual_exact.py check` reads only the support file and Python
+`runs/dual_exact_n11_3.83375_support.txt` is the load-bearing file (the other three containers are
+implied by monotonicity of `ν_f`); copies that survive the gitignored `runs/` are
+`search/n11_exact_3.83375_support.txt`, `search/n11_exact_3.835_support.txt`,
+`search/n11_exact_3.84_support.txt` and `search/n11_exact_3.85_support.txt`.  `dual_exact.py check` reads only the support file and Python
 integers, so the statement can be re-checked from those two files alone.
