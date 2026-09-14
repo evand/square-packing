@@ -998,8 +998,8 @@ def _linear_one(a):
                 names.append(t)
             sel[bcol] = -1.0
             bcol += 1
-        A.append(sel)                                  # sum of the branch binaries >= 1
-        bl.append(-np.inf)
+        A.append(sel)               # EXACTLY one branch per disjunction, so that the Farkas
+        bl.append(-1.0)             # certificate read off below belongs to a single branch
         bu.append(-1.0)
         names.append('branch selector')
     A = np.array(A)
@@ -1044,15 +1044,66 @@ def _linear_one(a):
                    bounds=[(-5.0, 5.0)] + [(-1.0, 1.0)] * (nv - 1), method='highs')
     print(f'  LP on the chosen branch: {-res2.fun:+.12e}')
     w = -np.asarray(res2.ineqlin.marginals)
-    idx = np.argsort(-w)
     pos = int((w > 1e-9).sum())
-    print(f'\n  Farkas certificate: {pos} of {len(w)} rows carry a positive multiplier.  A '
-          f'non-negative\n  combination of them is identically zero in (dx, dy, phi), so the '
-          f'weighted sum of the\n  gaps it takes cannot be made positive:')
-    for k in idx[:a.ndual]:
-        if w[k] <= 1e-9:
-            break
-        print(f'    {w[k]:10.6f}  {n2[k]}')
+    print(f'\n  Farkas certificate on the chosen branch: {pos} of {len(w)} rows carry a '
+          f'positive multiplier.\n  The LP is degenerate, so that dual is not unique; the '
+          f'IRREDUCIBLE certificate below is found\n  by greedily dropping rows while the '
+          f'value stays 0 (drop one more and a direction opens):')
+    A2 = np.array(A2)
+    b2 = np.array(b2)
+    keep = list(range(len(b2)))
+
+    def value(rowset):
+        r = linprog(cost2, A_ub=A2[rowset], b_ub=b2[rowset],
+                    bounds=[(-5.0, 5.0)] + [(-1.0, 1.0)] * (nv - 1), method='highs')
+        return -r.fun if r.status == 0 else float('inf')
+
+    order = sorted(keep, key=lambda k: (w[k] > 1e-9, -w[k]))
+    for k in order:
+        trial = [i for i in keep if i != k]
+        if value(trial) <= 1e-9:
+            keep = trial
+    print(f'  irreducible first-order certificate: {len(keep)} rows')
+    for k in keep:
+        print(f'    {n2[k]}')
+    # read the certificate back as chains: a set of squares linked by same-axis gap rows and
+    # anchored at both ends by the container is a run of unit squares spanning a side-4 box,
+    # which has exactly zero slack -- that is the whole first-order obstruction.
+    import re
+    gaps = {0: [], 1: []}
+    walls = {0: {}, 1: {}}
+    for k in keep:
+        m = re.match(r'gap\((\w+),(\w+)\) axis (\w)', n2[k])
+        if m:
+            gaps['uv'.index(m.group(3))].append((m.group(1), m.group(2)))
+            continue
+        m = re.match(r'(\w+) against the wall \((.)([-+])\)', n2[k])
+        if m:
+            walls['xy'.index(m.group(2))].setdefault(m.group(1), set()).add(m.group(3))
+    print('\n  read as CHAINS (a run of unit squares pinned between two opposite container '
+          'walls\n  has exactly zero slack in a side-4 box, and a relative tilt only costs):')
+    for ax in (0, 1):
+        adj = {}
+        for (i, j) in gaps[ax]:
+            adj.setdefault(i, set()).add(j)
+            adj.setdefault(j, set()).add(i)
+        seen = set()
+        for v0 in sorted(adj):
+            if v0 in seen:
+                continue
+            comp, st = set(), [v0]
+            while st:
+                v = st.pop()
+                if v in comp:
+                    continue
+                comp.add(v)
+                st += list(adj[v])
+            seen |= comp
+            anch = {v: walls[ax].get(v, set()) for v in comp if walls[ax].get(v)}
+            print(f'    along {"xy"[ax]}: {len(comp)} squares '
+                  f'{{{",".join(sorted(comp))}}}, anchored at '
+                  + (', '.join(f'{v}{"".join(sorted(a))}' for v, a in sorted(anch.items()))
+                     or 'nothing'))
 
     # --- where the linearisation is valid
     sl = sorted(M['slack'])
