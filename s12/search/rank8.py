@@ -173,10 +173,11 @@ SGN = ((1, 1), (1, -1), (-1, 1), (-1, -1))
 class Problem:
     """leaf A (or a sub-configuration): `labels` is a list of label ids, one square each."""
 
-    def __init__(self, labels, eps_excl=0.0):
+    def __init__(self, labels, eps_excl=0.0, eps_inc=0.0):
         self.labels = list(labels)
         self.n = len(self.labels)
         self.eps = eps_excl
+        self.epsi = eps_inc
         self.pairs = [(i, j) for i in range(self.n) for j in range(i + 1, self.n)]
         self.inc = []                     # (square, point) that must be contained
         self.exc = []                     # (square, point) that must not be
@@ -274,7 +275,7 @@ class Problem:
             dy = PXY[self.Ip, 1] - Y[self.Ik]
             e0 = np.where(self.Ii == 0, c, -s)
             e1 = np.where(self.Ii == 0, s, c)
-            out.append(0.5 - self.Is * (e0 * dx + e1 * dy))
+            out.append(0.5 - self.epsi - self.Is * (e0 * dx + e1 * dy))
         # exclusion
         if len(self.Ek):
             c, s = C[self.Ek], S[self.Ek]
@@ -357,14 +358,14 @@ class Problem:
         return J
 
 
-def solve(labels, z0, eps_excl=0.0, rounds=8, maxiter=300):
+def solve(labels, z0, eps_excl=0.0, rounds=8, maxiter=300, eps_inc=0.0):
     """max-min-gap by assignment-fixed SLSQP, iterated until the assignment stops changing.
     Returns (true objective at the returned point, z, info)."""
     from scipy.optimize import minimize
-    pr = Problem(labels, eps_excl)
+    pr = Problem(labels, eps_excl, eps_inc)
     z = np.array(z0, dtype=float)
     z[0] = true_objective(z, pr.n)[0]
-    best = (true_objective(z, pr.n)[0], z.copy())
+    best = (_feasible_value(z, pr), z.copy())
     seen = set()
     for it in range(rounds):
         pa, ea = pr.pair_assign(z), pr.exc_assign(z)
@@ -390,7 +391,7 @@ def _feasible_value(z, pr):
     inc, exc = pattern_slack(z, pr.labels)
     adm = admissibility_slack(z, pr.n)
     tol = 1e-9
-    if inc < -tol or exc > pr.eps + tol or adm < -tol:
+    if inc < pr.epsi - tol or exc > -pr.eps + tol or adm < -tol:
         return -float('inf')
     return true_objective(z, pr.n)[0]
 
@@ -571,6 +572,12 @@ def cmd_margin(a):
     for (v, tag, z) in sorted(tilted, key=lambda r: -r[0])[:12]:
         print(f'  {v:+.12e}  {tag:<14} max tilt {max_tilt_deg(z):8.4f} deg, '
               f'dist to tiling {_tiling_distance(z):8.6f}')
+    if near:
+        mt = max(max_tilt_deg(z) for (_v, _t, z) in near)
+        md = max(_tiling_distance(z) for (_v, _t, z) in near)
+        print(f'\nover the {len(near)} near-0 configurations: largest tilt of any square '
+              f'{mt:.4f} deg, largest\ndistance to a tiling-minus-4 family {md:.6f}; '
+              f'so the 0-level set is a plateau, not a point.')
     strict = [r for r in near if pattern_slack(r[2], labels)[1] < -1e-12]
     print(f'\n{len(strict)} of the {len(near)} near-0 configurations satisfy the exclusions '
           f'STRICTLY (are in leaf A itself, not just its closed relaxation); the best of those is '
@@ -637,248 +644,450 @@ def load(path):
 
 # ===================================================================== (2) sub-configurations
 def cmd_subsets(a):
+    """which sub-configurations of leaf A are jointly realisable as a CLOSED packing.
+
+    A square set is realisable iff the sup of the min pairwise closed gap over it is > 0.
+    Realisability is downward closed (drop a square and the rest still work), so the answer is
+    the pair (maximal realisable sets, minimal non-realisable sets), each up to D4.  A positive
+    answer is a witness and can be re-checked exactly (`verify`); a negative one is a multistart
+    measurement and nothing more."""
     rng = np.random.default_rng(a.seed)
     pools = sample_pools(a.nsamp, rng)
     sp = support_pools(a.support) if a.support else None
     base = tiling_starts()
+    universe = list(range(12)) if a.all else SINGLETONS
+    forced = [] if a.all else list(range(4))
+    nb = len(universe)
+    print(f'universe: {[LNAME[k] for k in universe]}'
+          + (f', forced: {[LNAME[k] for k in forced]}' if forced else ''))
 
-    def feasible(labels, nstart):
-        """multistart: the best min-gap found, and the configuration"""
-        best = (-float('inf'), None)
+    def labels_of(mask):
+        return sorted(forced + [universe[b] for b in range(nb) if mask >> b & 1])
+
+    def best_of(mask, nstart):
+        """multistart + basin hopping: the tiling families restricted to `labels`, random draws
+        from the per-label pose pools, then rounds of perturb-and-reoptimise around the best few
+        so far.  Local optimisation alone gives false negatives on ten-square problems."""
+        labels = labels_of(mask)
+        if len(labels) < 2:
+            return (float('inf'), None)
+        n = len(labels)
         starts = []
         for (_pick, z) in base:
             starts.append(np.concatenate([[0.0]] + [z[1 + 3 * li:4 + 3 * li] for li in labels]))
         for _ in range(nstart):
             src = pools if (sp is None or rng.random() < 0.7) else sp
             starts.append(z_from([src[li][rng.integers(len(src[li]))] for li in labels]))
-        for z0 in starts:
-            v, z, _pr = solve(labels, z0, eps_excl=a.eps, rounds=a.rounds, maxiter=a.maxiter)
-            if v > best[0]:
-                best = (v, z.copy())
-            if best[0] > a.pos:
+        res = run_starts([(f's{k}', z) for k, z in enumerate(starts)], labels, a, a.nproc)
+        res = [r for r in res if r[0] > -float('inf')]
+        for rd in range(a.bh):
+            res.sort(key=lambda r: -r[0])
+            if res and res[0][0] > a.pos:
                 break
-        return best
+            pool = res[:a.bhkeep] or [(0.0, 'x', starts[0])]
+            kick = []
+            for k in range(max(nstart, a.bhn)):
+                _v, _t, z = pool[rng.integers(len(pool))]
+                w = z.copy()
+                sig = 10.0 ** rng.uniform(-3, -0.7)
+                w[1::3] += rng.normal(0, sig, n)
+                w[2::3] += rng.normal(0, sig, n)
+                w[3::3] += rng.normal(0, 1.5 * sig, n)
+                kick.append((f'bh{rd}_{k}', w))
+            res += [r for r in run_starts(kick, labels, a, a.nproc) if r[0] > -float('inf')]
+        v, _tag, z = max(res, key=lambda r: r[0])
+        return (v, z)
 
-    # D4 orbits of the 256 subsets of the eight singletons
-    orb, seen = [], set()
-    for mask in range(256):
-        if mask in seen:
+    # --- D4 orbits of the subsets of `universe`
+    idx = {l: b for b, l in enumerate(universe)}
+    perms = []
+    for pm in LPERM:
+        if all(pm[l] in idx for l in universe):
+            perms.append(tuple(idx[pm[l]] for l in universe))
+    canon, orb = {}, []
+    for mask in range(1 << nb):
+        if mask in canon:
             continue
-        o = set()
-        for pm in LPERM:
-            o.add(sum(1 << (pm[SINGLETONS[b]] - 4) for b in range(8) if mask >> b & 1))
-        seen |= o
-        orb.append((min(o), len(o)))
-    orb.sort(key=lambda kv: (bin(kv[0]).count('1'), kv[0]))
-    print(f'{len(orb)} D4 classes of subsets of the eight singletons')
-
-    status = {}          # mask -> (value, z) ; feasible iff value > 0
-    canon = {}
-    for (rep, _sz) in orb:
-        for pm in LPERM:
-            canon[sum(1 << (pm[SINGLETONS[b]] - 4) for b in range(8) if rep >> b & 1)] = rep
+        o = {sum(1 << pm[b] for b in range(nb) if mask >> b & 1) for pm in perms}
+        rep = min(o)
+        for m in o:
+            canon[m] = rep
+        orb.append(rep)
+    print(f'{len(orb)} D4 classes of the {1 << nb} subsets')
 
     def subs(mask):
-        bits = [b for b in range(8) if mask >> b & 1]
-        return [mask ^ (1 << b) for b in bits]
+        return [mask ^ (1 << b) for b in range(nb) if mask >> b & 1]
 
-    # top-down: a subset of a feasible set is feasible, so only test what is not already implied
-    order = sorted({r for (r, _s) in orb}, key=lambda m: -bin(m).count('1'))
-    implied = {}
+    if a.only:
+        want = set(a.only.split(','))
+        m = sum(1 << b for b, l in enumerate(universe) if LNAME[l] in want)
+        v, z = best_of(m, a.nstart)
+        print(f'  {_mask_name(m, universe):<38} k={len(labels_of(m)):2d}  best min-gap {v:+.9e}'
+              f'   {"REALISABLE" if v > a.pos else "not realisable"}')
+        if a.out and z is not None:
+            labels = labels_of(m)
+            with open(a.out, 'w') as f:
+                f.write('# rank8.py subsets --only.  FLOAT.\n')
+                f.write(f'config {_mask_name(m, universe)} value {v:.17g} n {len(labels)}\n')
+                for k, li in enumerate(labels):
+                    f.write(f'  {LNAME[li]} {z[1+3*k]:.17g} {z[2+3*k]:.17g} {z[3+3*k]:.17g}\n')
+            print(f'wrote {a.out}')
+        return {m: (v, z)}
+    status, implied = {}, {}
+    order = sorted(orb, key=lambda m: -bin(m).count('1'))
+    ntest = 0
     for rep in order:
-        if rep in implied:
+        if rep in implied and not a.exhaustive:
             continue
-        labels = list(range(4)) + [4 + b for b in range(8) if rep >> b & 1]
-        ns = a.nstart if bin(rep).count('1') >= 6 else max(6, a.nstart // 3)
-        v, z = feasible(labels, ns)
+        v, z = best_of(rep, a.nstart)
+        if v <= a.pos and a.confirm:            # a negative is the dangerous answer: retry harder
+            v2, z2 = best_of(rep, a.nstart * a.confirm)
+            if v2 > v:
+                v, z = v2, z2
+        ntest += 1
         status[rep] = (v, z)
-        tag = 'FEASIBLE' if v > a.pos else ('infeasible' if v < a.pos else '?')
-        print(f'  {_mask_name(rep):<28} k={bin(rep).count("1")}  best min-gap {v:+.6e}   {tag}',
-              flush=True)
+        print(f'  {_mask_name(rep, universe):<34} k={len(labels_of(rep)):2d}  '
+              f'best min-gap {v:+.6e}   '
+              f'{"REALISABLE" if v > a.pos else "not realisable"}', flush=True)
         if v > a.pos:
-            # every subset is feasible too
             stack = [rep]
             while stack:
                 m = stack.pop()
                 for s in subs(m):
                     c = canon[s]
-                    if c not in implied:
+                    if c not in implied and c not in status:
                         implied[c] = rep
                         stack.append(s)
-    print(f'\n{len(status)} classes tested, {len(implied)} implied feasible by a larger '
-          f'feasible class')
+    if a.exhaustive:
+        print('\nmargin table (sup of the min pairwise closed gap, by class):')
+        for m in sorted(status, key=lambda m: (-bin(m).count('1'), -status[m][0])):
+            v = status[m][0]
+            print(f'  {_mask_name(m, universe):<34} {len(labels_of(m)):2d} squares   {v:+.6e}')
+    print(f'\n{ntest} classes tested, {len(implied)} implied realisable by a larger one')
     feas = {m for m, (v, _z) in status.items() if v > a.pos} | set(implied)
-    infeas = {m for m in canon.values() if m not in feas}
+    infeas = [m for m in orb if m not in feas]
     minimal = [m for m in sorted(infeas, key=lambda m: bin(m).count('1'))
                if all(canon[s] in feas for s in subs(m))]
-    print('\nMINIMAL INFEASIBLE subsets of the eight singletons (with all four corner squares), '
-          'up to D4:')
+    print('\nMINIMAL NON-REALISABLE sub-configurations up to D4 '
+          '(every proper subset of each IS realisable):')
     for m in minimal:
-        print(f'  {_mask_name(m)}   |T| = {bin(m).count("1")}   '
-              f'best min-gap {status.get(m, (float("nan"),))[0]:+.6e}')
+        v = status.get(m, (float('nan'), None))[0]
+        print(f'  {_mask_name(m, universe):<34} {len(labels_of(m)):2d} squares   '
+              f'best min-gap {v:+.6e}')
     maximal = [m for m in sorted(feas, key=lambda m: -bin(m).count('1'))
-               if all(canon[m | (1 << b)] not in feas for b in range(8) if not m >> b & 1)]
-    print('\nMAXIMAL FEASIBLE subsets up to D4:')
+               if all(canon[m | (1 << b)] not in feas for b in range(nb) if not m >> b & 1)]
+    print('\nMAXIMAL REALISABLE sub-configurations up to D4:')
     for m in maximal:
-        print(f'  {_mask_name(m)}   |T| = {bin(m).count("1")}   '
-              f'best min-gap {status.get(m, (float("nan"),))[0]:+.6e}')
+        v = status.get(m, (float('nan'), None))[0]
+        print(f'  {_mask_name(m, universe):<34} {len(labels_of(m)):2d} squares   '
+              f'best min-gap {v:+.6e}'
+              + ('' if m in status else f'   (implied by {_mask_name(implied[m], universe)})'))
     if a.out:
-        keep = [(v, _mask_name(m), z) for m, (v, z) in status.items() if z is not None]
         with open(a.out, 'w') as f:
             f.write('# rank8.py subsets: label cx cy theta_rad.  FLOAT.\n')
-            for (v, tag, z) in keep:
-                labels = list(range(4)) + [4 + b for b in range(8)
-                                           if _name_mask(tag) >> b & 1]
-                f.write(f'config {tag} value {v:.17g} n {len(labels)}\n')
+            n = 0
+            for m, (v, z) in sorted(status.items(), key=lambda kv: -bin(kv[0]).count('1')):
+                if z is None:
+                    continue
+                labels = labels_of(m)
+                f.write(f'config {_mask_name(m, universe)} value {v:.17g} n {len(labels)}\n')
                 for k, li in enumerate(labels):
                     f.write(f'  {LNAME[li]} {z[1+3*k]:.17g} {z[2+3*k]:.17g} {z[3+3*k]:.17g}\n')
-        print(f'\nwrote {len(keep)} configurations to {a.out}')
+                n += 1
+        print(f'\nwrote {n} configurations to {a.out}')
     return status
 
 
-def _mask_name(mask):
-    return '{' + ','.join(LNAME[4 + b] for b in range(8) if mask >> b & 1) + '}'
+def _mask_name(mask, universe=None):
+    u = universe if universe is not None else SINGLETONS
+    return '{' + ','.join(LNAME[u[b]] for b in range(len(u)) if mask >> b & 1) + '}'
 
-
-def _name_mask(name):
-    s = set(name.strip('{}').split(','))
-    return sum(1 << b for b in range(8) if LNAME[4 + b] in s)
 
 
 # ===================================================================== (3) the linearised system
-def cmd_linear(a):
-    from scipy.optimize import linprog
-    pick = tuple(int(c) for c in a.pick)
+def lin_model(pick, verbose=True):
+    """the first-order model of leaf A about a tiling-minus-4 family.
+
+    Write the perturbed pose of tile `k` as `c_k = C_k + (dx_k, dy_k)`, `theta_k = phi_k`, with
+    `C_k` the tile centre.  To first order in `(dx, dy, phi)`:
+
+      * the coordinates of a point `p` in square `k`'s frame, with `e = p - C_k`, are
+            coord_u = e_x - dx_k + e_y phi_k,      coord_v = e_y - dy_k - e_x phi_k,
+        and `p` is in the closed square iff both have modulus `<= 1/2`;
+      * the separating-axis gap of two squares with nominal centre difference `dd` is
+            gap = max_branches [ |dd_ax| + sg (Ddelta_ax + s_o phi_o) ] - 1 - (1/2)|phi_j - phi_i|,
+        over `ax in {u, v}` with `dd_ax != 0`, `sg = sign(dd_ax)`, owner `o in {i, j}`, and
+        `s_o = dd_y` for `ax = u`, `-dd_x` for `ax = v`  (the tilt term does NOT drop out for a
+        diagonal pair: that is where a rotation first buys separation);
+      * admissibility `c in [w/2, 4 - w/2]` with `w = |cos| + |sin| ~ 1 + |phi|` is
+            dx_k >= (1/2)|phi_k|  at a tile touching the left wall, and its three images.
+
+    Every `max` over branches is a disjunction and is carried as a binary; every `|.|` that enters
+    with a minus sign is a conjunction and is carried as two rows.  The system is homogeneous, so
+    it is normalised by `|dx|, |dy|, |phi| <= 1` and the question is only whether the optimum `g`
+    is `0` (no first-order direction opens every gap) or `> 0`.
+    """
     base = dict(tiling_starts())[pick]
     n = 12
     labels = list(range(12))
-    X0, Y0 = base[1::3].copy(), base[2::3].copy()
-    # the un-nudged base configuration: the tiling itself (nudges are what the LP is asked to find)
-    X0 = np.round(X0 - 0.5) + 0.5
-    Y0 = np.round(Y0 - 0.5) + 0.5
-    print(f'linearisation about the tiling-minus-4 family {pick}:')
-    for k in range(12):
-        print(f'  {LNAME[labels[k]]:<3} tile centre ({X0[k]:.1f}, {Y0[k]:.1f})')
-    # variables: g, then (dx, dy, phi) per square
-    nv = 1 + 3 * n
-    A, b, rows = [], [], []
+    X0 = np.round(base[1::3] - 0.5) + 0.5
+    Y0 = np.round(base[2::3] - 0.5) + 0.5
+    nv = 1 + 3 * n                      # g, then (dx, dy, phi) per square
 
-    def add(coef, rhs, tag):
-        A.append(coef)
-        b.append(rhs)
-        rows.append(tag)
+    def col(k, which):
+        return 1 + 3 * k + which
 
-    # --- pattern constraints, linearised.  A point p on the boundary of tile k gives an active
-    #     linear constraint; a point strictly inside / outside gives a constraint with a constant
-    #     slack, which we record as the validity radius rather than as a row.
-    slack = []
+    rows, rhs, tags = [], [], []        # conjunctive rows:  coef . z >= rhs
+    disj = []                           # disjunctions: list of list of (coef, rhs, tag)
+    slack = []                          # (nominal slack, description) of everything inactive
+
+    # ---- pattern rows
     for k in range(n):
         want = set(LABELS[labels[k]][1])
         for p in range(16):
-            dx, dy = PXY[p, 0] - X0[k], PXY[p, 1] - Y0[k]
-            # |dx - ddx + phi*dy| <= 1/2  and  |dy - ddy - phi*dx| <= 1/2   (first order)
-            for (val, gx, gy, gphi) in ((dx, -1.0, 0.0, dy), (dy, 0.0, -1.0, -dx)):
+            ex, ey = PXY[p, 0] - X0[k], PXY[p, 1] - Y0[k]
+            # (nominal value, d/d dx, d/d dy, d/d phi) of the two frame coordinates
+            co = [(ex, -1.0, 0.0, ey), (ey, 0.0, -1.0, -ex)]
+            branches = []
+            for (val, gx, gy, gp) in co:
                 for sg in (1.0, -1.0):
-                    lhs0 = sg * val                     # nominal value of the signed coordinate
+                    branches.append((sg * val, sg * gx, sg * gy, sg * gp))
+            M0 = max(b[0] for b in branches)
+            if p in want:
+                for (v0, gx, gy, gp) in branches:      # ALL four must stay <= 1/2
                     c = np.zeros(nv)
-                    c[1 + 3 * k] = sg * gx
-                    c[2 + 3 * k] = sg * gy
-                    c[3 + 3 * k] = sg * gphi
-                    if p in want:
-                        if abs(lhs0 - 0.5) < 1e-12:     # active: sg*coord <= 1/2
-                            add(c, 0.5 - lhs0, f'{LNAME[labels[k]]} holds {PNAMES[p]}')
-                        else:
-                            slack.append((0.5 - lhs0, f'{LNAME[labels[k]]} holds {PNAMES[p]}'))
-            if p not in want:
-                # NOT contained: at least one of the four signed coordinates exceeds 1/2.
-                # Nominally exactly one can be active (a point on the boundary of the tile);
-                # then that branch is forced and gives a strict linear row.
-                act = []
-                for (val, gx, gy, gphi) in ((dx, -1.0, 0.0, dy), (dy, 0.0, -1.0, -dx)):
-                    for sg in (1.0, -1.0):
-                        if abs(sg * val - 0.5) < 1e-12:
-                            act.append((sg, gx, gy, gphi))
-                if act:
-                    if len(act) > 1:
-                        print(f'  note: {LNAME[labels[k]]} excludes {PNAMES[p]} with '
-                              f'{len(act)} tight coordinates (a corner incidence)')
-                    sg, gx, gy, gphi = act[0]
-                    c = np.zeros(nv)
-                    c[1 + 3 * k] = -sg * gx
-                    c[2 + 3 * k] = -sg * gy
-                    c[3 + 3 * k] = -sg * gphi
-                    add(c, 0.0, f'{LNAME[labels[k]]} excludes {PNAMES[p]}')
+                    c[col(k, 0)], c[col(k, 1)], c[col(k, 2)] = -gx, -gy, -gp
+                    if abs(v0 - 0.5) < 1e-12:
+                        rows.append(c)
+                        rhs.append(0.0)
+                        tags.append(f'{LNAME[labels[k]]} holds {PNAMES[p]} ({"uv"[0]}-side)')
+                    else:
+                        slack.append((0.5 - v0, f'{LNAME[labels[k]]} holds {PNAMES[p]}'))
+            else:
+                if M0 > 0.5 + 1e-12:                   # excluded with room; no row
+                    slack.append((M0 - 0.5, f'{LNAME[labels[k]]} excludes {PNAMES[p]}'))
+                    continue
+                assert M0 > 0.5 - 1e-12, (k, p, M0)
+                opts = []
+                for (v0, gx, gy, gp) in branches:
+                    if abs(v0 - 0.5) < 1e-12:
+                        c = np.zeros(nv)
+                        c[col(k, 0)], c[col(k, 1)], c[col(k, 2)] = gx, gy, gp
+                        opts.append((c, 0.0, f'{LNAME[labels[k]]} excludes {PNAMES[p]}'))
+                if len(opts) == 1:
+                    rows.append(opts[0][0])
+                    rhs.append(0.0)
+                    tags.append(opts[0][2])
                 else:
-                    m = max(abs(dx), abs(dy)) - 0.5
-                    slack.append((m, f'{LNAME[labels[k]]} excludes {PNAMES[p]}'))
-    print(f'  {len(A)} active first-order pattern rows; smallest inactive slack '
-          f'{min(s for s, _t in slack):.6f} ({min(slack)[1]})')
+                    disj.append(opts)
 
-    # --- pairwise disjointness, linearised.  For tiles whose nominal centres differ by
-    #     (1,0), (0,1) or (1,1) the nominal gap is 0 and the pair contributes a row; tiles two
-    #     apart have nominal gap >= 1 and contribute only to the validity radius.
-    disj = []
+    # ---- admissibility rows (the tiles that touch the container)
+    for k in range(n):
+        for (v0, which, sgn) in ((X0[k] - 0.5, 0, +1.0), (3.5 - X0[k], 0, -1.0),
+                                 (Y0[k] - 0.5, 1, +1.0), (3.5 - Y0[k], 1, -1.0)):
+            if v0 > 1e-12:
+                slack.append((v0, f'{LNAME[labels[k]]} clear of a wall'))
+                continue
+            for s in (1.0, -1.0):                    # d >= (1/2)|phi|  ->  two rows
+                c = np.zeros(nv)
+                c[col(k, which)] = sgn
+                c[col(k, 2)] = -0.5 * s
+                rows.append(c)
+                rhs.append(0.0)
+                tags.append(f'{LNAME[labels[k]]} against the wall '
+                            f'({"xy"[which]}{"+" if sgn > 0 else "-"}) s{int(s):+d}')
+
+    # ---- disjointness rows
+    npair = 0
     for i in range(n):
         for j in range(i + 1, n):
             ddx, ddy = X0[j] - X0[i], Y0[j] - Y0[i]
             if max(abs(ddx), abs(ddy)) > 1.5:
+                slack.append((max(abs(ddx), abs(ddy)) - 1.0,
+                              f'gap({LNAME[labels[i]]},{LNAME[labels[j]]}) nominally open'))
                 continue
-            disj.append((i, j, ddx, ddy))
-    print(f'  {len(disj)} adjacent pairs (nominal gap 0) of {n*(n-1)//2}')
+            npair += 1
+            opts = []
+            for (ax, dd, s_of) in ((0, ddx, ddy), (1, ddy, -ddx)):
+                if abs(dd) < 0.5:
+                    continue
+                sg = math.copysign(1.0, dd)
+                for o in (i, j):
+                    for s in (1.0, -1.0):            # the -(1/2)|Dphi| is a conjunction
+                        c = np.zeros(nv)
+                        c[0] = -1.0
+                        c[col(j, ax)] += sg
+                        c[col(i, ax)] -= sg
+                        c[col(o, 2)] += sg * s_of
+                        c[col(j, 2)] -= 0.5 * s
+                        c[col(i, 2)] += 0.5 * s
+                        opts.append((c, 0.0,
+                                     f'gap({LNAME[labels[i]]},{LNAME[labels[j]]}) axis {"uv"[ax]}'
+                                     f' owner {LNAME[labels[o]]} s{int(s):+d}', (ax, o)))
+            # group the two |Dphi| rows of one branch together: a branch is (ax, owner)
+            grp = {}
+            for (c, r, t, key) in opts:
+                grp.setdefault(key, []).append((c, r, t))
+            disj.append([g for g in grp.values()])
+    if verbose:
+        print(f'  {len(rows)} conjunctive first-order rows, {len(disj)} disjunctions, '
+              f'{npair} adjacent pairs of {n*(n-1)//2}')
+    return dict(rows=rows, rhs=rhs, tags=tags, disj=disj, slack=slack, nv=nv,
+                labels=labels, X0=X0, Y0=Y0, npair=npair)
 
-    # branch over which axis separates each diagonal pair
-    diag = [k for k, (_i, _j, ddx, ddy) in enumerate(disj) if abs(ddx) > 0.5 and abs(ddy) > 0.5]
-    print(f'  {len(diag)} of them are diagonal (two axes tie at first order): '
-          f'{2**len(diag)} LP branches')
-    best = (-1e18, None, None)
-    A0, b0, rows0 = list(A), list(b), list(rows)
-    for choice in itertools.product((0, 1), repeat=len(diag)):
-        A, b, rows = list(A0), list(b0), list(rows0)
-        ch = dict(zip(diag, choice))
-        for k, (i, j, ddx, ddy) in enumerate(disj):
-            ax = 0 if abs(ddx) > 0.5 else 1
-            if k in ch:
-                ax = ch[k]
-            sg = math.copysign(1.0, ddx if ax == 0 else ddy)
-            #  gap = sg*(dd + delta_j - delta_i) - 1/2 - 1/2(|cos|+|sin|) >= g
-            #      = sg*(delta_j - delta_i) - 1/2|phi_j - phi_i| >= g     (first order)
-            for s2 in (1.0, -1.0):
-                c = np.zeros(nv)
-                c[0] = 1.0
-                c[(1 if ax == 0 else 2) + 3 * j] = -sg
-                c[(1 if ax == 0 else 2) + 3 * i] = sg
-                c[3 + 3 * j] = 0.5 * s2
-                c[3 + 3 * i] = -0.5 * s2
-                A.append(c)
-                b.append(0.0)
-                rows.append(f'gap({LNAME[labels[i]]},{LNAME[labels[j]]}) axis {"xy"[ax]} '
-                            f's{int(s2):+d}')
-        # normalisation so the homogeneous cone is bounded: |delta| <= 1, |phi| <= 1
-        bounds = [(None, None)] + [(-1.0, 1.0)] * (3 * n)
-        c = np.zeros(nv)
-        c[0] = -1.0
-        res = linprog(c, A_ub=np.array(A), b_ub=np.array(b), bounds=bounds, method='highs')
-        if res.status == 0 and -res.fun > best[0]:
-            best = (-res.fun, res, (list(A), list(b), list(rows), choice))
-    val, res, (A, b, rows, choice) = best
-    print(f'\nLP value (the best first-order min-gap direction, normalised to |delta|,|phi| <= 1):'
-          f'  {val:+.12e}')
-    print(f'  branch {choice}; the system is homogeneous, so value 0 means NO first-order '
-          f'direction opens every gap, and any value > 0 would scale to infinity.')
+
+def cmd_linear(a):
+    if a.all_picks:
+        vals = {}
+        for pick in itertools.product((0, 1), repeat=4):
+            b = argparse.Namespace(pick=''.join(map(str, pick)), ndual=0, all_picks=False,
+                                   quiet=True)
+            vals[pick] = _linear_one(b)
+        print('\nfirst-order value over all sixteen tiling-minus-4 families:')
+        for pick, v in vals.items():
+            print(f'  {"".join(map(str, pick))}  {v:+.12e}')
+        print(f'  max over the sixteen: {max(vals.values()):+.12e}')
+        return max(vals.values())
+    return _linear_one(a)
+
+
+def _linear_one(a):
+    from scipy.optimize import linprog, milp, LinearConstraint, Bounds
+    quiet = getattr(a, 'quiet', False)
+    pick = tuple(int(c) for c in a.pick)
+    if not quiet:
+        print(f'linearisation about the tiling-minus-4 family {pick} '
+              f'(the exact 4x4 tiling restricted to twelve tiles):')
+    M = lin_model(pick, verbose=not quiet)
+    nv = M['nv']
+    if not quiet:
+        for k in range(12):
+            print(f'  {LNAME[M["labels"][k]]:<3} tile centre '
+                  f'({M["X0"][k]:.1f}, {M["Y0"][k]:.1f})')
+
+    # flatten the disjunctions: each option is a LIST of rows that must all hold
+    opts = []
+    for d in M['disj']:
+        flat = []
+        for o in d:
+            flat.append(o if isinstance(o, list) else [o])
+        opts.append(flat)
+    nb = sum(len(f) for f in opts)
+    if not quiet:
+        print(f'  {nb} binary branch choices over {len(opts)} disjunctions')
+
+    BIG = 40.0
+    R, rr, names = list(M['rows']), list(M['rhs']), list(M['tags'])
+    A, bl, bu = [], [], []
+    for c, r in zip(R, rr):
+        A.append(np.concatenate([c, np.zeros(nb)]))
+        bl.append(r)
+        bu.append(np.inf)
+    bcol = nv
+    for f in opts:
+        sel = np.zeros(nv + nb)
+        for o in f:
+            for (c, r, t) in o:
+                # c.z >= r  must hold when the branch binary is 1, and be free when it is 0:
+                #     c.z + BIG (1 - b) >= r   <=>   c.z - BIG b >= r - BIG
+                row = np.concatenate([c, np.zeros(nb)])
+                row[bcol] = -BIG
+                A.append(row)
+                bl.append(r - BIG)
+                bu.append(np.inf)
+                names.append(t)
+            sel[bcol] = -1.0
+            bcol += 1
+        A.append(sel)                                  # sum of the branch binaries >= 1
+        bl.append(-np.inf)
+        bu.append(-1.0)
+        names.append('branch selector')
+    A = np.array(A)
+    lb = np.concatenate([[-5.0], -np.ones(nv - 1), np.zeros(nb)])
+    ub = np.concatenate([[5.0], np.ones(nv - 1), np.ones(nb)])
+    cost = np.zeros(nv + nb)
+    cost[0] = -1.0
+    integ = np.concatenate([np.zeros(nv), np.ones(nb)])
+    res = milp(c=cost, constraints=LinearConstraint(A, bl, bu), integrality=integ,
+               bounds=Bounds(lb, ub))
+    val = -res.fun if res.success else float('nan')
+    if quiet:
+        return val
+    print(f'\nFIRST-ORDER LP/MILP value (normalised to |dx|,|dy|,|phi| <= 1):  {val:+.12e}')
     if val <= 1e-9:
-        print('  => the linearised disjointness system around the tiling is INFEASIBLE '
-              '(first-order rigid: no perturbation makes all twelve pairwise gaps positive).')
-    y = res.ineqlin.marginals if hasattr(res, 'ineqlin') else None
-    if y is not None:
-        w = -np.asarray(y)
-        idx = np.argsort(-w)
-        print('\n  dual (Farkas) certificate, the rows carrying it:')
-        for k in idx[:a.ndual]:
-            if w[k] <= 1e-9:
-                break
-            print(f'    {w[k]:10.6f}  {rows[k]}')
-        print(f'    ({int((w > 1e-9).sum())} rows with positive multiplier of {len(rows)})')
-    return val, rows, res
+        print('  => the linearised disjointness system around the tiling is INFEASIBLE: no '
+              'first-order\n     perturbation (centre offsets and tilts) makes all twelve '
+              'pairwise gaps positive.\n     The tiling-minus-4 family is FIRST-ORDER RIGID '
+              'inside leaf A.')
+    else:
+        print('  => a first-order direction exists; the leaf is not first-order rigid.')
+
+    # --- the Farkas certificate: fix the branch the MILP chose and read the LP duals
+    sel = np.round(res.x[nv:]).astype(int)
+    A2, b2, n2 = [], [], []
+    for c, r, t in zip(M['rows'], M['rhs'], M['tags']):
+        A2.append(-c)
+        b2.append(-r)
+        n2.append(t)
+    k = 0
+    for f in opts:
+        for o in f:
+            if sel[k]:
+                for (c, r, t) in o:
+                    A2.append(-c)
+                    b2.append(-r)
+                    n2.append(t)
+            k += 1
+    cost2 = np.zeros(nv)
+    cost2[0] = -1.0
+    res2 = linprog(cost2, A_ub=np.array(A2), b_ub=np.array(b2),
+                   bounds=[(-5.0, 5.0)] + [(-1.0, 1.0)] * (nv - 1), method='highs')
+    print(f'  LP on the chosen branch: {-res2.fun:+.12e}')
+    w = -np.asarray(res2.ineqlin.marginals)
+    idx = np.argsort(-w)
+    pos = int((w > 1e-9).sum())
+    print(f'\n  Farkas certificate: {pos} of {len(w)} rows carry a positive multiplier.  A '
+          f'non-negative\n  combination of them is identically zero in (dx, dy, phi), so the '
+          f'weighted sum of the\n  gaps it takes cannot be made positive:')
+    for k in idx[:a.ndual]:
+        if w[k] <= 1e-9:
+            break
+        print(f'    {w[k]:10.6f}  {n2[k]}')
+
+    # --- where the linearisation is valid
+    sl = sorted(M['slack'])
+    pat = [s for s in sl if 'holds' in s[1] or 'excludes' in s[1]]
+    adm = [s for s in sl if 'wall' in s[1]]
+    prs = [s for s in sl if 'nominally open' in s[1]]
+    print('\nVALIDITY OF THE LINEARISATION.  The model above keeps a fixed combinatorial '
+          'structure:\n  the same pattern rows active, the same pairs adjacent, the same branch '
+          'in each disjunction.\n  That structure survives a perturbation of size (rho in centre, '
+          'alpha in angle) as long as')
+    print(f'    every inactive PATTERN inequality keeps its sign:  slack >= '
+          f'{min(p[0] for p in pat):.6f}  ({min(pat)[1]})')
+    print(f'    every tile that is clear of a wall stays clear:    slack >= '
+          f'{min(a2[0] for a2 in adm):.6f}  ({min(adm)[1]})')
+    print(f'    every non-adjacent pair stays apart:               slack >= '
+          f'{min(p[0] for p in prs):.6f}')
+    print('  and, since a point of P0 moves by at most rho + (sqrt2/2) alpha in a square\'s own '
+          'frame,\n  the structure is unchanged for  rho + 0.7072 alpha < 0.086000  (the binding '
+          'slack).')
+    print('\n  SECOND-ORDER REMAINDER.  With |centre offsets| <= rho and |phi| <= alpha, the '
+          'exact gap\n  and its first-order model differ by at most')
+    print('      |gap - gap_lin|  <=  2 rho alpha + (1 + 2 rho) alpha^2 / 2 + alpha^2')
+    print('  (the projection error (1+2rho)(1-cos alpha) + 2 rho |sin alpha|, plus the '
+          'W(Dphi) error\n  0.25 Dphi^2 <= alpha^2).  So the first-order certificate bounds the '
+          'true min gap by\n  O(rho alpha + alpha^2), not by 0: it says the obstruction is '
+          'first order, and the exact\n  statement still needs the non-linearised inequality.  '
+          'The sign of the leading second-order\n  term is POSITIVE (relative tilt costs '
+          '|Dphi|/2 at first order but only\n  |Dphi|/2 - Dphi^2/4 exactly), which is why (1) '
+          'has to be measured globally and not read off\n  this LP.')
+    for rho, al in ((0.01, 0.01), (0.01, 0.05), (0.05, 0.05), (0.02, 0.0175)):
+        e = 2 * rho * al + (1 + 2 * rho) * al * al / 2 + al * al
+        print(f'      rho = {rho:.3f}, alpha = {al:.4f} rad ({math.degrees(al):5.2f} deg): '
+              f'remainder <= {e:.6f}')
+    return val
+
 
 
 # ===================================================================== (4) Sherali-Adams level 2
@@ -891,13 +1100,15 @@ def cmd_sa2(a):
     lab = []
     for s in sq:
         lab.append(want.get(bentz.pattern_of(s, IPTS), -1))
-    keep = [i for i in range(len(sq)) if lab[i] >= 0]
+    use = set(range(12)) if not a.labels else {LIDX[n] for n in a.labels.split(',')}
+    keep = [i for i in range(len(sq)) if lab[i] >= 0 and lab[i] in use]
     sq = [sq[i] for i in keep]
     lab = [lab[i] for i in keep]
     n = len(sq)
     print(f'{a.FILE}: {n} support poses carrying one of the twelve leaf-A patterns')
-    cls = [[i for i in range(n) if lab[i] == k] for k in range(12)]
-    print('  per label: ' + ', '.join(f'{LNAME[k]}:{len(cls[k])}' for k in range(12)))
+    use = sorted(use)
+    cls = [[i for i in range(n) if lab[i] == k] for k in use]
+    print('  per label: ' + ', '.join(f'{LNAME[k]}:{len(cls[u])}' for u, k in enumerate(use)))
     dis = np.zeros((n, n), dtype=bool)
     for i in range(n):
         for j in range(i + 1, n):
@@ -906,6 +1117,31 @@ def cmd_sa2(a):
     pairs = [(i, j) for i in range(n) for j in range(i + 1, n) if dis[i, j]]
     pidx = {p: k for k, p in enumerate(pairs)}
     print(f'  {len(pairs)} of {n*(n-1)//2} pairs disjoint as closed sets')
+
+    if a.alpha:
+        adj = [0] * n
+        for (i, j) in pairs:
+            adj[i] |= 1 << j
+            adj[j] |= 1 << i
+        best = [0]
+
+        def bb(cand, k):
+            if bin(cand).count('1') + k <= best[0]:
+                return
+            if cand == 0:
+                best[0] = max(best[0], k)
+                return
+            c = cand
+            while c:
+                b = c & -c
+                i = b.bit_length() - 1
+                c ^= b
+                bb(cand & adj[i] & ~((1 << (i + 1)) - 1), k + 1)
+                cand ^= b
+                if bin(cand).count('1') + k <= best[0]:
+                    return
+        bb((1 << n) - 1, 0)
+        print(f'  integer optimum on this support: alpha = {best[0]}')
 
     # variables: y_i (n), y_ij (len(pairs))
     nv = n + len(pairs)
@@ -929,7 +1165,7 @@ def cmd_sa2(a):
         r += 1
 
     # clique rows (one square per pattern): sum_{s in cls[k]} y_s <= 1
-    for k in range(12):
+    for k in range(len(use)):
         row([(Y(s), 1.0) for s in cls[k]], 1.0)
     # y_ij <= y_i, y_ij <= y_j, y_i + y_j - y_ij <= 1
     for (i, j) in pairs:
@@ -937,7 +1173,7 @@ def cmd_sa2(a):
         row([(Yp(i, j), 1.0), (Y(j), -1.0)], 0.0)
         row([(Y(i), 1.0), (Y(j), 1.0), (Yp(i, j), -1.0)], 1.0)
     # SA level 2: multiply each clique row by x_u and by (1 - x_u)
-    for k in range(12):
+    for k in range(len(use)):
         for u in range(n):
             if u in cls[k]:
                 continue
@@ -949,8 +1185,8 @@ def cmd_sa2(a):
     c = np.zeros(nv)
     c[:n] = -1.0
     res = linprog(c, A_ub=Aub, b_ub=np.array(rhs), bounds=[(0, 1)] * nv, method='highs')
-    print(f'\nSA level-2 value on the 162-pose support: {-res.fun:.9f}   '
-          f'(LP with the clique rows alone: 12; integer optimum alpha = 11)')
+    print(f'\nSA level-2 value on the {n}-pose support over {len(use)} labels: {-res.fun:.9f}'
+          f'   (the clique LP alone gives {len(use)})')
     if res.status != 0:
         print('  LP status', res.status, res.message)
         return
@@ -959,15 +1195,15 @@ def cmd_sa2(a):
     # which rows carry the dual
     names = []
     r = 0
-    for k in range(12):
+    for k in use:
         names.append(('clique', LNAME[k], None))
     for (i, j) in pairs:
         names.append(('y_ij<=y_i', i, j))
         names.append(('y_ij<=y_j', i, j))
         names.append(('y_i+y_j-y_ij<=1', i, j))
-    for k in range(12):
+    for kk, k in enumerate(use):
         for u in range(n):
-            if u in cls[k]:
+            if u in cls[kk]:
                 continue
             names.append(('SA*x_u', LNAME[k], u))
             names.append(('SA*(1-x_u)', LNAME[k], u))
@@ -990,16 +1226,16 @@ def cmd_sa2(a):
         shown += 1
     tot = {}
     r = 0
-    for k in range(12):
+    for k in use:
         tot[('clique', LNAME[k])] = tot.get(('clique', LNAME[k]), 0.0) + w[r]
         r += 1
     for (i, j) in pairs:
         key = tuple(sorted((LNAME[lab[i]], LNAME[lab[j]])))
         tot[key] = tot.get(key, 0.0) + w[r] + w[r + 1] + w[r + 2]
         r += 3
-    for k in range(12):
+    for kk, k in enumerate(use):
         for u in range(n):
-            if u in cls[k]:
+            if u in cls[kk]:
                 continue
             key = tuple(sorted((LNAME[k], LNAME[lab[u]])))
             tot[key] = tot.get(key, 0.0) + w[r] + w[r + 1]
@@ -1022,7 +1258,8 @@ def cmd_analyse(a):
         inc, exc = pattern_slack(z, labels)
         print(f'\n=== {tag}: min pairwise closed gap {val:+.6e}, {n} squares, '
               f'worst containment {inc:+.3e}, worst exclusion {exc:+.3e}, '
-              f'max tilt {max_tilt_deg(z):.4f} deg, dist to tiling {_tiling_distance(z):.6f}')
+              f'max tilt {max_tilt_deg(z):.4f} deg'
+              + (f', dist to tiling {_tiling_distance(z):.6f}' if n == 12 else ''))
         th = norm_theta(z[3::3])
         for k in range(n):
             print(f'   {LNAME[labels[k]]:<3} c = ({z[1+3*k]:9.6f}, {z[2+3*k]:9.6f})  '
@@ -1038,6 +1275,35 @@ def cmd_analyse(a):
             deg[j] = deg.get(j, 0) + 1
         print('     contacts per square: '
               + ', '.join(f'{LNAME[labels[k]]}:{deg.get(k,0)}' for k in range(n)))
+
+
+def cmd_harden(a):
+    """re-optimise each saved configuration with a strict exclusion margin, so that the witness
+    survives snapping to rationals and `verify` can turn it into an exact statement.  The value
+    can only go down; a positive value after hardening is a genuine closed packing."""
+    out = []
+    for (tag, val, sqs) in load(a.FILE):
+        labels = [LIDX[nm] for (nm, _x, _y, _t) in sqs]
+        z0 = z_from([(x, y, th) for (_nm, x, y, th) in sqs])
+        best = (-float('inf'), z0)
+        for eps in (a.eps, a.eps / 10.0, a.eps / 100.0):
+            v, z, _pr = solve(labels, z0, eps_excl=eps, rounds=a.rounds,
+                              maxiter=a.maxiter, eps_inc=eps)
+            if v > a.pos:
+                best = (v, z)
+                break
+            if v > best[0]:
+                best = (v, z)
+        out.append((best[0], tag, best[1]))
+        print(f'  {tag:<34} {val:+.6e} -> {best[0]:+.6e}')
+    src = load(a.FILE)
+    with open(a.out, 'w') as f:
+        f.write(f'# rank8.py hardened (exclusion margin {a.eps}) from {a.FILE}.  FLOAT.\n')
+        for (v, tag, z), (_t, _val, sqs) in zip(out, src):
+            f.write(f'config {tag} value {v:.17g} n {len(sqs)}\n')
+            for k, (nm, _x, _y, _th) in enumerate(sqs):
+                f.write(f'  {nm} {z[1+3*k]:.17g} {z[2+3*k]:.17g} {z[3+3*k]:.17g}\n')
+    print(f'wrote {len(out)} hardened configurations to {a.out}')
 
 
 def cmd_verify(a):
@@ -1127,6 +1393,29 @@ def selftest():
        all(pattern_slack(z, list(range(12)))[1] < 0 for (_p, z) in st))
     ck('... with min pairwise closed gap exactly 0 (the tiles touch)',
        all(abs(v) < 1e-12 for v in vals), f'max |gap| = {max(abs(v) for v in vals):.3e}')
+    # the same statement in EXACT rational arithmetic, through leaf_ceiling's own primitives
+    exact_ok, exact_meet = True, None
+    for (_pick, z) in st:
+        recs, names = [], []
+        for k in range(12):
+            cx = Fr(round(z[1 + 3 * k] * 1000), 1000)
+            cy = Fr(round(z[2 + 3 * k] * 1000), 1000)
+            recs.append(lc.make_square(cx, cy, 0, 1, Fr(4)))
+            names.append(LNAME[k])
+        for k in range(12):
+            if bentz.pattern_of(recs[k], IPTS) != frozenset(LABELS[k][1]):
+                exact_ok = False
+        m = sum(1 for i in range(12) for j in range(i + 1, 12)
+                if lc.sq_meets_sq(recs[i], recs[j]))
+        if exact_meet is None:
+            exact_meet = m
+        elif exact_meet != m:
+            exact_meet = -1
+    ck('EXACT: every tiling-minus-4 family has all twelve patterns right (integer tests)',
+       exact_ok)
+    ck('EXACT: and exactly 18 of its 66 pairs meet as closed sets (they touch, so it is not '
+       'a packing)', exact_meet == 18, f'{exact_meet} meeting pairs')
+
     # analytic jacobian against finite differences
     pr = Problem(list(range(12)))
     z = st[0][1].copy()
@@ -1176,20 +1465,43 @@ def main():
     c.add_argument('--rounds', type=int, default=8)
     c.add_argument('--maxiter', type=int, default=300)
     c.add_argument('--pos', type=float, default=1e-7)
+    c.add_argument('--all', action='store_true',
+                   help='subsets of all twelve labels, not just the eight singletons')
+    c.add_argument('--only', default=None,
+                   help='measure just this one class, e.g. --only C0,C1,C2,D0,D1,D2,D3')
+    c.add_argument('--exhaustive', action='store_true',
+                   help='measure every class, not just the realisability frontier')
+    c.add_argument('--bh', type=int, default=4, help='basin-hopping rounds')
+    c.add_argument('--bhn', type=int, default=200, help='kicks per basin-hopping round')
+    c.add_argument('--bhkeep', type=int, default=8, help='incumbents kicked from')
+    c.add_argument('--confirm', type=int, default=4,
+                   help='on a negative answer, retry with this many times more starts')
     c.add_argument('--support', default=None)
     c.add_argument('--out', default=None)
     c.add_argument('--nproc', type=int, default=8)
     c = sub.add_parser('linear')
     c.add_argument('--pick', default='0000')
+    c.add_argument('--all-picks', action='store_true')
     c.add_argument('--ndual', type=int, default=40)
     c = sub.add_parser('sa2')
     c.add_argument('FILE')
+    c.add_argument('--labels', default=None,
+                   help='restrict to these labels, e.g. --labels C0,C1,C2,C3,D0,D1,D2,D3')
+    c.add_argument('--alpha', action='store_true',
+                   help='also compute the integer optimum on the restricted support')
     c.add_argument('--ndual', type=int, default=25)
     c.add_argument('--npairs', type=int, default=25)
     c = sub.add_parser('analyse')
     c.add_argument('FILE')
     c.add_argument('-n', type=int, default=6)
     c.add_argument('--tol', type=float, default=1e-6)
+    c = sub.add_parser('harden')
+    c.add_argument('FILE')
+    c.add_argument('out')
+    c.add_argument('--eps', type=float, default=1e-4)
+    c.add_argument('--pos', type=float, default=1e-7)
+    c.add_argument('--rounds', type=int, default=8)
+    c.add_argument('--maxiter', type=int, default=300)
     c = sub.add_parser('verify')
     c.add_argument('FILE')
     c.add_argument('-n', type=int, default=10)
@@ -1207,6 +1519,8 @@ def main():
         cmd_sa2(a)
     elif a.cmd == 'analyse':
         cmd_analyse(a)
+    elif a.cmd == 'harden':
+        cmd_harden(a)
     elif a.cmd == 'verify':
         cmd_verify(a)
     elif a.cmd == 'selftest':
