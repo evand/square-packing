@@ -162,6 +162,21 @@ analyse`) is eleven axis-parallel squares in tile positions with `T3` at `(3.309
 tilted `+32.2781°` and jammed into the top-right corner, its single contact being with `D3` pushed
 to `(2.414, 2.5)`.
 
+The most tilted one found (`support64` in `runs/rank8_margin_leafA.txt`, min gap `-3.3e-16`, i.e.
+`0`; distance `0.526759` from the nearest tiling family) is:
+
+```
+  T0 ( 0.50000000,  0.50093490)  0     C0 ( 0.50000000,  2.50000000)  0
+  T1 ( 3.50000000,  0.50000000)  0     C1 ( 1.85300142,  0.50000000)  0
+  T2 ( 0.50000000,  3.50000000)  0     C2 ( 1.50000000,  3.50000000)  0
+  T3 ( 3.50000000,  3.49999996)  0     C3 ( 3.50000000,  2.49651834)  0
+  D0 ( 1.50000000,  1.50000000)  0     D2 ( 2.69737837,  1.40241234)  +30.18107 deg   <--
+  D1 ( 1.50000000,  2.50000000)  0     D3 ( 2.50000000,  2.58600000)  0
+```
+
+— eleven axis-parallel squares and one interior square turned `30.18°` into the pocket the leaf
+leaves free, with `16` of the `66` pairs touching.  Nothing about the plateau is near the tiling.
+
 This is the closed/open distinction of `notes/s13-casefree.md` §2 localised to one leaf: under open
 semantics leaf A has twelve squares and a whole plateau of them; under closed semantics it has
 none, and the deficit is carried entirely by boundary contact.
