@@ -425,19 +425,31 @@ incidences — the LP value does **not** fall away from 12 as the rows close in:
 | 11 | 81,819 | `12.000000000` | `1.010823166` | 199 |
 | 12 | 82,018 | `12.000000000` | `1.010026368` | 131 |
 
-(the tail is degenerate — `M` sits at `1.010 +- 0.004` and the violated count oscillates between 57
-and 200 while the row set grows by ~150 a round, at 10–25 minutes a round.)
+It ran the full 30 rounds of the default cap and **the LP value never left `12.000000000`** — not
+once in 30 row-generation rounds, while the row set grew to 85,875 and the violated-vertex count
+came down to `5` at round 25 (`M = 1.000333966`, i.e. within `3.3 x 10^-4` of feasible at mass
+`11.999999640` with the corner masses pinned at 4) before bouncing back out.  The tail is degenerate
+in exactly the way `search/CLIQUE_CEILING.md` §"Reading" item 3 reports on the cut side: the LP moves
+the mass onto a different set of poses whose violated vertices are new ones, so `M` oscillates in
+`1.000–1.099` and the violated count between `5` and `570` while the row set grows by only ~150 a
+round, at 10–25 minutes a round.
 
-Until it reaches 0 violated vertices this is exactly the same non-statement as `T4SCREEN.md`'s
-(`LP` on an unconverged row set is an upper bound on a restricted value), with one difference that
-matters: the row set here is drawn from the **complete** exact vertex set, so the loop must
-terminate, and when it does the number is exact and final.  If it terminates at `12.000000000`, that
-is a certified corner-leaf measure of mass 12 at `t = 4`: **no certificate built from points and the
-four corner-box multipliers can close the corner leaf at `t = 4`** — the corner branch alone is dead,
-and only the cliques (which this measure violates, see below) or the slot branch could revive it.
-If it falls, the honest number is the `11.939983685` above.  The run is detached
-(`runs/lc_union2.out`, `runs/lc_UNION2k4_snap.log`); at 80k rows x 2177 columns each round is
-10–25 minutes.
+**So it did not close, and the capped output is not the number.**  `snap --polish` stops after
+`--polish-rounds` whether or not the rows have closed, and if `M > 1` there the fallback scales the
+measure by `1/M` and rounds down: this run wrote `runs/lc_UNION2k4.txt` at
+`11.827268498` (from `M = 1.022`), which is **worse** than the converged `11.939983685` of the
+smaller union and must not be quoted beside it.  A capped run's value is not comparable with a
+converged one — read the "0 violated vertices" line, or the run said nothing.  A rerun with a
+150,000-row start and a 200-round cap is going (`runs/lc_union2b.out`,
+`runs/lc_UNION2Bk4_snap.log`).
+
+What a converged `12.000000000` would mean, and why it is worth the compute: it would be a certified
+corner-leaf measure of mass 12 at `t = 4`, i.e. **no certificate built from points and the four
+corner-box multipliers can close the corner leaf at `t = 4`** — the corner branch alone dead, with
+only the cliques (which this measure violates, below) or the slot branch left.  What the 30 rounds
+establish on their own is weaker but not nothing: on a 2,177-pose set the corner-leaf LP does not
+*start* to fall away from 12 under 85,000 exact rows, whereas on the 1,256-pose set it fell to
+`11.9400` by round 6.  Which way that resolves is open.
 
 The anchor cliques of those measures are far from feasible.  On the two certified measures the
 exact local ascent reaches
