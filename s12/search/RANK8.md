@@ -34,16 +34,18 @@ each square confined to its **pattern region**: it contains its own points of `P
    optimisations, `2,889` of which ended inside the leaf, never returned a value above
    `+0.000000000000e+00`.  So leaf A is realisable under *open* semantics and fails under *closed*
    semantics by touching only — margin zero, exactly as `notes/status.md` guessed.  What was not
-   expected: `2,188` starts reached within `1e-13` of `0`, `1,765` of them further than `0.05` from
-   any tiling family (max-norm on centres and on angles mod 90°), the furthest at `0.914`, and
+   expected: `2,188` starts reached within `1e-3` of `0` (in practice within `1e-13`), `1,765` of
+   them further than `0.05` from any tiling family (max-norm on centres and on angles mod 90°),
+   the furthest at `0.914000`, and
    `174` of them with a square tilted by more than `1°`, **the largest tilt being `32.5242°`**.
    The zero set is a plateau, not a point (§1).
 
 2. **There is no small core: the *only* non-realisable sub-configuration is the whole of leaf A.**
    Over the eight singletons with the four corner squares always present, all `51` `D4` classes
    were measured; over all twelve labels, all `618` classes were resolved.  Every configuration of
-   eleven or fewer squares is realisable as a genuine closed packing, and **50 of the 51 witnesses
-   were re-verified exactly** (rational snapping, integer pattern tests, exact `sq_meets_sq`).  The
+   eleven or fewer squares is realisable as a genuine closed packing, and **every one of those
+   `50` witnesses was re-verified exactly** (rational snapping, integer pattern tests, exact
+   `sq_meets_sq`); the one class `verify` rejects is leaf A itself.  The
    three eleven-square classes have margins `4.426325e-02` (drop an interior singleton),
    `8.100185e-03` (drop a wall singleton) and — the surprise — **`3.763847e-06`** (drop a *corner*
    square), whose optimum is a genuine exact packing with twelve gaps all equal and a
