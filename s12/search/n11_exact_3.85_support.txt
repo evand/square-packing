@@ -1,0 +1,6 @@
+# t = 77/20 exact; D4-symmetrised measure of closed unit squares; masses set by hand to 4, 4, 2, 1
+# mass = 11;  M = ?
+pose 0 1 1/2 1/2 4
+pose 0 1 1/2 7501/5000 4
+pose 30287 100000 130193/100000 97989/40000 2
+pose 2183 50000 313/200 13/8 1
