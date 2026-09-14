@@ -113,9 +113,11 @@ not proof — that the continuum QSTAB is `32/3` throughout the window.
 mass pinned to exactly `4`).  `--margin 1e-6`, the `n = 12` setting, is *infeasible* here: with the
 corner boxes saturated, corner mass `4` forces coverage exactly `1` at the corner squares' common
 point, which a `1 − 10⁻⁶` row forbids — itself a statement of the vacuity.  Stages 0 and 1: value
-`32/3`, `M = 1`, max clique `1`, corner mass `4.000000` — identical to the unconstrained run.  Stage
-2 was still cutting at hand-off (LP `10.74`, residual clique `1.17` on cliques of 450+ poses, ~100 s
-per separation).  At `n = 12` the `k = 4` leaf was a real restriction (corner mass `0.85` in the pure
+`32/3`, `M = 1`, max clique `1`, corner mass `4.000000` — identical to the unconstrained run; stage 2
+ran out the 4 h clock unconverged (LP `10.70`, residual clique `1.15`, on cliques of 450+ poses at
+~100 s per separation).  **Certified exact** (`search/n11_qstab_385_leaf_exact.txt`, re-checked):
+mass `5333333333/500000000`, `M = 1`, max clique `1`, **corner mass `= 4` exactly** — the same four
+poses as the unconstrained `77/20` measure.  At `n = 12` the `k = 4` leaf was a real restriction (corner mass `0.85` in the pure
 optimum) and the branch's other leaves die; at `n = 11` the pure and the clique-strengthened optima
 both sit *in* the `k = 4` leaf, so a corner-count tree has one leaf, the whole problem.
 
@@ -128,10 +130,12 @@ both sit *in* the `k = 4` leaf, so a corner-count tree has one leaf, the whole p
 `10.715469`, probe minimum `0.64`, 8 clique orbits priced, **0 used** — and 6423 s for the round,
 against "seconds" at `n = 12`: `price_cliques` builds a dense closed-overlap graph over the D4 images
 of every row with positive interior-point dual, ~10⁵ images on this row set, `O(n²)`.  Killed after
-4 h in round 1.  A retry without the lattice warm start (`--no-warm --N 1000 --per-round 4`) was
-running at hand-off (`runs/boxclique_N11BC3980b*`).  The measurement that matters — cliques used —
-is already `0`, as at `n = 12`, and §5 makes the same measurement properly with point column
-generation in the loop.
+4 h in round 1.  A retry without the lattice warm start (`--no-warm --N 1000 --per-round 4`,
+`runs/boxclique_N11BC3980b*`) ran 11 rounds in 2 h: the point LP on the fixed 88 orbits climbs from
+`0` to exactly **`11.000022`** by round 6 and stays there, with **`0` of `17` priced clique orbits
+used** at every round; rounds slowed to 40 min as the dual support grew, and it was stopped.  Same
+verdict as `BOXCLIQUE.md`: on a fixed point set the LP never uses a box clique.  §5 makes the
+measurement properly, with point column generation in the loop.
 
 ---
 
