@@ -59,7 +59,7 @@ Two results fall out of this that `N11.md` explicitly left unbuilt.
   whatever point set, cell decomposition, LP or verifier is used.  `N11.md` could only say this
   heuristically ("the LP settles at exactly 11"); with the certificate `s(11) ≥ 3040/797 = 3.814304`
   the ceiling `s*(11) = sup{s : COVER(s) < 11}` of the pure method is now bracketed
-  **`3.814304 ≤ s*(11) < 3.84`**, a window of `0.026`.
+  **`3.814304 ≤ s*(11) ≤ 3.84`**, a window of `0.0257`.
 * **A better upper bound on `COVER` at `3.85`.**  A converged cover LP with exact-verifier
   separation gives an exact-verified cover of weight **`11.1162388`** at `t = 3800/987 = 3.850051`
   (`runs/n11_cd_CD385_cover.txt`, 520 points, `min covered = 1.000004` at `N = 6000` **and**
