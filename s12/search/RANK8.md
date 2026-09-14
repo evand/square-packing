@@ -205,25 +205,29 @@ configuration.
 > **MAXIMAL REALISABLE:  `{C0,C1,C2,C3,D0,D1,D2}` at `+4.426325e-02` and
 > `{C0,C1,C2,D0,D1,D2,D3}` at `+8.100185e-03`.**
 
-The margin table (sup of the min pairwise closed gap, best found; all `50` proper classes verified
-exactly as closed packings — the only class `verify` rejects is the full eight, and it rejects it
+The margin table (the best value found for each class, merged and re-polished over two independent
+runs — each is a *lower* bound on that class's sup, and each of the `50` proper classes is verified
+exactly as a closed packing.  The only class `verify` rejects is the full eight, and it rejects it
 for the right reason: correct patterns, `18` meeting pairs):
 
 | `|T|` | class | margin |
 |---|---|---|
-| 8 | `{C0,C1,C2,C3,D0,D1,D2,D3}` | `+0.000000e+00` — **not realisable** |
-| 7 | `{C0,C1,C2,C3,D0,D1,D2}` | `+4.426325e-02` |
-| 7 | `{C0,C1,C2,D0,D1,D2,D3}` | `+8.100185e-03` |
-| 6 | `{C0,C1,C2,C3,D1,D2}` | `+1.213203e-01` |
-| 6 | `{C0,C1,C2,C3,D0,D1}` | `+7.643407e-02` |
-| 6 | `{C0,C1,C2,D0,D1,D2}` / `{C0,C2,C3,D0,D1,D2}` | `+6.872930e-02` |
-| 6 | `{C0,C1,D0,D1,D2,D3}` | `+3.800139e-02` |
-| 6 | `{C1,C2,D0,D1,D2,D3}` | `+1.813679e-02` |
-| 5 | `{C0,C1,C2,C3,D0}` | `+3.500000e-01` |
-| 5 | rest of `|T| = 5` | `+5.06e-02` … `+1.31e-01` |
-| 4 | `{C0,C1,C2,C3}` | `+5.000000e-01` |
-| 4 | `{D0,D1,D2,D3}` | `+1.566542e-01` |
-| 4 | rest of `|T| = 4` | `+8.06e-02` … `+3.50e-01` |
+| 8 | `{C0,C1,C2,C3,D0,D1,D2,D3}` | `+0.000000000e+00` — **not realisable** |
+| 7 | `{C0,C1,C2,C3,D0,D1,D2}` | `+4.426324532e-02` |
+| 7 | `{C0,C1,C2,D0,D1,D2,D3}` | `+8.100184990e-03` |
+| 6 | `{C0,C1,C2,C3,D1,D2}` | `+1.213203436e-01` |
+| 6 | `{C0,C1,C2,C3,D0,D1}` | `+7.643406839e-02` |
+| 6 | `{C0,C1,C2,D0,D1,D2}`, `{C0,C2,C3,D0,D1,D2}` | `+6.872930441e-02` |
+| 6 | `{C0,C1,D0,D1,D2,D3}` | `+3.857127499e-02` |
+| 6 | `{C1,C2,D0,D1,D2,D3}` | `+1.813678996e-02` |
+| 5 | `{C0,C1,C2,C3,D0}` | `+3.500000000e-01` |
+| 5 | the other nine `|T| = 5` classes | `+5.058179e-02` … `+1.308005e-01` |
+| 4 | `{C0,C1,C2,C3}` | `+5.000000000e-01` |
+| 4 | `{D0,D1,D2,D3}` | `+1.566542267e-01` |
+| 4 | the other eleven `|T| = 4` classes | `+8.061024e-02` … `+3.500000e-01` |
+| 3 | all ten classes | `+1.566542e-01` … `+5.000000e-01` |
+| 2 | all six classes | `+1.720000e-01` … `+5.000000e-01` |
+| 1 | `{C0}`, `{D0}` | `+5.000000e-01`, `+4.983324e-01` |
 | 0 | `{}` (the four corner squares alone) | `+2.000000e+00` |
 
 The full table is in the log.  Two things it says.  **The four interior singletons on their own are
@@ -246,7 +250,9 @@ the `4096` subsets, resolved by the downward-closure pruning after `4` tests.
 | **drop a corner square `T3`** | 11 | **`+3.763847e-06`** |
 
 All three eleven-square witnesses are **exact closed packings** after hardening and snapping
-(`runs/rank8_subsets_all_hard.txt`, `rank8.py verify`).  Hence
+(`runs/rank8_subsets_all_hard.txt`, `rank8.py verify`): the hardened drop-a-corner witness has min
+gap `+6.670578e-07` — hardening costs it most of its margin, which is the point — and its snapped
+rational poses have all eleven patterns right and no meeting pair, in integers.  Hence
 
 > **the unique minimal non-realisable sub-configuration of leaf A is leaf A itself.**
 
@@ -277,8 +283,9 @@ parallel.  This is `HONEST.md` §0 item 3 and `BENTZ.md` §0 C1 again — the ga
 
 **No.**  Every sub-configuration of eleven or fewer of the twelve squares is realisable, with an
 exact witness; in particular every five- or six-square sub-family is realisable with a margin of at
-least `8e-2` (§2.1's table: the smallest six-square-in-`T` margin is `{C0,C1,D0,D1}` +4 corners at
-`+1.216405e-01`, and the smallest five-square one is `{C0,D0}` + 4 corners at `+3.5e-01`).  A
+least `1.72e-01` (§2.1's table: with the four corner squares present, the tightest six-square class
+is `{D0,D1}` at `+1.720000e-01` and the tightest five-square class is `{D0}` at `+4.983324e-01`;
+even eight squares never get below `+8.061024e-02`).  A
 half-container statement would therefore have to be a *different* statement — not a sub-family of
 leaf A, but a statement about a half-container *region* with its own boundary conditions — and
 nothing in the measurement suggests one exists: the certificate of §3 that is closest to a
@@ -500,10 +507,13 @@ python3 search/rank8.py subsets --exhaustive --nstart 300 --bh 8 --bhn 600 --con
        --out runs/rank8_subsets_singletons.txt
 python3 search/rank8.py subsets --all --nstart 200 --bh 5 --bhn 400 --confirm 2 \
        --nsamp 1000000 --support runs/pgonly_corner_exact.txt --out runs/rank8_subsets_all.txt
-python3 search/rank8.py harden runs/rank8_subsets_singletons.txt runs/rank8_subsets_singletons_hard.txt
-python3 search/rank8.py verify runs/rank8_subsets_singletons_hard.txt -n 60     # 50 of 51 EXACT
+python3 search/rank8.py subsets --all --only T0,T1,T2,C0,C1,C2,C3,D0,D1,D2,D3 \
+       --nstart 400 --bh 8 --bhn 800 --nsamp 1500000 --support runs/pgonly_corner_exact.txt
+# runs/rank8_subsets_final.txt merges and re-polishes the per-class best over both runs
+python3 search/rank8.py harden runs/rank8_subsets_final.txt runs/rank8_subsets_final_hard.txt
+python3 search/rank8.py verify runs/rank8_subsets_final_hard.txt -n 60     # 50 of 51 EXACT
 python3 search/rank8.py harden runs/rank8_subsets_all.txt runs/rank8_subsets_all_hard.txt
-python3 search/rank8.py verify runs/rank8_subsets_all_hard.txt -n 6
+python3 search/rank8.py verify runs/rank8_subsets_all_hard.txt -n 6        # all three 11-square EXACT
 
 # (3) the first-order system
 python3 search/rank8.py linear                 # one family, irreducible certificate, chains
@@ -517,9 +527,18 @@ python3 search/rank8.py sa2 runs/pgonly_corner_exact.txt --alpha \
 
 Inputs, read-only: `runs/pgonly_corner_exact.txt` (the certified `PGCORN` measure) and
 `runs/inputs-2026-09-12/` (unused here beyond the pattern census, which `bentz.py` already does).
-Logs quoted above: `runs/rank8_{selftest,margin,subsets_singletons,subsets_all,linear,sa2}.log`;
-configurations: `runs/rank8_margin_leafA.txt`, `runs/rank8_subsets_singletons{,_hard}.txt`,
-`runs/rank8_subsets_all{,_hard}.txt`, `runs/rank8_drop_corner.txt`.
+Logs quoted above: `runs/rank8_{selftest,margin,subsets_singletons,subsets_all,linear,sa2,verify}.log`;
+configurations: `runs/rank8_margin_leafA.txt` (the 120 best leaf-A configurations, all at `0`),
+`runs/rank8_subsets_final{,_hard}.txt` (one per `D4` class of the eight singletons; the hardened
+file is the one that verifies exactly), `runs/rank8_subsets_all{,_hard}.txt` (the three
+eleven-square classes over all twelve labels), `runs/rank8_drop_corner.txt` (the `3.76e-6`
+configuration of §2.2).
+
+**Merging note.**  §2.1's numbers are the best of two independent `subsets --exhaustive` runs plus
+a polishing pass (`runs/rank8_subsets_final.txt`); individual runs differ in the fourth significant
+figure on a few classes (e.g. `{C0,C1,D0,D1,D2}` at `8.288e-02` in one run and `9.317e-02` in the
+other).  Each entry is a *lower* bound on that class's sup, and the qualitative content — which
+class is realisable — never differed once basin hopping was on.
 
 ---
 
