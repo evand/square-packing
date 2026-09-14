@@ -106,12 +106,12 @@ def lp_mass(poses, t):
     return -res.fun, np.maximum(res.x, 0.0)
 
 
-FAMILY = ['corner (1/2,1/2,0)', 'wall (1/2,y,0)', 'tilted (x,y,th)', 'near-axis (x,y,th)']
-
-
 def unpack(z, t):
-    """z = [y2, x3, y3, th3, x4, y4, th4]  ->  the four poses"""
-    return [(0.5, 0.5, 0.0), (0.5, z[0], 0.0), (z[1], z[2], z[3]), (z[4], z[5], z[6])]
+    """z = [y_wall, (x, y, theta) * k]  ->  the corner pose, the wall pose and k free poses"""
+    out = [(0.5, 0.5, 0.0), (0.5, z[0], 0.0)]
+    for i in range(1, len(z), 3):
+        out.append((z[i], z[i + 1], z[i + 2]))
+    return out
 
 
 def objective(z, t):
@@ -119,22 +119,31 @@ def objective(z, t):
     return -m
 
 
-def search(t, restarts, seed, z0=None, log=print):
+def random_start(rng, t, k):
+    z = [rng.uniform(1.0, t / 2)]
+    for _ in range(k):
+        z += [rng.uniform(0.85, t - 0.85), rng.uniform(0.85, t - 0.85), rng.uniform(0.0, math.pi / 2)]
+    return np.array(z)
+
+
+def search(t, restarts, seed, k=2, z0=None, log=print):
     rng = np.random.default_rng(seed)
     best = (-1.0, None)
     starts = []
-    if z0 is not None:
+    if z0 is not None and (len(z0) - 1) // 3 == k:
         starts.append(np.array(z0))
+        for _ in range(max(2, restarts // 4)):                 # jitter the incumbent too
+            starts.append(np.array(z0) + rng.normal(0, 0.02, len(z0)))
     for _ in range(restarts):
-        starts.append(np.array([rng.uniform(1.0, t / 2),
-                                rng.uniform(0.9, t / 2), rng.uniform(t / 2, t - 0.9), rng.uniform(0.2, 0.8),
-                                rng.uniform(0.9, t / 2), rng.uniform(0.9, t - 0.9), rng.uniform(0.0, 0.35)]))
+        starts.append(random_start(rng, t, k))
     for i, z in enumerate(starts):
         r = minimize(objective, z, args=(t,), method='Nelder-Mead',
-                     options=dict(maxiter=1500, xatol=1e-7, fatol=1e-9))
+                     options=dict(maxiter=400 * len(z), xatol=1e-7, fatol=1e-9))
         if -r.fun > best[0]:
             best = (-r.fun, r.x)
             log(f"  restart {i}: mass {-r.fun:.9f}  z={np.round(r.x, 6).tolist()}")
+        if best[0] >= 11 - 1e-9:
+            break
     return best
 
 
@@ -154,14 +163,17 @@ def main():
     ap.add_argument('--bisect', nargs=2, type=float, default=None, metavar=('LO', 'HI'))
     ap.add_argument('--steps', type=int, default=8)
     ap.add_argument('--restarts', type=int, default=40)
+    ap.add_argument('--free', type=int, default=2, help='free (x, y, theta) poses besides corner and wall')
     ap.add_argument('--seed', type=int, default=20260913)
     ap.add_argument('--out', default=None)
     a = ap.parse_args()
 
     z_seed = [1.5002, 1.30193, 2.449725, math.radians(33.69997), 1.565, 1.625, math.radians(5.0)]
+    if a.free != 2:
+        z_seed = None
 
     def run(tf, z0):
-        m, z = search(tf, a.restarts, a.seed, z0=z0)
+        m, z = search(tf, a.restarts, a.seed, k=a.free, z0=z0)
         poses = unpack(z, tf)
         mass, mu = lp_mass(poses, tf)
         print(f"t = {tf:.6f}:  best LP mass = {mass:.9f}   {'>= 11' if mass >= 11 - 1e-9 else '< 11'}")
@@ -175,7 +187,7 @@ def main():
         # rescale the seed to the container being tried
         for k in range(a.steps):
             mid = (lo + hi) / 2
-            zz = list(z0)
+            zz = list(z0) if z0 is not None else None
             mass, z, poses, mu = run(mid, zz)
             if mass >= 11 - 1e-9:
                 hi = mid; z0 = list(z)
