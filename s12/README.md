@@ -116,6 +116,11 @@ Stromquist's `2 + 4/√5 = 3.788854` (2003).  Certificate `certificates/s11_lowe
 `s(11) ≤ s(12)`, so the `n = 12` files say nothing about `n = 11`.  The LP crosses 11 at
 about `3.815`, so for `n = 11` the pure method stops ~0.06 below the conjectured value
 `3.877083` (Trump's packing); details and the crossing bracket in `search/N11.md`.
+Every stronger family of the `n = 12` work (cliques on both sides, the corner branch, Sherali–Adams) has
+since been run at `n = 11` too, with the same outcome on the cover side — no certifiable family buys anything
+beyond the pure LP — and one difference in kind: level-2 Sherali–Adams closes the whole relaxation gap on the
+extremal support at `n = 11` where it closes a tenth at `n = 12`.  `search/N11_LADDER.md` has the rung-by-rung
+comparison.
 
 ## Limits of the method
 
