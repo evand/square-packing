@@ -11,8 +11,7 @@ Notation.  `T` = container side, `n = T^2 - T` squares, `theta in Theta_T = [0, 
 **Claim(T)** is `P_T = empty`, i.e. `s(T^2 - T) = T`.  Known: Claim(2) classical, Claim(3) true (Kearney–Shiu 2002);
 Claim(4) is the target; Claim(5) conjectured (Stromquist: "very unlikely" to fail at 12 or 20,
 `notes/proof-anatomy.md` §5.1); Claim(17) **false** (Cleemann, Friedman DS7 Fig. 8); asymptotics force
-failure for all large `T`.  The first failing `T*` is somewhere in `5..17`; check DS7 for anything
-tighter before quoting that range.
+failure for all large `T`.  The first failing `T*` is in `5..11` (§0a items 9, 11: `T = 11`, `12` verified here exactly).
 
 ## 0a. Corrections after adversarial review (`notes/proof-architecture-review.md`, same night) — read first
 
