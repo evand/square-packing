@@ -14,6 +14,12 @@ Semantics throughout as `notes/s13-casefree.md` §1: closed unit squares, closed
 
 ---
 
+> **Correction (2026-09-20, `S6_LOCAL.md`).**  Three numbers below are superseded: the `n = 12` uniform-tilt
+> coefficient is `-(1/3) t^2`, not `-(2/3)` (§6; `fixed_angle_value` was under-optimised — the `0.8°` row already
+> showed it); the `n = 6` cubic constant is `-(1/4) t^3`, not `-0.17` (§0.4, §4.2; two of the three points were
+> below the LP tolerance); and at `n = 12` there is no cubic direction to measure (§6, last paragraph).  The
+> verdict does not depend on any of them.
+
 ## 0. Verdict, up front
 
 **NOT CLOSED, and the skeleton provably cannot close by refinement.**  What came out instead is
