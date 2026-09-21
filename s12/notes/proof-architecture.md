@@ -69,6 +69,40 @@ tighter before quoting that range.
    valid argument — touching squares have coverage 2 at contacts and are infeasible for the closed-semantics LP.  The
    conclusion held numerically anyway.
 
+11. **Band-cut scan** (`search/BANDCUT_SCAN.md`).  The record `T = 12` and `T = 11` packings verify with our rows in exact
+   rational arithmetic (`delta = +6.81e-4`, `+2.75e-4`): the instrument has now seen a positive, and Claim(T) can only hold
+   for `T <= 10`.  The published `T >= 12` scheme is two integer blocks + two *squeezable* rectangles with
+   `waste(A) + waste(B) = T` exactly.  At `T = 4` the best band-type configuration is a margin-`0` point of `Z_4` of a new kind
+   (wall-to-wall `(4,1)` stack at `28.59°` + eight axis-parallel, `k = 8`) which still contains an axis-parallel chain of four;
+   no `T <= 10` configuration was found with a band cutting every row and column at margin `>= 0`.
+12. **Band-cut accounting** (`notes/bandcut-cost.md`).  Mixed-tilt chain inequality MT (proved): for a wall-to-wall chain
+   whose links share a normal `e = (cos phi, sin phi)`, `delta <= [cos phi (T - u_bar) + sin phi R - M]/(k - 1 + 2 cos phi)`,
+   `M = sum (1/2 + W(Dtheta)/2)`; mixed tilts cost first order (`|D|/2` per link), and the certificate dies when the link
+   *normals* spread (`+0.018` at `1°`, `T = k = 12`) — that is how a band escapes.  **The length accounting has no threshold
+   in `T`**: gain, number of chains, interface length are all linear in `T`.  In the published scheme the threshold is
+   integrality (`a_A + a_B + 4 <= T`, `a >= 4`), which over-proves by one: `T = 11` is positive and outside the scheme.
+13. *Caveat on item 12's "provable target" (mine, checked by hand):* "no `(3,b)` rectangle is squeezable" is **false** under
+   the natural reading (both sides can shrink): the `s(5)` packing (side `2 + 1/sqrt2 = 2.7071`) plus a column of two puts
+   `7 = 12 - 5` squares in `3.7071 x 2.7071`, a squeezable `(3,4)` of waste `5 = a + 2`; Stromquist's `1.9 x 3.9475` with four
+   squares is a squeezable `(2,4)` of waste `4 = a + 2` (`notes/proof-anatomy.md` §5.1).  So `a_0 = 4` and "minimum waste 6"
+   are facts about one paper's table, not floors, and `waste = a + 2` is not a floor either: the `s(5)` packing itself is a
+   squeezable `(3,3)` of waste `4 = a + 1`, and `s(11) < 4` a squeezable `(4,4)` of waste `5 = a + 1`.  Neither new rectangle
+   moves `T*` by the two-rectangle scheme (the complement would need `(m, m+1)` with `m^2 + 1` squares).  In this language
+   **Claim(T) says: a squeezable `(T,T)` square wastes at least `T + 1`** — true at `T = 2, 3`, the target at `T = 4`, false at
+   `T = 11` (waste `11`).  The natural family to embed it in is `w_min(a, b)`, the least waste of a squeezable `(a,b)`
+   rectangle, for small `a, b`: a table of mostly classical values, with `w_min(4,4) >= 5` the one we want.
+
+14. **The hole, measured** (`search/BANDCUT_K.md`; feasible points).  **No chain-free configuration with margin `>= 0` was
+   found at `T = 3` or `T = 4`**: every `delta* = 0` configuration carries a wall-to-wall chain of `T` among its near-axis
+   squares.  Chain-free maximum `= -gamma eps^p` (`eps` in rad): far field `k <= T-1`: `eps^2/4` at `T = 3`, `eps^2/5` at `T = 4`
+   (`1/(T+1)`?); in the hole `~ eps^2/8` (`T = 3`), `0.1–0.2 eps^2` (`T = 4`, `k = 4..7`, `k = 4` under-explored), and only
+   **`0.1004 eps^3` at `T = 4`, `k = 8, 9`** (solid) — `5e-7` at `eps = 1°`.  Best chain-free configurations are grid-like, not
+   band-like (tiling minus a permutation hole set, central `2 x 2` a pinwheel at tilt `eps`).  Two riders: "chain" must be
+   read at the configuration's own margin (at gap `>= 0` the statement is vacuous); and what holds a chain-free optimum shut
+   is a chain of `T` **through tilted squares**.  So the lemma the data supports is not "a near-axis chain exists" but
+   **"every configuration has a tight wall-to-wall chain of `T` squares, tilted or not, on which MT (item 12) gives `<= 0`"** —
+   which is exactly the statement a band defeats at `T >= 11` by spreading the link normals.
+
 The tables below are left as first written so the review can be read against them; where they disagree with §0a, §0a wins.
 
 ## 0. Verdict, up front
