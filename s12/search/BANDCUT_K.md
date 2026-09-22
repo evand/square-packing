@@ -269,7 +269,7 @@ the price of that arrangement is third order.  No counterexample — but the mar
 
 `bandcut_k.py chains` walks, for the best configuration of every cell, **every** path on `T`
 vertices of the near-axis DAG at that configuration's margin, and reports the chain with the
-smallest rise together with the bound it certifies.  At `T = 3` (`runs/bandcut_k_T3*`):
+smallest rise together with the bound it certifies.  *Erratum (2026-09-21, `notes/t3-chain.md`): `chain_certificate` evaluates `B_T` at the chain's **mean** tilt without checking that the links share a normal, and converts the tilt to degrees twice; on near-axis chains (tilt `<= eps`) the `B_3`/`B_4` columns below are approximate to `O(eps)`, and at large tilt they are not bounds at all.  The chain counts and rises are unaffected.*  At `T = 3` (`runs/bandcut_k_T3*`):
 
 | cell | `delta*` | chains of 3 among the near-axis squares | best rise | `B_3` (wall-to-wall) |
 |---|---|---|---|---|
