@@ -78,5 +78,14 @@ gives exactly `delta > 0` on them because it is tight.  The content of a chain c
 and unpinned.  What a `T = 4` proof has to use is that a chain of four cannot afford three band links plus two interfaces
 (item 4 above) — a counting statement in the chain length, which is where `4` enters as a number.  **[heuristic]**
 
-Not done: the same listing on the `T = 12` certificate (`runs/bandcut_scan_exact132.json`; same script, one command);
+Not done:
 transverse-chain search through the band squares to quantify "unpinned".
+
+## 4. Addendum: the same listing on the `T = 12` certificate  (`runs/bandcut_scan_exact132.json`, `runs/t11_chains_132.json`)
+
+Same picture, same numbers.  81 near-axis, 51 tilted; no axis-parallel wall-to-wall path.  Tight chains (slack `< 1e-6`)
+all of length 12: 8 distinct tilted sub-chains (5 in `x`, 3 in `y`), 2–4 band squares at one end, band tilts `23.7–30.7°`,
+`|Dperp| ~ 0.43–0.49` per band link, net **`+0.10–0.13` per band link**, interface link `-0.13` to `-0.16`, interface end
+square `-0.06` to `-0.18`.  One `x`-chain crosses the band *elbow* (tilts `-25.8, -25.4, +8.1, +23.7, +22.2, +7.3`) and pays
+for it in mixed-tilt links (`-0.139, -0.105, -0.134`), balanced by one link with `Dperp = +1.03` (`+0.231`).  Replaced
+`T = 11`'s "three band links break even" with the same ledger one container up: nothing in it changes with `T`.  **[measured]**
