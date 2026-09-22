@@ -792,7 +792,7 @@ def chain_certificate(z, n, near, lvl, T, tol=1e-7):
             B = (span * math.cos(t0) + R * math.sin(t0)) / (T - 1) - 1
             Bw = ((T - u) * math.cos(t0) + R * math.sin(t0)) / (T - 1) - 1
             if best is None or B < best[0]:
-                best = (B, Bw, R, span, ax, ch, math.degrees(t0))
+                best = (B, Bw, R, span, ax, ch, t0)
     if best is None:
         return dict(nchains=0)
     B, Bw, R, span, ax, ch, t0 = best
