@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Packing Twelve Squares</title>
+<title>Twelve and Thirteen Squares · Square Packing Atlas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
@@ -74,29 +74,36 @@ li::marker{color:var(--muted)}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
 .axis{width:100%;height:96px}
 .footnote{font-size:.87rem;color:var(--muted)}
+section>*{min-width:0}
+.footnote .mono,td .mono{overflow-wrap:anywhere}
+@media (max-width:520px){th,td{padding:8px 6px}td.num{white-space:normal}.wrap{padding:40px 16px 72px}}
+.topbar{display:flex;align-items:center;gap:6px 18px;padding:10px 20px;border-bottom:1px solid var(--rule);background:var(--surface);flex-wrap:wrap;font-size:16px;line-height:1.5}
+.topbar .brand{font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+.topbar nav{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.92rem}
+.topbar nav a{text-decoration:none;color:var(--muted);white-space:nowrap}
+.topbar nav a.here,.topbar nav a:hover{color:var(--accent)}
 </style>
 </head>
 <body>
-
-
+<div class="topbar">
+  <span class="brand">Square Packing Atlas</span>
+  <nav><a href="../index.html">Overview</a><a href="../explore.html">Explore</a><a href="../compare.html">Compare</a><a href="../bounds.html">Bounds</a><a href="../proofs.html">Proofs</a><a href="./" class="here">s(12)</a><a href="../sources.html">Sources</a></nav>
+</div>
 <div class="wrap">
 <header>
   <span class="eyebrow">Discrete geometry · computer-assisted proof</span>
-  <h1>Packing Twelve Squares</h1>
+  <h1>Twelve and Thirteen Squares</h1>
   <p class="lede">Nobody knows whether twelve unit squares fit inside a square of side less than 4.
   The best proven barrier had stood since 2003, at 3.7889. Here is a new one at 3.9686, machine-checked
-  from end to end — closing about 85% of the remaining gap, and an honest account of how far it does
+  from end to end — closing about 85% of the remaining gap — with a new floor for eleven squares, a
+  case-free proof that thirteen need side 4, and an honest account of how far the method does
   <em>not</em> go.</p>
   <div class="tags">
-    <span class="tag ok">Lower bound improved</span>
-    <span class="tag open">Main conjecture still open</span>
-    <span class="tag neutral">Certificate verified exactly</span>
-    <a class="tag neutral" href="https://github.com/evand/square-packing/tree/main/s12">Code, certificates &amp; verifier on GitHub →</a>
-    <a class="tag neutral" href="../">Square Packing Atlas: every record packing →</a>
+    <a class="tag neutral" href="https://github.com/evand/square-packing/tree/main/s12">Code, certificates &amp; verifiers on GitHub →</a>
   </div>
 </header>
 
-<section>
+<section id="result">
   <div class="sechead"><span class="eyebrow">01 · The result</span><h2>A new lower bound for s(12)</h2></div>
   <div class="card thm">
     <p class="stmt"><strong>Theorem.</strong> Twelve unit squares cannot be packed into any square of
@@ -115,21 +122,21 @@ li::marker{color:var(--muted)}
     in a container of side <span class="mono">15680/3951</span>, and total weight
     <span class="mono">11.9738036</span> — under the threshold by <span class="mono">0.026</span>.
     A 764-point certificate proves <span class="mono">s(12) ≥ 980/247 = 3.967611</span>, and the
-    first bound published here, <span class="mono">3920/997 = 3.931795</span>, now needs only 224 points.</p>
+    first bound published here, <span class="mono">3920/997 = 3.931795</span>, now needs only 224 points.
+    The same pipeline gives <span class="mono">s(11) ≥ 3040/797 = 3.814304</span> (680 points).</p>
   </div>
-  <p>A weaker certificate is far prettier, and worth stating because a human can hold it in their head.
-  Insist that every point carry the <em>same</em> weight, and the best one found is:</p>
+  <p>A weaker certificate is far prettier. Insist that every point carry the <em>same</em> weight, and the
+  best one found is:</p>
   <div class="card">
     <p><strong>81 points</strong> in <span class="mono">[0, 35/9]²</span> such that <strong>every</strong>
     closed unit square inside that container, at every angle, contains <strong>at least 7</strong> of them.</p>
   </div>
   <p>Twelve squares with disjoint interiors would need <span class="mono">12 × 7 = 84</span> point-slots
   and only 81 points exist, so at most <span class="mono">⌊81/7⌋ = 11</span> fit — hence
-  <span class="mono">s(12) ≥ 35/9 = 3.888…</span>, already past the 2003 bound. Everything after that
-  sentence is arithmetic a computer checks exactly.</p>
+  <span class="mono">s(12) ≥ 35/9 = 3.888…</span>, already past the 2003 bound.</p>
 </section>
 
-<section>
+<section id="context">
   <div class="sechead"><span class="eyebrow">02 · Context</span><h2>Where the problem stands</h2></div>
   <p>Let <span class="mono">s(n)</span> be the side of the smallest square holding <span class="mono">n</span>
   unit squares, rotations allowed. It is known exactly for surprisingly few <span class="mono">n</span>.</p>
@@ -137,9 +144,9 @@ li::marker{color:var(--muted)}
     <thead><tr><th>n</th><th>s(n)</th><th>status</th></tr></thead>
     <tbody>
       <tr><td class="num">10</td><td class="num">3.707107…</td><td>proved — Stromquist 2003</td></tr>
-      <tr><td class="num">11</td><td class="num">3.877084…</td><td>best packing (Trump 1979); <strong>optimality open</strong></td></tr>
+      <tr><td class="num">11</td><td class="num">3.877084…</td><td>best packing (Trump 1979); <strong>open</strong> — bound raised here to 3.8143</td></tr>
       <tr><td class="num">12</td><td class="num">4 &nbsp;(conjectured)</td><td><strong>open</strong> — bound raised here to 3.9686</td></tr>
-      <tr><td class="num">13</td><td class="num">4</td><td>proved — Bentz 2010</td></tr>
+      <tr><td class="num">13</td><td class="num">4</td><td>proved — Bentz 2010; re-proved here without cases (§07)</td></tr>
       <tr><td class="num">14, 15, 16</td><td class="num">4</td><td>proved — El Moumni, Nagamochi, area</td></tr>
     </tbody>
   </table></div>
@@ -149,21 +156,14 @@ li::marker{color:var(--muted)}
   <span class="mono">[3.788854, 4]</span>; it is now <span class="mono">[3.9686, 4]</span>.</p>
 </section>
 
-<section>
+<section id="search">
   <div class="sechead"><span class="eyebrow">03 · The other direction</span><h2>No packing below 4 was found</h2></div>
-  <p>The conjecture could also fall the other way — a clever tilted packing of 12 squares into
-  something smaller than 4 would settle it immediately. It doesn't appear to exist.</p>
-  <p>An L-BFGS + basin-hopping optimiser over the 36-dimensional configuration space
-  <span class="mono">(x, y, θ) × 12</span>, validated by reproducing the known optima for
-  n = 5, 10 and 11 to five decimal places, was run at container sides 3.90 through 3.999.
-  Every run collapsed to the same attractor: the compressed <span class="mono">4 × 4</span> grid,
-  with residual overlap energy exactly <span class="mono">0.2 ε²</span> at side
-  <span class="mono">4 − ε</span>. Nothing below 4 turned up — consistent with the
-  2025–26 simulated-annealing campaigns of Schadt and Ellsworth, which improved records at
-  n = 28, 29, 39, 41, 50… but never at 12.</p>
+  <p>A basin-hopping search over all 36 coordinates, validated on n = 5, 10 and 11, finds nothing below
+  side 4 — every run collapses to the compressed <span class="mono">4 × 4</span> grid. Schadt's and
+  Ellsworth's 2025–26 annealing campaigns, which improved many records, never improved 12.</p>
 </section>
 
-<section>
+<section id="certificate">
   <div class="sechead"><span class="eyebrow">04 · The certificate</span><h2>What the 81 points look like</h2></div>
   <figure>
     <div class="figbox"><svg viewBox="0 0 560 560" width="100%" role="img" aria-label="81-point certificate in a square of side 35/9">
@@ -262,31 +262,22 @@ li::marker{color:var(--muted)}
     <figcaption>The 81-point uniform certificate at side 35/9 (the 3.9686 certificate has 1736
     weighted points and does not draw as cleanly). Three sample unit squares are
     drawn — axis-aligned, tilted 20°, tilted 45° — with the points each one captures highlighted and
-    counted. No placement anywhere, at any angle, captures fewer than 7. Every uniform certificate
-    found, for 1 to 8 points per square, has the same skeleton: a <span class="mono">#</span> of lines
-    one unit from each wall, and a small ring about the centre.</figcaption>
+    counted. No placement anywhere, at any angle, captures fewer than 7. The
+    <a href="../proofs.html">Proofs page</a> lets you move the square yourself.</figcaption>
   </figure>
-  <p>The headline number was sharpened in three steps after the first certificate was found. A
-  certificate can be <em>scaled up linearly</em> — points and container together — until some
-  square's captured weight first falls below 1; that took the first LP solution from 3.92 to
-  3.9318. Re-optimising the weights on fixed points, with the exact verifier supplying the
-  violated placements as cutting planes, reached 3.9486 and then hit a cliff. Growing the point set
-  by column generation at a larger container removed the cliff and reached 3.9686. Just above that,
-  at 3.9696, column generation no longer gets under 12, so the method appears to be close to its limit here.</p>
-  <p>The points were found by linear programming. Classical proofs in this area (Göbel, Stromquist,
-  Friedman, Nagamochi, Bentz) hand-design a set of points that every unit square must contain;
-  the LP formulation instead lets weights be fractional and optimises them, with the covering
-  condition enforced by cutting planes generated over a rigorous cell decomposition of the
-  placement space, and with the point locations themselves chosen by column generation over a
-  fine candidate grid. The uniform certificates come from a separate integer program that forces
-  every weight to be equal — <span class="mono">1/7</span> each for the 81-point set, so a square must
-  capture 7 points — which is why their statement is a plain counting argument.</p>
+  <p>A linear program chooses the points and their fractional weights, where the classical proofs
+  (Göbel, Stromquist, Friedman, Nagamochi, Bentz) hand-design them. The bound was sharpened in three
+  steps: scaling the first certificate up to its critical container (3.92 → 3.9318), re-optimising the
+  weights with the exact verifier supplying violated placements as cutting planes (3.9486), and growing
+  the point set by column generation (3.9686); at 3.9696 column generation no longer gets under 12. The
+  uniform certificates come from an integer program that forces equal weights —
+  <span class="mono">1/7</span> each for the 81-point set.</p>
 </section>
 
-<section>
+<section id="verification">
   <div class="sechead"><span class="eyebrow">05 · Verification</span><h2>How it is checked</h2></div>
-  <p>A lower bound of this kind is only worth what its verification is worth, so the covering
-  property is established three independent ways.</p>
+  <p>A bound like this is worth what its verification is worth, so the covering property is checked
+  three independent ways.</p>
   <div class="grid2">
     <div class="card">
       <h3>Lean 4 + Mathlib</h3>
@@ -331,63 +322,36 @@ VERIFIED: every CLOSED unit square inside C covers weight &gt;= 1, and total wei
     i.e.  s(12) &gt;= 3.968615540</code></pre>
 </section>
 
-<section>
+<section id="limits">
   <div class="sechead"><span class="eyebrow">06 · Limits</span><h2>What this does not do</h2></div>
-  <p>It does not prove <span class="mono">s(12) = 4</span>, and this method never will. Here is the
-  precise reason, which is the most useful thing the exercise produced.</p>
-  <p>By LP duality, the smallest total weight any such certificate can have at container side
-  <span class="mono">s</span> is at least the <em>fractional packing number</em>
-  <span class="mono">ν_f(s)</span> — the largest total mass of a measure on unit-square placements whose
-  covering density never exceeds 1. The method proves <span class="mono">s(12) ≥ s</span> only when
-  <span class="mono">ν_f(s) &lt; 12</span>, so the side at which <span class="mono">ν_f</span> reaches
-  12 is a ceiling on the whole family of arguments. That ceiling is now pinned from above, rigorously:
-  an explicit fractional packing of mass <span class="mono">12.0282</span> at
-  <span class="mono">s = 399/100</span>, certified in exact rational arithmetic, shows that
-  <em>no</em> cover of weight below 12 exists at any <span class="mono">s ≥ 3.99</span> — whatever point
-  set, cell decomposition or verifier is used
-  (<a href="https://github.com/evand/square-packing/blob/main/s12/search/DUAL_EXACT.md">search/DUAL_EXACT.md</a>).
-  So:</p>
-  <ul>
-    <li>the ceiling <span class="mono">s*</span> of this entire family of arguments for n = 12 lies in
-      <span class="mono">[3.968616, 3.99)</span> — the lower end is the bound shipped here, the upper end
-      is a theorem. It is not 4. Runs that have not been driven to convergence suggest the true value is
-      a little below <span class="mono">3.99</span>: <span class="mono">L(3.98) ≥ 11.918</span>
-      (<a href="https://github.com/evand/square-packing/blob/main/s12/search/DUAL.md">search/DUAL.md</a>),
-      and column generation at <span class="mono">3.9696</span> no longer gets below 12
-      (<a href="https://github.com/evand/square-packing/blob/main/s12/search/TIGHTEN.md">search/TIGHTEN.md</a>);</li>
-    <li>the container of side 4 is not a way round this. A limit argument at
-      <span class="mono">s = 4</span> would need a cover of <span class="mono">[0,4]²</span> in the closed
-      semantics, and no such cover can weigh less than <span class="mono">12.2688</span>
-      (<a href="https://github.com/evand/square-packing/blob/main/s12/search/COVER4.md">search/COVER4.md</a>),
-      which is already above 12 — the same floor that section 07 leans on for thirteen squares;</li>
-    <li>whatever part of the bracket is actually reachable is computation, not mathematics: each
-      certificate is a large cutting-plane computation that must be driven to convergence against an
-      exact separator over a three-dimensional continuum of placements;</li>
-    <li>closing the remaining gap to 4 needs more than a certificate. The obvious next step — case
-      analysis layered on top of it, as Bentz did for n = 13 — has been measured at the container
-      and does not work: branching on where the corner squares sit, on which wall slots are used,
-      and on which of Bentz's own sixteen points each square contains all leave a case whose
-      fractional value is still 12
-      (<a href="https://github.com/evand/square-packing/blob/main/s12/search/BENTZ.md">search/BENTZ.md</a>).
-      What those measurements do show is where the missing unit lives. Squares that are not rotated
-      are easy: the nine points <span class="mono">{1,2,3}²</span> catch every axis-parallel unit
-      square in the 4×4 box, so at most nine of them fit, and everything the LP finds beyond nine is
-      rotation — most of it rotation by <em>less than one degree</em>, a square nudged a thousandth
-      off the grid and tilted a fraction of a degree so that it dodges every point on the grid lines.
-      And on the LP's own extremal measure the largest set of genuinely disjoint squares has eleven
-      members against a fractional mass of twelve: a gap of exactly one square, carried by eight
-      squares near the wall and interior tiles. A proof has to show that those eight cannot all be
-      placed — a statement about eight squares at once, which no weighting of points can express.
-      That is a real research problem, not a longer run.</li>
-  </ul>
+  <p>It does not prove <span class="mono">s(12) = 4</span>, and this method never will. By LP duality a
+  certificate at container side <span class="mono">s</span> weighs at least the <em>fractional packing
+  number</em> <span class="mono">ν_f(s)</span>, and an exact fractional packing of mass
+  <span class="mono">12.0282</span> at <span class="mono">s = 3.99</span> shows that no weighted cover
+  below 12 exists at any side ≥ 3.99, whatever points or verifier are used
+  (<a href="https://github.com/evand/square-packing/blob/main/s12/search/DUAL_EXACT.md">DUAL_EXACT.md</a>).
+  So the ceiling of this whole family of arguments lies in <span class="mono">[3.968616, 3.99)</span>.
+  It is not 4.</p>
+  <p>The container itself does not help: a cover of <span class="mono">[0,4]²</span> — in the
+  <em>closed</em> convention, where a point on a square's edge counts, explained in §07 — weighs at least
+  <span class="mono">12.2688</span>
+  (<a href="https://github.com/evand/square-packing/blob/main/s12/search/COVER4.md">COVER4.md</a>).
+  Case analysis layered on top, Bentz's route for thirteen, has been measured there too, and every
+  branching tried leaves a case still worth 12
+  (<a href="https://github.com/evand/square-packing/blob/main/s12/search/BENTZ.md">BENTZ.md</a>). The
+  missing unit is rotation — mostly by less than one degree — and on the LP's extremal measure it is
+  carried by eight squares at once, a statement no weighting of points can express. That is a real
+  research problem, not a longer run.</p>
+  <p>The complete negative record — every route to <span class="mono">s(12) = 4</span> tried, where each
+  one fails, each claim labelled proved or measured — is
+  <a href="https://github.com/evand/square-packing/blob/main/s12/notes/n12-gap.md">notes/n12-gap.md</a>.</p>
 </section>
 
-<section>
+<section id="s13">
   <div class="sechead"><span class="eyebrow">07 · A second result</span><h2>s(13) = 4, without case analysis</h2></div>
-  <p>The same machinery, pointed at the neighbouring problem, gives a genuinely new <em>proof</em> of
-  a known theorem. Thirteen unit squares need a container of side exactly 4: that is Bentz's 2010
-  result, and his argument is a weighted point set plus a six-case analysis of where a square is
-  allowed to sit. Here it falls out of a single object, with no cases at all.</p>
+  <p>The same machinery gives a new <em>proof</em> of a known theorem. That thirteen unit squares need
+  side 4 is Bentz's 2010 result, from a point set plus a six-case analysis of where a square may sit.
+  Here it follows from a single object, with no cases.</p>
   <div class="card thm">
     <p class="stmt"><strong>Theorem.</strong> There are <strong>3621 points</strong> in the square
     <span class="mono">[0,4]²</span>, carrying rational weights of total
@@ -403,45 +367,28 @@ VERIFIED: every CLOSED unit square inside C covers weight &gt;= 1, and total wei
   </div>
 
   <h3>What a &ldquo;closed cover&rdquo; is, and why weight under 13 is enough</h3>
-  <p>A <em>cover</em> here is the same object as the certificate in section 01 — weighted points that
-  no unit square can avoid — but placed in the container of side 4 itself, rather than in a slightly
-  smaller one. The word <em>closed</em> is the whole of the difficulty. A point sitting exactly on the
-  edge of a square counts as captured. That convention is not a technicality chosen for convenience: it
-  is what every published proof in this literature uses, because they all argue about squares of side
-  <span class="mono">1 + ε</span> for every <span class="mono">ε &gt; 0</span>, and the limit of that is
-  precisely &ldquo;closed square, boundary counts&rdquo;.</p>
-  <p>It is also what makes the number 13 reachable. In the opposite convention — open squares, boundary
-  does not count — the sixteen squares of the <span class="mono">4×4</span> tiling can each be shrunk a
-  hair and become genuinely disjoint, so any cover would have to weigh at least 16 and nothing below 16
-  could ever be proved. In closed semantics those sixteen squares <em>share</em> their boundary grid
-  points, that obstruction evaporates, and a cover of weight 12.96 is possible. It is also close to
-  optimal: no cover of <span class="mono">[0,4]²</span> can weigh less than
-  <span class="mono">12.2688</span>, proved exactly in <span class="mono">search/COVER4.md</span>. The
-  gap between that floor and 13 is the entire room this proof has.</p>
+  <p>A <em>cover</em> is the certificate of §01 placed in the container of side 4 itself. <em>Closed</em>
+  means a point exactly on a square's edge counts as captured — the limit of the
+  <span class="mono">1 + ε</span> squares every published proof argues about, and what makes 13 reachable.
+  With open squares the sixteen tiles of the <span class="mono">4×4</span> grid, shrunk a hair, are
+  disjoint, so every cover would weigh at least 16. Closed, they share their boundary points, and 12.96 is
+  possible — against a proved floor of <span class="mono">12.2688</span>, which is all the room this proof
+  has.</p>
 
   <h3>&ldquo;Margin zero&rdquo; and &ldquo;exhaustive&rdquo;</h3>
-  <p>The verifier of section 05 works by chopping the range of angles into bins and shrinking each
-  square slightly so that one shrunken square stands in for a whole bin. At the container itself that
-  method provably cannot work: at the corner placement the only point captured lies exactly on the
-  square's boundary, so the slack is <em>zero</em>, and tilting by <span class="mono">ε</span> buys back
-  only about <span class="mono">ε²</span> while any bin of width <span class="mono">ε</span> erodes the
-  square by about <span class="mono">ε</span>. Quadratic margin against linear erosion: no resolution is
-  fine enough.</p>
-  <p>So the cover is checked a different way. The three-dimensional space of placements — two
-  coordinates for the centre, one for the angle — is cut adaptively into boxes with rational corners.
-  For each box the checker must <em>prove</em>, exactly, that every placement in it captures weight at
-  least 1; if it cannot, it splits the box and tries again. <strong>Exhaustive</strong> means the
-  process finished: every box ended up certified, none was abandoned at the depth limit, and zero boxes
-  are left uncertified. There is no sampling anywhere, and no floating-point number on the load-bearing
-  path.</p>
-  <p>One structural fact is worth knowing, because it says why this proof looks the way it does. A
-  theorem in <span class="mono">search/RUNG2.md</span> shows that if every box is certified by a
-  <em>fixed</em> set of witness points — the same points captured at every placement in the box — then
-  the cover must weigh at least 16, always. So a 12.96 cover cannot be proved that way, and most of its
-  boxes have to be certified <em>disjunctively</em> instead: &ldquo;at every placement here, either
-  <em>this</em> set of points is inside the square, or <em>that</em> one is.&rdquo; Both checkers below
-  measure that the disjunctive rule carries 65% of their non-empty boxes — the same fraction, from two
-  different disjunctions over two different subdivisions.</p>
+  <p>The verifier of §05 shrinks each square slightly so that one square stands in for a bin of angles.
+  At the container that cannot work: at the corner placement the only captured point lies on the
+  square's edge, so the slack is <em>zero</em>, and a tilt of <span class="mono">ε</span> buys back only
+  about <span class="mono">ε²</span> while a bin of width <span class="mono">ε</span> erodes about
+  <span class="mono">ε</span>.</p>
+  <p>Instead the three-dimensional space of placements is cut adaptively into boxes with rational
+  corners, and for each box the checker must <em>prove</em>, exactly, that every placement in it captures
+  weight at least 1, splitting the box when it cannot. <strong>Exhaustive</strong> means it finished with
+  zero boxes uncertified; nothing is sampled, and no floating-point number is load-bearing. Boxes certified
+  by a <em>fixed</em> set of captured points can only prove covers of weight 16 or more
+  (<a href="https://github.com/evand/square-packing/blob/main/s12/search/RUNG2.md">RUNG2.md</a>), so most
+  boxes are certified <em>disjunctively</em> — &ldquo;either this set of points is inside, or that
+  one&rdquo; — 65% of the non-empty boxes in both checkers.</p>
 
   <h3>Two checkers that share nothing</h3>
   <div class="tablewrap"><table>
@@ -455,41 +402,38 @@ VERIFIED: every CLOSED unit square inside C covers weight &gt;= 1, and total wei
       <tr><td>time</td><td class="num">1 h 42 min, 8 processes</td><td class="num">17 min, 8 threads</td></tr>
     </tbody>
   </table></div>
-  <p>The two were written from the mathematical statement, not from each other: different subdivision
-  rules, different sets of primitives, no shared line of code. They also agree pointwise, which is
-  worth more than the box counts — asked for the exact weight captured at four specific placements,
-  including one where a point sits exactly on the square's edge, they return the same nine-digit
-  rationals. Twenty-three rejection tests check that the Rust checker refuses what it should: mutated
-  certificates, two invalid covers from the project's own history, and nine malformed files, on which
-  it must give no verdict at all rather than a wrong one.</p>
+  <p>The two were written from the statement, not from each other: different subdivisions, different
+  primitives, no shared code. They also agree pointwise — at four specific placements, one with a point
+  exactly on the edge, they return the same nine-digit rationals. Twenty-three rejection tests check that
+  the Rust checker refuses mutated certificates, two invalid covers from our own history, and nine
+  malformed files (on which it must give no verdict at all).</p>
   <p>The soundness of every primitive both checkers rest on is proved in Lean 4 + Mathlib
-  (<span class="mono">lean/Sqpack/ZeroMargin.lean</span>, 36 theorems, 0 sorries, standard axioms only).
-  What is <em>not</em> in Lean, and should be said plainly: the subdivision itself, the argument that
-  the boxes exhaust the space, the bookkeeping and the file parser, in either checker. What stands
-  behind those is that two independent programs reach zero uncertified boxes on the same file.</p>
+  (<span class="mono">lean/Sqpack/ZeroMargin.lean</span>, 0 sorries, standard axioms only). Not in Lean,
+  in either checker: the subdivision, the argument that the boxes exhaust the space, the bookkeeping and
+  the parser. Behind those stands the agreement of two independent programs.</p>
   <pre><code>$ verify2/target/release/zmcheck cert certificates/rung2/s13_closed_cover_4.txt --depth 18 --threads 8
 certificate certificates/rung2/s13_closed_cover_4.txt: container [0,4]^2, 3621 points, D=1000 W=1000000000
 total weight = 12955972155/1000000000 = 12.955972155
 done in 1065s: boxes 30258, max depth 10
   leaves: ADM 5114  DISJ 9477  EMPTY 6938  UNCERTIFIED 0
 VERIFIED: every closed unit square in [0,4]^2 captures weight &gt;= 1; total weight 12955972155/1000000000 = 12.955972155</code></pre>
-  <p class="footnote">Full account, with the lemmas and the obstruction theorem:
-  <a href="https://github.com/evand/square-packing/blob/main/s12/search/RUNG2.md">search/RUNG2.md</a>;
-  the independent checker is written up in
-  <a href="https://github.com/evand/square-packing/blob/main/s12/search/RUNG2_XCHECK.md">search/RUNG2_XCHECK.md</a>,
-  and there is a short self-contained note at
-  <a href="https://github.com/evand/square-packing/blob/main/s12/notes/s13-casefree.md">notes/s13-casefree.md</a>.
-  None of this moves <span class="mono">s(12)</span>: the floor of 12.2688 on covers of
-  <span class="mono">[0,4]²</span> is above 12, so the same object says nothing about twelve squares.</p>
+  <p class="footnote">Full account:
+  <a href="https://github.com/evand/square-packing/blob/main/s12/search/RUNG2.md">RUNG2.md</a>; the
+  second checker:
+  <a href="https://github.com/evand/square-packing/blob/main/s12/search/RUNG2_XCHECK.md">RUNG2_XCHECK.md</a>;
+  a short self-contained note:
+  <a href="https://github.com/evand/square-packing/blob/main/s12/notes/s13-casefree.md">s13-casefree.md</a>.
+  None of this moves <span class="mono">s(12)</span>: the 12.2688 floor is above 12.</p>
 </section>
 
-<section>
+<section id="artifacts">
   <div class="sechead"><span class="eyebrow">08 · Reproduce</span><h2>Artifacts</h2></div>
   <p>Everything is in the repository <a href="https://github.com/evand/square-packing/tree/main/s12">evand/square-packing</a> (directory <span class="mono">s12/</span>); <span class="mono">./verify.sh</span> rebuilds the verifiers and re-checks the certificates (<span class="mono">--full</span> adds the slow sweeps, including the full s(13) check), and CI runs the fast tier on every change.</p>
   <div class="tablewrap"><table>
     <thead><tr><th>path</th><th>what</th></tr></thead>
     <tbody>
       <tr><td class="num">certificates/s12_lower_3.9686.txt</td><td>the main certificate: 1736 weighted points, s = 15680/3951</td></tr>
+      <tr><td class="num">certificates/s11_lower_3.8143.txt</td><td>the s(11) certificate: 680 weighted points, s = 3040/797</td></tr>
       <tr><td class="num">certificates/s12_uniform_7of81_3.888.txt</td><td>the pretty one: 81 points, 7 per square, s = 35/9</td></tr>
       <tr><td class="num">certificates/rung2/s13_closed_cover_4.txt</td><td>the s(13) = 4 cover: 3621 weighted points of [0,4]², total weight 12.955972</td></tr>
       <tr><td class="num">tests/rejection_tests.sh</td><td>inputs the verifier must refuse</td></tr>
@@ -504,9 +448,9 @@ VERIFIED: every closed unit square in [0,4]^2 captures weight &gt;= 1; total wei
       <tr><td class="num">search/pack_src/</td><td>packing optimiser used for the upper-bound search</td></tr>
     </tbody>
   </table></div>
-  <p class="footnote">Caveats worth stating plainly: the result rests on a computation, not on a proof a human can check by hand. The literature survey behind
-  the "previous record" claim is DS7 plus David Ellsworth's current record tables; if a better published
-  bound for n = 12 exists somewhere I did not find it. Nothing here has been peer reviewed.</p>
+  <p class="footnote">Caveats: these results rest on computation, not on proofs a human can check by
+  hand, and nothing here has been peer reviewed. The "previous record" claims rest on DS7 and David
+  Ellsworth's record tables; if a better published bound exists, we did not find it.</p>
 </section>
 </div>
 
