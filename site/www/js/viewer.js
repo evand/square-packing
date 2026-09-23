@@ -18,7 +18,7 @@ const tiltOf = th => { th = ((th % 90) + 90) % 90; return th > 45 ? th - 90 : th
 const hueFill = (tilt) => `hsl(${(tilt * 4 + 360) % 360} 55% 62%)`;
 const CAT = ['#5B9BD5','#ED7D31','#70AD47','#C9A227','#8E6BBF','#DB5B8A','#3FA9A9','#B0715A','#7A8B2F','#4C6FBF','#D9713C','#5FA35F',
              '#A4527F','#3F8E7A','#B85C5C','#6F7DB5','#C48E2A','#8062A8','#3C9CC7','#9E7A4E','#5C8EA6','#B0505E','#4C9E6E'];
-const catFill = k => CAT[k % CAT.length];
+const catFill = k => k < 0 ? 'var(--sq-fill)' : CAT[k % CAT.length];   // -1: a square whose merged group averages to ~0 tilt
 const parseQuery = () => Object.fromEntries(new URLSearchParams(location.search));
 // Seven catalogue files are named `square-NN_rM%27.svg`.  Dropped into a URL unescaped the
 // server decodes the %27 back to an apostrophe and the fetch 404s, so encode the name.
@@ -527,6 +527,13 @@ function renderSide() {
   $('prose').innerHTML = prose ? prose.replace(/\$([^$]+)\$/g, (m, t) => { try { return katex.renderToString(t, { throwOnError: false }); } catch (e) { return m; } }) : '';
   // Not encoded: seven names hold a literal %27, which Ellsworth's own links use as-is.
   $('srcline').innerHTML = `Geometry from <a href="https://kingbird.myphotos.cc/packing/${S.file}" target="_blank" rel="noopener">${S.file}</a> on David Ellsworth's <a href="https://kingbird.myphotos.cc/packing/squares_in_squares.html" target="_blank" rel="noopener">Squares in Squares</a> (after Erich Friedman).`;
+  // where to go next for this n
+  const nv = variantsFor(S.n).length, xl = [];
+  if (nv > 1) xl.push(`<a href="compare.html?n=${S.n}">compare all ${nv} packings of ${S.n}</a>`);
+  if (S.n <= 100) xl.push(`<a href="bounds.html?n=${S.n}">floor and history for n = ${S.n}</a>`);
+  if (S.n === 12) xl.push(`<a href="s12/">our s(12) ≥ 3.9686</a>`);
+  if (S.n === 13) xl.push(`<a href="proofs.html#bentz-proof">how s(13) = 4 is proved</a>`);
+  $('xlinks').innerHTML = xl.join(' · ');
   // freedom
   const fl = $('freelist'); fl.innerHTML = '';
   const groupOnly = a.mobile.map((m, i) => m && !a.free.includes(i) && !a.wedged.includes(i) ? i : null).filter(x => x != null);
@@ -547,9 +554,9 @@ function renderSide() {
   // gaps
   const G = $('gaps'); G.innerHTML = '';
   const near = a.near_misses || [];
-  setText('gapnote', `Closest approach between two squares that do not touch, or a square and a wall, ` +
-    `in units of one square's side. ` + (near.length > GAP_SHOW ? `The ${GAP_SHOW} smallest; ` : '') +
-    `nothing above ${GAP_MAX} is measured. Click a row to zoom to it.`);
+  setText('gapnote', `Closest non-touching pairs (square–square or square–wall), in side lengths. ` +
+    (near.length > GAP_SHOW ? `The ${GAP_SHOW} smallest shown; only` : 'Only') +
+    ` gaps below ${GAP_MAX} are measured. Click a row to zoom to it.`);
   near.slice(0, GAP_SHOW).forEach(m => {
     const row = document.createElement('div'); row.className = 'row';
     row.innerHTML = `<span>${gapLabel(m)}</span><span class="g">${fmt(m.gap_mp ?? m.gap, 5)}</span>`;
@@ -588,7 +595,7 @@ async function load(file, n) {
   if (!res.ok) {   // no exported analysis: say so everywhere, rather than leaving the last one up
     S.rec = null; S.file = file; S.n = n; $('nbox').value = n; $('title').textContent = 'No analysis for ' + file;
     $('sval').textContent = '—'; $('view').innerHTML = '';
-    for (const id of ['sform', 'tags', 'prose', 'srcline', 'rotsum', 'legend', 'freesum', 'freelist', 'gaps', 'stats', 'sel']) { const e = $(id); if (e) e.innerHTML = ''; }
+    for (const id of ['sform', 'tags', 'prose', 'srcline', 'xlinks', 'rotsum', 'legend', 'freesum', 'freelist', 'gaps', 'stats', 'sel']) { const e = $(id); if (e) e.innerHTML = ''; }
     setText('panelerr', `${file} is in the catalogue but has no exported analysis — it failed the parser's checks, or the export skipped it.`);
     return;
   }

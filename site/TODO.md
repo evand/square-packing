@@ -5,6 +5,26 @@ Living list.  Items marked ✓ are done.  Findings from an audit on 2026-09-09; 
 of the code and should be re-checked before they are fixed.  **(ship)** marks what should not go
 public unfixed — see the Publishing section for why each one is on that list.
 
+## Done 2026-09-22 (site review, `private/site/notes/site-review-2026-09-22.md`)
+
+* Nav gains **s(12)**, on every page including `/s12/`, which now wears the Atlas topbar; the nav wraps
+  instead of scrolling (on a phone "Sources" was cut off).  Explore's stage no longer assumes a 49 px
+  topbar.
+* Overview: lede says the site has original results; a "New: s(12) and s(13)" card and a Compare
+  card; the year slider no longer widens the page on phones; three-column cards.
+* Cross-links: Explore → Compare (when there are alternatives), Bounds (n ≤ 100), `/s12/` (n = 12),
+  the Bentz walkthrough (n = 13); Bounds table n → Explore; Bounds footnote → Sources §1; ids on
+  every Proofs and Sources heading.
+* Writing: Bounds lede; Proofs "Why twelve", Bentz intro and the s(13) section tightened (the
+  technical account now lives on `/s12/#s13`); Sources lede no longer says nothing here is
+  original, §5 lists s(11) and the case-free s(13) as "this project", §3's asymptotics folded
+  under `<details>`, §7 shortened; Explore gap note.  `/s12/` 29 % shorter, retitled "Twelve and
+  Thirteen Squares", s(11) added, §06 rewritten against `s12/notes/n12-gap.md`.
+* Bugs fixed: `catFill(-1)` black squares; playground calls before its data loads, page-wide arrow
+  keys (now only when the diagram has focus), stale-load race, legend stuck on "7", "check all
+  angles" gives feedback; Compare's play timer after a failed load; the doubled year on the Bounds
+  card; the misplaced "show the count everywhere" checkbox.
+
 ## Done 2026-09-09
 
 * ✓ **Bounds no longer calls s(5) and s(10) open.**  `lower_bounds.json` stored every floor rounded
@@ -199,24 +219,12 @@ public unfixed — see the Publishing section for why each one is on that list.
 
 ## Bugs
 
-1. `viewer.js` `fillFor`: `catFill(-1)` -> `CAT[-1]` -> `fill="undefined"`.  Confirmed:
-   `square-271_r2` at merge 93–100 renders two squares black.  A wrap-around merge gives a group mean
-   tilt ~0 while its members have tilt >= 1e-9.
-2. `playground.js`: the pointer, the arrow keys and "check all angles" dereference `C.s` before
-   `loadCert` resolves (3 TypeErrors with the fetch held back).  All four arrow keys are captured
-   document-wide, even on the focused certificate `<select>`, killing arrow-key scrolling on
-   proofs.html.  "Check all angles" takes ~150 ms on a desktop, so its missing progress indicator
-   only matters on slow devices.
-3. `compare.js:56/79`: the no-drawable and not-loadable branches null `A` without stopping the play
-   timer — press play at n = 17, type 585, and it throws every 40 ms.
-4. `proofs.html`: the legend and theorem box are hard-coded for the 81-point set; after switching to
-   `cert_56` they still say "exactly 7" and 35/9.  Switching quickly can also let the older file
-   arrive last (`playground.js:93`).
-5. `overview.js:92` counts tilt angles as `n_angles − 1`, wrong for packings with no unrotated square
+1. `proofs.html`: the theorem box is written for the 81-point set; after switching to `cert_56` it
+   still says 35/9 and 7 (the colour legend now follows the chosen set).
+2. `overview.js:92` counts tilt angles as `n_angles − 1`, wrong for packings with no unrotated square
    (`50_r0r`, `200_r0r`); not seen at any slider year tried.
-6. Explore's "fit" throws on a file with no analysis (`S.rec` is null).
-7. The Bounds one-n story card repeats the year: "Stromquist 2003, 2003".
-8. At phone width the Overview year slider and its label widen the page (402 px at a 390 px viewport).
+3. Explore's "fit" throws on a file with no analysis (`S.rec` is null).
+4. Compare at t = 0 outlines most squares red, which reads as an error rather than "moves".
 
 Refuted in the review, so not a bug: `hover()` does not trail the pointer while panning —
 `setPointerCapture` retargets `pointermove` to the `<svg>`, and the tooltip stays hidden.

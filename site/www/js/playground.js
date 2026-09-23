@@ -8,14 +8,19 @@ let C = null;                 // certificate: {s, pts:[[x,y,w]], k}
 let pose = { x: 1.5, y: 1.5, th: 0 };
 const EPS = 1e-9;
 
+let loadGen = 0;               // a newer loadCert supersedes an older one still in flight
 async function loadCert(name) {
+  const gen = ++loadGen;
   const txt = await (await fetch('data/' + name)).text();
+  if (gen !== loadGen) return;
   const nums = txt.split(/\s+/).filter(Boolean).map(Number);
   const [sn, sd, D, W, m] = nums; const pts = [];
   for (let i = 0; i < m; i++) pts.push([nums[5 + 3 * i] / D, nums[6 + 3 * i] / D, nums[7 + 3 * i] / W]);
   const k = Math.round(1 / Math.min(...pts.map(p => p[2])));   // uniform weight 1/k
   C = { s: sn / sd, sTex: `${sn}/${sd}`, pts, k, m };
   pose = { x: C.s / 2, y: C.s / 2, th: 0 }; $('ang').value = 0;
+  const kl = [`exactly ${k}`, `${k + 1}`, `${k + 2}–${k + 3}`, `${k + 4}+`];
+  document.querySelectorAll('.keys span').forEach((sp, i) => { if (kl[i]) sp.lastChild.textContent = kl[i]; });
   build(); update();
 }
 
@@ -43,6 +48,7 @@ function build() {
   const land = $('land'); land.width = 120; land.height = 120;
 }
 function update() {
+  if (!C) return;
   clamp();
   const cov = covered(pose.x, pose.y, pose.th); const set = new Set(cov);
   $('sq').setAttribute('transform', `translate(${pose.x} ${pose.y}) rotate(${pose.th})`);
@@ -69,6 +75,11 @@ function landscape() {
   $('landnote').textContent = `at ${(+$('ang').value).toFixed(1)}°: minimum ${min} over ${N}×${N} centre positions; ${(100 * tight / (N * N)).toFixed(1)}% of positions are tight`;
 }
 function scanAll() {
+  if (!C) return;
+  $('scan').disabled = true; $('scannote').textContent = 'checking 181 angles…';
+  setTimeout(() => { try { scanNow(); } finally { $('scan').disabled = false; } }, 30);
+}
+function scanNow() {
   let gmin = Infinity, worst = null; const N = 90, s = C.s;
   for (let a = 0; a <= 90; a += 0.5) {
     const h = halfExtent(a);
@@ -84,12 +95,13 @@ function scanAll() {
 function initDrag() {
   const svg = $('pl'); let drag = null;
   const pt = e => { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; const q = p.matrixTransform(svg.getScreenCTM().inverse()); return { x: q.x, y: C.s - q.y }; };
-  svg.addEventListener('pointerdown', e => { const p = pt(e); drag = { dx: pose.x - p.x, dy: pose.y - p.y }; svg.setPointerCapture(e.pointerId); if (Math.hypot(pose.x - p.x, pose.y - p.y) > 1.2) { pose.x = p.x; pose.y = p.y; drag = { dx: 0, dy: 0 }; } update(); });
-  svg.addEventListener('pointermove', e => { if (!drag) return; const p = pt(e); pose.x = p.x + drag.dx; pose.y = p.y + drag.dy; update(); });
+  svg.addEventListener('pointerdown', e => { if (!C) return; const p = pt(e); drag = { dx: pose.x - p.x, dy: pose.y - p.y }; svg.setPointerCapture(e.pointerId); if (Math.hypot(pose.x - p.x, pose.y - p.y) > 1.2) { pose.x = p.x; pose.y = p.y; drag = { dx: 0, dy: 0 }; } update(); });
+  svg.addEventListener('pointermove', e => { if (!drag || !C) return; const p = pt(e); pose.x = p.x + drag.dx; pose.y = p.y + drag.dy; update(); });
   svg.addEventListener('pointerup', () => { drag = null; });
-  svg.addEventListener('wheel', e => { e.preventDefault(); pose.th = ((pose.th + (e.deltaY > 0 ? 1 : -1) * 0.5) % 90 + 90) % 90; $('ang').value = pose.th; update(); }, { passive: false });
-  window.addEventListener('keydown', e => { const st = { ArrowLeft: [-0.01, 0], ArrowRight: [0.01, 0], ArrowUp: [0, 0.01], ArrowDown: [0, -0.01] }[e.key]; if (st && document.activeElement.tagName !== 'INPUT') { pose.x += st[0]; pose.y += st[1]; update(); e.preventDefault(); } });
-  $('ang').oninput = () => { pose.th = +$('ang').value; update(); };
+  svg.addEventListener('wheel', e => { if (!C) return; e.preventDefault(); pose.th = ((pose.th + (e.deltaY > 0 ? 1 : -1) * 0.5) % 90 + 90) % 90; $('ang').value = pose.th; update(); }, { passive: false });
+  // Arrow keys move the square only while the diagram has focus (click it or tab to it).
+  svg.addEventListener('keydown', e => { const st = { ArrowLeft: [-0.01, 0], ArrowRight: [0.01, 0], ArrowUp: [0, 0.01], ArrowDown: [0, -0.01] }[e.key]; if (st && C) { pose.x += st[0]; pose.y += st[1]; update(); e.preventDefault(); } });
+  $('ang').oninput = () => { if (!C) return; pose.th = +$('ang').value; update(); };
   $('showland').onchange = update; $('scan').onclick = scanAll; $('cert').onchange = () => loadCert($('cert').value);
 }
 initDrag(); loadCert('cert_81.txt');

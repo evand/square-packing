@@ -42,17 +42,17 @@ td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;w
 <body>
 <div class="topbar">
   <span class="brand">Square Packing Atlas</span>
-  <nav><a href="index.html">Overview</a><a href="explore.html">Explore</a><a href="compare.html">Compare</a><a href="bounds.html" class="here">Bounds</a><a href="proofs.html">Proofs</a><a href="sources.html">Sources</a></nav>
+  <nav><a href="index.html">Overview</a><a href="explore.html">Explore</a><a href="compare.html">Compare</a><a href="bounds.html" class="here">Bounds</a><a href="proofs.html">Proofs</a><a href="s12/">s(12)</a><a href="sources.html">Sources</a></nav>
 </div>
 <div class="wrap">
   <section>
     <div class="eyebrow">what is known, exactly</div>
     <h1>The best packing and the proven floor</h1>
-    <p class="lede">Lower bounds are collected for <i>n</i> up to 100; above that only the record packings are known. For each <i>n</i> here two numbers are known: the side of the best packing anyone has found (an upper bound on <span class="mono">s(n)</span>), and a floor that a proof says no packing can beat. Where they meet, <span class="mono">s(n)</span> is settled. Everywhere else the truth is somewhere in the gap — and for most <i>n</i> the gap has barely moved in forty years.</p>
+    <p class="lede">For each <i>n</i> two numbers are known: the side of the best packing anyone has found, and a floor that a proof says no packing can beat. Where they meet, <span class="mono">s(n)</span> is settled; elsewhere the truth lies in the gap, and for most <i>n</i> the gap has barely moved in forty years. Floors are collected for <i>n</i> ≤ 100.</p>
   </section>
 
   <section>
-    <h2>The gap, for <i>n</i> up to 100</h2>
+    <h2>The gap</h2>
     <div class="ctl">
       <label>show <i>n</i> up to <input id="nmax" type="number" min="10" max="100" value="60"></label>
       <label><input type="checkbox" id="rel"> as a percentage of the side</label>
@@ -76,7 +76,7 @@ td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;w
     <details open><summary>all <i>n</i> up to 100</summary>
       <div class="tablewrap"><table id="tbl"><thead><tr><th>n</th><th>best packing</th><th>found by</th><th>proven floor</th><th>proved by</th><th>gap</th><th>status</th></tr></thead><tbody></tbody></table></div>
     </details>
-    <p class="note">Upper bounds and their dates are read from David Ellsworth's catalogue; lower bounds from Erich Friedman's survey and the papers it cites, with the 2026 computer-checked certificates (unrefereed) marked. Bounds of the form ⌈√n⌉ that follow from area alone or from Nagamochi's general theorem are labelled as such.</p>
+    <p class="note">Upper bounds and their dates are read from David Ellsworth's catalogue; lower bounds from <a href="sources.html#catalogue">Erich Friedman's survey</a> and the papers it cites, with the 2026 computer-checked certificates (unrefereed) marked. Bounds of the form ⌈√n⌉ that follow from area alone or from Nagamochi's general theorem are labelled as such.</p>
   </section>
 </div>
 <script src="js/bounds.js"></script>

@@ -169,7 +169,9 @@ function setup() {
     `<div>Distinct angles: ${ra.analysis.n_angles} → ${rb.analysis.n_angles}; free squares ${ra.analysis.free.length} → ${rb.analysis.free.length}</div>`;
 }
 
+function stopPlay() { if (timer) { clearInterval(timer); timer = null; $('play').textContent = 'play'; } }
 function draw() {
+  if (!A) { stopPlay(); return; }
   const svg = $('view'); svg.innerHTML = ''; const t = +$('t').value / 1000;
   const ra = A.rec, rb = B && B.rec; const s = (rb && match) ? ra.s + (rb.s - ra.s) * t : ra.s;
   svg.setAttribute('viewBox', `${-0.03 * s} ${-0.03 * s} ${1.06 * s} ${1.06 * s}`);

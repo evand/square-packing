@@ -21,6 +21,7 @@ section{display:flex;flex-direction:column;gap:14px}
 .count{font-family:"IBM Plex Mono",monospace;font-size:2.6rem;font-weight:600;line-height:1;color:var(--accent)}
 .count.low{color:var(--red)}
 .panel label{display:flex;flex-direction:column;gap:4px}
+.panel label.check{flex-direction:row;align-items:center;gap:6px}
 .panel input[type=range]{width:100%}
 .land{display:flex;flex-direction:column;gap:8px}
 .land canvas{width:100%;aspect-ratio:1;image-rendering:pixelated;border:1px solid var(--rule);border-radius:3px;background:var(--surface)}
@@ -36,7 +37,7 @@ section{display:flex;flex-direction:column;gap:14px}
 <body>
 <div class="topbar">
   <span class="brand">Square Packing Atlas</span>
-  <nav><a href="index.html">Overview</a><a href="explore.html">Explore</a><a href="compare.html">Compare</a><a href="bounds.html">Bounds</a><a href="proofs.html" class="here">Proofs</a><a href="sources.html">Sources</a></nav>
+  <nav><a href="index.html">Overview</a><a href="explore.html">Explore</a><a href="compare.html">Compare</a><a href="bounds.html">Bounds</a><a href="proofs.html" class="here">Proofs</a><a href="s12/">s(12)</a><a href="sources.html">Sources</a></nav>
 </div>
 <div class="wrap">
   <section>
@@ -46,22 +47,22 @@ section{display:flex;flex-direction:column;gap:14px}
   </section>
 
   <section>
-    <h2>The trick</h2>
+    <h2 id="trick">The trick</h2>
     <p>Suppose you want to show that <i>n</i> unit squares can't fit in a square box of side <i>s</i>. Scatter some points in the box so that <em>every possible position of a unit square</em> — anywhere, at any angle — covers at least one of them. If you managed it with fewer than <i>n</i> points, you're done: <i>n</i> squares with no overlap would each need their own point, and there aren't enough to go round.</p>
     <p>The whole art is choosing the points. Near a wall a unit square can't tilt much without poking out, so a row of points about 0.9 from each wall catches everything there. In the middle, a triangle of points with sides ≤ 1 can't be dodged (a unit square whose centre is in the triangle must cover a corner of it). Stitching such lemmas together over the whole box is the proof.</p>
     <p>A sharper version asks each point to be hit not once but <i>k</i> times: if every unit square covers at least <i>k</i> of <i>m</i> points, then at most ⌊<i>m</i>/<i>k</i>⌋ squares fit. Below is a real one.</p>
   </section>
 
   <section>
-    <h2>Try it: 81 points, every square catches 7</h2>
+    <h2 id="playground">Try it: 81 points, every square catches 7</h2>
     <div class="thm">In a box of side 35/9 ≈ 3.889 there are 81 points such that <b>every</b> unit square inside the box, at every position and angle, contains at least 7 of them. Twelve squares would need 12 × 7 = 84. So twelve unit squares fit in no box smaller than this: <span class="mono">s(12) ≥ 35/9</span>.</div>
     <p>Drag the square around and rotate it. The points it covers light up and the count is shown. Try to get it below 7 — you can't, but the places where it is <em>exactly</em> 7 tell you what the points are for.</p>
     <div class="play">
-      <svg id="pl" viewBox="0 0 1 1"></svg>
+      <svg id="pl" viewBox="0 0 1 1" tabindex="0" aria-label="unit square over the point set; drag to move, scroll to rotate, arrow keys when focused"></svg>
       <div class="panel">
         <div><div class="eyebrow">points covered</div><div class="count" id="cnt">—</div><div class="note" id="cntnote"></div></div>
         <label>angle <span class="mono" id="angv">0°</span><input id="ang" type="range" min="0" max="90" step="0.1" value="0"></label>
-        <label><input type="checkbox" id="showland" checked> show the count everywhere at this angle</label>
+        <label class="check"><input type="checkbox" id="showland" checked> show the count everywhere at this angle</label>
         <div class="land"><canvas id="land" width="120" height="120"></canvas>
           <div class="keys"><span><i style="background:#B4322A"></i>exactly 7</span><span><i style="background:#F5EBDA"></i>8</span><span><i style="background:#DCEDF1"></i>9–10</span><span><i style="background:#0E7490"></i>11+</span></div>
           <div class="note" id="landnote"></div></div>
@@ -73,26 +74,26 @@ section{display:flex;flex-direction:column;gap:14px}
   </section>
 
   <section>
-    <h2>Why twelve is still open</h2>
-    <p>Everyone believes <span class="mono">s(12) = 4</span>: the plain 4 × 4 grid with four squares missing. The best proven floor is now 3.9686 — <a href="s12/">our own result</a>, computer-checked but not refereed — from a weighted version of the same argument where points carry fractional weights chosen by a linear program, an idea from Sam Burns's and Gustavo Massaccesi's 2026 work on n = 17 (<a href="sources.html">Sources</a> §5). Weighted points alone cannot finish the job: at box side 4 itself no weighting of points totals less than 12.27 (proved exactly), so closing the last 0.03 needs case analysis on top — the kind used to prove <span class="mono">s(13) = 4</span>, which is next.</p>
+    <h2 id="why-twelve">Why twelve is still open</h2>
+    <p>Everyone believes <span class="mono">s(12) = 4</span>: the plain 4 × 4 grid with four squares missing. The best proven floor is now 3.9686, <a href="s12/">our own result</a>, computer-checked but not refereed. It uses a weighted version of the same argument, where a linear program chooses fractional weights for the points, an idea from Sam Burns's and Gustavo Massaccesi's 2026 work on n = 17 (<a href="sources.html#computer-checked">Sources §5</a>). Weighted points alone cannot finish the job: at box side 4 no weighting of points totals less than 12.27 (proved exactly). Closing the last 0.03 needs something more, such as the case analysis used to prove <span class="mono">s(13) = 4</span>, next.</p>
   </section>
 
 <section>
-  <h2>Walkthrough: how Bentz ruled out thirteen</h2>
-  <p>Bentz works in the square <span class="mono">[0,4]²</span> with <b>boxes</b> — the inside of a square of side a little more than 1. If 13 boxes never fit in <span class="mono">[0,4]²</span>, then 13 unit squares need a container of side at least 4, which is <span class="mono">s(13) = 4</span>. He starts with 16 unavoidable points: <span class="mono">A(1, 0.914)</span>, <span class="mono">B(0.914, 1)</span>, <span class="mono">C(0.914, 2)</span> and <span class="mono">D(1.65, 1.65)</span>, mirrored in <span class="mono">x = 2</span>, <span class="mono">y = 2</span> and <span class="mono">y = x</span> — eight points near the corners, four near the middles of the walls, four in the interior. Thirteen boxes against sixteen points leaves only three points of slack, which is enough to force at least two boxes to be alone with a corner point. A box in that position is very restricted: swapping its point for a nearby one leaves the set unavoidable, so the box has to cover that nearby point too (the replacement lemma). From there the argument splits on whether those two lonely boxes sit at the same corner or at different ones, and the split has six leaves.</p>
+  <h2 id="bentz-proof">Walkthrough: how Bentz ruled out thirteen</h2>
+  <p>Bentz works in <span class="mono">[0,4]²</span> with <b>boxes</b>, each the inside of a square of side a little more than 1. If 13 boxes never fit, then <span class="mono">s(13) = 4</span>. He starts from 16 unavoidable points (in the figure). Thirteen boxes against sixteen points leave three points of slack. That is enough to force at least two boxes to sit alone with a corner point, where a replacement lemma pins them down further. The argument then splits on whether those two boxes share a corner, and the split has six leaves.</p>
   <div id="bentz"></div>
   <p>Click through the leaves and watch the number in the tree: every branch ends at <b>12</b>. The bookkeeping is "free points + boxes already placed", and a contradiction needs that total to be under 13. Each configuration Bentz builds is, in effect, a certificate worth exactly 12 — so it kills a thirteenth box and nothing more. For 12 squares every leaf would have to come out at 11 instead, and only one of the six does. The loss starts at the very first step: with 12 boxes and 16 points the slack is 4, all eight corner points can pair up in four boxes, and there is no lonely box for the replacement lemma to work on. That single missing unit is why the same proof says nothing about <span class="mono">s(12)</span>.</p>
   
 </section>
 
 <section>
-  <h2>Thirteen again, with no cases</h2>
+  <h2 id="s13-casefree">Thirteen again, with no cases</h2>
   <p>The six leaves above are the price of working with plain points. Give the points fractional weights, let a linear program choose them, and the case tree can be made to disappear altogether: the same theorem now follows from a single object, with nothing to click through.</p>
   <div class="thm">In <span class="mono">[0,4]²</span> there are <b>3,621 points</b> carrying rational weights of total <span class="mono">12.955972</span>, such that <b>every</b> closed unit square inside the box, at every position and every angle, captures weight at least 1 — a point sitting exactly on the square's edge counts. Since <span class="mono">12.955972 &lt; 13</span>, thirteen squares don't fit below side 4: <span class="mono">s(13) = 4</span>.</div>
   <p>The counting is the same as ever, only with weights. Thirteen unit squares packed into a box smaller than 4 can be blown up until they are squares of side a little <em>more</em> than 1 inside <span class="mono">[0,4]²</span>, each strictly containing a unit square; those thirteen unit squares are then pairwise disjoint as sets, so no point is credited twice. Each captures weight ≥ 1, which would need a total of 13, and the whole set weighs less. Sixteen unit squares tile <span class="mono">[0,4]²</span>, so side 4 is reached — the bound is exactly right.</p>
-  <p>That "closed" convention, boundary points included, is not a detail; it is what makes 13 the number to beat rather than 16. The sixteen squares of the <span class="mono">4 × 4</span> tiling meet along the grid lines, and a point on a shared edge is credited to both squares that touch it. In the other convention — squares shrunk by a hair, boundary not counted — those sixteen become genuinely disjoint, every cover of <span class="mono">[0,4]²</span> would have to weigh at least 16, and nothing below 16 could ever be proved. Closed semantics is also what every published proof in this subject is really using, since they all argue about squares of side 1 + ε for every ε &gt; 0. There is a floor even so: no cover of <span class="mono">[0,4]²</span> can weigh less than <span class="mono">12.2688</span>, proved exactly, so the whole proof lives in the narrow room between that and 13 — and, incidentally, no cover of this box will ever say anything about twelve squares, because 12.2688 is already above 12.</p>
-  <p>Checking such a claim is harder than checking the 81-point set above, because here the margin is zero: at the corner placement the only point the square catches lies exactly on its edge, so there is no slack to sample with. The check has to be exhaustive and exact. Two programs do it, written from the statement rather than from each other and sharing no code — one in Python using exact rational arithmetic, one in Rust using exact integers — and both chop the three-dimensional space of positions and angles into boxes until every box is settled by an exact argument, with none left over. They also pass 23 rejection tests: deliberately broken and mutated certificates that a checker must refuse, including two earlier covers that really were invalid. The lemmas the two checkers rest on are proved in the Lean proof assistant; the subdivision code itself is not, which is worth saying plainly.</p>
-  <p class="aside">The theorem is Bentz's (2010) — only the proof is new, and it is a computation, not something a reader checks by hand. Certificate, both checkers, the rejection tests and the Lean are in the <a href="https://github.com/evand/square-packing/tree/main/s12">repository</a> (directory <span class="mono">s12/</span>); the self-contained write-up is <a href="https://github.com/evand/square-packing/blob/main/s12/notes/s13-casefree.md">notes/s13-casefree.md</a>, with the exact floor on covers of <span class="mono">[0,4]²</span> in <a href="https://github.com/evand/square-packing/blob/main/s12/search/COVER4.md">search/COVER4.md</a>.</p>
+  <p>The closed convention, where a point on a square's edge counts, is what makes 13 the target. In the 4 × 4 tiling a point on a shared edge is credited to both squares. Shrink the squares a hair instead and the sixteen become disjoint, so no cover could weigh under 16. Nor can any cover weigh under <span class="mono">12.2688</span> (proved exactly), which is also why no cover of this box can ever say anything about twelve squares.</p>
+  <p>Here the margin is zero: at the corner placement the only captured point lies on the square's edge, so nothing can be checked by sampling. Two independent exact checkers (Python rationals, Rust integers) split the space of positions and angles into boxes until every box is settled. Both finish with none left over, and both reject 23 deliberately broken certificates. Their lemmas are proved in Lean; the subdivision code is not.</p>
+  <p class="aside">The theorem is Bentz's (2010); only the proof is new. The technical account (certificate, both checkers, the Lean) is on the <a href="s12/#s13">s(12) page</a>, and everything is in the <a href="https://github.com/evand/square-packing/tree/main/s12">repository</a>.</p>
 </section>
 </div>
 <script src="js/playground.js"></script>

@@ -86,7 +86,7 @@ function draw() {
     G.appendChild(a);
   }
   legend();
-  $('foot').textContent = `As of ${state.year === 2026 ? 'today' : state.year}: ${counts.trivial || 0} of ${NMAX} are best packed on the plain grid, ${counts.diagonal || 0} use only 45° tilts, ${counts.one || 0} have one other tilt angle and ${counts.many || 0} several. Geometry and attributions from David Ellsworth's catalogue, which continues Erich Friedman's; dates are read from its wording and rounded to the year.`;
+  $('foot').textContent = `As of ${state.year === 2026 ? 'today' : state.year}: ${counts.trivial || 0} of ${NMAX} are best packed on the plain grid, ${counts.diagonal || 0} use only 45° tilts, ${counts.one || 0} have one other tilt angle and ${counts.many || 0} several. Dates are read from the catalogue's wording and rounded to the year.`;
 }
 function tip(e, t) {
   const T = $('tip'); const lines = [`n = ${t.n}`, `s = ${t.s.toFixed(t.file ? 6 : 0)}${t.file ? '…' : ' (grid)'}`];

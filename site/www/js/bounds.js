@@ -102,7 +102,7 @@ function chart2() {
   const tt = box.querySelector('.tt');
   const dot = (x, y, col, text) => { const c = el('circle', { cx: x, cy: y, r: 5, fill: col, stroke: 'var(--surface)', 'stroke-width': 1.5, style: 'cursor:pointer' }, svg); el('circle', { cx: x, cy: y, r: 12, fill: 'transparent', style: 'cursor:pointer' }, svg).onmouseenter = c.onmouseenter = () => { tt.textContent = text; tt.style.display = 'block'; tt.style.left = Math.min(x / W * box.clientWidth + 12, box.clientWidth - 240) + 'px'; tt.style.top = (y / H * box.clientWidth * H / W - 10) + 'px'; }; c.onmouseleave = () => { tt.style.display = 'none'; }; };
   up.forEach(p => dot(xs(p.y), ys(p.s), 'var(--chart-a)', `${p.s.toFixed(6)}\n${p.label || p.who || ''} ${p.undated ? '(date not recorded)' : Math.floor(p.y)}`));
-  lo.forEach(p => dot(xs(p.y), ys(p.v), 'var(--chart-b)', `≥ ${p.v.toFixed(6)}\n${p.src || ''} ${p.y}${p.status === 'preprint' ? '\n(unrefereed)' : ''}`));
+  lo.forEach(p => dot(xs(p.y), ys(p.v), 'var(--chart-b)', `≥ ${p.v.toFixed(6)}\n${p.src || ''}${String(p.src || '').includes(String(p.y)) ? '' : ' ' + p.y}${p.status === 'preprint' ? '\n(unrefereed)' : ''}`));
   // direct labels at the right end
   const lu = el('text', { x: W - mr - 4, y: ys(up[up.length - 1].s) - 7, 'text-anchor': 'end', style: 'font-size:11px;fill:var(--muted)' }, svg); lu.textContent = `best ${up[up.length - 1].s.toFixed(5)}`;
   const ll = el('text', { x: W - mr - 4, y: ys(lo[lo.length - 1].v) + 15, 'text-anchor': 'end', style: 'font-size:11px;fill:var(--muted)' }, svg); ll.textContent = `floor ${lo[lo.length - 1].v.toFixed(5)}`;
@@ -113,7 +113,7 @@ function chart2() {
   const cards = [];
   const first = up[1]; if (first) cards.push(`First improvement on the grid: <b>${first.s.toFixed(5)}</b> by ${first.who || '?'}${first.undated ? ' (date not recorded)' : ' in ' + Math.floor(first.y)}.`);
   const last = up[up.length - 1]; if (up.length > 2) cards.push(`Current record <b>${last.s.toFixed(6)}</b> (${last.who || ''}${last.undated ? '' : ', ' + Math.floor(last.y)}) after ${up.length - 1} improvements.`);
-  const ll2 = lo[lo.length - 1]; cards.push(`Proven floor <b>${ll2.v.toFixed(6)}</b> (${ll2.src || 'area'}${ll2.y > 1979 ? ', ' + ll2.y : ''}${ll2.status === 'preprint' ? ', unrefereed' : ''}).`);
+  const ll2 = lo[lo.length - 1]; cards.push(`Proven floor <b>${ll2.v.toFixed(6)}</b> (${ll2.src || 'area'}${ll2.y > 1979 && !String(ll2.src || '').includes(String(ll2.y)) ? ', ' + ll2.y : ''}${ll2.status === 'preprint' ? ', unrefereed' : ''}).`);
   if (!settled) cards.push(`Open by <b>${(last.s - ll2.v).toFixed(5)}</b> — ${(100 * (last.s - ll2.v) / last.s).toFixed(2)}% of the side.`);
   for (const c of cards) { const d = document.createElement('div'); d.innerHTML = c; st.appendChild(d); }
   history.replaceState(null, '', `?n=${n}`);
@@ -126,7 +126,7 @@ function table() {
   for (let n = 1; n <= 100; n++) {
     const u = upper(n), l = lower(n), settled = isSettled(u, l);
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td class="num">${n}</td><td class="num">${u.s.toFixed(6)}${u.trivial ? ' (grid)' : ''}</td><td>${u.who}${u.date ? ' ' + u.date[0] : ''}</td><td class="num">${l.value.toFixed(6)}</td><td>${srcLabel(l)}${l.status === 'preprint' ? ' <span class="tag open">unrefereed</span>' : ''}</td><td class="num">${settled ? '—' : (u.s - l.value).toFixed(4)}</td><td>${settled ? '<span class="tag ok">settled</span>' : '<span class="tag open">open</span>'}</td>`;
+    tr.innerHTML = `<td class="num"><a href="explore.html?n=${n}" title="explore n = ${n}">${n}</a></td><td class="num">${u.s.toFixed(6)}${u.trivial ? ' (grid)' : ''}</td><td>${u.who}${u.date ? ' ' + u.date[0] : ''}</td><td class="num">${l.value.toFixed(6)}</td><td>${srcLabel(l)}${l.status === 'preprint' ? ' <span class="tag open">unrefereed</span>' : ''}</td><td class="num">${settled ? '—' : (u.s - l.value).toFixed(4)}</td><td>${settled ? '<span class="tag ok">settled</span>' : '<span class="tag open">open</span>'}</td>`;
     tb.appendChild(tr);
   }
 }
