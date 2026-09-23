@@ -367,6 +367,13 @@ no `30k`-column LP per node.  (iii) *A better killer choice*: the deepest violat
 `0.03`-neighbourhood; diverse shallow ones kill little; `min_viol` should rise with the rounds.
 None of these was reached within the day.
 
+**Stopped 2026-09-22, 22:35 (the question is parked; `TODO`).**  Last states, none with a verdict:
+`L2e` round 4 solved (13-set, LP `12.2095`, `1,762 s`; worst violation `-0.024`), stopped in round 5 at `|F| = 1,857`;
+`L3d` round 6 solved (13-set, LP `12.2491`, `3,156 s`; worst `-0.032`), stopped in round 7 at `|F| = 1,921`;
+`symRx` (reflection `x -> 4 - x`, `notes/unavoid13.md`) round 19 at `|F| = 1,465` **feasible** (a symmetric 13-set, 8 orbits,
+IP `18,566 s`; worst violation `-0.076`), stopped in round 20 at `|F| = 1,545`.  `symRd` never ran past round 1.
+Families and logs: `runs/unavoid13no_L2e`, `runs/unavoid13no_L3d`, `runs/unavoid13_symRx`.
+
 ## 8. What in the brief or in `notes/unavoid13.md` turned out wrong
 
 1. **The brief's step-1 test is not a completeness test** (§1): `LP ≥ 12.2688` holds for *any* candidate
