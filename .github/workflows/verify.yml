@@ -46,6 +46,12 @@ jobs:
             s12/verify2/target
           key: ${{ runner.os }}-cargo-${{ hashFiles('s12/verify/Cargo.lock', 's12/verify2/Cargo.lock') }}
 
+      - name: Install Python and numpy (the unavoidable-set and zero-margin checkers use it)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install --quiet numpy
+
       - name: Check certificate hashes
         run: sha256sum -c certificates/SHA256SUMS
 
