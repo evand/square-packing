@@ -92,6 +92,24 @@ echo
 echo "=== rung-2 rejection tests (23 checks: mutations, invalid historical covers, malformed input) ==="
 ./tests/rung2/rejection_tests.sh
 echo
+echo "=== unavoidable point sets (notes/unavoid13.md, certificates/unavoid13/README.md): p(3) = 7, and no"
+echo "    half-turn-symmetric 13-point set for [0,4]^2.  Lower bounds: exact branch-and-bound certificates"
+echo "    checked by search/unavoid13_exactcheck.py (Fractions; own vertices, incidence, domination, tree) ==="
+echo "    p(3) <= 7: the rational Kearney-Shiu set ks7_rational_3.txt is unavoidable (zero-margin checker + SEG)"
+out=$(python3 search/unavoid13_check.py cert certificates/unavoid13/ks7_rational_3.txt --tri --seg --depth 16) \
+  || { echo "$out"; echo "checker failed: unavoid13_check.py"; exit 1; }
+echo "$out" | grep -E '^(done in |  leaves:|VERIFIED|NOT VERIFIED)'
+echo "$out" | grep -qx 'VERIFIED' || { echo "REJECTED: ks7_rational_3.txt"; exit 1; }
+echo "    p(3) >= 7: no 6 points meet the 87 squares of unavoid3_lower7_family.txt"
+chk python3 search/unavoid13_exactcheck.py certificates/unavoid13/unavoid3_lower7_family.txt \
+    certificates/unavoid13/unavoid3_lower7_bb.txt --threads 4
+echo "    no half-turn-symmetric set of <= 13 points meets the 441 squares of unavoid4_C2_family.txt (~25 s)"
+chk python3 search/unavoid13_exactcheck.py certificates/unavoid13/unavoid4_C2_family.txt \
+    certificates/unavoid13/unavoid4_C2_bb.txt --threads 4
+echo
+echo "=== unavoid13 rejection tests (22 checks: mutated families, tampered duals, dropped subtrees) ==="
+./tests/unavoid13/rejection_tests.sh
+echo
 echo "=== rejection tests (a verifier that never says no is worthless) ==="
 ./tests/rejection_tests.sh
 echo

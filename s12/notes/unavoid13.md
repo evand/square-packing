@@ -11,13 +11,13 @@ IP, violation search, polish), `search/unavoid13_loop.py` (the cutting-plane loo
 
 **`T = 4`: undecided — `h(F) = 13` at every round of every run; smallest violation of a polished 13-set
 `−0.040`; the general IP is the bottleneck, not the geometry.**  What *is* decided at `T = 4` [proved,
-exact candidates, two solvers]: **no 13-point unavoidable set is invariant under the 180° rotation of the
+exact branch-and-bound certificate, §6]: **no 13-point unavoidable set is invariant under the 180° rotation of the
 container** (hence none is `C4`-, `V`- (Friedman's symmetry), diagonal-Klein- or `D4`-symmetric); the single
 axis- and diagonal-reflection cases were still running when this note was written (§4.2).  Every 13-point
 unavoidable set, if one exists, is therefore essentially asymmetric.
 
-**`T = 3` [proved]: the minimum is exactly 7.**  Lower bound: a 575-square family with `h(F) = 7`, exact
-incidence, three solvers (§2.3).  Upper bound: the rational Kearney–Shiu set with `a = 9/10`, certified with
+**`T = 3` [proved]: the minimum is exactly 7.**  Lower bound: an 87-square family with `h(F) = 7`, exact
+branch-and-bound certificate checked in Fractions (§2.3, §6).  Upper bound: the rational Kearney–Shiu set with `a = 9/10`, certified with
 `0` uncertified boxes — but only after adding a two-witness primitive (SEG) to the checker, which
 `zeromargin.py` cannot do with or without `--tri`/`--disj` (§2.2).  Calibration: fractional value `5.53`
 (proved-side LP over `F`) to `5.99` (heuristic dense cover LP) against the pure number 7 (§2.4).
@@ -165,10 +165,14 @@ So no 6 points meet these 575 closed unit squares, hence no 6-point pure unavoid
 
 > **[proved]** The minimum size of a pure unavoidable set for closed unit squares in `[0,3]^2` is
 > exactly **7**.  (Kearney–Shiu exhibit 7; the lower bound is new to the repo, and I know of no statement
-> of it in the literature.)
+> of it in the literature.)  Lower-bound certificate: `certificates/unavoid13/unavoid3_lower7_family.txt`
+> (87 squares) + `unavoid3_lower7_bb.txt` (exact branch-and-bound tree, rational LP duals), checked by
+> `search/unavoid13_exactcheck.py` in Fractions (§6).  The three-solver table above is the earlier
+> floating-point evidence.
 
 The float loop's own `h(F) = 7` at round 6 (lenient incidence) agrees, as it must (§1).  The shrunk family
-(greedy, orbit-first) is reported in §2.5 when the shrink finishes.
+(greedy, orbit-first: `D4` orbits first, then single squares) has **87 squares** and still `h = 7`; it is
+shipped as `certificates/unavoid13/unavoid3_lower7_family.txt` with the exact certificate of §6.
 
 ### 2.4 Calibration at `T = 3`
 
@@ -252,15 +256,18 @@ Positive control: with `G = V` (Friedman's `x→4−x, y→4−y`) and `k = 14` 
 | `Rd` (one diagonal reflection) | 2 | *(pending)* | | | |
 
 > **[proved]** No 13-point pure unavoidable set for `[0,4]^2` is invariant under the 180° rotation of the
-> container (hence none under `C4`, `V`, the diagonal Klein group, or `D4`).  Certificates: the four families
-> above, each a finite set of rational admissible closed unit squares that no such symmetric 13-set meets;
-> re-solvable from `runs/unavoid13_sym*/F_round*_symcheck_*.json` + the family file.
+> container (hence none under `C4`, `V`, the diagonal Klein group, or `D4`, each of which contains it).
+> Certificate: `certificates/unavoid13/unavoid4_C2_family.txt` (the `C2` family above: 441 rational admissible
+> closed unit squares, 221 half-turn orbits) + `unavoid4_C2_bb.txt` (exact branch-and-bound tree, rational LP
+> duals), checked by `search/unavoid13_exactcheck.py` in Fractions (§6).  The `D4`, `C4`, `V` families are
+> not needed for the statement and keep their two-solver status.
 
 Every nontrivial subgroup of `D4` contains the 180° rotation or a single reflection, so once `Rx` and `Rd`
 are excluded too, **no 13-point unavoidable set has any nontrivial symmetry of the container**.  (Lenient
 float incidence is the sound direction for an infeasibility claim — more ways to hit ⇒ if none, none
 exactly — but the theorem rests on the exact re-check: exact vertices, exact edge–axis intersections,
-exact incidence, and two solvers.)
+exact incidence, and, for `C2`, which carries all four, the exact certificate of §6.)  For `C2`
+the only fixed point is the centre, so of the axis points in (a) only the centre is needed.
 
 ### 4.3 The lazy-row feasibility loop (`unavoid13_loop2.py`)  [measured]
 
@@ -313,3 +320,53 @@ families only `11.3–11.6` (they are built to cut integer solutions, not fracti
 6. `search/nu_f.py` / `search/packing_dual.py` were not needed for the `T = 3` calibration: the hitting-set
    LP relaxation over the arrangement vertices *is* the finite cover LP and its dual *is* a packing measure
    feasible everywhere (the same vertex-maximality argument), so both calibration numbers fall out of the loop.
+
+## 6. Exact certificates, 2026-09-22
+
+Both infeasibility steps above (`h(F) ≥ 7` at `T = 3`; no half-turn-symmetric `≤ 13`-set at `T = 4`) now rest on
+exact certificates instead of floating-point MIP solves.  Files: `certificates/unavoid13/` (README there);
+generator `search/unavoid13_exactcert.py`; checker `search/unavoid13_exactcheck.py`; rejection tests
+`tests/unavoid13/rejection_tests.sh` (22 checks); all wired into the fast tier of `verify.sh`, together with the
+`p(3) ≤ 7` check of §2.2 (`unavoid13_check.py` on `ks7_rational_3.txt`), which was not in it before.
+
+**Certificate.**  A branch-and-bound tree over the hitting-set IP `min c·x, A x ≥ 1, x ∈ {0,1}` on a listed set of
+candidate points (plain: cost 1; `C2`: orbit columns, cost 1 for the centre and 2 otherwise).  Each leaf is an
+uncoverable row or rational duals `y ≥ 0`.  The duals come from HiGHS in floats, are clamped to `≥ 0` and rounded
+*down* to multiples of `10⁻⁶`.  No repair step is needed, because the bound
+`L = Σy + Σ_{fixed 1} r_j + Σ_{free} min(0, r_j)`, `r = c − Aᵀy`, is valid for every `y ≥ 0`: the upper-bound duals
+are implicitly `max(0, −r_j)`.  The generator closes a leaf only if the exact bound from the rounded duals closes it,
+and branches otherwise.  **Rounding used:** every integer point of a leaf has cost `C1 + g·t` (`C1` = fixed-1 cost,
+`g` = gcd of the free costs, `t ∈ ℤ≥0`).  The leaf is closed iff the least such value `≥ L` exceeds `k`.  Plain:
+`L > 6`.  `C2`: the tree branches first on the centre; below that `g = 2` and `C1 ∈ {0, 1}`, so `L > 12` closes a
+leaf (the least admissible cost `≥ L` is then `≥ 14`).
+
+| instance | candidates | rows | exact vertices (distinct columns) | root LP | branchings / leaves | min `L − k` | checker, 4 threads |
+|---|---|---|---|---|---|---|---|
+| `p(3) ≥ 7` | 233 | 87 | 6,112 (3,969) | 5.500 | 671 / 672 (all dual) | +0.0227 | 1.2 s |
+| `C2`, `k = 13` | 877 (centre + 876 orbits) | 441 | 55,717 (20,104) | 12.074 | 16 / 17 (all dual) | −0.90 (parity) | 24 s |
+
+The `C2` root LP (12.07) is below 13, so the claim holds only because of parity: 13 is odd, and orbits off the
+centre cost 2.  The old float MIP was right, but its LP relaxation alone falls short by about one.
+
+**What the checker verifies.**  It works from the family file and the certificate alone and shares no code with the
+other `unavoid13*` modules.  It checks: exact admissibility of every square; the half-turn closure of the family
+(`C2`); the exact arrangement vertices (corners; every intersection of non-parallel closed edges of two squares with
+centres `≤ √2` apart; the centre for `C2`); exact incidence of every vertex and candidate in every square (Fractions
+for every pair after an exact `|Δ| > 3/4` box test; `--float-filter` is an optional faster mode with a proven error
+margin); that every vertex column is dominated by a candidate column of no larger cost; the tree's structure (every
+branching on a free candidate, both subtrees present, nothing trailing); and every leaf exactly (integer arithmetic
+over a common denominator with an explicit overflow guard).  Its vertex count agrees with the old exact re-check on
+both families (6,112 and 55,717).
+
+**What is still trusted.**  The vertex-maximality lemma of §1 and its orbit version in §4 (the centre kept,
+off-centre orbits replaced one at a time), i.e. that a hitting set can be moved onto arrangement vertices.  Python's
+`fractions` and integers.  The ≈450-line checker itself.  It has 22 rejection tests: mutated families that become
+feasible, tampered duals, dropped, misaligned or extra subtrees, a branch variable fixed twice, a deleted candidate,
+the strengthened claims `k = 7` and `C2, k = 14` (the latter false, since Friedman's 14 is half-turn symmetric), and
+malformed input.  No floating-point step remains in either proof.
+
+**What did not hold, or changed.**  Neither claim changed.  The 575-square `T = 3` family is not needed: the
+87-square shrink alone gives `h ≥ 7` exactly.  The `C2` instance is much smaller than the old count suggested.  The
+20,104 orbit candidates reduce to 877 once orbit columns dominated by another cost-2 column or by the centre are
+dropped.  Dominance between equal-cost columns is sound; the old re-check skipped it only to protect the cheaper
+on-axis candidates of reflection groups.

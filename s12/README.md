@@ -38,8 +38,9 @@ Each is an exact certificate re-checked by `./verify.sh`; nothing here is peer r
   [proved] / [measured] / [heuristic].
 * Two exact integrality facts found on the way (`notes/unavoid13.md`): the smallest point set
   that every unit square in `[0,3]²` must contain has exactly 7 points, and no 13-point set for
-  `[0,4]²` is symmetric under the half-turn.  The infeasibility steps currently rest on
-  floating-point MIP solves; an exact re-solve is in progress.
+  `[0,4]²` is symmetric under the half-turn.  Both rest on exact branch-and-bound
+  certificates with rational LP duals (`certificates/unavoid13/`), checked in exact arithmetic
+  by `search/unavoid13_exactcheck.py` as part of `./verify.sh`.
 
 ## How to check
 
