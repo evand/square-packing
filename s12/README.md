@@ -1,4 +1,4 @@
-# A machine-checked lower bound for s(12)
+# s(12) and friends: machine-checked results on unit squares in a square
 
 [![verify](https://github.com/evand/square-packing/actions/workflows/verify.yml/badge.svg)](https://github.com/evand/square-packing/actions/workflows/verify.yml)
 
@@ -9,30 +9,55 @@ This directory is the s(12) research tree.  The rest of the
 record packings (https://evand.github.io/square-packing/).
 
 `s(n)` is the side of the smallest square into which `n` unit squares can be packed, with
-rotations allowed.  `s(12) = 4` is conjectured but **open**: `s(13) = 4` is proved (Bentz 2010)
-and `s(11) = 3.877083…` (Trump 1979), so the largest `n` with `s(n) < 4` is either 11 or 12,
-and deciding which *is* the open problem.
+rotations allowed.  `s(13) = 4` is proved (Bentz 2010) and Trump's 1979 packing gives
+`s(11) <= 3.877083…`, so the largest `n` with `s(n) < 4` is either 11 or 12; `s(12) = 4` is
+conjectured, and deciding it *is* the open problem.  `s(11)` itself is also open.
 
-This repo contains an exact certificate and its verifier for
+## Results
 
-> **s(12) ≥ 15680/3951 = 3.968616…**
+Each is an exact certificate re-checked by `./verify.sh`; nothing here is peer reviewed.
 
-improving the previous published bound `2 + 4/√5 = 3.788854…` (Stromquist 2003, inherited from
-n = 11 by monotonicity; listed as the record for n = 11–12 in Friedman's Dynamic Survey DS7,
-Table 2).  The upper bound remains the trivial `4`, so the gap narrows from
-`[3.788854, 4]` to `[3.968616, 4]`.
+* **`s(12) >= 15680/3951 = 3.968616…`** (1,736 weighted points).  Previous published bound
+  `2 + 4/√5 = 3.788854…` (Stromquist 2003, inherited from n = 11; the DS7 Table 2 entry for
+  n = 11–12).  The upper bound is still the trivial 4, so the gap narrows from
+  `[3.788854, 4]` to `[3.968616, 4]`.
+* **`s(11) >= 3040/797 = 3.814304…`** (680 weighted points), also improving Stromquist's
+  3.788854.  [Section below](#a-bound-for-s11-as-well).
+* **`s(13) = 4` with no case analysis**: one weighted closed cover of `[0,4]²` of total weight
+  `12.955972 < 13`, checked at margin zero by two checkers that share no code, where Bentz's 2010
+  proof needs a six-leaf case analysis.  The theorem is Bentz's; the proof is new.
+  [Section below](#s13--4-without-case-analysis).
 
-It also contains a second, independent result produced by the same machinery: a **case-free
-machine proof of `s(13) = 4`** — one weighted closed cover of `[0,4]²` of total weight
-`12.955972 < 13`, verified exhaustively at margin zero by two checkers that share no code, where
-Bentz's 2010 proof needs a six-leaf case analysis.  See
-[`s(13) = 4` without case analysis](#s13--4-without-case-analysis) below.
+## Why the method stops short of `s(12) = 4`
 
-Run everything with:
+* No weighted cover of the container `[0,4]²` weighs less than `12.2688` (exact,
+  `search/COVER4.md`), so covers alone can never prove `s(12) = 4`; below the container the
+  method's ceiling lies in `[3.968616, 3.99)` ([Limits of the method](#limits-of-the-method)).
+* [`notes/n12-gap.md`](notes/n12-gap.md) is the complete negative record: every route to
+  `s(12) = 4` that was tried, where each one fails, and each claim labelled
+  [proved] / [measured] / [heuristic].
+* Two exact integrality facts found on the way (`notes/unavoid13.md`): the smallest point set
+  that every unit square in `[0,3]²` must contain has exactly 7 points, and no 13-point set for
+  `[0,4]²` is symmetric under the half-turn.  The infeasibility steps currently rest on
+  floating-point MIP solves; an exact re-solve is in progress.
+
+## How to check
 
 ```sh
-./verify.sh          # builds the verifier and re-checks every certificate
+./verify.sh          # fast tier: every certificate that checks in minutes, and all rejection tests
+./verify.sh --full   # adds the slow sweeps (finer angle nets, the s(13) full-domain check)
 ```
+
+CI (`.github/workflows/verify.yml`) runs the fast tier on every push touching `s12/`; the full
+tier runs only when started by hand.  Lean: `cd lean && lake build` (reduction theorems and the
+soundness lemmas of both zero-margin checkers, no `sorry`).
+
+## What else is here
+
+`notes/` (topical research notes), `search/` (the search and analysis tools, each with its
+report), `certificates/` (with `FORMAT.md`).  This is a research log as well as a proof: notes
+refer to `runs/` (bulky run outputs), agent briefs under `tasks/`, and working files
+(`TODO.md`, `notes/status.md`, `notes/review-*.md`), none of which is in the repository.
 
 ## The method
 
@@ -147,14 +172,14 @@ Closing the remaining gap to 4 therefore needs something beyond a certificate.  
 the kind Bentz used for `s(13)` (`notes/proof-anatomy.md` dissects those proofs) was the natural
 candidate, and it has now been measured at the container: branching on corner-box counts, on
 wall-slot counts, and on incidence patterns with Bentz's own 16 points all leave a leaf whose
-fractional value is `>= 12` (`search/BENTZ.md`, `search/T4LEAF.md`; summary in `TODO.md`).  What
+fractional value is `>= 12` (`search/BENTZ.md`, `search/T4LEAF.md`; summary in `notes/n12-gap.md`).  What
 those measurements do show is *where* the missing unit lives: axis-parallel squares are trivially
 `<= 9` at side 4 (the nine points `{1,2,3}²`), so all three units the LP finds beyond that are
 rotation — at least `2.6` of them from tilts under one degree — and on the extremal measure's own
 support the largest set of pairwise-disjoint squares has 11 members against a fractional mass of 12:
 an integrality gap of exactly one square, carried by eight squares near the wall and interior tiles.
 That rank-8 statement is what a proof has to establish, and no single-square inequality expresses
-it.  `TODO.md` separates what is established from what is only suggested.
+it.  `notes/n12-gap.md` separates what is established from what is only suggested.
 
 Separately, an extensive search for a packing of 12 unit squares into a square of side < 4
 (L-BFGS + basin hopping, validated by reproducing `s(5)`, `s(10)`, `s(11)` to 5 decimals) found
@@ -192,7 +217,7 @@ family — corner branch, per-slot branch, anchor cliques, the chord lemma (now 
 and no certified fractional packing of mass `>= 12` either; the extremal object is always the
 `4×4` grid smeared and tilted.  The full corner × slot tree has 4213 leaves.  Notes:
 `search/T4SCREEN.md`, `T4LEAF.md`, `LEAF_CEILING.md`, `LINECUTS.md`, `WITNESS.md`,
-`notes/branch-semantics.md`, `notes/review-2026-09-07.md`; the plan is in `TODO.md`.
+`notes/branch-semantics.md`.
 
 **`s(13) = 4` without case analysis (2026-09-12).**  As a milestone for the `t = 4` verifier, the
 same machinery re-proves Bentz's `s(13) = 4` from a single object.  It is a separate result and
@@ -202,7 +227,7 @@ has its own section below.
 continuum, the sub-12 packing-side duals cost 18–20, because the cliques carrying them are
 non-Helly (grazing tangencies) and no sound positive-volume rule can credit them; without cliques
 the certifiable family sits at exactly 12 on the corner leaf and above 12 on the pure instance
-(`search/HONEST.md`, `notes/review-2026-09-12.md`).
+(`search/HONEST.md`).
 
 **The Bentz template, measured (2026-09-13).**  Branching on which of Bentz's 16 points each square
 contains — his actual case variable — has no power at `t = 4`: the fully pinned leaf (four corner
@@ -213,7 +238,7 @@ The corner `k = 3` leaf is `>= 12.027` (certified).  Restricted to axis-parallel
 leaf is exactly `9`; within one degree of axis-parallel it is `>= 11.599`.  On the extremal
 measure's 162-pose support the largest pairwise-disjoint subfamily has 11 members (`α = 11`, gap
 exactly 1): the eight non-corner singleton patterns admit only seven disjoint squares.
-`search/BENTZ.md`, `notes/review-2026-09-13.md`.  `TODO.md` has the current critical path.
+`search/BENTZ.md`; the whole record is `notes/n12-gap.md`.
 
 ## s(13) = 4 without case analysis
 

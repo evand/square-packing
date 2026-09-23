@@ -1,7 +1,11 @@
 name: verify
 
-# The point of the s(12) proof is that the claim is checkable, so it is checked whenever it
-# changes.  If this badge is not green, do not believe the number.
+# The point of the s12/ results is that they are checkable, so they are checked whenever the
+# checking code or the certificates change.  If this badge is not green, do not believe the numbers.
+#
+# Two tiers (s12/verify.sh): the fast tier (minutes) runs on every push and pull request touching
+# s12/; the full tier (the slow sweeps) runs only when started by hand from the Actions tab, since
+# re-running our own code on our own certificates is not an independent check.
 
 on:
   push:
@@ -9,13 +13,20 @@ on:
   pull_request:
     paths: ['s12/**', '.github/workflows/verify.yml']
   workflow_dispatch:
+    inputs:
+      tier:
+        description: 'fast or full'
+        type: choice
+        options: [fast, full]
+        default: fast
   schedule:
-    # Monthly, so bit-rot in the toolchain surfaces before someone else finds it.
+    # Monthly, fast tier only, so bit-rot in the toolchain surfaces before someone else finds it.
     - cron: '0 6 1 * *'
 
 jobs:
-  verify:
+  certificates:
     runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.tier == 'full' && 350 || 45 }}
     defaults:
       run:
         working-directory: s12
@@ -32,10 +43,28 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             s12/verify/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('s12/verify/Cargo.lock') }}
+            s12/verify2/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('s12/verify/Cargo.lock', 's12/verify2/Cargo.lock') }}
 
       - name: Check certificate hashes
         run: sha256sum -c certificates/SHA256SUMS
 
-      - name: Verify every certificate, and the rejection tests
-        run: ./verify.sh
+      - name: Verify certificates and run the rejection tests (${{ inputs.tier || 'fast' }} tier)
+        run: ./verify.sh ${{ inputs.tier == 'full' && '--full' || '' }}
+
+  lean:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the Lean project (Mathlib from its cache)
+        uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: s12/lean
+
+      - name: No sorry anywhere a checker relies on
+        working-directory: s12/lean
+        run: |
+          lake env lean Axioms.lean | tee axioms.out
+          ! grep -n 'sorryAx' axioms.out

@@ -131,6 +131,8 @@ within 1 of a given wall.  It is **still a hypothesis in this repo** — it is a
 false for closed unit squares, and is being proved separately — so it is behind a flag and every
 value below is reported with and without it.
 
+> **Correction (2026-09-22).**  No longer a hypothesis: `lean/Sqpack/Chord.lean` `wall_strip_le_three` proves it for closed unit squares pairwise disjoint as closed sets in `[0,t]^2`, `t <= 4` (the semantics used here; `notes/chord-lemma.md`). Only the `1e-9` coordinate tolerance in the rows below is argued outside Lean (the parenthesis after them).  Values reported "with the chord flag" are therefore values of a proved relaxation.
+
 The four rows are built from the pose **coordinates**, not from the region labels:
 `mu({c_y <= r + 1e-9}) <= 3` and its three images.  (Including a pose at `c_y = 1 + 1e-9` is safe:
 the chord argument only needs `c_y <= 0.9 + w/2`, and `w >= 1` always.)  This matters, because from

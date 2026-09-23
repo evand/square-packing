@@ -485,7 +485,7 @@ VERIFIED: every closed unit square in [0,4]^2 captures weight &gt;= 1; total wei
 
 <section>
   <div class="sechead"><span class="eyebrow">08 · Reproduce</span><h2>Artifacts</h2></div>
-  <p>Everything is in the repository <a href="https://github.com/evand/square-packing/tree/main/s12">evand/square-packing</a> (directory <span class="mono">s12/</span>); <span class="mono">./verify.sh</span> rebuilds the verifier and re-checks every certificate, and CI does the same on every push.</p>
+  <p>Everything is in the repository <a href="https://github.com/evand/square-packing/tree/main/s12">evand/square-packing</a> (directory <span class="mono">s12/</span>); <span class="mono">./verify.sh</span> rebuilds the verifiers and re-checks the certificates (<span class="mono">--full</span> adds the slow sweeps, including the full s(13) check), and CI runs the fast tier on every change.</p>
   <div class="tablewrap"><table>
     <thead><tr><th>path</th><th>what</th></tr></thead>
     <tbody>

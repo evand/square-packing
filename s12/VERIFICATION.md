@@ -121,7 +121,8 @@ the same machine, same binary, same file: `done in 1064s` at 8 threads and `done
 neither the verdict nor the box count depends on the thread count
 (`runs/zmcheck_t8_2026-09-12.log`, `runs/zmcheck_t4_2026-09-12.log`).  4 threads is the GitHub
 runner's core count, and 33.6 min is inside the budget, so `verify.sh` runs the full sweep on
-every push; see `search/S13_WRITEUP.md`.
+every push; see `search/S13_WRITEUP.md`.  *(Superseded: the runner turned out ~6.5× slower, and since
+2026-09-22 the full sweep is in `verify.sh --full` only; see "Verification tiers" below.)*
 
 Two checkers, two subdivisions, two primitive sets, two domains, `0 uncertified` on the same file.
 The disjunctive primitive carries 65 % of the non-empty leaves in each (`CHAIN` 5320 of 8187;
@@ -147,7 +148,8 @@ contains the pose `(1/2, 3/2, 0)` that `RUNG2.md` §2 identifies as the containe
 monotone-witness pose — and are compared on uncertified-box count, because a restricted sweep
 prints `PARTIAL SWEEP` and can never print `VERIFIED`.  One test, the `closed4_best_x103`
 violation, needs a development-history file kept outside the repo and prints `skip` (20 passed)
-when it is absent; that is the case in CI.
+when it is absent; that is the case in CI.  *(Fixed 2026-09-22: the two inputs are now
+`tests/rung2/inputs/`, a missing input is a failure, and all 23 run in CI.)*
 
 **Lean.**  `lean/Sqpack/ZeroMargin.lean`, 970 lines, Mathlib `v4.33.1`
 (`runs/lean_build_2026-09-12.log`):
@@ -190,6 +192,19 @@ The job stays under its `timeout-minutes: 300`; since runs are dispatch-only on 
 cost is paid on demand.  If the public repository is to run it on every push, use the fallback
 written into `.github/workflows/verify.yml` (full sweep on dispatch/schedule, rejection suite and a
 restricted-band sweep on push).
+
+## Verification tiers (2026-09-22)
+
+Re-running our own checkers on our own certificates is a regression test, not an independent
+check, so CI pays minutes for it, not hours.  `./verify.sh` (the **fast tier**, what CI runs on
+every change to `s12/`, and monthly) checks every certificate at its primary angle net, runs the
+exact Python re-checks that take seconds, the rung-2 rejection suite (23 tests, which also sweeps
+the s(13) certificate over its tightest band) and the main rejection suite, and the
+`points.json` round trips: 451 s at 4 threads on the development machine (2026-09-22; 23 + 172
+rejection tests passed, every verdict VERIFIED).  `./verify.sh --full` adds the N = 12000 re-runs, the box-clique
+`xcheck.py` re-check and the full-domain `zmcheck` sweep of the s(13) certificate (3 h 40 min on a
+GitHub runner, above); CI runs it only on manual dispatch.  A separate CI job builds `lean/` and
+fails if `lean/Axioms.lean` reports `sorryAx` for any of its 36 theorems.
 
 ## Checks performed on the original 788-point certificate (2026-08-23)
 ## Companion certificate (weaker but human-readable)

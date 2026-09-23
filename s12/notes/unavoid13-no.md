@@ -42,6 +42,11 @@ This is consistent with `h = 14` on those two families and equally with HiGHS ru
 `30k–130k` columns; nothing is proved.  If the exact re-solve ever returns `INFEASIBLE` on one of them,
 `runs/unavoid13no_L2e/F_round01.txt` / `runs/unavoid13no_union/u1_family.txt` are the candidates.
 
+**Update (2026-09-22, 21:40).**  The 7,200 s portfolio on L2e's `1,617`-square family **found a 13-set** (optimisation
+form, seed 4, `3,088 s`, LP `12.2057`; `runs/unavoid13no_L2e/round_log.txt` round 2), so that family has `h = 13` and is
+no longer a candidate.  L3d's `1,761`-square family also gave a 13-set (`2,661 s`).  Both loops continued (1,697 and
+1,841 squares).  Only the `2,809`-square union remains undecided.
+
 **State at hand-off** (detached, still running; do not restart on top of them): `L2e` (`runs/unavoid13no_L2e`,
 round 2 = a 7,200 s portfolio on the 1,617-square family; a `13-set by IP` line means feasible,
 `INFEASIBLE` means the dump `final_*` exists and must go through `search/unavoid13no_recheck.py`) and

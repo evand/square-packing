@@ -30,7 +30,7 @@ cd "$(dirname "$0")/../.." || exit 1
 Z=${ZM:-verify2/target/release/zmcheck}
 [ -x "$Z" ] || { echo "build it first:  (cd verify2 && cargo build --release)"; exit 1; }
 C=certificates/rung2/s13_closed_cover_4.txt
-X103=${X103:-/home/evand/math/square-packing/s12/runs/inputs-2026-09-11/closed4_best_x103.txt}
+X103=${X103:-tests/rung2/inputs/closed4_best_x103.txt}
 T=$(mktemp -d /tmp/rung2rej.XXXXXX) || exit 1
 trap 'rm -rf "$T"' EXIT
 LAST=$T/last.out
@@ -131,7 +131,7 @@ if [ -r "$X103" ]; then
   check "(e)  ...and closed4_best.txt likewise, 0.9420217" VIOLATION \
         pose "${X103%_x103.txt}.txt" --x 3/2 --y 1461/2000 --u 1/40000
 else
-  echo "  skip  (e) closed4_best_x103.txt not readable at $X103"
+  bad "(e) closed4_best_x103.txt input" "missing at $X103" "readable"
 fi
 
 echo "-- malformed input: refuse, do not judge (exit 2, ERROR:, no verdict word)"

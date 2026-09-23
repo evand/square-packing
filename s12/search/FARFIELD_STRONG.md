@@ -433,7 +433,7 @@ points-only route is closed by item 1.
    the truth is `12.2688` and a pool can sit well above `12`.  Here the right calibration is
    "does the pool reproduce the family optimum uncapped?", and it does, exactly.  **Consequently no
    cell of this note can be a refutation by the rule "packing side `>= n`", and none is claimed.**
-2. **The chord rows are a flagged hypothesis, not a theorem.**  `search/T4LEAF.md` §1.2:
+2. **The chord rows are a flagged hypothesis, not a theorem.**  *(Superseded 2026-09-22: they are a theorem, `lean/Sqpack/Chord.lean` `wall_strip_le_three`; see the correction in `search/T4LEAF.md` §1.2. The paragraph is kept as written.)*  `search/T4LEAF.md` §1.2:
    `mu({c_y <= 1}) <= 3` is Nagamochi 2005 Lemma 7(i) / Stromquist's chord lemma for squares of side
    `L > 1`, "**still a hypothesis in this repo** — it is a strictness statement, false for closed
    unit squares, and is being proved separately".  `notes/status.md`'s row "corner `k = 4`, points +
