@@ -382,13 +382,14 @@
  },
  "11": {
   "best": {
-   "value": 3.7888543819998315,
-   "exact_form": "2+4/sqrt(5)",
-   "source": "Stromquist2003",
-   "year": 2003,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v10i1r8",
-   "note": null
+   "value": 3.8143036386449185,
+   "exact_form": "3040/797",
+   "source": "EvanDaniel2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/evand/square-packing/tree/main/s12",
+   "note": "2026-08; 680-point weighted certificate s11_lower_3.8143.txt, verified at N=6000 and 12000; separate from the n=12 certificates (s(11) <= s(12) gives nothing for n=11)",
+   "date": "2026-08"
   },
   "history": [
    {
@@ -416,6 +417,16 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 3.8143036386449185,
+    "exact_form": "3040/797",
+    "source": "EvanDaniel2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/evand/square-packing/tree/main/s12",
+    "note": "2026-08; 680-point weighted certificate s11_lower_3.8143.txt, verified at N=6000 and 12000; separate from the n=12 certificates (s(11) <= s(12) gives nothing for n=11)",
+    "date": "2026-08"
    }
   ]
  },
@@ -3548,7 +3559,7 @@
    "url": null
   },
   "Gobel1979": {
-   "authors": "F. G\u00f6bel",
+   "authors": "F. Göbel",
    "title": "Geometrical Packing and Covering Problems",
    "venue": "in A. Schrijver (ed.), Packing and Covering in Combinatorics, Math Centrum Tracts 106, pp. 179-199",
    "year": 1979,

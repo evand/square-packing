@@ -3,6 +3,10 @@
 ## Result
 `s(12) >= 15680/3951 = 3.968616`  — 12 unit squares cannot be packed into any square of side < 15680/3951.
 
+Second result, same machinery, separate certificate and separate checker:
+`s(13) = 4`, case-free (Bentz 2010 re-proved without its six-leaf case analysis).  See
+**s(13) = 4 (rung 2) (2026-09-12)** below.
+
 ## Certificates
 | file | s | points | total weight | verify N=6000 min | N=12000 | xcheck --all N=6000 |
 |---|---|---|---|---|---|---|
@@ -16,6 +20,176 @@ others); weights have denominator 10^7.  How the three newer files were produced
 re-optimised at fixed points with the exact verifier as separation oracle; reweighted-L1
 sparsification; column generation with exact reduced-cost pricing) is in `search/TIGHTEN.md`.
 The checks were re-run independently of the search session on the merged tree.
+
+## s(11) certificate (2026-08-26)
+`certificates/s11_lower_3.8143.txt` — `s(11) >= 3040/797 = 3.814304`; 680 points, coordinates
+over 3985, weights over 10^7, total 27036677/2500000 = 10.8146708 < 11.  Checks: `verify` with
+n = 11 at N=6000 (min 10000042/10^7) and N=12000: VERIFIED; `xcheck.py --all --n 11` at N=6000:
+identical minimum; `scale_to_critical.py --n 11 --N 6000`: already critical (D = 3985).  The
+N=6000 run was repeated by hand on the merged tree.  Search: `tighten.py --n 11` from the
+n = 12 certificates rescaled, with column generation (`search/N11.md`).  Now in `verify.sh`.
+
+## Verifier diagnostic mode (2026-08-26)
+`verify/src/main.rs` gained an opt-in mode `TIGHT_DUMP=<path> TIGHT_THRESH=<int>` that lists the
+arrangement cells below a captured-weight threshold (`search/TIGHTSET.md`).  With the variable
+unset the code path and output are unchanged: the default output for the main certificate at
+N=6000 was diffed against the previous binary, and `verify.sh` plus the 42 rejection tests pass.
+
+## Witness file: credited cliques (2026-09-07)
+`verify/src/main.rs` now records, on each line of the optional witness file (`topk > 0`), the
+anchor cliques its sweep credited to the cell that witness came from — two extra columns, a count
+and the file indices, and **only** for a certificate carrying an `anchors` block.  The verdict
+path, the exit codes and stdout are untouched, and the witness file of every certificate without
+such a block is byte-identical: `tests/bitid.sh` against the previous binary is ALL IDENTICAL on
+ten cases (plain, witness, `TIGHT_DUMP`, branch trailer, box cliques), and on an anchor-clique file
+the new witness lines cut back to five fields reproduce the old ones exactly.  The rejection suite
+is 138 checks, 0 failures, 0 panics, and `verify.sh` is exit 0 with 24 VERIFIED verdicts.  Why: the cutting-plane loop was building its LP rows with a
+*pose* predicate while the verifier credits a *cell*, so the LP believed rows the verifier keeps
+failing — `search/WITNESS.md` has the defect, the fix and the numbers.
+
+## Verifier speed-up (2026-09-08)
+`verify/src/main.rs`: three changes for the anchor-clique certificates of the cutting-plane loop
+(`search/VERIFYSPEED.md`): the `[0°, 45°]` reduction is applied again when the atoms AND the
+anchor-clique family are D4-invariant (a new exact closure check, `anchors_d4_closed`); the anchor
+credit of a strip's cells is computed once per (strip, piece) as a cell range instead of once per
+(cell, piece), with the per-cell test kept as an optional cross-check (`VERIFY_ANCHOR_XCHECK=1`);
+bins are scheduled dynamically over the threads, and the witness file and the reported minimum
+are now independent of the thread count.  Checks: `tests/bitid.sh` against the previous binary is
+ALL IDENTICAL (11 cases, single thread, plain / witness / `TIGHT_DUMP` / branch / box-clique /
+anchor-clique modes); `./verify.sh` at 4 threads is exit 0 with the same 24 VERIFIED verdicts; the rejection suite is 172
+checks (was 138; the 34 new ones are the levers' over-credit traps), 0 failures, 0 panics; on the
+`k = 4` and `1110` probes the per-bin output (stdout and witness file) is byte-identical to the
+old binary on every bin compared, and the incremental credit agrees with the per-cell test at
+every cell of those bins.  Whole-probe before/after numbers are in `search/VERIFYSPEED.md`.
+
+## s(13) = 4 (rung 2) (2026-09-12)
+
+A second, separate result: one weighted closed cover of `[0,4]^2` of total weight < 13, so no 13
+unit squares fit below side 4, and 16 of them tile `[0,4]^2`, so `s(13) = 4` (Bentz 2010) with no
+case analysis.  Note: `verify/` **cannot** check this file — at the container itself the margin is
+exactly 0 and its angle-net erosion is linear against a quadratic margin (`search/ZEROMARGIN.md`
+§1), which is why `verify2/` exists.
+
+| file | container | points | total weight | sha256 |
+|---|---|---|---|---|
+| `certificates/rung2/s13_closed_cover_4.txt` | `[0,4]^2` | 3621 | `2591194431/200000000 = 12.955972155` | `ea303acea08cc17a13cecc24d3714c2df409f91eba048cd5546050ed064b53ed` |
+
+Coordinates have denominator `D = 1000`, weights `10^9`; every number in the file is an integer.
+Now pinned in `certificates/SHA256SUMS`.
+
+**Checker 1 — `search/zeromargin.py`** (Python, `fractions.Fraction` throughout; floats only as
+pre-filters, which can lose a certification but never create one).  Symmetry-reduced domain
+(`c_x in [0,4]`, `c_y in [0,2]`, `u = tan(th/2) in [0,1/2]`), legitimate because the checker first
+verifies **exactly** that the point set is invariant under `x -> 4-x` and `y -> 4-y`
+(`Checker.symmetric`) and refuses to run reduced otherwise.
+
+```
+python3 search/zeromargin.py cert certificates/rung2/s13_closed_cover_4.txt \
+        --depth 18 --nproc 8 --disj --chain-from 0 --dump runs/leaves.txt
+
+done in 6138s: boxes 16872, max depth 13
+  leaves: ADM 2867  CORE 0  P1 0  MIX 0  CHAIN 5320  TRI 0  EMPTY 3449  UNCERTIFIED 0
+VERIFIED
+```
+
+1 h 42 min on 8 processes; depth limit 18 never reached (max 13), so the subdivision terminated on
+its own.  Re-run from the committed path it reproduces the census to the last box
+(`done in 5828s: boxes 16872 ... ADM 2867 / CHAIN 5320 / EMPTY 3449 / UNCERTIFIED 0, VERIFIED`),
+so the check is deterministic and the shipped file is the one that verifies (`search/RUNG2.md` §0).
+
+**Checker 2 — `verify2/zmcheck`** (Rust, exact `i128` on the whole load-bearing path; its own
+subdivision, its own primitive set, no shared code, written from the lemmas rather than from the
+Python).  **Full** domain: `c_x, c_y in [0,4]`, `u in [0,1]` (`th in [0,90]` deg), no symmetry
+assumed or checked.  `runs/zmcheck_main_2026-09-12.log`, main checkout:
+
+```
+verify2/target/release/zmcheck cert certificates/rung2/s13_closed_cover_4.txt \
+        --depth 18 --threads 8
+
+certificate certificates/rung2/s13_closed_cover_4.txt: container [0,4]^2, 3621 points, D=1000 W=1000000000
+total weight = 12955972155/1000000000 = 12.955972155
+12800 root boxes (pitch 1/10 in x,y; 8 bins of u in [0,1]); depth limit 18; disj true; 8 threads
+done in 1065s: boxes 30258, max depth 10
+  leaves: ADM 5114  DISJ 9477  EMPTY 6938  UNCERTIFIED 0
+VERIFIED: every closed unit square in [0,4]^2 captures weight >= 1; total weight 12955972155/1000000000 = 12.955972155
+```
+
+17 min on 8 threads; depth limit never reached (max 10 of 18).  Timed again for this write-up on
+the same machine, same binary, same file: `done in 1064s` at 8 threads and `done in 2015s` (33 min
+35 s) at 4, both `boxes 30258, max depth 10` with
+`ADM 5114  DISJ 9477  EMPTY 6938  UNCERTIFIED 0` — the census is identical in all three runs, so
+neither the verdict nor the box count depends on the thread count
+(`runs/zmcheck_t8_2026-09-12.log`, `runs/zmcheck_t4_2026-09-12.log`).  4 threads is the GitHub
+runner's core count, and 33.6 min is inside the budget, so `verify.sh` runs the full sweep on
+every push; see `search/S13_WRITEUP.md`.
+
+Two checkers, two subdivisions, two primitive sets, two domains, `0 uncertified` on the same file.
+The disjunctive primitive carries 65 % of the non-empty leaves in each (`CHAIN` 5320 of 8187;
+`DISJ` 9477 of 14591) — which `search/RUNG2.md` Theorem 1 predicts, since no cover of `[0,4]^2`
+below weight 16 can be certified by fixed-witness primitives at any depth.
+
+**Rejection tests.**  `runs/rung2_rejection_2026-09-12.log`:
+
+```
+./tests/rung2/rejection_tests.sh
+
+23 passed, 0 failed, 0 panics
+REJ_EXIT=0
+```
+
+Five mutations of the certificate and their controls (1 % weight cut: still valid; 5 % cut, halved
+weights, set scaled by 0.995, set translated by 0.01: a violating pose is **exhibited** each time,
+exit 1 with `*** VIOLATION`; one point deleted, one point moved by 0.01: still valid), the two
+invalid covers from the development history at their exact violating weights (`0.970282351`,
+`0.9420217`), and nine malformed inputs that must exit 2 with `ERROR:` and **no verdict word**.
+The mutation sweeps run over the restricted band `c_x in [0.5,0.6]`, `c_y in [1,2]` — which
+contains the pose `(1/2, 3/2, 0)` that `RUNG2.md` §2 identifies as the container's worst
+monotone-witness pose — and are compared on uncertified-box count, because a restricted sweep
+prints `PARTIAL SWEEP` and can never print `VERIFIED`.  One test, the `closed4_best_x103`
+violation, needs a development-history file kept outside the repo and prints `skip` (20 passed)
+when it is absent; that is the case in CI.
+
+**Lean.**  `lean/Sqpack/ZeroMargin.lean`, 970 lines, Mathlib `v4.33.1`
+(`runs/lean_build_2026-09-12.log`):
+
+```
+cd lean && lake build
+Build completed successfully (8710 jobs).
+BUILD_EXIT=0
+```
+
+0 `sorry`; `lean/Axioms.lean` prints `#print axioms` for **36** theorems and every one is
+`[propext, Classical.choice, Quot.sound]`.  Formalised: `sq_subset_box_iff` (admissibility, both
+directions, all four sides), Lemma A (eight-corner form), Lemma B (the degree-4 coefficient rows),
+Lemma C (both branches), Lemma E (the maximum is attained, so the `_gmax <= 0` test is an
+equivalence), Lemmas F–H and the chain covering, `clip_bin_no_loss`.  **Not** formalised, in
+either checker: the subdivision, the exhaustiveness/control flow, the weight bookkeeping, the
+certificate parser, the float pre-filters (`notes/lean-zeromargin.md`).
+
+**In `verify.sh` / CI.**  `verify.sh` now builds `verify2` and runs the `zmcheck` sweep at
+`--depth 18 --threads "$(nproc)"`, failing on `NOT VERIFIED` or `PARTIAL SWEEP` exactly as `chk`
+does for `verify`, then runs `tests/rung2/rejection_tests.sh`.  The `zeromargin.py` sweep is a
+commented slow path next to it.  `search/S13_WRITEUP.md` has the timing table and the CI decision.
+
+`./verify.sh` run end to end at 16 cores after these changes
+(`runs/verify_full_2026-09-12.log`, 1054 s, exit 0): **25 `VERIFIED` verdicts** (was 24; the new
+one is the rung-2 sweep, `done in 626s`, same census), no `NOT VERIFIED`, no `PARTIAL SWEEP`, the
+rung-2 suite `23 passed, 0 failed, 0 panics`, the main suite `172 passed, 0 failed, 0 panics`, and
+every `points.json` round-trip byte-identical.  `sha256sum -c certificates/SHA256SUMS`: 36 of 36 OK
+before and after.
+
+## First CI run of the full `verify.sh` including `zmcheck` (2026-09-13)
+`evand/square-packing-research` run 34738582801 (`workflow_dispatch`; push events have never
+triggered a run on that repository — 0 runs in its history before this one).  **Success**, every
+verdict VERIFIED, both `sha256sum -c` steps OK, 4 h 42 min wall in total.  Breakdown: the `verify/`
+certificates and the two rejection suites 28 min; the rung-2 sweep `done in 13229s` (3 h 40 min) on
+the runner against `2015 s` at 4 threads on the development machine — the runner's cores are ~6.5×
+slower for this workload, so `search/S13_WRITEUP.md`'s 4-thread estimate does not transfer.  The
+census is identical (`boxes 30258, max depth 10, ADM 5114 / DISJ 9477 / EMPTY 6938 / 0 uncertified`).
+The job stays under its `timeout-minutes: 300`; since runs are dispatch-only on this repository the
+cost is paid on demand.  If the public repository is to run it on every push, use the fallback
+written into `.github/workflows/verify.yml` (full sweep on dispatch/schedule, rejection suite and a
+restricted-band sweep on push).
 
 ## Checks performed on the original 788-point certificate (2026-08-23)
 ## Companion certificate (weaker but human-readable)

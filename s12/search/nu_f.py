@@ -307,6 +307,12 @@ def run(s_frac, tlimit, tag, eta=0.01, dt=0.01, log=print, nproc=3):
             pts = []
             for line in open(sep_path):
                 q = line.split()
+                # NOTE (2026-09-07): the verifier's witness lines have carried a 5th column (the
+                # region flag) since branch certificates existed, and now a 6th and 7th on a file
+                # with an `anchors` block (search/WITNESS.md), so this `== 4` has matched nothing
+                # for a long time and `pts` is always empty here.  Left as it is deliberately:
+                # relaxing it would feed rows into the nu_f model that none of its published
+                # numbers were measured with.  Fix it together with a re-measurement.
                 if len(q) == 4 and float(q[0]) < 1.0: pts.append((float(q[2]), float(q[3]), float(q[1])))
             os.remove(sep_path)
         except Exception as e:
@@ -356,6 +362,8 @@ def lower_from_cert(cert, tag, h=0.01, rounds=7, eta=0.01, dt=0.01, log=print, n
     sep_path = f"runs/lower_{tag}_sep.txt"
     try:
         mv = run_verifier(cert, N=2000, threads=4, topk=8, sep=sep_path)
+        # `len(q) == 4`: see the note above -- the witness file has had five columns for a long
+        # time, so this list is always empty; left unchanged deliberately.
         pts = [(float(q[2]), float(q[3]), float(q[1])) for q in (l.split() for l in open(sep_path)) if len(q) == 4]
         os.remove(sep_path); m.add_rows(pts)
     except Exception as e: log(f"[verifier: {e}]")

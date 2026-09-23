@@ -148,6 +148,24 @@ public unfixed — see the Publishing section for why each one is on that list.
   an exact tie when the exported values are exactly equal.
 
 
+## Done 2026-09-12 (merged into this repo 2026-09-22 from the untracked `site/` copy)
+
+* ✓ **"Why twelve is still open" no longer says a fractional packing of mass 12 exists at side 4** —
+  the proved figure is 12.27 (exact certificate, `s12/search/COVER4.md`); the sentence now says so.
+
+* ✓ **`proofs.html` has a section on the case-free proof of s(13) = 4.**  Added after the Bentz
+  walkthrough, as "Thirteen again, with no cases": the single weighted set of 3,621 points in
+  `[0,4]²` of total weight 12.955972 < 13 that every closed unit square catches weight 1 from, the
+  rescaling that makes disjointness (and so the count) work, why the *closed* convention is what
+  puts the target at 13 rather than 16, the exact 12.2688 floor on any cover of that box — which
+  also says why no such cover can ever speak about n = 12 — and how it is checked at margin zero:
+  two exhaustive exact programs sharing no code (Python rationals, Rust integers), 23 rejection
+  tests, soundness lemmas in Lean but not the subdivision code.  Says explicitly that the theorem
+  is Bentz's (2010) and only the proof is new.  Facts and numbers from `s12/notes/s13-casefree.md`
+  and `s12/README.md` "s(13) = 4 without case analysis"; links to the repository in the same form
+  the playground aside already uses.  Hand-written HTML, so nothing to rebuild — `build.sh` only
+  regenerates `www/data/`, never the pages.
+
 ## Done 2026-09-10 (pre-publication review)
 
 * ✓ **Explore said "nobody has beaten the trivial packing" for 48 n that have a better one**

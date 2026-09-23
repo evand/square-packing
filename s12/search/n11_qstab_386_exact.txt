@@ -1,0 +1,7 @@
+# t = 193/50 exact; D4-symmetrised measure; closed-intersection clique-feasible
+# mass = 5333333333/500000000 = 10.666666666000; M = 1; maxclique = 1
+# pose p q cx cy mass : theta = 2 arctan(p/q); mass/8 on each of the 8 dihedral images (dual_exact.py convention)
+pose 0 1 501299/1000000 501299/1000000 4
+pose 0 1 501299/1000000 1504097/1000000 4
+pose 30287 100000 40791/31250 307011/125000 2
+pose 2183 50000 313813/200000 1629221/1000000 333333333/500000000

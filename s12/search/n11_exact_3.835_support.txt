@@ -1,0 +1,8 @@
+# t = 767/200 exact; D4-symmetrised measure of closed unit squares; snapped from n11_cand_3.83500_k4.txt with Q=100000, Dc=1000000
+# mass = 11000000000/1000000000 = 11.000000000000;  M = max coverage = 1 = 1.000000000000000;  L = mass/M = 11 = 11.000000000000
+# pose p q cx cy mass : rotation theta = 2*arctan(p/q) (cos = (q^2-p^2)/(q^2+p^2), sin = 2pq/(q^2+p^2)),
+#   rational centre (cx, cy); mass/8 on each of the 8 dihedral images (cx,cy,+), (t-cx,cy,-), (cx,t-cy,-), (t-cx,t-cy,+), (cy,cx,-), (t-cy,cx,+), (cy,t-cx,+), (t-cy,t-cx,-)
+pose 0 1 1/2 1/2 4
+pose 0 1 1/2 94081/62500 4
+pose 15693 100000 693683/500000 2433819/1000000 2
+pose -1703 100000 308551/200000 190847/125000 1

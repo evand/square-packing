@@ -1,5 +1,20 @@
 # The ceiling of the method: bracketing `ν_f(s)` (TODO item B1)
 
+## Update 2026-08-26: the lower side is closed — `s* ∈ [3.968616, 3.99)`
+
+`search/packing_dual.py` (float with margins) and `search/dual_exact.py` (integers and
+`Fraction`s end to end) certify a D4-symmetric packing measure at `t = 399/100` with mass
+`12.00823` and maximum coverage `< 1`: **`L(3.99) = 96065846032/7999999981 > 12`**
+(`search/DUAL_EXACT.md`).  Hence `COVER(t) ≥ 12` for every `t ≥ 3.99`, no certificate of this
+kind can exist there, and the rigorous bracket in "What is proved" below becomes
+`s* ∈ [3.968616, 3.99)`.  The certification evaluates the coverage exactly at every vertex of
+the arrangement of the support squares (where the maximum of a closed-square coverage is
+attained), which replaces the dilated-cell subdivision used below and removes its 2–14 % slack.
+Non-converged runs at smaller containers: `L(3.98) ≥ 11.918`, `L(3.97) ≥ 11.807`
+(float-certified, `search/DUAL.md`).  The closed-semantics cover LP at `[0,4]²`
+(`search/CLOSED4.md`) gives a heuristic upper indication of `12.3–12.5` for `COVER(4)`.
+The rest of this file is left as written on 2026-08-25.
+
 Code: `search/nu_f.py` (exact-placement LP runs, post-hoc rigorous lower bound, verifier-based
 upper bound), `search/ceiling_launch.sh` (the batch), `search/ceiling_lower.sh` (post-hoc lower
 bounds), `search/ceiling_collect.py` and `search/ceiling_lower_table.py` (the tables).  Everything

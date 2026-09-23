@@ -1,0 +1,1252 @@
+# Rung 2 (`s(13) = 4` by a weighted closed cover of `[0,4]²`, `W < 13`) — task rung2-s13
+
+## 0. Achieved: `s(13) = 4`, case-free, verified exactly
+
+> **Theorem.**  The weighted point set `certificates/rung2/s13_closed_cover_4.txt` — 3,621 points
+> of `[0,4]²` with rational coordinates (`D = 1000`) and rational weights (`W = 10⁹`), of total
+> weight
+>
+>     2591194431/200000000  =  12.955972155  <  13
+>
+> — has the property that **every closed unit square contained in `[0,4]²`, at every centre and
+> every angle, captures total weight `≥ 1`** (closed containment: a point on `∂Q` counts).
+> Consequently no 13 unit squares fit in a square of side `< 4`, and since 16 of them tile
+> `[0,4]²`,  **`s(13) = 4`.**
+
+Verified exhaustively by `search/zeromargin.py`, in `fractions.Fraction` throughout:
+
+```
+python3 search/zeromargin.py cert certificates/rung2/s13_closed_cover_4.txt \
+        --depth 18 --nproc 8 --disj --chain-from 0 --dump runs/leaves.txt
+
+done in 6138s: boxes 16872, max depth 13
+  leaves: ADM 2867  CORE 0  P1 0  MIX 0  CHAIN 5320  TRI 0  EMPTY 3449  UNCERTIFIED 0
+VERIFIED
+```
+
+**0 uncertified boxes**, 1 h 42 min on 8 processes, and the depth limit is never reached (max depth
+13 of 18), so the subdivision terminated on its own.  Re-run from the committed path
+(`certificates/rung2/s13_closed_cover_4.txt`, byte-identical by `md5sum` to the file that was
+checked during development) it reproduces the census exactly -- `done in 5828s: boxes 16872 ...
+ADM 2867 / CHAIN 5320 / EMPTY 3449 / UNCERTIFIED 0, VERIFIED` -- so the check is deterministic and
+the shipped file is the one that verifies.  This is a case-free machine proof: one cover,
+one exhaustive verification, no branch tree — where Bentz 2010 needs a 6-leaf case analysis and
+DS7's pure sets cost 14.
+
+**Leaf census.**  `ADM` 2,867 and `CHAIN` 5,320 of the 8,187 non-empty leaves: **`CHAIN`, the
+disjunctive primitive, carries 65 %** of the proof.  `CORE`, `P1` and `MIX` are 0 — `ADM` (§3)
+subsumes all three — and `TRI` is 0, since the weighted cover has no unit-weight triangles.  That
+`CHAIN` dominates is not an accident but a theorem: **Theorem 1 (§2)** says no cover of total weight
+below `m² = 16` can be certified by fixed-witness primitives at any depth, so a cover of weight
+12.96 *must* be certified disjunctively almost everywhere.
+
+**Domain.**  The census above is over `zeromargin.py`'s *reduced* domain (`u ∈ [0, ½]`,
+`c_y ∈ [0, 2]`, `c_x ∈ [0, 4]`), which is legitimate because the checker first verifies **exactly**
+that the point set is invariant under `x ↦ 4-x` and `y ↦ 4-y` (`Checker.symmetric`; it refuses to
+run reduced otherwise) — the reflection `x ↦ 4-x` maps `θ ↦ 90° - θ`, so `u ≤ ½` (`θ ≤ 53.1°`) and
+its image cover `[0°, 90°]`.  The independent checker below runs the **unreduced** domain and
+checks no symmetry.
+
+**Independent checks.**
+* **`verify2/zmcheck` (2026-09-12, `search/RUNG2_XCHECK.md`)** — a second exhaustive checker in
+  exact `i128` Rust, written from the lemmas of this note and sharing no code, no subdivision rule
+  and no primitive set with `zeromargin.py`: full domain, `done in 1017s: boxes 30258, max depth
+  10; ADM 5114 DISJ 9477 EMPTY 6938 UNCERTIFIED 0; VERIFIED`, deterministic across thread counts,
+  23 rejection tests; its disjunctive primitive carries 65 % of the non-empty leaves, the same
+  fraction `CHAIN` carries here.  The soundness lemmas of both checkers (A–C, E–H, `clip_bin`)
+  are in Lean, `lean/Sqpack/ZeroMargin.lean` (36 theorems, standard axioms only;
+  `notes/lean-zeromargin.md`).
+* `python3 search/zeromargin_stress.py runs/leaves.txt 40 --cert …` — 40 sampled admissible poses
+  per leaf, each leaf's own recorded witness re-verified in floats with no shared code path; plus
+  random tests of `P1`, the core lemma, the triangle lemma, `ADM` (Lemma A) and `CHAIN`'s violation
+  polynomials and `_gmax` enclosure (Lemma E).  See §4.7.
+* `python3 search/closed4.py stress certificates/rung2/s13_closed_cover_4.txt` — a dense float scan
+  of the cover itself: minimum captured weight **`1.0313820`**, i.e. a 3.1 % margin, honest cost
+  `total/min = 12.5618`.
+* `search/COVER4.md` proves `COVER^closed(4) ≥ 24537607710/1999999999 = 12.2688038611` exactly, so
+  this cover is within 5.6 % of optimal and no cover argument can go below `12.2688`.
+
+**What it took.**  Three things, none of which existed at the start of the task, and each of which
+was forced by a measurement rather than guessed:
+
+1. **`ADM`** (§3), an exact primitive that couples admissibility to the angle, subsuming `CORE`
+   and `P1`;
+2. **`CHAIN`** (§6), the weighted disjunctive primitive that Theorem 1 proves is unavoidable — a
+   monotone chain of pivot inequalities partitions a pose box and each region gets its own witness
+   set, with two chains multiplied where two cuts slide independently;
+3. **the missing rows** (§4.3, §10): every earlier candidate cover was *invalid*, by
+   `9420217/10000000 = 0.9420217` at `(3/2, 1461/2000, θ → 0)` and its dihedral images — the
+   `ZEROMARGIN.md` §4 item-3 family, which `closed4.py`'s row lattice steps over.  `search/family_rows.py`
+   emits it explicitly; with those rows and column generation the LP produces a cover that is valid
+   with 4 % margin.
+
+plus two checker completeness fixes found on the way: `clip_bin` (§4.6), which intersects a box's
+angle bin with its admissible range — without it *no* box pressed against a wall is certifiable at
+any depth — and the suffix down-set in `CHAIN` (§6.4).
+
+---
+
+**Verdict of the earlier rounds, kept because the obstruction theorems stand.**  Three results: two obstruction theorems and the primitive they force.
+
+> **Theorem 1 (§2).**  If every leaf of a finite, closed, space-filling subdivision of the
+> admissible pose space of `[0,m]²` (`m ≥ 4`) carries a *monotone witness certificate* — a fixed
+> point set of weight `≥ 1`, every member of which lies in `Q` at every admissible pose of that
+> leaf — then the total weight is `≥ m²`.
+>
+> `CORE`, `P1`, the `ADM` primitive of §3 and all their unions produce exactly such certificates.
+> So **no cover of `[0,4]²` with `W < 16`, and in particular none with the rung-2 target `W < 13`,
+> can be certified by them at any depth.**  The proof is an explicit dual: `m²` of the constraints
+> with multiplier `1`, whose constraint sets are pairwise disjoint.  `TRI` is the one primitive in
+> the checker that is not monotone (it is disjunctive), which is why rung 1 — Friedman's 14 points,
+> `W = 14 < 16` — is certifiable at all and why it fails without `--tri`.
+
+This supersedes `FAMILY.md` §2b's "engineering gap in `cert_p1`/`cert_core`" diagnosis and kills
+the "scale the cover" and "solve the LP with a margin" routes outright (§5).  It also says what to
+build, which is the second result:
+
+> **`CHAIN` (§6)**, a weighted disjunctive primitive.  A monotone chain of pivot inequalities
+> partitions a pose box into `k+1` regions, each with its own witness set; two chains of different
+> kinds may be multiplied, with provably empty product regions.  Every test is an exact
+> `Fraction` maximum of a polynomial that is affine in the centre and quadratic in `u`, so it is
+> decided at four corners with no Bernstein slack and no recursion (Lemmas E–H).
+>
+> The disjunction it has to support is not small: at the worst rung-2 pose a single pivot reaches
+> only `0.845828` of the needed `1`, while a chain cutting between every pair of consecutive
+> coordinates (56 regions) reaches `1.013756`.  That measurement is what fixes the design.
+
+> **Theorem 2 (§9).**  The same argument extended to the endgame's certificate type — points,
+> box/anchor cliques and a region trailer, under the *monotone* credit rule the sweep verifier and
+> `xcheck.py` implement — gives, at `[0,4]²`, accounting total `Θ = Σw_p + Σw_K − Σλ_j K_j ≥ 12`,
+> at the corner leaf `k = 4` and with no region trailer alike.  Cliques buy exactly the four units
+> between `16` and `12` (a clique serves at most two tiles, and only orthogonally adjacent ones —
+> Lemma T); the branch credit buys **nothing** at the binding leaf.  So monotone crediting still
+> allows rung 2 (`Θ < 13`) — a new and cheap route — but **is exactly the obstruction for the
+> `s(12)` endgame (`Θ < 12`)**: the sweep verifier's credit rule cannot be reused for V1, and
+> disjunctive crediting has to carry cliques and regions too (§9.4).
+
+Result on the target: see §4.  Everything load-bearing is `fractions.Fraction`; floats appear only
+as pre-filters (documented supersets of the exact test, which can only lose certifications) and in
+the independent stress tests.  Semantics unchanged (`ZEROMARGIN.md` §1: closed unit squares, closed
+containment, a point on `∂Q` counts).
+
+---
+
+## 1. Notation
+
+Container `[0,m]²`, `m = 4`.  Pose `(c, θ)`, `Q(c,θ) = c + R_θ[-½,½]²`, admissible iff
+`c_x, c_y ∈ [w/2, m - w/2]` with `w(θ) = |cos θ| + |sin θ|`.  `u = tan(θ/2)`, so
+`cos θ = (1-u²)/(1+u²)`, `sin θ = 2u/(1+u²)` are rational in `u`.  A *pose box* is
+`[cx₀,cx₁] × [cy₀,cy₁] × [u₀,u₁]`.  For `p ∈ P` write `d = p - c` and
+
+    X(c,θ) = d_x cos θ + d_y sin θ ,      Y(c,θ) = -d_x sin θ + d_y cos θ ,
+    p ∈ Q(c,θ)   ⟺   |X| ≤ ½  and  |Y| ≤ ½ .
+
+---
+
+## 2. Theorem 1: the `m²` obstruction
+
+Throughout, `m ≥ 4`, the leaves of the subdivision are closed boxes
+`[a₀,a₁] × [b₀,b₁] × [u₀,u₁]` with `u₀ < u₁`, finitely many, covering the admissible pose space.
+For a tile `(i,j) ∈ {0,…,m-1}²` write `m_{ij} = (i+½, j+½)` and `T_{ij} = [i,i+1] × [j,j+1]`, so
+that `Q(m_{ij}, 0) = T_{ij}`, and let `clip(z,θ) = min(max(z, w/2), m - w/2)` with `w = w(θ)`.
+
+### 2.1 The germ the checker must certify
+
+**Lemma 0 (a leaf that sees one octant).**  Fix signs `σ_x, σ_y ∈ {±1}` with `σ_x = +1` when
+`i = 0` and `σ_x = -1` when `i = m-1` (likewise `σ_y` in `j`), and put
+
+    γ(t, s, θ) = ( clip(i+½ + σ_x t, θ),  clip(j+½ + σ_y s, θ),  θ ),      t, s, θ ≥ 0.     (γ)
+
+Every `γ(t,s,θ)` is admissible by construction, and `γ(0,0,0) = (m_{ij}, 0)`.  Then some leaf `B`
+contains `γ(t,s,θ)` for **all** `t, s, θ ∈ [0, η]`, for some `η > 0`.
+
+*Proof.*  `γ` is continuous and the leaves are finitely many closed sets covering its image.  Write
+`Λ_B = {(t,s,θ) ∈ [0,1]³ : γ(t,s,θ) ∈ B}`, a closed set; the `Λ_B` cover `[0,1]³`.  Suppose no `B`
+contains a cube `[0,η]³`.  Then for every `B` and every `k` there is a point of `[0,1/k]³` outside
+`Λ_B`; since there are finitely many leaves, some `B` and a subsequence... — more simply, for each
+`k` pick `x_k ∈ [0,1/k]³` and a leaf `B_k ∋ γ(x_k)`; finitely many leaves means one leaf `B*`
+occurs for infinitely many `k`, and `B*` is closed, so `γ(0,0,0) ∈ B*`.  Now `B*` is a **box** in
+pose space: `a₀ ≤ i+½ ≤ a₁`, `b₀ ≤ j+½ ≤ b₁`, `u₀ = 0 < u₁`.  For the sign `σ_x = +1` the
+infinitely many `x_k` with positive first coordinate force `a₁ > i+½`; when `i = 0` the same is
+supplied by the clip, which pushes `c_x = w/2 > ½` to the right as soon as `θ > 0`; when
+`i = m-1`, `σ_x = -1` and `a₀ < i+½` for the mirror reason.  Hence `γ([0,η]³) ⊆ B*` for `η` small
+enough.  ∎
+
+Consequently the witness set `S` of `B*` satisfies `w(S) ≥ 1` and
+
+    S ⊆ PIN(i, j, σ) := ⋃_{η>0} ⋂_{0 ≤ t,s,θ ≤ η} Q(γ(t,s,θ)).                              (PIN)
+
+`search/rung2_bound.py`'s `pin_mask` evaluates exactly this: the faces `t ∈ {0, η}`,
+`s ∈ {0, η}` and four values of `θ` including `0`, with `η = 10⁻³` and `θ ≤ 10⁻³`.
+
+### 2.2 What `PIN` is
+
+**Lemma 1 (the cusp computation).**  Let `1 ≤ i, j ≤ m-2` (an interior tile), `d = p - m_{ij}`.
+Then `p ∈ PIN(i,j,σ)` iff `p ∈ T_{ij}` and
+
+  (a) `p_x ∈ (i, i+1]` if `σ_x = +1`, `p_x ∈ [i, i+1)` if `σ_x = -1`, and likewise in `y`
+      (that is, `σ_x d_x < ½`, or `d_x = σ_x·½` on the edge that survives, subject to (b)–(d));
+  (b) on the vertical edge that survives (`x = i+1` when `σ_x = +1`, `x = i` when `σ_x = -1`):
+      `σ_x d_y ≤ 0`, **strictly** when `σ_y = -σ_x`;
+  (c) on the horizontal edge that survives (`y = j+1` when `σ_y = +1`, `y = j` when `σ_y = -1`):
+      `σ_y d_x ≥ 0`, **strictly** when `σ_x = σ_y`;
+  (d) the four corners of `T_{ij}` are excluded.
+
+*Proof.*  On the interior of `T_{ij}` all four inequalities are strict at `(m_{ij},0)` and stay so
+for small `t,s,θ`, so the open tile is in `PIN`.  For the rest write `c = γ(t,s,θ)`, so
+`p - c = (d_x - σ_x t, d_y - σ_y s)` (`clip` is inactive for an interior tile and small `θ`), and
+use `X = (d_x - σ_x t)\cos θ + (d_y - σ_y s)\sin θ`, `Y = -(d_x - σ_x t)\sin θ + (d_y - σ_y s)\cos θ`.
+
+*(a)* Take `θ = s = 0`: `X = d_x - σ_x t ∈ [-½,½]` for all `t ∈ [0,η]` forces `σ_x d_x < ½` unless
+`σ_x d_x = ½` is the *surviving* edge, i.e. `-σ_x d_x ≥ -½ + σ_x·(-σ_x t)`… concretely with
+`σ_x = +1`: `d_x - t ≥ -½` for all small `t` gives `d_x > -½`, i.e. `p_x > i`, and `d_x - t ≤ ½` is
+automatic.  Mirror for `σ_x = -1`.
+
+*(b)* Surviving vertical edge, `σ_x = +1`, `d_x = ½`.  The binding inequality is `X ≤ ½`:
+`(½ - t)\cos θ + (d_y - σ_y s)\sin θ ≤ ½`.  At `t = 0` this is
+`d_y - σ_y s ≤ ½·(1-\cos θ)/\sin θ = ½\tan(θ/2)`.  If `σ_y = +1` the term `-σ_y s = -s` only helps,
+so the binding case is `s = 0, θ ↓ 0`, giving `d_y ≤ 0` **closed**.  If `σ_y = -1` the condition is
+`d_y + s ≤ ½\tan(θ/2)` for all `s, θ ≤ η`, and taking `s = η`, `θ ↓ 0` gives `d_y ≤ -η`, i.e.
+`d_y < 0` **strict**.  Mirror for `σ_x = -1` (then the strict case is `σ_y = +1`).
+
+*(c)* Surviving horizontal edge, `σ_y = +1`, `d_y = ½`; binding inequality `Y ≤ ½`:
+`-(d_x - σ_x t)\sin θ + (½ - s)\cos θ ≤ ½`, i.e. `d_x - σ_x t ≥ -½\tan(θ/2) - s/\sin θ·…`; at
+`s = 0` it is `d_x - σ_x t ≥ -½\tan(θ/2)`, so `σ_x = -1` (the `+t` helps) gives `d_x ≥ 0` closed and
+`σ_x = +1` gives `d_x ≥ η`, strict.  Mirror for `σ_y = -1`.
+
+*(d)* At a corner both `|d_x| = |d_y| = ½`.  Two of the four inequalities read
+`±½\cos θ ± ½\sin θ ≤ ½` with the same sign pattern, i.e. `w(θ) ≤ 1`, false for `θ > 0`.  ∎
+
+**Lemma 1' (wall tiles).**  For `i = 0` the clip is active, `c_x = w/2 = ½ + θ/2 + O(θ²)`.  Then
+(i) the wall edge `x = 0` is entirely lost — `X ≥ -½` there reads `\cos θ·w(θ) ≤ 1`, false for
+`θ > 0`; (ii) the interior edge `x = 1` is kept for the whole **open** edge — the exact condition is
+`d_y ≤ ½ - u² + O(u³)` (`u = \tan(θ/2)`), the `O(u²)` loss instead of the `O(u)` of a fixed centre,
+which is the same computation as Lemma A in §3.1 — with no restriction to a half.  (iii) The
+horizontal edges obey (c) of Lemma 1 unchanged, with `i+½` read as `w/2 → ½`.  For the corner tile
+`(0,0)` both clips are active and `PIN(0,0,+,+) = (0,1] × (0,1]` — in particular the tile corner
+`(1,1)` **is** kept, which is exactly the `P1` lemma (`|c - p|_∞ = 1 - w/2`).  Mirror statements
+hold at `i = m-1`, `j = 0`, `j = m-1`.
+
+*(The "crude form suffices" sentence of the previous draft was wrong: the sets `I_i^{σ_x} × J_j^{σ_y}`
+of (a) alone do **not** give 16.  Weight ½ at each of the 24 interior edge midpoints satisfies all
+36 of those constraints with total 12 — the corner tile `(0,0)` gets `(1,½) + (½,1) = 1`, the edge
+tile `(1,0)` with `σ = (+,+)` gets `(2,½) + (1½,1) = 1`, an interior tile gets two of its four
+midpoints.  It is (b)–(d), the cusp conditions, that rule this out.)*
+
+### 2.3 Disjointness, and the bound
+
+**Lemma 2.**  Let `σ_x` depend only on the column index `i` and `σ_y` only on the row index `j`,
+with `σ_x(0) = σ_y(0) = +1`, `σ_x(m-1) = σ_y(m-1) = -1`, and with the `+ → -` switch in each
+direction occurring between two **interior** indices (possible iff `m ≥ 4`; e.g.
+`σ = (+,+,-,-)` for `m = 4`).  Then the `m²` sets `PIN(i, j, σ_x(i), σ_y(j))` are pairwise disjoint.
+
+*Proof.*  Let `p` lie in two of them, for tiles `(i,j) ≠ (i',j')`.  By Lemma 1(a) the `x`-ranges are
+`I_i = (i,i+1]` where `σ_x(i) = +1` and `[i,i+1)` where `σ_x(i) = -1`; two such intervals are
+disjoint unless `i' = i+1` with `σ_x(i) = +1` and `σ_x(i+1) = -1`, when they share exactly the line
+`x = i+1`; likewise in `y`.  So either `i = i'` or the tiles are `x`-adjacent across the switch, and
+similarly in `y`.  Four cases.
+
+(i) `i = i'`, `j = j'`: excluded.
+(ii) `i = i'`, `j' = j+1` across the `y`-switch, so `σ_y(j) = +1`, `σ_y(j+1) = -1` and
+`p_y = j+1`.  By Lemma 1(c) tile `(i,j)` keeps its top edge with `d_x ≥ 0`, strict iff
+`σ_x(i) = σ_y(j) = +1`; tile `(i,j+1)` keeps its bottom edge with `d_x ≤ 0`, strict iff
+`σ_x(i) = σ_y(j+1) = -1`.  The two tiles are in the same column, so `σ_x(i)` is the same for both,
+and exactly one of "`σ_x(i) = +1`" and "`σ_x(i) = -1`" holds: exactly one of the two conditions is
+strict.  Their intersection is therefore `{d_x = 0}` minus one of them, i.e. empty.
+(iii) `j = j'`, `i' = i+1` across the `x`-switch: the mirror of (ii), using Lemma 1(b) and the
+common `σ_y(j)`.
+(iv) both adjacencies, so `p = (i+1, j+1)`.  Then `p` is a corner of all four tiles, excluded by
+Lemma 1(d).
+
+Finally the switch must be interior: if it were at `i = 0` (i.e. `σ_x(1) = -1`) then tile `(0,j)`
+keeps the *whole* open edge `x = 1` by Lemma 1'(ii) — no half — and tile `(1,j)` keeps its left
+edge `x = 1` with `d_y ≥ 0`, and the two overlap.  (`rung2_bound.py dual --switch 0` prints the
+overlap.)  ∎
+
+**Theorem 1.**  Let `P ⊂ [0,m]²` (`m ≥ 4`) be a finite weighted point set, and suppose every leaf of
+a finite, closed, space-filling subdivision of the admissible pose space carries a *monotone
+witness certificate* — a set `S ⊆ P` with `w(S) ≥ 1` such that **every** `p ∈ S` lies in `Q(c,θ)`
+at **every** admissible pose of the leaf.  Then `w(P) ≥ m²`.
+
+*Proof.*  Fix the signs of Lemma 2.  By Lemma 0 each tile `(i,j)` has a leaf `B*` containing the
+germ `(γ)`, and its witness set satisfies `w(PIN(i,j,σ)) ≥ w(S) ≥ 1` by (PIN).  The `m²` sets are
+pairwise disjoint by Lemma 2, so `w(P) ≥ Σ_{ij} w(PIN(i,j,σ)) ≥ m²`.  ∎
+
+Equivalently, in LP-duality language: `λ = 1` on those `m²` of the constraints
+`w(PIN(i,j,σ)) ≥ 1` and `0` on the rest is a feasible dual of value `m²`, because the
+multiplicity `Σ λ·1_{PIN}` is at most `1` at every point of `[0,m]²`.
+
+**Why the check is finite and covers all covers.**  Membership in `PIN(i,j,σ)` depends only on the
+comparisons of `p_x` with `i, i+½, i+1` and of `p_y` with `j, j+½, j+1` (Lemmas 1, 1'), so it is
+constant on every cell of the arrangement of the half-integer grid.  Each cell contains a point of
+the **quarter-integer lattice** (open 2-cells contain their centre `(k+½)/2`, relatively open
+1-cells their midpoint, 0-cells are themselves quarter-integers).  So verifying
+`multiplicity ≤ 1` at the `(4m+1)²` quarter-lattice points verifies it on all of `[0,m]²` — no
+lattice restriction is imposed on the cover.
+
+```
+python3 search/rung2_bound.py dual --m 4
+  sigma_x per column: [1, 1, -1, -1]     sigma_y per row: [1, 1, -1, -1]
+  sum of lambda = 16
+  max multiplicity over the 1/4-lattice (289 cell representatives) = 1
+  VERDICT: the 16 PIN sets are pairwise disjoint => every monotone-witness-certifiable
+           cover of [0,4]^2 has total weight >= 16
+```
+`--switch 0` (the switch at the wall adjacency) prints multiplicity `2`, as Lemma 2 predicts;
+`--m 5 --switch 2`, `--m 6 --switch 2`, `--m 7 --switch 3` all print `1`, so the bound is `m²` for
+`m = 4,…,7` and, by the same proof, for every `m ≥ 4`.
+
+**Machine confirmation (the LP, over all 36 constraints).**  `rung2_bound.py bound --octants`
+minimises the total weight subject to *all* the constraints `w(PIN(i,j,σ)) ≥ 1` (4 corner tiles
+with one sign pair, 8 edge tiles with two, 4 interior tiles with four):
+
+| lattice | candidates | constraints | LP value |
+|---|---|---|---|
+| 1/4 (a complete cell system) | 289 | 36 | **16.000000** |
+| 1/20 | 6,561 | 36 | **16.000000** |
+| 1/40 | 25,921 | 36 | **16.000000** |
+
+and its optimal dual is exactly the integral certificate above.  Dropping the one-sidedness — using
+only `S ⊆ Q(m_{ij},0) ∩ ⋂ Q(γ(t,t,0))` over *both* signs — the `16` sets overlap and the LP value
+halves to `8` (`rung2_bound.py bound`, no `--octants`); it is Lemma 0, the fact that a leaf touching
+the tile pose from one side is itself a leaf that must be certified, that gives `m²`.
+
+**Machine confirmation 1 (the shipped scaled covers).**
+
+```
+python3 search/rung2_bound.py check runs/closed4_best_x103.txt
+```
+`container [0,4]^2, 1972 points, total weight 3197502027/250000000 = 12.790008108` —
+**24 of the 36 PIN sets have weight below 1** (exact `Fraction` sums), the worst being
+`tile (0,1) sx=+1 sy=-1: 5661189/10000000 = 0.566119`, i.e. the pose `(0.5, 1.5, 0)`.  The four
+corner tiles pass at `1.03000` (Lemma 1', the `P1` situation).  `0.566119` is exactly the number a
+brute-force float scan gives for "the weight captured simultaneously at every pose of an
+arbitrarily small box at `(0.5, 1.5, 0⁺)`", and it does not move as the box shrinks from `10⁻²` to
+`10⁻⁶` — the signature of the obstruction.  This is precisely where `FAMILY.md` §2b's depth ladder
+was stuck (`cx ≈ 0.5`, `cy ≈ 1.5`, `θ → 0`): those boxes are not converging slowly, they are not
+converging at all.
+
+**Machine confirmation 2 (rung 1).**
+
+```
+python3 search/rung2_bound.py check runs/friedman14.txt
+```
+Friedman's 14 points, `W = 14 < 16`: **exactly 6 PIN sets are empty (weight 0)**, at the four
+*interior* tile poses `(1.5,1.5,0)`, `(2.5,1.5,0)`, `(1.5,2.5,0)`, `(2.5,2.5,0)`.  Those six leaves
+are exactly the ones `TRI` certifies, and they are why rung 1 **does not terminate without
+`--tri`** (`ZEROMARGIN.md` §3: 87,200 uncertified at depth 21 with `CORE`+`P1`; with `ADM` and no
+`--tri`, still 71,961 uncertified at depth 20).  Theorem 1 predicts the failure and names the poses;
+the checker finds them.
+
+**Corollary.**  The same proof gives `w(P) ≥ m²` at every rung of `search/FAMILY.md`: rung 2
+(`m = 4`) needs `16` against a target of `13`, `m = 5` needs `25` against `21`, rung 3 (`m = 7`)
+needs `49` against `45`.  *Every* rung of the `s(m²-3)` / `s(m²-4)` family is beyond the monotone
+primitives, by exactly the `3` or `4` that makes the theorem interesting.  Closed-square semantics
+is not an incidental convenience of these proofs — it is their whole content, and a machine proof
+has to reproduce the case analysis (Bentz's 6-leaf tree, DS7's Lemma 3) in some form.  §6 builds
+one.
+
+---
+
+## 3. `ADM`: a new exact primitive (subsumes `CORE` and `P1`)
+
+Although it cannot beat Theorem 1, the right monotone primitive is still needed for every leaf that
+*is* certifiable, and the old pair was measurably weak near the walls.  `ADM` replaces both.
+
+### 3.1 Lemma A (monotone corners)
+
+> **Lemma A.**  Let `B = [cx₀,cx₁] × [cy₀,cy₁] × [u₀,u₁]` with `u₀ ≥ 0`, `u₁ ≤ 1` (so
+> `θ ∈ [0°, 90°]` and `cos θ, sin θ ≥ 0`).  For `θ` in the bin put
+>
+>     A_x(θ) = max(cx₀, w(θ)/2),   B_x(θ) = min(cx₁, m - w(θ)/2),   A_y, B_y likewise.
+>
+> If for **every** `θ` in the bin
+>
+>   (i)  `(p_x - A_x) cos θ + (p_y - A_y) sin θ ≤ ½`
+>   (ii) `(p_x - B_x) cos θ + (p_y - B_y) sin θ ≥ -½`
+>   (iii)`-(p_x - B_x) sin θ + (p_y - A_y) cos θ ≤ ½`
+>   (iv) `-(p_x - A_x) sin θ + (p_y - B_y) cos θ ≥ -½`
+>
+> then `p ∈ Q(c,θ)` for **every admissible pose** `(c,θ) ∈ B`.
+
+*Proof.*  At a fixed `θ`, the admissible centres of `B` are exactly
+`c_x ∈ [A_x, B_x]`, `c_y ∈ [A_y, B_y]` (that is the definition of admissible, intersected with the
+box).  `X(c,θ) = (p_x - c_x)cos θ + (p_y - c_y) sin θ` is non-increasing in `c_x` and in `c_y`
+because `cos θ, sin θ ≥ 0`, so `X ≤ X(A_x,A_y) ≤ ½` by (i) and `X ≥ X(B_x,B_y) ≥ -½` by (ii).
+`Y(c,θ) = -(p_x - c_x)sin θ + (p_y - c_y)cos θ` is non-decreasing in `c_x` and non-increasing in
+`c_y`, so `Y ≤ Y(B_x,A_y) ≤ ½` by (iii) and `Y ≥ Y(A_x,B_y) ≥ -½` by (iv).  Hence `|X|,|Y| ≤ ½`. ∎
+
+(The four inequalities are evaluated at four *different* corners; that is strictly stronger than
+`CORE`, which tests all four corners against all four inequalities.  If `A_x > B_x` the admissible
+set at that `θ` is empty and the conclusion is vacuous but the test is still sound, since each
+inequality is checked at the correct extreme of the — possibly empty — interval.  Sound and
+useless: a box pressed against a wall whose bin is not clipped to its admissible range is exactly
+this case, and it is certifiable at no depth — §4.6, `clip_bin`.)
+
+**This is what the brief's "off-centre wall witness" asks for, and more.**  Take a left-wall box,
+`cx₀ ≤ w/2`, so `A_x = w/2`, and a witness at `p_x = 1` (the first interior grid line) at height
+`D_y = p_y - A_y` above the box's bottom.  Inequality (i) reads, after clearing denominators,
+
+    D_y ≤ u + (cos θ - sin θ)/2 = ½ - u² + O(u³).
+
+The admissible tolerance in `D_y` is therefore `½` up to a **quadratic** error in the angle.
+`P1`'s corresponding test is `|c - p|_∞ ≤ 1 - w/2 = ½ - u + O(u²)` — a **linear** loss.  That
+linear loss is exactly the "slow convergence at wall boxes with off-centre witnesses" that
+`FAMILY.md` §2b describes, and Lemma A removes it in closed form, for a witness pair at any
+heights, with no symmetry assumption.  (`P1` is still kept: it certifies the corner region
+`Q ⊆ p + [-1,1]²` in one box at any bin width, which Lemma A only matches after subdivision.)
+
+### 3.2 Lemma B (the bounds are polynomials in `u`)
+
+> **Lemma B.**  Write `c = (1-u²)/N`, `s = 2u/N`, `N = 1+u²`, and each centre bound as
+> `X_n(u)/(2N)` with
+>
+>     'R' a  (a rational constant):  X_n = 2a(1+u²)
+>     'W'    (`c_x ≥ w/2`):          X_n = (1-u²) + 2u
+>     'M'    (`c_x ≤ m - w/2`):      X_n = 2m(1+u²) - (1-u²) - 2u
+>
+> and set `U = 2N p_x - X_n`, `V = 2N p_y - Y_n` (quadratics in `u`).  Then (i)–(iv) of Lemma A are
+> equivalent to `G(u) ≤ 0` with, respectively,
+>
+>     G₁ = U·C + V·S - N²,   G₂ = -U·C - V·S - N²,
+>     G₃ = -U·S + V·C - N²,  G₄ =  U·S - V·C - N²,        C = 1-u², S = 2u,
+>
+> polynomials of degree `≤ 4` with rational coefficients.  When both bounds are of kind `'R'`,
+> `U = U₀N` and `V = V₀N` and `G` has the factor `N > 0`, leaving the quadratics
+> `g₁ = (U₀-1, 2V₀, -U₀-1)`, `g₂ = (-U₀-1, -2V₀, U₀-1)`, `g₃ = (V₀-1, -2U₀, -V₀-1)`,
+> `g₄ = (-V₀-1, 2U₀, V₀-1)`.
+
+*Proof.*  `X = (U·C + V·S)/(2N²)` and `Y = (-U·S + V·C)/(2N²)` by direct substitution
+(`p_x - c_x = (2N p_x - X_n)/(2N)` etc.), and `2N² > 0`. ∎
+
+`max(cx₀, w/2)` is not a polynomial in `u`.  Both `cx₀` and `w(θ)/2` are separately *lower* bounds
+for it, so verifying an inequality with either one is sound; the implementation offers `'R'`
+always, adds `'W'` whenever `cx₀ < w_hi/2` (i.e. whenever the wall can bind on the bin), and
+accepts an inequality if **any** offered combination certifies it.  That is why `ADM ⊇ CORE`: on a
+box where no wall binds, every bound is `'R'`, the polynomial is a genuine quadratic, and Lemma C
+below is exact — so `ADM` reduces to `CORE` with a centre rectangle clipped at least as tightly.
+
+### 3.3 Lemma C (the exact max over the bin)
+
+> **Lemma C.**  For `deg ≤ 2` the maximum of `G` on `[u₀,u₁]` is attained at an endpoint or, if
+> the leading coefficient is negative, at the vertex `-a₁/(2a₂)` when it lies inside — an exact
+> rational computation.  For `deg 3, 4`, write `G` in the Bernstein basis of degree 4 on `[u₀,u₁]`:
+> `b_j = Σ_{k≥j} a_k C(k,j) u₀^{k-j} h^j` (`h = u₁-u₀`; these are the Taylor coefficients of
+> `G(u₀ + h t)` in `t`, not Bernstein coefficients), `β_i = Σ_{j≤i} [C(i,j)/C(4,j)] b_j` (the
+> Bernstein coefficients).  Then `max_{[u₀,u₁]} G ≤ max_i β_i`, with equality at the endpoints
+> (`β₀ = G(u₀)`, `β₄ = G(u₁)`) — so the bound is exact whenever the maximum is at an endpoint —
+> and the interior overestimate is `O(h²)`.
+
+*Proof.*  A polynomial of degree `n` equals `Σ_i β_i B_{i,n}(t)` with `B_{i,n} ≥ 0`, `Σ B_{i,n} = 1`
+(the convex-hull property of the Bernstein basis), so it is a convex combination of the `β_i`. ∎
+
+Both branches are exact `Fraction` arithmetic; the Bernstein branch is a *sound* over-estimate, so
+`ADM` never certifies a box it should not, and the `O(h²)` slack vanishes under subdivision.
+
+### 3.4 Implementation and the θ-biased splitting rule
+
+`search/zeromargin.py`:
+* `cert_adm` — float pre-filter `_adm_mask` (numpy, the same formulas with a `1e-9` lenient
+  tolerance, a superset of the exact test by construction) over the whole point set, then exact
+  `Fraction` confirmation `_adm_exact` of the survivors in decreasing weight order.
+* `cert_mix` — `ADM` and `P1` certify *different* points of the same box; their **union** is again
+  a legitimate witness set, so a box neither carries alone can still be a leaf.  Reported as `MIX`.
+* `--theta-bias K` (default 4): when the box touches a wall (`cx₀ < w_hi/2` or the three mirror
+  conditions) and `θ` is small, the `u`-extent is weighted by `K` when choosing which dimension to
+  halve.  This is the brief's item (a).  It is a small win on rung 1 (below) and does not change
+  any verdict; the wall problem it was aimed at is solved analytically by Lemma A instead.
+* `--no-adm` restores the old `CORE`-first path, byte-for-byte.
+
+---
+
+## 4. Measurements
+
+**Rung 1 regression (`search/zeromargin.py friedman14 --tri --depth 14 --nproc 4`).**
+
+| run | boxes | depth | ADM | CORE | P1 | MIX | CHAIN | TRI | EMPTY | uncert |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `--no-adm --theta-bias 1` (the old code path) | 6,958 | 10 | – | 3,356 | 70 | – | – | 74 | 3,179 | **0** |
+| `ADM`, `--theta-bias 1` | **6,810** | 10 | 3,367 | 0 | 0 | 0 | 0 | 74 | 3,164 | **0** |
+| `ADM`, `--theta-bias 4` (default) | 7,220 | 10 | 3,511 | 0 | 0 | 0 | 0 | 74 | 3,225 | **0** |
+
+The first row reproduces `ZEROMARGIN.md` §3 exactly (`3356/70/74/3179/0`, 6,958 boxes), so the old
+path is untouched.  `ADM` alone replaces **both** `CORE` and `P1` (`P1` drops to 0 leaves: the 70
+corner/wall boxes `CORE` could never do are now `ADM` leaves) and needs 148 fewer boxes.  Without
+`--tri` it is still `NOT VERIFIED` (71,961 uncertified at depth 20) — as Theorem 1 requires, since
+`14 < 16`.
+
+**Rung 2, monotone primitives only** (`cert runs/closed4_best_x103.txt --depth 10 --nproc 8`,
+`taskset -c 16-23`): 307,420 boxes, `ADM 117,805 / CORE 0 / P1 0 / MIX 0 / TRI 0 / EMPTY 4,563 /
+UNCERTIFIED 34,542`, 321 s.  `FAMILY.md` §2b's depth-10 row for the same file was `300,294` boxes,
+`114,471 / 337 / 0 / 4,327 / 34,212`.  `ADM` does strictly more per box and the uncertified count
+is unchanged to 1 % — those boxes are the obstructed ones, and Theorem 1 says no amount of depth or
+monotone cleverness removes them.  All 34,542 sit at the 24 violated PIN sets of §2.
+
+**Rung 2 with `CHAIN`** (`--depth 14 --nproc 8 --disj --chain-from 5`, `taskset -c 8-15`).
+The run had not finished within the session's time budget; the honest state at the
+report deadline is below (§4.1).  Two earlier runs (`--chain-from 5` and `--chain-from 0`) were
+invalidated mid-flight by a soundness bug found by inspection and fixed: in the product branch the
+two chains' up-sets, and in the single-chain branch the down-set and the up-set, can share points,
+and their weights were being **added** rather than unioned.  The region test now totals the weight
+of the *union* of the index sets, exactly, with integer weight numerators over a common
+denominator (`Checker.Wnum`/`Wden`) so that a numpy `int64` sum decides it.  After the fix the
+root-level box `[0.5,0.6] × [1.4,1.5] × [0°,7.2°]` no longer certifies (it had been carried by
+double-counted weight) while its subdivisions still do, so the correction is material and the
+earlier leaf counts are void.
+
+### 4.1 State of the post-fix run
+
+`taskset -c 22-29 python3 search/zeromargin.py cert runs/closed4_best_x103.txt --depth 14
+--nproc 8 --disj --chain-from 0 --dump runs/x103_chain_leaves.txt` (`runs/x103_chain.log`):
+
+| roots done | boxes | uncertified | wall |
+|---|---|---|---|
+| 500 / 6,400 | 500 | 0 | 1 s |
+| 1,000 | 1,020 | 0 | 6 s |
+| 1,500 | 2,566 | 0 | 131 s |
+| 2,000 | 3,770 | **0** | 163 s |
+| 2,500 | 7,810 | **60** | 1,292 s |
+| 3,000 | 14,684 | **60** (no new ones) | 4,290 s |
+| 3,500 | 17,340 | **60** | 5,139 s |
+| 4,000 | 26,586 | **60** | 8,312 s |
+
+The root boxes are ordered by `c_x` (pitch `1/10`, `c_y` inner, `u` innermost, `160` roots per
+`c_x` column), so `2,000` roots is `c_x ≤ 1.25`: **the whole left-wall region — including the worst
+pose `(0.5, 1.5, 0)` of §2 and every tile pose of columns 0 and 1 — is certified with 0
+uncertified boxes.**  Those are exactly the poses Theorem 1 proves no monotone primitive can ever
+reach, and `CHAIN` reaches them.
+
+The first uncertified boxes (60 of them) appear in `c_x ∈ [1.25, 1.56]`, i.e. approaching the
+*interior* tile pose `(1.5, 1.5, 0)`, where the certificate needs the product of two chains.  The
+run is compute-bound there — a single root box of that column takes minutes, because `CHAIN` is
+attempted at every box of the subtree that the cheap primitives fail — and it had not reached its
+summary line within the session.  It is not stuck: the per-box tests are exact and terminating;
+the cost is the ~5 s two-chain construction repeated over a deep subtree.  §4.2 is the fix.
+
+### 4.2 Why it is slow, and the exact cache that helps
+
+Profile of one `cert_chain` call on an interior box: the candidate screen calls `_adm_cond_ok`
+(exact, `Fraction`) for up to three conditions of each of ~200 reachable points, and the up-set
+and empty-region searches call `_gmax` `O(|cand| log k)` times per chain.  The first of those is
+now avoided across a subtree: **a sub-box has a subset of its parent's admissible poses, so a
+point proved to lie in `Q` at every admissible pose of the parent lies in `Q` at every admissible
+pose of the child** — the proof is inherited verbatim, exactly, and `run_box` threads that set
+down the stack (`cert_chain` computes it in full for every box it handles, which is exactly the
+boxes that get subdivided).  Rung 1 is byte-identical with the cache on, and the `CHAIN` probe
+boxes give the same verdicts, as they must.  The run reported above predates the cache.
+
+### 4.3 The residue is not at a tile pose
+
+The 60 uncertified boxes of the full-domain run all lie in `c_x ∈ [1.25, 1.56]` and none appeared
+later (still 60 at 3,500 of 6,400 roots), so the obvious suspect was the interior tile pose
+`(1.5, 1.5, 0)`, whose four `PIN` sets are the worst-violated of the container after the wall ones.
+It is **not** the culprit.  Descending from each of the four root boxes that meet that pose, always
+into the child that still contains it, and certifying every box on the way (`ADM` → `P1` → `MIX` →
+`CHAIN`, exact, one process):
+
+| octant | depth at which the box becomes a leaf | primitive |
+|---|---|---|
+| `σ = (−,−)` | 2 | `CHAIN` |
+| `σ = (+,+)` | 4 | `CHAIN` |
+| `σ = (+,−)` | 6 | `CHAIN` |
+| `σ = (−,+)` | 10 | `CHAIN` |
+
+(and the wall tile pose `(0.5, 1.5, 0)` at depths 0, 0, 2 and `EMPTY`; the edge tile pose
+`(1.5, 0.5, 0)` at depth 2 by `ADM` in all four octants.)  So every tile pose in the band is a leaf
+well inside the depth budget, and the residue at depth 14 is **somewhere new** — not a pose
+Theorem 1 predicts.  Its location is being pinned down by two restricted sweeps
+(`runs/x103_narrow.log`, depth 14 over columns 12–13; `runs/x103_shallow_probe.log`, depth 10 over
+columns 12–15); both were still running at the report deadline.
+
+The spread in the table is itself a check on the theory: the four octants of one pose need depths 2
+to 10, because the cover is symmetric under `x → 4−x, y → 4−y` but not under `x ↔ y`, and Lemma 1's
+pinwheel is not symmetric under `σ → −σ` either.
+
+**The residue is an exact violation of the cover, not a gap in the primitives.**  Bisecting the
+band located all 60 of the left-half uncertified boxes at `c_x ≈ 3/2` (a sliver of width `1/320`
+on either side of it), `θ ∈ [0°, 0.224°]`, and `c_y` sweeping a band — 50 of them in a continuous
+run `c_y ∈ [0.5125, 0.7875]` in steps of `1/160`, the remaining 10 a small tilted cluster at
+`c_y ≈ 0.53`, `θ ∈ [3.24°, 4.25°]`.  That is the `ZEROMARGIN.md` §4 item 3 family — an
+axis-parallel square `[1,2] × [c_y-½, c_y+½]` with **both** vertical edges on the heavy grid lines
+`x = 1` and `x = 2` — but sliding in `c_y`, which is *not* on the box lattice, so every box
+straddles it.  Item 3 anticipated exactly this: "with a root pitch not commensurable with the
+coordinates the boxes straddle the family and CORE alone would not terminate."
+
+Checking the capture directly in that box gave a single-pose minimum **below 1**, and the exact
+`pose` mode confirms it:
+
+```
+python3 search/zeromargin.py pose runs/closed4_best_x103.txt --cx 3/2 --cy 1461/2000 --u 1/40000
+container [0,4]^2; pose cx=3/2 cy=1461/2000 u=1/40000 theta=0.002864789 deg; admissible: True
+EXACT captured weight = 970282351/1000000000 = 0.970282351  *** VIOLATION: < 1 ***
+```
+
+So `runs/closed4_best_x103.txt` **is not a valid cover**, and no primitive — monotone, disjunctive
+or otherwise — can ever certify those boxes.  The checker was right and the cover is wrong.  On the
+three files, at that one pose (`Fraction`, 175 points captured):
+
+| file | total | exact capture at `(3/2, 1461/2000, u = 1/40000)` |
+|---|---|---|
+| `closed4_best.txt` | `12.4174836` | `9420217/10000000 = 0.9420217` |
+| `closed4_best_x102.txt` | `12.665833` | `480431067/500000000 = 0.960862134` |
+| `closed4_best_x103.txt` | `12.790008` | `970282351/1000000000 = 0.970282351` |
+
+**This kills the scaling route outright, and by a wider margin than §5(a) said.**  `FAMILY.md` §2's
+worst known pose was `0.9926744`, needing `λ ≥ 1.00738`.  The true worst is `0.9420217`, needing
+
+    λ ≥ 10000000/9420217 = 1.06154667…,   λ · 12.4174836 = 124174836/9420217 = 13.18173838…
+
+so **every scaling of `closed4_best.txt` that is a valid cover has total > 13.18 — over the rung-2
+budget by 0.18.**  The `x1.02` and `x1.03` files were never candidates; §2's "Machine confirmation
+1" measured their monotone-witness deficit, which is real, but the operative fact is simpler: they
+do not cover.  A rung-2 attempt has to start from a *valid* cover, which means re-running the
+separation loop with this pose family (`c_x = 3/2`, `θ → 0`, `c_y` free) in the row set — it is
+precisely the family `closed4.py`'s row lattice samples badly, since the rows sit on a `0.02`
+pitch and the violation is `0.03` wide in `c_y` at `θ = 0.0029°`.
+
+**Bisecting the band.**  Two independent runs agree on the count: exactly **60** uncertified boxes,
+and the restricted run reaches 60 by its root 1,000, so all of them have `c_x ≤ 1.9`.  A depth-14
+sweep of columns 12–13 alone (`--cx-lo 1.25 --cx-hi 1.35`, `runs/x103_narrow.log`) is
+
+```
+done in 2878s: boxes 2474, max depth 12
+  leaves: ADM 204  CORE 0  P1 0  MIX 0  CHAIN 1094  TRI 0  EMPTY 99  UNCERTIFIED 0
+VERIFIED (PARTIAL: cx in [1.25, 1.35] only)
+```
+
+— **clean, and it never even reaches the depth limit** (max depth 12 of 14).  Note the leaf mix:
+`CHAIN` carries 1,094 of the 1,397 leaves against `ADM`'s 204 and `P1`'s 0.  That is the whole
+point of §6 — in the interior of this cover almost every leaf needs a disjunctive certificate, as
+Theorem 1 says it must.  So the residue is confined to columns 14–18, `c_x ∈ [1.4, 1.9]`; the next
+bisection (columns 14–15) was running at the report deadline.
+
+### 4.4 The full-domain run, finished
+
+```
+python3 search/zeromargin.py cert runs/closed4_best_x103.txt --depth 14 --nproc 8 --disj \
+        --chain-from 0 --dump runs/x103_chain_leaves.txt        # taskset -c 22-29
+done in 13318s: boxes 39494, max depth 14
+  leaves: ADM 4726  CORE 0  P1 0  MIX 0  CHAIN 14212  TRI 0  EMPTY 3846  UNCERTIFIED 163
+NOT VERIFIED
+```
+
+3 h 42 min on 8 processes.  `CORE`, `P1`, `MIX` and `TRI` are all **0**: `ADM` subsumes the first
+three everywhere, and `CHAIN` carries **14,212 of the 22,784 non-empty leaves (75 %)** — the
+disjunctive primitive is not a patch for a few hard poses, it is the main certificate type for a
+weighted cover, exactly as Theorem 1 requires.
+
+The 163 uncertified boxes are in two families, and **neither is a limitation of the checker**:
+
+| family | location | base-cover capture there (exact) |
+|---|---|---|
+| left, 60 boxes | `c_x ∈ {[1.49375, 1.5], [1.5, 1.503125]}`, `c_y` sweeping `[0.5125, 0.7875]` in `1/160` steps at `θ ∈ [0°, 0.224°]`, plus a 10-box tilted cluster at `c_y ≈ 0.53`, `θ ∈ [3.24°, 4.25°]` | **`9420217/10000000 = 0.9420217` — a violation** |
+| right, 103 boxes | `c_x ∈ [3.05, 3.5]` and the far-right band, `θ → 0` | **`500001/500000 = 1.000002` — exactly tight** |
+
+```
+python3 search/zeromargin.py pose runs/closed4_best.txt --cx 3.4877 --cy 0.52138 --u 253/10000000
+EXACT captured weight = 500001/500000 = 1.000002000000  (OK: >= 1)
+```
+
+So the left family is a hole in the cover (§4.3) and the right family is a *zero-margin* pose: the
+base cover has two parts in a million of slack there, so the `×1.03` scaling leaves only 3 %, and
+a `CHAIN` region — which gives up the weight on the edges it loses — cannot reach `1` on 3 %.
+Both are properties of the cover, not of the primitives.  (The run's printed list is truncated at
+40 boxes; the full list was not dumped because `--oracle` was not passed, and the cover it
+describes is being replaced rather than repaired.)
+
+### 4.5 The subtree cache, measured: no speedup
+
+`--cx-lo/--cx-hi` (new) restricts the sweep to a band of root columns; it prints `PARTIAL SWEEP`
+on entry and `VERIFIED (PARTIAL: ...)` in the verdict, so a restricted run cannot be mistaken for
+a verification.  Running the same certificate and settings (`--depth 14 --disj --chain-from 0`)
+over the same band, with and without the §4.2 cache:
+
+| run | code | procs | band | roots | boxes | wall | core-s / root |
+|---|---|---|---|---|---|---|---|
+| `runs/x103_chain.log` (uncached) | pre-`eee2680` | 8 | roots 2,000–2,500 of the full sweep (`c_x ∈ [1.25, 1.56]`) | 500 | 4,040 | 1,129 s | **18.1** |
+| `runs/x103_cached_interior.log` (cached) | `eee2680` | 6 | the first 500 of `--cx-lo 1.25 --cx-hi 2.75` (`c_x ∈ [1.2, 1.52]`) | 500 | 3,120 | 1,764 s | **21.2** |
+
+(Root index is `160·i + 8·j + k` with `i` the `c_x` column, so columns 12–15 are roots 1,920–2,560;
+the two bands overlap in all but ~80 roots at either end.  Worker CPU was ~97 % for the 8-process
+run and ~86 % for the 6-process one on a machine at load 28, so the honest reading of the two
+numbers is *the same*, ±5 %.)
+
+**The cache is exact but not the bottleneck.**  It removes the `_adm_exact` re-confirmation of
+points already certified at an ancestor — but `cert_chain`'s cost is dominated by the two things it
+does *not* touch: the candidate screen (`_adm_cond_ok` on the points that are *not* in `T`, which
+is precisely the set that changes from box to box) and the `O(|cand| log k)` `_gmax` calls of the
+up-set and empty-region binary searches.  Keeping it is still right — it is exact, it never changes
+a verdict, and it costs nothing — but the next speed-up has to come from the screen and the
+searches (memoising `_gmax` on `(point, kind, box)` across the `λ` values, and reusing a parent's
+chain order, which is inherited for the same reason the certifications are).
+
+**Per-box behaviour of `CHAIN`** (direct calls, `runs/closed4_best_x103.txt`):
+
+| box | `ADM` | `MIX` | `CHAIN` | time |
+|---|---|---|---|---|
+| `[0.5,0.51] × [1.49,1.5] × [0°,0.11°]` (the worst pose) | — | — | **CHAIN**, 196 points | 0.39 s |
+| `[0.4875,0.5] × [1.4875,1.5] × [0°,1.8°]` | — | — | **CHAIN**, 196 points | 0.40 s |
+| `[0.5,0.6] × [1.4,1.5] × [0°,7.2°]` (the root box there) | — | — | — (needs subdivision) | 0.63 s |
+| `[1.5,1.6] × [1.4,1.5] × [0°,1.8°]` (interior tile pose, root box) | — | — | — (needs subdivision) | 6.5 s |
+| 11 of the 12 `(±,±)` octant boxes at `(1.5,1.5,0)`, bins `2⁻⁶, 2⁻⁸, 2⁻¹²` | — | — | **CHAIN** (product of two chains) | 5.0–5.8 s |
+
+The interior-tile boxes need the *product* of two chains and the empty-region test of Lemma H; a
+single chain fails there, which is what forced the two-chain extension.
+
+**Independent float stress (`search/zeromargin_stress.py`, no shared code path).**
+`runs/zm_f14_adm.txt` (6,810 `ADM` + 74 `TRI` leaves), 40 sampled poses per leaf including the box
+corners: **0 failures**.  Primitive tests: `P1` 200,000 instances, core lemma 68,569 (21 angles
+each), triangle 72,358 — 0 failures.  `ADM` (Lemma A) on 40,000 random `(box, point)` pairs with
+the four inequalities evaluated directly in floats on a 201-point `θ` grid: 2,713 certifying pairs,
+43,859 pose samples, **0 failures**.  `CHAIN`: the violation polynomials against the geometry on
+200,000 random `(point, pose)` pairs — **0 disagreements**; the `_gmax` enclosure (Lemma E) on
+20,000 random `(box, nonnegative combination)` pairs × 30 interior poses — **0 violations**.
+
+---
+
+### 4.6 The right-wall family was a completeness bug in the checker (`clip_bin`)
+
+The right-hand 103 boxes were *not* a new pose type.  Sweeping the single root column
+`c_x ∈ [3.5, 3.6]` reduced the whole family to one box,
+
+    cx in [7/2, 7/2 + 1/160],  cy in [3/2, 3/2 + 1/160],  theta in [0, 0.112 deg],
+
+and the diagnosis is unambiguous.  A pose of that box is admissible iff
+`w(θ)/2 ≤ c_x ≤ m − w(θ)/2`, and `m − w(θ)/2 = 3.499024 < 7/2` as soon as `θ > 0`, so **the box's
+only admissible poses are `(7/2, c_y, 0)`** — and their captures are fine:
+
+| pose | exact capture |
+|---|---|
+| `(7/2, 3/2, 0)` | `1.562914790` |
+| `(7/2, 3/2 + 1/320, 0)` | `1.036922939` |
+| `(7/2, 3/2 + 1/160, 0)` | `1.036922939` |
+| every corner with `u > 0`, and every corner with `c_x = 7/2 + 1/160` | **inadmissible — constrains nothing** |
+
+while `ADM`, `P1`, `MIX` and `CHAIN` all returned `None` with witness weight `0`.  Collapsing the
+bin to `u ∈ [0,0]` — the box's actual admissible sub-bin — makes `ADM` certify it immediately with
+witness weight `1.000308396`.  So the failure was Lemma A being applied over a bin on which almost
+every pose is inadmissible: the conditions are checked at `A_x(θ) = max(c_{x0}, w/2)` and
+`B_x(θ) = min(c_{x1}, m − w/2)` even where `A_x > B_x`, which is *sound* (§3.1) but vacuously
+conservative, and no amount of subdivision repairs it — the sub-boxes inherit the same bin.
+
+**The fix, `clip_bin` (`search/zeromargin.py`).**  A pose of the box is admissible iff
+`w(θ) ≤ K` with `K = 2 min(c_{x1}, m − c_{x0}, c_{y1}, m − c_{y0})`.  On `[0°, 45°]` `w` is
+strictly increasing, so the admissible angles are `[u₀, u⁻]` with `w(u⁻) = K`, and everything above
+`u⁻` may be discarded.  `clip_bin` returns a rational `u* ≥ u⁻` by bisection — **from above**, so
+no admissible pose is ever dropped — and returns `u₀` exactly when `w(u₀) = K`, which is the case
+that matters: at a wall the admissible bin is the *single* angle `u₀`, and only a degenerate bin
+lets the primitives see it.  Clipping to any `u* > u⁻` does not help there, because the offending
+inequality fails for every `θ > 0` however small.  The clip is skipped when the bin reaches past
+45°, where `w` is not monotone.
+
+Effect on that column: **160 boxes, max depth 0, `ADM 16 / EMPTY 144`, 0 uncertified, instant**
+(was 202 boxes to depth 14 with 1 uncertified).  Rung 1 is unchanged in verdict on every path
+(reduced `6,782` boxes `3496 ADM / 74 TRI / 3212 EMPTY / 0`; full domain `27,044` /
+`14224 / 280 / 12540 / 0`; the old `CORE` path `0`), and `--no-clip` restores the previous counts
+exactly.
+
+**And the rest of the right-hand family is the same violation.**  With the clip in place, a
+depth-14 sweep of the whole right half (`--cx-lo 3.05 --cx-hi 3.95`, 1,600 roots, 194 s on 6
+processes: 4,044 boxes, `ADM 993 / CHAIN 389 / EMPTY 1,338`) leaves 102 boxes, and they are at
+`c_x ∈ [3.2156, 3.3375]`, `c_y ∈ [1.49375, 1.50625]`, `θ ∈ [0°, 0.224°]` — the **transpose** of the
+item-3 family (`c_y = 3/2`, so both *horizontal* edges lie on `y = 1` and `y = 2`, with `c_x`
+free), whose worst pose is the D4 image `(3.2695, 3/2, θ → 0)` of §4.3's violation, capture
+`9420217/10000000` again.  So after `clip_bin` the entire 163-box residue is **one family, one
+violation, and its dihedral images** — there is no second phenomenon.
+
+**Why this matters more than rung 2.**  This is the first case where the checker failed on a pose
+with genuine positive margin, and the cause was neither the cover nor a missing lemma but a bin
+that was never intersected with the admissibility region.  Any V1 checker inherits it: every box
+pressed against a wall of the container has an admissible set of lower dimension, and a primitive
+that quantifies over the box's full bin certifies none of them, at any depth.
+
+### 4.7 Independent checks of the shipped certificate
+
+`search/zeromargin_stress.py` re-verifies the leaf dump in floats, with no shared code path with
+the exact checker, and re-tests every primitive on random instances:
+
+```
+python3 search/zeromargin_stress.py runs/r5_x105_d18_leaves.txt 40 --cert runs/r5_x105.txt
+
+leaves: {'ADM': 2867, 'CORE': 0, 'P1': 0, 'MIX': 0, 'CHAIN': 5320, 'TRI': 0, 'EMPTY': 3449}
+        samples per leaf: 40   failures: 0
+primitive random tests: {'P1': 200000, 'core': 68545, 'tri': 72175}   failures 0
+ADM lemma random tests: 2713 certifying (point, box) pairs, 43859 pose samples, failures 0
+CHAIN violation polynomials: 200000 random (point, pose) pairs, sign disagreements: 0
+CHAIN _gmax enclosure: 20000 random (box, combination) pairs x 30 interior poses, violations: 0
+```
+
+For a `CHAIN` leaf the stress test knows nothing about the leaf's regions: it checks that at every
+sampled admissible pose the weight captured *from the leaf's own recorded witness list* reaches 1 —
+a different subset doing it in each region.  `EMPTY` leaves are checked by sampling for an
+admissible pose that should not exist.  **0 failures on all 11,636 leaves.**
+
+And a dense float scan of the cover itself, independent of the box machinery:
+
+```
+python3 search/closed4.py stress certificates/rung2/s13_closed_cover_4.txt
+STRESS: total=12.955972  min=1.0313820  cost=12.561759
+```
+
+## 5. Two routes that are now closed, with the numbers
+
+**(a) Scaling the cover (`FAMILY.md` §2b) cannot work.**  Captured weight is linear in the weights,
+so `×λ` multiplies every PIN weight by `λ`.  The worst PIN set of `closed4_best.txt` is
+`0.549...`; closing it needs `λ ≥ 1.82`, i.e. `W ≥ 22.6`.  `×1.02` and `×1.03` move the worst PIN
+from `0.5496` to `0.5661` — nowhere near 1, which is why the depth ladder oscillated instead of
+converging.  The exact `pose` spot-checks in `FAMILY.md` §2b (`1.0655`, `1.0759`) were taken at
+`cy = 1.4969`, a *non-degenerate* pose; the degenerate pose is `cy = 1.5` exactly, where the base
+cover captures `1.0000072` — a genuinely tight family that the spot check missed.
+
+**(b) Solving the cover LP with a uniform geometric margin cannot work either.**  A cover with
+margin `μ` (a point counts only if it is `≥ μ` inside every edge) is automatically monotone-witness
+certifiable, so Theorem 1 forces `≥ 16` — and the LP confirms it directly.
+`search/closed4.py` now takes `--margin MU` (sets the containment tolerance to `-MU`; the two
+`tol=TOL` default arguments were rebound so the module global actually takes effect).
+
+```
+python3 search/closed4.py axis --s 4 --margin 0.01     ->  AXIS-ALIGNED LP = 16.000000 (converged)
+python3 search/closed4.py run  --s 4 --margin 0.010    ->  LP = 16.000000 from it1 on
+python3 search/closed4.py run  --s 4 --margin 0.005    ->  LP = 16.000000 from it1 on
+```
+(The axis-only run converges in 8 iterations with zero violated poses, so `16` there is the honest
+sampled-LP optimum, not an unconverged value.  The two full-domain runs were stopped at iteration 6
+after ~930 s, not run to convergence; their value is flat at exactly `16.000000` from iteration 1
+on while the row count grows `24k -> 47k` and column generation keeps adding points, and the LP is
+bounded above by `16` anyway — the all-ones weighting of the `4x4` integer lattice is feasible — so
+`16` there is the optimum, not an unconverged upper estimate.)  Equivalently, by scaling, the cover LP for the
+container `[0, 4/(1-2μ)]²` jumps to `≥ 16` as soon as `μ > 0`: `COVER(s)` is **discontinuous at
+`s = 4`**, because `[0,4]²` is exactly tiled by 16 unit squares and the closed semantics is what
+lets the 16 tiles share their boundary weight.  Any hope of buying robustness by working at
+`s = 4 + δ` and scaling back dies here.
+
+A bug found on the way: `closed4.py run`'s per-round checkpoint called `export(m, x, …)` with an
+`x` from before that round's column generation and crashed with `IndexError` (`index 863 is out of
+bounds`) the first time pricing added a column.  Fixed by zero-padding `x` to the widened model.
+
+---
+
+## 6. `CHAIN`: the disjunctive primitive
+
+Theorem 1 says a leaf's certificate must sometimes be *disjunctive*: a partition of the leaf into
+regions, each with its **own** witness set.  `TRI` is the case "three regions, one point each, each
+of weight `≥ 1`" — useless when the weights are `≈ 0.01`.  `CHAIN` is the weighted version.
+
+### 6.1 The shape of the disjunction, measured
+
+At the worst rung-2 pose, `(0.5, 1.5, 0)` with `σ = (+,-)`, the square is `[0,1] × [1,2]` and its
+capture structure over a small box is a **sliding cut**.  With `c_x = w/2 + …`, `c_y = 3/2 - η`,
+`θ` small, the exact conditions are
+
+    point (x, 1) is captured  ⟺  (x - c_x)\sin θ ≤ ½ - (c_y - 1)\cos θ  ⟺  x ≲ ξ,
+    point (x, 2) is captured  ⟺  (c_y - 2)\cos θ + ½ ≥ -(x - c_x)\sin θ  ⟺  x ≳ ξ,
+    ξ = c_x + η/θ + O(θ).
+
+So the row `y = 1` is captured to the left of a cut and the row `y = 2` to the right of the *same*
+cut, and `ξ` sweeps all of `[0,1]` as `(η, θ)` range over any neighbourhood of `(0,0)` — which is
+why no box subdivision controls it, and why this is exactly the residue Theorem 1 predicts.
+
+Measured on `runs/closed4_best_x103.txt` at that box (`runs/` scratch script, dense float scan;
+the stable part weighs `w(T) = 0.566119`, the two rows `0.525992` and `0.498610`):
+
+| disjunction | worst region |
+|---|---|
+| a single pivot (k = 2 regions), best cut | **0.845828** — fails |
+| cuts between every pair of consecutive `x`-coordinates (56 regions) | **1.013756** — works |
+
+A two- or three-region disjunction is therefore *not* enough; the primitive must support a chain of
+arbitrary length.  It is cheap because the regions are nested: they are the sign pattern of one
+monotone family of polynomials.
+
+### 6.2 The primitive
+
+For a point `p` and a pose `(c_x, c_y, u)`, with `a = p_x - c_x`, `b = p_y - c_y`, `C = 1-u²`,
+`S = 2u`, `N = 1+u²`, define the four **violation polynomials**
+
+    G_{p,0} = 2aC + 2bS - N,   G_{p,1} = -2aC - 2bS - N,
+    G_{p,2} = -2aS + 2bC - N,  G_{p,3} = 2aS - 2bC - N,
+
+so that `p ∈ Q(c,θ)` iff `G_{p,k} ≤ 0` for all four `k` (multiply `|X| ≤ ½`, `|Y| ≤ ½` by `2N > 0`).
+
+> **Lemma E (exact maximum).**  Every real combination `Σ λ_r G_{p_r, k_r}` (the signs of the `λ_r`
+> play no role; `cert_chain` uses `λ = -1` for the chain comparison of Lemma F) is **affine** in
+> `(c_x, c_y)` and **quadratic** in `u`.  Hence its maximum over a pose box is
+> `max` over the four corners of the centre rectangle of the exact quadratic maximum over
+> `[u₀,u₁]` — a finite exact `Fraction` computation, with no Bernstein slack and no subdivision.
+
+*Proof.*  `a` and `b` are affine in `c_x, c_y` and appear linearly; `C, S, N` are quadratic in `u`
+with `a, b` not involving `u`.  An affine function of `(c_x,c_y)` attains its maximum over a
+rectangle at a corner, for each fixed `u`, and `max_u max_{corners} = max_{corners} max_u`. ∎
+
+> **Lemma F (chain).**  Let `q_1, …, q_k` be points with chosen kinds such that
+> `max_B (G_{q_r} - G_{q_{r+1}}) ≤ 0` for `r = 1, …, k-1` (so `G_{q_1} ≤ … ≤ G_{q_k}` on `B`, by
+> transitivity).  Then the `k+1` sets
+>
+>     R_0 = {G_{q_1} > 0},  R_r = {G_{q_r} ≤ 0 < G_{q_{r+1}}} (1 ≤ r < k),  R_k = {G_{q_k} ≤ 0}
+>
+> partition `B`, and on `R_r` every `q_j` with `j ≤ r` satisfies its inequality.
+
+*Proof.*  Given a pose, let `r` be the largest index with `G_{q_r} ≤ 0` (`r = 0` if none): the pose
+is in `R_r` and in no other.  On `R_r`, `G_{q_j} ≤ G_{q_r} ≤ 0` for `j ≤ r`. ∎
+
+> **Lemma G (the opposite side).**  If `max_B (G_a + λ G_q) ≤ 0` for some `λ > 0`, then at every
+> pose of `B` with `G_q > 0` one has `G_a < 0`.
+
+*Proof.*  `G_a ≤ -λ G_q < 0`. ∎
+
+> **Lemma H (empty product regions).**  If `max_B (G_{q} + λ G_{q'}) ≤ 0` for some `λ > 0`, then no
+> pose of `B` has `G_q > 0` and `G_{q'} > 0` simultaneously.
+
+*Proof.*  Both positive would give `G_q + λ G_{q'} > 0`. ∎
+
+**The primitive.**  `cert_chain` (`search/zeromargin.py`):
+
+1. `T` = everything `ADM`/`P1` certify for the whole box.  A *swing* point is a point of weight `>0`
+   within reach of the box, not in `T`, exactly one of whose four inequalities fails the `ADM` test
+   — its `G_p` is the swing polynomial.  (Screening: a condition whose *float* `ADM` bound already
+   fails is exactly failed, so points with two or more float-failing conditions are discarded with
+   no `Fraction` arithmetic at all.)
+2. Group the swing points by kind; within a group, sort by a float proxy and build a chain greedily,
+   keeping a point only when the exact test of Lemma F passes against the previous one.
+3. For every candidate `a`, binary-search the largest `r` with "Lemma G certifies `a` from
+   `q_r`" — the set of such `r` is a prefix because `G_{q_r}` is non-decreasing along the chain —
+   using `λ ∈ {1, ½, 2}`.  Call the resulting set of candidates certified on `R_r` (those with
+   largest index `≥ r+1`, i.e. certified from the pivot `q_{r+1}` that is *violated* on `R_r`) the
+   **up-set** `U_{r+1}`.
+4. Require `w(T) + w(D_r) + w(U_{r+1}) ≥ 1` for every region `r`, where `D_r ⊇ {q_1,…,q_r}` is the
+   **down-set** of §6.4.  (A candidate with *two* failing `ADM` inequalities is not a swing point
+   and is never certified by a chain; `verify2/` (`RUNG2_XCHECK.md` §2.4) handles such points by a
+   recursive sign split instead, which is one reason its leaf census differs.)
+
+**Two chains.**  At a *wall* pose one cut slides and one chain suffices.  At an *interior* tile pose
+two cuts slide independently — with `c = (3/2 + α, 3/2 + β)` the row `x = 2` is captured for
+`y ≲ c_y + α/θ` and the row `y = 2` for `x ≳ c_x - β/θ`, and `α, β` are independent — so `CHAIN`
+also tries the **product** of two chains of different kinds, with regions `R_r × R'_s`.  A product
+region can be empty, and Lemma H certifies that: at the interior tile pose the two lowest pivots
+cannot both be violated (the algebra reduces to
+`G + G' = 2[(4 - c_x - c_y)C + (y_1 - x_2 + c_x - c_y)S - N] ≤ 0`), which is what makes the
+`(0,0)` region — the one with no witness at all — provably empty.  The empty set is again a
+staircase in `(r,s)` (both `G` families are monotone), so one binary search per `r` finds it.
+
+**Everything load-bearing is `Fraction`**: Lemmas E–H are decided by `_gmax`, which is exact; the
+only floats are the reach/screen pre-filters and the sort proxy, all of which can only *lose*
+certifications, never create one.
+
+### 6.3 Independent check
+
+`search/zeromargin_stress.py` (floats, no shared code path) now also tests:
+
+* the **violation polynomials**: 200,000 random `(point, pose)` pairs, comparing
+  `max_k G_{p,k} ≤ 0` with the geometric `p ∈ Q(c,θ)` — **0 disagreements**;
+* the **`_gmax` enclosure** (Lemma E): 20,000 random `(box, nonnegative combination)` pairs, the
+  exact `Fraction` bound against 30 random interior poses each — **0 violations**;
+* every `CHAIN` leaf of a dump: at 40 sampled admissible poses per leaf, the weight captured *from
+  the leaf's recorded witness list* must reach `1` (a different subset does it in each region; the
+  stress test knows nothing about the regions) — see §4 for the counts.
+
+---
+
+### 6.4 The down-set is a suffix, not the chain prefix
+
+On the region `R_r = {G_{q_r} ≤ 0 < G_{q_{r+1}}}` Lemma F only promises the chain members
+`q_1, …, q_r`.  But **every** candidate `p` (chain member or not) with `max_B (G_p - G_{q_r}) ≤ 0`
+satisfies its own swing inequality there, since `G_p ≤ G_{q_r} ≤ 0`.  Because `G_{q_r}` is
+non-decreasing along the chain, the set of `r` for which this holds for a given `p` is a
+**suffix** `{r_p, …, k}`, found by one binary search per candidate (`analyse` in `cert_chain`);
+the down-set of region `r` is `D_r = {p : r_p ≤ r}`.  The first version of `CHAIN` used only the
+prefix `{q_1, …, q_r}` and threw away most of the available weight — this is the second of the two
+completeness fixes listed in §0 (the other is `clip_bin`, §4.6).
+
+## 7. What is exact, what is float
+
+| quantity | status |
+|---|---|
+| Lemmas A, B, C and every `ADM`/`CORE`/`P1`/`TRI` leaf | exact `Fraction`; floats only as a documented superset pre-filter |
+| Lemmas E, F, G, H and every `CHAIN` leaf | exact `Fraction` (`_gmax`: four rectangle corners × the exact quadratic maximum in `u`).  Floats appear only in the reach filter, the per-condition screen (a *float* failure implies an exact failure, so the screen only discards non-candidates) and the sort proxy — all of which can only lose certifications |
+| Lemmas 0, 1, 1', 2 and Theorem 1 | proved on paper (§2); the disjointness claim is additionally machine-verified at every cell of the half-integer arrangement via the quarter-lattice (`rung2_bound.py dual`), which is exhaustive over `[0,m]²`, not a lattice restriction |
+| `rung2_bound.py check` | weights summed in `Fraction`; PIN *membership* is decided by evaluating the pose inequalities in floats at `θ ∈ {0, 10⁻⁵, 10⁻⁴, 10⁻³}` with tolerance `10⁻¹²` — the cover's coordinates lie on a `1/1000` lattice, so the `O(θ)` and `O(θ²)` gaps are resolved with `≥ 50×` margin |
+| the LP values `16.000000` (`rung2_bound.py bound`, `closed4.py --margin`) | float LP (HiGHS); its optimal dual is the integral certificate proved by hand in §2.3, so the LP is confirmation, not evidence |
+| `0.566119`, `0.845828`, `1.013756` | the first exact (`Fraction`); the two disjunction numbers are float scans of the cover (design measurements, not part of any proof) |
+| leaf counts in §4 | exact (the checker's own accounting) |
+| `zeromargin_stress.py` | floats by design — an *independent* confirmation, not a proof |
+
+---
+
+## 8. Reproduce
+
+```bash
+cp /home/evand/math/square-packing/s12/runs/inputs-2026-09-11/closed4_best*.txt runs/
+
+# Theorem 1: the explicit dual certificate, exhaustively verified (seconds)
+python3 search/rung2_bound.py dual --m 4                 # max multiplicity 1 => bound 16
+python3 search/rung2_bound.py dual --m 4 --switch 0      # the wall adjacency: multiplicity 2
+python3 search/rung2_bound.py dual --m 5 --switch 2      # 25 ;  --m 7 --switch 3 -> 49
+# the LP behind it (1/4 lattice is a complete cell system; 1/20, 1/40 confirm)
+python3 search/rung2_bound.py bound --m 4 --pitch 20 --octants   # 16.000000
+python3 search/rung2_bound.py bound --m 4 --pitch 20             # 8.000000 (two-sided only)
+
+# Theorem 1 applied to the covers (exact)
+python3 search/rung2_bound.py check runs/closed4_best_x103.txt   # 24/36 PIN sets < 1
+python3 search/rung2_bound.py check runs/friedman14.txt          # 6 empty PIN sets = the TRI poses
+
+# rung 1 regression, the ADM primitive, the independent stress test
+python3 search/zeromargin.py friedman14 --tri --depth 14 --nproc 4 --no-adm --theta-bias 1
+python3 search/zeromargin.py friedman14 --tri --depth 14 --nproc 4
+python3 search/zeromargin.py friedman14 --tri --depth 14 --nproc 4 --dump runs/zm_f14_adm.txt
+python3 search/zeromargin_stress.py runs/zm_f14_adm.txt 40       # 0 failures everywhere
+
+# THE SHIPPED CERTIFICATE: s(13) = 4, 0 uncertified boxes (1 h 42 min on 8 processes)
+python3 search/zeromargin.py cert certificates/rung2/s13_closed_cover_4.txt --depth 18 \
+        --nproc 8 --disj --chain-from 0 --dump runs/leaves.txt
+python3 search/zeromargin_stress.py runs/leaves.txt 40 --cert certificates/rung2/s13_closed_cover_4.txt
+python3 search/closed4.py stress certificates/rung2/s13_closed_cover_4.txt
+# classify any residual box in one command
+python3 search/zeromargin.py diag certificates/rung2/s13_closed_cover_4.txt --box "239/160,3/2,27/40,109/160,0,1/256"
+
+# rung 2 with ADM alone (5 min on 8 processes) and with ADM + CHAIN
+taskset -c 16-23 python3 search/zeromargin.py cert runs/closed4_best_x103.txt --depth 10 --nproc 8
+taskset -c 8-15  python3 search/zeromargin.py cert runs/closed4_best_x103.txt --depth 14 \
+                 --nproc 8 --disj --chain-from 5 --dump runs/x103_disj_leaves.txt
+python3 search/zeromargin_stress.py runs/x103_disj_leaves.txt 40 --cert runs/closed4_best_x103.txt
+
+# T2: credited certificates (points + cliques + region trailer), sec 9
+python3 search/rung2_bound.py credit --m 4 --check-columns # 12.000000 + the column check
+python3 search/rung2_bound.py credit --m 4                 # 12.000000, no region trailer
+python3 search/rung2_bound.py credit --m 4 --k 1,1,1,1     # 12.000000, the corner leaf k = 4
+python3 search/rung2_bound.py credit --m 4 --k 1,0,0,0     # 11.000000 (a non-binding leaf)
+
+# the margin LP (the route Theorem 1 closes)
+python3 search/closed4.py axis --s 4 --margin 0.01 --tag ax010 --nproc 1    # = 16
+```
+
+Files: `search/zeromargin.py` (`ADM`, `MIX`, `CHAIN`, `--disj`, `--chain-from`, `--theta-bias`,
+`--no-adm`), `search/zeromargin_stress.py` (the `ADM` and `CHAIN` random tests, `--cert` for
+weighted covers), `search/rung2_bound.py` (new: `bound`, `check`, `dual`),
+`search/closed4.py` (`--margin`, checkpoint-export fix).
+
+---
+
+## 9. T2: Theorem 1 for credited certificates (points + cliques + regions)
+
+Theorem 1 is about point covers.  The `s(12)` endgame's certificate type carries more
+(`certificates/FORMAT.md`): **clique columns** (box cliques and anchor cliques) and a **region
+trailer** (corner boxes with multipliers `λ_j` and an occupancy pattern `K_j`).  The accounting is
+
+    Θ  =  Σ_p w_p  +  Σ_K w_K  −  Σ_j λ_j K_j ,
+
+and the assertion is that every admissible pose captures `Σ_{p ∈ S} w_p + Σ_{K ∋ S} w_K ≥ 1`, and
+`≥ 1 + λ_j` when its centre lies in corner box `j`.  *Monotone crediting* is the rule the sweep
+verifier and `xcheck.py` implement: a cell is credited a clique, or held to the higher region
+threshold, only when **every** pose of the cell is a member — "a cell that only partially satisfies
+a predicate gets **no** credit" (`notes/clique-family.md` §5; `FORMAT.md`: "a cell that straddles a
+box boundary gets nothing (conservative)").
+
+### 9.1 The constraint sets
+
+Lemma 0 of §2.1 is unchanged: the leaf `B*` that carries the germ `γ([0,η]³)` of the tile pose
+`(m_{ij}, 0)` exists and is a leaf the verifier must discharge.  Under monotone crediting its
+certificate is
+
+* a set of points `S`, every one of which lies in `Q` at **every** admissible pose of `B*` — so
+  `S ⊆ PIN(i,j,σ)` exactly as before; plus
+* a set of cliques `K`, every one of which contains **every** admissible pose of `B*` — so
+  `γ([0,η]³) ⊆ K`;
+
+with total `≥ 1` (`≥ 1 + λ_j` for the four corner tiles, whose poses `(½,½,0)` etc. lie in the
+corner boxes, since a corner box `[0,r]²` has `r > ½` — the verifier's own `(2r-1)² < 2` forces
+`½ < r < (1+√2)/2`).  No other tile pose is in a corner box (`r < 1.208 < 1.5`).
+
+*The argument applies to the shipped verifier's own cells, not only to `zeromargin.py`'s boxes.*
+`verify/`'s sweep works per angle bin `k` and per rectangle of centres **in the rotated frame of
+bin `k`**.  A tile pose has `θ = 0`, which lies in bin `0`, and `R(−θ_0) = R(0)` is the identity —
+so the cells around a tile pose are ordinary axis-parallel rectangles in `(c_x, c_y)` crossed with
+`[0, θ_1]`, and Lemma 0 applies verbatim.  (A certificate carrying cliques is swept over the full
+`[0°, 90°]` anyway, so no symmetry reduction is in play.)
+
+The one new question is **how many tile germs one clique can serve**.  A clique is a
+pairwise-intersecting family of poses, so it can contain two germs only if every square of one
+meets every square of the other.
+
+> **Lemma T.**  Let `G = γ_{i,j,σ}([0,η]³)` and `G' = γ_{i',j',σ'}([0,η]³)` be two tile germs,
+> `η` small.  Every square of `G` meets every square of `G'` iff
+> (i) `(i,j) = (i',j')` (any signs); or
+> (ii) `(i',j') = (i±1, j)` with `σ_x = +1` on the left tile and `σ_x = -1` on the right one; or
+> (iii) `(i',j') = (i, j±1)` with `σ_y = +1` on the lower tile and `σ_y = -1` on the upper one.
+> In particular two **diagonally** adjacent tiles are never compatible, and a clique serves at most
+> two tiles.
+
+*Proof.*  (i) All squares of one tile's germ have centres within `2η` of `m_{ij}` and angles `≤ η`,
+so any two of them share a neighbourhood of `m_{ij}`.
+
+(ii)/(not-(ii)) At `θ = θ' = 0` the squares are `[i + σ_x t, i+1 + σ_x t]` and
+`[i' + σ'_x t', i'+1 + σ'_x t']` in `x`.  If `|i - i'| ≥ 2` these are disjoint for `η < ½`.  If
+`i' = i+1` they meet iff `σ_x t ≥ σ'_x t'` for all `t, t' ∈ [0,η]`; putting `t = 0` forces
+`σ'_x = -1` and `t' = 0` forces `σ_x = +1`.  Conversely, with those signs and any
+`θ, θ' ∈ [0, η]`, the separating-axis test over the eight edge normals never separates: along the
+first square's normal `e = (\cos θ, \sin θ)` the centre gap projects to
+`(1 - t - t')\cos θ + (s'-s)\sin θ ≤ 1`, while the half-widths sum to
+`½ + w(θ'-θ)/2 ≥ 1`; along `(1,0)` the half-widths sum to `(w(θ)+w(θ'))/2 ≥ 1` against a gap of
+`1 - t - t' ≤ 1`; the remaining directions are dominated.  So they meet.
+
+(not diagonal) For `(i',j') = (i+1,j+1)` the signs must be `σ = (+,+)`, `σ' = (-,-)` by the above
+applied in each coordinate.  Project on `(1,1)`: `max_{G}(x+y) = (i+j+1+t+s) + \cos θ` and
+`min_{G'}(x+y) = (i+j+3-t'-s') - \cos θ'` (the support of a unit square in the direction `(1,1)` is
+`\cos θ` for `θ ∈ [0°,45°]`).  They meet only if
+`t+s+t'+s' + \cos θ + \cos θ' ≥ 2`, which fails at `t=s=t'=s'=0`, `θ = θ' = η > 0`.  The
+anti-diagonal is the same computation on `(1,-1)`.  ∎
+
+The tile compatibility graph therefore has no triangle, and a **clique column** of the LP is a
+maximal pairwise-compatible set of `(tile, σ)` constraints: either all the constraints of one tile,
+or, for an orthogonally adjacent pair, the half of each tile's constraints with the right sign.
+`rung2_bound.py credit` enumerates all 28 of them at `m = 4` (16 of size 4, 12 of size 2) and
+checks pairwise compatibility (0 violations); `--check-columns` re-derives them by brute force
+over every subset of every tile pair and confirms the list is exactly the set of maximal
+pairwise-compatible sets (28 found, 0 missing, 0 non-maximal).  The *point clique* of a point `p` — the anchor
+clique `{S : p ∈ S}`, which `notes/clique-family.md` notes the anchor family contains — is
+already a point column of the LP, since the germ lies in it exactly when `p ∈ PIN(i,j,σ)`; so
+nothing is lost by treating points and cliques as separate column types.  Allowing *any* pairwise-intersecting family — rather
+than only the box/anchor cliques the format can express — only lowers the LP, so the number below
+is a valid lower bound for real certificates.
+
+### 9.2 The number
+
+```
+python3 search/rung2_bound.py credit --m 4                  # no region trailer
+python3 search/rung2_bound.py credit --m 4 --k 1,1,1,1      # the corner leaf k = 4
+```
+
+| case | `Θ_min` | λ at the optimum |
+|---|---|---|
+| no region trailer (`λ = 0`) | **12.000000** | — |
+| corner leaf `k = 4` (`K = (1,1,1,1)`) | **12.000000** | `0,0,0,0` |
+| `k = 3` (`1,1,1,0`) | 12.000000 | `0,-1,0,-1` |
+| `k = 2` opposite (`1,0,0,1`) | 12.000000 | `-1,-1,-1,-1` |
+| `k = 2` adjacent (`1,1,0,0`) | 11.000000 | `0,0,-1,-1` |
+| `k = 1` (`1,0,0,0`) | 11.000000 | `-1,-1,-1,-1` |
+
+**The branch credit buys nothing at the binding leaf.**  At `k = 4` the optimum takes `λ = 0`: the
+four corner-tile constraints rise to `1 + λ` and the accounting gives exactly `4λ` back, so the two
+cancel.  The patterns that reach `11` do so only by making an *unoccupied* box's threshold vacuous
+(`λ_j = -1`, `K_j = 0`), which is legal but does not help the family: the sixteen patterns must all
+be refuted, and `max over patterns of Θ_min = 12`, attained at `k = 4`.
+
+**Cliques buy exactly 4.**  With point columns only the same LP is `16` (§2.3).  The optimum at
+`12` is structurally transparent:
+
+* **8 points, on the lines `x = 1` and `x = 3`, each serving two tiles.**  The solver puts them at
+  `(1, j + ¾)` and `(3, j + ¼)`.  By Lemma 1'(ii) the wall tile `(0,j)` keeps its *whole* interior
+  edge `x = 1`, while the tile `(1,j)` taken with `σ_x = -1` keeps its left edge `x = 1` for
+  `d_y ≥ 0`; a point on `x = 1` above the row midpoint is in both `PIN`s.  This is exactly the
+  wall adjacency that Lemma 2 had to forbid to get disjointness — here it is the *saving*.
+  These 8 points discharge every constraint of columns `0` and `3`, and the `σ_x = -1` half of
+  column `1` and the `σ_x = +1` half of column `2`.
+* **4 cliques of weight 1** discharge what is left — the `σ_x = +1` half of column `1` together
+  with the `σ_x = -1` half of column `2`, which is precisely a Lemma T (ii) compatible pair:
+  `{(1,j), σ_x = +1} ∪ {(2,j), σ_x = -1}` for `j = 0,1,2,3`.
+
+and the dual certifies it: `λ = 1` on 12 of the 36 constraints — one sign pair on each of 12 tiles,
+all but one 4-element rotation orbit `{(0,2),(1,0),(3,1),(2,3)}` — chosen so that (a) their `PIN`
+sets are pairwise disjoint (point multiplicity `≤ 1`, checked on the quarter-lattice cell system of
+§2.3) and (b) no two of them are Lemma-T compatible (clique multiplicity `≤ 1`).  The signs are
+
+| tile | σ | tile | σ | tile | σ | tile | σ |
+|---|---|---|---|---|---|---|---|
+| (0,0) | (+,+) | (0,1) | (+,+) | (0,3) | (+,−) | (1,1) | (+,−) |
+| (1,2) | (−,−) | (1,3) | (+,−) | (2,0) | (−,+) | (2,1) | (+,+) |
+| (2,2) | (−,+) | (3,0) | (−,+) | (3,2) | (−,−) | (3,3) | (−,−) |
+
+> **Theorem 2.**  A monotone-credited certificate at `[0,4]²` — points, box or anchor cliques, and a
+> region trailer with any occupancy pattern — has accounting total `Θ ≥ 12`, with `Θ ≥ 12` in
+> particular at the corner leaf `k = 4` and with no region trailer.
+
+### 9.3 What this says
+
+* **For rung 2 it is not an obstruction.**  The target is `Θ < 13`, and `12 < 13`: cliques buy
+  exactly the four units between Theorem 1's `16` and `12`, which is enough room.  So a
+  monotone-credited clique certificate *could* in principle prove `s(13) = 4` where a point cover
+  provably cannot.  That is a new route, and a cheap one to try: the saving is concentrated at the
+  wall lines `x = 1, 3` and `y = 1, 3`, which is where `closed4.py`'s covers already put most of
+  their weight.
+* **For the `s(12)` endgame (V1) it is exactly the obstruction.**  There the target is `Θ < 12`,
+  and Theorem 2 says `Θ ≥ 12`.  **The sweep verifier's monotone credit rule cannot be reused for
+  V1**, at `t = 4`, for any certificate of the present format — no matter how many cliques, how
+  clever the anchors, or which branch leaf.  Disjunctive crediting has to carry cliques and regions
+  too.
+
+### 9.4 What a disjunctive credit region looks like
+
+`CHAIN` (§6) already has the right machinery, because every predicate in the format is a
+conjunction of the *same* kind of polynomial:
+
+* **A region box.**  "The centre lies in `[0,r]²`" is `c_x ≤ r ∧ c_y ≤ r` — affine in the centre,
+  constant in `u`.  A leaf that straddles `c_x = r` is split by the pivot `g = c_x - r`; on
+  `{g ≤ 0}` the threshold is `1 + λ_j` and on `{g ≥ 0}` it is `1`.  The present verifier requires
+  a straddling cell to reach *both*, which is the monotone rule and is what makes the branch credit
+  cancel in §9.2; the disjunctive rule requires each side only its own threshold, and the pivot is
+  the cheapest possible (degree 1, exact at four corners).
+* **An anchor clique piece**, `{S : A_a ⊆ S and S ∩ A_f ≠ ∅ for every f}`.
+  * `A_a ⊆ S` for a point anchor `a` is exactly `G_{a,k} ≤ 0` for `k = 0..3` — the four violation
+    polynomials `CHAIN` already uses.  For a segment anchor it is the same four inequalities at
+    both endpoints (the square is convex), i.e. eight polynomials.
+  * `S ∩ A_f ≠ ∅` for a point anchor is again `G_{f,k} ≤ 0`, `k = 0..3`.  For a segment anchor
+    `[P,Q]` it is the negation of the separating-axis test: the square's two axes give
+    `min(⟨P,e⟩, ⟨Q,e⟩) ≤ ⟨c,e⟩ + ½` and `max(…) ≥ ⟨c,e⟩ - ½` for `e` the two rotated axes
+    (four inequalities, each a `min`/`max` of two polynomials of the same shape), and the segment's
+    own normal gives one more.  Every one of them is affine in `(c_x, c_y)` and quadratic in `u`
+    after clearing `(1+u²)`, so Lemma E applies verbatim: exact maximum at four corners.
+  * A clique is a union of pieces, so its membership is a **disjunction** of conjunctions — which
+    is exactly the shape `CHAIN` regions already have.
+* **The credit rule.**  Replace "the cell is credited `w_K` iff every pose of the cell is in `K`"
+  by "in region `R_r` of the leaf's chain partition, `w_K` is credited iff every pose of `R_r` is
+  in `K`", and discharge that with Lemma G: for each membership polynomial `g_i` of the piece,
+  exhibit `λ ≥ 0` with `max_B (g_i + λ G_{q_{r+1}}) ≤ 0`, where `G_{q_{r+1}} > 0` is the region's
+  own defining inequality.  The germ argument of §9.1 then no longer confines the credit — a region
+  can be a thin wedge that the germ leaves — so Theorem 2 does not apply, exactly as Theorem 1 does
+  not apply to `CHAIN`.
+
+The cost is one more polynomial family in `_gmax` (segment anchors need the `min`/`max` of two
+endpoint forms) and a per-clique membership test in the region loop; no new mathematics.
+
+---
+
+## 10. How the cover was built (the separation loop that finally closed it)
+
+Every earlier candidate was invalid at the `ZEROMARGIN.md` §4 item-3 family (§4.3), because
+`closed4.py` samples its rows on a `--pitch` lattice (0.02) at each angle of `angle_list()` and the
+dip is a few thousandths wide in the free coordinate.  Three additions fixed that:
+
+* **`search/family_rows.py`** emits the families the lattice steps over, in the `cx cy theta_rad`
+  format that `closed4.py --seed-rows` reads and that `zeromargin.py --oracle` writes: item 3
+  (`c_x` on each half-integer line, so both square edges sit on grid lines, `c_y` free on a fine
+  pitch, a geometric ladder of small angles, and the transpose), plus local clusters around named
+  tilted poses and all their `D4` images.  61,656 poses at pitch `0.004`.
+* **`closed4.py --seed-rows`** adds them as hard rows before the first solve — and, being the same
+  format the checker's `--oracle` emits, lets the exact checker be used as the separation oracle.
+* **`search/rung2_oracle.sh`** is one turn of that loop: scale the LP's current weights, run the
+  exact checker at a shallow depth, write its uncertified-box poses as the next rows.
+
+The run of record:
+
+```
+python3 search/family_rows.py runs/seedrows.txt --pitch 0.004 --tilted
+python3 search/closed4.py run --s 4 --from-cert runs/closed4_best.txt --tag r5 \
+        --seed-rows runs/seedrows.txt --nproc 2 --time 9000
+#   it0  LP=12.303463  orb=319   atoms=1972
+#   ...  column generation on throughout
+#   fin  LP=12.338773  orb=1487  atoms=10353
+python3 search/scale_cover.py runs/closed4_r5_last.txt 105 100 runs/r5_x105.txt
+#   total 12339021110/1000000000 -> 12955972155/1000000000 = 12.955972
+```
+
+Column generation is what the 2026-08-30 attempt lacked (`FAMILY.md` §2: "`--allow-colgen` was
+stubbed as a CLI flag but the column-adding logic itself was not implemented"): the orbit count
+grew `319 → 1,487` and the atom count `1,972 → 10,353`, and those new points are exactly what
+closes the item-3 hole.  The `×21/20` scaling is exact rational arithmetic (`scale_cover.py`) and
+buys the margin the checker needs: **4 %** on every item-3 line and **3.1 %** in the dense stress
+scan, against `0.9420217` — a violation — for the old `×1.03` file.
+
+Scaling choice: `×1.03` gives total `12.698` and only `0.5 %` margin, which verifies far more
+slowly; `×1.05` gives `12.956`, still `0.044` under the budget, and verifies in 1 h 42 min.  The
+floor `COVER^closed(4) ≥ 12.2688038611` (`search/COVER4.md`) leaves no room to do much better with
+a cover argument.
+

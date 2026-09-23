@@ -176,3 +176,6 @@ additionally trivial as a perfect square.
   rational form; the others (Burns, Fort, Massaccesi, evand's n=12
   certificates) are recorded only as the decimal/fraction the source itself
   headlines.
+- n = 11: the floor is `3040/797 = 3.814304` (EvanDaniel2026), re-added 2026-09-22 when
+  `s12/certificates/s11_lower_3.8143.txt` became public in this repo; it had been reverted to
+  Stromquist 2003 at the 2026-09-10 release because the certificate was not yet public.

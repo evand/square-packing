@@ -48,6 +48,8 @@ This is what the rescaling argument above needs, and it is what `verify/` implem
 | `s12_uniform_7of81_3.888.txt` | 35/9 | 81 | 81/7 | s(12) >= 3.888889 (uniform: every square contains 7 of 81) |
 | `s12_uniform_<k>of<m>_<s>.txt` | see `search/uniform/UNIFORM.md` | m | m/k | uniform family, k = 1..8 |
 | `s12_56points_3.8.txt` | 19/5 | 56 | 56/5 = 11.2 | s(12) >= 3.8 |
+| `s12_boxclique_demo_3.9318_N2000.txt` | 3920/997 | 224 + 8 cliques | 11.9939028 | s(12) >= 3.931795 (format demonstration: points plus box cliques, tied to N = 2000; see below) |
+| `s12_anchorclique_demo_3.9318.txt` | 3920/997 | 226 + 1 anchor clique | 11.9834372 | s(12) >= 3.931795 (format demonstration: one point of the 224-point set replaced by its anchor clique `K(p, A)`, which carries its weight; see below) |
 
 The uniform ones are included because every weight is equal, so they read as purely
 combinatorial statements — e.g. the 56-point one: *every closed unit square inside `[0, 3.8]^2` contains at
@@ -120,3 +122,238 @@ combinatorial structure on the points) and the subdivision-tree statistics under
 arrangement sweep in `verify/`).  Their points are *unweighted* and their squares *open*;
 our `weights` and `convention.squares = "closed"` are exactly the two places where a reader
 of both formats must not assume the same semantics.
+
+## Branch certificates (`region … / lambda … / k …` trailer)
+
+The pure covering argument cannot reach `s = 4`: for every `s >= 3.99` there is a fractional
+packing of mass `> 12` (`search/DUAL_EXACT.md`), so no weighted point set of total weight `< 12`
+covers every unit square there.  A **branch certificate** carries one more piece of information
+about the packings it refutes.  After the `m` point lines the file may continue with
+
+```
+region corner r_num r_den   # the four corner boxes [0, r]^2, [s-r, s] x [0, r], ... (closed)
+lambda L                    # a multiplier, an integer numerator over W; may be negative
+k K                         # number of squares of the packing whose CENTRE lies in a corner box
+```
+
+and then asserts:
+
+> every closed unit square inside `[0, s]^2` whose centre lies in a corner box captures weight
+> `>= 1 + L/W`; every other closed unit square inside `[0, s]^2` captures weight `>= 1`; and
+> `sum_i w_i / W - (L/W)·K < n`.
+
+**What it proves.**  Take a packing of `n` unit squares in a container of side `s' < s`, scale
+it up to `[0, s]^2` and pass to the concentric closed unit squares as before; let `K'` be the
+number of them centred in a corner box.  Each captures `>= 1`, those in the region `>= 1 + λ`
+(`λ = L/W`), and no point is counted twice, so `n + λ K' <= sum_i w(S_i) <= W`.  Hence a branch
+certificate with `W - λK < n` shows that **no packing has exactly `K` squares centred in the
+corner boxes**.  Because the centres of two interior-disjoint unit squares are at least `1`
+apart and the admissible part `[1/2, r]^2` of a corner box has diameter `(r - 1/2)·sqrt 2`, the
+verifier insists on `(2r - 1)^2 < 2` exactly, so each box holds at most one centre and
+`K ∈ {0, 1, 2, 3, 4}`: **five branch certificates, one per `K`, together prove `s(n) >= s`**.
+Nothing else changes — the same scaling argument, the same closed-square convention.  With
+`L = 0` a branch certificate is a plain one.
+
+**Per-box multipliers.**  The trailer may instead carry four multipliers and an occupancy
+pattern,
+
+```
+lambda L1 L2 L3 L4          # box 1 = [0,r]^2, 2 = [s-r,s]x[0,r], 3 = [0,r]x[s-r,s], 4 = [s-r,s]^2
+k K1 K2 K3 K4               # K_j = 1 iff a square of the packing is centred in box j
+```
+
+asserting that a square centred in box `j` captures `>= 1 + L_j/W`, every other square `>= 1`,
+and `sum_i w_i/W − sum_j (L_j/W)·K_j < n`; it then refutes every packing with exactly that
+occupancy pattern, and the sixteen patterns (six up to the symmetries of the square) cover all
+packings.  The one-number form is the special case `L_j = L` with `K` the number of occupied
+boxes.  Unequal `L_j` make the claim non-symmetric, so the verifier then sweeps the full range
+`[0°, 90°)` whatever the symmetry of the point set.  (Lean: `packing_le_weight_regions`.)
+
+**How it is verified.**  The verifier's arrangement sweep works cell by cell in the centre
+plane; a cell that may meet a corner box is required to reach `1 + λ`, a cell that may leave the
+boxes is required to reach `1`, and a cell that straddles the boundary is required to reach both
+(the membership tests are done in floating point with a padding that can only make them
+stricter, on the cell's bounding box, which is exact for the axis-parallel boxes).  Witnesses
+carry a fifth column, the flag of the threshold they violate, for the LP.  The trailer keywords
+are mandatory and any other trailing data is still an error.  The corner boxes are symmetric
+under the symmetries of the container, so the `[0°, 45°]` reduction for D4-symmetric point sets
+remains valid.  `search/branch.py` produces these certificates (`search/BRANCH.md`).
+
+## Clique certificates (`cliques … ` block)
+
+The cover condition is the fractional *point-clique* cover of the pose overlap graph: the squares
+through a point pairwise intersect, so a packing (pairwise disjoint closed unit squares) contains
+at most one of them.  Rotated squares are not a Helly family, so there are pairwise-intersecting
+families of poses with no common point (`search/CLIQUE.md`), and a certificate may carry such a
+family as a **clique column**: a weight `w_K` credited to every pose in `K`, counted once in the
+total.  The reduction is the same one line — at most one square of a packing lies in `K`.
+
+A pose is a closed unit square `S(c, θ)` with centre `c` and angle `θ`.  Fix the verifier's angle
+net `θ_k = 2·arctan(k/N)`, `k = 0..N` (`θ_N = 90°`), bins `[θ_k, θ_{k+1}]`, and for each bin the
+rotated frame `u = R(−θ_k)·x`, i.e. `u_0 = cos θ_k · x + sin θ_k · y`, `u_1 = −sin θ_k · x + cos θ_k · y`.
+A **box** `(k, [U0LO, U0HI] × [U1LO, U1HI])` is the set of poses with `θ ∈ [θ_k, θ_{k+1}]` and
+`R(−θ_k)·c` in the closed rectangle.  A **box clique** is a finite union of boxes; a pose belongs
+to it iff it lies in one of them.  After the `m` point lines the file may continue with
+
+```
+cliques N Q c               # angle net N (the verifier must be run with this N), coordinate
+                            # denominator Q of the rectangles, number of cliques c
+w_1 b_1                     # clique 1: weight numerator over W (>= 0), number of boxes (>= 1)
+k U0LO U0HI U1LO U1HI       # b_1 box lines: bin k (0 <= k < N), rectangle in the frame of bin k,
+...                         #   integers over Q, LO <= HI
+w_2 b_2
+...
+```
+
+and then, optionally, a `region … / lambda … / k …` trailer as above.  The file then asserts:
+
+> every closed unit square `S` inside `[0, s]^2` captures `sum_{p ∈ S} w_p + sum_{K ∋ S} w_K >= 1`
+> (plus the region thresholds, if any), and `sum_p w_p + sum_K w_K (− λ·k) < n`.
+
+**Why a box clique is a clique.**  A unit square at any angle of bin `k` contains the concentric
+square of side `σ_k = 1/(cos δ_k + sin δ_k)` at angle `θ_k` (the verifier's shrink lemma; the
+verifier uses `σ_k` rounded down to `10^-6`, which only shrinks it further).  In the frame of bin
+`k` that square is axis-parallel with half-side `h_k = σ_k/2`, so every square of the box
+`(k, [U0LO,U0HI] × [U1LO,U1HI])` contains the **core**
+
+    core = [U0HI − h_k, U0LO + h_k] × [U1HI − h_k, U1LO + h_k]      (in the frame of bin k, closed)
+
+If the cores of two boxes have a common point, every square of one meets every square of the
+other.  The verifier therefore refuses (`ERROR`, no verdict) a clique unless **every pair of its
+boxes, each box with itself included, has intersecting cores** — an exact separating-axis test
+between two rotated rectangles in `i128` (`xcheck.py`: in rationals with the exact `σ_k`).  A box
+whose own core is empty (a rectangle wider than `2h_k`) is refused for the same reason: two
+squares of such a box need not meet.  Nothing else about a clique is trusted.
+
+**How it is verified.**  In the sweep of bin `k`, a cell (a rectangle of centres in the frame of
+bin `k`, over the common denominator) is credited `w_K` iff it lies inside one of `K`'s boxes of
+bin `k` — an exact integer comparison of the four sides; a cell that straddles a box boundary
+gets nothing (conservative), and its witness for the LP is chosen outside the box.  Cliques are
+not symmetric under the container's symmetries in any representable way (the image of a bin is
+not a bin), so a certificate with cliques is always swept over the full range `[0°, 90°]`, and
+the `N` of the block must be the `N` the verifier is run with (the boxes are defined in terms of
+the net; any other `N` is refused).  Weights are non-negative; `Q > 0`; a clique has at least one
+box.  Well-formedness violations are `ERROR`s, not rejections.
+
+**What is *not* required.**  A clique need not lack a common point, need not be maximal, and its
+boxes may overlap (a pose in two boxes of the same clique is credited once).  Subsets of cliques
+are cliques, so a certificate may carry any inner approximation of a clique the LP found.
+
+**Reduction (Lean: `packing_le_weight_cliques`).**  For a family of pose sets `K_j` each of which
+is pairwise intersecting (any two closed unit squares with poses in `K_j` share a point) and
+weights `w_j >= 0` such that every admissible pose is covered by weight `>= 1` by points and
+cliques together, a packing of `n` squares of side `L > 1` has `n <= sum w`.  The box-core
+property above is exactly the pairwise-intersection hypothesis.  `search/boxclique.py` produces
+these certificates (`search/BOXCLIQUE.md`).
+
+## Anchor cliques (`anchors …` block)
+
+A box clique can never contain a point clique (the "core" of *all* poses through `p` is `{p}`, and
+the verifier's cores are inward-rounded rectangles).  The second clique family in the format is the
+one of `notes/clique-family.md`, which does contain point cliques and is what
+`search/ANCHOR.md` uses.
+
+An **anchor** is a point or a closed segment with rational coordinates.  A **piece** is the set of
+poses
+
+    { S : A_a subseteq S  and  S ∩ A_f != empty for every f in the piece's filter list }
+
+and an **anchor clique** is the union of finitely many pieces; a pose belongs to it iff it belongs
+to one of them.  The two-line reason such a union is a clique (**Lemma 0**,
+`notes/clique-family.md`): let `S` be in piece `i` and `S'` in piece `j`.  If `A_{a_i}` and
+`A_{a_j}` have a common point, both squares contain it.  If `a_j` is in `filt(i)` then
+`S ∩ A_{a_j} != empty` and `A_{a_j} subseteq S'`, so `S ∩ S' != empty`; symmetrically if `a_i` is
+in `filt(j)`.  So the family is a clique as soon as **every ordered pair of its pieces is covered
+by one of those three cases**, and that is exactly what the verifier checks — nothing else about an
+anchor clique is trusted.  The special case `A = {p}` with one piece and no filter is the point
+clique of `p`, i.e. the coverage constraint at `p`; `K(p, A) = {S : p ∈ S, S ∩ A != empty} ∪
+{S : A subseteq S}` is the two-piece case that gives the family its name.
+
+After the `m` point lines and any `cliques` block (and before an optional `region` trailer) the
+file may continue with
+
+```
+anchors A c                 # A anchors (>= 1), c anchor cliques (>= 0)
+anchorP X Y D               # A anchor lines, indices 0..A-1 in this order:
+anchorS X0 Y0 X1 Y1 D       #   the point (X/D, Y/D), or the closed segment between the two points
+...
+w_1 P_1                     # clique 1: weight numerator over W (>= 0), number of pieces (>= 1)
+piece a r f_1 … f_r         # P_1 piece lines: { S : A_a subseteq S and S meets A_{f_i} for all i }
+...                         #   a and the f_i are anchor indices, r >= 0 is their count
+w_2 P_2
+...
+```
+
+and asserts, as for box cliques,
+
+> every closed unit square `S` inside `[0, s]^2` captures
+> `sum_{p ∈ S} w_p + sum_{K ∋ S} w_K >= 1` (plus the region thresholds, if any), and
+> `sum_p w_p + sum_K w_K (− λ·k) < n`,
+
+where `K` now ranges over box cliques and anchor cliques together and each clique counts **once**.
+
+**Well-formedness** (`ERROR`, no verdict, if violated): `A >= 1`, `c >= 0`, every `D > 0`, every
+weight `>= 0`, every clique has at least one piece, every anchor index in a piece is in `0..A-1`,
+a filter list does not name its piece's own anchor and does not repeat an anchor, every anchor
+endpoint lies in the closed container, and — the substantive one — **for every ordered pair of
+pieces `(i, j)` of the same clique, the anchors `A_{a_i}` and `A_{a_j}` intersect (exact rational
+segment intersection, closed, touching counts) or `a_j` is in `filt(i)` or `a_i` is in `filt(j)`**.
+This is Lemma 0's hypothesis and the analogue of the box cliques' "cores pairwise meet".
+
+**How it is verified.**  In the sweep of bin `k = [θ_k, θ_{k+1}]` a cell is a rectangle of centres
+in the frame of the bin.  It is credited `w_K` iff **one piece of `K` provably holds every pose of
+the cell**, which needs two exact `i128` predicates per (cell, anchor); a cell that only partly
+satisfies them gets nothing (conservative), and its witness for the LP is placed at a pose of the
+cell outside the piece.  A witness line of a file with an `anchors` block also carries, after the
+region flag, the number of anchor cliques the sweep credited that cell and their indices in this
+block, so that the LP builds its row with the verifier's own credit instead of a pose predicate,
+which credits more wherever the cell straddles a piece's boundary (`search/WITNESS.md`).
+
+* `contains` — *every pose of the cell contains the anchor*.  For a fixed centre `c`, the
+  intersection over the bin of the closed unit squares is the **exact bin core**
+  `core = R_{θ_k} Q ∩ R_{θ_{k+1}} Q ∩ { x : dir(x) mod 90° ∈ [θ_k, θ_{k+1}] ⇒ |x| <= 1/2 }`
+  (`search/ZEROMARGIN.md` §2), which is convex, so it is enough that the four corners of
+  (anchor endpoint − cell) lie in it — a rotated-square test at each end of the bin, a rational
+  sector test and one squared norm, all exact.  A segment is contained iff both endpoints are
+  (the square is convex).  The core is strictly larger than the `σ_k`-square the point sweep uses:
+  an edge midpoint (`|x| = 1/2`, direction 0) belongs to *every* rotation of the square and is kept
+  here, which is what makes a point anchor's piece an exact point clique.
+* `meets` — *every pose of the cell meets the anchor*.  Every pose of the bin contains the
+  concentric `σ_k`-square, so it is enough that the cell lies inside `A ⊕ [−h, h]²` (`h = σ_k/2`,
+  in the frame of the bin), a hexagon: four half-planes from the anchor's bounding box and **two
+  from the segment's own normal** — the axis whose omission is the recorded near miss of
+  `notes/clique-family.md` §7.  This is conservative twice over (`σ_k` is rounded down and a pose
+  is larger than its `σ_k`-square), which is sound: under-crediting only makes the check harder.
+
+Both predicates are evaluated on the cell and the anchors rounded **outward** to a grid of
+`10^-9` container units in the bin's frame, so that the arithmetic stays far from `i128` overflow
+(any overflow is an `ERROR`, never a verdict); outward rounding can only shrink the credited
+region.  Unlike box cliques, anchors do not refer to the angle net, so an `anchors` block carries
+no `N` and is meaningful at every `N` — a finer net simply credits more cells.  Box cliques have
+no representable images under the container's symmetries, so a certificate carrying them is swept
+over the full `[0°, 90°]`.  Anchor cliques do have images (a symmetry of the container maps the
+anchors, and with them every piece and clique, to anchors), so when the atoms are D4-symmetric, the
+region thresholds are equal and the anchor-clique family is **D4-closed** — for each generator of
+the group, the multiset of (weight, clique) is mapped to itself, cliques compared exactly as sorted
+lists of pieces over canonical rational anchors — the covered weight is D4-invariant and the
+verifier sweeps `[0°, 45°]` only, as for a plain symmetric certificate; otherwise the full range
+(`search/VERIFYSPEED.md`; `VERIFY_FULLSWEEP=1` forces the full range).
+
+**A practical note: the anchors' own points belong in the file as zero-weight atoms.**  They carry
+no weight, but the sweep's cells are the atoms' breakpoints and a cell is credited only if it lies
+*wholly* inside a piece: without them the cells straddle the boundary of `{S : p ∈ S}` and of
+`{S : A ⊆ S}` and a band around each boundary loses the credit — which is exactly where the
+covering is tight.  In the demonstration file below this is the difference between `1.000002` and
+`0.958275`.
+
+**Shipped demonstration** — `s12_anchorclique_demo_3.9318.txt`.  The 224-point certificate with one
+point (at `(1375, 3875)/1994`, wall distance `0.6896`) replaced by the anchor clique `K(p, A)` of
+`notes/clique-family.md` Lemma 2 carrying that point's weight `0.1198148`: `A` is the vertical
+segment at offset `ε = 0.2949` of half-length `ρ = 0.3109 > ρ* = 0.2808`, so `K(p, A)` contains the
+whole point clique of `p` and the covering is at least as strong; the total weight is unchanged at
+`11.9834372 < 12`.  Verified at `N = 6000` **and** `N = 12000` — an anchor block refers to no net.
+Unlike the box-clique demonstration the clique is **load-bearing**: with its weight set to `0` the
+minimum covered weight drops to `0.880188` and the file is rejected.
+
+`search/anchorclique.py` (via `search/branch.py --cliques`) produces these certificates,
+`search/anchordemo.py` the demonstration; `search/ANCHOR.md` reports what they are worth.
