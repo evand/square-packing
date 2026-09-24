@@ -174,6 +174,24 @@ def separate(P, w, s, thetas, pitch, thr=1.0 - 1e-9, perang=150, block=0.1, pool
     return gmin, nviol, poses, vals
 
 
+def _cap_worker(args):
+    P, w, poses = args
+    return captured(P, w, poses)
+
+
+def pool_violations(P, w, S, pool=None, nproc=1, cap=3000):
+    """--lazy-seed: captured weight at every pose of the separation pool S; returns the (at most `cap`)
+    worst poses with captured weight < 1 - 1e-9, and the pool minimum."""
+    if len(S) == 0: return np.zeros((0, 3)), 9e9
+    if pool is not None:
+        v = np.concatenate(pool.map(_cap_worker, [(P, w, ch) for ch in np.array_split(S, 4 * nproc)]))
+    else:
+        v = captured(P, w, S)
+    bad = np.nonzero(v < 1 - 1e-9)[0]
+    bad = bad[np.argsort(v[bad])[:cap]]
+    return S[bad], float(v.min())
+
+
 def _polish_worker(args):
     P, w, s, seeds, rounds, nper, seed, thmax = args
     return polish(P, w, s, seeds, rounds=rounds, nper=nper, rng=np.random.default_rng(seed), thmax=thmax,
@@ -291,6 +309,21 @@ class Model:
         R = np.concatenate(self.R); C = np.concatenate(self.C); V = np.concatenate(self.V)
         return sp.coo_matrix((V, (R, C)), shape=(len(self.rows), len(self.orbits))).tocsr()
 
+    def prune_cols(self, keep):
+        """drop the orbits with keep[k] False (their atoms, matrix entries and keys: a dropped point may be
+        priced in again later)."""
+        keep = np.asarray(keep, dtype=bool)
+        idx = np.full(len(self.orbits), -1, dtype=np.int64); idx[np.nonzero(keep)[0]] = np.arange(int(keep.sum()))
+        R = np.concatenate(self.R); C = np.concatenate(self.C); V = np.concatenate(self.V)
+        nc = idx[C]; sel = nc >= 0
+        self.R = [R[sel]]; self.C = [nc[sel].astype(np.int32)]; self.V = [V[sel]]
+        self.orbits = [o for o, k in zip(self.orbits, keep) if k]
+        self.sizes = self.sizes[keep]
+        self.tag = {int(idx[k]): t for k, t in self.tag.items() if keep[k]}
+        self.okey = {key: int(idx[k]) for key, k in self.okey.items() if keep[k]}
+        am = keep[self.own]; self.P = self.P[am]; self.own = idx[self.own[am]]
+        self.hs = None
+
     def prune(self, keep):
         idx = np.full(len(self.rows), -1, dtype=np.int64); idx[np.nonzero(keep)[0]] = np.arange(int(keep.sum()))
         R = np.concatenate(self.R); C = np.concatenate(self.C); V = np.concatenate(self.V)
@@ -298,6 +331,41 @@ class Model:
         self.R = [nr[sel].astype(np.int32)]; self.C = [C[sel]]; self.V = [V[sel]]
         self.rows = [rw for rw, k in zip(self.rows, keep) if k]
         self.rkey = set(self.canon(*rw) for rw in self.rows)
+        self.hs = None                       # persistent warm-start model (solve_warm) is now stale
+
+    def solve_warm(self):
+        """same LP as solve(), but through a persistent highspy model: rows/columns added since the
+        last call are appended (addCols / addRows) and HiGHS re-solves from the previous basis (primal
+        simplex after new columns, then dual simplex after new rows).  Much faster than a cold linprog once the
+        model has tens of thousands of rows (--warm-lp; added 2026-09-22 for the s = 5 run,
+        search/S21_COVER.md).  Returns the same (value, x, y, Ax) tuple as solve()."""
+        import highspy
+        A = self.matrix().tocsr(); nr, nc = A.shape; inf = highspy.kHighsInf
+        h = getattr(self, 'hs', None)
+        if h is None:
+            h = highspy.Highs(); h.setOptionValue('output_flag', False)
+            h.setOptionValue('random_seed', int(HIGHS.get('random_seed', 0)))
+            self.hs = h; r0, c0 = 0, 0
+        else:
+            r0, c0 = self.hs_shape
+        if nc > c0:                          # new columns: their coefficients in the existing rows
+            B = A[:r0, c0:].tocsc(); B.sort_indices()
+            h.addCols(nc - c0, self.sizes[c0:nc].astype(float), np.zeros(nc - c0), np.full(nc - c0, inf),
+                      int(B.nnz), B.indptr[:-1].astype(np.int32), B.indices.astype(np.int32), B.data.astype(float))
+            if r0 > 0:                       # two-phase: the old optimum stays primal feasible -> primal simplex first
+                h.setOptionValue('simplex_strategy', 4); h.run()
+        if nr > r0:                          # new rows over all columns
+            B = A[r0:, :].tocsr(); B.sort_indices()
+            h.addRows(nr - r0, np.ones(nr - r0), np.full(nr - r0, inf),
+                      int(B.nnz), B.indptr[:-1].astype(np.int32), B.indices.astype(np.int32), B.data.astype(float))
+        self.hs_shape = (nr, nc)
+        h.setOptionValue('simplex_strategy', 1)          # then dual simplex for the new rows
+        h.run()
+        if h.getModelStatus() != highspy.HighsModelStatus.kOptimal:
+            self.hs = None; return self.solve()          # fall back to a cold solve
+        sol = h.getSolution(); x = np.maximum(np.array(sol.col_value), 0.0)
+        y = np.maximum(np.array(sol.row_dual), 0.0)
+        return float(self.sizes @ x), x, y, A @ x
 
     def solve(self, fixed=None, method='highs'):
         """min sizes.x  s.t.  A x >= 1, x >= 0  [x = fixed if given: just evaluate]."""
@@ -463,14 +531,23 @@ def run(a, log=print):
         gmin, nviol, poses, vals = separate(m.P, w0, s, thetas, a.pitch * 5, perang=a.perang, block=a.pitch * 5, pool=pool)
     m.add_rows(poses)
     log(f"[{a.tag}] initial rows: {len(m.rows)}")
+    lazy = np.zeros((0, 3))
     for f in (a.seed_rows or '').split(','):
         if not f.strip(): continue
         P = read_poses(f.strip(), s)
+        if a.lazy_seed:                      # separation pool: only violated poses become rows, each round
+            lazy = np.r_[lazy, P]; log(f"[{a.tag}] seed rows from {f.strip()}: {len(P)} poses kept as a lazy separation pool")
+            continue
         n = m.add_rows(P)
         log(f"[{a.tag}] seed rows from {f.strip()}: {len(P)} poses, {n} new; rows now {len(m.rows)}")
+    if len(lazy):
+        Sv, smin = pool_violations(m.P, w0, lazy, pool, a.nproc, cap=20000); n = m.add_rows(Sv)
+        log(f"[{a.tag}] lazy pool: {n} violated poses added initially; rows now {len(m.rows)}")
     hist = []; best = None
     for it in range(a.max_iters):
-        out = m.solve()
+        tlp = time.time()
+        out = m.solve_warm() if a.warm_lp else m.solve()
+        tlp = time.time() - tlp
         if out is None: log("LP failed"); break
         val, x, y, Ax = out; w = x[m.own]
         # --- cutting planes: lattice scan
@@ -508,13 +585,16 @@ def run(a, log=print):
             Mcov = cand[0][0] if cand else 1.0
             for cv, X, Y in cand: ncols += m.add_point(X / m.D, Y / m.D, 'priced')
         n1 = m.add_rows(poses); n2 = m.add_rows(fp)
+        if len(lazy):                        # --lazy-seed: violated poses of the separation pool
+            Sv, smin = pool_violations(m.P[:len(w)], w, lazy, pool, a.nproc); n2 += m.add_rows(Sv)   # atoms priced in this round come after
+            if smin < pmin: pmin = smin
         rec = dict(it=it, t=round(time.time() - t0, 1), LP=val, rows=len(m.rows), orbits=len(m.orbits), atoms=len(m.P),
                    lattice_min=gmin, lattice_viol=nviol, polish_min=float(pmin), new_rows=n1 + n2, new_cols=ncols, dualcov=Mcov,
-                   support=int((x > 1e-9).sum()))
+                   support=int((x > 1e-9).sum()), lp_s=round(tlp, 1))
         hist.append(rec)
         log(f"[{a.tag}] it{it} LP={val:.6f} rows={len(m.rows)} orb={len(m.orbits)} atoms={len(m.P)} support={rec['support']} "
             f"latmin={gmin:.6f} viol={nviol} polmin={pmin:.6f} +rows={n1}+{n2} +cols={ncols}"
-            + (f" dualcov={Mcov:.4f}" if Mcov is not None else "") + f" t={time.time()-t0:.0f}s")
+            + (f" dualcov={Mcov:.4f}" if Mcov is not None else "") + f" lp={tlp:.0f}s t={time.time()-t0:.0f}s")
         if n1 + n2 == 0: best = (val, it)                       # LP value with no violated pose found
         json.dump(dict(s=s, args=vars(a), hist=hist), open(f"runs/closed4_{a.tag}.json", 'w'), indent=1)
         # checkpoint every round (2026-08-30 coordinator note): so a kill/timeout mid-run never
@@ -525,8 +605,17 @@ def run(a, log=print):
         if n1 + n2 == 0 and ncols == 0:
             log(f"[{a.tag}] converged (no violated pose found, no priced column)"); break
         if time.time() - t0 > a.time: log(f"[{a.tag}] time limit"); break
+        if a.col_prune_at and len(m.orbits) > a.col_prune_at:
+            # drop unused columns whose reduced cost (w.r.t. this round's dual) exceeds col_prune_rc * cost
+            A = m.matrix()[:len(y), :len(x)]
+            rc = m.sizes[:len(x)] - A.T @ y
+            keepc = np.r_[(x > 1e-12) | (rc <= a.col_prune_rc * m.sizes[:len(x)]), np.ones(len(m.orbits) - len(x), dtype=bool)]
+            n0 = len(m.orbits); m.prune_cols(keepc); log(f"   pruned columns {n0} -> {len(m.orbits)} orbits ({len(m.P)} atoms)")
+            # a prune discards the warm-start model (solve_warm), so make it episodic: next one only after 50 % growth
+            a.col_prune_at = max(a.col_prune_at, int(1.5 * len(m.orbits)))
         if len(m.rows) > a.prune_at:
-            keep = y > 1e-12; keep[-a.prune_keep:] = True; m.prune(keep); log(f"   pruned to {len(m.rows)} rows")
+            keep = np.r_[(y > 1e-12) | (Ax <= 1 + 1e-7), np.zeros(len(m.rows) - len(y), dtype=bool)]   # dual support + tight rows
+            keep[-a.prune_keep:] = True; m.prune(keep); log(f"   pruned to {len(m.rows)} rows")
     # final solve on all rows (the last iteration added rows after solving)
     out = m.solve(); val, x, y, Ax = out
     w = x[m.own]
@@ -564,7 +653,8 @@ def _stress_worker(args):
     j = int(vals.argmin()); return float(vals[j]), poses[j]
 
 
-def stress(P, w, s, pitch=0.005, nproc=8, nrand=200, seed=1, log=print, full_range=True):
+def stress(P, w, s, pitch=0.005, nproc=8, nrand=200, seed=1, log=print, full_range=True, near_tile=False,
+           fine_tilted=False, nworst=10):
     """dense scan: centres at pitch (rotated-frame lattice + wall bands), angles 0, 1e-4, 1e-3, ..., 45
     plus nrand random angles in [0, 90) (full range: does not rely on the D4 symmetry).  Returns
     (min, worst poses list)."""
@@ -572,6 +662,11 @@ def stress(P, w, s, pitch=0.005, nproc=8, nrand=200, seed=1, log=print, full_ran
     degs = [0.0, 1e-4, 1e-3, 1e-2, 1e-1] + [float(d) for d in range(1, 46)] + [45 - 1e-4, 45 - 1e-3, 45 - 1e-2, 45 - 1e-1]
     rng = np.random.default_rng(seed)
     rand = rng.random(nrand) * (90.0 if full_range else 45.0)
+    if near_tile:     # 2026-09-23 (search/S21_COVER.md): the binding wall-tile deficit sits at 0.1-0.5 deg,
+        # between the fixed angles above; add 0.02..3 deg in 0.02 steps and their 90-deg mirrors
+        degs = degs + [float(d) for d in np.arange(0.02, 3.0, 0.02)] + [90.0 - float(d) for d in np.arange(0.02, 3.0, 0.02)]
+    if fine_tilted:   # 3..45 deg in 0.25 steps (the S21_OVERHEAD.md sec 2 protocol; D4-symmetric covers need only [0,45])
+        degs = degs + [float(d) for d in np.arange(3.0, 45.0 + 1e-9, 0.25)]
     thetas = [math.radians(d) for d in degs] + [math.radians(d) for d in rand]
     pool = mp.get_context('fork').Pool(nproc)
     outs = pool.map(_stress_worker, [(P, w, s, th, pitch) for th in thetas]); pool.close(); pool.join()
@@ -581,7 +676,7 @@ def stress(P, w, s, pitch=0.005, nproc=8, nrand=200, seed=1, log=print, full_ran
     seeds = np.array([p for v, p in res[:16]])
     fp, fv, cur, curv = polish(P, w, s, seeds, rounds=8, nper=64)
     pmin = float(curv.min())
-    worst = [(float(v), [float(p[0]), float(p[1]), math.degrees(float(p[2]))]) for v, p in res[:10]]
+    worst = [(float(v), [float(p[0]), float(p[1]), math.degrees(float(p[2]))]) for v, p in res[:max(10, nworst)]]
     log(f"stress: {len(thetas)} angles, pitch {pitch}: lattice min = {vmin:.7f}; after local polish = {pmin:.7f}")
     for v, p in worst[:6]: log(f"   {v:.7f} at centre ({p[0]:.4f}, {p[1]:.4f}) angle {p[2]:.5f} deg")
     j = int(curv.argmin()); log(f"   polished worst: {pmin:.7f} at ({cur[j,0]:.5f}, {cur[j,1]:.5f}) angle {math.degrees(cur[j,2]):.6f} deg")
@@ -672,6 +767,7 @@ def main():
     ap.add_argument('--cg-start', type=int, default=2); ap.add_argument('--cg-every', type=int, default=1)
     ap.add_argument('--cg-want', type=int, default=150); ap.add_argument('--cg-pitch', type=float, default=0.01)
     ap.add_argument('--no-colgen', action='store_true')
+    ap.add_argument('--warm-lp', action='store_true', help='run: re-solve through a persistent highspy model (warm start) instead of a cold linprog each round')
     ap.add_argument('--from-cert', default=None, help='run: columns = the points of this certificate file (refinement of a finished set)')
     ap.add_argument('--warm-thr', type=float, default=0.02, help='--from-cert: initial rows are lattice poses with captured weight < 1 + warm_thr')
     ap.add_argument('--no-wall-points', action='store_true'); ap.add_argument('--no-literature', action='store_true')
@@ -686,6 +782,12 @@ def main():
                          'so the exact checker can be used as the separation oracle, and the format '
                          'search/family_rows.py writes for the ZEROMARGIN sec 4 item-3 family that '
                          "closed4.py's own row lattice steps over (search/RUNG2.md sec 4.3)")
+    ap.add_argument('--col-prune-at', type=int, default=0, help='run: when the model has more orbits than this, '
+                    'drop unused orbits with reduced cost > --col-prune-rc x cost (0 = never, the old behaviour)')
+    ap.add_argument('--col-prune-rc', type=float, default=0.02)
+    ap.add_argument('--lazy-seed', action='store_true',
+                    help='treat --seed-rows as a separation pool (violated poses added each round) instead of '
+                         'hard rows up front; keeps the LP small together with a low --prune-at')
     ap.add_argument('--margin', type=float, default=None,
                     help='solve the STABLE (margin-mu) cover problem: a point counts only if it is at '
                          'distance >= mu inside every edge of the unit square (sets TOL = -mu).  A cover '

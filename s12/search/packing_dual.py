@@ -850,7 +850,9 @@ def analyse(path):
     near0 = P[:, 2] < 1.0; print(f"  axis-aligned (|theta|<1 deg): mass {mus[near0].sum():.4f} ({100*mus[near0].sum()/tot:.1f}%)")
     # where the centres sit (canonical image, so cx <= cy, cy <= t/2 roughly): distance to the nearest wall
     d = np.minimum(np.minimum(P[:, 0], t - P[:, 0]), np.minimum(P[:, 1], t - P[:, 1]))
-    for lo, hi in ((0, 0.52), (0.52, 0.8), (0.8, 1.2), (1.2, 1.6), (1.6, 2.0)):
+    bins = [(0, 0.52), (0.52, 0.8), (0.8, 1.2), (1.2, 1.6), (1.6, 2.0)]
+    if t / 2 > 2.0 + 1e-9: bins += [(2.0, t / 2 + 1e-9)]          # t > 4: centres farther than 2 from every wall
+    for lo, hi in bins:
         sel = (d >= lo) & (d < hi)
         if sel.any(): print(f"  centre distance to nearest wall in [{lo},{hi}): mass {mus[sel].sum():7.4f} ({100*mus[sel].sum()/tot:5.1f}%) poses {sel.sum()}")
     print("  heaviest poses (cx cy theta_deg mu):")

@@ -833,6 +833,9 @@ def main():
     ap.add_argument('--pitch', type=str, default='1/10')
     ap.add_argument('--ubins', type=int, default=8)
     ap.add_argument('--dump', type=str, default=None)
+    ap.add_argument('--chunksize', type=int, default=4,
+                    help='root boxes per worker task (1 balances a sweep whose cost sits in a few heavy roots; '
+                         'the result does not depend on it)')
     ap.add_argument('--oracle', type=str, default=None,
                      help='write the uncertified boxes worst-case poses (centre + 4 corners x 2 angle '
                           'endpoints, floats derived from the exact box) as (cx, cy, theta_rad) rows, '
@@ -971,7 +974,7 @@ def main():
            'boxes': 0, 'maxdepth': 0}
     unc_all = []; leaves_all = []
     with Pool(a.nproc) as pool:
-        for i, (st, unc, leaves) in enumerate(pool.imap_unordered(_worker, [(chk, r) for r in R], chunksize=4)):
+        for i, (st, unc, leaves) in enumerate(pool.imap_unordered(_worker, [(chk, r) for r in R], chunksize=a.chunksize)):
             for k in tot:
                 tot[k] = max(tot[k], st[k]) if k == 'maxdepth' else tot[k] + st[k]
             unc_all += unc; leaves_all += leaves

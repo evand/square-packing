@@ -180,6 +180,33 @@ def cov_worker(rng):
         res.append(inc)
     return lo, res
 
+SQW = []          # per-square integer weight (check mode, streaming)
+
+def covmax_worker(rng):
+    """streaming variant of cov_worker for `check`: the max weighted coverage over the range, without
+    keeping the incidence lists (same exact containment test, via cov_worker)"""
+    lo, res = cov_worker(rng)
+    best = -1; bi = -1; npairs = 0
+    for off, inc in enumerate(res):
+        npairs += len(inc)
+        num = sum(SQW[si] for si in inc)
+        if num > best: best = num; bi = lo + off
+    return best, bi, npairs
+
+def max_coverage(procs, weights):
+    """(best numerator, vertex index, number of pairs) over all VERTS, weights[si] per square image"""
+    global SQW
+    SQW = weights
+    t0 = time.time()
+    n = len(VERTS); rngs = [(i, min(i + 2000, n)) for i in range(0, n, 2000)]
+    best = -1; bi = -1; npairs = 0
+    with Pool(procs) as pool:
+        for b, i, np_ in pool.imap_unordered(covmax_worker, rngs):
+            npairs += np_
+            if b > best or (b == best and i < bi): best = b; bi = i
+    log(f"  incidences (streamed): {n} vertices, {npairs} (vertex, square) pairs, {time.time() - t0:.1f} s")
+    return best, bi
+
 def chunks(lst, n):
     k = max(1, (len(lst) + n - 1) // n)
     return [lst[i:i + k] for i in range(0, len(lst), k)]
@@ -300,6 +327,27 @@ def build_squares(poses):
 
 
 # ============================================================================== modes
+def polish_lp(pat, poses, DM):
+    """LP (floats, HiGHS) on the exact rows -- only CHOOSES the masses; returns (MU, exact M, worst key)"""
+    import numpy as np, scipy.sparse as sp
+    from scipy.optimize import linprog
+    keys = list(pat.keys()); nP = len(poses)
+    rows = []; cols = []; vals = []
+    for i, key in enumerate(keys):
+        for k, c in key: rows.append(i); cols.append(k); vals.append(c / 8.0)
+    A = sp.csr_matrix((vals, (rows, cols)), shape=(len(keys), nP))
+    t0 = time.time()
+    res = linprog(-np.ones(nP), A_ub=A, b_ub=np.ones(len(keys)), bounds=(0, None), method='highs',
+                  options={'primal_feasibility_tolerance': 1e-9, 'dual_feasibility_tolerance': 1e-9})
+    assert res.status == 0, res.message
+    log(f"  LP: {len(keys)} rows x {nP} cols, {A.nnz} nz, mass {-res.fun:.9f}, {time.time() - t0:.1f} s")
+    mu = np.maximum(res.x, 0.0)
+    MU = [int(math.floor(float(m) * DM)) for m in mu]
+    M, key = exact_max(pat, MU, DM)
+    log(f"  rounded down to /{DM}: mass {sum(MU)/DM:.9f}, exact M = {M} = {float(M):.12f}")
+    return MU, M, key
+
+
 def cmd_build(args):
     global LOG
     LOG = open(os.path.join(RUNS, f'dual_exact_{TAG}.log'), 'w')
@@ -326,23 +374,12 @@ def cmd_build(args):
     M0, _ = exact_max(pat, MU0, DM)
     log(f"  before polish: mass {sum(MU0)/DM:.9f}, exact M = {float(M0):.9f}, L = {sum(MU0)/DM/float(M0):.9f}")
 
-    # ---- polish: LP (floats, HiGHS) on the exact rows -- only CHOOSES the masses
-    import numpy as np, scipy.sparse as sp
-    from scipy.optimize import linprog
-    keys = list(pat.keys()); nP = len(poses)
-    rows = []; cols = []; vals = []
-    for i, key in enumerate(keys):
-        for k, c in key: rows.append(i); cols.append(k); vals.append(c / 8.0)
-    A = sp.csr_matrix((vals, (rows, cols)), shape=(len(keys), nP))
-    t0 = time.time()
-    res = linprog(-np.ones(nP), A_ub=A, b_ub=np.ones(len(keys)), bounds=(0, None), method='highs',
-                  options={'primal_feasibility_tolerance': 1e-9, 'dual_feasibility_tolerance': 1e-9})
-    assert res.status == 0, res.message
-    log(f"  LP: {len(keys)} rows x {nP} cols, {A.nnz} nz, mass {-res.fun:.9f}, {time.time() - t0:.1f} s")
-    mu = np.maximum(res.x, 0.0)
-    MU = [int(math.floor(float(m) * DM)) for m in mu]
-    M, key = exact_max(pat, MU, DM)
-    log(f"  rounded down to /{DM}: mass {sum(MU)/DM:.9f}, exact M = {M} = {float(M):.12f}")
+    if args.no_lp:
+        # keep the float masses (rounded down); skips the LP, which dominates memory on large supports
+        MU = MU0; M, key = exact_max(pat, MU, DM)
+        log(f"  --no-lp: float masses rounded down to /{DM}: mass {sum(MU)/DM:.9f}, exact M = {M} = {float(M):.12f}")
+    else:
+        MU, M, key = polish_lp(pat, poses, DM)
     if M > 1:
         MU = [(m * M.denominator) // M.numerator for m in MU]      # floor(mu / M): coverage <= 1 exactly
         M, key = exact_max(pat, MU, DM)
@@ -350,12 +387,12 @@ def cmd_build(args):
     assert M <= 1
     mass = Fr(sum(MU), DM); L = mass / M
     log(f"  EXACT: mass = {mass} = {float(mass):.12f};  M = {M};  L = mass/M = {L} = {float(L):.12f}  "
-        f"({'>=' if L >= 12 else '<'} 12; L - 12 = {float(L - 12):+.3e})")
+        f"({'>=' if L >= args.n else '<'} {args.n}; L - {args.n} = {float(L - args.n):+.3e})")
     log(f"  support: {sum(1 for m in MU if m > 0)} poses with positive mass; worst vertex pattern {key}")
     out = os.path.join(RUNS, f'dual_exact_{TAG}_support.txt')
     write_exact_support(out, poses, MU, DM, M, L, f"snapped from {os.path.basename(args.src)} with Q={args.Q}, Dc={args.Dc}")
     js = dict(t=f"{TN}/{TD}", Q=args.Q, Dc=args.Dc, DM=DM, poses=len(poses), poses_positive=sum(1 for m in MU if m > 0),
-              images=len(squares), vertices_F=len(verts), incidence_pairs=sum(map(len, inc)), lp_rows=len(keys),
+              images=len(squares), vertices_F=len(verts), incidence_pairs=sum(map(len, inc)), lp_rows=len(pat),
               mass=str(mass), mass_float=float(mass), M=str(M), M_float=float(M), L=str(L), L_float=float(L),
               L_minus_12=str(L - 12), M_before_polish=str(M0), seconds=time.time() - t_all)
     json.dump(js, open(os.path.join(RUNS, f'dual_exact_{TAG}.json'), 'w'), indent=1)
@@ -378,17 +415,20 @@ def cmd_check(args):
     squares, pose_of = build_squares(poses)
     log(f"  {len(squares)} images, all admissible (exact: 4 rational corners in the closed container)")
     verts = enumerate_vertices(squares, full=args.full, procs=args.procs)
-    inc = incidences(args.procs)
-    # exact coverage at every vertex
-    best = -1; bi = -1
-    for vi, lst in enumerate(inc):
-        num = sum(MU[pose_of[s]] for s in lst)
-        if num > best: best = num; bi = vi
+    if args.stream:
+        best, bi = max_coverage(args.procs, [MU[k] for k in pose_of])
+    else:
+        inc = incidences(args.procs)
+        # exact coverage at every vertex
+        best = -1; bi = -1
+        for vi, lst in enumerate(inc):
+            num = sum(MU[pose_of[s]] for s in lst)
+            if num > best: best = num; bi = vi
     M = Fr(best, 8 * DM); mass = Fr(sum(MU), DM); L = mass / M
     X, Y, D = verts[bi]
     log(f"  EXACT: {len(verts)} vertices checked; mass = {mass} = {float(mass):.12f};  M = {M} = {float(M):.15f} "
         f"(attained at ({X}/{D}, {Y}/{D}) ~ ({X/D:.6f}, {Y/D:.6f}));  L = mass/M = {L} = {float(L):.12f}  "
-        f"({'>=' if L >= 12 else '<'} 12);  {time.time() - t_all:.1f} s")
+        f"({'>=' if L >= args.n else '<'} {args.n});  {time.time() - t_all:.1f} s")
     return L
 
 
@@ -403,12 +443,16 @@ def main():
     b.add_argument('--Dc', type=int, default=1000000, help='denominator of the centre coordinates')
     b.add_argument('--DM', type=int, default=10 ** 9, help='denominator of the masses')
     b.add_argument('--procs', type=int, default=4)
+    b.add_argument('--no-lp', action='store_true', help='keep the float masses (rounded down, scaled by 1/M if M > 1); no LP polish')
+    b.add_argument('--n', type=int, default=12, help='target the log line compares L with (display only)')
     c = sub.add_parser('check')
     c.add_argument('support')
     c.add_argument('--t', default=None, help='container side (default: read from the support file header)')
     c.add_argument('--tag', default=None)
     c.add_argument('--full', action='store_true', help='whole container instead of the fundamental domain')
+    c.add_argument('--stream', action='store_true', help='do not keep the incidence lists (low memory; same exact test)')
     c.add_argument('--procs', type=int, default=4)
+    c.add_argument('--n', type=int, default=12, help='target the log line compares L with (display only)')
     args = ap.parse_args()
     sys.set_int_max_str_digits(0)
     if args.cmd == 'build':

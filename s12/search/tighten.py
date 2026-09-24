@@ -56,6 +56,7 @@ REPO = os.path.dirname(HERE)
 VERIFY = os.path.join(REPO, 'verify', 'target', 'release', 'verify')
 NPROC = os.cpu_count() or 4
 HIGHS = {'random_seed': 0}
+PRUNE_AT = 120000   # row count above which the loop prunes to the LP's active rows (+ last 30k); --prune-at
 TOL = 1e-9          # atoms within TOL of the square boundary are NOT counted (safe direction)
 
 
@@ -288,7 +289,7 @@ def price(m, y, pitch=0.01, want=200, ysup=1e-9):
 
 
 def tighten(m, tag, margin=2e-6, N=6000, topk=6, max_iters=200, log=print, cost=None, budget=None,
-            fixed_zero=None, probe_margin=None, final_check=True, x0=None, prune_at=120000,
+            fixed_zero=None, probe_margin=None, final_check=True, x0=None, prune_at=None,
             colgen=0, cg_want=200, cg_pitch=0.01, n=12,
             sep_mode='exact', exact_every=5, sep_pitch=0.004, sep_dtheta=0.4):
     """cutting-plane loop.  Returns (x, val, info).
@@ -300,6 +301,7 @@ def tighten(m, tag, margin=2e-6, N=6000, topk=6, max_iters=200, log=print, cost=
     `exact_every` rounds and at convergence (task K, search/LOOPSPEED.md).  The loop still only
     STOPS on an exact verdict, and the final file is verified unchanged."""
     if probe_margin is None: probe_margin = margin / 2
+    if prune_at is None: prune_at = PRUNE_AT
     tmp = f"runs/tight_{tag}_probe.txt"; sep = f"runs/tight_{tag}_sep.txt"
     t0 = time.time(); x = x0; val = None; it = 0
     pool = None; fclean = 0
@@ -433,6 +435,7 @@ def main():
     ap.add_argument('--Dps', default=None, help='comma-separated D values for scan')
     ap.add_argument('--N', type=int, default=6000); ap.add_argument('--topk', type=int, default=6)
     ap.add_argument('--margin', type=float, default=2e-6)
+    ap.add_argument('--prune-at', type=int, default=120000, help='prune the row set above this many rows (default 120000)')
     ap.add_argument('--budget', type=float, default=11.99); ap.add_argument('--rounds', type=int, default=8)
     ap.add_argument('--eps', type=float, default=1e-4)
     ap.add_argument('--seed', type=int, default=0); ap.add_argument('--out', default=None)
@@ -445,6 +448,7 @@ def main():
     ap.add_argument('--exact-every', type=int, default=5, help='--sep float: exact verifier every this many rounds (default 5)')
     ap.add_argument('--sep-pitch', type=float, default=0.004); ap.add_argument('--sep-dtheta', type=float, default=0.4)
     a = ap.parse_args()
+    global PRUNE_AT; PRUNE_AT = a.prune_at
     HIGHS['random_seed'] = a.seed
     os.makedirs('runs', exist_ok=True)
     lf = open(f"runs/tight_{a.tag}.log", 'a')

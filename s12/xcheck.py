@@ -415,6 +415,10 @@ def min_cover_bin(k):
     px0 = min(p[0] for p in V); px1 = max(p[0] for p in V)
     bx = sorted(set([x - H for x in qx] + [x + H for x in qx] + [px0, px1]))
     best = None; wit = None
+    # plain certificate (no clique boxes in this bin, no anchor pieces, no region trailer): every
+    # credit and every requirement below is identically 0, so skip building their Fraction
+    # arguments cell by cell (pure speed-up; the values compared are the same integers)
+    plain = not cboxes and not apieces and region is None
     for a, b in zip(bx, bx[1:]):
         if b <= px0 or a >= px1:
             continue                                  # strip does not meet P
@@ -460,6 +464,12 @@ def min_cover_bin(k):
                 continue
             cl, dl = by[j], by[j+1]
             k0 = bisect_left(yv, dl - H); k1 = bisect_right(yv, cl + H)
+            if plain:
+                v = pre[k1] - pre[k0] if k1 > k0 else 0
+                if best is None or v < best:
+                    best = v
+                    wit = (F(a + b, 2*den), F(max(cl, ylo) + min(dl, yhi), 2*den))
+                continue
             tot = (pre[k1] - pre[k0] if k1 > k0 else 0) + clique_credit(F(a, den), F(b, den), F(cl, den), F(dl, den)) + anchor_credit(F(a, den), F(b, den), F(max(cl, ylo), den), F(min(dl, yhi), den))
             v = tot - required(*flags(cl, dl))
             if best is None or v < best:

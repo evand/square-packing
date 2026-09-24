@@ -30,7 +30,12 @@ def main():
     ap.add_argument('--stress-pitch', type=float, default=0.003)
     ap.add_argument('--nrand', type=int, default=300)
     ap.add_argument('--nseed', type=int, default=24, help='how many of the worst stress poses to polish/add per round')
-    ap.add_argument('--cap', type=float, default=13.0, help='abort (report) if LP value would need to exceed this')
+    ap.add_argument('--cap', type=float, default=13.0, help='abort (report) if LP value would need to exceed this '
+                    '(13 is the s = 4 budget; pass e.g. --cap 21 at s = 5)')
+    ap.add_argument('--near-tile', action='store_true', help='stress scan also at 0.02..3 deg in 0.02 steps (closed4.stress near_tile)')
+    ap.add_argument('--fine-tilted', action='store_true', help='stress scan also at 3..45 deg in 0.25 steps (closed4.stress fine_tilted)')
+    ap.add_argument('--nworst', type=int, default=10, help='how many per-angle worst stress poses are returned (polish seeds come from these)')
+    ap.add_argument('--warm-lp', action='store_true', help='re-solve through closed4.Model.solve_warm (persistent highspy model)')
     # NOTE: this loop only reweights the fixed column set from `cert` -- it does not price in new
     # points.  The 2026-08-30 run (search/FAMILY.md sec 2) plateaus at stress_min ~0.994-0.996
     # after 67 rounds without reweighting closing the gap; column generation (new points at the
@@ -57,10 +62,10 @@ def main():
 
     t0 = time.time(); hist = []; best = None
     for r in range(a.rounds):
-        out = m.solve()
+        out = m.solve_warm() if a.warm_lp else m.solve()
         if out is None: log("LP failed"); break
         val, x, y, Ax = out; wt = x[m.own]
-        vmin, worst, wp = C.stress(m.P, wt, s, pitch=a.stress_pitch, nproc=a.nproc, nrand=a.nrand, log=lambda *_a: None)
+        vmin, worst, wp = C.stress(m.P, wt, s, pitch=a.stress_pitch, nproc=a.nproc, nrand=a.nrand, log=lambda *_a: None, near_tile=a.near_tile, fine_tilted=a.fine_tilted, nworst=a.nworst)
         rec = dict(round=r, t=round(time.time() - t0, 1), LP=val, rows=len(m.rows), stress_min=vmin,
                    worst_pose=list(wp))
         hist.append(rec)
@@ -105,7 +110,7 @@ def main():
               hist=hist, points_list=[(float(px), float(py), float(wp_)) for (px, py), wp_ in zip(m.P, wt) if wp_ > 1e-9])
     json.dump(js, open(f"runs/closed4_{a.tag}_best.json", 'w'), indent=1)
     log(f"[{a.tag}] exported runs/closed4_{a.tag}_best.txt: {npts} points, total {tw:.6f}")
-    vmin, worst, wp = C.stress(m.P, wt, s, pitch=a.stress_pitch, nproc=a.nproc, nrand=a.nrand, log=log)
+    vmin, worst, wp = C.stress(m.P, wt, s, pitch=a.stress_pitch, nproc=a.nproc, nrand=a.nrand, log=log, near_tile=a.near_tile, fine_tilted=a.fine_tilted, nworst=a.nworst)
     log(f"[{a.tag}] RESULT s={s} LP={val:.6f} exported total={tw:.6f} stress min={vmin:.7f} cost=total/min={tw/vmin:.6f}")
 
 
