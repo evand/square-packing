@@ -50,6 +50,10 @@ TOL = 1e-9           # closed containment: |q - u|_inf <= 1/2 + TOL counts (safe
 # ordinary closed cover problem for the container [0, s/(1-2MU)]^2.
 WALL = 1e-7          # rows are placed >= WALL inside the open admissible box
 HIGHS = {'random_seed': 0}
+# LP algorithm of Model.solve (2026-09-24, search/S45_COVER.md): 'simplex' (the old linprog/HiGHS default) or 'ipm'
+# (HiGHS interior point, no crossover; at s = 7 a 166k x 906 model solves in 127 s vs 1190 s dual simplex, same value
+# to 1e-11).  Set by `run --lp-ipm` or the environment variable CLOSED4_LP=ipm (so rung2_close.py picks it up too).
+LPSOLVER = os.environ.get('CLOSED4_LP', 'simplex')
 
 # ----------------------------------------------------------------------------- literature sets
 FRIEDMAN14 = [(1, 1), (1.6, 1), (2.4, 1), (3, 1), (1, 1.8), (2, 1.8), (3, 1.8), (1, 2.2), (2, 2.2), (3, 2.2),
@@ -367,11 +371,31 @@ class Model:
         y = np.maximum(np.array(sol.row_dual), 0.0)
         return float(self.sizes @ x), x, y, A @ x
 
+    def solve_ipm(self, A=None):
+        """cold HiGHS interior-point solve without crossover (LPSOLVER = 'ipm').  The solution is interior-ish:
+        primal values and duals below 1e-9 are set to 0 (so the export and the row prune see the support only)."""
+        import highspy
+        if A is None: A = self.matrix()
+        A = A.tocsr(); nr, nc = A.shape; inf = highspy.kHighsInf
+        h = highspy.Highs(); h.setOptionValue('output_flag', False)
+        h.setOptionValue('random_seed', int(HIGHS.get('random_seed', 0)))
+        h.setOptionValue('solver', 'ipm'); h.setOptionValue('run_crossover', 'off')
+        h.addVars(nc, np.zeros(nc), np.full(nc, inf)); h.changeColsCost(nc, np.arange(nc, dtype=np.int32), self.sizes.astype(float))
+        A.sort_indices()
+        h.addRows(nr, np.ones(nr), np.full(nr, inf), int(A.nnz), A.indptr[:-1].astype(np.int32), A.indices.astype(np.int32), A.data.astype(float))
+        h.run()
+        if h.getModelStatus() != highspy.HighsModelStatus.kOptimal: return None
+        sol = h.getSolution(); x = np.array(sol.col_value); y = np.array(sol.row_dual)
+        x[x < 1e-9] = 0.0; y[y < 1e-9] = 0.0
+        return float(self.sizes @ x), x, y, A @ x
+
     def solve(self, fixed=None, method='highs'):
         """min sizes.x  s.t.  A x >= 1, x >= 0  [x = fixed if given: just evaluate]."""
         A = self.matrix()
         if fixed is not None:
             return float(self.sizes @ fixed), fixed, None, A @ fixed
+        if LPSOLVER == 'ipm' and method == 'highs':
+            return self.solve_ipm(A)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             res = linprog(c=self.sizes, A_ub=-A, b_ub=-np.ones(A.shape[0]), bounds=(0, None), method=method, options=dict(HIGHS))
@@ -546,7 +570,7 @@ def run(a, log=print):
     hist = []; best = None
     for it in range(a.max_iters):
         tlp = time.time()
-        out = m.solve_warm() if a.warm_lp else m.solve()
+        out = m.solve_warm() if (a.warm_lp and LPSOLVER != 'ipm') else m.solve()
         tlp = time.time() - tlp
         if out is None: log("LP failed"); break
         val, x, y, Ax = out; w = x[m.own]
@@ -767,6 +791,8 @@ def main():
     ap.add_argument('--cg-start', type=int, default=2); ap.add_argument('--cg-every', type=int, default=1)
     ap.add_argument('--cg-want', type=int, default=150); ap.add_argument('--cg-pitch', type=float, default=0.01)
     ap.add_argument('--no-colgen', action='store_true')
+    ap.add_argument('--lp-ipm', action='store_true', help='solve every LP by cold HiGHS IPM without crossover (LPSOLVER; '
+                    'overrides --warm-lp in run; much faster at s >= 6, S45_COVER.md)')
     ap.add_argument('--warm-lp', action='store_true', help='run: re-solve through a persistent highspy model (warm start) instead of a cold linprog each round')
     ap.add_argument('--from-cert', default=None, help='run: columns = the points of this certificate file (refinement of a finished set)')
     ap.add_argument('--warm-thr', type=float, default=0.02, help='--from-cert: initial rows are lattice poses with captured weight < 1 + warm_thr')
@@ -801,6 +827,9 @@ def main():
         TOL = -float(a.margin)
         print(f"MARGIN MODE: a point counts only if inside by >= {a.margin} (TOL = {TOL})")
     HIGHS['random_seed'] = a.seed
+    if a.lp_ipm:
+        global LPSOLVER
+        LPSOLVER = 'ipm'
     os.makedirs('runs', exist_ok=True)
     lf = open(f"runs/closed4_{a.tag}.log", 'a')
     def log(msg):
