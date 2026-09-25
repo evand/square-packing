@@ -14,6 +14,11 @@ Code: `search/closed4.py` (unchanged), `search/rung2_close.py` (extended, §6), 
 
 ## 0. Answer
 
+> **Update 2026-09-25 (task s32-close, §9):** a closing loop measured by the strict protocol itself reached a
+> stable strict minimum `0.99902` (pitch 0.002).  An off-grid pitch-0.001 confirmation then found `0.99319`.  The
+> candidate `runs/s32-close_candidate.txt` totals **`31.7135`**: that is `1.004 ×` over the confirmed minimum, and
+> `0.29` (`0.9 %`) below 32.  Verdict: **go** for the exact checker (heuristic; see §9 for the risk).
+
 > **Converged LP (heuristic): `COVER^closed(6) ≈ 31.22 ± 0.03`.**  Three chains agree to within `0.04`, and each was
 > still drifting down when stopped:
 > * the transplant chain on coarse rows (`s32convT`, from the `m = 5` LP cover grown by one cell): `31.196`;
@@ -240,4 +245,99 @@ python3 search/s21_cover_eval.py hardscan runs/s32convR4_r11_last.txt --pitch 0.
 python3 search/s21_cover_eval.py family   runs/s32convR4_r11_last.txt                 # 0.9936483
 python3 search/closed4.py stress runs/s32convR4_r11_last.txt --nproc 7 --tag s32stress   # 0.9896608 -> 31.608
 python3 search/s21_cover_eval.py regions  runs/s32convD_it6_last.txt
+```
+
+## 9. Closing to a stable strict minimum (task s32-close, 2026-09-25)
+
+Everything in this section is **heuristic**: float LP over sampled rows, float scans, local search.  Code: `search/close_shifted.py`
+(new; see its docstring).  `closed4.py`, `rung2_close.py` and `s21_cover_eval.py` are unchanged.  Cores 0–6 + 16–22.
+The loop used 14 workers and ran 09:10 → 14:00 (4.8 h).  The confirmation scan used 10 workers and ran 14:02 → 14:28.
+
+**Loop.**  `close_shifted.py loop`.  The columns are the R4 r11 support plus the `D it6` columns (1,985 orbits / 14,397
+atoms), fixed, with no pricing.  Each round runs these steps:
+1. **Measure** the exported cover with exactly the strict protocol, at pitch 0.002: the `hardscan` lattice plus the
+   polish of the 1,400 worst poses (same chunking and seeds as `s21_cover_eval.py`), and `family` at pitch 0.0005.
+   Round −1, the R4 r11 cover itself, reproduces the known `0.9836802` / `0.9936483` exactly.
+2. **Find new rows** on a lattice of the same pitch with a random sub-pitch offset and angles jittered within their
+   step, drawn fresh each round, so the rows never sit on the measurement lattice.
+3. **Keep permanently** every dip below 0.995 and never prune it.  This covers the polished dips, the worst
+   polish-visited poses, the family poses, and the 4 worst shifted-lattice poses per angle.  A 3×3 stencil at
+   ±0.001 (±0.01°) around the 40 deepest dips is also kept.  Everything is logged to `runs/s32closeA_dips.txt`.
+4. **Re-solve** with a cold HiGHS IPM; each solve took 75–206 s.  Prunable rows are dropped at 60k (`--prune-keep 25000`).
+
+It stops once the strict minimum changes by less than 0.1 % over 3 consecutive rounds.
+
+| round | total | strict min p = 0.002 (hardscan ∧ family) | cost | where the minimum sat | rows (permanent) |
+|---|---|---|---|---|---|
+| −1 (R4 r11) | 31.2817 | 0.98368 | 31.801 | wall band `17.75°` | 22,927 (0) |
+| 0 | 31.2672 | 0.84936 | 36.813 | `(2.516, 0.558, 7.14°)` | 60,953 (2,590) |
+| 1 | 31.2981 | 0.92134 | 33.970 | edge tile `0.17°` | 58,182 (5,614) |
+| 2 | 31.3093 | 0.96578 | 32.419 | edge tile `0.08°` | 51,388 (8,656) |
+| 3 | 31.3247 | 0.98464 | 31.813 | edge tile `0.16°` | 55,520 (11,448) |
+| 4 | 31.3326 | 0.98576 | 31.785 | wall band `10.6°` | 53,032 (13,038) |
+| 5 | 31.3376 | 0.98861 | 31.699 | edge tile `0.24°` | 59,194 (14,197) |
+| 6 | 31.3409 | 0.99478 | 31.505 | centre tile `0.09°` | 65,347 (15,430) |
+| 7 | 31.3434 | 0.98658 | 31.770 | edge tile `0.06°` | 67,881 (15,567) |
+| 8 | 31.3446 | 0.99692 | 31.441 | interior `40.0°` | 73,529 (16,159) |
+| 9 | 31.3459 | 0.99783 | 31.414 | interior `32.5°` | 80,107 (16,160) |
+| 10 | 31.3464 | 0.99386 | 31.540 | edge tile `0.54°` | 85,399 (16,160) |
+| 11 | 31.3469 | 0.99789 | 31.413 | `18.25°` | 90,753 (17,408) |
+| 12 | 31.3476 | 0.99065 | 31.644 | edge tile `0.20°` | 94,757 (17,408) |
+| 13 | 31.3479 | 0.99495 | 31.507 | family (item 3) | 102,724 (17,738) |
+| 14 | 31.3481 | 0.98353 | 31.873 | family (item 3) | 105,141 (17,739) |
+| 15 | 31.3632 | 0.97948 | 32.020 | `44.75°` near the wall | 110,232 (17,741) |
+| 16 | 31.3673 | 0.98356 | 31.892 | `31.2°` / family | 115,934 (19,900) |
+| 17 | 31.3687 | 0.96815 | 32.401 | edge tile `0.11°` (lattice = family) | 118,447 (22,061) |
+| 18 | 31.3699 | 0.99717 | 31.459 | interior `32.0°` | 122,992 (23,501) |
+| 19 | 31.3705 | 0.99834 | 31.423 | `2.36°` | 123,452 (23,501) |
+| 20 | 31.3711 | 0.99866 | 31.413 | interior `37.0°` | 125,924 (23,501) |
+| **21** | 31.3713 | **0.99912** | **31.399** | `4.51°` | 127,179 (23,501) |
+| **22** (final) | **31.3716** | 0.99902 | 31.402 | interior `29.7°` | 130,732 (23,501) |
+
+* **Stable** over rounds 19–22 (`0.99834, 0.99866, 0.99912, 0.99902`).  The LP rose by `+0.09` over the loop (`31.28 → 31.37`).
+* Rounds 13–17 were the last whack-a-mole phase: family (item-3) poses and near-tile poses reopened, down to `0.968`.
+  Once the permanent set had grown to 23.5k, no deep hole reopened.  The stop is driven by interior `30–40°` cells
+  at `~0.999`.
+* Pitch 0.004 was not run per round.  On the final cover r22, `s21_cover_eval.py hardscan` at pitch 0.004 gives
+  `0.99932`, cost `31.393`.
+
+**Confirmation scan (r22; `close_shifted.py confirm --tiles --interleaved --full --dips runs/s32closeA_dips.txt`).**
+The scan is genuinely off-grid:
+
+| scan | lattice min |
+|---|---|
+| hardscan at pitch 0.002 (re-measured) | 0.99902 |
+| pitch-0.001 boxes (±0.08) around the 80 deepest distinct dips, at ±0.3° step 0.01° (tilted) or ±0.06° step 0.002° (near-tile) | 0.99734 at `(5.455, 2.515, 5.38°)` |
+| every tile pose ±0.015 at pitch 0.0005, 0..1.5° step 0.01° | 0.99794 at `(4.499, 2.500, 0.07°)` |
+| whole container at pitch 0.001, the 319 hardscan angles | 0.99773 at `(3.610, 4.684, 32.25°)` |
+| whole container at pitch 0.001, the 318 **interleaved** angles (0.01..2.99 step 0.02, 3.125..44.875 step 0.25) | 0.99571 at `(0.516, 3.500, 0.09°)`, the edge tile |
+| polish of the 1,400 worst of all the above | **0.99319** at `(3.4996, 5.4925, 0.09°)`, the top-edge tile turned 0.09° |
+
+* **Confirmed minimum `0.99319`, cost `31.587`.**  The gap below the loop's strict minimum is **`0.58 %`**.  At
+  `m = 7` the sibling measured `1.29 %`.  The binding pose is again the edge tile nudged by `~0.1°`, as at
+  `m = 4, 5, 6`.  The deepest cell sits inside the ±0.015 / 0.0005 near-tile box but was missed by it, so it is
+  thinner than 0.0005.  Thin cells like this are the remaining risk.
+* **Candidate:** `runs/s32-close_candidate.txt` = r22 × `10109/10000`, i.e. `≥ 1.004 / 0.99319` (`1.01088`).
+  Total **`31.713505`**, `0.2865` (`0.90 %`) below 32.  Its heuristic minimum capture is `1.00402`.
+
+**Verdict: go for the exact checker (heuristic).**  Factor budget over the r22 weights:
+* total allowed: `32 / 31.3716 = 1.0200`;
+* already spent on the confirmed dips: `1.0069`;
+* left for unfound dips plus checker margin: **`1.0131`**.  The candidate's `1.004` uses part of it, which leaves the
+  candidate itself `32 / 31.7135 = 1.0090` of headroom.
+
+If the checker finds the candidate short, rescale r22 up to `32/31.3716`.  That keeps the total `< 32` as long as the
+true minimum is `≥ 0.98036`, i.e. within `1.3 %` of the confirmed minimum.  The m = 4 checker needed `0.25 %` margin
+(floor `~0.18 %`).  So an unfound dip up to `~1 %` below `0.99319` still fits.  The pitch-0.002 → confirmation gap
+seen here (`0.58 %`) is about half of that.
+
+Files (`runs/`, gitignored): `s32closeA.{log,json}`, `s32closeA_r{0..22}.txt`, `s32closeA_dips.txt` (21,349 dip
+poses, `cx cy θ value`), `s32closeA_confirm_r22.log`, `s32closeA_eval004_r22.log`, **`s32-close_candidate.txt`**.
+
+```
+python3 search/close_shifted.py loop runs/s32convR4_r11_last.txt s32closeA --cols-from runs/s32convD_it6_last.txt \
+        --lazy-seed runs/s32_neartile.txt,runs/s32_seedrows.txt --hs-pitch 0.002 --prune-at 60000 --prune-keep 25000 \
+        --nproc 14 --time 36000                                               # STABLE after round 22
+python3 search/close_shifted.py confirm runs/s32closeA_r22.txt --dips runs/s32closeA_dips.txt --tiles --interleaved --full --nproc 10
+python3 search/scale_cover.py runs/s32closeA_r22.txt 10109 10000 runs/s32-close_candidate.txt    # 31.713505
 ```
