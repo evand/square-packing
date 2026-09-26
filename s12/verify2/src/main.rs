@@ -947,6 +947,8 @@ struct Disj<'a> {
     node_cap: usize,
     /// a forced prefix of branch decisions (a Lemma-K seed pair)
     forced: Vec<usize>,
+    /// spent `Cov` buffers for `cover_child` to reuse (allocation only; contents are overwritten)
+    pool: Vec<Cov>,
     fail_reports: usize,
 }
 
@@ -1272,18 +1274,33 @@ impl<'a> Disj<'a> {
         cov.m
     }
 
+    /// The float (`exact = false`) or exact mask of hypothesis `h`; the exact one must already
+    /// have been built by `exact_mask`.
+    #[inline]
+    fn mask(&self, h: usize, exact: bool) -> &[u64] {
+        if exact {
+            self.emask[h].as_ref().expect("exact mask not built")
+        } else {
+            &self.pmask[h]
+        }
+    }
+
     /// One step of the closure: the parent's cover plus the mask of the hypothesis just pushed
     /// (`active.last()`), then the Lemma-K closure re-run over the node's `ge` hypotheses.
     fn cover_child(&mut self, parent: &Cov, active: &[usize], exact: bool) -> Cov {
-        let mut cov = parent.clone();
+        let mut cov = match self.pool.pop() {
+            Some(mut c) => {
+                c.m.clone_from(&parent.m);
+                c.added.clone_from(&parent.added);
+                c
+            }
+            None => parent.clone(),
+        };
         let hi = *active.last().unwrap();
         if exact {
-            let m = self.exact_mask(hi).clone();
-            Self::or_into(&mut cov.m, &m);
-        } else {
-            let m = self.pmask[hi].clone();
-            Self::or_into(&mut cov.m, &m);
+            self.exact_mask(hi);
         }
+        Self::or_into(&mut cov.m, self.mask(hi, exact));
         loop {
             let mut grew = false;
             for idx in 0..active.len() {
@@ -1299,12 +1316,9 @@ impl<'a> Disj<'a> {
                     cov.added[bi] = true;
                     let le = bi * 2;
                     if exact {
-                        let m = self.exact_mask(le).clone();
-                        Self::or_into(&mut cov.m, &m);
-                    } else {
-                        let m = self.pmask[le].clone();
-                        Self::or_into(&mut cov.m, &m);
+                        self.exact_mask(le);
                     }
+                    Self::or_into(&mut cov.m, self.mask(le, exact));
                     grew = true;
                 }
             }
@@ -1387,6 +1401,8 @@ impl<'a> Disj<'a> {
                 let pcc = self.cover_child(pc, active, false);
                 let ecc = self.cover_child(ec, active, true);
                 let r = self.search(active, &pcc, &ecc, depth - 1, regions);
+                self.pool.push(pcc);
+                self.pool.push(ecc);
                 active.pop();
                 if !r {
                     ok = false;
@@ -1478,6 +1494,8 @@ impl<'a> Disj<'a> {
                 let pcc = self.cover_child(pc, active, false);
                 let ecc = self.cover_child(ec, active, true);
                 let r = self.search(active, &pcc, &ecc, depth - 1, regions);
+                self.pool.push(pcc);
+                self.pool.push(ecc);
                 active.pop();
                 if !r {
                     ok = false;
@@ -1583,6 +1601,7 @@ impl Checker {
             nodes: 0,
             node_cap: self.node_cap,
             forced: Vec::new(),
+            pool: Vec::new(),
             fail_reports: 0,
         };
         d.build_plaus();
