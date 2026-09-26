@@ -237,3 +237,45 @@ python3 search/s21_cover_eval.py hardscan runs/s7convR1_r10_last.txt     # 0.982
 python3 search/s21_cover_eval.py family   runs/s7convR1_r10_last.txt     # 0.9919715
 python3 search/s21_cover_eval.py regions  runs/s7convC3_it10_last.txt
 ```
+
+## 9. Closing to a stable strict minimum (task s45-close, 2026-09-25; written up 2026-09-26 from the logs)
+
+Everything here is **heuristic**.  The agent that ran it stopped after the confirmation scan without writing this
+section; the numbers below are read from `runs/s45closeA.log`, `runs/s45closeA_eval_r*.log` and
+`runs/s45close_confirm_r6.log`.  Code: `search/close_strict.py` (new; the `m = 7` sibling of `close_shifted.py`:
+every round measures the LP weights with the strict protocol itself at pitch 0.002 and keeps every dip as a
+permanent row; see its docstring).
+
+**Starting point.**  `hardscan` at pitch 0.002 on `s7convR1_r10` (the §0 best cover): polished min `0.98055` at
+`(5.800, 2.470, 37.8°)`, cost **`44.785`** (at pitch 0.004 it was `44.698`: a `0.2 %` deeper dip at half the pitch).
+
+**Loop** (`s45closeA`, from `s7convR1_r10`, columns + `s7convC2_it8`, 8 rounds, 3.0 h):
+
+| round | total | strict min p = 0.002 | cost | `hardscan` p = 0.004 min / cost | where |
+|---|---|---|---|---|---|
+| 0 | 43.9054 | 0.85609 | 51.29 | 0.85611 / 51.28 | `(2.514, 0.554, 6.6°)` wall band |
+| 1 | 43.9233 | 0.91502 | 48.00 | 0.91504 / 48.00 | `(2.481, 6.439, 7.4°)` |
+| 2 | 43.9353 | 0.97666 | 44.99 | 0.97928 / 44.86 | edge tile `0.28°` |
+| 3 | 43.9520 | 0.97862 | 44.91 | 0.98013 / 44.84 | wall band `15°` |
+| 4 | 43.9600 | 0.96452 | 45.58 | 0.96352 / 45.62 | edge tile `0.19°` |
+| 5 | 43.9622 | 0.99427 | 44.22 | 0.99520 / 44.17 | interior `29–37°` |
+| **6** | 43.9671 | **0.99456** | **44.208** | 0.99506 / 44.19 | interior `35°` |
+| 7 | 43.9698 | 0.99418 | 44.227 | 0.99389 / 44.24 | interior `40–45°` |
+
+Declared STABLE after round 7 (`0.99427, 0.99456, 0.99418`).
+
+**Confirmation scan on r6** (`close_strict.py confirm`, pitch 0.001, 150 dip boxes ±0.1, whole container at the 318
+interleaved angles, polish of the 1,400 worst): dip boxes `0.99279`; full container `0.98751` at `(0.596, 5.483,
+12.4°)`; **polished `0.98170` at `(1.502, 0.502, 0.26°)`, the edge tile turned `0.26°`**.  Cost **`44.787`**.
+The confirmation minimum sits **`1.29 %`** below the loop's stable strict minimum (`m = 6`: `0.58 %`), so the loop's
+stopping rule was fooled: its lattice never resolved the thin edge-tile cells.
+
+**Verdict: no-go (heuristic).**  A candidate at `1.004 ×` over the confirmed minimum would total `≈ 44.966`, `0.08 %`
+under 45: no room for further unfound dips, and (per `S32_EXACT.md`) the exact checker's real cost at `m ≥ 6` is the
+interior tile germs, not margin.  No candidate file was written.  Revisit only after `s(32)` closes, with the
+near-tile family handled exactly rather than by scans.
+
+```
+bash runs/s45closeA.sh          # close_strict.py loop ... --hs-pitch 0.002 --eval-004 (STABLE after 8 rounds)
+bash runs/s45close_confirm.sh   # close_strict.py confirm runs/s45closeA_r6.txt runs/s45closeA_dips_at_r6.txt --pitch 0.001 ...
+```

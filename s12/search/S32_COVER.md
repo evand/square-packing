@@ -14,6 +14,10 @@ Code: `search/closed4.py` (unchanged), `search/rung2_close.py` (extended, §6), 
 
 ## 0. Answer
 
+> **Update 2026-09-26 (exact-check pilots, `S32_EXACT.md`):** everything except the interior tile germs certifies
+> with `--branch-cap 640`; the germs (`|θ| ≤ 0.56°`, within 0.003 of a tile centre) remain open, with no coverage
+> hole found (float min 1.010).  No full sweep yet.
+>
 > **Update 2026-09-25 (task s32-close, §9):** a closing loop measured by the strict protocol itself reached a
 > stable strict minimum `0.99902` (pitch 0.002).  An off-grid pitch-0.001 confirmation then found `0.99319`.  The
 > candidate `runs/s32-close_candidate.txt` totals **`31.7135`**: that is `1.004 ×` over the confirmed minimum, and

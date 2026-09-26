@@ -127,6 +127,11 @@ use std::fmt::Write as _;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
+// Instrumentation only (env ZM_ROOTLOG): a global box counter and a histogram of box depths,
+// read by the sweep's heartbeat.  Never consulted by the verdict.
+static G_BOXES: AtomicUsize = AtomicUsize::new(0);
+static G_DEPTH: [AtomicUsize; 64] = [const { AtomicUsize::new(0) }; 64];
+
 type I = i128;
 
 // ---------------------------------------------------------------- univariate integer polynomials
@@ -1650,6 +1655,8 @@ impl Checker {
 
     fn run_box(&self, b: Bx, parent: Option<&Work>, cen: &mut Census, dump: bool) {
         cen.boxes += 1;
+        G_BOXES.fetch_add(1, Ordering::Relaxed);
+        G_DEPTH[(b.depth as usize).min(63)].fetch_add(1, Ordering::Relaxed);
         cen.maxdepth = cen.maxdepth.max(b.depth);
         if 4 * b.du + b.dxy > SAFE_BITS {
             cen.unsafe_boxes += 1;
@@ -2071,6 +2078,38 @@ fn main() {
             let gbox = Arc::new(AtomicUsize::new(0));
             let gunc = Arc::new(AtomicUsize::new(0));
             let dumping = dumpf.is_some();
+            let rootlog = std::env::var("ZM_ROOTLOG").is_ok();
+            let finished = Arc::new(std::sync::atomic::AtomicBool::new(false));
+            if rootlog {
+                let fin = finished.clone();
+                let done = done.clone();
+                let nroot = rootsA.len();
+                std::thread::spawn(move || {
+                    let mut k = 0u64;
+                    while !fin.load(Ordering::Relaxed) {
+                        std::thread::sleep(std::time::Duration::from_secs(1));
+                        k += 1;
+                        if k % 60 != 0 {
+                            continue;
+                        }
+                        let mut h = String::new();
+                        for (d, c) in G_DEPTH.iter().enumerate() {
+                            let c = c.load(Ordering::Relaxed);
+                            if c > 0 {
+                                let _ = write!(h, " d{}:{}", d, c);
+                            }
+                        }
+                        eprintln!(
+                            "HEARTBEAT {:.0}s roots {}/{} boxes {} depths{}",
+                            t0.elapsed().as_secs_f64(),
+                            done.load(Ordering::Relaxed),
+                            nroot,
+                            G_BOXES.load(Ordering::Relaxed),
+                            h
+                        );
+                    }
+                });
+            }
             let mut hs = Vec::new();
             for _ in 0..threads.max(1) {
                 let ck = ckA.clone();
@@ -2089,7 +2128,17 @@ fn main() {
                         if i >= nroot {
                             break;
                         }
-                        ck.run_box(roots[i], None, &mut local, dumping);
+                        let tr = std::time::Instant::now();
+                        let mut rc = Census::default();
+                        ck.run_box(roots[i], None, &mut rc, dumping);
+                        if rootlog {
+                            eprintln!(
+                                "ROOT {} boxes {} maxdepth {} adm {} disj {} empty {} uncert {} {:.1}s",
+                                ck.describe(&roots[i]), rc.boxes, rc.maxdepth, rc.adm, rc.disj,
+                                rc.empty, rc.uncert, tr.elapsed().as_secs_f64()
+                            );
+                        }
+                        local.merge(rc);
                         gbox.fetch_add(local.boxes - pb, Ordering::Relaxed);
                         gunc.fetch_add(local.uncert - pu, Ordering::Relaxed);
                         pb = local.boxes;
@@ -2114,6 +2163,7 @@ fn main() {
             for h in hs {
                 h.join().unwrap();
             }
+            finished.store(true, Ordering::Relaxed);
             let cen = acc.lock().unwrap();
             let secs = t0.elapsed().as_secs_f64();
             println!(
