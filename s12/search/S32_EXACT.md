@@ -197,3 +197,104 @@ within `0.003` of the germ); `(1.5, 1.5)` is unknown.
 441 admissible cells (cells `< 5` are EMPTY) at 350–2,000 CPU-s each (off-germ ≈ 700 CPU-s per 8-bin cell;
 more on the integer lines): ≈ **60–130 CPU-h**.  Total **≈ 150–250 CPU-h** (unreduced: 1,000–1,500), i.e.
 ≈ 6–9 h wall on 28 threads (`--jobs 7 --threads 4`), plus the tails of single germ roots (2–4.4 CPU-h each).
+
+## 9. Performance (`zmcheck` profiling, 2026-09-26)
+
+Branch `worktree-agent-a9f0f2716bab1a8db` (rebased on `0fa5f1c`, not merged): 5 code commits that change no verdict,
+plus `ZM_UBINS` (benchmarking only: `ZM_UBINS=0,2` keeps those angle bins of each root cell and makes the sweep
+partial) and `verify2/bench/bench.sh`.  Timings were taken with 20–44 other threads running on the 32-thread
+machine, so CPU-seconds vary by ±15 % or more.  User-mode instruction counts (`perf stat`) do not depend on
+load, so they are the figures to compare.
+
+**Benchmarks.**  *tile*: the cell `x ∈ [3.4, 3.6], y ∈ [5.4, 5.6]`, default settings, 32 roots, at 1 and 4
+threads.  *germB* and *germ0*: the single roots `x 3.4, y 2.3`, `u`-bins 2 and 0, with the germ settings
+(`--branch-cap 640 --node-cap 4000000 --depth 22`).  germB is dominated by branch ranking; germ0 runs the
+long forced two-chain searches.
+
+**Where the time went.**  In the baseline, 96 % of the time was in `Disj::search`, and about 90 % of the total
+was in `weight_of`.  That is the per-point loop that sums the weight of a cover: it walks one `Vec<u8>` per
+swing point, and the ranking calls it twice per branch candidate (up to 640) at every search node.  The
+checker is **CPU-bound**: IPC 4.9, L1d miss rate 23 % (almost all L2 hits), negligible LLC misses, RSS under
+20 MB.  Threads do not contend: the tile cell takes 128 CPU-s on 1 thread and 123 CPU-s on 4.  The only
+shared state is one atomic root counter.
+
+| commit | change | measured effect |
+|---|---|---|
+| `3bbf237` | word-parallel `weight_of`: point `fi` is nibble `fi % 16` of word `fi / 16`, so the test is whether that nibble of `need & !cover` is zero | germB 70.5 → 32.3 CPU-s; tile 123 → 70 |
+| `228780b` | ranking as `weight(cover) +` per-word deltas over the nonzero words of each hypothesis mask; per-word weights from 4-point subset-sum tables (`i64` when the swing points' total fits, else the old loop) | germB 32 → 15; tile 70 → 37 |
+| `7456201` | no clones of the hypothesis masks in `cover_child`; a free list reuses `Cov` buffers | germ0 −13 % instructions |
+| `5403218` | `Ĝ_q` computed once per hypothesis in `exact_mask`; no per-point `Vec` clones | tile −4 % instructions, −9 % cycles |
+| `b4e33e2` | `Cov` carries its per-word weights and total, updated only where a mask changes a needed bit; no full `weight_of` per node | −2 … −6 % instructions on all three |
+
+**Total (baseline `4d49633` vs `b4e33e2`; each pair ran at the same time under the same load):**
+
+| benchmark | baseline | now | CPU | instructions |
+|---|---|---|---|---|
+| tile, 1 thread | 149–173 CPU-s, 3,092 G instr | 23–29 CPU-s, 362 G | **5–7.6×** | 8.5× |
+| tile, 4 threads | 160–216 CPU-s, 61–68 s wall | 27–28 CPU-s, 8–9 s wall | **5.7–7.9×** | 8.5× |
+| germB | 80–112 CPU-s, 1,640 G | 11.5–11.7 CPU-s, 152 G | **6.8–9.7×** | 10.8× |
+| germ0 | 719 CPU-s, 2,738 G cycles, 8,622 G instr | 410–433 G cycles at the same load, 1,154 G instr | **≈ 6.5×** | 7.5× |
+
+On an idle machine, expect roughly 6–8× less CPU for the sweep.  §7's D4 estimate of 150–250 CPU-h would then
+be about 25–40 CPU-h.
+
+**Why the verdicts are unchanged.**  Every change computes the same integers, only in a different order or
+with fewer redundant steps.  The following checks all passed:
+
+* The census and `ROOT` lines are identical on every benchmark.
+* The sorted `--dump` leaf files are **identical**: every DISJ leaf's region count, node count and seed, and
+  every ADM witness list.  This holds for the tile cell, germB and germ0, so the search visits exactly the
+  same nodes.
+* Builds with `debug-assertions` and `overflow-checks` assert every new computation against the old one on
+  tile, germB and germ0: the per-point `weight_of` reference, delta against full sum, and the incremental
+  `Cov` against the union and weight recomputed from scratch.
+* The `i128` fallback path gives the identical census when all weights and `W` are scaled by 10¹⁰.
+* The rung-2 rejection tests pass 23/23, with output byte-identical to the baseline's.
+* `--d4` root selection is unchanged (`main` against the branch head on two cells).
+
+**Tried and not kept.**
+
+* `target-cpu=native`: slower with the lookup tables.  A branch-free masked sum only matches the tables with
+  AVX-512, so it is not portable.
+* `codegen-units = 1`: no change in instruction count, and cycles within noise.  Adding `panic = "abort"`
+  gave −3 to −5 % cycles on the tile cell, which is inconclusive under this load.  `bench.sh` can recheck it
+  on an idle machine.
+* A "newly covered" bit loop for the deltas: 2× slower (branch mispredictions).
+* Evaluating the Lemma-I tests on corner polynomials (5 coefficients instead of 15; the same integers, even
+  modulo 2¹²⁸): −5 % instructions, no gain in cycles.
+* Sparse masks stored as structure-of-arrays: slower.
+
+**Where the time is now.**
+
+* germ0-type roots: the cover bookkeeping, mostly `or_hyp` and the Lemma-K closure loop in `cover_child`
+  (about 50 %), then per-word weights.
+* germB-type roots: the ranking's `weight_delta`.
+* The tile cell: about 40 % in the exact `i128` Lemma-I tests (`exact_mask`) and 35 % in ranking.
+
+IPC is 2.7–3.4, the L1d miss rate 2–15 %, and LLC misses are negligible: still core-bound.
+
+**Algorithmic ideas (not done).**
+
+1. Schedule germ roots first, in `s32_sweep.py` or in the root order.  A 2–4 CPU-h germ root that starts
+   last sets the wall time.
+2. Rank fewer candidates.  Every node scores all ≤ 640 candidates, but only the top `rank_exact = 64`
+   matter.  An exact upper bound per candidate (`pc.w` plus the weight of the points its mask touches) could
+   skip most of them and still give the same top 64, with ties broken by index.
+3. An `i64` fast path for the exact tests at shallow depths, backed by a per-box proven magnitude bound (the
+   bits of `Dc·M²` and the like) or by checked arithmetic falling back to `i128`.  This targets the ~40 %
+   off-germ share.
+4. Inherit exact hypothesis masks from the parent box.  A Lemma-I certificate on a box holds on every
+   sub-box, as the ADM `cmask` already uses.  This is sound but not bit-identical: it can change which leaves
+   certify.
+5. Make the forced-chain covers incremental along the chain instead of re-closing Lemma K over the whole
+   `active` list at each node.
+
+**Benchmark script.**  `verify2/bench/bench.sh` builds each commit from `git archive` into its own target
+directory.  It runs tile (1 and 4 threads), germB and germ0 `-n` times each, one run at a time and never more
+than 4 threads.  It records user+sys CPU time, wall time, max RSS and `perf stat` counters (cycles,
+instructions, IPC, cache and L1d misses).  It diffs every build's census against the baseline's and prints
+medians and speedups.  To run it on an idle machine:
+
+```
+cd s12 && CERT=$PWD/runs/s32-close_candidate.txt verify2/bench/bench.sh -n 3     # ≈ 1.5–2 h; -q (no germ0) ≈ 35–45 min
+```

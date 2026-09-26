@@ -22,7 +22,7 @@
 # GNU time (`command -v time` is often a shell keyword; set $GNUTIME if it is not found).
 #
 # Expected runtime on an idle 16-core Zen 5 with the default 6 commits and -n 3: roughly
-# 1.5-2 h (dominated by the baseline builds' germ0 runs); with -q, about 45 min.  Each run uses
+# 1.5-2 h (dominated by the baseline build's germ0 runs); with -q, about 35-45 min.  Each run uses
 # at most 4 threads, one run at a time.
 #
 # Output: DIR/results.csv (one row per run), DIR/summary.txt (per-build medians and speedups
