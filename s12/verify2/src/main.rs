@@ -56,7 +56,7 @@
 //! ## The search
 //!
 //! Root boxes: `x, y` on a pitch of `1/10` over `[0,m]`, `u` in 8 bins of `[0,1]`; the full
-//! admissible domain, no symmetry reduction.  A box is a leaf when
+//! admissible domain, no symmetry reduction (unless `--d4`, see below).  A box is a leaf when
 //!
 //!   * `EMPTY`  --- some admissibility hypothesis `A_i` satisfies `max_B(-A_i) < 0`, i.e. `A_i > 0`
 //!     on all of `B`: no pose of `B` is admissible, nothing to prove;
@@ -109,9 +109,23 @@
 //! denominators; a box whose denominators could overflow `i128` is refused rather than trusted
 //! (see `SAFE_BITS`), so no result depends on wrap-around.
 //!
+//! ## D4 reduction (`--d4`)
+//!
+//! With `--d4` the checker first verifies *exactly* that the certificate's weight function
+//! `f(p) = sum of the weights at p` is invariant under `(x,y) -> (m-x,y)` and `(x,y) -> (y,x)`,
+//! which generate the symmetry group D4 of `[0,m]^2` (refusing with `ERROR:` otherwise), and then
+//! sweeps only the root boxes with `x, y <= m/2` and `u <= 1/2` (bins 0..3): one eighth of the
+//! roots.  Soundness: an isometry `g` of `[0,m]^2` maps closed unit squares in `[0,m]^2` to closed
+//! unit squares in `[0,m]^2` and preserves the captured weight (`f o g = f`).  A rotation about
+//! the centre keeps the angle `theta` (mod 90 deg) and a reflection sends it to `-theta = 90 - theta`
+//! (mod 90 deg), because `Q(c,theta) = c + R(theta)[-1/2,1/2]^2` and every D4 element maps the axis
+//! square to itself.  So any pose is carried to `theta in [0,45]` (a reflection, if needed) and
+//! then, by a rotation, to a centre in the closed quadrant `[0,m/2]^2`; and `theta <= 45` means
+//! `u <= tan(22.5) = sqrt(2)-1 < 1/2`.  A clean `--d4` sweep prints `VERIFIED-D4:`.
+//!
 //! ## Usage
 //!
-//!     zmcheck cert  FILE [--depth D] [--threads T] [--nodisj] [--dump F]
+//!     zmcheck cert  FILE [--depth D] [--threads T] [--nodisj] [--dump F] [--d4]
 //!                        [--xlo A --xhi B --ylo A --yhi B]    (a band; never says VERIFIED)
 //!                        [--theta-bias K] [--sign-depth S] [--branch-cap N] [--fail-cap N]
 //!                        [--node-cap N] [--heur-cap N] [--seed-cap N] [--rank-exact N]
@@ -1807,7 +1821,7 @@ fn main() {
     if args.len() < 3 {
         eprintln!(
             "usage: zmcheck cert FILE [--depth D] [--threads T] [--nodisj] [--dump F] \
-             [--xlo A] [--xhi B] [--theta-bias K] [--sign-depth S] [--node-cap N]\n\
+             [--d4] [--xlo A] [--xhi B] [--theta-bias K] [--sign-depth S] [--node-cap N]\n\
              \x20      zmcheck pose FILE --x R --y R --u R\n\
              \x20      zmcheck box  FILE --box x0,x1,y0,y1,u0,u1"
         );
@@ -1836,6 +1850,7 @@ fn main() {
     let mut py = None;
     let mut pu = None;
     let mut boxspec: Option<String> = None;
+    let mut d4 = false;
     let mut i = 3;
     while i < args.len() {
         let a = args[i].as_str();
@@ -1847,6 +1862,7 @@ fn main() {
             "--depth" => depth = need().parse().unwrap_or_else(|_| die("bad --depth")),
             "--threads" => threads = need().parse().unwrap_or_else(|_| die("bad --threads")),
             "--nodisj" => disj = false,
+            "--d4" => d4 = true,
             "--dump" => dumpf = Some(need()),
             "--xlo" => xlo = Some(need().parse().unwrap_or_else(|_| die("bad --xlo"))),
             "--xhi" => xhi = Some(need().parse().unwrap_or_else(|_| die("bad --xhi"))),
@@ -1902,6 +1918,12 @@ fn main() {
     }
     if cert.d % 10 != 0 {
         die("this checker requires D to be a multiple of 10 (the root grid pitch is 1/10)");
+    }
+    if d4 {
+        if mode != "cert" {
+            die("--d4 applies to cert mode only");
+        }
+        check_d4(&cert, mm);
     }
     let (grid, gn) = Checker::build_grid(&cert, mm);
     let total = cert.total;
@@ -2014,9 +2036,11 @@ fn main() {
         }
         "cert" => {
             // root boxes: pitch 1/10 in x and y over [0,m], 8 bins of [0,1] in u
+            // --d4: only the quadrant x, y <= m/2 (cells 0..5m-1) and u <= 1/2 (bins 0..3)
             let n = (mm * 10) as usize;
+            let (ncell, nbin) = if d4 { (n / 2, 4) } else { (n, 8) };
             let mut roots: Vec<Bx> = Vec::new();
-            for i in 0..n {
+            for i in 0..ncell {
                 let x0 = 100 * i as I;
                 if let Some(v) = xlo {
                     if (x0 as f64) / 1000.0 + 1e-12 < v {
@@ -2028,7 +2052,7 @@ fn main() {
                         continue;
                     }
                 }
-                for j in 0..n {
+                for j in 0..ncell {
                     let y0 = 100 * j as I;
                     if let Some(v) = ylo {
                         if (y0 as f64) / 1000.0 + 1e-12 < v {
@@ -2040,7 +2064,7 @@ fn main() {
                             continue;
                         }
                     }
-                    for k in 0..8 {
+                    for k in 0..nbin {
                         roots.push(Bx {
                             dc: 1000,
                             ax0: x0,
@@ -2060,6 +2084,12 @@ fn main() {
             let partial = xlo.is_some() || xhi.is_some() || ylo.is_some() || yhi.is_some();
             if partial {
                 println!("PARTIAL SWEEP: centre range restricted; the verdict can never be VERIFIED");
+            }
+            if d4 {
+                println!(
+                    "D4-REDUCED: roots restricted to centres in [0,{}]^2 and u in [0,1/2] (bins 0..3)",
+                    mm as f64 / 2.0
+                );
             }
             println!(
                 "{} root boxes (pitch 1/10 in x,y; 8 bins of u in [0,1]); depth limit {}; disj {}; \
@@ -2137,6 +2167,9 @@ fn main() {
                                 ck.describe(&roots[i]), rc.boxes, rc.maxdepth, rc.adm, rc.disj,
                                 rc.empty, rc.uncert, tr.elapsed().as_secs_f64()
                             );
+                            for s in &rc.uncert_list {
+                                eprintln!("UNCERT {} IN {}", s, ck.describe(&roots[i]));
+                            }
                         }
                         local.merge(rc);
                         gbox.fetch_add(local.boxes - pb, Ordering::Relaxed);
@@ -2187,6 +2220,19 @@ fn main() {
                 std::fs::write(&f, &cen.dump).unwrap_or_else(|e| die(&format!("dump: {e}")));
                 println!("  leaf dump -> {f}");
             }
+            if cen.uncert == 0 && !partial && d4 {
+                println!(
+                    "VERIFIED-D4: every closed unit square in [0,{}]^2 captures weight >= 1 \
+                     (D4-invariant certificate, fundamental region [0,{}]^2 x u in [0,1/2]); \
+                     total weight {}/{} = {:.9}",
+                    mm,
+                    mm as f64 / 2.0,
+                    total,
+                    w,
+                    total as f64 / w as f64
+                );
+                std::process::exit(0);
+            }
             if cen.uncert == 0 && !partial {
                 println!(
                     "VERIFIED: every closed unit square in [0,{}]^2 captures weight >= 1; \
@@ -2208,6 +2254,33 @@ fn main() {
         }
         _ => die(&format!("unknown mode {mode}")),
     }
+}
+
+/// `--d4`: the aggregated weight function must be invariant under `(x,y) -> (S-x,y)` and
+/// `(x,y) -> (y,x)` (S = m*D, integer coordinates), which generate D4.  Exact; dies otherwise.
+fn check_d4(cert: &Cert, mm: I) {
+    use std::collections::BTreeMap;
+    let s = mm * cert.d;
+    let mut f: BTreeMap<(I, I), I> = BTreeMap::new();
+    for k in 0..cert.xs.len() {
+        *f.entry((cert.xs[k], cert.ys[k])).or_insert(0) += cert.wt[k];
+    }
+    f.retain(|_, w| *w != 0);
+    for (&(x, y), &w) in &f {
+        for (gx, gy) in [(s - x, y), (y, x)] {
+            if f.get(&(gx, gy)) != Some(&w) {
+                die(&format!(
+                    "--d4: certificate is not D4-invariant: weight {w} at ({x},{y}) but {:?} at \
+                     ({gx},{gy})",
+                    f.get(&(gx, gy))
+                ));
+            }
+        }
+    }
+    println!(
+        "D4: weight function invariant under x->{mm}-x and x<->y (exact, {} distinct points)",
+        f.len()
+    );
 }
 
 fn lcm(a: I, b: I) -> I {
