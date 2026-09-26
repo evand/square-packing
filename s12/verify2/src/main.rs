@@ -953,19 +953,14 @@ struct Disj<'a> {
 }
 
 impl<'a> Disj<'a> {
-    fn cond_under_raw(&self, p: u32, k: u8, h: Hyp) -> bool {
+    /// `gq` is `Ghat_{h.q, h.kq}` , hoisted out by the caller: it is the
+    /// same for every condition tested against one hypothesis.
+    fn cond_under_raw(&self, p: u32, k: u8, h: Hyp, gq: &F4) -> bool {
         let ck = self.ck;
         let b = &self.b;
         let bp = self.bp;
         let sc = b.dc / ck.cert.d;
         let gp = gpoly(k as usize, ck.cert.xs[p as usize] * sc, ck.cert.ys[p as usize] * sc, b, bp);
-        let gq = gpoly(
-            h.kq as usize,
-            ck.cert.xs[h.q as usize] * sc,
-            ck.cert.ys[h.q as usize] * sc,
-            b,
-            bp,
-        );
         // hypothesis F_h <= 0 with F_h = +-Ghat_q; target Ghat_p - mu F_h <= 0, mu = n/d >= 0.
         //   h.le  : F_h =  Ghat_q  ->  test  d*Ghat_p - n*Ghat_q
         //   !h.le : F_h = -Ghat_q  ->  test  d*Ghat_p + n*Ghat_q
@@ -1064,8 +1059,8 @@ impl<'a> Disj<'a> {
         }
         for fi in 0..nf {
             let (p, px, py) = (self.fails[fi].0, self.fails[fi].2, self.fails[fi].3);
-            let ks = self.fails[fi].1.clone();
-            for &k in &ks {
+            for ki in 0..self.fails[fi].1.len() {
+                let k = self.fails[fi].1[ki];
                 let slot = fi * 4 + k as usize;
                 for bi in 0..nb {
                     let (q, kq, qx, qy, _) = self.branches[bi];
@@ -1094,11 +1089,16 @@ impl<'a> Disj<'a> {
             let nf = self.fails.len();
             let (bi, le) = (hi / 2, hi % 2 == 0);
             let (q, kq, _, _, _) = self.branches[bi];
+            let gq = {
+                let sc = self.b.dc / self.ck.cert.d;
+                let (xs, ys) = (self.ck.cert.xs[q as usize] * sc, self.ck.cert.ys[q as usize] * sc);
+                gpoly(kq as usize, xs, ys, &self.b, self.bp)
+            };
             let mut m = vec![0u64; self.nw];
             for fi in 0..nf {
                 let p = self.fails[fi].0;
-                let ks = self.fails[fi].1.clone();
-                for &k in &ks {
+                for ki in 0..self.fails[fi].1.len() {
+                    let k = self.fails[fi].1[ki];
                     let slot = fi * 4 + k as usize;
                     if self.pmask[hi][slot / 64] & (1u64 << (slot % 64)) == 0 {
                         continue;
@@ -1106,7 +1106,7 @@ impl<'a> Disj<'a> {
                     let ok = if q == p && kq == k {
                         le
                     } else {
-                        self.cond_under_raw(p, k, Hyp { q, kq, le })
+                        self.cond_under_raw(p, k, Hyp { q, kq, le }, &gq)
                     };
                     if ok {
                         m[slot / 64] |= 1u64 << (slot % 64);
