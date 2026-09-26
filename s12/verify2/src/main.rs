@@ -924,6 +924,10 @@ struct Disj<'a> {
     emask: Vec<Option<Vec<u64>>>,
     /// bit `4*fi+k` set for every condition that `fails[fi]` still needs
     need: Vec<u64>,
+    /// bit `4*fi` set for every `fi < fails.len()` (the nibbles that hold a swing point)
+    live: Vec<u64>,
+    /// `fwt[fi]` = weight of `fails[fi]` (a copy, so `weight_of` touches one flat array)
+    fwt: Vec<I>,
     nw: usize,
     nb: usize,
     score: u8,
@@ -1018,11 +1022,16 @@ impl<'a> Disj<'a> {
         self.need = vec![0u64; self.nw];
         self.pmask = vec![vec![0u64; self.nw]; nb * 2];
         self.emask = vec![None; nb * 2];
+        self.live = vec![0u64; self.nw];
+        self.fwt = Vec::with_capacity(nf);
         for fi in 0..nf {
             for &k in &self.fails[fi].1 {
                 let b = fi * 4 + k as usize;
                 self.need[b / 64] |= 1u64 << (b % 64);
             }
+            let b = fi * 4;
+            self.live[b / 64] |= 1u64 << (b % 64);
+            self.fwt.push(self.ck.cert.wt[self.fails[fi].0 as usize]);
         }
         for fi in 0..nf {
             let (p, px, py) = (self.fails[fi].0, self.fails[fi].2, self.fails[fi].3);
@@ -1079,13 +1088,53 @@ impl<'a> Disj<'a> {
     }
 
     /// Total weight of `T` plus every point all of whose failing conditions are in `cover`.
+    ///
+    /// Word-parallel form: slot `4*fi+k` puts swing point `fi` in nibble `fi % 16` of word
+    /// `fi / 16`.  `need & !cover` is the set of its failing conditions not in `cover`; the point
+    /// counts iff that nibble is zero.  (Same set of points as the per-point loop; the weights are
+    /// exact integers, so the order of summation is immaterial.)
     fn weight_of(&self, cover: &[u64]) -> I {
+        self.weight_of2(cover, None)
+    }
+
+    /// `weight_of(a | b)` without materialising the union.
+    #[inline]
+    fn weight_of2(&self, a: &[u64], b: Option<&[u64]>) -> I {
+        let mut w = self.twt;
+        let nw = self.nw;
+        let (need, live, a) = (&self.need[..nw], &self.live[..nw], &a[..nw]);
+        for wi in 0..nw {
+            let cv = match b {
+                Some(b) => a[wi] | b[wi],
+                None => a[wi],
+            };
+            let miss = need[wi] & !cv;
+            let mut t = miss | (miss >> 1);
+            t |= t >> 2;
+            // bit 4j of `full` set iff nibble j holds a swing point none of whose failing
+            // conditions is missing from the cover
+            let mut full = !t & live[wi];
+            while full != 0 {
+                let j = (full.trailing_zeros() / 4) as usize;
+                w += self.fwt[wi * 16 + j];
+                full &= full - 1;
+            }
+        }
+        #[cfg(debug_assertions)]
+        assert_eq!(w, self.weight_of_ref(a, b));
+        w
+    }
+
+    /// The per-point definition, kept as the reference for the debug-assertion cross-check.
+    #[cfg(debug_assertions)]
+    fn weight_of_ref(&self, a: &[u64], b: Option<&[u64]>) -> I {
         let mut w = self.twt;
         for fi in 0..self.fails.len() {
             let mut all = true;
             for &k in &self.fails[fi].1 {
-                let b = fi * 4 + k as usize;
-                if cover[b / 64] & (1u64 << (b % 64)) == 0 {
+                let s = fi * 4 + k as usize;
+                let c = a[s / 64] | b.map_or(0, |b| b[s / 64]);
+                if c & (1u64 << (s % 64)) == 0 {
                     all = false;
                     break;
                 }
@@ -1285,16 +1334,13 @@ impl<'a> Disj<'a> {
         // is exactly `RUNG2.md` sec 6.2's greedy chain -- and `Sum` is a compromise.  All three
         // are heuristics over the same exact primitive; `classify` tries them in turn.
         let mut scored: Vec<(I, usize)> = Vec::new();
-        let mut tmp = vec![0u64; self.nw];
         for bi in 0..self.branches.len() {
             if active.contains(&(bi * 2)) || active.contains(&(bi * 2 + 1)) {
                 continue;
             }
             let mut w = [0 as I; 2];
             for si in 0..2 {
-                tmp.copy_from_slice(&pc.m);
-                Self::or_into(&mut tmp, &self.pmask[bi * 2 + si]);
-                w[si] = self.weight_of(&tmp);
+                w[si] = self.weight_of2(&pc.m, Some(&self.pmask[bi * 2 + si]));
             }
             scored.push((self.combine(w), bi));
         }
@@ -1304,10 +1350,9 @@ impl<'a> Disj<'a> {
             let bi = e.1;
             let mut w = [0 as I; 2];
             for si in 0..2 {
-                let hm = self.exact_mask(bi * 2 + si).clone();
-                tmp.copy_from_slice(&ec.m);
-                Self::or_into(&mut tmp, &hm);
-                w[si] = self.weight_of(&tmp);
+                let hi = bi * 2 + si;
+                self.exact_mask(hi);
+                w[si] = self.weight_of2(&ec.m, Some(self.emask[hi].as_ref().unwrap()));
             }
             e.0 = self.combine(w);
         }
@@ -1426,6 +1471,8 @@ impl Checker {
             pmask: Vec::new(),
             emask: Vec::new(),
             need: Vec::new(),
+            live: Vec::new(),
+            fwt: Vec::new(),
             nw: 0,
             nb: 0,
             score: 0,
