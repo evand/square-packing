@@ -906,6 +906,10 @@ struct Hyp {
 struct Cov {
     m: Vec<u64>,
     added: Vec<bool>,
+    /// weight bookkeeping, kept exact by `Disj::or_hyp`: `cw[wi] = word_w(wi, m[wi])` and
+    /// `w = weight_of(&m)`
+    cw: Vec<I>,
+    w: I,
 }
 
 struct Disj<'a> {
@@ -1180,20 +1184,8 @@ impl<'a> Disj<'a> {
         w as I
     }
 
-    /// `weight_of(a)` together with each word's share of it (for `weight_delta`).
-    fn word_contrib(&self, a: &[u64], cw: &mut Vec<I>) -> I {
-        cw.clear();
-        let mut w = self.twt;
-        for wi in 0..self.nw {
-            let x = self.word_w(wi, a[wi]);
-            cw.push(x);
-            w += x;
-        }
-        w
-    }
-
     /// `weight_of(a | h) - weight_of(a)` for a hypothesis mask `h` given sparsely (its nonzero
-    /// words), where `cw` is `a`'s per-word share from `word_contrib`.  Only words in which `h`
+    /// words), where `cw[wi] = word_w(wi, a[wi])` (`Cov::cw`).  Only words in which `h`
     /// adds a needed condition can change, so only those are re-weighed.  (Exact integers: the
     /// result is the same number `weight_of` computes, by a different order of summation.)
     #[inline]
@@ -1267,16 +1259,46 @@ impl<'a> Disj<'a> {
     /// quadrant of two independent sliding cuts (the interior tile poses) certifiable instead of
     /// merely "provably empty".
     fn cover(&mut self, active: &[usize], exact: bool) -> Vec<u64> {
-        let mut cov = Cov { m: vec![0u64; self.nw], added: vec![false; self.branches.len()] };
+        let mut cov = self.cov_zero();
         for i in 0..active.len() {
             cov = self.cover_child(&cov, &active[..=i], exact);
         }
         cov.m
     }
 
+    /// The empty cover, with its weight bookkeeping (`Cov::cw`, `Cov::w`).
+    fn cov_zero(&self) -> Cov {
+        let m = vec![0u64; self.nw];
+        let cw: Vec<I> = (0..self.nw).map(|wi| self.word_w(wi, 0)).collect();
+        let w = self.twt + cw.iter().sum::<I>();
+        Cov { m, added: vec![false; self.branches.len()], cw, w }
+    }
+
+    /// `cov.m |= mask(h, exact)`, re-weighing only the words whose needed bits change, so that
+    /// `cov.cw[wi] == word_w(wi, cov.m[wi])` and `cov.w == weight_of(&cov.m)` stay true.  (The
+    /// sparse list holds every nonzero word of the mask, so `cov.m` ends up exactly the union
+    /// `or_into` would give.)
+    fn or_hyp(&self, cov: &mut Cov, h: usize, exact: bool) {
+        let sp = if exact { &self.esparse[h] } else { &self.psparse[h] };
+        for &(wi, bits) in sp {
+            let wi = wi as usize;
+            let old = cov.m[wi];
+            let new = old | bits;
+            if new != old {
+                cov.m[wi] = new;
+                if (new ^ old) & self.need[wi] != 0 {
+                    let x = self.word_w(wi, new);
+                    cov.w += x - cov.cw[wi];
+                    cov.cw[wi] = x;
+                }
+            }
+        }
+    }
+
     /// The float (`exact = false`) or exact mask of hypothesis `h`; the exact one must already
     /// have been built by `exact_mask`.
     #[inline]
+    #[cfg_attr(not(debug_assertions), allow(dead_code))]
     fn mask(&self, h: usize, exact: bool) -> &[u64] {
         if exact {
             self.emask[h].as_ref().expect("exact mask not built")
@@ -1292,6 +1314,8 @@ impl<'a> Disj<'a> {
             Some(mut c) => {
                 c.m.clone_from(&parent.m);
                 c.added.clone_from(&parent.added);
+                c.cw.clone_from(&parent.cw);
+                c.w = parent.w;
                 c
             }
             None => parent.clone(),
@@ -1300,7 +1324,7 @@ impl<'a> Disj<'a> {
         if exact {
             self.exact_mask(hi);
         }
-        Self::or_into(&mut cov.m, self.mask(hi, exact));
+        self.or_hyp(&mut cov, hi, exact);
         loop {
             let mut grew = false;
             for idx in 0..active.len() {
@@ -1318,13 +1342,25 @@ impl<'a> Disj<'a> {
                     if exact {
                         self.exact_mask(le);
                     }
-                    Self::or_into(&mut cov.m, self.mask(le, exact));
+                    self.or_hyp(&mut cov, le, exact);
                     grew = true;
                 }
             }
             if !grew {
                 break;
             }
+        }
+        #[cfg(debug_assertions)]
+        {
+            let mut m = parent.m.clone();
+            Self::or_into(&mut m, self.mask(hi, exact));
+            for (bi, &a) in cov.added.iter().enumerate() {
+                if a && !parent.added[bi] {
+                    Self::or_into(&mut m, self.mask(bi * 2, exact));
+                }
+            }
+            assert_eq!(m, cov.m);
+            assert_eq!(cov.w, self.weight_of(&cov.m));
         }
         cov
     }
@@ -1384,7 +1420,8 @@ impl<'a> Disj<'a> {
         if self.nodes > self.node_cap {
             return false;
         }
-        if self.weight_of(&pc.m) >= self.target && self.weight_of(&ec.m) >= self.target {
+        // `Cov::w` is `weight_of(&m)`, maintained incrementally (checked in debug builds)
+        if pc.w >= self.target && ec.w >= self.target {
             *regions += 1;
             return true;
         }
@@ -1438,16 +1475,19 @@ impl<'a> Disj<'a> {
         // `weight_of(cover | mask)` is evaluated as `weight_of(cover)` plus the change in the few
         // words the mask touches (`weight_delta`); the debug build checks it against the full sum.
         let mut scored: Vec<(I, usize)> = Vec::new();
-        let mut cw: Vec<I> = Vec::with_capacity(self.nw);
-        let wpc = self.word_contrib(&pc.m, &mut cw);
+        // branch candidates already decided at this node (`active` holds 2*bi + si)
+        let mut used = vec![false; self.branches.len()];
+        for &h in active.iter() {
+            used[h / 2] = true;
+        }
         for bi in 0..self.branches.len() {
-            if active.contains(&(bi * 2)) || active.contains(&(bi * 2 + 1)) {
+            if used[bi] {
                 continue;
             }
             let mut w = [0 as I; 2];
             for si in 0..2 {
                 let hi = bi * 2 + si;
-                w[si] = wpc + self.weight_delta(&pc.m, &cw, &self.psparse[hi]);
+                w[si] = pc.w + self.weight_delta(&pc.m, &pc.cw, &self.psparse[hi]);
                 #[cfg(debug_assertions)]
                 assert_eq!(w[si], self.weight_of2(&pc.m, Some(&self.pmask[hi])));
             }
@@ -1455,14 +1495,13 @@ impl<'a> Disj<'a> {
         }
         scored.sort_by(|a, b| b.0.cmp(&a.0));
         scored.truncate(self.ck.rank_exact);
-        let wec = self.word_contrib(&ec.m, &mut cw);
         for e in scored.iter_mut() {
             let bi = e.1;
             let mut w = [0 as I; 2];
             for si in 0..2 {
                 let hi = bi * 2 + si;
                 self.exact_mask(hi);
-                w[si] = wec + self.weight_delta(&ec.m, &cw, &self.esparse[hi]);
+                w[si] = ec.w + self.weight_delta(&ec.m, &ec.cw, &self.esparse[hi]);
                 #[cfg(debug_assertions)]
                 assert_eq!(w[si], self.weight_of2(&ec.m, Some(self.emask[hi].as_ref().unwrap())));
             }
@@ -1645,7 +1684,7 @@ impl Checker {
                 d.twt
             );
         }
-        let zero = Cov { m: vec![0u64; d.nw], added: vec![false; d.branches.len()] };
+        let zero = d.cov_zero();
         let z2 = zero.clone();
         let mut total_nodes = 0usize;
         for score in 0..3u8 {
