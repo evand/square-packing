@@ -2040,6 +2040,13 @@ fn main() {
             let n = (mm * 10) as usize;
             let (ncell, nbin) = if d4 { (n / 2, 4) } else { (n, 8) };
             let mut roots: Vec<Bx> = Vec::new();
+            // Benchmarking only: `ZM_UBINS=0,5` keeps just those angle bins of each root cell.
+            // Any restriction makes the sweep partial, so it can never say VERIFIED.
+            let ubins: Option<Vec<I>> = std::env::var("ZM_UBINS").ok().map(|s| {
+                s.split(',')
+                    .map(|t| t.trim().parse().unwrap_or_else(|_| die("bad ZM_UBINS")))
+                    .collect()
+            });
             for i in 0..ncell {
                 let x0 = 100 * i as I;
                 if let Some(v) = xlo {
@@ -2065,6 +2072,11 @@ fn main() {
                         }
                     }
                     for k in 0..nbin {
+                        if let Some(ub) = &ubins {
+                            if !ub.contains(&k) {
+                                continue;
+                            }
+                        }
                         roots.push(Bx {
                             dc: 1000,
                             ax0: x0,
@@ -2081,7 +2093,8 @@ fn main() {
                     }
                 }
             }
-            let partial = xlo.is_some() || xhi.is_some() || ylo.is_some() || yhi.is_some();
+            let partial = xlo.is_some() || xhi.is_some() || ylo.is_some() || yhi.is_some()
+                || ubins.is_some();
             if partial {
                 println!("PARTIAL SWEEP: centre range restricted; the verdict can never be VERIFIED");
             }
