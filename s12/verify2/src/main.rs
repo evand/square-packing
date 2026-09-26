@@ -922,12 +922,20 @@ struct Disj<'a> {
     /// `build_plaus`); `emask` is the same thing computed exactly, on demand.
     pmask: Vec<Vec<u64>>,
     emask: Vec<Option<Vec<u64>>>,
+    /// the same masks as lists of their nonzero words (`Disj::sparse`), for `weight_delta`
+    psparse: Vec<Vec<(u32, u64)>>,
+    esparse: Vec<Vec<(u32, u64)>>,
     /// bit `4*fi+k` set for every condition that `fails[fi]` still needs
     need: Vec<u64>,
     /// bit `4*fi` set for every `fi < fails.len()` (the nibbles that hold a swing point)
     live: Vec<u64>,
     /// `fwt[fi]` = weight of `fails[fi]` (a copy, so `weight_of` touches one flat array)
     fwt: Vec<I>,
+    /// subset sums of `fwt` by groups of four swing points (see `word_w`)
+    /// (`i64`: only used when `wsmall`, i.e. the swing points' total weight fits in an `i64`, so
+    /// that every subset sum does too --- the weights are `>= 0`, `load` checks that)
+    wtab: Vec<i64>,
+    wsmall: bool,
     nw: usize,
     nb: usize,
     score: u8,
@@ -1033,6 +1041,25 @@ impl<'a> Disj<'a> {
             self.live[b / 64] |= 1u64 << (b % 64);
             self.fwt.push(self.ck.cert.wt[self.fails[fi].0 as usize]);
         }
+        // wtab[64*wi + 16*g + s] = total weight of the swing points 16*wi + 4*g + j, j in s
+        let fsum: I = self.fwt.iter().sum();
+        self.wsmall = fsum <= i64::MAX as I;
+        self.wtab = if self.wsmall { vec![0; self.nw * 64] } else { Vec::new() };
+        for wi in 0..if self.wsmall { self.nw } else { 0 } {
+            for g in 0..4 {
+                for s in 0..16usize {
+                    let mut t: I = 0;
+                    for j in 0..4 {
+                        let fi = wi * 16 + g * 4 + j;
+                        if s & (1 << j) != 0 && fi < nf {
+                            t += self.fwt[fi];
+                        }
+                    }
+                    // 0 <= t <= fsum <= i64::MAX: the conversion is exact
+                    self.wtab[wi * 64 + g * 16 + s] = i64::try_from(t).unwrap();
+                }
+            }
+        }
         for fi in 0..nf {
             let (p, px, py) = (self.fails[fi].0, self.fails[fi].2, self.fails[fi].3);
             let ks = self.fails[fi].1.clone();
@@ -1053,6 +1080,8 @@ impl<'a> Disj<'a> {
                 }
             }
         }
+        self.psparse = self.pmask.iter().map(|m| Self::sparse(m)).collect();
+        self.esparse = vec![Vec::new(); nb * 2];
     }
 
     /// The *exact* mask of one hypothesis, built on demand: bit `4*fi+k` is set iff Lemma I
@@ -1082,6 +1111,7 @@ impl<'a> Disj<'a> {
                     }
                 }
             }
+            self.esparse[hi] = Self::sparse(&m);
             self.emask[hi] = Some(m);
         }
         self.emask[hi].as_ref().unwrap()
@@ -1102,27 +1132,83 @@ impl<'a> Disj<'a> {
     fn weight_of2(&self, a: &[u64], b: Option<&[u64]>) -> I {
         let mut w = self.twt;
         let nw = self.nw;
-        let (need, live, a) = (&self.need[..nw], &self.live[..nw], &a[..nw]);
+        let a = &a[..nw];
         for wi in 0..nw {
             let cv = match b {
                 Some(b) => a[wi] | b[wi],
                 None => a[wi],
             };
-            let miss = need[wi] & !cv;
-            let mut t = miss | (miss >> 1);
-            t |= t >> 2;
-            // bit 4j of `full` set iff nibble j holds a swing point none of whose failing
-            // conditions is missing from the cover
-            let mut full = !t & live[wi];
+            w += self.word_w(wi, cv);
+        }
+        #[cfg(debug_assertions)]
+        assert_eq!(w, self.weight_of_ref(a, b));
+        w
+    }
+
+    /// The weight of the swing points of word `wi` (points `16*wi ..`) that the cover word `cv`
+    /// fully covers.
+    #[inline]
+    fn word_w(&self, wi: usize, cv: u64) -> I {
+        let miss = self.need[wi] & !cv;
+        let mut t = miss | (miss >> 1);
+        t |= t >> 2;
+        // bit 4j of `full` set iff nibble j holds a swing point none of whose failing
+        // conditions is missing from the cover
+        let mut full = !t & self.live[wi];
+        if !self.wsmall {
+            let mut w: I = 0;
             while full != 0 {
                 let j = (full.trailing_zeros() / 4) as usize;
                 w += self.fwt[wi * 16 + j];
                 full &= full - 1;
             }
+            return w;
         }
-        #[cfg(debug_assertions)]
-        assert_eq!(w, self.weight_of_ref(a, b));
+        // four subset-sum lookups, one per group of four swing points; the multiply gathers
+        // bits 0,4,8,12 of a 16-bit chunk into bits 12..15 (no carries: all partial products
+        // land on distinct bits).  The four entries are disjoint subsets of the swing points, so
+        // their sum is <= fsum <= i64::MAX and the i64 addition cannot overflow.
+        let tab = &self.wtab[wi * 64..wi * 64 + 64];
+        let mut w: i64 = 0;
+        for g in 0..4 {
+            let x = (full >> (16 * g)) & 0x1111;
+            let idx = ((x.wrapping_mul(0x1248) >> 12) & 0xF) as usize;
+            w += tab[g * 16 + idx];
+        }
+        w as I
+    }
+
+    /// `weight_of(a)` together with each word's share of it (for `weight_delta`).
+    fn word_contrib(&self, a: &[u64], cw: &mut Vec<I>) -> I {
+        cw.clear();
+        let mut w = self.twt;
+        for wi in 0..self.nw {
+            let x = self.word_w(wi, a[wi]);
+            cw.push(x);
+            w += x;
+        }
         w
+    }
+
+    /// `weight_of(a | h) - weight_of(a)` for a hypothesis mask `h` given sparsely (its nonzero
+    /// words), where `cw` is `a`'s per-word share from `word_contrib`.  Only words in which `h`
+    /// adds a needed condition can change, so only those are re-weighed.  (Exact integers: the
+    /// result is the same number `weight_of` computes, by a different order of summation.)
+    #[inline]
+    fn weight_delta(&self, a: &[u64], cw: &[I], h: &[(u32, u64)]) -> I {
+        let mut d: I = 0;
+        for &(wi, bits) in h {
+            let wi = wi as usize;
+            if bits & self.need[wi] & !a[wi] != 0 {
+                d += self.word_w(wi, a[wi] | bits) - cw[wi];
+            }
+        }
+        d
+    }
+
+    /// Nonzero words of a mask, for `weight_delta`.
+    fn sparse(m: &[u64]) -> Vec<(u32, u64)> {
+        m.iter().enumerate().filter(|(_, &x)| x != 0).map(|(i, &x)| (i as u32, x)).collect()
     }
 
     /// The per-point definition, kept as the reference for the debug-assertion cross-check.
@@ -1333,26 +1419,36 @@ impl<'a> Disj<'a> {
         // "G >= 0" child) builds a *chain* -- the pivot whose far side is richest first, which
         // is exactly `RUNG2.md` sec 6.2's greedy chain -- and `Sum` is a compromise.  All three
         // are heuristics over the same exact primitive; `classify` tries them in turn.
+        // `weight_of(cover | mask)` is evaluated as `weight_of(cover)` plus the change in the few
+        // words the mask touches (`weight_delta`); the debug build checks it against the full sum.
         let mut scored: Vec<(I, usize)> = Vec::new();
+        let mut cw: Vec<I> = Vec::with_capacity(self.nw);
+        let wpc = self.word_contrib(&pc.m, &mut cw);
         for bi in 0..self.branches.len() {
             if active.contains(&(bi * 2)) || active.contains(&(bi * 2 + 1)) {
                 continue;
             }
             let mut w = [0 as I; 2];
             for si in 0..2 {
-                w[si] = self.weight_of2(&pc.m, Some(&self.pmask[bi * 2 + si]));
+                let hi = bi * 2 + si;
+                w[si] = wpc + self.weight_delta(&pc.m, &cw, &self.psparse[hi]);
+                #[cfg(debug_assertions)]
+                assert_eq!(w[si], self.weight_of2(&pc.m, Some(&self.pmask[hi])));
             }
             scored.push((self.combine(w), bi));
         }
         scored.sort_by(|a, b| b.0.cmp(&a.0));
         scored.truncate(self.ck.rank_exact);
+        let wec = self.word_contrib(&ec.m, &mut cw);
         for e in scored.iter_mut() {
             let bi = e.1;
             let mut w = [0 as I; 2];
             for si in 0..2 {
                 let hi = bi * 2 + si;
                 self.exact_mask(hi);
-                w[si] = self.weight_of2(&ec.m, Some(self.emask[hi].as_ref().unwrap()));
+                w[si] = wec + self.weight_delta(&ec.m, &cw, &self.esparse[hi]);
+                #[cfg(debug_assertions)]
+                assert_eq!(w[si], self.weight_of2(&ec.m, Some(self.emask[hi].as_ref().unwrap())));
             }
             e.0 = self.combine(w);
         }
@@ -1470,9 +1566,13 @@ impl Checker {
             branches,
             pmask: Vec::new(),
             emask: Vec::new(),
+            psparse: Vec::new(),
+            esparse: Vec::new(),
             need: Vec::new(),
             live: Vec::new(),
             fwt: Vec::new(),
+            wtab: Vec::new(),
+            wsmall: false,
             nw: 0,
             nb: 0,
             score: 0,
