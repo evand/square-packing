@@ -3,7 +3,7 @@ import Sqpack.Cover
 /-!
 # Segment entries of a mixed cover, as integer data
 
-A segment line `X0 Y0 X1 Y1 w` of a mixed cover (`tasks/line-cover/FORMAT.md`) is stored as the
+A segment line `X0 Y0 X1 Y1 w` of a mixed cover (`certificates/s21/FORMAT.md`) is stored as the
 integer 5-tuple `(X0, Y0, X1, Y1, w)`.  As for points (`Cover.lean`, `PTree`), the entries sit in a
 binary search tree `STree`, keyed on `(X0, Y0, X1, Y1)` lexicographically, so the kernel can look an
 entry up in `O(log n)` steps.  The ordering is not trusted: `STree.mem_sound` holds for any tree.

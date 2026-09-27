@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Transcribe the s(21) mixed cover into Lean: lean/Sqpack/S21Data.lean.
 
-Usage (from s12/):  python3 lean/scripts/gen_s21_data.py [runs/line-cover_m5_candidate_x1003.txt] [--check]
+Usage (from s12/):  python3 lean/scripts/gen_s21_data.py [certificates/s21/s21_mixed_cover_5.txt] [--check]
 
-Mixed format v1 (tasks/line-cover/FORMAT.md): `mixed 1`, `s_num s_den`, `D`, `W`, `np` point lines
+Mixed format v1 (certificates/s21/FORMAT.md): `mixed 1`, `s_num s_den`, `D`, `W`, `np` point lines
 `X Y w`, `ns` segment lines `X0 Y0 X1 Y1 w`, `npg` polygon lines (`#` comments to end of line).
 Points become nodes `(X, Y, w)` of a `PTree` keyed on (X, Y) (Sqpack/Cover.lean); segments become
 nodes `(X0, Y0, X1, Y1, w)` of an `STree` (Sqpack/SegTree.lean) keyed on (X0, Y0, X1, Y1), with the two
@@ -117,7 +117,7 @@ def render(path):
 
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    path = args[0] if args else "runs/line-cover_m5_candidate_x1003.txt"
+    path = args[0] if args else "certificates/s21/s21_mixed_cover_5.txt"
     text, sha, npt, nsg, ptot, stot = render(path)
     target = "lean/Sqpack/S21Data.lean"
     if "--check" in sys.argv:

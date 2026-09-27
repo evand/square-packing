@@ -5,7 +5,7 @@ import Sqpack.S32
 
 `packing_le_weight` (`Basic.lean`) bounds a packing by the total weight of a finite weighted point
 set that every closed unit square of the container captures with weight `≥ 1`.  The mixed covers
-of `tasks/line-cover/FORMAT.md` also carry mass **uniformly on segments** (by length) and
+of `certificates/s21/FORMAT.md` also carry mass **uniformly on segments** (by length) and
 **uniformly on convex polygons** (by area).  This file does the reduction once for *any* measure,
 then specialises.
 

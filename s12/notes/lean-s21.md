@@ -1,8 +1,10 @@
 # `s(21) = 5` in Lean, from one computational hypothesis (`lean/Sqpack/{MixedMeasure,SegTree,S21Data,S21}.lean`)
 
-**What this is.**  The mixed cover `runs/line-cover_m5_candidate_x1003.txt` (FORMAT.md v1: 7,536 points and
-1,872 segments, no polygons, total `2089474919732/10¹¹ = 20.89474919732 < 21`) is certified VERIFIED-D4 by
-`search/zm_mixed.py` (`search/ZM_MIXED.md` §7.5).  The Lean files state and prove `s(21) = 5` **from a single named
+**What this is.**  The mixed cover `certificates/s21/s21_mixed_cover_5.txt` (`certificates/s21/FORMAT.md` v1:
+7,536 points and 1,872 segments, no polygons, total `2089474919732/10¹¹ = 20.89474919732 < 21`; until 2026-09-27
+`runs/line-cover_m5_candidate_x1003.txt`, same bytes) is certified VERIFIED-D4 by `search/zm_mixed.py`
+(`search/ZM_MIXED.md` §7.5, §8; the shipped run is `certificates/s21/zm_mixed_d4/`) and independently by `zmx2`
+(`search/ZMX2.md`; `certificates/s21/zmx2_{d4,full}/`).  The Lean files state and prove `s(21) = 5` **from a single named
 hypothesis, the checker's statement on the D4 region**, with everything else proved: the reduction from
 *measures* (not just point sets) to packings, the D4 reduction for measures, the D4 invariance and the total of the
 actual cover (as data), the scaling argument and the 5 × 5 packing.  Mathlib `v4.33.1`, `lake build` clean, no
@@ -134,7 +136,7 @@ real-valued and measure-free apart from `segFrac`'s one-dimensional Lebesgue mea
 
 ## 5.  Statement ↔ computation
 
-| `S21CheckerCover` | `zm_mixed.py --d4` run (`ZM_MIXED.md` §7.5, code `d4b97f9`, shas `runs/zmm/m5/x1003_sha.txt`) |
+| `S21CheckerCover` | `zm_mixed.py --d4 --cert-mode` run `certificates/s21/zm_mixed_d4/` (header: sha256 of checker, reader, `zeromargin.py`, cover; settings), and `zmx2 --d4` (`certificates/s21/zmx2_d4/`) |
 |---|---|
 | `c.1, c.2 ∈ [0, 5/2]`, `u ∈ [0, ½]` | the 40,000 closed root boxes (pitch `1/20`, 16 `u`-bins), checked against `d4_roots` |
 | `θ = 2 arctan u` | the checker's parameter `u = tan(θ/2)` |
@@ -145,9 +147,10 @@ real-valued and measure-free apart from `segFrac`'s one-dimensional Lebesgue mea
 | sums over `pentries`, `sentries` | sums over file lines: no repeats (`check_ok`), counts 7,536 / 1,872 match the header |
 | `1 ≤ …` | every leaf EMPTY, or `PIECE`/`ADM`/`CHAIN`/`SPLIT` with a certified lower bound `≥ 1` at every admissible pose |
 
-So the run's verdict **is** `S21CheckerCover`, provided `zm_mixed.py` is correct (one implementation; its lemmas
-are proved on paper in `ZM_MIXED.md` §2 and tested, not formalised; the audit and second-checker tasks in
-`tasks/s21-finish/` address this).
+So the run's verdict **is** `S21CheckerCover`, provided `zm_mixed.py` is correct (its lemmas are proved on paper in
+`ZM_MIXED.md` §2 and tested, not formalised; audit `ZM_MIXED_AUDIT.md`).  `zmx2`'s `--d4` verdict is the same
+statement from an independent implementation (with the float caveat of `certificates/s21/README.md`), and its
+`--full` run establishes the unreduced statement directly.
 
 **What Lean now does that the checker's write-up argued:** the reduction from mixed measures to packings (FORMAT.md's
 "`packing_le_weight` needs generalising" — done, for arbitrary measures), the symmetry argument for measures

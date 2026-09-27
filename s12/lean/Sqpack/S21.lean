@@ -4,8 +4,8 @@ import Sqpack.S21Data
 /-!
 # `s(21) = 5`, from one computational hypothesis
 
-The lower bound comes from a **mixed cover** of `[0,5]²` (`tasks/line-cover/FORMAT.md`,
-`runs/line-cover_m5_candidate_x1003.txt`): 7,536 point masses and 1,872 segments carrying mass
+The lower bound comes from a **mixed cover** of `[0,5]²` (`certificates/s21/FORMAT.md`,
+`certificates/s21/s21_mixed_cover_5.txt`): 7,536 point masses and 1,872 segments carrying mass
 uniformly by length, total `2089474919732 / 10¹¹ = 20.8947… < 21`.  Its measure `μ`
 (`MixedCover.measure`) gives every closed unit square in `[0,5]²` mass `≥ 1`; the checker
 `search/zm_mixed.py` establishes that on the D4 fundamental region.
@@ -264,7 +264,7 @@ open S21Data
 open Classical in
 /-- **The computational hypothesis.**  Every closed unit square inside `[0,5]²` whose centre lies
 in `[0,5/2]²` and whose angle lies in `[0, π/4]` gets mass `≥ 1` from the cover
-`runs/line-cover_m5_candidate_x1003.txt`: the masses of the points in it, plus, for each segment,
+`certificates/s21/s21_mixed_cover_5.txt`: the masses of the points in it, plus, for each segment,
 its mass times the fraction of the segment lying in it (`segFrac`: the Lebesgue measure of the
 parameters `t ∈ [0,1]` with `a + t(b − a)` in the square). -/
 def S21RegionCover : Prop :=
