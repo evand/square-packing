@@ -195,7 +195,9 @@ An exact zero factor gives an exact zero, so an exactly-zero `α` (a box edge th
 since `v·G ∈ [next_down, next_up]` of its rounding, this is `≤ v·G` (`≥`).  `u0` enters as `⌊u0·G⌋` (exact integers).
 (iii) *Clamp.*  Values beyond `±(4s + 10)` are clamped to it.  All `F` are supported in `[0, s]`, all shifts are
 `≤ 1`, and `Φ` is constant for `z ≤ −s − 1` and for `z ≥ s + 1`, so no `F` value and no `inf Φ` changes.
-(iv) Everything after (ii) is exact `i128`: `F` values `< 2^76`, sums `< 2^80`.
+(iv) Everything after (ii) is exact `i128`: `F` values `< 2^76`, sums `< 2^80` for the candidate; for every accepted
+file `F·2^30·Lc < 2^110`, because the parser bounds its inputs (§11: `s_num, s_den < 2^40`, `W` and every weight
+`< 2^50`, total `< 2^56`, `D < 2^20`, `s·D < 2^27`).
 A float **never** certifies anything except through (i)–(ii).
 
 ## 6. `θ = 0` exactly (Lemma H)
@@ -281,3 +283,18 @@ Caveats, for the bundling step:
 * Harness and code were written by the same agent: the harness is an independent *implementation* (Python,
   `Fraction`s, generic segment clipping, no Lemmas C–W), not an independent *author*.
 * Not supported: polygons, non-axis-parallel segments (refused, never mis-checked).
+
+## 11. Post-audit fix (2026-09-27, `ZMX2_AUDIT.md` F1)
+
+The audit's one must-fix was in the parser, not in any lemma: release builds do not check `i128` overflow, and a
+crafted header (`s_num = 5 + 2^125`) or crafted weights (`2^127 − 1`, …) wrapped silently, so `zmx2` printed a false
+side or total next to `VERIFIED-D4`.  `parse_cover` now bounds every input integer before any arithmetic (the audit's
+§5 patch: header values, each weight, the total, `D < 2^20` (nit N2), `s·D < 2^27`) and refuses anything larger
+with `ERROR` (exit 2).  Tests: T1 gains `wrap_s` / `wrap_w` (both refused), and **T8** is the audit's differential
+`cert` test A7 (random covers scaled to exact `μ = 1 − 10⁻⁵` at a known pose; every one refused).  No effect on the
+candidate (its values are far inside the bounds): with the patched binary both official runs were repeated
+(`certificates/s21/zmx2_{d4,full}/`, `search/s21_cert_runs.sh zmx2`) with censuses identical to §9's.  Resume from
+`--log` still keys on a 64-bit FNV hash (audit S3); the shipped runs are fresh (`0 already done` in their
+manifests), and `s21_cert_runs.sh` deletes the log before each run.  Test suite: 45/45 (was 42).  The audit's `search/zmx2_audit/run_audit.sh`, rerun on the patched binary
+(cores 0–9): F1 inputs refused; A1–A4 refused at the same poses; A5 probes, A6 (800 random covers), A7 (190 differential
+runs) and A8 (300 tightest leaves): 0 fail.  The shipped `s(32)` cover (`--d4 --pair-points`) re-verifies with the same census.
