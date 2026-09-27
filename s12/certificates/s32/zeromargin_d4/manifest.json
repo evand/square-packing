@@ -1,0 +1,20 @@
+{
+ "cert": "certificates/s32/s32_closed_cover_6.txt",
+ "cert_sha": "a0d2d38fc9a585a166b9e06c5069fdae9bdce44ca9fb64dda75abcc99e3c2144",
+ "checker_src": "search/zeromargin.py",
+ "checker_sha": "640fe453c1a32f4aa580ca2b1261c6406923a4d7c131f65604a432c7fc2086ab",
+ "runner_sha": "cc7fa8c70f7a39c5e1e920baa9efdc1af8feb68bc6eeb029dab4a99fc3f77fbe",
+ "settings": {
+  "depth": 24,
+  "theta_bias": 1,
+  "use_chain": true,
+  "chain_from": 0,
+  "use_adm": true,
+  "clip": true,
+  "pitch": "1/10",
+  "ubins": 8,
+  "reduction": "D4"
+ },
+ "created": "2026-09-26 17:13:00",
+ "note": "paths made repo-relative (from s12/) when bundled; hashes and settings unchanged"
+}

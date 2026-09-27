@@ -89,6 +89,11 @@ else echo "    (full-domain sweep skipped in the fast tier; the rung-2 rejection
 #      leaves: ADM 2867  CORE 0  P1 0  MIX 0  CHAIN 5320  TRI 0  EMPTY 3449  UNCERTIFIED 0
 #      VERIFIED
 echo
+echo "=== s(32) = 6: weighted closed cover of [0,6]^2, total 3171350535386/10^11 = 31.713505 < 32,"
+echo "    certified over the D4 fundamental region by zeromargin.py (certificates/s32/README.md) ==="
+# The full re-sweep is ~2.8 CPU-h per cover; CI skips it (S32_SEPARATE=1): run it locally.
+if full && [ -z "${S32_SEPARATE:-}" ]; then certificates/s32/verify.sh --full; else certificates/s32/verify.sh; fi
+echo
 echo "=== rung-2 rejection tests (23 checks: mutations, invalid historical covers, malformed input) ==="
 ./tests/rung2/rejection_tests.sh
 echo

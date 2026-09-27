@@ -15,7 +15,8 @@ side `L > 1`, contained in `C` and with pairwise disjoint interiors, satisfies `
 square of side `s' < s`; that is, `s(n) ≥ s`.  (The passage from unit squares in the smaller
 container to `L`-squares with `L > 1` in `C` is the classical scaling trick.)
 
-The hypothesis `hcover` is what the exact integer verifier in `verify/` checks.
+The hypothesis `hcover` is what the exact checkers (`verify/`, `verify2/`, `search/zeromargin.py`) establish
+for a given certificate.
 -/
 
 open Finset

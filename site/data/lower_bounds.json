@@ -1295,13 +1295,14 @@
  },
  "32": {
   "best": {
-   "value": 5.795831523312719,
-   "exact_form": "sqrt(32 - 2*floor(sqrt(32)) + 1) + 1 = sqrt(23)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 6.0,
+   "exact_form": "6",
+   "source": "EvanDaniel2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s32",
+   "note": "2026-09-26; s(32) = 6: weighted closed cover of [0,6]^2, total 31.7135 < 32, certified by two exact checkers; Lean top theorem from the checker hypothesis; unrefereed",
+   "date": "2026-09-26"
   },
   "history": [
    {
@@ -1320,6 +1321,26 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 5.95,
+    "exact_form": "119/20",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "2026-09-26; rectangle-density certificate",
+    "date": "2026-09-26"
+   },
+   {
+    "value": 6.0,
+    "exact_form": "6",
+    "source": "EvanDaniel2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s32",
+    "note": "2026-09-26; s(32) = 6: weighted closed cover of [0,6]^2, total 31.7135 < 32, certified by two exact checkers; Lean top theorem from the checker hypothesis; unrefereed",
+    "date": "2026-09-26"
    }
   ]
  },
@@ -3658,10 +3679,17 @@
   },
   "EvanDaniel2026": {
    "authors": "Evan Daniel (evand)",
-   "title": "square-packing (s12/): exact certificate for s(12) >= 15680/3951",
+   "title": "square-packing (s12/): exact certificates for s(12) >= 15680/3951 and s(32) = 6",
    "venue": "GitHub repository + write-up (computer-assisted, unrefereed)",
    "year": 2026,
    "url": "https://github.com/evand/square-packing/tree/main/s12"
+  },
+  "wand125_2026": {
+   "authors": "wand125 (GitHub user)",
+   "title": "square-packing-bounds: rectangle-density lower-bound certificates",
+   "venue": "GitHub repository (computer-assisted, unrefereed)",
+   "year": 2026,
+   "url": "https://github.com/wand125/square-packing-bounds"
   }
  },
  "meta": {

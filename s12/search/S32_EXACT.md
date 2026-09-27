@@ -1,5 +1,8 @@
 # The exact check of the `s(32)` candidate: first pilots (2026-09-25/26)
 
+> **Outcome (2026-09-26): certified; §10–12.**  The shipped bundle is `certificates/s32/` (the candidate is
+> `s32_closed_cover_6.txt` there).  §§0–9 are the pilot record and predate the result.
+
 Goal: `s(32) = 6` from `runs/s32-close_candidate.txt` (13,085 points of `[0,6]²`, `D = 1000`, `W = 10¹¹`, total
 `3171350535386/10¹¹ = 31.713505354 < 32`; built in `S32_COVER.md` §9).  If `verify2/target/release/zmcheck cert`
 returns `VERIFIED` on it, that is the whole proof: the reduction (cover ⇒ packing bound) is `notes/s13-casefree.md`

@@ -3,6 +3,8 @@
 ## Result
 `s(12) >= 15680/3951 = 3.968616`  — 12 unit squares cannot be packed into any square of side < 15680/3951.
 
+**s(32) = 6** (2026-09-26): see **s(32) = 6** at the end of this file and `certificates/s32/README.md`.
+
 Second result, same machinery, separate certificate and separate checker:
 `s(13) = 4`, case-free (Bentz 2010 re-proved without its six-leaf case analysis).  See
 **s(13) = 4 (rung 2) (2026-09-12)** below.
@@ -259,3 +261,22 @@ should fail, and watching it not fail.
 
 `tests/rejection_tests.sh` now has 42 checks (was 7); against the pre-fix binary 15 fail and
 8 panic.
+
+## s(32) = 6 (2026-09-26)
+`certificates/s32/s32_closed_cover_6.txt` (sha256 `a0d2d38f…2144`): 13,085 points of `[0,6]²`, `D = 1000`,
+`W = 10¹¹`, total `3171350535386/10¹¹ = 31.713505354 < 32`, exactly D4-invariant (weights included).
+* `zeromargin.py --d4` (fast exact path): all 7,200 roots of `[0,3]² × u ∈ [0,½]` certified, 164,130 boxes, max
+  depth 27, UNCERTIFIED 0, 2.77 CPU-h; one root needed depth 30.  Records, the checker file that ran and hashes:
+  `certificates/s32/zeromargin_d4/`; `certificates/s32/verify.sh` re-summarises them (`D4 RECHECK CLEAN`) and
+  re-runs two germ roots, `--full` re-runs everything.
+* `zmcheck cert --d4` (`--branch-cap 640 --node-cap 4000000 --depth 22`): 3,595 / 3,600 roots; the 5 open roots
+  (interior tile germs, `u ≤ 1/8`) are certified by `zeromargin.py` (`search/S32_EXACT.md` §10).
+* Second cover `s32_shift_v1.txt` (31.697940): `zeromargin.py` 7,200 / 7,200 and `zmcheck --d4` with `ZM_MIXPAIR=1`
+  3,600 / 3,600.
+* Lean: `s32_eq_six_of_checker : S32CheckerCover → minSide 32 = 6`, standard axioms only (`notes/lean-s32.md`);
+  `lean/scripts/gen_s32_data.py --check` ties `S32Data.lean` to the certificate byte for byte.
+* Pre-publication review (fresh eyes, 2026-09-26): Lean statement is the standard `s(32)`, hypothesis matches the
+  checker; every fast-path acceptance in `zeromargin.py` is exact; angles above 45° sound; `--selfcheck` on 10
+  roots and `--ref` on 2 reproduce the shipped censuses; three D4-symmetric mutated covers refused.
+  Should-fix, not affecting this certificate: an int64 guard on `sum(W·weight)` in `zeromargin.py`, and
+  `zm_d4_sweep.py summary` gating on runner sha and settings.

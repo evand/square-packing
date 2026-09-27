@@ -1,0 +1,5 @@
+D4-reduced s(32) sweep in runs/s32d4_v1: 180/180 jobs done, roots 3600/3600
+certificate runs/s32_shift_v1.txt sha256 7598d39a899adbdd2352d8054d98cb3e8818e4e4cd9c7a23830795a8f9847793; settings --branch-cap 640 --node-cap 4000000 --depth 22
+boxes 43440, max depth 20, CPU 6.0 h (sum of ROOT times), uncertified 0, refused 0
+zmcheck binaries used: 1 (4fc06e86162894b0)
+D4 SWEEP CLEAN: all 3600 roots of the fundamental region [0,3]^2 x u in [0,1/2] certified by zmcheck --d4 (D4 invariance checked exactly in every job) => every closed unit square in [0,6]^2 captures weight >= 1 (S32_EXACT.md sec 7).

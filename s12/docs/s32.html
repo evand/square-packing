@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Thirty-Two Squares · Square Packing Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --paper:#F2F4F1; --surface:#FBFCFA; --ink:#131A1E; --muted:#5F6B70; --rule:#D6DCD7;
+  --accent:#0E7490; --accent-soft:#DCEDF1; --gold:#9C6410; --gold-soft:#F5EBDA; --green:#2A6E4F; --green-soft:#DFEDE5;
+  --shadow:0 1px 2px rgba(19,26,30,.05),0 8px 24px -12px rgba(19,26,30,.14);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E1316; --surface:#151C20; --ink:#E4EBEA; --muted:#96A4A8; --rule:#263238;
+    --accent:#54C3D6; --accent-soft:#0F3138; --gold:#DBA745; --gold-soft:#33280F; --green:#63BE92; --green-soft:#122B20;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E1316; --surface:#151C20; --ink:#E4EBEA; --muted:#96A4A8; --rule:#263238;
+  --accent:#54C3D6; --accent-soft:#0F3138; --gold:#DBA745; --gold-soft:#33280F; --green:#63BE92; --green-soft:#122B20;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:Spectral,Georgia,"Times New Roman",serif;font-size:17.5px;line-height:1.65;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:760px;margin:0 auto;padding:64px 24px 96px}
+h1,h2,h3{text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:clamp(2.1rem,5.2vw,3rem);font-weight:700;letter-spacing:-.015em}
+h2{font-size:1.55rem;font-weight:600;margin-top:0}
+h3{font-size:1.1rem;font-weight:600}
+p{margin:0}
+a{color:var(--accent);text-decoration-thickness:.08em;text-underline-offset:.18em}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted);font-weight:500}
+header{display:flex;flex-direction:column;gap:18px;padding-bottom:34px;border-bottom:1px solid var(--rule)}
+.lede{font-size:1.16rem;color:var(--muted);max-width:60ch}
+section{display:flex;flex-direction:column;gap:18px;padding:44px 0;border-bottom:1px solid var(--rule)}
+section:last-of-type{border-bottom:none}
+.sechead{display:flex;flex-direction:column;gap:6px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:24px;box-shadow:var(--shadow)}
+.thm{border-left:3px solid var(--accent);display:flex;flex-direction:column;gap:14px}
+.thm .stmt{font-size:1.22rem;line-height:1.5}
+.big{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-weight:600;
+  font-size:clamp(1.9rem,5vw,2.5rem);color:var(--accent);letter-spacing:-.02em}
+.tag{display:inline-flex;align-items:center;gap:7px;font-family:"IBM Plex Mono",monospace;font-size:.72rem;
+  letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:999px;font-weight:500}
+.tag.ok{background:var(--green-soft);color:var(--green)}
+.tag.open{background:var(--gold-soft);color:var(--gold)}
+.tag.neutral{background:var(--accent-soft);color:var(--accent)}
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+.tablewrap{overflow-x:auto}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);font-weight:500}
+td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+figure{margin:0;display:flex;flex-direction:column;gap:12px}
+figcaption{font-size:.9rem;color:var(--muted)}
+.figbox{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:18px}
+pre{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:16px;overflow-x:auto;
+  font-family:"IBM Plex Mono",monospace;font-size:.83rem;line-height:1.6;margin:0}
+code{font-family:"IBM Plex Mono",monospace;font-size:.9em;background:var(--accent-soft);
+  padding:.1em .35em;border-radius:2px}
+pre code{background:none;padding:0;font-size:1em}
+ul{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:9px}
+li::marker{color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.axis{width:100%;height:96px}
+.footnote{font-size:.87rem;color:var(--muted)}
+section>*{min-width:0}
+.footnote .mono,td .mono{overflow-wrap:anywhere}
+@media (max-width:520px){th,td{padding:8px 6px}td.num{white-space:normal}.wrap{padding:40px 16px 72px}}
+.topbar{display:flex;align-items:center;gap:6px 18px;padding:10px 20px;border-bottom:1px solid var(--rule);background:var(--surface);flex-wrap:wrap;font-size:16px;line-height:1.5}
+.topbar .brand{font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+.topbar nav{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.92rem}
+.topbar nav a{text-decoration:none;color:var(--muted);white-space:nowrap}
+.topbar nav a.here,.topbar nav a:hover{color:var(--accent)}
+.cv{width:100%;aspect-ratio:1/1;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.85rem;color:var(--muted)}
+.stat{display:flex;flex-direction:column;gap:2px}
+.stat b{font-family:"IBM Plex Mono",monospace;font-size:1.25rem;color:var(--ink);font-weight:600}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="brand">Square Packing Atlas</span>
+  <nav><a href="../index.html">Overview</a><a href="../explore.html">Explore</a><a href="../compare.html">Compare</a><a href="../bounds.html">Bounds</a><a href="../proofs.html">Proofs</a><a href="../s12/">s(12)</a><a href="./" class="here">s(32)</a><a href="../sources.html">Sources</a></nav>
+</div>
+<div class="wrap">
+<header>
+  <span class="eyebrow">Discrete geometry · computer-assisted proof</span>
+  <h1>Thirty-Two Squares</h1>
+  <p class="lede">Thirty-two unit squares fit in a 6 × 6 square: take the grid and leave four cells empty.
+  Can a cleverer arrangement, with some squares tilted, fit them into anything smaller? No. <span class="mono">s(32) = 6</span>.
+  As far as we can find, this is the first exact value for any count of the form <span class="mono">k² − 4</span>.</p>
+  <div class="tags">
+    <span class="tag ok">two independent exact checkers</span>
+    <span class="tag neutral">Lean 4 top theorem</span>
+    <span class="tag open">not peer reviewed</span>
+    <a class="tag neutral" href="https://github.com/evand/square-packing/tree/main/s12/certificates/s32">Certificate &amp; checkers on GitHub →</a>
+  </div>
+</header>
+
+<section id="result">
+  <div class="sechead"><span class="eyebrow">01 · The result</span><h2>s(32) = 6</h2></div>
+  <p><span class="mono">s(n)</span> is the side of the smallest square that holds <i>n</i> unit squares,
+  each at any position and any angle, overlapping at most along their edges. Leaving cells of a grid empty
+  gives <span class="mono">s(32) ≤ 6</span>. The work is the other direction.</p>
+  <div class="card thm">
+    <p class="stmt"><strong>Theorem.</strong> There are <strong>13,085 points</strong> in
+    <span class="mono">[0,6]²</span>, with rational weights totalling
+    <span class="mono">3171350535386 / 10¹¹</span>, such that <em>every</em> closed unit square inside
+    <span class="mono">[0,6]²</span>, at every position and every angle, contains points of total weight at
+    least 1.</p>
+    <p class="big">31.713505 &nbsp;&lt;&nbsp; 32</p>
+    <p class="footnote">Suppose 32 unit squares fit in a square of side <span class="mono">s &lt; 6</span>.
+    Spread their centres out by the factor <span class="mono">6/s</span>. The squares stay inside
+    <span class="mono">[0,6]²</span> and become <em>pairwise disjoint</em>, so no point lies in two of them.
+    Each captures weight at least 1, so between them they capture at least 32, but the points weigh only 31.71
+    in total. So there is no such packing, and <span class="mono">s(32) = 6</span>.</p>
+  </div>
+  <p>Everything rests on checking the property in the theorem for <em>every</em> placement of a unit square,
+  a three-parameter continuum. That check is exact and exhaustive, and it was done twice, by two checkers
+  written independently (§04). Lean 4 then assembles the proof (§05).</p>
+</section>
+
+<section id="context">
+  <div class="sechead"><span class="eyebrow">02 · Context</span><h2>Why k² − 4 had no exact value</h2></div>
+  <p>Exact values of <span class="mono">s(n)</span> are rare. Just below a perfect square <span class="mono">k²</span>
+  the answer is known to be <span class="mono">k</span> for <span class="mono">k² − 1</span> and
+  <span class="mono">k² − 2</span> (Nagamochi 2005), and for <span class="mono">k² − 3</span> when
+  <span class="mono">k ≤ 7</span> (Bentz 2010, and a 2016 preprint). With four squares missing, nothing was proved
+  for any <span class="mono">k</span>: not <span class="mono">s(12)</span>, <span class="mono">s(21)</span>,
+  <span class="mono">s(32)</span> or <span class="mono">s(45)</span>.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>lower bound for s(32)</th><th>source</th></tr></thead>
+    <tbody>
+      <tr><td class="num">5.656854 = √32</td><td>area</td></tr>
+      <tr><td class="num">5.795832 = 1 + √23</td><td>Nagamochi 2005, a general bound</td></tr>
+      <tr><td class="num">5.95 = 119/20</td><td><a href="https://github.com/wand125/square-packing-bounds">wand125</a>, rectangle-density certificates, 2026-09-26 (unrefereed)</td></tr>
+      <tr><td class="num"><b>6</b></td><td>this work, 2026-09-26 (unrefereed)</td></tr>
+    </tbody>
+  </table></div>
+  <p>The classical tool is an <em>unavoidable set</em>: points that every unit square must hit. For
+  <span class="mono">k² − 4</span> squares it would need <span class="mono">k² − 5</span> points, and a lattice
+  that sparse leaves gaps a square can slip through. Weights solve the counting problem. They make a harder
+  checking problem, and exactness costs one more thing. A smooth density can never certify side 6 exactly:
+  each of the 36 grid cells would have to carry weight 1 on its own, 36 in all. The weight has to sit
+  <em>on</em> the grid lines, where neighbouring cells share it.</p>
+</section>
+
+<section id="cover">
+  <div class="sechead"><span class="eyebrow">03 · The certificate</span><h2>What the 13,085 points look like</h2></div>
+  <figure>
+    <div class="figbox"><canvas class="cv" id="cv" width="1200" height="1200" role="img" aria-label="The 13,085 weighted points of the cover in the 6 by 6 square; most of the weight lies on the grid lines."></canvas></div>
+    <figcaption id="cvcap">The cover in <span class="mono">[0,6]²</span>, each point drawn with area proportional to its weight;
+    the faint lines are the 6 × 6 grid. <b>77%</b> of the weight lies exactly on grid lines, the shared edges of the
+    tiling. Most of the rest lies along curves that run across several tiles, plus clouds in the edge tiles near their inner sides. The tile centres are nearly empty, and so is a band half a unit wide along the outer wall.</figcaption>
+  </figure>
+  <div class="grid2">
+    <div class="stat"><span class="eyebrow">points</span><b>13,085</b></div>
+    <div class="stat"><span class="eyebrow">total weight</span><b>31.713505</b></div>
+    <div class="stat"><span class="eyebrow">largest weight</span><b>0.0368</b></div>
+    <div class="stat"><span class="eyebrow">symmetry</span><b>all 8 of the square</b></div>
+  </div>
+  <p>The cover was found by linear programming over sampled placements, with points added where the worst
+  placement fell short, and then closed up until no placement tested in a fine scan captured less than 1. The
+  converged LP value is about 31.22, so there is 2.4% of room below 32; <span class="mono">s(21)</span>, the
+  previous rung, had only 1.3% and could not be closed. Every number in the file is an integer: coordinates in
+  thousandths, weights in units of <span class="mono">10⁻¹¹</span>.</p>
+</section>
+
+<section id="verification">
+  <div class="sechead"><span class="eyebrow">04 · Verification</span><h2>How it is checked</h2></div>
+  <p><strong>Symmetry first.</strong> The cover is unchanged by all eight symmetries of the square (checked
+  exactly, weights included). So it is enough to check squares whose centre lies in the quarter
+  <span class="mono">[0,3]²</span> and whose angle lies in <span class="mono">[0°, 45°]</span>. The checkers take a
+  little more, angles up to 53.13°, which keeps the parameter <span class="mono">u = tan(θ/2)</span> in
+  <span class="mono">[0, ½]</span>.</p>
+  <p><strong>Then exhaustion, at margin zero.</strong> That region is cut into root boxes of placements, and each
+  box is subdivided until the checker can <em>prove</em>, in exact rational or integer arithmetic, that every
+  placement in the box captures weight at least 1. Near the tiling that is tight: a square sitting exactly on a
+  grid cell captures points only on its own edges, so there is no slack to spend. Most boxes are proved
+  <em>disjunctively</em> ("either these points are inside, or those are").
+  <a href="../s12/#s13">The s(13) write-up</a> explains the method, used there on a cover of side 4.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th></th><th>search/zeromargin.py</th><th>verify2/zmcheck</th></tr></thead>
+    <tbody>
+      <tr><td>language</td><td>Python; exact integers and <span class="mono">Fraction</span>, floats only to pre-screen</td><td>Rust, exact <span class="mono">i128</span></td></tr>
+      <tr><td>root boxes</td><td class="num">7,200</td><td class="num">3,600</td></tr>
+      <tr><td>certified</td><td class="num"><b>7,200</b></td><td class="num">3,595; the other 5 by zeromargin.py</td></tr>
+      <tr><td>boxes, max depth</td><td class="num">164,130, 27</td><td class="num">53,660, 22</td></tr>
+      <tr><td>uncertified</td><td class="num"><b>0</b></td><td class="num">52 boxes in 5 roots</td></tr>
+      <tr><td>CPU</td><td class="num">2.8 h (12 min on 28 processes)</td><td class="num">80 h</td></tr>
+    </tbody>
+  </table></div>
+  <p><span class="mono">zeromargin.py</span> alone covers the whole region. <span class="mono">zmcheck</span>, a separate
+  program in another language sharing no code with it, gets within five root boxes. The holdouts sit at the
+  hardest spots: placements within 0.003 of an interior tile centre, tilted less than 0.56°, where all four
+  edges lie on grid lines at once. A second cover, <span class="mono">s32_shift_v1.txt</span> (total 31.698), is
+  certified <em>completely</em> by both checkers, <span class="mono">zmcheck</span> using a different
+  (opt-in) branch order.</p>
+  <p><strong>Checking the checkers.</strong> Before publishing, a fresh review traced every step where the
+  fast path accepts a box and confirmed each is an exact test. A self-check mode, which runs the slow
+  all-<span class="mono">Fraction</span> reference beside the fast path at every call, reproduced the shipped
+  results root for root. Three deliberately broken covers were also tried, each keeping the symmetry: a
+  corner orbit removed, a tile-centre orbit removed, and orbits removed so that one square at 52° captures
+  less than 1. All three were refused.</p>
+  <pre><code>$ certificates/s32/verify.sh
+s32_closed_cover_6.txt: OK   ...
+lean/Sqpack/S32Data.lean matches certificates/s32/s32_closed_cover_6.txt (sha256 a0d2d38f…2144)
+region: 7200 roots = [0,3]^2 x u in [0,1/2]; present 7200, missing 0, with uncertified boxes 0, ...
+totals: boxes 164130, max depth 27, leaves ADM 12201 P1 0 MIX 0 CHAIN 70007 EMPTY 3457 UNCERTIFIED 0
+D4 RECHECK CLEAN: every root of the D4 region certified</code></pre>
+</section>
+
+<section id="lean">
+  <div class="sechead"><span class="eyebrow">05 · Lean</span><h2>What is formally proved</h2></div>
+  <pre><code>theorem s32_eq_six_of_checker (h : S32CheckerCover) : minSide 32 = 6</code></pre>
+  <p>In Lean 4 with Mathlib, <span class="mono">minSide n</span> is the infimum of the sides that hold
+  <i>n</i> closed unit squares at arbitrary positions and angles with disjoint interiors: the usual
+  <span class="mono">s(n)</span>. Lean proves the grid packing, the scaling argument, the symmetry reduction,
+  and the symmetry and total weight of <em>this</em> cover, which is transcribed into Lean from the certificate
+  file. It uses the standard axioms only, with no <span class="mono">sorry</span> and no
+  <span class="mono">native_decide</span>.</p>
+  <p>The one hypothesis, <span class="mono">S32CheckerCover</span>, is the region statement: every closed unit
+  square in <span class="mono">[0,6]²</span> with centre in <span class="mono">[0,3]²</span> and angle
+  <span class="mono">2·arctan u</span>, <span class="mono">u ∈ [0,½]</span>, captures weight at least 1. That is
+  exactly what the checker runs establish. The soundness of the checkers' mathematical primitives is also
+  proved in Lean. The programs themselves are not: their subdivision, bookkeeping and parsing are trusted, and
+  behind them stands the agreement of two independent implementations.</p>
+</section>
+
+<section id="limits">
+  <div class="sechead"><span class="eyebrow">06 · Caveats</span><h2>What to keep in mind</h2></div>
+  <ul>
+    <li>This is a computer-assisted proof and has not been peer reviewed. The claim is only as good as the two
+    checker programs, which are open to inspection and re-running.</li>
+    <li>"First exact <span class="mono">k² − 4</span> value" rests on our literature search (journals, arXiv, the
+    Friedman/Ellsworth catalogue, and the 2026 certificate repositories). If we missed one, please tell us.</li>
+    <li>Nothing here settles <span class="mono">s(12)</span>, <span class="mono">s(21)</span> or
+    <span class="mono">s(45)</span>. For those the same approach currently runs out of room: see
+    <a href="../s12/">the s(12) write-up</a>, where the proven floor stands at 3.9686.</li>
+  </ul>
+</section>
+
+<section id="artifacts">
+  <div class="sechead"><span class="eyebrow">07 · Reproduce</span><h2>Artifacts</h2></div>
+  <p>Everything is in <a href="https://github.com/evand/square-packing/tree/main/s12/certificates/s32">s12/certificates/s32</a>
+  of <a href="https://github.com/evand/square-packing">evand/square-packing</a>.
+  <span class="mono">certificates/s32/verify.sh</span> re-checks in seconds, re-running two germ roots;
+  <span class="mono">--full</span> re-runs the whole sweep for both covers, about 5 CPU-hours. CI runs the fast
+  check on every change.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>path (under s12/)</th><th>what</th></tr></thead>
+    <tbody>
+      <tr><td class="num">certificates/s32/s32_closed_cover_6.txt</td><td>the cover: 13,085 integer points and weights</td></tr>
+      <tr><td class="num">certificates/s32/s32_shift_v1.txt</td><td>a second cover, certified in full by both checkers</td></tr>
+      <tr><td class="num">certificates/s32/zeromargin_d4/</td><td>the run: every root's record, the exact checker file that ran, hashes</td></tr>
+      <tr><td class="num">certificates/s32/README.md</td><td>the claim, what checks what, and what is trusted</td></tr>
+      <tr><td class="num">search/zeromargin.py, verify2/</td><td>the two checkers</td></tr>
+      <tr><td class="num">lean/Sqpack/S32.lean, D4.lean</td><td>the theorem, the symmetry reduction</td></tr>
+      <tr><td class="num">search/S32_COVER.md, S32_EXACT.md</td><td>the research log: how the cover was built and checked</td></tr>
+    </tbody>
+  </table></div>
+</section>
+</div>
+<script>
+(async () => {
+  const cv = document.getElementById('cv'), g = cv.getContext('2d');
+  let txt;
+  try { txt = await fetch('cover.txt').then(r => { if (!r.ok) throw 0; return r.text(); }); }
+  catch (e) { document.getElementById('cvcap').insertAdjacentHTML('beforeend', ' (Figure unavailable here: the certificate file could not be loaded.)'); return; }
+  const L = txt.trim().split(/\n/), D = +L[1], W = +L[2], P = L.slice(4).map(l => l.trim().split(/\s+/).map(Number));
+  const draw = () => {
+    const cs = getComputedStyle(document.documentElement), S = cv.width, pad = 24, k = (S - 2 * pad) / 6;
+    g.clearRect(0, 0, S, S);
+    g.strokeStyle = cs.getPropertyValue('--rule').trim(); g.lineWidth = 2;
+    for (let i = 0; i <= 6; i++) { g.beginPath(); g.moveTo(pad + i * k, pad); g.lineTo(pad + i * k, S - pad); g.stroke();
+      g.beginPath(); g.moveTo(pad, pad + i * k); g.lineTo(S - pad, pad + i * k); g.stroke(); }
+    g.fillStyle = cs.getPropertyValue('--accent').trim(); g.globalAlpha = 0.75;
+    const rmax = 7, wmax = Math.max(...P.map(p => p[2]));
+    for (const [x, y, w] of P) { const r = Math.max(0.6, rmax * Math.sqrt(w / wmax));
+      g.beginPath(); g.arc(pad + x / D * k, S - pad - y / D * k, r, 0, 2 * Math.PI); g.fill(); }
+    g.globalAlpha = 1;
+  };
+  draw();
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+})();
+</script>
+</body>
+</html>

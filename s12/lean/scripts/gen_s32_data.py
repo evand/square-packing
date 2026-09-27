@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Transcribe the s(32) cover into Lean: lean/Sqpack/S32Data.lean.
 
-Usage (from s12/):  python3 lean/scripts/gen_s32_data.py [runs/s32-close_candidate.txt]
+Usage (from s12/):  python3 lean/scripts/gen_s32_data.py [certificates/s32/s32_closed_cover_6.txt]
 
 The certificate format (header `m 1`, `D`, `W`, `n`, then `x y w` integer lines; the point is
 (x/D, y/D), the weight w/W) is transcribed entry by entry: every line becomes one node
@@ -96,7 +96,7 @@ def render(path):
 
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    path = args[0] if args else "runs/s32-close_candidate.txt"
+    path = args[0] if args else "certificates/s32/s32_closed_cover_6.txt"
     text, sha, n, total = render(path)
     target = "lean/Sqpack/S32Data.lean"
     if "--check" in sys.argv:

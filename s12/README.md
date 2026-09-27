@@ -2,7 +2,8 @@
 
 [![verify](https://github.com/evand/square-packing/actions/workflows/verify.yml/badge.svg)](https://github.com/evand/square-packing/actions/workflows/verify.yml)
 
-Readable write-up with the point diagram: **https://evand.github.io/square-packing/s12/**
+Readable write-ups: **https://evand.github.io/square-packing/s32/** (s(32) = 6) and
+**https://evand.github.io/square-packing/s12/** (s(12), s(11), s(13)).
 
 This directory is the s(12) research tree.  The rest of the
 [square-packing](../README.md) repository is the Square Packing Atlas, an explorer for the
@@ -17,6 +18,11 @@ conjectured, and deciding it *is* the open problem.  `s(11)` itself is also open
 
 Each is an exact certificate re-checked by `./verify.sh`; nothing here is peer reviewed.
 
+* **`s(32) = 6`** (2026-09-26): one weighted closed cover of `[0,6]²`, 13,085 points of total weight
+  `31.713505 < 32`, certified at margin zero over the symmetry-reduced pose space by two independently
+  written exact checkers; Lean proves `minSide 32 = 6` from that one computational hypothesis.  As far as we
+  know the first exact value of `s(k² − 4)` for any `k`.  Previous best lower bound 5.95 (wand125, 2026).
+  [`certificates/s32/`](certificates/s32/README.md).
 * **`s(12) >= 15680/3951 = 3.968616…`** (1,736 weighted points).  Previous published bound
   `2 + 4/√5 = 3.788854…` (Stromquist 2003, inherited from n = 11; the DS7 Table 2 entry for
   n = 11–12).  The upper bound is still the trivial 4, so the gap narrows from
