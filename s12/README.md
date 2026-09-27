@@ -21,7 +21,7 @@ Each is an exact certificate re-checked by `./verify.sh`; nothing here is peer r
 * **`s(32) = 6`** (2026-09-26): one weighted closed cover of `[0,6]²`, 13,085 points of total weight
   `31.713505 < 32`, certified at margin zero over the symmetry-reduced pose space by two independently
   written exact checkers; Lean proves `minSide 32 = 6` from that one computational hypothesis.  As far as we
-  know the first exact value of `s(k² − 4)` for any `k`.  Previous best lower bound 5.95 (wand125, 2026).
+  know the first exact value of `s(k² − 4)` for any `k ≥ 4` (`s(5)`, `k = 3`, is Göbel 1979).  Previous best lower bound 5.95 (wand125, 2026).
   [`certificates/s32/`](certificates/s32/README.md).
 * **`s(12) >= 15680/3951 = 3.968616…`** (1,736 weighted points).  Previous published bound
   `2 + 4/√5 = 3.788854…` (Stromquist 2003, inherited from n = 11; the DS7 Table 2 entry for

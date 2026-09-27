@@ -99,7 +99,7 @@ section>*{min-width:0}
   <h1>Thirty-Two Squares</h1>
   <p class="lede">Thirty-two unit squares fit in a 6 × 6 square: take the grid and leave four cells empty.
   Can a cleverer arrangement, with some squares tilted, fit them into anything smaller? No. <span class="mono">s(32) = 6</span>.
-  As far as we can find, this is the first exact value for any count of the form <span class="mono">k² − 4</span>.</p>
+  As far as we can find, this is the first exact value of <span class="mono">s(k² − 4)</span> for any <span class="mono">k ≥ 4</span>, and the first case where the plain grid is optimal with four squares missing.</p>
   <div class="tags">
     <span class="tag ok">two independent exact checkers</span>
     <span class="tag neutral">Lean 4 top theorem</span>
@@ -132,13 +132,16 @@ section>*{min-width:0}
 </section>
 
 <section id="context">
-  <div class="sechead"><span class="eyebrow">02 · Context</span><h2>Why k² − 4 had no exact value</h2></div>
+  <div class="sechead"><span class="eyebrow">02 · Context</span><h2>Four squares short of a grid</h2></div>
   <p>Exact values of <span class="mono">s(n)</span> are rare. Just below a perfect square <span class="mono">k²</span>
   the answer is known to be <span class="mono">k</span> for <span class="mono">k² − 1</span> and
   <span class="mono">k² − 2</span> (Nagamochi 2005), and for <span class="mono">k² − 3</span> when
-  <span class="mono">k ≤ 7</span> (Bentz 2010, and a 2016 preprint). With four squares missing, nothing was proved
-  for any <span class="mono">k</span>: not <span class="mono">s(12)</span>, <span class="mono">s(21)</span>,
-  <span class="mono">s(32)</span> or <span class="mono">s(45)</span>.</p>
+  <span class="mono">3 ≤ k ≤ 7</span> (Bentz 2010, and a 2016 preprint). With four squares missing, the only known value
+  was <span class="mono">s(5) = 2 + 1/√2</span> (Göbel 1979), where tilting beats the grid. From <span class="mono">k = 4</span> on the
+  grid is conjectured optimal, and nothing was proved: not <span class="mono">s(12)</span>, <span class="mono">s(21)</span>,
+  <span class="mono">s(32)</span> or <span class="mono">s(45)</span>. Friedman's survey conjectures that once
+  <span class="mono">s(k² − c) = k</span> holds for one <span class="mono">k</span>, it holds for every larger one. If that is right,
+  <span class="mono">s(32) = 6</span> would carry on to <span class="mono">s(45) = 7</span>, <span class="mono">s(60) = 8</span>, and so on.</p>
   <div class="tablewrap"><table>
     <thead><tr><th>lower bound for s(32)</th><th>source</th></tr></thead>
     <tbody>
@@ -243,7 +246,7 @@ D4 RECHECK CLEAN: every root of the D4 region certified</code></pre>
   <ul>
     <li>This is a computer-assisted proof and has not been peer reviewed. The claim is only as good as the two
     checker programs, which are open to inspection and re-running.</li>
-    <li>"First exact <span class="mono">k² − 4</span> value" rests on our literature search (journals, arXiv, the
+    <li>"First exact <span class="mono">s(k² − 4)</span> for <span class="mono">k ≥ 4</span>" rests on our literature search (journals, arXiv, the
     Friedman/Ellsworth catalogue, and the 2026 certificate repositories). If we missed one, please tell us.</li>
     <li>Nothing here settles <span class="mono">s(12)</span>, <span class="mono">s(21)</span> or
     <span class="mono">s(45)</span>. For those the same approach currently runs out of room: see
