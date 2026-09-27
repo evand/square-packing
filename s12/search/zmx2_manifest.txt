@@ -1,0 +1,26 @@
+# zmx2 run manifest (written by search/zmx2_run.sh; see search/ZMX2.md sec 9)
+date:            2026-09-27T16:19:39Z
+host:            nixos x86_64, cores 0-9 (10 threads)
+git HEAD:        5d91695fba1397fbe5ecf8f506d1302064f74b44 (0 local change(s) to zmx2.rs)
+checker source:  verify2/src/bin/zmx2.rs sha256 cead27e16072ad6641d4ff4612ee0e3e8a762c54932c9976ced696c87ec47084
+checker binary:  verify2/target/release/zmx2 sha256 f89104bfe3fa112e1bcda7f08ef320ea4a32fbe4693425de4e7df39a8687f25e
+rustc:           rustc 1.91.1 (ed61e7d7e 2025-11-07) (built from a source tarball)
+input:           runs/line-cover_m5_candidate_x1003.txt sha256 8b415ceeb5f20b02c4e338ce2feb21bc206051ef6bc5c7e433bebae2ef39fc23
+input summary:   s = 5/1  D = 1000  W = 100000000000  points 7536 (aggregated 7536)  segments 1872  vlines 4  hlines 4  Lc 20 total = 522368729933/25000000000 = 20.894749197320 
+D4 check:        D4: measure invariant under x->s-x and x<->y (exact)
+
+[cand_d4]
+command:         taskset -c 0-9 verify2/target/release/zmx2 cert runs/line-cover_m5_candidate_x1003.txt --d4 --threads 10 --log runs/zmx2/cand_d4.log
+log header:      # zmx2 cert hash=20610030026555f9 mode=d4 atoms=grid depth=40 node_cap=20000000 kappa=1.5 K=30 region=x0-24,y0-24,bins0-3
+log sha256:      174d7d04cd6782ad47998f1e4bd0af96cf3e92ce9aeee64c585639da8ba9fdc4  (2500 ROOT lines, 0 UNCERT lines)
+                 roots: 2500 in region, 0 already done (log), 2500 to run, 10 threads
+                 done in 1s wall: roots 2500 (missing 0), boxes 1826222, certified 888945, empty 25416, uncertified 0, max depth 26, cpu 11s
+                 VERIFIED-D4: every closed unit square in [0,s]^2 has mu >= 1 (D4-reduced sweep, all roots)
+
+[cand_full]
+command:         taskset -c 0-9 verify2/target/release/zmx2 cert runs/line-cover_m5_candidate_x1003.txt --full --threads 10 --log runs/zmx2/cand_full.log
+log header:      # zmx2 cert hash=20610030026555f9 mode=full atoms=grid depth=40 node_cap=20000000 kappa=1.5 K=30 region=x0-49,y0-49,bins0-3
+log sha256:      2bc0562fbdcc429b85a2e0f73a598935bfee4fa2e605eb01e1df7cd55b137af6  (20000 ROOT lines, 0 UNCERT lines)
+                 roots: 20000 in region, 0 already done (log), 20000 to run, 10 threads
+                 done in 10s wall: roots 20000 (missing 0), boxes 14709448, certified 7164300, empty 200424, uncertified 0, max depth 27, cpu 87s
+                 VERIFIED: every closed unit square in [0,s]^2 has mu >= 1 (unreduced sweep, all roots)
