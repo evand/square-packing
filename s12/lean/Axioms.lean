@@ -66,3 +66,33 @@ import Sqpack
 #print axioms SquarePacking.s32_isLeast
 #print axioms SquarePacking.s32_eq_six
 #print axioms SquarePacking.s32_eq_six_of_checker
+-- measures and mixed covers (Sqpack/MixedMeasure.lean, notes/lean-s21.md)
+#print axioms SquarePacking.packing_le_measure
+#print axioms SquarePacking.not_packs_of_measure
+#print axioms SquarePacking.d4_reduction_measure
+#print axioms SquarePacking.d4_reduction_measure_u
+#print axioms SquarePacking.segMeasure_comm
+#print axioms SquarePacking.segFrac_comm
+#print axioms SquarePacking.MixedCover.measure_apply
+#print axioms SquarePacking.MixedCover.measure_univ_le
+#print axioms SquarePacking.MixedCover.measure_univ_eq
+#print axioms SquarePacking.MixedCover.measure_preimage_invol
+#print axioms SquarePacking.MixedCover.d4InvM
+#print axioms SquarePacking.STree.mem_sound
+-- s(21) = 5 (Sqpack/S21.lean, notes/lean-s21.md)
+#print axioms SquarePacking.S21Data.check_ok
+#print axioms SquarePacking.S21Data.pwsum_tree
+#print axioms SquarePacking.S21Data.swsum_tree
+#print axioms SquarePacking.S21Data.card_pentries
+#print axioms SquarePacking.S21Data.card_sentries
+#print axioms SquarePacking.S21Data.total_eq
+#print axioms SquarePacking.S21Data.mu_box_lt
+#print axioms SquarePacking.S21Data.mu_sq
+#print axioms SquarePacking.S21Data.d4
+#print axioms SquarePacking.S21CheckerCover.region
+#print axioms SquarePacking.s21_cover_all
+#print axioms SquarePacking.s21_not_packs
+#print axioms SquarePacking.s21_packs
+#print axioms SquarePacking.s21_isLeast
+#print axioms SquarePacking.s21_eq_five
+#print axioms SquarePacking.s21_eq_five_of_checker
