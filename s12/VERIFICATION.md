@@ -204,7 +204,7 @@ the s(13) certificate over its tightest band) and the main rejection suite, and 
 rejection tests passed, every verdict VERIFIED).  `./verify.sh --full` adds the N = 12000 re-runs, the box-clique
 `xcheck.py` re-check and the full-domain `zmcheck` sweep of the s(13) certificate (3 h 40 min on a
 GitHub runner, above); CI runs it only on manual dispatch.  A separate CI job builds `lean/` and
-fails if `lean/Axioms.lean` reports `sorryAx` for any of its 36 theorems.
+fails if `lean/Axioms.lean` reports `sorryAx` for any of its 63 theorems.
 
 ## Checks performed on the original 788-point certificate (2026-08-23)
 ## Companion certificate (weaker but human-readable)

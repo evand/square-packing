@@ -188,6 +188,7 @@ def cmd_summary(a):
 
 
 def main():
+    global CERT
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('mode', choices=['plan', 'run', 'summary'])
     ap.add_argument('--out', default='runs/s32d4')
@@ -196,7 +197,9 @@ def main():
     ap.add_argument('--threads', type=int, default=4, help='threads per zmcheck process')
     ap.add_argument('--only', default=None, help='regex on job names (e.g. "c2[45]_")')
     ap.add_argument('--zmcheck', default=ZM, help='a zmcheck build with --d4')
+    ap.add_argument('--cert', default=CERT, help='certificate file (fixed per --out: checked against manifest.json)')
     a = ap.parse_args()
+    CERT = a.cert
     if not os.path.exists(CERT):
         sys.exit(f'run from s12/ ({CERT} not found)')
     {'plan': cmd_plan, 'run': cmd_run, 'summary': cmd_summary}[a.mode](a)

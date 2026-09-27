@@ -12,3 +12,6 @@ site/data/*.stdout
 
 # local Pages assembly
 _site/
+
+# Claude Code agent worktrees
+.claude/
