@@ -27,6 +27,9 @@ imported, not edited (sha256 `640fe453…086ab`, printed and compared at every r
   hole is a germ pivot pose at `θ = 0.57°` — and leaf stress tests of every certified dump find no pose below 1.
 * **Performance**: comparable line vs point covers (§4.6): 17,626 boxes / 304 CPU-s (lines) vs 19,998 / 606 CPU-s
   (the same lines as 2,406 points, `zeromargin.py`); germ cell 1,040 boxes / 19 s vs 1,932 / 86 s.
+* **`m = 5` (§7.5): agent A's candidate `× 1.003`, total `20.89474919732 < 21`, is VERIFIED-D4** (40,000 roots,
+  461,204 boxes, 19.7 CPU-h, 0 uncertified): `s(21) = 5`, conditional on this single checker and on the measure
+  version of the FORMAT.md reduction.  The unscaled candidate (20.832) left one root (float margin `0.33 %` there).
 * **Agent A's `m = 4` mixed covers** (scaled by me, checker tests only): `r5 × 1.05` (total 12.929)
   **VERIFIED-D4**.  `r7 × 1.02` (12.566) failed in round 1 (74 boxes); **round 2 (§7)** adds the region-wise
   primitive `SPLIT` (Lemma R) and affine end minorants in Lemma L, and it **verifies (D4, 43,970 boxes, 4.0 CPU-h)**.
@@ -557,7 +560,68 @@ box and in no certified leaf; leaf stress test over the 4,611 certified leaves (
 0 violations.  The wall-germ rejections of §7.2 (λ = 1.0005, 1.0002) contain SPLIT leaves too (26–27 per run);
 stress tests of those dumps: 0 violations.
 
-__ROUND2_A__
+### 7.4 Round-2 code, further changes found on the `m = 5` pilot
+
+On the first `m = 5` pilot (depth 20) the tilted-dip cell `[0.5,0.6]×[1.4,1.5]` and the wall column left 81 boxes
+(float minimum there `≥ 1.004`: checker limits), at wall poses with `θ = 2.5–7°` where the top vertex of `Q` crosses
+`y = 2` next to the grid point `(1, 2)`: the chord on `y = 2` swings between `0.005` and `0.062` inside one box and the
+Lemma L′ term (`ρ_min`) saw nothing.  Two more pieces (both in §2, with proofs, and in the tests `[4e]`, which now
+also run on the `m = 5` candidate's segments and count Lemma V's uses): **Lemma L′ in hull form** (affine minorant /
+majorant of the mass function instead of `ρ_min`), and **Lemma V** (split the box on whether the short chord exists).
+With them, and `--depth 24`, the pilot is clean.  (The r7 runs of §7.1–7.3 used the code before these two changes.)
+
+### 7.5 The `m = 5` candidate `runs/line-cover_m5_candidate.txt`
+
+7,536 points + 1,872 segments, total `520806311/25000000 = 20.83225244 < 21`, D4-invariant (checked), agent A's
+`lc_m5germC_r12` scaled by `1.004017` (`1.0025×` over its float-confirmed minimum, `search/LINE_COVER.md`).  Not scaled
+by me.  `--d4 --disj --chain-from 0 --depth 24`, `zm_mixed.py` at commit `d4b97f9`
+(sha256 in `runs/zmm/m5/full_sha.txt`).
+
+Pilot (certified, partial):
+
+| cell | roots | boxes | depth | CPU | result |
+|---|---|---|---|---|---|
+| interior germ `[1.4,1.6]²` | 32 | 5,470 | 17 | 755 s | VERIFIED |
+| tilted dip `9.13°`: `[0.5,0.6]×[1.4,1.5]` | 8 | 4,472 | 24 | 341 s | VERIFIED |
+| tilted dip `31.9°`: `[2.3,2.4]×[1.6,1.7]` | 8 | 2,722 | 18 | 499 s | VERIFIED |
+| wall-band column `c_x ∈ [0.5,0.6]`, all `c_y ≤ 2.5` | 200 | 7,240 | 24 | 627 s | VERIFIED |
+
+**Unscaled candidate, first full attempt (certified per root, stopped):** 2,946 of 5,000 root boxes done, 35,657
+CPU-s, all clean except one root, `[1.2,1.3]×[1.5,1.6]`, `u ∈ [5/16, 3/8]` (`θ = 34.7–41.1°`): 241 boxes uncertified at
+depth 24, where the cover's float minimum is `1.0033` (`zm_mixed_test.py unc`: a checker limit, not a hole).  The
+same root, split into 8 sub-roots, **verifies** on the candidate `× 1.003` (16,074 boxes, 1,093 CPU-s) and `× 1.006`
+(8,036 boxes, 629 CPU-s).  Heavy roots cluster around `c ≈ (1.2–1.4, 1.3–1.6)` at `θ ≥ 28°` (up to 13k boxes,
+2,000 CPU-s each), the same anti-correlated geometry as r7's.
+
+**Scaled file for the full sweep:** `runs/line-cover_m5_candidate_x1003.txt` = the candidate with every mass `× 1003/1000`
+(exact), total **`522368729933/25000000000 = 20.89474919732 < 21`** (the brief allows up to `× 1.006`, total `20.957`).
+Full D4 sweep with root pitch `1/20`, 16 `u`-bins (40,000 roots, for load balance), `--depth 24`, resumable
+(`runs/zmm/m5/x1003_full.jsonl`), code `d4b97f9`, shas in `runs/zmm/m5/x1003_sha.txt`:
+
+| run | roots | boxes | max depth | CPU | wall (10 procs) | leaves ADM / CHAIN / SPLIT / PIECE / EMPTY | result |
+|---|---|---|---|---|---|---|---|
+| `line-cover_m5_candidate_x1003.txt`, full D4 region | 40,000 (all, checked against `d4_roots`) | **461,204** | 21 | **70,917 s = 19.7 h** | 2.0 h | 146,017 / 23,518 / 53,951 / 9,058 / 18,058 | **VERIFIED-D4, 0 uncertified** |
+
+**Certified (by `zm_mixed.py` alone):** every admissible closed unit square of `[0,5]²` with centre in `[0, 2.5]²` and
+`θ = 2 arctan u`, `u ∈ [0, ½]` has `μ(Q) ≥ 1` for the mixed cover `runs/line-cover_m5_candidate_x1003.txt` of total
+`20.89474919732 < 21`; with its (checked) D4 invariance this covers all poses (§2, Symmetry).  With the FORMAT.md
+reduction that is `s(21) ≥ 5`, hence **`s(21) = 5`**, *provided* (i) the checker is correct — one implementation,
+Python + `Fraction`, lemmas proved here and tested by randomised exact checks, no independent re-check yet — and
+(ii) the reduction from point sets to these measures (Lean `packing_le_weight` generalisation, FORMAT.md) is done.
+The unscaled candidate (20.832) is not certified: one root needs more margin than 0.3 % or a stronger checker (above).
+
+Leaf stress tests (a re-run of three cells with `--dump`, same settings): the hard cell `[1.2,1.3]×[1.5,1.6]`
+(42,338 boxes; 21,201 certified leaves, 212,014 poses, min `1.00637`), the germ `[1.45,1.55]²` (744 leaves, min
+`1.00777`) and the wall/dip area `[0.45,0.6]×[1.4,1.55]` (1,018 leaves, min `1.00720`): 0 exact violations.
+
+Reproduce (resumable): `python3 search/zm_mixed.py cert runs/line-cover_m5_candidate_x1003.txt --d4 --disj
+--chain-from 0 --depth 24 --pitch 1/20 --ubins 16 --nproc 10 --resume runs/zmm/m5/x1003_full.jsonl`.
+
+**`m = 4` candidate** (`runs/line-cover_m4_candidate.txt`, 12.3654): a D4 run with the code before Lemma V / L′-hull
+had 15,914 uncertified boxes at 3,000 / 3,200 roots when stopped for the `m = 5` work; not rerun.
+
+
+
 
 ## 6. Reproduce
 
