@@ -437,7 +437,89 @@ def min_density(pcs, x0, x1):
     return best if best is not None else F(0)
 
 
-def lemma_l_data(L, key, I, w, box):
+def end_minorant(pcs, LM, a, D, up, xmid):
+    """For the gain g(x) = mass in [a, a + x] (up) or [a - x, a] (down), 0 <= x <= D, an affine l(x) = s x + i with
+    s >= 0 and l <= g on [0, D]: the edge of the lower convex hull of g's vertices (g is piecewise linear, so its
+    greatest convex minorant is that hull) that contains xmid (a float guess of where the chord end sits).
+    Returns (s, i, g(D)).  Used in Lemma L: gain >= min(l(x), g(D))."""
+    if D <= 0: return F(0), F(0), F(0)
+    if up:
+        g = lambda x: LM.below(a + x) - LM.below(a)
+        xs = [e - a for e in LM.bps if a < e < a + D]
+    else:
+        g = lambda x: LM.below(a) - LM.below(a - x)
+        xs = [a - e for e in LM.bps if a - D < e < a]
+    P = sorted(set([F(0), D] + xs))
+    V = [(x, g(x)) for x in P]
+    H = []
+    for pnt in V:                      # lower hull, left to right
+        while len(H) >= 2 and (H[-1][0] - H[-2][0]) * (pnt[1] - H[-2][1]) - (H[-1][1] - H[-2][1]) * (pnt[0] - H[-2][0]) <= 0:
+            H.pop()
+        H.append(pnt)
+    xm = min(max(xmid, 0.0), float(D))
+    for i in range(len(H) - 1):
+        if float(H[i + 1][0]) >= xm or i == len(H) - 2:
+            (x0, y0), (x1, y1) = H[i], H[i + 1]
+            sl = (y1 - y0) / (x1 - x0)
+            return sl, y0 - sl * x0, V[-1][1]
+    return F(0), F(0), V[-1][1]
+
+
+def cone_slope(pcs, LM, a, D, up=True):
+    """s = inf_{0 < x <= D} g(x)/x (kept for reference; superseded by end_minorant)."""
+    if D <= 0: return F(0)
+    if up:
+        g = lambda x: LM.below(a + x) - LM.below(a)
+        d0 = sum((dn for e0, e1, dn in pcs if e0 <= a < e1), F(0))
+        xs = [e - a for e in LM.bps if a < e < a + D]
+    else:
+        g = lambda x: LM.below(a) - LM.below(a - x)
+        d0 = sum((dn for e0, e1, dn in pcs if e0 < a <= e1), F(0))
+        xs = [a - e for e in LM.bps if a - D < e < a]
+    best = d0
+    for x in xs + [D]:
+        v = g(x) / x
+        if v < best: best = v
+    return best
+
+
+def _tk_float(fam, k, line, cx, cy, u):
+    num, dt = thr_num(fam, k, F(0)); n1, _ = thr_num(fam, k, F(1))
+    a = float(line) - (cx if fam == 'V' else cy)
+    nv = [float(num[i]) + a * float(n1[i] - num[i]) for i in range(3)]
+    val = nv[0] + nv[1] * u + nv[2] * u * u
+    den = 2 * u if dt == 'S' else 1 - u * u
+    return (cy if fam == 'V' else cx) + val / den
+
+
+def move_bound(fam, line, ks, ref, up, box, m):
+    """an exact upper bound, over the box, of  min_{k in ks} t_k - ref  (up) or  ref - max_{k in ks} t_k  (lo):
+    min over k of the max over sub-bins and corners of a containing rectangle (t_k is affine in the centre) of
+    the Bernstein-ratio upper bound.  None if unavailable."""
+    cx0, cx1, cy0, cy1, u0, u1 = box
+    ch = [corner_choices(cx0, True, m, u0, u1), corner_choices(cx1, False, m, u0, u1),
+          corner_choices(cy0, True, m, u0, u1), corner_choices(cy1, False, m, u0, u1)]
+    pts = sorted(set([u0, u1] + [q for c in ch for (a, b, _) in c for q in (a, b)]))
+    res = None
+    for k in ks:
+        mk = None
+        for j in range(len(pts) - 1):
+            v0, v1 = pts[j], pts[j + 1]
+            X0, X1, Y0, Y1 = [next(f for (a, b, f) in c if a <= v0 and v1 <= b) for c in ch]
+            for X in (X0, X1):
+                for Y in (Y0, Y1):
+                    t = thr_rf(fam, k, line, X, Y)
+                    e = rf_add(t, {K0: [-ref]}) if up else rf_add({K0: [ref]}, t, -1)
+                    ub = rf_bound(e, v0, v1, upper=True)
+                    if ub is None: mk = None; break
+                    mk = ub if mk is None else max(mk, ub)
+                if mk is None: break
+            if mk is None: break
+        if mk is not None and (res is None or mk < res): res = mk
+    return res
+
+
+def lemma_l_data(L, key, I, w, box, m=None):
     """eligibility and data of Lemma L for one axis line in one box, or None."""
     cx0, cx1, cy0, cy1, u0, u1 = box
     fam = key[0]
@@ -455,27 +537,60 @@ def lemma_l_data(L, key, I, w, box):
         b_lo = iv[0] if b_lo is None else max(b_lo, iv[0])
     Delta = 2 * (cx1 - cx0 + cy1 - cy0) + 8 * (u1 - u0) + F(1, 10 ** 6)
     vertex = not (b_lo < a_up)
+    Dup = Dlo = Delta
+    if not vertex and m is not None:        # tight caps: how far the chord ends can actually move (any Delta > 0 is sound)
+        mu = move_bound(fam, key[1], typed_up, a_up, True, box, m)
+        ml = move_bound(fam, key[1], typed_lo, b_lo, False, box, m)
+        if mu is not None: Dup = max(min(Delta, mu), F(1, 10 ** 12))
+        if ml is not None: Dlo = max(min(Delta, ml), F(1, 10 ** 12))
     if vertex:                  # Lemma L' (short chord, e.g. a vertex of Q crossing the line): see ZM_MIXED.md
         lo_r, hi_r = min(a_up, b_lo) - Delta, max(a_up, b_lo) + Delta
     else:
-        lo_r, hi_r = b_lo - Delta, a_up + Delta
+        lo_r, hi_r = b_lo - Dlo, a_up + Dup
     for k in range(4):
         if k in typed_up or k in typed_lo: continue
         iv = I[k]                                   # an untyped inequality must hold on the whole range
         if iv is None or (iv[0] is not None and iv[0] > lo_r) or (iv[1] is not None and iv[1] < hi_r): return None
     pcs = line_pieces(L, (None, None), w[0], w[1])
     if not pcs: return None
-    if vertex:
-        rho = min_density(pcs, lo_r, hi_r)
-        if rho == 0: return None
-        return dict(fam=fam, line=key[1], up=typed_up, lo=typed_lo, vertex=True, A=lo_r, Bv=hi_r, rho=rho,
-                    core=F(0))
+    if vertex:                  # Lemma L' with hull minorant / majorant (ZM_MIXED.md): mass >= l1(min(r_up,B)-p) - l2(max(r_lo,A)-p)
+        LMv = LineMass(pcs)
+        cxm, cym, um = float(cx0 + cx1) / 2, float(cy0 + cy1) / 2, max(float(u0 + u1) / 2, 1e-9)
+        rf_up = min(_tk_float(fam, k, key[1], cxm, cym, um) for k in typed_up)
+        rf_lo = max(_tk_float(fam, k, key[1], cxm, cym, um) for k in typed_lo)
+        pst = F((min(max(rf_up, float(lo_r)), float(hi_r)) + min(max(rf_lo, float(lo_r)), float(hi_r))) / 2).limit_denominator(10 ** 9)
+        pst = min(max(pst, lo_r), hi_r)
+        g = lambda x: LMv.below(pst + x) - LMv.below(pst)
+        xs = sorted(set([lo_r - pst, hi_r - pst] + [e - pst for e in LMv.bps if lo_r < e < hi_r]))
+        V = [(x, g(x)) for x in xs]
+        def hull(V, lower):
+            H = []
+            for q in V:
+                while len(H) >= 2:
+                    cr = (H[-1][0] - H[-2][0]) * (q[1] - H[-2][1]) - (H[-1][1] - H[-2][1]) * (q[0] - H[-2][0])
+                    if (cr <= 0) if lower else (cr >= 0): H.pop()
+                    else: break
+                H.append(q)
+            return H
+        def edge(H, xf):
+            for i in range(len(H) - 1):
+                if float(H[i + 1][0]) >= xf or i == len(H) - 2:
+                    (x0, y0), (x1, y1) = H[i], H[i + 1]
+                    sl = (y1 - y0) / (x1 - x0); return sl, y0 - sl * x0
+        s1, i1 = edge(hull(V, True), rf_up - float(pst))
+        s2, i2 = edge(hull(V, False), rf_lo - float(pst))
+        if s1 <= 0 and s2 <= 0: return None
+        return dict(fam=fam, line=key[1], up=typed_up, lo=typed_lo, vertex=True, A=lo_r, Bv=hi_r, p=pst,
+                    s1=s1, i1=i1, s2=s2, i2=i2, rho=s1, core=F(0))
     LM = LineMass(pcs)
     core = LM.below(a_up) - LM.below(b_lo)
-    rho_up = min_density(pcs, a_up, hi_r)
-    rho_lo = min_density(pcs, lo_r, b_lo)
-    return dict(fam=fam, line=key[1], up=typed_up, lo=typed_lo, a_up=a_up, b_lo=b_lo, Delta=Delta,
-                core=core, rho_up=rho_up, rho_lo=rho_lo)
+    cxm, cym, um = float(cx0 + cx1) / 2, float(cy0 + cy1) / 2, max(float(u0 + u1) / 2, 1e-9)
+    xu = min(_tk_float(fam, k, key[1], cxm, cym, um) for k in typed_up) - float(a_up)
+    xl = float(b_lo) - max(_tk_float(fam, k, key[1], cxm, cym, um) for k in typed_lo)
+    su, iu, cu = end_minorant(pcs, LM, a_up, Dup, True, xu)
+    sl, il, cl = end_minorant(pcs, LM, b_lo, Dlo, False, xl)
+    return dict(fam=fam, line=key[1], up=typed_up, lo=typed_lo, a_up=a_up, b_lo=b_lo, Dup=Dup, Dlo=Dlo,
+                core=core, s_up=su, i_up=iu, cap_up=cu, s_lo=sl, i_lo=il, cap_lo=cl)
 
 
 # Rational functions of u as dicts {(eS, eC, eN): poly}: value = sum_key poly(u) / (S^eS C^eC N^eN),
@@ -588,19 +703,23 @@ def thr_rf(fam, k, line, X, Y):
 
 
 def _line_opts(d, X, Y):
-    if d.get('vertex'):         # rho min(min_up t_k, B) - rho max(max_lo t_j, A)
-        rho = d['rho']
-        up = [{K0: [rho * d['Bv']]}] + [rf_scale(thr_rf(d['fam'], k, d['line'], X, Y), rho) for k in d['up']]
-        lo = [{K0: [-rho * d['A']]}] + [rf_scale(thr_rf(d['fam'], k, d['line'], X, Y), -rho) for k in d['lo']]
+    if d.get('vertex'):         # l1(min(min_up t_k, B) - p) - l2(max(max_lo t_j, A) - p)
+        p_, s1, i1, s2, i2 = d['p'], d['s1'], d['i1'], d['s2'], d['i2']
+        up = [{K0: [s1 * (d['Bv'] - p_) + i1]}] + \
+             [rf_add(rf_scale(thr_rf(d['fam'], k, d['line'], X, Y), s1), {K0: [i1 - s1 * p_]}) for k in d['up']]
+        lo = [{K0: [-(s2 * (d['A'] - p_) + i2)]}] + \
+             [rf_add(rf_scale(thr_rf(d['fam'], k, d['line'], X, Y), -s2), {K0: [s2 * p_ - i2]}) for k in d['lo']]
         return [up, lo]
     out = []
-    for side, ks, rho in (('up', d['up'], d['rho_up']), ('lo', d['lo'], d['rho_lo'])):
-        if rho == 0: continue
-        opts = [{K0: [rho * d['Delta']]}]
+    for side, ks in (('up', d['up']), ('lo', d['lo'])):
+        s_, i_, cap = (d['s_up'], d['i_up'], d['cap_up']) if side == 'up' else (d['s_lo'], d['i_lo'], d['cap_lo'])
+        if s_ == 0 and i_ == 0 and cap == 0: continue
+        opts = [{K0: [cap]}]
         for k in ks:
             t = thr_rf(d['fam'], k, d['line'], X, Y)
-            if side == 'up': opts.append(rf_scale(rf_add(t, {K0: [-d['a_up']]}), rho))        # rho (t_k - a_up)
-            else: opts.append(rf_scale(rf_add({K0: [d['b_lo']]}, t, -1), rho))              # rho (b_lo - t_k)
+            if side == 'up': x = rf_add(t, {K0: [-d['a_up']]})          # x = t_k - a_up
+            else: x = rf_add({K0: [d['b_lo']]}, t, -1)                   # x = b_lo - t_k
+            opts.append(rf_add(rf_scale(x, s_), {K0: [i_]}))             # s x + i
         out.append(opts)
     return out
 
@@ -641,10 +760,212 @@ def lemma_l_joint(datas, box, B, m):
                 if best is None or v < best: best = v
     return best
 
+# =========================================================================================== Lemma R (region-wise)
+def g_coeffs(kind, px, py):
+    """zeromargin's violation polynomial of a point, G = alpha(u) + beta(u) cx + gamma(u) cy (G <= 0 <=> the
+    inequality `kind` holds; zeromargin.Checker._gcoef with a = px - cx, b = py - cy)."""
+    Cp, Sp, Np = PC, PS, PN
+    if kind == 0:      # 2(aC + bS) - N
+        al = padd(padd(pscale(Cp, 2 * px), pscale(Sp, 2 * py)), pscale(Np, -1)); be = pscale(Cp, -2); ga = pscale(Sp, -2)
+    elif kind == 1:    # -2(aC + bS) - N
+        al = padd(padd(pscale(Cp, -2 * px), pscale(Sp, -2 * py)), pscale(Np, -1)); be = pscale(Cp, 2); ga = pscale(Sp, 2)
+    elif kind == 2:    # -2aS + 2bC - N
+        al = padd(padd(pscale(Sp, -2 * px), pscale(Cp, 2 * py)), pscale(Np, -1)); be = pscale(Sp, 2); ga = pscale(Cp, -2)
+    else:              # 2aS - 2bC - N
+        al = padd(padd(pscale(Sp, 2 * px), pscale(Cp, -2 * py)), pscale(Np, -1)); be = pscale(Sp, -2); ga = pscale(Cp, 2)
+    return al, be, ga
+
+
+def g_at(gc, X, Y):
+    al, be, ga = gc
+    return rf_add(rf_add({K0: al}, rf_mulpoly_den(X, be, K0)), rf_mulpoly_den(Y, ga, K0))
+
+
+def _div_by(x, poly):
+    """x / poly for poly = k*C or k*S (the beta/gamma of g_coeffs); None otherwise."""
+    if len(poly) == 3 and poly[1] == 0 and poly[0] == -poly[2] and poly[0] != 0:      # k (1 - u^2)
+        return rf_mulpoly_den(x, [1 / poly[0]], (0, 1, 0))
+    if len(poly) == 2 and poly[0] == 0 and poly[1] != 0:                               # 2k u = k S
+        return rf_mulpoly_den(x, [2 / poly[1]], (1, 0, 0))
+    return None
+
+
+def phi_at(datas, X, Y, v0, v1):
+    """Corollary L's lower bound over [v0, v1] of the lines' Lemma L right-hand sides at the centre (X(u), Y(u))."""
+    um = (float(v0) + float(v1)) / 2
+    tot = {K0: [sum((d['core'] for d in datas), F(0))]}
+    slack = F(0)
+    for d in datas:
+        for opts in _line_opts(d, X, Y):
+            vals = [rf_eval(o, um) for o in opts]
+            i0 = min(range(len(opts)), key=lambda i: vals[i])
+            tot = rf_add(tot, opts[i0])
+            sl = F(0)
+            for i, o in enumerate(opts):
+                if i == i0: continue
+                mu = rf_bound(rf_add(opts[i0], o, -1), v0, v1, upper=True)
+                if mu is None: return None
+                if mu > sl: sl = mu
+            slack += sl
+    lb = rf_bound(tot, v0, v1)
+    return None if lb is None else lb - slack
+
+
+def rf_mul(x, y):
+    r = {}
+    for k1, p1 in x.items():
+        for k2, p2 in y.items():
+            k = (k1[0] + k2[0], k1[1] + k2[1], k1[2] + k2[2])
+            r[k] = padd(r.get(k, [F(0)]), pmul(p1, p2))
+    return r
+
+
+def _mono(a, b, c):
+    r = [F(1)]
+    for _ in range(a): r = pmul(r, PS)
+    for _ in range(b): r = pmul(r, PC)
+    for _ in range(c): r = pmul(r, PN)
+    return r
+
+
+def _trim(p):
+    p = list(p)
+    while len(p) > 1 and p[-1] == 0: p.pop()
+    return p
+
+
+def rf_combine(x):
+    """the same rational function over one common denominator S^A C^B N^E (a single key)."""
+    ks = [k for k, p in x.items() if any(p)]
+    if not ks: return {K0: [F(0)]}
+    A = max(k[0] for k in ks); Bc = max(k[1] for k in ks); E = max(k[2] for k in ks)
+    P = [F(0)]
+    for k in ks: P = padd(P, pmul(x[k], _mono(A - k[0], Bc - k[1], E - k[2])))
+    return {(A, Bc, E): P}
+
+
+def rf_div(x, d):
+    """x / d for a rational function d that is a single term kappa S^i C^j N^e / (S^a C^b N^c); None otherwise."""
+    d = rf_combine(d)
+    ks = [k for k, p in d.items() if any(p)]
+    if len(ks) != 1: return None
+    (a, b, c) = ks[0]; p = _trim(d[ks[0]])
+    for i in range(4):
+        for j in range(4):
+            for e in range(4):
+                mo = _mono(i, j, e)
+                if len(mo) != len(p): continue
+                kap = p[-1] / mo[-1]
+                if kap != 0 and all(p[t] == kap * mo[t] for t in range(len(p))):
+                    num = pscale(_mono(a, b, c), 1 / kap)
+                    return rf_mulpoly_den(x, num, (i, j, e))
+    return None
+
+
+def rf_is_zero(x):
+    return all(not any(p) for p in rf_combine(x).values())
+
+
+def gc_to_rf(gc):
+    al, be, ga = gc
+    return ({K0: al}, {K0: be}, {K0: ga})
+
+
+def aff_at(D, X, Y):
+    D0, DX, DY = D
+    return rf_add(rf_add(D0, rf_mul(DX, X)), rf_mul(DY, Y))
+
+
+def region_phi(datas, box, m, cons):
+    """Lemma R: a lower bound on the lines' mass over the admissible poses of the box that also satisfy the
+    constraints cons = [(D, side)], D = (D0, DX, DY) rational functions of u with D(c, u) = D0 + DX c_x + DY c_y
+    (affine in the centre at fixed u), side 'le': D <= 0, 'ge': D >= 0; the constraint lines must be pairwise
+    parallel (no line-line vertices).  At fixed u the centres form (a subset of) rect(u) ∩ half-planes, a convex
+    polygon whose vertices are among the rectangle corners and the constraint lines ∩ edge lines; the concave Lemma L
+    bound is >= its minimum over any finite set whose hull contains the polygon, i.e. over every candidate not PROVEN
+    (rf_bound over the sub-bin) to violate a constraint or to leave its edge.  'EMPTY' if every candidate is excluded
+    on every sub-bin; None if a bound is unavailable."""
+    cx0, cx1, cy0, cy1, u0, u1 = box
+    ch = [corner_choices(cx0, True, m, u0, u1), corner_choices(cx1, False, m, u0, u1),
+          corner_choices(cy0, True, m, u0, u1), corner_choices(cy1, False, m, u0, u1)]
+    pts = sorted(set([u0, u1] + [q for c in ch for (a, b, _) in c for q in (a, b)]))
+    best = 'EMPTY'
+    for j in range(len(pts) - 1):
+        v0, v1 = pts[j], pts[j + 1]
+        X0, X1, Y0, Y1 = [next(f for (a, b, f) in c if a <= v0 and v1 <= b) for c in ch]
+
+        def excluded(V, edge=None):
+            X, Y = V
+            for D, side in cons:
+                g = aff_at(D, X, Y)
+                if side == 'le':
+                    lb = rf_bound(g, v0, v1)
+                    if lb is not None and lb > 0: return True
+                else:
+                    ub = rf_bound(g, v0, v1, upper=True)
+                    if ub is not None and ub < 0: return True
+            if edge is not None:
+                coord, lo, hi = edge
+                a_ = rf_bound(rf_add(coord, hi, -1), v0, v1)
+                if a_ is not None and a_ > 0: return True
+                b_ = rf_bound(rf_add(lo, coord, -1), v0, v1)
+                if b_ is not None and b_ > 0: return True
+            return False
+        cand = []
+        for X in (X0, X1):
+            for Y in (Y0, Y1):
+                if not excluded((X, Y)): cand.append((X, Y))
+        for D, side in cons:
+            D0, DX, DY = D
+            if not rf_is_zero(DX):
+                for Y in (Y0, Y1):          # edge cy = Y:  cx = -(D0 + DY Y)/DX
+                    X = rf_div(rf_scale(rf_add(D0, rf_mul(DY, Y)), -1), DX)
+                    if X is None or any(k[0] and u0 <= 0 for k in X): return None
+                    if not excluded((X, Y), (X, X0, X1)): cand.append((X, Y))
+            if not rf_is_zero(DY):
+                for X in (X0, X1):          # edge cx = X:  cy = -(D0 + DX X)/DY
+                    Y = rf_div(rf_scale(rf_add(D0, rf_mul(DX, X)), -1), DY)
+                    if Y is None or any(k[0] and u0 <= 0 for k in Y): return None
+                    if not excluded((X, Y), (Y, Y0, Y1)): cand.append((X, Y))
+        for V in cand:
+            v = phi_at(datas, V[0], V[1], v0, v1)
+            if v is None: return None
+            if best == 'EMPTY' or v < best: best = v
+    return best
+
+
+def vertex_split(datas, box, m):
+    """Lemma V: for the Lemma L' (short-chord) line with the largest density, split the box's poses by the sign of
+    t_k - t_j (k, j its up / lo inequalities active at the box centre), an affine function of the centre at fixed u.
+    Where t_k <= t_j the line is counted as 0; where t_k >= t_j with its Lemma L' term.  Returns the min of the two
+    region bounds of the joint Lemma L expression (other short-chord lines dropped, i.e. counted 0), or None."""
+    vs = [d for d in datas if d.get('vertex')]
+    if not vs: return None
+    d = max(vs, key=lambda d: d['rho'])
+    others = [e for e in datas if not e.get('vertex')]
+    cx0, cx1, cy0, cy1, u0, u1 = box
+    if u0 <= 0: return None
+    cxm, cym, um = float(cx0 + cx1) / 2, float(cy0 + cy1) / 2, float(u0 + u1) / 2
+    k = min(d['up'], key=lambda k: _tk_float(d['fam'], k, d['line'], cxm, cym, um))
+    j = max(d['lo'], key=lambda k: _tk_float(d['fam'], k, d['line'], cxm, cym, um))
+    Z0 = {K0: [F(0)]}; O1 = {K0: [F(1)]}
+    def Dat(X, Y): return rf_add(thr_rf(d['fam'], k, d['line'], X, Y), thr_rf(d['fam'], j, d['line'], X, Y), -1)
+    D0 = Dat(Z0, Z0)
+    D = (D0, rf_add(Dat(O1, Z0), D0, -1), rf_add(Dat(Z0, O1), D0, -1))
+    ra = region_phi(others, box, m, [(D, 'le')]) if others else 'EMPTY0'
+    rb = region_phi(others + [d], box, m, [(D, 'ge')])
+    if ra is None or rb is None: return None
+    if ra == 'EMPTY0':
+        ra = region_phi([], box, m, [(D, 'le')])
+        if ra is None: return None
+    vals = [v for v in (ra, rb) if v != 'EMPTY']
+    return min(vals) if vals else None
+
+
 # =========================================================================================== the checker
 class MixedChecker:
     def __init__(self, cover, max_depth=18, use_chain=False, chain_from=0, theta_bias=4, clip=True,
-                 use_thr=True, use_pieces=True, dump=False, use_lin=True):
+                 use_thr=True, use_pieces=True, dump=False, use_lin=True, use_split=True):
         self.cov = cover
         self.m = cover.m
         self.max_depth = max_depth
@@ -654,6 +975,7 @@ class MixedChecker:
         self.clip = clip
         self.use_thr = use_thr
         self.use_lin = use_lin
+        self.use_split = use_split
         self.use_pieces = use_pieces and cover.has_pieces
         self.dump = dump
         pts = [(x, y) for x, y, _ in cover.points]
@@ -695,6 +1017,7 @@ class MixedChecker:
         cxm, cym = float(cx0 + cx1) / 2, float(cy0 + cy1) / 2
         R = 0.7072 + 0.5 * math.hypot(float(cx1 - cx0), float(cy1 - cy0)) + 1e-9
         cov = self.cov
+        self._lparts = None
         ivcache = {}
 
         def ivs(L):
@@ -756,34 +1079,51 @@ class MixedChecker:
             for c in (1, 2, 3): J4 = iv_and(J4, I[c])
             lcore[key] = sum(((b - a) * dn for a, b, dn in line_pieces(L, J4, w[0], w[1])), F(0))
             if self.use_lin and key[0] in ('V', 'H'):
-                dL = lemma_l_data(L, key, I, w, box)
+                dL = lemma_l_data(L, key, I, w, box, self.m)
                 if dL is not None: ldata[key] = dL
         gkeys = set(k for keys, _, _ in groups for k in keys)
         others = [k for k in lcore if not (k[0] in ('V', 'H') and (k[0], k[1]) in gkeys)]
 
         def lin_or_core(keys):
+            """(value, Lemma L gained?, parts); parts = (Lemma L datas, core value of those lines, L value) so that
+            value = rest + max(core, L) with rest = value - max(core, L)."""
             keys = list(keys)
             el = [k for k in keys if k in ldata]
             base_ = sum((lcore[k] for k in keys if k not in ldata), F(0))
             cs = sum((lcore[k] for k in el), F(0))
-            if not el: return base_, False
+            if not el: return base_, False, None
+            best = None                                         # (lj, datas, core of those datas)
             lj = lemma_l_joint([ldata[k] for k in el], box, B, m)
+            if lj is not None: best = (lj, [ldata[k] for k in el], cs)
             nv = [k for k in el if not ldata[k].get('vertex')]
-            if len(nv) < len(el):       # the short-chord terms can be negative: also try without them
-                lj2 = lemma_l_joint([ldata[k] for k in nv], box, B, m) if nv else None
-                if lj2 is not None: lj2 += sum((lcore[k] for k in el if ldata[k].get('vertex')), F(0))
-                if lj2 is not None and (lj is None or lj2 > lj): lj = lj2
-            if lj is not None and lj > cs: return base_ + lj, True
-            return base_ + cs, False
+            if len(nv) < len(el) and nv:  # the short-chord terms can be negative: also try without them
+                lj2 = lemma_l_joint([ldata[k] for k in nv], box, B, m)
+                if lj2 is not None:
+                    csv = sum((lcore[k] for k in el if ldata[k].get('vertex')), F(0))
+                    if best is None or lj2 + csv > best[0]:
+                        best = (lj2 + csv, [ldata[k] for k in nv], cs - csv)
+            if any(ldata[k].get('vertex') for k in el):          # Lemma V: split on the short chord's existence
+                vv = vertex_split([ldata[k] for k in el], box, m)
+                if vv is not None and (best is None or vv > best[0]):
+                    best = (vv, [ldata[k] for k in el], cs)
+            if best is None: return base_ + cs, False, None
+            ljv, datas, csd = best
+            # value of the part carried by `datas`: ljv - (vertex cores added) ; keep it simple:
+            part_L = ljv - (cs - csd)          # = Lemma L joint value of `datas`
+            part = max(part_L, csd)
+            val = base_ + (cs - csd) + part
+            return val, part_L > csd, (datas, csd, part_L)
 
         A = sum((max(bd, cr) for _, bd, cr in groups), F(0))
         tgain = any(bd > cr for _, bd, cr in groups)
-        oth, lgain = lin_or_core(others)
+        oth, lgain, parts = lin_or_core(others)
         A += oth
         total = A
         if groups and ldata:
-            Bv, lg2 = lin_or_core([k for keys, _, _ in groups for k in keys if k in lcore] + others)
-            if Bv > total: total = Bv; tgain = False; lgain = lg2
+            Bv, lg2, parts2 = lin_or_core([k for keys, _, _ in groups for k in keys if k in lcore] + others)
+            if Bv > total: total = Bv; tgain = False; lgain = lg2; parts = parts2
+        # for the region-wise bound (Lemma R): total = rest + max(core_part, L_part), rest excludes the datas' lines
+        self._lparts = None if parts is None else (parts[0], parts[1], total - max(parts[1], parts[2]))
         thr_gain = 'T' if tgain else ('L' if lgain else False)
         # ---- polygons (Lemma S, 2-D)
         if cov.polys:
@@ -801,7 +1141,11 @@ class MixedChecker:
                 if K:
                     for P in near:
                         Vi = clip_convex(P['V'], K)
-                        if Vi: total += P['w'] * poly_area(Vi) / P['area']
+                        if Vi:
+                            pa = P['w'] * poly_area(Vi) / P['area']
+                            total += pa
+                            if self._lparts is not None:
+                                self._lparts = (self._lparts[0], self._lparts[1], self._lparts[2] + pa)
         return total, thr_gain
 
     def _group(self, Lu, wu, Ld, wd, ivs, up_cond, down_cond, u0, with_pts=False, moved=None):
@@ -874,12 +1218,118 @@ class MixedChecker:
             if v < best: best = v
         return best, core
 
+    # ---------------------------------------------------------------- SPLIT: region-wise pieces + points (Lemma R)
+    def cert_split(self, box, B, inh, Lbox, lparts, maxchain=400, diag=None):
+        """Disjunctive certification coupling pieces and points region by region (ZM_MIXED.md Lemma R).
+        T = points in Q at every admissible pose (ADM / P1 / inherited).  For each swing kind: a chain of swing
+        points q_1..q_k with G_{q_1} <= ... <= G_{q_k} on the box (exact); every admissible pose lies in a region
+        r = 0..k:  G_{q_r} <= 0 (r >= 1) and G_{q_{r+1}} > 0 (r < k).  In region r the points of T, of the
+        down-set (G_p <= G_{q_r} on the box) and of the up-set (G_p + lam G_{q_{r+1}} <= 0 on the box) are in Q,
+        and the pieces carry >= rest + max(core, region_phi(...)) (Lemma R).  Certified if every region reaches 1."""
+        if lparts is None: lparts = ([], F(0), Lbox)        # no Lemma L lines: the pieces are the constant Lbox
+        datas, core_part, rest = lparts
+        zc = self.zc
+        cx0, cx1, cy0, cy1, u0, u1 = box
+        if u0 <= 0: return (None, None)
+        specs = zc._adm_specs(box, B)
+        ma, cmasks = zc._adm_mask(specs, u0, u1, per_cond=True)
+        mp = zc._p1_mask(box, B)
+        t = 1 - B['whi'] / 2
+        n = len(zc.P) - 1                                       # the phantom (last) is not a point here
+        inT = np.zeros(n, dtype=bool); wT = F(0)
+        sel = ma[:n] | mp[:n]
+        if inh is not None: sel = sel | inh[:n]
+        for k in np.nonzero(sel)[0]:
+            px, py = zc.P[k]
+            if (inh is not None and inh[k]) or (mp[k] and zc._p1_exact(px, py, box, t)) or \
+               (ma[k] and zc._adm_exact(px, py, specs, u0, u1)):
+                inT[k] = True; wT += zc.W[k]
+        base = wT + rest
+        if base + core_part >= 1 and diag is None: return ('SPLIT', 'T')
+        cxm, cym = float((cx0 + cx1) / 2), float((cy0 + cy1) / 2)
+        rad = 0.7072 + 0.5 * math.hypot(float(cx1 - cx0), float(cy1 - cy0))
+        reach = (((zc.Pxf[:n] - cxm) ** 2 + (zc.Pyf[:n] - cym) ** 2) <= rad * rad) & (~inT) & (zc.Wf[:n] > 0)
+        nfail = np.zeros(n, dtype=np.int8)
+        for cm in cmasks: nfail += (~cm[:n])
+        reach &= (nfail <= 1)
+        cand = []
+        for k in np.nonzero(reach)[0]:
+            px, py = zc.P[k]
+            bad = None
+            for c in range(4):
+                if not cmasks[c][k]:
+                    if bad is not None: bad = -1; break
+                    bad = c; continue
+                if not zc._adm_cond_ok(px, py, specs, c, u0, u1):
+                    if bad is not None: bad = -1; break
+                    bad = c
+            if bad is None or bad < 0: continue
+            cand.append((int(k), bad))
+        if not cand: return (None, None)
+        ctx = zc._box_ctx(box)
+        def le(terms): return zc._gle0(terms, ctx)
+        m = self.m
+        kinds = sorted({kd for _, kd in cand}, key=lambda kd: -sum(zc.Wf[k] for k, d in cand if d == kd))
+        for kd in kinds:
+            grp = [ck for ck in cand if ck[1] == kd]
+            def proxy(ck):
+                g = zc._gcoef(kd, zc.P[ck[0]][0] - F(cxm), zc.P[ck[0]][1] - F(cym))
+                return float(g[0] + g[1] * (u0 + u1) / 2 + g[2] * ((u0 + u1) / 2) ** 2)
+            grp.sort(key=proxy)
+            ch = []
+            for ck in grp:
+                if not ch or le([(1, ch[-1][0], kd), (-1, ck[0], kd)]): ch.append(ck)
+                if len(ch) >= maxchain: break
+            kk = len(ch)
+            # down[r] / up[r] membership (exact integer tests, binary searches as in zeromargin's CHAIN)
+            W = {k: zc.W[k] for k, _ in cand}
+            dlo = {}; ulo = {}
+            for (k, kind) in cand:
+                lo, hi = 1, kk + 1
+                while lo < hi:
+                    mid = (lo + hi) // 2
+                    q = ch[mid - 1]
+                    if q[0] == k or le([(1, k, kind), (-1, q[0], q[1])]): hi = mid
+                    else: lo = mid + 1
+                dlo[k] = lo
+                lo, hi = 0, kk
+                while lo < hi:
+                    mid = (lo + hi + 1) // 2
+                    q = ch[mid - 1]
+                    good = q[0] != k and any(le([(a, k, kind), (b, q[0], q[1])]) for a, b in ((1, 1), (2, 1), (1, 2)))
+                    if good: lo = mid
+                    else: hi = mid - 1
+                ulo[k] = lo
+            gcs = [gc_to_rf(g_coeffs(kd, *zc.P[q[0]])) for q in ch]
+            ok = True
+            regs = []
+            for r in range(kk + 1):
+                Wr = sum((W[k] for k, _ in cand if dlo[k] <= r or ulo[k] >= r + 1), F(0))
+                cons = []
+                if r >= 1: cons.append((gcs[r - 1], 'le'))
+                if r < kk: cons.append((gcs[r], 'ge'))
+                if diag is None and base + Wr + (Lbox - rest) >= 1: continue
+                ph = region_phi(datas, box, m, cons)
+                pb = rest + (core_part if ph in (None, 'EMPTY') else max(core_part, ph))
+                if diag is not None:
+                    regs.append(dict(r=r, pts=[int(k) for k in np.nonzero(inT)[0]] +
+                                     [k for k, _ in cand if dlo[k] <= r or ulo[k] >= r + 1], pieces=pb, empty=(ph == 'EMPTY')))
+                if ph == 'EMPTY': continue
+                if wT + Wr + pb < 1:
+                    ok = False
+                    if diag is None: break
+            if diag is not None:
+                diag.append(dict(kind=kd, chain=[q[0] for q in ch], regions=regs, ok=ok))
+            if ok and diag is None: return ('SPLIT', ('kind', kd, 'k', kk))
+        return (None, None)
+
     # ---------------------------------------------------------------- recursion (mirrors zeromargin.run_box)
     def run_box(self, root):
         zc = self.zc
         stats = {'ADM': 0, 'CORE': 0, 'P1': 0, 'MIX': 0, 'CHAIN': 0, 'TRI': 0, 'PIECE': 0, 'EMPTY': 0,
-                 'UNCERT': 0, 'boxes': 0, 'maxdepth': 0, 'THR': 0, 'LIN': 0, 'TPTS': 0}
-        unc = []; leaves = []
+                 'UNCERT': 0, 'boxes': 0, 'maxdepth': 0, 'THR': 0, 'LIN': 0, 'TPTS': 0, 'SPLIT': 0, 'cpu': 0.0}
+        unc = []
+        _t0 = time.process_time(); leaves = []
         n = len(zc.P)
         base = np.zeros(n, dtype=bool); base[self.ph] = True
         stack = [(root, 0, None, F(0))]
@@ -905,8 +1355,10 @@ class MixedChecker:
                 if self.dump: leaves.append((box, 'EMPTY', None))
                 continue
             L = F(0); thr = False
+            lparts = None
             if self.use_pieces:
                 L, thr = self.piece_bound(box, B)
+                lparts = self._lparts
                 if Lpar > L: L = Lpar                    # the parent's bound holds on this sub-box too
             kind = wit = None
             if L >= 1:
@@ -951,6 +1403,8 @@ class MixedChecker:
                         if kind is not None:
                             stats['TPTS'] += 1
                             if self.dump: wit = ('moved', sorted(moved), wit)
+                if kind is None and self.use_split and lparts is not None:
+                    kind, wit = self.cert_split(box, B, inh, L, lparts)
                 if kind is not None and self.dump:
                     wit = (str(Lr), wit)
             if kind is not None:
@@ -980,6 +1434,7 @@ class MixedChecker:
                 mid = (u0 + u1) / 2
                 stack.append(((cx0, cx1, cy0, cy1, u0, mid), depth + 1, kid, L))
                 stack.append(((cx0, cx1, cy0, cy1, mid, u1), depth + 1, kid, L))
+        stats['cpu'] = time.process_time() - _t0
         return stats, unc, leaves
 
 
@@ -1023,14 +1478,22 @@ def admissible(m, cx, cy, u):
 # =========================================================================================== driver
 _MC = None
 def _worker1(root):
-    return _MC.run_box(root)
+    return root, _MC.run_box(root)
 
 
-def run_sweep(chk, R, nproc, chunksize, progress, label=''):
+def run_sweep(chk, R, nproc, chunksize, progress, label='', resume=None, done=None):
+    """resume: a jsonl file getting one line per finished root (root, census, uncertified boxes); roots already
+    in `done` (read from it) are skipped and their census added."""
+    import json
     global _MC
     _MC = chk
+    prev = []
+    if done:
+        prev = [done[k] for k in [(label, tuple(str(v) for v in r)) for r in R] if k in done]
+        R = [r for r in R if (label, tuple(str(v) for v in r)) not in done]
+    fres = open(resume, 'a') if resume else None
     tot = {'ADM': 0, 'CORE': 0, 'P1': 0, 'MIX': 0, 'CHAIN': 0, 'TRI': 0, 'PIECE': 0, 'EMPTY': 0, 'UNCERT': 0,
-           'boxes': 0, 'maxdepth': 0, 'THR': 0, 'LIN': 0, 'TPTS': 0}
+           'boxes': 0, 'maxdepth': 0, 'THR': 0, 'LIN': 0, 'TPTS': 0, 'SPLIT': 0, 'cpu': 0.0}
     unc_all = []; leaves_all = []
     t0 = time.time()
     import multiprocessing as _mp
@@ -1040,15 +1503,25 @@ def run_sweep(chk, R, nproc, chunksize, progress, label=''):
     else:
         pool = _mp.get_context('fork').Pool(nproc)
         it = pool.imap_unordered(_worker1, R, chunksize=chunksize)
-    for i, (st, unc, leaves) in enumerate(it):
+    for st, unc in prev:
+        for k in tot:
+            tot[k] = max(tot[k], st.get(k, 0)) if k == 'maxdepth' else tot[k] + st.get(k, 0)
+        unc_all += unc
+    t1 = time.time()
+    for i, (root, (st, unc, leaves)) in enumerate(it):
         for k in tot:
             tot[k] = max(tot[k], st[k]) if k == 'maxdepth' else tot[k] + st[k]
         unc_all += unc; leaves_all += leaves
+        if fres:
+            fres.write(json.dumps(dict(label=label, root=[str(v) for v in root], st=st,
+                                       unc=[[str(v) for v in b] for b in unc], cpu=None)) + "\n")
+            fres.flush()
         if (i + 1) % progress == 0:
             print(f"  {label}{i+1}/{len(R)} roots, {tot['boxes']} boxes, uncert {tot['UNCERT']}, "
                   f"{time.time()-t0:.0f}s", flush=True)
     if pool is not None:
         pool.close(); pool.join()
+    if fres: fres.close()
     return tot, unc_all, leaves_all, time.time() - t0
 
 
@@ -1067,11 +1540,15 @@ def main():
     ap.add_argument('--chunksize', type=int, default=1)
     ap.add_argument('--progress', type=int, default=100)
     ap.add_argument('--dump', type=str, default=None)
+    ap.add_argument('--resume', type=str, default=None,
+                    help='jsonl file: one line per finished root; on restart the roots in it are skipped (their '
+                         'census and uncertified boxes are counted)')
     ap.add_argument('--full', action='store_true',
                     help='no symmetry assumed: the cover and its (x,y)->(y,x) image, all centres, u in [0,1/2]')
     ap.add_argument('--d4', action='store_true')
     ap.add_argument('--no-thr', action='store_true', help='disable Lemma T (for comparison)')
     ap.add_argument('--no-lin', action='store_true', help='disable Lemma L (for comparison)')
+    ap.add_argument('--no-split', action='store_true', help='disable the region-wise SPLIT primitive (Lemma R)')
     ap.add_argument('--no-clip', action='store_true')
     ap.add_argument('--cx-lo', type=str, default=None); ap.add_argument('--cx-hi', type=str, default=None)
     ap.add_argument('--cy-lo', type=str, default=None); ap.add_argument('--cy-hi', type=str, default=None)
@@ -1138,17 +1615,25 @@ def main():
     grand = None; unc_all = []; leaves_all = []; wall = 0
     for cc, label in covers:
         chk = MixedChecker(cc, max_depth=a.depth, use_chain=a.disj, chain_from=a.chain_from,
-                           theta_bias=a.theta_bias, clip=not a.no_clip, use_thr=not a.no_thr, use_lin=not a.no_lin,
+                           theta_bias=a.theta_bias, clip=not a.no_clip, use_thr=not a.no_thr, use_lin=not a.no_lin, use_split=not a.no_split,
                            dump=a.dump is not None)
-        tot, unc, leaves, dt = run_sweep(chk, R0, a.nproc, a.chunksize, a.progress, label)
+        done = {}
+        if a.resume and os.path.exists(a.resume):
+            import json
+            for ln in open(a.resume):
+                if not ln.strip(): continue
+                d = json.loads(ln)
+                done[(d['label'], tuple(d['root']))] = (d['st'], [tuple(F(v) for v in b) for b in d['unc']])
+            print(f"resume: {len(done)} finished roots read from {a.resume}", flush=True)
+        tot, unc, leaves, dt = run_sweep(chk, R0, a.nproc, a.chunksize, a.progress, label, a.resume, done)
         wall += dt
         unc_all += [(label, b) for b in unc]; leaves_all += [(label, l) for l in leaves]
         if grand is None: grand = tot
         else:
             for k in grand: grand[k] = max(grand[k], tot[k]) if k == 'maxdepth' else grand[k] + tot[k]
     tot = grand
-    print(f"done in {wall:.0f}s: boxes {tot['boxes']}, max depth {tot['maxdepth']}")
-    print(f"  leaves: PIECE {tot['PIECE']}  ADM {tot['ADM']}  P1 {tot['P1']}  MIX {tot['MIX']}  CHAIN {tot['CHAIN']}  "
+    print(f"done in {wall:.0f}s: boxes {tot['boxes']}, max depth {tot['maxdepth']}, CPU {tot['cpu']:.0f} s")
+    print(f"  leaves: PIECE {tot['PIECE']}  ADM {tot['ADM']}  P1 {tot['P1']}  MIX {tot['MIX']}  CHAIN {tot['CHAIN']}  SPLIT {tot['SPLIT']}  "
           f"EMPTY {tot['EMPTY']}  UNCERTIFIED {tot['UNCERT']}   (leaves where Lemma T / Lemma L raised the piece bound: {tot['THR']} / {tot['LIN']}; closed by Lemma T with line points: {tot['TPTS']})")
     if unc_all:
         print("uncertified boxes (cover cx0 cx1 cy0 cy1 theta0 theta1 deg):")

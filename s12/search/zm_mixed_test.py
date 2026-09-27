@@ -367,6 +367,108 @@ def selftest(n=300, seed=7):
           f"{'ok' if nbad == 0 else 'FAIL'}")
     fails += (nbad > 0)
 
+    # ---- (4e) PIECE bound on a real LP cover (agent A's r7, if present): random small boxes, bound <= exact mass
+    for rp in [os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'runs', f)
+               for f in ('lc_m4mixA_r7.txt', 'line-cover_m5_candidate.txt')]:
+      if os.path.exists(rp):
+          cvr = MC.load(rp); cvr = dict(cvr, points=[])
+          cov = Z.Cover(cvr); mc = Z.MixedChecker(cov)
+          nchk = nbad = 0; nl = 0
+          vcount = [0]; _vs = Z.vertex_split
+          def _vcount(*a, **k):
+              r = _vs(*a, **k)
+              if r is not None: vcount[0] += 1
+              return r
+          Z.vertex_split = _vcount
+          for it in range(n):
+              sz = random.choice([F(1, 80), F(1, 320), F(1, 1280)])
+              cx0 = F(random.randint(0, int(2 / sz) - 1)) * sz; cy0 = F(random.randint(0, int(2 / sz) - 1)) * sz
+              k = random.randint(0, 63); u0 = F(k, 128); u1 = u0 + F(1, 128) / random.choice([1, 4, 16])
+              if it % 3 == 0:        # the m5 wall / near-vertex area of ZM_MIXED.md sec 7.4
+                  cx0 = F(random.randint(3300, 3580), 6400); cy0 = F(random.randint(9200, 9470), 6400); sz = F(1, 640)
+                  u0 = F(random.randint(200, 640), 10240); u1 = u0 + F(1, 10240 * random.choice([1, 4, 16]))
+              box = (cx0, cx0 + sz, cy0, cy0 + sz, u0, u1)
+              box = box[:5] + (zm.clip_bin(box, cov.m),)
+              B = zm.bin_data(box[4], box[5])
+              if box[1] < B['wlo'] / 2 or box[3] < B['wlo'] / 2: continue
+              Lb, thr = mc.piece_bound(box, B)
+              nl += (thr == 'L')
+              for _ in range(8):
+                  p = rand_pose_in(box, cov.m)
+                  if p is None: continue
+                  v = seg_mass_exact(cov, *p)
+                  nchk += 1
+                  if Lb > v:
+                      nbad += 1
+                      if nbad <= 3: print("   PIECE violation (r7):", box, p, float(Lb), float(v))
+          Z.vertex_split = _vs
+          print(f"[4e] PIECE bound on {os.path.basename(rp)} segments: {nchk} checks, {nbad} violations, Lemma L used in {nl}/{n} boxes, Lemma V evaluated {vcount[0]} times  "
+                f"{'ok' if nbad == 0 else 'FAIL'}")
+          fails += (nbad > 0)
+
+    # ---- (6) Lemma R / SPLIT: per region, every claimed point is in Q and the region piece bound <= piece mass
+    nchk = nbad = 0; nreg = 0; nok = 0
+    base_cv = grid_cover(rho=F(45, 100))
+    for it in range(n):
+        cv = dict(base_cv)
+        cv['segments'] = [sg[:4] + (sg[4] + random.randint(-sg[4] // 10, sg[4] // 10),) for sg in base_cv['segments']]
+        cx0 = F(random.randint(10, 150), 100); cy0 = F(random.randint(10, 150), 100)
+        sz = random.choice([F(1, 40), F(1, 160), F(1, 640)])
+        pts = []
+        for _ in range(random.randint(20, 80)):      # points around the box, many near the reach of its squares
+            ang = random.random() * 2 * math.pi; rr = random.uniform(0.3, 0.75)
+            X = int(1000 * (float(cx0) + rr * math.cos(ang))); Y = int(1000 * (float(cy0) + rr * math.sin(ang)))
+            if 0 <= X <= 4000 and 0 <= Y <= 4000: pts.append((X, Y, random.randint(1000, 60000)))
+        cv['points'] = pts
+        cov = Z.Cover(cv)
+        mc = Z.MixedChecker(cov, use_chain=True)
+        k = random.randint(1, 60); u0 = F(k, 128); u1 = u0 + F(1, 128) / random.choice([1, 8, 64])
+        box = (cx0, cx0 + sz, cy0, cy0 + sz, u0, u1)
+        box = box[:5] + (zm.clip_bin(box, cov.m),)
+        B = zm.bin_data(box[4], box[5])
+        if box[1] < B['wlo'] / 2 or box[3] < B['wlo'] / 2: continue
+        Lb, _ = mc.piece_bound(box, B)
+        diag = []
+        mc.cert_split(box, B, None, Lb, mc._lparts, diag=diag)
+        for dg in diag:
+            nok += dg['ok']
+            chain = dg['chain']; kd = dg['kind']
+            poses = [rand_pose_in(box, cov.m) for _ in range(6)]
+            for _ in range(6):             # poses ON (and just off) a pivot surface G_q = 0: solve for cx
+                if not chain: break
+                q = random.choice(chain); p0 = rand_pose_in(box, cov.m)
+                if p0 is None: continue
+                _, cyp, up = p0
+                # G = g0 + g1 u + g2 u^2 with a = px - cx affine: G(cx) = G(0) + cx * dG/dcx
+                def Gx(cx):
+                    g = zm.Checker._gcoef(kd, cov.points[q][0] - cx, cov.points[q][1] - cyp)
+                    return g[0] + g[1] * up + g[2] * up * up
+                s0 = Gx(F(0)); s1 = Gx(F(1)) - s0
+                if s1 == 0: continue
+                cxs = -s0 / s1 + random.choice([0, 0, F(1, 10 ** 9), -F(1, 10 ** 9)])
+                if box[0] <= cxs <= box[1] and Z.admissible(cov.m, cxs, cyp, up): poses.append((cxs, cyp, up))
+            for p in poses:
+                if p is None: continue
+                cxp, cyp, up = p
+                cs, sn = zm.trig(up)
+                def G(k):
+                    g = zm.Checker._gcoef(kd, cov.points[k][0] - cxp, cov.points[k][1] - cyp)
+                    return g[0] + g[1] * up + g[2] * up * up
+                r = 0
+                for j, q in enumerate(chain):
+                    if G(q) <= 0: r = j + 1
+                reg = dg['regions'][r]
+                nreg += 1
+                inq = all(zm.in_rot_square(cov.points[k][0] - cxp, cov.points[k][1] - cyp, cs, sn) for k in reg['pts'])
+                pm = seg_mass_exact(cov, *p)
+                nchk += 1
+                if not inq or reg['pieces'] > pm or reg['empty']:
+                    nbad += 1
+                    if nbad <= 3: print("   Lemma R violation:", box, p, r, inq, float(reg['pieces']), float(pm), reg['empty'])
+    print(f"[6] Lemma R (SPLIT regions): {nchk} (box, pose) checks, {nbad} violations; {nok} chains fully certified  "
+          f"{'ok' if nbad == 0 else 'FAIL'}")
+    fails += (nbad > 0)
+
     # ---- (5) the whole PIECE bound on random mixed covers and random boxes
     nchk = nbad = 0
     for it in range(n):
@@ -598,6 +700,15 @@ def unc_diag(path, dump, per=3000, seed=3):
     return res
 
 
+def scale_cover(path, out, f):
+    """exact rational scaling of every mass of a mixed file by f (a Fraction): W -> W * den, w -> w * num."""
+    f = F(f); cv = MC.load(path); a, b = f.numerator, f.denominator
+    cv2 = dict(cv, W=cv['W'] * b, points=[(x, y, w * a) for x, y, w in cv['points']],
+               segments=[sg[:4] + (sg[4] * a,) for sg in cv['segments']], polygons=[(w * a, v) for w, v in cv['polygons']])
+    MC.write(out, cv2, comment=f'{path} x {f} (checker test)')
+    return MC.total(cv2)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('what')
@@ -615,6 +726,8 @@ def main():
         print(f"pose in {len(hits)} leaves; certified leaves containing it: {len(cert)} "
               f"({'REJECTED here: ok' if hits and not cert else 'NOT rejected here'})")
         return 0 if hits and not cert else 1
+    if a.what == 'scale':
+        print(float(scale_cover(a.args[0], a.args[1], F(a.args[2])))); return 0
     if a.what == 'unc':
         unc_diag(a.args[0], a.args[1]); return 0
     if a.what == 'holes':

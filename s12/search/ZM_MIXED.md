@@ -28,9 +28,9 @@ imported, not edited (sha256 `640fe453…086ab`, printed and compared at every r
 * **Performance**: comparable line vs point covers (§4.6): 17,626 boxes / 304 CPU-s (lines) vs 19,998 / 606 CPU-s
   (the same lines as 2,406 points, `zeromargin.py`); germ cell 1,040 boxes / 19 s vs 1,932 / 86 s.
 * **Agent A's `m = 4` mixed covers** (scaled by me, checker tests only): `r5 × 1.05` (total 12.929)
-  **VERIFIED-D4** (27,648 boxes, 1.6 CPU-h, final code); `r7 × 1.02` (12.566) NOT VERIFIED, 74 boxes left at depth
-  18 where the cover has `≥ 1.5 %` float margin: points and segments anti-correlated inside a box, which the
-  one-number coupling (Lemma P) cannot see (§5, the main open item for tight mixed covers).
+  **VERIFIED-D4**.  `r7 × 1.02` (12.566) failed in round 1 (74 boxes); **round 2 (§7)** adds the region-wise
+  primitive `SPLIT` (Lemma R) and affine end minorants in Lemma L, and it **verifies (D4, 43,970 boxes, 4.0 CPU-h)**.
+  At the binding cells the checker verifies down to `0.05 %` over the true minimum and rejects at `−0.0014 %` (§7).
 
 
 ## 1. Statement and structure
@@ -186,6 +186,21 @@ hold exactly on `[r↓, r↑]` and the untyped ones hold on `[b↓ − Δ, a↑ 
 G(max(r↓, b↓−Δ))]`; the second bracket is `≥ ρ↑·(min(r↑, a↑+Δ) − a↑)` and the third `≥ ρ↓·(b↓ − max(r↓, b↓−Δ))`
 because `G` increases at rate `≥ ρ` on those intervals. ∎
 
+**Lemma L, general ends (what the code uses).**  In Lemma L replace `ρ↑·min(r↑ − a↑, Δ↑)` by
+`min(ℓ↑(r↑ − a↑), g↑(Δ↑))`, where `g↑(x) = G(a↑ + x) − G(a↑)` is the gain of the up end, `Δ↑ > 0` any number (with
+the untyped inequalities holding on `[b↓ − Δ↓, a↑ + Δ↑]`), and `ℓ↑(x) = s x + i` any affine function with `s ≥ 0`
+and `ℓ↑ ≤ g↑` on `[0, Δ↑]` (the intercept `i` may be negative); likewise at the lo end.  *Proof.*  With `x =
+min(r↑ − a↑, Δ↑) ∈ [0, Δ↑]` the up gain is exactly `g↑(x)` (the proof of Lemma L).  If `r↑ − a↑ ≤ Δ↑`,
+`min(ℓ↑(r↑ − a↑), g↑(Δ↑)) ≤ ℓ↑(x) ≤ g↑(x)`; otherwise `x = Δ↑` and the min is `≤ g↑(Δ↑) = g↑(x)`. ∎  The term is a
+minimum of affine functions of `r↑ = min_k t_k` with non-negative slope, so Corollary L applies unchanged.  The code
+takes `ℓ` = the edge of the lower convex hull of `g`'s vertices on `[0, Δ]` (the greatest convex minorant of the
+piecewise-linear `g`, so every hull edge is `≤ g`) that contains a float guess of where the chord end sits (any
+choice is sound), and `Δ` = an exact upper bound of how far the end can move over the box (`max` over sub-bins and
+corners of Bernstein-ratio bounds of `t_k − a↑`, which is affine in the centre), capped by the crude
+`2(dx + dy) + 8 du`.  The earlier `ρ_min` form is the special case `ℓ = ρ_min x`.  This matters for LP covers,
+whose segment densities jump by factors of 10 between neighbouring `1/q` pieces (e.g. `0.10 → 3.58` at `x = 0.98` on
+`y = 1` in r7): the cone through the origin sees the low one, the hull edge the real slope.
+
 > **Lemma L′ (short chord).**  Same setting, but without `b↓ < a↑` (e.g. a vertex of `Q` crossing the line, where
 > the certified core `[b↓, a↑]` is empty).  Put `A = min(a↑, b↓) − Δ`, `B = max(a↑, b↓) + Δ`, suppose the untyped
 > `I_k` contain `[A, B]`, and let `ρ` be the minimum density on `[A, B]`.  Then at every admissible pose
@@ -198,6 +213,29 @@ because `G` increases at rate `≥ ρ` on those intervals. ∎
 a (min of affine) − (max of affine) in `c` at fixed `u`, so it enters Corollary L unchanged.  Since it can be
 negative, the joint bound is computed with and without the Lemma L′ lines and the larger is used (without them,
 those lines contribute their core, here 0).
+
+**Lemma L′, hull form (what the code uses).**  Fix `p ∈ [A, B]` and let `g(x) = G(p + x) − G(p)` on
+`[A − p, B − p]` (increasing, piecewise linear, `g(0) = 0`), `ℓ₁ ≤ g` an affine minorant and `ℓ₂ ≥ g` an affine
+majorant there, both with slope `≥ 0` (edges of the lower / upper convex hull of `g`'s vertices).  Then at every
+admissible pose `μ_ℓ(Q) ≥ ℓ₁(min(r↑, B) − p) − ℓ₂(max(r↓, A) − p)`.  *Proof.*  `x = min(r↑, B) ≥ a↑ ≥ A` and
+`y = max(r↓, A) ≤ b↓ ≤ B`, so both lie in `[A, B]`.  If `x ≥ y`, `Q ∩ ℓ ⊇ [y, x]` (typed inequalities hold on
+`[r↓, r↑]`, untyped ones on `[A, B]`) and `μ_ℓ(Q) ≥ G(x) − G(y) = g(x − p) − g(y − p) ≥ ℓ₁(x − p) − ℓ₂(y − p)`; if
+`x < y` the right-hand side is `≤ g(x − p) − g(y − p) < 0 ≤ μ_ℓ(Q)`. ∎  Both terms are minima of affine functions of the
+`t_k` with the right signs (`ℓ₁, ℓ₂` increasing), so Corollary L applies.  (`p` = the float chord centre, the hull
+edges at the float chord ends; any choice is sound.)
+
+> **Lemma V (splitting on a short chord).**  For a Lemma L′ line with active inequalities `k` (up) and `j` (lo),
+> `D = t_k − t_j` is, at fixed `u`, an affine function of the centre (the base coordinate cancels; the coefficient of
+> the other coordinate is `0` or `±N²/(SC)`).  The admissible poses split into `R_a = {D ≤ 0}` and `R_b = {D ≥ 0}`;
+> on `R_a` the line is bounded below by `0`, on `R_b` by its Lemma L′ term; with the other lines' Lemma L terms, the
+> region minima (computed as in Lemma R, with the constraint `D`) give `min(Φ_a, Φ_b)`, a valid lower bound on the
+> lines' mass over the box.
+
+*Proof.*  Every admissible pose lies in `R_a ∪ R_b`; on each region the claimed bound holds pointwise (mass `≥ 0`,
+respectively Lemma L′), and region_phi's candidate set contains every vertex of the region polygon at every `u`
+(Lemma R's argument, which only needs the constraint to be affine in the centre with coefficients that are
+rational functions of `u`: the edge intersections are then rational functions too, computed exactly after putting
+the coefficient over one denominator `S^a C^b N^e`). ∎
 
 > **Corollary L (joint bound).**  For a set of lines satisfying Lemma L or L′, let `Φ(c,u)` be the sum of their
 > right-hand sides.  (i) For fixed `u`, every `t_k` is affine in `c`, so `Φ(·, u)` (a sum of minima of affine
@@ -227,6 +265,49 @@ margin.
 both valid, the larger is used: (A) `Σ_groups max(T-bound, core) +` joint Lemma L bound (or cores, whichever is
 larger) over the non-group lines; (B) the joint Lemma L bound over all eligible lines (group lines included) +
 cores of the rest.  Plus polygons (Lemma S).  Distinct summands always involve disjoint sets of pieces.
+
+> **Lemma R (region-wise coupling of pieces and points; primitive `SPLIT`).**  Fix a box with `u₀ > 0`.  Let `T`
+> be a set of points in `Q` at every admissible pose of the box (`ADM`/`P1`/inherited).  Let `q₁, …, q_k` be
+> *swing* points of one kind `κ` (each satisfies its three other inequalities at every admissible pose of the box)
+> with `G_{q₁} ≤ G_{q₂} ≤ … ≤ G_{q_k}` on the whole box, where `G_q = α_q(u) + β(u) c_x + γ(u) c_y` is zeromargin's
+> violation polynomial of kind `κ` (`G ≤ 0` ⇔ inequality `κ`; `β, γ ∈ {±2C, ±2S}` depend on `κ` only).  For
+> `r = 0..k` put `R_r = {admissible poses : G_{q_r} ≤ 0 (if r ≥ 1), G_{q_{r+1}} ≥ 0 (if r < k)}`,
+> `D_r = {p swing : G_p ≤ G_{q_r} on the box}`, `U_r = {p swing : G_p + λ G_{q_{r+1}} ≤ 0 on the box, some λ > 0}`.
+> Let the piece bound of the box be `rest + max(core, Φ)` as assembled in §2 (Φ the Corollary L term of a set of
+> Lemma L/L′ lines, `rest` the part carried by the other pieces), and let `Φ_r` be a lower bound of the Lemma L
+> right-hand side over `R_r`.  If for every `r`
+>
+>     w(T) + w(D_r ∪ U_r) + rest + max(core, Φ_r) ≥ 1        (or R_r = ∅),
+>
+> then `μ(Q) ≥ 1` at every admissible pose of the box.
+
+*Proof.*  Take an admissible pose and let `r = max{j : G_{q_j} ≤ 0}` (0 if none).  Monotonicity gives
+`G_{q_{r+1}} > 0` (if `r < k`), so the pose is in `R_r`.  `T ⊆ Q`.  For `p ∈ D_r`: `G_p ≤ G_{q_r} ≤ 0`, and `p`
+satisfies its other three inequalities, so `p ∈ Q` (the chain members `q_j`, `j ≤ r`, are in `D_r`).  For `p ∈ U_r`:
+`G_p ≤ −λ G_{q_{r+1}} < 0`, so `p ∈ Q`.  The pieces carry `≥ rest + core` (Lemma S/T parts, valid at every pose of the
+box) and `≥ rest + Φ_r` (Lemma L at this pose, `≥` its minimum over `R_r`).  Points and pieces are disjoint, so
+`μ(Q) ≥ w(T) + w(D_r ∪ U_r) + rest + max(core, Φ_r) ≥ 1`. ∎
+
+**Computing `Φ_r`.**  At fixed `u`, the admissible centres of `R_r` lie in `rect(u) ∩ {G_{q_r} ≤ 0} ∩ {G_{q_{r+1}} ≥ 0}`
+(`rect(u)` any rectangle containing the admissible centre rectangle, as in Corollary L), a convex polygon; its two
+constraint lines are **parallel** (same `β, γ`), so every vertex is a rectangle corner or a constraint line ∩ an edge
+line.  These candidates are rational functions of `u` with denominators `S^a C^b N^c` (the edge intersection
+divides by `β` or `γ`, i.e. by `C` or `S`; `S` needs `u₀ > 0`).  The Lemma L bound is concave in the centre
+(Corollary L (i)), so its minimum over the polygon is `≥` its minimum over **any finite set whose convex hull
+contains the polygon**; the code keeps every candidate that is not *proven* (exact Bernstein-ratio bounds over the
+sub-bin) to violate a constraint or to lie outside its edge — every true vertex at every `u` survives, since a vertex
+satisfies all constraints at its own `u` — and bounds the Lemma L expression at each kept candidate exactly as in
+Corollary L (ii)–(iii).  If no candidate survives on a sub-bin, the polygon is empty for every `u` of it (a non-empty
+compact convex polygon has a vertex).  If a Bernstein bound is unavailable, `Φ_r` is not used (the region keeps
+`max(core, ·) = core`).
+
+`SPLIT` is tried after `ADM → P1 → MIX → CHAIN` (and Corollary T′) fail, one chain per swing kind (heaviest kind
+first, chain built greedily in the order of `G` at the box centre, each link checked exactly with zeromargin's integer
+`_gle0`; `D_r`, `U_r` by the same binary searches as zeromargin's `CHAIN`, with `λ ∈ {1, ½, 2}`).  Regions already
+covered by the box bound (`w(T) + w(D_r ∪ U_r) + L_box ≥ 1`, valid by the same argument with `Φ_r` replaced by the
+box's bound) skip `Φ_r`.  What it adds over the phantom (Lemma P): the pieces' bound is taken **on the region**, i.e.
+on the side of the pivot surface where the point is out — exactly where the piece mass is larger when points and
+pieces are anti-correlated (r7, §4.5).
 
 > **Lemma P (points + pieces).**  Let `L ≥ 0` be a lower bound on the piece mass at every admissible pose of a box.
 > Add to the point set a phantom point `φ` of weight `L'` (`L` rounded **down** to a multiple of zeromargin's common
@@ -370,8 +451,10 @@ has minimum `1.044`, 0 violations.  **r7 × 1.02**: all 74 uncertified boxes (de
 `θ ≈ 32°` near `(1.24, 1.56)` and `(1.39, 1.31)`) have sampled minimum `≥ 1.0154` (`zm_mixed_test.py unc`): the
 cover has margin there, the checker is short.  Diagnosis of one of them: the pieces carry `0.651–0.676` and the
 points `0.356–0.378` over the box, **anti-correlated** (total minimum `1.018`, but `min + min = 1.007`); the piece
-bound is `0.645` and the point primitives cannot find the remaining `0.355`.  This is the decoupling of Lemma P
-(one uniform `L` per box, while `CHAIN` splits the box into regions): see §5.
+bound is `0.645` and the point primitives cannot find the remaining `0.355`.  **Corrected in §7:** the loss was
+mostly in the piece bound (Lemma L's `ρ_min` ends against LP densities that jump tenfold between neighbouring
+pieces, plus lines anti-correlated with each other), with the point/piece coupling second; both are fixed there
+and r7 × 1.02 verifies.
 
 ### 4.6 Performance against the point checker (comparable covers)
 
@@ -395,17 +478,86 @@ arithmetic.
   non-axis segments at distance exactly 1 would form tilted germs (at `θ` = their direction) that nothing here closes.
 * Lemma T is formulated at `θ = 0`; with `u ≤ ½` roots that is the only germ.  Hence `--full` = cover + swapped cover
   on `u ∈ [0,½]` (§2), not zeromargin's `u ∈ [0,1]`.
-* **Pieces and points are coupled only through one number per box** (Lemma P).  When a tight pose has a discrete
-  point entering `Q` while the pieces' mass falls (r7 × 1.02, §4.5), `min(points) + min(pieces)` over a box stays
-  below the joint minimum until the box no longer contains the jump, which is slow.  The fix is to hand `CHAIN` a
-  region-wise piece bound (Lemma L is an explicit concave function of the pose, so it can be evaluated per
-  `CHAIN` region); not built.
+* **Pieces and points: region-wise only along one chain.**  `SPLIT` (Lemma R) couples them per region of a
+  single-kind pivot chain; products of two chains (as `CHAIN` does for points) are not built, `u₀ = 0` boxes are
+  excluded (the edge intersections divide by `S`), and only Lemma L/L′ lines get region bounds (Lemma T groups,
+  Lemma S lines and polygons stay box-wide constants).  Sufficient for r7 × 1.02 and for 0.05 % margins at the
+  binding cells (§7).
 * Corollary T′ (points in the groups) is a second attempt per box, only for points exactly on the germ lines.
 * The float reach filter and zeromargin's float pre-screens can only drop certifications (sound, possibly
   incomplete).  `L` is rounded down to zeromargin's weight denominator (`≤ 1/W` loss).
 * The checker is Python + `Fraction`; there is no second independent implementation (zeromargin's primitives are
   independent code, and the lemmas are covered by the randomised exact tests of §4.2).  The Lean reduction
   `packing_le_weight` still needs generalising from point sets to these measures (FORMAT.md; not part of this task).
+
+## 7. Round 2 (2026-09-27): region-wise coupling, sharper Lemma L, r7 × 1.02 verified
+
+**What changed in the code** (all in `zm_mixed.py`; `zeromargin.py` untouched, sha unchanged):
+
+1. **`SPLIT` (Lemma R, §2):** after `ADM/P1/MIX/CHAIN` and Corollary T′ fail, one pivot chain per swing kind is built
+   and every region gets its own piece bound (the Lemma L expression minimised over the region's polygon, whose
+   vertices are enumerated exactly), next to its own point witness set.
+2. **Lemma L, general ends (§2):** the end gain is bounded by an edge of the lower convex hull of the actual
+   mass function (negative intercept allowed) instead of `ρ_min·x`, and the cap `Δ` is an exact bound on how far the
+   end can move over the box.
+3. `--resume FILE` (one JSON line per finished root; restart skips them), per-root CPU in the census.
+
+**Diagnosis that led to (2)** (one of r7's 74 boxes, `[1.2281,1.2297]×[1.5516,1.5531]`, `θ ≈ 34°`): the piece bound
+was `0.6429` against a float minimum `0.6481`; per line, the float minima summed to `0.6426` — the lines are
+anti-correlated with **each other** (the square slides mass from one line to the next), which only a joint bound sees;
+and Lemma L's joint bound gained nothing because the relevant chord end of `y = 1` sits on a density jump
+(`0.10 → 3.58` at `x = 0.98`), so `ρ_min = 0`.  The points (`0.356–0.380`) were a smaller part of the gap: a
+single-kind chain leaves `≈ 0.352`.  After (1)+(2), the box bound in that area is `0.6466–0.6514` and the boxes
+close at depth `≤ 20`.
+
+**Tests added** (`zm_mixed_test.py selftest`, all exact at rational poses): `[6]` Lemma R — random mixed covers
+(jittered grid lines + 20–80 points around the box), random boxes with `u₀ > 0`; for each sampled pose the region
+`r` is computed from the exact `G` values and the test checks that **every point claimed for region `r` is in `Q`**
+and that **region `r`'s piece bound ≤ the exact piece mass**, with half of the poses placed exactly on (or `10⁻⁹` off)
+a pivot surface `G_q = 0`: 2,338 checks, 0 violations.  `[4e]` the piece bound on the real segments of A's r7 (880
+checks, 0 violations; Lemma L decisive in 103/250 boxes).  All earlier tests still pass (§4.2, rerun).
+
+### 7.1 r7 × 1.02 (certified)
+
+| run | boxes | depth | CPU | leaves (ADM / CHAIN / SPLIT / other) | result |
+|---|---|---|---|---|---|
+| round 1 code, depth 18 | 116,176 | 18 | 4.7 h | 30,824 / 26,265 / — | 74 uncertified |
+| + SPLIT only | 111,086 | 18 | 6.3 h | 27,483 / 25,043 / 2,074 | 55 uncertified |
+| + SPLIT + general ends, depth 18 | 43,902 | 18 | 3.7 h | 9,410 / 8,706 / 3,221 | 18 uncertified (2 roots; both close at depth 20) |
+| **same, depth 20** | **43,970** | 20 | **4.0 h** | 9,446 / 8,718 / 3,225 | **VERIFIED-D4** |
+
+`lc_m4mixA_r7.txt × 1.02`, total `12.566207`.  Leaf stress test: 217,703 poses, minimum `1.0135`, 0 violations.
+
+### 7.2 How tight: scale factor over the minimum (certified per cell)
+
+r7's float minimum (A's strict protocol, `line_cover.py eval --pitch 0.002 --tiles`) is `μ_f = 0.9858395` at
+`(1.49977, 3.48477, 0.028°)`; a targeted search found a lower **exact** value, `μ₀ ≤ 0.9853327085` at the admissible
+rational pose `(45792065/91561246, 63046589/42031580, u = 17858/923433989)` (the wall germ `(½, 1.5)`, `θ = 0.002°`, its
+D4 image).  Files `r7 × λ/μ_f` (exact rational factors), cells of 32 / 8 roots, `--depth 22`:
+
+| cell | what | λ = 1.005 | 1.002 | 1.001 | 1.0005 | 1.0002 | 0.999 |
+|---|---|---|---|---|---|---|---|
+| `[0.4,0.6]×[1.4,1.6]` | the binding wall germ | — | ✓ 1,176 | ✓ 1,300 (d 20) | **✗ 12** | **✗ 13** | — |
+| `[1.4,1.6]×[0.4,0.6]` | its θ ↔ 90° − θ image | ✓ 852 | ✓ 1,204 | ✓ 1,288 | ✓ 1,314 | ✓ 1,332 | ✗ 35 |
+| `[1.2,1.3]×[1.5,1.6]` | the anti-correlated `θ ≈ 33°` cell | ✓ 3,472 | ✓ 4,680 | ✓ 5,162 | ✓ 5,530 | ✓ 5,744 | ✗ 421 at depth 13 (local min `≈ 1.009`: depth, not a hole) |
+| `[1.4,1.6]²` | interior germ | ✓ 704 | ✓ 832 | ✓ 894 | ✓ 942 | ✓ 964 | ✓ 1,066 |
+
+(✓ = VERIFIED, number = boxes.)  In terms of the exact minimum, `λ/μ_f · μ₀ = 1.000485` at `λ = 1.001` (**verified**)
+and `0.9999857` at `λ = 1.0005` (the cover has a hole of depth `1.4·10⁻⁵`: **rejected**, and the hole pose lies in an
+uncertified box and in no certified leaf; same at `1.0002`, hole `0.99969`).  So at the binding cells the checker
+needs **≤ 0.05 % over the true minimum**, and it resolves a `1.4·10⁻⁵` hole.  (A's float minimum overestimates the
+true one by `0.05 %` at this germ: the minimum sits at `θ = 0.002°`, below the scan's angles.)
+
+### 7.3 Rejection tests for SPLIT (certified that nothing wrong is certified)
+
+`r7 × 1.002` (raw factor), cell `[1.2,1.3]×[1.5,1.6]` (where SPLIT does most of the work), depth 16: hole found by
+float search and confirmed exactly, `0.9983051` at `(2561819/2065521, 1032242/661481, u = 10502771/36579205)`
+(`θ = 32.04°`).  Result: 14,394 boxes, 1,731 SPLIT leaves, 2,590 uncertified; the hole pose is in an uncertified
+box and in no certified leaf; leaf stress test over the 4,611 certified leaves (184,443 poses): minimum `1.00019`,
+0 violations.  The wall-germ rejections of §7.2 (λ = 1.0005, 1.0002) contain SPLIT leaves too (26–27 per run);
+stress tests of those dumps: 0 violations.
+
+__ROUND2_A__
 
 ## 6. Reproduce
 
