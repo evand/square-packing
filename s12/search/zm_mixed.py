@@ -426,17 +426,6 @@ def thr_num(fam, k, a):
 UPLO = {'V': ({0: 'S', 2: 'C'}, {1: 'S', 3: 'C'}), 'H': ({0: 'C', 3: 'S'}, {1: 'C', 2: 'S'})}
 
 
-def min_density(pcs, x0, x1):
-    """minimum over [x0, x1] of the summed density of the pieces (0 where nothing covers)."""
-    pts = sorted(set([x0, x1] + [e for a, b, _ in pcs for e in (a, b) if x0 < e < x1]))
-    best = None
-    for i in range(len(pts) - 1):
-        mid = (pts[i] + pts[i + 1]) / 2
-        d = sum((dn for a, b, dn in pcs if a <= mid <= b), F(0))
-        if best is None or d < best: best = d
-    return best if best is not None else F(0)
-
-
 def end_minorant(pcs, LM, a, D, up, xmid):
     """For the gain g(x) = mass in [a, a + x] (up) or [a - x, a] (down), 0 <= x <= D, an affine l(x) = s x + i with
     s >= 0 and l <= g on [0, D]: the edge of the lower convex hull of g's vertices (g is piecewise linear, so its
@@ -463,24 +452,6 @@ def end_minorant(pcs, LM, a, D, up, xmid):
             sl = (y1 - y0) / (x1 - x0)
             return sl, y0 - sl * x0, V[-1][1]
     return F(0), F(0), V[-1][1]
-
-
-def cone_slope(pcs, LM, a, D, up=True):
-    """s = inf_{0 < x <= D} g(x)/x (kept for reference; superseded by end_minorant)."""
-    if D <= 0: return F(0)
-    if up:
-        g = lambda x: LM.below(a + x) - LM.below(a)
-        d0 = sum((dn for e0, e1, dn in pcs if e0 <= a < e1), F(0))
-        xs = [e - a for e in LM.bps if a < e < a + D]
-    else:
-        g = lambda x: LM.below(a) - LM.below(a - x)
-        d0 = sum((dn for e0, e1, dn in pcs if e0 < a <= e1), F(0))
-        xs = [a - e for e in LM.bps if a - D < e < a]
-    best = d0
-    for x in xs + [D]:
-        v = g(x) / x
-        if v < best: best = v
-    return best
 
 
 def _tk_float(fam, k, line, cx, cy, u):
@@ -965,7 +936,12 @@ def vertex_split(datas, box, m):
 # =========================================================================================== the checker
 class MixedChecker:
     def __init__(self, cover, max_depth=18, use_chain=False, chain_from=0, theta_bias=4, clip=True,
-                 use_thr=True, use_pieces=True, dump=False, use_lin=True, use_split=True):
+                 use_thr=True, use_pieces=True, dump=False, use_lin=True, use_split=True, cert_mode=False):
+        # cert_mode: the reduced trusted surface for certificates (audit S5): Corollary T' (points on germ lines)
+        # and the polygon code are unreachable, and a cover containing polygons is refused.
+        if cert_mode and cover.polys:
+            raise ValueError("--cert-mode: the cover contains polygons (the polygon code is disabled in cert mode)")
+        self.cert_mode = cert_mode
         self.cov = cover
         self.m = cover.m
         self.max_depth = max_depth
@@ -1127,6 +1103,7 @@ class MixedChecker:
         thr_gain = 'T' if tgain else ('L' if lgain else False)
         # ---- polygons (Lemma S, 2-D)
         if cov.polys:
+            assert not self.cert_mode, "polygon code reached in cert mode"
             fx0, fx1, fy0, fy1 = cxm - R, cxm + R, cym - R, cym + R
             near = [P for P in cov.polys if not (P['bb'][1] < fx0 or P['bb'][0] > fx1 or
                                                   P['bb'][3] < fy0 or P['bb'][2] > fy1)]
@@ -1267,6 +1244,9 @@ class MixedChecker:
             cand.append((int(k), bad))
         if not cand: return (None, None)
         ctx = zc._box_ctx(box)
+        # zeromargin's _gle0 docstring speaks of positive weights; here it is called with weights +1 and -1.  Its
+        # corner argument (the G's are affine in the centre at fixed u, so the max over the centre box is at a
+        # corner) holds for any real weights (audit nit N4).
         def le(terms): return zc._gle0(terms, ctx)
         m = self.m
         kinds = sorted({kd for _, kd in cand}, key=lambda kd: -sum(zc.Wf[k] for k, d in cand if d == kd))
@@ -1374,7 +1354,7 @@ class MixedChecker:
                     kind, wit = zc.cert_mix(box, B, inh2)
                 if kind is None and self.use_chain and depth >= self.chain_from:
                     kind, wit = zc.cert_chain(box, B, inh=inh2)
-                if kind is None and self.use_thr and self.cov.line_points:
+                if kind is None and self.use_thr and self.cov.line_points and not self.cert_mode:
                     # second attempt (Lemma T with points): the points on the germ-pair lines are accounted for
                     # inside the groups and withheld (weight 0) from the point primitives
                     moved = []
@@ -1525,6 +1505,31 @@ def run_sweep(chk, R, nproc, chunksize, progress, label='', resume=None, done=No
     return tot, unc_all, leaves_all, time.time() - t0
 
 
+def file_sha(p):
+    return hashlib.sha256(open(p, 'rb').read()).hexdigest()
+
+
+def run_header(a, cov, input_path):
+    """Provenance of a cert run (audit S2/S3): the sha256 of every file the verdict depends on and every setting
+    that changes what is checked.  Written as the first line of the --resume jsonl and into the --manifest;
+    --resume refuses a file whose header differs.  (--nproc, --chunksize, --progress, --dump, --resume,
+    --manifest do not change the verdict and are not part of it.)"""
+    mode = 'D4' if a.d4 else ('full' if a.full else 'D2')
+    return dict(
+        kind='zm_mixed cert header', version=2,
+        sha256={'zm_mixed.py': file_sha(os.path.abspath(__file__)), 'mixed_cover.py': file_sha(MC.__file__),
+                'zeromargin.py': zm_sha(), 'input': file_sha(input_path)},
+        input=input_path,
+        total=str(cov.total),
+        settings=dict(mode=mode, depth=a.depth, pitch=str(F(a.pitch)), ubins=a.ubins,
+                      chain=bool(a.disj), chain_from=a.chain_from, theta_bias=a.theta_bias, clip=not a.no_clip,
+                      lemma_T=not a.no_thr, lemma_L=not a.no_lin, split=not a.no_split,
+                      cert_mode=bool(a.cert_mode), tprime=(not a.no_thr) and not a.cert_mode,
+                      split_maxchain=400, reach=str(REACH),
+                      region=dict(cx_lo=a.cx_lo, cx_hi=a.cx_hi, cy_lo=a.cy_lo, cy_hi=a.cy_hi,
+                                  u_lo=a.u_lo, u_hi=a.u_hi)))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('what', help='cert | pose | stress | selftest')
@@ -1546,6 +1551,10 @@ def main():
     ap.add_argument('--full', action='store_true',
                     help='no symmetry assumed: the cover and its (x,y)->(y,x) image, all centres, u in [0,1/2]')
     ap.add_argument('--d4', action='store_true')
+    ap.add_argument('--cert-mode', action='store_true',
+                    help='certificate mode: Corollary T\' and the polygon code disabled; covers with polygons refused')
+    ap.add_argument('--manifest', type=str, default=None,
+                    help='write a JSON manifest (header: shas + settings; result: census + verdict) at the end')
     ap.add_argument('--no-thr', action='store_true', help='disable Lemma T (for comparison)')
     ap.add_argument('--no-lin', action='store_true', help='disable Lemma L (for comparison)')
     ap.add_argument('--no-split', action='store_true', help='disable the region-wise SPLIT primitive (Lemma R)')
@@ -1576,7 +1585,18 @@ def main():
         import zm_mixed_test
         sys.exit(zm_mixed_test.stress(cov, a.leafdump, a.per, a.seed))
     assert a.what == 'cert'
+    import json
     print(f"zeromargin.py sha256 {sha} ({'= pinned' if sha == ZM_SHA_PINNED else '*** DIFFERS FROM PINNED ***'})")
+    hdr = run_header(a, cov, a.path)
+    for k, v in hdr['sha256'].items():
+        print(f"sha256 {v}  {k}" + (f" ({a.path})" if k == 'input' else ''))
+    print('argv:', ' '.join(sys.argv))
+    print('settings:', json.dumps(hdr['settings'], sort_keys=True), flush=True)
+    if a.cert_mode:
+        if cov.polys:
+            print("ERROR: --cert-mode: the cover contains polygons; refused"); sys.exit(2)
+        print(f"CERT MODE: Corollary T' and polygon code disabled ({sum(len(v) for v in cov.line_points.values())} "
+              f"points on segment lines are treated as ordinary points)")
     print(f"container [0,{cov.m}]^2, {len(cov.points)} points, {sum(len(L['segs']) for L in cov.lines.values())} "
           f"segments on {len(cov.lines)} lines, {len(cov.polys)} polygons; total {cov.total} = {float(cov.total):.9f}")
     partial = any(v is not None for v in (a.cx_lo, a.cx_hi, a.cy_lo, a.cy_hi, a.u_lo, a.u_hi))
@@ -1616,15 +1636,28 @@ def main():
     for cc, label in covers:
         chk = MixedChecker(cc, max_depth=a.depth, use_chain=a.disj, chain_from=a.chain_from,
                            theta_bias=a.theta_bias, clip=not a.no_clip, use_thr=not a.no_thr, use_lin=not a.no_lin, use_split=not a.no_split,
-                           dump=a.dump is not None)
+                           dump=a.dump is not None, cert_mode=a.cert_mode)
         done = {}
-        if a.resume and os.path.exists(a.resume):
-            import json
-            for ln in open(a.resume):
-                if not ln.strip(): continue
+        if a.resume and os.path.exists(a.resume) and os.path.getsize(a.resume) > 0:
+            with open(a.resume) as fh:
+                lines = [ln for ln in fh if ln.strip()]
+            h0 = json.loads(lines[0])
+            if h0.get('kind') != hdr['kind']:
+                print(f"ERROR: --resume {a.resume}: no header line (written by an older zm_mixed.py?); refused")
+                sys.exit(2)
+            if {k: h0.get(k) for k in ('sha256', 'settings', 'total')} != \
+                    {k: hdr[k] for k in ('sha256', 'settings', 'total')}:
+                print(f"ERROR: --resume {a.resume}: its header (shas / settings) differs from this run; refused")
+                for k in ('sha256', 'settings', 'total'):
+                    if h0.get(k) != hdr[k]: print(f"  {k}: file {json.dumps(h0.get(k))}\n  {k}: now  {json.dumps(hdr[k])}")
+                sys.exit(2)
+            for ln in lines[1:]:
                 d = json.loads(ln)
                 done[(d['label'], tuple(d['root']))] = (d['st'], [tuple(F(v) for v in b) for b in d['unc']])
-            print(f"resume: {len(done)} finished roots read from {a.resume}", flush=True)
+            print(f"resume: {len(done)} finished roots read from {a.resume} (header matches)", flush=True)
+        elif a.resume and label == '':
+            with open(a.resume, 'w') as fh:
+                fh.write(json.dumps(hdr) + "\n")
         tot, unc, leaves, dt = run_sweep(chk, R0, a.nproc, a.chunksize, a.progress, label, a.resume, done)
         wall += dt
         unc_all += [(label, b) for b in unc]; leaves_all += [(label, l) for l in leaves]
@@ -1651,6 +1684,15 @@ def main():
         print(f"leaves written to {a.dump}")
     tag = "VERIFIED" + ("-D4" if a.d4 else "") if tot['UNCERT'] == 0 else "NOT VERIFIED"
     print(tag + (" (PARTIAL)" if partial else ""))
+    if a.manifest:
+        man = dict(header=hdr, argv=sys.argv, created=time.strftime('%Y-%m-%d %H:%M:%S'),
+                   result=dict(roots=len(R0) * len(covers), census=tot, uncertified=len(unc_all), wall_s=round(wall, 1),
+                               verdict=tag + (" (PARTIAL)" if partial else "")))
+        if a.resume:
+            man['records'] = dict(path=a.resume, sha256=file_sha(a.resume))
+        with open(a.manifest, 'w') as fh:
+            json.dump(man, fh, indent=1, sort_keys=False); fh.write("\n")
+        print(f"manifest written to {a.manifest}")
 
 
 if __name__ == '__main__':
