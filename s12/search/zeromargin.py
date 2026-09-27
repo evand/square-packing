@@ -209,6 +209,71 @@ def in_core_f_vec(a, b, Bf, tol=1e-9):
     ok &= np.where(in_sector, r2ok, True)
     return ok
 
+def _cond_poly_i(U, V, cond, both_rect, one):
+    """Checker._cond_poly with every term scaled by the integer `one` = D (U, V already are)."""
+    U0, U1, U2 = U; V0, V1, V2 = V
+    if both_rect:
+        # U = U0 (1+u^2) etc.: here U0 == U2 and U1 == V1 == 0, as in the ref
+        if cond == 0: return (U0 - one, 2 * V0, -U0 - one, 0, 0)
+        if cond == 1: return (-U0 - one, -2 * V0, U0 - one, 0, 0)
+        if cond == 2: return (V0 - one, -2 * U0, -V0 - one, 0, 0)
+        return (-V0 - one, 2 * U0, V0 - one, 0, 0)
+    if cond == 0:
+        return (U0 - one, U1 + 2 * V0, U2 - U0 + 2 * V1 - 2 * one, -U1 + 2 * V2, -U2 - one)
+    if cond == 1:
+        return (-U0 - one, -U1 - 2 * V0, U0 - U2 - 2 * V1 - 2 * one, U1 - 2 * V2, U2 - one)
+    if cond == 2:
+        return (V0 - one, V1 - 2 * U0, V2 - V0 - 2 * U1 - 2 * one, -V1 - 2 * U2, -V2 - one)
+    return (-V0 - one, 2 * U0 - V1, V0 - V2 + 2 * U1 - 2 * one, V1 + 2 * U2, V2 - one)
+
+_C4 = (1, 4, 6, 4, 1)
+def _bern_le0_i(a, Du, U0, U1):
+    """_max_bern(a, u0, u1) <= 0 in integers.  With u = u0 + h t, u0 = U0/Du, h = H/Du:
+    b_j Du^4 = H^j sum_{k>=j} a_k C(k,j) U0^(k-j) Du^(4-k), and the Bernstein coefficients
+    beta_i = sum_{j<=i} C(i,j)/C(4,j) b_j, so 12 Du^4 beta_i = sum_j C(i,j) (12/C(4,j)) (b_j Du^4)
+    is an integer with the sign of beta_i."""
+    H = U1 - U0
+    Dp_ = [1, Du, Du * Du, Du ** 3, Du ** 4]
+    U0p = [1, U0, U0 * U0, U0 ** 3, U0 ** 4]
+    b = []; Hp = 1
+    for j in range(5):
+        sj = 0
+        for k in range(j, 5):
+            if a[k]: sj += a[k] * COMB[k][j] * U0p[k - j] * Dp_[4 - k]
+        b.append(sj * Hp); Hp *= H
+    if b[0] > 0: return False
+    for i in range(1, 5):
+        bi = 0
+        for j in range(i + 1):
+            bi += COMB[i][j] * (12 // _C4[j]) * b[j]
+        if bi > 0: return False
+    return True
+
+def _quad_le0(c0, c1, c2, Du, U0, U1):
+    """EXACT, integers:  max of  f(u) = c0 + c1 u + c2 u^2  over  u in [U0/Du, U1/Du]  is <= 0 ?
+    The same rule as _max_quad: both endpoints, and the vertex u* = -c1/(2 c2) when c2 < 0 and
+    u* lies strictly inside.  Endpoints scaled by Du^2 > 0; vertex value c0 - c1^2/(4 c2) <= 0
+    <=> 4 c0 c2 - c1^2 >= 0 (multiply by 4 c2 < 0); u0 < u* < u1 <=> U0 (-2 c2) < c1 Du < U1 (-2 c2)."""
+    D2 = Du * Du
+    if c0 * D2 + c1 * U0 * Du + c2 * U0 * U0 > 0: return False
+    if c0 * D2 + c1 * U1 * Du + c2 * U1 * U1 > 0: return False
+    if c2 < 0:
+        t2 = -2 * c2; cdu = c1 * Du
+        if U0 * t2 < cdu < U1 * t2 and 4 * c0 * c2 - c1 * c1 < 0: return False
+    return True
+
+def _quadmax_f(c0, c1, c2, f0, f1):
+    """float (numpy) max of c0 + c1 u + c2 u^2 over [f0, f1]: a steering/rejection value only."""
+    v = np.maximum(c0 + (c1 + c2 * f0) * f0, c0 + (c1 + c2 * f1) * f1)
+    neg = c2 < 0
+    if neg.any():
+        with np.errstate(divide='ignore', invalid='ignore'):
+            uv = np.where(neg, -c1 / (2 * np.where(neg, c2, -1.0)), f0)
+        inr = neg & (uv > f0) & (uv < f1)
+        if inr.any():
+            v = np.where(inr, np.maximum(v, c0 + (c1 + c2 * uv) * uv), v)
+    return v
+
 class Checker:
     def __init__(self, m, points, weights=None, use_tri=False, max_depth=16, dump=None,
                  use_adm=True, theta_bias=1, use_chain=False, chain_from=0, clip=True):
@@ -246,6 +311,18 @@ class Checker:
         self.Wnum = (np.array([int(w * den) for w in self.W], dtype=np.int64) if (den and n)
                      else np.zeros(n, dtype=np.int64))
         self.order = np.argsort(-self.Wf) if n else np.zeros(0, dtype=np.int64)
+        # exact INTEGER point coordinates over a common denominator Dp (sec 11 of S32_EXACT.md):
+        # the fast CHAIN path evaluates its pair inequalities in Python ints instead of Fractions.
+        Dp = 1
+        for x, y in self.P:
+            Dp = Dp * x.denominator // math.gcd(Dp, x.denominator)
+            Dp = Dp * y.denominator // math.gcd(Dp, y.denominator)
+        self.Dp = Dp
+        self.PXi = [int(x * Dp) for x, _ in self.P]
+        self.PYi = [int(y * Dp) for _, y in self.P]
+        self._adm_ctx_cache = None
+        self.fast = True            # False: the reference (Fraction) CHAIN, byte-for-byte the old code
+        self.nstat = {'fexact': 0, 'fconfirm': 0, 'fmismatch': 0}
 
     def _triangles(self):
         n = len(self.P); T = []
@@ -259,9 +336,30 @@ class Checker:
 
     # ---- symmetry -------------------------------------------------------------------------
     def symmetric(self):
-        S = set(self.P)
+        """x -> m-x and y -> m-y both preserve the WEIGHTED point set (the old check compared the
+        point sets only; the reduction needs the weight function f(p) = sum of the weights at p
+        to be invariant, so the weights are compared too -- S32_EXACT.md sec 11)."""
         m = self.m
-        return all((m - x, y) in S for x, y in S) and all((x, m - y) in S for x, y in S)
+        return (self._invariant(lambda x, y: (m - x, y)) and
+                self._invariant(lambda x, y: (x, m - y)))
+
+    def _fweights(self):
+        f = {}
+        for p, w in zip(self.P, self.W): f[p] = f.get(p, 0) + w
+        return f
+
+    def _invariant(self, g):
+        """exact: f(g p) = f(p) for every p, f the aggregated (duplicates summed) weight map.
+        g is an involution here, and f o g = f on supp f with g(supp f) = supp f is all we use."""
+        f = self._fweights()
+        return all(f.get(g(x, y)) == w for (x, y), w in f.items())
+
+    def symmetric_d4(self):
+        """exact D4 invariance about (m/2, m/2): the generators x -> m-x and x <-> y (their
+        products give all 8 elements, including y -> m-y and the quarter turns)."""
+        m = self.m
+        return (self._invariant(lambda x, y: (m - x, y)) and
+                self._invariant(lambda x, y: (y, x)))
 
     # ---- certification tests ----------------------------------------------------------------
     def cert_core(self, box, B, Bf):
@@ -330,6 +428,54 @@ class Checker:
         return (-V0 - 1, 2 * U0 - V1, V0 - V2 + 2 * U1 - 2, V1 + 2 * U2, V2 - 1)
 
     def _adm_cond_ok(self, px, py, specs, cond, u0, u1):
+        if self.fast:
+            r = self._adm_cond_ok_int(px, py, specs, cond, u0, u1)
+            if self.fast == 'check':
+                assert r == self._adm_cond_ok_ref(px, py, specs, cond, u0, u1), ('ADM int/ref mismatch', px, py, specs, cond, u0, u1)
+            return r
+        return self._adm_cond_ok_ref(px, py, specs, cond, u0, u1)
+
+    def _adm_int_ctx(self, specs, u0, u1):
+        """common integer denominator D of the point coordinates, m and the box's 'R' bounds, and
+        u = U/Du; cached per (specs, u-bin) since a box's cond tests all share it"""
+        key = (specs, u0, u1)
+        c = self._adm_ctx_cache
+        if c is not None and c[0] == key: return c[1]
+        D = self.Dp * self.m.denominator // math.gcd(self.Dp, self.m.denominator)
+        for sl in specs:
+            for kd, v in sl:
+                if kd == 'R': d = v.denominator; D = D * d // math.gcd(D, d)
+        Du = u0.denominator * u1.denominator // math.gcd(u0.denominator, u1.denominator)
+        U0 = u0.numerator * (Du // u0.denominator); U1 = u1.numerator * (Du // u1.denominator)
+        mD = self.m.numerator * (D // self.m.denominator)
+        def xn(k):
+            if k[0] == 'R':
+                v = k[1].numerator * (D // k[1].denominator); return (2 * v, 0, 2 * v)
+            if k[0] == 'W': return (D, 2 * D, -D)
+            return (2 * mD - D, -2 * D, 2 * mD + D)
+        slots = tuple(tuple((k[0] == 'R', xn(k)) for k in sl) for sl in specs)
+        ctx = (D, Du, U0, U1, slots)
+        self._adm_ctx_cache = (key, ctx)
+        return ctx
+
+    def _adm_cond_ok_int(self, px, py, specs, cond, u0, u1):
+        """_adm_cond_ok_ref in integers (identical decisions): every quantity of the polynomial
+        test times the common denominator D, the Bernstein coefficients times 12 Du^4 > 0."""
+        D, Du, U0, U1, slots = self._adm_int_ctx(specs, u0, u1)
+        PX = px.numerator * (D // px.denominator); PY = py.numerator * (D // py.denominator)
+        Axs, Bxs, Ays, Bys = slots
+        xs, ys = ((Axs, Ays), (Bxs, Bys), (Bxs, Ays), (Axs, Bys))[cond]
+        for xr, Xn in xs:
+            U = (2 * PX - Xn[0], -Xn[1], 2 * PX - Xn[2])
+            for yr, Yn in ys:
+                V = (2 * PY - Yn[0], -Yn[1], 2 * PY - Yn[2])
+                g = _cond_poly_i(U, V, cond, xr and yr, D)
+                if g[3] == 0 and g[4] == 0:
+                    if _quad_le0(g[0], g[1], g[2], Du, U0, U1): return True
+                elif _bern_le0_i(g, Du, U0, U1): return True
+        return False
+
+    def _adm_cond_ok_ref(self, px, py, specs, cond, u0, u1):
         """does inequality `cond` hold for p at every admissible pose of the box?  (Lemma A)"""
         m = self.m
         Axs, Bxs, Ays, Bys = specs
@@ -508,6 +654,16 @@ class Checker:
         return best
 
     def cert_chain(self, box, B, lams=(F(1), F(1, 2), F(2)), inh=None, diag=None):
+        if self.fast and diag is None and tuple(lams) == (F(1), F(1, 2), F(2)):
+            r = self.cert_chain_fast(box, B, inh=inh)
+            if self.fast == 'check':          # self-test: the ref path must agree verbatim
+                r2 = self.cert_chain_ref(box, B, inh=inh)
+                assert r == r2, ('fast/ref CHAIN mismatch', box, r[0], r2[0])
+                self.nstat['checked'] = self.nstat.get('checked', 0) + 1
+            return r
+        return self.cert_chain_ref(box, B, lams=lams, inh=inh, diag=diag)
+
+    def cert_chain_ref(self, box, B, lams=(F(1), F(1, 2), F(2)), inh=None, diag=None):
         """Disjunctive certification by monotone chains of pivots (RUNG2.md secs 6-7).
 
         T = the points ADM/P1 certify for the whole box.  A *swing* point is one whose four
@@ -690,6 +846,285 @@ class Checker:
                     return ('CHAIN', sorted(int(v) for v in np.nonzero(used)[0]))
         return (None, None)
 
+    # ---- CHAIN, fast path (S32_EXACT.md sec 11) ----------------------------------------------
+    # The same primitive as cert_chain_ref, making the same decisions, with two changes of
+    # arithmetic only:
+    #  (1) every pair test  max_box sum_i lam_i G_i <= 0  that is ACCEPTED is decided exactly in
+    #      Python ints (_box_ctx / _gle0: the box's corners and u-endpoints over common integer
+    #      denominators; the test is the same corner + quadratic-vertex rule as _gmax/_max_quad);
+    #  (2) a numpy float evaluation of the same quantity is used only to REJECT (float value
+    #      > FTOL) or to steer a binary search; a float value within FTOL of 0 is decided exactly,
+    #      and the final accepted probe of every binary search is re-decided exactly.  A float
+    #      never certifies anything: if a confirmation fails, that search is redone all-exact.
+    FTOL = 1e-9
+
+    def _box_ctx(self, box):
+        cx0, cx1, cy0, cy1, u0, u1 = box
+        Dc = self.Dp
+        for v in (cx0, cx1, cy0, cy1):
+            d = v.denominator; Dc = Dc * d // math.gcd(Dc, d)
+        Du = u0.denominator * u1.denominator // math.gcd(u0.denominator, u1.denominator)
+        corners = [(cx.numerator * (Dc // cx.denominator), cy.numerator * (Dc // cy.denominator))
+                   for cx in (cx0, cx1) for cy in (cy0, cy1)]
+        return (Dc, Dc // self.Dp, corners, Du, u0.numerator * (Du // u0.denominator),
+                u1.numerator * (Du // u1.denominator))
+
+    def _gle0(self, terms, ctx):
+        """EXACT (ints):  max over the pose box of  sum_i w_i G_{k_i, kind_i}  <= 0 ?  terms =
+        [(w, k, kind)] with integer w (a positive multiple of the Fraction weights of _gmax,
+        which does not change the sign).  At a corner (cx, cy) = (CX, CY)/Dc, a = A/Dc with
+        A = PX*sc - CX, so Dc*G has integer coefficients; u = U/Du; see _quad_le0."""
+        Dc, sc, corners, Du, U0, U1 = ctx
+        PXi, PYi = self.PXi, self.PYi
+        for CX, CY in corners:
+            c0 = c1 = c2 = 0
+            for w, k, kind in terms:
+                A = PXi[k] * sc - CX; Bv = PYi[k] * sc - CY
+                if kind == 0:   g0, g1, g2 = 2 * A - Dc, 4 * Bv, -2 * A - Dc
+                elif kind == 1: g0, g1, g2 = -2 * A - Dc, -4 * Bv, 2 * A - Dc
+                elif kind == 2: g0, g1, g2 = 2 * Bv - Dc, -4 * A, -2 * Bv - Dc
+                else:           g0, g1, g2 = -2 * Bv - Dc, 4 * A, 2 * Bv - Dc
+                c0 += w * g0; c1 += w * g1; c2 += w * g2
+            if not _quad_le0(c0, c1, c2, Du, U0, U1): return False
+        return True
+
+    def cert_chain_fast(self, box, B, inh=None):
+        cx0, cx1, cy0, cy1, u0, u1 = box
+        specs = self._adm_specs(box, B)
+        # --- T, reach, candidates: identical to cert_chain_ref
+        ma, cmasks = self._adm_mask(specs, u0, u1, per_cond=True)
+        mp = self._p1_mask(box, B)
+        t = 1 - B['whi'] / 2
+        inT = np.zeros(len(self.P), dtype=bool)
+        wT = F(0)
+        for k in self.order:
+            if not (ma[k] or mp[k] or (inh is not None and inh[k])): continue
+            px, py = self.P[k]
+            if (inh is not None and inh[k]) or \
+               (mp[k] and self._p1_exact(px, py, box, t)) or \
+               (ma[k] and self._adm_exact(px, py, specs, u0, u1)):
+                inT[k] = True; wT += self.W[k]
+        self._last_inT = inT
+        if wT >= 1: return ('ADM', [int(k) for k in np.nonzero(inT)[0]])
+        cxm, cym = float((cx0 + cx1) / 2), float((cy0 + cy1) / 2)
+        rad = 0.7072 + 0.5 * math.hypot(float(cx1 - cx0), float(cy1 - cy0))
+        reach = (((self.Pxf - cxm) ** 2 + (self.Pyf - cym) ** 2) <= rad * rad) & (~inT) & (self.Wf > 0)
+        if float(wT) + self.Wf[reach].sum() < 1.0: return (None, None)
+        nfail = np.zeros(len(self.P), dtype=np.int8)
+        for cm in cmasks: nfail += (~cm)
+        reach &= (nfail <= 1)
+        cand = []
+        for k in np.nonzero(reach)[0]:
+            px, py = self.P[k]
+            bad = None
+            for c in range(4):
+                if not cmasks[c][k]:
+                    if bad is not None: bad = -1; break
+                    bad = c; continue
+                if not self._adm_cond_ok(px, py, specs, c, u0, u1):
+                    if bad is not None: bad = -1; break
+                    bad = c
+            if bad is None or bad < 0: continue
+            cand.append((int(k), bad))
+        if len(cand) < 2: return (None, None)
+        if float(wT) + sum(self.Wf[k] for k, _ in cand) < 1.0: return (None, None)
+        if not self.Wden: return (None, None)
+
+        nc = len(cand)
+        ck = np.array([k for k, _ in cand], dtype=np.int64)
+        cd = np.array([d for _, d in cand], dtype=np.int64)
+        pos = {k: i for i, (k, _) in enumerate(cand)}
+        ctx = self._box_ctx(box)
+        TOL = self.FTOL
+        st = self.nstat
+        f0, f1 = float(u0), float(u1)
+        # float G coefficients of every candidate at every corner, shape (4, nc, 3)
+        Gf = np.empty((4, nc, 3))
+        ci = 0
+        for cx in (cx0, cx1):
+            for cy in (cy0, cy1):
+                a = self.Pxf[ck] - float(cx); b = self.Pyf[ck] - float(cy)
+                g = Gf[ci]
+                g[:, 0] = np.select([cd == 0, cd == 1, cd == 2], [2 * a - 1, -2 * a - 1, 2 * b - 1], -2 * b - 1)
+                g[:, 1] = np.select([cd == 0, cd == 1, cd == 2], [4 * b, -4 * b, -4 * a], 4 * a)
+                g[:, 2] = np.select([cd == 0, cd == 1, cd == 2], [-2 * a - 1, 2 * a - 1, -2 * b - 1], 2 * b - 1)
+                ci += 1
+
+        def fmax(ia, wa, ib, wb):
+            """float  max_box (wa G_ia + wb G_ib), vectorised over index arrays (cand positions)"""
+            best = None
+            for c in range(4):
+                G = Gf[c]
+                v = _quadmax_f(wa * G[ia, 0] + wb * G[ib, 0], wa * G[ia, 1] + wb * G[ib, 1],
+                               wa * G[ia, 2] + wb * G[ib, 2], f0, f1)
+                best = v if best is None else np.maximum(best, v)
+            return best
+
+        excache = {}
+        def ex(i, wa, j, wb):
+            key = (i, wa, j, wb)
+            r = excache.get(key)
+            if r is None:
+                st['fexact'] += 1
+                r = excache[key] = self._gle0([(wa, cand[i][0], cand[i][1]), (wb, cand[j][0], cand[j][1])], ctx)
+            return r
+
+        LAMS = ((1, 1.0, 1), (2, 0.5, 1), (1, 2.0, 2))     # lam = 1, 1/2, 2 as (wa, lam_f, wb):
+        # G_a + lam G_q  ~  wa G_a + wb G_q  with wb/wa = lam (a positive rescaling)
+
+        def anylam_exact(i, j):
+            return any(ex(i, wa, j, wb) for wa, _, wb in LAMS)
+
+        yn_, yd_ = F(cym).numerator, F(cym).denominator
+        xn_, xd_ = F(cxm).numerator, F(cxm).denominator
+        umn, umd = ((u0 + u1) / 2).numerator, ((u0 + u1) / 2).denominator
+        Lp = self.Dp
+        for d_ in (xd_, yd_): Lp = Lp * d_ // math.gcd(Lp, d_)
+        sP, sX, sY = Lp // self.Dp, Lp // xd_, Lp // yd_
+        def pxkey(k, kd):
+            A = self.PXi[k] * sP - xn_ * sX; Bv = self.PYi[k] * sP - yn_ * sY   # a, b times Lp
+            if kd == 0:   g0, g1 = 2 * A - Lp, 4 * Bv
+            elif kd == 1: g0, g1 = -2 * A - Lp, -4 * Bv
+            elif kd == 2: g0, g1 = 2 * Bv - Lp, -4 * A
+            else:         g0, g1 = -2 * Bv - Lp, 4 * A
+            return (g0 * umd + g1 * umn) / (Lp * umd)
+        # --- one chain per swing kind, heaviest kind first (same order and same sort as ref)
+        kinds = sorted({kd for _, kd in cand}, key=lambda kd: -sum(self.Wf[k] for k, d in cand if d == kd))
+        chains = []
+        for kd in kinds:
+            grp = [i for i in range(nc) if cand[i][1] == kd]
+            if len(grp) < 2: continue
+            # the ref's sort key float(g0 + g1 (u0+u1)/2) at the exact centre F(cxm), F(cym),
+            # computed as one exact int ratio (int / int is correctly rounded, like float(Fraction))
+            grp.sort(key=lambda i: pxkey(cand[i][0], kd))
+            garr = np.array(grp, dtype=np.int64); ng = len(grp)
+            # float screen of  max (G_x - G_y) <= 0  for all pairs of the group at once
+            Mg = fmax(np.repeat(garr, ng), 1.0, np.tile(garr, ng), -1.0).reshape(ng, ng)
+            ch = [grp[0]]; lastg = 0; p = 1
+            while p < ng:
+                nxt = np.nonzero(Mg[lastg, p:] <= TOL)[0]      # > TOL: rejected, as the ref would
+                if len(nxt) == 0: break
+                p += int(nxt[0])
+                if ex(ch[-1], 1, grp[p], -1):                  # acceptance: exact
+                    ch.append(grp[p]); lastg = p
+                p += 1
+            chains.append(ch)
+        if not chains: return (None, None)
+
+        def bsearch_down(chp):
+            """smallest r in 1..kk with G_i <= G_{q_r} (i == q_r counts), kk+1 if none: the same
+            probe sequence as the ref binary search, float-steered, exact near ties, and the
+            final accepted probe re-decided exactly."""
+            kk = len(chp)
+            lo = np.ones(nc, dtype=np.int64); hi = np.full(nc, kk + 1, dtype=np.int64)
+            rows = np.arange(nc)
+            while True:
+                act = np.nonzero(lo < hi)[0]
+                if len(act) == 0: break
+                mid = (lo[act] + hi[act]) // 2
+                q = chp[mid - 1]
+                selfq = (q == act)
+                v = fmax(act, 1.0, q, -1.0)
+                pred = selfq | (v < -TOL)
+                for t in np.nonzero(~selfq & (np.abs(v) <= TOL))[0]:
+                    pred[t] = ex(int(act[t]), 1, int(q[t]), -1)
+                hi[act[pred]] = mid[pred]
+                lo[act[~pred]] = mid[~pred] + 1
+            for i in range(nc):
+                r = int(lo[i])
+                if r <= kk and chp[r - 1] != i:
+                    st['fconfirm'] += 1
+                    if not ex(i, 1, int(chp[r - 1]), -1):
+                        st['fmismatch'] += 1
+                        a_, b_ = 1, kk + 1                  # redo this row all-exact
+                        while a_ < b_:
+                            m_ = (a_ + b_) // 2
+                            if chp[m_ - 1] == i or ex(i, 1, int(chp[m_ - 1]), -1): b_ = m_
+                            else: a_ = m_ + 1
+                        lo[i] = a_
+            return lo
+
+        def bsearch_up(rowsq, chp, selfcheck):
+            """largest r in 0..kk with good(r) = (q_r != row) and exists lam: G_row + lam G_{q_r}
+            <= 0 on the box, found by the ref's binary search; rowsq = the rows' cand positions."""
+            kk = len(chp); nr = len(rowsq)
+            lo = np.zeros(nr, dtype=np.int64); hi = np.full(nr, kk, dtype=np.int64)
+            while True:
+                act = np.nonzero(lo < hi)[0]
+                if len(act) == 0: break
+                mid = (lo[act] + hi[act] + 1) // 2
+                q = chp[mid - 1]; ia = rowsq[act]
+                notself = (q != ia) if selfcheck else np.ones(len(act), dtype=bool)
+                vs = [fmax(ia, 1.0, q, lf) for _, lf, _ in LAMS]
+                yes = (vs[0] < -TOL) | (vs[1] < -TOL) | (vs[2] < -TOL)
+                no = (vs[0] > TOL) & (vs[1] > TOL) & (vs[2] > TOL)
+                good = notself & yes
+                for t in np.nonzero(notself & ~yes & ~no)[0]:
+                    good[t] = any(ex(int(ia[t]), wa, int(q[t]), wb)
+                                  for (wa, _, wb), vv in zip(LAMS, vs) if abs(vv[t]) <= TOL)
+                lo[act[good]] = mid[good]
+                hi[act[~good]] = mid[~good] - 1
+            for x in range(nr):
+                r = int(lo[x])
+                if r > 0:
+                    st['fconfirm'] += 1
+                    if not anylam_exact(int(rowsq[x]), int(chp[r - 1])):
+                        st['fmismatch'] += 1
+                        a_, b_ = 0, kk
+                        while a_ < b_:
+                            m_ = (a_ + b_ + 1) // 2
+                            qq = int(chp[m_ - 1])
+                            if (not selfcheck or qq != int(rowsq[x])) and anylam_exact(int(rowsq[x]), qq): a_ = m_
+                            else: b_ = m_ - 1
+                        lo[x] = a_
+            return lo
+
+        allrows = np.arange(nc, dtype=np.int64)
+        def analyse(ch):
+            kk = len(ch); chp = np.array(ch, dtype=np.int64)
+            dlo = bsearch_down(chp)
+            ulo = bsearch_up(allrows, chp, True)
+            r_ = np.arange(kk + 2)[:, None]
+            down = (r_[:kk + 1] >= dlo[None, :])            # down[r][i] = (r >= dlo[i]), r = 0..kk
+            up = (r_ >= 1) & (r_ <= ulo[None, :])            # up[r][i] = (1 <= r <= ulo[i]), r = 0..kk+1
+            return chp, down, up
+
+        Wc = self.Wnum[ck]
+        need = self.Wden - int(self.Wnum[inT].sum())      # the regions' cand weight must reach this
+        info = [analyse(ch) for ch in chains]
+
+        def used_list(masks):
+            u = inT.copy()
+            for mk in masks: u[ck[mk]] = True
+            return ('CHAIN', sorted(int(v) for v in np.nonzero(u)[0]))
+
+        # --- single chain: region r uses down[r] | up[r+1], r = 0..kk
+        for ci, ch in enumerate(chains):
+            chp, down, up = info[ci]; kk = len(ch)
+            U = down | up[1:kk + 2]
+            if int((U.astype(np.int64) @ Wc).min()) >= need:
+                return used_list([down[kk], up[1:kk + 1].any(axis=0)])
+        # --- product of two chains of different kinds
+        for i in range(len(chains)):
+            for j in range(i + 1, len(chains)):
+                chA, downA, upA = info[i]; chB, downB, upB = info[j]
+                ka, kb = len(chA), len(chB)
+                empt = bsearch_up(chA, chB, False)          # empt[r], r = 0..ka-1
+                MB = (downB | upB[1:kb + 2]).astype(np.int64)
+                ok = True
+                sidx = np.arange(kb + 1)
+                for r in range(ka + 1):
+                    MA = downA[r] | upA[r + 1]
+                    if r < ka: live = ~((sidx < kb) & (empt[r] >= sidx + 1))
+                    else: live = np.ones(kb + 1, dtype=bool)
+                    if not live.any(): continue
+                    tot = np.maximum(MB[live], MA[None, :].astype(np.int64)) @ Wc
+                    if int(tot.min()) < need: ok = False; break
+                if ok:
+                    return used_list([downA[ka], downB[kb], upA[1:ka + 1].any(axis=0),
+                                      upB[1:kb + 1].any(axis=0)])
+        return (None, None)
+
     def cert_tri(self, box):
         cx0, cx1, cy0, cy1 = box[:4]
         corners = [(cx0, cy0), (cx1, cy0), (cx0, cy1), (cx1, cy1)]
@@ -779,7 +1214,11 @@ def _worker(args):
     chk, root = args
     return chk.run_box(root)
 
-def roots(m, pitch=F(1, 10), ubins=8, cy_max=None, cx_lo=None, cx_hi=None):
+_CHK = None
+def _worker1(root):
+    return _CHK.run_box(root)
+
+def roots(m, pitch=F(1, 10), ubins=8, cy_max=None, cx_lo=None, cx_hi=None, cy_lo=None, cy_hi=None):
     """Root boxes aligned to the pitch grid (so tight poses sit on box boundaries).
     cx_lo/cx_hi restrict the sweep to a band of centre-x columns -- a *partial* run, useful for
     timing or for isolating a region; it proves nothing about the poses it skips, and the summary
@@ -791,10 +1230,24 @@ def roots(m, pitch=F(1, 10), ubins=8, cy_max=None, cx_lo=None, cx_hi=None):
         if cx_lo is not None and (i + 1) * pitch <= F(cx_lo): continue
         if cx_hi is not None and i * pitch >= F(cx_hi): continue
         for j in range(ny):
+            if cy_lo is not None and (j + 1) * pitch <= F(cy_lo): continue
+            if cy_hi is not None and j * pitch >= F(cy_hi): continue
             for k in range(ubins):
                 R.append((i * pitch, (i + 1) * pitch, j * pitch, (j + 1) * pitch,
                           F(k, 2 * ubins), F(k + 1, 2 * ubins)))
     return R
+
+def d4_roots(m, pitch=F(1, 10), ubins=8):
+    """The D4 fundamental region's root boxes (S32_EXACT.md sec 11): centre cells of the pitch
+    grid covering [0, m/2]^2 and u = tan(theta/2) in [0, 1/2] in `ubins` equal bins (the same
+    boxes as roots(); u <= 1/2 covers theta <= 45 deg with room, since tan(22.5 deg) < 1/2).
+    Order: x-cell, y-cell, u-bin."""
+    m = F(m); h = m / 2
+    n = h / pitch
+    assert n.denominator == 1, "m/2 must be a multiple of the pitch"
+    n = int(n)
+    return [(i * pitch, (i + 1) * pitch, j * pitch, (j + 1) * pitch, F(k, 2 * ubins), F(k + 1, 2 * ubins))
+            for i in range(n) for j in range(n) for k in range(ubins)]
 
 FRIEDMAN14 = [(1, 1), (F(8, 5), 1), (F(12, 5), 1), (3, 1),
               (1, F(9, 5)), (2, F(9, 5)), (3, F(9, 5)),
@@ -841,10 +1294,20 @@ def main():
                           'endpoints, floats derived from the exact box) as (cx, cy, theta_rad) rows, '
                           'one per line, for use as separating cutting planes in a cover LP')
     ap.add_argument('--full', action='store_true', help='no symmetry reduction (cy up to m, u up to 1)')
+    ap.add_argument('--d4', action='store_true',
+                    help='D4 reduction (8x): roots [0,m/2]^2 x u in [0,1/2]; needs exact D4 invariance')
+    ap.add_argument('--ref', action='store_true',
+                    help='the reference arithmetic (Fractions throughout, the pre-sec-11 code path)')
+    ap.add_argument('--selfcheck', action='store_true',
+                    help='run the fast path AND the reference at every CHAIN / ADM-condition test and '
+                         'assert they agree (slow; a regression test)')
     ap.add_argument('--cx-lo', type=str, default=None,
                     help='restrict the sweep to root columns with cx >= this (a PARTIAL run: it '
                          'proves nothing about the columns it skips)')
     ap.add_argument('--cx-hi', type=str, default=None, help='... and cx <= this')
+    ap.add_argument('--progress', type=int, default=500, help='print a progress line every N roots')
+    ap.add_argument('--cy-lo', type=str, default=None, help='same restriction for cy (PARTIAL run)')
+    ap.add_argument('--cy-hi', type=str, default=None, help='... and cy <= this')
     ap.add_argument('--u', type=str, default=None, help='pose mode: u = tan(theta/2), as a Fraction-parseable string ("1/3", "0.3333")')
     ap.add_argument('--cx', type=str, default=None, help='pose mode: centre x, Fraction-parseable')
     ap.add_argument('--cy', type=str, default=None, help='pose mode: centre y, Fraction-parseable')
@@ -954,31 +1417,45 @@ def main():
     chk = Checker(m, pts, ws, use_tri=a.tri, max_depth=a.depth, dump=a.dump,
                   use_adm=not a.no_adm, theta_bias=a.theta_bias,
                   use_chain=a.disj, chain_from=a.chain_from, clip=not a.no_clip)
+    chk.fast = 'check' if a.selfcheck else (not a.ref)
     sym = chk.symmetric()
     print(f"container [0,{m}]^2, {len(pts)} points, total weight {float(sum(chk.W)):.6f}, "
-          f"symmetric under x->m-x and y->m-y: {sym}, triangles: {len(chk.tris) if a.tri else 'off'}")
+          f"symmetric under x->m-x and y->m-y (weights too): {sym}, triangles: {len(chk.tris) if a.tri else 'off'}"
+          f", arithmetic: {'Fraction (ref)' if a.ref else 'int + float screen (fast)'}")
     if not sym and not a.full:
         print("point set not symmetric: use --full"); sys.exit(2)
     pitch = F(a.pitch)
-    if a.full:
-        R = roots(m, pitch, a.ubins * 2, cy_max=m, cx_lo=a.cx_lo, cx_hi=a.cx_hi)
+    if a.d4:
+        if a.full or any(v is not None for v in (a.cx_lo, a.cx_hi, a.cy_lo, a.cy_hi)):
+            print("--d4 takes no --full / range flags"); sys.exit(2)
+        if not chk.symmetric_d4():
+            print("ERROR: --d4: the weighted point set is not D4-invariant (x -> m-x, x <-> y)"); sys.exit(2)
+        print("D4: weighted point set invariant under x -> m-x and x <-> y (exact); "
+              "roots cover [0, m/2]^2 x u in [0, 1/2]")
+        R = d4_roots(m, pitch, a.ubins)
+    elif a.full:
+        R = roots(m, pitch, a.ubins * 2, cy_max=m, cx_lo=a.cx_lo, cx_hi=a.cx_hi,
+                  cy_lo=a.cy_lo, cy_hi=a.cy_hi)
         R = [(x0, x1, y0, y1, u0 * 2, u1 * 2) for (x0, x1, y0, y1, u0, u1) in R]  # u in [0,1]: theta to 90deg
     else:
-        R = roots(m, pitch, a.ubins, cx_lo=a.cx_lo, cx_hi=a.cx_hi)
-    if a.cx_lo is not None or a.cx_hi is not None:
-        print(f"PARTIAL SWEEP: cx restricted to [{a.cx_lo}, {a.cx_hi}] -- this is not a verification "
+        R = roots(m, pitch, a.ubins, cx_lo=a.cx_lo, cx_hi=a.cx_hi, cy_lo=a.cy_lo, cy_hi=a.cy_hi)
+    if any(v is not None for v in (a.cx_lo, a.cx_hi, a.cy_lo, a.cy_hi)):
+        print(f"PARTIAL SWEEP: cx restricted to [{a.cx_lo}, {a.cx_hi}], cy to [{a.cy_lo}, {a.cy_hi}] -- this is not a verification "
               f"of the whole container")
     print(f"{len(R)} root boxes, depth limit {a.depth}, pitch {pitch}, u-bins {a.ubins}")
     t0 = time.time()
     tot = {'ADM': 0, 'CORE': 0, 'P1': 0, 'MIX': 0, 'CHAIN': 0, 'TRI': 0, 'EMPTY': 0, 'UNCERT': 0,
            'boxes': 0, 'maxdepth': 0}
     unc_all = []; leaves_all = []
-    with Pool(a.nproc) as pool:
-        for i, (st, unc, leaves) in enumerate(pool.imap_unordered(_worker, [(chk, r) for r in R], chunksize=a.chunksize)):
+    global _CHK
+    _CHK = chk                       # inherited by the fork()ed workers, not pickled per task
+    import multiprocessing as _mp
+    with _mp.get_context('fork').Pool(a.nproc) as pool:
+        for i, (st, unc, leaves) in enumerate(pool.imap_unordered(_worker1, R, chunksize=a.chunksize)):
             for k in tot:
                 tot[k] = max(tot[k], st[k]) if k == 'maxdepth' else tot[k] + st[k]
             unc_all += unc; leaves_all += leaves
-            if (i + 1) % 500 == 0:
+            if (i + 1) % a.progress == 0:
                 print(f"  {i+1}/{len(R)} roots, {tot['boxes']} boxes, uncert {tot['UNCERT']}, {time.time()-t0:.0f}s", flush=True)
     print(f"done in {time.time()-t0:.0f}s: boxes {tot['boxes']}, max depth {tot['maxdepth']}")
     print(f"  leaves: ADM {tot['ADM']}  CORE {tot['CORE']}  P1 {tot['P1']}  MIX {tot['MIX']}  "
@@ -1010,9 +1487,12 @@ def main():
                             f.write(f"{cxv!r} {cyv!r} {thv!r}\n")
         print(f"oracle rows (uncertified-box corner/centre poses) written to {a.oracle}: "
               f"{len(unc_all)} boxes -> up to {len(unc_all) * 27} poses")
-    partial = a.cx_lo is not None or a.cx_hi is not None
+    partial = any(v is not None for v in (a.cx_lo, a.cx_hi, a.cy_lo, a.cy_hi))
+    if a.d4:
+        print(("VERIFIED-D4" if tot['UNCERT'] == 0 else "NOT VERIFIED") + " (D4 fundamental region)")
+        return
     print(("VERIFIED" if tot['UNCERT'] == 0 else "NOT VERIFIED")
-          + (f" (PARTIAL: cx in [{a.cx_lo}, {a.cx_hi}] only)" if partial else ""))
+          + (f" (PARTIAL: cx in [{a.cx_lo}, {a.cx_hi}], cy in [{a.cy_lo}, {a.cy_hi}] only)" if partial else ""))
 
 if __name__ == '__main__':
     main()
