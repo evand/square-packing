@@ -1379,17 +1379,31 @@ impl<'a> Disj<'a> {
             }
             by_kind[kq as usize].push((m, bi));
         }
-        let mut out: Vec<Vec<usize>> = Vec::new();
-        for g in by_kind.iter_mut() {
+        let mut outk: Vec<(usize, Vec<usize>)> = Vec::new();
+        for (k, g) in by_kind.iter_mut().enumerate() {
             if g.is_empty() {
                 continue;
             }
             g.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
-            out.push(g.iter().map(|e| e.1).collect());
+            outk.push((k, g.iter().map(|e| e.1).collect()));
         }
         // the biggest families first: they are the sliding cuts
-        out.sort_by_key(|v| -(v.len() as i64));
-        out
+        outk.sort_by_key(|v| -(v.1.len() as i64));
+        // ZM_MIXPAIR (heuristic order only): kinds 0/1 are the two edges parallel to one axis of the
+        // square, kinds 2/3 the other two.  Two families of the same orientation share one sliding
+        // parameter, so at an interior tile germ (all four edges on grid lines) the product must pair
+        // one family of each orientation; promote the largest family of the other orientation.
+        if std::env::var("ZM_MIXPAIR").map_or(false, |v| !v.is_empty() && v != "0") && outk.len() > 2 && outk[0].0 / 2 == outk[1].0 / 2 {
+            if let Some(j) = (2..outk.len()).find(|&j| outk[j].0 / 2 != outk[0].0 / 2) {
+                let e = outk.remove(j);
+                outk.insert(1, e);
+            }
+        }
+        if std::env::var("ZM_CHAINS").is_ok() {
+            let sz: Vec<String> = outk.iter().map(|e| format!("k{}:{}", e.0, e.1.len())).collect();
+            eprintln!("  CHAINS {}", sz.join(" "));
+        }
+        outk.into_iter().map(|e| e.1).collect()
     }
 
     /// Float-plausible Lemma-K pairs: `(bi, bj)` such that the screen cannot rule out that the
