@@ -91,7 +91,7 @@ section>*{min-width:0}
 <body>
 <div class="topbar">
   <span class="brand">Square Packing Atlas</span>
-  <nav><a href="../index.html">Overview</a><a href="../explore.html">Explore</a><a href="../compare.html">Compare</a><a href="../bounds.html">Bounds</a><a href="../proofs.html">Proofs</a><a href="../s12/">s(12)</a><a href="./" class="here">s(32)</a><a href="../sources.html">Sources</a></nav>
+  <nav><a href="../index.html">Overview</a><a href="../explore.html">Explore</a><a href="../compare.html">Compare</a><a href="../bounds.html">Bounds</a><a href="../proofs.html">Proofs</a><a href="../s12/">s(12)</a><a href="../s21/">s(21)</a><a href="./" class="here">s(32)</a><a href="../sources.html">Sources</a></nav>
 </div>
 <div class="wrap">
 <header>
@@ -176,7 +176,8 @@ section>*{min-width:0}
   <p>The cover was found by linear programming over sampled placements, with points added where the worst
   placement fell short, and then closed up until no placement tested in a fine scan captured less than 1. The
   converged LP value is about 31.22, so there is 2.4% of room below 32; <span class="mono">s(21)</span>, the
-  previous rung, had only 1.3% and could not be closed. Every number in the file is an integer: coordinates in
+  previous rung, had only 1.3% and could not be closed with points; it was closed later by spreading part of the
+  weight evenly along the grid lines (<a href="../s21/">s(21) = 5</a>). Every number in the file is an integer: coordinates in
   thousandths, weights in units of <span class="mono">10⁻¹¹</span>.</p>
 </section>
 
@@ -248,9 +249,10 @@ D4 RECHECK CLEAN: every root of the D4 region certified</code></pre>
     checker programs, which are open to inspection and re-running.</li>
     <li>"First exact <span class="mono">s(k² − 4)</span> for <span class="mono">k ≥ 4</span>" rests on our literature search (journals, arXiv, the
     Friedman/Ellsworth catalogue, and the 2026 certificate repositories). If we missed one, please tell us.</li>
-    <li>Nothing here settles <span class="mono">s(12)</span>, <span class="mono">s(21)</span> or
+    <li>Nothing here settles <span class="mono">s(12)</span> or
     <span class="mono">s(45)</span>. For those the same approach currently runs out of room: see
-    <a href="../s12/">the s(12) write-up</a>, where the proven floor stands at 3.9686.</li>
+    <a href="../s12/">the s(12) write-up</a>, where the proven floor stands at 3.9686. (<span class="mono">s(21)</span>
+    has since been settled with line densities: <a href="../s21/">s(21) = 5</a>.)</li>
   </ul>
 </section>
 

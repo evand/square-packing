@@ -1,11 +1,11 @@
 name: pages
 
-# The site root is site/www/; the s(12) write-up is served at /s12/, the s(32) write-up at /s32/.
+# The site root is site/www/; the s(12) write-up is served at /s12/, the s(21) write-up at /s21/, the s(32) write-up at /s32/.
 
 on:
   push:
     branches: [main]
-    paths: ['site/www/**', 's12/docs/**', 's12/certificates/s32/s32_closed_cover_6.txt', '.github/workflows/pages.yml']
+    paths: ['site/www/**', 's12/docs/**', 's12/certificates/s32/s32_closed_cover_6.txt', 's12/certificates/s21/s21_mixed_cover_5.txt', '.github/workflows/pages.yml']
   workflow_dispatch:
 
 permissions:
@@ -30,6 +30,9 @@ jobs:
           mkdir -p _site/s32
           cp s12/docs/s32.html _site/s32/index.html
           cp s12/certificates/s32/s32_closed_cover_6.txt _site/s32/cover.txt
+          mkdir -p _site/s21
+          cp s12/docs/s21.html _site/s21/index.html
+          cp s12/certificates/s21/s21_mixed_cover_5.txt _site/s21/cover.txt
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

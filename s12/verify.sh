@@ -94,6 +94,12 @@ echo "    certified over the D4 fundamental region by zeromargin.py (certificate
 # The full re-sweep is ~2.8 CPU-h per cover; CI skips it (S32_SEPARATE=1): run it locally.
 if full && [ -z "${S32_SEPARATE:-}" ]; then certificates/s32/verify.sh --full; else certificates/s32/verify.sh; fi
 echo
+echo "=== s(21) = 5: mixed cover of [0,5]^2 (7,536 points + 1,872 grid-line segments), total"
+echo "    522368729933/25000000000 = 20.894749 < 21 (certificates/s21/README.md).  Fast tier: shipped records of"
+echo "    both checkers re-summarised, and a fresh zmx2 run over the whole pose space with no symmetry assumed ==="
+# The zm_mixed.py re-sweep is ~20 CPU-h; CI skips it (S21_SEPARATE=1): run it locally.
+if full && [ -z "${S21_SEPARATE:-}" ]; then certificates/s21/verify.sh --full; else certificates/s21/verify.sh; fi
+echo
 echo "=== rung-2 rejection tests (23 checks: mutations, invalid historical covers, malformed input) ==="
 ./tests/rung2/rejection_tests.sh
 echo

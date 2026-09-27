@@ -2,7 +2,8 @@
 
 [![verify](https://github.com/evand/square-packing/actions/workflows/verify.yml/badge.svg)](https://github.com/evand/square-packing/actions/workflows/verify.yml)
 
-Readable write-ups: **https://evand.github.io/square-packing/s32/** (s(32) = 6) and
+Readable write-ups: **https://evand.github.io/square-packing/s21/** (s(21) = 5),
+**https://evand.github.io/square-packing/s32/** (s(32) = 6) and
 **https://evand.github.io/square-packing/s12/** (s(12), s(11), s(13)).
 
 This directory is the s(12) research tree.  The rest of the
@@ -18,10 +19,19 @@ conjectured, and deciding it *is* the open problem.  `s(11)` itself is also open
 
 Each is an exact certificate re-checked by `./verify.sh`; nothing here is peer reviewed.
 
+* **`s(21) = 5`** (2026-09-27): one *mixed* cover of `[0,5]²`, 7,536 weighted points plus mass spread uniformly
+  along 1,872 segments of the interior grid lines, total `20.894749 < 21`, certified at margin zero by two
+  independently written exact checkers (`search/zm_mixed.py` over the symmetry-reduced pose space; `zmx2`, Rust,
+  also over the whole pose space with no symmetry assumed); Lean proves `minSide 21 = 5` from that one
+  computational hypothesis, with the reduction from measures to packings.  The line densities are what close
+  the last `0.1 %`: they remove the near-tile holes that point covers always left (`search/LINE_COVER.md`).
+  Previous best lower bound `5000/1001 = 4.995005` (ours, 2026-09-23; wand125 `399/80`, jlevy `122/25`).
+  [`certificates/s21/`](certificates/s21/README.md).
 * **`s(32) = 6`** (2026-09-26): one weighted closed cover of `[0,6]²`, 13,085 points of total weight
   `31.713505 < 32`, certified at margin zero over the symmetry-reduced pose space by two independently
   written exact checkers; Lean proves `minSide 32 = 6` from that one computational hypothesis.  As far as we
   know the first exact value of `s(k² − 4)` for any `k ≥ 4` (`s(5)`, `k = 3`, is Göbel 1979).  Previous best lower bound 5.95 (wand125, 2026).
+  Since re-verified by a third checker, `zmx2` (`certificates/s32/README.md`).
   [`certificates/s32/`](certificates/s32/README.md).
 * **`s(12) >= 15680/3951 = 3.968616…`** (1,736 weighted points).  Previous published bound
   `2 + 4/√5 = 3.788854…` (Stromquist 2003, inherited from n = 11; the DS7 Table 2 entry for

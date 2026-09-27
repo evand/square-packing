@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Twenty-One Squares · Square Packing Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --paper:#F2F4F1; --surface:#FBFCFA; --ink:#131A1E; --muted:#5F6B70; --rule:#D6DCD7;
+  --accent:#0E7490; --accent-soft:#DCEDF1; --gold:#9C6410; --gold-soft:#F5EBDA; --green:#2A6E4F; --green-soft:#DFEDE5;
+  --shadow:0 1px 2px rgba(19,26,30,.05),0 8px 24px -12px rgba(19,26,30,.14);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E1316; --surface:#151C20; --ink:#E4EBEA; --muted:#96A4A8; --rule:#263238;
+    --accent:#54C3D6; --accent-soft:#0F3138; --gold:#DBA745; --gold-soft:#33280F; --green:#63BE92; --green-soft:#122B20;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E1316; --surface:#151C20; --ink:#E4EBEA; --muted:#96A4A8; --rule:#263238;
+  --accent:#54C3D6; --accent-soft:#0F3138; --gold:#DBA745; --gold-soft:#33280F; --green:#63BE92; --green-soft:#122B20;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:Spectral,Georgia,"Times New Roman",serif;font-size:17.5px;line-height:1.65;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:760px;margin:0 auto;padding:64px 24px 96px}
+h1,h2,h3{text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:clamp(2.1rem,5.2vw,3rem);font-weight:700;letter-spacing:-.015em}
+h2{font-size:1.55rem;font-weight:600;margin-top:0}
+h3{font-size:1.1rem;font-weight:600}
+p{margin:0}
+a{color:var(--accent);text-decoration-thickness:.08em;text-underline-offset:.18em}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted);font-weight:500}
+header{display:flex;flex-direction:column;gap:18px;padding-bottom:34px;border-bottom:1px solid var(--rule)}
+.lede{font-size:1.16rem;color:var(--muted);max-width:60ch}
+section{display:flex;flex-direction:column;gap:18px;padding:44px 0;border-bottom:1px solid var(--rule)}
+section:last-of-type{border-bottom:none}
+.sechead{display:flex;flex-direction:column;gap:6px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:24px;box-shadow:var(--shadow)}
+.thm{border-left:3px solid var(--accent);display:flex;flex-direction:column;gap:14px}
+.thm .stmt{font-size:1.22rem;line-height:1.5}
+.big{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-weight:600;
+  font-size:clamp(1.9rem,5vw,2.5rem);color:var(--accent);letter-spacing:-.02em}
+.tag{display:inline-flex;align-items:center;gap:7px;font-family:"IBM Plex Mono",monospace;font-size:.72rem;
+  letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:999px;font-weight:500}
+.tag.ok{background:var(--green-soft);color:var(--green)}
+.tag.open{background:var(--gold-soft);color:var(--gold)}
+.tag.neutral{background:var(--accent-soft);color:var(--accent)}
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+.tablewrap{overflow-x:auto}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);font-weight:500}
+td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+figure{margin:0;display:flex;flex-direction:column;gap:12px}
+figcaption{font-size:.9rem;color:var(--muted)}
+.figbox{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:18px}
+pre{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:16px;overflow-x:auto;
+  font-family:"IBM Plex Mono",monospace;font-size:.83rem;line-height:1.6;margin:0}
+code{font-family:"IBM Plex Mono",monospace;font-size:.9em;background:var(--accent-soft);
+  padding:.1em .35em;border-radius:2px}
+pre code{background:none;padding:0;font-size:1em}
+ul{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:9px}
+li::marker{color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.axis{width:100%;height:96px}
+.footnote{font-size:.87rem;color:var(--muted)}
+section>*{min-width:0}
+.footnote .mono,td .mono{overflow-wrap:anywhere}
+@media (max-width:520px){th,td{padding:8px 6px}td.num{white-space:normal}.wrap{padding:40px 16px 72px}}
+.topbar{display:flex;align-items:center;gap:6px 18px;padding:10px 20px;border-bottom:1px solid var(--rule);background:var(--surface);flex-wrap:wrap;font-size:16px;line-height:1.5}
+.topbar .brand{font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+.topbar nav{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.92rem}
+.topbar nav a{text-decoration:none;color:var(--muted);white-space:nowrap}
+.topbar nav a.here,.topbar nav a:hover{color:var(--accent)}
+.cv{width:100%;aspect-ratio:1/1;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.85rem;color:var(--muted)}
+.stat{display:flex;flex-direction:column;gap:2px}
+.diag{width:100%;max-width:420px;display:block;margin:0 auto}
+.diag .gl{stroke:var(--rule);stroke-width:6}
+.diag .cell{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:4 4}
+.diag .sq{fill:var(--accent-soft);fill-opacity:.55;stroke:var(--ink);stroke-width:1.5}
+.diag .chord{stroke:var(--accent);stroke-width:7;stroke-linecap:butt}
+.diag .piv{stroke:var(--gold);stroke-width:1.2;stroke-dasharray:3 3}
+.diag .lab{font-family:"IBM Plex Mono",monospace;font-size:13px;fill:var(--muted)}
+.stat b{font-family:"IBM Plex Mono",monospace;font-size:1.25rem;color:var(--ink);font-weight:600}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="brand">Square Packing Atlas</span>
+  <nav><a href="../index.html">Overview</a><a href="../explore.html">Explore</a><a href="../compare.html">Compare</a><a href="../bounds.html">Bounds</a><a href="../proofs.html">Proofs</a><a href="../s12/">s(12)</a><a href="./" class="here">s(21)</a><a href="../s32/">s(32)</a><a href="../sources.html">Sources</a></nav>
+</div>
+<div class="wrap">
+<header>
+  <span class="eyebrow">Discrete geometry · computer-assisted proof</span>
+  <h1>Twenty-One Squares</h1>
+  <p class="lede">Twenty-one unit squares fit in a 5 × 5 square: take the grid and leave four cells empty.
+  Tilting some of them does not help. <span class="mono">s(21) = 5</span>. The proof spreads part of its weight
+  continuously along the grid lines instead of putting all of it on points, and that is what closes the last 0.1%.</p>
+  <div class="tags">
+    <span class="tag ok">two independent exact checkers</span>
+    <span class="tag neutral">Lean 4 top theorem</span>
+    <span class="tag open">not peer reviewed</span>
+    <a class="tag neutral" href="https://github.com/evand/square-packing/tree/main/s12/certificates/s21">Certificate &amp; checkers on GitHub →</a>
+  </div>
+</header>
+
+<section id="result">
+  <div class="sechead"><span class="eyebrow">01 · The result</span><h2>s(21) = 5</h2></div>
+  <p><span class="mono">s(n)</span> is the side of the smallest square that holds <i>n</i> unit squares,
+  each at any position and any angle, overlapping at most along their edges. Leaving cells of a grid empty
+  gives <span class="mono">s(21) ≤ 5</span>. The work is the other direction.</p>
+  <div class="card thm">
+    <p class="stmt"><strong>Theorem.</strong> There is a mass distribution on <span class="mono">[0,5]²</span>,
+    made of <strong>7,536 weighted points</strong> and <strong>1,872 short segments of the interior grid lines</strong>
+    carrying mass spread evenly along their length, of total mass
+    <span class="mono">522368729933 / (25·10⁹)</span>, such that <em>every</em> closed unit square inside
+    <span class="mono">[0,5]²</span>, at every position and every angle, captures mass at least 1.</p>
+    <p class="big">20.894749 &nbsp;&lt;&nbsp; 21</p>
+    <p class="footnote">Suppose 21 unit squares fit in a square of side <span class="mono">s &lt; 5</span>.
+    Spread their centres out by the factor <span class="mono">5/s</span>. The squares stay inside
+    <span class="mono">[0,5]²</span> and become <em>pairwise disjoint</em>, so no part of the mass lies in two of them.
+    Each captures mass at least 1, so between them they capture at least 21, but there is only 20.89 in total. So
+    there is no such packing, and <span class="mono">s(21) = 5</span>. "Captures" is meant for the closed square: a
+    point on its boundary counts, and a segment lying along one of its edges counts in full.</p>
+  </div>
+  <p>This is the second exact value of <span class="mono">s(k² − 4)</span> for <span class="mono">k ≥ 4</span>, after
+  <a href="../s32/"><span class="mono">s(32) = 6</span></a>. As there, everything rests on checking the property in the
+  theorem for every placement of a unit square, a three-parameter continuum. That check was done twice, by two
+  checkers written independently (§04), and Lean 4 assembles the proof (§05).</p>
+</section>
+
+<section id="context">
+  <div class="sechead"><span class="eyebrow">02 · Context</span><h2>A 0.1% gap</h2></div>
+  <p>With four squares missing from a <span class="mono">k × k</span> grid, the only value known before 2026 was
+  <span class="mono">s(5) = 2 + 1/√2</span> (Göbel 1979), where tilting beats the grid. For <span class="mono">k = 5</span>
+  the lower bounds climbed quickly in September 2026, from several directions, and stalled just short of 5:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>lower bound for s(21)</th><th>source</th></tr></thead>
+    <tbody>
+      <tr><td class="num">4.582576 = √21</td><td>area</td></tr>
+      <tr><td class="num">4.741657 = 1 + √14</td><td>Nagamochi 2005, a general bound</td></tr>
+      <tr><td class="num">4.7438</td><td>Friedman, <i>Packing unit squares in squares</i> (DS7 survey)</td></tr>
+      <tr><td class="num">4.88 = 122/25</td><td><a href="https://github.com/jlevy/squares">jlevy/squares</a>, 2026-09-23 (unrefereed)</td></tr>
+      <tr><td class="num">4.98 = 249/50, then 4.9875 = 399/80</td><td><a href="https://github.com/wand125/square-packing-bounds">wand125</a>, rectangle-density certificates, September 2026 (unrefereed)</td></tr>
+      <tr><td class="num">4.995005 = 5000/1001</td><td>this project, a weighted point set in a square of side <span class="mono">5000/1001</span>, 2026-09-23 (unrefereed)</td></tr>
+      <tr><td class="num"><b>5</b></td><td>this work, 2026-09-27 (unrefereed)</td></tr>
+    </tbody>
+  </table></div>
+  <p>The method is the one behind <a href="../s32/">s(32) = 6</a>: find weights such that every unit square in the
+  container captures weight at least 1, with total below <i>n</i>. For side 5 exactly, with points only, it did not
+  work. The linear program that chooses the weights converges to about 20.74, comfortably below 21, but a program can
+  only look at finitely many placements, and the weights it returns always let some unsampled placement capture a
+  little less than 1. Repairing that costs weight. For <span class="mono">s(32)</span> the repair cost about 1.6% and there
+  was 2.4% of room. For <span class="mono">s(21)</span> the best point covers needed 1.4% of repair and there was 1.3% of
+  room: the best point cover the repair loop produced cost about 21.02.</p>
+</section>
+
+<section id="idea">
+  <div class="sechead"><span class="eyebrow">03 · The idea</span><h2>Put the weight on the lines, evenly</h2></div>
+  <p>Where do the stubborn placements sit? Almost all of them are squares lying nearly on a cell of the grid, tilted by
+  an angle of about a thousandth of a radian. At exactly zero tilt such a square has all four grid lines of its cell on
+  its boundary and gets all of their weight. Tilt it slightly and each edge swings off its line, pivoting about some
+  point. On the left line it keeps the part above the pivot; on the right line, one unit away, the matching edge keeps
+  the part below the same height. Where the pivot falls depends on the ratio of offset to angle, so it can be anywhere.</p>
+  <figure>
+    <div class="figbox">
+      <svg viewBox="0 0 400 260" class="diag" role="img" aria-label="A unit square slightly tilted over a grid cell: it keeps the upper part of the left grid line and the lower part of the right grid line, and the two parts add up to almost one full edge.">
+        <line x1="100" y1="0" x2="100" y2="260" class="gl"/><line x1="300" y1="0" x2="300" y2="260" class="gl"/>
+        <rect x="100" y="30" width="200" height="200" class="cell"/>
+        <polygon points="114.9,17.1 312.9,44.9 285.1,242.9 87.1,215.1" class="sq"/>
+        <line x1="100" y1="123.2" x2="100" y2="216.9" class="chord"/><line x1="300" y1="43.1" x2="300" y2="136.8" class="chord"/>
+        <line x1="92" y1="123.2" x2="308" y2="136.8" class="piv"/>
+        <text x="96" y="252" text-anchor="end" class="lab">x = i</text><text x="304" y="252" class="lab">x = i + 1</text>
+      </svg>
+    </div>
+    <figcaption>A unit square tilted slightly over a grid cell (tilt exaggerated). It keeps the part of the line
+    <span class="mono">x = i</span> on one side of the pivot height and the part of <span class="mono">x = i + 1</span> on the other
+    side (thick). If both lines carry the <em>same even density</em>, the two parts add up to one full edge, to first order,
+    wherever the pivot is.</figcaption>
+  </figure>
+  <p>If the weight on the lines sits on discrete points, the captured amount is a step function of where the pivot falls,
+  and some pivot position always lands between steps: a hole. The linear program patches one hole and opens another.
+  If instead the weight is spread <em>evenly</em> along the lines, the two partial edges add up to a whole edge whatever
+  the pivot, and there is nothing to slip through. With piecewise-constant densities the captured amount near a
+  tilted cell becomes a piecewise-linear function with finitely many corners, so a finite set of test placements
+  pins it down completely.</p>
+  <p>Spreading weight out is not new in itself: the rectangle-density certificates of
+  <a href="https://github.com/tokoharu/square-packing-density-bounds">tokoharu</a> and wand125 spread it evenly over
+  rectangles. The difference here is that the density is one-dimensional and sits on the grid lines themselves,
+  mixed with ordinary points, which is what a proof at exactly side 5 needs.</p>
+  <p>The effect is large. The repair cost over the linear program fell from 1.4–2.9% to 0.04–0.15% (for side 4 and
+  side 5 alike), while the program's own value hardly moved. Everything left over is an ordinary tilted placement of
+  the kind the closing loop handles routinely.</p>
+  <figure>
+    <div class="figbox"><canvas class="cv" id="cv" width="1200" height="1200" role="img" aria-label="The s(21) cover in the 5 by 5 square: mass spread along the eight interior grid lines, with varying density, plus weighted points."></canvas></div>
+    <figcaption id="cvcap">The cover in <span class="mono">[0,5]²</span>. Line thickness is proportional to the density of
+    mass along the interior grid lines; dots have area proportional to their weight. The segments carry <b>83%</b> of
+    the mass, about 2.2 per outer interior line and 2.15 per inner one, densest next to the corner cells. The points,
+    3.5 in all, sit in the band along the wall (1.3), close to the lines (0.8) and scattered inside.</figcaption>
+  </figure>
+  <div class="grid2">
+    <div class="stat"><span class="eyebrow">points</span><b>7,536</b></div>
+    <div class="stat"><span class="eyebrow">segments</span><b>1,872 × 1/50</b></div>
+    <div class="stat"><span class="eyebrow">total mass</span><b>20.894749</b></div>
+    <div class="stat"><span class="eyebrow">symmetry</span><b>all 8 of the square</b></div>
+  </div>
+  <p>The weights came out of the linear program at about <span class="mono">1.0025×</span> its confirmed minimum and
+  were then multiplied by a further <span class="mono">1.003</span>, to leave the exact checkers some room: 20.83 became
+  20.89, still 0.5% below 21. Every number in the file is an integer: coordinates in thousandths, masses in units of
+  <span class="mono">10⁻¹¹</span>.</p>
+</section>
+
+<section id="verification">
+  <div class="sechead"><span class="eyebrow">04 · Verification</span><h2>How it is checked</h2></div>
+  <p><strong>Symmetry first.</strong> The distribution is unchanged by all eight symmetries of the square (checked
+  exactly, points and segments). So it is enough to check squares whose centre lies in <span class="mono">[0,2.5]²</span>
+  and whose angle lies in <span class="mono">[0°, 45°]</span>; the checkers take angles up to 53.13°, so that
+  <span class="mono">u = tan(θ/2)</span> runs over <span class="mono">[0, ½]</span>. One of them also checks the whole
+  pose space with no symmetry assumed.</p>
+  <p><strong>Then exhaustion, at margin zero.</strong> The region is cut into boxes of placements, and each box is
+  subdivided until the checker can prove that every placement in it captures mass at least 1. Points are handled much as
+  for <span class="mono">s(32)</span>. For the lines, the checkers use the same observation as the cover: for two
+  parallel grid lines one unit apart, one pivot height governs both at once, so the pair's mass is bounded below by
+  a minimum over that single height of an explicit piecewise-linear function, computed exactly. That is what lets the
+  boxes around a nearly untilted cell close after a handful of subdivisions; without it, thousands stay open.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th></th><th>search/zm_mixed.py</th><th>verify2/zmx2</th></tr></thead>
+    <tbody>
+      <tr><td>language, arithmetic</td><td>Python; exact <span class="mono">Fraction</span> and integers, floats only to choose tests</td><td>Rust; exact integers for points and masses, outward-rounded intervals for where lines cross edges</td></tr>
+      <tr><td>region</td><td>symmetry-reduced</td><td>symmetry-reduced, and the whole pose space</td></tr>
+      <tr><td>root boxes</td><td class="num">40,000</td><td class="num">2,500 and 20,000</td></tr>
+      <tr><td>certified</td><td class="num"><b>40,000</b></td><td class="num"><b>2,500</b> and <b>20,000</b></td></tr>
+      <tr><td>boxes, max depth</td><td class="num">461,204, 21</td><td class="num">1.83 M, 26; 14.7 M, 27</td></tr>
+      <tr><td>uncertified</td><td class="num"><b>0</b></td><td class="num"><b>0</b></td></tr>
+      <tr><td>CPU</td><td class="num">13 h (1.4 h on 10 processes)</td><td class="num">12 s; 96 s</td></tr>
+    </tbody>
+  </table></div>
+  <p><span class="mono">zmx2</span> was written separately, from the statement of the problem alone, without
+  seeing <span class="mono">zm_mixed.py</span> or its write-up; it has its own parser, its own proofs and its own
+  arithmetic. Both checkers certify the cover completely. With every mass scaled down by 0.6% the cover is refused by
+  <span class="mono">zmx2</span> exactly at its known weakest tilted placement (centre <span class="mono">(0.574, 1.441)</span>,
+  angle 9.2°, exact mass 0.99969), and <span class="mono">zm_mixed.py</span>, run around that placement, leaves it open.</p>
+  <p><strong>Checking the checkers.</strong> A fresh adversarial review re-derived every lemma of
+  <span class="mono">zm_mixed.py</span> against its code and found no gap. It then tested each certified <em>component</em>
+  of the bounds, not just the total, against the exact mass at about 115 million adversarial rational placements on
+  this cover, with no violation and several bounds that were exactly tight. It also made three deliberately broken
+  versions of the cover: one with a tilted dip below 1, one in the hardest tilted cell, and one with a hole at a
+  pivot that exists only at positive tilt. Each was refused, with the exact hole inside a box the checker left
+  open. <span class="mono">zmx2</span> has its own tests (holes refused at the right placement, an exact rational
+  harness, agreement with the point checkers on the published <span class="mono">s(13)</span> and
+  <span class="mono">s(32)</span> covers) and a separate review.</p>
+  <pre><code>$ certificates/s21/verify.sh
+cover: ... 7536 points, 1872 segments (1872 axis-parallel), 0 polygons; all in [0,5]^2, masses >= 0
+total = 522368729933/25000000000 = 20.894749197320  (< 21: True)
+lean/Sqpack/S21Data.lean matches certificates/s21/s21_mixed_cover_5.txt (sha256 8b415cee…fc23)
+zm_mixed D4 RECORDS CLEAN: every root of the D4 region certified
+VERIFIED: every closed unit square in [0,s]^2 has mu >= 1 (unreduced sweep, all roots)
+s(21) bundle: OK</code></pre>
+</section>
+
+<section id="lean">
+  <div class="sechead"><span class="eyebrow">05 · Lean</span><h2>What is formally proved</h2></div>
+  <pre><code>theorem s21_eq_five_of_checker (h : S21CheckerCover) : minSide 21 = 5</code></pre>
+  <p><span class="mono">minSide n</span> is the same Lean definition as for <span class="mono">s(32)</span>: the infimum
+  of the sides that hold <i>n</i> closed unit squares at arbitrary positions and angles with disjoint interiors. New
+  here: the scaling argument for <em>any</em> measure, not just finitely many points; the symmetry reduction for
+  measures; the measure of a segment as the even spread of its mass; and the symmetry and total of <em>this</em>
+  cover, transcribed from the file. Standard axioms only, no <span class="mono">sorry</span>, no
+  <span class="mono">native_decide</span>.</p>
+  <p>The one hypothesis, <span class="mono">S21CheckerCover</span>, says that every closed unit square in
+  <span class="mono">[0,5]²</span> with centre in <span class="mono">[0,2.5]²</span> and angle
+  <span class="mono">2·arctan u</span>, <span class="mono">u ∈ [0,½]</span>, captures mass at least 1: the points inside
+  it plus, for each segment, its mass times the fraction of the segment inside it. That is what both checkers
+  establish. The checker programs themselves are not formally verified.</p>
+</section>
+
+<section id="limits">
+  <div class="sechead"><span class="eyebrow">06 · Caveats</span><h2>What to keep in mind</h2></div>
+  <ul>
+    <li>This is a computer-assisted proof and has not been peer reviewed. The claim is only as good as the two
+    checker programs, which are open to inspection and re-running.</li>
+    <li><span class="mono">zmx2</span> is not purely rational. It works out where a grid line crosses the edges of a
+    rotated square in IEEE-754 double-precision interval arithmetic, rounding every operation outward. Its verdict is
+    rigorous provided the processor and compiler round <span class="mono">+ − × ÷ √</span> correctly, which IEEE-754
+    requires and Rust does not undo. <span class="mono">zm_mixed.py</span> uses exact rationals throughout, so the two
+    rest on different kinds of trust.</li>
+    <li>The lower bounds in §02 from 2026 are unrefereed, like this one.</li>
+    <li>Nothing here settles <span class="mono">s(12)</span> or <span class="mono">s(45)</span>
+    (<a href="../s12/">the s(12) write-up</a>).</li>
+  </ul>
+</section>
+
+<section id="artifacts">
+  <div class="sechead"><span class="eyebrow">07 · Reproduce</span><h2>Artifacts</h2></div>
+  <p>Everything is in <a href="https://github.com/evand/square-packing/tree/main/s12/certificates/s21">s12/certificates/s21</a>
+  of <a href="https://github.com/evand/square-packing">evand/square-packing</a>.
+  <span class="mono">certificates/s21/verify.sh</span> re-checks in about a minute, including a fresh
+  <span class="mono">zmx2</span> run over the whole pose space; <span class="mono">--full</span> also re-runs
+  <span class="mono">zm_mixed.py</span>, about 20 CPU-hours. CI runs the fast check on every change.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>path (under s12/)</th><th>what</th></tr></thead>
+    <tbody>
+      <tr><td class="num">certificates/s21/s21_mixed_cover_5.txt</td><td>the cover: integer points, segments and masses</td></tr>
+      <tr><td class="num">certificates/s21/FORMAT.md</td><td>the file format, and why a valid file bounds s(n)</td></tr>
+      <tr><td class="num">certificates/s21/zm_mixed_d4/, zmx2_*/</td><td>the runs: every root's record, hashes and settings, the exact checker files</td></tr>
+      <tr><td class="num">certificates/s21/README.md</td><td>the claim, what checks what, and what is trusted</td></tr>
+      <tr><td class="num">search/zm_mixed.py, verify2/src/bin/zmx2.rs</td><td>the two checkers; proofs in search/ZM_MIXED.md, search/ZMX2.md</td></tr>
+      <tr><td class="num">lean/Sqpack/S21.lean, MixedMeasure.lean</td><td>the theorem, the reduction for measures</td></tr>
+      <tr><td class="num">search/LINE_COVER.md</td><td>the research log: how the cover was built</td></tr>
+    </tbody>
+  </table></div>
+</section>
+</div>
+<script>
+(async () => {
+  const cv = document.getElementById('cv'), g = cv.getContext('2d');
+  let txt;
+  try { txt = await fetch('cover.txt').then(r => { if (!r.ok) throw 0; return r.text(); }); }
+  catch (e) { document.getElementById('cvcap').insertAdjacentHTML('beforeend', ' (Figure unavailable here: the certificate file could not be loaded.)'); return; }
+  const T = txt.split('\n').map(l => l.split('#')[0]).join(' ').trim().split(/\s+/);
+  let i = 2; const nx = () => +T[i++];
+  const sn = nx(), sd = nx(), D = nx(), W = nx(), S = sn / sd;
+  const P = []; for (let n = nx(); n > 0; n--) P.push([nx(), nx(), nx()]);
+  const G = []; for (let n = nx(); n > 0; n--) G.push([nx(), nx(), nx(), nx(), nx()]);
+  const draw = () => {
+    const cs = getComputedStyle(document.documentElement), Z = cv.width, pad = 24, k = (Z - 2 * pad) / S;
+    const X = x => pad + x / D * k, Y = y => Z - pad - y / D * k;
+    g.clearRect(0, 0, Z, Z);
+    g.strokeStyle = cs.getPropertyValue('--rule').trim(); g.lineWidth = 2;
+    g.strokeRect(pad, pad, Z - 2 * pad, Z - 2 * pad);
+    const dens = G.map(([x0, y0, x1, y1, w]) => (w / W) / (Math.hypot(x1 - x0, y1 - y0) / D));
+    const dmax = Math.max(...dens);
+    g.fillStyle = cs.getPropertyValue('--accent').trim();
+    G.forEach(([x0, y0, x1, y1], j) => {
+      const t = Math.max(1, 26 * dens[j] / dmax);
+      if (x0 === x1) g.fillRect(X(x0) - t / 2, Y(Math.max(y0, y1)), t, Math.abs(Y(y0) - Y(y1)));
+      else g.fillRect(X(Math.min(x0, x1)), Y(y0) - t / 2, Math.abs(X(x1) - X(x0)), t);
+    });
+    g.fillStyle = cs.getPropertyValue('--gold').trim(); g.globalAlpha = 0.8;
+    const rmax = 7, wmax = Math.max(...P.map(p => p[2]));
+    for (const [x, y, w] of P) { if (!w) continue; const r = Math.max(0.6, rmax * Math.sqrt(w / wmax));
+      g.beginPath(); g.arc(X(x), Y(y), r, 0, 2 * Math.PI); g.fill(); }
+    g.globalAlpha = 1;
+  };
+  draw();
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+})();
+</script>
+</body>
+</html>
