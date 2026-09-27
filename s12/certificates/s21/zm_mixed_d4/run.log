@@ -1,0 +1,55 @@
+zeromargin.py sha256 640fe453c1a32f4aa580ca2b1261c6406923a4d7c131f65604a432c7fc2086ab (= pinned)
+sha256 ee3e2915349b8795128417bca6414b205d526db9f01f88cd4cd32c32e8d760ac  zm_mixed.py
+sha256 bb89de15ecf5821dd7e1a36ebab8a50d792a406b7fb0f5cb38059f99ef74aae5  mixed_cover.py
+sha256 640fe453c1a32f4aa580ca2b1261c6406923a4d7c131f65604a432c7fc2086ab  zeromargin.py
+sha256 8b415ceeb5f20b02c4e338ce2feb21bc206051ef6bc5c7e433bebae2ef39fc23  input (certificates/s21/s21_mixed_cover_5.txt)
+argv: search/zm_mixed.py cert certificates/s21/s21_mixed_cover_5.txt --d4 --cert-mode --disj --chain-from 0 --depth 24 --pitch 1/20 --ubins 16 --nproc 10 --progress 1000 --resume certificates/s21/zm_mixed_d4/roots.jsonl --manifest certificates/s21/zm_mixed_d4/manifest.json
+settings: {"cert_mode": true, "chain": true, "chain_from": 0, "clip": true, "depth": 24, "lemma_L": true, "lemma_T": true, "mode": "D4", "pitch": "1/20", "reach": "442/625", "region": {"cx_hi": null, "cx_lo": null, "cy_hi": null, "cy_lo": null, "u_hi": null, "u_lo": null}, "split": true, "split_maxchain": 400, "theta_bias": 4, "tprime": false, "ubins": 16}
+CERT MODE: Corollary T' and polygon code disabled (0 points on segment lines are treated as ordinary points)
+container [0,5]^2, 7536 points, 1872 segments on 8 lines, 0 polygons; total 522368729933/25000000000 = 20.894749197
+D4: measure invariant under x -> m-x and x <-> y; roots [0,m/2]^2 x u in [0,1/2]
+40000 root boxes x 1 cover(s), depth limit 24, pitch 1/20, u-bins 16, CHAIN on, Lemma T on, Lemma L on
+  1000/40000 roots, 1000 boxes, uncert 0, 0s
+  2000/40000 roots, 2000 boxes, uncert 0, 0s
+  3000/40000 roots, 3000 boxes, uncert 0, 0s
+  4000/40000 roots, 4000 boxes, uncert 0, 0s
+  5000/40000 roots, 5000 boxes, uncert 0, 0s
+  6000/40000 roots, 6000 boxes, uncert 0, 0s
+  7000/40000 roots, 7000 boxes, uncert 0, 0s
+  8000/40000 roots, 8000 boxes, uncert 0, 0s
+  9000/40000 roots, 9036 boxes, uncert 0, 1s
+  10000/40000 roots, 10786 boxes, uncert 0, 17s
+  11000/40000 roots, 16122 boxes, uncert 0, 73s
+  12000/40000 roots, 19990 boxes, uncert 0, 115s
+  13000/40000 roots, 21414 boxes, uncert 0, 121s
+  14000/40000 roots, 22660 boxes, uncert 0, 124s
+  15000/40000 roots, 23660 boxes, uncert 0, 127s
+  16000/40000 roots, 24660 boxes, uncert 0, 130s
+  17000/40000 roots, 25660 boxes, uncert 0, 132s
+  18000/40000 roots, 26660 boxes, uncert 0, 135s
+  19000/40000 roots, 27748 boxes, uncert 0, 147s
+  20000/40000 roots, 49040 boxes, uncert 0, 537s
+  21000/40000 roots, 128412 boxes, uncert 0, 1269s
+  22000/40000 roots, 180454 boxes, uncert 0, 1727s
+  23000/40000 roots, 271202 boxes, uncert 0, 2708s
+  24000/40000 roots, 314320 boxes, uncert 0, 3263s
+  25000/40000 roots, 343844 boxes, uncert 0, 3610s
+  26000/40000 roots, 365876 boxes, uncert 0, 3763s
+  27000/40000 roots, 375734 boxes, uncert 0, 3966s
+  28000/40000 roots, 392728 boxes, uncert 0, 4087s
+  29000/40000 roots, 395002 boxes, uncert 0, 4110s
+  30000/40000 roots, 396970 boxes, uncert 0, 4131s
+  31000/40000 roots, 399476 boxes, uncert 0, 4174s
+  32000/40000 roots, 401756 boxes, uncert 0, 4218s
+  33000/40000 roots, 403388 boxes, uncert 0, 4240s
+  34000/40000 roots, 405854 boxes, uncert 0, 4261s
+  35000/40000 roots, 408080 boxes, uncert 0, 4288s
+  36000/40000 roots, 410900 boxes, uncert 0, 4343s
+  37000/40000 roots, 414640 boxes, uncert 0, 4404s
+  38000/40000 roots, 420486 boxes, uncert 0, 4518s
+  39000/40000 roots, 442830 boxes, uncert 0, 4875s
+  40000/40000 roots, 461204 boxes, uncert 0, 5078s
+done in 5078s: boxes 461204, max depth 21, CPU 46426 s
+  leaves: PIECE 9058  ADM 146017  P1 0  MIX 0  CHAIN 23518  SPLIT 53951  EMPTY 18058  UNCERTIFIED 0   (leaves where Lemma T / Lemma L raised the piece bound: 59152 / 173034; closed by Lemma T with line points: 0)
+VERIFIED-D4
+manifest written to certificates/s21/zm_mixed_d4/manifest.json

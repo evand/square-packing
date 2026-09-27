@@ -1,7 +1,7 @@
 # Exact checker for mixed covers (points + segments + polygons): `zm_mixed.py` (2026-09-27)
 
 Brief: `tasks/line-cover/B.md`.  Code: `search/zm_mixed.py` (checker), `search/zm_mixed_test.py` (tests, toy covers,
-leaf stress).  Format: `tasks/line-cover/FORMAT.md`; reader `search/mixed_cover.py` (agent A).  `zeromargin.py` is
+leaf stress).  Format: `tasks/line-cover/FORMAT.md` (public copy: `certificates/s21/FORMAT.md`); reader `search/mixed_cover.py` (agent A).  `zeromargin.py` is
 imported, not edited (sha256 `640fe453…086ab`, printed and compared at every run).  Labels: **certified** (exact),
 **heuristic** (float), **estimate**.
 
@@ -24,12 +24,20 @@ imported, not edited (sha256 `640fe453…086ab`, printed and compared at every r
 * **Tests** (§4): point-only files give the same boxes and leaf census as `zeromargin.py cert` (two `s(13)`
   columns); randomised exact tests of every lemma (≈62k checks, 0 violations); rejection tests (remove / lighten /
   shift a segment off a grid line / zero and negative margin) all fail exactly around their holes — the shift test's
-  hole is a germ pivot pose at `θ = 0.57°` — and leaf stress tests of every certified dump find no pose below 1.
+  hole is a germ pivot pose at `θ = 0.57°`.  The evidence that matters for the certificate is the audit's
+  (`ZM_MIXED_AUDIT.md` §3): **component tests** (every certified component bound — piece bound, phantom, SPLIT
+  region bound, points — against the exact mass of that component at adversarial rational poses, ≈ 115 M exact
+  checks on the real `m = 5` cover, 0 violations, several at slack exactly 0) and **rejection runs on three holed
+  versions of the real `m = 5` cover** (tilted dip, SPLIT-heavy cell, germ-pivot hole), each refused with its exact
+  hole inside an uncertified box.  (The leaf stress tests below re-check only poses whose *total* float mass is
+  `< 1 + 10⁻⁶`; on a cover with margin that set is empty, so they are no evidence about the checker there: §8.)
 * **Performance**: comparable line vs point covers (§4.6): 17,626 boxes / 304 CPU-s (lines) vs 19,998 / 606 CPU-s
   (the same lines as 2,406 points, `zeromargin.py`); germ cell 1,040 boxes / 19 s vs 1,932 / 86 s.
 * **`m = 5` (§7.5): agent A's candidate `× 1.003`, total `20.89474919732 < 21`, is VERIFIED-D4** (40,000 roots,
-  461,204 boxes, 19.7 CPU-h, 0 uncertified): `s(21) = 5`, conditional on this single checker and on the measure
-  version of the FORMAT.md reduction.  The unscaled candidate (20.832) left one root (float margin `0.33 %` there).
+  461,204 boxes, 19.7 CPU-h, 0 uncertified).  Since then (§8): re-run in **certificate mode** with full provenance
+  (the shipped run, `certificates/s21/zm_mixed_d4/`), re-verified by the independent checker `zmx2`
+  (`ZMX2.md`), and the measure version of the FORMAT.md reduction is proved in Lean (`notes/lean-s21.md`):
+  **`s(21) = 5`**, bundled in `certificates/s21/`.  The unscaled candidate (20.832) left one root (float margin `0.33 %` there).
 * **Agent A's `m = 4` mixed covers** (scaled by me, checker tests only): `r5 × 1.05` (total 12.929)
   **VERIFIED-D4**.  `r7 × 1.02` (12.566) failed in round 1 (74 boxes); **round 2 (§7)** adds the region-wise
   primitive `SPLIT` (Lemma R) and affine end minorants in Lemma L, and it **verifies (D4, 43,970 boxes, 4.0 CPU-h)**.
@@ -489,9 +497,9 @@ arithmetic.
 * Corollary T′ (points in the groups) is a second attempt per box, only for points exactly on the germ lines.
 * The float reach filter and zeromargin's float pre-screens can only drop certifications (sound, possibly
   incomplete).  `L` is rounded down to zeromargin's weight denominator (`≤ 1/W` loss).
-* The checker is Python + `Fraction`; there is no second independent implementation (zeromargin's primitives are
-  independent code, and the lemmas are covered by the randomised exact tests of §4.2).  The Lean reduction
-  `packing_le_weight` still needs generalising from point sets to these measures (FORMAT.md; not part of this task).
+* The checker is Python + `Fraction`.  (When this was written there was no second implementation; there is now
+  `zmx2`, `ZMX2.md`, written without reading this file, and the Lean reduction for measures,
+  `notes/lean-s21.md`; §8.)
 
 ## 7. Round 2 (2026-09-27): region-wise coupling, sharper Lemma L, r7 × 1.02 verified
 
@@ -610,9 +618,12 @@ Python + `Fraction`, lemmas proved here and tested by randomised exact checks, n
 (ii) the reduction from point sets to these measures (Lean `packing_le_weight` generalisation, FORMAT.md) is done.
 The unscaled candidate (20.832) is not certified: one root needs more margin than 0.3 % or a stronger checker (above).
 
-Leaf stress tests (a re-run of three cells with `--dump`, same settings): the hard cell `[1.2,1.3]×[1.5,1.6]`
-(42,338 boxes; 21,201 certified leaves, 212,014 poses, min `1.00637`), the germ `[1.45,1.55]²` (744 leaves, min
-`1.00777`) and the wall/dip area `[0.45,0.6]×[1.4,1.55]` (1,018 leaves, min `1.00720`): 0 exact violations.
+Leaf dumps of three cells (a re-run with `--dump`, same settings): the hard cell `[1.2,1.3]×[1.5,1.6]` (42,338
+boxes; 21,201 certified leaves), the germ `[1.45,1.55]²` (744 leaves) and the wall/dip area `[0.45,0.6]×[1.4,1.55]`
+(1,018 leaves).  Their *stress* test (total float mass, min `1.0064–1.0078`) is uninformative at this margin (§8);
+the audit's **component tests** of the same dumps (43.7 M + 0.22 M + 0.78 M exact checks, each certified component
+bound against the exact mass of that component) found 0 violations, and its **rejection runs** on three holed
+versions of this cover refused each exact hole (`ZM_MIXED_AUDIT.md` §3, rerun in certificate mode in §8).
 
 Reproduce (resumable): `python3 search/zm_mixed.py cert runs/line-cover_m5_candidate_x1003.txt --d4 --disj
 --chain-from 0 --depth 24 --pitch 1/20 --ubins 16 --nproc 10 --resume runs/zmm/m5/x1003_full.jsonl`.
@@ -623,9 +634,50 @@ had 15,914 uncertified boxes at 3,000 / 3,200 roots when stopped for the `m = 5`
 
 
 
-## 6. Reproduce
+## 8. Certificate mode and provenance (2026-09-27, after the audit)
+
+`ZM_MIXED_AUDIT.md` found no soundness defect and five should-fixes; all are addressed without touching any lemma's
+logic.
+
+* **S2/S3 (provenance, resume).**  `cert` prints the sha256 of `zm_mixed.py`, `mixed_cover.py`, `zeromargin.py` and
+  the input, the argv and every setting that changes what is checked (mode, depth, pitch, `u`-bins, CHAIN and
+  `--chain-from`, `--theta-bias`, clipping, Lemmas T/L, SPLIT and its chain cap 400, the reach constant, cert mode,
+  any partial region).  With `--resume` these go into a header, the first line of the jsonl; a restart refuses a
+  file whose header (shas, settings, total) differs, or that has no header.  `--manifest FILE` writes header,
+  argv, census, verdict and the records' sha256.
+* **S5 (trusted surface).**  `--cert-mode`: Corollary T′ (points on germ lines) and the polygon code are
+  unreachable (the polygon branch asserts), and a cover containing polygons is refused (exit 2).  Points lying on
+  a segment line are then ordinary points (sound, possibly weaker; the `s(21)` cover has none).
+* **S1.**  The cover, the run records and the exact checker files that ran are in `certificates/s21/`.
+* **S4 (evidence).**  §0, §7.5 now cite the component and rejection tests; the leaf stress test stays as a
+  heuristic tool (`zm_mixed.py stress`) but is not evidence about the checker on a cover with margin.
+* **Nits.**  N1: dead `min_density`, `cone_slope` removed.  N4: comment at the `_gle0` call (weights `±1` are valid;
+  zeromargin's docstring is not edited).  N2/N3 noted here: the code uses Lemma L′'s hull form (§2, proved), and
+  Lemma V's split is valid for any `D` (the L′ term is valid at every pose, so soundness reduces to Lemma R).  N5
+  (moved points withheld though unused: sound, wasteful) and N6 (the D4 check is sufficient, not necessary) are
+  unchanged.  The section numbering (§7 before §6) is kept because §7.5 is cited elsewhere; Reproduce is §9.
+
+**Tests rerun at the final code** (sha256 `ee3e2915…d760ac`, cores 0–9): `zm_mixed_test.py selftest --n 100 --seed 41`
+PASS (all sections, 0 violations); audit `file` (independent parser: total, D4 and all four symmetries), `oracle`
+(300 poses, 0 mismatches), `tprime` (7,403 checks, 0 violations), `boxes` (100 adversarial boxes, 4.59 M exact
+checks, 0 violations, min slack 0); rejection runs **in cert mode**: R1 (`× 0.994`, tilted dip) 2,059 boxes, 36
+uncertified, the exact hole `0.99972` in an UNCERT box; R3 (germ-pivot hole) 5,011 boxes, 1,703 uncertified, the
+hole `0.98718` in an UNCERT box — both censuses identical to the audit's; component test of R1's 826 certified
+leaves: 328,959 exact checks, 0 violations, min total in a certified leaf `1.00023`.
+
+**The certified run** (`search/s21_cert_runs.sh zm_mixed`, `certificates/s21/zm_mixed_d4/`):
+`--d4 --cert-mode --disj --chain-from 0 --depth 24 --pitch 1/20
+--ubins 16`, code sha256 `ee3e2915…d760ac` (commit `fe2ac0b`), 10 processes on cores 0–9: 40,000 roots, **461,204 boxes, max
+depth 21, leaves ADM 146,017 / CHAIN 23,518 / SPLIT 53,951 / PIECE 9,058 / EMPTY 18,058 / UNCERTIFIED 0, VERIFIED-D4**,
+12.9 CPU-h, 1.4 h wall.  The census of every one of the 40,000 roots is identical to §7.5's run (cert mode changes
+nothing here: the cover has no points on lines and no polygons).  `python3 search/s21_records.py zm_mixed
+certificates/s21/zm_mixed_d4 certificates/s21/s21_mixed_cover_5.txt` re-checks the records from scratch.
+
+## 9. Reproduce
 
 ```
+bash search/s21_cert_runs.sh zm_mixed       # the shipped s(21) run -> certificates/s21/zm_mixed_d4/ (resumable)
+python3 search/s21_records.py zm_mixed certificates/s21/zm_mixed_d4 certificates/s21/s21_mixed_cover_5.txt
 S=search; R=runs/zmm
 python3 $S/zm_mixed_test.py selftest --n 300 --seed 31
 python3 $S/zm_mixed_test.py toys $R
