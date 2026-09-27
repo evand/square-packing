@@ -1,5 +1,7 @@
 # Lean statements for the zero-margin checker's primitives (`lean/Sqpack/ZeroMargin.lean`)
 
+*The D4 reduction and the Lean statement of `s(32) = 6` built on these files: `notes/lean-s32.md`.*
+
 **What this is.**  `search/zeromargin.py` proves `s(13) = 4` from
 `certificates/rung2/s13_closed_cover_4.txt` (`search/RUNG2.md` §0), and it is the base of V1, the
 `t = 4` verifier the `s(12)` endgame needs.  Its correctness rests on the paper lemmas of

@@ -45,3 +45,24 @@ import Sqpack
 #print axioms SquarePacking.d4_reduce
 #print axioms SquarePacking.d4_reduction
 #print axioms SquarePacking.d4_reduction_u
+-- weighted covers as integer data (Sqpack/Cover.lean)
+#print axioms SquarePacking.sum_filter_coverA
+#print axioms SquarePacking.sum_coverA
+#print axioms SquarePacking.D4Inv_cover
+#print axioms SquarePacking.PTree.mem_sound
+#print axioms SquarePacking.PTree.nodup_of_chainB
+-- s(32) = 6 (Sqpack/S32.lean, notes/lean-s32.md)
+#print axioms SquarePacking.not_packs_of_cover
+#print axioms SquarePacking.packs_grid
+#print axioms SquarePacking.S32Data.check_ok
+#print axioms SquarePacking.S32Data.wsum_tree
+#print axioms SquarePacking.S32Data.card_entries
+#print axioms SquarePacking.S32Data.total_lt
+#print axioms SquarePacking.S32Data.d4Inv
+#print axioms SquarePacking.S32CheckerCover.region
+#print axioms SquarePacking.s32_cover_all
+#print axioms SquarePacking.s32_not_packs
+#print axioms SquarePacking.s32_packs
+#print axioms SquarePacking.s32_isLeast
+#print axioms SquarePacking.s32_eq_six
+#print axioms SquarePacking.s32_eq_six_of_checker
