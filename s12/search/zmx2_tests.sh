@@ -10,7 +10,7 @@ TH=${TH:-10}
 (cd verify2 && cargo build --release --bin zmx2 2>&1 | grep -E '^(error|warning: unused)' ) && { echo "build failed"; exit 1; }
 Z=verify2/target/release/zmx2
 T="python3 search/zmx2_tools.py"
-C=runs/line-cover_m5_candidate_x1003.txt
+C=certificates/s21/s21_mixed_cover_5.txt     # = runs/line-cover_m5_candidate_x1003.txt (same bytes)
 S13=certificates/rung2/s13_closed_cover_4.txt
 npass=0; nfail=0
 ok()   { echo "PASS  $*"; npass=$((npass+1)); }
@@ -32,6 +32,12 @@ mk trailing "1\n100 100 1\n0\n0\n7\n"
 mk short    "2\n100 100 1\n"
 for b in negw outside degen diag polygon trailing short; do
   out=$($Z info "$ZT/bad_$b.txt" 2>&1); rc=$?
+  if [ $rc = 2 ] && echo "$out" | grep -q '^ERROR'; then ok "refuses $b: $(echo "$out" | head -1 | cut -c1-70)"; else bad "accepted $b (rc $rc)"; fi
+done
+# integer-overflow inputs (ZMX2_AUDIT.md F1): s_num = 5 + 2^125; weights 2^127-1, 2^127-1, 2 (i128 wrap)
+ZT=$ZT python3 search/zmx2_audit/mkcovers.py $C > /dev/null
+for b in wrap_s wrap_w; do
+  out=$($Z info "$ZT/$b.txt" 2>&1); rc=$?
   if [ $rc = 2 ] && echo "$out" | grep -q '^ERROR'; then ok "refuses $b: $(echo "$out" | head -1 | cut -c1-70)"; else bad "accepted $b (rc $rc)"; fi
 done
 
@@ -132,6 +138,11 @@ echo "== T7 the candidate"
 $Z cert $C --d4 --threads $TH > $ZT/cand_d4.log 2>&1
 v=$(verdict $ZT/cand_d4.log)
 [ "$v" = VERIFIED-D4 ] && ok "candidate --d4: $v; $(grep '^done' $ZT/cand_d4.log | sed 's/.*boxes/boxes/' | cut -d, -f1)" || bad "candidate d4: $v"
+
+echo "== T8 differential cert (ZMX2_AUDIT.md A7): random covers scaled to exact mu = 1 - 1e-5 at a known pose"
+NDC=$([ $QUICK = 1 ] && echo 10 || echo 40)
+out=$(ZMX2=$Z ZT=$ZT python3 search/zmx2_audit/diffcert.py 2 $NDC 1/100000 2>&1 | tail -1)
+echo "$out" | grep -q ': 0 unexpected' && ok "every cover with a known exact violation refused ($out)" || bad "diffcert: $out"
 
 echo
 echo "zmx2_tests: $npass passed, $nfail failed"

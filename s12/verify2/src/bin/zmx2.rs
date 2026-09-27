@@ -330,12 +330,22 @@ fn parse_cover(path: &str) -> Cover {
     if s_num <= 0 || s_den <= 0 || d <= 0 || w <= 0 {
         die("header values must be positive");
     }
+    // Input bounds (ZMX2_AUDIT.md F1): release builds do not check i128 overflow, so every input
+    // integer is bounded here, before any arithmetic, such that all later sizes of ZMX2.md sec 2/5
+    // hold for every accepted file (F * 2^30 * Lc < 2^110, grid integers and casts small).
+    const HDR: I = 1 << 40;
+    if s_num >= HDR || s_den >= HDR || w >= (1 << 50) {
+        die("header value too large (s_num, s_den < 2^40, W < 2^50)");
+    }
+    if d >= (1 << 20) {
+        die("D too large for this checker (limit 2^20)");
+    }
     if (s_num * d) % s_den != 0 {
         die("s_den must divide s_num*D");
     }
     let sx = s_num * d / s_den;
-    if d >= (1 << 22) {
-        die("D too large for this checker (limit 2^22)");
+    if sx >= (1 << 27) {
+        die("s*D too large for this checker (limit 2^27)");
     }
     let inrange = |v: I| v >= 0 && v <= sx;
     let np = nx("np");
@@ -352,6 +362,9 @@ fn parse_cover(path: &str) -> Cover {
         }
         if wt < 0 {
             die("negative weight");
+        }
+        if wt >= (1 << 50) {
+            die("weight too large (limit 2^50)");
         }
         raw_pts.push((x as i64, y as i64, wt));
     }
@@ -373,6 +386,9 @@ fn parse_cover(path: &str) -> Cover {
             if wt < 0 {
                 die("negative weight");
             }
+            if wt >= (1 << 50) {
+                die("weight too large (limit 2^50)");
+            }
             if x0 == x1 && y0 == y1 {
                 die("degenerate (zero-length) segment");
             }
@@ -388,6 +404,11 @@ fn parse_cover(path: &str) -> Cover {
     }
     if it2.next().is_some() {
         die("trailing tokens after the declared pieces");
+    }
+    // each weight < 2^50, and a file has far fewer than 2^70 pieces, so this sum cannot overflow
+    let tsum: I = raw_pts.iter().map(|p| p.2).chain(raw_segs.iter().map(|s| s.4)).sum();
+    if tsum >= (1 << 56) {
+        die("total weight too large (limit 2^56)");
     }
     build_cover(s_num, s_den, d, w, sx, raw_pts, raw_segs, fnv(&bytes))
 }
