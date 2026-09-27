@@ -36,3 +36,12 @@ import Sqpack
 #print axioms SquarePacking.bern_endpoints
 #print axioms SquarePacking.polyOk_bern
 #print axioms SquarePacking.polyOk_quad
+-- D4 reduction (Sqpack/D4.lean, search/S32_EXACT.md §7, §11.3(d))
+#print axioms SquarePacking.sq_add_pi_div_two
+#print axioms SquarePacking.mem_sq_reflX
+#print axioms SquarePacking.mem_sq_swapXY
+#print axioms SquarePacking.capt_reflX
+#print axioms SquarePacking.capt_swapXY
+#print axioms SquarePacking.d4_reduce
+#print axioms SquarePacking.d4_reduction
+#print axioms SquarePacking.d4_reduction_u
