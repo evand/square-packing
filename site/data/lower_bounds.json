@@ -382,14 +382,14 @@
  },
  "11": {
   "best": {
-   "value": 3.8143036386449185,
-   "exact_form": "3040/797",
-   "source": "EvanDaniel2026",
+   "value": 3.875,
+   "exact_form": "31/8",
+   "source": "Kleddamag2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/evand/square-packing/tree/main/s12",
-   "note": "2026-08; 680-point weighted certificate s11_lower_3.8143.txt, verified at N=6000 and 12000; separate from the n=12 certificates (s(11) <= s(12) gives nothing for n=11)",
-   "date": "2026-08"
+   "url": "https://github.com/Kleddamag/11-squares-certified-bound",
+   "note": "strict: s(11) > 31/8; strict-core charge certificate developed from jlevy's T-026, second checker adapted from Guzhou0806's R038; replayed in full by jlevy/squares; about 0.0021 below Trump's 1979 packing",
+   "date": "2026-09-22"
   },
   "history": [
    {
@@ -419,14 +419,64 @@
     "note": "general lower bound, Theorem 2(ii)"
    },
    {
+    "value": 3.81,
+    "exact_form": "381/100",
+    "source": "jlevy2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/jlevy/squares",
+    "note": "T-018: weighted fractional unavoidable-set certificate, 1121 atoms",
+    "date": "2026-09-04"
+   },
+   {
+    "value": 3.826447410572939,
+    "exact_form": "955000*sqrt(518400042893309449)/179696714646249",
+    "source": "jlevy2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/jlevy/squares",
+    "note": "T-026: threshold certificate (points plus 2-of-3 threshold atoms) and an exact dilation limit; T-025 gives 191/50 = 3.82 directly",
+    "date": "2026-09-09"
+   },
+   {
+    "value": 3.81,
+    "exact_form": "381/100",
+    "source": "tokoharu2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/tokoharu/square-packing-density-bounds",
+    "note": "rectangle-density certificate",
+    "date": "2026-09-21"
+   },
+   {
     "value": 3.8143036386449185,
     "exact_form": "3040/797",
     "source": "EvanDaniel2026",
     "year": 2026,
     "status": "preprint",
     "url": "https://github.com/evand/square-packing/tree/main/s12",
-    "note": "2026-08; 680-point weighted certificate s11_lower_3.8143.txt, verified at N=6000 and 12000; separate from the n=12 certificates (s(11) <= s(12) gives nothing for n=11)",
-    "date": "2026-08"
+    "note": "680-point weighted certificate s11_lower_3.8143.txt, found 2026-08-26 but first published 2026-09-22, after jlevy's 3.8264; kernel-checked in Lean (s11_ge_3040_797)",
+    "date": "2026-09-22"
+   },
+   {
+    "value": 3.826997548829543,
+    "exact_form": "955000*sqrt(2073600042893309449)/359341754646249",
+    "source": "jlevy2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/jlevy/squares",
+    "note": "T-033: the T-026 certificate on a finer direction net",
+    "date": "2026-09-22"
+   },
+   {
+    "value": 3.875,
+    "exact_form": "31/8",
+    "source": "Kleddamag2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/Kleddamag/11-squares-certified-bound",
+    "note": "strict: s(11) > 31/8; strict-core charge certificate developed from jlevy's T-026, second checker adapted from Guzhou0806's R038; replayed in full by jlevy/squares; about 0.0021 below Trump's 1979 packing",
+    "date": "2026-09-22"
    }
   ]
  },
@@ -438,7 +488,7 @@
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/evand/square-packing/tree/main/s12",
-   "note": "2026-08-26; 1736-point certificate, current best claimed value; repo states 'nothing here has been peer reviewed'",
+   "note": "2026-08-26; 1736-point weighted certificate; still the best lower bound we know of for n = 12 (jlevy/squares replayed it by a second method and lists it as the verified bound)",
    "date": "2026-08-26"
   },
   "history": [
@@ -475,7 +525,7 @@
     "year": 2026,
     "status": "preprint",
     "url": "https://github.com/evand/square-packing/tree/main/s12",
-    "note": "2026-08-24; first certificate",
+    "note": "2026-08-24; first certificate; kernel-checked in Lean (s12_ge_3920_997)",
     "date": "2026-08-24"
    },
    {
@@ -495,8 +545,18 @@
     "year": 2026,
     "status": "preprint",
     "url": "https://github.com/evand/square-packing/tree/main/s12",
-    "note": "2026-08-26; 1736-point certificate, current best claimed value; repo states 'nothing here has been peer reviewed'",
+    "note": "2026-08-26; 1736-point weighted certificate; still the best lower bound we know of for n = 12 (jlevy/squares replayed it by a second method and lists it as the verified bound)",
     "date": "2026-08-26"
+   },
+   {
+    "value": 3.96,
+    "exact_form": "99/25",
+    "source": "jlevy2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/jlevy/squares",
+    "note": "T-017: weighted fractional unavoidable-set certificate, reached independently of ours",
+    "date": "2026-09-04"
    }
   ]
  },
@@ -658,14 +718,14 @@
  },
  "17": {
   "best": {
-   "value": 4.613028635886111,
-   "exact_form": "sqrt(17650291964463886688094912400/829429719507765981945905041)",
-   "source": "MiraAcc2026",
+   "value": 4.66018,
+   "exact_form": "233009/50000",
+   "source": "Guzhou0806_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/Mira-acc/17squares",
-   "note": "2026-09-08 (later same day); 'reviewed' weighted certificate, 1620 atoms, current best claimed value; external peer review still pending per repo",
-   "date": "2026-09-08"
+   "url": "https://github.com/Guzhou0806/n17-square-packing",
+   "note": "R067, strict; keeps Kleddamag's 4.66001 sites, charges and budget and rebuilds the cores and angle intervals; the repository reports a further candidate as still under replay",
+   "date": "2026-09-28"
   },
   "history": [
    {
@@ -751,8 +811,78 @@
     "year": 2026,
     "status": "preprint",
     "url": "https://github.com/Mira-acc/17squares",
-    "note": "2026-09-08 (later same day); 'reviewed' weighted certificate, 1620 atoms, current best claimed value; external peer review still pending per repo",
+    "note": "2026-09-08; weighted certificate, 1620 atoms, plus an exact dilation endpoint",
     "date": "2026-09-08"
+   },
+   {
+    "value": 4.613046130461305,
+    "exact_form": "461300/99999",
+    "source": "Guzhou0806_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/Guzhou0806/n17-square-packing",
+    "note": "R012: parent-angle certificate",
+    "date": "2026-09-19"
+   },
+   {
+    "value": 4.614153538416646,
+    "exact_form": null,
+    "source": "MiraAcc2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/Mira-acc/17squares",
+    "note": "parent-aware certificate plus an analytic recentering corollary: 4.614153538416645696808...",
+    "date": "2026-09-20"
+   },
+   {
+    "value": 4.619791092906573,
+    "exact_form": "461300/99853",
+    "source": "Kleddamag2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/Kleddamag/17-squares-certified-bound",
+    "note": "strict; mixed point and 2-of-3 threshold charges on strict interior cores, building on Mira's and Guzhou0806's certificates and jlevy's method",
+    "date": "2026-09-21"
+   },
+   {
+    "value": 4.62003,
+    "exact_form": "462003/100000",
+    "source": "Guzhou0806_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/Guzhou0806/n17-square-packing",
+    "note": "R052 continuation, strict; Guzhou0806's R042, R043 and R050 (2026-09-23/24) lie between this and 461300/99853",
+    "date": "2026-09-25"
+   },
+   {
+    "value": 4.64002,
+    "exact_form": "232001/50000",
+    "source": "Kleddamag2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/Kleddamag/17-squares-certified-bound",
+    "note": "v1.1.0, strict",
+    "date": "2026-09-26"
+   },
+   {
+    "value": 4.66001,
+    "exact_form": "466001/100000",
+    "source": "Kleddamag2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/Kleddamag/17-squares-certified-bound",
+    "note": "strict; 2,168 exact orientation intervals, two checkers; replayed by jlevy/squares",
+    "date": "2026-09-27"
+   },
+   {
+    "value": 4.66018,
+    "exact_form": "233009/50000",
+    "source": "Guzhou0806_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/Guzhou0806/n17-square-packing",
+    "note": "R067, strict; keeps Kleddamag's 4.66001 sites, charges and budget and rebuilds the cores and angle intervals; the repository reports a further candidate as still under replay",
+    "date": "2026-09-28"
    }
   ]
  },
@@ -3760,7 +3890,7 @@
   },
   "EvanDaniel2026": {
    "authors": "Evan Daniel (evand)",
-   "title": "square-packing (s12/): exact certificates for s(12) >= 15680/3951, s(21) = 5, s(32) = 6 and s(45) = 7",
+   "title": "square-packing (s12/): exact certificates for s(11) >= 3040/797, s(12) >= 15680/3951, s(21) = 5, s(32) = 6 and s(45) = 7, and a case-free proof of s(13) = 4",
    "venue": "GitHub repository + write-up (computer-assisted, unrefereed)",
    "year": 2026,
    "url": "https://github.com/evand/square-packing/tree/main/s12"
@@ -3773,17 +3903,46 @@
    "url": "https://github.com/wand125/square-packing-bounds"
   },
   "jlevy2026": {
-   "authors": "jlevy (GitHub user)",
-   "title": "squares: survey of square-packing bounds for n <= 324 with replayed certificates",
+   "authors": "Joshua Levy (jlevy), the Squares Project",
+   "title": "squares: new results and AI-agent research on square packing, with a survey of n <= 100 that keeps reported and replayed bounds apart",
    "venue": "GitHub repository (AI-agent project, unrefereed)",
    "year": 2026,
    "url": "https://github.com/jlevy/squares"
+  },
+  "Kleddamag2026": {
+   "authors": "Kleddamag (GitHub user)",
+   "title": "certified lower bounds for s(11) and s(17): strict-core charge certificates with two exact checkers (work done with OpenAI Codex under Kleddamag's direction)",
+   "venue": "GitHub repositories 11-squares-certified-bound and 17-squares-certified-bound (computer-assisted, unrefereed)",
+   "year": 2026,
+   "url": "https://github.com/Kleddamag/17-squares-certified-bound"
+  },
+  "Guzhou0806_2026": {
+   "authors": "Guzhou0806 / N17 project (GitHub user, with AI assistance)",
+   "title": "n17-square-packing: strict lower-bound certificates for s(17)",
+   "venue": "GitHub repository (computer-assisted, unrefereed)",
+   "year": 2026,
+   "url": "https://github.com/Guzhou0806/n17-square-packing"
+  },
+  "tokoharu2026": {
+   "authors": "tokoharu (GitHub user)",
+   "title": "square-packing-density-bounds: rectangle-density lower-bound certificates",
+   "venue": "GitHub repository (computer-assisted, unrefereed)",
+   "year": 2026,
+   "url": "https://github.com/tokoharu/square-packing-density-bounds"
+  },
+  "chelokot2026": {
+   "authors": "chelokot (GitHub user)",
+   "title": "square-packing-archive: Lean-verified square-packing records (kernel-checked s(n^2-2) = n, s(6), s(10), s(13), s(22), s(33))",
+   "venue": "GitHub repository (Lean 4 formalisation)",
+   "year": 2026,
+   "url": "https://github.com/chelokot/square-packing-archive"
   }
  },
  "meta": {
   "description": "Best-known PROVEN lower bounds for s(n), the side of the smallest square that can contain n non-overlapping axis-free unit squares, for n=1..100.",
   "generated": "2026-09-08",
-  "caveats": "See site/notes/lower-bounds-notes.md for sourcing notes and uncertainties. Entries with status 'preprint' are computer-assisted 2026 results that have not been refereed.",
-  "precision": "`value` is the full double-precision evaluation of `exact_form`, not a rounded decimal: storing the n=5 floor as 2.7071068 put it ABOVE the true 2+1/sqrt(2)=2.707106781..., so it compared as greater than the matching upper bound and s(5) and s(10) were reported open with a gap of -0.0000. Entries whose exact_form is absent or flagged unreliable keep their curated decimal."
+  "caveats": "See site/notes/lower-bounds-notes.md for sourcing notes and uncertainties. Entries with status 'preprint' are computer-assisted 2026 results that have not been refereed. Others' certificates are linked as published; this project replays only its own. Where a 2026 repository is still moving (n = 17 especially), the history keeps the main steps and the linked repository has the rest.",
+  "precision": "`value` is the full double-precision evaluation of `exact_form`, not a rounded decimal: storing the n=5 floor as 2.7071068 put it ABOVE the true 2+1/sqrt(2)=2.707106781..., so it compared as greater than the matching upper bound and s(5) and s(10) were reported open with a gap of -0.0000. Entries whose exact_form is absent or flagged unreliable keep their curated decimal.",
+  "updated": "2026-09-28"
  }
 }

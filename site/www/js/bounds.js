@@ -20,7 +20,7 @@ function lower(n) {
   const t = Math.sqrt(n); return { value: t, source: 'area', year: null, status: 'proved' };
 }
 const isSettled = (u, l) => Math.abs(u.s - l.value) < 1e-9;
-const SHORT = { 'area-bound': 'area', 'trivial-square': 'grid = area', 'Nagamochi2005': 'Nagamochi 2005', 'FriedmanDS7': 'Friedman', 'Gobel1979': 'Göbel 1979', 'Stromquist2003': 'Stromquist 2003', 'Green2000': 'Green 2000', 'Bentz2010': 'Bentz 2010', 'Bentz2016': 'Bentz 2016', 'KearneyShiu2002': 'Kearney–Shiu 2002', 'ElMoumni1999': 'El Moumni 1999', 'EvanDaniel2026': 'evand 2026', 'MiraAcc2026': 'Mira 2026', 'Burns2026': 'Burns 2026', 'Massaccesi2026': 'Massaccesi 2026', 'Fort2026': 'Fort 2026' };
+const SHORT = { 'area-bound': 'area', 'trivial-square': 'grid = area', 'Nagamochi2005': 'Nagamochi 2005', 'FriedmanDS7': 'Friedman', 'Gobel1979': 'Göbel 1979', 'Stromquist2003': 'Stromquist 2003', 'Green2000': 'Green 2000', 'Bentz2010': 'Bentz 2010', 'Bentz2016': 'Bentz 2016', 'KearneyShiu2002': 'Kearney–Shiu 2002', 'ElMoumni1999': 'El Moumni 1999', 'EvanDaniel2026': 'evand 2026', 'MiraAcc2026': 'Mira 2026', 'Burns2026': 'Burns 2026', 'Massaccesi2026': 'Massaccesi 2026', 'Fort2026': 'Fort 2026', 'jlevy2026': 'jlevy 2026', 'wand125_2026': 'wand125 2026', 'Kleddamag2026': 'Kleddamag 2026', 'Guzhou0806_2026': 'Guzhou0806 2026', 'tokoharu2026': 'tokoharu 2026', 'chelokot2026': 'chelokot 2026' };
 const srcLabel = h => { if (!h || !h.source) return ''; if (SHORT[h.source]) return SHORT[h.source]; const S = LB && LB.sources && LB.sources[h.source]; return S ? `${S.authors} ${S.year || ''}`.trim() : h.source; };
 
 // ---------- chart 1: gap per n ----------
@@ -85,24 +85,30 @@ function chart2() {
   for (const p of packs) if (p.s < best - 1e-9) { best = p.s; up.push(p); }
   // lower-bound steps
   const hist = (LB && LB[String(n)] && LB[String(n)].history) || [];
-  const lo = [{ y: 1979, v: Math.sqrt(n), src: 'area bound' }]; let bl = Math.sqrt(n);
-  for (const h of hist.slice().sort((a, b) => (a.year || 1979) - (b.year || 1979))) if (h.value > bl + 1e-9) { bl = h.value; lo.push({ y: h.year || 1979, v: h.value, src: srcLabel(h), status: h.status }); }
-  const y0 = 1978, y1 = 2027;
-  const allv = [...up.map(u => u.s), ...lo.map(l => l.v)]; let vmin = Math.min(...allv), vmax = Math.max(...allv); const pad = Math.max(0.02, (vmax - vmin) * 0.15); vmin -= pad; vmax += pad;
+  const lo = [{ y: 1979, v: Math.sqrt(n), src: 'area bound', when: '' }]; let bl = Math.sqrt(n);
+  for (const h of hist.slice().sort((a, b) => hy(a) - hy(b))) if (h.value > bl + 1e-9) { bl = h.value; lo.push({ y: Math.max(1979, hy(h)), v: h.value, src: srcLabel(h), status: h.status, when: h.date || String(h.year || '') }); }
+  // "2026 only" zooms to August–September 2026, when most floors moved; steps from before the
+  // window start at its left edge.
+  const zoom = $('zoom').checked, y0 = zoom ? 2026 + 7 / 12 : 1978, y1 = zoom ? 2026 + 9 / 12 + 0.004 : 2027;
+  const inWin = (pts, key) => { const k = pts.findLastIndex(p => p.y < y0); return pts.filter((p, i) => i >= k).map(p => p[key]); };
+  const allv = zoom ? [...inWin(up, 's'), ...inWin(lo, 'v')] : [...up.map(u => u.s), ...lo.map(l => l.v)]; let vmin = Math.min(...allv), vmax = Math.max(...allv); const pad = Math.max(0.02, (vmax - vmin) * 0.15); vmin -= pad; vmax += pad;
   const W = 1000, H = 300, ml = 62, mr = 16, mt = 14, mb = 30;
   const svg = el('svg', { viewBox: `0 0 ${W} ${H}` }, box);
   const xs = y => ml + (y - y0) / (y1 - y0) * (W - ml - mr), ys = v => mt + (vmax - v) / (vmax - vmin) * (H - mt - mb);
   const g = el('g', { class: 'grid' }, svg), ax = el('g', { class: 'axis' }, svg);
-  for (let y = 1980; y <= 2025; y += 5) { el('line', { x1: xs(y), x2: xs(y), y1: mt, y2: H - mb }, g); const tx = el('text', { x: xs(y), y: H - mb + 16, 'text-anchor': 'middle' }, ax); tx.textContent = y; }
+  const ticks = zoom ? [['Aug 1', 7, 1], ['Aug 15', 7, 15], ['Sep 1', 8, 1], ['Sep 15', 8, 15], ['Oct 1', 9, 1]].map(([t, m, dd]) => [t, 2026 + (m + (dd - 1) / 31) / 12])
+                     : Array.from({ length: 10 }, (_, i) => [String(1980 + 5 * i), 1980 + 5 * i]);
+  for (const [t, y] of ticks) { el('line', { x1: xs(y), x2: xs(y), y1: mt, y2: H - mb }, g); const tx = el('text', { x: xs(y), y: H - mb + 16, 'text-anchor': 'middle' }, ax); tx.textContent = t; }
   const vstep = niceStep((vmax - vmin) / 5);
   for (let v = Math.ceil(vmin / vstep) * vstep; v <= vmax; v += vstep) { el('line', { x1: ml, x2: W - mr, y1: ys(v), y2: ys(v) }, g); const tx = el('text', { x: ml - 6, y: ys(v) + 4, 'text-anchor': 'end' }, ax); tx.textContent = v.toFixed(vstep < 0.01 ? 3 : 2); }
-  const stepPath = (pts, key) => { let d = ''; pts.forEach((p, i) => { const x = xs(p.y), y = ys(p[key]); d += i === 0 ? `M${x},${y}` : `H${x}V${y}`; }); d += `H${xs(y1)}`; return d; };
+  const stepPath = (pts, key) => { let d = ''; pts.forEach((p, i) => { const x = xs(Math.max(p.y, y0)), y = ys(p[key]); d += i === 0 ? `M${x},${y}` : `H${x}V${y}`; }); d += `H${xs(y1)}`; return d; };
   el('path', { d: stepPath(up, 's'), fill: 'none', stroke: 'var(--chart-a)', 'stroke-width': 2 }, svg);
   el('path', { d: stepPath(lo, 'v'), fill: 'none', stroke: 'var(--chart-b)', 'stroke-width': 2 }, svg);
   const tt = box.querySelector('.tt');
   const dot = (x, y, col, text) => { const c = el('circle', { cx: x, cy: y, r: 5, fill: col, stroke: 'var(--surface)', 'stroke-width': 1.5, style: 'cursor:pointer' }, svg); el('circle', { cx: x, cy: y, r: 12, fill: 'transparent', style: 'cursor:pointer' }, svg).onmouseenter = c.onmouseenter = () => { tt.textContent = text; tt.style.display = 'block'; tt.style.left = Math.min(x / W * box.clientWidth + 12, box.clientWidth - 240) + 'px'; tt.style.top = (y / H * box.clientWidth * H / W - 10) + 'px'; }; c.onmouseleave = () => { tt.style.display = 'none'; }; };
-  up.forEach(p => dot(xs(p.y), ys(p.s), 'var(--chart-a)', `${p.s.toFixed(6)}\n${p.label || p.who || ''} ${p.undated ? '(date not recorded)' : Math.floor(p.y)}`));
-  lo.forEach(p => dot(xs(p.y), ys(p.v), 'var(--chart-b)', `≥ ${p.v.toFixed(6)}\n${p.src || ''}${String(p.src || '').includes(String(p.y)) ? '' : ' ' + p.y}${p.status === 'preprint' ? '\n(unrefereed)' : ''}`));
+  const shown = p => p.y >= y0;
+  up.filter(shown).forEach(p => dot(xs(p.y), ys(p.s), 'var(--chart-a)', `${p.s.toFixed(6)}\n${p.label || p.who || ''} ${p.undated ? '(date not recorded)' : Math.floor(p.y)}`));
+  lo.filter(shown).forEach(p => dot(xs(p.y), ys(p.v), 'var(--chart-b)', `≥ ${p.v.toFixed(6)}\n${p.src || ''}${p.when && !String(p.src || '').includes(p.when) ? ' · ' + p.when : ''}${p.status === 'preprint' ? '\n(unrefereed)' : ''}`));
   // direct labels at the right end
   const lu = el('text', { x: W - mr - 4, y: ys(up[up.length - 1].s) - 7, 'text-anchor': 'end', style: 'font-size:11px;fill:var(--muted)' }, svg); lu.textContent = `best ${up[up.length - 1].s.toFixed(5)}`;
   const ll = el('text', { x: W - mr - 4, y: ys(lo[lo.length - 1].v) + 15, 'text-anchor': 'end', style: 'font-size:11px;fill:var(--muted)' }, svg); ll.textContent = `floor ${lo[lo.length - 1].v.toFixed(5)}`;
@@ -113,10 +119,28 @@ function chart2() {
   const cards = [];
   const first = up[1]; if (first) cards.push(`First improvement on the grid: <b>${first.s.toFixed(5)}</b> by ${first.who || '?'}${first.undated ? ' (date not recorded)' : ' in ' + Math.floor(first.y)}.`);
   const last = up[up.length - 1]; if (up.length > 2) cards.push(`Current record <b>${last.s.toFixed(6)}</b> (${last.who || ''}${last.undated ? '' : ', ' + Math.floor(last.y)}) after ${up.length - 1} improvements.`);
-  const ll2 = lo[lo.length - 1]; cards.push(`Proven floor <b>${ll2.v.toFixed(6)}</b> (${ll2.src || 'area'}${ll2.y > 1979 && !String(ll2.src || '').includes(String(ll2.y)) ? ', ' + ll2.y : ''}${ll2.status === 'preprint' ? ', unrefereed' : ''}).`);
+  const ll2 = lo[lo.length - 1]; cards.push(`Proven floor <b>${ll2.v.toFixed(6)}</b> (${ll2.src || 'area'}${ll2.when && ll2.when.length > 4 ? ', ' + ll2.when : ''}${ll2.status === 'preprint' ? ', unrefereed' : ''}).`);
   if (!settled) cards.push(`Open by <b>${(last.s - ll2.v).toFixed(5)}</b> — ${(100 * (last.s - ll2.v) / last.s).toFixed(2)}% of the side.`);
   for (const c of cards) { const d = document.createElement('div'); d.innerHTML = c; st.appendChild(d); }
+  histTable(n, hist);
   history.replaceState(null, '', `?n=${n}`);
+}
+// Fractional year of a floor: its ISO date if it has one ("2026-09-04" or "2026-09"), else mid-year.
+function hy(h) { const m = /^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?/.exec(h.date || ''); if (!m) return h.year || 1979; return +m[1] + ((m[2] ? +m[2] - 1 : 5.5) + (m[3] ? (+m[3] - 0.5) / 31 : 0.5)) / 12; }
+// Every recorded floor for n, oldest first, with its source and note: the same data as the chart.
+function histTable(n, hist) {
+  const tb = $('histtbl').querySelector('tbody'); tb.innerHTML = '';
+  $('histn').textContent = n;
+  const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const rows = hist.filter(h => h.source !== 'area-bound').sort((a, b) => hy(a) - hy(b));
+  for (const h of rows) {
+    const S = LB.sources && LB.sources[h.source], url = h.url || (S && S.url);
+    const src = url ? `<a href="${esc(url)}">${esc(srcLabel(h))}</a>` : esc(srcLabel(h));
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="num">${esc(h.date || h.year || '')}</td><td class="num">${h.value.toFixed(6)}</td><td>${src}${h.status === 'preprint' ? ' <span class="tag open">unrefereed</span>' : ''}</td><td>${esc(h.note || '')}</td>`;
+    tb.appendChild(tr);
+  }
+  if (!rows.length) tb.innerHTML = '<tr><td colspan="4">Only the area bound √n is recorded for this n.</td></tr>';
 }
 function niceStep(x) { const p = Math.pow(10, Math.floor(Math.log10(x))); const m = x / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; }
 
@@ -136,7 +160,7 @@ async function main() {
   try { LB = await fetch('data/lower_bounds.json').then(r => r.ok ? r.json() : null); } catch (e) { LB = null; }
   const q = Object.fromEntries(new URLSearchParams(location.search)); if (q.n) $('npick').value = q.n;
   for (const id of ['nmax', 'rel', 'dropTrivial']) $(id).onchange = chart1;
-  $('npick').onchange = chart2;
+  $('npick').onchange = chart2; $('zoom').onchange = chart2;
   chart1(); chart2(); table();
 }
 main();

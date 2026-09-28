@@ -42,7 +42,7 @@ td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;w
 <body>
 <div class="topbar">
   <span class="brand">Square Packing Atlas</span>
-  <nav><a href="index.html">Overview</a><a href="explore.html">Explore</a><a href="compare.html">Compare</a><a href="bounds.html" class="here">Bounds</a><a href="proofs.html">Proofs</a><a href="s12/">s(12)</a><a href="s21/">s(21)</a><a href="s32/">s(32)</a><a href="sources.html">Sources</a></nav>
+  <nav><a href="index.html">Overview</a><a href="explore.html">Explore</a><a href="compare.html">Compare</a><a href="bounds.html" class="here">Bounds</a><a href="proofs.html">Proofs &amp; results</a><a href="sources.html">Sources</a></nav>
 </div>
 <div class="wrap">
   <section>
@@ -65,10 +65,14 @@ td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;w
 
   <section>
     <h2>How one <i>n</i> closed over time</h2>
-    <div class="ctl"><label><i>n</i> = <input id="npick" type="number" min="2" max="100" value="17"></label><span class="hint" id="npickhint"></span></div>
+    <div class="ctl"><label><i>n</i> = <input id="npick" type="number" min="2" max="100" value="17"></label><label><input type="checkbox" id="zoom"> August–September 2026 only</label><span class="hint" id="npickhint"></span></div>
     <div class="legend"><span><i style="background:var(--chart-a)"></i>best packing (upper bound)</span><span><i style="background:var(--chart-b)"></i>proven floor (lower bound)</span></div>
     <div class="chart" id="c2"><div class="tt"></div></div>
     <div class="story" id="story"></div>
+    <details id="floors" open><summary>every recorded floor for <i>n</i> = <span id="histn"></span>, with its source</summary>
+      <div class="tablewrap"><table id="histtbl"><thead><tr><th>date</th><th>floor</th><th>by</th><th>note</th></tr></thead><tbody></tbody></table></div>
+    </details>
+    <p class="note">The chart draws each floor on the date it was made public, and only floors that beat every earlier one. The list includes the rest. Others' 2026 certificates are linked as their authors published them; <a href="sources.html#computer-checked">Sources §5</a> has the details.</p>
   </section>
 
   <section>

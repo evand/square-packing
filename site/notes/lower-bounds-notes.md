@@ -179,3 +179,18 @@ additionally trivial as a perfect square.
 - n = 11: the floor is `3040/797 = 3.814304` (EvanDaniel2026), re-added 2026-09-22 when
   `s12/certificates/s11_lower_3.8143.txt` became public in this repo; it had been reverted to
   Stromquist 2003 at the 2026-09-10 release because the certificate was not yet public.
+- 2026-09-28 records pass (dates from each repository's commit history, read via the GitHub API):
+  - n = 11: the floor is Kleddamag's `s(11) > 31/8 = 3.875` (Kleddamag/11-squares-certified-bound,
+    2026-09-22; replayed in full by jlevy/squares).  The history adds jlevy's T-018 `3.81` (2026-09-04),
+    T-026 `3.8264` (2026-09-09) and T-033 `3.8270` (2026-09-22), and tokoharu's `3.81` (2026-09-21).
+    Ours (`3040/797`) is dated by its publication, 2026-09-22 (found 2026-08-26), so it is not a step
+    on the chart: jlevy's `3.8264` was already public.
+  - n = 12: ours (`15680/3951`, public 2026-08-26 in the old `evand/square-packing-12`) is still the
+    floor; jlevy's T-017 `99/25 = 3.96` (2026-09-04) is added to the history.
+  - n = 17: the floor is Guzhou0806's R067 `233009/50000 = 4.66018` (2026-09-28), a continuation of
+    Kleddamag's `466001/100000 = 4.66001` (2026-09-27).  The history keeps the main steps since Mira's
+    `4.613029`; the Kleddamag and Guzhou0806 repositories were updated daily that week, so the
+    intermediate releases are left to them.
+  - Others' certificates are linked as published; this project replays only its own.  Many
+    `n = 18 … 91` floors from wand125's rectangle-density certificates (updated daily) are not yet
+    in this file.
