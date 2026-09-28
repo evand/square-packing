@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Twelve and Thirteen Squares · Square Packing Atlas</title>
+<title>Twelve and Eleven Squares · Square Packing Atlas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
@@ -82,61 +82,63 @@ section>*{min-width:0}
 .topbar nav{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.92rem}
 .topbar nav a{text-decoration:none;color:var(--muted);white-space:nowrap}
 .topbar nav a.here,.topbar nav a:hover{color:var(--accent)}
+.subnav{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 14px;padding:6px 20px;border-bottom:1px solid var(--rule);font-size:15px;line-height:1.5}
+.subnav .lbl{font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.subnav a{text-decoration:none;color:var(--muted);white-space:nowrap}
+.subnav a.here,.subnav a:hover{color:var(--accent)}
 </style>
 </head>
 <body>
 <div class="topbar">
   <span class="brand">Square Packing Atlas</span>
-  <nav><a href="../index.html">Overview</a><a href="../explore.html">Explore</a><a href="../compare.html">Compare</a><a href="../bounds.html">Bounds</a><a href="../proofs.html">Proofs</a><a href="./" class="here">s(12)</a><a href="../s21/">s(21)</a><a href="../s32/">s(32)</a><a href="../sources.html">Sources</a></nav>
+  <nav><a href="../index.html">Overview</a><a href="../explore.html">Explore</a><a href="../compare.html">Compare</a><a href="../bounds.html">Bounds</a><a href="../proofs.html" class="here">Proofs &amp; results</a><a href="../sources.html">Sources</a></nav>
 </div>
+<div class="subnav"><span class="lbl">Results</span><a href="./" class="here">s(11), s(12)</a><a href="../s13/">s(13)</a><a href="../s21/">s(21)</a><a href="../s32/">s(32)</a><a href="../s45/">s(45)</a></div>
 <div class="wrap">
 <header>
   <span class="eyebrow">Discrete geometry · computer-assisted proof</span>
-  <h1>Twelve and Thirteen Squares</h1>
-  <p class="lede">Nobody knows whether twelve unit squares fit inside a square of side less than 4.
-  The best proven barrier had stood since 2003, at 3.7889. Here is a new one at 3.9686, checked exactly
-  by computer over every position and angle — closing about 85% of the remaining gap — with a new floor
-  for eleven squares, a case-free proof that thirteen need side 4, checked in full by the Lean proof
-  assistant, and an honest account of how far the method does <em>not</em> go.</p>
+  <h1>Twelve and Eleven Squares</h1>
+  <p class="lede">Nobody knows whether twelve unit squares fit inside a square of side less than 4. Until 2026 the
+  best proven floor was 3.7889, inherited from eleven squares (Stromquist 2003). Here is one at 3.9686, checked
+  exactly by computer over every position and angle: about 85% of that gap. The same method gave a floor for eleven
+  squares, since overtaken by others (§02). And an account of how far the method does <em>not</em> go.</p>
   <!-- LEAN-3.968616: update when S12 headline kernel check lands -->
   <div class="tags">
+    <span class="tag ok">exact verifier + independent re-check</span>
+    <span class="tag ok">smaller bounds kernel-checked in Lean 4</span>
+    <span class="tag open">not peer reviewed</span>
     <a class="tag neutral" href="https://github.com/evand/square-packing/tree/main/s12">Code, certificates &amp; verifiers on GitHub →</a>
   </div>
 </header>
 
 <section id="result">
-  <div class="sechead"><span class="eyebrow">01 · The result</span><h2>A new lower bound for s(12)</h2></div>
+  <div class="sechead"><span class="eyebrow">01 · The result</span><h2>A lower bound for s(12)</h2></div>
   <div class="card thm">
     <p class="stmt"><strong>Theorem.</strong> Twelve unit squares cannot be packed into any square of
     side smaller than <span class="mono">15680/3951</span>. That is, <span class="mono">s(12) ≥ 3.968616…</span>.</p>
     <p class="big">3.788854 &nbsp;→&nbsp; 3.968616</p>
-    <p class="footnote">Previous published bound: <span class="mono">2 + 4/√5 = 3.788854…</span>
-    (Stromquist 2003, inherited from n = 11 by monotonicity, and listed as the record for n = 11–12 in
-    Friedman's dynamic survey DS7). The conjectured truth is <span class="mono">s(12) = 4</span>.</p>
+    <p class="footnote">The bound before 2026: <span class="mono">2 + 4/√5 = 3.788854…</span> (Stromquist 2003,
+    inherited from n = 11 by monotonicity; the n = 11–12 entry of Friedman's survey DS7). jlevy/squares
+    reached <span class="mono">99/25 = 3.96</span> independently a week after ours (§02). The conjectured
+    truth is <span class="mono">s(12) = 4</span>.</p>
   </div>
-  <p>The proof is a <em>weighted unavoidable set</em>: a finite set of points carrying weights, such
-  that every unit square inside the container — at every position and every angle — captures total
-  weight at least 1. Twelve squares with disjoint interiors would then capture at least 12, so a
-  certificate weighing less than 12 rules them out.</p>
+  <p>The proof is a <em>weighted unavoidable set</em>: points carrying weights, such that every unit square inside
+  the container, at every position and every angle, captures total weight at least 1. Twelve squares with disjoint
+  interiors would capture at least 12, so a set weighing less than 12 rules them out
+  (<a href="../proofs.html#trick">the idea, with a playground</a>).</p>
   <div class="card">
     <p>The certificate has <strong>1736 points</strong> with rational coordinates of denominator 3951,
     in a container of side <span class="mono">15680/3951</span>, and total weight
-    <span class="mono">11.9738036</span> — under the threshold by <span class="mono">0.026</span>.
+    <span class="mono">11.9738036</span>, under the threshold by <span class="mono">0.026</span>.
     A 764-point certificate proves <span class="mono">s(12) ≥ 980/247 = 3.967611</span>, and the
     first bound published here, <span class="mono">3920/997 = 3.931795</span>, now needs only 224 points.
     The same pipeline gives <span class="mono">s(11) ≥ 3040/797 = 3.814304</span> (680 points).</p>
   </div>
-  <p>A weaker certificate is far prettier. Insist that every point carry the <em>same</em> weight, and the
-  best one found is:</p>
-  <div class="card">
-    <p><strong>81 points</strong> in <span class="mono">[0, 35/9]²</span> such that <strong>every</strong>
-    closed unit square inside that container, at every angle, contains <strong>at least 7</strong> of them.</p>
-  </div>
-  <p>Twelve squares with disjoint interiors would need <span class="mono">12 × 7 = 84</span> point-slots
-  and only 81 points exist, so at most <span class="mono">⌊81/7⌋ = 11</span> fit — hence
-  <span class="mono">s(12) ≥ 35/9 = 3.888…</span>, already past the 2003 bound. This bound,
-  <span class="mono">3920/997</span> and the <span class="mono">s(11)</span> bound are also checked in full inside
-  Lean's kernel (§05).</p>
+  <p>A weaker certificate is far prettier. Insist that every point carry the <em>same</em> weight, and the best one
+  found is <strong>81 points</strong> in <span class="mono">[0, 35/9]²</span> such that every closed unit square
+  inside, at every angle, contains <strong>at least 7</strong> of them. Twelve squares would need
+  <span class="mono">12 × 7 = 84</span>, so <span class="mono">s(12) ≥ 35/9 = 3.888…</span>, already past the 2003
+  bound. It is drawn in §03.</p>
 </section>
 
 <section id="context">
@@ -146,28 +148,47 @@ section>*{min-width:0}
   <div class="tablewrap"><table>
     <thead><tr><th>n</th><th>s(n)</th><th>status</th></tr></thead>
     <tbody>
-      <tr><td class="num">10</td><td class="num">3.707107…</td><td>proved — Stromquist 2003</td></tr>
-      <tr><td class="num">11</td><td class="num">3.877084…</td><td>best packing (Trump 1979); <strong>open</strong> — bound raised here to 3.8143</td></tr>
-      <tr><td class="num">12</td><td class="num">4 &nbsp;(conjectured)</td><td><strong>open</strong> — bound raised here to 3.9686</td></tr>
-      <tr><td class="num">13</td><td class="num">4</td><td>proved — Bentz 2010; re-proved here without cases, kernel-checked in Lean (§07)</td></tr>
-      <tr><td class="num">14, 15, 16</td><td class="num">4</td><td>proved — El Moumni, Nagamochi, area</td></tr>
+      <tr><td class="num">10</td><td class="num">3.707107…</td><td>proved: Stromquist 2003</td></tr>
+      <tr><td class="num">11</td><td class="num">≤ 3.877084…</td><td>best packing Trump 1979; <strong>open</strong>, above 31/8 = 3.875 (Kleddamag 2026)</td></tr>
+      <tr><td class="num">12</td><td class="num">4 (conj.)</td><td><strong>open</strong>, at least 3.9686 (here)</td></tr>
+      <tr><td class="num">13</td><td class="num">4</td><td>proved: Bentz 2010; <a href="../s13/">without cases</a> here</td></tr>
+      <tr><td class="num">14–16</td><td class="num">4</td><td>proved: El Moumni, Nagamochi, area</td></tr>
     </tbody>
   </table></div>
-  <p>Because <span class="mono">s(13) = 4</span> is proved and <span class="mono">s(11) &lt; 4</span>,
-  the largest <span class="mono">n</span> with <span class="mono">s(n) &lt; 4</span> is either 11 or 12 —
-  and deciding which <em>is</em> the open problem. The gap for n = 12 was
-  <span class="mono">[3.788854, 4]</span>; it is now <span class="mono">[3.9686, 4]</span>.</p>
-</section>
+  <p>Because <span class="mono">s(13) = 4</span> is proved and <span class="mono">s(11) &lt; 4</span>, the largest
+  <span class="mono">n</span> with <span class="mono">s(n) &lt; 4</span> is either 11 or 12, and deciding which
+  <em>is</em> the open problem. For n = 12 the gap was <span class="mono">[3.788854, 4]</span>; it is now
+  <span class="mono">[3.9686, 4]</span>. From the other direction, a basin-hopping search over all 36 coordinates,
+  validated on n = 5, 10 and 11, finds nothing below side 4: every run collapses to the compressed
+  <span class="mono">4 × 4</span> grid. Schadt's and Ellsworth's 2025–26 annealing campaigns, which improved many
+  records, never improved 12.</p>
 
-<section id="search">
-  <div class="sechead"><span class="eyebrow">03 · The other direction</span><h2>No packing below 4 was found</h2></div>
-  <p>A basin-hopping search over all 36 coordinates, validated on n = 5, 10 and 11, finds nothing below
-  side 4 — every run collapses to the compressed <span class="mono">4 × 4</span> grid. Schadt's and
-  Ellsworth's 2025–26 annealing campaigns, which improved many records, never improved 12.</p>
+  <h3 id="records">Timeline and records</h3>
+  <p><strong>s(12).</strong> Our first bound, <span class="mono">3920/997 = 3.9318</span>, went up on 2026-08-24 and
+  <span class="mono">15680/3951 = 3.968616</span> on 2026-08-26, in the repository
+  <span class="mono">evand/square-packing-12</span> (since merged into this one). As far as we know these were the
+  first lower bounds specific to twelve squares. <a href="https://github.com/jlevy/squares">jlevy/squares</a>
+  reached <span class="mono">99/25 = 3.96</span> on 2026-09-04 with its own weighted certificates. It has since
+  replayed ours, by a second method as well as with our checker, and lists 3.968616 as the verified bound for
+  n = 12. It is still the best lower bound for <span class="mono">s(12)</span> that we know of.</p>
+  <p><strong>s(11).</strong> We found <span class="mono">s(11) ≥ 3040/797 = 3.8143</span> on 2026-08-26 but first
+  published it on 2026-09-22. By then jlevy/squares had published 3.81 (2026-09-04) and 3.8264 (2026-09-09), so ours
+  was never the best public bound: 3.8143, since superseded by jlevy's 3.827 and Kleddamag's 3.875.
+  <a href="https://github.com/Kleddamag/11-squares-certified-bound">Kleddamag's</a>
+  <span class="mono">s(11) &gt; 31/8</span> (2026-09-22) builds on jlevy's certificate and on a checker by
+  Guzhou0806, and stands about 0.002 below Trump's 1979 packing. tokoharu's rectangle-density certificate gives
+  3.81. Ours remains an independent certificate of a weaker bound, and a Lean theorem (§05).</p>
+  <div class="tablewrap"><table id="rectbl">
+    <thead><tr><th>date</th><th>n</th><th>floor</th><th>by</th></tr></thead>
+    <tbody><tr><td colspan="4">The dated list for <a href="../bounds.html?n=11#floors">n = 11</a> and
+    <a href="../bounds.html?n=12#floors">n = 12</a> is on the Bounds page.</td></tr></tbody>
+  </table></div>
+  <p class="footnote">Every lower bound for n = 11 and 12 recorded in the Atlas since 2003, from the same data as the
+  <a href="../bounds.html?n=12">Bounds chart</a>. The 2026 entries are unrefereed; each links to its source.</p>
 </section>
 
 <section id="certificate">
-  <div class="sechead"><span class="eyebrow">04 · The certificate</span><h2>What the 81 points look like</h2></div>
+  <div class="sechead"><span class="eyebrow">03 · The certificate</span><h2>What the 81 points look like</h2></div>
   <figure>
     <div class="figbox"><svg viewBox="0 0 560 560" width="100%" role="img" aria-label="81-point certificate in a square of side 35/9">
 <defs><pattern id="gp" width="26.1" height="26.1" patternUnits="userSpaceOnUse"><path d="M 26.1 0 L 0 0 0 26.1" fill="none" stroke="var(--rule)" stroke-width="0.5"/></pattern></defs>
@@ -262,39 +283,24 @@ section>*{min-width:0}
 <text x="26.0" y="554" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--muted)">0</text>
 <text x="510.0" y="554" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--muted)">35/9</text>
 </svg></div>
-    <figcaption>The 81-point uniform certificate at side 35/9 (the 3.9686 certificate has 1736
-    weighted points and does not draw as cleanly). Three sample unit squares are
-    drawn — axis-aligned, tilted 20°, tilted 45° — with the points each one captures highlighted and
-    counted. No placement anywhere, at any angle, captures fewer than 7. The
-    <a href="../proofs.html">Proofs page</a> lets you move the square yourself.</figcaption>
+    <figcaption>The 81-point uniform certificate at side 35/9, with three sample unit squares (axis-aligned, tilted
+    20°, tilted 45°) and the points each one captures. The <a href="../proofs.html#playground">Proofs page</a> lets
+    you move the square yourself.</figcaption>
   </figure>
   <p>A linear program chooses the points and their fractional weights, where the classical proofs
   (Göbel, Stromquist, Friedman, Nagamochi, Bentz) hand-design them. The bound was sharpened in three
   steps: scaling the first certificate up to its critical container (3.92 → 3.9318), re-optimising the
   weights with the exact verifier supplying violated placements as cutting planes (3.9486), and growing
   the point set by column generation (3.9686); at 3.9696 column generation no longer gets under 12. The
-  uniform certificates come from an integer program that forces equal weights —
-  <span class="mono">1/7</span> each for the 81-point set.</p>
+  uniform certificates come from an integer program that forces equal weights:
+  <span class="mono">1/7</span> each for the 81-point set. The 1736-point certificate does not draw as cleanly.</p>
 </section>
 
 <section id="verification">
-  <div class="sechead"><span class="eyebrow">05 · Verification</span><h2>How it is checked</h2></div>
-  <p>A bound like this is worth what its verification is worth, so the covering property is checked
-  three independent ways, and for the smaller bounds a fourth, inside Lean.</p>
+  <div class="sechead"><span class="eyebrow">04 · Verification</span><h2>How it is checked</h2></div>
+  <p>A bound like this is worth what its verification is worth, so the covering property is checked three
+  independent ways, and for the smaller bounds a fourth, inside Lean (§05).</p>
   <div class="grid2">
-    <div class="card">
-      <h3>Lean 4 + Mathlib</h3>
-      <p class="footnote">The reduction step — an unavoidable set of total weight <span class="mono">W</span>
-      implies at most <span class="mono">W</span> squares — is fully formalised, including the scaling
-      argument that lets a <em>closed</em>-square certificate control a packing. For
-      <span class="mono">s(12) ≥ 35/9</span>, <span class="mono">s(12) ≥ 3920/997</span> and
-      <span class="mono">s(11) ≥ 3040/797</span> the covering property is checked too, inside Lean's kernel
-      (<span class="mono">decide +kernel</span>, no <span class="mono">native_decide</span>), by a verifier
-      proved sound once; those three are Lean theorems with no hypothesis. For the main certificate,
-      <span class="mono">3.968616</span>, only the reduction is in Lean so far; its cover rests on the
-      checkers below. 0 sorries; axioms are only <span class="mono">propext, Classical.choice, Quot.sound</span>.</p>
-      <!-- LEAN-3.968616: update when S12 headline kernel check lands -->
-    </div>
     <div class="card">
       <h3>Exact integer verifier (Rust)</h3>
       <p class="footnote">Checks the covering property over the entire continuum of placements.
@@ -302,22 +308,29 @@ section>*{min-width:0}
       trigonometry is rational; for each bin, a unit square at any angle in the bin contains the
       concentric square of side <span class="mono">σ_k = 1/(cos δ + sin δ)</span> at angle
       <span class="mono">θ_k</span>. For each such angle the minimum over the continuum of centres is
-      computed exactly by an arrangement sweep — no sampling. All arithmetic in <span class="mono">i128</span>.</p>
+      computed exactly by an arrangement sweep, with no sampling. All arithmetic in <span class="mono">i128</span>.</p>
     </div>
     <div class="card">
       <h3>Two independent re-checks</h3>
       <p class="footnote">A separately written Python implementation in exact
-      <span class="mono">Fraction</span> arithmetic checks every angle bin exhaustively and agrees bin by bin on every certificate. A third check — a dense float scan over 181 angles spanning the full
-      <span class="mono">0°–90°</span> range, ~500k centres each, not using the symmetry reduction —
-      returns the same minimum for the original 788-point certificate, <span class="mono">1.0000023</span>, as the exact checks do.</p>
+      <span class="mono">Fraction</span> arithmetic checks every angle bin and agrees bin by bin on every
+      certificate. A dense float scan over 181 angles spanning the full <span class="mono">0°–90°</span> range,
+      ~500k centres each, not using the symmetry reduction, returns the same minimum for the original 788-point
+      certificate, <span class="mono">1.0000023</span>, as the exact checks do.</p>
     </div>
     <div class="card">
       <h3>Resolution robustness</h3>
       <p class="footnote">The main certificate is verified at <span class="mono">N = 6000</span> and
       <span class="mono">12000</span>; on coarser nets the angle-bin shrink exceeds its slack and the verifier
       refuses it. The uniform certificates are verified at <span class="mono">N = 2000</span> and
-      <span class="mono">8000</span>. The D4 symmetry of the point set — itself checked — reduces angles to
+      <span class="mono">8000</span>. The D4 symmetry of the point set, itself checked, reduces angles to
       <span class="mono">[0°, 45°]</span>.</p>
+    </div>
+    <div class="card">
+      <h3>Replayed elsewhere</h3>
+      <p class="footnote"><a href="https://github.com/jlevy/squares">jlevy/squares</a> has replayed the
+      3.968616 certificate with our verifier and decided all 2,486 angle bins again with its own interval
+      method.</p>
     </div>
   </div>
   <pre><code>$ ./verify/target/release/verify certificates/s12_lower_3.9686.txt 12 6000 32 0
@@ -331,8 +344,25 @@ VERIFIED: every CLOSED unit square inside C covers weight &gt;= 1, and total wei
     i.e.  s(12) &gt;= 3.968615540</code></pre>
 </section>
 
+<section id="lean">
+  <div class="sechead"><span class="eyebrow">05 · Lean</span><h2>What is formally proved</h2></div>
+  <pre><code>theorem s12_ge_35_9     : (35 / 9 : ℝ) ≤ minSide 12
+theorem s12_ge_3920_997 : (3920 / 997 : ℝ) ≤ minSide 12
+theorem s11_ge_3040_797 : (3040 / 797 : ℝ) ≤ minSide 11</code></pre>
+  <p>In Lean 4 with Mathlib, <span class="mono">minSide n</span> is the usual <span class="mono">s(n)</span>. The
+  reduction step (an unavoidable set of total weight <span class="mono">W</span> allows at most
+  <span class="mono">W</span> squares) is formalised, including the scaling argument that lets a
+  <em>closed</em>-square certificate control a packing. For the three bounds above the covering property is
+  checked too, inside Lean's kernel (<span class="mono">decide +kernel</span>, no
+  <span class="mono">native_decide</span>), by a verifier for trees of pose boxes proved sound once; they are
+  Lean theorems with no hypothesis. For the main certificate, <span class="mono">3.968616</span>, only the
+  reduction is in Lean so far; its cover rests on the checkers of §04. No <span class="mono">sorry</span>;
+  axioms are only <span class="mono">propext, Classical.choice, Quot.sound</span>.</p>
+  <!-- LEAN-3.968616: update when S12 headline kernel check lands -->
+</section>
+
 <section id="limits">
-  <div class="sechead"><span class="eyebrow">06 · Limits</span><h2>What this does not do</h2></div>
+  <div class="sechead"><span class="eyebrow">06 · Limits and caveats</span><h2>What this does not do</h2></div>
   <p>It does not prove <span class="mono">s(12) = 4</span>, and this method never will. By LP duality a
   certificate at container side <span class="mono">s</span> weighs at least the <em>fractional packing
   number</em> <span class="mono">ν_f(s)</span>, and an exact fractional packing of mass
@@ -341,143 +371,81 @@ VERIFIED: every CLOSED unit square inside C covers weight &gt;= 1, and total wei
   (<a href="https://github.com/evand/square-packing/blob/main/s12/search/DUAL_EXACT.md">DUAL_EXACT.md</a>).
   So the ceiling of this whole family of arguments lies in <span class="mono">[3.968616, 3.99)</span>.
   It is not 4.</p>
-  <p>The container itself does not help: a cover of <span class="mono">[0,4]²</span> — in the
-  <em>closed</em> convention, where a point on a square's edge counts, explained in §07 — weighs at least
+  <p>The container itself does not help: a cover of <span class="mono">[0,4]²</span> in the
+  <a href="../s13/#closed">closed convention</a>, where a point on a square's edge counts, weighs at least
   <span class="mono">12.2688</span>
   (<a href="https://github.com/evand/square-packing/blob/main/s12/search/COVER4.md">COVER4.md</a>).
   Case analysis layered on top, Bentz's route for thirteen, has been measured there too, and every
   branching tried leaves a case still worth 12
   (<a href="https://github.com/evand/square-packing/blob/main/s12/search/BENTZ.md">BENTZ.md</a>). The
-  missing unit is rotation — mostly by less than one degree — and on the LP's extremal measure it is
+  missing unit is rotation, mostly by less than one degree, and on the LP's extremal measure it is
   carried by eight squares at once, a statement no weighting of points can express. That is a real
   research problem, not a longer run.</p>
-  <p>The complete negative record — every route to <span class="mono">s(12) = 4</span> tried, where each
-  one fails, each claim labelled proved or measured — is
+  <p>The complete negative record, with every route to <span class="mono">s(12) = 4</span> tried, where each
+  one fails, and each claim labelled proved or measured, is
   <a href="https://github.com/evand/square-packing/blob/main/s12/notes/n12-gap.md">notes/n12-gap.md</a>.</p>
+  <ul>
+    <li>These results rest on computation, not on proofs a human can check by hand, and nothing here has been
+    peer reviewed.</li>
+    <li>The record claims in §02 rest on DS7, David Ellsworth's record tables and the 2026 repositories listed on
+    <a href="../sources.html#computer-checked">Sources §5</a>.</li>
+  </ul>
 </section>
 
 <section id="s13">
-  <div class="sechead"><span class="eyebrow">07 · A second result</span><h2>s(13) = 4, without case analysis</h2></div>
-  <p>The same machinery gives a new <em>proof</em> of a known theorem. That thirteen unit squares need
-  side 4 is Bentz's 2010 result, from a point set plus a six-case analysis of where a square may sit.
-  Here it follows from a single object, with no cases.</p>
-  <div class="card thm">
-    <p class="stmt"><strong>Theorem.</strong> There are <strong>3621 points</strong> in the square
-    <span class="mono">[0,4]²</span>, carrying rational weights of total
-    <span class="mono">12.955972155</span>, such that <em>every</em> closed unit square inside
-    <span class="mono">[0,4]²</span> — at every position and every angle — captures weight at least 1.</p>
-    <p class="big">12.955972 &nbsp;&lt;&nbsp; 13</p>
-    <p class="footnote">Thirteen squares packed below side 4 would rescale to thirteen
-    <em>pairwise disjoint</em> closed unit squares in <span class="mono">[0,4]²</span>, capturing 13
-    between them without double-counting a single point. They cannot: the whole set weighs less than
-    13. And sixteen unit squares tile <span class="mono">[0,4]²</span>, so 4 is attained —
-    <span class="mono">s(13) = 4</span>. Certificate:
-    <span class="mono">certificates/rung2/s13_closed_cover_4.txt</span>.</p>
-  </div>
-
-  <h3>What a &ldquo;closed cover&rdquo; is, and why weight under 13 is enough</h3>
-  <p>A <em>cover</em> is the certificate of §01 placed in the container of side 4 itself. <em>Closed</em>
-  means a point exactly on a square's edge counts as captured — the limit of the
-  <span class="mono">1 + ε</span> squares every published proof argues about, and what makes 13 reachable.
-  With open squares the sixteen tiles of the <span class="mono">4×4</span> grid, shrunk a hair, are
-  disjoint, so every cover would weigh at least 16. Closed, they share their boundary points, and 12.96 is
-  possible — against a proved floor of <span class="mono">12.2688</span>, which is all the room this proof
-  has.</p>
-
-  <h3>&ldquo;Margin zero&rdquo; and &ldquo;exhaustive&rdquo;</h3>
-  <p>The verifier of §05 shrinks each square slightly so that one square stands in for a bin of angles.
-  At the container that cannot work: at the corner placement the only captured point lies on the
-  square's edge, so the slack is <em>zero</em>, and a tilt of <span class="mono">ε</span> buys back only
-  about <span class="mono">ε²</span> while a bin of width <span class="mono">ε</span> erodes about
-  <span class="mono">ε</span>.</p>
-  <p>Instead the three-dimensional space of placements is cut adaptively into boxes with rational
-  corners, and for each box the checker must <em>prove</em>, exactly, that every placement in it captures
-  weight at least 1, splitting the box when it cannot. <strong>Exhaustive</strong> means it finished with
-  zero boxes uncertified; nothing is sampled, and no floating-point number is load-bearing. Boxes certified
-  by a <em>fixed</em> set of captured points can only prove covers of weight 16 or more
-  (<a href="https://github.com/evand/square-packing/blob/main/s12/search/RUNG2.md">RUNG2.md</a>), so most
-  boxes are certified <em>disjunctively</em> — &ldquo;either this set of points is inside, or that
-  one&rdquo; — 65% of the non-empty boxes in both checkers.</p>
-
-  <h3>Two checkers that share nothing</h3>
-  <div class="tablewrap"><table>
-    <thead><tr><th></th><th>search/zeromargin.py</th><th>verify2/zmcheck</th></tr></thead>
-    <tbody>
-      <tr><td>language</td><td>Python, exact <span class="mono">Fraction</span></td><td>Rust, exact <span class="mono">i128</span></td></tr>
-      <tr><td>placements</td><td class="num">reduced by a symmetry it first checks exactly</td><td class="num">full range, no symmetry assumed</td></tr>
-      <tr><td>boxes</td><td class="num">16,872 (max depth 13 of 18)</td><td class="num">30,258 (max depth 10 of 18)</td></tr>
-      <tr><td>uncertified</td><td class="num">0</td><td class="num">0</td></tr>
-      <tr><td>disjunctive share</td><td class="num">5,320 / 8,187 = 65%</td><td class="num">9,477 / 14,591 = 65%</td></tr>
-      <tr><td>time</td><td class="num">1 h 42 min, 8 processes</td><td class="num">17 min, 8 threads</td></tr>
-    </tbody>
-  </table></div>
-  <p>The two were written from the statement, not from each other: different subdivisions, different
-  primitives, no shared code. They also agree pointwise — at four specific placements, one with a point
-  exactly on the edge, they return the same nine-digit rationals. Twenty-three rejection tests check that
-  the Rust checker refuses mutated certificates, two invalid covers from our own history, and nine
-  malformed files (on which it must give no verdict at all).</p>
-  <p>The soundness of every primitive both checkers rest on is proved in Lean 4 + Mathlib
-  (<span class="mono">lean/Sqpack/ZeroMargin.lean</span>, 0 sorries, standard axioms only). The checkers'
-  own subdivision, bookkeeping and parsing are not in Lean — but they no longer need to be. The covering
-  property has been checked a third time, inside Lean's kernel: a generated tree of pose boxes, each
-  decided by <span class="mono">decide +kernel</span> against a zero-margin verifier whose soundness is
-  proved once for every tree (<span class="mono">ZMTree.sound</span>). The program that builds the tree is
-  untrusted; a wrong tree only makes the check fail. The result is a Lean theorem with no hypothesis,</p>
-  <pre><code>theorem s13_eq_4 : minSide 13 = 4</code></pre>
-  <p>resting only on Lean's kernel, Mathlib and the definitions in the statement (<span class="mono">minSide</span>
-  and what a packing is); <span class="mono">#print axioms</span> gives <span class="mono">propext</span>,
-  <span class="mono">Classical.choice</span>, <span class="mono">Quot.sound</span>. The same verifier, unchanged,
-  also checks <a href="../s32/"><span class="mono">s(32) = 6</span></a>.</p>
-  <pre><code>$ verify2/target/release/zmcheck cert certificates/rung2/s13_closed_cover_4.txt --depth 18 --threads 8
-certificate certificates/rung2/s13_closed_cover_4.txt: container [0,4]^2, 3621 points, D=1000 W=1000000000
-total weight = 12955972155/1000000000 = 12.955972155
-done in 1065s: boxes 30258, max depth 10
-  leaves: ADM 5114  DISJ 9477  EMPTY 6938  UNCERTIFIED 0
-VERIFIED: every closed unit square in [0,4]^2 captures weight &gt;= 1; total weight 12955972155/1000000000 = 12.955972155</code></pre>
-  <p class="footnote">Full account:
-  <a href="https://github.com/evand/square-packing/blob/main/s12/search/RUNG2.md">RUNG2.md</a>; the
-  second checker:
-  <a href="https://github.com/evand/square-packing/blob/main/s12/search/RUNG2_XCHECK.md">RUNG2_XCHECK.md</a>;
-  a short self-contained note:
-  <a href="https://github.com/evand/square-packing/blob/main/s12/notes/s13-casefree.md">s13-casefree.md</a>.
-  None of this moves <span class="mono">s(12)</span>: the 12.2688 floor is above 12.</p>
+  <div class="sechead"><span class="eyebrow">Moved</span><h2>s(13) = 4 without case analysis</h2></div>
+  <p>The case-free proof of <span class="mono">s(13) = 4</span> that used to be here now has its own page:
+  <a href="../s13/">Thirteen Squares</a>.</p>
 </section>
 
 <section id="artifacts">
-  <div class="sechead"><span class="eyebrow">08 · Reproduce</span><h2>Artifacts</h2></div>
-  <p>Everything is in the repository <a href="https://github.com/evand/square-packing/tree/main/s12">evand/square-packing</a> (directory <span class="mono">s12/</span>); <span class="mono">./verify.sh</span> rebuilds the verifiers and re-checks the certificates (<span class="mono">--full</span> adds the slow sweeps, including the full s(13) check), and CI runs the fast tier on every change.</p>
+  <div class="sechead"><span class="eyebrow">07 · Reproduce</span><h2>Artifacts</h2></div>
+  <p>Everything is in the repository <a href="https://github.com/evand/square-packing/tree/main/s12">evand/square-packing</a>
+  (directory <span class="mono">s12/</span>); <span class="mono">./verify.sh</span> rebuilds the verifiers and re-checks
+  the certificates (<span class="mono">--full</span> adds the slow sweeps), and CI runs the fast tier on every change.</p>
   <p>The Lean side: <span class="mono">cd lean &amp;&amp; lake build</span> builds the reductions and
-  <span class="mono">s(12) ≥ 35/9</span>, <span class="mono">s(12) ≥ 3920/997</span> (a few minutes on 4 cores, after Mathlib). The larger
-  kernel checks are opt-in, with their data generated first (deterministic, gitignored):</p>
-  <pre><code>$ lean/scripts/gen_data.sh S13 &amp;&amp; (cd lean &amp;&amp; lake build Sqpack.S13Lower)   # s(13) = 4: ~9 min on 4 cores
-$ lean/scripts/gen_data.sh S11 &amp;&amp; (cd lean &amp;&amp; lake build Sqpack.S11Lower)   # s(11) ≥ 3040/797: about 1 CPU-hour</code></pre>
+  <span class="mono">s(12) ≥ 35/9</span>, <span class="mono">s(12) ≥ 3920/997</span> (a few minutes on 4 cores, after
+  Mathlib). The <span class="mono">s(11)</span> kernel check is opt-in, with its data generated first
+  (deterministic, gitignored):</p>
+  <pre><code>$ lean/scripts/gen_data.sh S11 &amp;&amp; (cd lean &amp;&amp; lake build Sqpack.S11Lower)   # s(11) ≥ 3040/797: about 1 CPU-hour</code></pre>
   <div class="tablewrap"><table>
-    <thead><tr><th>path</th><th>what</th></tr></thead>
+    <thead><tr><th>path (under s12/)</th><th>what</th></tr></thead>
     <tbody>
       <tr><td class="num">certificates/s12_lower_3.9686.txt</td><td>the main certificate: 1736 weighted points, s = 15680/3951</td></tr>
       <tr><td class="num">certificates/s11_lower_3.8143.txt</td><td>the s(11) certificate: 680 weighted points, s = 3040/797</td></tr>
       <tr><td class="num">certificates/s12_uniform_7of81_3.888.txt</td><td>the pretty one: 81 points, 7 per square, s = 35/9</td></tr>
-      <tr><td class="num">certificates/rung2/s13_closed_cover_4.txt</td><td>the s(13) = 4 cover: 3621 weighted points of [0,4]², total weight 12.955972</td></tr>
       <tr><td class="num">tests/rejection_tests.sh</td><td>inputs the verifier must refuse</td></tr>
-      <tr><td class="num">tests/rung2/rejection_tests.sh</td><td>23 inputs the zero-margin checker must refuse</td></tr>
       <tr><td class="num">verify/</td><td>exact integer verifier (Rust)</td></tr>
-      <tr><td class="num">verify2/</td><td>exact zero-margin checker for the container itself (Rust)</td></tr>
       <tr><td class="num">xcheck.py</td><td>independent exact re-check (Python Fractions)</td></tr>
-      <tr><td class="num">search/zeromargin.py</td><td>the other zero-margin checker (Python Fractions)</td></tr>
-      <tr><td class="num">lean/Sqpack/Basic.lean</td><td>formalised reduction theorem, 0 sorries</td></tr>
-      <tr><td class="num">lean/Sqpack/BoxTree.lean, ZMTree.lean</td><td>the kernel verifiers for pose-box trees, proved sound once</td></tr>
-      <tr><td class="num">lean/Sqpack/S12Lower.lean, S12WLower.lean, S11Lower.lean, S13Lower.lean</td><td>kernel-checked s(12) ≥ 35/9, s(12) ≥ 3920/997, s(11) ≥ 3040/797, s(13) = 4</td></tr>
+      <tr><td class="num">lean/Sqpack/Basic.lean</td><td>formalised reduction theorem</td></tr>
+      <tr><td class="num">lean/Sqpack/BoxTree.lean</td><td>the kernel verifier for pose-box trees, proved sound once</td></tr>
+      <tr><td class="num">lean/Sqpack/S12Lower.lean, S12WLower.lean, S11Lower.lean</td><td>kernel-checked s(12) ≥ 35/9, s(12) ≥ 3920/997, s(11) ≥ 3040/797</td></tr>
       <tr><td class="num">lean/LADDER.md</td><td>how the kernel checks work, and what they cost</td></tr>
-      <tr><td class="num">lean/Sqpack/ZeroMargin.lean</td><td>formalised soundness of the zero-margin primitives, 0 sorries</td></tr>
       <tr><td class="num">search/lp_search.py</td><td>LP certificate search (cell cuts + column generation)</td></tr>
       <tr><td class="num">search/pack_src/</td><td>packing optimiser used for the upper-bound search</td></tr>
     </tbody>
   </table></div>
-  <p class="footnote">Caveats: these results rest on computation, not on proofs a human can check by
-  hand, and nothing here has been peer reviewed. The "previous record" claims rest on DS7 and David
-  Ellsworth's record tables; if a better published bound exists, we did not find it.</p>
 </section>
 </div>
-
+<script>
+// The dated floors for n = 11 and 12 (§02), from the Atlas's lower_bounds.json, the same data as the Bounds chart.
+(async () => {
+  let B;
+  try { B = await fetch('../data/lower_bounds.json').then(r => { if (!r.ok) throw 0; return r.json(); }); } catch (e) { return; }
+  const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const SHORT = { EvanDaniel2026: 'this project', jlevy2026: 'jlevy/squares', Kleddamag2026: 'Kleddamag', tokoharu2026: 'tokoharu', Stromquist2003: 'Stromquist' };
+  const label = h => SHORT[h.source] || ((B.sources[h.source] || {}).authors || h.source);
+  const rows = [];
+  for (const n of [11, 12]) for (const h of (B[n] && B[n].history) || []) if ((h.year || 0) >= 2003 && h.source !== 'Nagamochi2005') rows.push([n, h]);
+  rows.sort((a, b) => String(a[1].date || a[1].year).localeCompare(String(b[1].date || b[1].year)) || a[0] - b[0]);
+  const tb = document.querySelector('#rectbl tbody'); tb.innerHTML = '';
+  for (const [n, h] of rows) {
+    const url = h.url || (B.sources[h.source] || {}).url, who = url ? `<a href="${esc(url)}">${esc(label(h))}</a>` : esc(label(h));
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="num">${esc(h.date || h.year)}</td><td class="num">${n}</td><td class="num">${esc(h.exact_form && h.exact_form.length < 12 ? h.exact_form + ' = ' : '')}${h.value.toFixed(4)}</td><td>${who}</td>`;
+    tb.appendChild(tr);
+  }
+})();
+</script>
 </body>
 </html>

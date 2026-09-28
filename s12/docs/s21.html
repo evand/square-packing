@@ -93,13 +93,18 @@ section>*{min-width:0}
 .diag .piv{stroke:var(--gold);stroke-width:1.2;stroke-dasharray:3 3}
 .diag .lab{font-family:"IBM Plex Mono",monospace;font-size:13px;fill:var(--muted)}
 .stat b{font-family:"IBM Plex Mono",monospace;font-size:1.25rem;color:var(--ink);font-weight:600}
+.subnav{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 14px;padding:6px 20px;border-bottom:1px solid var(--rule);font-size:15px;line-height:1.5}
+.subnav .lbl{font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.subnav a{text-decoration:none;color:var(--muted);white-space:nowrap}
+.subnav a.here,.subnav a:hover{color:var(--accent)}
 </style>
 </head>
 <body>
 <div class="topbar">
   <span class="brand">Square Packing Atlas</span>
-  <nav><a href="../index.html">Overview</a><a href="../explore.html">Explore</a><a href="../compare.html">Compare</a><a href="../bounds.html">Bounds</a><a href="../proofs.html">Proofs</a><a href="../s12/">s(12)</a><a href="./" class="here">s(21)</a><a href="../s32/">s(32)</a><a href="../sources.html">Sources</a></nav>
+  <nav><a href="../index.html">Overview</a><a href="../explore.html">Explore</a><a href="../compare.html">Compare</a><a href="../bounds.html">Bounds</a><a href="../proofs.html" class="here">Proofs &amp; results</a><a href="../sources.html">Sources</a></nav>
 </div>
+<div class="subnav"><span class="lbl">Results</span><a href="../s12/">s(11), s(12)</a><a href="../s13/">s(13)</a><a href="./" class="here">s(21)</a><a href="../s32/">s(32)</a><a href="../s45/">s(45)</a></div>
 <div class="wrap">
 <header>
   <span class="eyebrow">Discrete geometry · computer-assisted proof</span>
@@ -283,7 +288,7 @@ s(21) bundle: OK</code></pre>
   <span class="mono">2·arctan u</span>, <span class="mono">u ∈ [0,½]</span>, captures mass at least 1: the points inside
   it plus, for each segment, its mass times the fraction of the segment inside it. That is what both checkers
   establish. The checker programs themselves are not formally verified.</p>
-  <p>For <a href="../s32/"><span class="mono">s(32) = 6</span></a> and <a href="../s12/#s13"><span class="mono">s(13) = 4</span></a>
+  <p>For <a href="../s32/"><span class="mono">s(32) = 6</span></a> and <a href="../s13/"><span class="mono">s(13) = 4</span></a>
   the corresponding hypothesis has since been proved inside Lean's kernel, by a verifier for pose-box trees whose
   soundness is proved once. That verifier handles weighted points only. Extending it to segments, which would do the
   same for this cover and for <span class="mono">s(45) = 7</span>, is future work; until then
@@ -302,8 +307,8 @@ s(21) bundle: OK</code></pre>
     rest on different kinds of trust.</li>
     <li>The lower bounds in §02 from 2026 are unrefereed, like this one.</li>
     <li>Nothing here settles <span class="mono">s(12)</span> (<a href="../s12/">the s(12) write-up</a>). The same
-    line-density method has since given <span class="mono">s(45) = 7</span>, checked by the same two checkers, with no
-    Lean yet (<a href="https://github.com/evand/square-packing/tree/main/s12/certificates/s45">certificate</a>).</li>
+    line-density method has since given <a href="../s45/"><span class="mono">s(45) = 7</span></a>, checked by the same two
+    checkers, with no Lean yet.</li>
   </ul>
 </section>
 

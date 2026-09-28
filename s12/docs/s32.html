@@ -86,13 +86,18 @@ section>*{min-width:0}
 .legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.85rem;color:var(--muted)}
 .stat{display:flex;flex-direction:column;gap:2px}
 .stat b{font-family:"IBM Plex Mono",monospace;font-size:1.25rem;color:var(--ink);font-weight:600}
+.subnav{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 14px;padding:6px 20px;border-bottom:1px solid var(--rule);font-size:15px;line-height:1.5}
+.subnav .lbl{font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.subnav a{text-decoration:none;color:var(--muted);white-space:nowrap}
+.subnav a.here,.subnav a:hover{color:var(--accent)}
 </style>
 </head>
 <body>
 <div class="topbar">
   <span class="brand">Square Packing Atlas</span>
-  <nav><a href="../index.html">Overview</a><a href="../explore.html">Explore</a><a href="../compare.html">Compare</a><a href="../bounds.html">Bounds</a><a href="../proofs.html">Proofs</a><a href="../s12/">s(12)</a><a href="../s21/">s(21)</a><a href="./" class="here">s(32)</a><a href="../sources.html">Sources</a></nav>
+  <nav><a href="../index.html">Overview</a><a href="../explore.html">Explore</a><a href="../compare.html">Compare</a><a href="../bounds.html">Bounds</a><a href="../proofs.html" class="here">Proofs &amp; results</a><a href="../sources.html">Sources</a></nav>
 </div>
+<div class="subnav"><span class="lbl">Results</span><a href="../s12/">s(11), s(12)</a><a href="../s13/">s(13)</a><a href="../s21/">s(21)</a><a href="./" class="here">s(32)</a><a href="../s45/">s(45)</a></div>
 <div class="wrap">
 <header>
   <span class="eyebrow">Discrete geometry · computer-assisted proof</span>
@@ -194,7 +199,7 @@ section>*{min-width:0}
   placement in the box captures weight at least 1. Near the tiling that is tight: a square sitting exactly on a
   grid cell captures points only on its own edges, so there is no slack to spend. Most boxes are proved
   <em>disjunctively</em> ("either these points are inside, or those are").
-  <a href="../s12/#s13">The s(13) write-up</a> explains the method, used there on a cover of side 4.</p>
+  <a href="../s13/#verification">The s(13) write-up</a> explains the method, used there on a cover of side 4.</p>
   <div class="tablewrap"><table>
     <thead><tr><th></th><th>search/zeromargin.py</th><th>verify2/zmcheck</th></tr></thead>
     <tbody>
@@ -243,7 +248,7 @@ theorem s32_eq_6 : minSide 32 = 6</code></pre>
   itself: a generated tree of pose boxes, about 6,000 chunks, each decided by the kernel
   (<span class="mono">decide +kernel</span>) against a small verifier whose soundness is proved once, for every tree
   (<span class="mono">ZMTree.sound</span>, the zero-margin verifier also used for
-  <a href="../s12/#s13"><span class="mono">s(13) = 4</span></a>). The program that builds the tree is not trusted: a
+  <a href="../s13/#lean"><span class="mono">s(13) = 4</span></a>). The program that builds the tree is not trusted: a
   wrong tree only makes the check fail. So the whole covering property is checked inside Lean's kernel, and
   <span class="mono">s32_eq_6</span> has no hypothesis.</p>
   <p>What remains trusted is Lean's kernel, Mathlib, and the definitions in the statement
@@ -266,8 +271,8 @@ $ lean/scripts/build_parts.sh S32Z Sqpack.S32Lower 4             # 13.8 CPU-hour
     Friedman/Ellsworth catalogue, and the 2026 certificate repositories). If we missed one, please tell us.</li>
     <li>Nothing here settles <span class="mono">s(12)</span>. There the same approach runs out of room: see
     <a href="../s12/">the s(12) write-up</a>, where the proven floor stands at 3.9686. (<span class="mono">s(21)</span>
-    and <span class="mono">s(45)</span> have since been settled with line densities: <a href="../s21/">s(21) = 5</a>,
-    and <span class="mono">s(45) = 7</span>, <a href="https://github.com/evand/square-packing/tree/main/s12/certificates/s45">certificate</a>.)</li>
+    and <span class="mono">s(45)</span> have since been settled with line densities: <a href="../s21/">s(21) = 5</a>
+    and <a href="../s45/">s(45) = 7</a>.)</li>
   </ul>
 </section>
 
