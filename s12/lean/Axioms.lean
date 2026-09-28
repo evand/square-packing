@@ -103,3 +103,17 @@ import Sqpack
 #print axioms SquarePacking.s12_ge_3920_997
 -- opt-in (not in the default target, ~30 core-minutes): `lake build Sqpack.S11Lower`, then
 -- #print axioms SquarePacking.s11_ge_3040_797
+-- zero-margin leaves (Sqpack/ZMTree.lean, lean/LADDER.md rung 2)
+#print axioms SquarePacking.ZMTree.qOk_sound
+#print axioms SquarePacking.ZMTree.bOk_sound
+#print axioms SquarePacking.ZMTree.pairOk_sound
+#print axioms SquarePacking.ZMTree.admK_sound
+#print axioms SquarePacking.ZMTree.ptOkK_sound
+#print axioms SquarePacking.ZMTree.E_cov
+#print axioms SquarePacking.ZMTree.C_cov
+#print axioms SquarePacking.ZMTree.Z_cov
+#print axioms SquarePacking.ZMTree.sound
+-- opt-in (not in the default target, ~33 core-minutes, ~9 min on 4 cores): `lake build
+-- Sqpack.S13Lower`, then
+-- #print axioms SquarePacking.s13_ge_4
+-- #print axioms SquarePacking.s13_eq_4
