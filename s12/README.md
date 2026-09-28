@@ -2,9 +2,11 @@
 
 [![verify](https://github.com/evand/square-packing/actions/workflows/verify.yml/badge.svg)](https://github.com/evand/square-packing/actions/workflows/verify.yml)
 
-Readable write-ups: **https://evand.github.io/square-packing/s21/** (s(21) = 5),
+Readable write-ups: **https://evand.github.io/square-packing/s12/** (s(12), s(11)),
+**https://evand.github.io/square-packing/s13/** (s(13) = 4 without cases),
+**https://evand.github.io/square-packing/s21/** (s(21) = 5),
 **https://evand.github.io/square-packing/s32/** (s(32) = 6) and
-**https://evand.github.io/square-packing/s12/** (s(12), s(11), s(13)).
+**https://evand.github.io/square-packing/s45/** (s(45) = 7).
 
 This directory is the s(12) research tree.  The rest of the
 [square-packing](../README.md) repository is the Square Packing Atlas, an explorer for the
@@ -25,31 +27,41 @@ Each is an exact certificate re-checked by `./verify.sh`; nothing here is peer r
   space; `zmx2` also over the whole pose space with no symmetry assumed).  Not in Lean yet: the measure reduction is
   proved in Lean for any side (`lean/Sqpack/MixedMeasure.lean`), but there is no `s(45)` data file or top theorem.  The point covers of
   `search/S45_COVER.md` §§0–9 stalled on validity; with the grid-line densities the second LP round already had
-  room (§10).  Previous best lower bound `1389/200 = 6.945` (wand125, 2026).
+  room (§10).  Previous best lower bounds `1389/200 = 6.945`, then `1391/200 = 6.955` (wand125, 2026).
   [`certificates/s45/`](certificates/s45/README.md).
 * **`s(21) = 5`** (2026-09-27): one *mixed* cover of `[0,5]²`, 7,536 weighted points plus mass spread uniformly
   along 1,872 segments of the interior grid lines, total `20.894749 < 21`, certified at margin zero by two
   independently written exact checkers (`search/zm_mixed.py` over the symmetry-reduced pose space; `zmx2`, Rust,
   also over the whole pose space with no symmetry assumed); Lean proves `minSide 21 = 5` from that one
-  computational hypothesis, with the reduction from measures to packings.  The line densities are what close
+  computational hypothesis, with the reduction from measures to packings (the kernel verifier that closes this
+  hypothesis for `s(13)` and `s(32)` handles points only; segments are future work).  The line densities are what close
   the last `0.1 %`: they remove the near-tile holes that point covers always left (`search/LINE_COVER.md`).
   Previous best lower bound `5000/1001 = 4.995005` (ours, 2026-09-23; wand125 `399/80`, jlevy `122/25`).
   [`certificates/s21/`](certificates/s21/README.md).
 * **`s(32) = 6`** (2026-09-26): one weighted closed cover of `[0,6]²`, 13,085 points of total weight
   `31.713505 < 32`, certified at margin zero over the symmetry-reduced pose space by two independently
-  written exact checkers; Lean proves `minSide 32 = 6` from that one computational hypothesis.  As far as we
+  written exact checkers, and kernel-checked in full in Lean with no hypothesis (`s32_eq_6`, `lean/Sqpack/S32Lower.lean`,
+  opt-in, 13.8 CPU-h; `lean/LADDER.md`).  As far as we
   know the first exact value of `s(k² − 4)` for any `k ≥ 4` (`s(5)`, `k = 3`, is Göbel 1979).  Previous best lower bound 5.95 (wand125, 2026).
   Since re-verified by a third checker, `zmx2` (`certificates/s32/README.md`).
   [`certificates/s32/`](certificates/s32/README.md).
-* **`s(12) >= 15680/3951 = 3.968616…`** (1,736 weighted points).  Previous published bound
-  `2 + 4/√5 = 3.788854…` (Stromquist 2003, inherited from n = 11; the DS7 Table 2 entry for
-  n = 11–12).  The upper bound is still the trivial 4, so the gap narrows from
-  `[3.788854, 4]` to `[3.968616, 4]`.
-* **`s(11) >= 3040/797 = 3.814304…`** (680 weighted points), also improving Stromquist's
-  3.788854.  [Section below](#a-bound-for-s11-as-well).
+* **`s(12) >= 15680/3951 = 3.968616…`** (1,736 weighted points; public 2026-08-26).  The bound before
+  2026 was `2 + 4/√5 = 3.788854…` (Stromquist 2003, inherited from n = 11; the DS7 Table 2 entry for
+  n = 11–12).  jlevy/squares reached `99/25 = 3.96` independently on 2026-09-04
+  (https://github.com/jlevy/squares, T-017) and has since replayed this certificate by a second
+  method; `15680/3951` is still the best lower bound for `s(12)` we know of.  The upper bound is the
+  trivial 4, so the gap narrows from `[3.788854, 4]` to `[3.968616, 4]`.  The reduction is in Lean;
+  the smaller bounds `s(12) ≥ 35/9` and `≥ 3920/997` are kernel-checked in full.
+* **`s(11) >= 3040/797 = 3.814304…`** (680 weighted points; kernel-checked in Lean).  Found 2026-08-26
+  but first published 2026-09-22, by which time jlevy/squares had `3.8264` (2026-09-09); since
+  superseded by jlevy's `3.827` and Kleddamag's `s(11) > 31/8 = 3.875`
+  (https://github.com/Kleddamag/11-squares-certified-bound).  [Section below](#a-bound-for-s11-as-well).
 * **`s(13) = 4` with no case analysis**: one weighted closed cover of `[0,4]²` of total weight
   `12.955972 < 13`, checked at margin zero by two checkers that share no code, where Bentz's 2010
-  proof needs a six-leaf case analysis.  The theorem is Bentz's; the proof is new.
+  proof needs a six-leaf case analysis.  Kernel-checked in Lean with no hypothesis (`s13_eq_4`,
+  `lean/Sqpack/S13Lower.lean`, opt-in).  The theorem is Bentz's; the proof is new.  (Bentz's own
+  argument was kernel-checked in Lean earlier, on 2026-09-05, by chelokot:
+  https://github.com/chelokot/square-packing-archive .)
   [Section below](#s13--4-without-case-analysis).
 
 ## Why the method stops short of `s(12) = 4`
@@ -74,8 +86,10 @@ Each is an exact certificate re-checked by `./verify.sh`; nothing here is peer r
 ```
 
 CI (`.github/workflows/verify.yml`) runs the fast tier on every push touching `s12/`; the full
-tier runs only when started by hand.  Lean: `cd lean && lake build` (reduction theorems and the
-soundness lemmas of both zero-margin checkers, no `sorry`).
+tier runs only when started by hand.  Lean: `cd lean && lake build` (reduction theorems, the
+soundness lemmas of both zero-margin checkers, the kernel verifiers `BoxTree`/`ZMTree`, and the
+kernel-checked `s(12) ≥ 35/9`, `≥ 3920/997`; no `sorry`).  The larger kernel checks (`s(11)`,
+`s(13)`, `s(32)`) are opt-in: `lean/LADDER.md`.
 
 ## What else is here
 
@@ -112,7 +126,7 @@ of lines one unit from each wall plus a small ring at the centre — and the ori
 
 | | |
 |---|---|
-| `lean/` | Lean 4 + Mathlib formalisation of the reduction step (weighted set of total weight `W` ⟹ at most `W` squares), including the rescaling lemmas, the branch/clique variants, and the wall-strip chord lemma of `notes/chord-lemma.md` (at most 3 squares of a packing centred within 1 of a wall, for container side ≤ 4). **0 sorries**; axioms are only `propext`, `Classical.choice`, `Quot.sound`. |
+| `lean/` | Lean 4 + Mathlib formalisation of the reduction step (weighted set of total weight `W` ⟹ at most `W` squares), including the rescaling lemmas, the branch/clique variants, and the wall-strip chord lemma of `notes/chord-lemma.md` (at most 3 squares of a packing centred within 1 of a wall, for container side ≤ 4).  Kernel verifiers for pose-box trees, proved sound once (`BoxTree.lean`, `ZMTree.lean`), check the covering property itself inside the kernel for `s(12) ≥ 35/9`, `s(12) ≥ 3920/997`, `s(11) ≥ 3040/797`, `s(13) = 4` and `s(32) = 6` (`lean/LADDER.md`); for `3.968616` only the reduction is in Lean so far. **0 sorries**; axioms are only `propext`, `Classical.choice`, `Quot.sound`. |
 | `verify/` | Exact `i128` verifier. Checks the covering property over the **entire continuum** of placements — no sampling. Angles are enumerated as rational rotations `θ_k = 2·arctan(k/N)` (so all trigonometry is rational); a unit square at any angle in `[θ_k, θ_{k+1}]` contains the concentric square of side `σ_k = 1/(cos δ + sin δ)` at angle `θ_k`, and for each such angle the minimum over all centres is computed exactly by an arrangement sweep. Verified at `N` = 6000 and 12000; at `N` ≤ 4000 the net's `σ`-shrink exceeds this certificate's slack and the verifier correctly refuses it (see `VERIFICATION.md`). |
 | `tests/` | 172 rejection tests (plus 23 for `verify2/`, `tests/rung2/`): mutated, malformed and adversarial certificates that the verifier must refuse.  Writing them found two soundness bugs in the verifier (neither affecting the shipped certificates); see `VERIFICATION.md`. |
 | `xcheck.py` | Independent re-implementation in exact Python, re-derived from the definition rather than from the Rust; checks **every** angle bin (2486 bins at `N` = 6000 for the main certificate) and agrees with the Rust verifier bin by bin. |
@@ -164,7 +178,11 @@ hopping, validated against `s(5)`, `s(10)`, `s(11)`) is `search/pack_src/main.rs
 ## A bound for s(11) as well
 
 The same pipeline run with `n = 11` gives **`s(11) ≥ 3040/797 = 3.814303…`**, improving
-Stromquist's `2 + 4/√5 = 3.788854` (2003).  Certificate `certificates/s11_lower_3.8143.txt`
+Stromquist's `2 + 4/√5 = 3.788854` (2003).  It was found on 2026-08-26 but first published on
+2026-09-22, after jlevy/squares' `3.81` (2026-09-04) and `3.8264` (2026-09-09), so it was never the
+best public bound; it has since been superseded by jlevy's `3.827` and Kleddamag's `s(11) > 31/8 =
+3.875`.  It stands as an independent certificate of a weaker bound, kernel-checked in Lean
+(`s11_ge_3040_797`, `lean/Sqpack/S11Lower.lean`).  Certificate `certificates/s11_lower_3.8143.txt`
 (680 points, total weight `10.8146708 < 11`), verified at `N` = 6000 and 12000 and by
 `xcheck.py --all --n 11`; it is at its critical container.  It is a separate certificate:
 `s(11) ≤ s(12)`, so the `n = 12` files say nothing about `n = 11`.  The LP crosses 11 at
@@ -364,14 +382,16 @@ chain covering, and `clip_bin_no_loss`.  **0 `sorry`**; `lean/Axioms.lean` print
 theorems and every one is `[propext, Classical.choice, Quot.sound]`.  Mathlib `v4.33.1`;
 `notes/lean-zeromargin.md` maps each theorem to the line of Python it covers.
 
-**What is not machine-checked, plainly.**  The Lean covers the primitives, not the programs.  The
-**subdivision and the exhaustiveness argument of each checker — the control flow that claims the
-leaves cover the pose space, the weight bookkeeping, the certificate parser, the float
-pre-filters — are not in Lean**, in either checker.  What stands behind them is that two programs
-with different subdivisions, different primitive sets and different domains (one reduced by a
-symmetry it checks exactly, one not reduced at all) reach `0 uncertified` on the same file, agree
-to nine digits on individual poses, and refuse 23 things they should refuse.  That is a strong
-claim, and it is not the same claim as a formal proof.  `notes/s13-casefree.md` is the
+**The covering property in Lean's kernel (2026-09-27).**  The checkers' own subdivision,
+bookkeeping and parsing are not in Lean, but they no longer carry the result: `lean/Sqpack/S13Lower.lean`
+checks the covering property a third time inside the kernel, on a generated tree of pose boxes
+decided by `decide +kernel` against the zero-margin verifier `ZMTree.check`, whose soundness
+(`ZMTree.sound`) is proved once for every tree.  The tree generator is untrusted (a wrong tree only
+makes the check fail).  So `theorem s13_eq_4 : minSide 13 = 4` has no hypothesis; what remains
+trusted is Lean's kernel, Mathlib and the definitions in the statement.  Opt-in:
+`lean/scripts/gen_data.sh S13 && (cd lean && lake build Sqpack.S13Lower)`, ~9 min on 4 cores.  This is
+not the first kernel-checked proof of `s(13) = 4`: chelokot's archive has Bentz's argument, with two
+printed auxiliary sets corrected (https://github.com/chelokot/square-packing-archive).  `notes/s13-casefree.md` is the
 self-contained write-up, with a "what would make this wrong" paragraph.
 
 **Where the cover came from, and how good it is.**  The LP that built it is in `search/RUNG2.md`
@@ -406,6 +426,17 @@ The idea of replacing an unavoidable *set* by LP-optimised *weights*, and mechan
 verification in exact rational arithmetic, is due to the August 2026 work on `s(17)` by
 **Sam Burns** and **Gustavo Massaccesi** (unrefereed blog posts); this repo applies that idea to
 `n = 12`, which as far as I know had not been tried.  `CREDITS.md` has the full lineage.
+
+Parallel 2026 work, linked as published (we replay only our own certificates; the recent `s(11)` and
+`s(17)` certificates use strict-core and subset-charge formats our checkers do not read):
+**jlevy** / the Squares Project (https://github.com/jlevy/squares: `s(12) ≥ 3.96`, `s(11) ≥ 3.827`,
+`s(21) ≥ 4.88`, and replays of others' certificates, ours included), **Kleddamag**
+(`s(11) > 31/8`, https://github.com/Kleddamag/11-squares-certified-bound; `s(17) > 4.66001`,
+https://github.com/Kleddamag/17-squares-certified-bound), **Guzhou0806** / N17 project
+(https://github.com/Guzhou0806/n17-square-packing, `s(17)` certificates), **tokoharu** and **wand125**
+(rectangle-density certificates, https://github.com/tokoharu/square-packing-density-bounds,
+https://github.com/wand125/square-packing-bounds), and **chelokot** (Lean archive with kernel-checked
+`s(13) = 4` and more, https://github.com/chelokot/square-packing-archive).
 
 What is new here beyond that: cutting planes generated over a rigorous *cell* decomposition of
 placement space (so every LP iterate is a valid certificate), column generation for the point
@@ -482,6 +513,7 @@ one, appears in DS7 Table 2 or on Wikipedia's *Square packing* page.
 
 ## Status
 
-Not peer reviewed.  The "previous record" claim rests on DS7 plus David Ellsworth's current
-record tables; if a better published bound for `n = 12` exists, I did not find it.
+Not peer reviewed.  The record claims rest on DS7, David Ellsworth's record tables and the 2026
+repositories above; the dated history of the `n = 11` and `n = 12` bounds is on the write-up
+(https://evand.github.io/square-packing/s12/#records).
 Independent checking is welcome, and is the point of the format being this boring.

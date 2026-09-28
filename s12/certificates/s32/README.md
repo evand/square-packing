@@ -6,7 +6,8 @@ square, **s(32) = 6**.  As far as we know this is the first exact value of `s(k�
 `s(32) ≥ 119/20 = 5.95` (wand125, rectangle-density certificates, 2026-09-26); before 2026, Nagamochi's
 general bound `1 + √23 = 5.7958`.
 
-Computer-assisted, not peer reviewed.  The proof is designed to be re-checked: `./verify.sh` here.
+Computer-assisted, not peer reviewed; checked by two exact checkers and, since 2026-09-28, kernel-checked in full in
+Lean 4 with no hypothesis (`s32_eq_6`, `lean/Sqpack/S32Lower.lean`).  The proof is designed to be re-checked: `./verify.sh` here.
 
 ## The proof in one paragraph
 
@@ -27,6 +28,7 @@ check is an exhaustive, exact subdivision of pose space by a computer.
 | `S32CheckerCover`: every admissible closed unit square with centre in `[0,3]²`, `θ = 2 arctan u`, `u ∈ [0, ½]` captures weight `≥ 1` | **`search/zeromargin.py`**: all 7,200 root boxes certified, 0 uncertified (`zeromargin_d4/`) | exact rational/integer arithmetic; the program is not formally verified |
 | the same, independently | **`verify2/` (`zmcheck`, Rust)**, a separately written checker: 3,595 / 3,600 roots of the same region (`zmcheck_d4/SUMMARY_candidate.txt`); its 5 open roots, at interior tile germs, are closed by `zeromargin.py` | exact integer arithmetic |
 | the same, a third time (added 2026-09-27) | **`zmx2`** (`verify2/src/bin/zmx2.rs`, Rust), the mixed-cover checker written for `s(21)` (`../s21/`), which handles points as atoms of the grid lines: `zmx2 cert s32_closed_cover_6.txt --d4 --pair-points`, all 3,600 roots certified, 1,405,342 boxes, 0 uncertified, 873 CPU-s (`search/ZMX2.md` §9; repeated with the binary patched after its audit, `ZMX2.md` §11, same census; not shipped as a record here) | exact integers for points and masses; interval geometry (`../s21/README.md`) |
+| `S32CheckerCover` itself, inside Lean's kernel (added 2026-09-28) | **`lean/Sqpack/S32Lower.lean`**: a generated tree of pose boxes (5,990 chunk theorems) decided by `decide +kernel` against the zero-margin verifier `ZMTree.check`, proved sound once (`ZMTree.sound`); gives `s32_checkerCover : S32CheckerCover` and `s32_eq_6 : minSide 32 = 6` with **no hypothesis**.  The tree generator is untrusted.  Opt-in: `lean/scripts/gen_data.sh S32Z`, then `lean/scripts/build_parts.sh S32Z Sqpack.S32Lower 4` (13.8 CPU-h; `lean/LADDER.md`) | kernel |
 | that the Lean data is this file | `lean/scripts/gen_s32_data.py --check` (byte-for-byte), sha256 in the Lean file header | script |
 
 A second cover, **`s32_shift_v1.txt`** (total `31.6979…`, `search/S32_SHIFT.md`), is certified in full by *both*
@@ -68,7 +70,9 @@ fast one at every call.
 
 * The checker programs (subdivision, bookkeeping, parsing).  Their mathematical primitives are proved in Lean
   (`lean/Sqpack/ZeroMargin.lean`, `notes/lean-zeromargin.md`), the programs are not.  The two checkers share no
-  code.
+  code.  Since 2026-09-28 the result no longer rests on them: the covering statement is also checked inside Lean's
+  kernel (above), so what remains trusted for `s32_eq_6` is Lean's kernel, Mathlib and the definitions in the
+  statement.
 * The run records: `verify.sh` re-summarises them, but the per-root censuses are the checker's own reports.
   `--full` regenerates them.
 

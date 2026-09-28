@@ -70,6 +70,31 @@ These use **open** squares (strict interior) with a pigeonhole argument; the wei
 cosmetic: a certificate written for one convention does not verify under the other's checker
 without reworking the disjointness step.
 
+**Parallel 2026 work** (linked as published; we replay only our own certificates, and the recent
+`s(11)`/`s(17)` certificates below use strict-core and subset-charge formats our checkers do not read):
+
+* **Joshua Levy (jlevy), the Squares Project**, https://github.com/jlevy/squares — weighted and
+  threshold certificates: `s(12) ≥ 99/25` (T-017, 2026-09-04, independently of ours), `s(11) ≥ 3.81`
+  (2026-09-04) up to `3.8270` (T-033, 2026-09-22), `s(21) ≥ 122/25`; also a survey that replays others'
+  certificates, including ours.
+* **Kleddamag** (with OpenAI Codex), https://github.com/Kleddamag/11-squares-certified-bound —
+  `s(11) > 31/8 = 3.875` (2026-09-22), developed from jlevy's T-026 certificate with a checker adapted
+  from Guzhou0806's R038; and https://github.com/Kleddamag/17-squares-certified-bound — `s(17)` up to
+  `466001/100000 = 4.66001` (2026-09-27), building on Mira, Guzhou0806 and jlevy.
+* **Guzhou0806 / N17 project**, https://github.com/Guzhou0806/n17-square-packing — strict `s(17)`
+  certificates, R012 (`4.613046`, 2026-09-19) to R067 (`4.66018`, 2026-09-28).
+* **tokoharu**, https://github.com/tokoharu/square-packing-density-bounds, and **wand125**,
+  https://github.com/wand125/square-packing-bounds — rectangle-density certificates (`s(11) ≥ 3.81`;
+  `s(21)`, `s(32)`, `s(45)` and many other `n`).
+* **chelokot**, https://github.com/chelokot/square-packing-archive — a Lean 4 archive with
+  kernel-checked `s(n²−2) = n`, `s(6)`, `s(10)`, `s(13) = 4` (2026-09-05, Bentz's argument with two
+  printed auxiliary sets corrected), `s(22)`, `s(33)`.  Our case-free `s(13) = 4` was kernel-checked
+  later (2026-09-27).
+
+Our `s(11) ≥ 3040/797` was found on 2026-08-26 but published on 2026-09-22, after jlevy's `3.8264`;
+it is superseded by jlevy's `3.827` and Kleddamag's `3.875`.  Our `s(12) ≥ 15680/3951` (public
+2026-08-26) is still the best `s(12)` lower bound we know of.
+
 ## Provenance of this work
 
 Produced by Claude (Anthropic) in a single session under human direction, in the same spirit of
