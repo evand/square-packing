@@ -19,6 +19,14 @@ conjectured, and deciding it *is* the open problem.  `s(11)` itself is also open
 
 Each is an exact certificate re-checked by `./verify.sh`; nothing here is peer reviewed.
 
+* **`s(45) = 7`** (2026-09-27): one *mixed* cover of `[0,7]²`, 19,989 weighted points plus mass spread uniformly
+  along 3,912 segments of the interior grid lines, total `44.773528 < 45`, certified at margin zero by the same two
+  exact checkers as `s(21) = 5` (same files, same settings: `search/zm_mixed.py` over the symmetry-reduced pose
+  space; `zmx2` also over the whole pose space with no symmetry assumed).  Not in Lean yet: the measure reduction is
+  proved in Lean for any side (`lean/Sqpack/MixedMeasure.lean`), but there is no `s(45)` data file or top theorem.  The point covers of
+  `search/S45_COVER.md` §§0–9 stalled on validity; with the grid-line densities the second LP round already had
+  room (§10).  Previous best lower bound `1389/200 = 6.945` (wand125, 2026).
+  [`certificates/s45/`](certificates/s45/README.md).
 * **`s(21) = 5`** (2026-09-27): one *mixed* cover of `[0,5]²`, 7,536 weighted points plus mass spread uniformly
   along 1,872 segments of the interior grid lines, total `20.894749 < 21`, certified at margin zero by two
   independently written exact checkers (`search/zm_mixed.py` over the symmetry-reduced pose space; `zmx2`, Rust,

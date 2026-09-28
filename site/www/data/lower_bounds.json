@@ -1819,13 +1819,14 @@
  },
  "45": {
   "best": {
-   "value": 6.830951894845301,
-   "exact_form": "sqrt(45 - 2*floor(sqrt(45)) + 1) + 1 = sqrt(34)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 7.0,
+   "exact_form": "7",
+   "source": "EvanDaniel2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s45",
+   "note": "2026-09-27; s(45) = 7: mixed cover of [0,7]^2 (19,989 weighted points + mass spread uniformly on grid-line segments), total 44.7735 < 45, certified by two independent exact checkers; no Lean; unrefereed",
+   "date": "2026-09-27"
   },
   "history": [
    {
@@ -1844,6 +1845,26 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 6.945,
+    "exact_form": "1389/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "2026-09-25/26; rectangle-density certificate",
+    "date": "2026-09-26"
+   },
+   {
+    "value": 7.0,
+    "exact_form": "7",
+    "source": "EvanDaniel2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s45",
+    "note": "2026-09-27; s(45) = 7: mixed cover of [0,7]^2 (19,989 weighted points + mass spread uniformly on grid-line segments), total 44.7735 < 45, certified by two independent exact checkers; no Lean; unrefereed",
+    "date": "2026-09-27"
    }
   ]
  },
@@ -3729,7 +3750,7 @@
   },
   "EvanDaniel2026": {
    "authors": "Evan Daniel (evand)",
-   "title": "square-packing (s12/): exact certificates for s(12) >= 15680/3951, s(21) = 5 and s(32) = 6",
+   "title": "square-packing (s12/): exact certificates for s(12) >= 15680/3951, s(21) = 5, s(32) = 6 and s(45) = 7",
    "venue": "GitHub repository + write-up (computer-assisted, unrefereed)",
    "year": 2026,
    "url": "https://github.com/evand/square-packing/tree/main/s12"
