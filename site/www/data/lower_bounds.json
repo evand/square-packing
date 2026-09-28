@@ -1857,6 +1857,16 @@
     "date": "2026-09-26"
    },
    {
+    "value": 6.955,
+    "exact_form": "1391/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "2026-09-27; rectangle-density certificate",
+    "date": "2026-09-27"
+   },
+   {
     "value": 7.0,
     "exact_form": "7",
     "source": "EvanDaniel2026",
