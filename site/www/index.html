@@ -39,13 +39,13 @@
 <body>
 <div class="topbar">
   <span class="brand">Square Packing Atlas</span>
-  <nav><a href="index.html" class="here">Overview</a><a href="explore.html">Explore</a><a href="compare.html">Compare</a><a href="bounds.html">Bounds</a><a href="proofs.html">Proofs</a><a href="s12/">s(12)</a><a href="s21/">s(21)</a><a href="s32/">s(32)</a><a href="sources.html">Sources</a></nav>
+  <nav><a href="index.html" class="here">Overview</a><a href="explore.html">Explore</a><a href="compare.html">Compare</a><a href="bounds.html">Bounds</a><a href="proofs.html">Proofs &amp; results</a><a href="sources.html">Sources</a></nav>
 </div>
 <div class="wrap">
   <div class="intro">
     <div class="eyebrow">an open problem you can hold in your hands</div>
     <h1>How small a square can hold <i>n</i> unit squares?</h1>
-    <p class="lede">Call the answer <span class="mono">s(n)</span>. For a perfect square number of squares it is obvious; for most other <i>n</i> nobody knows. There is only the best packing anyone has found and a proven floor beneath it. This atlas draws every record packing from Erich Friedman's and David Ellsworth's catalogue, lets you take them apart and shows how the exact results are proved. It also has new computer-checked results of our own: a proof that 32 squares need side 6, a better floor for 12 squares, and a proof for 13 with no case analysis.</p>
+    <p class="lede">Call the answer <span class="mono">s(n)</span>. For a perfect square number of squares it is obvious; for most other <i>n</i> nobody knows. There is only the best packing anyone has found and a proven floor beneath it. This atlas draws every record packing from Erich Friedman's and David Ellsworth's catalogue, lets you take them apart and shows how the exact results are proved. It also has computer-checked results of our own: proofs that 21, 32 and 45 squares need sides 5, 6 and 7, a better floor for 12 squares, and a proof for 13 with no case analysis. All are unrefereed.</p>
   </div>
 
   <div class="controls">
@@ -65,14 +65,16 @@
   <div class="tip" id="tip"></div>
 
   <div class="cards">
-    <a class="card card-new" href="s21/"><h3>New: s(21) = 5</h3><p>Twenty-one unit squares need a square of side 5. The proof puts most of its weight evenly along the grid lines instead of on points, and is checked by two independent exact checkers, with a Lean top theorem.</p></a>
-    <a class="card card-new" href="s32/"><h3>New: s(32) = 6</h3><p>Thirty-two unit squares need a square of side 6. This is the first exact value of <span class="mono">s(k² − 4)</span> for any <span class="mono">k ≥ 4</span>, checked by two independent exact checkers and in full inside Lean's kernel.</p></a>
+    <a class="card card-new" href="s32/"><h3>s(32) = 6</h3><p>Thirty-two unit squares need a square of side 6. As far as we know the first exact value of <span class="mono">s(k² − 4)</span> for any <span class="mono">k ≥ 4</span>; checked by two independent exact checkers and in full inside Lean's kernel.</p></a>
+    <a class="card card-new" href="s21/"><h3>s(21) = 5</h3><p>Twenty-one unit squares need a square of side 5. The proof puts most of its weight evenly along the grid lines instead of on points; two independent exact checkers, and a Lean theorem from their covering statement.</p></a>
+    <a class="card card-new" href="s45/"><h3>s(45) = 7</h3><p>Forty-five unit squares need a square of side 7: the s(21) method one size up, checked by the same two exact checkers. Not in Lean yet.</p></a>
     <!-- LEAN-3.968616: update when S12 headline kernel check lands -->
-    <a class="card card-new" href="s12/"><h3>New: s(12) and s(13)</h3><p>A machine-checked floor <span class="mono">s(12) ≥ 3.9686</span>, up from 3.7889, and a proof of <span class="mono">s(13) = 4</span> with no case analysis, checked in full inside Lean's kernel. Both unrefereed; every certificate is checkable.</p></a>
+    <a class="card card-new" href="s12/"><h3>s(12) ≥ 3.9686</h3><p>A floor for twelve squares, up from 3.7889 and still the best we know of, checked exactly over every position and angle. Also our floor for eleven squares, since overtaken by others.</p></a>
+    <a class="card card-new" href="s13/"><h3>s(13) = 4 without cases</h3><p>Bentz's theorem from one weighted cover, with no case analysis; checked by two exact checkers and in full inside Lean's kernel.</p></a>
     <a class="card" href="explore.html?n=17"><h3>Explore</h3><p>Every record packing, with its angles, contacts, free squares and smallest gaps measured. Start with the famous 17.</p></a>
     <a class="card" href="compare.html?n=17"><h3>Compare</h3><p>All the packings found for one <i>n</i>, oldest first, and a slider that morphs one into another.</p></a>
     <a class="card" href="bounds.html"><h3>Bounds</h3><p>Best packing versus proven floor for <i>n</i> up to 100, and how the gap has closed over time.</p></a>
-    <a class="card" href="proofs.html"><h3>Proofs</h3><p>How you prove no better packing exists: unavoidable points, with a playground for the 12-square case.</p></a>
+    <a class="card" href="proofs.html"><h3>Proofs &amp; results</h3><p>How you prove no better packing exists: unavoidable points, with a playground for the 12-square case, and what the method has proved.</p></a>
     <a class="card" href="sources.html"><h3>Sources</h3><p>Who found what, when; papers, pages, videos. One list.</p></a>
   </div>
 

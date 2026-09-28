@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Proofs · Square Packing Atlas</title>
+<title>Proofs and Results · Square Packing Atlas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/site.css">
@@ -37,8 +37,9 @@ section{display:flex;flex-direction:column;gap:14px}
 <body>
 <div class="topbar">
   <span class="brand">Square Packing Atlas</span>
-  <nav><a href="index.html">Overview</a><a href="explore.html">Explore</a><a href="compare.html">Compare</a><a href="bounds.html">Bounds</a><a href="proofs.html" class="here">Proofs</a><a href="s12/">s(12)</a><a href="s21/">s(21)</a><a href="s32/">s(32)</a><a href="sources.html">Sources</a></nav>
+  <nav><a href="index.html">Overview</a><a href="explore.html">Explore</a><a href="compare.html">Compare</a><a href="bounds.html">Bounds</a><a href="proofs.html" class="here">Proofs &amp; results</a><a href="sources.html">Sources</a></nav>
 </div>
+<div class="subnav"><span class="lbl">Results</span><a href="s12/">s(11), s(12)</a><a href="s13/">s(13)</a><a href="s21/">s(21)</a><a href="s32/">s(32)</a><a href="s45/">s(45)</a></div>
 <div class="wrap">
   <section>
     <div class="eyebrow">how a floor gets proved</div>
@@ -88,12 +89,17 @@ section{display:flex;flex-direction:column;gap:14px}
 
 <section>
   <h2 id="s13-casefree">Thirteen again, with no cases</h2>
-  <p>The six leaves above are the price of working with plain points. Give the points fractional weights, let a linear program choose them, and the case tree can be made to disappear altogether: the same theorem now follows from a single object, with nothing to click through.</p>
-  <div class="thm">In <span class="mono">[0,4]²</span> there are <b>3,621 points</b> carrying rational weights of total <span class="mono">12.955972</span>, such that <b>every</b> closed unit square inside the box, at every position and every angle, captures weight at least 1 — a point sitting exactly on the square's edge counts. Since <span class="mono">12.955972 &lt; 13</span>, thirteen squares don't fit below side 4: <span class="mono">s(13) = 4</span>.</div>
-  <p>The counting is the same as ever, only with weights. Thirteen unit squares packed into a box smaller than 4 can be blown up until they are squares of side a little <em>more</em> than 1 inside <span class="mono">[0,4]²</span>, each strictly containing a unit square; those thirteen unit squares are then pairwise disjoint as sets, so no point is credited twice. Each captures weight ≥ 1, which would need a total of 13, and the whole set weighs less. Sixteen unit squares tile <span class="mono">[0,4]²</span>, so side 4 is reached — the bound is exactly right.</p>
-  <p>The closed convention, where a point on a square's edge counts, is what makes 13 the target. In the 4 × 4 tiling a point on a shared edge is credited to both squares. Shrink the squares a hair instead and the sixteen become disjoint, so no cover could weigh under 16. Nor can any cover weigh under <span class="mono">12.2688</span> (proved exactly), which is also why no cover of this box can ever say anything about twelve squares.</p>
-  <p>Here the margin is zero: at the corner placement the only captured point lies on the square's edge, so nothing can be checked by sampling. Two independent exact checkers (Python rationals, Rust integers) split the space of positions and angles into boxes until every box is settled. Both finish with none left over, and the Rust one rejects 23 deliberately broken certificates. A third check runs inside the kernel of the Lean proof assistant, so <span class="mono">s(13) = 4</span> is now a Lean theorem that rests on no outside program.</p>
-  <p class="aside">The theorem is Bentz's (2010); only the proof is new. The technical account (certificate, both checkers, the Lean) is on the <a href="s12/#s13">s(12) page</a>, and everything is in the <a href="https://github.com/evand/square-packing/tree/main/s12">repository</a>.</p>
+  <p>The six leaves above are the price of plain points. Give the points fractional weights, chosen by a linear program, and the case tree disappears: <b>3,621 weighted points</b> in <span class="mono">[0,4]²</span>, total <span class="mono">12.956</span>, such that every closed unit square in the box captures weight at least 1. Thirteen squares would need 13. A point on a square's edge counts, which lets neighbouring tiles share weight. The margin is then zero, so the check is an exact subdivision of every position and angle, done by two independent checkers and by Lean's kernel. The theorem is Bentz's; only the proof is new: <a href="s13/">Thirteen Squares</a>.</p>
+</section>
+
+<section>
+  <h2 id="results">What the method has proved since</h2>
+  <p><b><a href="s12/">Twelve and eleven squares.</a></b> Weighted points in a box a little smaller than 4 give <span class="mono">s(12) ≥ 15680/3951 = 3.9686</span> (August 2026), still the best floor for twelve squares that we know of. The same method gave <span class="mono">s(11) ≥ 3.8143</span>, since superseded by jlevy's 3.827 and Kleddamag's 3.875.</p>
+  <p><b><a href="s13/">Thirteen squares.</a></b> The case-free proof above, the first of our covers of a box of side exactly <i>k</i>, where there is no margin to spend. It is kernel-checked in Lean; an earlier Lean proof of <span class="mono">s(13) = 4</span>, following Bentz's argument, is chelokot's (<a href="sources.html#computer-checked">Sources §5</a>).</p>
+  <p><b><a href="s32/">Thirty-two squares.</a></b> The same kind of cover at side 6: 13,085 weighted points of total 31.7135, so <span class="mono">s(32) = 6</span>. As far as we know, the first exact value of <span class="mono">s(k² − 4)</span> for any <span class="mono">k ≥ 4</span>. Kernel-checked in Lean with no hypothesis.</p>
+  <p><b><a href="s21/">Twenty-one</a> and <a href="s45/">forty-five squares.</a></b> At sides 5 and 7, points alone always left a hole near some slightly tilted square. Spreading part of the weight evenly along the grid lines closes those holes: <span class="mono">s(21) = 5</span> and <span class="mono">s(45) = 7</span>, each checked by two independent exact checkers. <span class="mono">s(21)</span> has a Lean theorem from the checkers' covering statement; <span class="mono">s(45)</span> has no Lean yet.</p>
+  <p><b>How they are checked.</b> Each result is a statement about a continuum of positions and angles, so the checking is the proof. The certificates are exact files of integers. Each is checked by two programs that share no code; where the margin is zero they subdivide the space of placements until every piece is proved, with nothing sampled. Lean's kernel re-checks the covering property itself for <span class="mono">s(11) ≥ 3040/797</span>, <span class="mono">s(12) ≥ 35/9</span> and <span class="mono">≥ 3920/997</span>, <span class="mono">s(13) = 4</span> and <span class="mono">s(32) = 6</span>; for the others Lean has only the reduction, or nothing yet, and the cover rests on the checkers. None of this is peer reviewed.</p>
+  <p class="aside">Others have used weighted certificates in 2026 too: on <span class="mono">s(17)</span> (Burns, Massaccesi, Mira, Guzhou0806, Kleddamag), on <span class="mono">s(11)</span> (jlevy, Kleddamag), and with rectangle densities for many <i>n</i> from 18 to 91 (tokoharu, wand125). <a href="sources.html#computer-checked">Sources §5</a> lists them.</p>
 </section>
 </div>
 <script src="js/playground.js"></script>
