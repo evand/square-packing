@@ -1,0 +1,16 @@
+# zmx2 run manifest (search/s45_cert_runs.sh; certificates/s45/README.md)
+date:            2026-09-28T04:30:07Z   wall 4 s
+host:            x86_64, taskset -c 6-11, 6 threads
+git HEAD:        5ae38b9238de58efe02f52ce581c2f439321c7eb (0 local change(s) to zmx2.rs)
+checker source:  verify2/src/bin/zmx2.rs sha256 6b7f0f79466bf25c9a85f8fe2f3866de734935f0521ea188136818c2fb5b3fed
+checker binary:  verify2/target/release/zmx2 sha256 0247012e282136cb56cc34f7a00a82ea7b4717af602a384d221603e70a6d012b
+rustc:           rustc 1.91.1 (ed61e7d7e 2025-11-07) (built from a source tarball)
+input:           certificates/s45/s45_mixed_cover_7.txt sha256 5da180d18434ec52a48b05e8ae0ce70453a280dd482df01d997f73bfbc627c6c
+input summary:   s = 7/1  D = 1000  W = 100000000  points 19989 (aggregated 19989)  segments 3912  vlines 6  hlines 6  Lc 20 total = 2238676387/50000000 = 44.773527740000 
+D4 check:        D4: measure invariant under x->s-x and x<->y (exact)
+command:         taskset -c 6-11 verify2/target/release/zmx2 cert certificates/s45/s45_mixed_cover_7.txt --d4 --threads 6 --log certificates/s45/zmx2_d4/roots.log
+log header:      # zmx2 cert hash=117e4b50fad482f5 mode=d4 atoms=grid depth=40 node_cap=20000000 kappa=1.5 K=30 region=x0-34,y0-34,bins0-3
+log sha256:      ead2f437121e2763495c857c360c906546bd49187672781298876f639cf66b8f  (4900 ROOT lines, 0 UNCERT lines)
+result:          roots: 4900 in region, 0 already done (log), 4900 to run, 6 threads
+result:          done in 3s wall: roots 4900 (missing 0), boxes 2071984, certified 1023340, empty 15102, uncertified 0, max depth 24, cpu 19s
+result:          VERIFIED-D4: every closed unit square in [0,s]^2 has mu >= 1 (D4-reduced sweep, all roots)

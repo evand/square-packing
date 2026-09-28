@@ -1,5 +1,9 @@
 # `COVER^closed(7)`: the cover side of `s(45) = 7` (task s45-cover; 2026-09-24/25)
 
+> **Update 2026-09-27 (§10): closed.**  A *line-density* (mixed) cover of total `44.7735 < 45` is verified by both
+> exact checkers (`zm_mixed.py --d4 --cert-mode` and `zmx2 --d4/--full`): `s(45) = 7`, bundled in `certificates/s45/` (2026-09-27).  §§0–9 (point
+> covers, no-go) are kept as the record of why points failed.
+
 Route: `s(45) = 7` from a weighted closed point cover of `[0,7]²` of total `< 45`, the `m = 7` rung of the
 `s(13) = 4` machinery (`RUNG2.md`), measured with the `m = 5` recipe of `S21_COVER.md`.  This note is the cover
 side only: the converged heuristic LP, the honest cost of explicit covers, and where the weight sits.  No exact
@@ -279,3 +283,90 @@ near-tile family handled exactly rather than by scans.
 bash runs/s45closeA.sh          # close_strict.py loop ... --hs-pitch 0.002 --eval-004 (STABLE after 8 rounds)
 bash runs/s45close_confirm.sh   # close_strict.py confirm runs/s45closeA_r6.txt runs/s45closeA_dips_at_r6.txt --pitch 0.001 ...
 ```
+
+## 10. Line-density covers (task s45-line, 2026-09-27)
+
+Labels in this section: **[proved]** = an exact checker run as named (with that checker's trust caveat),
+**[measured]** = float LP / float scan, **[heuristic]** = reading or extrapolation.
+
+> **GO.**  `runs/s45_mixed_candidate_7.txt` (mixed v1, `s = 7`, 19,989 points + 3,912 grid-line segments, exactly D4
+> invariant) has total **`2238676387/50000000 = 44.77352774 < 45`**, and every closed unit square in `[0,7]²` captures
+> mass `≥ 1`:
+> * **`zmx2 --d4`: `VERIFIED-D4`** (4,900 roots, 2,071,984 boxes, 0 uncertified, 21 CPU-s) and **`zmx2 --full`
+>   (no symmetry used): `VERIFIED`** (39,200 roots, 16,648,752 boxes, 0 uncertified, 170 CPU-s) [proved, modulo zmx2's
+>   outward-rounded binary64 chord-end enclosure, `ZMX2.md` §5];
+> * **`zm_mixed.py --d4 --cert-mode`** (pinned sha `ee3e2915…`, the `s(21)` shipped settings): **`VERIFIED-D4`** — 78,400 roots, 437,510 boxes, max depth 19, 0 uncertified,
+>   16.5 CPU-h (83 min on 12 processes) [proved: exact `Fraction`/integer arithmetic; the program is not formally verified].
+>
+> With the reduction of `FORMAT.md` (a valid mixed cover of `[0,s]²` of total `< n` gives `s(n) ≥ s`) this gives
+> `s(45) ≥ 7`, hence **`s(45) = 7`** (7² − 4 = 45; the grid gives `≤ 7`).  Bundled as `certificates/s45/` (the cover as
+> `s45_mixed_cover_7.txt`, same bytes; the records of both checkers; `verify.sh`); not in Lean.
+
+**What made it easy.**  The point covers of §§0–9 died on validity (strict/LP overhead `2.2 %`, confirmed dips at
+thin edge-tile cells).  With uniform densities on the interior grid lines (`LINE_COVER.md`) the *second* cutting-plane
+round of a single line-cover LP chain already has exact overhead `1.53 %` over its LP, and there is `2.7 %` room.  The
+closing loop (phase B) was never needed.
+
+### 10.1 Run
+
+`line_cover.py loop m7A` (unchanged code; `runs/lc_m7A.sh`): `--s 7 --q 50 --no-line-points --germ`, point columns
+lattice 0.05 + supports of `s7convR1_r10` and `s7convC3_it10` (4,995 point orbits / 39,177 atoms) + 525 segment
+orbits (4,200 pieces on `x, y ∈ {1..6}`), warm rows from `s7convR1_r10` (separation at pitch 0.01, threshold 1.005),
+germ family `q = 50` (148,002 poses → **51,692 permanent rows**, vs 21k at `m = 5`); 88,288 initial rows.  Cores 0–11.
+HiGHS IPM: **2,041 s** (A0, 88k rows) and **2,890 s** (A1, 103k rows) — the LP is the bottleneck, `≈ 2.5×` the
+`m = 5` solve times.  Stopped by hand after A1 once the exact oracle below certified a sub-45 scaling.
+
+| round | LP [measured] | segments | float lattice / polished / near-tile / item-3 min [measured] | exact threshold `f*` (zmx2 bisection) | exact cost `total · f*` |
+|---|---|---|---|---|---|
+| A0 | 43.760660 | 32.09 | 0.92466 / 0.90959 / 0.99738 / 0.98688 | `(1.0994727, 1.0995801]` | `48.119` |
+| **A1** | **43.788012** (exported 43.788153) | 32.11 | 0.99049 / **0.98647** / 0.99876 / 0.99852 | **`(1.0152344, 1.0152930]`** | **`44.458`** |
+
+`f*` = the smallest factor at which `zmx2 --d4` verifies the scaled cover; the upper end is [proved] (zmx2), the lower
+end is a refusal (the checker loses `< 0.1 %`, `ZMX2.md` §0, so the true minimum of A1 is `≈ 0.9850`, `1/f*`)
+[measured].  The float polished minimum `0.98647` of the loop's own scan is `0.15 %` *above* that — the loop's
+cheap phase-A scan missed the deepest dip, as expected; zmx2 finds it exactly.  Overheads over the LP: A1 exact
+`1.0153` (point covers, strict float scan: `1.022`, and that scan was itself `1.3 %` optimistic, §9).
+
+**New tool — zmx2 as a validity oracle.**  At `m = 7` `zmx2 --d4` takes `0.3–2 s` wall on 8–12 threads, so the exact
+minimum of any mixed cover can be bracketed by bisection on the scale factor in `≈ 10` runs (`search/m7_zbisect.sh
+COVER LO HI [STEPS]`), and the uncertified boxes of a refused run are the exact dip locations
+(`search/m7_zuncert.py LOG` turns them into LP row poses, not yet used in a loop).  This replaces the whole float
+strict/confirm protocol for mixed covers, and removes the "unfound dip" risk that killed §9.
+
+### 10.2 The candidate
+
+`runs/s45_mixed_candidate_7.txt` = `lc_m7A_r1 × 409/400` (masses rounded up; `line_cover.py scale`), i.e. `1.0225 ×`
+over A1, `0.71 %` over its exact threshold `f*`.  Total `44.77352774`, room `0.226` (`0.50 %`) below 45.
+`zmx2 d4`: exact D4 invariance; `mixed_cover.py`: well formed.  Weight: segments `32.8` of `44.77` (`73 %`).
+`zm_mixed.py` run (`runs/zm_mixed_s45/`, manifest header shas: `zm_mixed.py ee3e2915…`, `mixed_cover.py bb89de15…`,
+`zeromargin.py 640fe453…` = the pinned files, input `5da180d1…`): settings `--d4 --cert-mode --disj --chain-from 0
+--depth 24 --pitch 1/20 --ubins 16`; leaves ADM 122,892 / CHAIN 45,866 / SPLIT 54,276 / PIECE 9,458 / EMPTY 25,463 /
+UNCERTIFIED 0 (Lemma T raised the piece bound at 48,800 leaves, Lemma L at 182,886).  Cheaper than `s(21)` (12.9 CPU-h
+for 40,000 roots) per root, because the margin is larger (`0.71 %` over the exact threshold vs `≈ 0.5 %`).  Interior
+tile germs, the cost of the point checker at `m ≥ 6` (`S32_EXACT.md`), closed by Lemma T as at `m = 5` [proved].
+
+### 10.3 Files
+
+| file | what |
+|---|---|
+| `runs/lc_m7A.sh`, `runs/lc_m7A.{log,nohup.log,json}`, `runs/lc_m7A_r{0,1}.txt` | the loop (stopped after A1) and its round covers |
+| `runs/m7zmx/*.log` | the zmx2 bisection runs (per-factor root logs with UNCERT boxes) |
+| **`runs/s45_mixed_candidate_7.txt`** | the candidate, total `2238676387/50000000` |
+| `runs/zmx2_s45/cand_{d4,full}.{log,out}` | zmx2 runs on the candidate |
+| `runs/zm_mixed_s45.sh`, `runs/zm_mixed_s45/{roots.jsonl,manifest.json,run.log}` | the `zm_mixed.py` run |
+| `search/m7_zbisect.sh`, `search/m7_zuncert.py` | new: exact-threshold bisection, UNCERT → row poses |
+
+### 10.4 Reproduce
+
+```
+bash runs/lc_m7A.sh                         # stop after "[m7A] A1" (~1.5 h; LP 2-3k s per solve)
+bash search/m7_zbisect.sh runs/lc_m7A_r1.txt 1.0 1.03 9        # f* in (1.0152344, 1.0152930]
+python3 search/line_cover.py scale runs/lc_m7A_r1.txt runs/s45_mixed_candidate_7.txt --factor 1.0225
+verify2/target/release/zmx2 cert runs/s45_mixed_candidate_7.txt --d4   --threads 12   # VERIFIED-D4
+verify2/target/release/zmx2 cert runs/s45_mixed_candidate_7.txt --full --threads 12   # VERIFIED
+bash runs/zm_mixed_s45.sh                   # zm_mixed.py --d4 --cert-mode, 78,400 roots
+```
+
+The bundle (`certificates/s45/`): `bash search/s45_cert_runs.sh zmx2` (fresh `zmx2` runs on the bundled file) and
+`bash search/s45_cert_runs.sh import runs/zm_mixed_s45` (the `zm_mixed.py` records above, re-headed to the bundled
+path and resumed, not recomputed; `s45_cert_runs.sh zm_mixed` recomputes them); `certificates/s45/verify.sh` re-checks.
