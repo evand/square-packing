@@ -18,3 +18,4 @@ runs/
 # Lean certificate data too big to commit: regenerate with lean/scripts/gen_data.sh
 lean/Sqpack/S11/
 lean/Sqpack/S13/
+lean/Sqpack/S32Z/

@@ -992,15 +992,19 @@ def emit(args, sha, s, D, W, P, ctx, trees, cells, ubins, Mq, M):
            f"From `{args.cert}`, sha256 `{sha}`:\n{len(P)} points `(X/{D}, Y/{D})` with weights `w/{W}`, "
            f"container `[0, {Mq}/{D}]²`.\n-/\n")
     L = ["import Sqpack.ZMTree\n", HDR, doc, f"namespace {ns}\n", "open BoxTree\n",
+         "-- large certificates (s(32): 13,085 points) need more than the default recursion depth",
+         "set_option maxRecDepth 100000 in",
          "/-- The certificate points `(X, Y, w)`, in a search tree on `(X, Y)`. -/",
          f"def pts : PTree :=\n  {emit_ptree(P)}\n",
          "theorem pts_nodup : pts.toList.Nodup :=\n  PTree.nodup_of_chainB _ (by decide +kernel)\n",
          f"theorem pts_d4 : d4Check {Mq} pts = true := by decide +kernel\n",
          f"theorem pts_wsum : pts.wsum = {sum(w for _, _, w in P)} := by decide +kernel\n",
-         "set_option maxRecDepth 100000 in\n/-- The same entries as a list literal (the chunks use it: "
+         "-- a long list literal: elaboration needs more than the default heartbeats\n"
+         "set_option maxRecDepth 100000 in\nset_option maxHeartbeats 0 in\n"
+         "/-- The same entries as a list literal (the chunks use it: "
          "`pts.toList` costs a kernel evaluation per declaration). -/",
          "def ptsL : List (ℕ × ℕ × ℕ) :=\n  [" + ",\n   ".join(f"({x}, {y}, {w})" for x, y, w in P) + "]\n",
-         "theorem pts_toList : pts.toList = ptsL := by decide +kernel\n",
+         "set_option maxRecDepth 100000 in\ntheorem pts_toList : pts.toList = ptsL := by decide +kernel\n",
          "theorem ptsL_nodup : ptsL.Nodup := pts_toList ▸ pts_nodup\n",
          f"end {ns}\n"]
     open(f"{outdir}/Pts.lean", 'w').write("\n".join(L))

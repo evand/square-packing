@@ -4,7 +4,7 @@ Goal: kernel-checked lower bounds `s(n) ≥ t` from point certificates — **ker
 (`decide +kernel`; no `native_decide`, no new axioms), with **one generic verifier proved sound
 once**, and per result only data plus a one-line theorem.
 
-Status (2026-09-27): rung 1 (pilot) done — `SquarePacking.s12_ge_35_9 : (35/9 : ℝ) ≤ minSide 12`,
+Status (2026-09-28): rung 1 (pilot) done — `SquarePacking.s12_ge_35_9 : (35/9 : ℝ) ≤ minSide 12`,
 `#print axioms` = `[propext, Classical.choice, Quot.sound]`, no `sorry`.  The same verifier, unchanged,
 also proves rung-3 results from our weighted certificates: `s12_ge_3920_997 : (3920/997 : ℝ) ≤
 minSide 12` (`S12WLower.lean`, 224 points, in the default build) and `s11_ge_3040_797 :
@@ -21,6 +21,15 @@ bound is sharp (the 4×4 tiling), so monotone witness leaves provably cannot do 
 proved sound once (`ZMTree.sound`, in the default build).  The data is **opt-in**: `lake build
 Sqpack.S13Lower`, 538 s wall / 33 CPU-min on 4 cores, ≤ 13.2 GB RSS per process.
 
+**Rung 2b, `s(32) = 6` with no hypothesis, done (2026-09-28):** `SquarePacking.s32_ge_6 : (6 : ℝ) ≤
+minSide 32`, `SquarePacking.s32_eq_6 : minSide 32 = 6`, and `SquarePacking.s32_checkerCover :
+S32CheckerCover` — the one computational hypothesis of `S32.lean` is now a theorem
+(`S32Lower.lean`), from `certificates/s32/s32_closed_cover_6.txt` (13,085 points), with the same
+`ZMTree` verifier, unchanged, and no new leaf type; the exact mirror rejected none of zeromargin's
+leaves.  `#print axioms` = `[propext, Classical.choice, Quot.sound]`.  Opt-in, data gitignored:
+`lean/scripts/gen_data.sh S32Z` (~70 min on 4 cores), then `lean/scripts/build_parts.sh S32Z
+Sqpack.S32Lower 4 12-15` (3 h 36 min wall / 13.8 CPU-h, ≤ 15.2 GB RSS per process).  Details below.
+
 ## Files
 
 | file | what |
@@ -34,6 +43,8 @@ Sqpack.S13Lower`, 538 s wall / 33 CPU-min on 4 cores, ≤ 13.2 GB RSS per proces
 | `Sqpack/ZMTree.lean` | the zero-margin verifier `ZMTree.check` (tree type `ZT`: leaves `Z`, `E`; nodes `X/Y/U`, `XM/YM/UM`, `F`, `C`), its soundness `ZMTree.sound` (for the same `BoxTree.Cov`, so `BoxTree.le_minSide` is reused), the decoder `ZMTree.dec` |
 | `scripts/gen_zmtree.py` | zero-margin tree search (`search/zeromargin.py` as a read-only oracle) + exact integer mirror of `ZMTree.check` + leaf pruning + Lean emission |
 | `Sqpack/S13/{Pts,Part0..3,Cov}.lean`, `Sqpack/S13Lower.lean` | generated: the 3,621 points (a `PTree` and the literal `ptsL`); 209 chunk theorems; `cov_root`.  `s13_ge_4`, `s13_eq_4` (opt-in) |
+| `Sqpack/S32Z/{Pts,Part0..95,Cov}.lean`, `Sqpack/S32Lower.lean` | generated (gitignored): the 13,085 points; 5,990 chunk theorems; `cov_root`.  `s32_ge_6`, `s32_checkerCover` (the hypothesis of `S32.lean`, proved), `s32_eq_6` (opt-in) |
+| `scripts/build_parts.sh` | builds a data set's part files a few at a time (plain `lake build` starts them all at once) |
 
 Regenerate: `python3 lean/scripts/gen_boxtree.py certificates/s12_uniform_7of81_3.888.txt --n 12
 --name S12U --outdir lean/Sqpack/S12U` (25 s; deterministic).  The others:
@@ -42,7 +53,10 @@ Regenerate: `python3 lean/scripts/gen_boxtree.py certificates/s12_uniform_7of81_
 Rung 2: `python3 lean/scripts/gen_zmtree.py certificates/rung2/s13_closed_cover_4.txt --n 13
 --name S13 --outdir lean/Sqpack/S13 --nproc 4` (156 s wall / 580 s CPU on 4 cores; deterministic —
 a fresh run reproduces the files byte for byte; gitignored, `lean/scripts/gen_data.sh S13`).
-Large data sets (`S11`, `S13` today, all future big ones) are **gitignored**: run `lean/scripts/gen_data.sh` before
+Rung 2b: `python3 lean/scripts/gen_zmtree.py certificates/s32/s32_closed_cover_6.txt --n 32 --name
+S32Z --outdir lean/Sqpack/S32Z --nproc 4 --parts 96` (~70 min wall on 4 cores; `gen_data.sh S32Z`),
+then `lean/scripts/build_parts.sh S32Z Sqpack.S32Lower 4 12-15` (not a plain `lake build`, below).
+Large data sets (`S11`, `S13`, `S32Z` today, all future big ones) are **gitignored**: run `lean/scripts/gen_data.sh` before
 `lake build Sqpack.S11Lower`.  Small ones (`S12U`, `S12W`) stay committed; both regenerate byte-identically.
 
 ## What is proved, and how
@@ -229,23 +243,104 @@ per chunk.  What it took (same chunk, 27.4 s → 7.6 s kernel):
 |---|---|---|---|---|
 | s(13) = 4 (measured) | 4,079 (ADM 1,416, CHAIN 2,663) | 1 | 33 min | 9 min |
 | s(32) = 6, 13,085 points | 82,208 (ADM 12,201, CHAIN 70,007) | ~1.5 | ~17 h | ~4–5 h (16 files) |
-| s(21) = 5, 7,536 points + 1,872 segments | — | — | needs segment entries | — |
+| **s(32) = 6 (measured, rung 2b)** | 89,473 in the Lean tree (ADM 16,747, CHAIN 72,726) | 1.6 | **13.8 h** | **3.6 h** (96 files, 4 at a time) |
+| s(21) = 5, 7,536 points + 1,872 segments | — | — | needs segment entries (below) | — |
 
 s(32) needs no new leaf type (same `ZMTree`, `m = 6`, root grid `[0,3]²` by `XM/YM` at pitch
 `1/10`), only the generator run (zeromargin's own D4 sweep was 2.8 CPU-h; with the mirror and the
 pruning expect ~3×) and the build; the remaining levers are the per-entry overhead in context
-(0.5 ms against 0.2 ms for the bare test) and a Mathlib-free data layer.  Not yet run on s(32):
-whether the mirror accepts every zeromargin leaf there without `P1` / inherited points (it did on
-s(13)) is the first thing to measure; a rejected leaf is split further, never accepted.  s(21)
+(0.5 ms against 0.2 ms for the bare test) and a Mathlib-free data layer.  (Done since: rung 2b
+below — the mirror accepted every zeromargin leaf on s(32) too.)  s(21)
 additionally needs segment entries (`MixedMeasure.lean`) in `Cov` and in the `Z` count.
+
+## Rung 2b: `s(32) = 6` with no hypothesis (`S32Lower.lean`)
+
+**What is proved.**  `SquarePacking.s32_ge_6 : (6 : ℝ) ≤ minSide 32` (by `le_minSide`, exactly as
+`s13_ge_4`), `SquarePacking.s32_checkerCover : S32CheckerCover` — the one computational hypothesis of
+`S32.lean` is now a theorem — and `SquarePacking.s32_eq_6 : minSide 32 = 6` (=
+`s32_eq_six_of_checker s32_checkerCover`, so `S32.lean`'s own chain from the hypothesis is reused
+unchanged).  The bridge is `S32CheckerCover.of_cov` (20 lines: `Cov` of the root box for
+`S32Data.tree.toList` is literally `S32CheckerCover` after unfolding `pt = ptR 1000` and scaling
+the weights by `10¹¹`) plus `s32_tree_toList : S32Data.tree.toList = ptsL` (kernel), i.e. the
+generator's point list is the committed transcription of the certificate, entry for entry.
+`#print axioms` for all three: `[propext, Classical.choice, Quot.sound]`; no `sorry`, no
+`native_decide`.  `S32.lean` is untouched and still in the default build.  Same `ZMTree`, no new leaf type, nothing changed in
+the verifier.
+
+**Mirror rejections: none.**  As on s(13), every leaf zeromargin's logic proposes (with `T` recomputed
+without `P1` and without inherited points) passes the exact mirror of `ZMTree.check` (`zm_only = 0`
+over all 900 cells), and every leaf is re-checked by the mirror again at emission.
+
+**The s(32) tree.**  900 root cells (`1/10` pitch, D4 region `[0,3]²`) × 8 `u`-bins of `[0, ½]`;
+186,888 search boxes, max depth 20 (zeromargin's own run needed depth 27 at the wall germ
+`[1.5,1.6]×[0.5,0.6]`; here that cell closes at depth 18 — the mirror-side chain search and
+clipping differ in detail).  Leaves: **`E` 5,127; `Z` 89,473 = `ADM` only 16,747 + one chain
+25,152 + two chains 47,574** (zeromargin: `ADM` 12,201, `CHAIN` 70,007, `EMPTY` 3,457); 4,876 `C`
+nodes, 87,400 midpoint splits, 8,005 `F` nodes.  Claimed entries 47.1 M (43.8 M `ADM` witnesses,
+3.32 M chain entries, 358 k pivots), **526 per `Z` leaf** (s(13): 325); 55.1 M base-2²⁰ digits in
+5,990 chunks, 96 files (267 MB of Lean, gitignored).  Scale `Q = 1000·4096`, `R = 2³²`, as for s(13).
+
+**Generation.**  3,992 s wall on 4 cores (cores 12–15; 15,440 s CPU in the workers, 1.55× zeromargin's
+own 9,958 s), plus 5 min emission.  (The search ran the generator's own per-cell worker from a
+checkpointing wrapper, then `gen_zmtree.py --load`; the one-shot `lean/scripts/gen_data.sh S32Z`
+command runs the same code but was not itself timed end to end.)  Deterministic: four cells
+re-searched in a fresh process gave identical trees, and a second emission is byte-identical.
+
+**Kernel cost** (cores 12–15, 4 part files at a time): the 96 part files **49,766 s CPU = 13.8
+CPU-h** (499–549 s each, 502–582 s wall), **3 h 33 min wall**; `Pts` 144 s (the 13k-entry literal
+and `pts_toList`), `Cov` 21 s, `S32Lower` 9 s.  **Peak RSS 13.7–15.2 GB per part process** (6.6 GB
+of it Mathlib), ≤ ~55 GB for the four together.  That is **0.56 s CPU per `Z` leaf, 1.06 ms per
+claimed entry** (s(13): 0.47 s, 1.4 ms) — the estimate before the run was ~17 CPU-h.
+
+**Build note.**  `lake build` starts every ready module at once — one job per hardware thread,
+ignoring `taskset` — so a plain `lake build Sqpack.S32Lower` started 32 part files together
+(8 GB each within minutes, heading for 14 GB; killed at 94 GB used).  `lean/scripts/build_parts.sh
+S32Z Sqpack.S32Lower 4 12-15` builds the parts 4 at a time (one `lake build` per part via `xargs
+-P`), then the top.  The 13,085-entry `ptsL` literal also needs `maxRecDepth`/`maxHeartbeats`
+raised in `Pts.lean` (the generator now emits them; `pts_toList`'s kernel list comparison recurses
+13k deep).
+
+## Next: segments (`s(21) = 5`, `s(45) = 7`) — scope, not started
+
+Both covers put most of their mass uniformly on grid-line segments (s(21): 7,536 points + 1,872
+segments; s(45): 19,989 points + 3,912 segments, 32.8 of the 44.77 on lines), and their certificates
+are `zm_mixed.py` runs (`search/ZM_MIXED.md`).  What exists in Lean: the measure-level reduction
+(`MixedMeasure.lean`: `not_packs_of_measure`, `d4_reduction_measure_u`, `MixedCover.measure_apply`
+giving the mass of a square as points inside + each segment's weight × the fraction of its
+parameter interval inside), and `S21.lean` with its one hypothesis `S21CheckerCover` (no s(45) file
+yet).  What a hypothesis-free rung needs:
+
+1. **`CovM`** — `Cov` with the mixed mass (point sum + Σ segment weight × inside fraction), its
+   `splitX/Y/U` gluing and an end-to-end `le_minSide_mixed` via `not_packs_of_measure` and
+   `d4_reduction_measure_u` (≈ 150 lines, mechanical; plus a `SegTree` data layer like `PTree`).
+2. **Segment terms in the `Z` leaf**, each an exact integer test with its own soundness lemma —
+   this is the real work.  `zm_mixed.py`'s leaves are `PIECE` (piece mass alone ≥ 1) and zeromargin's
+   `ADM`/`CHAIN` with a *phantom point* of weight `L` (Lemma P), where `L` comes from
+   * **Lemma S** (certified core of a line): the Bernstein coefficients are affine in the point, so
+     on a line they cut an interval with rational ends; nearest to what `ZMTree` already proves
+     (`ADM` for every point of a segment at once).  Straightforward: ≈ 300–500 lines.
+   * **Lemma T** (threshold lemma for a germ pair of lines one unit apart) and **Lemma L / L′**
+     (linear chord ends on an axis line, hull form) — piecewise-linear lower bounds on the chord
+     length as the pose varies; genuinely new real analysis (chord of a tilted unit square on a
+     line, monotonicity in the pose), plus the rational-function bounds `rf_bound`.  In the s(21)
+     census Lemma L raises `L` at 173 k of the leaves and T at 59 k, so neither can be skipped.
+   * **Lemma R / `SPLIT`** (region-wise coupling of pieces and points, 54 k leaves in each run).
+   Estimate: 1.5–3 k lines of Lean for the soundness side, several days; the generator is the
+   analogue of `gen_zmtree.py` with `zm_mixed.py` as oracle and an exact mirror.
+3. **Kernel cost.**  `zm_mixed.py`'s D4 censuses: s(21) 461 k boxes, leaves `PIECE` 9 k, `ADM` 146 k,
+   `CHAIN` 23.5 k, `SPLIT` 54 k, `EMPTY` 18 k (46 k CPU-s in Python); s(45) 438 k boxes, `PIECE` 9.5 k,
+   `ADM` 123 k, `CHAIN` 46 k, `SPLIT` 54 k, `EMPTY` 25 k (59 k CPU-s).  So ~2.5× s(32)'s leaf count,
+   but the lines carry most of the mass, so a leaf claims far fewer points (the phantom `L` covers
+   the rest): at s(32)'s measured 0.56 s per `Z` leaf, **~40 CPU-h each (≈ 10 h on 4 cores)** is a
+   conservative upper estimate; with ~100–200 claimed points per leaf and a few dozen segment tests,
+   more likely **15–25 CPU-h** each.  Memory per part file as for s(32) (split into ~200 parts).
 
 ## Remaining gaps / next steps
 
 * No `sorry`; nothing is assumed about the tree, the generator or the decoder.
 * `BoxTree`'s leaf test is sound everywhere but a tree can only terminate where the certificate
-  has slack; the zero-margin leaves are in `ZMTree` (rung 2 above, `s(13) = 4` done).  Next:
-  `s(32) = 6` with the same leaf types (estimate above); segments (`s(21)`) need `MixedMeasure` in
-  `Cov` and a segment entry type in the `Z` leaf.
+  has slack; the zero-margin leaves are in `ZMTree` (rung 2: `s(13) = 4`; rung 2b: `s(32) = 6`,
+  both done, hypothesis-free).  Next: segments (`s(21)`, `s(45)`), scoped in the section above.
 * D4 symmetry is assumed (`d4Check`); a certificate without symmetry needs a second root lemma
   (centre in `[0,m]²`, `u ∈ [0,1]`, via `θ ↦ θ + π/2`), about 30 lines on top of `d4_reduce`'s
   step D.  All certificates in `certificates/` checked so far are D4-invariant.
