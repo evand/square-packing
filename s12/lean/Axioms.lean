@@ -96,3 +96,10 @@ import Sqpack
 #print axioms SquarePacking.s21_isLeast
 #print axioms SquarePacking.s21_eq_five
 #print axioms SquarePacking.s21_eq_five_of_checker
+-- box-tree verifier and the pilot rung of the lower-bound ladder (Sqpack/BoxTree.lean, lean/LADDER.md)
+#print axioms SquarePacking.BoxTree.sound
+#print axioms SquarePacking.BoxTree.le_minSide
+#print axioms SquarePacking.s12_ge_35_9
+#print axioms SquarePacking.s12_ge_3920_997
+-- opt-in (not in the default target, ~30 core-minutes): `lake build Sqpack.S11Lower`, then
+-- #print axioms SquarePacking.s11_ge_3040_797

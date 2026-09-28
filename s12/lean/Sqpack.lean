@@ -9,3 +9,6 @@ import Sqpack.MixedMeasure
 import Sqpack.SegTree
 import Sqpack.S21Data
 import Sqpack.S21
+import Sqpack.BoxTree
+import Sqpack.S12Lower
+import Sqpack.S12WLower
