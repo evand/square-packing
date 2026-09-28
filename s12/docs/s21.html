@@ -283,6 +283,11 @@ s(21) bundle: OK</code></pre>
   <span class="mono">2·arctan u</span>, <span class="mono">u ∈ [0,½]</span>, captures mass at least 1: the points inside
   it plus, for each segment, its mass times the fraction of the segment inside it. That is what both checkers
   establish. The checker programs themselves are not formally verified.</p>
+  <p>For <a href="../s32/"><span class="mono">s(32) = 6</span></a> and <a href="../s12/#s13"><span class="mono">s(13) = 4</span></a>
+  the corresponding hypothesis has since been proved inside Lean's kernel, by a verifier for pose-box trees whose
+  soundness is proved once. That verifier handles weighted points only. Extending it to segments, which would do the
+  same for this cover and for <span class="mono">s(45) = 7</span>, is future work; until then
+  <span class="mono">s(21) = 5</span> rests on the two checkers for the covering property.</p>
 </section>
 
 <section id="limits">
@@ -296,8 +301,9 @@ s(21) bundle: OK</code></pre>
     requires and Rust does not undo. <span class="mono">zm_mixed.py</span> uses exact rationals throughout, so the two
     rest on different kinds of trust.</li>
     <li>The lower bounds in §02 from 2026 are unrefereed, like this one.</li>
-    <li>Nothing here settles <span class="mono">s(12)</span> or <span class="mono">s(45)</span>
-    (<a href="../s12/">the s(12) write-up</a>).</li>
+    <li>Nothing here settles <span class="mono">s(12)</span> (<a href="../s12/">the s(12) write-up</a>). The same
+    line-density method has since given <span class="mono">s(45) = 7</span>, checked by the same two checkers, with no
+    Lean yet (<a href="https://github.com/evand/square-packing/tree/main/s12/certificates/s45">certificate</a>).</li>
   </ul>
 </section>
 

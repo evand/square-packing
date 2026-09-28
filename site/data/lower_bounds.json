@@ -1351,7 +1351,7 @@
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s32",
-   "note": "2026-09-26; s(32) = 6: weighted closed cover of [0,6]^2, total 31.7135 < 32, certified by two exact checkers; Lean top theorem from the checker hypothesis; unrefereed",
+   "note": "2026-09-26; s(32) = 6: weighted closed cover of [0,6]^2, total 31.7135 < 32, certified by two exact checkers; kernel-checked in Lean with no hypothesis (S32Lower.lean, 2026-09-28); unrefereed",
    "date": "2026-09-26"
   },
   "history": [
@@ -1389,7 +1389,7 @@
     "year": 2026,
     "status": "preprint",
     "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s32",
-    "note": "2026-09-26; s(32) = 6: weighted closed cover of [0,6]^2, total 31.7135 < 32, certified by two exact checkers; Lean top theorem from the checker hypothesis; unrefereed",
+    "note": "2026-09-26; s(32) = 6: weighted closed cover of [0,6]^2, total 31.7135 < 32, certified by two exact checkers; kernel-checked in Lean with no hypothesis (S32Lower.lean, 2026-09-28); unrefereed",
     "date": "2026-09-26"
    }
   ]

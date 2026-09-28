@@ -94,10 +94,11 @@ section>*{min-width:0}
   <span class="eyebrow">Discrete geometry · computer-assisted proof</span>
   <h1>Twelve and Thirteen Squares</h1>
   <p class="lede">Nobody knows whether twelve unit squares fit inside a square of side less than 4.
-  The best proven barrier had stood since 2003, at 3.7889. Here is a new one at 3.9686, machine-checked
-  from end to end — closing about 85% of the remaining gap — with a new floor for eleven squares, a
-  case-free proof that thirteen need side 4, and an honest account of how far the method does
-  <em>not</em> go.</p>
+  The best proven barrier had stood since 2003, at 3.7889. Here is a new one at 3.9686, checked exactly
+  by computer over every position and angle — closing about 85% of the remaining gap — with a new floor
+  for eleven squares, a case-free proof that thirteen need side 4, checked in full by the Lean proof
+  assistant, and an honest account of how far the method does <em>not</em> go.</p>
+  <!-- LEAN-3.968616: update when S12 headline kernel check lands -->
   <div class="tags">
     <a class="tag neutral" href="https://github.com/evand/square-packing/tree/main/s12">Code, certificates &amp; verifiers on GitHub →</a>
   </div>
@@ -133,7 +134,9 @@ section>*{min-width:0}
   </div>
   <p>Twelve squares with disjoint interiors would need <span class="mono">12 × 7 = 84</span> point-slots
   and only 81 points exist, so at most <span class="mono">⌊81/7⌋ = 11</span> fit — hence
-  <span class="mono">s(12) ≥ 35/9 = 3.888…</span>, already past the 2003 bound.</p>
+  <span class="mono">s(12) ≥ 35/9 = 3.888…</span>, already past the 2003 bound. This bound,
+  <span class="mono">3920/997</span> and the <span class="mono">s(11)</span> bound are also checked in full inside
+  Lean's kernel (§05).</p>
 </section>
 
 <section id="context">
@@ -146,7 +149,7 @@ section>*{min-width:0}
       <tr><td class="num">10</td><td class="num">3.707107…</td><td>proved — Stromquist 2003</td></tr>
       <tr><td class="num">11</td><td class="num">3.877084…</td><td>best packing (Trump 1979); <strong>open</strong> — bound raised here to 3.8143</td></tr>
       <tr><td class="num">12</td><td class="num">4 &nbsp;(conjectured)</td><td><strong>open</strong> — bound raised here to 3.9686</td></tr>
-      <tr><td class="num">13</td><td class="num">4</td><td>proved — Bentz 2010; re-proved here without cases (§07)</td></tr>
+      <tr><td class="num">13</td><td class="num">4</td><td>proved — Bentz 2010; re-proved here without cases, kernel-checked in Lean (§07)</td></tr>
       <tr><td class="num">14, 15, 16</td><td class="num">4</td><td>proved — El Moumni, Nagamochi, area</td></tr>
     </tbody>
   </table></div>
@@ -277,14 +280,20 @@ section>*{min-width:0}
 <section id="verification">
   <div class="sechead"><span class="eyebrow">05 · Verification</span><h2>How it is checked</h2></div>
   <p>A bound like this is worth what its verification is worth, so the covering property is checked
-  three independent ways.</p>
+  three independent ways, and for the smaller bounds a fourth, inside Lean.</p>
   <div class="grid2">
     <div class="card">
       <h3>Lean 4 + Mathlib</h3>
       <p class="footnote">The reduction step — an unavoidable set of total weight <span class="mono">W</span>
       implies at most <span class="mono">W</span> squares — is fully formalised, including the scaling
-      argument that lets a <em>closed</em>-square certificate control a packing. 0 sorries; axioms are
-      only <span class="mono">propext, Classical.choice, Quot.sound</span>.</p>
+      argument that lets a <em>closed</em>-square certificate control a packing. For
+      <span class="mono">s(12) ≥ 35/9</span>, <span class="mono">s(12) ≥ 3920/997</span> and
+      <span class="mono">s(11) ≥ 3040/797</span> the covering property is checked too, inside Lean's kernel
+      (<span class="mono">decide +kernel</span>, no <span class="mono">native_decide</span>), by a verifier
+      proved sound once; those three are Lean theorems with no hypothesis. For the main certificate,
+      <span class="mono">3.968616</span>, only the reduction is in Lean so far; its cover rests on the
+      checkers below. 0 sorries; axioms are only <span class="mono">propext, Classical.choice, Quot.sound</span>.</p>
+      <!-- LEAN-3.968616: update when S12 headline kernel check lands -->
     </div>
     <div class="card">
       <h3>Exact integer verifier (Rust)</h3>
@@ -408,9 +417,17 @@ VERIFIED: every CLOSED unit square inside C covers weight &gt;= 1, and total wei
   the Rust checker refuses mutated certificates, two invalid covers from our own history, and nine
   malformed files (on which it must give no verdict at all).</p>
   <p>The soundness of every primitive both checkers rest on is proved in Lean 4 + Mathlib
-  (<span class="mono">lean/Sqpack/ZeroMargin.lean</span>, 0 sorries, standard axioms only). Not in Lean,
-  in either checker: the subdivision, the argument that the boxes exhaust the space, the bookkeeping and
-  the parser. Behind those stands the agreement of two independent programs.</p>
+  (<span class="mono">lean/Sqpack/ZeroMargin.lean</span>, 0 sorries, standard axioms only). The checkers'
+  own subdivision, bookkeeping and parsing are not in Lean — but they no longer need to be. The covering
+  property has been checked a third time, inside Lean's kernel: a generated tree of pose boxes, each
+  decided by <span class="mono">decide +kernel</span> against a zero-margin verifier whose soundness is
+  proved once for every tree (<span class="mono">ZMTree.sound</span>). The program that builds the tree is
+  untrusted; a wrong tree only makes the check fail. The result is a Lean theorem with no hypothesis,</p>
+  <pre><code>theorem s13_eq_4 : minSide 13 = 4</code></pre>
+  <p>resting only on Lean's kernel, Mathlib and the definitions in the statement (<span class="mono">minSide</span>
+  and what a packing is); <span class="mono">#print axioms</span> gives <span class="mono">propext</span>,
+  <span class="mono">Classical.choice</span>, <span class="mono">Quot.sound</span>. The same verifier, unchanged,
+  also checks <a href="../s32/"><span class="mono">s(32) = 6</span></a>.</p>
   <pre><code>$ verify2/target/release/zmcheck cert certificates/rung2/s13_closed_cover_4.txt --depth 18 --threads 8
 certificate certificates/rung2/s13_closed_cover_4.txt: container [0,4]^2, 3621 points, D=1000 W=1000000000
 total weight = 12955972155/1000000000 = 12.955972155
@@ -429,6 +446,11 @@ VERIFIED: every closed unit square in [0,4]^2 captures weight &gt;= 1; total wei
 <section id="artifacts">
   <div class="sechead"><span class="eyebrow">08 · Reproduce</span><h2>Artifacts</h2></div>
   <p>Everything is in the repository <a href="https://github.com/evand/square-packing/tree/main/s12">evand/square-packing</a> (directory <span class="mono">s12/</span>); <span class="mono">./verify.sh</span> rebuilds the verifiers and re-checks the certificates (<span class="mono">--full</span> adds the slow sweeps, including the full s(13) check), and CI runs the fast tier on every change.</p>
+  <p>The Lean side: <span class="mono">cd lean &amp;&amp; lake build</span> builds the reductions and
+  <span class="mono">s(12) ≥ 35/9</span>, <span class="mono">s(12) ≥ 3920/997</span> (a few minutes on 4 cores, after Mathlib). The larger
+  kernel checks are opt-in, with their data generated first (deterministic, gitignored):</p>
+  <pre><code>$ lean/scripts/gen_data.sh S13 &amp;&amp; (cd lean &amp;&amp; lake build Sqpack.S13Lower)   # s(13) = 4: ~9 min on 4 cores
+$ lean/scripts/gen_data.sh S11 &amp;&amp; (cd lean &amp;&amp; lake build Sqpack.S11Lower)   # s(11) ≥ 3040/797: about 1 CPU-hour</code></pre>
   <div class="tablewrap"><table>
     <thead><tr><th>path</th><th>what</th></tr></thead>
     <tbody>
@@ -443,6 +465,9 @@ VERIFIED: every closed unit square in [0,4]^2 captures weight &gt;= 1; total wei
       <tr><td class="num">xcheck.py</td><td>independent exact re-check (Python Fractions)</td></tr>
       <tr><td class="num">search/zeromargin.py</td><td>the other zero-margin checker (Python Fractions)</td></tr>
       <tr><td class="num">lean/Sqpack/Basic.lean</td><td>formalised reduction theorem, 0 sorries</td></tr>
+      <tr><td class="num">lean/Sqpack/BoxTree.lean, ZMTree.lean</td><td>the kernel verifiers for pose-box trees, proved sound once</td></tr>
+      <tr><td class="num">lean/Sqpack/S12Lower.lean, S12WLower.lean, S11Lower.lean, S13Lower.lean</td><td>kernel-checked s(12) ≥ 35/9, s(12) ≥ 3920/997, s(11) ≥ 3040/797, s(13) = 4</td></tr>
+      <tr><td class="num">lean/LADDER.md</td><td>how the kernel checks work, and what they cost</td></tr>
       <tr><td class="num">lean/Sqpack/ZeroMargin.lean</td><td>formalised soundness of the zero-margin primitives, 0 sorries</td></tr>
       <tr><td class="num">search/lp_search.py</td><td>LP certificate search (cell cuts + column generation)</td></tr>
       <tr><td class="num">search/pack_src/</td><td>packing optimiser used for the upper-bound search</td></tr>

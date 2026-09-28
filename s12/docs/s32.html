@@ -102,7 +102,7 @@ section>*{min-width:0}
   As far as we can find, this is the first exact value of <span class="mono">s(k² − 4)</span> for any <span class="mono">k ≥ 4</span>, and the first case where the plain grid is optimal with four squares missing.</p>
   <div class="tags">
     <span class="tag ok">two independent exact checkers</span>
-    <span class="tag neutral">Lean 4 top theorem</span>
+    <span class="tag ok">kernel-checked in Lean 4</span>
     <span class="tag open">not peer reviewed</span>
     <a class="tag neutral" href="https://github.com/evand/square-packing/tree/main/s12/certificates/s32">Certificate &amp; checkers on GitHub →</a>
   </div>
@@ -128,7 +128,8 @@ section>*{min-width:0}
   </div>
   <p>Everything rests on checking the property in the theorem for <em>every</em> placement of a unit square,
   a three-parameter continuum. That check is exact and exhaustive, and it was done twice, by two checkers
-  written independently (§04). Lean 4 then assembles the proof (§05).</p>
+  written independently (§04). It was then done a third time inside the kernel of the Lean 4 proof assistant,
+  which proves <span class="mono">s(32) = 6</span> with no hypothesis left over (§05).</p>
 </section>
 
 <section id="context">
@@ -227,32 +228,46 @@ D4 RECHECK CLEAN: every root of the D4 region certified</code></pre>
 
 <section id="lean">
   <div class="sechead"><span class="eyebrow">05 · Lean</span><h2>What is formally proved</h2></div>
-  <pre><code>theorem s32_eq_six_of_checker (h : S32CheckerCover) : minSide 32 = 6</code></pre>
+  <pre><code>theorem s32_checkerCover : S32CheckerCover
+theorem s32_eq_6 : minSide 32 = 6</code></pre>
   <p>In Lean 4 with Mathlib, <span class="mono">minSide n</span> is the infimum of the sides that hold
   <i>n</i> closed unit squares at arbitrary positions and angles with disjoint interiors: the usual
   <span class="mono">s(n)</span>. Lean proves the grid packing, the scaling argument, the symmetry reduction,
   and the symmetry and total weight of <em>this</em> cover, which is transcribed into Lean from the certificate
-  file. It uses the standard axioms only, with no <span class="mono">sorry</span> and no
-  <span class="mono">native_decide</span>.</p>
-  <p>The one hypothesis, <span class="mono">S32CheckerCover</span>, is the region statement: every closed unit
-  square in <span class="mono">[0,6]²</span> with centre in <span class="mono">[0,3]²</span> and angle
+  file (<span class="mono">S32.lean</span>).</p>
+  <p>That file proves <span class="mono">minSide 32 = 6</span> from one hypothesis,
+  <span class="mono">S32CheckerCover</span>, the region statement: every closed unit square in
+  <span class="mono">[0,6]²</span> with centre in <span class="mono">[0,3]²</span> and angle
   <span class="mono">2·arctan u</span>, <span class="mono">u ∈ [0,½]</span>, captures weight at least 1. That is
-  exactly what the checker runs establish. The soundness of the checkers' mathematical primitives is also
-  proved in Lean. The programs themselves are not: their subdivision, bookkeeping and parsing are trusted, and
-  behind them stands the agreement of two independent implementations.</p>
+  exactly what the checker runs of §04 establish. <span class="mono">S32Lower.lean</span> now proves the hypothesis
+  itself: a generated tree of pose boxes, about 6,000 chunks, each decided by the kernel
+  (<span class="mono">decide +kernel</span>) against a small verifier whose soundness is proved once, for every tree
+  (<span class="mono">ZMTree.sound</span>, the zero-margin verifier also used for
+  <a href="../s12/#s13"><span class="mono">s(13) = 4</span></a>). The program that builds the tree is not trusted: a
+  wrong tree only makes the check fail. So the whole covering property is checked inside Lean's kernel, and
+  <span class="mono">s32_eq_6</span> has no hypothesis.</p>
+  <p>What remains trusted is Lean's kernel, Mathlib, and the definitions in the statement
+  (<span class="mono">minSide</span> and what a packing is). No <span class="mono">sorry</span>, no
+  <span class="mono">native_decide</span>; <span class="mono">#print axioms</span> gives only
+  <span class="mono">propext</span>, <span class="mono">Classical.choice</span>,
+  <span class="mono">Quot.sound</span>. The check is heavy, so it is opt-in and not part of the default build:</p>
+  <pre><code>$ lean/scripts/gen_data.sh S32Z                                 # generate the tree, ~70 min on 4 cores
+$ lean/scripts/build_parts.sh S32Z Sqpack.S32Lower 4             # 13.8 CPU-hours, ≤ 15 GB per process</code></pre>
 </section>
 
 <section id="limits">
   <div class="sechead"><span class="eyebrow">06 · Caveats</span><h2>What to keep in mind</h2></div>
   <ul>
-    <li>This is a computer-assisted proof and has not been peer reviewed. The claim is only as good as the two
-    checker programs, which are open to inspection and re-running.</li>
+    <li>This is a computer-assisted proof and has not been peer reviewed. The covering property is checked by two
+    independent programs and by Lean's kernel; the Lean statement rests on the definitions of
+    <span class="mono">minSide</span> and of a packing, which are short and open to inspection
+    (<span class="mono">lean/Sqpack/S32.lean</span>).</li>
     <li>"First exact <span class="mono">s(k² − 4)</span> for <span class="mono">k ≥ 4</span>" rests on our literature search (journals, arXiv, the
     Friedman/Ellsworth catalogue, and the 2026 certificate repositories). If we missed one, please tell us.</li>
-    <li>Nothing here settles <span class="mono">s(12)</span> or
-    <span class="mono">s(45)</span>. For those the same approach currently runs out of room: see
+    <li>Nothing here settles <span class="mono">s(12)</span>. There the same approach runs out of room: see
     <a href="../s12/">the s(12) write-up</a>, where the proven floor stands at 3.9686. (<span class="mono">s(21)</span>
-    has since been settled with line densities: <a href="../s21/">s(21) = 5</a>.)</li>
+    and <span class="mono">s(45)</span> have since been settled with line densities: <a href="../s21/">s(21) = 5</a>,
+    and <span class="mono">s(45) = 7</span>, <a href="https://github.com/evand/square-packing/tree/main/s12/certificates/s45">certificate</a>.)</li>
   </ul>
 </section>
 
@@ -271,7 +286,9 @@ D4 RECHECK CLEAN: every root of the D4 region certified</code></pre>
       <tr><td class="num">certificates/s32/zeromargin_d4/</td><td>the run: every root's record, the exact checker file that ran, hashes</td></tr>
       <tr><td class="num">certificates/s32/README.md</td><td>the claim, what checks what, and what is trusted</td></tr>
       <tr><td class="num">search/zeromargin.py, verify2/</td><td>the two checkers</td></tr>
-      <tr><td class="num">lean/Sqpack/S32.lean, D4.lean</td><td>the theorem, the symmetry reduction</td></tr>
+      <tr><td class="num">lean/Sqpack/S32.lean, D4.lean</td><td>the theorem from the checker hypothesis, the symmetry reduction</td></tr>
+      <tr><td class="num">lean/Sqpack/S32Lower.lean, ZMTree.lean</td><td>the hypothesis proved in the kernel (opt-in); the zero-margin verifier and its soundness</td></tr>
+      <tr><td class="num">lean/LADDER.md</td><td>how the kernel check works, and what it cost</td></tr>
       <tr><td class="num">search/S32_COVER.md, S32_EXACT.md</td><td>the research log: how the cover was built and checked</td></tr>
     </tbody>
   </table></div>
