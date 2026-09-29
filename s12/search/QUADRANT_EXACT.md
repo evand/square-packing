@@ -24,7 +24,8 @@ run A (`qx2_zm.py` sha `86da7d97…1656`, commit 28dc161) certified 9,799 of the
 pinned `zm_mixed.py` `ee3e2915…60ac` and `zeromargin.py` `640fe453…86ab`; (4) the reduction μ₇ ⇒ μ_Q ⇒ μ_k (k ≥ 6)
 and the dilation argument (§2, on paper, re-derived independently).  Lemmas used: Z, U, K, E (with E′, E″), zm_mixed's
 S, T, L, R, P and the polygon Lemma S(b) (audited §4.5), zeromargin's ADM/P1/MIX/CHAIN primitives, and the D4
-reduction (SYM).  `V2_STATUS_PLACEHOLDER`
+reduction (SYM).  **A single-version full run (run V2, the run-B code, sha `cdade4b6…a1b7`) also verifies all 9,800
+roots with 0 uncertified boxes** (§6); runs A+B are kept as a second, differently-configured check.
 
 * **Exact family** [proved, exact arithmetic]: a profile π of 52 axis-parallel uniform pieces per period (pitch 1/5)
   plus Lebesgue on `y ∈ [9/5, 2]`, and a corner module ν of 36 pieces plus Lebesgue on `[9/5, 2]²`, all masses rational
@@ -482,7 +483,15 @@ Together with Lemma Z (θ = 0) this covers every pose of the D4 fundamental doma
 Every root is fully verified by one of the two program versions; both are sound by the same lemmas (run B's version
 differs only by the added case split, which only adds certifications).
 
-V2_RUN_PLACEHOLDER
+**Run V2 (the certificate of record)** (`qx2_data/cert/runV2_cdade4b6_full.*`): the same code as run B (sha
+`cdade4b6c105f991e21f8a23877dfd4b92db5ea25df3c29d7999cee8d081a1b7`, commit 0e303ca), all 9,800 roots, same settings;
+11 processes, 6,836 s wall, 74,551 CPU-s; 54,358 boxes, max depth 17; leaves PIECE 15,926, EXACT 9,763, EXACT0 381,
+EXACT45 759, CAP 374, LEB 689, SYM 1,171, AXIS 61, EMPTY 2,955; **UNCERTIFIED 0: VERIFIED-D4** (θ > 0; θ = 0 by Lemma Z).
+
+Reproduce: `cd s12/search; python3 qx2_zm.py axis qx2_data/L4_k02_box7.txt` (Lemma Z, seconds);
+`python3 qx2_family_check.py qx2_data/L4_k02_family.txt qx2_data/L4_k02_box7.txt`;
+`taskset -c 0-10 python3 qx2_zm.py qx2_data/L4_k02_box7.txt --depth 18 --nproc 11 --exact-umax 1/2 --exact-from 3`
+(≈ 2 h on 11 cores).
 
 
 ## 7. Open items

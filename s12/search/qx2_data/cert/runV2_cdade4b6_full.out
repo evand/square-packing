@@ -1,0 +1,31 @@
+zeromargin.py sha256 640fe453c1a32f4aa580ca2b1261c6406923a4d7c131f65604a432c7fc2086ab (= pinned)
+sha256 cdade4b6c105f991e21f8a23877dfd4b92db5ea25df3c29d7999cee8d081a1b7  qx2_zm.py
+sha256 ee3e2915349b8795128417bca6414b205d526db9f01f88cd4cd32c32e8d760ac  zm_mixed.py
+sha256 640fe453c1a32f4aa580ca2b1261c6406923a4d7c131f65604a432c7fc2086ab  zeromargin.py
+sha256 bb89de15ecf5821dd7e1a36ebab8a50d792a406b7fb0f5cb38059f99ef74aae5  mixed_cover.py
+sha256 c0a6750997897c21ffc693df6df97f89a248dd9eb588a2fe2b83bf359793694b  input
+argv: qx2_zm.py qx2_data/L4_k02_box7.txt --depth 18 --nproc 11 --exact-umax 1/2 --exact-from 3 --resume ../runs/qx2_cert/L4_k02_V2.jsonl --unc-out ../runs/qx2_cert/L4_k02_V2_unc.txt --progress 500
+container [0,7]^2, 0 points, 800 segments on 60 lines, Lebesgue square [9/5,26/5]^2; total 5701378693611/125000000000 = 45.611029548888
+D4 roots [0,m/2]^2 x u in [0,1/2]: 9800 roots; depth 18; EXACT on for u1 <= 1/2
+  500/9800 roots, 500 boxes, uncert 0, 0s
+  1000/9800 roots, 1000 boxes, uncert 0, 0s
+  1500/9800 roots, 1500 boxes, uncert 0, 0s
+  2000/9800 roots, 2596 boxes, uncert 0, 71s
+  2500/9800 roots, 3382 boxes, uncert 0, 84s
+  3000/9800 roots, 3904 boxes, uncert 0, 89s
+  3500/9800 roots, 4552 boxes, uncert 0, 100s
+  4000/9800 roots, 7934 boxes, uncert 0, 209s
+  4500/9800 roots, 16690 boxes, uncert 0, 1679s
+  5000/9800 roots, 22584 boxes, uncert 0, 2600s
+  5500/9800 roots, 27782 boxes, uncert 0, 3043s
+  6000/9800 roots, 31108 boxes, uncert 0, 3372s
+  6500/9800 roots, 35488 boxes, uncert 0, 3985s
+  7000/9800 roots, 40162 boxes, uncert 0, 4890s
+  7500/9800 roots, 43118 boxes, uncert 0, 5388s
+  8000/9800 roots, 45646 boxes, uncert 0, 5709s
+  8500/9800 roots, 47532 boxes, uncert 0, 5916s
+  9000/9800 roots, 49894 boxes, uncert 0, 6166s
+  9500/9800 roots, 52710 boxes, uncert 0, 6509s
+done in 6836s: boxes 54358, max depth 17, CPU 74551 s
+  leaves: LEB 689  CAP 374  EXACT 9763  EXACT0 381  EXACT45 759  AXIS 61  SYM 1171  PIECE 15926  ADM 0  P1 0  MIX 0  SPLIT 0  EMPTY 2955  UNCERT 0
+VERIFIED-D4 (u > 0; u = 0 face: qx2_exact.py axis)
