@@ -351,14 +351,27 @@ class Exact:
         self.stat = dict(cand=0, combos=0)
 
     # ------------------------------------------------------------------ geometry of the box
+    @staticmethod
+    def tb(box):
+        """trig bounds valid for u in [u0, ue], ue = min(u1, tan 22.5deg): Lemma E certifies only theta <= 45 deg (the
+        rest of a box straddling 45 deg is the diagonal image of certified poses: SYM).  On [0, 45 deg] cos decreases,
+        sin and w = cos + sin increase, cos - sin >= 0 decreases.  Returns c0, s0 (at u0) and cmin, wmax, cms_min
+        (lower bound of cos, upper bound of w, lower bound of cos - sin on [u0, ue])."""
+        u0, u1 = box[4], box[5]
+        c0, s0 = zm.trig(u0)
+        if u1 * u1 + 2 * u1 - 1 <= 0:
+            c1, s1 = zm.trig(u1)
+            return dict(c0=c0, s0=s0, cmin=c1, wmax=c1 + s1, cms_min=c1 - s1)
+        return dict(c0=c0, s0=s0, cmin=F(7071, 10000), wmax=F(14143, 10000), cms_min=F(0))
+
     def rect(self, box):
         """lower edges of the admissible centre rectangle on the bin: ('R', cx0) or ('W', w/2) per axis, or None
         when the wall crosses the box side within the bin (the driver then splits the bin)."""
         cx0, cx1, cy0, cy1, u0, u1 = box
-        if u1 >= F(2, 5): return None
+        if u0 * u0 + 2 * u0 - 1 >= 0 or u1 > HALF: return None
         m = self.m
-        c1, s1 = zm.trig(u1); c0, s0 = zm.trig(u0)
-        w0, w1 = c0 + s0, c1 + s1                 # w increasing on [0, 45 deg]
+        T = self.tb(box)
+        w0, w1 = T['c0'] + T['s0'], T['wmax']     # w increasing on [u0, ue]
         if cx1 + w1 / 2 > m or cy1 + w1 / 2 > m: return None
         out = []
         for lo in (cx0, cy0):
@@ -392,8 +405,8 @@ class Exact:
         fixed depth d* of the convex branch (s + c - d)^2 / (2 s c) (an affine minorant).  Requires Q ⊂ {x, y <= b}."""
         cx0, cx1, cy0, cy1, u0, u1 = box
         a, b = self.Ua, self.Ub
-        c1, s1 = zm.trig(u1); c0, s0 = zm.trig(u0)
-        w1 = c1 + s1; w0 = c0 + s0                        # w increasing on the bin (u1 < 2/5)
+        T = self.tb(box); c0, s0 = T['c0'], T['s0']
+        w1 = T['wmax']; w0 = c0 + s0                      # w increasing on [u0, ue]
         if cx1 + w1 / 2 <= a or cy1 + w1 / 2 <= a: return 'none'
         if cx1 + w1 / 2 > b or cy1 + w1 / 2 > b: return None
         caps = []
@@ -419,10 +432,10 @@ class Exact:
         W = g_y - quad(alpha, beta) if z >= 0 (z = beta C - alpha S; both the triangle and the strip y-cap)."""
         cx0, cx1, cy0, cy1, u0, u1 = box
         a = self.Ua
-        c1, s1 = zm.trig(u1); c0, s0 = zm.trig(u0)
-        if cx1 - (c1 - s1) / 2 > a: return False            # x_BL = cx - (c - s)/2 <= a
+        T = self.tb(box); c0, s0, cms = T['c0'], T['s0'], T['cms_min']
+        if cx1 - cms / 2 > a: return False                  # x_BL = cx - (c - s)/2 <= a
         if cx0 + (c0 + s0) / 2 < a: return False            # x_BR = cx + (c + s)/2 >= a
-        if cy0 + (c1 - s1) / 2 < a: return False            # y_TL = cy + (c - s)/2 >= a
+        if cy0 + cms / 2 < a: return False                  # y_TL = cy + (c - s)/2 >= a
         # X(a, a) = ((a - cx) C + (a - cy) S) / N <= 1/2, worst at (cx0, cy0)
         return nonneg(psub(PN2, padd(pscale(PC, a - cx0), pscale(PS, a - cy0))), u0, u1, 4)
 
@@ -432,8 +445,8 @@ class Exact:
         A_LL = (z'+)^2 / (2 S C N^2) >= 0, and -g_x + A_LL = Q'(alpha', beta'') when z' >= 0."""
         cx0, cx1, cy0, cy1, u0, u1 = box
         a = self.Ua
-        c1, s1 = zm.trig(u1); c0, s0 = zm.trig(u0)
-        return cx0 - (c0 - s0) / 2 >= a and cy0 + (c1 - s1) / 2 >= a
+        T = self.tb(box); c0, s0, cms = T['c0'], T['s0'], T['cms_min']
+        return cx0 - (c0 - s0) / 2 >= a and cy0 + cms / 2 >= a
 
     def zcut_line(self):
         """the c-line z = beta C - alpha S = 0 (the vertex (a, a) on the bottom edge)"""
@@ -532,8 +545,9 @@ class Exact:
 
     # ------------------------------------------------------------------ main entry
     def certify(self, box, tau=F(1), lam=F(0)):
-        """True only if mu(Q) >= tau at every admissible pose of the box with u in (u0, u1] (u in [u0,u1] if u0>0).
-        In the corner regime (Lemma E'') both McCormick anchors are tried."""
+        """True only if mu(Q) >= tau at every admissible pose of the box with u in (u0, ue] (u in [u0, ue] if u0 > 0),
+        ue = min(u1, tan 22.5deg): poses beyond 45 deg are left to SYM.  All polynomial checks run on [u0, u1] (a
+        superset); the formulas are only claimed for u <= ue.  In the corner regimes both McCormick anchors are tried."""
         self.anchor = 'hi'
         ok, why = self._certify(box, tau, lam)
         if not ok and self._had_corner:
@@ -866,7 +880,22 @@ def cert_cap(box, B, cov, a, b):
         if lo0 < a: return False                 # the width condition needs the centre on U's side
         o0, o1 = (cx0, cx1) if axis == 0 else (cy0, cy1)
         key = ('H', a) if axis == 0 else ('V', a)
-        rho = line_min_density(cov, key, o0 - h, o1 + h)
+        t0, t1 = o0 - h, o1 + h                  # a range containing the chord Q ∩ {line}
+        u0, u1 = box[4], box[5]
+        if u0 > 0:
+            # triangle cap (d <= min(sin, cos) on the bin): the chord is the cap's hypotenuse, from the extreme vertex
+            # V (BL for y = a, TL for x = a) to V + (d/s)(c, s) resp. (d/c)(-s, c) [y = a], or V + (d/c)(c, s) resp.
+            # (d/s)(s, -c) [x = a]; along the line it spans [p_V - s d/c, p_V + c d/s] (y = a, p = x) or
+            # [p_V - c d/s, p_V + s d/c] (x = a, p = y), with x_BL = cx - (c - s)/2, y_TL = cy + (c - s)/2.
+            c0, s0 = zm.trig(u0); c1, s1 = zm.trig(u1)
+            if d <= min(s0, c1) and s0 > 0 and c1 > 0:
+                if axis == 0:     # y = a, parameter x, vertex BL
+                    t0 = max(t0, cx0 - (c0 - s0) / 2 - (s1 / c1) * d)
+                    t1 = min(t1, cx1 - (c1 - s1) / 2 + (c0 / s0) * d)
+                else:             # x = a, parameter y, vertex TL
+                    t0 = max(t0, cy0 + (c1 - s1) / 2 - (c0 / s0) * d)
+                    t1 = min(t1, cy1 + (c0 - s0) / 2 + (s1 / c1) * d)
+        rho = line_min_density(cov, key, t0, t1)
         if not (d <= rho): return False
         ok_any = True
     return True
@@ -887,7 +916,7 @@ class QXChecker(ZM.MixedChecker):
         zc = self.zc
         stats = {'ADM': 0, 'CORE': 0, 'P1': 0, 'MIX': 0, 'CHAIN': 0, 'TRI': 0, 'PIECE': 0, 'EMPTY': 0,
                  'UNCERT': 0, 'boxes': 0, 'maxdepth': 0, 'THR': 0, 'LIN': 0, 'TPTS': 0, 'SPLIT': 0, 'cpu': 0.0,
-                 'LEB': 0, 'CAP': 0, 'EXACT': 0, 'EXACT0': 0, 'AXIS': 0}
+                 'LEB': 0, 'CAP': 0, 'EXACT': 0, 'EXACT0': 0, 'EXACT45': 0, 'AXIS': 0, 'SYM': 0}
         unc = []
         _t0 = time.process_time(); leaves = []
         n = len(zc.P)
@@ -917,6 +946,10 @@ class QXChecker(ZM.MixedChecker):
             # ---- new primitives
             if u1 == 0:
                 kind, wit = 'AXIS', None          # only theta = 0 poses left (after clip_bin): Lemma Z
+            elif u0 * u0 + 2 * u0 - 1 >= 0:
+                # theta >= 45 deg on the whole box: the diagonal image (cy, cx, 90deg - theta) has theta' <= 45 deg and a
+                # centre in [0, m/2]^2, i.e. lies in a root box with u <= tan(22.5deg) < 1/2 (D4 invariance, checked)
+                kind, wit = 'SYM', None
             elif cert_leb(box, B, self.Ua, self.Ub):
                 kind, wit = 'LEB', None
             elif cert_cap(box, B, self.cov, self.Ua, self.Ub):
@@ -948,7 +981,7 @@ class QXChecker(ZM.MixedChecker):
                     and u1 > u0:
                 ok, why = self.exact.certify(box)
                 if ok:
-                    kind = 'EXACT0' if u0 == 0 else 'EXACT'; wit = why
+                    kind = 'EXACT0' if u0 == 0 else ('EXACT45' if u1 * u1 + 2 * u1 - 1 > 0 else 'EXACT'); wit = why
             if kind is not None:
                 stats[kind] += 1
                 if thr == 'T': stats['THR'] += 1
@@ -1029,7 +1062,7 @@ def axis_face(cov, lo=HALF, hi=None, verbose=True):
 
 # ============================================================================================== driver
 KEYS = ('ADM', 'CORE', 'P1', 'MIX', 'CHAIN', 'TRI', 'PIECE', 'EMPTY', 'UNCERT', 'boxes', 'maxdepth', 'THR', 'LIN',
-        'TPTS', 'SPLIT', 'cpu', 'LEB', 'CAP', 'EXACT', 'EXACT0', 'AXIS')
+        'TPTS', 'SPLIT', 'cpu', 'LEB', 'CAP', 'EXACT', 'EXACT0', 'EXACT45', 'AXIS', 'SYM')
 _CHK = None
 
 
@@ -1116,7 +1149,7 @@ def main():
             print(f"  {i+1}/{len(todo)} roots, {tot['boxes']} boxes, uncert {tot['UNCERT']}, {time.time()-t0:.0f}s", flush=True)
     if pool: pool.close(); pool.join()
     print(f"done in {time.time()-t0:.0f}s: boxes {tot['boxes']}, max depth {tot['maxdepth']}, CPU {tot['cpu']:.0f} s")
-    print("  leaves: " + "  ".join(f"{k} {tot[k]}" for k in ('LEB', 'CAP', 'EXACT', 'EXACT0', 'AXIS', 'PIECE', 'ADM', 'P1', 'MIX',
+    print("  leaves: " + "  ".join(f"{k} {tot[k]}" for k in ('LEB', 'CAP', 'EXACT', 'EXACT0', 'EXACT45', 'AXIS', 'SYM', 'PIECE', 'ADM', 'P1', 'MIX',
                                                                'SPLIT', 'EMPTY', 'UNCERT')))
     if unc_all:
         print("uncertified boxes (cx0 cx1 cy0 cy1 theta0 theta1 deg):")

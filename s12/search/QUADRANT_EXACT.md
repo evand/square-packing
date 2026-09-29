@@ -27,7 +27,7 @@ RUN_STATUS_PLACEHOLDER
 * **What the certificate claims**: every closed unit square `Q ⊂ [0,7]²` has `μ₇(Q) ≥ 1`.  It is split as
   (i) the θ = 0 face, **Lemma Z**, certified exactly (`qx2_zm.py axis`: 900 one-sided limit corners, minimum exactly 1,
   188 exactly tight; and on the quadrant model, `qx2_exact.py axis`: 907 corners, min exactly 1);
-  (ii) θ ∈ (0°, 53°] on the D4 fundamental domain, by the box checker `qx2_zm.py` (sha256 `ae08dd27…5fc8`), whose leaves
+  (ii) θ ∈ (0°, 53°] on the D4 fundamental domain, by the box checker `qx2_zm.py` (sha256 `7f6554be…d96b`), whose leaves
   are zm_mixed's primitives (pinned `zm_mixed.py` `ee3e2915…60ac` and `zeromargin.py` `640fe453…86ab`, unedited) plus new
   exact primitives with proofs in §4: **LEB** (Lemma U), **CAP** (Lemma K), **EXACT** (Lemma E with E′/E″, the
   zero-margin one), **AXIS** (boxes whose admissible poses are θ = 0 only).
@@ -406,32 +406,39 @@ zm_mixed disables polygons in `--cert-mode` because they had not been audited.  
 Nothing wrong was found.  The polygon bound is sound; it is simply lossy (`O(box)` on the part of ∂Q inside U), which
 is why the straddle region is slow.
 
-## 5. Tests (all exact unless stated)
+## 5. Tests (all exact unless stated; `qx2_zm_test.py`, final code unless stated)
 
 ### 5.1 Unit tests
-* `qx2_zm_test.py opts`: chord-option formulas vs direct exact chords, 6000 checks, 0 mismatches.
+* `opts`: chord-option formulas vs direct exact chords, 6000 checks, 0 mismatches.
 * `poly`: Bernstein nonnegativity vs dense exact evaluation, 400 random polynomials, 0 false positives.
 * `capleb`: 557 LEB + 58 CAP boxes on the real cover, 7,380 exact pose masses, 0 below 1.
+* `corner`, `cuts`: the E″ identities (corner3, xcut) at 12,709 exact poses, 0 failures (§4.4).
 
 ### 5.2 Lemma E soundness and completeness
-* `exact` (real cover, random boxes incl. the wall and B families and u₀ = 0): certifying `τ = (min of 60 exact sampled
-  masses) + 10⁻⁹` would be a bug: 0 of 216 boxes.
-* `adv` (random D4-symmetric covers with 80–112 random piecewise-uniform lines and a Lebesgue square, boxes away from
-  U or straddling its boundary, u₀ ∈ {0, 1/20, 1/10}): `τ = float minimum (3000 samples + polish) + 10⁻⁷` must not
-  certify: **0 of ~1,000** boxes over 12 seeds (it certifies at `min − 10⁻⁵` in 5–20 %, the rest are `rect` / dense-cover
-  incompleteness).
-* `gap`: the largest certified τ vs the float minimum: median gap 1·10⁻⁴, 80 % below 2.5·10⁻⁴ (the float minimum is
-  itself only an upper bound), 0 unsound.
-* `slope` (zero margin at u → 0): boxes `[x, x + h] × [½, ½ + h] × [0, u₁]` and at `cy = 3/2`: the claim
-  `mass ≥ 1 + λu` with λ = (float minimum growth over the box) + 0.02 must be refused: refused in 80/80; with
-  λ = growth − 0.05 certified in 39/80.
+* `exact` (real cover, random boxes in the wall family, the B family, the corner germs `(3/2, 3/2)`, `(3/2, 23/10)`,
+  `(23/10, 3/2)`, `u₀ ∈ {0, …}`): certifying `τ = (min of 60 exact sampled masses) + 10⁻⁹` would be a bug: 0 of 516
+  boxes (earlier code versions and the final one); completeness at `τ = min − 10⁻⁴`: 57–87 %.
+* `adv` (random D4-symmetric covers with 80–112 random piecewise-uniform lines and a Lebesgue square; boxes away from
+  U, straddling its boundary, or near its corner; `u₀ ∈ {0, 1/20, 1/10}`): `τ = float minimum (3000 samples + polish)
+  + 10⁻⁷` must not certify: **0 of ≈ 1,400** boxes over 17 seeds.
+* `gap`: the largest certified τ vs the float minimum over the box: median gap 7·10⁻⁵, 80 % below 1.3·10⁻⁴, max 8·10⁻³
+  (the float minimum is itself only an upper bound), 0 unsound (40 boxes, final code).
+* `slope` (zero margin at u → 0): boxes `[x, x+h] × [½, ½+h] × [0, u₁]` and at `cy = 3/2`: the claim `mass ≥ 1 + λu`
+  with λ = (float minimum growth over the box) + 0.02 must be refused: refused in 140/140; with λ = growth − 0.05
+  certified in 94/140.
+* `leafstress`: the checker re-run with a leaf dump on 5 roots at the tight places (wall family, corner germs `(3/2, 3/2)`, `(3/2, 23/10)`, `(23/10, 3/2)`, left B family), 40 EXACT/EXACT0/PIECE leaves, 1,200 exact masses at random admissible rational poses of the leaves (corners, faces, tiny u favoured): minimum `1.0000048`, 0 below 1.
+* A natural rejection (§1.5): on the invalid `L2_k02` cover the checker left uncertified exactly the boxes containing
+  the two bad corner germs; every other root verified.
 
-### 5.3 Rejection covers (`qx2_zm_test.py holes`, files `runs/qx2_rej/`)
-| cover | construction | Lemma Z | box checker (wall family, cx ∈ [2.9, 3.3], cy ∈ [½, 0.6], u ≤ 0.01) |
+### 5.3 Rejection covers (`qx2_zm_test.py holes`)
+| cover (from the final L4 cover) | construction | Lemma Z | box checker (wall family, cx ∈ [2.9, 3.3], cy ∈ [½, 0.6], u ≤ 0.01) |
 |---|---|---|---|
-| R_scale | all segment masses × (1 − 10⁻⁶) | min 0.999999: VIOLATED | NOT VERIFIED (all u₀ = 0 boxes on the family) |
-| R_piece | line y = 1, x ∈ [3, 3.2] (+ D4 images) lighter by 10⁻⁴ | 0.999998: VIOLATED | NOT VERIFIED |
-| R_seam | seam x = 3, y ∈ [0.8, 1] (+ images) lighter by 10⁻⁴ | 0.99996: VIOLATED | NOT VERIFIED |
+| R_scale | all segment masses × (1 − 10⁻⁶) | min 0.999999: VIOLATED | NOT VERIFIED: 32 uncertified boxes = every u₀ = 0 box on the family (no EXACT0 leaf) |
+| R_piece | line y = 1, x ∈ [3, 3.2] (+ D4 images) lighter by 10⁻⁴ | 0.999998: VIOLATED | NOT VERIFIED: 32 uncertified boxes = every u₀ = 0 box on the family (no EXACT0 leaf) |
+| R_seam | seam x = 3, y ∈ [0.8, 1] (+ images) lighter by 10⁻⁴ | 0.99996: VIOLATED | NOT VERIFIED: 32 uncertified boxes = every u₀ = 0 box on the family (no EXACT0 leaf) |
+| REJECTED_L2_k02 | the first exact solution (germ violation 6.4·10⁻⁵) | min 1: passes (the violation is at θ → 0⁺ only) | NOT VERIFIED exactly at the two bad germs (runs `L2_k02_diag*`) |
+
+(On the earlier L2 cover the same three holes were rejected by both Lemma Z and the box checker.)
 
 ## 6. The run
 

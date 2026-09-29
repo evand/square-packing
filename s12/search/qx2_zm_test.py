@@ -453,6 +453,31 @@ def t_cuts(n=4000, seed=121):
     print(f"[xcut] {nbox} boxes, {poses} exact poses: failures {bad}  {'ok' if bad == 0 else 'FAIL'}")
 
 
+def t_captangent(path, n=3000, seed=171):
+    """Lemma K near tangency: boxes whose squares touch the lines x = a / y = a from inside U at a vertex (the refined
+    chord range of the triangle cap); exact masses at random admissible poses of every certified box."""
+    cov = ZM.Cover(MC.load(path)); a, b = X.u_square(cov)
+    rng = random.Random(seed); ncert = 0; checks = 0; bad = 0
+    for it in range(n):
+        u0 = F(rng.randint(1, 390), 1000); du = F(1, rng.choice([100, 1000, 10000]))
+        u1 = min(u0 + du, F(1, 2))
+        c, s = zm.trig(u0); w = c + s
+        h = F(1, rng.choice([160, 640, 2560]))
+        # centre so that min_x Q ~ a (and/or min_y Q ~ a)
+        cx0 = a + w / 2 - h * F(rng.randint(-2, 2), 2)
+        cy0 = a + w / 2 - h * F(rng.randint(-2, 2), 2) if rng.random() < 0.5 else F(rng.randint(2300, 3400), 1000)
+        if rng.random() < 0.5: cx0, cy0 = cy0, cx0
+        box = (cx0, cx0 + h, cy0, cy0 + h, u0, u1)
+        B = zm.bin_data(u0, u1)
+        if not X.cert_cap(box, B, cov, a, b) or X.cert_leb(box, B, a, b): continue
+        ncert += 1
+        for p in sample_poses(box, rng, 10):
+            checks += 1
+            v = ZM.exact_mass(cov, *p)
+            if v < 1: bad += 1; print("  VIOLATION", [float(t) for t in box], [float(t) for t in p], float(v))
+    print(f"[captangent] {ncert} CAP-certified tangent boxes, {checks} exact poses, below 1: {bad}  {'ok' if bad == 0 else 'FAIL'}")
+
+
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(); ap.add_argument('what'); ap.add_argument('path', nargs='?')
     ap.add_argument('--n', type=int, default=40); ap.add_argument('--seed', type=int, default=3)
@@ -469,6 +494,7 @@ if __name__ == '__main__':
     elif a.what == 'slope': t_slope(a.path, n=a.n, seed=a.seed, region=reg or (2.5, 3.5, 0.5, 0.52))
     elif a.what == 'corner': t_corner(a.n, a.seed)
     elif a.what == 'cuts': t_cuts(a.n, a.seed)
+    elif a.what == 'captangent': t_captangent(a.path, a.n, a.seed)
     elif a.what == 'leafstress':
         R_ = [tuple(F(v) for v in r.split(',')) for r in a.region.split(';')]
         t_leafstress(a.path, R_, per=a.n, seed=a.seed)
