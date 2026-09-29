@@ -217,7 +217,7 @@ def lsorted : List LLine → Bool
 /-- **The L-block check.** -/
 def lblkOk (S Q R x0 x1 y0 y1 U0 U1 : ℕ) (cls : List (SegE × ℕ)) (tag : ℕ) (B : LBlk) : Bool :=
   lsorted B.lines &&
-  B.lines.all (fun l => lcertOk Q R x0 x1 y0 y1 U0 U1 l && lpcsOk S Q tag cls l) &&
+  B.lines.all (fun l => Nat.ble l.dir 1 && lcertOk Q R x0 x1 y0 y1 U0 U1 l && lpcsOk S Q tag cls l) &&
   Nat.beq B.corners.length 4 &&
   B.corners.all (fun c => Nat.beq c.length B.lines.length) &&
   cornerOk Q R S U0 U1 cls B.lg x0 y0 (B.lines.zip (B.corners.getD 0 [])) &&

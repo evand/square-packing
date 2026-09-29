@@ -900,6 +900,556 @@ lemma chord {S Q R x0 x1 y0 y1 U0 U1 : ℕ} (hQ : 0 < Q) (hR : 0 < R) {c : ℝ �
     have e3 := le_trans e1 e2
     rw [le_div_iff₀ hsp] at e3
     nlinarith
+
+/-! ## 4.  The parts of a line and of a block -/
+
+lemma xk_nonneg {S Q R x0 x1 y0 y1 U0 U1 : ℕ} (hQ : 0 < Q) (hR : 0 < R) {c : ℝ × ℝ} {u : ℝ}
+    (P : Pose S Q R x0 x1 y0 y1 U0 U1 c u) {l : LLine} {t k : ℕ} (hk : k < 4)
+    (hro : rolesOk R U0 U1 l.dir l.roles = true) (hr : role l.roles k ≠ 0)
+    (h : admK Q R x0 x1 y0 y1 U0 U1 (lpx l t) (lpy l t) k = true) : 0 ≤ xk Q l t k c u := by
+  have g := admK_sound hQ hR P.hU01 P.hU1 h P.hx0 P.hx1 P.hy0 P.hy1 P.hu0 P.hu1 P.hwx P.hwy
+  obtain ⟨_, h2⟩ := rolesOk_k hro hk
+  rcases h2 with h2 | ⟨hS, hC⟩
+  · exact absurd h2 hr
+  have hsp : 0 < sig (ktype l.dir k) u := by
+    rcases ktype_cases l.dir k with ht | ht
+    · exact sig_pos hR ⟨by rw [ht]; norm_num, fun _ => hS ht, fun h => by rw [ht] at h; omega⟩
+        (Or.inl ht) P.hu0 P.hu1
+    · exact sig_pos hR ⟨by rw [ht]; norm_num, fun h => by rw [ht] at h; omega, fun _ => hC (by omega)⟩
+        (Or.inr ht) P.hu0 P.hu1
+  have hQr : (0 : ℝ) < Q := by exact_mod_cast hQ
+  unfold xk
+  apply div_nonneg _ hsp.le
+  nlinarith
+
+lemma Xup_nonneg {S Q R x0 x1 y0 y1 U0 U1 : ℕ} (hQ : 0 < Q) (hR : 0 < R) {c : ℝ × ℝ} {u : ℝ}
+    (P : Pose S Q R x0 x1 y0 y1 U0 U1 c u) {l : LLine} (h : lcertOk Q R x0 x1 y0 y1 U0 U1 l = true) :
+    0 ≤ Xup Q l c u := by
+  obtain ⟨_, _, hro, hk⟩ := lcert_spec h
+  unfold Xup
+  refine le_foldr_min _ _ _ _ (fun k hk' => ?_) (Nat.cast_nonneg _)
+  simp only [typedU, List.mem_filter, List.mem_range, decide_eq_true_eq] at hk'
+  exact xk_nonneg hQ hR P hk'.1 hro (by omega) ((hk k hk'.1).1 hk'.2)
+
+lemma Ydn_nonneg {S Q R x0 x1 y0 y1 U0 U1 : ℕ} (hQ : 0 < Q) (hR : 0 < R) {c : ℝ × ℝ} {u : ℝ}
+    (P : Pose S Q R x0 x1 y0 y1 U0 U1 c u) {l : LLine} (h : lcertOk Q R x0 x1 y0 y1 U0 U1 l = true) :
+    0 ≤ Ydn Q l c u := by
+  obtain ⟨_, _, hro, hk⟩ := lcert_spec h
+  unfold Ydn
+  refine le_foldr_min _ _ _ _ (fun k hk' => ?_) (Nat.cast_nonneg _)
+  simp only [typedD, List.mem_filter, List.mem_range, decide_eq_true_eq] at hk'
+  exact xk_nonneg hQ hR P hk'.1 hro (by omega) ((hk k hk'.1).2.1 hk'.2)
+
+/-- The segment of a piece. -/
+def pent (cls : List (SegE × ℕ)) (p : ℕ × ℕ × ℕ) : SegE := (cls.getD (Nat.sub p.1 1) ec0).1
+
+/-- The parts of a line at a pose: down zone (from `b − Y`), core, up zone (to `a + X`). -/
+noncomputable def dnPart (Q : ℕ) (cls : List (SegE × ℕ)) (l : LLine) (c : ℝ × ℝ) (u : ℝ)
+    (p : ℕ × ℕ × ℕ) : SegE × ℝ × ℝ :=
+  (pent cls p, min ((p.2.2 : ℝ) / Q) (max ((p.2.1 : ℝ) / Q) (((l.b : ℝ) - Ydn Q l c u) / Q)),
+    (p.2.2 : ℝ) / Q)
+noncomputable def corePart (Q : ℕ) (cls : List (SegE × ℕ)) (p : ℕ × ℕ × ℕ) : SegE × ℝ × ℝ :=
+  (pent cls p, (p.2.1 : ℝ) / Q, (p.2.2 : ℝ) / Q)
+noncomputable def upPart (Q : ℕ) (cls : List (SegE × ℕ)) (l : LLine) (c : ℝ × ℝ) (u : ℝ)
+    (p : ℕ × ℕ × ℕ) : SegE × ℝ × ℝ :=
+  (pent cls p, (p.2.1 : ℝ) / Q,
+    max ((p.2.1 : ℝ) / Q) (min ((p.2.2 : ℝ) / Q) (((l.a : ℝ) + Xup Q l c u) / Q)))
+
+noncomputable def lparts (Q : ℕ) (cls : List (SegE × ℕ)) (l : LLine) (c : ℝ × ℝ) (u : ℝ) :
+    List (SegE × ℝ × ℝ) :=
+  l.dn.map (dnPart Q cls l c u) ++ l.core.map (corePart Q cls) ++ l.up.map (upPart Q cls l c u)
+
+lemma lpc_spec {S tag : ℕ} {cls : List (SegE × ℕ)} {l : LLine} {zlo zhi : ℕ} {p : ℕ × ℕ × ℕ}
+    (htag : 0 < tag) (h : lpcOk S tag cls l zlo zhi p = true) :
+    (pent cls p, tag) ∈ cls ∧ onLine S l.dir l.K (pent cls p) = true ∧
+      slo S l.dir (pent cls p) ≤ p.2.1 ∧ p.2.1 ≤ p.2.2 ∧ p.2.2 ≤ shi S l.dir (pent cls p) ∧
+      zlo ≤ p.2.1 ∧ p.2.2 ≤ zhi := by
+  simp only [lpcOk, Bool.and_eq_true, Nat.beq_eq, Nat.ble_eq] at h
+  obtain ⟨⟨⟨⟨⟨⟨ht, hon⟩, h1⟩, h2⟩, h3⟩, h4⟩, h5⟩ := h
+  have hm := getD_mem_of_tag htag ht
+  refine ⟨?_, hon, h1, h2, h3, h4, h5⟩
+  have : (pent cls p, tag) = cls.getD (Nat.sub p.1 1) ec0 := by
+    unfold pent; rw [← ht]
+  rw [this]; exact hm
+
+lemma psorted_pairwise : ∀ L : List (ℕ × ℕ × ℕ), psorted L = true → (∀ p ∈ L, p.2.1 ≤ p.2.2) →
+    L.Pairwise fun p q => p.2.2 ≤ q.2.1
+  | [], _, _ => List.Pairwise.nil
+  | [_], _, _ => List.pairwise_singleton _ _
+  | p :: q :: t, h, hle => by
+    simp only [psorted, Bool.and_eq_true, Nat.ble_eq] at h
+    have ih := psorted_pairwise (q :: t) h.2 (fun r hr => hle r (List.mem_cons_of_mem _ hr))
+    refine List.Pairwise.cons (fun r hr => ?_) ih
+    rcases List.mem_cons.mp hr with rfl | hr
+    · exact h.1
+    · have := List.rel_of_pairwise_cons ih hr
+      have hq := hle q (List.mem_cons_of_mem _ List.mem_cons_self)
+      omega
+
+
+lemma up_len {lo hi z : ℝ} (h : lo ≤ hi) : max lo (min hi z) - lo = max 0 (min (z - lo) (hi - lo)) := by
+  rcases le_total z lo with h1 | h1
+  · rw [min_eq_right (le_trans h1 h), max_eq_left h1, max_eq_left (by
+      exact le_trans (min_le_left _ _) (by linarith))]; ring
+  · rcases le_total z hi with h2 | h2
+    · rw [min_eq_right h2, max_eq_right h1, min_eq_left (by linarith), max_eq_right (by linarith)]
+    · rw [min_eq_left h2, max_eq_right h, min_eq_right (by linarith), max_eq_right (by linarith)]
+
+lemma dn_len {lo hi z : ℝ} (h : lo ≤ hi) : hi - min hi (max lo z) = max 0 (min (hi - z) (hi - lo)) := by
+  rcases le_total z lo with h1 | h1
+  · rw [max_eq_left h1, min_eq_right h, min_eq_right (by linarith), max_eq_right (by linarith)]
+  · rcases le_total z hi with h2 | h2
+    · rw [max_eq_right h1, min_eq_right h2, min_eq_left (by linarith), max_eq_right (by linarith)]
+    · rw [max_eq_right h1, min_eq_left h2, max_eq_left (by
+        exact le_trans (min_le_left _ _) (by linarith))]; ring
+
+lemma mm_scale {A B Q : ℝ} (hQ : 0 < Q) : max 0 (min (A / Q) (B / Q)) * Q = max 0 (min A B) := by
+  have key : ∀ {A B : ℝ}, A ≤ B → max 0 (min (A / Q) (B / Q)) * Q = max 0 (min A B) := by
+    intro A B h
+    rw [min_eq_left (div_le_div_of_nonneg_right h hQ.le), min_eq_left h]
+    rcases le_total 0 A with h0 | h0
+    · rw [max_eq_right (div_nonneg h0 hQ.le), max_eq_right h0]; field_simp
+    · rw [max_eq_left (div_nonpos_of_nonpos_of_nonneg h0 hQ.le), max_eq_left h0]; simp
+  rcases le_total A B with h | h
+  · exact key h
+  · rw [min_comm (A / Q), min_comm A]; exact key h
+
+/-- The density bound of one piece: `Q · pval ≥ ρ̂ · length` (length over `Q`). -/
+lemma piece_rho {D S : ℕ} (hD : 0 < D) (hS : 0 < S) {cls : List (SegE × ℕ)} {l : LLine}
+    {p : ℕ × ℕ × ℕ} (hon : onLine S l.dir l.K (pent cls p) = true) (lo' hi' : ℝ) (hlh : lo' ≤ hi') :
+    (rho S (D * S) cls l p : ℝ) * ((hi' - lo') * (D * S : ℕ))
+      ≤ (D * S : ℕ) * pval D (pent cls p, lo', hi') := by
+  have hQr : (0 : ℝ) < (D * S : ℕ) := by exact_mod_cast Nat.mul_pos hD hS
+  obtain ⟨_, _, _, hlt, _⟩ := onLine_spec (K := l.K) hD hS rfl hon
+  rw [pval_line hD hS rfl hon]
+  have hl : (0 : ℝ) < (shi S l.dir (pent cls p) : ℝ) - slo S l.dir (pent cls p) := by
+    have : (slo S l.dir (pent cls p) : ℝ) < shi S l.dir (pent cls p) := by exact_mod_cast hlt
+    linarith
+  have hr : (rho S (D * S) cls l p : ℝ) ≤ ((pent cls p).2.2.2.2 : ℝ) * (D * S : ℕ) /
+      ((shi S l.dir (pent cls p) : ℝ) - slo S l.dir (pent cls p)) := by
+    unfold rho
+    simp only [nat_div_eq, nat_mul_eq, nat_sub_eq]
+    have := Nat.cast_div_le (α := ℝ) (m := (pent cls p).2.2.2.2 * (D * S))
+      (n := shi S l.dir (pent cls p) - slo S l.dir (pent cls p))
+    rw [Nat.cast_mul, Nat.cast_sub hlt.le] at this
+    unfold pent at this ⊢
+    exact this
+  have hnn : 0 ≤ (hi' - lo') * (D * S : ℕ) := mul_nonneg (by linarith) hQr.le
+  calc (rho S (D * S) cls l p : ℝ) * ((hi' - lo') * (D * S : ℕ))
+      ≤ ((pent cls p).2.2.2.2 : ℝ) * (D * S : ℕ) /
+        ((shi S l.dir (pent cls p) : ℝ) - slo S l.dir (pent cls p)) * ((hi' - lo') * (D * S : ℕ)) :=
+        mul_le_mul_of_nonneg_right hr hnn
+    _ = (D * S : ℕ) * (((pent cls p).2.2.2.2 : ℝ) * (D * S : ℕ) * (hi' - lo') /
+        ((shi S l.dir (pent cls p) : ℝ) - slo S l.dir (pent cls p))) := by ring
+
+/-- The option `k + 1` at the up end is `i + s x_k`. -/
+lemma oval_up_xk (Q : ℕ) (l : LLine) (cap k : ℕ) (c : ℝ × ℝ) (u : ℝ) :
+    oval Q l true cap (k + 1) c u = sv l.iU + l.sU * xk Q l l.a k c u := by
+  simp only [oval, show k + 1 ≠ 0 by omega, if_false, if_true, show k + 1 - 1 = k by omega, xk]
+  ring
+lemma oval_dn_xk (Q : ℕ) (l : LLine) (cap k : ℕ) (c : ℝ × ℝ) (u : ℝ) :
+    oval Q l false cap (k + 1) c u = sv l.iD + l.sD * xk Q l l.b k c u := by
+  simp only [oval, show k + 1 ≠ 0 by omega, if_false, Bool.false_eq_true, show k + 1 - 1 = k by omega, xk]
+  ring
+
+lemma emin_le_cap (Q : ℕ) (l : LLine) (up : Bool) (cap : ℕ) (c : ℝ × ℝ) (u : ℝ) :
+    emin Q l up cap c u ≤ cap := (foldr_min_le _ _ _).1
+lemma emin_le_opt {Q : ℕ} {l : LLine} {up : Bool} {cap o : ℕ} (c : ℝ × ℝ) (u : ℝ)
+    (ho : isOpt l up o = true) (ho4 : o < 5) : emin Q l up cap c u ≤ oval Q l up cap o c u :=
+  (foldr_min_le _ _ _).2 o (by simp [opts, ho, ho4])
+
+/-- **The up gain**: `Q Σ pval(up parts) ≥ emin up`. -/
+lemma up_gain {D S R x0 x1 y0 y1 U0 U1 : ℕ} (hD : 0 < D) (hS : 0 < S) (hR : 0 < R)
+    {c : ℝ × ℝ} {u : ℝ} (P : Pose S (D * S) R x0 x1 y0 y1 U0 U1 c u) {cls : List (SegE × ℕ)}
+    {tag : ℕ} (htag : 0 < tag) {l : LLine}
+    (hc : lcertOk (D * S) R x0 x1 y0 y1 U0 U1 l = true)
+    (hup : ∀ p ∈ l.up, lpcOk S tag cls l l.a (l.a + l.du) p = true)
+    (hg : gainOk l.sU l.iU l.du 0 (upOff S (D * S) cls l) = true) :
+    emin (D * S) l true (capU S (D * S) cls l) c u
+      ≤ (D * S : ℕ) * ((l.up.map (upPart (D * S) cls l c u)).map (pval D)).sum := by
+  set Q := D * S with hQdef
+  have hQr : (0 : ℝ) < Q := by exact_mod_cast Nat.mul_pos hD hS
+  have hXd : Xup Q l c u ≤ l.du := (foldr_min_le _ _ _).1
+  have hsp : ∀ p ∈ l.up, (p.2.1 - l.a : ℕ) ≤ (p.2.2 - l.a : ℕ) ∧ p.2.2 ≤ l.a + l.du ∧ l.a ≤ p.2.1 ∧
+      p.2.1 ≤ p.2.2 := by
+    intro p hp
+    obtain ⟨_, _, _, h2, _, h4, h5⟩ := lpc_spec htag (hup p hp)
+    exact ⟨by omega, h5, h4, h2⟩
+  -- the ρ̂-sum is below `Q Σ pval`
+  have hsum : ((upOff S Q cls l).map fun p => (p.1 : ℝ) *
+        max 0 (min (Xup Q l c u - p.2.1) ((p.2.2 : ℝ) - p.2.1))).sum
+      ≤ (Q : ℝ) * ((l.up.map (upPart Q cls l c u)).map (pval D)).sum := by
+    unfold upOff
+    rw [List.map_map, List.map_map, ← List.sum_map_mul_left]
+    apply List.sum_le_sum
+    intro p hp
+    obtain ⟨_, hon, _, _, _, _, _⟩ := lpc_spec htag (hup p hp)
+    obtain ⟨_, _, ha, hlh⟩ := hsp p hp
+    simp only [Function.comp, upPart]
+    have hlh' : (p.2.1 : ℝ) / Q ≤ max ((p.2.1 : ℝ) / Q) (min ((p.2.2 : ℝ) / Q) (((l.a : ℝ) + Xup Q l c u) / Q)) :=
+      le_max_left _ _
+    have key := piece_rho hD hS hon _ _ hlh'
+    refine le_trans (le_of_eq ?_) key
+    rw [up_len (div_le_div_of_nonneg_right (by exact_mod_cast hlh) hQr.le)]
+    simp only [nat_sub_eq]
+    rw [Nat.cast_sub ha, Nat.cast_sub (le_trans ha hlh)]
+    congr 1
+    have e1 : ((l.a : ℝ) + Xup Q l c u) / Q - (p.2.1 : ℝ) / Q = (Xup Q l c u - (p.2.1 - l.a)) / Q := by ring
+    have e2 : (p.2.2 : ℝ) / Q - (p.2.1 : ℝ) / Q = ((p.2.2 - l.a) - (p.2.1 - l.a)) / Q := by ring
+    rw [e1, e2, ← hQdef, mm_scale hQr]
+  have hgl := gain_lb l.sU l.iU l.du 0 (upOff S Q cls l) hg (fun p hp => by
+    simp only [upOff, List.mem_map] at hp
+    obtain ⟨q, hq, rfl⟩ := hp
+    exact (hsp q hq).1) (Xup Q l c u) hXd
+  rcases foldr_min_mem (fun k => xk Q l l.a k c u) (l.du : ℝ) (typedU l) with h | ⟨k, hk, h⟩
+  · -- the end moves the whole zone: the cap
+    change Xup Q l c u = l.du at h
+    have hcap : (capU S Q cls l : ℝ) = ((upOff S Q cls l).map fun p => (p.1 : ℝ) *
+        max 0 (min (Xup Q l c u - p.2.1) ((p.2.2 : ℝ) - p.2.1))).sum := by
+      unfold capU
+      rw [gainSum_eq, Nat.cast_zero, zero_add]
+      unfold upOff
+      rw [List.map_map, List.map_map]
+      congr 1
+      apply List.map_congr_left
+      intro p hp
+      obtain ⟨h0, h1, ha, hlh⟩ := hsp p hp
+      simp only [Function.comp, nat_sub_eq, h]
+      rw [Nat.cast_sub h0, Nat.cast_sub ha, Nat.cast_sub (le_trans ha hlh)]
+      congr 1
+      have : ((p.2.2 : ℝ) - l.a) ≤ l.du := by
+        have : (p.2.2 : ℝ) ≤ l.a + l.du := by exact_mod_cast h1
+        linarith
+      rw [min_eq_right (by linarith), max_eq_right (by
+        have : (p.2.1 : ℝ) ≤ p.2.2 := by exact_mod_cast hlh
+        linarith)]
+    have := emin_le_cap Q l true (capU S Q cls l) c u
+    linarith
+  · -- the end is a threshold `x_k`
+    change Xup Q l c u = xk Q l l.a k c u at h
+    simp only [typedU, List.mem_filter, List.mem_range, decide_eq_true_eq] at hk
+    have ho : isOpt l true (k + 1) = true := by simp [isOpt, hk.2]; omega
+    have h1 := emin_le_opt (Q := Q) (cap := capU S Q cls l) c u ho (by omega)
+    rw [oval_up_xk, ← h] at h1
+    simp only [Nat.cast_zero, zero_add] at hgl
+    linarith
+
+/-- **The down gain**: `Q Σ pval(down parts) ≥ emin down`. -/
+lemma dn_gain {D S R x0 x1 y0 y1 U0 U1 : ℕ} (hD : 0 < D) (hS : 0 < S) (hR : 0 < R)
+    {c : ℝ × ℝ} {u : ℝ} (P : Pose S (D * S) R x0 x1 y0 y1 U0 U1 c u) {cls : List (SegE × ℕ)}
+    {tag : ℕ} (htag : 0 < tag) {l : LLine}
+    (hc : lcertOk (D * S) R x0 x1 y0 y1 U0 U1 l = true)
+    (hdn : ∀ p ∈ l.dn, lpcOk S tag cls l (l.b - l.dd) l.b p = true)
+    (hg : gainOk l.sD l.iD l.dd 0 (dnOff S (D * S) cls l) = true) :
+    emin (D * S) l false (capD S (D * S) cls l) c u
+      ≤ (D * S : ℕ) * ((l.dn.map (dnPart (D * S) cls l c u)).map (pval D)).sum := by
+  set Q := D * S with hQdef
+  have hQr : (0 : ℝ) < Q := by exact_mod_cast Nat.mul_pos hD hS
+  have hYd : Ydn Q l c u ≤ l.dd := (foldr_min_le _ _ _).1
+  obtain ⟨hba, hdd, _, _⟩ := lcert_spec hc
+  have hsp : ∀ p ∈ l.dn, (l.b - p.2.2 : ℕ) ≤ (l.b - p.2.1 : ℕ) ∧ l.b - l.dd ≤ p.2.1 ∧
+      p.2.2 ≤ l.b ∧ p.2.1 ≤ p.2.2 := by
+    intro p hp
+    obtain ⟨_, _, _, h2, _, h4, h5⟩ := lpc_spec htag (hdn p hp)
+    exact ⟨by omega, h4, h5, h2⟩
+  have hsum : ((dnOff S Q cls l).map fun p => (p.1 : ℝ) *
+        max 0 (min (Ydn Q l c u - p.2.1) ((p.2.2 : ℝ) - p.2.1))).sum
+      ≤ (Q : ℝ) * ((l.dn.map (dnPart Q cls l c u)).map (pval D)).sum := by
+    unfold dnOff
+    rw [List.map_reverse, List.sum_reverse, List.map_map, List.map_map, ← List.sum_map_mul_left]
+    apply List.sum_le_sum
+    intro p hp
+    obtain ⟨_, hon, _, _, _, _, _⟩ := lpc_spec htag (hdn p hp)
+    obtain ⟨_, h4, hb, hlh⟩ := hsp p hp
+    simp only [Function.comp, dnPart]
+    have hlh' : min ((p.2.2 : ℝ) / Q) (max ((p.2.1 : ℝ) / Q) (((l.b : ℝ) - Ydn Q l c u) / Q))
+        ≤ (p.2.2 : ℝ) / Q := min_le_left _ _
+    have key := piece_rho hD hS hon _ _ hlh'
+    refine le_trans (le_of_eq ?_) key
+    rw [dn_len (div_le_div_of_nonneg_right (by exact_mod_cast hlh) hQr.le)]
+    simp only [nat_sub_eq]
+    rw [Nat.cast_sub hb, Nat.cast_sub (le_trans hlh hb)]
+    congr 1
+    have e1 : (p.2.2 : ℝ) / Q - ((l.b : ℝ) - Ydn Q l c u) / Q = (Ydn Q l c u - (l.b - p.2.2)) / Q := by
+      ring
+    have e2 : (p.2.2 : ℝ) / Q - (p.2.1 : ℝ) / Q = ((l.b - p.2.1) - (l.b - p.2.2)) / Q := by ring
+    rw [e1, e2, ← hQdef, mm_scale hQr]
+  have hgl := gain_lb l.sD l.iD l.dd 0 (dnOff S Q cls l) hg (fun p hp => by
+    simp only [dnOff, List.mem_reverse, List.mem_map] at hp
+    obtain ⟨q, hq, rfl⟩ := hp
+    exact (hsp q hq).1) (Ydn Q l c u) hYd
+  rcases foldr_min_mem (fun k => xk Q l l.b k c u) (l.dd : ℝ) (typedD l) with h | ⟨k, hk, h⟩
+  · change Ydn Q l c u = l.dd at h
+    have hcap : (capD S Q cls l : ℝ) = ((dnOff S Q cls l).map fun p => (p.1 : ℝ) *
+        max 0 (min (Ydn Q l c u - p.2.1) ((p.2.2 : ℝ) - p.2.1))).sum := by
+      unfold capD
+      rw [gainSum_eq, Nat.cast_zero, zero_add]
+      unfold dnOff
+      rw [List.map_reverse, List.map_reverse, List.sum_reverse, List.sum_reverse,
+        List.map_map, List.map_map]
+      congr 1
+      apply List.map_congr_left
+      intro p hp
+      obtain ⟨h0, h4, hb, hlh⟩ := hsp p hp
+      simp only [Function.comp, nat_sub_eq, h]
+      rw [Nat.cast_sub h0, Nat.cast_sub hb, Nat.cast_sub (le_trans hlh hb)]
+      congr 1
+      have : ((l.b : ℝ) - p.2.1) ≤ l.dd := by
+        have : ((l.b - l.dd : ℕ) : ℝ) ≤ p.2.1 := by exact_mod_cast h4
+        rw [Nat.cast_sub hdd] at this
+        linarith
+      rw [min_eq_right (by linarith), max_eq_right (by
+        have : (p.2.1 : ℝ) ≤ p.2.2 := by exact_mod_cast hlh
+        linarith)]
+    have := emin_le_cap Q l false (capD S Q cls l) c u
+    linarith
+  · change Ydn Q l c u = xk Q l l.b k c u at h
+    simp only [typedD, List.mem_filter, List.mem_range, decide_eq_true_eq] at hk
+    have ho : isOpt l false (k + 1) = true := by simp [isOpt, hk.2]; omega
+    have h1 := emin_le_opt (Q := Q) (cap := capD S Q cls l) c u ho (by omega)
+    rw [oval_dn_xk, ← h] at h1
+    simp only [Nat.cast_zero, zero_add] at hgl
+    linarith
+
+/-- The cores: `Σ pval(core parts) ≥ coreVal`. -/
+lemma core_val {D S : ℕ} (hD : 0 < D) (hS : 0 < S) {cls : List (SegE × ℕ)} {tag : ℕ}
+    (htag : 0 < tag) {l : LLine} (hcore : ∀ p ∈ l.core, lpcOk S tag cls l l.b l.a p = true) :
+    (coreVal S cls l : ℝ) ≤ ((l.core.map (corePart (D * S) cls)).map (pval D)).sum := by
+  unfold coreVal
+  rw [List.map_map]
+  push_cast [Nat.cast_list_sum]
+  rw [List.map_map]
+  apply List.sum_le_sum
+  intro p hp
+  obtain ⟨_, hon, _, hlh, _, _, _⟩ := lpc_spec htag (hcore p hp)
+  obtain ⟨_, _, _, hlt, _⟩ := onLine_spec (K := l.K) hD hS rfl hon
+  simp only [Function.comp, corePart]
+  rw [pval_line hD hS rfl hon]
+  have hQr : (0 : ℝ) < (D * S : ℕ) := by exact_mod_cast Nat.mul_pos hD hS
+  unfold cmass
+  simp only [nat_div_eq, nat_mul_eq, nat_sub_eq]
+  have := Nat.cast_div_le (α := ℝ) (m := (pent cls p).2.2.2.2 * (p.2.2 - p.2.1))
+    (n := shi S l.dir (pent cls p) - slo S l.dir (pent cls p))
+  rw [Nat.cast_mul, Nat.cast_sub hlt.le, Nat.cast_sub hlh] at this
+  unfold pent at this ⊢
+  refine le_trans this (le_of_eq ?_)
+  field_simp
+
+/-- **A line at a pose**: its parts are parts, pairwise disjoint on each segment, and certify its
+core plus its ends' minima. -/
+theorem line_sound {D S R x0 x1 y0 y1 U0 U1 : ℕ} (hD : 0 < D) (hS : 0 < S) (hR : 0 < R)
+    {c : ℝ × ℝ} {u : ℝ} (P : Pose S (D * S) R x0 x1 y0 y1 U0 U1 c u) {cls : List (SegE × ℕ)}
+    {tag : ℕ} (htag : 0 < tag) {l : LLine}
+    (hc : lcertOk (D * S) R x0 x1 y0 y1 U0 U1 l = true) (hp : lpcsOk S (D * S) tag cls l = true) :
+    (∀ x ∈ lparts (D * S) cls l c u, PartOK D (sq c (2 * Real.arctan u) 1) x ∧ (x.1, tag) ∈ cls ∧
+        onLine S l.dir l.K x.1 = true) ∧
+      (lparts (D * S) cls l c u).Pairwise PRel ∧
+      (coreVal S cls l : ℝ) + (emin (D * S) l true (capU S (D * S) cls l) c u +
+          emin (D * S) l false (capD S (D * S) cls l) c u) / (D * S : ℕ)
+        ≤ ((lparts (D * S) cls l c u).map (pval D)).sum := by
+  set Q := D * S with hQdef
+  have hQ : 0 < Q := Nat.mul_pos hD hS
+  have hQr : (0 : ℝ) < Q := by exact_mod_cast hQ
+  obtain ⟨hba, hdd, hro, hk⟩ := lcert_spec hc
+  have hp' := hp
+  simp only [lpcsOk, Bool.and_eq_true, List.all_eq_true] at hp'
+  obtain ⟨⟨⟨⟨⟨⟨⟨hup, hsu⟩, hcore⟩, hsc⟩, hdn⟩, hsd⟩, hgu⟩, hgd⟩ := hp'
+  have hX0 := Xup_nonneg hQ hR P hc
+  have hY0 := Ydn_nonneg hQ hR P hc
+  have hch := fun t ht0 ht1 => chord hQ hR P hc (t := t) ht0 ht1
+  have cQ : ∀ {m n : ℕ}, m ≤ n → (m : ℝ) / Q ≤ (n : ℝ) / Q :=
+    fun h => div_le_div_of_nonneg_right (by exact_mod_cast h) hQr.le
+  have hab : ((l.b : ℝ) - Ydn Q l c u) / Q ≤ (l.a : ℝ) / Q := by
+    rw [div_le_div_iff_of_pos_right hQr]; have : (l.b : ℝ) ≤ l.a := by exact_mod_cast hba
+    linarith
+  have hba' : (l.b : ℝ) / Q ≤ ((l.a : ℝ) + Xup Q l c u) / Q := by
+    rw [div_le_div_iff_of_pos_right hQr]; have : (l.b : ℝ) ≤ l.a := by exact_mod_cast hba
+    linarith
+  have Pup : ∀ p ∈ l.up, PartOK D (sq c (2 * Real.arctan u) 1) (upPart Q cls l c u p) ∧
+      (pent cls p, tag) ∈ cls ∧ onLine S l.dir l.K (pent cls p) = true := by
+    intro p hpm
+    obtain ⟨hm, hon, h1, h2, h3, h4, h5⟩ := lpc_spec htag (hup p hpm)
+    obtain ⟨hax, hlo, hhi, _, hlp⟩ := onLine_spec (K := l.K) hD hS hQdef hon
+    refine ⟨?_, hm, hon⟩
+    simp only [upPart]
+    refine ⟨hax, by rw [hlo]; exact cQ h1, le_max_left _ _, ?_, fun t ht1 ht2 => ?_⟩
+    · rw [hhi]; exact max_le (cQ (le_trans h2 h3)) (le_trans (min_le_left _ _) (cQ h3))
+    · simp only at ht1 ht2 ⊢
+      rw [hlp]
+      have hta : (l.a : ℝ) / Q ≤ t := le_trans (cQ h4) ht1.le
+      refine hch t (by linarith) ?_
+      rcases le_total ((p.2.1 : ℝ) / Q) (min ((p.2.2 : ℝ) / Q) (((l.a : ℝ) + Xup Q l c u) / Q))
+        with hm' | hm'
+      · rw [max_eq_right hm'] at ht2; exact le_trans ht2.le (min_le_right _ _)
+      · rw [max_eq_left hm'] at ht2; exact absurd (lt_trans ht1 ht2) (lt_irrefl _)
+  have Pcore : ∀ p ∈ l.core, PartOK D (sq c (2 * Real.arctan u) 1) (corePart Q cls p) ∧
+      (pent cls p, tag) ∈ cls ∧ onLine S l.dir l.K (pent cls p) = true := by
+    intro p hpm
+    obtain ⟨hm, hon, h1, h2, h3, h4, h5⟩ := lpc_spec htag (hcore p hpm)
+    obtain ⟨hax, hlo, hhi, _, hlp⟩ := onLine_spec (K := l.K) hD hS hQdef hon
+    refine ⟨?_, hm, hon⟩
+    simp only [corePart]
+    refine ⟨hax, by rw [hlo]; exact cQ h1, cQ h2, by rw [hhi]; exact cQ h3, fun t ht1 ht2 => ?_⟩
+    simp only at ht1 ht2 ⊢
+    rw [hlp]
+    refine hch t ?_ ?_
+    · have : ((l.b : ℝ) - Ydn Q l c u) / Q ≤ (l.b : ℝ) / Q :=
+        div_le_div_of_nonneg_right (by linarith) hQr.le
+      linarith [cQ h4]
+    · have : (l.a : ℝ) / Q ≤ ((l.a : ℝ) + Xup Q l c u) / Q :=
+        div_le_div_of_nonneg_right (by linarith) hQr.le
+      linarith [cQ h5]
+  have Pdn : ∀ p ∈ l.dn, PartOK D (sq c (2 * Real.arctan u) 1) (dnPart Q cls l c u p) ∧
+      (pent cls p, tag) ∈ cls ∧ onLine S l.dir l.K (pent cls p) = true := by
+    intro p hpm
+    obtain ⟨hm, hon, h1, h2, h3, h4, h5⟩ := lpc_spec htag (hdn p hpm)
+    obtain ⟨hax, hlo, hhi, _, hlp⟩ := onLine_spec (K := l.K) hD hS hQdef hon
+    refine ⟨?_, hm, hon⟩
+    simp only [dnPart]
+    refine ⟨hax, ?_, min_le_left _ _, by rw [hhi]; exact cQ h3, fun t ht1 ht2 => ?_⟩
+    · rw [hlo]; exact le_min (cQ (le_trans h1 h2)) (le_trans (cQ h1) (le_max_left _ _))
+    · simp only at ht1 ht2 ⊢
+      rw [hlp]
+      have htb : t ≤ (l.b : ℝ) / Q := le_trans ht2.le (cQ h5)
+      refine hch t ?_ (by linarith)
+      rcases le_total ((p.2.2 : ℝ) / Q) (max ((p.2.1 : ℝ) / Q) (((l.b : ℝ) - Ydn Q l c u) / Q))
+        with hm' | hm'
+      · rw [min_eq_left hm'] at ht1; exact absurd (lt_trans ht1 ht2) (lt_irrefl _)
+      · rw [min_eq_right hm'] at ht1; exact le_trans (le_max_right _ _) ht1.le
+  refine ⟨?_, ?_, ?_⟩
+  · intro x hx
+    simp only [lparts, List.mem_append, List.mem_map] at hx
+    rcases hx with (⟨p, hp, rfl⟩ | ⟨p, hp, rfl⟩) | ⟨p, hp, rfl⟩
+    · exact Pdn p hp
+    · exact Pcore p hp
+    · exact Pup p hp
+  · have ord_up := psorted_pairwise l.up hsu (fun p hp => (lpc_spec htag (hup p hp)).2.2.2.1)
+    have ord_core := psorted_pairwise l.core hsc (fun p hp => (lpc_spec htag (hcore p hp)).2.2.2.1)
+    have ord_dn := psorted_pairwise l.dn hsd (fun p hp => (lpc_spec htag (hdn p hp)).2.2.2.1)
+    simp only [lparts, List.pairwise_append, List.pairwise_map, List.mem_append, List.mem_map]
+    refine ⟨⟨ord_dn.imp_of_mem fun {p q} _ hq h _ => ?_, ord_core.imp fun {p q} h _ => ?_, ?_⟩,
+      ord_up.imp_of_mem fun {p q} hp _ h _ => ?_, ?_⟩
+    · simp only [dnPart]
+      exact le_min (le_trans (cQ h) (cQ (lpc_spec htag (hdn q hq)).2.2.2.1))
+        (le_trans (cQ h) (le_max_left _ _))
+    · simp only [corePart]; exact cQ h
+    · rintro x ⟨p, hp, rfl⟩ y ⟨q, hq, rfl⟩ _
+      simp only [dnPart, corePart]
+      exact cQ (le_trans (lpc_spec htag (hdn p hp)).2.2.2.2.2.2
+        (lpc_spec htag (hcore q hq)).2.2.2.2.2.1)
+    · simp only [upPart]
+      exact le_trans (max_le (cQ (lpc_spec htag (hup p hp)).2.2.2.1) (min_le_left _ _)) (cQ h)
+    · rintro x hx y ⟨q, hq, rfl⟩ _
+      simp only [upPart]
+      rcases hx with ⟨p, hp, rfl⟩ | ⟨p, hp, rfl⟩
+      · simp only [dnPart]
+        exact cQ (le_trans (lpc_spec htag (hdn p hp)).2.2.2.2.2.2
+          (le_trans hba (lpc_spec htag (hup q hq)).2.2.2.2.2.1))
+      · simp only [corePart]
+        exact cQ (le_trans (lpc_spec htag (hcore p hp)).2.2.2.2.2.2
+          (lpc_spec htag (hup q hq)).2.2.2.2.2.1)
+  · have gU := up_gain hD hS hR P htag hc hup hgu
+    have gD := dn_gain hD hS hR P htag hc hdn hgd
+    have cV := core_val hD hS htag hcore
+    simp only [lparts, List.map_append, List.sum_append]
+    rw [← hQdef] at gU gD
+    have e : (emin Q l true (capU S Q cls l) c u + emin Q l false (capD S Q cls l) c u) / (Q : ℕ)
+        ≤ ((l.up.map (upPart Q cls l c u)).map (pval D)).sum
+          + ((l.dn.map (dnPart Q cls l c u)).map (pval D)).sum := by
+      rw [div_le_iff₀ hQr]; nlinarith
+    linarith
+
+/-! ## 5.  The block -/
+
+lemma lsorted_pairwise : ∀ L : List LLine, lsorted L = true →
+    L.Pairwise fun l m => l.dir < m.dir ∨ (l.dir = m.dir ∧ l.K < m.K)
+  | [], _ => List.Pairwise.nil
+  | [_], _ => List.pairwise_singleton _ _
+  | l :: m :: t, h => by
+    simp only [lsorted, Bool.and_eq_true, Bool.or_eq_true, Nat.blt_eq, Nat.beq_eq] at h
+    have ih := lsorted_pairwise (m :: t) h.2
+    refine List.Pairwise.cons (fun r hr => ?_) ih
+    rcases List.mem_cons.mp hr with rfl | hr
+    · exact h.1
+    · have := List.rel_of_pairwise_cons ih hr
+      rcases h.1 with h1 | ⟨h1, h2⟩ <;> rcases this with h3 | ⟨h3, h4⟩ <;> omega
+
+/-- An entry lies on one line only (directions `0`, `1`). -/
+lemma onLine_unique {S d1 d2 K1 K2 : ℕ} {e : SegE} (h1 : onLine S d1 K1 e = true)
+    (h2 : onLine S d2 K2 e = true) (hd1 : d1 ≤ 1) (hd2 : d2 ≤ 1) : d1 = d2 ∧ K1 = K2 := by
+  have spec : ∀ {d K : ℕ}, onLine S d K e = true →
+      (d = 0 ∧ e.1 = e.2.2.1 ∧ e.1 * S = K ∧ e.2.1 < e.2.2.2.1) ∨
+      (d ≠ 0 ∧ e.2.1 = e.2.2.2.1 ∧ e.2.1 * S = K ∧ e.1 < e.2.2.1) := by
+    intro d K h
+    by_cases hd : d = 0
+    · subst hd
+      simp only [onLine, beq_rfl, cond_true, Bool.and_eq_true, Nat.beq_eq, Nat.blt_eq,
+        nat_mul_eq] at h
+      exact Or.inl ⟨rfl, h.1.1, h.1.2, h.2⟩
+    · simp only [onLine, beq_ne hd, cond_false, Bool.and_eq_true, Nat.beq_eq, Nat.blt_eq,
+        nat_mul_eq] at h
+      exact Or.inr ⟨hd, h.1.1, h.1.2, h.2⟩
+  rcases spec h1 with ⟨a1, a2, a3, a4⟩ | ⟨a1, a2, a3, a4⟩ <;>
+    rcases spec h2 with ⟨b1, b2, b3, b4⟩ | ⟨b1, b2, b3, b4⟩
+  · exact ⟨by omega, by omega⟩
+  · omega
+  · omega
+  · exact ⟨by omega, by rw [← a3, ← b3]⟩
+
+/-- **Soundness of an L-block**: at every admissible pose, parts of its segments certify its value. -/
+theorem lblk_sound {D S R x0 x1 y0 y1 U0 U1 : ℕ} (hD : 0 < D) (hS : 0 < S) (hR : 0 < R)
+    {c : ℝ × ℝ} {u : ℝ} (P : Pose S (D * S) R x0 x1 y0 y1 U0 U1 c u) {cls : List (SegE × ℕ)}
+    {tag : ℕ} (htag : 0 < tag) {B : LBlk}
+    (h : lblkOk S (D * S) R x0 x1 y0 y1 U0 U1 cls tag B = true) :
+    ∃ L : List (SegE × ℝ × ℝ),
+      (∀ x ∈ L, PartOK D (sq c (2 * Real.arctan u) 1) x ∧ (x.1, tag) ∈ cls) ∧
+      L.Pairwise PRel ∧ (lblkVal S (D * S) cls B : ℝ) ≤ (L.map (pval D)).sum := by
+  simp only [lblkOk, Bool.and_eq_true, List.all_eq_true, Nat.beq_eq, Nat.ble_eq] at h
+  obtain ⟨⟨⟨⟨⟨⟨⟨hls, hlines⟩, hlen⟩, hlen'⟩, h00⟩, h01⟩, h10⟩, h11⟩ := h
+  have hQr : (0 : ℝ) < (D * S : ℕ) := by exact_mod_cast Nat.mul_pos hD hS
+  have LS := fun l (hl : l ∈ B.lines) =>
+    line_sound hD hS hR P htag (hlines l hl).1.2 (hlines l hl).2
+  refine ⟨B.lines.flatMap fun l => lparts (D * S) cls l c u, ?_, ?_, ?_⟩
+  · intro x hx
+    obtain ⟨l, hl, hx⟩ := List.mem_flatMap.mp hx
+    obtain ⟨a1, a2, _⟩ := (LS l hl).1 x hx
+    exact ⟨a1, a2⟩
+  · rw [List.pairwise_flatMap]
+    refine ⟨fun l hl => (LS l hl).2.1, ?_⟩
+    have hp := lsorted_pairwise B.lines hls
+    refine hp.imp_of_mem fun {l m} hl hm hlm x hx y hy hxy => ?_
+    exfalso
+    obtain ⟨_, _, ox⟩ := (LS l hl).1 x hx
+    obtain ⟨_, _, oy⟩ := (LS m hm).1 y hy
+    rw [hxy] at ox
+    obtain ⟨e1, e2⟩ := onLine_unique ox oy (hlines l hl).1.1 (hlines m hm).1.1
+    omega
+  · have hro : ∀ l ∈ B.lines, rolesOk R U0 U1 l.dir l.roles = true :=
+      fun l hl => (lcert_spec (hlines l hl).1.2).2.2.1
+    have hPhi := Phi_box hD hS hR P cls hlen hlen' hro h00 h01 h10 h11
+    unfold lblkVal
+    have hsum : ∀ ls : List LLine, (∀ l ∈ ls, l ∈ B.lines) →
+        (((ls.map (coreVal S cls)).sum : ℕ) : ℝ) + Phi (D * S) S cls ls c u / (D * S : ℕ)
+          ≤ ((ls.flatMap fun l => lparts (D * S) cls l c u).map (pval D)).sum := by
+      intro ls
+      induction ls with
+      | nil => intro _; simp [Phi]
+      | cons l ls ih =>
+        intro hls'
+        have ih' := ih (fun m hm => hls' m (List.mem_cons_of_mem _ hm))
+        have hl := (LS l (hls' l List.mem_cons_self)).2.2
+        simp only [Phi, List.map_cons, List.sum_cons, List.flatMap_cons, List.map_append,
+          List.sum_append, Nat.cast_add] at ih' hl ⊢
+        rw [add_div]
+        linarith
+    have h1 := hsum B.lines (fun l hl => hl)
+    have hd : ((B.lg / (D * S) : ℕ) : ℝ) ≤ (B.lg : ℝ) / (D * S : ℕ) := Nat.cast_div_le
+    have h2 : (B.lg : ℝ) / (D * S : ℕ) ≤ Phi (D * S) S cls B.lines c u / (D * S : ℕ) :=
+      div_le_div_of_nonneg_right hPhi hQr.le
+    simp only [nat_div_eq]
+    rw [Nat.cast_add]
+    linarith
+
 end ZMTreeM
 
 end SquarePacking
