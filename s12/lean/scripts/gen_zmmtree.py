@@ -40,6 +40,7 @@ import gen_zmtree as G  # noqa: E402  (the point-leaf mirror and search; read-on
 import zeromargin as zm  # noqa: E402
 import zm_mixed as ZX  # noqa: E402
 import mixed_cover as MC  # noqa: E402
+import lblock as LB  # noqa: E402
 
 sys.setrecursionlimit(100000)
 BASE = G.BASE
@@ -165,8 +166,39 @@ def tchain(prs):
     return all(p[2] <= q[1] and p[5] <= q[4] for p, q in zip(prs, prs[1:]))
 
 
-def pc_value(ctx, box, cls, sb, tg):
-    """(ok, value): the exact mirror of pcOk and pcVal on the decoded claims."""
+def lnums(lb):
+    out = []
+    for (lines, corners, lg) in lb:
+        out.append(lg)
+        for l in lines:
+            out += [l[0], l[1], l[2], l[3], l[4], l[5], l[6], l[7], l[9]]
+            for z in (l[11], l[12], l[13]):
+                for p in z:
+                    out += list(p)
+        for c in corners:
+            for x in c:
+                out += list(x)
+    return out
+
+
+def pc_value(ctx, box, cls, sb, tg, lb=()):
+    """(ok, value): the exact mirror of pcOkX and pcValX (ZMTreeX.lean) on the decoded claims."""
+    S = ctx.S
+    if any(x < 0 for x in lnums(lb)):
+        return False, 0
+    ok, val = pc_value_st(ctx, box, cls, sb, tg)
+    if not ok:
+        return False, 0
+    for li, B in enumerate(lb):
+        tag = 2 * (len(tg) + li) + 1
+        if not LB.lblk_ok(ctx, box, cls, tag, B):
+            return False, 0
+        val += LB.lblk_val(ctx, cls, B)
+    return True, val
+
+
+def pc_value_st(ctx, box, cls, sb, tg):
+    """the S-block and T-group part (ZMTreeM.pcOk / pcVal)."""
     S = ctx.S
     nums = [x for b in sb for x in b] + [x for g in tg for x in g[:8]] + \
         [x for g in tg for p in g[8] for x in p] + [t for _, t in cls]
@@ -340,10 +372,11 @@ def couple(up, dn, delta):
 class Builder:
     """The piece certificate of one box: S-blocks for lines not in a germ group, T-groups for germ pairs."""
 
-    def __init__(self, P, mchk, use_thr=True):
+    def __init__(self, P, mchk, use_thr=True, use_lin=True):
         self.P = P
         self.mchk = mchk              # zm_mixed.MixedChecker (oracle: specs and intervals)
         self.use_thr = use_thr
+        self.use_lin = use_lin
 
     def build(self, box):
         """returns (sc, sb, tg, value) with sc the claims as (segment index, tag), or None."""
@@ -418,17 +451,44 @@ class Builder:
                         continue
                     groups.append((d, K))
                     used.add(ku); used.add(kd)
+        self._ctxd = dict(fb=fb, specs=specs, B=B, ivs=ivs, interval=interval, near_keys=near_keys)
+        best = None
+        cands = [('T', groups)]
+        if self.use_lin:
+            cands += [('L', []), ('TL', groups)]
+        for mode, grps in cands:
+            r = self._assemble(box, mode, grps, interval, ivs, near_keys)
+            if r is not None and (best is None or r[4] > best[4]):
+                best = r
+        return best
+
+    def _assemble(self, box, mode, groups, interval, ivs, near_keys):
+        P, ctx = self.P, self.P.ctx
+        Q, S, R = ctx.Q, ctx.S, ctx.R
+        used = set()
         sb, tg, claims = [], [], []    # claims: (segment index, tag)
+        lbk = []
         # T-groups
-        for gi, (d, K) in enumerate(groups):
+        for gi, (d, K) in enumerate(groups if mode in ('T', 'TL') else []):
             r = self._group(box, d, K, interval, ivs, len(tg))
             if r is None:
-                used.discard((d, lnU(Q, d, K))); used.discard((d, lnD(Q, d, K)))
                 continue
             g, cl = r
+            used.add((d, lnU(Q, d, K))); used.add((d, lnD(Q, d, K)))
             tag = 2 * len(tg) + 1
             tg.append(g)
             claims += [(i, tag) for i in cl]
+        # the L-block (one, jointly over its lines)
+        if mode in ('L', 'TL'):
+            keys = [k for k in near_keys if k not in used]
+            r = self._lblock(box, keys, ivs)
+            if r is not None:
+                lines, segi, lkeys = r
+                tagL = 2 * len(tg) + 1
+                claims += [(i, tagL) for i in segi]
+                for k in lkeys:
+                    used.add(k)
+                lbk.append(lines)
         # S-blocks
         for key in near_keys:
             if key in used:
@@ -446,6 +506,7 @@ class Builder:
             sb.append((key[0], key[1], A, Bv))
             claims += [(i, 2 * s) for i in segi]
         claims.sort()
+        assert len(set(i for i, _ in claims)) == len(claims), "a segment in two blocks"
         # renumber the pieces' claim indices (the groups were built with segment indices)
         pos = {i: k for k, (i, _) in enumerate(claims)}
         tg2 = []
@@ -454,10 +515,179 @@ class Builder:
                     for (ju, a, b, jd, c, dd, mm) in prs]
             tg2.append((d, K, Au, Bu, Ad, Bd, tu1, td1, prs2))
         cls = [(P.segs[i], t) for i, t in claims]
-        ok, val = pc_value(ctx, box, cls, sb, tg2)
+        lb2 = []
+        for (lines, rest) in lbk:
+            def rn(pcs):
+                return [(pos[i] + 1, lo, hi) for (i, lo, hi) in pcs]
+            lines2 = [l[:11] + (rn(l[11]), rn(l[12]), rn(l[13])) for l in lines]
+            B = self._finish_lblock(box, cls, lines2, len(tg2) + len(lb2))
+            if B is not None:
+                lb2.append(B)
+            else:
+                # the block did not certify: its segments' claims stay, with no value (harmless)
+                pass
+        ok, val = pc_value(ctx, box, cls, sb, tg2, lb2)
         if not ok:
-            raise AssertionError(("piece certificate rejected by the mirror", box))
-        return claims, sb, tg2, val
+            raise AssertionError(("piece certificate rejected by the mirror", box, mode))
+        return claims, sb, tg2, lb2, val
+
+    def _lblock(self, box, keys, ivs):
+        """the lines of an L-block (Lemma L data from zm_mixed.lemma_l_data, rebuilt on the grid), their
+        segment indices, their keys; corners and lg are computed after the claims are numbered."""
+        P, ctx = self.P, self.P.ctx
+        Q, S, R = ctx.Q, ctx.S, ctx.R
+        x0, x1, y0, y1, U0, U1 = box
+        fb = self._ctxd['fb']
+        cov = P.cov
+        lines, segi, lkeys = [], [], []
+        for key in sorted(keys):
+            d, K = key
+            zk = P.zkey[key]
+            L = cov.lines[zk]
+            I = ivs(key)
+            lo_f, hi_f = P.seg_range(key)
+            w = (lo_f / Q - 1.0, hi_f / Q + 1.0)
+            dat = ZX.lemma_l_data(L, zk, I, w, fb, self.mchk.m)
+            if dat is None or dat.get('vertex'):
+                continue
+            roles = sum(4 ** k * 1 for k in dat['up']) + sum(4 ** k * 2 for k in dat['lo'])
+            if not LB.roles_ok(R, U0, U1, d, roles):
+                continue
+            a = (dat['a_up'].numerator * Q) // dat['a_up'].denominator
+            b = ceil_div(dat['b_lo'].numerator * Q, dat['b_lo'].denominator)
+            ok = False
+            for _ in range(8):
+                if all(G.admk(ctx, k, lx(d, K, a), ly(d, K, a), box) for k in dat['up']):
+                    ok = True
+                    break
+                a -= 1
+            if not ok:
+                continue
+            ok = False
+            for _ in range(8):
+                if all(G.admk(ctx, k, lx(d, K, b), ly(d, K, b), box) for k in dat['lo']):
+                    ok = True
+                    break
+                b += 1
+            if not ok or b > a:
+                continue
+            top = ((dat['a_up'] + dat['Dup']).numerator * Q) // (dat['a_up'] + dat['Dup']).denominator
+            bot = ceil_div((dat['b_lo'] - dat['Dlo']).numerator * Q, (dat['b_lo'] - dat['Dlo']).denominator)
+            top, bot = max(top, a), min(max(bot, 0), b)
+            unt = [k for k in range(4) if k not in dat['up'] and k not in dat['lo']]
+
+            def unt_ok(t):
+                return all(G.admk(ctx, k, lx(d, K, t), ly(d, K, t), box) for k in unt)
+            while top > a and not unt_ok(top):
+                top = a + (top - a) // 2
+            while bot < b and not unt_ok(bot):
+                bot = b - (b - bot) // 2
+            if not (unt_ok(top) and unt_ok(bot)):
+                continue
+            du, dd = top - a, b - bot
+            up, core, dn = [], [], []
+            for i in P.lines[key]:
+                e = P.segs[i]
+                s0, s1 = slo(S, d, e), shi(S, d, e)
+                for (zl, zh, dst) in ((b - dd, b, dn), (b, a, core), (a, a + du, up)):
+                    lo, hi = max(s0, zl), min(s1, zh)
+                    if hi > lo:
+                        dst.append((i, lo, hi))
+            if not (up or core or dn):
+                continue
+            # the minorants of the two gains (fine units), steered by the chord ends at the box centre
+            cxm, cym = float(fb[0] + fb[1]) / 2, float(fb[2] + fb[3]) / 2
+            um = max(float(fb[4] + fb[5]) / 2, 1e-9)
+            fam = 'V' if d == 0 else 'H'
+            xu = (min(ZX._tk_float(fam, k, zk[1], cxm, cym, um) for k in dat['up']) - float(dat['a_up'])) * Q \
+                if dat['up'] else float(du)
+            xl = (float(dat['b_lo']) - max(ZX._tk_float(fam, k, zk[1], cxm, cym, um) for k in dat['lo'])) * Q \
+                if dat['lo'] else float(dd)
+
+            def rho_seg(i):
+                e = P.segs[i]
+                return (e[4] * Q) // (shi(S, d, e) - slo(S, d, e))
+            offu = [(rho_seg(i), lo - a, hi - a) for (i, lo, hi) in up]
+            offd = list(reversed([(rho_seg(i), b - hi, b - lo) for (i, lo, hi) in dn]))
+            mu = LB.minorant(offu, du, xu) or (0, 0)
+            md = LB.minorant(offd, dd, xl) or (0, 0)
+            lines.append((d, K, a, b, du, dd, roles, mu[0], mu[1], md[0], md[1], up, core, dn))
+            segi += sorted({i for z in (up, core, dn) for (i, _, _) in z})
+            lkeys.append(key)
+        if not lines:
+            return None
+        return (lines, None), sorted(set(segi)), lkeys
+
+    def _finish_lblock(self, box, cls, lines, li):
+        """corners (choices, slacks) and lg of an L-block whose pieces are numbered; None if nothing."""
+        ctx = self.P.ctx
+        S, Q, R = ctx.S, ctx.Q, ctx.R
+        x0, x1, y0, y1, U0, U1 = box
+        vm = (U0 + U1) / 2.0
+        corners = []
+        lgs = []
+
+        def fval(f, v):
+            return {0: 1.0, 1: 4 * R * v, 2: 2 * (R * R - v * v), 3: 4 * R * v * 2 * (R * R - v * v)}[f]
+        for (cx, cy) in ((x0, y0), (x0, y1), (x1, y0), (x1, y1)):
+            ch = []
+            for l in lines:
+                row = []
+                for up in (True, False):
+                    cap = LB.cap_u(S, Q, cls, l) if up else LB.cap_d(S, Q, cls, l)
+                    opts = [o for o in range(5) if LB.is_opt(l, up, o)]
+                    def fv(o):
+                        t = LB.opt_t(ctx, l, up, cap, o, cx, cy)
+                        if t[0] == 0:
+                            return float(cap)
+                        n = t[1]
+                        return (n[0] + n[1] * vm + n[2] * vm * vm) / fval(t[0], vm)
+                    best = None
+                    for o in sorted(opts, key=fv):
+                        sg = 0
+                        okk = True
+                        t1 = LB.opt_t(ctx, l, up, cap, o, cx, cy)
+                        for o2 in opts:
+                            if o2 == o:
+                                continue
+                            t2 = LB.opt_t(ctx, l, up, cap, o2, cx, cy)
+                            f = LB.tor(t1[0], t2[0])
+                            Pp = LB.padd(LB.term(R, f, t1), LB.pneg(LB.term(R, f, t2)))
+                            rb = LB.ratio_bound(Pp, LB.cmul(f, R, 1), U0, U1, True)
+                            if rb is None:
+                                okk = False
+                                break
+                            sg = max(sg, rb)
+                        if okk:
+                            best = (o, sg)
+                            break
+                    if best is None:
+                        return None
+                    row += [best[0], best[1]]
+                ch.append(tuple(row))
+            # the main bound at this corner
+            f = 0
+            for l, c in zip(lines, ch):
+                f = LB.tor(LB.tor(LB.opt_t(ctx, l, True, LB.cap_u(S, Q, cls, l), c[0], cx, cy)[0],
+                                  LB.opt_t(ctx, l, False, LB.cap_d(S, Q, cls, l), c[2], cx, cy)[0]), f)
+            Pm = (0, 0, 0, 0, 0)
+            sgs = 0
+            for l, c in zip(lines, ch):
+                Pm = LB.padd(Pm, LB.padd(LB.term(R, f, LB.opt_t(ctx, l, True, LB.cap_u(S, Q, cls, l), c[0], cx, cy)),
+                                         LB.term(R, f, LB.opt_t(ctx, l, False, LB.cap_d(S, Q, cls, l), c[2], cx, cy))))
+                sgs += c[1] + c[3]
+            Den = LB.cmul(f, R, 1)
+            lb_ = LB.ratio_bound(LB.padd(Pm, LB.pneg(LB.cmul(f, R, sgs))), Den, U0, U1, False)
+            if lb_ is None:
+                return None
+            lgs.append(lb_)
+            corners.append(ch)
+        lg = max(min(lgs), 0)
+        B = (lines, corners, lg)
+        tag = 2 * li + 1
+        if not LB.lblk_ok(ctx, box, cls, tag, B):
+            return None
+        return B
 
     def _group(self, box, d, K, interval, ivs, gi):
         P, ctx = self.P, self.P.ctx
@@ -570,13 +800,13 @@ class Builder:
 # the search
 
 class MSearch:
-    def __init__(self, ctx, P, mchk, max_depth=30, use_thr=True):
+    def __init__(self, ctx, P, mchk, max_depth=30, use_thr=True, use_lin=True):
         self.ctx, self.P, self.mchk = ctx, P, mchk
-        self.builder = Builder(P, mchk, use_thr=use_thr)
+        self.builder = Builder(P, mchk, use_thr=use_thr, use_lin=use_lin)
         self.max_depth = max_depth
         self.m = mchk.m
         self.stat = dict(E=0, PIECE=0, C=0, split=0, boxes=0, maxdepth=0, UNCERT=0, T=0, Sblk=0, claims=0,
-                         pairs=0, inherit=0)
+                         pairs=0, inherit=0, Lblk=0, Llines=0, leafT=0, leafL=0)
 
     def fbox(self, box):
         Q, R = self.ctx.Q, self.ctx.R
@@ -598,17 +828,20 @@ class MSearch:
             return ('E',)
         r = self.builder.build(box)
         best = r
-        if parent is not None and (r is None or parent[3] > r[3]):
+        if parent is not None and (r is None or parent[4] > r[4]):
             # the parent's certificate holds on the sub-box too (re-checked by the mirror)
             cls = [(self.P.segs[i], t) for i, t in parent[0]]
-            ok, val = pc_value(ctx, box, cls, parent[1], parent[2])
-            if ok and (r is None or val > r[3]):
-                best = (parent[0], parent[1], parent[2], val)
+            ok, val = pc_value(ctx, box, cls, parent[1], parent[2], parent[3])
+            if ok and (r is None or val > r[4]):
+                best = (parent[0], parent[1], parent[2], parent[3], val)
                 st['inherit'] += 1
-        if best is not None and best[3] >= ctx.W:
+        if best is not None and best[4] >= ctx.W:
             st['PIECE'] += 1
             st['T'] += len(best[2]); st['Sblk'] += len(best[1]); st['claims'] += len(best[0])
             st['pairs'] += sum(len(g[8]) for g in best[2])
+            st['Lblk'] += len(best[3]); st['Llines'] += sum(len(B[0]) for B in best[3])
+            st['leafT'] += 1 if best[2] else 0
+            st['leafL'] += 1 if best[3] else 0
             return ('Z', best)
         if depth >= self.max_depth:
             st['UNCERT'] += 1
@@ -634,7 +867,7 @@ class MSearch:
 # =============================================================================================
 # Lean emission
 
-def leaf_digits_pc(claims, sb, tg, B=BASE):
+def leaf_digits_pc(claims, sb, tg, lb=(), B=BASE):
     d = [len(claims)]
     prev = -1
     for i, t in claims:
@@ -651,6 +884,27 @@ def leaf_digits_pc(claims, sb, tg, B=BASE):
         d += [dr] + big(K) + big(Au) + big(Bu) + big(Ad) + big(Bd) + big(tu1) + big(td1) + [len(prs)]
         for (ju1, a, b, jd1, c, dd, mm) in prs:
             d += [ju1] + big(a) + big(b) + [jd1] + big(c) + big(dd) + big(mm)
+
+    def big4(v):
+        assert 0 <= v < B ** 4, v
+        return [v % B, (v // B) % B, (v // (B * B)) % B, v // (B * B * B)]
+
+    def sgn(v):
+        return big4(v) + big4(0) if v >= 0 else big4(0) + big4(-v)
+    d.append(len(lb))
+    for (lines, corners, lg) in lb:
+        d.append(len(lines))
+        for (dr, K, a, b, du, dd, roles, sU, iU, sD, iD, up, core, dn) in lines:
+            d += [dr] + big4(K) + big4(a) + big4(b) + big4(du) + big4(dd) + [roles] + big4(sU) + sgn(iU) + \
+                big4(sD) + sgn(iD)
+            for z in (up, core, dn):
+                d.append(len(z))
+                for (j1, lo, hi) in z:
+                    d += [j1] + big4(lo) + big4(hi)
+        for ch in corners:
+            for (oU, sgU, oD, sgD) in ch:
+                d += [oU] + big4(sgU) + [oD] + big4(sgD)
+        d += big4(lg)
     for x in d:
         assert 0 <= x < B, x
     return d
@@ -678,10 +932,10 @@ def replay(ctx, t, box, st, out, leaves):
         replay(ctx, r, tuple(rb), st, out, leaves)
         return
     if t[0] == 'Z':
-        claims, sb, tg, val = t[1]
+        claims, sb, tg, lb, val = t[1]
         out.append(0)
         leaves.append([0])                         # the point part: no points claimed
-        leaves.append(leaf_digits_pc(claims, sb, tg))
+        leaves.append(leaf_digits_pc(claims, sb, tg, lb))
         st['Z'] += 1
         return
     if t[0] == 'UNC':
@@ -700,8 +954,9 @@ def tree_cost(t, memo):
     if t[0] == 'E':
         r = 0.2
     elif t[0] == 'Z':
-        claims, sb, tg, _ = t[1]
-        r = 2.0 + 4.0 * len(sb) + 8.0 * len(tg) + 0.05 * len(claims) + 0.5 * sum(len(g[8]) for g in tg)
+        claims, sb, tg, lb, _ = t[1]
+        r = (2.0 + 4.0 * len(sb) + 8.0 * len(tg) + 0.05 * len(claims) + 0.5 * sum(len(g[8]) for g in tg)
+             + sum(20.0 * len(B[0]) for B in lb))
     elif t[0] == 'C':
         r = 0.1 + tree_cost(t[2], memo)
     elif t[0] in ('XM', 'YM'):
@@ -784,7 +1039,7 @@ def emit(args, sha, s, D, W, Pts, Sg, ctx, trees, cells, Mq, M):
            f"masses `w/{W}`, container `[0, {Mq}/{D}]²`.\n-/\n")
     ptl = ",\n   ".join(f"({x}, {y}, {w})" for x, y, w in Pts)
     sgl = ",\n   ".join(f"({a}, {b}, {c}, {d}, {w})" for a, b, c, d, w in Sg)
-    L = ["import Sqpack.ZMTreeM\n", HDR, doc, f"namespace {ns}\n", "open BoxTree ZMTreeM\n",
+    L = ["import Sqpack.ZMTreeX\n", HDR, doc, f"namespace {ns}\n", "open BoxTree ZMTreeM\n",
          "set_option maxRecDepth 100000 in",
          f"def pts : PTree :=\n  {G.emit_ptree(Pts)}\n",
          "theorem pts_nodup : pts.toList.Nodup :=\n  PTree.nodup_of_chainB _ (by decide +kernel)\n",
@@ -890,6 +1145,7 @@ def main():
     ap.add_argument('--only', type=int, default=None)
     ap.add_argument('--cells', default=None, help='only these root cells, "i,j;i,j" (testing)')
     ap.add_argument('--no-thr', action='store_true')
+    ap.add_argument('--no-lin', action='store_true', help='no L-blocks (Lemma L)')
     ap.add_argument('--name')
     ap.add_argument('--outdir')
     ap.add_argument('--chunk-cost', type=float, default=3000.0)
@@ -944,7 +1200,7 @@ def main():
         trees = dd['trees']
         assert dd['sha'] == sha
     else:
-        _S = MSearch(ctx, P, mchk, max_depth=args.depth, use_thr=not args.no_thr)
+        _S = MSearch(ctx, P, mchk, max_depth=args.depth, use_thr=not args.no_thr, use_lin=not args.no_lin)
         _S.ubins = args.ubins
         roots = G.roots_of(ctx, M, cells, args.ubins)
         if args.cells:

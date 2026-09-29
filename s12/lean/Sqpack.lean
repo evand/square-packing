@@ -14,6 +14,10 @@ import Sqpack.ZMTree
 import Sqpack.CovM
 import Sqpack.SegParts
 import Sqpack.ZMTreeM
+import Sqpack.LemmaL
+import Sqpack.LBlock
+import Sqpack.LBlockSound
+import Sqpack.ZMTreeX
 import Sqpack.S3Lower
 import Sqpack.S12Lower
 import Sqpack.S12WLower
