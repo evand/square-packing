@@ -800,18 +800,48 @@ class Builder:
 # the search
 
 class MSearch:
-    def __init__(self, ctx, P, mchk, max_depth=30, use_thr=True, use_lin=True):
+    def __init__(self, ctx, P, mchk, max_depth=30, use_thr=True, use_lin=True, pts=(), D=1, m=1):
         self.ctx, self.P, self.mchk = ctx, P, mchk
+        self.pts = list(pts)
+        self.psearch = G.Search(ctx, D, ctx.W, self.pts, m) if self.pts else None
         self.builder = Builder(P, mchk, use_thr=use_thr, use_lin=use_lin)
         self.max_depth = max_depth
         self.m = mchk.m
         self.stat = dict(E=0, PIECE=0, C=0, split=0, boxes=0, maxdepth=0, UNCERT=0, T=0, Sblk=0, claims=0,
-                         pairs=0, inherit=0, Lblk=0, Llines=0, leafT=0, leafL=0)
+                         pairs=0, inherit=0, Lblk=0, Llines=0, leafT=0, leafL=0, ADM=0, CHAIN1=0,
+                         CHAIN2=0, ptclaims=0)
 
     def fbox(self, box):
         Q, R = self.ctx.Q, self.ctx.R
         x0, x1, y0, y1, U0, U1 = box
         return (F(x0, Q), F(x1, Q), F(y0, Q), F(y1, Q), F(U0, R), F(U1, R))
+
+    def point_leaf(self, box, need):
+        """a ZMTree point leaf reaching `need` (units of 1/W) at every admissible pose (Lemma P: the pieces
+        supply the rest), via gen_zmtree's search with the target lowered; checked by its mirror."""
+        ps = self.psearch
+        if ps is None or need <= 0:
+            return None
+        ctx2 = G.Ctx(self.ctx.S, self.ctx.Q, self.ctx.R, need, self.ctx.F)
+        old_ctx, old_den = ps.ctx, ps.chk.Wden
+        ps.ctx = ctx2
+        ps.chk.Wden = need
+        try:
+            lf = ps.leaf_for(box, 0)
+        finally:
+            ps.ctx, ps.chk.Wden = old_ctx, old_den
+        if lf is None or lf[0] == 'E':
+            return None
+        kind, chA, chB, emp, ents = lf
+        if kind != 'ADM':
+            chA, chB, emp, ents = G.optimise_leaf(need, self.pts, chA, chB, emp, ents)
+        leaf = G.Leaf([], chA, chB, emp)
+        prev = -1
+        for k, tag in ents:
+            leaf.ents.append((k - prev - 1, tag)); prev = k
+        if not G.leaf_ok(ctx2, box, self.pts, leaf):
+            return None
+        return (kind, chA, chB, emp, ents)
 
     def _build(self, box, depth, parent=None):
         ctx = self.ctx
@@ -835,6 +865,19 @@ class MSearch:
             if ok and (r is None or val > r[4]):
                 best = (parent[0], parent[1], parent[2], parent[3], val)
                 st['inherit'] += 1
+        Lp = best[4] if best is not None else 0
+        if Lp < ctx.W and self.psearch is not None:
+            pl = self.point_leaf(box, ctx.W - Lp)
+            if pl is not None:
+                if best is None:
+                    best = ([], [], [], [], 0)
+                st[pl[0]] += 1
+                st['ptclaims'] += len(pl[4])
+                if best[3]:
+                    st['leafL'] += 1
+                if best[2]:
+                    st['leafT'] += 1
+                return ('Z', best, pl)
         if best is not None and best[4] >= ctx.W:
             st['PIECE'] += 1
             st['T'] += len(best[2]); st['Sblk'] += len(best[1]); st['claims'] += len(best[0])
@@ -934,7 +977,30 @@ def replay(ctx, t, box, st, out, leaves):
     if t[0] == 'Z':
         claims, sb, tg, lb, val = t[1]
         out.append(0)
-        leaves.append([0])                         # the point part: no points claimed
+        if len(t) > 2:
+            kind, chA, chB, emp, ents = t[2]
+            d = [len(ents)]
+            prev = -1
+            for k, tag in ents:
+                g = k - prev - 1; prev = k
+                assert 8 * g + tag[0] < B
+                d.append(8 * g + tag[0])
+                if tag[0] < 4:
+                    for (dd, uu, ll) in (tag[1], tag[2]):
+                        assert dd < 256 and uu < 256 and ll < 4
+                        d.append(dd + 256 * uu + 65536 * ll)
+            for ch in (chA, chB):
+                d.append(len(ch))
+                for X, Y, k in ch:
+                    assert X < 16384 and k < 4 and Y < B
+                    d += [X + 16384 * k, Y]
+            d.append(len(emp))
+            for e, l in emp:
+                assert e < 256 and l < 4
+                d.append(e + 256 * l)
+            leaves.append(d)
+        else:
+            leaves.append([0])                     # the point part: no points claimed
         leaves.append(leaf_digits_pc(claims, sb, tg, lb))
         st['Z'] += 1
         return
@@ -1192,19 +1258,18 @@ def main():
     mchk = ZX.MixedChecker(cov, max_depth=args.depth, cert_mode=True)
     P = Pieces(ctx, cov, Sg)
     global _S
-    if Pts:
-        raise SystemExit("covers with points: the point part of the leaf is not wired in yet")
     if args.load:
         import pickle
         dd = pickle.load(open(args.load, 'rb'))
         trees = dd['trees']
         assert dd['sha'] == sha
     else:
-        _S = MSearch(ctx, P, mchk, max_depth=args.depth, use_thr=not args.no_thr, use_lin=not args.no_lin)
+        _S = MSearch(ctx, P, mchk, max_depth=args.depth, use_thr=not args.no_thr, use_lin=not args.no_lin,
+                     pts=Pts, D=D, m=s)
         _S.ubins = args.ubins
         roots = G.roots_of(ctx, M, cells, args.ubins)
         if args.cells:
-            want = [tuple(map(int, c.split(','))) for c in args.cells.split(';')]
+            want = [tuple(map(int, c.split(','))) for c in args.cells.replace('+', ';').split(';')]
             wd = (M // 2) // cells
             roots = [r for r in roots if (r[0] // wd, r[2] // wd) in want]
         if args.only:

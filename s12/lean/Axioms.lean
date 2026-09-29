@@ -130,3 +130,6 @@ import Sqpack
 #print axioms SquarePacking.ZMTreeM.ZM_cov
 #print axioms SquarePacking.ZMTreeM.soundM
 #print axioms SquarePacking.s3_ge_2
+#print axioms SquarePacking.ZMTreeM.lblk_sound
+#print axioms SquarePacking.ZMTreeM.pc_soundX
+#print axioms SquarePacking.s3_ge_2_mixed

@@ -19,5 +19,6 @@ import Sqpack.LBlock
 import Sqpack.LBlockSound
 import Sqpack.ZMTreeX
 import Sqpack.S3Lower
+import Sqpack.S3LowerP
 import Sqpack.S12Lower
 import Sqpack.S12WLower

@@ -1,5 +1,5 @@
 mixed 1
-# toy R_lighten
+# toy R_lighten (lean/scripts/mk_toys.py)
 4 1
 1000
 1000000

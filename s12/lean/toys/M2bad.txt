@@ -1,5 +1,5 @@
 mixed 1
-# toy M2bad
+# toy M2bad (lean/scripts/mk_toys.py)
 2 1
 1000
 1000000
