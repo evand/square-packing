@@ -60,6 +60,7 @@ jobs:
           S32_SEPARATE: '1'   # the s(32) full re-sweep (~5 CPU-h) is left to certificates/s32/verify.sh --full, run locally
           S21_SEPARATE: '1'   # likewise the s(21) zm_mixed.py re-sweep (~20 CPU-h); the zmx2 full run stays in CI
           S45_SEPARATE: '1'   # likewise the s(45) zm_mixed.py re-sweep (~16.5 CPU-h); the zmx2 full run stays in CI
+          S60_SEPARATE: '1'   # likewise the s(60) zm_mixed.py re-sweep (~19.6 CPU-h); the zmx2 full run stays in CI
         run: ./verify.sh ${{ inputs.tier == 'full' && '--full' || '' }}
 
   lean:

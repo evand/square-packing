@@ -21,6 +21,14 @@ conjectured, and deciding it *is* the open problem.  `s(11)` itself is also open
 
 Each is an exact certificate re-checked by `./verify.sh`; nothing here is peer reviewed.
 
+* **`s(60) = 8`** (2026-09-28): one *mixed* cover of `[0,8]²`, 23,744 weighted points plus mass spread uniformly
+  along 5,216 segments of the interior grid lines, total `59.858675 < 60`, certified at margin zero by the same two
+  exact checkers as `s(21) = 5` and `s(45) = 7` (same files, same settings).  Not in Lean yet (no `s(60)` data file
+  or top theorem).  The `s(45)` line-cover recipe at side 8, seeded by the `s(45)` LP cover with its centre cell
+  duplicated, plus a coarse uniform row family (`search/S60_COVER.md`).  Previous best lower bound `397/50 = 7.94`
+  (wand125, 2026).  **Corollary `s(61) = 8`** (`s(61) ≥ s(60)`, and the grid): `s(k² − 3) = k` was proved only for
+  `k = 3..7` (Bentz; `notes/literature-s32.md`), so this is its first new case.  No write-up page:
+  [`certificates/s60/`](certificates/s60/README.md).
 * **`s(45) = 7`** (2026-09-27): one *mixed* cover of `[0,7]²`, 19,989 weighted points plus mass spread uniformly
   along 3,912 segments of the interior grid lines, total `44.773528 < 45`, certified at margin zero by the same two
   exact checkers as `s(21) = 5` (same files, same settings: `search/zm_mixed.py` over the symmetry-reduced pose

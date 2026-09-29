@@ -106,6 +106,12 @@ echo "    both checkers re-summarised, and a fresh zmx2 run over the whole pose 
 # The zm_mixed.py re-sweep is ~16.5 CPU-h; CI skips it (S45_SEPARATE=1): run it locally.
 if full && [ -z "${S45_SEPARATE:-}" ]; then certificates/s45/verify.sh --full; else certificates/s45/verify.sh; fi
 echo
+echo "=== s(60) = 8: mixed cover of [0,8]^2 (23,744 points + 5,216 grid-line segments), total"
+echo "    748233441/12500000 = 59.858675 < 60 (certificates/s60/README.md; no Lean).  Fast tier: shipped records of"
+echo "    both checkers re-summarised, and a fresh zmx2 run over the whole pose space with no symmetry assumed ==="
+# The zm_mixed.py re-sweep is ~19.6 CPU-h; CI skips it (S60_SEPARATE=1): run it locally.
+if full && [ -z "${S60_SEPARATE:-}" ]; then certificates/s60/verify.sh --full; else certificates/s60/verify.sh; fi
+echo
 echo "=== rung-2 rejection tests (23 checks: mutations, invalid historical covers, malformed input) ==="
 ./tests/rung2/rejection_tests.sh
 echo

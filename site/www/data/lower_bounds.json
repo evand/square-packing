@@ -2475,13 +2475,14 @@
  },
  "60": {
   "best": {
-   "value": 7.855654600401044,
-   "exact_form": "sqrt(60 - 2*floor(sqrt(60)) + 1) + 1 = sqrt(47)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 8.0,
+   "exact_form": "8",
+   "source": "EvanDaniel2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s60",
+   "note": "2026-09-28; s(60) = 8: mixed cover of [0,8]^2 (23,744 weighted points + mass spread uniformly on grid-line segments), total 59.8587 < 60, certified by two independent exact checkers; no Lean; unrefereed",
+   "date": "2026-09-28"
   },
   "history": [
    {
@@ -2500,18 +2501,39 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 7.94,
+    "exact_form": "397/50",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "2026-09-26/27; rectangle-density certificate (raised in steps from 3151/400 on 2026-09-26)",
+    "date": "2026-09-27"
+   },
+   {
+    "value": 8.0,
+    "exact_form": "8",
+    "source": "EvanDaniel2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s60",
+    "note": "2026-09-28; s(60) = 8: mixed cover of [0,8]^2 (23,744 weighted points + mass spread uniformly on grid-line segments), total 59.8587 < 60, certified by two independent exact checkers; no Lean; unrefereed",
+    "date": "2026-09-28"
    }
   ]
  },
  "61": {
   "best": {
-   "value": 7.928203230275509,
-   "exact_form": "sqrt(61 - 2*floor(sqrt(61)) + 1) + 1 = sqrt(48)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 8.0,
+   "exact_form": "8",
+   "source": "EvanDaniel2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s60",
+   "note": "2026-09-28; s(61) = 8 from s(60) = 8 by monotonicity (s(61) >= s(60); the 8 x 8 grid gives <= 8); s(k^2-3) = k was proved only for k <= 7 (Bentz); no Lean; unrefereed",
+   "date": "2026-09-28"
   },
   "history": [
    {
@@ -2530,6 +2552,26 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 7.96,
+    "exact_form": "199/25",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "2026-09-26/27; rectangle-density certificate (raised in steps from 793/100 on 2026-09-26)",
+    "date": "2026-09-27"
+   },
+   {
+    "value": 8.0,
+    "exact_form": "8",
+    "source": "EvanDaniel2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s60",
+    "note": "2026-09-28; s(61) = 8 from s(60) = 8 by monotonicity (s(61) >= s(60); the 8 x 8 grid gives <= 8); s(k^2-3) = k was proved only for k <= 7 (Bentz); no Lean; unrefereed",
+    "date": "2026-09-28"
    }
   ]
  },
@@ -3890,7 +3932,7 @@
   },
   "EvanDaniel2026": {
    "authors": "Evan Daniel (evand)",
-   "title": "square-packing (s12/): exact certificates for s(11) >= 3040/797, s(12) >= 15680/3951, s(21) = 5, s(32) = 6 and s(45) = 7, and a case-free proof of s(13) = 4",
+   "title": "square-packing (s12/): exact certificates for s(11) >= 3040/797, s(12) >= 15680/3951, s(21) = 5, s(32) = 6, s(45) = 7 and s(60) = 8, and a case-free proof of s(13) = 4",
    "venue": "GitHub repository + write-up (computer-assisted, unrefereed)",
    "year": 2026,
    "url": "https://github.com/evand/square-packing/tree/main/s12"

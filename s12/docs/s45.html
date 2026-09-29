@@ -164,6 +164,16 @@ section>*{min-width:0}
   less than 1. Spreading part of the mass evenly along the grid lines, as for <span class="mono">s(21)</span>, removed
   those holes at once: the second round of a single linear-program run already had room below 45
   (<a href="https://github.com/evand/square-packing/blob/main/s12/search/S45_COVER.md">S45_COVER.md</a> §10).</p>
+  <p>One rung further, the same recipe at side 8 gives <span class="mono">s(60) = 8</span> (2026-09-28): 23,744
+  weighted points plus mass on the fourteen interior grid lines, total <span class="mono">59.8587 &lt; 60</span>,
+  certified by the same two checkers with the same settings (0 uncertified boxes in either), no Lean. The best
+  lower bound before it was <span class="mono">397/50 = 7.94</span>
+  (<a href="https://github.com/wand125/square-packing-bounds">wand125</a>, 2026-09-27). Since removing a square
+  cannot make the packing harder, it also gives <span class="mono">s(61) = 8</span>, the first open case of
+  <span class="mono">s(k² − 3) = k</span> (proved before only up to <span class="mono">k = 7</span>). It has no page of its own:
+  the <a href="https://github.com/evand/square-packing/tree/main/s12/certificates/s60">certificate README</a> is the
+  documentation, and <a href="https://github.com/evand/square-packing/blob/main/s12/search/S60_COVER.md">S60_COVER.md</a>
+  the research log.</p>
 </section>
 
 <section id="cover">
