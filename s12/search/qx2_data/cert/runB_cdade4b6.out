@@ -1,0 +1,12 @@
+zeromargin.py sha256 640fe453c1a32f4aa580ca2b1261c6406923a4d7c131f65604a432c7fc2086ab (= pinned)
+sha256 cdade4b6c105f991e21f8a23877dfd4b92db5ea25df3c29d7999cee8d081a1b7  qx2_zm.py
+sha256 ee3e2915349b8795128417bca6414b205d526db9f01f88cd4cd32c32e8d760ac  zm_mixed.py
+sha256 640fe453c1a32f4aa580ca2b1261c6406923a4d7c131f65604a432c7fc2086ab  zeromargin.py
+sha256 bb89de15ecf5821dd7e1a36ebab8a50d792a406b7fb0f5cb38059f99ef74aae5  mixed_cover.py
+sha256 c0a6750997897c21ffc693df6df97f89a248dd9eb588a2fe2b83bf359793694b  input
+argv: qx2_zm.py qx2_data/L4_k02_box7.txt --depth 18 --nproc 2 --exact-umax 1/2 --exact-from 3 --cx-lo 2.3 --cx-hi 2.4 --cy-lo 2.3 --cy-hi 2.4 --u-hi 0.06 --resume ../runs/qx2_cert/L4_k02_final_B.jsonl
+container [0,7]^2, 0 points, 800 segments on 60 lines, Lebesgue square [9/5,26/5]^2; total 5701378693611/125000000000 = 45.611029548888
+D4 roots [0,m/2]^2 x u in [0,1/2]: 1 roots (PARTIAL); depth 18; EXACT on for u1 <= 1/2
+done in 174s: boxes 15, max depth 3, CPU 174 s
+  leaves: LEB 1  CAP 1  EXACT 3  EXACT0 3  EXACT45 0  AXIS 0  SYM 0  PIECE 0  ADM 0  P1 0  MIX 0  SPLIT 0  EMPTY 0  UNCERT 0
+VERIFIED-D4 (u > 0; u = 0 face: qx2_exact.py axis) (PARTIAL)

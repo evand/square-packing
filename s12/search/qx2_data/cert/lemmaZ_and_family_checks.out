@@ -1,0 +1,8 @@
+Lemma Z (theta = 0 face) on the box cover: 900 one-sided limit corners on a 16^2 grid over [1/2,7/2]^2; min = 1 = 1.000000000000000 at ('1/2', '5/2', '1', '-1'); exactly tight: 188; OK
+axis face: 907 one-sided limit corners, min = 1 = 1.000000000000000 at ('23/10', '23/10', '1', '1'); exactly tight: 325
+a = 9/5; one period of the profile: atoms 9/5 + layer 1/5 = 2  (sigma = 0)
+profile mirror-symmetric: True; corner module diagonal-symmetric: True
+nu(C) = 1135633136217/500000000000 = 2.271266272434; m_v = 220372778697/250000000000 = 0.881491114788; D = 423621306389/500000000000 = 0.847242612778; 4D > 3: True
+box k = 7: 800 segments built from the family; file has 800; identical multisets: True; Lebesgue square [9/5,26/5]^2 with density 1: True
+total = 5701378693611/125000000000 = 45.611029548888; k^2 - 4D = 5701378693611/125000000000; equal: True; < k^2 - 3: True
+FAMILY CHECK OK

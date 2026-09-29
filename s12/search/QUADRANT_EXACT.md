@@ -13,7 +13,18 @@ sha named; **[measured]** = float; **[heuristic]** = interpretation.
 
 ## 0. Answer
 
-RUN_STATUS_PLACEHOLDER
+**Stage reached: all four steps; the certificate is complete** [proved, modulo the correctness of the programs
+named below, which is tested but not independently re-implemented].  Statement: *the fixed-profile family
+`qx2_data/L4_k02_family.txt` (R = 2, w = 2, σ = 0) is valid, hence `s(k² − 3) = k` for every integer `k ≥ 6`* (the
+known cases `k ≤ 7` included), which with the small cases is **Bentz's conjecture `s(k² − 3) = k`**.
+Trust chain: (1) the family and box files (exact; `qx2_family_check.py` rebuilds μ₇ independently); (2) Lemma Z for
+θ = 0 (`qx2_zm.py axis`, exact enumeration, min exactly 1); (3) the θ > 0 box check of μ₇ over the D4 domain:
+run A (`qx2_zm.py` sha `86da7d97…1656`, commit 28dc161) certified 9,799 of the 9,800 roots, run B (sha
+`cdade4b6…a1b7`, commit 0e303ca) certified the remaining root `[23/10, 12/5]² × u ∈ [0, 1/16]` (§6) — both import the
+pinned `zm_mixed.py` `ee3e2915…60ac` and `zeromargin.py` `640fe453…86ab`; (4) the reduction μ₇ ⇒ μ_Q ⇒ μ_k (k ≥ 6)
+and the dilation argument (§2, on paper, re-derived independently).  Lemmas used: Z, U, K, E (with E′, E″), zm_mixed's
+S, T, L, R, P and the polygon Lemma S(b) (audited §4.5), zeromargin's ADM/P1/MIX/CHAIN primitives, and the D4
+reduction (SYM).  `V2_STATUS_PLACEHOLDER`
 
 * **Exact family** [proved, exact arithmetic]: a profile π of 52 axis-parallel uniform pieces per period (pitch 1/5)
   plus Lebesgue on `y ∈ [9/5, 2]`, and a corner module ν of 36 pieces plus Lebesgue on `[9/5, 2]²`, all masses rational
@@ -27,7 +38,7 @@ RUN_STATUS_PLACEHOLDER
 * **What the certificate claims**: every closed unit square `Q ⊂ [0,7]²` has `μ₇(Q) ≥ 1`.  It is split as
   (i) the θ = 0 face, **Lemma Z**, certified exactly (`qx2_zm.py axis`: 900 one-sided limit corners, minimum exactly 1,
   188 exactly tight; and on the quadrant model, `qx2_exact.py axis`: 907 corners, min exactly 1);
-  (ii) θ ∈ (0°, 53°] on the D4 fundamental domain, by the box checker `qx2_zm.py` (sha256 `7f6554be…d96b`), whose leaves
+  (ii) θ ∈ (0°, 53°] on the D4 fundamental domain, by the box checker `qx2_zm.py` (runs A and B, §6), whose leaves
   are zm_mixed's primitives (pinned `zm_mixed.py` `ee3e2915…60ac` and `zeromargin.py` `640fe453…86ab`, unedited) plus new
   exact primitives with proofs in §4: **LEB** (Lemma U), **CAP** (Lemma K), **EXACT** (Lemma E with E′/E″, the
   zero-margin one), **AXIS** (boxes whose admissible poses are θ = 0 only).
@@ -453,7 +464,26 @@ is why the straddle region is slow.
 
 ## 6. The run
 
-RUN_RESULTS_PLACEHOLDER
+**Run A** (`runs/qx2_cert/L4_k02_final.*`, copied to `qx2_data/cert/runA_86da7d97.*`): `qx2_zm.py` sha
+`86da7d978bbf6c7c26175bac3763b8e672195a10a4d5595202a9555b2cc71656`, input `L4_k02_box7.txt` sha `c0a67509…694b`,
+`--d4` roots (pitch 1/10, 8 u-bins: 9,800 roots), depth ≤ 18, Lemma E for `u₁ ≤ 1/2` from depth 3; 11 processes,
+6,734 s wall, 73,472 CPU-s.  56,288 boxes; leaves: PIECE 15,915, EXACT 10,084, EXACT0 372, EXACT45 759, CAP 1,012,
+LEB 715, SYM 1,170, AXIS 61, EMPTY 2,955; **1 uncertified box**: `[2.3, 2.3015625]² × [0°, 0.112°]` (the square
+`[1.8, 2.8]²` touching both boundary lines of U at θ → 0: mass exactly 1 on one side of an irrational `u*` where a
+vertex crosses `y = a`).
+
+**Run B** (`qx2_data/cert/runB_cdade4b6.*`): `qx2_zm.py` sha
+`cdade4b6c105f991e21f8a23877dfd4b92db5ea25df3c29d7999cee8d081a1b7` (adds to run A's code: the exact case split of a cap
+at `d = 0` — the parabola bound is claimed only on `{d ≥ 0}`, 0 on `{d ≤ 0}` where the boundary line carries no mass
+—, certified through the S-procedure or a common polynomial factor with the branch constraint), on the single root
+`[23/10, 12/5]² × [0, 1/16]`: 15 boxes, VERIFIED (LEB 1, CAP 1, EXACT 3, EXACT0 3).
+
+Together with Lemma Z (θ = 0) this covers every pose of the D4 fundamental domain: **μ₇ is valid.**
+Every root is fully verified by one of the two program versions; both are sound by the same lemmas (run B's version
+differs only by the added case split, which only adds certifications).
+
+V2_RUN_PLACEHOLDER
+
 
 ## 7. Open items
 
