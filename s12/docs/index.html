@@ -100,12 +100,11 @@ section>*{min-width:0}
   <h1>Twelve and Eleven Squares</h1>
   <p class="lede">Nobody knows whether twelve unit squares fit inside a square of side less than 4. Until 2026 the
   best proven floor was 3.7889, inherited from eleven squares (Stromquist 2003). Here is one at 3.9686, checked
-  exactly by computer over every position and angle: about 85% of that gap. The same method gave a floor for eleven
+  exactly by computer over every position and angle, and in full inside Lean's kernel: about 85% of that gap. The same method gave a floor for eleven
   squares, since overtaken by others (§02). And an account of how far the method does <em>not</em> go.</p>
-  <!-- LEAN-3.968616: update when S12 headline kernel check lands -->
   <div class="tags">
     <span class="tag ok">exact verifier + independent re-check</span>
-    <span class="tag ok">smaller bounds kernel-checked in Lean 4</span>
+    <span class="tag ok">kernel-checked in Lean 4</span>
     <span class="tag open">not peer reviewed</span>
     <a class="tag neutral" href="https://github.com/evand/square-packing/tree/main/s12">Code, certificates &amp; verifiers on GitHub →</a>
   </div>
@@ -346,19 +345,19 @@ VERIFIED: every CLOSED unit square inside C covers weight &gt;= 1, and total wei
 
 <section id="lean">
   <div class="sechead"><span class="eyebrow">05 · Lean</span><h2>What is formally proved</h2></div>
-  <pre><code>theorem s12_ge_35_9     : (35 / 9 : ℝ) ≤ minSide 12
-theorem s12_ge_3920_997 : (3920 / 997 : ℝ) ≤ minSide 12
-theorem s11_ge_3040_797 : (3040 / 797 : ℝ) ≤ minSide 11</code></pre>
+  <pre><code>theorem s12_ge_15680_3951 : (15680 / 3951 : ℝ) ≤ minSide 12
+theorem s12_ge_35_9       : (35 / 9 : ℝ) ≤ minSide 12
+theorem s12_ge_3920_997   : (3920 / 997 : ℝ) ≤ minSide 12
+theorem s11_ge_3040_797   : (3040 / 797 : ℝ) ≤ minSide 11</code></pre>
   <p>In Lean 4 with Mathlib, <span class="mono">minSide n</span> is the usual <span class="mono">s(n)</span>. The
   reduction step (an unavoidable set of total weight <span class="mono">W</span> allows at most
   <span class="mono">W</span> squares) is formalised, including the scaling argument that lets a
-  <em>closed</em>-square certificate control a packing. For the three bounds above the covering property is
+  <em>closed</em>-square certificate control a packing. For all four bounds above the covering property is
   checked too, inside Lean's kernel (<span class="mono">decide +kernel</span>, no
   <span class="mono">native_decide</span>), by a verifier for trees of pose boxes proved sound once; they are
-  Lean theorems with no hypothesis. For the main certificate, <span class="mono">3.968616</span>, only the
-  reduction is in Lean so far; its cover rests on the checkers of §04. No <span class="mono">sorry</span>;
+  Lean theorems with no hypothesis. The main certificate, <span class="mono">3.968616</span>, is the
+  largest: 328,275 leaves, about 7 CPU-hours in the kernel. No <span class="mono">sorry</span>;
   axioms are only <span class="mono">propext, Classical.choice, Quot.sound</span>.</p>
-  <!-- LEAN-3.968616: update when S12 headline kernel check lands -->
 </section>
 
 <section id="limits">
@@ -407,7 +406,8 @@ theorem s11_ge_3040_797 : (3040 / 797 : ℝ) ≤ minSide 11</code></pre>
   <span class="mono">s(12) ≥ 35/9</span>, <span class="mono">s(12) ≥ 3920/997</span> (a few minutes on 4 cores, after
   Mathlib). The <span class="mono">s(11)</span> kernel check is opt-in, with its data generated first
   (deterministic, gitignored):</p>
-  <pre><code>$ lean/scripts/gen_data.sh S11 &amp;&amp; (cd lean &amp;&amp; lake build Sqpack.S11Lower)   # s(11) ≥ 3040/797: about 1 CPU-hour</code></pre>
+  <pre><code>$ lean/scripts/gen_data.sh S11 &amp;&amp; (cd lean &amp;&amp; lake build Sqpack.S11Lower)   # s(11) ≥ 3040/797: about 1 CPU-hour
+$ lean/scripts/gen_data.sh S12H &amp;&amp; lean/scripts/build_parts.sh S12H Sqpack.S12HLower 1   # s(12) ≥ 15680/3951: ~7 CPU-hours, up to 31 GB</code></pre>
   <div class="tablewrap"><table>
     <thead><tr><th>path (under s12/)</th><th>what</th></tr></thead>
     <tbody>
@@ -419,7 +419,7 @@ theorem s11_ge_3040_797 : (3040 / 797 : ℝ) ≤ minSide 11</code></pre>
       <tr><td class="num">xcheck.py</td><td>independent exact re-check (Python Fractions)</td></tr>
       <tr><td class="num">lean/Sqpack/Basic.lean</td><td>formalised reduction theorem</td></tr>
       <tr><td class="num">lean/Sqpack/BoxTree.lean</td><td>the kernel verifier for pose-box trees, proved sound once</td></tr>
-      <tr><td class="num">lean/Sqpack/S12Lower.lean, S12WLower.lean, S11Lower.lean</td><td>kernel-checked s(12) ≥ 35/9, s(12) ≥ 3920/997, s(11) ≥ 3040/797</td></tr>
+      <tr><td class="num">lean/Sqpack/S12HLower.lean, S12Lower.lean, S12WLower.lean, S11Lower.lean</td><td>kernel-checked s(12) ≥ 15680/3951, s(12) ≥ 35/9, s(12) ≥ 3920/997, s(11) ≥ 3040/797</td></tr>
       <tr><td class="num">lean/LADDER.md</td><td>how the kernel checks work, and what they cost</td></tr>
       <tr><td class="num">search/lp_search.py</td><td>LP certificate search (cell cuts + column generation)</td></tr>
       <tr><td class="num">search/pack_src/</td><td>packing optimiser used for the upper-bound search</td></tr>
