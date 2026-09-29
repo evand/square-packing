@@ -25,6 +25,16 @@ import quadrant_lp as Q
 BIG = 1e6
 RUNS = Q.RUNS
 
+# STRICT containment.  quadrant_lp's TOL = 1e-9 counts chord ends up to 1e-9 outside the square; divided by sin(theta)
+# that over-counts the mass by ~1e-9/theta at tiny tilts (2e-4 at theta = 1e-5), which hid a genuine germ violation of
+# 6.4e-5 at the corner germ (1.5, 1.5) from the LP's oracle (found by qx2_zm.py, confirmed exactly, QUADRANT_EXACT.md
+# sec 6).  With tol = 0 the float error is ~1e-16/theta.
+Q.TOL = 0.0
+_chord_lenient = Q.chord
+def _chord_strict(orient, a, cx, cy, th, tol=0.0):
+    return _chord_lenient(orient, a, cx, cy, th, tol)
+Q.chord = _chord_strict
+
 
 class XModel(Q.Model):
     def __init__(self, R, w, a, kappa=0.0, th0=0.0):
@@ -182,6 +192,39 @@ def add_axis_rows(lp, m):
     return n
 
 
+class GermRows:
+    """the exact tile-germ limit rows (qx2_exact.germ_rows_exact) as a float sparse matrix; rows are handed to the LP
+    only when violated by the current solution (QUADRANT_EXACT.md 1.5)."""
+
+    def __init__(self, m, nproc):
+        import qx2_exact as E
+        import scipy.sparse as sp
+        EM = E.ExactModel(m)
+        rows = E.germ_rows_exact(EM, m.R, nproc=nproc)
+        r, c, v, rhs = [], [], [], []
+        seen = set()
+        k = 0
+        for pose, co, ar in rows:
+            key = (tuple(sorted((j, c_) for j, c_ in co.items())), ar)
+            if key in seen or 1 - ar <= 0: continue
+            seen.add(key)
+            for j, c_ in co.items(): r.append(k); c.append(j); v.append(float(c_))
+            rhs.append(float(1 - ar)); k += 1
+        self.A = sp.csr_matrix((v, (r, c)), shape=(k, m.nvar)); self.rhs = np.array(rhs)
+        self.added = np.zeros(k, bool)
+
+    def violated(self, x, tol=1e-10):
+        val = self.A @ x - self.rhs
+        return np.nonzero((val < -tol) & ~self.added)[0], float(val.min()) if len(val) else 0.0
+
+    def add(self, lp, idx):
+        sub = self.A[idx].tocsr(); sub.sort_indices()
+        n = sub.shape[0]
+        lp.h.addRows(n, self.rhs[idx], np.full(n, lp.inf), int(sub.nnz), sub.indptr[:-1].astype(np.int32),
+                     sub.indices.astype(np.int32), sub.data.astype(float))
+        self.added[idx] = True
+
+
 def run(a):
     tag = a.tag
     od = os.path.join(RUNS, 'qx2_' + tag); os.makedirs(od, exist_ok=True)
@@ -204,10 +247,22 @@ def run(a):
         for wf in a.warm.split(','):
             W = np.load(wf)['rows']; nw = lp.add(W); log(f"warm rows from {wf}: {nw} of {len(W)}")
     hist = []; pool = None; x = None
+    GR = None
+    if a.germs:
+        t1 = time.time(); GR = GermRows(m, max(a.nproc, 1))
+        log(f"germ-limit rows: {GR.A.shape[0]} distinct [{time.time()-t1:.0f}s]")
     for rnd in range(a.rounds + 1):
         t1 = time.time()
         x, obj, st = lp.solve()
         if x is None: log(f"round {rnd}: LP status {st}"); break
+        if GR is not None:
+            for it in range(50):
+                idx, gmin = GR.violated(x)
+                if len(idx) == 0: break
+                GR.add(lp, idx); x, obj, st = lp.solve()
+                log(f"   germ rows: added {len(idx)} violated (min {gmin:.3e}) -> LP {st}")
+                if x is None: break
+            if x is None: log(f"round {rnd}: LP status {st}"); break
         if a.mode == 'band':
             D = -obj; mv = D
         else:
@@ -269,6 +324,7 @@ def parser():
     ap.add_argument('--nproc', type=int, default=1); ap.add_argument('--seed', type=int, default=0)
     ap.add_argument('--tag', required=True); ap.add_argument('--warm', default='')
     ap.add_argument('--solver', default='simplex'); ap.add_argument('--crossover', default='on')
+    ap.add_argument('--germs', action='store_true', help='exact tile-germ limit rows (added when violated)')
     return ap
 
 

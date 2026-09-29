@@ -337,7 +337,7 @@ def trivial(cl):
 class Exact:
     """Lemma E: exact certification of  mu(Q) >= tau  on a pose box with u in (u0, u1]  (see QUADRANT_EXACT.md 4.4)."""
 
-    def __init__(self, cov, Ua, Ub, maxdepth_u=14, budget=48, verbose=False):
+    def __init__(self, cov, Ua, Ub, maxdepth_u=32, budget=96, verbose=False):
         if cov.points: raise ValueError("EXACT: covers with points are not supported")
         self.cov = cov; self.m = cov.m; self.Ua = Ua; self.Ub = Ub
         self.L = []
@@ -347,6 +347,7 @@ class Exact:
             self.L.append(dict(key=key, o=key[0], p=key[1], prof=prof, opts=options(key[0], key[1]),
                                f=L['f']))
         self.maxdepth_u = maxdepth_u; self.budget = budget; self.verbose = verbose
+        self.anchor = 'hi'
         self.stat = dict(cand=0, combos=0)
 
     # ------------------------------------------------------------------ geometry of the box
@@ -405,7 +406,51 @@ class Exact:
                 caps.append((axis, 'tan', dstar))
             else:
                 caps.append((axis, 'std', None))
+        if len(caps) == 2 and all(m_ == 'std' for _, m_, _ in caps) and self.corner_ok(box):
+            caps.append((2, 'corner', self.anchor))
         return caps
+
+    def corner_ok(self, box):
+        """the lower-left configuration of Lemma E'' on the whole box: Q ∩ {x < a, y < a} is the quadrilateral
+        (BL, bottom edge ∩ {x = a}, (a, a), left edge ∩ {y = a}):  x_BR >= a, y_TL >= a, (a, a) in Q, alpha, beta >= 0,
+        beta C >= alpha S  (alpha = (a - x_BL) N, beta = (a - y_BL) N)."""
+        cx0, cx1, cy0, cy1, u0, u1 = box
+        a = self.Ua
+        c1, s1 = zm.trig(u1); c0, s0 = zm.trig(u0)
+        if cx0 + (c0 + s0) / 2 < a: return False                 # x_BR = cx + (c + s)/2 >= a
+        if cy0 + (c1 - s1) / 2 < a: return False                 # y_TL = cy + (c - s)/2 >= a
+        CmS = psub(PC, PS); CpS = padd(PC, PS)
+        al_hi = padd(pscale(PN, a - cx0), pscale(CmS, HALF)); al_lo = padd(pscale(PN, a - cx1), pscale(CmS, HALF))
+        be_hi = padd(pscale(PN, a - cy0), pscale(CpS, HALF)); be_lo = padd(pscale(PN, a - cy1), pscale(CpS, HALF))
+        checks = [al_lo, be_lo,
+                  psub(pmul(be_lo, PC), pmul(al_hi, PS)),                               # beta C - alpha S >= 0
+                  psub(PN2, padd(pscale(PC, a - cx0), pscale(PS, a - cy0))),              # X(a,a) <= 1/2
+                  psub(PN2, psub(pscale(PC, a - cy0), pscale(PS, a - cx1)))]              # Y(a,a) <= 1/2
+        return all(nonneg(p, u0, u1, 4) for p in checks)
+
+    def corner_term(self, box, Dp, X, Y, anchor='hi'):
+        """Lemma E'': a concave minorant of area(Q ∩ {x < a, y < a}) = (2 C alpha beta + S (beta^2 - alpha^2)) / (2 C N^2),
+        with alpha beta >= alpha_lo beta + beta_lo alpha - alpha_lo beta_lo (McCormick) and S beta^2 >= S (2 b* beta - b*^2)."""
+        cx0, cx1, cy0, cy1 = box[:4]
+        a = self.Ua
+        CmS = psub(PC, PS); CpS = padd(PC, PS)
+        # alpha = (a - cx) N + (C - S)/2 = an / D,  beta = (a - cy) N + (C + S)/2 = bn / D
+        an = padd(pmul(psub(pscale(Dp, a), X), PN), pscale(pmul(CmS, Dp), HALF))
+        bn = padd(pmul(psub(pscale(Dp, a), Y), PN), pscale(pmul(CpS, Dp), HALF))
+        # McCormick anchor: 'lo' uses (alpha - alpha_lo)(beta - beta_lo) >= 0 (exact at the box corner (cx1, cy1)),
+        # 'hi' uses (alpha_hi - alpha)(beta_hi - beta) >= 0 (exact at (cx0, cy0)); both are the same formula with the
+        # anchor values substituted: alpha beta >= A beta + B alpha - A B.
+        if anchor == 'lo':
+            al_lo = padd(pscale(PN, a - cx1), pscale(CmS, HALF)); be_lo = padd(pscale(PN, a - cy1), pscale(CpS, HALF))
+        else:
+            al_lo = padd(pscale(PN, a - cx0), pscale(CmS, HALF)); be_lo = padd(pscale(PN, a - cy0), pscale(CpS, HALF))
+        bstar = padd(pscale(PN, a - (cy0 + cy1) / 2), pscale(CpS, HALF))
+        D2 = pmul(Dp, Dp)
+        t1 = pscale(pmul(PC, padd(padd(pmul(pmul(al_lo, bn), Dp), pmul(pmul(be_lo, an), Dp)), pscale(pmul(pmul(al_lo, be_lo), D2), -1))), 2)
+        t2 = pmul(PS, psub(pscale(pmul(pmul(bstar, bn), Dp), 2), pmul(pmul(bstar, bstar), D2)))
+        t3 = pscale(pmul(PS, pmul(an, an)), -1)
+        num = pscale(padd(padd(t1, t2), t3), HALF)
+        return RF(num, (1, 0, 2, 2))
 
     def cap_lines(self, axis):
         """c-lines d = 0 (Q touches the line) and d = sin(theta) (the second vertex crosses it)"""
@@ -447,11 +492,23 @@ class Exact:
 
     # ------------------------------------------------------------------ main entry
     def certify(self, box, tau=F(1), lam=F(0)):
-        """True only if mu(Q) >= tau at every admissible pose of the box with u in (u0, u1] (u in [u0,u1] if u0>0)."""
+        """True only if mu(Q) >= tau at every admissible pose of the box with u in (u0, u1] (u in [u0,u1] if u0>0).
+        In the corner regime (Lemma E'') both McCormick anchors are tried."""
+        self.anchor = 'hi'
+        ok, why = self._certify(box, tau, lam)
+        if not ok and self._had_corner:
+            self.anchor = 'lo'
+            ok, why = self._certify(box, tau, lam)
+            self.anchor = 'hi'
+        return ok, why
+
+    def _certify(self, box, tau, lam):
+        self._had_corner = False
         rect = self.rect(box)
         if rect is None: return False, 'rect'
         reg = self.u_regime(box)
         if reg is None: return False, 'U-regime'
+        self._had_corner = reg != 'none' and any(cp[1] == 'corner' for cp in reg)
         cx0, cx1, cy0, cy1, u0, u1 = box
         xlo = coord_rep(rect[0][0], cx0); xhi = coord_rep('R', cx1)
         ylo = coord_rep(rect[1][0], cy0); yhi = coord_rep('R', cy1)
@@ -484,7 +541,7 @@ class Exact:
                     if crosses(cl): brk.append(cl)
         if reg != 'none':
             for axis, mode, _ in reg:
-                if mode != 'std': continue
+                if mode != 'std' or axis == 2: continue
                 for cl in self.cap_lines(axis):
                     if crosses(cl): brk.append(cl)
         allc = edges + brk
@@ -540,10 +597,13 @@ class Exact:
         tau0, lam = tau                      # the claim checked: mass >= tau0 + lam * u
         const.append(RF([-F(tau0), -F(lam)]))
         if reg != 'none':
-            # area(Q ∩ U) >= sum_axis Phi_axis - (#caps - 1)   (inclusion-exclusion; no cap: area = 1)
-            const.append(RF.const(1 - len(reg)))
-            for cap in reg:
+            # area(Q ∩ U) >= sum_axis Phi_axis - (#caps - 1) [+ area(Q ∩ {x<a, y<a}) when the corner regime holds]
+            lcaps = [cp for cp in reg if cp[1] != 'corner']
+            const.append(RF.const(1 - len(lcaps)))
+            for cap in lcaps:
                 const.append(self.phi_term(cap, Dp, X, Y, u0, u1, sD))
+            if len(lcaps) < len(reg):
+                const.append(self.corner_term(box, Dp, X, Y, [cp for cp in reg if cp[1] == 'corner'][0][2]))
         for L in lines:
             r = self._line_terms(L, Dp, X, Y, pos, u0, u1, sD)
             if r is None: continue

@@ -83,6 +83,56 @@ class ExactModel:
         ar = poly_area(clip_hp(clip_hp(Qv, -1, 0, -self.a), 0, -1, -self.a))     # x >= a, y >= a
         return co, ar
 
+    def germ_coeffs(self, c0x, c0y, tx, ty, lines=None):
+        """exact limit, as u -> 0+, of (coefficients, Lebesgue area) at the pose (c0 + u t, u): the tile-germ blow-up
+        (QUADRANT_EXACT.md 1.5).  Each chord end t_k(u) = N_k(u)/F_k(u) converges in the extended reals (F = C: N(0);
+        F = S = 2u: sign(N(0)) inf, or N'(0)/2 when N(0) = 0), and the captured fraction is a continuous function of the
+        ends, so the limit is the fraction at the limit ends."""
+        import qx2_zm as Z
+        c0x, c0y, tx, ty = F(c0x), F(c0y), F(tx), F(ty)
+        cxp = [c0x, tx]; cyp = [c0y, ty]                 # c(u) = c0 + u t as polynomials in u
+        co = {}
+        for (o, p, t0, t1, var) in (self.lines if lines is None else lines):
+            opts = Z.options('H' if o == 'h' else 'V', p)
+            ups, los = [], []
+            for (typ, Fk, a0, ax, ay) in opts:
+                num = Z.padd(Z.padd(a0, Z.pmul(ax, cxp)), Z.pmul(ay, cyp))
+                n0 = num[0] if len(num) > 0 else F(0)
+                if Fk == 'C': lim = n0                                 # C(0) = 1
+                elif n0 > 0: lim = ('+inf',)                           # N(u)/(2u) -> +inf
+                elif n0 < 0: lim = ('-inf',)
+                else: lim = (num[1] if len(num) > 1 else F(0)) / 2     # N(u) = n1 u + ...
+                (ups if typ == 'up' else los).append(lim)
+            # r_up = min of ups (with +inf ignorable, -inf => empty), r_lo = max of los (-inf ignorable, +inf => empty)
+            empty = False; hi = None; lo = None
+            for x in ups:
+                if isinstance(x, tuple):
+                    if x[0] == '-inf': empty = True
+                    continue
+                hi = x if hi is None else min(hi, x)
+            for x in los:
+                if isinstance(x, tuple):
+                    if x[0] == '+inf': empty = True
+                    continue
+                lo = x if lo is None else max(lo, x)
+            if empty: continue
+            a_ = t0 if lo is None else max(lo, t0); b_ = t1 if hi is None else min(hi, t1)
+            L = b_ - a_
+            if L > 0: co[var] = co.get(var, 0) + L / (t1 - t0)
+        ar = _ov(self.a, F(10 ** 6), c0x - HALF, c0x + HALF) * _ov(self.a, F(10 ** 6), c0y - HALF, c0y + HALF)
+        return co, ar
+
+    def lines_near(self, cx, cy, r=F(3, 4)):
+        out = []
+        for L in self.lines:
+            o, p, t0, t1, var = L
+            if o == 'h':
+                if abs(p - cy) > r or t1 < cx - r or t0 > cx + r: continue
+            else:
+                if abs(p - cx) > r or t1 < cy - r or t0 > cy + r: continue
+            out.append(L)
+        return out
+
     def margin(self, u, ar):
         if self.kappa <= 0 or u == 0: return F(0)
         th = 2 * math.atan(float(u)); t = min(th % (math.pi / 2), math.pi / 2 - th % (math.pi / 2))
@@ -229,7 +279,7 @@ def axis_corners(EM, R):
                     yield cx, cy, sx, sy
 
 
-def project(path, tol=1e-7, den=10 ** 12, out=None):
+def project(path, tol=1e-7, den=10 ** 12, out=None, germs=True, nproc=8):
     """exact solution near the float one: every theta = 0 limit corner whose float value is < 1 + tol becomes an
     exact equality (value = 1), plus sigma = 0; support fixed; free variables rounded to 1/den, the pivots solved
     exactly.  (Tilted rows are not used: they carry the LP margin, and validity there is the checker's job.)"""
@@ -244,8 +294,15 @@ def project(path, tol=1e-7, den=10 ** 12, out=None):
         if v < 1 + tol:
             if any(j not in sup and c != 0 for j, c in co.items()) and False: pass
             eqs.append(({j: c for j, c in co.items() if j in sup}, 1 - ar, v))
+    ngz = len(eqs)
+    if germs:
+        for pose, co, ar in germ_rows_exact(EM, m.R, nproc=nproc):
+            v = float(ar) + sum(float(c) * x[j] for j, c in co.items())
+            if v < 1 + tol:
+                eqs.append(({j: c for j, c in co.items() if j in sup}, 1 - ar, v))
+    print(f"germ-limit rows tight: {len(eqs) - ngz}")
     eqs.append(({j: EM.csig[j] for j in sup if EM.csig[j] != 0}, EM.w - EM.const_sig, None))
-    print(f"{len(sup)} support variables, {len(eqs)} equalities (tight theta = 0 limit corners + sigma)")
+    print(f"{len(sup)} support variables, {len(eqs)} equalities (tight theta = 0 limit corners + tight germ limits + sigma)")
     # exact row reduction
     col = {j: k for k, j in enumerate(sup)}; n = len(sup)
     M = []
@@ -408,6 +465,50 @@ def write_cover(path_exact, k, out):
     MC.write(out, cover, comment=f"qx2 box k={k} from {path_exact}; total {tot} = k^2 - 4D, D = {D}")
     MC.validate(MC.load(out))
     return cover
+
+
+# ------------------------------------------------------------------------------------------------ germ-limit rows
+def germ_grid(R, pitch=F(1, 10), tstep=F(1, 5), tmax=F(6, 5)):
+    """(c0x, c0y, tx, ty) for the tile-germ blow-up rows: c0 on the pitch-grid of the quadrant window (both orders,
+    so that both tilt directions are covered: (x, y, -theta) is the diagonal image of (y, x, +theta)), t on the tstep-grid
+    of [-tmax, tmax]^2 (u-units: centre c0 + u t); at a wall (c0 = 1/2) only t >= 1, the admissible side."""
+    ex = R + F(7, 4); ey = R + F(3, 4)
+    n = int(tmax / tstep); ts = [k * tstep for k in range(-n, n + 1)]
+    xs = [HALF + k * pitch for k in range(int((ex + F(1, 4) - HALF) / pitch) + 1)]
+    out = []
+    for cx in xs:
+        for cy in xs:
+            if cy > cx or cy > ey + F(1, 4): continue
+            for (X, Y) in set([(cx, cy), (cy, cx)]):
+                for tx in ts:
+                    if X == HALF and tx < 1: continue
+                    for ty in ts:
+                        if Y == HALF and ty < 1: continue
+                        out.append((X, Y, tx, ty))
+    return out
+
+
+_GEM = None
+
+
+def _germ_work(chunk):
+    out = []
+    for (X, Y, tx, ty) in chunk:
+        co, ar = _GEM.germ_coeffs(X, Y, tx, ty, _GEM.lines_near(X, Y))
+        out.append(((X, Y, tx, ty), co, ar))
+    return out
+
+
+def germ_rows_exact(EM, R, nproc=8, **kw):
+    """exact germ-limit rows [(pose, coeff dict, area)] over germ_grid (parallel)."""
+    global _GEM
+    import multiprocessing as mp
+    G = germ_grid(R, **kw)
+    _GEM = EM
+    chunks = [G[i::nproc * 8] for i in range(nproc * 8)]
+    with mp.get_context('fork').Pool(nproc) as pool:
+        res = pool.map(_germ_work, chunks)
+    return [r for part in res for r in part]
 
 
 def write_family(path_exact, out):

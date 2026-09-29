@@ -186,17 +186,18 @@ def t_adversarial(n=200, seed=11):
     rng = random.Random(seed); unsound = 0; tried = 0; comp = 0; reasons = {}
     t0 = time.time()
     for it in range(n):
-        mode = it % 2
+        mode = it % 3
         if mode == 0:
             cv = random_cover(rng, m=5, a=F(11, 5))          # U far from the boxes: regime 'none'
         else:
-            cv = random_cover(rng, m=6, a=F(3, 2), nlines=14)   # boxes straddling y = a: regime 'bottom'
+            cv = random_cover(rng, m=6, a=F(3, 2), nlines=14)   # boxes straddling y = a (1) or near the corner (2)
         cov = ZM.Cover(cv)
         a, b = X.u_square(cov)
         ex = X.Exact(cov, a, b)
         h = F(1, rng.choice([8, 20, 40]))
         if mode == 0: x0 = F(rng.randint(40, 130), 100); y0 = F(rng.randint(40, 130), 100)
-        else: x0 = F(rng.randint(230, 330), 100); y0 = F(rng.randint(80, 190), 100)
+        elif mode == 1: x0 = F(rng.randint(230, 330), 100); y0 = F(rng.randint(80, 190), 100)
+        else: x0 = F(rng.randint(95, 160), 100); y0 = F(rng.randint(95, 160), 100)
         du = F(1, rng.choice([4, 10, 40, 200]))
         u0 = rng.choice([F(0), F(1, 20), F(1, 10)])
         box = (x0, x0 + h, y0, y0 + h, u0, min(u0 + du, F(39, 100)))
@@ -344,6 +345,49 @@ def t_slope(path, lam_hi=F(1, 2), lam_lo=F(1, 20), n=40, seed=31, region=(2.5, 3
     print(f"[slope] {tot} boxes at u -> 0: unsound {bad}; certified at lam = {float(lam_lo)}: {acc_lo}/{tot}  {'ok' if bad == 0 else 'FAIL'}")
 
 
+def t_corner(n=3000, seed=81):
+    """Lemma E'': at random poses of random boxes satisfying corner_ok, (i) the quadrilateral formula equals the exact
+    area of Q ∩ {x < a, y < a} (polygon clipping), (ii) the McCormick/tangent minorant used by corner_term is <= it."""
+    import qx2_exact as E2
+    rng = random.Random(seed)
+    cv = random_cover(rng, m=6, a=F(3, 2), nlines=4)
+    cov = ZM.Cover(cv); a, b = X.u_square(cov); ex = X.Exact(cov, a, b)
+    ok_boxes = 0; checks = 0; bad_formula = 0; bad_minor = 0; worst_loss = 0
+    for it in range(n):
+        h = F(1, rng.choice([10, 40, 160])); du = F(1, rng.choice([20, 100, 1000]))
+        x0 = F(rng.randint(90, 170), 100); y0 = F(rng.randint(90, 170), 100)
+        u0 = rng.choice([F(0), F(1, 50), F(1, 10)])
+        box = (x0, x0 + h, y0, y0 + h, u0, min(u0 + du, F(39, 100)))
+        if not ex.corner_ok(box): continue
+        ok_boxes += 1
+        for _ in range(4):
+            cx = x0 + h * F(rng.randint(0, 1000), 1000); cy = y0 + h * F(rng.randint(0, 1000), 1000)
+            u = box[4] + (box[5] - box[4]) * F(rng.randint(1, 1000), 1000)
+            C, S = E2.trig(u); N = 1  # trig returns cos, sin
+            Qv = E2.square_vertices(cx, cy, C, S)
+            LL = E2.poly_area(E2.clip_hp(E2.clip_hp(Qv, 1, 0, a), 0, 1, a))      # x <= a, y <= a
+            uu = F(u); Cp, Sp, Np = 1 - uu * uu, 2 * uu, 1 + uu * uu
+            xBL = cx + (-C + S) / 2; yBL = cy + (-S - C) / 2
+            al = (a - xBL) * Np; be = (a - yBL) * Np
+            form = (2 * Cp * al * be + Sp * (be * be - al * al)) / (2 * Cp * Np * Np)
+            # the minorant, with the box's alpha_lo, beta_lo, beta*
+            anc = rng.choice(['lo', 'hi'])
+            if anc == 'lo': al_lo = (a - box[1]) * Np + (Cp - Sp) / 2; be_lo = (a - box[3]) * Np + (Cp + Sp) / 2
+            else: al_lo = (a - box[0]) * Np + (Cp - Sp) / 2; be_lo = (a - box[2]) * Np + (Cp + Sp) / 2
+            bst = (a - (box[2] + box[3]) / 2) * Np + (Cp + Sp) / 2
+            minor = (2 * Cp * (al_lo * be + be_lo * al - al_lo * be_lo) + Sp * (2 * bst * be - bst * bst) - Sp * al * al) / (2 * Cp * Np * Np)
+            # and the RF path of corner_term at a degenerate 'candidate' (D = 1, X = cx, Y = cy)
+            rf = ex.corner_term(box, [F(1)], [F(cx)], [F(cy)], anc)
+            val = X.peval(rf.num, uu) / (Cp ** rf.e[0] * Sp ** rf.e[1] * Np ** rf.e[2])
+            checks += 1
+            if form != LL: bad_formula += 1
+            if minor > LL or val != minor: bad_minor += 1
+            worst_loss = max(worst_loss, float(LL - minor))
+    print(f"[corner] {ok_boxes} boxes in the corner regime, {checks} exact poses: formula mismatches {bad_formula}, "
+          f"minorant violations / RF mismatches {bad_minor}; max loss {worst_loss:.2e}  "
+          f"{'ok' if bad_formula == 0 and bad_minor == 0 else 'FAIL'}")
+
+
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(); ap.add_argument('what'); ap.add_argument('path', nargs='?')
     ap.add_argument('--n', type=int, default=40); ap.add_argument('--seed', type=int, default=3)
@@ -358,3 +402,4 @@ if __name__ == '__main__':
     elif a.what == 'gap': t_gap(a.n, a.seed)
     elif a.what == 'holes': make_holes(a.path, a.region or 'holes')
     elif a.what == 'slope': t_slope(a.path, n=a.n, seed=a.seed, region=reg or (2.5, 3.5, 0.5, 0.52))
+    elif a.what == 'corner': t_corner(a.n, a.seed)

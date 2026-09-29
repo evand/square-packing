@@ -262,6 +262,22 @@ the continuation is the tangent at c of the convex function `1 − g`; beyond, `
 and Φ = 1 for a line Q never crosses; if Q never meets U, λ(Q ∩ U) = 0.  Every Φ is a **concave** function of c at
 fixed u (d is affine in c).
 
+**E″ (near the corner of U).**  The bound `Φ_x + Φ_y − 1` drops `λ(Q ∩ {x < a, y < a})`, which near `(a, a)` is most of
+the square (at the germ `Q ≈ [1,2]²` it is 0.64): inclusion–exclusion is exact only with that term.  Suppose on the
+whole box: `x_BR ≥ a`, `y_TL ≥ a`, `(a, a) ∈ Q`, `α, β ≥ 0` and `βC ≥ αS`, where BL, BR, TL are the lowest, rightmost,
+leftmost vertices and `α = (a − x_BL)N`, `β = (a − y_BL)N` (affine in c).  In the frame `(ξ, η)` of Q at BL (unit
+square, Jacobian 1) the region is `{ξ, η ≥ 0, Cξ − Sη ≤ α, Sξ + Cη ≤ β}`, a quadrilateral with vertices `(0,0)`,
+`(α/C, 0)`, `((αC+βS)/N², (βC−αS)/N²)`, `(0, β/C)`, all in `[0,1]²` by the conditions (they say: P_b on the bottom edge,
+P_l on the left edge, `(a,a)` in Q), so
+
+    λ(Q ∩ {x < a, y < a}) = (2Cαβ + S(β² − α²)) / (2CN²)          (= αβ at θ = 0),
+
+an indefinite quadratic.  Its concave minorant: `αβ ≥ α_lo β + β_lo α − α_lo β_lo` (McCormick; `α_lo(u), β_lo(u)` the
+values at the box's `cx₁`, `cy₁`) and `Sβ² ≥ S(2β*β − β*²)` (tangent, β* at the box's mid-`cy`), keeping `−Sα²`.  Loss
+`≤ h_x h_y + u h_y²/4` (box sides h).  Then `λ(Q ∩ U) ≥ Φ_x + Φ_y − 1 + (that minorant)`, concave.  Test
+(`qx2_zm_test.py corner`): the quadrilateral formula equals exact polygon clipping at 8,272 random rational poses of
+2,068 corner-regime boxes, the minorant is below it at all of them, and the RF path of the code reproduces it exactly.
+
 **E (the lemma).**  *Fix u.  Let 𝓛(u) consist of the four sides of R(u) and the following lines in the centre plane
 (each affine in c, coefficients polynomial in u):*
 * *for every line ℓ within reach, every option k and every breakpoint b of G_ℓ that is **bad** for k —
@@ -285,8 +301,8 @@ parallel to an edge of Q, so chord lengths are continuous in c; Φ is continuous
 each open cell attains its minimum over the closure of a cell (a convex polygon) at a vertex; the cells cover R(u). ∎
 
 **How it is certified** (`Exact.certify`).  For every pair of lines of `𝓛` (as polynomial forms `A cx + B cy + K`) the
-vertex is `v(u) = (X/Δ, Y/Δ)`, Δ = `A₁B₂ − A₂B₁`, X, Y polynomials.  On a sub-bin (bisection of the bin, depth ≤ 14,
-≤ 48 sub-bins per vertex):
+vertex is `v(u) = (X/Δ, Y/Δ)`, Δ = `A₁B₂ − A₂B₁`, X, Y polynomials.  On a sub-bin (bisection of the bin, depth ≤ 32,
+≤ 96 sub-bins per vertex):
 1. the sign of Δ must be certified constant (Bernstein coefficients; at `u₀ = 0` after dividing out the power of u);
    parallel pairs (Δ ≡ 0) have no vertex;
 2. if `v(u)` is certified outside R(u) on the whole sub-bin (one side-constraint strictly negative) it is skipped;
