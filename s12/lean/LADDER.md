@@ -326,7 +326,29 @@ S32Z Sqpack.S32Lower 4 12-15` builds the parts 4 at a time (one `lake build` per
 raised in `Pts.lean` (the generator now emits them; `pts_toList`'s kernel list comparison recurses
 13k deep).
 
-## Next: segments (`s(21) = 5`, `s(45) = 7`) — scope, not started
+## Segments (`s(21) = 5`, `s(45) = 7`) — batch 1 done (2026-09-28): S, T, L, P in the kernel
+
+Details, statement ↔ code, and the zm_mixed.py audit: `notes/lean-segments.md`.  Done, in the
+default build, all `#print axioms` = `[propext, Classical.choice, Quot.sound]`:
+
+* `CovM.lean` — `CovM` (mixed mass), `CovM.split*`, `segD4Check`, **`le_minSide_mixed`**.
+* `SegParts.lean` — parts of segments ≤ segment mass (`parts_le_segMass`); Lemma T in pair form
+  (`pair_capture`, from `G_up(t) + G_down(t′) = 4u(t′ − t − u)`).
+* `ZMTreeM.lean` — S-blocks (Lemma S: `admAll` at the two ends + convexity) and T-groups (a monotone
+  coupling of the two germ lines' masses: the dual of Corollary T's `min_T f(T)`), `pc_sound`.
+* `LemmaL.lean`, `LBlock.lean`, `LBlockSound.lean` — L-blocks (Lemma L, general ends, Corollary L at
+  the four box corners, all corner inequalities quartic ⇒ `ZMTree.bOk`), **`lblk_sound`**.
+* `ZMTreeX.lean` — the mixed tree `ZTM` (a `ZMTree` point leaf with target `W − Lp`: Lemma P),
+  `checkM`, **`soundM`**, decoder `decM`.  `ZMTree.lean` is untouched.
+* Toys: `s3_ge_2` (pure segments, 178 leaves, 97 with L-blocks), `s3_ge_2_mixed` (points + segments,
+  222 `ADM` point leaves with a piece phantom); opt-in `s16_ge_4` (T1 grid cover, 9,451 leaves).
+* Generator `scripts/gen_zmmtree.py` (+ `scripts/lblock.py`, `scripts/mk_toys.py`): zm_mixed.py as
+  oracle, exact mirror; M2 and the T1 germ cell (S+T) reproduce zm_mixed's census exactly.
+
+Not done: Lemma L′/V, SPLIT (Lemma R), wall corners in Corollary L (the last two need a general-degree
+Bernstein lemma).  Kernel cost per `Z` leaf: S 23 ms, T 27 ms, L 125 ms (≈ 40 ms per line).
+
+### The original scope (for reference)
 
 Both covers put most of their mass uniformly on grid-line segments (s(21): 7,536 points + 1,872
 segments; s(45): 19,989 points + 3,912 segments, 32.8 of the 44.77 on lines), and their certificates

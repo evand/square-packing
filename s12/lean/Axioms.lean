@@ -120,3 +120,16 @@ import Sqpack
 -- Sqpack.S13Lower`, then
 -- #print axioms SquarePacking.s13_ge_4
 -- #print axioms SquarePacking.s13_eq_4
+-- mixed covers: CovM, piece leaves (Lemma S, Lemma T pair form, Lemma P), the mixed tree
+-- (Sqpack/{CovM,SegParts,ZMTreeM}.lean, notes/lean-segments.md), and the toy end-to-end s(3) >= 2
+#print axioms SquarePacking.ZMTreeM.le_minSide_mixed
+#print axioms SquarePacking.ZMTreeM.parts_le_segMass
+#print axioms SquarePacking.ZMTreeM.pair_capture
+#print axioms SquarePacking.ZMTreeM.admAll_sound
+#print axioms SquarePacking.ZMTreeM.pc_sound
+#print axioms SquarePacking.ZMTreeM.ZM_cov
+#print axioms SquarePacking.ZMTreeM.soundM
+#print axioms SquarePacking.s3_ge_2
+#print axioms SquarePacking.ZMTreeM.lblk_sound
+#print axioms SquarePacking.ZMTreeM.pc_soundX
+#print axioms SquarePacking.s3_ge_2_mixed
