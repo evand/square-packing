@@ -143,6 +143,26 @@ def sign_on(p, u0, u1, depth=6):
     return 0
 
 
+def pdivmod(p, q):
+    """polynomial division p = a q + r (Fractions)"""
+    p = ptrim(p); q = ptrim(q)
+    if not q: raise ZeroDivisionError
+    a = [F(0)] * max(1, len(p) - len(q) + 1); r = list(p)
+    while len(r) >= len(q) and r:
+        k = len(r) - len(q); f = r[-1] / q[-1]
+        a[k] = f
+        for i in range(len(q)): r[i + k] -= f * q[i]
+        r = ptrim(r)
+    return ptrim(a), r
+
+
+def pgcd(p, q):
+    p = ptrim(p); q = ptrim(q)
+    while q:
+        _, r = pdivmod(p, q); p, q = q, r
+    return p
+
+
 PN = [F(1), F(0), F(1)]         # N = 1 + u^2
 PC = [F(1), F(0), F(-1)]        # C = 1 - u^2
 PS = [F(0), F(2)]               # S = 2u
@@ -543,6 +563,21 @@ class Exact:
             return RF(psub(dn, pscale(pmul(PS, Dp), HALF)), (1, 0, 0, 1))   # (d N - S/2)/C
         return RF(pscale(pmul(dn, dn), HALF), (1, 1, 0, 2))               # d^2 N^2/(2 S C) >= g for all d <= cos
 
+    def cap_alts(self, axis, Dp, X, Y, u0, u1, sD):
+        """like cap_term, but when the sign of d is not certified on the sub-bin, a case split:
+        [(parabola, d), (0, -d)]: the first bound is claimed where d >= 0, the second where d <= 0 (exact there)."""
+        a = self.Ua
+        Z = X if axis == 0 else Y
+        dn = pscale(padd(pmul(pscale(PN, 2), psub(pscale(Dp, a), Z)), pmul(padd(PC, PS), Dp)), HALF)
+        d = RF(dn, (0, 0, 1, 1))
+        if rf_nonneg(rf_scale(d, -1), u0, u1, sD, 4): return [(RF([]), None)]
+        s_ = RF(PS, (0, 0, 1, 0))
+        if rf_nonneg(rf_add(d, s_, Dp, -1), u0, u1, sD, 4):
+            return [(RF(psub(dn, pscale(pmul(PS, Dp), HALF)), (1, 0, 0, 1)), None)]
+        par = RF(pscale(pmul(dn, dn), HALF), (1, 1, 0, 2))
+        if rf_nonneg(d, u0, u1, sD, 4): return [(par, None)]
+        return [(par, d), (RF([]), rf_scale(d, -1))]
+
     # ------------------------------------------------------------------ main entry
     def certify(self, box, tau=F(1), lam=F(0)):
         """True only if mu(Q) >= tau at every admissible pose of the box with u in (u0, ue] (u in [u0, ue] if u0 > 0),
@@ -649,6 +684,7 @@ class Exact:
             dv = pevalf(Dp, u)
             pos.append((pevalf(X, u) / dv, pevalf(Y, u) / dv, u))
         terms = []           # list of lists of RF alternatives (a combo picks one per list; the sum must be >= 0)
+        splits = []          # case splits: lists of (RF, region constraint g >= 0); a combo picks one branch per split
         const = []           # RF terms added to every combo
         tau0, lam = tau                      # the claim checked: mass >= tau0 + lam * u
         const.append(RF([-F(tau0), -F(lam)]))
@@ -656,8 +692,21 @@ class Exact:
             # area(Q ∩ U) >= sum_axis Phi_axis - (#caps - 1) [+ area(Q ∩ {x<a, y<a}) when the corner regime holds]
             lcaps = [cp for cp in reg if cp[1] in ('std', 'tan')]
             const.append(RF.const(1 - len(lcaps)))
+            # (no split in corner3: there the upper bound of g_y is also added back on z < 0 cells and must be one RF)
+            corner_reg = any(cp[1] == 'corner3' for cp in reg)
             for cap in lcaps:
-                const.append(self.phi_term(cap, Dp, X, Y, u0, u1, sD))
+                if cap[1] == 'std' and not corner_reg:
+                    alts = self.cap_alts(cap[0], Dp, X, Y, u0, u1, sD)
+                    if len(alts) == 1: const.append(rf_add(RF.const(1), alts[0][0], Dp, -1))
+                    else:
+                        # branch d >= 0: 1 - parabola (+ the boundary line's own bound, attached below);
+                        # branch d <= 0: 1, and the line on the boundary (x = a resp. y = a) carries no mass
+                        # (Q lies in {x >= a} resp. {y >= a} and u > 0: the chord is at most a point)
+                        bl = ('V', self.Ua) if cap[0] == 0 else ('H', self.Ua)
+                        splits.append([[rf_add(RF.const(1), r_, Dp, -1), g_, bl if k_ == 0 else None, []]
+                                       for k_, (r_, g_) in enumerate(alts)])
+                else:
+                    const.append(self.phi_term(cap, Dp, X, Y, u0, u1, sD))
             for cp in reg:
                 if cp[1] == 'corner3':
                     # cells z > 0: 1 - ghat_x - ghat_y + Mc(quad);  cells z < 0: 1 - ghat_x;  on z = 0 the minimum.
@@ -674,14 +723,27 @@ class Exact:
                     gx = rf_scale(self.cap_term(0, Dp, X, Y, u0, u1, sD), -1)
                     alt2 = self.corner_term(box, Dp, X, Y, cp[2], kind='xcut')
                     if rf_positive(zr, u0, u1, sD, 4): const.append(alt2)
-                    elif rf_positive(rf_scale(zr, -1), u0, u1, sD, 4): const.append(gx)
+                    elif rf_positive(rf_scale(zr, -1), u0, u1, sD, 4):
+                        # z' < 0: A_LL = 0, the term is -g_x exactly: the same case split as a plain cap
+                        alts = self.cap_alts(0, Dp, X, Y, u0, u1, sD)
+                        if len(alts) == 1: const.append(rf_scale(alts[0][0], -1))
+                        else:
+                            splits.append([[rf_scale(r_, -1), g_, ('V', self.Ua) if k_ == 0 else None, []]
+                                           for k_, (r_, g_) in enumerate(alts)])
                     else: terms.append([gx, alt2])
+        split_lines = {}
+        for sp in splits:
+            for br in sp:
+                if br[2] is not None: split_lines[br[2]] = br
         for L in lines:
             r = self._line_terms(L, Dp, X, Y, pos, u0, u1, sD)
             if r is None: continue
             ualts, lalts = r
             ualts = self._prune_dom(ualts, u0, u1, sD, Dp, pos)
             nl = self._prune_dom([rf_scale(x, -1) for x in lalts], u0, u1, sD, Dp, pos)
+            if L['key'] in split_lines:          # this line's bound lives in the d >= 0 branch of its cap split
+                split_lines[L['key']][3] += [ualts, nl]
+                continue
             if len(ualts) == 1: const.append(ualts[0])
             else: terms.append(ualts)
             if len(nl) == 1: const.append(nl[0])
@@ -692,21 +754,63 @@ class Exact:
         for alts in terms: ncomb *= len(alts)
         if ncomb > 64:
             return self._split(Dp, X, Y, box, rect, lines, reg, tau, u0, u1, depth, 'combos')
-        combos = [base]
+        for sp in splits:
+            nb = 0
+            for br in sp:
+                k_ = 1
+                for al in br[3]: k_ *= len(al)
+                nb += k_
+            ncomb *= nb
+        if ncomb > 64:
+            return self._split(Dp, X, Y, box, rect, lines, reg, tau, u0, u1, depth, 'combos')
+        combos = [(base, [])]
         for alts in terms:
-            combos = [rf_add(c, a, Dp) for c in combos for a in alts]
+            combos = [(rf_add(c, a, Dp), gs) for c, gs in combos for a in alts]
+        for sp in splits:
+            new_ = []
+            for br in sp:
+                parts = [br[0]]
+                for al in br[3]:
+                    parts = [rf_add(p_, a, Dp) for p_ in parts for a in al]
+                new_ += [(rf_add(c, p_, Dp), gs + [br[1]]) for c, gs in combos for p_ in parts]
+            combos = new_
         self.stat['cand'] += 1; self.stat['combos'] += len(combos)
         # constraints of R(u) that the candidate may violate on this sub-bin (for the S-procedure below)
         open_cons = [g for g in cons if not rf_nonneg(g, u0, u1, sD, 3)]
-        for c in combos:
-            if not rf_nonneg(c, u0, u1, sD, 5) and not self._sproc(c, open_cons, u0, u1, sD, Dp):
+        # a combo is claimed only where all its branch constraints gs hold (and the vertex is in R(u)): certified if
+        # c >= 0 on the sub-bin, or c - nu g >= 0 for one such constraint g (S-procedure)
+        for c, gs in combos:
+            if not rf_nonneg(c, u0, u1, sD, 5) and not self._sproc(c, gs + open_cons, u0, u1, sD, Dp) \
+                    and not self._gcdcert(c, gs, u0, u1, sD):
+                if self.verbose and depth >= self.maxdepth_u:
+                    self.lastcombo = dict(c=c, gs=gs, open=open_cons, u0=u0, u1=u1, sD=sD, Dp=Dp)
                 if depth >= self.maxdepth_u and self.verbose:
                     um = float(u0 + u1) / 2
                     self.lastfail = dict(u=(float(u0), float(u1)), pos=[(pevalf(X, uu) / pevalf(Dp, uu), pevalf(Y, uu) / pevalf(Dp, uu), uu)
                                                                        for uu in (float(u0) + 1e-12, um, float(u1))],
-                                         combo=[rf_float(cc, um, Dp) for cc in combos], nterms=len(terms))
+                                         combo=[rf_float(cc, um, Dp) for cc, _ in combos], nterms=len(terms))
                 return self._split(Dp, X, Y, box, rect, lines, reg, tau, u0, u1, depth, 'value')
         return True, 'ok'
+
+    @staticmethod
+    def _gcdcert(c, gs, u0, u1, sD):
+        """c >= 0 wherever g >= 0 (one g of gs), certified through a common factor: with the numerators Pc = G c1,
+        Pg = G g1 (G = gcd), the denominator signs s_c, s_g (constant on the sub-bin), and g1 of certified strict sign
+        sigma on the sub-bin: {g >= 0} = {s_g sigma G >= 0}, so c = (s_g sigma G)(s_c s_g sigma c1)/|den| >= 0 there if
+        s_c s_g sigma c1 >= 0 on the sub-bin.  (Needed when c and g vanish at the same irrational u, e.g. a square
+        touching the boundary of U with a vertex.)"""
+        sc = 1 if (c.e[3] % 2 == 0 or sD > 0) else -1
+        for g in gs:
+            if g is None or not g.num: continue
+            G = pgcd(c.num, g.num)
+            if len(G) <= 1: continue
+            c1, r1 = pdivmod(c.num, G); g1, r2 = pdivmod(g.num, G)
+            if r1 or r2: continue
+            sg = 1 if (g.e[3] % 2 == 0 or sD > 0) else -1
+            sig = sign_on(g1, u0, u1, 5)
+            if sig == 0: continue
+            if nonneg(pscale(c1, sc * sg * sig), u0, u1, 5): return True
+        return False
 
     @staticmethod
     def _sproc(c, gs, u0, u1, sD, Dp):

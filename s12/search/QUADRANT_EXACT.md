@@ -207,7 +207,10 @@ area).  Claim: every closed unit square `Q ⊂ [0,7]²` has `μ(Q) ≥ 1`.  By t
 * each root box is subdivided (zm_mixed's rule, depth ≤ 18); a box is a leaf if one of:
   AXIS (after zm's `clip_bin` its admissible poses are θ = 0 only: Lemma Z), LEB (Lemma U), CAP (Lemma K),
   zm_mixed's PIECE / ADM / P1 / MIX / SPLIT (with the polygon handled by its Lemma S(b), audited in §4.5),
-  EXACT (Lemma E; certifies `u ∈ (u₀, u₁]`, the θ = 0 part again by Lemma Z when `u₀ = 0`: leaf kind EXACT0).
+  EXACT (Lemma E; certifies `u ∈ (u₀, u₁]`, the θ = 0 part again by Lemma Z when `u₀ = 0`: leaf kind EXACT0; for a box
+  straddling 45° it certifies the part `θ ≤ 45°`: EXACT45), **SYM** (`θ₀ ≥ 45°`, exact test `u₀² + 2u₀ − 1 ≥ 0`: the
+  diagonal reflection maps the box's poses to poses with `θ′ = 90° − θ ≤ 45°` and centre in `[0, 7/2]²`, which the
+  roots cover with `u ≤ tan 22.5° < 1/2`; the same argument covers the `θ > 45°` part of an EXACT45 box).
 
 ## 4. The new lemmas
 
@@ -253,8 +256,13 @@ the third vertex is at height `cy + |cos θ − sin θ|/2 ≥ cy ≥ a`, so all 
 at `a`, of length `c_y = |Q ∩ {y = a}|`; hence `λ(Q ∩ {y < a}) ≤ c_y·d_y`.  The pieces on `y = a` carry
 `≥ ρ_y c_y` inside Q; the lines `y = a`, `x = a` meet in one point.  So
 `μ(Q) ≥ 1 − c_y d_y − c_x d_x + ρ_y c_y + ρ_x c_x ≥ 1`. ∎
-Test: `d ≤ a − cy₀ + ŵ/2`; `ρ` = the exact minimum density of the line's profile over `[cx₀ − ŵ/2, cx₁ + ŵ/2]` (0 if not
-fully covered).
+Test: `d ≤ a − cy₀ + ŵ/2`; `ρ` = the exact minimum density of the line's profile over a range containing the chord
+`Q ∩ {y = a}` (0 if not fully covered): `[cx₀ − ŵ/2, cx₁ + ŵ/2]`, or, when `u₀ > 0` and `d ≤ min(sin θ₀, cos θ₁)` (the cap
+is the triangle at the lowest vertex BL, legs along the unit edges `(c, s)` and `(−s, c)`), the tighter
+`[x_BL − (s/c)d, x_BL + (c/s)d]` with `x_BL = cx − (c − s)/2` bounded over the box (for `x = a`: the triangle at the
+leftmost vertex TL, `[y_TL − (c/s)d, y_TL + (s/c)d]`, `y_TL = cy + (c − s)/2`).  This matters at squares touching the
+boundary of U with a vertex, where the crude range reaches a gap of the line near `(a, a)`.  Test (`captangent`):
+2,421 CAP-certified boxes at such tangencies, 24,210 exact masses, 0 below 1.
 
 ### 4.3 Chord ends are affine in the centre
 
@@ -276,8 +284,11 @@ mismatches.)  So `μ_ℓ(Q) = max(0, G(r↑) − G(r↓))`, `r↑ = min(up optio
 
 ### 4.4 Lemma E (exact minimisation on a pose box; zero margin allowed)
 
-Box `B = [cx₀,cx₁]×[cy₀,cy₁]×[u₀,u₁]`, `0 ≤ u₀ < u₁ < 2/5` (so w(u) = (C+S)/N is increasing).  Claim certified:
-`μ(Q(c,u)) ≥ τ₀ + λu` for every admissible pose with `u ∈ (u₀, u₁]` (τ₀ = 1, λ = 0 in the certificate; other values
+Box `B = [cx₀,cx₁]×[cy₀,cy₁]×[u₀,u₁]`, `0 ≤ u₀ < tan 22.5°`, `u₁ ≤ ½`.  Claim certified:
+`μ(Q(c,u)) ≥ τ₀ + λu` for every admissible pose with `u ∈ (u₀, u_e]`, `u_e = min(u₁, tan 22.5°)` (all polynomial checks
+run on the larger `[u₀, u₁]`; every bound that uses monotonicity of cos, sin, w in u is taken on `[u₀, u_e]`, where
+cos decreases and sin, w increase, with the rational bounds `cos ≥ 7071/10⁴`, `w ≤ 14143/10⁴`, `cos − sin ≥ 0` when
+`u₁` is past 45°) (τ₀ = 1, λ = 0 in the certificate; other values
 only in tests).  The admissible centres at fixed u form the rectangle `R(u) = [x_lo(u), cx₁] × [y_lo(u), cy₁]`,
 `x_lo = cx₀` or `w(u)/2` (whichever holds on the whole bin — else the lemma is not applied), likewise y; `cx₁ + w/2 ≤ 7`
 is checked.
