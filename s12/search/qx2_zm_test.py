@@ -346,46 +346,111 @@ def t_slope(path, lam_hi=F(1, 2), lam_lo=F(1, 20), n=40, seed=31, region=(2.5, 3
 
 
 def t_corner(n=3000, seed=81):
-    """Lemma E'': at random poses of random boxes satisfying corner_ok, (i) the quadrilateral formula equals the exact
-    area of Q ∩ {x < a, y < a} (polygon clipping), (ii) the McCormick/tangent minorant used by corner_term is <= it."""
+    """Lemma E3 (corner3, BL frame): at random rational poses of random boxes satisfying corner3_ok,
+    (i) z <= 0  =>  area(Q ∩ U) = 1 - g_x   and   z >= 0  =>  area(Q ∩ U) = 1 - g_x - g_y + quad(alpha, beta), exactly
+        (exact polygon clipping);
+    (ii) the code's terms at a degenerate candidate (D = 1, X = cx, Y = cy): cap_term >= g (x and y),
+         corner_term (both anchors) <= quad, z_rf = z."""
     import qx2_exact as E2
     rng = random.Random(seed)
     cv = random_cover(rng, m=6, a=F(3, 2), nlines=4)
     cov = ZM.Cover(cv); a, b = X.u_square(cov); ex = X.Exact(cov, a, b)
-    ok_boxes = 0; checks = 0; bad_formula = 0; bad_minor = 0; worst_loss = 0
+    ok_boxes = 0; checks = 0; bad = 0; nz = [0, 0]
     for it in range(n):
-        h = F(1, rng.choice([10, 40, 160])); du = F(1, rng.choice([20, 100, 1000]))
-        x0 = F(rng.randint(90, 170), 100); y0 = F(rng.randint(90, 170), 100)
-        u0 = rng.choice([F(0), F(1, 50), F(1, 10)])
+        h = F(1, rng.choice([10, 40, 160, 640])); du = F(1, rng.choice([20, 100, 1000]))
+        x0 = F(rng.randint(90, 180), 100); y0 = F(rng.randint(90, 240), 100)
+        u0 = rng.choice([F(0), F(1, 200), F(1, 50), F(1, 10)])
         box = (x0, x0 + h, y0, y0 + h, u0, min(u0 + du, F(39, 100)))
-        if not ex.corner_ok(box): continue
+        if not ex.corner3_ok(box): continue
         ok_boxes += 1
         for _ in range(4):
             cx = x0 + h * F(rng.randint(0, 1000), 1000); cy = y0 + h * F(rng.randint(0, 1000), 1000)
             u = box[4] + (box[5] - box[4]) * F(rng.randint(1, 1000), 1000)
-            C, S = E2.trig(u); N = 1  # trig returns cos, sin
+            C, S = E2.trig(u)
             Qv = E2.square_vertices(cx, cy, C, S)
-            LL = E2.poly_area(E2.clip_hp(E2.clip_hp(Qv, 1, 0, a), 0, 1, a))      # x <= a, y <= a
-            uu = F(u); Cp, Sp, Np = 1 - uu * uu, 2 * uu, 1 + uu * uu
-            xBL = cx + (-C + S) / 2; yBL = cy + (-S - C) / 2
-            al = (a - xBL) * Np; be = (a - yBL) * Np
-            form = (2 * Cp * al * be + Sp * (be * be - al * al)) / (2 * Cp * Np * Np)
-            # the minorant, with the box's alpha_lo, beta_lo, beta*
-            anc = rng.choice(['lo', 'hi'])
-            if anc == 'lo': al_lo = (a - box[1]) * Np + (Cp - Sp) / 2; be_lo = (a - box[3]) * Np + (Cp + Sp) / 2
-            else: al_lo = (a - box[0]) * Np + (Cp - Sp) / 2; be_lo = (a - box[2]) * Np + (Cp + Sp) / 2
-            bst = (a - (box[2] + box[3]) / 2) * Np + (Cp + Sp) / 2
-            minor = (2 * Cp * (al_lo * be + be_lo * al - al_lo * be_lo) + Sp * (2 * bst * be - bst * bst) - Sp * al * al) / (2 * Cp * Np * Np)
-            # and the RF path of corner_term at a degenerate 'candidate' (D = 1, X = cx, Y = cy)
-            rf = ex.corner_term(box, [F(1)], [F(cx)], [F(cy)], anc)
-            val = X.peval(rf.num, uu) / (Cp ** rf.e[0] * Sp ** rf.e[1] * Np ** rf.e[2])
+            area = E2.poly_area(E2.clip_hp(E2.clip_hp(Qv, -1, 0, -a), 0, -1, -a))
+            gx = E2.poly_area(E2.clip_hp(Qv, 1, 0, a)); gy = E2.poly_area(E2.clip_hp(Qv, 0, 1, a))
+            Cp, Sp, Np = 1 - u * u, 2 * u, 1 + u * u
+            al = (a - cx) * Np + (Cp - Sp) / 2; be = (a - cy) * Np + (Cp + Sp) / 2
+            z = be * Cp - al * Sp
+            quad = (2 * Cp * al * be + Sp * (be * be - al * al)) / (2 * Cp * Np * Np)
             checks += 1
-            if form != LL: bad_formula += 1
-            if minor > LL or val != minor: bad_minor += 1
-            worst_loss = max(worst_loss, float(LL - minor))
-    print(f"[corner] {ok_boxes} boxes in the corner regime, {checks} exact poses: formula mismatches {bad_formula}, "
-          f"minorant violations / RF mismatches {bad_minor}; max loss {worst_loss:.2e}  "
-          f"{'ok' if bad_formula == 0 and bad_minor == 0 else 'FAIL'}")
+            if z <= 0:
+                nz[0] += 1
+                if area != 1 - gx: bad += 1; print("  z<=0 identity fails", float(area), float(1 - gx))
+            if z >= 0:
+                nz[1] += 1
+                if area != 1 - gx - gy + quad: bad += 1; print("  z>=0 identity fails", float(area), float(1 - gx - gy + quad))
+            def rfv(rf):
+                return X.peval(rf.num, u) / (Cp ** rf.e[0] * Sp ** rf.e[1] * Np ** rf.e[2]) if rf.num else F(0)
+            for axis, g in ((0, gx), (1, gy)):
+                if rfv(ex.cap_term(axis, [F(1)], [cx], [cy], u, u, 1)) < g: bad += 1; print("  cap bound fails", axis)
+            for anc in ('lo', 'hi'):
+                if rfv(ex.corner_term(box, [F(1)], [cx], [cy], anc)) > quad: bad += 1; print("  McCormick fails", anc)
+            if rfv(ex.z_rf([F(1)], [cx], [cy])) != z: bad += 1; print("  z RF mismatch")
+    print(f"[corner3] {ok_boxes} boxes in the corner3 regime, {checks} exact poses (z<=0: {nz[0]}, z>=0: {nz[1]}): "
+          f"failures {bad}  {'ok' if bad == 0 else 'FAIL'}")
+
+
+def t_leafstress(path, roots, per=40, seed=111):
+    """re-run the checker on some roots with a leaf dump and evaluate the EXACT mass at random admissible rational poses
+    of every certified leaf (favouring corners, faces and tiny u); any value below 1 in a certified leaf is a bug."""
+    cov = ZM.Cover(MC.load(path))
+    chk = X.QXChecker(cov, exact_umax=F(39, 100), exact_from=3, max_depth=18, use_chain=False, cert_mode=False, dump=True)
+    rng = random.Random(seed); bad = 0; n = 0; mn = None; kinds = {}
+    for root in roots:
+        st, unc, leaves = chk.run_box(root)
+        for box, kind, wit in leaves:
+            if kind == 'EMPTY': continue
+            kinds[kind] = kinds.get(kind, 0) + 1
+            for p in sample_poses(box, rng, per):
+                if kind == 'AXIS' and p[2] != 0: continue
+                v = ZM.exact_mass(cov, *p); n += 1
+                if mn is None or v < mn[0]: mn = (v, kind, [float(t) for t in p])
+                if v < 1: bad += 1; print("  VIOLATION in", kind, [float(t) for t in box], [float(t) for t in p], float(v))
+    print(f"[leafstress] {len(roots)} roots, leaves {kinds}, {n} exact poses, min {float(mn[0]):.12f} ({mn[1]} at {mn[2]}), "
+          f"below 1: {bad}  {'ok' if bad == 0 else 'FAIL'}")
+
+
+def t_cuts(n=4000, seed=121):
+    """Lemma E3 (xcut, TL frame): at random rational poses of random boxes satisfying xcut_ok,
+    A_LL = area(Q ∩ {x < a, y < a}) = (z'+)^2 / (2 S C N^2) exactly; z' >= 0 => -g_x + A_LL = Q'(alpha', beta'')
+    exactly; z' <= 0 => A_LL = 0; the code's McCormick term (both anchors) <= Q', cap_term(0) >= g_x, zp_rf = z'."""
+    import qx2_exact as E2
+    rng = random.Random(seed)
+    cv = random_cover(rng, m=6, a=F(3, 2), nlines=4)
+    cov = ZM.Cover(cv); a, b = X.u_square(cov); ex = X.Exact(cov, a, b)
+    nbox = 0; poses = 0; bad = 0
+    for it in range(n):
+        h = F(1, rng.choice([20, 80, 320])); du = F(1, rng.choice([50, 200, 2000]))
+        x0 = F(rng.randint(90, 240), 100); y0 = F(rng.randint(90, 240), 100)
+        u0 = rng.choice([F(0), F(1, 100), F(1, 20)])
+        box = (x0, x0 + h, y0, y0 + h, u0, min(u0 + du, F(39, 100)))
+        if not ex.xcut_ok(box): continue
+        nbox += 1
+        for _ in range(3):
+            cx = x0 + h * F(rng.randint(0, 1000), 1000); cy = y0 + h * F(rng.randint(0, 1000), 1000)
+            u = box[4] + (box[5] - box[4]) * F(rng.randint(1, 1000), 1000)
+            C, S = E2.trig(u)
+            Qv = E2.square_vertices(cx, cy, C, S)
+            Cp, Sp, Np = 1 - u * u, 2 * u, 1 + u * u
+            poses += 1
+            ex_ll = E2.poly_area(E2.clip_hp(E2.clip_hp(Qv, 1, 0, a), 0, 1, a))
+            ex_gx = E2.poly_area(E2.clip_hp(Qv, 1, 0, a))
+            al = (a - cx) * Np + (Cp + Sp) / 2; be = (a - cy) * Np - (Cp - Sp) / 2
+            z = al * Cp + be * Sp
+            form = (max(z, 0) ** 2) / (2 * Sp * Cp * Np * Np)
+            Qp = (2 * Cp * al * be + Sp * (be * be - al * al)) / (2 * Cp * Np * Np)
+            def rfv(rf):
+                return X.peval(rf.num, u) / (Cp ** rf.e[0] * Sp ** rf.e[1] * Np ** rf.e[2]) if rf.num else F(0)
+            ok = (form == ex_ll)
+            if z >= 0: ok &= (-ex_gx + ex_ll == Qp)
+            else: ok &= (ex_ll == 0)
+            ok &= rfv(ex.cap_term(0, [F(1)], [cx], [cy], u, u, 1)) >= ex_gx
+            for anc in ('lo', 'hi'): ok &= rfv(ex.corner_term(box, [F(1)], [cx], [cy], anc, kind='xcut')) <= Qp
+            ok &= rfv(ex.zp_rf([F(1)], [cx], [cy])) == z
+            if not ok: bad += 1; print("  xcut mismatch", float(form), float(ex_ll), float(ex_gx), float(Qp))
+    print(f"[xcut] {nbox} boxes, {poses} exact poses: failures {bad}  {'ok' if bad == 0 else 'FAIL'}")
 
 
 if __name__ == '__main__':
@@ -393,7 +458,7 @@ if __name__ == '__main__':
     ap.add_argument('--n', type=int, default=40); ap.add_argument('--seed', type=int, default=3)
     ap.add_argument('--region', type=str, default='')
     a = ap.parse_args()
-    reg = [float(t) for t in a.region.split(',')] if (a.region and a.what != 'holes') else None
+    reg = [float(t) for t in a.region.split(',')] if (a.region and a.what not in ('holes', 'leafstress')) else None
     if a.what == 'opts': t_opts()
     elif a.what == 'poly': t_poly()
     elif a.what == 'exact': t_exact(a.path, a.n, a.seed, reg)
@@ -403,3 +468,7 @@ if __name__ == '__main__':
     elif a.what == 'holes': make_holes(a.path, a.region or 'holes')
     elif a.what == 'slope': t_slope(a.path, n=a.n, seed=a.seed, region=reg or (2.5, 3.5, 0.5, 0.52))
     elif a.what == 'corner': t_corner(a.n, a.seed)
+    elif a.what == 'cuts': t_cuts(a.n, a.seed)
+    elif a.what == 'leafstress':
+        R_ = [tuple(F(v) for v in r.split(',')) for r in a.region.split(';')]
+        t_leafstress(a.path, R_, per=a.n, seed=a.seed)

@@ -406,45 +406,85 @@ class Exact:
                 caps.append((axis, 'tan', dstar))
             else:
                 caps.append((axis, 'std', None))
-        if len(caps) == 2 and all(m_ == 'std' for _, m_, _ in caps) and self.corner_ok(box):
-            caps.append((2, 'corner', self.anchor))
+        if len(caps) == 2 and all(m_ == 'std' for _, m_, _ in caps):
+            if self.corner3_ok(box):
+                return [caps[0], caps[1], (2, 'corner3', self.anchor)]
+            if self.xcut_ok(box):
+                return [caps[1], (0, 'xcut', self.anchor)]
         return caps
 
-    def corner_ok(self, box):
-        """the lower-left configuration of Lemma E'' on the whole box: Q ∩ {x < a, y < a} is the quadrilateral
-        (BL, bottom edge ∩ {x = a}, (a, a), left edge ∩ {y = a}):  x_BR >= a, y_TL >= a, (a, a) in Q, alpha, beta >= 0,
-        beta C >= alpha S  (alpha = (a - x_BL) N, beta = (a - y_BL) N)."""
+    def corner3_ok(self, box):
+        """Lemma E''' (BL frame) on the whole box: x_BL <= a <= x_BR, y_TL >= a, (a, a) not right of the right edge,
+        and Q ⊂ {x, y <= b} (checked by u_regime).  Then area(Q ∩ U) = 1 - g_x - W with W = 0 if z <= 0 and
+        W = g_y - quad(alpha, beta) if z >= 0 (z = beta C - alpha S; both the triangle and the strip y-cap)."""
         cx0, cx1, cy0, cy1, u0, u1 = box
         a = self.Ua
         c1, s1 = zm.trig(u1); c0, s0 = zm.trig(u0)
-        if cx0 + (c0 + s0) / 2 < a: return False                 # x_BR = cx + (c + s)/2 >= a
-        if cy0 + (c1 - s1) / 2 < a: return False                 # y_TL = cy + (c - s)/2 >= a
-        CmS = psub(PC, PS); CpS = padd(PC, PS)
-        al_hi = padd(pscale(PN, a - cx0), pscale(CmS, HALF)); al_lo = padd(pscale(PN, a - cx1), pscale(CmS, HALF))
-        be_hi = padd(pscale(PN, a - cy0), pscale(CpS, HALF)); be_lo = padd(pscale(PN, a - cy1), pscale(CpS, HALF))
-        checks = [al_lo, be_lo,
-                  psub(pmul(be_lo, PC), pmul(al_hi, PS)),                               # beta C - alpha S >= 0
-                  psub(PN2, padd(pscale(PC, a - cx0), pscale(PS, a - cy0))),              # X(a,a) <= 1/2
-                  psub(PN2, psub(pscale(PC, a - cy0), pscale(PS, a - cx1)))]              # Y(a,a) <= 1/2
-        return all(nonneg(p, u0, u1, 4) for p in checks)
+        if cx1 - (c1 - s1) / 2 > a: return False            # x_BL = cx - (c - s)/2 <= a
+        if cx0 + (c0 + s0) / 2 < a: return False            # x_BR = cx + (c + s)/2 >= a
+        if cy0 + (c1 - s1) / 2 < a: return False            # y_TL = cy + (c - s)/2 >= a
+        # X(a, a) = ((a - cx) C + (a - cy) S) / N <= 1/2, worst at (cx0, cy0)
+        return nonneg(psub(PN2, padd(pscale(PC, a - cx0), pscale(PS, a - cy0))), u0, u1, 4)
 
-    def corner_term(self, box, Dp, X, Y, anchor='hi'):
-        """Lemma E'': a concave minorant of area(Q ∩ {x < a, y < a}) = (2 C alpha beta + S (beta^2 - alpha^2)) / (2 C N^2),
-        with alpha beta >= alpha_lo beta + beta_lo alpha - alpha_lo beta_lo (McCormick) and S beta^2 >= S (2 b* beta - b*^2)."""
+    def xcut_ok(self, box):
+        """Lemma E''' (x-triangle): on the whole box the x-cap Q ∩ {x < a} is the triangle at the leftmost vertex TL
+        (x_BL >= a) and TL is above y = a (y_TL >= a).  Then area(Q ∩ U) = area(Q ∩ {y >= a}) - g_x + A_LL with
+        A_LL = (z'+)^2 / (2 S C N^2) >= 0, and -g_x + A_LL = Q'(alpha', beta'') when z' >= 0."""
+        cx0, cx1, cy0, cy1, u0, u1 = box
+        a = self.Ua
+        c1, s1 = zm.trig(u1); c0, s0 = zm.trig(u0)
+        return cx0 - (c0 - s0) / 2 >= a and cy0 + (c1 - s1) / 2 >= a
+
+    def zcut_line(self):
+        """the c-line z = beta C - alpha S = 0 (the vertex (a, a) on the bottom edge)"""
+        a = self.Ua
+        K = psub(pmul(PC, padd(pscale(PN, a), pscale(padd(PC, PS), HALF))), pmul(PS, padd(pscale(PN, a), pscale(psub(PC, PS), HALF))))
+        return (pmul(PS, PN), pscale(pmul(PC, PN), -1), K)
+
+    def z_rf(self, Dp, X, Y):
+        """z = beta C - alpha S along the candidate (BL frame), as an RF"""
+        a = self.Ua
+        CmS = psub(PC, PS); CpS = padd(PC, PS)
+        an = padd(pmul(psub(pscale(Dp, a), X), PN), pscale(pmul(CmS, Dp), HALF))
+        bn = padd(pmul(psub(pscale(Dp, a), Y), PN), pscale(pmul(CpS, Dp), HALF))
+        return RF(psub(pmul(PC, bn), pmul(PS, an)), (0, 0, 0, 1))
+
+    def zp_rf(self, Dp, X, Y):
+        """z' = alpha' C + beta'' S along the candidate (TL frame), as an RF"""
+        a = self.Ua
+        CmS = psub(PC, PS); CpS = padd(PC, PS)
+        an = padd(pmul(psub(pscale(Dp, a), X), PN), pscale(pmul(CpS, Dp), HALF))
+        bn = padd(pmul(psub(pscale(Dp, a), Y), PN), pscale(pmul(CmS, Dp), -HALF))
+        return RF(padd(pmul(PC, an), pmul(PS, bn)), (0, 0, 0, 1))
+
+    def zpcut_line(self):
+        """the c-line z' = alpha' C + beta'' S = 0"""
+        a = self.Ua
+        # alpha' = (a - cx) N + (C+S)/2, beta'' = (a - cy) N - (C-S)/2
+        K = padd(pmul(PC, padd(pscale(PN, a), pscale(padd(PC, PS), HALF))), pmul(PS, psub(pscale(PN, a), pscale(psub(PC, PS), HALF))))
+        return (pscale(pmul(PC, PN), -1), pscale(pmul(PS, PN), -1), K)
+
+    def corner_term(self, box, Dp, X, Y, anchor='hi', kind='corner'):
+        """Lemmas E2/E3 (QUADRANT_EXACT.md 4.4): a concave minorant (along the candidate) of the indefinite quadratic
+            quad(alpha, beta) = (2 C alpha beta + S (beta^2 - alpha^2)) / (2 C N^2)
+        with 'corner': alpha = (a - cx) N + (C - S)/2, beta = (a - cy) N + (C + S)/2   (frame at BL;
+                       quad = area(Q ∩ {x < a, y < a}) in the corner configuration),
+             'xcut':   alpha' = (a - cx) N + (C + S)/2, beta'' = (a - cy) N - (C - S)/2 (frame at TL;
+                       quad = Q' = -g_x + area(Q ∩ {x < a, y < a}) in the x-triangle configuration).
+        alpha beta >= A beta + B alpha - A B with (A, B) the values at the box corner (cx1, cy1) ('lo': (alpha - A)(beta - B)
+        >= 0) or (cx0, cy0) ('hi': (A - alpha)(B - beta) >= 0) -- both quantities decrease in cx, cy --; S beta^2 >=
+        S (2 b* beta - b*^2) (tangent, b* at mid-cy); -S alpha^2 kept (concave)."""
         cx0, cx1, cy0, cy1 = box[:4]
         a = self.Ua
         CmS = psub(PC, PS); CpS = padd(PC, PS)
-        # alpha = (a - cx) N + (C - S)/2 = an / D,  beta = (a - cy) N + (C + S)/2 = bn / D
-        an = padd(pmul(psub(pscale(Dp, a), X), PN), pscale(pmul(CmS, Dp), HALF))
-        bn = padd(pmul(psub(pscale(Dp, a), Y), PN), pscale(pmul(CpS, Dp), HALF))
-        # McCormick anchor: 'lo' uses (alpha - alpha_lo)(beta - beta_lo) >= 0 (exact at the box corner (cx1, cy1)),
-        # 'hi' uses (alpha_hi - alpha)(beta_hi - beta) >= 0 (exact at (cx0, cy0)); both are the same formula with the
-        # anchor values substituted: alpha beta >= A beta + B alpha - A B.
+        ka, kb = (pscale(CmS, HALF), pscale(CpS, HALF)) if kind == 'corner' else (pscale(CpS, HALF), pscale(CmS, -HALF))
+        an = padd(pmul(psub(pscale(Dp, a), X), PN), pmul(ka, Dp))
+        bn = padd(pmul(psub(pscale(Dp, a), Y), PN), pmul(kb, Dp))
         if anchor == 'lo':
-            al_lo = padd(pscale(PN, a - cx1), pscale(CmS, HALF)); be_lo = padd(pscale(PN, a - cy1), pscale(CpS, HALF))
+            al_lo = padd(pscale(PN, a - cx1), ka); be_lo = padd(pscale(PN, a - cy1), kb)
         else:
-            al_lo = padd(pscale(PN, a - cx0), pscale(CmS, HALF)); be_lo = padd(pscale(PN, a - cy0), pscale(CpS, HALF))
-        bstar = padd(pscale(PN, a - (cy0 + cy1) / 2), pscale(CpS, HALF))
+            al_lo = padd(pscale(PN, a - cx0), ka); be_lo = padd(pscale(PN, a - cy0), kb)
+        bstar = padd(pscale(PN, a - (cy0 + cy1) / 2), kb)
         D2 = pmul(Dp, Dp)
         t1 = pscale(pmul(PC, padd(padd(pmul(pmul(al_lo, bn), Dp), pmul(pmul(be_lo, an), Dp)), pscale(pmul(pmul(al_lo, be_lo), D2), -1))), 2)
         t2 = pmul(PS, psub(pscale(pmul(pmul(bstar, bn), Dp), 2), pmul(pmul(bstar, bstar), D2)))
@@ -508,7 +548,7 @@ class Exact:
         if rect is None: return False, 'rect'
         reg = self.u_regime(box)
         if reg is None: return False, 'U-regime'
-        self._had_corner = reg != 'none' and any(cp[1] == 'corner' for cp in reg)
+        self._had_corner = reg != 'none' and any(cp[1] in ('corner3', 'xcut') for cp in reg)
         cx0, cx1, cy0, cy1, u0, u1 = box
         xlo = coord_rep(rect[0][0], cx0); xhi = coord_rep('R', cx1)
         ylo = coord_rep(rect[1][0], cy0); yhi = coord_rep('R', cy1)
@@ -541,9 +581,11 @@ class Exact:
                     if crosses(cl): brk.append(cl)
         if reg != 'none':
             for axis, mode, _ in reg:
-                if mode != 'std' or axis == 2: continue
-                for cl in self.cap_lines(axis):
-                    if crosses(cl): brk.append(cl)
+                if mode in ('std', 'xcut') and axis in (0, 1):
+                    for cl in self.cap_lines(axis):
+                        if crosses(cl): brk.append(cl)
+                if mode == 'corner3' and crosses(self.zcut_line()): brk.append(self.zcut_line())
+                if mode == 'xcut' and crosses(self.zpcut_line()): brk.append(self.zpcut_line())
         allc = edges + brk
         self.nbrk = len(brk)
         # ---- candidates
@@ -598,12 +640,28 @@ class Exact:
         const.append(RF([-F(tau0), -F(lam)]))
         if reg != 'none':
             # area(Q ∩ U) >= sum_axis Phi_axis - (#caps - 1) [+ area(Q ∩ {x<a, y<a}) when the corner regime holds]
-            lcaps = [cp for cp in reg if cp[1] != 'corner']
+            lcaps = [cp for cp in reg if cp[1] in ('std', 'tan')]
             const.append(RF.const(1 - len(lcaps)))
             for cap in lcaps:
                 const.append(self.phi_term(cap, Dp, X, Y, u0, u1, sD))
-            if len(lcaps) < len(reg):
-                const.append(self.corner_term(box, Dp, X, Y, [cp for cp in reg if cp[1] == 'corner'][0][2]))
+            for cp in reg:
+                if cp[1] == 'corner3':
+                    # cells z > 0: 1 - ghat_x - ghat_y + Mc(quad);  cells z < 0: 1 - ghat_x;  on z = 0 the minimum.
+                    # (lcaps = [x, y] was added as 1 - ghat_x - ghat_y above; F1 = that + ghat_y.)
+                    zr = self.z_rf(Dp, X, Y)
+                    gy = self.cap_term(1, Dp, X, Y, u0, u1, sD)
+                    alt2 = self.corner_term(box, Dp, X, Y, cp[2])         # Mc(quad)
+                    if rf_positive(zr, u0, u1, sD, 4): const.append(alt2)
+                    elif rf_positive(rf_scale(zr, -1), u0, u1, sD, 4): const.append(gy)
+                    else: terms.append([gy, alt2])
+                elif cp[1] == 'xcut':
+                    # cells z' > 0: Phi_y + Mc(Q');  cells z' < 0: Phi_y - ghat_x;  on z' = 0 the minimum.
+                    zr = self.zp_rf(Dp, X, Y)
+                    gx = rf_scale(self.cap_term(0, Dp, X, Y, u0, u1, sD), -1)
+                    alt2 = self.corner_term(box, Dp, X, Y, cp[2], kind='xcut')
+                    if rf_positive(zr, u0, u1, sD, 4): const.append(alt2)
+                    elif rf_positive(rf_scale(zr, -1), u0, u1, sD, 4): const.append(gx)
+                    else: terms.append([gx, alt2])
         for L in lines:
             r = self._line_terms(L, Dp, X, Y, pos, u0, u1, sD)
             if r is None: continue
