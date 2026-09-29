@@ -1,12 +1,12 @@
 import Sqpack.SegParts
 
 /-!
-# Zero-margin leaves for mixed covers (points + axis-parallel segments)
+# Piece certificates for mixed covers: S-blocks (Lemma S) and T-groups (Lemma T)
 
-The sibling of `ZMTree.lean` for mixed covers (`certificates/s21/FORMAT.md`, `search/zm_mixed.py`,
-`search/ZM_MIXED.md`).  A tree `ZTM` is checked by `checkM` (natural-number arithmetic only) and
-certifies `CovM` (`CovM.lean`); `soundM` holds for every tree, so nothing about the tree or the
-generator is trusted.
+The piece side of the mixed verifier (`certificates/s21/FORMAT.md`, `search/zm_mixed.py`,
+`search/ZM_MIXED.md`, `notes/lean-segments.md`).  The tree `ZTM`, its check `checkM` and `soundM`
+(`CovM` for every tree) are in `ZMTreeX.lean`, which adds the L-blocks of `LBlock.lean`; nothing about
+the tree or the generator is trusted.
 
 ## The mixed `Z` leaf
 
