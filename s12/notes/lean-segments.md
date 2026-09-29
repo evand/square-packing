@@ -132,6 +132,16 @@ replaced by `sorry`; T1 data): **S-only 23 ms, T-group 27 ms, L-block 125 ms** (
 L-line).  M2 part (178 leaves, 15 chunks): 20.8 s kernel.  Point entries cost as in `ZMTree` (s(32): 1.06 ms
 per claimed entry).  Generator (Python, mirror included): T1 21,519 boxes in 283 CPU-s (13 ms per box).
 
+**T1 built in full** (`s16_ge_4`, opt-in): 6 part files, ~420 s each (≈ 42 CPU-min, 15 min wall on
+3 cores, ≤ 11 GB RSS per part).
+
+**s(21) pilot (generator only, the interior germ cell `[1.4,1.6]²`, pitch 1/10, 8 u-bins, 32 roots):**
+the mirror verifies it: 3,646 boxes, depth 15, 1,839 `Z` leaves (`ADM` 1,440, one chain 339, two
+chains 60; 1,263 with T-groups, 576 with L-blocks), 230 claimed points per leaf, 292 CPU-s (80 ms per
+box).  zm_mixed's shipped run needed 5,470 boxes (depth 17, pitch 1/20) for this cell.  Kernel, 30
+one-leaf chunks each: **0.69 s per leaf (T + points), 0.89 s per leaf (L + points)** — the points
+dominate.
+
 ## 5. Open obstacles
 
 1. **SPLIT (Lemma R)** is not in the Lean leaf.  It needs the Lemma L bound minimised over a region
