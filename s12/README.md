@@ -50,8 +50,9 @@ Each is an exact certificate re-checked by `./verify.sh`; nothing here is peer r
   n = 11–12).  jlevy/squares reached `99/25 = 3.96` independently on 2026-09-04
   (https://github.com/jlevy/squares, T-017) and has since replayed this certificate by a second
   method; `15680/3951` is still the best lower bound for `s(12)` we know of.  The upper bound is the
-  trivial 4, so the gap narrows from `[3.788854, 4]` to `[3.968616, 4]`.  The reduction is in Lean;
-  the smaller bounds `s(12) ≥ 35/9` and `≥ 3920/997` are kernel-checked in full.
+  trivial 4, so the gap narrows from `[3.788854, 4]` to `[3.968616, 4]`.  Kernel-checked in full in
+  Lean with no hypothesis (`s12_ge_15680_3951`, `lean/Sqpack/S12HLower.lean`, opt-in, 7.3 CPU-h;
+  `lean/LADDER.md`).
 * **`s(11) >= 3040/797 = 3.814304…`** (680 weighted points; kernel-checked in Lean).  Found 2026-08-26
   but first published 2026-09-22, by which time jlevy/squares had `3.8264` (2026-09-09); since
   superseded by jlevy's `3.827` and Kleddamag's `s(11) > 31/8 = 3.875`

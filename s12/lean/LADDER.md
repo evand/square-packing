@@ -10,7 +10,16 @@ also proves rung-3 results from our weighted certificates: `s12_ge_3920_997 : (3
 minSide 12` (`S12WLower.lean`, 224 points, in the default build) and `s11_ge_3040_797 :
 (3040/797 : ℝ) ≤ minSide 11` (`S11Lower.lean`, 680 points; **opt-in**, not imported by
 `Sqpack.lean`: `lake build Sqpack.S11Lower`, ~26 min on 3 cores).  All print the same three
-axioms.  `s(12) ≥ 3.968616` (1736 points) needs a 328k-leaf tree; not built (estimate below).
+axioms.
+
+**The headline bound, `s(12) ≥ 15680/3951 = 3.968616`, done (2026-09-28):**
+`SquarePacking.s12_ge_15680_3951 : (15680/3951 : ℝ) ≤ minSide 12` (`S12HLower.lean`), from
+`certificates/s12_lower_3.9686.txt` (1736 points, total weight 11.9738036), with the same `BoxTree`
+verifier, unchanged, and the same one-call proof as `S12WLower.lean` (the point set is
+D4-invariant, so no new root lemma).  `#print axioms` = `[propext, Classical.choice, Quot.sound]`; no
+`sorry`, no `native_decide`.  Opt-in, data gitignored: `lean/scripts/gen_data.sh S12H` (39 min, one
+core), then `lean/scripts/build_parts.sh S12H Sqpack.S12HLower 1 14-15` (6 h 31 min wall / 7.3
+CPU-h on 2 cores, ≤ 30.6 GB RSS).  Details in the measurements below.
 
 **Rung 2, the first zero-margin rung, done (2026-09-27):** `SquarePacking.s13_ge_4 : (4 : ℝ) ≤
 minSide 13` and `SquarePacking.s13_eq_4 : minSide 13 = 4` (`S13Lower.lean`), from the case-free
@@ -40,6 +49,7 @@ Sqpack.S32Lower 4 12-15` (3 h 36 min wall / 13.8 CPU-h, ≤ 15.2 GB RSS per proc
 | `Sqpack/S12Lower.lean` | `s12_ge_35_9` (hand-written, one `le_minSide` call) |
 | `Sqpack/S12W/*`, `Sqpack/S12WLower.lean` | `s(12) ≥ 3920/997` from `certificates/s12_lower_3.931795_sparse.txt` |
 | `Sqpack/S11/*`, `Sqpack/S11Lower.lean` | `s(11) ≥ 3040/797` from `certificates/s11_lower_3.8143.txt` (opt-in) |
+| `Sqpack/S12H/{Pts,Part0..319,Cov}.lean`, `Sqpack/S12HLower.lean` | generated (gitignored): the 1736 points; 1,235 chunk theorems; `cov_root`.  `s12_ge_15680_3951` from `certificates/s12_lower_3.9686.txt` (opt-in) |
 | `Sqpack/ZMTree.lean` | the zero-margin verifier `ZMTree.check` (tree type `ZT`: leaves `Z`, `E`; nodes `X/Y/U`, `XM/YM/UM`, `F`, `C`), its soundness `ZMTree.sound` (for the same `BoxTree.Cov`, so `BoxTree.le_minSide` is reused), the decoder `ZMTree.dec` |
 | `scripts/gen_zmtree.py` | zero-margin tree search (`search/zeromargin.py` as a read-only oracle) + exact integer mirror of `ZMTree.check` + leaf pruning + Lean emission |
 | `Sqpack/S13/{Pts,Part0..3,Cov}.lean`, `Sqpack/S13Lower.lean` | generated: the 3,621 points (a `PTree` and the literal `ptsL`); 209 chunk theorems; `cov_root`.  `s13_ge_4`, `s13_eq_4` (opt-in) |
@@ -49,14 +59,16 @@ Sqpack.S32Lower 4 12-15` (3 h 36 min wall / 13.8 CPU-h, ≤ 15.2 GB RSS per proc
 Regenerate: `python3 lean/scripts/gen_boxtree.py certificates/s12_uniform_7of81_3.888.txt --n 12
 --name S12U --outdir lean/Sqpack/S12U` (25 s; deterministic).  The others:
 `… s12_lower_3.931795_sparse.txt --n 12 --name S12W --outdir lean/Sqpack/S12W` (60 s) and
-`… s11_lower_3.8143.txt --n 11 --look 0 --parts 24 --name S11 --outdir lean/Sqpack/S11` (4 min).
+`… s11_lower_3.8143.txt --n 11 --look 0 --parts 24 --name S11 --outdir lean/Sqpack/S11` (4 min) and
+`… s12_lower_3.9686.txt --n 12 --look 0 --parts 320 --balance digits --name S12H --outdir
+lean/Sqpack/S12H` (39 min; `gen_data.sh S12H`).
 Rung 2: `python3 lean/scripts/gen_zmtree.py certificates/rung2/s13_closed_cover_4.txt --n 13
 --name S13 --outdir lean/Sqpack/S13 --nproc 4` (156 s wall / 580 s CPU on 4 cores; deterministic —
 a fresh run reproduces the files byte for byte; gitignored, `lean/scripts/gen_data.sh S13`).
 Rung 2b: `python3 lean/scripts/gen_zmtree.py certificates/s32/s32_closed_cover_6.txt --n 32 --name
 S32Z --outdir lean/Sqpack/S32Z --nproc 4 --parts 96` (~70 min wall on 4 cores; `gen_data.sh S32Z`),
 then `lean/scripts/build_parts.sh S32Z Sqpack.S32Lower 4 12-15` (not a plain `lake build`, below).
-Large data sets (`S11`, `S13`, `S32Z` today, all future big ones) are **gitignored**: run `lean/scripts/gen_data.sh` before
+Large data sets (`S11`, `S13`, `S32Z`, `S12H` today, all future big ones) are **gitignored**: run `lean/scripts/gen_data.sh` before
 `lake build Sqpack.S11Lower`.  Small ones (`S12U`, `S12W`) stay committed; both regenerate byte-identically.
 
 ## What is proved, and how
@@ -131,9 +143,23 @@ as the difference against the same file with the decisions replaced by an axiom.
 | `s12_uniform_7of81` (35/9) | 81, uniform | 29,529 (29,528) | 34 | 7 | **430 leaves/s** (7,594 leaves: 17.6 s) | clean `lake build` 41 s wall / 99 s CPU on 4 cores; 8.2 GB RSS per file |
 | `s12_lower_3.931795_sparse` | 224, weighted | 25,127 (25,126) | 35 | ~21 | 170 leaves/s (6,459 leaves: 38 s) | 96 s wall / 251 s CPU on 4 cores; 10 GB RSS |
 | `s11_lower_3.8143` | 680, weighted | 89,689 (89,688) | 37 | ~85 | 47 leaves/s (11,412 leaves: 240 s) | 26 min wall / 64 min CPU on 3 cores (oversubscribed); 17.6 GB RSS for an 11k-leaf file |
-| `s12_lower_3.9686` (not built) | 1736, weighted | 328,275 | 39 | ~150 (est.) | ~25 leaves/s (est.) | ~4 h CPU (est.) |
+| **`s12_lower_3.9686`** (15680/3951) | 1736, weighted | 328,275 (328,274) | 39 | ~184 | **12.5 leaves/s** (whole build, CPU) | **6 h 31 min wall / 7.3 CPU-h** on 2 cores, one part at a time; 320 files; ≤ 30.6 GB RSS per file |
 
-Tree generation (Python, one core): 25 s, 60 s, 3.5 min, 29 min.  Elaboration of the data is now
+Tree generation (Python, one core): 25 s, 60 s, 3.5 min, 24 min (+ 15 min emission).
+
+**The 1736-point run (2026-09-28, cores 14–15).**  The tree is exactly the predicted one (328,275
+leaves, depth 39, 525 candidates per leaf on average); 1,235 chunks, 2,032 `F` nodes, 61.2 M
+base-B digits (~184 claimed points per leaf).  The kernel cost came in at ~2× the model's estimate
+(≈ 80 ms CPU per leaf against 1.0 + 0.23 × 184 ≈ 43 ms), and **memory, not time, set the layout**:
+at 96 leaf-balanced files the parts covering the dense centre of the certificate (twice the digits
+of the others) peaked at 47.6 GB and took 6–7 min, the others ~20 GB and 2.5–3.5 min.  Memory grows
+through a file (per-declaration kernel work is not released), roughly with its digit count, so the
+generator now has `--balance digits` (parts balanced by digit count; the default `leaves` keeps the
+older data sets byte-identical — `S12W` was re-emitted and is unchanged).  At 320 digit-balanced
+files: 26–181 s per part, peak 30.6 GB (`Part103`, the largest file, 0.63 MB),
+most ≤ 15 GB; Lean ran ~1.1 cores per part process, so one part at a time on 2 cores costs little
+against two (which would exceed a 35 GB budget when two heavy parts coincide).  `Pts` 7 s, `Cov`
+6 s, `S12HLower` 4 s.  Elaboration of the data is now
 negligible (one numeral per chunk); the kernel is > 85 % of a data file's build time.
 
 **What dominates.**  The kernel does roughly 10⁶ `Nat` operations per second (GMP-backed; the
@@ -343,6 +369,7 @@ yet).  What a hypothesis-free rung needs:
   both done, hypothesis-free).  Next: segments (`s(21)`, `s(45)`), scoped in the section above.
 * D4 symmetry is assumed (`d4Check`); a certificate without symmetry needs a second root lemma
   (centre in `[0,m]²`, `u ∈ [0,1]`, via `θ ↦ θ + π/2`), about 30 lines on top of `d4_reduce`'s
-  step D.  All certificates in `certificates/` checked so far are D4-invariant.
+  step D.  All certificates in `certificates/` checked so far are D4-invariant (including the
+  1736-point `s12_lower_3.9686.txt`, checked by `pts_d4`).
 * Others' certificates (rung 2) only need a file in this format (`certificates/FORMAT.md`).
 

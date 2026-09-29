@@ -5,6 +5,7 @@ generic kernel checker `Sqpack/BoxTree.lean` (the Lean lower-bound ladder; see `
 Usage (from s12/):
   python3 lean/scripts/gen_boxtree.py CERT --n N --name NAME --outdir lean/Sqpack/NAME
           [--K 12] [--J 20] [--ru 29/70] [--chunk 600] [--parts 4] [--fratio 0.85] [--look 1]
+          [--balance leaves|digits]
 
 writes NAME/Pts.lean (the points and their data checks), NAME/Part*.lean (the kernel-checked
 chunks, one file per parallel build job) and NAME/Cov.lean (`cov_root`, glued by `Cov.split*`).
@@ -279,14 +280,22 @@ def emit(args, sha, s, D, W, pts, S, R, Umax, root_box, tree, stats, ctx):
          f"end {ns}\n"]
     open(f"{outdir}/Pts.lean", 'w').write("\n".join(L))
     # --- parts
-    total = sum(leaves(t, memo) for t, _ in chunks)
+    st = dict(F=0, digits=0)
+    enc = []      # per chunk: (base, numeral, number of digits)
+    for t, box in chunks:
+        digits = []
+        replay(ctx, t, box, P, args.fratio, st, digits)
+        enc.append(encode(digits) + (len(digits),))
+    # balance the parts by leaves (default) or by digits (the kernel's time *and* memory grow with
+    # a file's digits: dense certificates put far more digits on some leaves than on others)
+    size = [enc[i][2] if args.balance == 'digits' else leaves(t, memo) for i, (t, _) in enumerate(chunks)]
+    total = sum(size)
     parts, cur, acc = [], [], 0
-    for i, (t, box) in enumerate(chunks):
-        cur.append(i); acc += leaves(t, memo)
+    for i in range(len(chunks)):
+        cur.append(i); acc += size[i]
         if acc >= total * (len(parts) + 1) / args.parts and len(parts) < args.parts - 1:
             parts.append(cur); cur = []
     parts.append(cur)
-    st = dict(F=0, digits=0)
     for pi, idxs in enumerate(parts):
         L = [f"import {mod}.Pts\n", HDR,
              f"/-!\n# `{name}`: box-tree chunks {idxs[0]}..{idxs[-1]} (generated; do not edit)\n\n"
@@ -295,11 +304,9 @@ def emit(args, sha, s, D, W, pts, S, R, Umax, root_box, tree, stats, ctx):
         for i in idxs:
             t, box = chunks[i]
             bx = ' '.join(map(str, box))
-            digits = []
-            replay(ctx, t, box, P, args.fratio, st, digits)
-            B, code = encode(digits)
-            st['digits'] += len(digits)
-            L.append(f"/-- Chunk {i}: {leaves(t, memo)} leaves, {len(digits)} base-{B} digits. -/")
+            B, code, nd = enc[i]
+            st['digits'] += nd
+            L.append(f"/-- Chunk {i}: {leaves(t, memo)} leaves, {nd} base-{B} digits. -/")
             L.append(f"def c{i} : ℕ :=\n  0x{code:x}\n")
             L.append(f"theorem ok{i} : {covT} {bx} :=\n"
                      f"  sound {D} {S} {Mq} {R} {W} {ctx.F} pts.toList (by norm_num) (by norm_num) "
@@ -335,6 +342,8 @@ def main():
     ap.add_argument('--parts', type=int, default=4)
     ap.add_argument('--look', type=int, default=1, help='split lookahead depth')
     ap.add_argument('--fratio', type=float, default=0.85)
+    ap.add_argument('--balance', choices=['leaves', 'digits'], default='leaves',
+                    help='what the --parts files are balanced by')
     ap.add_argument('--name')
     ap.add_argument('--outdir')
     args = ap.parse_args()

@@ -2,6 +2,9 @@
 
 ## Result
 `s(12) >= 15680/3951 = 3.968616`  — 12 unit squares cannot be packed into any square of side < 15680/3951.
+Kernel-checked in Lean from `certificates/s12_lower_3.9686.txt` with no hypothesis (2026-09-28):
+`SquarePacking.s12_ge_15680_3951 : (15680/3951 : ℝ) ≤ minSide 12` (`lean/Sqpack/S12HLower.lean`,
+opt-in; `#print axioms` = `[propext, Classical.choice, Quot.sound]`; `lean/LADDER.md`).
 
 **s(32) = 6** (2026-09-26): see **s(32) = 6** at the end of this file and `certificates/s32/README.md`.
 
