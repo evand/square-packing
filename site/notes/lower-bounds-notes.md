@@ -201,3 +201,42 @@ additionally trivial as a perfect square.
   (already settled by Bentz 2016, Bentz 2010 and our `s(60) = 8`) it is a history entry and `best` keeps the earlier
   proof, per the tie rule above; for 78 and 97 it is `best` (previously Nagamochi's general bound).  The `n = 61`
   s(60)-corollary note no longer credits Bentz with `k = 3` (Kearney–Shiu 2002).
+- 2026-09-30 records pass, from jlevy/squares at `5ddb1cd` (its per-n case records `packing/frontier/n-XXX.md`
+  and results register), with dates from each upstream repository's commit history (GitHub API, UTC):
+  - n = 11 is **settled**: `s(11) = T = 3.8770835900228141773…`, the side of Trump's 1979 packing (root of
+    `s^8 - 20s^7 + 178s^6 - 842s^5 + 1923s^4 - 496s^3 - 6754s^2 + 12420s - 6865`), by Queuingtheorydotcom's
+    Astra-assisted certificate proof (github.com/Queuingtheorydotcom/11SquaresOptimal, commit `f9e0de7`,
+    2026-09-29 UTC), which builds on jlevy's T-026 and Kleddamag's `31/8`.  jlevy/squares replayed it
+    independently (T-060, V4/C5; packet `packing/resources/web/n11-optimality-2026-09-29/`).  Computer-assisted
+    and unrefereed, so `status` is `preprint` like the other 2026 results; the floor's `value` is the same double
+    as the catalogue's upper bound, so the table reads it as settled.  Kleddamag's `31/8` stays in the history.
+  - n = 17: the floor is Guzhou0806's R068 `116511/25000 = 4.66044` (2026-09-28, T-043, replayed).  R070
+    (`4.6604427`, 2026-09-29) and R071 (`4.66044275`, 2026-09-30) are in that repository and not yet replayed
+    anywhere; they are left to it.  jlevy's T-019 `459/100` (2026-09-04) is added to the history: it was the
+    floor from 2026-09-04 until Mira's `4.6070` on 2026-09-08.
+  - n = 18 … 72: the floors jlevy/squares has *replayed* (V3/V4) and that beat this file become `best`: jlevy's
+    own T-030 (18), T-020 (19), T-021 (20); Tokoharu's T-047 (26, 29, 30); wand125's rectangle T-045 (27, 28, 31)
+    and point T-044 (39, 40, 41, 52, 53, 55, 56, 68, 69, 70, 71, 72).  Several are one certificate serving
+    another count, as jlevy records them: a certificate whose mass is below `m` holds for every `n ≥ m`
+    (28 from the n = 27 file, 30 from 29, 52 from 53, 68 from 69), and 41 and 71 are carried from 39 and 70 by
+    monotonicity.  These are jlevy's verified floors, taken as listed; no further propagation was done here
+    (so, as before, nothing is carried forward from 17 to 18 or from an exact value to the next count).
+    Earlier steps are added to the histories where they were real steps (T-019 for 17 and 18, T-020/T-021
+    for 20 and 21, Tokoharu's `1377/250` for 27, 28 and `571/100` for 31).
+  - **Reported values.**  wand125's rectangle-density bounds (T-046, 48 counts in 18 … 95) and his `s(50) ≥ 37/5`
+    (T-048) are graded V0/C0 by jlevy: reported, with the author's checker run, but replayed by no one else.
+    They go into `history` with `"reported": true` and a note saying so, and are **never `best`**, even where
+    they are larger (at 45 counts they are); `best` stays the largest *non-reported* entry.  The four older
+    wand125 rectangle entries at n = 21 and 45 were of the same kind and now carry the flag too.  This makes
+    the `best = largest value` rule above read "largest value among entries not flagged `reported`".
+  - Exact values kept: n = 21, 32, 45, 60, 61, 78, 97 stay on our own proofs.  n = 45 gains wand125's second,
+    point-only certificate (T-054, V4/C3, 2026-09-28, a history entry under the tie rule); n = 21 gains his
+    point-only certificate as a reported entry (T-055, V0/C0).  jlevy's register still shows the Nagamochi bound
+    at 60, 61, 78 and 97, which it has not taken in yet; wand125's reported values there (7.94, 7.96, 8.955)
+    are below our exact values and are not added.
+  - Not taken: jlevy treats Green's 2000 values (Friedman's Table 2: 37, 38, 50, 51, 65–67, 82–85) as
+    reported, since Green's proofs were a private communication and have not been recovered; this file keeps
+    them as `proved` on the survey's authority, as before.  jlevy's record gives the n = 82–85 closed form as
+    `94√2/41 + 247/41 = 9.2667`, which matches the decimal and would repair the flagged `exact_form` above;
+    not changed here.  wand125's repository kept moving after jlevy's snapshot (e.g. `s(37) ≥ 161/25`,
+    `s(87) ≥ 939/100`, a point-only `s(61) = 8`, all 2026-09-30) and those are left to it.

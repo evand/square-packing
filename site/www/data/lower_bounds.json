@@ -382,14 +382,14 @@
  },
  "11": {
   "best": {
-   "value": 3.875,
-   "exact_form": "31/8",
-   "source": "Kleddamag2026",
+   "value": 3.877083590022814,
+   "exact_form": "root of s^8 - 20s^7 + 178s^6 - 842s^5 + 1923s^4 - 496s^3 - 6754s^2 + 12420s - 6865 near 3.8770835900228141773 (Trump 1979)",
+   "source": "Queuingtheorydotcom2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/Kleddamag/11-squares-certified-bound",
-   "note": "strict: s(11) > 31/8; strict-core charge certificate developed from jlevy's T-026, second checker adapted from Guzhou0806's R038; replayed in full by jlevy/squares; about 0.0021 below Trump's 1979 packing",
-   "date": "2026-09-22"
+   "url": "https://github.com/Queuingtheorydotcom/11SquaresOptimal",
+   "note": "s(11) = Trump's 1979 side: a computer-assisted certificate proof (a closed centre cover reduces any smaller packing to 2,184 cell patterns; exact certificates exclude 2,180, symmetry reduces the other four to one case, whose branch cover forces the packing into a certified isolation neighbourhood of Trump's packing); Astra-assisted, building on jlevy's T-026 and Kleddamag's 31/8; commit f9e0de7 (2026-09-29 UTC); independently replayed by jlevy/squares (T-060, V4/C5); not formalised, unrefereed",
+   "date": "2026-09-29"
   },
   "history": [
    {
@@ -477,6 +477,16 @@
     "url": "https://github.com/Kleddamag/11-squares-certified-bound",
     "note": "strict: s(11) > 31/8; strict-core charge certificate developed from jlevy's T-026, second checker adapted from Guzhou0806's R038; replayed in full by jlevy/squares; about 0.0021 below Trump's 1979 packing",
     "date": "2026-09-22"
+   },
+   {
+    "value": 3.877083590022814,
+    "exact_form": "root of s^8 - 20s^7 + 178s^6 - 842s^5 + 1923s^4 - 496s^3 - 6754s^2 + 12420s - 6865 near 3.8770835900228141773 (Trump 1979)",
+    "source": "Queuingtheorydotcom2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/Queuingtheorydotcom/11SquaresOptimal",
+    "note": "s(11) = Trump's 1979 side: a computer-assisted certificate proof (a closed centre cover reduces any smaller packing to 2,184 cell patterns; exact certificates exclude 2,180, symmetry reduces the other four to one case, whose branch cover forces the packing into a certified isolation neighbourhood of Trump's packing); Astra-assisted, building on jlevy's T-026 and Kleddamag's 31/8; commit f9e0de7 (2026-09-29 UTC); independently replayed by jlevy/squares (T-060, V4/C5); not formalised, unrefereed",
+    "date": "2026-09-29"
    }
   ]
  },
@@ -718,13 +728,13 @@
  },
  "17": {
   "best": {
-   "value": 4.66018,
-   "exact_form": "233009/50000",
+   "value": 4.66044,
+   "exact_form": "116511/25000",
    "source": "Guzhou0806_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/Guzhou0806/n17-square-packing",
-   "note": "R067, strict; keeps Kleddamag's 4.66001 sites, charges and budget and rebuilds the cores and angle intervals; the repository reports a further candidate as still under replay",
+   "url": "https://github.com/Guzhou0806/n17-square-packing/tree/815b16261f852e389968513eec94b4b9e5b3206d/certificates/R068-C010",
+   "note": "R068, strict; continues Kleddamag's 4.66001 charge through R067 (4.66018); replayed by jlevy/squares (T-043, V4/C3); the repository has since published R070 (4.6604427, 2026-09-29) and R071 (4.66044275, 2026-09-30), not yet replayed there",
    "date": "2026-09-28"
   },
   "history": [
@@ -793,6 +803,16 @@
     "url": "https://gus-massa.blogspot.com/2026/08/another-better-lower-bound-for-n17.html",
     "note": "2026-08-21; LP-optimized weights over 168 points in a 29x29 grid; explicitly improves on Burns' 4.4811",
     "date": "2026-08-21"
+   },
+   {
+    "value": 4.59,
+    "exact_form": "459/100",
+    "source": "jlevy2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/jlevy/squares",
+    "note": "T-019: weighted fractional certificate for n = 17, 18, 19 (mass below 17); the floor until Mira's 4.6070 on 2026-09-08",
+    "date": "2026-09-04"
    },
    {
     "value": 4.6070286,
@@ -883,18 +903,29 @@
     "url": "https://github.com/Guzhou0806/n17-square-packing",
     "note": "R067, strict; keeps Kleddamag's 4.66001 sites, charges and budget and rebuilds the cores and angle intervals; the repository reports a further candidate as still under replay",
     "date": "2026-09-28"
+   },
+   {
+    "value": 4.66044,
+    "exact_form": "116511/25000",
+    "source": "Guzhou0806_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/Guzhou0806/n17-square-packing/tree/815b16261f852e389968513eec94b4b9e5b3206d/certificates/R068-C010",
+    "note": "R068, strict; continues Kleddamag's 4.66001 charge through R067 (4.66018); replayed by jlevy/squares (T-043, V4/C3); the repository has since published R070 (4.6604427, 2026-09-29) and R071 (4.66044275, 2026-09-30), not yet replayed there",
+    "date": "2026-09-28"
    }
   ]
  },
  "18": {
   "best": {
-   "value": 4.445208382054341,
-   "exact_form": "(40*sqrt(2)+19)/17",
-   "source": "Green2000",
-   "year": 2000,
-   "status": "proved",
-   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-   "note": "n=17 superseded by 2026 computer-assisted preprints; n=18 not affected by those (they target n=17 only)"
+   "value": 4.679,
+   "exact_form": "4679/1000",
+   "source": "jlevy2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/jlevy/squares",
+   "note": "T-030: weighted fractional certificate, 957 atoms, mass 17.8934 < 18; replayed there (V4/C4); T-027..T-029 (4.67, 4.675, 4.6775, 2026-09-18/19) are the steps to it",
+   "date": "2026-09-19"
   },
   "history": [
    {
@@ -922,18 +953,50 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 4.59,
+    "exact_form": "459/100",
+    "source": "jlevy2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/jlevy/squares",
+    "note": "T-019: weighted fractional certificate for n = 17, 18, 19",
+    "date": "2026-09-04"
+   },
+   {
+    "value": 4.679,
+    "exact_form": "4679/1000",
+    "source": "jlevy2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/jlevy/squares",
+    "note": "T-030: weighted fractional certificate, 957 atoms, mass 17.8934 < 18; replayed there (V4/C4); T-027..T-029 (4.67, 4.675, 4.6775, 2026-09-18/19) are the steps to it",
+    "date": "2026-09-19"
+   },
+   {
+    "value": 4.695,
+    "exact_form": "939/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n18_L4695",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-27",
+    "reported": true
    }
   ]
  },
  "19": {
   "best": {
-   "value": 4.485281374238571,
-   "exact_form": "6*sqrt(2)-4",
-   "source": "FriedmanDS7",
-   "year": 2009,
-   "status": "proved",
-   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-   "note": null
+   "value": 4.8,
+   "exact_form": "24/5",
+   "source": "jlevy2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/jlevy/squares",
+   "note": "T-020: weighted fractional certificate, 2,260 atoms, mass 18.9226 < 19, so it holds for n = 19, 20, 21 (V4/C4)",
+   "date": "2026-09-04"
   },
   "history": [
    {
@@ -961,18 +1024,40 @@
     "status": "proved",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
+   },
+   {
+    "value": 4.8,
+    "exact_form": "24/5",
+    "source": "jlevy2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/jlevy/squares",
+    "note": "T-020: weighted fractional certificate, 2,260 atoms, mass 18.9226 < 19, so it holds for n = 19, 20, 21 (V4/C4)",
+    "date": "2026-09-04"
+   },
+   {
+    "value": 4.815,
+    "exact_form": "963/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n19_L4815",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-27",
+    "reported": true
    }
   ]
  },
  "20": {
   "best": {
-   "value": 4.60555127546399,
-   "exact_form": "sqrt(20 - 2*floor(sqrt(20)) + 1) + 1 = sqrt(13)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 4.85,
+   "exact_form": "97/20",
+   "source": "jlevy2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/jlevy/squares",
+   "note": "T-021: weighted fractional certificate, 1,680 atoms, mass 19.8487 < 20 (V4/C4)",
+   "date": "2026-09-05"
   },
   "history": [
    {
@@ -1000,6 +1085,37 @@
     "status": "proved",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
+   },
+   {
+    "value": 4.8,
+    "exact_form": "24/5",
+    "source": "jlevy2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/jlevy/squares",
+    "note": "T-020: weighted fractional certificate, mass 18.9226 < 19",
+    "date": "2026-09-04"
+   },
+   {
+    "value": 4.85,
+    "exact_form": "97/20",
+    "source": "jlevy2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/jlevy/squares",
+    "note": "T-021: weighted fractional certificate, 1,680 atoms, mass 19.8487 < 20 (V4/C4)",
+    "date": "2026-09-05"
+   },
+   {
+    "value": 4.895,
+    "exact_form": "979/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n20_L4895",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-27",
+    "reported": true
    }
   ]
  },
@@ -1042,6 +1158,26 @@
     "note": null
    },
    {
+    "value": 4.8,
+    "exact_form": "24/5",
+    "source": "jlevy2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/jlevy/squares",
+    "note": "T-020: weighted fractional certificate, mass 18.9226 < 19",
+    "date": "2026-09-04"
+   },
+   {
+    "value": 4.85,
+    "exact_form": "97/20",
+    "source": "jlevy2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/jlevy/squares",
+    "note": "T-021: weighted fractional certificate, mass 19.8487 < 20",
+    "date": "2026-09-05"
+   },
+   {
     "value": 4.88,
     "exact_form": "122/25",
     "source": "jlevy2026",
@@ -1068,8 +1204,9 @@
     "year": 2026,
     "status": "preprint",
     "url": "https://github.com/wand125/square-packing-bounds",
-    "note": "2026-09-26",
-    "date": "2026-09-26"
+    "note": "2026-09-26; rectangle-density certificate, reported, not independently replayed",
+    "date": "2026-09-26",
+    "reported": true
    },
    {
     "value": 4.9875,
@@ -1078,7 +1215,9 @@
     "year": 2026,
     "status": "preprint",
     "url": "https://github.com/wand125/square-packing-bounds",
-    "note": "September 2026, after 249/50"
+    "note": "2026-09-27, after 249/50; rectangle-density certificate, reported, not independently replayed",
+    "reported": true,
+    "date": "2026-09-27"
    },
    {
     "value": 5.0,
@@ -1089,6 +1228,17 @@
     "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s21",
     "note": "2026-09-27; s(21) = 5: mixed cover of [0,5]^2 (7,536 weighted points + mass spread uniformly on grid-line segments), total 20.8947 < 21, certified by two independent exact checkers; Lean top theorem from the checker hypothesis; unrefereed",
     "date": "2026-09-27"
+   },
+   {
+    "value": 5.0,
+    "exact_form": "5",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/point_n21_L5",
+    "note": "a second certificate for s(21) = 5, point-only (no line segments), commit d38917c; reported, not independently replayed (jlevy/squares T-055, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
@@ -1241,13 +1391,14 @@
  },
  "26": {
   "best": {
-   "value": 5.391854457079787,
-   "exact_form": "2*sqrt(2)+(27+2*sqrt(10))/13",
-   "source": "Green2000",
-   "year": 2000,
-   "status": "proved",
-   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-   "note": null
+   "value": 5.508,
+   "exact_form": "1377/250",
+   "source": "tokoharu2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/tokoharu/square-packing-density-bounds/tree/main/certificates/cert_n26_L5508",
+   "note": "rectangle-density certificate; replayed by jlevy/squares (T-047, V4/C3)",
+   "date": "2026-09-21"
   },
   "history": [
    {
@@ -1275,18 +1426,40 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 5.508,
+    "exact_form": "1377/250",
+    "source": "tokoharu2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/tokoharu/square-packing-density-bounds/tree/main/certificates/cert_n26_L5508",
+    "note": "rectangle-density certificate; replayed by jlevy/squares (T-047, V4/C3)",
+    "date": "2026-09-21"
+   },
+   {
+    "value": 5.53,
+    "exact_form": "553/100",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n26_L553",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-27",
+    "reported": true
    }
   ]
  },
  "27": {
   "best": {
-   "value": 5.391854457079787,
-   "exact_form": "2*sqrt(2)+(27+2*sqrt(10))/13",
-   "source": "Green2000",
-   "year": 2000,
-   "status": "proved",
-   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-   "note": null
+   "value": 5.6,
+   "exact_form": "28/5",
+   "source": "wand125_2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n27_L56",
+   "note": "rectangle-density certificate in tokoharu's format; replayed by jlevy/squares (T-045, V4/C3)",
+   "date": "2026-09-26"
   },
   "history": [
    {
@@ -1314,18 +1487,39 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 5.508,
+    "exact_form": "1377/250",
+    "source": "tokoharu2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/tokoharu/square-packing-density-bounds/tree/main/certificates/cert_n26_L5508",
+    "note": "the n = 26 rectangle-density certificate, whose mass is below 26; replayed by jlevy/squares (T-047)",
+    "date": "2026-09-21"
+   },
+   {
+    "value": 5.6,
+    "exact_form": "28/5",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n27_L56",
+    "note": "rectangle-density certificate in tokoharu's format; replayed by jlevy/squares (T-045, V4/C3)",
+    "date": "2026-09-26"
    }
   ]
  },
  "28": {
   "best": {
-   "value": 5.511708697745938,
-   "exact_form": "2*sqrt(2)+6/sqrt(5)",
-   "source": "Green2000",
-   "year": 2000,
-   "status": "proved",
-   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-   "note": null
+   "value": 5.6,
+   "exact_form": "28/5",
+   "source": "wand125_2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n27_L56",
+   "note": "the n = 27 rectangle-density certificate, whose mass is below 27; replayed by jlevy/squares (T-045, V4/C3)",
+   "date": "2026-09-26"
   },
   "history": [
    {
@@ -1353,18 +1547,50 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 5.508,
+    "exact_form": "1377/250",
+    "source": "tokoharu2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/tokoharu/square-packing-density-bounds/tree/main/certificates/cert_n26_L5508",
+    "note": "the n = 26 rectangle-density certificate, whose mass is below 26; replayed by jlevy/squares (T-047)",
+    "date": "2026-09-21"
+   },
+   {
+    "value": 5.6,
+    "exact_form": "28/5",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n27_L56",
+    "note": "the n = 27 rectangle-density certificate, whose mass is below 27; replayed by jlevy/squares (T-045, V4/C3)",
+    "date": "2026-09-26"
+   },
+   {
+    "value": 5.72,
+    "exact_form": "143/25",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n28_L572",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
  "29": {
   "best": {
-   "value": 5.511708697745938,
-   "exact_form": "2*sqrt(2)+6/sqrt(5)",
-   "source": "Green2000",
-   "year": 2000,
-   "status": "proved",
-   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-   "note": null
+   "value": 5.71,
+   "exact_form": "571/100",
+   "source": "tokoharu2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/tokoharu/square-packing-density-bounds/tree/main/certificates/cert_n29_L571",
+   "note": "rectangle-density certificate; replayed by jlevy/squares (T-047, V4/C3)",
+   "date": "2026-09-21"
   },
   "history": [
    {
@@ -1392,18 +1618,40 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 5.71,
+    "exact_form": "571/100",
+    "source": "tokoharu2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/tokoharu/square-packing-density-bounds/tree/main/certificates/cert_n29_L571",
+    "note": "rectangle-density certificate; replayed by jlevy/squares (T-047, V4/C3)",
+    "date": "2026-09-21"
+   },
+   {
+    "value": 5.79,
+    "exact_form": "579/100",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n29_L579",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-27",
+    "reported": true
    }
   ]
  },
  "30": {
   "best": {
-   "value": 5.58257569495584,
-   "exact_form": "sqrt(30 - 2*floor(sqrt(30)) + 1) + 1 = sqrt(21)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 5.71,
+   "exact_form": "571/100",
+   "source": "tokoharu2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/tokoharu/square-packing-density-bounds/tree/main/certificates/cert_n29_L571",
+   "note": "the n = 29 rectangle-density certificate, whose mass is below 29; replayed by jlevy/squares (T-047, V4/C3)",
+   "date": "2026-09-21"
   },
   "history": [
    {
@@ -1431,18 +1679,40 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 5.71,
+    "exact_form": "571/100",
+    "source": "tokoharu2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/tokoharu/square-packing-density-bounds/tree/main/certificates/cert_n29_L571",
+    "note": "the n = 29 rectangle-density certificate, whose mass is below 29; replayed by jlevy/squares (T-047, V4/C3)",
+    "date": "2026-09-21"
+   },
+   {
+    "value": 5.865,
+    "exact_form": "1173/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n30_L5865",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-27",
+    "reported": true
    }
   ]
  },
  "31": {
   "best": {
-   "value": 5.69041575982343,
-   "exact_form": "sqrt(31 - 2*floor(sqrt(31)) + 1) + 1 = sqrt(22)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 5.92,
+   "exact_form": "148/25",
+   "source": "wand125_2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n31_L592",
+   "note": "rectangle-density certificate in tokoharu's format; replayed by jlevy/squares (T-045, V4/C3)",
+   "date": "2026-09-27"
   },
   "history": [
    {
@@ -1470,6 +1740,37 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 5.71,
+    "exact_form": "571/100",
+    "source": "tokoharu2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/tokoharu/square-packing-density-bounds/tree/main/certificates/cert_n29_L571",
+    "note": "the n = 29 rectangle-density certificate, whose mass is below 29; replayed by jlevy/squares (T-047)",
+    "date": "2026-09-21"
+   },
+   {
+    "value": 5.92,
+    "exact_form": "148/25",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n31_L592",
+    "note": "rectangle-density certificate in tokoharu's format; replayed by jlevy/squares (T-045, V4/C3)",
+    "date": "2026-09-27"
+   },
+   {
+    "value": 5.935,
+    "exact_form": "1187/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n31_L5935",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
@@ -1708,6 +2009,17 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 6.425,
+    "exact_form": "257/40",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n37_L6425",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
@@ -1747,18 +2059,30 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 6.54,
+    "exact_form": "327/50",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n38_L654",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
  "39": {
   "best": {
-   "value": 6.350603018683724,
-   "exact_form": "2*sqrt(2)+(113+10*sqrt(3))/37",
-   "source": "Green2000",
-   "year": 2000,
-   "status": "proved",
-   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-   "note": null
+   "value": 6.5,
+   "exact_form": "13/2",
+   "source": "wand125_2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n39_L650.json",
+   "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+   "date": "2026-09-14"
   },
   "history": [
    {
@@ -1786,18 +2110,40 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 6.5,
+    "exact_form": "13/2",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n39_L650.json",
+    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-14"
+   },
+   {
+    "value": 6.63,
+    "exact_form": "663/100",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n39_L663",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-27",
+    "reported": true
    }
   ]
  },
  "40": {
   "best": {
-   "value": 6.406135888745854,
-   "exact_form": "2*sqrt(2)+8/sqrt(5)",
-   "source": "Green2000",
-   "year": 2000,
-   "status": "proved",
-   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-   "note": null
+   "value": 6.5,
+   "exact_form": "13/2",
+   "source": "wand125_2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n40_L650.json",
+   "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+   "date": "2026-09-14"
   },
   "history": [
    {
@@ -1825,18 +2171,40 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 6.5,
+    "exact_form": "13/2",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n40_L650.json",
+    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-14"
+   },
+   {
+    "value": 6.695,
+    "exact_form": "1339/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n40_L6695",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-27",
+    "reported": true
    }
   ]
  },
  "41": {
   "best": {
-   "value": 6.477225575051661,
-   "exact_form": "sqrt(41 - 2*floor(sqrt(41)) + 1) + 1 = sqrt(30)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 6.5,
+   "exact_form": "13/2",
+   "source": "wand125_2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n39_L650.json",
+   "note": "the n = 39 certificate, carried to n = 41 by monotonicity (s(41) >= s(39)) as jlevy/squares does; replayed by jlevy/squares (T-044, V4/C3)",
+   "date": "2026-09-14"
   },
   "history": [
    {
@@ -1864,6 +2232,27 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 6.5,
+    "exact_form": "13/2",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n39_L650.json",
+    "note": "the n = 39 certificate, carried to n = 41 by monotonicity (s(41) >= s(39)) as jlevy/squares does; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-14"
+   },
+   {
+    "value": 6.755,
+    "exact_form": "1351/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n41_L6755",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-27",
+    "reported": true
    }
   ]
  },
@@ -1894,6 +2283,17 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 6.79,
+    "exact_form": "679/100",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n42_L679",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
@@ -1924,6 +2324,17 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 6.865,
+    "exact_form": "1373/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n43_L6865",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-27",
+    "reported": true
    }
   ]
  },
@@ -1954,6 +2365,17 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 6.935,
+    "exact_form": "1387/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n44_L6935",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
@@ -1993,8 +2415,9 @@
     "year": 2026,
     "status": "preprint",
     "url": "https://github.com/wand125/square-packing-bounds",
-    "note": "2026-09-25/26; rectangle-density certificate",
-    "date": "2026-09-26"
+    "note": "2026-09-25/26; rectangle-density certificate; rectangle-density certificate, reported, not independently replayed",
+    "date": "2026-09-26",
+    "reported": true
    },
    {
     "value": 6.955,
@@ -2003,8 +2426,9 @@
     "year": 2026,
     "status": "preprint",
     "url": "https://github.com/wand125/square-packing-bounds",
-    "note": "2026-09-27; rectangle-density certificate",
-    "date": "2026-09-27"
+    "note": "2026-09-27; rectangle-density certificate; rectangle-density certificate, reported, not independently replayed",
+    "date": "2026-09-27",
+    "reported": true
    },
    {
     "value": 7.0,
@@ -2015,6 +2439,16 @@
     "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s45",
     "note": "2026-09-27; s(45) = 7: mixed cover of [0,7]^2 (19,989 weighted points + mass spread uniformly on grid-line segments), total 44.7735 < 45, certified by two independent exact checkers; no Lean; unrefereed",
     "date": "2026-09-27"
+   },
+   {
+    "value": 7.0,
+    "exact_form": "7",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/point_n45_L7",
+    "note": "second proof of s(45) = 7 by a point-only certificate (no line segments), commit 39d8ecc; replayed by jlevy/squares (T-054, V4/C3)",
+    "date": "2026-09-28"
    }
   ]
  },
@@ -2193,6 +2627,17 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 7.4,
+    "exact_form": "37/5",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "mixed point-and-segment certificate, commit 75dd095; reported, not independently replayed (jlevy/squares T-048, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
@@ -2232,18 +2677,30 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 7.4425,
+    "exact_form": "2977/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n51_L74425",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
  "52": {
   "best": {
-   "value": 7.317426011159064,
-   "exact_form": "2*sqrt(2)+(101+3*sqrt(14))/25",
-   "source": "Green2000",
-   "year": 2000,
-   "status": "proved",
-   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-   "note": null
+   "value": 7.38,
+   "exact_form": "369/50",
+   "source": "wand125_2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n53_L738.json",
+   "note": "the n = 53 certificate, whose exact mass 51.483 is below 52; replayed by jlevy/squares (T-044, V4/C3)",
+   "date": "2026-09-21"
   },
   "history": [
    {
@@ -2271,18 +2728,40 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 7.38,
+    "exact_form": "369/50",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n53_L738.json",
+    "note": "the n = 53 certificate, whose exact mass 51.483 is below 52; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-21"
+   },
+   {
+    "value": 7.535,
+    "exact_form": "1507/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n52_L7535",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-27",
+    "reported": true
    }
   ]
  },
  "53": {
   "best": {
-   "value": 7.324555320336759,
-   "exact_form": "sqrt(53 - 2*floor(sqrt(53)) + 1) + 1 = sqrt(40)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 7.38,
+   "exact_form": "369/50",
+   "source": "wand125_2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n53_L738.json",
+   "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+   "date": "2026-09-21"
   },
   "history": [
    {
@@ -2310,6 +2789,27 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 7.38,
+    "exact_form": "369/50",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n53_L738.json",
+    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-21"
+   },
+   {
+    "value": 7.595,
+    "exact_form": "1519/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n53_L7595",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
@@ -2340,18 +2840,30 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 7.6675,
+    "exact_form": "3067/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n54_L76675",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-27",
+    "reported": true
    }
   ]
  },
  "55": {
   "best": {
-   "value": 7.48074069840786,
-   "exact_form": "sqrt(55 - 2*floor(sqrt(55)) + 1) + 1 = sqrt(42)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 7.54,
+   "exact_form": "377/50",
+   "source": "wand125_2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n55_L754.json",
+   "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+   "date": "2026-09-17"
   },
   "history": [
    {
@@ -2370,18 +2882,40 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 7.54,
+    "exact_form": "377/50",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n55_L754.json",
+    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-17"
+   },
+   {
+    "value": 7.71,
+    "exact_form": "771/100",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n55_L771",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
  "56": {
   "best": {
-   "value": 7.557438524302,
-   "exact_form": "sqrt(56 - 2*floor(sqrt(56)) + 1) + 1 = sqrt(43)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 7.62,
+   "exact_form": "381/50",
+   "source": "wand125_2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n56_L762.json",
+   "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+   "date": "2026-09-17"
   },
   "history": [
    {
@@ -2400,6 +2934,27 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 7.62,
+    "exact_form": "381/50",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n56_L762.json",
+    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-17"
+   },
+   {
+    "value": 7.77,
+    "exact_form": "777/100",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n56_L777",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
@@ -2430,6 +2985,17 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 7.835,
+    "exact_form": "1567/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n57_L7835",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-27",
+    "reported": true
    }
   ]
  },
@@ -2460,6 +3026,17 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 7.89,
+    "exact_form": "789/100",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n58_L789",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-27",
+    "reported": true
    }
   ]
  },
@@ -2490,6 +3067,17 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 7.92,
+    "exact_form": "198/25",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n59_L792",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
@@ -2770,6 +3358,17 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 8.375,
+    "exact_form": "67/8",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n66_L8375",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
@@ -2809,18 +3408,30 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 8.455,
+    "exact_form": "1691/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n67_L8455",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
  "68": {
   "best": {
-   "value": 8.289965586284652,
-   "exact_form": "2*sqrt(2)+71/13",
-   "source": "Green2000",
-   "year": 2000,
-   "status": "proved",
-   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-   "note": null
+   "value": 8.41,
+   "exact_form": "841/100",
+   "source": "wand125_2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n69_L841.json",
+   "note": "the n = 69 certificate, whose exact mass is below 68; replayed by jlevy/squares (T-044, V4/C3)",
+   "date": "2026-09-21"
   },
   "history": [
    {
@@ -2848,18 +3459,40 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 8.41,
+    "exact_form": "841/100",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n69_L841.json",
+    "note": "the n = 69 certificate, whose exact mass is below 68; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-21"
+   },
+   {
+    "value": 8.495,
+    "exact_form": "1699/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n68_L8495",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-27",
+    "reported": true
    }
   ]
  },
  "69": {
   "best": {
-   "value": 8.348469228349535,
-   "exact_form": "sqrt(69 - 2*floor(sqrt(69)) + 1) + 1 = sqrt(54)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 8.41,
+   "exact_form": "841/100",
+   "source": "wand125_2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n69_L841.json",
+   "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+   "date": "2026-09-21"
   },
   "history": [
    {
@@ -2878,18 +3511,40 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 8.41,
+    "exact_form": "841/100",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n69_L841.json",
+    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-21"
+   },
+   {
+    "value": 8.575,
+    "exact_form": "343/40",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n69_L8575",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-27",
+    "reported": true
    }
   ]
  },
  "70": {
   "best": {
-   "value": 8.416198487095663,
-   "exact_form": "sqrt(70 - 2*floor(sqrt(70)) + 1) + 1 = sqrt(55)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 8.55,
+   "exact_form": "171/20",
+   "source": "wand125_2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n70_L855.json",
+   "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+   "date": "2026-09-17"
   },
   "history": [
    {
@@ -2908,18 +3563,40 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 8.55,
+    "exact_form": "171/20",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n70_L855.json",
+    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-17"
+   },
+   {
+    "value": 8.62,
+    "exact_form": "431/50",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n70_L862",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
  "71": {
   "best": {
-   "value": 8.483314773547882,
-   "exact_form": "sqrt(71 - 2*floor(sqrt(71)) + 1) + 1 = sqrt(56)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 8.55,
+   "exact_form": "171/20",
+   "source": "wand125_2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n70_L855.json",
+   "note": "the n = 70 certificate, carried to n = 71 by monotonicity (s(71) >= s(70)) as jlevy/squares does; replayed by jlevy/squares (T-044, V4/C3)",
+   "date": "2026-09-17"
   },
   "history": [
    {
@@ -2938,18 +3615,40 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 8.55,
+    "exact_form": "171/20",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n70_L855.json",
+    "note": "the n = 70 certificate, carried to n = 71 by monotonicity (s(71) >= s(70)) as jlevy/squares does; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-17"
+   },
+   {
+    "value": 8.685,
+    "exact_form": "1737/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n71_L8685",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-27",
+    "reported": true
    }
   ]
  },
  "72": {
   "best": {
-   "value": 8.54983443527075,
-   "exact_form": "sqrt(72 - 2*floor(sqrt(72)) + 1) + 1 = sqrt(57)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 8.61,
+   "exact_form": "861/100",
+   "source": "wand125_2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n72_L861.json",
+   "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+   "date": "2026-09-17"
   },
   "history": [
    {
@@ -2968,6 +3667,27 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 8.61,
+    "exact_form": "861/100",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n72_L861.json",
+    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-17"
+   },
+   {
+    "value": 8.74,
+    "exact_form": "437/50",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n72_L874",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
@@ -2998,6 +3718,17 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 8.78,
+    "exact_form": "439/50",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n73_L878",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-27",
+    "reported": true
    }
   ]
  },
@@ -3028,6 +3759,17 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 8.84,
+    "exact_form": "221/25",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n74_L884",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
@@ -3058,6 +3800,17 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 8.89,
+    "exact_form": "889/100",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n75_L889",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-27",
+    "reported": true
    }
   ]
  },
@@ -3088,6 +3841,17 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 8.92,
+    "exact_form": "223/25",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n76_L892",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-27",
+    "reported": true
    }
   ]
  },
@@ -3118,6 +3882,17 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 8.92,
+    "exact_form": "223/25",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n76_L892",
+    "note": "the n = 76 rectangle-density certificate, whose mass is below 77; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-27",
+    "reported": true
    }
   ]
  },
@@ -3435,6 +4210,17 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 9.355,
+    "exact_form": "1871/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n86_L9355",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
@@ -3495,6 +4281,17 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 9.45,
+    "exact_form": "189/20",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n88_L945",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
@@ -3525,6 +4322,17 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 9.55,
+    "exact_form": "191/20",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n89_L955",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
@@ -3555,6 +4363,17 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 9.55,
+    "exact_form": "191/20",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n89_L955",
+    "note": "the n = 89 rectangle-density certificate, whose mass is below 90; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
@@ -3585,6 +4404,17 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 9.645,
+    "exact_form": "1929/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n91_L9645",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
@@ -3675,6 +4505,17 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 9.795,
+    "exact_form": "1959/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n94_L9795",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
@@ -3705,6 +4546,17 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 9.8418,
+    "exact_form": "49209/5000",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n95_L98418",
+    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
+    "date": "2026-09-28",
+    "reported": true
    }
   ]
  },
@@ -4030,6 +4882,13 @@
    "venue": "GitHub repository (Lean 4 formalisation)",
    "year": 2026,
    "url": "https://github.com/chelokot/square-packing-archive"
+  },
+  "Queuingtheorydotcom2026": {
+   "authors": "Queuingtheorydotcom (GitHub user)",
+   "title": "11SquaresOptimal: a computer-assisted certificate proof that the known eleven-square packing (Trump 1979) is optimal (Astra-assisted)",
+   "venue": "GitHub repository (computer-assisted, unrefereed; independently replayed by jlevy/squares, T-060)",
+   "year": 2026,
+   "url": "https://github.com/Queuingtheorydotcom/11SquaresOptimal"
   }
  },
  "meta": {
@@ -4038,6 +4897,7 @@
   "caveats": "See site/notes/lower-bounds-notes.md for sourcing notes and uncertainties. Entries with status 'preprint' are computer-assisted 2026 results that have not been refereed. Others' certificates are linked as published; this project replays only its own. Where a 2026 repository is still moving (n = 17 especially), the history keeps the main steps and the linked repository has the rest.",
   "precision": "`value` is the full double-precision evaluation of `exact_form`, not a rounded decimal: storing the n=5 floor as 2.7071068 put it ABOVE the true 2+1/sqrt(2)=2.707106781..., so it compared as greater than the matching upper bound and s(5) and s(10) were reported open with a gap of -0.0000. Entries whose exact_form is absent or flagged unreliable keep their curated decimal.",
   "updated": "2026-09-30",
-  "families": "s(k^2-3) = k is proved here for every k >= 6 (EvanDaniel2026, 2026-09-29, s12/certificates/k2m3). The table covers n <= 100, so it holds the cases n = 33, 46, 61, 78, 97 (k = 6..10); for n = 33, 46, 61, which were already settled, it is a history entry and `best` keeps the earlier proof; for n = 78, 97 it is `best`. The family continues beyond the table (n = 118, 141, ...)."
+  "families": "s(k^2-3) = k is proved here for every k >= 6 (EvanDaniel2026, 2026-09-29, s12/certificates/k2m3). The table covers n <= 100, so it holds the cases n = 33, 46, 61, 78, 97 (k = 6..10); for n = 33, 46, 61, which were already settled, it is a history entry and `best` keeps the earlier proof; for n = 78, 97 it is `best`. The family continues beyond the table (n = 118, 141, ...).",
+  "reported": "Entries with \"reported\": true are values their authors report but that no one other than the author has replayed (jlevy/squares grades them V0/C0). They are kept in `history` for the record and are never `best`, even where they are larger."
  }
 }
