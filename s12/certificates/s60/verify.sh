@@ -16,6 +16,11 @@ C=$B/s60_mixed_cover_8.txt
 FULL=0
 case "${1:-}" in --full) FULL=1 ;; "") ;; *) echo "usage: $0 [--full]"; exit 2 ;; esac
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
+run() {   # run a check, indent its output, stop on failure (a pipe into sed would hide the exit status under sh)
+  "$@" > "$TMP/o" 2>&1 && st=0 || st=$?
+  sed 's/^/    /' "$TMP/o"
+  [ "$st" = 0 ] || { echo "FAILED ($st): $*"; exit 1; }
+}
 NP=${NPROC:-$(nproc)}
 
 echo "--- hashes"
@@ -25,15 +30,15 @@ echo "--- the cover: well-formed, exact total < 60, D4-invariant measure (search
 python3 search/mixed_records.py cover $C 60
 
 echo "--- shipped zm_mixed.py run (zm_mixed_d4/): header shas = checker/ + cover, settings, all 102,400 roots certified"
-python3 search/mixed_records.py zm_mixed $B/zm_mixed_d4 $C | sed 's/^/    /'
+run python3 search/mixed_records.py zm_mixed $B/zm_mixed_d4 $C
 for f in zm_mixed.py mixed_cover.py zeromargin.py; do   # the same checker files as the s(21) bundle
   cmp $B/zm_mixed_d4/checker/$f $B/../s21/zm_mixed_d4/checker/$f
 done
 cmp $B/zm_mixed_d4/checker/zeromargin.py $B/../s32/zeromargin_d4/checker/zeromargin.py   # the pinned zeromargin.py
 
 echo "--- shipped zmx2 runs (zmx2_d4/, zmx2_full/): every root of each region certified"
-python3 search/mixed_records.py zmx2 $B/zmx2_d4/roots.log $C d4 | sed 's/^/    /'
-python3 search/mixed_records.py zmx2 $B/zmx2_full/roots.log $C full | sed 's/^/    /'
+run python3 search/mixed_records.py zmx2 $B/zmx2_d4/roots.log $C d4
+run python3 search/mixed_records.py zmx2 $B/zmx2_full/roots.log $C full
 
 echo "--- fresh zmx2 run: the whole pose space, no symmetry assumed (--full: cover + mirror, 51,200 roots)"
 ( cd verify2 && cargo build --release --bin zmx2 2>&1 | tail -1 )
@@ -42,7 +47,7 @@ $Z d4 $C
 out=$($Z cert $C --full --threads "$NP" --log "$TMP/full.log" 2>&1) || { echo "$out" | tail -20; echo "zmx2 failed"; exit 1; }
 echo "$out" | grep -E '^(cover:|done in|VERIFIED|NOT VERIFIED|INCOMPLETE)'
 echo "$out" | grep -q '^VERIFIED: ' || { echo "REJECTED by zmx2: $C"; exit 1; }
-python3 search/mixed_records.py zmx2 "$TMP/full.log" $C full | sed 's/^/    /'
+run python3 search/mixed_records.py zmx2 "$TMP/full.log" $C full
 python3 - "$TMP/full.log" $B/zmx2_full/roots.log <<'EOF'
 import sys
 def census(p):   # ROOT id pass P root R boxes b cert c empty e uncert u maxdepth m capped k ms t
@@ -62,7 +67,7 @@ if [ "$FULL" = 1 ]; then
   python3 search/zm_mixed.py cert $C --d4 --cert-mode --disj --chain-from 0 --depth 24 --pitch 1/20 --ubins 16 \
       --nproc "$NP" --progress 5000 --resume "$O/roots.jsonl" --manifest "$O/manifest.json" > "$O/run.log" 2>&1 || true
   tail -4 "$O/run.log"
-  python3 search/mixed_records.py zm_mixed "$O" $C | sed 's/^/    /'
+  run python3 search/mixed_records.py zm_mixed "$O" $C
   python3 - "$O/roots.jsonl" $B/zm_mixed_d4/roots.jsonl <<'EOF'
 import json, sys
 def census(p):
