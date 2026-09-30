@@ -749,6 +749,8 @@ class Exact:
             if len(nl) == 1: const.append(nl[0])
             else: terms.append(nl)
         base = rf_sum(const, Dp)
+        # an empty alternative list would make the combination list empty and certify vacuously (review 2026-09-29)
+        assert all(terms) and all(al for sp in splits for br in sp for al in br[3]), 'empty alternative list'
         # combos: the bound is the sum over lines of a minimum over alternatives = the minimum over combos
         ncomb = 1
         for alts in terms: ncomb *= len(alts)
@@ -1190,6 +1192,7 @@ def main():
     ap.add_argument('--u-lo'); ap.add_argument('--u-hi')
     ap.add_argument('--resume', default=None); ap.add_argument('--progress', type=int, default=50)
     ap.add_argument('--unc-out', default=None)
+    ap.add_argument('--dump-leaves', action='store_true', help='record every leaf (box, kind) of each root in --resume')
     a = ap.parse_args()
     here = os.path.dirname(os.path.abspath(__file__))
     shas = {n: file_sha(os.path.join(here, n)) for n in ('qx2_zm.py', 'zm_mixed.py', 'zeromargin.py', 'mixed_cover.py')}
@@ -1219,7 +1222,7 @@ def main():
     print(f"D4 roots [0,m/2]^2 x u in [0,1/2]: {len(R0)} roots{' (PARTIAL)' if partial else ''}; depth {a.depth}; "
           f"EXACT {'off' if a.no_exact else 'on for u1 <= ' + a.exact_umax}", flush=True)
     chk = QXChecker(cov, exact_umax=F(a.exact_umax), exact_from=a.exact_from, use_exact=not a.no_exact,
-                    max_depth=a.depth, use_chain=False, cert_mode=False)
+                    max_depth=a.depth, use_chain=False, cert_mode=False, dump=a.dump_leaves)
     _CHK = chk
     done = set()
     if a.resume and os.path.exists(a.resume):
@@ -1247,7 +1250,9 @@ def main():
         for k in KEYS: tot[k] = max(tot[k], st.get(k, 0)) if k == 'maxdepth' else tot[k] + st.get(k, 0)
         unc_all += unc
         if fres:
-            fres.write(json.dumps(dict(root=[str(v) for v in root], st=st, unc=[[str(v) for v in b] for b in unc])) + "\n")
+            rec = dict(root=[str(v) for v in root], st=st, unc=[[str(v) for v in b] for b in unc])
+            if a.dump_leaves: rec['leaves'] = [[[str(v) for v in b], k] for b, k, _ in leaves]
+            fres.write(json.dumps(rec) + "\n")
             fres.flush()
         if (i + 1) % a.progress == 0:
             print(f"  {i+1}/{len(todo)} roots, {tot['boxes']} boxes, uncert {tot['UNCERT']}, {time.time()-t0:.0f}s", flush=True)
@@ -1264,7 +1269,7 @@ def main():
         if a.unc_out:
             with open(a.unc_out, 'w') as f:
                 for b in unc_all: f.write(" ".join(str(v) for v in b) + "\n")
-    tag = "VERIFIED-D4 (u > 0; u = 0 face: qx2_exact.py axis)" if tot['UNCERT'] == 0 else "NOT VERIFIED"
+    tag = "VERIFIED-D4 (u > 0; u = 0 face: qx2_zm.py axis)" if tot['UNCERT'] == 0 else "NOT VERIFIED"
     print(tag + (" (PARTIAL)" if partial else ""))
 
 
