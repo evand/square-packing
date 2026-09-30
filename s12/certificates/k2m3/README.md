@@ -11,10 +11,13 @@ unit squares tile the `k × k` square, **`s(k² − 3) = k` for all `k ≥ 6`**:
 **Earlier work.**  Friedman [DS7, 1998] conjectured that `s(n² − k) = n` implies `s((n+1)² − k) = n + 1`, which
 together with `s(6) = 3` [Kearney–Shiu 2002] would give `s(k² − 3) = k` for all `k ≥ 3`.  Bentz, having proved
 `s(13) = 4` and `s(46) = 7` [Bentz 2010], stated that `s(m² − 3) = m` should hold for all `m ≥ 3` (the statement is
-often called Bentz's conjecture) and proved the cases `m = 5, 6` in an unpublished preprint [Bentz 2016].  The cases
+often called Bentz's conjecture) and proved the cases `m = 5, 6` in an arXiv preprint [Bentz 2016].  The cases
 `k ≥ 8` were open (apart from `k = 8`, which this project obtained on 2026-09-28 as a corollary of `s(60) = 8`,
-[`../s60/`](../s60/README.md)); the result here covers all `k ≥ 6`, so `k = 6` does not depend on the preprint;
-`k = 5` still does.  (For `k = 2` the statement is false: `s(1) = 1`.)
+[`../s60/`](../s60/README.md)); the result here covers all `k ≥ 6`.  Since `s` is non-decreasing, `s(k² − 4) = k`
+implies `s(k² − 3) = k`, so this project's `s(21) = 5`, `s(32) = 6`, `s(45) = 7` ([`../s21/`](../s21/README.md),
+[`../s32/`](../s32/README.md), [`../s45/`](../s45/README.md)) also give `k = 5, 6, 7`, and the case-free `s(13) = 4`
+([`../rung2/`](../rung2/README.md)) gives `k = 4`: no case `k ≥ 4` depends on Bentz's proofs, though his came first.
+Only `k = 3` is taken from the literature [Kearney–Shiu 2002].  (For `k = 2` the statement is false: `s(1) = 1`.)
 
 References: Kearney & Shiu, Electron. J. Combin. 9 (2002) #R14; Bentz, "Optimal packings of 13 and 46 unit squares in
 a square", Electron. J. Combin. 17 (2010) #R126; Bentz, "Optimal packings of 22 and 33 unit squares in a square",

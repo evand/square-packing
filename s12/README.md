@@ -34,7 +34,8 @@ Each is an exact certificate re-checked by `./verify.sh`; nothing here is peer r
   exact certificate, adversarially reviewed by six independent agents with no errors found; the all-k reduction is
   kernel-checked in Lean. Not yet independently re-implemented, externally reviewed, or fully formalised.*  Known before:
   `k = 3` (Kearney–Shiu 2002), `k = 4, 7` (Bentz 2010), `k = 5, 6` (Bentz, arXiv:1606.03746, preprint), `k = 8` (ours,
-  from `s(60) = 8` below); Bentz suggested it for all `k ≥ 3` (it also follows from Conjecture 1 of Friedman's survey with
+  from `s(60) = 8` below); ours also give `k = 4…7` independently of Bentz (case-free `s(13) = 4`; `s(k² − 4) = k` ⇒
+  `s(k² − 3) = k` for `s(21)`, `s(32)`, `s(45)`); Bentz suggested it for all `k ≥ 3` (it also follows from Conjecture 1 of Friedman's survey with
   `s(6) = 3`).  `search/QUADRANT_EXACT.md`, `search/QUADRANT.md`, `notes/lean-bentz-reduction.md`;
   [`certificates/k2m3/`](certificates/k2m3/README.md).
 * **`s(60) = 8`** (2026-09-28): one *mixed* cover of `[0,8]²`, 23,744 weighted points plus mass spread uniformly

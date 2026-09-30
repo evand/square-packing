@@ -101,7 +101,7 @@ section>*{min-width:0}
   <p class="lede">Nobody knows whether twelve unit squares fit inside a square of side less than 4. Until 2026 the
   best proven floor was 3.7889, inherited from eleven squares (Stromquist 2003). Here is one at 3.9686, checked
   exactly by computer over every position and angle, and in full inside Lean's kernel: about 85% of that gap. The same method gave a floor for eleven
-  squares, since overtaken by others (§02). And an account of how far the method does <em>not</em> go.</p>
+  squares, since overtaken, and eleven squares have now been settled by others (§02). And an account of how far the method does <em>not</em> go.</p>
   <div class="tags">
     <span class="tag ok">exact verifier + independent re-check</span>
     <span class="tag ok">kernel-checked in Lean 4</span>
@@ -148,7 +148,7 @@ section>*{min-width:0}
     <thead><tr><th>n</th><th>s(n)</th><th>status</th></tr></thead>
     <tbody>
       <tr><td class="num">10</td><td class="num">3.707107…</td><td>proved: Stromquist 2003</td></tr>
-      <tr><td class="num">11</td><td class="num">≤ 3.877084…</td><td>best packing Trump 1979; <strong>open</strong>, above 31/8 = 3.875 (Kleddamag 2026)</td></tr>
+      <tr><td class="num">11</td><td class="num">3.877084…</td><td>proved: <a href="https://github.com/Queuingtheorydotcom/11SquaresOptimal">Queuingtheorydotcom</a> 2026 (preprint, replayed by jlevy/squares); packing Trump 1979</td></tr>
       <tr><td class="num">12</td><td class="num">4 (conj.)</td><td><strong>open</strong>, at least 3.9686 (here)</td></tr>
       <tr><td class="num">13</td><td class="num">4</td><td>proved: Bentz 2010; <a href="../s13/">without cases</a> here</td></tr>
       <tr><td class="num">14–16</td><td class="num">4</td><td>proved: El Moumni, Nagamochi, area</td></tr>
@@ -176,7 +176,11 @@ section>*{min-width:0}
   <a href="https://github.com/Kleddamag/11-squares-certified-bound">Kleddamag's</a>
   <span class="mono">s(11) &gt; 31/8</span> (2026-09-22) builds on jlevy's certificate and on a checker by
   Guzhou0806, and stands about 0.002 below Trump's 1979 packing. tokoharu's rectangle-density certificate gives
-  3.81. Ours remains an independent certificate of a weaker bound, and a Lean theorem (§05).</p>
+  3.81. On 2026-09-29 <a href="https://github.com/Queuingtheorydotcom/11SquaresOptimal">Queuingtheorydotcom</a> published a computer-assisted proof that Trump's packing is
+  optimal, <span class="mono">s(11) = 3.877084…</span>, building on jlevy's and Kleddamag's certificates: a cover of centres
+  reduces a smaller packing to 2,184 cell patterns, exact certificates exclude all but four, symmetry reduces those to one, and that one is
+  forced into a certified neighbourhood of Trump's packing. jlevy/squares replayed it independently the same day. Ours
+  remains an independent certificate of a weaker bound, and a Lean theorem (§05).</p>
   <div class="tablewrap"><table id="rectbl">
     <thead><tr><th>date</th><th>n</th><th>floor</th><th>by</th></tr></thead>
     <tbody><tr><td colspan="4">The dated list for <a href="../bounds.html?n=11#floors">n = 11</a> and
@@ -436,7 +440,7 @@ $ lean/scripts/gen_data.sh S12H &amp;&amp; lean/scripts/build_parts.sh S12H Sqpa
   const SHORT = { EvanDaniel2026: 'this project', jlevy2026: 'jlevy/squares', Kleddamag2026: 'Kleddamag', tokoharu2026: 'tokoharu', Stromquist2003: 'Stromquist' };
   const label = h => SHORT[h.source] || ((B.sources[h.source] || {}).authors || h.source);
   const rows = [];
-  for (const n of [11, 12]) for (const h of (B[n] && B[n].history) || []) if ((h.year || 0) >= 2003 && h.source !== 'Nagamochi2005') rows.push([n, h]);
+  for (const n of [11, 12]) for (const h of (B[n] && B[n].history) || []) if ((h.year || 0) >= 2003 && h.source !== 'Nagamochi2005' && !h.reported) rows.push([n, h]);
   rows.sort((a, b) => String(a[1].date || a[1].year).localeCompare(String(b[1].date || b[1].year)) || a[0] - b[0]);
   const tb = document.querySelector('#rectbl tbody'); tb.innerHTML = '';
   for (const [n, h] of rows) {

@@ -173,27 +173,29 @@ section>*{min-width:0}
   <span class="mono">s(6) = 3</span> (Kearney and Shiu, 2002) would give <span class="mono">s(k² − 3) = k</span> for all
   <span class="mono">k ≥ 3</span>. Bentz, having proved <span class="mono">s(13) = 4</span> and <span class="mono">s(46) = 7</span>
   (2010), stated that <span class="mono">s(m² − 3) = m</span> should hold for all <span class="mono">m ≥ 3</span>, and proved
-  <span class="mono">m = 5, 6</span> in an unpublished preprint (2016). (<span class="mono">k = 2</span> is not a case:
+  <span class="mono">m = 5, 6</span> in an arXiv preprint (2016). (<span class="mono">k = 2</span> is not a case:
   <span class="mono">s(1) = 1</span>.)</p>
   <div class="tablewrap"><table>
     <thead><tr><th>k</th><th>n = k² − 3</th><th>s(n) = k proved by</th></tr></thead>
     <tbody>
       <tr><td class="num">3</td><td class="num">6</td><td>Kearney and Shiu, <a href="https://www.combinatorics.org/ojs/index.php/eljc/article/view/v9i1r14">Electron. J. Combin. 9 (2002) #R14</a></td></tr>
       <tr><td class="num">4</td><td class="num">13</td><td>Bentz, <a href="https://www.combinatorics.org/ojs/index.php/eljc/article/view/v17i1r126">Electron. J. Combin. 17 (2010) #R126</a>; in Lean by chelokot (2026); <a href="../s13/">without cases</a> here</td></tr>
-      <tr><td class="num">5</td><td class="num">22</td><td>Bentz, <a href="https://arxiv.org/abs/1606.03746">arXiv:1606.03746</a> (2016, preprint); in Lean by chelokot (2026)</td></tr>
-      <tr><td class="num">6</td><td class="num">33</td><td>Bentz, arXiv:1606.03746 (preprint); in Lean by chelokot (2026); <b>this work</b></td></tr>
-      <tr><td class="num">7</td><td class="num">46</td><td>Bentz, 2010; <b>this work</b></td></tr>
+      <tr><td class="num">5</td><td class="num">22</td><td>Bentz, <a href="https://arxiv.org/abs/1606.03746">arXiv:1606.03746</a> (2016, preprint); in Lean by chelokot (2026); this project, 2026-09-27, from <a href="../s21/"><span class="mono">s(21) = 5</span></a></td></tr>
+      <tr><td class="num">6</td><td class="num">33</td><td>Bentz, arXiv:1606.03746 (preprint); in Lean by chelokot (2026); this project, 2026-09-26, from <a href="../s32/"><span class="mono">s(32) = 6</span></a>; <b>this work</b></td></tr>
+      <tr><td class="num">7</td><td class="num">46</td><td>Bentz, 2010; this project, 2026-09-27, from <a href="../s45/"><span class="mono">s(45) = 7</span></a>; <b>this work</b></td></tr>
       <tr><td class="num">8</td><td class="num">61</td><td>this project, 2026-09-28, from <a href="../s60/"><span class="mono">s(60) = 8</span></a>; <b>this work</b></td></tr>
       <tr><td class="num">≥ 9</td><td class="num">78, 97, …</td><td><b>this work</b>, 2026-09-29 (unrefereed). Before it, the best floor we have on record for
-      <span class="mono">n = 78</span> and <span class="mono">97</span> was Nagamochi's general bound <span class="mono">1 + √(k² − 2k)</span>: 8.937254 and 9.944272</td></tr>
+      <span class="mono">n = 78</span> and <span class="mono">97</span> was Nagamochi's general bound <span class="mono">1 + √(k² − 2k)</span>: 8.937254 and 9.944272 (for <span class="mono">n = 78</span>, wand125 reported
+      <span class="mono">1791/200 = 8.955</span> on 2026-09-27, not yet independently replayed)</td></tr>
     </tbody>
   </table></div>
   <p>So the cases <span class="mono">k ≥ 8</span> were open until this month: David Ellsworth's
   <a href="https://kingbird.myphotos.cc/packing/squares_in_squares.html">Squares in Squares</a> lists 6, 13, 22, 33 and 46 as
   proved and nothing for 61 or 78, and <a href="https://github.com/jlevy/squares">jlevy/squares</a> lists
-  "Can Bentz's method prove <span class="mono">s(61) = 8</span>?" as an open question (H-033, 2026-08-24). The result here
-  covers <span class="mono">k = 6</span> without the preprint; <span class="mono">k = 5</span> still rests on it (and on
-  chelokot's Lean proof).</p>
+  "Can Bentz's method prove <span class="mono">s(61) = 8</span>?" as an open question (H-033, 2026-08-24). Since <span class="mono">s</span> never decreases, <span class="mono">s(k² − 4) = k</span> implies
+  <span class="mono">s(k² − 3) = k</span>, so our <span class="mono">s(21)</span>, <span class="mono">s(32)</span>, <span class="mono">s(45)</span>
+  and <span class="mono">s(60)</span> results each settle a case too. With them and our case-free <a href="../s13/"><span class="mono">s(13) = 4</span></a>,
+  none of <span class="mono">k = 4 … 8</span> depends on Bentz's proofs, though his came first.</p>
   <p>Bentz's proofs and our covers for <a href="../s45/"><span class="mono">s(45)</span></a> and
   <a href="../s60/"><span class="mono">s(60)</span></a> are one box at a time: each needs its own certificate, and the
   effort grows with the box. A proof for every <span class="mono">k</span> needs something that does not grow. Nagamochi's
@@ -1525,8 +1527,9 @@ section>*{min-width:0}
   exactly 1; and a cover weakened by 10⁻⁴ at a corner limit is refused where it should be.</p>
   <p>There is no second checker. The Rust checker used for <span class="mono">s(21)</span>, <span class="mono">s(45)</span> and
   <span class="mono">s(60)</span> does not handle area density, and the area-density square cannot be removed from this
-  family. The <span class="mono">k = 8</span> case is independently confirmed, by the <span class="mono">s(60)</span>
-  certificate and its two checkers.</p>
+  family. The cases <span class="mono">k = 6, 7, 8</span> are confirmed independently of this family, by the
+  <span class="mono">s(32)</span>, <span class="mono">s(45)</span> and <span class="mono">s(60)</span> certificates, each with two checkers
+  (<span class="mono">s(32)</span> also kernel-checked in Lean with no hypothesis).</p>
 </section>
 
 <section id="lean">
@@ -1555,9 +1558,10 @@ section>*{min-width:0}
     not re-implemented independently. Our other exact values each have two checkers that share no code.</li>
     <li>The reviews were done by AI agents, not by outside mathematicians. Nothing here is peer reviewed.</li>
     <li>The Lean proof is conditional on <span class="mono">Valid7</span> (§05).</li>
-    <li>Our result covers <span class="mono">k ≥ 6</span> only. The statement for all <span class="mono">k ≥ 3</span> also needs
-    <span class="mono">k = 3, 4, 5</span> from the literature (§02), and <span class="mono">k = 5</span> rests on Bentz's unpublished
-    preprint and chelokot's Lean proof.</li>
+    <li>This family covers <span class="mono">k ≥ 6</span> only. The statement for all <span class="mono">k ≥ 3</span> also needs
+    <span class="mono">k = 3, 4, 5</span>: <span class="mono">k = 4</span> and <span class="mono">k = 5</span> follow from this project's
+    case-free <span class="mono">s(13) = 4</span> and <span class="mono">s(21) = 5</span> as well as from Bentz's proofs, and
+    <span class="mono">k = 3</span> is Kearney and Shiu's (§02).</li>
     <li>The family was found by a float linear program, and a float program can be wrong (§04). The certificate does not rely
     on it: every acceptance is an exact rational test.</li>
   </ul>
@@ -1572,7 +1576,7 @@ section>*{min-width:0}
   re-checks it. The 7 × 7 box file is also <a href="cover.txt">here</a>. From <span class="mono">s12/search</span>:</p>
   <pre><code>python3 qx2_zm.py axis qx2_data/L4_k02_box7.txt           # zero tilt, seconds
 python3 qx2_family_check.py qx2_data/L4_k02_family.txt qx2_data/L4_k02_box7.txt
-python3 qx2_zm.py qx2_data/L4_k02_box7.txt --depth 18 --nproc 11 \
+python3 qx2_zm.py qx2_data/L4_k02_box7.txt --depth 18 --nproc 8 \
     --exact-umax 1/2 --exact-from 3                         # positive tilt, ~22 CPU-hours</code></pre>
   <div class="tablewrap"><table>
     <thead><tr><th>path (under s12/)</th><th>what</th></tr></thead>
