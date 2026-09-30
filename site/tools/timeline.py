@@ -7,7 +7,7 @@ import json, re, os
 HERE = os.path.dirname(os.path.abspath(__file__)); D = HERE + '/../data/'
 MONTHS = {m: i + 1 for i, m in enumerate(['January','February','March','April','May','June','July','August','September','October','November','December'])}
 DATE = re.compile(r'\b(?:in|In|of)\s+(?:(early|late|mid)-?\s*)?(?:(' + '|'.join(MONTHS) + r')(?:[-–](' + '|'.join(MONTHS) + r'))?\s*)?(\d{4})(?:[-–](\d{4}))?\b')
-VERB = re.compile(r'\b(Found first|Found|Improved|Proved optimal|Proved|Optimized|Refined|Refound|Fixed|Drafted|Converted|Bounded|Extended|Side length found|Improvement|Rigid alternative found|Discovered)\b(?:\s+(?:by|and \w+ by)\s+(.+?))?(?=\s+(?:in|In)\s+(?:early|late|mid|January|February|March|April|May|June|July|August|September|October|November|December|\d{4})|[.,;]|$)')
+VERB = re.compile(r'\b(Found first|Found|Improved|Proved optimal|Proved|Optimized|Refined|Refound|Fixed|Drafted|Converted|Bounded|Extended|Side length found|Improvement|Rigid alternative found|Discovered)\b(?:\s+(?:by|and \w+ by)\s+(.+?))?(?=\s+(?:in|In)\s+(?:early|late|mid|January|February|March|April|May|June|July|August|September|October|November|December|\d{4})|(?<! [A-Z])[.,;]|$)')
 
 def parse_date(m):
     qual, m1, m2, y1, y2 = m
@@ -18,12 +18,13 @@ def parse_date(m):
 def events_of(prose):
     prose = (prose or '').replace('\xa0', ' ').replace('\n', ' ')
     out = []
-    for sent in re.split(r'(?<=[.!?])\s+(?=[A-Z])', prose):
+    for sent in re.split(r'(?<=[.!?])(?<! [A-Z]\.)\s+(?=[A-Z])', prose):
         dm = DATE.search(sent)
         vm = VERB.search(sent)
         if not dm: continue
         d = parse_date(dm.groups())
         who = (vm.group(2) or '').strip() if vm else ''
+        who = who.split(' (')[0]  # 'X (by adding an "L" to the s(54) found by Y)': nested parentheses
         who = re.sub(r'\s*\(.*?\)\s*', ' ', who).strip(' ,')
         out.append({'verb': vm.group(1) if vm else '', 'who': who, 'date': d, 'text': sent.strip()})
     return out

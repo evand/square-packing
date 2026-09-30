@@ -240,3 +240,10 @@ additionally trivial as a perfect square.
     `94√2/41 + 247/41 = 9.2667`, which matches the decimal and would repair the flagged `exact_form` above;
     not changed here.  wand125's repository kept moving after jlevy's snapshot (e.g. `s(37) ≥ 161/25`,
     `s(87) ≥ 939/100`, a point-only `s(61) = 8`, all 2026-09-30) and those are left to it.
+- 2026-09-30, **claimed** status (Evan's call: a bound is not proved without a source we can review).  T. Green's 2000
+  values (Friedman's DS7 Theorems 9–10 and Table 2, cited as "[8] T. Green, 2000, private communication"; the survey
+  gives no proof) and Friedman's own n = 13 (3.8437) and n = 21 (4.7438) table values (no figure, no proof) are
+  `"status": "claimed"`: kept in the history, tagged on the Bounds page, never `best`, never a step of the floor.  `best`
+  falls back to Nagamochi 2005's general bound for n = 37, 38, 50, 51, 65–67, 82–85 (jlevy/squares treats them the
+  same way).  Friedman's own results with figures and arguments in the survey (n = 7, 8, 14, 15, 19–20, 24, 35) stay
+  proved.  Open: DS7 Figure 34 draws Green's unavoidable set for n = 17–18, which our point checkers could verify.

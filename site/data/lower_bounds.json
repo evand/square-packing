@@ -603,7 +603,7 @@
     "exact_form": null,
     "source": "FriedmanDS7",
     "year": 2009,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": "superseded by exact value 4 (Bentz 2010)"
    },
@@ -751,9 +751,9 @@
     "exact_form": "(40*sqrt(2)+19)/17",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-    "note": "n=17 superseded by 2026 computer-assisted preprints; n=18 not affected by those (they target n=17 only)"
+    "note": "n=17 superseded by 2026 computer-assisted preprints; n=18 not affected by those (they target n=17 only). Survey Figure 34 draws the unavoidable set; not checked here."
    },
    {
     "value": 4.16227766016838,
@@ -941,9 +941,9 @@
     "exact_form": "(40*sqrt(2)+19)/17",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-    "note": "n=17 superseded by 2026 computer-assisted preprints; n=18 not affected by those (they target n=17 only)"
+    "note": "n=17 superseded by 2026 computer-assisted preprints; n=18 not affected by those (they target n=17 only). Survey Figure 34 draws the unavoidable set; not checked here."
    },
    {
     "value": 4.3166247903554,
@@ -1153,7 +1153,7 @@
     "exact_form": null,
     "source": "FriedmanDS7",
     "year": 2009,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
    },
@@ -1266,7 +1266,7 @@
     "exact_form": "2*sqrt(2)+2",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": "superseded by exact value 5 (Bentz 2016)"
    },
@@ -1414,7 +1414,7 @@
     "exact_form": "2*sqrt(2)+(27+2*sqrt(10))/13",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
    },
@@ -1475,7 +1475,7 @@
     "exact_form": "2*sqrt(2)+(27+2*sqrt(10))/13",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
    },
@@ -1535,7 +1535,7 @@
     "exact_form": "2*sqrt(2)+6/sqrt(5)",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
    },
@@ -1606,7 +1606,7 @@
     "exact_form": "2*sqrt(2)+6/sqrt(5)",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
    },
@@ -1667,7 +1667,7 @@
     "exact_form": "2*sqrt(2)+6/sqrt(5)",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
    },
@@ -1728,7 +1728,7 @@
     "exact_form": null,
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
    },
@@ -1975,13 +1975,13 @@
  },
  "37": {
   "best": {
-   "value": 6.350603018683724,
-   "exact_form": "2*sqrt(2)+(113+10*sqrt(3))/37",
-   "source": "Green2000",
-   "year": 2000,
+   "value": 6.0990195135927845,
+   "exact_form": "sqrt(37 - 2*floor(sqrt(37)) + 1) + 1 = sqrt(26)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
    "status": "proved",
-   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-   "note": null
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
   },
   "history": [
    {
@@ -1997,7 +1997,7 @@
     "exact_form": "2*sqrt(2)+(113+10*sqrt(3))/37",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
    },
@@ -2025,13 +2025,13 @@
  },
  "38": {
   "best": {
-   "value": 6.350603018683724,
-   "exact_form": "2*sqrt(2)+(113+10*sqrt(3))/37",
-   "source": "Green2000",
-   "year": 2000,
+   "value": 6.196152422706632,
+   "exact_form": "sqrt(38 - 2*floor(sqrt(38)) + 1) + 1 = sqrt(27)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
    "status": "proved",
-   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-   "note": null
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
   },
   "history": [
    {
@@ -2047,7 +2047,7 @@
     "exact_form": "2*sqrt(2)+(113+10*sqrt(3))/37",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
    },
@@ -2098,7 +2098,7 @@
     "exact_form": "2*sqrt(2)+(113+10*sqrt(3))/37",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
    },
@@ -2159,7 +2159,7 @@
     "exact_form": "2*sqrt(2)+8/sqrt(5)",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
    },
@@ -2220,7 +2220,7 @@
     "exact_form": "2*sqrt(2)+8/sqrt(5)",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
    },
@@ -2593,13 +2593,13 @@
  },
  "50": {
   "best": {
-   "value": 7.317426011159064,
-   "exact_form": "2*sqrt(2)+(101+3*sqrt(14))/25",
-   "source": "Green2000",
-   "year": 2000,
+   "value": 7.082762530298219,
+   "exact_form": "sqrt(50 - 2*floor(sqrt(50)) + 1) + 1 = sqrt(37)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
    "status": "proved",
-   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-   "note": null
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
   },
   "history": [
    {
@@ -2615,7 +2615,7 @@
     "exact_form": "2*sqrt(2)+(101+3*sqrt(14))/25",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
    },
@@ -2643,13 +2643,13 @@
  },
  "51": {
   "best": {
-   "value": 7.317426011159064,
-   "exact_form": "2*sqrt(2)+(101+3*sqrt(14))/25",
-   "source": "Green2000",
-   "year": 2000,
+   "value": 7.164414002968976,
+   "exact_form": "sqrt(51 - 2*floor(sqrt(51)) + 1) + 1 = sqrt(38)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
    "status": "proved",
-   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-   "note": null
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
   },
   "history": [
    {
@@ -2665,7 +2665,7 @@
     "exact_form": "2*sqrt(2)+(101+3*sqrt(14))/25",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
    },
@@ -2716,7 +2716,7 @@
     "exact_form": "2*sqrt(2)+(101+3*sqrt(14))/25",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
    },
@@ -2777,7 +2777,7 @@
     "exact_form": "2*sqrt(2)+(101+3*sqrt(14))/25",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
    },
@@ -3285,13 +3285,13 @@
  },
  "65": {
   "best": {
-   "value": 8.289965586284652,
-   "exact_form": "2*sqrt(2)+71/13",
-   "source": "Green2000",
-   "year": 2000,
+   "value": 8.071067811865476,
+   "exact_form": "sqrt(65 - 2*floor(sqrt(65)) + 1) + 1 = sqrt(50)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
    "status": "proved",
-   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-   "note": null
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
   },
   "history": [
    {
@@ -3307,7 +3307,7 @@
     "exact_form": "2*sqrt(2)+71/13",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
    },
@@ -3324,13 +3324,13 @@
  },
  "66": {
   "best": {
-   "value": 8.289965586284652,
-   "exact_form": "2*sqrt(2)+71/13",
-   "source": "Green2000",
-   "year": 2000,
+   "value": 8.14142842854285,
+   "exact_form": "sqrt(66 - 2*floor(sqrt(66)) + 1) + 1 = sqrt(51)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
    "status": "proved",
-   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-   "note": null
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
   },
   "history": [
    {
@@ -3346,7 +3346,7 @@
     "exact_form": "2*sqrt(2)+71/13",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
    },
@@ -3374,13 +3374,13 @@
  },
  "67": {
   "best": {
-   "value": 8.289965586284652,
-   "exact_form": "2*sqrt(2)+71/13",
-   "source": "Green2000",
-   "year": 2000,
+   "value": 8.21110255092798,
+   "exact_form": "sqrt(67 - 2*floor(sqrt(67)) + 1) + 1 = sqrt(52)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
    "status": "proved",
-   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-   "note": null
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
   },
   "history": [
    {
@@ -3396,7 +3396,7 @@
     "exact_form": "2*sqrt(2)+71/13",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
    },
@@ -3447,7 +3447,7 @@
     "exact_form": "2*sqrt(2)+71/13",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
    },
@@ -4029,13 +4029,13 @@
  },
  "82": {
   "best": {
-   "value": 9.2667,
-   "exact_form": "2*sqrt(2)+(288+12*sqrt(3))/41 [UNRELIABLE -- see notes]",
-   "source": "Green2000",
-   "year": 2000,
+   "value": 9.06225774829855,
+   "exact_form": "sqrt(82 - 2*floor(sqrt(82)) + 1) + 1 = sqrt(65)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
    "status": "proved",
-   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-   "note": "Friedman's table gives this closed form as ~= 9.2667, but the expression as printed evaluates to ~= 10.3598, which exceeds the trivial upper bound ceil(sqrt(82)) = 10; the stated decimal 9.2667 is used as the value and the closed form is flagged as unreliable. See lower-bounds-notes.md."
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
   },
   "history": [
    {
@@ -4051,7 +4051,7 @@
     "exact_form": "2*sqrt(2)+(288+12*sqrt(3))/41 [UNRELIABLE -- see notes]",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": "Friedman's table gives this closed form as ~= 9.2667, but the expression as printed evaluates to ~= 10.3598, which exceeds the trivial upper bound ceil(sqrt(82)) = 10; the stated decimal 9.2667 is used as the value and the closed form is flagged as unreliable. See lower-bounds-notes.md."
    },
@@ -4068,13 +4068,13 @@
  },
  "83": {
   "best": {
-   "value": 9.2667,
-   "exact_form": "2*sqrt(2)+(288+12*sqrt(3))/41 [UNRELIABLE -- see notes]",
-   "source": "Green2000",
-   "year": 2000,
+   "value": 9.12403840463596,
+   "exact_form": "sqrt(83 - 2*floor(sqrt(83)) + 1) + 1 = sqrt(66)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
    "status": "proved",
-   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-   "note": "Friedman's table gives this closed form as ~= 9.2667, but the expression as printed evaluates to ~= 10.3598, which exceeds the trivial upper bound ceil(sqrt(82)) = 10; the stated decimal 9.2667 is used as the value and the closed form is flagged as unreliable. See lower-bounds-notes.md."
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
   },
   "history": [
    {
@@ -4090,7 +4090,7 @@
     "exact_form": "2*sqrt(2)+(288+12*sqrt(3))/41 [UNRELIABLE -- see notes]",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": "Friedman's table gives this closed form as ~= 9.2667, but the expression as printed evaluates to ~= 10.3598, which exceeds the trivial upper bound ceil(sqrt(82)) = 10; the stated decimal 9.2667 is used as the value and the closed form is flagged as unreliable. See lower-bounds-notes.md."
    },
@@ -4107,13 +4107,13 @@
  },
  "84": {
   "best": {
-   "value": 9.2667,
-   "exact_form": "2*sqrt(2)+(288+12*sqrt(3))/41 [UNRELIABLE -- see notes]",
-   "source": "Green2000",
-   "year": 2000,
+   "value": 9.18535277187245,
+   "exact_form": "sqrt(84 - 2*floor(sqrt(84)) + 1) + 1 = sqrt(67)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
    "status": "proved",
-   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-   "note": "Friedman's table gives this closed form as ~= 9.2667, but the expression as printed evaluates to ~= 10.3598, which exceeds the trivial upper bound ceil(sqrt(82)) = 10; the stated decimal 9.2667 is used as the value and the closed form is flagged as unreliable. See lower-bounds-notes.md."
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
   },
   "history": [
    {
@@ -4129,7 +4129,7 @@
     "exact_form": "2*sqrt(2)+(288+12*sqrt(3))/41 [UNRELIABLE -- see notes]",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": "Friedman's table gives this closed form as ~= 9.2667, but the expression as printed evaluates to ~= 10.3598, which exceeds the trivial upper bound ceil(sqrt(82)) = 10; the stated decimal 9.2667 is used as the value and the closed form is flagged as unreliable. See lower-bounds-notes.md."
    },
@@ -4146,13 +4146,13 @@
  },
  "85": {
   "best": {
-   "value": 9.2667,
-   "exact_form": "2*sqrt(2)+(288+12*sqrt(3))/41 [UNRELIABLE -- see notes]",
-   "source": "Green2000",
-   "year": 2000,
+   "value": 9.246211251235321,
+   "exact_form": "sqrt(85 - 2*floor(sqrt(85)) + 1) + 1 = sqrt(68)+1",
+   "source": "Nagamochi2005",
+   "year": 2005,
    "status": "proved",
-   "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-   "note": "Friedman's table gives this closed form as ~= 9.2667, but the expression as printed evaluates to ~= 10.3598, which exceeds the trivial upper bound ceil(sqrt(82)) = 10; the stated decimal 9.2667 is used as the value and the closed form is flagged as unreliable. See lower-bounds-notes.md."
+   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
+   "note": "general lower bound, Theorem 2(ii)"
   },
   "history": [
    {
@@ -4168,7 +4168,7 @@
     "exact_form": "2*sqrt(2)+(288+12*sqrt(3))/41 [UNRELIABLE -- see notes]",
     "source": "Green2000",
     "year": 2000,
-    "status": "proved",
+    "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": "Friedman's table gives this closed form as ~= 9.2667, but the expression as printed evaluates to ~= 10.3598, which exceeds the trivial upper bound ceil(sqrt(82)) = 10; the stated decimal 9.2667 is used as the value and the closed form is flagged as unreliable. See lower-bounds-notes.md."
    },
@@ -4898,6 +4898,7 @@
   "precision": "`value` is the full double-precision evaluation of `exact_form`, not a rounded decimal: storing the n=5 floor as 2.7071068 put it ABOVE the true 2+1/sqrt(2)=2.707106781..., so it compared as greater than the matching upper bound and s(5) and s(10) were reported open with a gap of -0.0000. Entries whose exact_form is absent or flagged unreliable keep their curated decimal.",
   "updated": "2026-09-30",
   "families": "s(k^2-3) = k is proved here for every k >= 6 (EvanDaniel2026, 2026-09-29, s12/certificates/k2m3). The table covers n <= 100, so it holds the cases n = 33, 46, 61, 78, 97 (k = 6..10); for n = 33, 46, 61, which were already settled, it is a history entry and `best` keeps the earlier proof; for n = 78, 97 it is `best`. The family continues beyond the table (n = 118, 141, ...).",
-  "reported": "Entries with \"reported\": true are values their authors report but that no one other than the author has replayed (jlevy/squares grades them V0/C0). They are kept in `history` for the record and are never `best`, even where they are larger."
+  "reported": "Entries with \"reported\": true are values their authors report but that no one other than the author has replayed (jlevy/squares grades them V0/C0). They are kept in `history` for the record and are never `best`, even where they are larger.",
+  "claimed": "Entries with status \"claimed\" are values whose proof was never published and cannot be reviewed: T. Green's 2000 bounds, cited in Friedman's survey DS7 as a private communication (Theorems 9-10 and Table 2), and Friedman's table values for n = 13 (3.8437) and n = 21 (4.7438), which the survey gives without figure or proof. They are kept in the history for the record and are never `best`. For n = 17-18 the survey's Figure 34 draws Green's unavoidable set, which could be checked; it has not been checked here."
  }
 }
