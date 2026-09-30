@@ -39,6 +39,15 @@ leaves.  `#print axioms` = `[propext, Classical.choice, Quot.sound]`.  Opt-in, d
 `lean/scripts/gen_data.sh S32Z` (~70 min on 4 cores), then `lean/scripts/build_parts.sh S32Z
 Sqpack.S32Lower 4 12-15` (3 h 36 min wall / 13.8 CPU-h, ≤ 15.2 GB RSS per process).  Details below.
 
+**`s(k² − 3) = k` for all `k ≥ 6`, conditional on one finite statement (2026-09-29):**
+`SquarePacking.Bentz.bentz_of_valid7 : Valid7 → ∀ k : ℕ, 6 ≤ k → minSide (k ^ 2 - 3) = k` (`Bentz.lean`, **default
+build**, ~2 min).  `Valid7` = every closed unit square in `[0,7]²` has mass `≥ 1` under the box cover
+`search/qx2_data/L4_k02_box7.txt` taken verbatim as a `MixedCover` (800 segments + the Lebesgue square `[9/5, 26/5]²`),
+which is exactly what the Python certificate asserts (Lemma Z + `qx2_zm.py` run V3, `search/QUADRANT_EXACT.md`).  The
+kernel checks the whole all-k reduction: the family measure `μ_k` for every `k`, `μ₇` = the box file, total mass
+`k² − 4D < k² − 3`, and localisation by integer shifts.  `#print axioms` = `[propext, Classical.choice, Quot.sound]`.
+Discharging `Valid7` in Lean needs polygon mass in `CovM`, Lemma Z, and Lemma E (`notes/lean-bentz-reduction.md`).
+
 ## Files
 
 | file | what |
@@ -54,6 +63,8 @@ Sqpack.S32Lower 4 12-15` (3 h 36 min wall / 13.8 CPU-h, ≤ 15.2 GB RSS per proc
 | `scripts/gen_zmtree.py` | zero-margin tree search (`search/zeromargin.py` as a read-only oracle) + exact integer mirror of `ZMTree.check` + leaf pruning + Lean emission |
 | `Sqpack/S13/{Pts,Part0..3,Cov}.lean`, `Sqpack/S13Lower.lean` | generated: the 3,621 points (a `PTree` and the literal `ptsL`); 209 chunk theorems; `cov_root`.  `s13_ge_4`, `s13_eq_4` (opt-in) |
 | `Sqpack/S32Z/{Pts,Part0..95,Cov}.lean`, `Sqpack/S32Lower.lean` | generated (gitignored): the 13,085 points; 5,990 chunk theorems; `cov_root`.  `s32_ge_6`, `s32_checkerCover` (the hypothesis of `S32.lean`, proved), `s32_eq_6` (opt-in) |
+| `Sqpack/BentzData.lean`, `Sqpack/Bentz.lean` | generated data (the box file verbatim + the family table, input sha256s in the header) and `bentz_of_valid7` |
+| `scripts/gen_bentz_data.py` | writes `BentzData.lean` from `search/qx2_data/` (deterministic, byte for byte) |
 | `scripts/build_parts.sh` | builds a data set's part files a few at a time (plain `lake build` starts them all at once) |
 
 Regenerate: `python3 lean/scripts/gen_boxtree.py certificates/s12_uniform_7of81_3.888.txt --n 12

@@ -22,3 +22,5 @@ import Sqpack.S3Lower
 import Sqpack.S3LowerP
 import Sqpack.S12Lower
 import Sqpack.S12WLower
+import Sqpack.BentzData
+import Sqpack.Bentz
