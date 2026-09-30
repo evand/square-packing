@@ -16,7 +16,8 @@ sha named; **[measured]** = float; **[heuristic]** = interpretation.
 **Stage reached: all four steps; the certificate is complete** [proved, modulo the correctness of the programs
 named below, which is tested but not independently re-implemented].  Statement: *the fixed-profile family
 `qx2_data/L4_k02_family.txt` (R = 2, w = 2, σ = 0) is valid, hence `s(k² − 3) = k` for every integer `k ≥ 6`* (the
-known cases `k ≤ 7` included), which with the small cases is **Bentz's conjecture `s(k² − 3) = k`**.
+known cases `k ≤ 7` included), which with the small cases is **`s(k² − 3) = k` for all `k ≥ 3`**, the statement suggested by Bentz (arXiv:1606.03746; he
+does not call it a conjecture) and implied by Friedman's survey Conjecture 1 (1998) with `s(6) = 3`.
 Trust chain: (1) the family and box files (exact; `qx2_family_check.py` rebuilds μ₇ independently); (2) Lemma Z for
 θ = 0 (`qx2_zm.py axis`, exact enumeration, min exactly 1); (3) the θ > 0 box check of μ₇ over the D4 domain:
 run A (`qx2_zm.py` sha `86da7d97…1656`, commit 28dc161) certified 9,799 of the 9,800 roots, run B (sha
@@ -503,3 +504,26 @@ Reproduce: `cd s12/search; python3 qx2_zm.py axis qx2_data/L4_k02_box7.txt` (Lem
 * An outside audit of Lemma E and of `qx2_zm.py` (≈ 900 lines), and of the zm_mixed polygon path.
 * The same pipeline for `k² − 4` (R = 3, w = 3, QUADRANT.md: float D ≈ 1.15): needs D > 1, i.e. the tilt margin and
   the layer must cost less than ≈ 0.15 there; untried.
+
+## 8. Corrections after the adversarial review (2026-09-29/30)
+
+Six independent reviews (`private/s12/tasks/k2m3-review/*/REPORT.md`) found no error that affects the claim.  Corrections
+to the text above (the bundle README `certificates/k2m3/README.md` is written with them applied):
+* §0: the certificate of record is now **run V3** (§6); `k = 2` is not a case (`s(1) = 1`); small cases: `k = 3`
+  Kearney–Shiu 2002, `k = 4, 7` Bentz 2010, `k = 5, 6` Bentz arXiv:1606.03746 (preprint); Bentz writes "strongly
+  suggest", not "conjecture", and Friedman's survey Conjecture 1 (1998) implies the statement with `s(6) = 3`.
+* §1.4: "every other one-sided limit corner is ≥ 1.001" is for θ = 0 only; off θ = 0 the tightest pose found is a
+  near-45° square mostly inside U, mass `1 + 1.03·10⁻⁴` (break-it review).
+* §2.3(b): the lines `x = R`, `x = k − R` carry no extra module mass in this family; μ_Q is shift-invariant on the
+  closed `{x ≥ R}`.  The open-interval argument is stricter than needed and still correct.
+* §4.2: the remark that the lines `y = a`, `x = a` meet in one point is not needed (segments carry no atoms).
+* §4.4: `f` is continuous on each closed cell, not on all of R(u), in the corner3/xcut regimes (a vertex on `z = 0`
+  takes the minimum of both cell functions, as the code does); the McCormick tangent loss is `≤ u h_y²/(4(1 − u²))`;
+  the anchor named `'hi'` is the box's low corner; the cap lines `d = 0`, `d = s` are not needed for concavity.
+  "Floats only choose options, pieces, orderings and the S-procedure multiplier": also `lines_in_reach` omits lines by
+  a float distance test with margin ≈ 9·10⁻⁵ (sound).  Step 3 also uses the `d = 0` cap split and `_gcdcert` (§6); the
+  S-procedure tries every open or branch constraint.
+* §4.5: the frame `box ± 0.7072` is not needed for soundness; leaf dumps have since been stress-tested (reviews).
+* §6: reproduce with `--resume FILE --dump-leaves` to get a record; the box file format is
+  `certificates/s21/FORMAT.md`.  Guards added after review (commit 6717ff8): an assert against empty alternative lists
+  in `_certify`, and zm_mixed's `region_phi` refuses zero-width bins.

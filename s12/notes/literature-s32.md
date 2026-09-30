@@ -21,7 +21,10 @@ certificates: s(32) >= 5.95 and s(45) >= 6.945, both posted 2026-09-25/26; detai
 | 23, 24; 34, 35; 47, 48; 62, 63; ... | k | Nagamochi, EJC 12 (2005) #R37: s(k²-1) = s(k²-2) = k for all k | refereed, but see caveat |
 | 46 (=7²-3) | 7 | Bentz 2010 | refereed |
 
-- s(k²-3) = k: proved for k = 3..7 only (Bentz conjectures all k >= 3).  Open for k >= 8 (s(61), ...).
+- s(k²-3) = k: proved for k = 3..7 only (k = 3 Kearney–Shiu 2002; 4, 7 Bentz 2010; 5, 6 Bentz preprint).  Bentz 2016 says
+  the results "strongly suggest" it for all m >= 3 (never the word conjecture); Friedman DS7 Conjecture 1 (1998): s(n²-k)=n
+  ⇒ s((n+1)²-k)=n+1 implies it.  Open for k >= 8 before our k2m3 result (s(k²-3) = k for k >= 6, 2026-09-29;
+  s(61) = 8 already from s(60) = 8).  jlevy/squares H-033 asks about s(61).  Details: private tasks/k2m3-lit/REPORT.md.
 - s(k²-4): nothing proved.  (k = 3 fails: s(5) < 3.)  Open at k = 4 (s(12)), 5, 6, 7, ...
 - Wikipedia's *Square packing* lists only k², k²-1, k²-2, 5, 6, 10, 13, 46 — omits 22, 33 (preprint).
 - No 2023–2026 paper (arXiv or journal) proves a new exact value.  Recent arXiv work is asymptotic

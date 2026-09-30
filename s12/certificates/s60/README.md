@@ -7,7 +7,7 @@ lower bounds: `397/50 = 7.94` (wand125, 2026-09-27, rectangle-density certificat
 `791/100`, `198/25` and `793/100` from 2026-09-26 on); `1 + √47 = 7.8557` (Nagamochi 2005, a general bound).
 
 **Corollary: s(61) = 8.**  Removing a square from a packing leaves a packing, so `s(61) ≥ s(60) = 8`, and the
-`8 × 8` grid holds 61.  `s(k² − 3) = k` was proved only for `k = 3, …, 7` (Bentz conjectures it for all `k`;
+`8 × 8` grid holds 61.  `s(k² − 3) = k` was proved only for `k = 3, …, 7` (Bentz 2016 states that it should hold for all `k ≥ 3`; it also follows from Friedman's 1998 survey Conjecture 1 with `s(6) = 3`;
 [`../../notes/literature-s32.md`](../../notes/literature-s32.md)); `k = 8` is its first new case.
 
 Computer-assisted, not peer reviewed, **not (yet) in Lean**.  The proof is designed to be re-checked: `./verify.sh`

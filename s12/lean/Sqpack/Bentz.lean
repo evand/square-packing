@@ -5,7 +5,7 @@ import Sqpack.BentzData
 # `s(k² − 3) = k` for every `k ≥ 6`, from one finite hypothesis (`Valid7`)
 
 `search/QUADRANT_EXACT.md` builds a fixed-profile family (`R = w = 2`, pitch `1/5`, `σ = 0`,
-`D = 423621306389/500000000000 > 3/4`) and certifies in Python (Lemma Z + `qx2_zm.py` run V2) that
+`D = 423621306389/500000000000 > 3/4`) and certifies in Python (Lemma Z + `qx2_zm.py` run V3, `certificates/k2m3/`) that
 its box measure `μ₇` on `[0,7]²` — the cover file `search/qx2_data/L4_k02_box7.txt` — gives every
 closed unit square in `[0,7]²` mass `≥ 1`.  This file proves, in Lean, everything else:
 
@@ -61,7 +61,7 @@ noncomputable def box7Cover : MixedCover Empty (Fin boxSegs.length) Unit where
 
 /-- **`Valid7`**: every closed unit square inside `[0,7]²` has mass `≥ 1` under the measure `μ₇` of
 the box cover.  This is what the Python certificate asserts (`search/QUADRANT_EXACT.md` §3, §6:
-Lemma Z for `θ = 0` and the box checker run V2 of `qx2_zm.py` for `θ > 0`, over the D4 domain). -/
+Lemma Z for `θ = 0` and the box checker run V3 of `qx2_zm.py` for `θ > 0`, over the D4 domain). -/
 def Valid7 : Prop :=
   ∀ (c : ℝ × ℝ) (θ : ℝ), sq c θ 1 ⊆ box 7 → 1 ≤ box7Cover.measure (sq c θ 1)
 
@@ -712,7 +712,8 @@ theorem valid_of_valid7 (h : Valid7) {k : ℕ} (hk : 6 ≤ k) (c : ℝ × ℝ) (
   rw [MixedCover.measure_apply _ (famCover_nonneg k) (measurableSet_sq _ _ _), hm]
   exact h7
 
-/-- **Bentz's conjecture `s(k² − 3) = k` for all `k ≥ 6`, from `Valid7`.** -/
+/-- **`s(k² − 3) = k` for all `k ≥ 6`, from `Valid7`** (the statement suggested by Bentz, arXiv:1606.03746, and
+implied by Friedman's survey Conjecture 1 with `s(6) = 3`; `k ≤ 7` were known). -/
 theorem bentz_of_valid7 (h : Valid7) : ∀ k : ℕ, 6 ≤ k → minSide (k ^ 2 - 3) = k := by
   intro k hk
   have hnot : ∀ s : ℝ, s < k → ¬ Packs (k ^ 2 - 3) s := fun s hs =>

@@ -81,6 +81,5 @@ parameters; the proofs are case splits closed by `omega`/`linarith` and should c
 
 ## Build
 
-Opt-in (not imported by `Sqpack.lean`, so the default build is unchanged): `lake build Sqpack.Bentz`, **127 s**
+In the default build since 2026-09-30 (`Sqpack.lean` imports `Sqpack.BentzData`, `Sqpack.Bentz`); alone: `lake build Sqpack.Bentz`, **127 s**
 on cores 12–15 (`LEAN_NUM_THREADS=4`; not profiled, presumably dominated by the three `decide +kernel` data checks of §3).
-Adding `import Sqpack.Bentz` to `Sqpack.lean` would put it in the default build.

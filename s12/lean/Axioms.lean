@@ -133,3 +133,5 @@ import Sqpack
 #print axioms SquarePacking.ZMTreeM.lblk_sound
 #print axioms SquarePacking.ZMTreeM.pc_soundX
 #print axioms SquarePacking.s3_ge_2_mixed
+-- s(k^2 - 3) = k for all k >= 6, from the one finite hypothesis Valid7 (Sqpack/Bentz.lean, certificates/k2m3/)
+#print axioms SquarePacking.Bentz.bentz_of_valid7
