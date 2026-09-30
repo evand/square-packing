@@ -194,3 +194,10 @@ additionally trivial as a perfect square.
   - Others' certificates are linked as published; this project replays only its own.  Many
     `n = 18 … 91` floors from wand125's rectangle-density certificates (updated daily) are not yet
     in this file.
+- 2026-09-30, the `s(k² − 3) = k` family (`EvanDaniel2026`, `s12/certificates/k2m3`, 2026-09-29; write-up `/k2m3/`):
+  proved for every `k ≥ 6` by one fixed-profile family whose `k = 7` box is certified by a single exact checker, with
+  the all-k reduction kernel-checked in Lean.  An infinite family does not fit a table keyed by `n`, so it enters as
+  its concrete cases in range, `n = 33, 46, 61, 78, 97` (`k = 6..10`), and `meta.families` says so.  For 33, 46 and 61
+  (already settled by Bentz 2016, Bentz 2010 and our `s(60) = 8`) it is a history entry and `best` keeps the earlier
+  proof, per the tie rule above; for 78 and 97 it is `best` (previously Nagamochi's general bound).  The `n = 61`
+  s(60)-corollary note no longer credits Bentz with `k = 3` (Kearney–Shiu 2002).

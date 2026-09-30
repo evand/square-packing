@@ -1560,6 +1560,16 @@
     "status": "proved",
     "url": "https://arxiv.org/abs/1606.03746",
     "note": null
+   },
+   {
+    "value": 6.0,
+    "exact_form": "6",
+    "source": "EvanDaniel2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
+    "note": "2026-09-29; s(33) = 6 as the k = 6 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by a single exact checker (search/qx2_zm.py) and adversarially reviewed; the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); not independently re-implemented; unrefereed",
+    "date": "2026-09-29"
    }
   ]
  },
@@ -2044,6 +2054,16 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v17i1r126",
     "note": null
+   },
+   {
+    "value": 7.0,
+    "exact_form": "7",
+    "source": "EvanDaniel2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
+    "note": "2026-09-29; s(46) = 7 as the k = 7 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by a single exact checker (search/qx2_zm.py) and adversarially reviewed; the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); not independently re-implemented; unrefereed",
+    "date": "2026-09-29"
    }
   ]
  },
@@ -2532,7 +2552,7 @@
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s60",
-   "note": "2026-09-28; s(61) = 8 from s(60) = 8 by monotonicity (s(61) >= s(60); the 8 x 8 grid gives <= 8); s(k^2-3) = k was proved only for k <= 7 (Bentz); no Lean; unrefereed",
+   "note": "2026-09-28; s(61) = 8 from s(60) = 8 by monotonicity (s(61) >= s(60); the 8 x 8 grid gives <= 8); s(k^2-3) = k had been proved only for k <= 7 (Kearney-Shiu k = 3, Bentz k = 4..7); no Lean; unrefereed",
    "date": "2026-09-28"
   },
   "history": [
@@ -2570,8 +2590,18 @@
     "year": 2026,
     "status": "preprint",
     "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s60",
-    "note": "2026-09-28; s(61) = 8 from s(60) = 8 by monotonicity (s(61) >= s(60); the 8 x 8 grid gives <= 8); s(k^2-3) = k was proved only for k <= 7 (Bentz); no Lean; unrefereed",
+    "note": "2026-09-28; s(61) = 8 from s(60) = 8 by monotonicity (s(61) >= s(60); the 8 x 8 grid gives <= 8); s(k^2-3) = k had been proved only for k <= 7 (Kearney-Shiu k = 3, Bentz k = 4..7); no Lean; unrefereed",
     "date": "2026-09-28"
+   },
+   {
+    "value": 8.0,
+    "exact_form": "8",
+    "source": "EvanDaniel2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
+    "note": "2026-09-29; s(61) = 8 as the k = 8 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by a single exact checker (search/qx2_zm.py) and adversarially reviewed; the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); not independently re-implemented; unrefereed",
+    "date": "2026-09-29"
    }
   ]
  },
@@ -3093,13 +3123,14 @@
  },
  "78": {
   "best": {
-   "value": 8.937253933193773,
-   "exact_form": "sqrt(78 - 2*floor(sqrt(78)) + 1) + 1 = sqrt(63)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 9.0,
+   "exact_form": "9",
+   "source": "EvanDaniel2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
+   "note": "2026-09-29; s(78) = 9 as the k = 9 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by a single exact checker (search/qx2_zm.py) and adversarially reviewed; the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); not independently re-implemented; unrefereed",
+   "date": "2026-09-29"
   },
   "history": [
    {
@@ -3118,6 +3149,16 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 9.0,
+    "exact_form": "9",
+    "source": "EvanDaniel2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
+    "note": "2026-09-29; s(78) = 9 as the k = 9 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by a single exact checker (search/qx2_zm.py) and adversarially reviewed; the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); not independently re-implemented; unrefereed",
+    "date": "2026-09-29"
    }
   ]
  },
@@ -3699,13 +3740,14 @@
  },
  "97": {
   "best": {
-   "value": 9.94427190999916,
-   "exact_form": "sqrt(97 - 2*floor(sqrt(97)) + 1) + 1 = sqrt(80)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 10.0,
+   "exact_form": "10",
+   "source": "EvanDaniel2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
+   "note": "2026-09-29; s(97) = 10 as the k = 10 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by a single exact checker (search/qx2_zm.py) and adversarially reviewed; the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); not independently re-implemented; unrefereed",
+   "date": "2026-09-29"
   },
   "history": [
    {
@@ -3724,6 +3766,16 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii)"
+   },
+   {
+    "value": 10.0,
+    "exact_form": "10",
+    "source": "EvanDaniel2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
+    "note": "2026-09-29; s(97) = 10 as the k = 10 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by a single exact checker (search/qx2_zm.py) and adversarially reviewed; the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); not independently re-implemented; unrefereed",
+    "date": "2026-09-29"
    }
   ]
  },
@@ -3932,7 +3984,7 @@
   },
   "EvanDaniel2026": {
    "authors": "Evan Daniel (evand)",
-   "title": "square-packing (s12/): exact certificates for s(11) >= 3040/797, s(12) >= 15680/3951, s(21) = 5, s(32) = 6, s(45) = 7 and s(60) = 8, and a case-free proof of s(13) = 4",
+   "title": "square-packing (s12/): exact certificates for s(11) >= 3040/797, s(12) >= 15680/3951, s(21) = 5, s(32) = 6, s(45) = 7, s(60) = 8 and s(k^2-3) = k for all k >= 6, and a case-free proof of s(13) = 4",
    "venue": "GitHub repository + write-up (computer-assisted, unrefereed)",
    "year": 2026,
    "url": "https://github.com/evand/square-packing/tree/main/s12"
@@ -3985,6 +4037,7 @@
   "generated": "2026-09-08",
   "caveats": "See site/notes/lower-bounds-notes.md for sourcing notes and uncertainties. Entries with status 'preprint' are computer-assisted 2026 results that have not been refereed. Others' certificates are linked as published; this project replays only its own. Where a 2026 repository is still moving (n = 17 especially), the history keeps the main steps and the linked repository has the rest.",
   "precision": "`value` is the full double-precision evaluation of `exact_form`, not a rounded decimal: storing the n=5 floor as 2.7071068 put it ABOVE the true 2+1/sqrt(2)=2.707106781..., so it compared as greater than the matching upper bound and s(5) and s(10) were reported open with a gap of -0.0000. Entries whose exact_form is absent or flagged unreliable keep their curated decimal.",
-  "updated": "2026-09-28"
+  "updated": "2026-09-30",
+  "families": "s(k^2-3) = k is proved here for every k >= 6 (EvanDaniel2026, 2026-09-29, s12/certificates/k2m3). The table covers n <= 100, so it holds the cases n = 33, 46, 61, 78, 97 (k = 6..10); for n = 33, 46, 61, which were already settled, it is a history entry and `best` keeps the earlier proof; for n = 78, 97 it is `best`. The family continues beyond the table (n = 118, 141, ...)."
  }
 }

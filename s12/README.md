@@ -5,8 +5,10 @@
 Readable write-ups: **https://evand.github.io/square-packing/s12/** (s(12), s(11)),
 **https://evand.github.io/square-packing/s13/** (s(13) = 4 without cases),
 **https://evand.github.io/square-packing/s21/** (s(21) = 5),
-**https://evand.github.io/square-packing/s32/** (s(32) = 6) and
-**https://evand.github.io/square-packing/s45/** (s(45) = 7).
+**https://evand.github.io/square-packing/s32/** (s(32) = 6),
+**https://evand.github.io/square-packing/s45/** (s(45) = 7),
+**https://evand.github.io/square-packing/s60/** (s(60) = 8) and
+**https://evand.github.io/square-packing/k2m3/** (s(k² − 3) = k for all k ≥ 6).
 
 This directory is the s(12) research tree.  The rest of the
 [square-packing](../README.md) repository is the Square Packing Atlas, an explorer for the
@@ -21,14 +23,28 @@ conjectured, and deciding it *is* the open problem.  `s(11)` itself is also open
 
 Each is an exact certificate re-checked by `./verify.sh`; nothing here is peer reviewed.
 
+* **`s(k² − 3) = k` for every `k ≥ 6`** (2026-09-29): one *fixed-profile family* of measures on the 1/5-grid, no
+  points: a corner module on `[0,2]²` at each corner, a wall band of width 2 repeating with period 1, and Lebesgue
+  measure on `[9/5, k − 9/5]²`; total `k² − 4D`, `D = 423621306389/500000000000 = 0.847243`, so `k² − 3.388970 < k² − 3`
+  for every `k`.  Integer shifts move any unit square in `[0,k]²` into the `7 × 7` box, so validity of that one box
+  (`search/qx2_data/L4_k02_box7.txt`: 800 segments + the Lebesgue square) gives every `k ≥ 6`; that reduction, the
+  accounting and the dilation are kernel-checked in Lean (`bentz_of_valid7 : Valid7 → ∀ k ≥ 6, minSide (k² − 3) = k`,
+  `lean/Sqpack/Bentz.lean`, default build).  `Valid7` is certified by Lemma Z (θ = 0) and `search/qx2_zm.py` (θ > 0,
+  9,800 D4 roots, 0 uncertified, every leaf recorded), a single implementation: *Working in public: a single-implementation
+  exact certificate, adversarially reviewed by six independent agents with no errors found; the all-k reduction is
+  kernel-checked in Lean. Not yet independently re-implemented, externally reviewed, or fully formalised.*  Known before:
+  `k = 3` (Kearney–Shiu 2002), `k = 4, 7` (Bentz 2010), `k = 5, 6` (Bentz, arXiv:1606.03746, preprint), `k = 8` (ours,
+  from `s(60) = 8` below); Bentz suggested it for all `k ≥ 3` (it also follows from Conjecture 1 of Friedman's survey with
+  `s(6) = 3`).  `search/QUADRANT_EXACT.md`, `search/QUADRANT.md`, `notes/lean-bentz-reduction.md`;
+  [`certificates/k2m3/`](certificates/k2m3/README.md).
 * **`s(60) = 8`** (2026-09-28): one *mixed* cover of `[0,8]²`, 23,744 weighted points plus mass spread uniformly
   along 5,216 segments of the interior grid lines, total `59.858675 < 60`, certified at margin zero by the same two
   exact checkers as `s(21) = 5` and `s(45) = 7` (same files, same settings).  Not in Lean yet (no `s(60)` data file
   or top theorem).  The `s(45)` line-cover recipe at side 8, seeded by the `s(45)` LP cover with its centre cell
   duplicated, plus a coarse uniform row family (`search/S60_COVER.md`).  Previous best lower bound `397/50 = 7.94`
-  (wand125, 2026).  **Corollary `s(61) = 8`** (`s(61) ≥ s(60)`, and the grid): `s(k² − 3) = k` was proved only for
-  `k = 3..7` (Bentz; `notes/literature-s32.md`), so this is its first new case.  No write-up page:
-  [`certificates/s60/`](certificates/s60/README.md).
+  (wand125, 2026).  **Corollary `s(61) = 8`** (`s(61) ≥ s(60)`, and the grid): `s(k² − 3) = k` had been proved only for
+  `k = 3..7` (Kearney–Shiu for `k = 3`, Bentz for `k = 4..7`), so this was its first new case, a day before the whole
+  family above.  [`certificates/s60/`](certificates/s60/README.md).
 * **`s(45) = 7`** (2026-09-27): one *mixed* cover of `[0,7]²`, 19,989 weighted points plus mass spread uniformly
   along 3,912 segments of the interior grid lines, total `44.773528 < 45`, certified at margin zero by the same two
   exact checkers as `s(21) = 5` (same files, same settings: `search/zm_mixed.py` over the symmetry-reduced pose

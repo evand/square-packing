@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Forty-Five Squares · Square Packing Atlas</title>
+<title>Sixty Squares · Square Packing Atlas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
@@ -104,70 +104,68 @@ section>*{min-width:0}
   <span class="brand">Square Packing Atlas</span>
   <nav><a href="../index.html">Overview</a><a href="../explore.html">Explore</a><a href="../compare.html">Compare</a><a href="../bounds.html">Bounds</a><a href="../proofs.html" class="here">Proofs &amp; results</a><a href="../sources.html">Sources</a></nav>
 </div>
-<div class="subnav"><span class="lbl">Results</span><a href="../s12/">s(11), s(12)</a><a href="../s13/">s(13)</a><a href="../s21/">s(21)</a><a href="../s32/">s(32)</a><a href="./" class="here">s(45)</a><a href="../s60/">s(60)</a><a href="../k2m3/">s(k²−3)</a></div>
+<div class="subnav"><span class="lbl">Results</span><a href="../s12/">s(11), s(12)</a><a href="../s13/">s(13)</a><a href="../s21/">s(21)</a><a href="../s32/">s(32)</a><a href="../s45/">s(45)</a><a href="./" class="here">s(60)</a><a href="../k2m3/">s(k²−3)</a></div>
 <div class="wrap">
 <header>
   <span class="eyebrow">Discrete geometry · computer-assisted proof</span>
-  <h1>Forty-Five Squares</h1>
-  <p class="lede">Forty-five unit squares fit in a 7 × 7 square: take the grid and leave four cells empty. No
-  arrangement fits them into anything smaller: <span class="mono">s(45) = 7</span>. The proof is the one used for
-  <a href="../s21/"><span class="mono">s(21) = 5</span></a>, one size up: weighted points plus mass spread evenly
-  along the grid lines, checked by the same two exact checkers. It is not in Lean yet.</p>
+  <h1>Sixty Squares</h1>
+  <p class="lede">Sixty unit squares fit in an 8 × 8 square: take the grid and leave four cells empty. No arrangement fits
+  them into anything smaller: <span class="mono">s(60) = 8</span>, and so <span class="mono">s(61) = 8</span> as well. The
+  proof is the one used for <a href="../s21/"><span class="mono">s(21) = 5</span></a> and
+  <a href="../s45/"><span class="mono">s(45) = 7</span></a>, one size up again, checked by the same two exact checkers. It is
+  not in Lean yet.</p>
   <div class="tags">
     <span class="tag ok">two independent exact checkers</span>
     <span class="tag open">no Lean yet</span>
     <span class="tag open">not peer reviewed</span>
-    <a class="tag neutral" href="https://github.com/evand/square-packing/tree/main/s12/certificates/s45">Certificate &amp; checkers on GitHub →</a>
+    <a class="tag neutral" href="https://github.com/evand/square-packing/tree/main/s12/certificates/s60">Certificate &amp; checkers on GitHub →</a>
   </div>
 </header>
 
 <section id="result">
-  <div class="sechead"><span class="eyebrow">01 · The result</span><h2>s(45) = 7</h2></div>
+  <div class="sechead"><span class="eyebrow">01 · The result</span><h2>s(60) = 8</h2></div>
   <p><span class="mono">s(n)</span> is the side of the smallest square that holds <i>n</i> unit squares,
   each at any position and any angle, overlapping at most along their edges. Leaving cells of a grid empty
-  gives <span class="mono">s(45) ≤ 7</span>. The work is the other direction.</p>
+  gives <span class="mono">s(60) ≤ 8</span>. The work is the other direction.</p>
   <div class="card thm">
-    <p class="stmt"><strong>Theorem.</strong> There is a mass distribution on <span class="mono">[0,7]²</span>,
-    made of <strong>19,989 weighted points</strong> and <strong>3,912 short segments of the interior grid lines</strong>
+    <p class="stmt"><strong>Theorem.</strong> There is a mass distribution on <span class="mono">[0,8]²</span>,
+    made of <strong>23,744 weighted points</strong> and <strong>5,216 short segments of the interior grid lines</strong>
     carrying mass spread evenly along their length, of total mass
-    <span class="mono">2238676387 / (5·10⁷)</span>, such that <em>every</em> closed unit square inside
-    <span class="mono">[0,7]²</span>, at every position and every angle, captures mass at least 1.</p>
-    <p class="big">44.773528 &nbsp;&lt;&nbsp; 45</p>
-    <p class="footnote">Suppose 45 unit squares fit in a square of side <span class="mono">s &lt; 7</span>.
-    Spread their centres out by the factor <span class="mono">7/s</span>. The squares stay inside
-    <span class="mono">[0,7]²</span> and become <em>pairwise disjoint</em>, so no part of the mass lies in two of them.
-    Each captures mass at least 1, so between them they capture at least 45, but there is only 44.77 in total. So
-    there is no such packing, and <span class="mono">s(45) = 7</span>. "Captures" is meant for the closed square: a
+    <span class="mono">748233441 / 12500000</span>, such that <em>every</em> closed unit square inside
+    <span class="mono">[0,8]²</span>, at every position and every angle, captures mass at least 1.</p>
+    <p class="big">59.858675 &nbsp;&lt;&nbsp; 60</p>
+    <p class="footnote">Suppose 60 unit squares fit in a square of side <span class="mono">s &lt; 8</span>.
+    Spread their centres out by the factor <span class="mono">8/s</span>. The squares stay inside
+    <span class="mono">[0,8]²</span> and become <em>pairwise disjoint</em>, so no part of the mass lies in two of them.
+    Each captures mass at least 1, so between them they capture at least 60, but there is only 59.86 in total. So
+    there is no such packing, and <span class="mono">s(60) = 8</span>. "Captures" is meant for the closed square: a
     point on its boundary counts, and a segment lying along one of its edges counts in full.</p>
   </div>
-  <p>With <a href="../s21/"><span class="mono">s(21) = 5</span></a> and <a href="../s32/"><span class="mono">s(32) = 6</span></a>
-  this is the third exact value of <span class="mono">s(k² − 4)</span> for <span class="mono">k ≥ 4</span>. The property in
-  the theorem was checked for every placement of a unit square, a three-parameter continuum, by two checkers
-  written independently (§04). Unlike those two, there is no Lean theorem for this one (§05).</p>
+  <p><strong>Corollary: <span class="mono">s(61) = 8</span>.</strong> Removing a square from a packing leaves a packing, so
+  <span class="mono">s(61) ≥ s(60) = 8</span>, and the 8 × 8 grid holds 61. Before this, <span class="mono">s(k² − 3) = k</span>
+  was proved only up to <span class="mono">k = 7</span>; it has since been proved for every <span class="mono">k ≥ 6</span> by a
+  different cover, checked by a different program (<a href="../k2m3/">Three Short of a Square</a>). The two proofs of
+  <span class="mono">s(61) = 8</span> share nothing but the scaling argument.</p>
+  <p>With <a href="../s21/"><span class="mono">s(21) = 5</span></a>, <a href="../s32/"><span class="mono">s(32) = 6</span></a>
+  and <a href="../s45/"><span class="mono">s(45) = 7</span></a> this is the fourth exact value of
+  <span class="mono">s(k² − 4)</span> for <span class="mono">k ≥ 4</span>.</p>
 </section>
 
 <section id="context">
-  <div class="sechead"><span class="eyebrow">02 · Context</span><h2>The next rung</h2></div>
-  <p>Friedman's survey has no lower bound for <span class="mono">n = 42</span> to 46. Before 2026 the best was
-  Nagamochi's general bound. In September 2026 rectangle-density certificates brought it close to 7:</p>
+  <div class="sechead"><span class="eyebrow">02 · Context</span><h2>The rung after forty-five</h2></div>
   <div class="tablewrap"><table>
-    <thead><tr><th>lower bound for s(45)</th><th>source</th></tr></thead>
+    <thead><tr><th>lower bound for s(60)</th><th>source</th></tr></thead>
     <tbody>
-      <tr><td class="num">6.708204 = √45</td><td>area</td></tr>
-      <tr><td class="num">6.830952 = 1 + √34</td><td>Nagamochi 2005, a general bound</td></tr>
-      <tr><td class="num">6.945 = 1389/200, then 6.955 = 1391/200</td><td><a href="https://github.com/wand125/square-packing-bounds">wand125</a>, rectangle-density certificates, 2026-09-25 to 27 (unrefereed)</td></tr>
-      <tr><td class="num"><b>7</b></td><td>this work, 2026-09-27 (unrefereed)</td></tr>
+      <tr><td class="num">7.745967 = √60</td><td>area</td></tr>
+      <tr><td class="num">7.855655 = 1 + √47</td><td>Nagamochi 2005, a general bound</td></tr>
+      <tr><td class="num">7.94 = 397/50</td><td><a href="https://github.com/wand125/square-packing-bounds">wand125</a>, rectangle-density certificates, raised in steps from 2026-09-26 to 27 (unrefereed)</td></tr>
+      <tr><td class="num"><b>8</b></td><td>this work, 2026-09-28 (unrefereed)</td></tr>
     </tbody>
   </table></div>
-  <p>We first tried weighted points alone, as for <span class="mono">s(32)</span>. The linear program had room, but
-  every explicit point cover the repair loop produced still let some tilted placement near the edge tiles capture
-  less than 1. Spreading part of the mass evenly along the grid lines, as for <span class="mono">s(21)</span>, removed
-  those holes at once: the second round of a single linear-program run already had room below 45
-  (<a href="https://github.com/evand/square-packing/blob/main/s12/search/S45_COVER.md">S45_COVER.md</a> §10).</p>
-  <p>One rung further, the same recipe at side 8 gives <a href="../s60/"><span class="mono">s(60) = 8</span></a>
-  (2026-09-28), and with it <span class="mono">s(61) = 8</span>, the first open case of <span class="mono">s(k² − 3) = k</span>.
-  That whole family, for every <span class="mono">k ≥ 6</span>, has since been proved by a different kind of cover
-  (<a href="../k2m3/">Three Short of a Square</a>).</p>
+  <p>The cover is the <a href="../s45/"><span class="mono">s(45)</span></a> recipe at side 8: the linear program was seeded
+  with the <span class="mono">s(45)</span> cover, its centre cell duplicated, plus a coarse uniform family of rows, and the
+  line densities again did the work. The research log is
+  <a href="https://github.com/evand/square-packing/blob/main/s12/search/S60_COVER.md">S60_COVER.md</a>.</p>
 </section>
 
 <section id="cover">
@@ -176,57 +174,57 @@ section>*{min-width:0}
   tilted slightly over a grid cell keeps part of one grid line and the complementary part of the parallel line one
   unit away, and if both carry the same even density the two parts add up to a whole edge wherever the tilt pivots.</p>
   <figure>
-    <div class="figbox"><canvas class="cv" id="cv" width="1200" height="1200" role="img" aria-label="The s(45) cover in the 7 by 7 square: mass spread along the twelve interior grid lines, with varying density, plus weighted points."></canvas></div>
-    <figcaption id="cvcap">The cover in <span class="mono">[0,7]²</span>. Line thickness is proportional to the density of
-    mass along the interior grid lines; dots have area proportional to their weight. The segments carry <b>73%</b> of
-    the mass (32.8 of 44.8).</figcaption>
+    <div class="figbox"><canvas class="cv" id="cv" width="1200" height="1200" role="img" aria-label="The s(60) cover in the 8 by 8 square: mass spread along the fourteen interior grid lines, with varying density, plus weighted points."></canvas></div>
+    <figcaption id="cvcap">The cover in <span class="mono">[0,8]²</span>. Line thickness is proportional to the density of
+    mass along the interior grid lines; dots have area proportional to their weight. The segments carry <b>69%</b> of
+    the mass (41.4 of 59.9).</figcaption>
   </figure>
   <div class="grid2">
-    <div class="stat"><span class="eyebrow">points</span><b>19,989</b></div>
-    <div class="stat"><span class="eyebrow">segments</span><b>3,912 × 1/50</b></div>
-    <div class="stat"><span class="eyebrow">total mass</span><b>44.773528</b></div>
+    <div class="stat"><span class="eyebrow">points</span><b>23,744</b></div>
+    <div class="stat"><span class="eyebrow">segments</span><b>5,216 × 1/50</b></div>
+    <div class="stat"><span class="eyebrow">total mass</span><b>59.858675</b></div>
     <div class="stat"><span class="eyebrow">symmetry</span><b>all 8 of the square</b></div>
   </div>
-  <p>The weights are the linear program's second round multiplied by <span class="mono">409/400</span>, with masses
-  rounded up. By bisection with the Rust checker, the unscaled cover verifies at a factor of
-  <span class="mono">1.0153</span> and is refused just below, so this one sits about 0.7% above its threshold and
-  0.5% below 45. Every number in the file is an integer: coordinates in thousandths, masses in units of
-  <span class="mono">10⁻⁸</span>. The file format is the one of <span class="mono">s(21)</span>
+  <p>The weights are the linear program's fourth round multiplied by <span class="mono">41/40</span>, with masses rounded
+  up. By bisection with the Rust checker, the unscaled cover verifies at a factor of <span class="mono">1.0171875</span> and
+  is refused at <span class="mono">1.016875</span>, so this one sits about 0.77% above its threshold and 0.24% below 60.
+  Every number in the file is an integer: coordinates in thousandths, masses in units of <span class="mono">10⁻⁸</span>.
+  The file format is the one of <span class="mono">s(21)</span>
   (<a href="https://github.com/evand/square-packing/blob/main/s12/certificates/s21/FORMAT.md">FORMAT.md</a>).</p>
 </section>
 
 <section id="verification">
   <div class="sechead"><span class="eyebrow">04 · Verification</span><h2>How it is checked</h2></div>
   <p>The distribution is unchanged by all eight symmetries of the square (checked exactly), so it is enough to check
-  squares whose centre lies in <span class="mono">[0,3.5]²</span> and whose angle lies in <span class="mono">[0°, 45°]</span>;
+  squares whose centre lies in <span class="mono">[0,4]²</span> and whose angle lies in <span class="mono">[0°, 45°]</span>;
   the checkers take angles up to 53.13°. The Rust checker also checks the whole pose space with no symmetry assumed.
-  Both are the exact files, with the same settings, that certified <span class="mono">s(21)</span>; the
-  <a href="../s21/#verification"><span class="mono">s(21)</span> page</a> describes how they work.</p>
+  Both are the exact files, with the same settings, that certified <span class="mono">s(21)</span> and
+  <span class="mono">s(45)</span>; the <a href="../s21/#verification"><span class="mono">s(21)</span> page</a> describes how
+  they work.</p>
   <div class="tablewrap"><table>
     <thead><tr><th></th><th>search/zm_mixed.py</th><th>verify2/zmx2</th></tr></thead>
     <tbody>
       <tr><td>language, arithmetic</td><td>Python; exact <span class="mono">Fraction</span> and integers, floats only to choose tests</td><td>Rust; exact integers for points and masses, outward-rounded intervals for where lines cross edges</td></tr>
       <tr><td>region</td><td>symmetry-reduced</td><td>symmetry-reduced, and the whole pose space</td></tr>
-      <tr><td>root boxes</td><td class="num">78,400</td><td class="num">4,900 and 39,200</td></tr>
-      <tr><td>certified</td><td class="num"><b>78,400</b></td><td class="num"><b>4,900</b> and <b>39,200</b></td></tr>
-      <tr><td>boxes, max depth</td><td class="num">437,510, 19</td><td class="num">2.07 M, 24; 16.6 M, 24</td></tr>
+      <tr><td>root boxes</td><td class="num">102,400</td><td class="num">6,400 and 51,200</td></tr>
+      <tr><td>certified</td><td class="num"><b>102,400</b></td><td class="num"><b>6,400</b> and <b>51,200</b></td></tr>
+      <tr><td>boxes, max depth</td><td class="num">500,134, 18</td><td class="num">2.62 M, 24; 21.0 M, 24</td></tr>
       <tr><td>uncertified</td><td class="num"><b>0</b></td><td class="num"><b>0</b></td></tr>
-      <tr><td>CPU</td><td class="num">16.5 h (83 min on 12 processes)</td><td class="num">19 s; 144 s</td></tr>
+      <tr><td>CPU</td><td class="num">19.6 h (107 min on 12 processes)</td><td class="num">22 s; 177 s</td></tr>
     </tbody>
   </table></div>
   <p>Nothing specific to this cover has been audited separately. The checkers are the reviewed
-  <span class="mono">s(21)</span> files (same hashes), but no deliberately broken versions of this cover were tried
-  and there is no independent review of this bundle yet.</p>
+  <span class="mono">s(21)</span> files (same hashes, and the <span class="mono">zm_mixed.py</span> run repeated after one
+  guard was added in review, with an identical census root for root), but no deliberately broken versions of this cover
+  were tried and there is no independent review of this bundle yet.</p>
 </section>
 
 <section id="lean">
   <div class="sechead"><span class="eyebrow">05 · Lean</span><h2>Not in Lean yet</h2></div>
-  <p>There is no Lean theorem <span class="mono">minSide 45 = 7</span>. The general steps are proved in Lean for any
-  side: that a mass distribution of this kind bounds the packing, and the symmetry reduction
-  (<span class="mono">lean/Sqpack/MixedMeasure.lean</span>, used for <a href="../s21/#lean"><span class="mono">s(21)</span></a>).
-  Nothing about <em>this</em> cover is transcribed or checked in Lean. The kernel verifier that checks
-  <a href="../s13/#lean"><span class="mono">s(13)</span></a> and <a href="../s32/#lean"><span class="mono">s(32)</span></a>
-  handles weighted points only; extending it to segments would cover both <span class="mono">s(21)</span> and this.</p>
+  <p>There is no Lean theorem <span class="mono">minSide 60 = 8</span>. As for <a href="../s45/#lean"><span class="mono">s(45)</span></a>,
+  the general steps are proved in Lean for any side (<span class="mono">lean/Sqpack/MixedMeasure.lean</span>), but nothing
+  about <em>this</em> cover is transcribed or checked there. For <span class="mono">s(61) = 8</span> the situation differs:
+  the <a href="../k2m3/#lean">k² − 3 family</a> has a kernel-checked reduction to one finite statement about a 7 × 7 box.</p>
 </section>
 
 <section id="limits">
@@ -244,20 +242,20 @@ section>*{min-width:0}
 
 <section id="artifacts">
   <div class="sechead"><span class="eyebrow">07 · Reproduce</span><h2>Artifacts</h2></div>
-  <p>Everything is in <a href="https://github.com/evand/square-packing/tree/main/s12/certificates/s45">s12/certificates/s45</a>
+  <p>Everything is in <a href="https://github.com/evand/square-packing/tree/main/s12/certificates/s60">s12/certificates/s60</a>
   of <a href="https://github.com/evand/square-packing">evand/square-packing</a>.
-  <span class="mono">certificates/s45/verify.sh</span> re-checks in about 30 seconds on 6 cores, including a fresh
+  <span class="mono">certificates/s60/verify.sh</span> re-checks in about 35 seconds on 7 cores, including a fresh
   <span class="mono">zmx2</span> run over the whole pose space; <span class="mono">--full</span> also re-runs
-  <span class="mono">zm_mixed.py</span>, about 16.5 CPU-hours.</p>
+  <span class="mono">zm_mixed.py</span>, about 19.6 CPU-hours.</p>
   <div class="tablewrap"><table>
     <thead><tr><th>path (under s12/)</th><th>what</th></tr></thead>
     <tbody>
-      <tr><td class="num">certificates/s45/s45_mixed_cover_7.txt</td><td>the cover: integer points, segments and masses</td></tr>
-      <tr><td class="num">certificates/s45/zm_mixed_d4/, zmx2_*/</td><td>the runs: every root's record, hashes and settings, the exact checker files</td></tr>
-      <tr><td class="num">certificates/s45/README.md</td><td>the claim, what checks what, and what is trusted</td></tr>
+      <tr><td class="num">certificates/s60/s60_mixed_cover_8.txt</td><td>the cover: integer points, segments and masses</td></tr>
+      <tr><td class="num">certificates/s60/zm_mixed_d4/, zmx2_*/</td><td>the runs: every root's record, hashes and settings, the exact checker files</td></tr>
+      <tr><td class="num">certificates/s60/README.md</td><td>the claim, what checks what, and what is trusted</td></tr>
       <tr><td class="num">certificates/s21/FORMAT.md</td><td>the file format, and why a valid file bounds s(n)</td></tr>
       <tr><td class="num">search/zm_mixed.py, verify2/src/bin/zmx2.rs</td><td>the two checkers; proofs in search/ZM_MIXED.md, search/ZMX2.md</td></tr>
-      <tr><td class="num">search/S45_COVER.md</td><td>the research log: the point covers that failed (§§0–9) and the line cover (§10)</td></tr>
+      <tr><td class="num">search/S60_COVER.md</td><td>the research log: how the cover was built</td></tr>
     </tbody>
   </table></div>
 </section>
