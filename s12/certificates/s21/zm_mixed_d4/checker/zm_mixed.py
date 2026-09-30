@@ -857,6 +857,7 @@ def region_phi(datas, box, m, cons):
     (rf_bound over the sub-bin) to violate a constraint or to leave its edge.  'EMPTY' if every candidate is excluded
     on every sub-bin; None if a bound is unavailable."""
     cx0, cx1, cy0, cy1, u0, u1 = box
+    if u0 >= u1: return None            # zero-width bin: no sub-bin is examined, so 'EMPTY' would be unproved (audit B1)
     ch = [corner_choices(cx0, True, m, u0, u1), corner_choices(cx1, False, m, u0, u1),
           corner_choices(cy0, True, m, u0, u1), corner_choices(cy1, False, m, u0, u1)]
     pts = sorted(set([u0, u1] + [q for c in ch for (a, b, _) in c for q in (a, b)]))

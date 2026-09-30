@@ -110,3 +110,5 @@ binary patched after the audit (`ZMX2.md` §11); root for root they have the sam
   same tilted dip `(0.5736, 1.4406, θ = 9.21°)` where the exact mass is `0.99969 < 1`.
 * Lean: `notes/lean-s21.md`; the one hypothesis is the checkers' region statement, stated with the closed-square,
   parametric-fraction semantics of `FORMAT.md`.
+
+**Re-run 2026-09-29 (checker `zm_mixed.py` `1fd20346…`, was `ee3e2915…`).**  One guard added after the audit: `region_phi` (Lemma R) now refuses a zero-width angle bin instead of returning an unproved `EMPTY` (latent bug B1 of the lean-segments audit, `notes/lean-segments.md` §3; unreachable in the earlier run).  The whole `--d4 --cert-mode` run was repeated with the new file (records and `checker/` replaced); its census is identical to the previous run's root for root (every root, every leaf count).

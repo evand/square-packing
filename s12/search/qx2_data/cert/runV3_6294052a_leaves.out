@@ -1,0 +1,61 @@
+zeromargin.py sha256 640fe453c1a32f4aa580ca2b1261c6406923a4d7c131f65604a432c7fc2086ab (= pinned)
+sha256 6294052a37ce66c5d84b55afd606e3a52f463e22b876bf44b5aa903aefb7e737  qx2_zm.py
+sha256 1fd203469bb43a55ca7ce376b9717437e0970eead31941ec7fa100ab24d5ba95  zm_mixed.py
+sha256 640fe453c1a32f4aa580ca2b1261c6406923a4d7c131f65604a432c7fc2086ab  zeromargin.py
+sha256 bb89de15ecf5821dd7e1a36ebab8a50d792a406b7fb0f5cb38059f99ef74aae5  mixed_cover.py
+sha256 c0a6750997897c21ffc693df6df97f89a248dd9eb588a2fe2b83bf359793694b  input
+argv: search/qx2_zm.py search/qx2_data/L4_k02_box7.txt --depth 18 --nproc 8 --exact-umax 1/2 --exact-from 3 --progress 200 --resume runs/rerun_0929/qx2_V3.jsonl --dump-leaves
+container [0,7]^2, 0 points, 800 segments on 60 lines, Lebesgue square [9/5,26/5]^2; total 5701378693611/125000000000 = 45.611029548888
+D4 roots [0,m/2]^2 x u in [0,1/2]: 9800 roots; depth 18; EXACT on for u1 <= 1/2
+  200/9800 roots, 200 boxes, uncert 0, 0s
+  400/9800 roots, 400 boxes, uncert 0, 0s
+  600/9800 roots, 600 boxes, uncert 0, 0s
+  800/9800 roots, 800 boxes, uncert 0, 0s
+  1000/9800 roots, 1000 boxes, uncert 0, 0s
+  1200/9800 roots, 1200 boxes, uncert 0, 0s
+  1400/9800 roots, 1400 boxes, uncert 0, 0s
+  1600/9800 roots, 1728 boxes, uncert 0, 30s
+  1800/9800 roots, 2258 boxes, uncert 0, 86s
+  2000/9800 roots, 2636 boxes, uncert 0, 109s
+  2200/9800 roots, 3054 boxes, uncert 0, 120s
+  2400/9800 roots, 3296 boxes, uncert 0, 123s
+  2600/9800 roots, 3496 boxes, uncert 0, 126s
+  2800/9800 roots, 3702 boxes, uncert 0, 129s
+  3000/9800 roots, 3904 boxes, uncert 0, 132s
+  3200/9800 roots, 4106 boxes, uncert 0, 135s
+  3400/9800 roots, 4366 boxes, uncert 0, 140s
+  3600/9800 roots, 5112 boxes, uncert 0, 175s
+  3800/9800 roots, 6558 boxes, uncert 0, 224s
+  4000/9800 roots, 7978 boxes, uncert 0, 314s
+  4200/9800 roots, 12614 boxes, uncert 0, 1143s
+  4400/9800 roots, 15596 boxes, uncert 0, 1956s
+  4600/9800 roots, 17458 boxes, uncert 0, 2633s
+  4800/9800 roots, 19942 boxes, uncert 0, 3478s
+  5000/9800 roots, 22612 boxes, uncert 0, 3901s
+  5200/9800 roots, 24298 boxes, uncert 0, 4194s
+  5400/9800 roots, 26586 boxes, uncert 0, 4419s
+  5600/9800 roots, 28896 boxes, uncert 0, 4720s
+  5800/9800 roots, 29896 boxes, uncert 0, 4917s
+  6000/9800 roots, 31128 boxes, uncert 0, 5058s
+  6200/9800 roots, 33032 boxes, uncert 0, 5414s
+  6400/9800 roots, 34962 boxes, uncert 0, 5930s
+  6600/9800 roots, 36832 boxes, uncert 0, 6429s
+  6800/9800 roots, 38386 boxes, uncert 0, 6792s
+  7000/9800 roots, 40232 boxes, uncert 0, 7383s
+  7200/9800 roots, 41614 boxes, uncert 0, 7761s
+  7400/9800 roots, 42172 boxes, uncert 0, 7866s
+  7600/9800 roots, 43284 boxes, uncert 0, 8129s
+  7800/9800 roots, 44658 boxes, uncert 0, 8434s
+  8000/9800 roots, 45660 boxes, uncert 0, 8601s
+  8200/9800 roots, 46254 boxes, uncert 0, 8702s
+  8400/9800 roots, 47424 boxes, uncert 0, 8906s
+  8600/9800 roots, 48532 boxes, uncert 0, 9092s
+  8800/9800 roots, 48948 boxes, uncert 0, 9157s
+  9000/9800 roots, 49924 boxes, uncert 0, 9279s
+  9200/9800 roots, 51208 boxes, uncert 0, 9501s
+  9400/9800 roots, 52306 boxes, uncert 0, 9727s
+  9600/9800 roots, 52904 boxes, uncert 0, 9797s
+  9800/9800 roots, 54358 boxes, uncert 0, 10232s
+done in 10232s: boxes 54358, max depth 17, CPU 81377 s
+  leaves: LEB 689  CAP 374  EXACT 9763  EXACT0 381  EXACT45 759  AXIS 61  SYM 1171  PIECE 15926  ADM 0  P1 0  MIX 0  SPLIT 0  EMPTY 2955  UNCERT 0
+VERIFIED-D4 (u > 0; u = 0 face: qx2_zm.py axis)

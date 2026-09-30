@@ -106,8 +106,10 @@ not a proof of a dip, since `zmx2` may lose up to `≈ 0.1 %`).
 
 ## Review record
 
-Both checkers are the exact files audited for `s(21)` (same sha256: `zm_mixed.py ee3e2915…`, `mixed_cover.py
+Both checkers are the exact files audited for `s(21)` (same sha256: `zm_mixed.py 1fd20346…`, `mixed_cover.py
 bb89de15…`, `zeromargin.py 640fe453…`; `zmx2.rs 6b7f0f79…`, binary `0247012e…`); see the review record in
 [`../s21/README.md`](../s21/README.md) (`search/ZM_MIXED_AUDIT.md`, `search/ZMX2_AUDIT.md`).  Nothing specific to this
 cover has been audited separately: no adversarial component tests or holed-cover rejection runs were made on it,
 and there is no independent review of this bundle yet.  The two checkers reach the same verdict on it.
+
+**Re-run 2026-09-29 (checker `zm_mixed.py` `1fd20346…`, was `ee3e2915…`).**  One guard added after the audit: `region_phi` (Lemma R) now refuses a zero-width angle bin instead of returning an unproved `EMPTY` (latent bug B1 of the lean-segments audit, `notes/lean-segments.md` §3; unreachable in the earlier run).  The whole `--d4 --cert-mode` run was repeated with the new file (records and `checker/` replaced); its census is identical to the previous run's root for root (every root, every leaf count).
