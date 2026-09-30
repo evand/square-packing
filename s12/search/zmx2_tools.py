@@ -8,7 +8,7 @@ Written independently of search/zm_mixed.py (never read).  Own parser, own exact
   admissible(cv, x, y, u)      exact admissibility of the pose (Q inside [0,s]^2)
 
 Subcommands:
-  sound FILE [--n N] [--poses P] [--seed S] [--refl]
+  sound FILE [--n N] [--poses P] [--seed S] [--refl] [--near X,Y,U] [--zflags f1,f2]
         soundness harness: random small pose boxes (biased to germs, walls, grid lines), the
         bound printed by `zmx2 boxes`, and exact mu at P random admissible rational poses of
         each box (plus corners); FAIL if any mu < bound.
@@ -179,6 +179,20 @@ def rand_box(rng, S):
     return (Fr(i, cd), Fr(i + wx, cd), Fr(j, cd), Fr(j + wy, cd), Fr(k, ud), Fr(min(k + wu, ud // 2), ud))
 
 
+def near_box(rng, x, y, u, r=0.002, ru=0.001):
+    """random small pose box near the pose (x, y, u): centre within r, u within ru (u >= 0), sides
+    1/(10*2^a) and 1/(8*2^b) for a in 7..16, b in 6..16 (the scale of a germ's uncertified leaves)."""
+    a = rng.randint(7, 16)
+    b = rng.randint(6, 16)
+    cd, ud = 10 << a, 8 << b
+    cx = x + rng.uniform(-r, r)
+    cy = y + rng.uniform(-r, r)
+    uc = max(0.0, u + rng.uniform(-ru, ru)) if rng.random() < 0.85 else 0.0
+    i, j, k = int(cx * cd), int(cy * cd), int(uc * ud)
+    wx, wy, wu = rng.choice([1, 1, 2]), rng.choice([1, 1, 2]), rng.choice([1, 1, 2])
+    return (Fr(i, cd), Fr(i + wx, cd), Fr(j, cd), Fr(j + wy, cd), Fr(k, ud), Fr(k + wu, ud))
+
+
 def cmd_sound(argv):
     path = argv[0]
     n = int(opt(argv, '--n', 200))
@@ -188,9 +202,14 @@ def cmd_sound(argv):
     rng = random.Random(seed)
     cv = load(path)
     cve = reflect_y(cv) if refl else cv
-    boxes = [rand_box(rng, cv['s']) for _ in range(n)]
+    near = opt(argv, '--near', None)
+    if near is None:
+        boxes = [rand_box(rng, cv['s']) for _ in range(n)]
+    else:
+        boxes = [near_box(rng, *(float(t) for t in near.split(','))) for _ in range(n)]
     inp = '\n'.join(','.join('%d/%d' % (f.numerator, f.denominator) for f in bx) for bx in boxes) + '\n'
-    cmd = [ZMX2, 'boxes', path] + (['--refl'] if refl else [])
+    zflags = ['--' + t for t in opt(argv, '--zflags', '').split(',') if t]  # e.g. pair-points,sym-atoms
+    cmd = [ZMX2, 'boxes', path] + (['--refl'] if refl else []) + zflags
     out = subprocess.run(cmd, input=inp, capture_output=True, text=True, check=True).stdout.split('\n')
     worst = None
     nfail = 0
