@@ -1,0 +1,3 @@
+  leaves: PIECE 9157  ADM 81862  P1 0  MIX 0  CHAIN 15061  SPLIT 30681  EMPTY 17662  UNCERTIFIED 0   (leaves where Lemma T / Lemma L raised the piece bound: 32940 / 103484; closed by Lemma T with line points: 0)
+VERIFIED-D4
+manifest written to runs/s21A/manifest.json

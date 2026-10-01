@@ -195,3 +195,12 @@ python3 search/golf/costmodel.py; python3 search/golf/estimate.py current A; pyt
 bash search/golf/make_covers.sh; bash search/golf/bisect_all.sh v_seg2 v_seg5 v_merge05 v_merge10 v_drop1e4
 bash search/golf/zmx2_curve.sh; bash search/golf/zm_sample.sh A search/golf/covers/cand_A_scale.txt
 ```
+
+## Addendum (2026-09-30): candidate A verified in full
+
+`candA_verified/s21A_mixed_cover_5.txt` (= `covers/cand_A_scale.txt`, total `524750000723/25·10⁹ = 20.990000029`):
+`zm_mixed.py cert --d4 --cert-mode --disj --chain-from 0 --depth 24 --pitch 1/20 --ubins 16` (the shipped s(21)
+settings, 6 processes): **VERIFIED-D4**, 40,000 roots, 268,846 boxes, 0 uncertified, 27,348 CPU-s (shipped cover:
+461,204 boxes, 49,356 CPU-s; ratio 0.58 / 0.55, as the pilot projected).  `zmx2 cert --full` (no symmetry): VERIFIED,
+20,000 roots, 7,804,632 boxes, 0 uncertified, 49 CPU-s.  Records: `candA_verified/` (manifest, xz roots, SHA256SUMS).
+Not a bundle: it would become the s(21) Lean target if we formalise s(21).
