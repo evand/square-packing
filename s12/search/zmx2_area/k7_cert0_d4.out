@@ -1,0 +1,4 @@
+D4: measure invariant under x->s-x and x<->y (exact)
+# zmx2 cert0 (theta = 0) hash=1109d48c2cfeb50c mode=d4 depth=40 area=1
+done0 in 0.0s: roots 900, boxes 900, certified 900, uncertified 0, max depth 0
+VERIFIED-D4 (theta = 0): every closed axis-parallel unit square in [0,s]^2 has mu >= 1 (D4-reduced)
