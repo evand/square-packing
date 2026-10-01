@@ -1,0 +1,20 @@
+{
+ "cert": "search/s61_wand125/s61_wand125_cover_8.txt",
+ "cert_sha": "bcb66c7910ef844ce8d39c423d7a5a419bd530a344689331f7665ba6971d0374",
+ "checker_src": "search/zeromargin.py",
+ "checker_sha": "640fe453c1a32f4aa580ca2b1261c6406923a4d7c131f65604a432c7fc2086ab",
+ "runner_sha": "cc7fa8c70f7a39c5e1e920baa9efdc1af8feb68bc6eeb029dab4a99fc3f77fbe",
+ "settings": {
+  "depth": 24,
+  "theta_bias": 1,
+  "use_chain": true,
+  "chain_from": 0,
+  "use_adm": true,
+  "clip": true,
+  "pitch": "1/10",
+  "ubins": 8,
+  "reduction": "D4"
+ },
+ "created": "2026-09-30 20:04:05",
+ "note": "paths made repo-relative (from s12/) after the run; hashes and settings unchanged. roots.jsonl and SUMMARY.txt are xz-compressed: unxz them before `zm_d4_sweep.py summary`."
+}

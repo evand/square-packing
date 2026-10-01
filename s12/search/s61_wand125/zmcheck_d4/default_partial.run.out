@@ -1,0 +1,10 @@
+D4: weight function invariant under x->8-x and x<->y (exact, 15193 distinct points)
+certificate search/s61_wand125/s61_wand125_cover_8.txt: container [0,8]^2, 15193 points, D=2000 W=562949953421312
+total weight = 34339940290718204/562949953421312 = 60.999987800
+D4-REDUCED: roots restricted to centres in [0,4]^2 and u in [0,1/2] (bins 0..3)
+6400 root boxes (pitch 1/10 in x,y; 8 bins of u in [0,1]); depth limit 22; disj true; 4 threads
+  progress: roots 500/6400  boxes 500  uncertified 0  0s
+  progress: roots 1000/6400  boxes 4458  uncertified 0  5s
+  progress: roots 1500/6400  boxes 24302  uncertified 0  37s
+  progress: roots 2000/6400  boxes 32048  uncertified 0  75s
+  progress: roots 2500/6400  boxes 41214  uncertified 0  1115s
