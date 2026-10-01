@@ -247,3 +247,10 @@ additionally trivial as a perfect square.
   falls back to Nagamochi 2005's general bound for n = 37, 38, 50, 51, 65–67, 82–85 (jlevy/squares treats them the
   same way).  Friedman's own results with figures and arguments in the survey (n = 7, 8, 14, 15, 19–20, 24, 35) stay
   proved.  Open: DS7 Figure 34 draws Green's unavoidable set for n = 17–18, which our point checkers could verify.
+- 2026-09-30, DS7 Figure 34 checked (`s12/search/GREEN_FIG34.md`).  n = 17–18: the 16-point set that reproduces Green's
+  `(40√2+19)/17` exactly (derived from the bound; matches the figure's pixels) is **not** unavoidable at that side: in
+  each band the second diagonal is `√((1−e)² + V²) ≈ 1.011 > 1`, and a closed unit square at ~30.4° misses all 16
+  points (exact check; re-checked independently in mpmath).  Green may have used a different set or argument, so the
+  value stays `claimed`, now with this note.  The same configuration re-tuned verifies `s(17) ≥ 111/25 = 4.44` (not
+  entered: far below today's floors).  n = 19–20: Friedman's 18-point set verifies exactly at `1121/250 = 4.484`
+  (just below `6√2 − 4 ≈ 4.48528`; the run at 4.485 hit its depth limit); stays `proved`.

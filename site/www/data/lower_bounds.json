@@ -753,7 +753,7 @@
     "year": 2000,
     "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-    "note": "n=17 superseded by 2026 computer-assisted preprints; n=18 not affected by those (they target n=17 only). Survey Figure 34 draws the unavoidable set; not checked here."
+    "note": "n=17 superseded by 2026 computer-assisted preprints; n=18 not affected by those (they target n=17 only). Survey Figure 34 draws the unavoidable set; not checked here. Checked 2026-09-30 (s12/search/GREEN_FIG34.md): the 16-point set of DS7 Figure 34 that reproduces (40√2+19)/17 is not unavoidable at that side (a closed unit square at ~30.4° misses every point, checked exactly); the same configuration re-tuned verifies s(17) ≥ 111/25 = 4.44 (limit 2√2 + √65/5 ≈ 4.44088)."
    },
    {
     "value": 4.16227766016838,
@@ -943,7 +943,7 @@
     "year": 2000,
     "status": "claimed",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-    "note": "n=17 superseded by 2026 computer-assisted preprints; n=18 not affected by those (they target n=17 only). Survey Figure 34 draws the unavoidable set; not checked here."
+    "note": "n=17 superseded by 2026 computer-assisted preprints; n=18 not affected by those (they target n=17 only). Survey Figure 34 draws the unavoidable set; not checked here. Checked 2026-09-30 (s12/search/GREEN_FIG34.md): the 16-point set of DS7 Figure 34 that reproduces (40√2+19)/17 is not unavoidable at that side (a closed unit square at ~30.4° misses every point, checked exactly); the same configuration re-tuned verifies s(17) ≥ 111/25 = 4.44 (limit 2√2 + √65/5 ≈ 4.44088)."
    },
    {
     "value": 4.3166247903554,
@@ -1023,7 +1023,7 @@
     "year": 2009,
     "status": "proved",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-    "note": null
+    "note": " Machine-checked 2026-09-30 (s12/search/GREEN_FIG34.md): the 18-point set of DS7 Figure 34, exactly, at side 1121/250 = 4.484."
    },
    {
     "value": 4.8,
@@ -1084,7 +1084,7 @@
     "year": 2009,
     "status": "proved",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
-    "note": null
+    "note": " Machine-checked 2026-09-30 (s12/search/GREEN_FIG34.md): the 18-point set of DS7 Figure 34, exactly, at side 1121/250 = 4.484."
    },
    {
     "value": 4.8,
