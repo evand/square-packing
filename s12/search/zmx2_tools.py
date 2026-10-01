@@ -16,6 +16,7 @@ Subcommands:
   toy OUT --s S --kind K [...] toy covers for the certify / reject tests (see ZMX2.md sec 8)
   fmin FILE [--pitch P] [--ubins N]   float minimum over a grid of admissible poses (all angles)
   perturb IN OUT --op ...      rejection-test covers (drop mass in a region; break symmetry)
+  uncert LOG FILE [--max N]    exact mu at the corners of the UNCERT boxes of a cert log (min, pose)
 """
 import math
 import os
@@ -312,6 +313,39 @@ def cmd_tight(argv):
     return 1 if nfail else 0
 
 
+def cmd_uncert(argv):
+    """uncert LOG FILE [--max N]: exact mu at the 8 corners and the centre of the first N (default 20) UNCERT
+    boxes of a `zmx2 cert` log/output (pass 1 boxes on the reflected cover); prints the smallest admissible value
+    and its pose.  For rejection tests: a refusal is a true one if some uncertified box contains a pose with mu < 1."""
+    log, path = argv[0], argv[1]
+    mx = int(opt(argv, '--max', 20))
+    cv = load(path)
+    cvs = [cv, reflect_y(cv)]
+    best = None
+    n = 0
+    for line in open(log):
+        if not line.startswith('UNCERT ') or n >= mx:
+            continue
+        f = line.split()
+        pas = int(f[3])
+        x0, x1, y0, y1, u0, u1 = (Fr(t) for t in f[5].split(','))
+        n += 1
+        poses = [(x, y, u) for x in (x0, x1) for y in (y0, y1) for u in (u0, u1)]
+        poses.append(((x0 + x1) / 2, (y0 + y1) / 2, (u0 + u1) / 2))
+        for (x, y, u) in poses:
+            if admissible(cvs[pas], x, y, u):
+                m = mu_exact(cvs[pas], x, y, u)
+                if best is None or m < best[0]:
+                    best = (m, pas, x, y, u)
+    if best is None:
+        print('uncert: %d boxes, no admissible corner' % n)
+        return 1
+    m, pas, x, y, u = best
+    print('uncert: %d boxes; min exact mu %.9f at pass %d (%s, %s, u %s) = (%.6f, %.6f, %.4f deg)' % (
+        n, float(m), pas, x, y, u, float(x), float(y), 2 * math.degrees(math.atan(float(u)))))
+    return 0
+
+
 def opt(argv, key, dflt):
     if key in argv:
         return argv[argv.index(key) + 1]
@@ -414,6 +448,7 @@ def cmd_toy(argv):
 def cmd_perturb(argv):
     """perturb IN OUT --op zero-seg --line x|y --at K --lo A --hi B   (zero the pieces of line
     x=K (or y=K) inside [A,B]);  --op scale --f F (all masses x F, rounded down);
+    --op pt-weight --at X,Y --w W (set the weight of the point at X,Y, file units);
     --op bump (add 1 to the first point's weight: breaks D4)."""
     cv = load(argv[0])
     op = opt(argv, '--op', '')
@@ -434,6 +469,15 @@ def cmd_perturb(argv):
         f = Fr(opt(argv, '--f', '1'))
         cv['points'] = [(x, y, int(w * f)) for (x, y, w) in cv['points']]
         cv['segments'] = [(a, b, c, d, int(w * f)) for (a, b, c, d, w) in cv['segments']]
+    elif op == 'pt-weight':
+        # set the weight of the point(s) at X,Y (file units) to W (file units)
+        X, Y = (int(t) for t in opt(argv, '--at', '').split(','))
+        W = int(opt(argv, '--w', '0'))
+        hit = [k for k, p in enumerate(cv['points']) if (p[0], p[1]) == (X, Y)]
+        if not hit:
+            raise SystemExit('no point at %d,%d' % (X, Y))
+        for n, k in enumerate(hit):
+            cv['points'][k] = (X, Y, W if n == 0 else 0)
     elif op == 'bump':
         p = cv['points'][0]
         cv['points'][0] = (p[0], p[1], p[2] + 1)
@@ -462,6 +506,8 @@ def main():
         return cmd_toy(argv)
     if cmd == 'perturb':
         return cmd_perturb(argv)
+    if cmd == 'uncert':
+        return cmd_uncert(argv)
     if cmd == 'fmin':
         cv = load(argv[0])
         print(fmin(cv, float(opt(argv, '--pitch', 0.05)), int(opt(argv, '--nth', 46))))

@@ -1,0 +1,6 @@
+D4: measure invariant under x->s-x and x<->y (exact)
+# zmx2 cert hash=20610030026555f9 mode=d4 atoms=pairpts+sym depth=40 node_cap=20000000 kappa=1.5 K=30 region=x0-24,y0-24,bins0-3
+cover: s = 5/1, 7536 points, 1872 segments, total 522368729933/25000000000 = 20.89474919732
+roots: 2500 in region, 0 already done (log), 2500 to run, 6 threads
+done in 335s wall: roots 2500 (missing 0), boxes 1823282, certified 887495, empty 25396, uncertified 0, max depth 26, cpu 1992s
+VERIFIED-D4: every closed unit square in [0,s]^2 has mu >= 1 (D4-reduced sweep, all roots)

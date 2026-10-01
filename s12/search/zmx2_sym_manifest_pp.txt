@@ -1,0 +1,25 @@
+# zmx2 --sym-atoms run manifest (written by search/zmx2_sym_run.sh; see search/ZMX2.md sec 12)
+date:            2026-10-01T00:50:03Z
+host:            x86_64, taskset -c 0-5 (6 threads)
+git HEAD:        e4af291cf52711a3ef7cedfea262f001fa2cafe1 (0 local change(s) to zmx2.rs)
+checker source:  verify2/src/bin/zmx2.rs sha256 92a4cfe87b4e33d57ce132c9c517eded3fe62b4a5a2151b5ba250b8ee329fe64
+checker binary:  verify2/target/release/zmx2 sha256 ed31d3ee17e1c4373acf688797b528b794af4b27779385989892b0cb7fc199ef
+rustc:           rustc 1.91.1 (ed61e7d7e 2025-11-07) (built from a source tarball)
+
+[s21_pp_d4]
+input:           certificates/s21/s21_mixed_cover_5.txt sha256 8b415ceeb5f20b02c4e338ce2feb21bc206051ef6bc5c7e433bebae2ef39fc23
+command:         taskset -c 0-5 verify2/target/release/zmx2 cert certificates/s21/s21_mixed_cover_5.txt --d4 --pair-points --sym-atoms --threads 6 --log runs/zmx2_sym/s21_pp_d4.log
+log header:      # zmx2 cert hash=20610030026555f9 mode=d4 atoms=pairpts+sym depth=40 node_cap=20000000 kappa=1.5 K=30 region=x0-24,y0-24,bins0-3
+log sha256:      9c46e41107c58d426606439976dc85913992b30fa02bf6df93a8e672c67a2ae1  (2500 ROOT lines, 0 UNCERT lines)
+                 roots: 2500 in region, 0 already done (log), 2500 to run, 6 threads
+                 done in 335s wall: roots 2500 (missing 0), boxes 1823282, certified 887495, empty 25396, uncertified 0, max depth 26, cpu 1992s
+                 VERIFIED-D4: every closed unit square in [0,s]^2 has mu >= 1 (D4-reduced sweep, all roots)
+
+[s60_pp_d4]
+input:           certificates/s60/s60_mixed_cover_8.txt sha256 2d0e456ea86cceeadc92d9f8fa7d468ba570a16d00d7343ebfbfb0b3b3b12a41
+command:         taskset -c 0-5 verify2/target/release/zmx2 cert certificates/s60/s60_mixed_cover_8.txt --d4 --pair-points --sym-atoms --threads 6 --log runs/zmx2_sym/s60_pp_d4.log
+log header:      # zmx2 cert hash=478e927dc2f4c16c mode=d4 atoms=pairpts+sym depth=40 node_cap=20000000 kappa=1.5 K=30 region=x0-39,y0-39,bins0-3
+log sha256:      e0ffd4455ec78a4c6100291525a72a94d147b19ce05691128103e052bd5a4a77  (6400 ROOT lines, 0 UNCERT lines)
+                 roots: 6400 in region, 0 already done (log), 6400 to run, 6 threads
+                 done in 642s wall: roots 6400 (missing 0), boxes 2581710, certified 1278159, empty 15896, uncertified 0, max depth 24, cpu 3835s
+                 VERIFIED-D4: every closed unit square in [0,s]^2 has mu >= 1 (D4-reduced sweep, all roots)
