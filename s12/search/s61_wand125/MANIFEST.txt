@@ -1,0 +1,41 @@
+s(61) = 8: replay of wand125's point-only cover (search/S61_WAND125_REPLAY.md).  Run 2026-09-30.
+
+source        github.com/wand125/square-packing-bounds @ f8846cec9661773dbd0cc7cbeee7d01ddb12a2b8, point_n61_L8/
+              cover.txt        sha256 bcb66c7910ef844ce8d39c423d7a5a419bd530a344689331f7665ba6971d0374
+              provenance.json  sha256 6e5e922174759e8c7efe3019e7a46996ebbee6e1e02f5c5c53c4bcbc9d31ed70
+              README.md        sha256 cb98aed2442a5cc555bb74857008140cec016079fc70868b98e7c8a8d4397d1e
+              check_cover.py   sha256 36ab993c6af90631d7b5a330ad6aa31b58791cc0955e3a7b3ef5fd65ff7cd33c  (read, not run)
+              verify.sh        sha256 f2c5b51ef08b1d476b4640e9fada1f9aa5c38c8ee9ae48db07910b12f7486196  (read, not run)
+ours          s61_wand125_cover_8.txt sha256 bcb66c7910ef844ce8d39c423d7a5a419bd530a344689331f7665ba6971d0374
+              (convert_check.py re-emits it canonically; byte-identical to theirs)
+repo HEAD     2bf33bc36728baa7e7f4c7ff1859756e952dd621 (evand/square-packing, worktree branch)
+sources       search/zeromargin.py        640fe453c1a32f4aa580ca2b1261c6406923a4d7c131f65604a432c7fc2086ab (= certificates/s32 frozen copy)
+              search/zm_d4_sweep.py       cc7fa8c70f7a39c5e1e920baa9efdc1af8feb68bc6eeb029dab4a99fc3f77fbe
+              verify2/src/main.rs         94b7d83ecf6aeea64c20aea9d4f5c210c28577fb3870581d79169204c980c12b (zmcheck)
+              verify2/src/bin/zmx2.rs     92a4cfe87b4e33d57ce132c9c517eded3fe62b4a5a2151b5ba250b8ee329fe64
+binaries      zmcheck  7f3b4e2c43268753d2c0c6984ff5633217662e78a46f82557409e69636a3dc21  (rustc 1.91.1, cargo build --release)
+              zmx2     ed31d3ee17e1c4373acf688797b528b794af4b27779385989892b0cb7fc199ef  (= certificates/s32/zmx2_full_sym binary)
+host          16-core Linux box, taskset -c 6-9 (4 threads/processes), Python 3.13.11
+
+commands (from s12/, C = search/s61_wand125/s61_wand125_cover_8.txt)
+  python3 search/s61_wand125/convert_check.py <their cover.txt> $C
+  python3 search/zm_d4_sweep.py run --cert $C --out search/s61_wand125/zeromargin_d4 --depth 24 --nproc 4
+  python3 search/zm_d4_sweep.py run --cert $C --out search/s61_wand125/zeromargin_d4 --depth 24 --deepen 30 --nproc 2
+  python3 search/zm_d4_sweep.py summary --out search/s61_wand125/zeromargin_d4
+  ZM_ROOTLOG=1 zmcheck cert $C --d4 --threads 4 --branch-cap 640 --node-cap 4000000 --depth 22        (stopped, see .md)
+  ZM_MIXPAIR=1 ZM_ROOTLOG=1 zmcheck cert $C --d4 --threads 4 --branch-cap 640 --node-cap 4000000 --depth 22
+  zmx2 d4 $C
+  zmx2 cert $C --d4 --pair-points --threads 4 --log zmx2_d4/roots.log
+  zmx2 cert $C --full --pair-points --sym-atoms --threads 4 --log zmx2_full_sym/roots.log
+  zmx2 fscan $C --pitch 0.01 --ubins 50                                                               (float, diagnostic)
+
+files
+  zeromargin_d4/       manifest.json, roots.jsonl.xz (12,802 records: 12,800 roots at depth 24 + 2 at depth 30),
+                       SUMMARY.txt.xz, checker/zeromargin.py (the frozen copy that ran)
+  zeromargin_d4.run.log
+  zmcheck_d4/          mixpair.run.out + mixpair.roots.err.xz (the VERIFIED-D4 run; ROOT/UNCERT lines),
+                       default_partial.run.out + default_partial.roots.err.xz (default branch order, stopped)
+  zmx2_d4/             run.out (progress lines stripped), roots.log.xz
+  zmx2_full_sym/       run.out (progress lines stripped), roots.log.xz
+  zmx2_fscan.txt       float landscape of the D4 region
+  convert_check.py, zmcheck_inflight.py   helpers written for this replay

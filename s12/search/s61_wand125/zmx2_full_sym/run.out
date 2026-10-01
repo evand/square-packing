@@ -1,0 +1,9 @@
+# zmx2 cert hash=372e341ebc298084 mode=full atoms=pairpts+sym depth=40 node_cap=20000000 kappa=1.5 K=30 region=x0-79,y0-79,bins0-3
+cover: s = 8/1, 15193 points, 0 segments, total 8584985072679551/140737488355328 = 60.99998780001
+roots: 51200 in region, 0 already done (log), 51200 to run, 4 threads
+done in 1110s wall: roots 51200 (missing 0), boxes 6236672, certified 3060076, empty 83860, uncertified 0, max depth 30, cpu 4415s
+VERIFIED: every closed unit square in [0,s]^2 has mu >= 1 (unreduced sweep, all roots)
+
+real	18m29.526s
+user	73m38.278s
+sys	0m1.665s
