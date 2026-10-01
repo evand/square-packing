@@ -295,6 +295,8 @@ that atom lattice: **`D ≤ m_v ≤ m_v^band(w)`**.
   Roth–Vaughan (1978) correctly (waste `W(x) ≥ c·√(x(x − ⌊x⌋))`, `c ≈ 10⁻¹⁰`), `s(k² − c′) = k` is already known
   for astronomically large `k`, so constant savings > 4 are the expected truth, and the open question is only
   small `k` — which a fixed family with `k₀ = 8` would close.  (Not re-checked; do check before quoting.)
+  **Correction (2026-09-30, FRIEDMAN.md §0):** wrong.  RV's bound is `10⁻¹⁰⁰√(x‖x‖)` (distance to the *nearest*
+  integer), which vanishes as the side → k⁻, so it gives nothing for `s(k²−c′)`; `c*(k) → ∞` is open.
 * **What would make me say no-go instead.**  An exact checker finding a violation that the LP cannot repair
   cheaply, or `D` collapsing under a finer oracle (it did not: germs, near-lattice at four offsets, 7.8·10⁶ heavy
   poses and whole-box checks moved `R2 w2` by `< 10⁻³`).
