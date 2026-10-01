@@ -34,6 +34,8 @@ second one also checks the whole pose space without using the symmetry.
 | the same, independently, and the whole pose space without the symmetry argument | **`verify2/src/bin/zmx2.rs` (`zmx2`, Rust)**, the binary of the `s(21)` bundle (same source and binary sha256): `--d4` 4,900 / 4,900 roots (`zmx2_d4/`), and `--full` (no symmetry used) 39,200 / 39,200 roots (`zmx2_full/`); 0 uncertified | exact integers for points and masses; chord-end geometry in outward-rounded binary64 intervals (caveat below) |
 | total `< 45`, D4 invariance, well-formedness | `search/mixed_records.py cover` (its own parser) and `zmx2 d4` in `verify.sh`; `zm_mixed.py` and `zmx2` also check invariance before a D4 run | scripts |
 
+**Note (2026-09-30).**  `zmx2.rs` has since gained the opt-in flag `--sym-atoms` (`search/ZMX2.md` §4.9, §12; source sha256 `92a4cfe8…`, binary `ed31d3ee…`).  Without the flag its decisions are unchanged: `verify.sh` rebuilds `zmx2` from the current source and its fresh run reproduces the shipped census root for root.  The shipped `zmx2` records were made with the earlier source and binary named in their manifests.
+
 ## The float caveat of `zmx2`, plainly
 
 `zm_mixed.py` certifies with rational arithmetic only (floats only choose which exact test to try).  `zmx2`

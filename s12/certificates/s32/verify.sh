@@ -44,6 +44,15 @@ for r in new:
     print(f"    {r['root']}: {r['stats']['boxes']} boxes, certified, census identical")
 EOF
 
+echo "--- shipped zmx2 --full --pair-points --sym-atoms run (zmx2_full_sym/): all 28,800 roots, none uncertified, no D4 fold"
+xz -dc certificates/s32/zmx2_full_sym/roots.log.xz | python3 -c '
+import sys
+r = [l.split() for l in sys.stdin if l.startswith("ROOT ")]   # ROOT id pass P root R boxes b cert c empty e uncert u ...
+keys = {(f[3], f[5]) for f in r}
+assert len(r) == 28800 and len(keys) == 28800, (len(r), len(keys))
+assert {f[3] for f in r} == {"0", "1"} and all(f[13] == "0" for f in r), "uncertified or unexpected pass"
+print("    28,800 distinct roots (both passes), 0 uncertified")'
+
 if [ "$FULL" = 1 ]; then
   for c in s32_closed_cover_6 s32_shift_v1; do
     echo "--- full re-run: zeromargin.py over the D4 region of $c.txt (depth 24, then 30 on any leftover root)"

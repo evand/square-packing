@@ -33,6 +33,8 @@ exhaustive, exact subdivision of pose space by a computer, done by two independe
 | that the Lean data is this file | `lean/scripts/gen_s21_data.py --check` (byte for byte), sha256 in the Lean file header | script |
 | total `< 21`, D4 invariance, well-formedness | Lean (`S21Data.total_eq`, `S21Data.d4`) and again in `verify.sh` by `search/s21_records.py cover` (its own parser) and `zmx2 d4` | kernel; scripts |
 
+**Note (2026-09-30).**  `zmx2.rs` has since gained the opt-in flag `--sym-atoms` (`search/ZMX2.md` §4.9, §12; source sha256 `92a4cfe8…`, binary `ed31d3ee…`).  Without the flag its decisions are unchanged: `verify.sh` rebuilds `zmx2` from the current source and its fresh run reproduces the shipped census root for root.  The shipped `zmx2` records were made with the earlier source and binary named in their manifests.
+
 ## The float caveat of `zmx2`, plainly
 
 `zm_mixed.py` certifies with rational arithmetic only (floats only choose which exact test to try).  `zmx2`

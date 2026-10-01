@@ -1,0 +1,18 @@
+# zmx2 --sym-atoms run manifest (written by search/zmx2_sym_run.sh; see search/ZMX2.md sec 12)
+date:            2026-10-01T00:22:43Z
+host:            x86_64, taskset -c 0-5 (6 threads)
+git HEAD:        e4af291cf52711a3ef7cedfea262f001fa2cafe1 (0 local change(s) to zmx2.rs)
+checker source:  verify2/src/bin/zmx2.rs sha256 92a4cfe87b4e33d57ce132c9c517eded3fe62b4a5a2151b5ba250b8ee329fe64
+checker binary:  verify2/target/release/zmx2 sha256 ed31d3ee17e1c4373acf688797b528b794af4b27779385989892b0cb7fc199ef
+rustc:           rustc 1.91.1 (ed61e7d7e 2025-11-07) (built from a source tarball)
+
+[s32_full]
+input:           certificates/s32/s32_closed_cover_6.txt sha256 a0d2d38fc9a585a166b9e06c5069fdae9bdce44ca9fb64dda75abcc99e3c2144
+command:         taskset -c 0-5 verify2/target/release/zmx2 cert certificates/s32/s32_closed_cover_6.txt --full --pair-points --sym-atoms --threads 6 --log runs/zmx2_sym/s32_full.log
+log header:      # zmx2 cert hash=c4c8c3ab717e9aab mode=full atoms=pairpts+sym depth=40 node_cap=20000000 kappa=1.5 K=30 region=x0-59,y0-59,bins0-3
+log sha256:      3b867c398c121401529f87077289a2f54166ced94b72a6b2fe288dfe312e44ce  (28800 ROOT lines, 0 UNCERT lines)
+                 roots: 28800 in region, 0 already done (log), 28800 to run, 6 threads
+                 done in 1938s wall: roots 28800 (missing 0), boxes 11268760, certified 5507496, empty 141284, uncertified 0, max depth 29, cpu 11592s
+                 VERIFIED: every closed unit square in [0,s]^2 has mu >= 1 (unreduced sweep, all roots)
+
+shipped as:      zmx2_full_sym/roots.log.xz (xz of the log above); run.out = the run's stdout
