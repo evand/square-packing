@@ -1,0 +1,3 @@
+# regenerable: zmx2 logs of the bisections (search/golf/zbisect.sh) and the unscaled variants (make_covers.sh)
+zbis/*.log
+covers/v_*.txt

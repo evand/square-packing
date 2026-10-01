@@ -1,0 +1,9 @@
+f=1.0300000 total=21.521591685440 : NOT VERIFIED: 73 uncertified boxes
+f=1.0500000 total=21.939486670080 : VERIFIED-D4: every closed unit square in [0,s]^2 has mu >= 1 (D4-reduced sweep, all roots)
+f=1.0400000 total=21.730539177720 : VERIFIED-D4: every closed unit square in [0,s]^2 has mu >= 1 (D4-reduced sweep, all roots)
+f=1.0350000 total=21.626065431800 : VERIFIED-D4: every closed unit square in [0,s]^2 has mu >= 1 (D4-reduced sweep, all roots)
+f=1.0325000 total=21.573828559560 : VERIFIED-D4: every closed unit square in [0,s]^2 has mu >= 1 (D4-reduced sweep, all roots)
+f=1.0312500 total=21.547710122440 : VERIFIED-D4: every closed unit square in [0,s]^2 has mu >= 1 (D4-reduced sweep, all roots)
+f=1.0306250 total=21.534650903720 : VERIFIED-D4: every closed unit square in [0,s]^2 has mu >= 1 (D4-reduced sweep, all roots)
+f=1.0303125 total=21.528121294520 : NOT VERIFIED: 73 uncertified boxes
+RESULT search/golf/covers/v_merge10.txt: verifies at f=1.0306250, refused at f=1.0303125
