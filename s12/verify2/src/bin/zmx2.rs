@@ -36,6 +36,12 @@ static NO_ATOMS: AtomicBool = AtomicBool::new(false);
 /// `--pair-points`: also make atom lines of every point abscissa/ordinate that has a partner
 /// point at distance exactly 1 (sec 4.5); slower, needed for off-grid point pairs (s(32)).
 static PAIR_POINTS: AtomicBool = AtomicBool::new(false);
+/// `--sym-atoms`: also bound every box that the default bound does not certify with the mirrored
+/// atom assignment (horizontal lines before vertical ones) and keep the larger bound (ZMX2.md
+/// sec 4.9, Lemma A).  Off by default: the default behaviour (every shipped census) is unchanged.
+static SYM_ATOMS: AtomicBool = AtomicBool::new(false);
+/// `--mirror-only` (test mode): use the mirrored atom assignment instead of the default one.
+static MIRROR_ONLY: AtomicBool = AtomicBool::new(false);
 
 fn gcd(a: I, b: I) -> I {
     let (mut a, mut b) = (a.abs(), b.abs());
@@ -275,6 +281,7 @@ struct Cover {
     pts: Vec<(i64, i64, I)>, // aggregated points, weight numerators (units 1/W), w > 0 only
     vl: Vec<Line>, // vertical lines, sorted by pos
     hl: Vec<Line>, // horizontal lines in the rotated frame: pos = -y, coordinate along = x
+    alt: Option<(Vec<Line>, Vec<Line>)>, // --sym-atoms: (vl, hl) under the mirrored assignment (sec 4.9)
     buckets: Vec<Vec<u32>>, // point index grid, cell 1/10 (in [0,s])
     nb: usize,
     raw_pts: Vec<(i64, i64, I)>,
@@ -469,7 +476,6 @@ fn build_cover(
         }
     }
     let no_atoms = NO_ATOMS.load(Ordering::Relaxed);
-    let mut pts: Vec<(i64, i64, I)> = Vec::new();
     // segments -> lines
     let mut lc: I = 1;
     for &(x0, y0, x1, y1, wt) in &raw_segs {
@@ -482,26 +488,123 @@ fn build_cover(
             die("unsupported: lcm of segment lengths exceeds 2^24");
         }
     }
+    let sets = AtomSets { vpos: &vpos, hpos: &hpos, vpart: &vpart, hpart: &hpart, no_atoms };
+    // (--mirror-only, a test mode: the mirrored assignment alone, sec 4.9)
+    let (vl, hl, pts) = build_lines(&pm, &raw_segs, &sets, lc, MIRROR_ONLY.load(Ordering::Relaxed));
+    // --sym-atoms (ZMX2.md sec 4.9, Lemma A): the mirrored assignment rule (horizontal before
+    // vertical at each rank).  It changes only which line a point is an atom of, never whether it
+    // is an atom, so the ordinary points are the same (asserted).  Kept only if it differs.
+    let alt = if SYM_ATOMS.load(Ordering::Relaxed) && !MIRROR_ONLY.load(Ordering::Relaxed) {
+        let (vl2, hl2, pts2) = build_lines(&pm, &raw_segs, &sets, lc, true);
+        assert!(pts2 == pts, "mirrored atom assignment changed the ordinary points");
+        let same = |x: &Vec<Line>, y: &Vec<Line>| {
+            x.len() == y.len() && x.iter().zip(y.iter()).all(|(a, b)| a.pos == b.pos && a.atoms == b.atoms)
+        };
+        if same(&vl2, &vl) && same(&hl2, &hl) {
+            None
+        } else {
+            Some((vl2, hl2))
+        }
+    } else {
+        None
+    };
+    // buckets of 1/10
+    let nb = ((sx * 10 + d - 1) / d) as usize + 1;
+    let mut buckets = vec![Vec::new(); nb * nb];
+    for (i, &(x, y, _)) in pts.iter().enumerate() {
+        let bx = ((x as I) * 10 / d) as usize;
+        let by = ((y as I) * 10 / d) as usize;
+        buckets[bx.min(nb - 1) * nb + by.min(nb - 1)].push(i as u32);
+    }
+    let tnum: I = raw_pts.iter().map(|p| p.2).sum::<I>() + raw_segs.iter().map(|s| s.4).sum::<I>();
+    let g = gcd(tnum, w).max(1);
+    Cover {
+        s_num,
+        s_den,
+        d,
+        w,
+        sx,
+        lc,
+        pts,
+        vl,
+        hl,
+        alt,
+        buckets,
+        nb,
+        raw_pts,
+        raw_segs,
+        total: (tnum / g, w / g),
+        hash,
+    }
+}
+
+/// The line/atom position sets of a cover (sec 4.5).
+struct AtomSets<'a> {
+    vpos: &'a HashSet<i64>,
+    hpos: &'a HashSet<i64>,
+    vpart: &'a HashSet<i64>,
+    hpart: &'a HashSet<i64>,
+    no_atoms: bool,
+}
+
+/// Build the vertical and horizontal lines (densities + atoms) and the ordinary points.  A point
+/// (x, y) is an atom of the first line in its rank list that exists, otherwise an ordinary point:
+///   hfirst = false (default):  vertical grid/segment x, horizontal grid/segment y, vertical
+///                              partner x, horizontal partner y;
+///   hfirst = true (mirrored):  horizontal grid/segment y, vertical grid/segment x, horizontal
+///                              partner y, vertical partner x.
+/// Either rule makes every point an atom of at most one line, which is all Lemma DP needs, and
+/// both make the same points atoms (sec 4.9).
+fn build_lines(
+    pm: &BTreeMap<(i64, i64), I>,
+    raw_segs: &[(i64, i64, i64, i64, I)],
+    st: &AtomSets,
+    lc: I,
+    hfirst: bool,
+) -> (Vec<Line>, Vec<Line>, Vec<(i64, i64, I)>) {
+    let mut pts: Vec<(i64, i64, I)> = Vec::new();
     // (orientation, pos) -> segments (a, b, w) and atoms (t, w) along the line; vertical: pos = x,
     // along = y; horizontal (rotated frame, Lemma T): pos = -y, along = x.
     let mut groups: BTreeMap<(u8, i64), (Vec<(i64, i64, I)>, Vec<(i64, I)>)> = BTreeMap::new();
-    for (&(x, y), &wt) in &pm {
+    for (&(x, y), &wt) in pm {
         if wt <= 0 {
             continue;
         }
-        if !no_atoms && vpos.contains(&x) {
-            groups.entry((0, x)).or_default().1.push((y, wt * lc));
-        } else if !no_atoms && hpos.contains(&y) {
-            groups.entry((1, -y)).or_default().1.push((x, wt * lc));
-        } else if !no_atoms && vpart.contains(&x) {
-            groups.entry((0, x)).or_default().1.push((y, wt * lc));
-        } else if !no_atoms && hpart.contains(&y) {
-            groups.entry((1, -y)).or_default().1.push((x, wt * lc));
+        let (vg, hg) = (st.vpos.contains(&x), st.hpos.contains(&y));
+        let (vp, hp) = (st.vpart.contains(&x), st.hpart.contains(&y));
+        // 0 = atom of the vertical line x, 1 = atom of the horizontal line y, 2 = ordinary point
+        let o = if st.no_atoms {
+            2
+        } else if !hfirst {
+            if vg {
+                0
+            } else if hg {
+                1
+            } else if vp {
+                0
+            } else if hp {
+                1
+            } else {
+                2
+            }
+        } else if hg {
+            1
+        } else if vg {
+            0
+        } else if hp {
+            1
+        } else if vp {
+            0
         } else {
-            pts.push((x, y, wt));
+            2
+        };
+        match o {
+            0 => groups.entry((0, x)).or_default().1.push((y, wt * lc)),
+            1 => groups.entry((1, -y)).or_default().1.push((x, wt * lc)),
+            _ => pts.push((x, y, wt)),
         }
     }
-    for &(x0, y0, x1, y1, wt) in &raw_segs {
+    for &(x0, y0, x1, y1, wt) in raw_segs {
         if wt == 0 {
             continue;
         }
@@ -546,33 +649,7 @@ fn build_cover(
     }
     vl.sort_by_key(|l| l.pos);
     hl.sort_by_key(|l| l.pos);
-    // buckets of 1/10
-    let nb = ((sx * 10 + d - 1) / d) as usize + 1;
-    let mut buckets = vec![Vec::new(); nb * nb];
-    for (i, &(x, y, _)) in pts.iter().enumerate() {
-        let bx = ((x as I) * 10 / d) as usize;
-        let by = ((y as I) * 10 / d) as usize;
-        buckets[bx.min(nb - 1) * nb + by.min(nb - 1)].push(i as u32);
-    }
-    let tnum: I = raw_pts.iter().map(|p| p.2).sum::<I>() + raw_segs.iter().map(|s| s.4).sum::<I>();
-    let g = gcd(tnum, w).max(1);
-    Cover {
-        s_num,
-        s_den,
-        d,
-        w,
-        sx,
-        lc,
-        pts,
-        vl,
-        hl,
-        buckets,
-        nb,
-        raw_pts,
-        raw_segs,
-        total: (tnum / g, w / g),
-        hash,
-    }
+    (vl, hl, pts)
 }
 
 /// The cover reflected by y -> s - y (used by the unreduced sweep for theta in [45,90] deg).
@@ -1146,7 +1223,20 @@ fn box_empty(ctx: &Ctx, b: &PBox, bg: &BoxGeo) -> bool {
     x1.hi < half_w || y1.hi < half_w || x0.lo > rthr || y0.lo > rthr
 }
 
-fn segment_bound(ctx: &Ctx, b: &PBox, bg: &BoxGeo) -> I {
+/// Lower bound of the line mass (segments + atoms), given `have` = the certain point weight
+/// already counted: the default assignment's bound, and with `--sym-atoms` (sec 4.9, Lemma A),
+/// if that does not reach the target, the larger of it and the mirrored assignment's bound.
+fn segment_bound(ctx: &Ctx, b: &PBox, bg: &BoxGeo, have: I) -> I {
+    let sb = segment_bound_lines(ctx, b, bg, &ctx.cv.vl, &ctx.cv.hl);
+    if let Some((vl2, hl2)) = &ctx.cv.alt {
+        if have + sb < ctx.target {
+            return sb.max(segment_bound_lines(ctx, b, bg, vl2, hl2));
+        }
+    }
+    sb
+}
+
+fn segment_bound_lines(ctx: &Ctx, b: &PBox, bg: &BoxGeo, vl: &[Line], hl: &[Line]) -> I {
     let cd = b.cd();
     let sxd = ctx.cv.sx as i64;
     // vertical lines: frame = identity; walls at 0 and s
@@ -1179,7 +1269,7 @@ fn segment_bound(ctx: &Ctx, b: &PBox, bg: &BoxGeo) -> I {
         wall_r: 0,
         pb: PBox { xn: [-b.yn[1], -b.yn[0]], yn: b.xn, cl: b.cl, un: b.un, ul: b.ul },
     };
-    family_bound(ctx, &fv, &ctx.cv.vl) + family_bound(ctx, &fh, &ctx.cv.hl)
+    family_bound(ctx, &fv, vl) + family_bound(ctx, &fh, hl)
 }
 
 // ------------------------------------------------------------------ points (Lemma P)
@@ -1492,7 +1582,7 @@ fn eval_node(ctx: &Ctx, b: &PBox, inw: I, cand: &[u32]) -> (I, I, Vec<u32>, bool
     if inw >= ctx.target {
         return (inw, inw, rest, false);
     }
-    let sb = segment_bound(ctx, b, &bg);
+    let sb = segment_bound(ctx, b, &bg, inw);
     (inw + sb, inw, rest, false)
 }
 
@@ -1646,6 +1736,7 @@ fn main() {
         eprintln!(
             "usage:\n  zmx2 cert FILE (--d4 | --full) [--threads T] [--depth N] [--node-cap N] [--kappa F]\n\
              \x20                [--log PATH] [--xlo i --xhi i --ylo j --yhi j --bins a-b] [--uncert-cap N]\n\
+             \x20                [--pair-points] [--sym-atoms] [--no-atoms] [--mirror-only]\n\
              \x20 zmx2 box FILE --box x0,x1,y0,y1,u0,u1 [--refl]      (rationals; bound breakdown)\n\
              \x20 zmx2 fmass FILE --x X --y Y --u U                   (float mu, diagnostics)\n\
              \x20 zmx2 fscan FILE [--pitch P] [--ubins N]             (float landscape of the D4 region)\n\
@@ -1660,6 +1751,12 @@ fn main() {
     }
     if has(&args, "--pair-points") {
         PAIR_POINTS.store(true, Ordering::Relaxed);
+    }
+    if has(&args, "--sym-atoms") {
+        SYM_ATOMS.store(true, Ordering::Relaxed);
+    }
+    if has(&args, "--mirror-only") {
+        MIRROR_ONLY.store(true, Ordering::Relaxed);
     }
     let cv = parse_cover(&args[2]);
     match cmd {
@@ -1678,6 +1775,19 @@ fn main() {
                 cv.lc
             );
             println!("total = {}/{} = {:.12}", cv.total.0, cv.total.1, cv.total.0 as f64 / cv.total.1 as f64);
+            if SYM_ATOMS.load(Ordering::Relaxed) {
+                let na = |v: &[Line]| v.iter().map(|l| l.atoms.len()).sum::<usize>();
+                match &cv.alt {
+                    None => println!("sym-atoms: the mirrored assignment is the same (no point changes line)"),
+                    Some((vl2, hl2)) => println!(
+                        "sym-atoms: atoms vertical/horizontal {}/{} (default), {}/{} (mirrored)",
+                        na(&cv.vl),
+                        na(&cv.hl),
+                        na(vl2),
+                        na(hl2)
+                    ),
+                }
+            }
         }
         "d4" => match check_d4(&cv) {
             Ok(()) => println!("D4: measure invariant under x->s-x and x<->y (exact)"),
@@ -1744,7 +1854,7 @@ fn main() {
                     nin += 1;
                 }
             }
-            let sb = segment_bound(&ctx, &b, &bg);
+            let sb = segment_bound(&ctx, &b, &bg, inw);
             let tot = inw + sb;
             println!("box {}  {}", b.exact_str(), b.fstr());
             println!("empty {}", empty);
@@ -1782,7 +1892,7 @@ fn main() {
                         inw += w * ctx.ptw;
                     }
                 }
-                let sb = segment_bound(&ctx, &b, &bg);
+                let sb = segment_bound(&ctx, &b, &bg, inw);
                 println!("{} {} {} {}", inw + sb, ctx.target, empty as u8, inw);
             }
         }
@@ -1859,13 +1969,24 @@ fn cmd_cert(args: &[String], cv: Cover) {
         "# zmx2 cert hash={:016x} mode={} atoms={} depth={} node_cap={} kappa={} K={} region=x{}-{},y{}-{},bins{}-{}",
         cv.hash,
         if d4 { "d4" } else { "full" },
-        if NO_ATOMS.load(Ordering::Relaxed) {
-            "none"
-        } else if PAIR_POINTS.load(Ordering::Relaxed) {
-            "pairpts"
-        } else {
-            "grid"
-        },
+        // (--sym-atoms appends "+sym"; without it the header is the same as before sec 4.9)
+        format!(
+            "{}{}",
+            if NO_ATOMS.load(Ordering::Relaxed) {
+                "none"
+            } else if PAIR_POINTS.load(Ordering::Relaxed) {
+                "pairpts"
+            } else {
+                "grid"
+            },
+            if MIRROR_ONLY.load(Ordering::Relaxed) {
+                "+mirror"
+            } else if SYM_ATOMS.load(Ordering::Relaxed) {
+                "+sym"
+            } else {
+                ""
+            }
+        ),
         st.depth,
         st.node_cap,
         st.kappa,

@@ -144,6 +144,68 @@ NDC=$([ $QUICK = 1 ] && echo 10 || echo 40)
 out=$(ZMX2=$Z ZT=$ZT python3 search/zmx2_audit/diffcert.py 2 $NDC 1/100000 2>&1 | tail -1)
 echo "$out" | grep -q ': 0 unexpected' && ok "every cover with a known exact violation refused ($out)" || bad "diffcert: $out"
 
+echo "== T9 --sym-atoms (ZMX2.md sec 4.9, sec 12): the s(32) --full germ, rejection, agreement, soundness"
+S32=certificates/s32/s32_closed_cover_6.txt
+G1="--xlo 14 --xhi 15 --ylo 4 --yhi 5 --bins 0-0"     # cells around the germ (1.5006, 0.5016, 0.179 deg)
+G2="--xlo 54 --xhi 55 --ylo 14 --yhi 15 --bins 0-0"   # around its image rotated by 90 deg, (5.4984, 1.5006)
+census() { grep '^done' "$1" | sed 's/.*roots/roots/; s/, max depth.*//'; }
+# (a) the gap and its closure
+$Z cert $S32 --full --pair-points $G2 --threads $TH > $ZT/s32_g2_default.log 2>&1
+v=$(verdict $ZT/s32_g2_default.log)
+[ "$v" = "NOT VERIFIED" ] && grep -q 'uncertified 76,' $ZT/s32_g2_default.log && ok "s(32) --full --pair-points, rotated germ cells, default assignment: refused as before (76 boxes, float-min $(fminpose $ZT/s32_g2_default.log)); default census unchanged: $(census $ZT/s32_g2_default.log)" || bad "s32 G2 default: $v"
+$Z cert $S32 --full --pair-points --sym-atoms $G2 --threads $TH > $ZT/s32_g2_sym.log 2>&1
+v=$(verdict $ZT/s32_g2_sym.log)
+[ "$v" = "REGION CLEAN" ] && ok "  same cells, --sym-atoms: clean ($(census $ZT/s32_g2_sym.log))" || bad "s32 G2 sym: $v"
+$Z cert $S32 --full --pair-points --mirror-only $G1 --threads $TH > $ZT/s32_g1_mirror.log 2>&1
+v=$(verdict $ZT/s32_g1_mirror.log)
+[ "$v" = "NOT VERIFIED" ] && grep -q 'uncertified 76,' $ZT/s32_g1_mirror.log && ok "  mirror image: germ cells of (1.5006,0.5016) with the mirrored assignment alone (--mirror-only): refused the same way (76 boxes, float-min $(fminpose $ZT/s32_g1_mirror.log))" || bad "s32 G1 mirror-only: $v"
+$Z cert $S32 --full --pair-points --sym-atoms $G1 --threads $TH > $ZT/s32_g1_sym.log 2>&1
+v=$(verdict $ZT/s32_g1_sym.log)
+[ "$v" = "REGION CLEAN" ] && ok "  germ cells of (1.5006,0.5016), --sym-atoms: clean ($(census $ZT/s32_g1_sym.log))" || bad "s32 G1 sym: $v"
+# (b) agreement: at an uncertified leaf of the default run, the --sym-atoms bound is the mirrored
+#     one and equals the float minimum of mu over the box (1.011548); the default bound is < 1
+LEAF=450431/81920,450432/81920,122925/81920,122926/81920,204/131072,205/131072
+b0=$($Z box $S32 --pair-points --box $LEAF | awk '/^bound/{print $4}')
+b1=$($Z box $S32 --pair-points --sym-atoms --box $LEAF | awk '/^bound/{print $4}')
+b2=$($Z box $S32 --pair-points --mirror-only --box $LEAF | awk '/^bound/{print $4}')
+fm=$(grep "^UNCERT .* box $LEAF " $ZT/s32_g2_default.log | head -1 | awk -F'float-min ' '{print $2}' | cut -d' ' -f1)
+python3 -c "import sys; b0,b1,b2,fm=map(float,sys.argv[1:]); sys.exit(not (b0 < 1 <= b1 == b2 and abs(b1 - fm) < 1e-5))" $b0 $b1 $b2 $fm \
+  && ok "  leaf x[5.49842,5.49844] y[1.50055,1.50056] th 0.178-0.179: default bound $b0 < 1 <= --sym-atoms $b1 = --mirror-only $b2 (= float-min $fm of the default run)" || bad "  leaf bounds $b0 $b1 $b2 $fm"
+# (c) rejection: covers weakened at the germ (one point's weight lowered; breaks D4, so --full only)
+#     P1 = (5.001, 1.999) is the point that closes the rotated germ, P2 = (1.999, 0.999) its preimage
+$T perturb $S32 $ZT/s32_rej_p1.txt --op pt-weight --at 5001,1999 --w 82730124 > /dev/null      # -0.0125
+$Z cert $ZT/s32_rej_p1.txt --full --pair-points --sym-atoms $G2 --threads $TH > $ZT/s32_rej_p1.log 2>&1
+v=$(verdict $ZT/s32_rej_p1.log); p=$(fminpose $ZT/s32_rej_p1.log)
+[ "$v" = "NOT VERIFIED" ] && ok "s(32), P1=(5.001,1.999) lowered by 0.0125 (--sym-atoms, G2 cells): refused; deepest float-min $p" || bad "rej p1: $v"
+grep 'x\[5\.5\|x\[5\.49' $ZT/s32_rej_p1.log > $ZT/s32_rej_p1_germ.log
+r=$($T uncert $ZT/s32_rej_p1_germ.log $ZT/s32_rej_p1.txt --max 40)
+[ -s $ZT/s32_rej_p1_germ.log ] && echo "$r" | awk '{exit !($7 < 1)}' && ok "  uncertified boxes at the germ (5.5, 1.5, theta -> 0) contain a pose with exact mu < 1: $r" || bad "  p1 germ: $r"
+r=$($T uncert $ZT/s32_rej_p1.log $ZT/s32_rej_p1.txt --max 80)
+echo "$r" | awk '{exit !($7 < 1)}' && ok "  all its uncertified boxes: $r" || bad "  p1: $r"
+$T perturb $S32 $ZT/s32_ok_p1.txt --op pt-weight --at 5001,1999 --w 382730124 > /dev/null        # -0.0095
+$Z cert $ZT/s32_ok_p1.txt --full --pair-points --sym-atoms $G2 --threads $TH > $ZT/s32_ok_p1.log 2>&1
+v=$(verdict $ZT/s32_ok_p1.log)
+[ "$v" = "REGION CLEAN" ] && ok "  P1 lowered by 0.0095 only (germ mu ~ 1.002): still clean ($(census $ZT/s32_ok_p1.log))" || bad "ok p1: $v"
+$T perturb $S32 $ZT/s32_rej_p2.txt --op pt-weight --at 1999,999 --w 82730124 > /dev/null
+$Z cert $ZT/s32_rej_p2.txt --full --pair-points --sym-atoms $G1 --threads $TH > $ZT/s32_rej_p2.log 2>&1
+v=$(verdict $ZT/s32_rej_p2.log); p=$(fminpose $ZT/s32_rej_p2.log)
+[ "$v" = "NOT VERIFIED" ] && ok "s(32), P2=(1.999,0.999) lowered by 0.0125 (--sym-atoms, G1 cells): refused; deepest float-min $p" || bad "rej p2: $v"
+r=$($T uncert $ZT/s32_rej_p2.log $ZT/s32_rej_p2.txt --max 80)
+echo "$r" | awk '{exit !($7 < 1)}' && ok "  its uncertified boxes (all at the germ (1.5, 0.5, theta -> 0)) contain a pose with exact mu < 1: $r" || bad "  p2: $r"
+# (d) soundness harness with the new flags: random boxes (plain / reflected), boxes near both germs
+NS=$([ $QUICK = 1 ] && echo 40 || echo 200)
+for spec in "31 --zflags pair-points,sym-atoms" "32 --refl --zflags pair-points,sym-atoms" \
+            "33 --near 5.4984,1.5006,0.00156 --zflags pair-points,sym-atoms" \
+            "34 --near 1.5006,0.5016,0.00156 --zflags pair-points,sym-atoms" \
+            "35 --near 5.4984,1.5006,0.00156 --zflags pair-points,mirror-only" \
+            "36 --near 1.5006,0.5016,0.00156 --zflags pair-points,mirror-only"; do
+  set -- $spec; sd=$1; shift
+  $T sound $S32 --n $NS --poses 10 --seed $sd "$@" > $ZT/sound_s32_$sd.txt; r=$(tail -1 $ZT/sound_s32_$sd.txt)
+  echo "$r" | grep -q ' 0 FAIL' && ok "s(32) harness $*: $r" || bad "s(32) harness $*: $r"
+done
+$T sound $ZT/s32_rej_p1.txt --n $NS --poses 10 --seed 37 --near 5.4984,1.5006,0.00156 --zflags pair-points,sym-atoms > $ZT/sound_s32_37.txt; r=$(tail -1 $ZT/sound_s32_37.txt)
+echo "$r" | grep -q ' 0 FAIL' && ok "weakened s(32) (P1) harness near the germ, --sym-atoms: $r" || bad "weakened harness: $r"
+
 echo
 echo "zmx2_tests: $npass passed, $nfail failed"
 [ $nfail = 0 ]

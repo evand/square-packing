@@ -32,6 +32,12 @@ checked by test T0), `search/zmx2_tools.py` (exact rational evaluator, harness, 
 >   small boxes, and the tightest certified leaves) in the test suite, plus ≈ 80,000 more in exploratory runs, never
 >   below the box's bound (§8).  Test suite: 42/42 pass.
 >
+> * **`s(32)` without the D4 fold (added 2026-09-30, §12).**  `--full --pair-points` left 152 boxes at the
+>   ±90°-rotated images of one germ.  The cause was the order in which a point on two candidate lines is made an
+>   atom (vertical first), not a missing form of Lemma Z; Lemma A (§4.9) bounds with both orders, opt-in flag
+>   `--sym-atoms`.  `--full --pair-points --sym-atoms`: **`VERIFIED`**, 28,800 roots, 11,268,760 boxes,
+>   0 uncertified, 11,592 CPU-s.  Default behaviour unchanged.
+>
 > Arithmetic: points and all mass comparisons exact integer; chord-endpoint geometry by outward-rounded IEEE
 > binary64 interval arithmetic, rounded outward onto an integer grid (§5, Lemma R).  So "exact" in the sense of a
 > rigorous enclosure, not of rational arithmetic throughout; this is the one place it differs from `zmcheck`.
@@ -160,7 +166,8 @@ count iff `y ≤ z + u0` (the missing condition is `y ≤ H1_b = ζ + u`).  The 
 `b`-atom sum right-continuous, so the one-sided limits at a candidate `c` are `A(c) + B(c⁻)` and `A(c⁺) + B(c)`; the
 code takes the minimum of both at every candidate (also at `zlo`, `zhi`, where one of them may be a limit from
 outside the range; it is still `≤ Φ` there, so the result stays a lower bound).  The candidate has no points on lines;
-atoms are what let `zmx2` check point covers (`s(13)`, `s(32)`) at all (`--no-atoms` fails at every one-cut germ).
+atoms are what let `zmx2` check point covers (`s(13)`, `s(32)`) at all (`--no-atoms` fails at every one-cut germ).  Which
+line a point on several candidate lines belongs to is a choice; §4.9 (Lemma A) makes both orders available.
 
 **4.6 Lemma W (walls).**  If `ℓ = X_L + 1` (distance 1 from the left wall) then for every admissible pose with
 `u > 0`: `H1_ℓ ≥ c_y + q(u)`, `q = (u(1−C) + C)/2 = (1 − u² + 2u³)/(2(1+u²))`.  If `ℓ = X_R − 1`:
@@ -182,6 +189,51 @@ line position `−a`, coordinate along the line = the original `x`.  One set of 
 **4.8 Lemma E (empty boxes).**  `w(u)` is increasing on `[0, √2−1]` and decreasing on `[√2−1, 1]` (`w' ∝ 2 − 4u − 2u²`),
 so `w ≥ w_lo = min(w(u0), w(u1))` on `B`; if `x1 < w_lo/2` (or `y1 < w_lo/2`, or `x0 > s − w_lo/2`, or
 `y0 > s − w_lo/2`) no pose of `B` is admissible.
+
+**4.9 Lemma A (the atom assignment, and its mirror: `--sym-atoms`; added 2026-09-30, §12).**  §4.5 makes a point an
+atom of the *first* line of its list that exists: vertical grid/segment line `x`, horizontal grid/segment line
+`y`, vertical partner line `x`, horizontal partner line `y` (partner lines only with `--pair-points`).  Call this
+rule `A_V`, and `A_H` the **mirrored rule**: horizontal grid/segment `y`, vertical grid/segment `x`, horizontal
+partner `y`, vertical partner `x`.  Write `Λ_A(B)` for the line bound of §4.1–4.8 (vertical family + horizontal
+family, each by Lemma DP) when the atoms are placed by rule `A`.  With `--sym-atoms` the bound of a box is
+
+`L(B) = P(B) + Λ_{A_V}(B)` if that is `≥ 1`, and `L(B) = P(B) + max(Λ_{A_V}(B), Λ_{A_H}(B))` otherwise.
+
+Without the flag `L(B) = P(B) + Λ_{A_V}(B)` exactly as before (same code path, same decisions); `--mirror-only`
+(a test mode) uses `P(B) + Λ_{A_H}(B)` alone.
+
+**Lemma A.**  For `A ∈ {A_V, A_H}` and every admissible pose of `B`, `P(B) + Λ_A(B) ≤ μ(Q)`.  Hence the
+`--sym-atoms` bound has the Main property.
+*Proof.*  (i) *Same ordinary points.*  Under either rule a point is an atom iff it lies on a line of one of the
+same four position sets; the rules differ only in the order in which the four memberships are tried.  So the
+ordinary points, which `P(B)` counts (and to which `cert`'s inherited certain-in weight and candidate lists refer,
+§2), are the same set under both rules; the code builds both and asserts that the two lists are equal.  (ii) *Any
+atoms.*  Lemmas S, Z (with §4.3, §4.5), W and H hold for a line carrying any finite set of positive atoms on it:
+an atom enters only through its position along the line and its own four conditions (decided by Lemma P per
+condition, or by Lemma W), and none of the proofs uses which other points are atoms of that line or of other
+lines.  (iii) *Disjointness (Lemma DP).*  Under either rule every point of positive weight is an atom of exactly one
+line or is ordinary, so `μ = μ_ord + Σ_ℓ ν_ℓ`, `ν_ℓ` = the density of `ℓ` plus the atoms the rule gives to `ℓ`, is a
+decomposition into non-negative measures (densities of crossing lines meet in a null set).  For any partition of
+the lines into singles and adjacent pairs the group bounds sum to at most `Σ_ℓ ν_ℓ(Q)`, and `P(B) ≤ μ_ord(Q)`.  So
+`P(B) + Λ_A(B) ≤ μ(Q)` for each rule, and the larger of two lower bounds is a lower bound. ∎
+
+Why both are needed: the rules are exchanged by the rotations by `±90°` in D4 (they swap vertical and horizontal
+lines), and a germ is closed by Lemma Z only if its decisive atoms sit on the family that Lemma Z couples there.
+`A_V` alone is not rotation-invariant, so a D4-invariant cover can be closed at a germ and not at its rotated
+image (§12).  The D4-reduced sweep never sees the rotated image; `--full` sees all of them.
+
+**4.10 Remark (Lemma Z needs no mirrored form).**  Soundness does not depend on this; it explains why §12's gap was
+the assignment and not a missing lemma.  Fix `c` and let `θ → 0⁺` (`u → 0⁺`).  For a vertical line at offset
+`d = c_x − ℓ`, Lemma C gives `f1 = (d − ½)/(2u) + O(u)`, `f2 = (d + ½)/(2u) + O(u)`, while `g1, g2 → ∓½`.  So `L1`
+and `H1` run off to `±∞` except at `d = ½` resp. `d = −½`, and the chord differs from the bounded `[L2, H2]`-chord
+(or from the empty one) only for lines with `d → ½`, cut **from below** by the left edge (`X = −½`, lower end `L1 = ζ`),
+and lines with `d → −½`, cut **from above** by the right edge (`X = ½`, upper end `H1`).  Two such lines are exactly
+`ℓ` and `ℓ + 1`, Lemma Z's `a` and `b`, with `H1_b = ζ + u`.  The opposite combination ("`a` cut from above, `b` from
+below") is the picture at `θ → 0⁻`, i.e. `θ → 90°⁻`, which the checker only meets as `θ → 0⁺` of the reflected
+cover (pass 1 of `--full`; the reflections of §7 for `--d4`).  Horizontal lines are the same machinery in the frame
+of `ρ`, which keeps `θ` (Lemma T), so Lemma Z also couples the bottom and top edges.  Hence every tile germ at
+`θ → 0⁺` is of Lemma Z's form, for each family, in every sweep; what can still go wrong is only *which family* a
+point on two candidate lines was given to, which is Lemma A's business.
 
 ## 5. Arithmetic (Lemma R)
 
@@ -245,6 +297,13 @@ exit 2.  (ii) A D4 element `g` is an isometry of `[0,s]²`, `g Q(c, θ) = Q(gc, 
 | T5 | candidate `× 0.994`; `× 0.9955`; line `x = 2` zeroed on `y ∈ [1.4, 1.6]` (`--full`) | refused at `(0.5736, 1.4406, 9.21°)`, exact `μ = 0.99969`; **verifies**; refused at `(1.5, 1.5, θ → 0⁺)`, exact `μ = 1.749` at `θ = 0` vs `0.9176` at `θ = 0.003°` |
 | T6 | `s(13)` shipped point cover: column `c_x ∈ [1.2, 1.3]`, all `c_y`, all angles (320 roots) with `zmx2 --full` and with `zmcheck` | both clean (`zmx2` 14,644 boxes / 1 CPU-s; `zmcheck` 542 boxes, ADM 186 DISJ 152 EMPTY 93 / 18 CPU-s); `zmx2 --no-atoms` refuses at the one-cut germs `(1.2, 0.5, θ = 0)` as designed; `zmx2 --d4` whole cover `VERIFIED-D4`; `× 0.975` refused at the wall germ `(0.5, 1.5, θ → 0⁺)` |
 | T7 | the candidate, `--d4` | `VERIFIED-D4` |
+| T8 | (§11) differential `cert`, random covers with a known exact violation `10⁻⁵` | all refused |
+| T9 | (§12, `--sym-atoms`) `s(32)` `--full --pair-points`, 2 × 2 cells, bin 0, around the rotated germ `(5.4984, 1.5006)` (G2) and the fundamental one `(1.5006, 0.5016)` (G1): default on G2; `--sym-atoms` on G2 and G1; `--mirror-only` on G1 | default G2 refused with the old census (44,356 boxes, 76 uncertified: the default path is unchanged); `--sym-atoms` clean on both; `--mirror-only` G1 refused with 76 (the exact mirror) |
+| T9 | agreement at the deepest uncertified leaf of G2 | bound `0.998220382` default, `1.011547684` with `--sym-atoms` = with `--mirror-only` = the run's float minimum over the box |
+| T9 | rejection: `P1 = (5.001, 1.999)` resp. `P2 = (1.999, 0.999)` lowered by `0.0125` (`perturb --op pt-weight`; germ `μ ≈ 0.999`), `--sym-atoms`, G2 resp. G1; `P1` lowered by `0.0095` only | refused; `zmx2_tools.py uncert`: uncertified boxes at the germ `θ → 0` contain poses with exact `μ = 0.998413 < 1` (`P1`: also at `(5.425, 1.5215, 2.81°)`, same `μ`); the `0.0095` cover is clean |
+| T9 | harness with the new flags on `s(32)`: 200 random boxes (plain, reflected) with `--sym-atoms`; 200 boxes near each germ with `--sym-atoms` and with `--mirror-only`; 200 near the germ of the weakened cover | 0 fails (≈ 15,000 admissible poses) |
+
+Test suite after §12: **62/62** (45 + 17 new in T9), `taskset -c 0-5`, 8 min wall (`search/zmx2_sym_logs/tests.out`).
 
 Point-only agreement: `zmx2` and `zmcheck` agree on the column, and on the whole `s(13)` and `s(32)` covers
 (`VERIFIED-D4` both), by entirely different germ mechanisms (`zmcheck`: DISJ sign-splits and Lemma K; `zmx2`: the pair
@@ -266,6 +325,8 @@ All on `taskset -c 0-9`, 10 threads.
 | `s(13)` shipped, `--d4` | 1,600 | 47,162 | 22,136 | 2,245 | 0 | 20 | 3 s | `VERIFIED-D4` |
 | `s(32)` shipped, `--d4 --pair-points` | 3,600 | 1,405,342 | 686,886 | 17,585 | 0 | 29 | 873 s | `VERIFIED-D4` |
 | `s(32)` shipped, `--d4` (grid atoms only) | 3,600 | 1,419,262 | 693,540 | 17,853 | 38 | 40 | 87 s | refused: all 38 at `(1.5006, 0.5016, 0.179°)`, float `μ ≥ 1.0115`; the loss is the off-grid pair `(0.999, 0.999)`, `(1.999, 0.999)` on opposite edges, which `--pair-points` couples |
+| `s(32)` shipped, `--full --pair-points` (run by jlevy, PR #245 review) | 28,800 | — | — | — | 152 | — | — | refused: 4 × 38 boxes at the ±90°-rotated images of that germ; atom-assignment asymmetry, fixed by `--sym-atoms` (§12) |
+| `s(32)` shipped, `--full --pair-points --sym-atoms` (§12) | 28,800 | 11,268,760 | 5,507,496 | 141,284 | 0 | 29 | 11,592 s | **`VERIFIED`** (no symmetry used) |
 
 (The box counts include the internal nodes; certified + empty + uncertified = leaves.)
 
@@ -298,3 +359,79 @@ candidate (its values are far inside the bounds): with the patched binary both o
 manifests), and `s21_cert_runs.sh` deletes the log before each run.  Test suite: 45/45 (was 42).  The audit's `search/zmx2_audit/run_audit.sh`, rerun on the patched binary
 (cores 0–9): F1 inputs refused; A1–A4 refused at the same poses; A5 probes, A6 (800 random covers), A7 (190 differential
 runs) and A8 (300 tightest leaves): 0 fail.  The shipped `s(32)` cover (`--d4 --pair-points`) re-verifies with the same census.
+
+## 12. The `s(32)` cover without the D4 fold: Lemma A, `--sym-atoms` (2026-09-30)
+
+**Brief.**  jlevy/squares' review of PR #245: `zmx2 cert certificates/s32/s32_closed_cover_6.txt --full --pair-points`
+(all 28,800 roots) leaves **152 boxes uncertified**, 38 in each of four images of one germ (centres near
+`(0.50, 4.50)` and `(5.50, 1.50)`, `θ ≈ 0.18–0.32°`), while `--d4 --pair-points` verifies and certifies the germ's
+image `(1.5006, 0.5016, 0.179°)` in the fundamental region.  The brief's hypothesis was that Lemma Z closes the
+germ in one orientation only and needs a mirrored form.  **Independence:** as in §0, `zm_mixed.py`,
+`zm_mixed_test.py`, `ZM_MIXED.md`, every `ZM_MIXED_AUDIT*`, `search/qx2_zm.py` and `QUADRANT_EXACT.md` were not
+opened.  **Read for this work:** `search/ZMX2.md`, `search/ZMX2_AUDIT.md`, `verify2/src/bin/zmx2.rs`,
+`search/zmx2_tools.py`, `search/zmx2_tests.sh`, `search/zmx2_run.sh`; `certificates/s21/verify.sh` (lines 1–62),
+`certificates/s32/README.md` (up to "Re-checking"), `certificates/s60/zmx2_full/manifest.txt`, the `done`/verdict
+lines of `certificates/{s21,s60}/zmx2_*/run.out`, the output of `grep zmx2` over
+`certificates/*/{verify.sh,SHA256SUMS,README.md}`, and lines of `s32_closed_cover_6.txt` itself (its header and the
+points with `x = 5001` or `y ∈ {999, 1999}`).  (`FORMAT.md`, `LINE_COVER.md`, `S32_EXACT.md` were not needed.)
+
+**Diagnosis** (reproduced on 2 × 2 cells, bin 0, both passes, around each of the 8 D4 images of the germ; 4–9 CPU-s
+each).  The failures are exactly 38 + 38 boxes (pass 0 + pass 1) in the cells around `(5.5, 1.5)` and around
+`(0.5, 4.5)`; the cells around the other six images are clean.  In the checker's frame of each pass the failing
+four are the fundamental germ **rotated by ±90°** (pass 0: the rotations; pass 1: the diagonal reflections composed
+with the pass-1 reflection), i.e. exactly the images in which vertical and horizontal are swapped.  At the deepest
+uncertified leaf `x ∈ [450431, 450432]/81920`, `y ∈ [122925, 122926]/81920`, `u ∈ [204, 205]/131072`
+(`(5.49843, 1.50056)`, `θ ≈ 0.179°`), `ZMX2_DEBUG=1 zmx2 box …` shows: points certainly in `0.00471`, line bound
+`0.99349`, total `0.998220 < 1`, while the float minimum over the box is `1.011548`.  The missing mass is the point
+`P1 = (5.001, 1.999)` (weight `0.01332730124`; its partner `(5.001, 0.999)`, weight `0.01522506381`, is just outside
+`Q`), the rotated image of the pair `(1.999, 0.999)`, `(0.999, 0.999)` named in §9's table.  Both points lie on the
+vertical partner line `x = 5.001` (partner `x = 4.001`) **and** on the horizontal partner lines `y = 1.999`,
+`y = 0.999`.  Rule `A_V` (§4.5, §4.9) made them atoms of `x = 5.001`, which at this germ has `d = c_x − 5.001 ≈ ½`:
+its lower end `ζ = L1` runs over `ℝ` as `θ → 0⁺` and there is no partner line `6.001`, so neither the single bound
+nor the pair `(4.001, 5.001)` (which needs `d_b ≈ −½`) can count them.  The horizontal pair `y = 0.999`,
+`y = 1.999` is exactly what Lemma Z (through Lemma T) closes at this germ, but under `A_V` it carried no atoms (pair
+bound `0`).  In the fundamental image the two points share an *ordinate*, become atoms of the vertical lines
+`x = 0.999`, `x = 1.999`, and Lemma Z closes the germ; the D4 sweep only ever sees that image.
+
+So nothing is missing from Lemma Z (§4.10: every `θ → 0⁺` germ already has its form, in both families and both
+passes); the gap is the **asymmetric atom assignment**.  Confirmation: with the mirrored rule alone
+(`--mirror-only`) the picture is exactly mirrored — the cells around `(1.5, 0.5)` fail with 38 + 38 boxes
+(float-min `1.011548` at `(1.500562, 0.501563, u 0.0015640)`) and the rotated cells verify.
+
+**Fix.**  Lemma A (§4.9): bound a box with both assignment rules and keep the larger, behind the opt-in flag
+`--sym-atoms` (the mirrored bound is computed only for boxes the default bound does not certify).  Without the flag
+the code path is the old one: the default census of the germ cells is unchanged (44,356 boxes, 76 uncertified,
+test T9), and the s(21)/s(60) `--sym-atoms` runs below, where the two rules coincide, reproduce the shipped
+`roots.log` censuses root for root.  The leaf above gets `1.011547684` (= the float minimum) with `--sym-atoms` or
+`--mirror-only`, `0.998220382` without.  New in `zmx2.rs`: `build_lines` (the old line construction, parametrised
+by the rule), `Cover.alt`, `segment_bound` = `segment_bound_lines` + the `--sym-atoms` maximum, the flags
+`--sym-atoms` and `--mirror-only` (test mode), log header `atoms=…+sym` / `…+mirror` (unchanged without them), and
+`info --sym-atoms` (says whether the rules differ).  Also `search/zmx2_tools.py` (`sound --near X,Y,U --zflags
+f1,f2`, `perturb --op pt-weight`), `search/zmx2_census_cmp.py` (root-for-root census comparison),
+`search/zmx2_sym_run.sh` (the runs; manifests `search/zmx2_sym_manifest.txt`, `search/zmx2_sym_manifest_pp.txt`;
+logs xz-compressed in `search/zmx2_sym_logs/`).
+
+**Runs** (`search/zmx2_sym_run.sh`, `taskset -c 0-5`, 6 threads; `zmx2.rs` sha256 `92a4cfe8…fe64`, binary
+`ed31d3ee…99ef`, rustc 1.91.1; `search/zmx2_sym_manifest.txt` was written by the script's first version, before
+the two `--pair-points` sweeps (`zmx2_sym_manifest_pp.txt`, `ONLY=… MAN=…`) and the "vs shipped" lines were added;
+the root-for-root comparisons below were made with `search/zmx2_census_cmp.py`, 0 roots differing in each):
+
+| run | roots | boxes | certified | empty | uncert. | max depth | CPU | verdict |
+|---|---|---|---|---|---|---|---|---|
+| **`s(32)` `--full --pair-points --sym-atoms`** | 28,800 | 11,268,760 | 5,507,496 | 141,284 | **0** | 29 | 11,592 s (1,938 s wall) | **`VERIFIED`** |
+| `s(32)` `--d4 --pair-points --sym-atoms` | 3,600 | 1,395,462 | 682,624 | 16,907 | 0 | 29 | 1,376 s | `VERIFIED-D4` (1,405,342 boxes without the flag) |
+| `s(21)` `--d4 --sym-atoms` | 2,500 | 1,826,222 | 888,945 | 25,416 | 0 | 26 | 11 s | `VERIFIED-D4`; census = shipped `zmx2_d4/roots.log`, root for root |
+| `s(21)` `--full --sym-atoms` | 20,000 | 14,709,448 | 7,164,300 | 200,424 | 0 | 27 | 88 s | `VERIFIED`; = shipped `zmx2_full/roots.log` |
+| `s(60)` `--d4 --sym-atoms` | 6,400 | 2,617,534 | 1,295,988 | 15,979 | 0 | 24 | 23 s | `VERIFIED-D4`; = shipped `zmx2_d4/roots.log` |
+| `s(60)` `--full --sym-atoms` | 51,200 | 21,036,120 | 10,414,200 | 129,460 | 0 | 24 | 184 s | `VERIFIED`; = shipped `zmx2_full/roots.log` |
+| `s(21)` `--d4 --pair-points --sym-atoms` | 2,500 | 1,823,282 | 887,495 | 25,396 | 0 | 26 | 1,992 s | `VERIFIED-D4` (the rules differ here) |
+| `s(60)` `--d4 --pair-points --sym-atoms` | 6,400 | 2,581,710 | 1,278,159 | 15,896 | 0 | 24 | 3,835 s | `VERIFIED-D4` (the rules differ here) |
+
+For the s(21) and s(60) covers without `--pair-points` the two rules give the same lines (`zmx2 info --sym-atoms`:
+"the mirrored assignment is the same"), so there `--sym-atoms` changes nothing — hence the identical censuses; the
+last two rows exercise the new path on mixed covers.  (An `s(21) --full --pair-points --sym-atoms` run was stopped
+after 4,936 / 20,000 roots, 0 uncertified so far, because `--pair-points` makes it ~20× slower; not a result.)
+
+**Verdict.**  `zmx2` now certifies the `s(32)` cover over the whole pose space with no symmetry argument:
+`VERIFIED`, 28,800 / 28,800 roots, 0 uncertified (`--full --pair-points --sym-atoms`).  The bundles still pin the
+old source/binary; nothing in `certificates/` was changed or re-pinned.

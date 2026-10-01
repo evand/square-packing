@@ -1,0 +1,61 @@
+# zmx2 --sym-atoms run manifest (written by search/zmx2_sym_run.sh; see search/ZMX2.md sec 12)
+date:            2026-10-01T00:22:43Z
+host:            x86_64, taskset -c 0-5 (6 threads)
+git HEAD:        e4af291cf52711a3ef7cedfea262f001fa2cafe1 (0 local change(s) to zmx2.rs)
+checker source:  verify2/src/bin/zmx2.rs sha256 92a4cfe87b4e33d57ce132c9c517eded3fe62b4a5a2151b5ba250b8ee329fe64
+checker binary:  verify2/target/release/zmx2 sha256 ed31d3ee17e1c4373acf688797b528b794af4b27779385989892b0cb7fc199ef
+rustc:           rustc 1.91.1 (ed61e7d7e 2025-11-07) (built from a source tarball)
+
+[s32_full]
+input:           certificates/s32/s32_closed_cover_6.txt sha256 a0d2d38fc9a585a166b9e06c5069fdae9bdce44ca9fb64dda75abcc99e3c2144
+command:         taskset -c 0-5 verify2/target/release/zmx2 cert certificates/s32/s32_closed_cover_6.txt --full --pair-points --sym-atoms --threads 6 --log runs/zmx2_sym/s32_full.log
+log header:      # zmx2 cert hash=c4c8c3ab717e9aab mode=full atoms=pairpts+sym depth=40 node_cap=20000000 kappa=1.5 K=30 region=x0-59,y0-59,bins0-3
+log sha256:      3b867c398c121401529f87077289a2f54166ced94b72a6b2fe288dfe312e44ce  (28800 ROOT lines, 0 UNCERT lines)
+                 roots: 28800 in region, 0 already done (log), 28800 to run, 6 threads
+                 done in 1938s wall: roots 28800 (missing 0), boxes 11268760, certified 5507496, empty 141284, uncertified 0, max depth 29, cpu 11592s
+                 VERIFIED: every closed unit square in [0,s]^2 has mu >= 1 (unreduced sweep, all roots)
+
+[s32_d4]
+input:           certificates/s32/s32_closed_cover_6.txt sha256 a0d2d38fc9a585a166b9e06c5069fdae9bdce44ca9fb64dda75abcc99e3c2144
+command:         taskset -c 0-5 verify2/target/release/zmx2 cert certificates/s32/s32_closed_cover_6.txt --d4 --pair-points --sym-atoms --threads 6 --log runs/zmx2_sym/s32_d4.log
+log header:      # zmx2 cert hash=c4c8c3ab717e9aab mode=d4 atoms=pairpts+sym depth=40 node_cap=20000000 kappa=1.5 K=30 region=x0-29,y0-29,bins0-3
+log sha256:      b6f28b6320808c3713f87d75a83850244994077784ae549a05946bd42a08e1a4  (3600 ROOT lines, 0 UNCERT lines)
+                 roots: 3600 in region, 0 already done (log), 3600 to run, 6 threads
+                 done in 251s wall: roots 3600 (missing 0), boxes 1395462, certified 682624, empty 16907, uncertified 0, max depth 29, cpu 1376s
+                 VERIFIED-D4: every closed unit square in [0,s]^2 has mu >= 1 (D4-reduced sweep, all roots)
+
+[s21_d4]
+input:           certificates/s21/s21_mixed_cover_5.txt sha256 8b415ceeb5f20b02c4e338ce2feb21bc206051ef6bc5c7e433bebae2ef39fc23
+command:         taskset -c 0-5 verify2/target/release/zmx2 cert certificates/s21/s21_mixed_cover_5.txt --d4 --sym-atoms --threads 6 --log runs/zmx2_sym/s21_d4.log
+log header:      # zmx2 cert hash=20610030026555f9 mode=d4 atoms=grid+sym depth=40 node_cap=20000000 kappa=1.5 K=30 region=x0-24,y0-24,bins0-3
+log sha256:      f29452bdc8d48ef8812cb6c3d5b7e84da7646e26e405dfa9b23f68c9e5611c12  (2500 ROOT lines, 0 UNCERT lines)
+                 roots: 2500 in region, 0 already done (log), 2500 to run, 6 threads
+                 done in 2s wall: roots 2500 (missing 0), boxes 1826222, certified 888945, empty 25416, uncertified 0, max depth 26, cpu 11s
+                 VERIFIED-D4: every closed unit square in [0,s]^2 has mu >= 1 (D4-reduced sweep, all roots)
+
+[s21_full]
+input:           certificates/s21/s21_mixed_cover_5.txt sha256 8b415ceeb5f20b02c4e338ce2feb21bc206051ef6bc5c7e433bebae2ef39fc23
+command:         taskset -c 0-5 verify2/target/release/zmx2 cert certificates/s21/s21_mixed_cover_5.txt --full --sym-atoms --threads 6 --log runs/zmx2_sym/s21_full.log
+log header:      # zmx2 cert hash=20610030026555f9 mode=full atoms=grid+sym depth=40 node_cap=20000000 kappa=1.5 K=30 region=x0-49,y0-49,bins0-3
+log sha256:      1f82a75604f3d137c621f6ca73699b58248453b39e0465910120dcb86575bff0  (20000 ROOT lines, 0 UNCERT lines)
+                 roots: 20000 in region, 0 already done (log), 20000 to run, 6 threads
+                 done in 16s wall: roots 20000 (missing 0), boxes 14709448, certified 7164300, empty 200424, uncertified 0, max depth 27, cpu 88s
+                 VERIFIED: every closed unit square in [0,s]^2 has mu >= 1 (unreduced sweep, all roots)
+
+[s60_d4]
+input:           certificates/s60/s60_mixed_cover_8.txt sha256 2d0e456ea86cceeadc92d9f8fa7d468ba570a16d00d7343ebfbfb0b3b3b12a41
+command:         taskset -c 0-5 verify2/target/release/zmx2 cert certificates/s60/s60_mixed_cover_8.txt --d4 --sym-atoms --threads 6 --log runs/zmx2_sym/s60_d4.log
+log header:      # zmx2 cert hash=478e927dc2f4c16c mode=d4 atoms=grid+sym depth=40 node_cap=20000000 kappa=1.5 K=30 region=x0-39,y0-39,bins0-3
+log sha256:      784bc29081db0fcf0dea78ea6b48ea77444052433ebf5083158f573779efc0b1  (6400 ROOT lines, 0 UNCERT lines)
+                 roots: 6400 in region, 0 already done (log), 6400 to run, 6 threads
+                 done in 4s wall: roots 6400 (missing 0), boxes 2617534, certified 1295988, empty 15979, uncertified 0, max depth 24, cpu 23s
+                 VERIFIED-D4: every closed unit square in [0,s]^2 has mu >= 1 (D4-reduced sweep, all roots)
+
+[s60_full]
+input:           certificates/s60/s60_mixed_cover_8.txt sha256 2d0e456ea86cceeadc92d9f8fa7d468ba570a16d00d7343ebfbfb0b3b3b12a41
+command:         taskset -c 0-5 verify2/target/release/zmx2 cert certificates/s60/s60_mixed_cover_8.txt --full --sym-atoms --threads 6 --log runs/zmx2_sym/s60_full.log
+log header:      # zmx2 cert hash=478e927dc2f4c16c mode=full atoms=grid+sym depth=40 node_cap=20000000 kappa=1.5 K=30 region=x0-79,y0-79,bins0-3
+log sha256:      3b7e3facfd0d5bac630dd87fc52987eecac052b7ca4b1713c6e796a3399b54e4  (51200 ROOT lines, 0 UNCERT lines)
+                 roots: 51200 in region, 0 already done (log), 51200 to run, 6 threads
+                 done in 33s wall: roots 51200 (missing 0), boxes 21036120, certified 10414200, empty 129460, uncertified 0, max depth 24, cpu 184s
+                 VERIFIED: every closed unit square in [0,s]^2 has mu >= 1 (unreduced sweep, all roots)
