@@ -206,6 +206,11 @@ done
 $T sound $ZT/s32_rej_p1.txt --n $NS --poses 10 --seed 37 --near 5.4984,1.5006,0.00156 --zflags pair-points,sym-atoms > $ZT/sound_s32_37.txt; r=$(tail -1 $ZT/sound_s32_37.txt)
 echo "$r" | grep -q ' 0 FAIL' && ok "weakened s(32) (P1) harness near the germ, --sym-atoms: $r" || bad "weakened harness: $r"
 
+echo "== T10 area densities (rectangles) and theta = 0 (cert0): search/zmx2_area_tests.sh (ZMX2_AREA.md sec 10)"
+ZT=$ZT/area TH=$TH bash search/zmx2_area_tests.sh $([ $QUICK = 1 ] && echo --quick) > $ZT/area_tests.out 2>&1
+r=$(tail -1 $ZT/area_tests.out)
+echo "$r" | grep -q ' 0 failed' && ok "T10: $r (details: $ZT/area_tests.out)" || bad "T10: $r (see $ZT/area_tests.out)"
+
 echo
 echo "zmx2_tests: $npass passed, $nfail failed"
 [ $nfail = 0 ]
