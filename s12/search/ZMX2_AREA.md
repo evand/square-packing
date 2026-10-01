@@ -7,9 +7,11 @@ on `[0,7]²`).  **Claim checked (Valid7):** every closed unit square `Q ⊆ [0,7
 
 Code: `verify2/src/bin/zmx2.rs` (new: `Rect`, the polygon parser, `mass_bound`, `area_bound`, `side_contained`,
 `cap_ub`, `quad_area_lb`, `coupled_side`, `family_bound_ex`, `frames`, the θ = 0 mode `bound0`/`cmd_cert0`/`boxes0`,
-`--umin`, `float_rect_area`, `fscan --outside --skip-wall --umax`), `search/zmx2_tools.py` (polygons in the exact
-evaluator: Sutherland–Hodgman clipping with `Fraction`s; `sound --area`, `sound0`, `toy --kind lebesgue`,
-`perturb --op rect-scale|rect-delta|seg-delta`), `search/zmx2_area_tests.sh` (§10; also run as T10 of
+`--umin`, the first-order bound `--first-order` (`first_order_bound`, `first_order_sig`, `u_line`, `u_slope`,
+`one_bp`, `dens_range`, `u_pair_inf`, `u_pair_q`, `u_area_slope`, `UTerm`), `float_rect_area`,
+`fscan --outside --skip-wall --umax`), `search/zmx2_tools.py` (polygons in the exact evaluator: Sutherland–Hodgman
+clipping with `Fraction`s; `sound --area --small-u`, `sound0`, `toy --kind lebesgue`,
+`perturb --op rect-scale|rect-delta|seg-delta`, `ZMX2` from the environment), `search/zmx2_area_tests.sh` (§10; also run as T10 of
 `search/zmx2_tests.sh`).  Logs: `search/zmx2_area/`.
 
 ## 0. Status
@@ -17,14 +19,17 @@ evaluator: Sutherland–Hodgman clipping with `Fraction`s; `sound --area`, `soun
 | part of the pose space | method | result |
 |---|---|---|
 | `θ = 0` (axis-parallel squares) | `zmx2 cert0` (Lemma Z0, §6; exact integers, no floating point) | **`VERIFIED-D4`** (900 roots) and **`VERIFIED`** without symmetry (3,600 roots), 0 uncertified, < 0.01 CPU-s |
-| `θ ∈ [θ_min, 90°)`, `θ_min = 2 atan(2⁻¹³) = 0.013988°` | `zmx2 cert --umin 10` (ZMX2.md + Lemmas 1–3, K) | **clean** over the whole D4 region (4,900 roots, 4,392,260 boxes, 0 uncertified, 65 CPU-s) and over the whole unreduced space (§9) |
-| `θ ∈ (0, θ_min)` | — | **open**: needs a first-order lemma at the *zero-limit germs* (§11); the present box-sum bound provably cannot close them |
+| `θ ∈ [θ_min, 90°)`, `θ_min = 2 atan(2⁻¹³) = 0.013988°` | `zmx2 cert --umin 10` (ZMX2.md + Lemmas 1–3, K) | **clean** over the D4 region (4,900 roots, 4,392,260 boxes, 0 uncertified, 65 CPU-s) **and over the whole unreduced pose space** (`--full`, 39,200 roots, 35,123,736 boxes, 0 uncertified, 440 CPU-s) |
+| all `θ`, i.e. also `0 < θ < θ_min` | `zmx2 cert --first-order` (+ Lemma U, §11) | D4 region: **120 uncertified boxes** of 1,179,242 (96 CPU-s); `--full`: 1,108 of 9,455,676 (797 CPU-s); all at the *double germs* of §11.4, `θ < 0.01°` |
 
-So **Valid7 is not yet certified by `zmx2`**: what is missing is exactly the thin slab `0 < θ < 0.014°` near a few
-families of germs where `μ₇(Q) → 1` as `θ → 0⁺` (walls, and the columns `c_x ∈ {1.5, 5.5}`, `c_y ∈ {1.5, 5.5}` around
-the area square), §11.  Everything else is certified, including all the exactly tight places that are not θ → 0⁺
-limits: squares inside `R` (`μ = 1`), squares touching `∂R` from inside at any angle (`μ = 1`), axis-parallel squares
-on a wall (`μ = 1`).  D4 invariance of `μ₇` is checked exactly (`zmx2 d4`, §7).
+So **Valid7 is not yet fully certified by `zmx2`**.  Certified: `θ = 0` everywhere; `θ ≥ 0.014°` everywhere (no
+symmetry used); and, with Lemma U, `0 < θ < 0.014°` everywhere except in boxes of size `≈ 10⁻⁵` around a short list of
+**double germs** (§11.4: the column `c_x = 1.5` where `Q`'s left side meets the line `x = 1` while its top and bottom
+sides meet two horizontal grid lines, and their D4 images), where the exact germ minimum is still `1 + 0.16 θ`
+(numerically) but the first-order bound of §11 is a few `10⁻⁶` short.  Everything else that is exactly tight is
+certified: squares inside `R` (`μ = 1`, Lemma 1), squares touching `∂R` from inside at any angle (`μ = 1`,
+Lemma K), axis-parallel squares on a wall (`μ = 1`, Lemma Z0), and the `θ → 0⁺` limits at the walls and the single
+column germs (`μ → 1`, Lemma U).  D4 invariance of `μ₇` is checked exactly (`zmx2 d4`, §7).
 
 **Independence.**  Not opened: `search/qx2_zm.py`, any `search/qx2_*.py`, `search/QUADRANT_EXACT.md`,
 `search/QUADRANT.md`, `search/zm_mixed.py`, `zm_mixed_test.py`, `ZM_MIXED.md`, `ZM_MIXED_AUDIT*`,
@@ -193,13 +198,17 @@ prints a verdict, only `REGION CLEAN`).  It isolates the slab of §11.
 | `cert0 --d4` (θ = 0) | 900 | 900 | 900 | — | 0 | 0 | < 0.01 s | **`VERIFIED-D4 (theta = 0)`** |
 | `cert0 --full` (θ = 0) | 3,600 | 3,600 | 3,600 | — | 0 | 0 | < 0.01 s | **`VERIFIED (theta = 0)`** |
 | `cert --d4 --umin 10` (θ ≥ 0.014°) | 4,900 | 4,392,260 | 1,974,266 | 224,314 | **0** | 40 | 65 s | **clean** |
-| `cert --full --umin 10` | see §9.1 | | | | | | | |
-| `cert --d4 --umin 14` / `--umin 20` | 4,900 | (stopped at 3 per root) | | | 1,893 / 1,104 | 40 / 23 | 27 s / 23 s | refused only in the germ columns of §11 (depth / `ul ≤ 27` limits) |
-| `cert --d4` (all θ, bin 0 from `u = 0`), region `y ≥ 1.8` | 2,380 | 464,992 | 231,310 | 1,682 | 1,282 | 40 | 10 s | refused only in the cells of §11, all at `u0 = 0` |
+| `cert --full --umin 10` (θ ≥ 0.014°, both passes, no symmetry) | 39,200 | 35,123,736 | 15,788,204 | 1,793,264 | **0** | 40 | 440 s | **clean** |
+| `cert --d4 --first-order` (all θ) | 4,900 | 1,179,242 | 587,463 | 4,488 | 120 | 40 | 96 s | refused: only the double germs of §11.4 |
+| `cert --full --first-order` (all θ) | 39,200 | 9,455,676 | 4,710,212 | 36,078 | 1,108 | 40 | 797 s | refused: only their D4 images |
+| `cert --d4` (all θ, no Lemma U), region `c_y ≥ 1.8` | 2,380 | 464,992 | 231,310 | 1,682 | 1,282 | 40 | 10 s | refused at every zero-limit germ (walls, columns) |
+| `cert --d4 --umin 14` / `--umin 20` | 4,900 | (3 per root) | | | 1,893 / 1,104 | 40 / 23 | 27 / 23 s | refused only in the germ columns (depth / `ul ≤ 27`) |
 
-### 9.1 (filled in below by the full-region runs)
+(Refused runs stop a root after 200 uncertified boxes, so their counts are lower bounds.  Projected cost of a complete run once §11.4 is closed:
+the `--full --first-order` sweep already visits every root, ≈ 800 CPU-s = 7 min on 2 cores; nothing needs more
+cores.)
 
-## 10. Tests (`search/zmx2_area_tests.sh`, 40/40; also T10 of `search/zmx2_tests.sh`)
+## 10. Tests (`search/zmx2_area_tests.sh`, 56/56; also T10 of `search/zmx2_tests.sh`)
 
 | # | test | result |
 |---|---|---|
@@ -209,44 +218,103 @@ prints a verdict, only `REGION CLEAN`).  It isolates the slab of §11.
 | A4 | the box file at θ = 0: `cert0 --d4` and `--full` `VERIFIED` | pass |
 | A5 | rejection on the box file: area density `− 10⁻⁶` (refused by `cert0` and by `cert` around `(3.1, 3.1)`, exact `μ = 0.999999`); the wall-band piece `x = 0.8, y ∈ [2.8, 3.0]` `− 10⁻⁴` (refused by `cert0`, exact `μ(½, 3, 0) = 0.9999`); the piece `x = 1.6, y ∈ [3.2, 3.4]` `− 10⁻⁴` (refused by `cert0` and by `cert --umin 10` near `(1.5, 3.3)`; exact `μ = 0.99994` at `(1.5 + θ/2, 3.3 + 0.28θ, θ = 0.014°)`) | pass |
 | A6 | harness (exact rational `μ`, polygon clipping with `Fraction`s, at random admissible rational poses and box corners): `sound0` (θ = 0, boxes biased to walls, rectangle sides and half-integer line offsets) on the box file and a weakened one; `sound --area` (boxes at the area square's sides, corners, inside-touching poses; plain and reflected); generic `sound`; weakened cover; the tightest certified leaves (bound `< 1.0005`) of a run around the left side of `R` | 0 FAIL in all (≈ 30,000 poses); `min(μ) − bound` = 0 on many boxes (the harness reaches the exactly tight places) |
+| A8 | `--first-order`: wall band and a single-germ column cell clean down to θ = 0 (and refused without the flag); rejection: the wall's first-order gain removed (h-lines `y = 2.6…3.4` zeroed on `x ∈ [1, 1.2]`: `μ = 1` on the wall at θ = 0 but `0.99999973` at `(0.50001, 3, u = 10⁻⁵)`) refused; the column piece of A5 refused; harness with `--small-u` (poses at angles `u1 2⁻ᵏ`, `k ≤ 40`, to reach the germ variables) near 8 germs, on the gain-removed cover, area boxes, reflected cover | pass, 0 FAIL (≈ 25,000 poses; `min(μ) − bound` down to `8·10⁻¹²` on the weakened cover) |
 | A7 | no area densities: `s(21) --d4` census = shipped `certificates/s21/zmx2_d4/roots.log` root for root, header unchanged | pass |
 
-## 11. What remains: the zero-limit germs (`0 < θ < θ_min`)
+Also, with the final source (cores 10–11, `NPROC=2`): `certificates/s21/verify.sh` and `certificates/s60/verify.sh`
+(fast tier: they rebuild `zmx2` from source and compare a fresh `--full` census with the shipped one root for root):
+**`s(21) bundle: OK`**, **`s(60) bundle: OK`**; `search/zmx2_tests.sh`: **63/63** (T0–T9 unchanged, T10 = this
+suite).  Record: `search/zmx2_area/verify_and_tests.out`.
 
-**The obstruction.**  `zmx2` bounds a box by a *sum of separately pessimised pieces* (points, each line or line
-pair, each rectangle).  At a pose where `μ = 1` is attained only as a limit `θ → 0⁺`, and where some piece decreases
-to first order along the way while others increase, every box containing the limit has
-`Σ inf(piece) = 1 − (first-order loss) < 1`; refining never helps.  Lemma Z removes this for the cut variable `ζ` of
-two lines at distance 1, Lemma K for a side and its cap, Lemma Z0 at `θ = 0` (joint minimum); none removes it for the
-angle.
+## 11. The zero-limit germs and Lemma U (`--first-order`)
 
-**Where it bites in `μ₇`** (D4 region; found by the runs of §9 and by exact germ scans `μ(c₀ + (a,b)θ, θ)` at
-`θ = 2·10⁻⁶`):
-* the **walls**: `c_x = ½`, `c_y ∈ [2.5, 4.5]` (and D4 images).  At `θ = 0`, `μ = 1` on the whole band (between
-  grid lines; `cert0` certifies it); for `θ > 0` against the wall `μ ≈ 1 + 0.5θ·`… — the line `x = 1` loses its lower
-  end at rate `≈ ρ·u` while the horizontal lines gain beyond `x = 1`, because admissibility pushes `c_x ≥ w/2`;
-  germ minima `(μ − 1)/θ ≈ 0.21–0.27`;
-* the **columns** `c_x = 1.5`, `c_y ∈ [2.2, 3.5]` (Q between `x = 1` and `x = 2`, `R` covering its right fifth), and
-  `(1.5, 1.5)`: the infimum `1` is approached along `c_x = 1.5 + θ/2` (the corner of `Q` touching `x = 1`), germ
+### 11.1 The obstruction
+
+`zmx2` bounds a box by a *sum of separately pessimised pieces* (points, each line or line pair, each rectangle).  At
+a pose where `μ = 1` is attained only as a limit `θ → 0⁺`, and where some piece decreases to first order along the
+way while others increase, every box containing the limit has `Σ inf(piece) = 1 − (first-order loss) < 1`; refining
+never helps.  Lemma Z removes this for the cut variable `ζ` of two lines at distance 1, Lemma K for a side and its
+cap, Lemma Z0 at `θ = 0` (joint minimum); none of them removes it for the angle.  In `μ₇` (D4 region; runs of §9 and
+exact germ scans `μ(c₀ + (a,b)θ, θ)`, `θ = 2·10⁻⁶`):
+
+* the **walls**: `c_x = ½`, `c_y ∈ [2.5, 4.5]`.  At `θ = 0`, `μ = 1` on the whole band; for `θ > 0` against the wall
+  the line `x = 1` loses its lower end at rate `≈ ρ u` while the horizontal lines gain beyond `x = 1` because
+  admissibility pushes `c_x ≥ w/2`; germ minima `(μ − 1)/θ ≈ 0.21–0.27`;
+* the **column** `c_x = 1.5`, `c_y ∈ [2.2, 3.5]` and `(1.5, 1.5)` (`Q` between `x = 1` and `x = 2`, `R` covering its
+  right fifth): the infimum `1` is approached along `c_x = 1.5 + θ/2` (the corner of `Q` touching `x = 1`); germ
   minima `(μ − 1)/θ ≈ 0.16–0.22`.
 
-In all of them the germ value is exactly 1 and the first-order term in `θ` is positive, so `μ₇ ≥ 1` there (numerically),
-but `zmx2` cannot certify a neighbourhood of `θ = 0⁺`.  With `--umin m` the B&B certifies down to `θ_min`
-(`m = 10`: 65 CPU-s for the D4 region); smaller `θ_min` costs more (`m = 14` needs depth > 40) and never reaches 0.
+### 11.2 Lemma U
 
-**What is needed (design, not implemented): Lemma U (first order at `θ = 0`).**  For a box with `u0 = 0`, bound every
-piece by `A_i + u·S_i` valid on the box, with `A_i` the `θ → 0⁺` limit and `S_i` a lower bound of its `u`-derivative
-along admissible paths (`c` fixed, or `c_x(t) = w(t)/2 + e` against a wall), and certify if
-`Σ A_i ≥ 1` (jointly minimised over `c`, as in Lemma Z0) and `Σ S_i ≥ 0`:
-* interior lines: chord ends `c ± ½ + (affine in t)` from `T ∈ [2t, 2t/(1−u1²)]`, `R/2 − ½ ≤ t u1/(1−u1²)`, `q ≥ ½ − u1 t`
-  (Lemma W), `(w − 1)/2 ∈ [t(1−u1)/(1+u1²), t]`; slopes times density bounds on the swept ranges;
-* line pairs at germs (Lemma Z): `inf_ζ` of the pair at `t` is `≥` its value at `t = 0` minus the losses of the
-  four outer ends (monotonicity + Lipschitz; the cut moving with `t` only gains);
-* rectangles: `d area/dθ = Σ_edges ∫_{edge ∩ R} (−s) ds` (`s` along the edge from its midpoint) — lower-bounded by
-  counting possibly-inside `s > 0` and certainly-inside `s < 0`;
-* `A = Σ A_i` exact (Lemma Z0-type joint minimum over the base rectangle; pairs by Lemma Z at `u0 = 0`).
-The numbers above say the slope budget (`≥ 0.16` per unit `θ`) is ample for the slack of such bounds.  Cost: only
-the `u0 = 0` boxes near the listed germs (a few hundred roots) would use it.
+Let `B` have `u1 ≤ 1/16` (θ ≤ 7.2°, so `p = S`, `P = C`); Lemma U bounds the box `B'` = `B` with `u0` replaced by 0
+(its poses contain those of `B`).  Choose path signs `σ_x, σ_y ∈ {−1, 0, 1}` (`+1` forced if `B` reaches
+`c_x < w_hi/2 + …` at the low wall, `−1` at the high wall, otherwise all three are tried) and write every pose as
+`c = b + σ (w(u) − 1)/2` per axis with a **base** `b` (at a wall `b` is admissible at θ = 0 since `c ≥ w/2`).  Using
+`w − 1 = 2u(1 − u)/(1 + u²) ∈ [2u(1 − u1)/(1 + u1²), 2u]`, `T = tan θ ∈ [2u, 2u/(1 − u1²)]`,
+`R/2 − ½ = u²/(1 − u²) ≥ 0`:
+
+**(a) Interior lines.**  If on `B'` the `f`-ends of Lemma C are dominated (`f1 ≤ −½ + min(0, α_g u1)`,
+`f2 ≥ ½ + max(0, β_g u1)`, Lemma M enclosures with `u → 0` limits), or the line is the Lemma W line of a wall, then at
+every admissible pose the chord `[lo, hi]` satisfies `lo ≤ b − ½ + α u`, `hi ≥ b + ½ + β u` with
+`α = α_g + σ⁺`, `β = β_g + σ⁻` (`α_g = −2 d_min` or `2|d_min|/(1−u1²)`, `β_g = 2|d_max|` or `−2 d_max/(1−u1²)`, the
+Lemma W variants `max(α_g, u1)`, `min(β_g, −u1)` from `q ≥ ½ − u1 u`, and `σ⁺ = 1`, `σ⁻ = (1−u1)/(1+u1²)` for
+`σ = +1`, `σ⁺ = −(1−u1)/(1+u1²)`, `σ⁻ = −1` for `σ = −1`).  (The `σ` part only shifts the along coordinate.)
+
+**(b) Window slope.**  Then `F(hi) − F(lo) ≥ W(b) + u s − corr(b)` with `W(b) = F(b + ½) − F(b − ½)`, `s` = `β` times
+the smallest (gain) or largest (loss) density on the range the hi end sweeps for bases in the box, minus the same for
+the lo end, and **(b')** if an end moves the adverse way across exactly one breakpoint `p`, the density beyond `p` in
+`s` and `corr(b) = (ρ_before − ρ_beyond)⁺ · min(dist(end(b), p)⁺, δ_max)`, by
+`∫_e^{e+δ} ρ ≤ ρ_beyond δ + (ρ_before − ρ_beyond)⁺ min((p − e)⁺, δ)` (both modes are tried per family).
+
+**(c) Germ pairs** (Lemma Z, `a` at `ℓ` with its lo end cut by `ζ`, `b` at `ℓ + 1` with its hi end cut by `ζ + u`):
+with base ends `H = b + ½`, `L = b − ½` and `X_a(ζ) = F_a(H) − F_a(max(ζ, L))`, `X_b(ζ) = F_b(min(ζ, H)) − F_b(L)`,
+for every `ζ` the a-term at `u` is `≥ X_a + u r_a` and `≥ 0` (`r_a` = rate of `a`'s hi end `H + β_a u` and of its lo
+end `max(ζ, L + α_a u) ≤ max(ζ, L) + α_a⁺ u`), the b-term `≥ X_b + u r_b` and `≥ 0` (hi end
+`min(ζ + u, H + β_b u) ≥ min(ζ, H) + min(1, β_b) u`).  Using the affine form where the term is positive on the
+`ζ`-cell and 0 elsewhere, the pair is `≥ Q(b, u) = inf_ζ [ψ₀(ζ) + u r(ζ)]`, an infimum of affine functions of `u`,
+hence **concave in `u`**; `Q(b, 0) = P(b)` is Lemma Z's limit value, computed exactly as a function of the base.
+
+**(d) Rectangles.**  `d/dt area(Q(c(t), θ(t)) ∩ R) = θ'·Σ_edges ∫_{edge ∩ R} (−s) ds + c'·N` (Reynolds; `s` along an
+edge from its midpoint; `N` = `∫ n` over `∂Q ∩ R`; `θ' ∈ [2/(1+u1²), 2]`, `c' = σ w'/2 ∈ σ [w'(u1)/2, 1]`), enclosed
+over the box extended towards the base (64 pieces per edge; `s > 0` counted where possibly inside, `s < 0` where
+certainly inside).  So `area ≥ area_base(b) + u s_A`.
+
+**(e) Edge lines.**  A line whose lo (left-type) or hi (right-type) end is not dominated has, if the centre stays on
+one side of it, a chord of length `≥ min(1, τ/S(u1))` (triangle cut, Lemma 2's chord profile) with
+`τ ≥ ½ + ℓ − b_⊥` (left) resp. `½ + b_⊥ − ℓ` (right) **for every `σ`** (since `w ≥ 1`), so its mass is
+`≥ ρ_min · min(1, τ/S(u1))`, a function of the perpendicular base coordinate.  A germ pair contributes the larger of
+its pair value and its two edge terms; the bound tries either choice per pair.
+
+**(f) Assembly.**  For every pose, `μ ≥ (certain points and atoms) + C(b) + u S + Σ_pairs Q_p(b, u)` where `C` collects
+windows, corrections, edge terms and base areas, `S` the window and area slopes.  For each `b` this is concave in
+`u`, so its minimum over `u ∈ [0, u1]` is at `u = 0` or `u = u1`; for each `u` it is, on every cell of the candidate
+grid (breakpoints `± ½`, rectangle sides `± ½`, edge and correction kinks), concave in each base coordinate
+(windows linear, pair values minima of linear functions, area bilinear), so the minimum is at a grid vertex.
+**`L_U = (points) + min over the grid of min(total(b, 0), total(b, u1))`**, exact integers except the slopes and
+rates (outward-rounded) and the pair-rate products (rounded down).  `L(B) = max(L(B), L_U)` for boxes that the other
+bounds do not certify (`--first-order`; off by default, log header `atoms=grid+fo`).
+
+### 11.3 What Lemma U certifies
+
+At the zero-limit germs the base value is exactly the germ limit (1) and the slope the true first-order term minus
+`O(box)`, so the boxes containing the limit certify: the **wall band** (`σ_x = +1`), the **single column germs**
+(`σ_x = +1` with the edge term of `x = 1`: in region `c_x < 1 + w/2` the corner chord of `x = 1` grows like
+`τ/S(u1)` and dominates; elsewhere the shift of the horizontal lines and the area give slope `≈ +0.43` per unit `u`
+against a true `0.44`), and the wall/pair germs at `c_y ∈ ½ + ℤ/5` on the wall.
+
+### 11.4 What remains: double germs
+
+`cert --d4 --first-order` leaves 120 boxes (`--full`: 1,108, the D4 images), all at `c_x ∈ [1.5, 1.50006]`,
+`u ≤ 7·10⁻⁵`, `c_y` within `5·10⁻⁵` of `1.5, 2.3, 2.5, 2.9, 3.1, 3.5` (and one at `(2.3, 2.3)`): the column germ of
+`x = 1` **and** a horizontal pair germ (top and bottom of `Q` on grid lines) at once.  The exact germ minimum there is
+`1 + 0.16 θ` (e.g. `(1.5, 3.1)`: `1.0000003229` at `θ = 2·10⁻⁶`), so these are not counter-examples; the bound is
+`≈ 3·10⁻⁶` short (best of the tried path/pair/correction choices, e.g. `0.999997` at
+`x ∈ [1.500012, 1.500024]`, `y ∈ [3.099976, 3.099988]`, `u ∈ [1.5, 2.3]·10⁻⁵`), and more depth does not help
+(`--depth 60` on three cells: 48 uncertified).  The losses come from charging a whole family at once: a breakpoint
+correction (b') or its density in the slope (one choice per family), and either the pair value or the edge terms for
+`x = 1` (one choice per pair).  Closing them needs a finer choice (per line rather than per family; or the `λ`-mixed
+bound `min(A, δ) ≤ λA + (1−λ)δ` with `λ` per line), or a dedicated two-germ lemma.  This is the only thing between
+the present code and a complete certificate of Valid7.
 
 ## 12. Caveats
 
@@ -256,3 +324,10 @@ the `u0 = 0` boxes near the listed germs (a few hundred roots) would use it.
   independent author), as in `ZMX2.md`.
 * Lemma K couples a line with only one cap; a line that is the side of two rectangles is coupled once (the other
   cap stays in the union bound).  Only axis-parallel rectangles are supported.
+* **Lemma U is the least mature part** and should be audited before anything rests on it: its proof (§11.2) has more
+  moving pieces than the rest (path bases, per-cell concavity in the base coordinates, the activity choice of the
+  pair terms, the f64 rate products, the 64-piece Reynolds enclosure), it was written and tested in one session, and
+  its tests are the harness (exact `μ` at tiny-angle poses near 8 germs, a weakened cover) and two rejection tests.
+  Nothing of §§2–8 depends on it, and it is off unless `--first-order` is given.
+* Refused runs stop a root after 200 uncertified boxes (`--uncert-cap`), so their counts understate the uncertified
+  volume; the cells involved are listed in §11.4.

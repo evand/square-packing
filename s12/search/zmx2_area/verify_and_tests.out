@@ -1,3 +1,14 @@
+=== s21
+    fresh census identical to the shipped zmx2_full/roots.log, root for root
+s(21) bundle: OK
+real	0m44.973s
+exit 0
+=== s60
+    fresh census identical to the shipped zmx2_full/roots.log, root for root
+s(60) bundle: OK
+real	1m42.383s
+exit 0
+=== zmx2_tests
 == T0 zmcheck untouched (source and manifest identical to HEAD)
 PASS  verify2/src/main.rs, Cargo.toml, Cargo.lock unchanged
 == T1 malformed / unsupported files are refused (ERROR, exit 2)
@@ -71,5 +82,7 @@ PASS  s(32) harness --near 5.4984,1.5006,0.00156 --zflags pair-points,mirror-onl
 PASS  s(32) harness --near 1.5006,0.5016,0.00156 --zflags pair-points,mirror-only: sound: 200 boxes, 2027 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 0
 PASS  weakened s(32) (P1) harness near the germ, --sym-atoms: sound: 200 boxes, 2097 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 0
 == T10 area densities (rectangles) and theta = 0 (cert0): search/zmx2_area_tests.sh (ZMX2_AREA.md sec 10)
-PASS  T10: zmx2_area_tests: 40 passed, 0 failed (details: /tmp/claude-1000/-home-evand-math/f38c36d0-09e9-46fc-a644-db51c87db088/scratchpad/zt_all/area_tests.out)
+PASS  T10: zmx2_area_tests: 56 passed, 0 failed (details: /tmp/claude-1000/-home-evand-math/f38c36d0-09e9-46fc-a644-db51c87db088/scratchpad/zt_all2/area_tests.out)
 zmx2_tests: 63 passed, 0 failed
+real	11m7.152s
+exit 0

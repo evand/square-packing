@@ -30,7 +30,7 @@ PASS  k2m3 box cert0 --d4: VERIFIED-D4 (theta = 0): every; done0 in 0.0s: roots 
 PASS  k2m3 box cert0 --full: VERIFIED (theta = 0): every cl; done0 in 0.0s: roots 3600, boxes 3600, certified 3600, uncertified 0, max depth 0
 == A5 rejection: the box with a piece lowered (theta = 0 and theta > 0)
 PASS  rho - 1e-6, cert0: refused (worst uncertified box 15728640/10485760,15728641/10485760,26214382/10485760,26214383/10485760: bound)
-PASS  rho - 1e-6, cert (centres [3,3.2]^2, all angles): refused; uncert: 6 boxes; min exact mu 0.999999000 at pass 0 (3, 3, u 1/8192) = (3.000000, 3.000000, 0.0140 deg)
+PASS  rho - 1e-6, cert (centres [3,3.2]^2, all angles): refused; uncert: 6 boxes; min exact mu 0.999999000 at pass 0 (3, 3, u 1/8) = (3.000000, 3.000000, 14.2500 deg)
 PASS  wall-band piece x=0.8, y in [2.8,3.0] - 1e-4: cert0 refused at box 5242880/10485760,5242881/10485760,26208023/10485760,26208024/1048576; exact mu(1/2, 3, 0) = 0.999900000000
 PASS  piece x=1.6, y in [3.2,3.4] - 1e-4: cert0 refused (worst uncertified box 15728640/10485760,15728641/10485760,28311554/10485760,28311555/10485)
 PASS    cert --umin 10 (theta >= 0.014 deg) near (1.5, 3.3): refused; exact mu at (1.5 + th/2, 3.3 + 0.28 th, th = 0.014 deg) = 0.999939822442
@@ -42,12 +42,25 @@ PASS  same, reflected cover: sound: 300 boxes, 6900 admissible poses checked, 0 
 PASS  generic random boxes (germs, walls), k2m3 box: sound: 300 boxes, 4447 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 0.0046
 PASS  weakened box (rho - 1e-6), area boxes: sound: 150 boxes, 3450 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 0.00287
 PASS  tightest certified leaves (bound < 1.0005) around the area square's left side: tight: 150 leaves, 3000 admissible poses, 0 FAIL; min(mu)-bound: min 0.00646 median 0.0355; bounds in [1.000001, 1.000498]
+== A8 --first-order (Lemma U, ZMX2_AREA.md sec 11): zero-limit germs at theta -> 0+
+PASS  wall band c_x in [0.4,0.6], c_y in [2.6,3.1], theta in [0, 14.25 deg]: clean (roots 10 (missing 0), boxes 194, certified 74, empty 28, uncertified 0)
+PASS  column c_x in [1.5,1.6], c_y in [2.6,2.8]: clean (roots 2 (missing 0), boxes 944, certified 473, empty 0, uncertified 0)
+PASS    the same cells without --first-order: refused (the obstruction of sec 11)
+PASS  wall gain removed: refused with --first-order; exact mu at (0.50001, 3, u = 1e-5) = 0.999999725953
+PASS  column piece x=1.6 lowered by 1e-4: refused with --first-order
+PASS  first-order harness near 0.5,3.0,0: sound: 150 boxes, 1459 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 8.24e-05
+PASS  first-order harness near 0.5,2.9,0: sound: 150 boxes, 1380 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 8.12e-05
+PASS  first-order harness near 1.5,3.0,0: sound: 150 boxes, 3450 admissible poses checked, 0 FAIL; min(mu)-bound: min 8.11e-08, median 0.000126
+PASS  first-order harness near 1.5,3.1,0: sound: 150 boxes, 3450 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 9.34e-05
+PASS  first-order harness near 1.5,2.3,0: sound: 150 boxes, 3450 admissible poses checked, 0 FAIL; min(mu)-bound: min 3.39e-06, median 0.000309
+PASS  first-order harness near 1.5,1.5,0: sound: 150 boxes, 3450 admissible poses checked, 0 FAIL; min(mu)-bound: min 8.91e-06, median 0.000449
+PASS  first-order harness near 0.5,0.5,0: sound: 150 boxes, 819 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 3.02e-05
+PASS  first-order harness near 2.48,2.75,0: sound: 150 boxes, 3450 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 0
+PASS  first-order harness, gain-removed cover, near the wall: sound: 150 boxes, 1432 admissible poses checked, 0 FAIL; min(mu)-bound: min 8.47e-12, median 1.63e-08
+PASS  first-order harness, area boxes: sound: 300 boxes, 6900 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 0.00242
+PASS  first-order harness, generic boxes, reflected cover: sound: 300 boxes, 4538 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 0.00436 (reflected cover)
 == A7 covers without area densities: behaviour unchanged
 PASS  s(21) --d4 census = shipped zmx2_d4/roots.log root for root (2500 / 2500 roots, 0 differ)
 PASS    log header unchanged
 
-zmx2_area_tests: 40 passed, 0 failed
-
-real	0m49.065s
-user	0m56.941s
-sys	0m0.305s
+zmx2_area_tests: 56 passed, 0 failed

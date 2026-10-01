@@ -116,6 +116,47 @@ $Z cert $K7 --d4 --threads $TH --umin 10 --xlo 16 --xhi 19 --ylo 16 --yhi 30 --t
 $T tight $ZT/k7_tight.txt $K7 --max $((N/2)) --poses 12 --seed 27 > $ZT/k7_tight.out; r=$(tail -1 $ZT/k7_tight.out)
 echo "$r" | grep -q ' 0 FAIL' && ok "tightest certified leaves (bound < 1.0005) around the area square's left side: $r" || bad "tight: $r"
 
+echo "== A8 --first-order (Lemma U, ZMX2_AREA.md sec 11): zero-limit germs at theta -> 0+"
+# the wall band and the column c_x = 1.5 (single germs): certified down to theta = 0
+$Z cert $K7 --d4 --first-order --threads $TH --xlo 4 --xhi 5 --ylo 26 --yhi 30 --bins 0-0 > $ZT/k7_fo_wall.log 2>&1
+v=$(verdict $ZT/k7_fo_wall.log)
+[ "$v" = "REGION CLEAN" ] && ok "wall band c_x in [0.4,0.6], c_y in [2.6,3.1], theta in [0, 14.25 deg]: clean ($(census $ZT/k7_fo_wall.log))" || bad "wall band first-order: $v"
+$Z cert $K7 --d4 --first-order --threads $TH --xlo 15 --xhi 15 --ylo 26 --yhi 27 --bins 0-0 > $ZT/k7_fo_col.log 2>&1
+v=$(verdict $ZT/k7_fo_col.log)
+[ "$v" = "REGION CLEAN" ] && ok "column c_x in [1.5,1.6], c_y in [2.6,2.8]: clean ($(census $ZT/k7_fo_col.log))" || bad "column first-order: $v"
+$Z cert $K7 --d4 --threads $TH --xlo 15 --xhi 15 --ylo 26 --yhi 27 --bins 0-0 --uncert-cap 3 > $ZT/k7_nofo_col.log 2>&1
+[ "$(verdict $ZT/k7_nofo_col.log)" = "NOT VERIFIED" ] && ok "  the same cells without --first-order: refused (the obstruction of sec 11)" || bad "  column without first-order not refused"
+# rejection: the wall-band first-order gain removed (h-lines y = 2.6..3.4 zeroed on x in [1, 1.2]): mu = 1 at
+# theta = 0 on the wall, mu < 1 for small theta > 0 against the wall
+python3 - $K7 $ZT/k7_gain.txt <<'EOF'
+import sys
+sys.path.insert(0, 'search')
+import zmx2_tools as T
+cv = T.load(sys.argv[1])
+cv['segments'] = [(a, b, c, d, 0 if (b == d and b in (13, 14, 15, 16, 17) and {a, c} == {5, 6}) else w)
+                  for (a, b, c, d, w) in cv['segments']]
+T.write(sys.argv[2], cv, comment='h-lines y = 2.6..3.4 zeroed on x in [1, 1.2]')
+EOF
+$Z cert $ZT/k7_gain.txt --full --first-order --threads $TH --xlo 5 --xhi 5 --ylo 29 --yhi 30 --bins 0-0 --uncert-cap 3 > $ZT/k7_gain.log 2>&1
+ex=$($T mu $ZT/k7_gain.txt 50001/100000 3 1/100000 | awk '{print $5}')
+[ "$(verdict $ZT/k7_gain.log)" = "NOT VERIFIED" ] && python3 -c "import sys; sys.exit(not ($ex < 1))" && ok "wall gain removed: refused with --first-order; exact mu at (0.50001, 3, u = 1e-5) = $ex" || bad "gain removed: $(verdict $ZT/k7_gain.log) $ex"
+$Z cert $ZT/k7_v8.txt --full --first-order --threads $TH --xlo 15 --xhi 15 --ylo 32 --yhi 33 --bins 0-0 --uncert-cap 3 > $ZT/k7_v8fo.log 2>&1
+[ "$(verdict $ZT/k7_v8fo.log)" = "NOT VERIFIED" ] && ok "column piece x=1.6 lowered by 1e-4: refused with --first-order" || bad "v8 first-order: accepted"
+# harness: exact mu at random poses with tiny angles (germ variables) of boxes near the germs
+NH=$([ $QUICK = 1 ] && echo 40 || echo 150)
+sd=80
+for near in 0.5,3.0,0 0.5,2.9,0 1.5,3.0,0 1.5,3.1,0 1.5,2.3,0 1.5,1.5,0 0.5,0.5,0 2.48,2.75,0; do
+  sd=$((sd+1))
+  r=$($T sound $K7 --n $NH --poses 15 --seed $sd --near $near --zflags first-order --small-u | tail -1)
+  echo "$r" | grep -q ' 0 FAIL' && ok "first-order harness near $near: $r" || bad "first-order harness near $near: $r"
+done
+r=$($T sound $ZT/k7_gain.txt --n $NH --poses 15 --seed 91 --near 0.5,3.0,0 --zflags first-order --small-u | tail -1)
+echo "$r" | grep -q ' 0 FAIL' && ok "first-order harness, gain-removed cover, near the wall: $r" || bad "harness gain: $r"
+r=$($T sound $K7 --n $N --poses 15 --seed 92 --area --zflags first-order --small-u | tail -1)
+echo "$r" | grep -q ' 0 FAIL' && ok "first-order harness, area boxes: $r" || bad "harness area fo: $r"
+r=$($T sound $K7 --n $N --poses 15 --seed 93 --refl --zflags first-order --small-u | tail -1)
+echo "$r" | grep -q ' 0 FAIL' && ok "first-order harness, generic boxes, reflected cover: $r" || bad "harness refl fo: $r"
+
 echo "== A7 covers without area densities: behaviour unchanged"
 $Z cert $C21 --d4 --threads $TH --log $ZT/s21_d4.log > /dev/null 2>&1
 python3 search/zmx2_census_cmp.py $ZT/s21_d4.log certificates/s21/zmx2_d4/roots.log > $ZT/s21_cmp.txt && ok "s(21) --d4 census = shipped zmx2_d4/roots.log root for root ($(cat $ZT/s21_cmp.txt | sed 's/.*: //'))" || bad "s(21) census differs: $(cat $ZT/s21_cmp.txt)"
