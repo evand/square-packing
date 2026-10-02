@@ -135,3 +135,16 @@ import Sqpack
 #print axioms SquarePacking.s3_ge_2_mixed
 -- s(k^2 - 3) = k for all k >= 6, from the one finite hypothesis Valid7 (Sqpack/Bentz.lean, certificates/k2m3/)
 #print axioms SquarePacking.Bentz.bentz_of_valid7
+-- attainment: s(n) is a minimum for n >= 1 (Sqpack/Attain.lean)
+#print axioms SquarePacking.packs_mono
+#print axioms SquarePacking.packs_nonempty
+#print axioms SquarePacking.one_le_of_packs
+#print axioms SquarePacking.bddBelow_packs
+#print axioms SquarePacking.minSide_le
+#print axioms SquarePacking.le_minSide_iff
+#print axioms SquarePacking.isLeast_minSide
+#print axioms SquarePacking.packs_minSide
+#print axioms SquarePacking.packs_iff_minSide_le
+#print axioms SquarePacking.minSide_eq_iff_isLeast
+#print axioms SquarePacking.s3_eq_2
+#print axioms SquarePacking.s3_isLeast

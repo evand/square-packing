@@ -1,4 +1,5 @@
 import Sqpack.M2.Cov
+import Sqpack.Attain
 
 /-!
 # `s(3) ≥ 2` from a mixed cover: the toy end-to-end run of the mixed verifier
@@ -26,5 +27,12 @@ theorem s3_ge_2 : (2 : ℝ) ≤ minSide 3 := by
   have e : ((2000 : ℕ) : ℝ) / ((1000 : ℕ) : ℝ) = 2 := by norm_num
   rw [e] at h
   exact h
+
+/-- **`s(3) = 2`**: with the 2×2 grid (`packs_grid`). -/
+theorem s3_eq_2 : minSide 3 = 2 :=
+  le_antisymm (minSide_le (by norm_num) (by simpa using packs_grid 2 3 (by norm_num))) s3_ge_2
+
+/-- The minimum is attained: `2` is the least side for 3 unit squares. -/
+theorem s3_isLeast : IsLeast {s | Packs 3 s} 2 := (minSide_eq_iff_isLeast (by norm_num)).mp s3_eq_2
 
 end SquarePacking
