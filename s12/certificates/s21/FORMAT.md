@@ -50,5 +50,5 @@ Lean for arbitrary measures: `packing_le_measure` and `not_packs_of_measure` in 
 
 * `search/mixed_cover.py`: reader and well-formedness check (`load`, `validate`, `total`), plus a float evaluator.
 * `search/zm_mixed.py`: exact checker (points, segments, polygons; `--cert-mode` refuses polygons).
-* `verify2/src/bin/zmx2.rs` (`zmx2`): independent exact checker (points and axis-parallel segments; anything
+* `verify2/src/bin/zmx2.rs` (`zmx2`): separately written exact checker, sharing no code with `zm_mixed.py` but sharing the point-test formulation of `zeromargin.py`'s write-up (points and axis-parallel segments; anything
   else is refused with `ERROR: unsupported`).

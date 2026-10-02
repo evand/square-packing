@@ -1127,7 +1127,7 @@
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s21",
-   "note": "2026-09-27; s(21) = 5: mixed cover of [0,5]^2 (7,536 weighted points + mass spread uniformly on grid-line segments), total 20.8947 < 21, certified by two independent exact checkers; Lean top theorem from the checker hypothesis; unrefereed",
+   "note": "2026-09-27; s(21) = 5: mixed cover of [0,5]^2 (7,536 weighted points + mass spread uniformly on grid-line segments), total 20.8947 < 21, certified by two separately written exact checkers (no shared code; shared point-test lineage); Lean top theorem from the checker hypothesis; unrefereed",
    "date": "2026-09-27"
   },
   "history": [
@@ -1226,7 +1226,7 @@
     "year": 2026,
     "status": "preprint",
     "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s21",
-    "note": "2026-09-27; s(21) = 5: mixed cover of [0,5]^2 (7,536 weighted points + mass spread uniformly on grid-line segments), total 20.8947 < 21, certified by two independent exact checkers; Lean top theorem from the checker hypothesis; unrefereed",
+    "note": "2026-09-27; s(21) = 5: mixed cover of [0,5]^2 (7,536 weighted points + mass spread uniformly on grid-line segments), total 20.8947 < 21, certified by two separately written exact checkers (no shared code; shared point-test lineage); Lean top theorem from the checker hypothesis; unrefereed",
     "date": "2026-09-27"
    },
    {
@@ -2387,7 +2387,7 @@
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s45",
-   "note": "2026-09-27; s(45) = 7: mixed cover of [0,7]^2 (19,989 weighted points + mass spread uniformly on grid-line segments), total 44.7735 < 45, certified by two independent exact checkers; no Lean; unrefereed",
+   "note": "2026-09-27; s(45) = 7: mixed cover of [0,7]^2 (19,989 weighted points + mass spread uniformly on grid-line segments), total 44.7735 < 45, certified by two separately written exact checkers (no shared code; shared point-test lineage); no Lean; unrefereed",
    "date": "2026-09-27"
   },
   "history": [
@@ -2437,7 +2437,7 @@
     "year": 2026,
     "status": "preprint",
     "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s45",
-    "note": "2026-09-27; s(45) = 7: mixed cover of [0,7]^2 (19,989 weighted points + mass spread uniformly on grid-line segments), total 44.7735 < 45, certified by two independent exact checkers; no Lean; unrefereed",
+    "note": "2026-09-27; s(45) = 7: mixed cover of [0,7]^2 (19,989 weighted points + mass spread uniformly on grid-line segments), total 44.7735 < 45, certified by two separately written exact checkers (no shared code; shared point-test lineage); no Lean; unrefereed",
     "date": "2026-09-27"
    },
    {
@@ -3089,7 +3089,7 @@
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s60",
-   "note": "2026-09-28; s(60) = 8: mixed cover of [0,8]^2 (23,744 weighted points + mass spread uniformly on grid-line segments), total 59.8587 < 60, certified by two independent exact checkers; no Lean; unrefereed",
+   "note": "2026-09-28; s(60) = 8: mixed cover of [0,8]^2 (23,744 weighted points + mass spread uniformly on grid-line segments), total 59.8587 < 60, certified by two separately written exact checkers (no shared code; shared point-test lineage); no Lean; unrefereed",
    "date": "2026-09-28"
   },
   "history": [
@@ -3127,7 +3127,7 @@
     "year": 2026,
     "status": "preprint",
     "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s60",
-    "note": "2026-09-28; s(60) = 8: mixed cover of [0,8]^2 (23,744 weighted points + mass spread uniformly on grid-line segments), total 59.8587 < 60, certified by two independent exact checkers; no Lean; unrefereed",
+    "note": "2026-09-28; s(60) = 8: mixed cover of [0,8]^2 (23,744 weighted points + mass spread uniformly on grid-line segments), total 59.8587 < 60, certified by two separately written exact checkers (no shared code; shared point-test lineage); no Lean; unrefereed",
     "date": "2026-09-28"
    }
   ]
