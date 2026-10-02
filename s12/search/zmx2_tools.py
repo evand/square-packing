@@ -8,7 +8,8 @@ Written independently of search/zm_mixed.py (never read).  Own parser, own exact
   admissible(cv, x, y, u)      exact admissibility of the pose (Q inside [0,s]^2)
 
 Subcommands:
-  sound FILE [--n N] [--poses P] [--seed S] [--refl] [--near X,Y,U] [--zflags f1,f2] [--area] [--small-u]
+  sound FILE [--n N] [--poses P] [--seed S] [--refl] [--near X,Y,U [--r R] [--ru RU] [--fine]] [--zflags f1,f2]
+        [--area] [--small-u]
         soundness harness: random small pose boxes (biased to germs, walls, grid lines), the
         bound printed by `zmx2 boxes`, and exact mu at P random admissible rational poses of
         each box (plus corners); FAIL if any mu < bound.
@@ -243,11 +244,12 @@ def rand_box(rng, S):
     return (Fr(i, cd), Fr(i + wx, cd), Fr(j, cd), Fr(j + wy, cd), Fr(k, ud), Fr(min(k + wu, ud // 2), ud))
 
 
-def near_box(rng, x, y, u, r=0.002, ru=0.001):
+def near_box(rng, x, y, u, r=0.002, ru=0.001, fine=False):
     """random small pose box near the pose (x, y, u): centre within r, u within ru (u >= 0), sides
-    1/(10*2^a) and 1/(8*2^b) for a in 7..16, b in 6..16 (the scale of a germ's uncertified leaves)."""
-    a = rng.randint(7, 16)
-    b = rng.randint(6, 16)
+    1/(10*2^a) and 1/(8*2^b) for a in 7..16, b in 6..16 (the scale of a germ's uncertified leaves);
+    fine: a in 12..18, b in 12..18 (the scale of the double germs, ZMX2_AREA.md sec 11.5)."""
+    a = rng.randint(12, 18) if fine else rng.randint(7, 16)
+    b = rng.randint(12, 18) if fine else rng.randint(6, 16)
     cd, ud = 10 << a, 8 << b
     cx = x + rng.uniform(-r, r)
     cy = y + rng.uniform(-r, r)
@@ -273,7 +275,8 @@ def cmd_sound(argv):
     elif near is None:
         boxes = [rand_box(rng, cv['s']) for _ in range(n)]
     else:
-        boxes = [near_box(rng, *(float(t) for t in near.split(','))) for _ in range(n)]
+        r, ru = float(opt(argv, '--r', 0.002)), float(opt(argv, '--ru', 0.001))
+        boxes = [near_box(rng, *(float(t) for t in near.split(',')), r=r, ru=ru, fine='--fine' in argv) for _ in range(n)]
     inp = '\n'.join(','.join('%d/%d' % (f.numerator, f.denominator) for f in bx) for bx in boxes) + '\n'
     zflags = ['--' + t for t in opt(argv, '--zflags', '').split(',') if t]  # e.g. pair-points,sym-atoms
     cmd = [ZMX2, 'boxes', path] + (['--refl'] if refl else []) + zflags

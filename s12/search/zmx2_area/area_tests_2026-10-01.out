@@ -1,0 +1,91 @@
+== A1 parser: axis-parallel rectangles (ccw) accepted, everything else refused
+PASS  accepts rect_ok
+PASS  accepts rect_rot
+PASS  refuses rect_cw: ERROR: unsupported: zmx2 handles polygons that are axis-parallel recta
+PASS  refuses rect_degen: ERROR: degenerate (zero-area) polygon
+PASS  refuses rect_tri: ERROR: unsupported: zmx2 handles polygons that are axis-parallel recta
+PASS  refuses rect_quad: ERROR: unsupported: zmx2 handles polygons that are axis-parallel recta
+PASS  refuses rect_big: ERROR: weight too large (limit 2^50)
+PASS  refuses rect_out: ERROR: polygon outside the container
+PASS  refuses rect_negw: ERROR: negative weight
+== A2 D4 invariance with a rectangle (exact)
+PASS  k2m3 box: D4: measure invariant under x->s-x and x<->y (exact)
+PASS  one segment of the box +1: refused under --d4
+PASS  non-symmetric rectangle refused under --d4: ERROR: --d4: cover is not D4-invariant: area densities (rectangles) not invarian
+== A3 toy: pure Lebesgue on the container (mu = 1 at every pose: zero margin everywhere)
+PASS  lebesgue s=2 cert --d4: VERIFIED-D4 (roots 400 (missing 0), boxes 400, certified 84, empty 316, uncertified 0)
+PASS  lebesgue s=2 cert0 --d4: VERIFIED-D4 (theta = 0):
+PASS  lebesgue s=2 cert --full: VERIFIED (roots 3200 (missing 0), boxes 3200, certified 672, empty 2528, uncertified 0)
+PASS  lebesgue s=2 cert0 --full: VERIFIED (theta = 0): ev
+PASS  lebesgue s=2, rho = 1 - 1e-6: refused; uncert: 5 boxes; min exact mu 0.999999000 at pass 0 (1/2, 1/2, u 0) = (0.500000, 0.500000, 0.0000 deg)
+PASS    cert0: refused (worst uncertified box 5242880/10485760,5242881/10485760,5242880/10485760,5242881/10485760:)
+PASS  lebesgue s=3 cert --d4: VERIFIED-D4 (roots 900 (missing 0), boxes 900, certified 364, empty 536, uncertified 0)
+PASS  lebesgue s=3 cert0 --d4: VERIFIED-D4 (theta = 0):
+PASS  lebesgue s=3 cert --full: VERIFIED (roots 7200 (missing 0), boxes 7200, certified 2912, empty 4288, uncertified 0)
+PASS  lebesgue s=3 cert0 --full: VERIFIED (theta = 0): ev
+PASS  lebesgue s=3, rho = 1 - 1e-6: refused; uncert: 5 boxes; min exact mu 0.999999000 at pass 0 (1/2, 1/2, u 0) = (0.500000, 0.500000, 0.0000 deg)
+PASS    cert0: refused (worst uncertified box 5242880/10485760,5242881/10485760,5242880/10485760,5242881/10485760:)
+== A4 the k2m3 box at theta = 0 (cert0, Lemma Z0): D4 region and whole square
+PASS  k2m3 box cert0 --d4: VERIFIED-D4 (theta = 0): every; done0 in 0.0s: roots 900, boxes 900, certified 900, uncertified 0, max depth 0
+PASS  k2m3 box cert0 --full: VERIFIED (theta = 0): every cl; done0 in 0.0s: roots 3600, boxes 3600, certified 3600, uncertified 0, max depth 0
+== A5 rejection: the box with a piece lowered (theta = 0 and theta > 0)
+PASS  rho - 1e-6, cert0: refused (worst uncertified box 15728640/10485760,15728641/10485760,26214382/10485760,26214383/10485760: bound)
+PASS  rho - 1e-6, cert (centres [3,3.2]^2, all angles): refused; uncert: 6 boxes; min exact mu 0.999999000 at pass 0 (3, 3, u 1/8192) = (3.000000, 3.000000, 0.0140 deg)
+PASS  wall-band piece x=0.8, y in [2.8,3.0] - 1e-4: cert0 refused at box 5242880/10485760,5242881/10485760,26208023/10485760,26208024/1048576; exact mu(1/2, 3, 0) = 0.999900000000
+PASS  piece x=1.6, y in [3.2,3.4] - 1e-4: cert0 refused (worst uncertified box 15728640/10485760,15728641/10485760,28311554/10485760,28311555/10485)
+PASS    cert --umin 10 (theta >= 0.014 deg) near (1.5, 3.3): refused; exact mu at (1.5 + th/2, 3.3 + 0.28 th, th = 0.014 deg) = 0.999939822442
+== A6 soundness harness: exact mu at random admissible rational poses >= the box bound
+PASS  theta = 0 (Lemma Z0), k2m3 box: sound0: 300 boxes, 5700 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 0
+PASS  theta = 0, weakened box: sound0: 150 boxes, 2850 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 0
+PASS  boxes at the area square's sides/corners/inside (Lemmas 1-3, K), k2m3 box: sound: 300 boxes, 6900 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 0.0022
+PASS  same, reflected cover: sound: 300 boxes, 6900 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 0.00172 (reflected cover)
+PASS  generic random boxes (germs, walls), k2m3 box: sound: 300 boxes, 4447 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 0.0046
+PASS  weakened box (rho - 1e-6), area boxes: sound: 150 boxes, 3450 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 0.00287
+PASS  tightest certified leaves (bound < 1.0005) around the area square's left side: tight: 150 leaves, 3000 admissible poses, 0 FAIL; min(mu)-bound: min 0.00783 median 0.0354; bounds in [1.000004, 1.000491]
+== A8 --first-order (Lemma U, ZMX2_AREA.md sec 11): zero-limit germs at theta -> 0+
+PASS  wall band c_x in [0.4,0.6], c_y in [2.6,3.1], theta in [0, 14.25 deg]: clean (roots 10 (missing 0), boxes 194, certified 74, empty 28, uncertified 0)
+PASS  column c_x in [1.5,1.6], c_y in [2.6,2.8]: clean (roots 2 (missing 0), boxes 674, certified 338, empty 0, uncertified 0)
+PASS    the same cells without --first-order: refused (the obstruction of sec 11)
+PASS  wall gain removed: refused with --first-order; exact mu at (0.50001, 3, u = 1e-5) = 0.999999725953
+PASS  column piece x=1.6 lowered by 1e-4: refused with --first-order
+PASS  first-order harness near 0.5,3.0,0: sound: 150 boxes, 1459 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 8.24e-05
+PASS  first-order harness near 0.5,2.9,0: sound: 150 boxes, 1380 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 8.12e-05
+PASS  first-order harness near 1.5,3.0,0: sound: 150 boxes, 3450 admissible poses checked, 0 FAIL; min(mu)-bound: min 8.11e-08, median 7.84e-05
+PASS  first-order harness near 1.5,3.1,0: sound: 150 boxes, 3450 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 8.16e-05
+PASS  first-order harness near 1.5,2.3,0: sound: 150 boxes, 3450 admissible poses checked, 0 FAIL; min(mu)-bound: min 3.39e-06, median 0.000305
+PASS  first-order harness near 1.5,1.5,0: sound: 150 boxes, 3450 admissible poses checked, 0 FAIL; min(mu)-bound: min 8.91e-06, median 0.000449
+PASS  first-order harness near 0.5,0.5,0: sound: 150 boxes, 819 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 3.02e-05
+PASS  first-order harness near 2.48,2.75,0: sound: 150 boxes, 3450 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 0
+PASS  first-order harness, gain-removed cover, near the wall: sound: 150 boxes, 1432 admissible poses checked, 0 FAIL; min(mu)-bound: min 8.47e-12, median 1.63e-08
+PASS  first-order harness, area boxes: sound: 300 boxes, 6900 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 0.00242
+PASS  first-order harness, generic boxes, reflected cover: sound: 300 boxes, 4538 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 0.00408 (reflected cover)
+== A9 double germs (Lemma V and the per-cell Lemma U, ZMX2_AREA.md sec 11.5-11.7)
+PASS  double-germ column c_x in [1.5,1.6], c_y in [1.5,3.5], theta in [0, 14.25 deg]: clean (roots 20 (missing 0), boxes 72098, certified 36059, empty 0, uncertified 0)
+PASS  R-corner germ cell (2.3, 2.3): clean (roots 1 (missing 0), boxes 337, certified 169, empty 0, uncertified 0)
+PASS    its D4 image (1.5, 5.5), both passes of --full: clean (roots 2 (missing 0), boxes 5490, certified 2746, empty 0, uncertified 0)
+PASS  fine harness near 1.5,1.5,0 : sound: 300 boxes, 6900 admissible poses checked, 0 FAIL; min(mu)-bound: min 1.53e-06, median 5.4e-05
+PASS  fine harness near 1.5,1.5,0 --refl: sound: 300 boxes, 6900 admissible poses checked, 0 FAIL; min(mu)-bound: min 1.88e-06, median 5e-05 (reflected cover)
+PASS  fine harness near 1.5,2.3,0 : sound: 300 boxes, 6900 admissible poses checked, 0 FAIL; min(mu)-bound: min 2.82e-07, median 2.17e-05
+PASS  fine harness near 1.5,2.3,0 --refl: sound: 300 boxes, 6900 admissible poses checked, 0 FAIL; min(mu)-bound: min 3.29e-07, median 2.68e-05 (reflected cover)
+PASS  fine harness near 1.5,2.5,0 : sound: 300 boxes, 6900 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 3.87e-06
+PASS  fine harness near 1.5,2.5,0 --refl: sound: 300 boxes, 6900 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 3.94e-06 (reflected cover)
+PASS  fine harness near 1.5,2.9,0 : sound: 300 boxes, 6900 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 4.86e-06
+PASS  fine harness near 1.5,2.9,0 --refl: sound: 300 boxes, 6900 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 3.56e-06 (reflected cover)
+PASS  fine harness near 1.5,3.1,0 : sound: 300 boxes, 6900 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 4.89e-06
+PASS  fine harness near 1.5,3.1,0 --refl: sound: 300 boxes, 6900 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 4.59e-06 (reflected cover)
+PASS  fine harness near 1.5,3.5,0 : sound: 300 boxes, 6900 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 2.71e-06
+PASS  fine harness near 1.5,3.5,0 --refl: sound: 300 boxes, 6900 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 3.83e-06 (reflected cover)
+PASS  fine harness near 2.3,2.3,0 : sound: 300 boxes, 6900 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 4.65e-06
+PASS  fine harness near 2.3,2.3,0 --refl: sound: 300 boxes, 6900 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 6.47e-06 (reflected cover)
+PASS  fine harness near 1.5,5.5,0 : sound: 300 boxes, 6900 admissible poses checked, 0 FAIL; min(mu)-bound: min 1.53e-06, median 5.88e-05
+PASS  fine harness near 1.5,5.5,0 --refl: sound: 300 boxes, 6900 admissible poses checked, 0 FAIL; min(mu)-bound: min 1.53e-06, median 7.5e-05 (reflected cover)
+PASS  pair-cut rejection cover: theta = 0 VERIFIED, theta >= 0.014 deg clean around the germ
+PASS    refused by --first-order at (1.5, 3.1); exact mu at (1.5000020011, 3.1000004, u = 2e-6) = 0.999990646228
+PASS    fine harness on it near (1.5, 3.1): sound: 300 boxes, 6900 admissible poses checked, 0 FAIL; min(mu)-bound: min 1.82e-08, median 9.04e-06
+PASS  R-corner rejection cover: theta = 0 VERIFIED, refused by --first-order at (2.3, 2.3); exact mu at (2.3001, 2.30008, u = 1e-4) = 0.999999001000
+PASS    fine harness on it near (2.3, 2.3): sound: 300 boxes, 6900 admissible poses checked, 0 FAIL; min(mu)-bound: min 0, median 6.23e-06
+== A7 covers without area densities: behaviour unchanged
+PASS  s(21) --d4 census = shipped zmx2_d4/roots.log root for root (2500 / 2500 roots, 0 differ)
+PASS    log header unchanged
+
+zmx2_area_tests: 80 passed, 0 failed

@@ -157,6 +157,69 @@ echo "$r" | grep -q ' 0 FAIL' && ok "first-order harness, area boxes: $r" || bad
 r=$($T sound $K7 --n $N --poses 15 --seed 93 --refl --zflags first-order --small-u | tail -1)
 echo "$r" | grep -q ' 0 FAIL' && ok "first-order harness, generic boxes, reflected cover: $r" || bad "harness refl fo: $r"
 
+echo "== A9 double germs (Lemma V and the per-cell Lemma U, ZMX2_AREA.md sec 11.5-11.7)"
+# the cells of sec 11.4 that the old first-order bound left: certified down to theta = 0
+$Z cert $K7 --d4 --first-order --threads $TH --xlo 15 --xhi 15 --ylo 15 --yhi 34 --bins 0-0 > $ZT/k7_dg_col.log 2>&1
+v=$(verdict $ZT/k7_dg_col.log)
+[ "$v" = "REGION CLEAN" ] && ok "double-germ column c_x in [1.5,1.6], c_y in [1.5,3.5], theta in [0, 14.25 deg]: clean ($(census $ZT/k7_dg_col.log))" || bad "double-germ column: $v"
+$Z cert $K7 --d4 --first-order --threads $TH --xlo 23 --xhi 23 --ylo 23 --yhi 23 --bins 0-0 > $ZT/k7_dg_23.log 2>&1
+v=$(verdict $ZT/k7_dg_23.log)
+[ "$v" = "REGION CLEAN" ] && ok "R-corner germ cell (2.3, 2.3): clean ($(census $ZT/k7_dg_23.log))" || bad "R-corner cell: $v"
+$Z cert $K7 --full --first-order --threads $TH --xlo 15 --xhi 15 --ylo 54 --yhi 54 --bins 0-0 > $ZT/k7_dg_55.log 2>&1
+v=$(verdict $ZT/k7_dg_55.log)
+[ "$v" = "REGION CLEAN" ] && ok "  its D4 image (1.5, 5.5), both passes of --full: clean ($(census $ZT/k7_dg_55.log))" || bad "(1.5, 5.5) full: $v"
+# harness: exact mu at tiny-angle poses of boxes at the double-germ scale (sides 1/(10 2^a), a = 12..18)
+NF=$([ $QUICK = 1 ] && echo 60 || echo 300)
+sd=400
+for near in 1.5,1.5,0 1.5,2.3,0 1.5,2.5,0 1.5,2.9,0 1.5,3.1,0 1.5,3.5,0 2.3,2.3,0 1.5,5.5,0; do
+  for refl in "" "--refl"; do
+    sd=$((sd+1))
+    r=$($T sound $K7 --n $NF --poses 15 --seed $sd --near $near --r 0.00003 --ru 0.00003 --fine --zflags first-order --small-u $refl | tail -1)
+    echo "$r" | grep -q ' 0 FAIL' && ok "fine harness near $near $refl: $r" || bad "fine harness near $near $refl: $r"
+  done
+done
+# rejection 1 (pair cut, Lemma V): mass moved so that mu >= 1 at theta = 0 and for theta >= theta_min near the germ,
+# but the pair y = 2.6 / 3.6 cut in the middle misses the added mass: mu < 1 for 0 < theta < ~0.003 deg at (1.5, 3.1)
+python3 - $K7 $ZT/k7_dg.txt <<'EOF'
+import sys
+sys.path.insert(0, 'search')
+import zmx2_tools as T
+cv = T.load(sys.argv[1])
+A, dl = 20000000, 10000000   # masses 2e-5 and 1e-5 (W = 1e12)
+segs = []
+for (a, b, c, d, w) in cv['segments']:
+    if b == d and b == 18 and {a, c} == {5, 6}: w += A        # y = 3.6 on x in [1.0, 1.2]
+    if b == d and b == 13 and {a, c} == {8, 9}: w += A        # y = 2.6 on x in [1.6, 1.8]
+    if a == c and a == 8 and {b, d} == {16, 17}: w -= dl      # x = 1.6 on y in [3.2, 3.4]
+    segs.append((a, b, c, d, w))
+cv['segments'] = segs
+T.write(sys.argv[2], cv, comment='double-germ rejection: +2e-5 on y=3.6 x[1,1.2] and y=2.6 x[1.6,1.8], -1e-5 on x=1.6 y[3.2,3.4]')
+EOF
+$Z cert0 $ZT/k7_dg.txt --full > $ZT/k7_dg_cert0.log 2>&1
+$Z cert $ZT/k7_dg.txt --full --umin 10 --threads $TH --xlo 14 --xhi 16 --ylo 29 --yhi 32 > $ZT/k7_dg_umin.log 2>&1
+$Z cert $ZT/k7_dg.txt --full --first-order --threads $TH --xlo 15 --xhi 15 --ylo 30 --yhi 31 --bins 0-0 --uncert-cap 3 > $ZT/k7_dg_fo.log 2>&1
+ex=$($T mu $ZT/k7_dg.txt 15000020011/10000000000 31000004/10000000 1/500000 | awk '{print $5}')
+[ "$(verdict $ZT/k7_dg_cert0.log)" = "VERIFIED" ] && [ "$(verdict $ZT/k7_dg_umin.log)" = "REGION CLEAN" ] && ok "pair-cut rejection cover: theta = 0 VERIFIED, theta >= 0.014 deg clean around the germ" || bad "pair-cut cover: $(verdict $ZT/k7_dg_cert0.log) / $(verdict $ZT/k7_dg_umin.log)"
+[ "$(verdict $ZT/k7_dg_fo.log)" = "NOT VERIFIED" ] && grep -q '^UNCERT .*x\[1.5000000,1.5000122\] y\[3.1000000' $ZT/k7_dg_fo.log && python3 -c "import sys; sys.exit(not ($ex < 1))" && ok "  refused by --first-order at (1.5, 3.1); exact mu at (1.5000020011, 3.1000004, u = 2e-6) = $ex" || bad "pair-cut cover first-order: $(verdict $ZT/k7_dg_fo.log) $ex"
+r=$($T sound $ZT/k7_dg.txt --n $NF --poses 15 --seed 431 --near 1.5,3.1,0 --r 0.00003 --ru 0.00003 --fine --zflags first-order --small-u | tail -1)
+echo "$r" | grep -q ' 0 FAIL' && ok "  fine harness on it near (1.5, 3.1): $r" || bad "  harness pair-cut cover: $r"
+# rejection 2 (R corner, Lemma K (d)): y = 1.8 zeroed on x in [1.8, 2]: a square inside R touching its left side,
+# rotated so that its lowest vertex pokes below y = 1.8 near x = 1.8, loses area with no line mass
+python3 - $K7 $ZT/k7_rc.txt <<'EOF'
+import sys
+sys.path.insert(0, 'search')
+import zmx2_tools as T
+cv = T.load(sys.argv[1])
+cv['segments'] = [(a, b, c, d, 0 if (b == d and b == 9 and {a, c} == {9, 10}) else w) for (a, b, c, d, w) in cv['segments']]
+T.write(sys.argv[2], cv, comment='R-corner rejection: y = 1.8 zeroed on x in [1.8, 2.0]')
+EOF
+$Z cert0 $ZT/k7_rc.txt --full > $ZT/k7_rc_cert0.log 2>&1
+$Z cert $ZT/k7_rc.txt --full --first-order --threads $TH --xlo 23 --xhi 23 --ylo 23 --yhi 23 --bins 0-0 --uncert-cap 3 > $ZT/k7_rc_fo.log 2>&1
+ex=$($T mu $ZT/k7_rc.txt 23001/10000 230008/100000 1/10000 | awk '{print $5}')
+[ "$(verdict $ZT/k7_rc_cert0.log)" = "VERIFIED" ] && [ "$(verdict $ZT/k7_rc_fo.log)" = "NOT VERIFIED" ] && python3 -c "import sys; sys.exit(not ($ex < 1))" && ok "R-corner rejection cover: theta = 0 VERIFIED, refused by --first-order at (2.3, 2.3); exact mu at (2.3001, 2.30008, u = 1e-4) = $ex" || bad "R-corner cover: $(verdict $ZT/k7_rc_cert0.log) / $(verdict $ZT/k7_rc_fo.log) $ex"
+r=$($T sound $ZT/k7_rc.txt --n $NF --poses 15 --seed 432 --near 2.3,2.3,0 --r 0.00003 --ru 0.00003 --fine --zflags first-order --small-u | tail -1)
+echo "$r" | grep -q ' 0 FAIL' && ok "  fine harness on it near (2.3, 2.3): $r" || bad "  harness R-corner cover: $r"
+
 echo "== A7 covers without area densities: behaviour unchanged"
 $Z cert $C21 --d4 --threads $TH --log $ZT/s21_d4.log > /dev/null 2>&1
 python3 search/zmx2_census_cmp.py $ZT/s21_d4.log certificates/s21/zmx2_d4/roots.log > $ZT/s21_cmp.txt && ok "s(21) --d4 census = shipped zmx2_d4/roots.log root for root ($(cat $ZT/s21_cmp.txt | sed 's/.*: //'))" || bad "s(21) census differs: $(cat $ZT/s21_cmp.txt)"
