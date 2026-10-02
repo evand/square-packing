@@ -151,7 +151,17 @@ all of `[0, θ₀]`.
 `f''(0) = p_x - ε < 0` whenever `ε > p_x` (e.g. `p_x = 1/4`, `ε = 1/2`).  Found by the jlevy/squares
 review `docs/project/reviews/review-2026-10-01-evand-mathematical-transfer.md`, which also gives
 the algebraic argument below (checked here by hand).  The tabulated anchors of §6 were certified by
-the exact certifier of §4, which does not use this step.
+the exact certifier of §4, which does not use this step.  **The repaired lemma is now
+kernel-checked**: `SquarePacking.anchor_lemma2` in `lean/Sqpack/AnchorLemma2.lean` (axioms
+`propext, Classical.choice, Quot.sound`) proves the "if" direction, and `anchor_lemma2_sharp` /
+`anchor_lemma2_iff` the "only if" direction and the equivalence.  The Lean statement is slightly
+stronger than the one above: only the left wall is used (`sq c θ 1 ⊆ {q | 0 ≤ q.1}` in place of
+admissibility in `[0,t]²`), the hypotheses are closed (`0 ≤ p_x < 1`, `0 ≤ ε ≤ 1 - p_x`), `p_y` is
+arbitrary, and the sharpness witness needs only the wall too.  The Lean proof uses the same
+inequalities but not the separating-axis framing: after reducing `θ` mod `90°` it exhibits the
+point `(p_x + ε, p_y + t)` of the square directly (three intervals for `t` on a line meet iff
+every lower end is below every upper end; the nine comparisons are the cases below, `(1,+)` and
+`(2,-)` being the algebraic bound, Lean lemma `key`: `a - z + εz² ≤ ρ z sqrt(1-z²)`).
 
 Since `f` decreases in `ρ`, take `ρ = ρ*`.  Put `a = p_x`, `z = cos θ ∈ [a, 1]`, `S = sqrt(1 - a²)`,
 `T = sin θ = sqrt(1 - z²)`.  Then
@@ -329,11 +339,12 @@ with a three-way case split on `hpair i j`: intersecting anchors give
 predicates (§ above) are what discharge `hin` and `hmeet` for a swept cell, exactly as `hcore` is
 discharged today.
 
-Lemma 2 (`K(p,A) ⊇ P_p`) is *not* needed for soundness and would not be formalised: it says the
-clique constraint dominates the point row, which is a statement about the strength of the
-certificate, not its validity.  Formalising it is one-parameter trigonometry, now reduced to an
-algebraic inequality in `z = cos θ` (the `(1,+)` case above; the earlier convexity argument was
-wrong), and the exact certifier of §4 is the practical substitute.
+Lemma 2 (`K(p,A) ⊇ P_p`) is *not* needed for soundness: it says the clique constraint dominates
+the point row, which is a statement about the strength of the certificate, not its validity.  It
+has nevertheless been formalised (2026-10-01, to settle the repair of the false convexity step):
+`SquarePacking.anchor_lemma2` (the "if" direction), `anchor_lemma2_sharp` and `anchor_lemma2_iff`
+in `lean/Sqpack/AnchorLemma2.lean`, kernel-checked, in the default build and in `Axioms.lean`.
+The exact certifier of §4 remains the practical tool for certifying specific anchors.
 
 ## 6. The measured facts (what the family is worth)
 
