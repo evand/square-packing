@@ -411,6 +411,17 @@ SquarePacking.Packs n s ↔ UnitSquarePacking.Packs n s` and `minSide_eq`; `lowe
 comment the `s(32)` one-liner (data `S32Z`).  All print the three standard axioms.  Attainment
 (`isLeast_minSide`, `Sqpack/Attain.lean`) transfers through `packs_iff`/`minSide_eq` unchanged.
 
+Bridge to google-deepmind/formal-conjectures (`FormalConjectures/Wikipedia/SquarePacking.lean`):
+their `Square`, `UnitSquare`, `Packing` are copied verbatim (Apache-2.0, attributed, namespace
+`FCSquarePacking`) into `Sqpack/FCSquarePacking.lean`; `Sqpack/SpecFC.lean` proves
+`packs_iff_nonempty_packing : Packs n x ↔ Nonempty (Packing n UnitSquare (Square x))` for all `n`,
+`x` (open squares placed by isometries of `EuclideanSpace ℝ (Fin 2)` in the open box), hence
+`setOf_packs_eq`, and `SpecHeadline.lean` has `s13_fc : IsLeast {x | Nonempty (Packing 13 UnitSquare
+(Square x))} 4`, their `least_…` shape.  Ingredients: Mazur–Ulam (`toRealLinearIsometryEquiv`);
+the image of the standard basis is orthonormal, so `u = (cos φ, sin φ)`, `v = ε(-sin φ, cos φ)`,
+`ε = ±1` (`exists_frame`); either way `(0,1)²` maps onto the interior of a unit square
+(`frame_image`); closure/interior between the open and closed formulations.
+
 ## Remaining gaps / next steps
 
 * No `sorry`; nothing is assumed about the tree, the generator or the decoder.

@@ -145,3 +145,8 @@ import Sqpack
 #print axioms UnitSquarePacking.isLeast_of_le_minSide
 #print axioms UnitSquarePacking.s12_lower_3920_997
 #print axioms UnitSquarePacking.s32_isLeast_of_checker
+-- bridge to google-deepmind/formal-conjectures' Packing (Sqpack/{FCSquarePacking,SpecFC}.lean)
+#print axioms UnitSquarePacking.exists_frame
+#print axioms UnitSquarePacking.frame_image
+#print axioms UnitSquarePacking.packs_iff_nonempty_packing
+#print axioms UnitSquarePacking.setOf_packs_eq
