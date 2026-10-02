@@ -135,3 +135,13 @@ import Sqpack
 #print axioms SquarePacking.s3_ge_2_mixed
 -- s(k^2 - 3) = k for all k >= 6, from the one finite hypothesis Valid7 (Sqpack/Bentz.lean, certificates/k2m3/)
 #print axioms SquarePacking.Bentz.bentz_of_valid7
+-- common specification (Sqpack/Spec.lean, namespace UnitSquarePacking) and the bridge from ours
+-- (Sqpack/SpecBridge.lean); the headline restatements are in the opt-in Sqpack/SpecHeadline.lean
+#print axioms UnitSquarePacking.unitSq_eq_setOf
+#print axioms UnitSquarePacking.interior_unitSq
+#print axioms UnitSquarePacking.packs_iff
+#print axioms UnitSquarePacking.minSide_eq
+#print axioms UnitSquarePacking.lower_of_le_minSide
+#print axioms UnitSquarePacking.isLeast_of_le_minSide
+#print axioms UnitSquarePacking.s12_lower_3920_997
+#print axioms UnitSquarePacking.s32_isLeast_of_checker

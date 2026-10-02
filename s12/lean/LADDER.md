@@ -394,6 +394,23 @@ yet).  What a hypothesis-free rung needs:
    conservative upper estimate; with ~100–200 claimed points per leaf and a few dozen segment tests,
    more likely **15–25 CPU-h** each.  Memory per part file as for s(32) (split into ~200 parts).
 
+## Common specification (`Spec.lean`, `SpecBridge.lean`, `SpecHeadline.lean`)
+
+`Sqpack/Spec.lean` (namespace `UnitSquarePacking`, imports only Mathlib, ~100 lines) is a short
+statement of the problem meant to be shared with other projects: `rot θ` (explicit, since `ℝ × ℝ`
+has the sup metric), `unitSq c θ` = image of `[-1/2,1/2]²` under `p ↦ c + rot θ p`, `container s =
+Icc 0 s ×ˢ Icc 0 s`, `Packs n s` (closed squares inside, `Pairwise` disjoint `interior`s), `minSide n =
+sInf {s | Packs n s}`; canonical result shapes: exact `IsLeast {s | Packs n s} k`, lower `∀ s, Packs n
+s → a ≤ s`, upper `Packs n b`.  Proved there: `unitSq_eq_setOf`, `interior_unitSq`.
+
+`SpecBridge.lean` (default build): `sq_one_eq`, `sqInt_one_eq`, `box_eq`, hence `packs_iff :
+SquarePacking.Packs n s ↔ UnitSquarePacking.Packs n s` and `minSide_eq`; `lower_of_le_minSide` /
+`isLeast_of_le_minSide` (`n ≥ 1`, via `csInf_le`); restated: `s12_lower_3920_997`,
+`s32_isLeast_of_checker`.  `SpecHeadline.lean` (opt-in: needs the `S11`, `S12H`, `S13` data):
+`s13 : IsLeast {s | Packs 13 s} 4`, `s12_lower` (`15680/3951`), `s11_lower` (`3040/797`), and in a
+comment the `s(32)` one-liner (data `S32Z`).  All print the three standard axioms.  Attainment
+(`isLeast_minSide`, `Sqpack/Attain.lean`) transfers through `packs_iff`/`minSide_eq` unchanged.
+
 ## Remaining gaps / next steps
 
 * No `sorry`; nothing is assumed about the tree, the generator or the decoder.

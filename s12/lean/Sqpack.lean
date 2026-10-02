@@ -24,3 +24,5 @@ import Sqpack.S12Lower
 import Sqpack.S12WLower
 import Sqpack.BentzData
 import Sqpack.Bentz
+import Sqpack.Spec
+import Sqpack.SpecBridge
