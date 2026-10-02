@@ -4,7 +4,7 @@
 square, **s(60) = 8**.  With `s(21) = 5` ([`../s21/`](../s21/README.md)), `s(32) = 6` ([`../s32/`](../s32/README.md))
 and `s(45) = 7` ([`../s45/`](../s45/README.md)) this is the fourth exact value of `s(k² − 4)` for `k ≥ 4`.  Previous
 lower bounds: `397/50 = 7.94` (wand125, 2026-09-27, rectangle-density certificate, after `3151/400`, `1581/200`,
-`791/100`, `198/25` and `793/100` from 2026-09-26 on); `1 + √47 = 7.8557` (Nagamochi 2005, a general bound).
+`791/100`, `198/25` and `793/100` from 2026-09-26 on); `1 + √47 = 7.8557` (Nagamochi 2005, a general bound; its published proof is incomplete, Karakuş, arXiv:2609.37410).
 
 **Corollary: s(61) = 8.**  Removing a square from a packing leaves a packing, so `s(61) ≥ s(60) = 8`, and the
 `8 × 8` grid holds 61.  `s(k² − 3) = k` was proved only for `k = 3, …, 7` (Bentz 2016 states that it should hold for all `k ≥ 3`; it also follows from Friedman's 1998 survey Conjecture 1 with `s(6) = 3`;
@@ -26,7 +26,7 @@ mass on the grid lines (`41.4` of the `59.86`) is what makes this possible at ma
 a grid cell gets its whole boundary's line mass, and a slightly tilted or shifted one loses part of an edge on one
 line and gains the complementary part on the parallel line one unit away.  The cover is invariant under the
 symmetries of the square, so it suffices to check squares with centre in `[0, 4]²` and angle in `[0°, 45°]`; that
-check is an exhaustive, exact subdivision of pose space by a computer, done by two independently written checkers,
+check is an exhaustive, exact subdivision of pose space by a computer, done by two separately written checkers (shared point-test lineage: below),
 and the second one also checks the whole pose space without using the symmetry.
 
 ## What is checked by what
@@ -36,7 +36,7 @@ and the second one also checks the whole pose space without using the symmetry.
 | cover ⇒ `s(60) ≥ 8` (scaling, disjointness), and the D4 reduction for measures | on paper: [`../s21/FORMAT.md`](../s21/FORMAT.md) ("Why that bounds `s(n)`").  The same statements are proved in Lean for every side `m` (`lean/Sqpack/MixedMeasure.lean`: `not_packs_of_measure`, `d4_reduction_measure_u`), but **no `s(60)` data file or top theorem exists**: nothing about *this* cover is checked in Lean | paper; generic Lean lemmas |
 | `s(60) ≤ 8` | the `8 × 8` grid | trivial |
 | every admissible closed unit square with centre in `[0,4]²`, `θ = 2 arctan u`, `u ∈ [0, ½]`, captures mass `≥ 1` | **`search/zm_mixed.py --d4 --cert-mode`**: all 102,400 root boxes certified, 0 uncertified (`zm_mixed_d4/`); the checker files are byte-identical to those of the `s(21)` and `s(45)` bundles | exact `Fraction`/integer arithmetic; the program is not formally verified |
-| the same, independently, and the whole pose space without the symmetry argument | **`verify2/src/bin/zmx2.rs` (`zmx2`, Rust)**, the binary of the `s(21)` and `s(45)` bundles (same source and binary sha256): `--d4` 6,400 / 6,400 roots (`zmx2_d4/`), and `--full` (no symmetry used) 51,200 / 51,200 roots (`zmx2_full/`); 0 uncertified | exact integers for points and masses; chord-end geometry in outward-rounded binary64 intervals (caveat below) |
+| the same, separately written (shared point-test lineage, below), and the whole pose space without the symmetry argument | **`verify2/src/bin/zmx2.rs` (`zmx2`, Rust)**, the binary of the `s(21)` and `s(45)` bundles (same source and binary sha256): `--d4` 6,400 / 6,400 roots (`zmx2_d4/`), and `--full` (no symmetry used) 51,200 / 51,200 roots (`zmx2_full/`); 0 uncertified | exact integers for points and masses; chord-end geometry in outward-rounded binary64 intervals (caveat below) |
 | total `< 60`, D4 invariance, well-formedness | `search/mixed_records.py cover` (its own parser) and `zmx2 d4` in `verify.sh`; `zm_mixed.py` and `zmx2` also check invariance before a D4 run | scripts |
 
 **Note (2026-09-30).**  `zmx2.rs` has since gained the opt-in flag `--sym-atoms` (`search/ZMX2.md` §4.9, §12; source sha256 `92a4cfe8…`, binary `ed31d3ee…`).  Without the flag its decisions are unchanged: `verify.sh` rebuilds `zmx2` from the current source and its fresh run reproduces the shipped census root for root.  The shipped `zmx2` records were made with the earlier source and binary named in their manifests.
@@ -108,7 +108,11 @@ end is a refusal, not a proof of a dip, since `zmx2` may lose up to `≈ 0.1 %`)
   for general `m`).
 * The checker programs (subdivision, bookkeeping, parsing, the interval arithmetic).  Their lemmas are proved on
   paper (`ZM_MIXED.md` §2, `ZMX2.md` §2–7), not in Lean.  The two checkers share no code: `zmx2` was written
-  from the format statement alone, with its own parser, its own lemmas and its own arithmetic.
+  without opening `zm_mixed.py` or its write-up, with its own parser, its own lemmas and its own arithmetic.
+  They are not independent in every respect: `zmx2`'s point test (Lemma P, `ZMX2.md` §2) uses the violation
+  polynomials `G0`–`G3` of `zeromargin.py`'s write-up (`RUNG2.md` §6.2), and `zm_mixed.py` tests points by calling
+  `zeromargin.py` itself, so the two share a point-test lineage and an error in that formulation would be common to
+  both.  Their treatments of the line masses were derived separately.
 * The run records: `verify.sh` re-summarises them; `--full` regenerates the `zm_mixed.py` one, and the default
   tier regenerates the `zmx2 --full` one and compares it root for root.
 

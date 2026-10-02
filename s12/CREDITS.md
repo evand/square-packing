@@ -19,7 +19,10 @@ and was developed by
 * **M. J. Kearney and P. Shiu**, *Efficient packing of unit squares in a square*,
   Electron. J. Combin. **9** (2002) #R14, https://www.combinatorics.org/ojs/index.php/eljc/article/view/v9i1r14 — the green/red duality trick;
 * **H. Nagamochi**, *Packing unit squares in a rectangle*, Electron. J. Combin. **12** (2005)
-  #R37, https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37 — weighted points, segments and areas as "resources";
+  #R37, https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37 — weighted points, segments and areas as "resources"
+  (its Lemma 1 is false, so the published proofs of its rectangle bound and consequences are incomplete: chelokot's
+  Lean counterexample, and H. Karakuş, arXiv:2609.37410, 2026, which re-proves `s(k² − 1) = k`; none of our results
+  uses that lemma);
 * **W. Bentz**, *Optimal packings of 13 and 46 unit squares in a square*, Electron. J. Combin.
   **17** (2010) #R126, https://www.combinatorics.org/ojs/index.php/eljc/article/view/v17i1r126 , and *Optimal packings of 22 and 33 unit squares in a square*,
   arXiv:1606.03746 (https://arxiv.org/abs/1606.03746) — continuously varying families of unavoidable sets.  `s(13) = 4` is what

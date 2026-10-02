@@ -115,7 +115,7 @@ section>*{min-width:0}
   <a href="../s45/"><span class="mono">s(45) = 7</span></a>, one size up again, checked by the same two exact checkers. It is
   not in Lean yet.</p>
   <div class="tags">
-    <span class="tag ok">two independent exact checkers</span>
+    <span class="tag ok">two separately written exact checkers</span>
     <span class="tag open">no Lean yet</span>
     <span class="tag open">not peer reviewed</span>
     <a class="tag neutral" href="https://github.com/evand/square-packing/tree/main/s12/certificates/s60">Certificate &amp; checkers on GitHub →</a>
@@ -144,8 +144,10 @@ section>*{min-width:0}
   <p><strong>Corollary: <span class="mono">s(61) = 8</span>.</strong> Removing a square from a packing leaves a packing, so
   <span class="mono">s(61) ≥ s(60) = 8</span>, and the 8 × 8 grid holds 61. Before this, <span class="mono">s(k² − 3) = k</span>
   was proved only up to <span class="mono">k = 7</span>; it has since been proved for every <span class="mono">k ≥ 6</span> by a
-  different cover, checked by a different program (<a href="../k2m3/">Three Short of a Square</a>). The two proofs of
-  <span class="mono">s(61) = 8</span> share nothing but the scaling argument.</p>
+  different cover, checked by a different program, <span class="mono">qx2_zm.py</span>, which reuses the piece bounds of
+  <span class="mono">zm_mixed.py</span> (<a href="../k2m3/">Three Short of a Square</a>). A third route uses points only:
+  wand125's point cover of <span class="mono">[0,8]²</span> (2026-09-30), which we replayed with our two point checkers,
+  <span class="mono">zeromargin.py</span> and <span class="mono">zmcheck</span> (<span class="mono">search/S61_WAND125_REPLAY.md</span>).</p>
   <p>With <a href="../s21/"><span class="mono">s(21) = 5</span></a>, <a href="../s32/"><span class="mono">s(32) = 6</span></a>
   and <a href="../s45/"><span class="mono">s(45) = 7</span></a> this is the fourth exact value of
   <span class="mono">s(k² − 4)</span> for <span class="mono">k ≥ 4</span>.</p>
@@ -157,7 +159,7 @@ section>*{min-width:0}
     <thead><tr><th>lower bound for s(60)</th><th>source</th></tr></thead>
     <tbody>
       <tr><td class="num">7.745967 = √60</td><td>area</td></tr>
-      <tr><td class="num">7.855655 = 1 + √47</td><td>Nagamochi 2005, a general bound</td></tr>
+      <tr><td class="num">7.855655 = 1 + √47</td><td>Nagamochi 2005, a general bound (its published proof has a gap: <a href="https://arxiv.org/abs/2609.37410">Karakuş 2026</a>)</td></tr>
       <tr><td class="num">7.94 = 397/50</td><td><a href="https://github.com/wand125/square-packing-bounds">wand125</a>, rectangle-density certificates, raised in steps from 2026-09-26 to 27 (unrefereed)</td></tr>
       <tr><td class="num"><b>8</b></td><td>this work, 2026-09-28 (unrefereed)</td></tr>
     </tbody>
@@ -236,6 +238,7 @@ section>*{min-width:0}
     rotated square in IEEE-754 double-precision interval arithmetic, rounding every operation outward. Its verdict is
     rigorous provided the processor and compiler round correctly. <span class="mono">zm_mixed.py</span> uses exact
     rationals throughout.</li>
+    <li>The two checkers share no code, but they are not independent in every respect: <span class="mono">zmx2</span>'s point test (Lemma P of <span class="mono">search/ZMX2.md</span>) uses the violation polynomials of <span class="mono">zeromargin.py</span>'s write-up, and <span class="mono">zm_mixed.py</span> tests points by calling <span class="mono">zeromargin.py</span> itself. An error in that formulation of the point test would be common to both. Their treatments of the line masses were derived separately.</li>
     <li>The 2026 lower bounds in §02 are unrefereed, like this one.</li>
   </ul>
 </section>

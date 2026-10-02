@@ -106,7 +106,7 @@ section>*{min-width:0}
   Can a cleverer arrangement, with some squares tilted, fit them into anything smaller? No. <span class="mono">s(32) = 6</span>.
   As far as we can find, this is the first exact value of <span class="mono">s(k² − 4)</span> for any <span class="mono">k ≥ 4</span>, and the first case where the plain grid is optimal with four squares missing.</p>
   <div class="tags">
-    <span class="tag ok">two independent exact checkers</span>
+    <span class="tag ok">two separately written exact checkers</span>
     <span class="tag ok">kernel-checked in Lean 4</span>
     <span class="tag open">not peer reviewed</span>
     <a class="tag neutral" href="https://github.com/evand/square-packing/tree/main/s12/certificates/s32">Certificate &amp; checkers on GitHub →</a>
@@ -132,8 +132,8 @@ section>*{min-width:0}
     in total. So there is no such packing, and <span class="mono">s(32) = 6</span>.</p>
   </div>
   <p>Everything rests on checking the property in the theorem for <em>every</em> placement of a unit square,
-  a three-parameter continuum. That check is exact and exhaustive, and it was done twice, by two checkers
-  written independently (§04). It was then done a third time inside the kernel of the Lean 4 proof assistant,
+  a three-parameter continuum. That check is exact and exhaustive, and it was done twice, by two separately
+  written checkers (§04), which share no code but share the formulation of the point test. It was then done a third time inside the kernel of the Lean 4 proof assistant,
   which proves <span class="mono">s(32) = 6</span> with no hypothesis left over (§05).</p>
 </section>
 
@@ -141,7 +141,8 @@ section>*{min-width:0}
   <div class="sechead"><span class="eyebrow">02 · Context</span><h2>Four squares short of a grid</h2></div>
   <p>Exact values of <span class="mono">s(n)</span> are rare. Just below a perfect square <span class="mono">k²</span>
   the answer is known to be <span class="mono">k</span> for <span class="mono">k² − 1</span> and
-  <span class="mono">k² − 2</span> (Nagamochi 2005), and for <span class="mono">k² − 3</span> when
+  <span class="mono">k² − 2</span> (stated by Nagamochi 2005, whose proof has a gap; re-proved by Karakuş 2026 and by chelokot
+  in Lean, see <a href="../k2m3/#k2m2">Three Short of a Square</a>), and for <span class="mono">k² − 3</span> when
   <span class="mono">3 ≤ k ≤ 7</span> (Kearney and Shiu 2002, Bentz 2010, and a 2016 preprint), and since September 2026
   for every <span class="mono">k ≥ 6</span> (<a href="../k2m3/">Three Short of a Square</a>, one exact checker). With four squares missing, the only known value
   was <span class="mono">s(5) = 2 + 1/√2</span> (Göbel 1979), where tilting beats the grid. From <span class="mono">k = 4</span> on the
@@ -153,7 +154,7 @@ section>*{min-width:0}
     <thead><tr><th>lower bound for s(32)</th><th>source</th></tr></thead>
     <tbody>
       <tr><td class="num">5.656854 = √32</td><td>area</td></tr>
-      <tr><td class="num">5.795832 = 1 + √23</td><td>Nagamochi 2005, a general bound</td></tr>
+      <tr><td class="num">5.795832 = 1 + √23</td><td>Nagamochi 2005, a general bound (its published proof has a gap: <a href="https://arxiv.org/abs/2609.37410">Karakuş 2026</a>)</td></tr>
       <tr><td class="num">5.95 = 119/20</td><td><a href="https://github.com/wand125/square-packing-bounds">wand125</a>, rectangle-density certificates, 2026-09-26 (unrefereed)</td></tr>
       <tr><td class="num"><b>6</b></td><td>this work, 2026-09-26 (unrefereed)</td></tr>
     </tbody>
@@ -265,7 +266,7 @@ $ lean/scripts/build_parts.sh S32Z Sqpack.S32Lower 4             # 13.8 CPU-hour
   <div class="sechead"><span class="eyebrow">06 · Caveats</span><h2>What to keep in mind</h2></div>
   <ul>
     <li>This is a computer-assisted proof and has not been peer reviewed. The covering property is checked by two
-    independent programs and by Lean's kernel; the Lean statement rests on the definitions of
+    separately written programs (sharing the formulation of the point test, not code) and by Lean's kernel; the Lean statement rests on the definitions of
     <span class="mono">minSide</span> and of a packing, which are short and open to inspection
     (<span class="mono">lean/Sqpack/S32.lean</span>).</li>
     <li>"First exact <span class="mono">s(k² − 4)</span> for <span class="mono">k ≥ 4</span>" rests on our literature search (journals, arXiv, the

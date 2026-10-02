@@ -114,7 +114,7 @@ section>*{min-width:0}
   that every unit square in the <span class="mono">4 × 4</span> box must catch. The same method later gave
   <a href="../s32/"><span class="mono">s(32) = 6</span></a> and <a href="../s21/"><span class="mono">s(21) = 5</span></a>.</p>
   <div class="tags">
-    <span class="tag ok">two independent exact checkers</span>
+    <span class="tag ok">two separately written exact checkers</span>
     <span class="tag ok">kernel-checked in Lean 4</span>
     <span class="tag open">not peer reviewed</span>
     <a class="tag neutral" href="https://github.com/evand/square-packing/tree/main/s12/certificates/rung2">Certificate on GitHub →</a>
@@ -141,7 +141,7 @@ section>*{min-width:0}
     closed square: a point on its edge counts.</p>
   </div>
   <p>The theorem is Bentz's; only the proof is new. Everything rests on checking the property in the box above
-  for every placement of a unit square, a three-parameter continuum. Two checkers written independently did
+  for every placement of a unit square, a three-parameter continuum. Two separately written checkers did
   that exactly (§04), and so did the kernel of the Lean 4 proof assistant, which proves
   <span class="mono">s(13) = 4</span> with no hypothesis left over (§05).</p>
 </section>
@@ -222,8 +222,8 @@ section>*{min-width:0}
       <tr><td>time</td><td class="num">1 h 42 min, 8 processes</td><td class="num">17 min, 8 threads</td></tr>
     </tbody>
   </table></div>
-  <p>The two were written from the statement, not from each other: different subdivisions, different primitives,
-  no shared code. They also agree pointwise: at four specific placements, one with a point exactly on the edge,
+  <p>The second was written from the lemmas of the first one's write-up, not from its code: different subdivisions,
+  different primitives, no shared code, but the same formulation of the point test. They also agree pointwise: at four specific placements, one with a point exactly on the edge,
   they return the same nine-digit rationals. Twenty-three rejection tests check that the Rust checker refuses
   mutated certificates, two invalid covers from our own history, and nine malformed files (on which it must give
   no verdict at all).</p>
@@ -260,7 +260,7 @@ theorem s13_eq_4 : minSide 13 = 4</code></pre>
   <div class="sechead"><span class="eyebrow">06 · Caveats</span><h2>What to keep in mind</h2></div>
   <ul>
     <li>This is a computer-assisted proof and has not been peer reviewed. The covering property is checked by two
-    independent programs and by Lean's kernel; the Lean statement rests on the definitions of
+    separately written programs and by Lean's kernel; the Lean statement rests on the definitions of
     <span class="mono">minSide</span> and of a packing, which are short and open to inspection.</li>
     <li>The theorem was known. What is new is a proof with no case analysis, and a method that carries on to other
     boxes: <a href="../s32/">side 6</a> with points only, <a href="../s21/">side 5</a> and <a href="../s45/">side 7</a>

@@ -113,7 +113,7 @@ section>*{min-width:0}
   Tilting some of them does not help. <span class="mono">s(21) = 5</span>. The proof spreads part of its weight
   continuously along the grid lines instead of putting all of it on points, and that is what closes the last 0.1%.</p>
   <div class="tags">
-    <span class="tag ok">two independent exact checkers</span>
+    <span class="tag ok">two separately written exact checkers</span>
     <span class="tag neutral">Lean 4 top theorem</span>
     <span class="tag open">not peer reviewed</span>
     <a class="tag neutral" href="https://github.com/evand/square-packing/tree/main/s12/certificates/s21">Certificate &amp; checkers on GitHub →</a>
@@ -142,7 +142,7 @@ section>*{min-width:0}
   <p>This is the second exact value of <span class="mono">s(k² − 4)</span> for <span class="mono">k ≥ 4</span>, after
   <a href="../s32/"><span class="mono">s(32) = 6</span></a>. As there, everything rests on checking the property in the
   theorem for every placement of a unit square, a three-parameter continuum. That check was done twice, by two
-  checkers written independently (§04), and Lean 4 assembles the proof (§05).</p>
+  separately written checkers that share no code but share the formulation of the point test (§04), and Lean 4 assembles the proof (§05).</p>
 </section>
 
 <section id="context">
@@ -154,7 +154,7 @@ section>*{min-width:0}
     <thead><tr><th>lower bound for s(21)</th><th>source</th></tr></thead>
     <tbody>
       <tr><td class="num">4.582576 = √21</td><td>area</td></tr>
-      <tr><td class="num">4.741657 = 1 + √14</td><td>Nagamochi 2005, a general bound</td></tr>
+      <tr><td class="num">4.741657 = 1 + √14</td><td>Nagamochi 2005, a general bound (its published proof has a gap: <a href="https://arxiv.org/abs/2609.37410">Karakuş 2026</a>)</td></tr>
       <tr><td class="num">4.7438</td><td>Friedman, <i>Packing unit squares in squares</i> (DS7 survey)</td></tr>
       <tr><td class="num">4.88 = 122/25</td><td><a href="https://github.com/jlevy/squares">jlevy/squares</a>, 2026-09-23 (unrefereed)</td></tr>
       <tr><td class="num">4.98 = 249/50, then 4.9875 = 399/80</td><td><a href="https://github.com/wand125/square-packing-bounds">wand125</a>, rectangle-density certificates, September 2026 (unrefereed)</td></tr>
@@ -251,9 +251,10 @@ section>*{min-width:0}
       <tr><td>CPU</td><td class="num">13 h (1.4 h on 10 processes)</td><td class="num">12 s; 96 s</td></tr>
     </tbody>
   </table></div>
-  <p><span class="mono">zmx2</span> was written separately, from the statement of the problem alone, without
-  seeing <span class="mono">zm_mixed.py</span> or its write-up; it has its own parser, its own proofs and its own
-  arithmetic. Both checkers certify the cover completely. With every mass scaled down by 0.6% the cover is refused by
+  <p><span class="mono">zmx2</span> was written separately, from the statement of the problem and the file format, without
+  seeing <span class="mono">zm_mixed.py</span> or its write-up; it has its own parser, its own proofs for the line masses and its own
+  arithmetic. Its point test, though, uses the violation polynomials of <span class="mono">zeromargin.py</span>'s write-up,
+  and <span class="mono">zm_mixed.py</span> tests points by calling <span class="mono">zeromargin.py</span>: the two share that lineage (§06). Both checkers certify the cover completely. With every mass scaled down by 0.6% the cover is refused by
   <span class="mono">zmx2</span> exactly at its known weakest tilted placement (centre <span class="mono">(0.574, 1.441)</span>,
   angle 9.2°, exact mass 0.99969), and <span class="mono">zm_mixed.py</span>, run around that placement, leaves it open.</p>
   <p><strong>Checking the checkers.</strong> A fresh adversarial review re-derived every lemma of
@@ -305,6 +306,7 @@ s(21) bundle: OK</code></pre>
     rigorous provided the processor and compiler round <span class="mono">+ − × ÷ √</span> correctly, which IEEE-754
     requires and Rust does not undo. <span class="mono">zm_mixed.py</span> uses exact rationals throughout, so the two
     rest on different kinds of trust.</li>
+    <li>The two checkers share no code, but they are not independent in every respect: <span class="mono">zmx2</span>'s point test (Lemma P of <span class="mono">search/ZMX2.md</span>) uses the violation polynomials of <span class="mono">zeromargin.py</span>'s write-up, and <span class="mono">zm_mixed.py</span> tests points by calling <span class="mono">zeromargin.py</span> itself. An error in that formulation of the point test would be common to both. Their treatments of the line masses were derived separately.</li>
     <li>The lower bounds in §02 from 2026 are unrefereed, like this one.</li>
     <li>Nothing here settles <span class="mono">s(12)</span> (<a href="../s12/">the s(12) write-up</a>). The same
     line-density method has since given <a href="../s45/"><span class="mono">s(45) = 7</span></a>, checked by the same two

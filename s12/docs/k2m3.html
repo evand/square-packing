@@ -126,7 +126,7 @@ section>*{min-width:0}
   that one check to every <span class="mono">k</span>.</p>
   <p class="status"><b>Status.</b> Working in public: a single-implementation exact certificate, adversarially
   reviewed by six independent agents with no errors found; the all-k reduction is kernel-checked in Lean. Not yet
-  independently re-implemented, externally reviewed, or fully formalised.</p>
+  independently re-implemented (a second implementation is in progress, §04), externally reviewed, or fully formalised.</p>
   <div class="tags">
     <span class="tag neutral">one exact checker</span>
     <span class="tag ok">all-k reduction kernel-checked in Lean</span>
@@ -167,7 +167,8 @@ section>*{min-width:0}
 
 <section id="context">
   <div class="sechead"><span class="eyebrow">02 · Context</span><h2>Three missing, one case at a time</h2></div>
-  <p>Nagamochi (2005) proved <span class="mono">s(k² − 2) = s(k² − 1) = k</span> for every <span class="mono">k</span>. With
+  <p>Nagamochi (2005) stated <span class="mono">s(k² − 2) = s(k² − 1) = k</span> for every <span class="mono">k ≥ 2</span>; his
+  published proof has a gap, and both have since been proved without it (below). With
   three squares missing the answer was known only case by case. Friedman's survey (1998) conjectured that
   <span class="mono">s(n² − k) = n</span> implies <span class="mono">s((n+1)² − k) = n + 1</span>, which together with
   <span class="mono">s(6) = 3</span> (Kearney and Shiu, 2002) would give <span class="mono">s(k² − 3) = k</span> for all
@@ -185,7 +186,8 @@ section>*{min-width:0}
       <tr><td class="num">7</td><td class="num">46</td><td>Bentz, 2010; this project, 2026-09-27, from <a href="../s45/"><span class="mono">s(45) = 7</span></a>; <b>this work</b></td></tr>
       <tr><td class="num">8</td><td class="num">61</td><td>this project, 2026-09-28, from <a href="../s60/"><span class="mono">s(60) = 8</span></a>; wand125, 2026-09-30, a point-only cover (checked here by two point checkers); <b>this work</b></td></tr>
       <tr><td class="num">≥ 9</td><td class="num">78, 97, …</td><td><b>this work</b>, 2026-09-29 (unrefereed). Before it, the best floor we have on record for
-      <span class="mono">n = 78</span> and <span class="mono">97</span> was Nagamochi's general bound <span class="mono">1 + √(k² − 2k)</span>: 8.937254 and 9.944272 (for <span class="mono">n = 78</span>, wand125 reported
+      <span class="mono">n = 78</span> and <span class="mono">97</span> was Nagamochi's general bound <span class="mono">1 + √(k² − 2k)</span>: 8.937254 and 9.944272 (its published proof has
+      the gap described below) (for <span class="mono">n = 78</span>, wand125 reported
       <span class="mono">1791/200 = 8.955</span> on 2026-09-27, not yet independently replayed)</td></tr>
     </tbody>
   </table></div>
@@ -199,10 +201,33 @@ section>*{min-width:0}
   <p>Bentz's proofs and our covers for <a href="../s45/"><span class="mono">s(45)</span></a> and
   <a href="../s60/"><span class="mono">s(60)</span></a> are one box at a time: each needs its own certificate, and the
   effort grows with the box. A proof for every <span class="mono">k</span> needs something that does not grow. Nagamochi's
-  proof for <span class="mono">k² − 2</span> is of that kind: resources along the walls and at the corners, in a fixed
+  argument for <span class="mono">k² − 2</span> is of that kind (and so is chelokot's repair of it, below): resources along the walls and at the corners, in a fixed
   pattern, saving 2 in every box. For <span class="mono">k² − 3</span> the saving must exceed 3, that is, more than ¾ per
   corner. A float linear program over patterns of this shape found about 0.945 per corner; the exact family here has
   0.847.</p>
+  <p id="k2m2"><strong>Two short: <span class="mono">s(k² − 2) = k</span> without Nagamochi's Lemma 1.</strong> Nagamochi's proof scores every
+  square against a fixed pattern of resources, and his Lemma 1 asserts that each square scores more than 1. That lemma is
+  false. chelokot gave a Lean-checked counterexample (a square of side 1.0001 in <span class="mono">[0,4]²</span> scoring 0.9775) and a
+  kernel-checked replacement proof of <span class="mono">s(k² − 2) = k</span> for every <span class="mono">k ≥ 2</span>
+  (<a href="https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-compensation-proof.md">chelokot/square-packing-archive</a>,
+  September 2026). Hakan Karakuş (<a href="https://arxiv.org/abs/2609.37410">arXiv:2609.37410</a>, 29 September 2026) gives a
+  family of counterexamples near a corner of every rectangle with sides <span class="mono">a > 3</span>, <span class="mono">b > 2</span>, and concludes that the
+  published proof of the rectangle bound is incomplete, not that the bound is false. He re-proves <span class="mono">s(k² − 1) = k</span>
+  with a weaker rectangle bound, and states that his argument does not establish <span class="mono">s(k² − 2) = k</span>.</p>
+  <p>Our certificates give a further route that uses neither Lemma 1 nor any rectangle bound. Since <span class="mono">s</span> never
+  decreases, <span class="mono">s(k² − 3) ≤ s(k² − 2) ≤ s(k² − 1) ≤ k</span>, so <span class="mono">s(k² − 3) = k</span> implies
+  <span class="mono">s(k² − 2) = k</span>. That gives:</p>
+  <ul>
+    <li><span class="mono">k ≥ 6</span> from this family. For <span class="mono">k ≥ 9</span> it is the only one of our results that applies, so there the
+    statement rests on the single-checker certificate of §04. <span class="mono">k = 6, 7, 8</span> also follow from
+    <a href="../s32/"><span class="mono">s(32) = 6</span></a> (kernel-checked in Lean with no hypothesis), <a href="../s45/"><span class="mono">s(45) = 7</span></a>
+    and <a href="../s60/"><span class="mono">s(60) = 8</span></a>;</li>
+    <li><span class="mono">k = 5</span> from <a href="../s21/"><span class="mono">s(21) = 5</span></a>, and <span class="mono">k = 4</span> from
+    <a href="../s13/"><span class="mono">s(13) = 4</span></a> (kernel-checked in Lean with no hypothesis);</li>
+    <li><span class="mono">k = 3</span>: <span class="mono">s(7) = 3</span> follows from <span class="mono">s(6) = 3</span> (Kearney and Shiu, 2002), and El Moumni (1999) proved it
+    directly; <span class="mono">k = 2</span>: <span class="mono">s(2) = 2</span> is classical (Göbel, 1979).</li>
+  </ul>
+  <p>Like the rest of this page, this is unrefereed.</p>
 </section>
 
 <section id="idea">
@@ -1525,11 +1550,15 @@ section>*{min-width:0}
   Among their findings: the tightest placement away from the known tight set, near 45°, captures
   <span class="mono">1 + 1.03·10⁻⁴</span>; an independent zero-tilt check over the whole box, with no symmetry, again gives
   exactly 1; and a cover weakened by 10⁻⁴ at a corner limit is refused where it should be.</p>
-  <p>There is no second checker. The Rust checker used for <span class="mono">s(21)</span>, <span class="mono">s(45)</span> and
-  <span class="mono">s(60)</span> does not handle area density, and the area-density square cannot be removed from this
-  family. The cases <span class="mono">k = 6, 7, 8</span> are confirmed independently of this family, by the
-  <span class="mono">s(32)</span>, <span class="mono">s(45)</span> and <span class="mono">s(60)</span> certificates, each with two checkers
-  (<span class="mono">s(32)</span> also kernel-checked in Lean with no hypothesis).</p>
+  <p>There is no second checker yet. The Rust checker <span class="mono">zmx2</span> of <span class="mono">s(21)</span>,
+  <span class="mono">s(45)</span> and <span class="mono">s(60)</span> is being extended to area density (the area-density square cannot be
+  removed from this family). As of 2026-09-30 that extension certifies the zero-tilt face, and every tilt from 0.014° up,
+  over the whole pose space with no symmetry assumed; but at tilts below 0.01°, near a few placements where a square's
+  edges meet three grid lines at once, 120 boxes of the symmetry-reduced region are still uncertified
+  (<span class="mono">search/ZMX2_AREA.md</span>). So it does not yet certify <span class="mono">Valid7</span>. The cases
+  <span class="mono">k = 6, 7, 8</span> are also settled by other covers: <span class="mono">s(32)</span> (kernel-checked in Lean with no
+  hypothesis), <span class="mono">s(45)</span> and <span class="mono">s(60)</span> (each by two separately written checkers; one of them,
+  <span class="mono">zm_mixed.py</span>, also supplies the piece bounds used here).</p>
 </section>
 
 <section id="lean">
@@ -1555,13 +1584,16 @@ section>*{min-width:0}
   <ul>
     <li>The covering property of the 7 × 7 box rests on one program, <span class="mono">search/qx2_zm.py</span>, with about 900
     lines of new code on top of the reviewed <span class="mono">zm_mixed.py</span>. It has been tested hard and reviewed, but
-    not re-implemented independently. Our other exact values each have two checkers that share no code.</li>
+    not re-implemented independently. Our other exact values each have two separately written checkers that share no code
+    (they do share the formulation of the point test, <a href="../s21/#limits">s(21) §06</a>).</li>
     <li>The reviews were done by AI agents, not by outside mathematicians. Nothing here is peer reviewed.</li>
     <li>The Lean proof is conditional on <span class="mono">Valid7</span> (§05).</li>
     <li>This family covers <span class="mono">k ≥ 6</span> only. The statement for all <span class="mono">k ≥ 3</span> also needs
     <span class="mono">k = 3, 4, 5</span>: <span class="mono">k = 4</span> and <span class="mono">k = 5</span> follow from this project's
     case-free <span class="mono">s(13) = 4</span> and <span class="mono">s(21) = 5</span> as well as from Bentz's proofs, and
     <span class="mono">k = 3</span> is Kearney and Shiu's (§02).</li>
+    <li>The consequence <span class="mono">s(k² − 2) = k</span> drawn in §02 rests, for <span class="mono">k ≥ 9</span>, on this
+    certificate alone among our results (chelokot's Lean proof is a separate route).</li>
     <li>The family was found by a float linear program, and a float program can be wrong (§04). The certificate does not rely
     on it: every acceptance is an exact rational test.</li>
   </ul>
@@ -1573,7 +1605,12 @@ section>*{min-width:0}
   of <a href="https://github.com/evand/square-packing">evand/square-packing</a>: its
   <a href="https://github.com/evand/square-packing/blob/main/s12/certificates/k2m3/README.md">README</a> says what checks
   what, and <a href="https://github.com/evand/square-packing/blob/main/s12/certificates/k2m3/verify.sh">verify.sh</a>
-  re-checks it. The 7 × 7 box file is also <a href="cover.txt">here</a>. From <span class="mono">s12/search</span>:</p>
+  re-checks it. By default it takes seconds: hashes, the cover's total and symmetry, that the family rebuilds the box
+  file, the Lean data, a re-run of the exact zero-tilt check, and the run record's structure and coverage (every root
+  covered by its recorded leaves). It does <em>not</em> recompute the mass bound at any positive-tilt leaf, so it is not a
+  fresh geometric check; <span class="mono">verify.sh --full</span> is, re-running <span class="mono">qx2_zm.py</span>
+  (about 81,000 CPU-seconds) and comparing root for root. (The <a href="../s60/#artifacts">s(60)</a> bundle's default
+  check, by contrast, includes a fresh run of its Rust checker.) The 7 × 7 box file is also <a href="cover.txt">here</a>. From <span class="mono">s12/search</span>:</p>
   <pre><code>python3 qx2_zm.py axis qx2_data/L4_k02_box7.txt           # zero tilt, seconds
 python3 qx2_family_check.py qx2_data/L4_k02_family.txt qx2_data/L4_k02_box7.txt
 python3 qx2_zm.py qx2_data/L4_k02_box7.txt --depth 18 --nproc 8 \

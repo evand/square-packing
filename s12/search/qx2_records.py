@@ -26,6 +26,10 @@ the admissibility condition; nothing is imported from the checkers.  Exact (Frac
         w(u)/2 <= cx <= m - w(u)/2 and the same for cy, with w(u) = cos theta + sin theta = (1 + 2u - u^2)/(1 + u^2);
         w increases on [0, sqrt2 - 1] and decreases after, so on a box it is decided at the end points of the bin.
       * the census totals (boxes, max depth, every leaf kind) equal the .out's, and the .out says VERIFIED-D4.
+      NOT checked: the mass inequality itself at any PIECE / EXACT / EXACT0 / EXACT45 / LEB / CAP leaf.  Those labels
+      are accepted on their intervals and the coverage above; re-proving them needs a re-run of qx2_zm.py
+      (certificates/k2m3/verify.sh --full).  So a clean record is a complete, well-formed proof skeleton, not a
+      fresh geometric check and not a second checker.
 Exit 0 iff clean.
 """
 import sys, os, json, gzip, hashlib, re

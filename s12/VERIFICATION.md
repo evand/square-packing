@@ -277,7 +277,9 @@ should fail, and watching it not fail.
 * Second cover `s32_shift_v1.txt` (31.697940): `zeromargin.py` 7,200 / 7,200 and `zmcheck --d4` with `ZM_MIXPAIR=1`
   3,600 / 3,600.
 * Lean: `s32_eq_six_of_checker : S32CheckerCover → minSide 32 = 6`, standard axioms only (`notes/lean-s32.md`);
-  `lean/scripts/gen_s32_data.py --check` ties `S32Data.lean` to the certificate byte for byte.
+  `lean/scripts/gen_s32_data.py --check` ties `S32Data.lean` to the certificate byte for byte.  Since 2026-09-28
+  the hypothesis is itself proved in the kernel (`s32_checkerCover`, `s32_eq_6 : minSide 32 = 6`,
+  `lean/Sqpack/S32Lower.lean`, opt-in; `lean/LADDER.md`), so `s(32) = 6` is a Lean theorem with no hypothesis.
 * Pre-publication review (fresh eyes, 2026-09-26): Lean statement is the standard `s(32)`, hypothesis matches the
   checker; every fast-path acceptance in `zeromargin.py` is exact; angles above 45° sound; `--selfcheck` on 10
   roots and `--ref` on 2 reproduce the shipped censuses; three D4-symmetric mutated covers refused.

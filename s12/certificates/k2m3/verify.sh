@@ -7,7 +7,9 @@
 #                                        shipped output; the shipped run V3 record re-checked from scratch
 #                                        (search/qx2_records.py: header, settings, roots, every leaf, coverage,
 #                                        census); the Lean data file BentzData.lean regenerated from the shipped
-#                                        files and compared byte for byte.
+#                                        files and compared byte for byte.  NOT done in this mode: recomputing
+#                                        any theta > 0 leaf's mass bound.  The record check is structure and
+#                                        coverage only, so this is not a fresh geometric check (--full is).
 #   certificates/k2m3/verify.sh --full   also re-runs qx2_zm.py with the run V3 settings over the whole D4 region
 #                                        (9,800 roots, ~81,000 CPU-s; about 3 h on 8 processes), re-checks the new
 #                                        record the same way and compares its census with the shipped one root for
@@ -78,4 +80,5 @@ print(f"    census and leaves identical to the shipped record for {same} / {len(
 assert same == len(b) == len(a), "the fresh run differs from the shipped record"
 EOF
 fi
-echo "s(k^2 - 3) = k bundle: OK"
+if [ "$FULL" = 1 ]; then echo "s(k^2 - 3) = k bundle: OK (full: theta > 0 re-run with qx2_zm.py)"
+else echo "s(k^2 - 3) = k bundle: OK (fast: theta = 0 re-run; theta > 0 record checked for structure and coverage, leaves NOT recomputed; use --full)"; fi

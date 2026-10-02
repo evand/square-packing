@@ -17,11 +17,15 @@ record packings (https://evand.github.io/square-packing/).
 `s(n)` is the side of the smallest square into which `n` unit squares can be packed, with
 rotations allowed.  `s(13) = 4` is proved (Bentz 2010) and Trump's 1979 packing gives
 `s(11) <= 3.877083…`, so the largest `n` with `s(n) < 4` is either 11 or 12; `s(12) = 4` is
-conjectured, and deciding it *is* the open problem.  `s(11)` itself is also open.
+conjectured, and deciding it *is* the open problem.  `s(11)` itself was settled on 2026-09-29: `s(11) = 3.877083…`,
+Trump's packing is optimal (Queuingtheorydotcom, https://github.com/Queuingtheorydotcom/11SquaresOptimal ;
+computer-assisted, unrefereed, replayed by jlevy/squares).
 
 ## Results
 
-Each is an exact certificate re-checked by `./verify.sh`; nothing here is peer reviewed.
+Each is an exact certificate with a `verify.sh`; nothing here is peer reviewed.  What the default (fast) re-check
+covers differs: for `certificates/k2m3/` it checks the run record's structure and coverage but does not recompute
+the positive-tilt leaves (`--full` does); for `certificates/{s21,s45,s60}/` it includes a fresh run of `zmx2`.
 
 * **`s(k² − 3) = k` for every `k ≥ 6`** (2026-09-29): one *fixed-profile family* of measures on the 1/5-grid, no
   points: a corner module on `[0,2]²` at each corner, a wall band of width 2 repeating with period 1, and Lebesgue
@@ -30,7 +34,9 @@ Each is an exact certificate re-checked by `./verify.sh`; nothing here is peer r
   (`search/qx2_data/L4_k02_box7.txt`: 800 segments + the Lebesgue square) gives every `k ≥ 6`; that reduction, the
   accounting and the dilation are kernel-checked in Lean (`bentz_of_valid7 : Valid7 → ∀ k ≥ 6, minSide (k² − 3) = k`,
   `lean/Sqpack/Bentz.lean`, default build).  `Valid7` is certified by Lemma Z (θ = 0) and `search/qx2_zm.py` (θ > 0,
-  9,800 D4 roots, 0 uncertified, every leaf recorded), a single implementation: *Working in public: a single-implementation
+  9,800 D4 roots, 0 uncertified, every leaf recorded), a single implementation (a second, `zmx2` with area density,
+  is partial: `search/ZMX2_AREA.md`); the bundle's fast `verify.sh` re-checks that record's structure and coverage, not
+  each leaf's mass bound: *Working in public: a single-implementation
   exact certificate, adversarially reviewed by six independent agents with no errors found; the all-k reduction is
   kernel-checked in Lean. Not yet independently re-implemented, externally reviewed, or fully formalised.*  Known before:
   `k = 3` (Kearney–Shiu 2002), `k = 4, 7` (Bentz 2010), `k = 5, 6` (Bentz, arXiv:1606.03746, preprint), `k = 8` (ours,
@@ -56,7 +62,7 @@ Each is an exact certificate re-checked by `./verify.sh`; nothing here is peer r
   [`certificates/s45/`](certificates/s45/README.md).
 * **`s(21) = 5`** (2026-09-27): one *mixed* cover of `[0,5]²`, 7,536 weighted points plus mass spread uniformly
   along 1,872 segments of the interior grid lines, total `20.894749 < 21`, certified at margin zero by two
-  independently written exact checkers (`search/zm_mixed.py` over the symmetry-reduced pose space; `zmx2`, Rust,
+  separately written exact checkers with a shared point-test lineage (`search/zm_mixed.py` over the symmetry-reduced pose space; `zmx2`, Rust,
   also over the whole pose space with no symmetry assumed); Lean proves `minSide 21 = 5` from that one
   computational hypothesis, with the reduction from measures to packings (the kernel verifier that closes this
   hypothesis for `s(13)` and `s(32)` handles points only; segments are future work).  The line densities are what close
@@ -64,8 +70,8 @@ Each is an exact certificate re-checked by `./verify.sh`; nothing here is peer r
   Previous best lower bound `5000/1001 = 4.995005` (ours, 2026-09-23; wand125 `399/80`, jlevy `122/25`).
   [`certificates/s21/`](certificates/s21/README.md).
 * **`s(32) = 6`** (2026-09-26): one weighted closed cover of `[0,6]²`, 13,085 points of total weight
-  `31.713505 < 32`, certified at margin zero over the symmetry-reduced pose space by two independently
-  written exact checkers, and kernel-checked in full in Lean with no hypothesis (`s32_eq_6`, `lean/Sqpack/S32Lower.lean`,
+  `31.713505 < 32`, certified at margin zero over the symmetry-reduced pose space by two separately
+  written exact checkers (no shared code; `zmcheck` was written from `zeromargin.py`'s lemmas), and kernel-checked in full in Lean with no hypothesis (`s32_eq_6`, `lean/Sqpack/S32Lower.lean`,
   opt-in, 13.8 CPU-h; `lean/LADDER.md`).  As far as we
   know the first exact value of `s(k² − 4)` for any `k ≥ 4` (`s(5)`, `k = 3`, is Göbel 1979).  Previous best lower bound 5.95 (wand125, 2026).
   Since re-verified by a third checker, `zmx2` (`certificates/s32/README.md`).
@@ -81,9 +87,10 @@ Each is an exact certificate re-checked by `./verify.sh`; nothing here is peer r
 * **`s(11) >= 3040/797 = 3.814304…`** (680 weighted points; kernel-checked in Lean).  Found 2026-08-26
   but first published 2026-09-22, by which time jlevy/squares had `3.8264` (2026-09-09); since
   superseded by jlevy's `3.827` and Kleddamag's `s(11) > 31/8 = 3.875`
-  (https://github.com/Kleddamag/11-squares-certified-bound).  [Section below](#a-bound-for-s11-as-well).
+  (https://github.com/Kleddamag/11-squares-certified-bound), and then by Queuingtheorydotcom's proof that
+  `s(11) = 3.877083…` (2026-09-29, https://github.com/Queuingtheorydotcom/11SquaresOptimal).  [Section below](#a-bound-for-s11-as-well).
 * **`s(13) = 4` with no case analysis**: one weighted closed cover of `[0,4]²` of total weight
-  `12.955972 < 13`, checked at margin zero by two checkers that share no code, where Bentz's 2010
+  `12.955972 < 13`, checked at margin zero by two separately written checkers that share no code, where Bentz's 2010
   proof needs a six-leaf case analysis.  Kernel-checked in Lean with no hypothesis (`s13_eq_4`,
   `lean/Sqpack/S13Lower.lean`, opt-in).  The theorem is Bentz's; the proof is new.  (Bentz's own
   argument was kernel-checked in Lean earlier, on 2026-09-05, by chelokot:
@@ -361,8 +368,9 @@ either this witness set is inside the square, or that one is".  Both checkers be
 exactly that, independently: the disjunctive primitive carries 65 % of the non-empty leaves in
 each of them.
 
-**The two checkers.**  Two exhaustive checkers, written from the statement rather than from each
-other, sharing no code, no subdivision rule and no primitive set:
+**The two checkers.**  Two exhaustive checkers, sharing no code, no subdivision rule and no primitive
+set; the second was written from the first one's lemmas (`RUNG2.md`, `ZEROMARGIN.md`), not its code, so the
+formulation of the point test is common to both:
 
 | | `search/zeromargin.py` | `verify2/zmcheck` |
 |---|---|---|
@@ -529,7 +537,11 @@ one, appears in DS7 Table 2 or on Wikipedia's *Square packing* page.
   Combin. **9** (2002), #R14.  https://www.combinatorics.org/ojs/index.php/eljc/article/view/v9i1r14
 * H. Nagamochi, *Packing unit squares in a rectangle*, Electron. J. Combin. **12** (2005),
   #R37.  https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37 — weighted
-  points, segments and areas as "resources", the closest classical precedent for weights.
+  points, segments and areas as "resources", the closest classical precedent for weights.  Its Lemma 1 is false
+  (chelokot; H. Karakuş, arXiv:2609.37410), so its published proofs of the rectangle bound, of `s(k² − 2) = k` and of
+  the general bound are incomplete; `s(k² − 1) = k` is re-proved by Karakuş, `s(k² − 2) = k` by chelokot (Lean) and,
+  for `k ≥ 4`, by our results via `s(k² − 3) ≤ s(k² − 2)` (`docs/k2m3.html`, `#k2m2`).  None of our results uses
+  Nagamochi's Lemma 1 or rectangle bound.
 * W. Bentz, *Optimal packings of 22 and 33 unit squares in a square*, arXiv:1606.03746,
   https://arxiv.org/abs/1606.03746 .
 * Wikipedia, *Square packing*, https://en.wikipedia.org/wiki/Square_packing .

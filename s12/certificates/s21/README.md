@@ -4,7 +4,7 @@
 square, **s(21) = 5**.  With `s(32) = 6` ([`../s32/`](../s32/README.md)) this is the second exact value of
 `s(k² − 4)` for `k ≥ 4`.  Previous lower bounds: `s(21) ≥ 5000/1001 = 4.995005` (this project, 2026-09-23;
 `s21_lower_4.9950.txt` here); `399/80 = 4.9875` and before it `249/50 = 4.98` (wand125, 2026); `122/25 = 4.88`
-(jlevy, 2026); `4.7438` (Friedman, DS7 survey); `1 + √14 = 4.7417` (Nagamochi 2005, a general bound).
+(jlevy, 2026); `4.7438` (Friedman, DS7 survey); `1 + √14 = 4.7417` (Nagamochi 2005, a general bound; its published proof is incomplete, Karakuş, arXiv:2609.37410).
 
 Computer-assisted, not peer reviewed.  The proof is designed to be re-checked: `./verify.sh` here.
 
@@ -21,7 +21,7 @@ possible at margin zero: a square sitting exactly on a grid cell gets its whole 
 tilted one loses part of an edge on one line and gains the complementary part on the parallel line one unit
 away, so nothing can slip between discrete points.  The cover is invariant under the symmetries of the square,
 so it suffices to check squares with centre in `[0, 5/2]²` and angle in `[0°, 45°]`; that check is an
-exhaustive, exact subdivision of pose space by a computer, done by two independently written checkers.
+exhaustive, exact subdivision of pose space by a computer, done by two separately written checkers (shared point-test lineage: below).
 
 ## What is checked by what
 
@@ -29,7 +29,7 @@ exhaustive, exact subdivision of pose space by a computer, done by two independe
 |---|---|---|
 | cover ⇒ `s(21) ≥ 5` for any measure (scaling, disjointness), `s(21) ≤ 5` (grid), D4 reduction for measures, invariance and total of *this* cover | **Lean 4 + Mathlib**, `lean/Sqpack/{MixedMeasure,SegTree,S21Data,S21}.lean`: `s21_eq_five_of_checker : S21CheckerCover → minSide 21 = 5`; standard axioms only, no `sorry`, no `native_decide` (`notes/lean-s21.md`) | kernel |
 | `S21CheckerCover`: every admissible closed unit square with centre in `[0,5/2]²`, `θ = 2 arctan u`, `u ∈ [0, ½]`, captures mass `≥ 1` | **`search/zm_mixed.py --d4 --cert-mode`**: all 40,000 root boxes certified, 0 uncertified (`zm_mixed_d4/`) | exact `Fraction`/integer arithmetic; the program is not formally verified |
-| the same, independently, and the whole pose space without the symmetry argument | **`verify2/src/bin/zmx2.rs` (`zmx2`, Rust)**, written without reading `zm_mixed.py` or its write-up: `--d4` 2,500 / 2,500 roots (`zmx2_d4/`), and `--full` (no symmetry used) 20,000 / 20,000 roots (`zmx2_full/`); 0 uncertified | exact integers for points and masses; chord-end geometry in outward-rounded binary64 intervals (caveat below) |
+| the same, separately written (shared point-test lineage, below), and the whole pose space without the symmetry argument | **`verify2/src/bin/zmx2.rs` (`zmx2`, Rust)**, written without reading `zm_mixed.py` or its write-up: `--d4` 2,500 / 2,500 roots (`zmx2_d4/`), and `--full` (no symmetry used) 20,000 / 20,000 roots (`zmx2_full/`); 0 uncertified | exact integers for points and masses; chord-end geometry in outward-rounded binary64 intervals (caveat below) |
 | that the Lean data is this file | `lean/scripts/gen_s21_data.py --check` (byte for byte), sha256 in the Lean file header | script |
 | total `< 21`, D4 invariance, well-formedness | Lean (`S21Data.total_eq`, `S21Data.d4`) and again in `verify.sh` by `search/s21_records.py cover` (its own parser) and `zmx2 d4` | kernel; scripts |
 
@@ -89,6 +89,10 @@ binary patched after the audit (`ZMX2.md` §11); root for root they have the sam
   paper (`ZM_MIXED.md` §2, `ZMX2.md` §2–7), not in Lean.  The two checkers share no code: `zmx2` was written
   from the format statement alone, with its own parser, its own lemmas (including its own
   derivation of the germ mechanism, a pair lemma for lines at distance 1) and its own arithmetic.
+  They are not independent in every respect: `zmx2`'s point test (Lemma P, `ZMX2.md` §2) uses the violation
+  polynomials `G0`–`G3` of `zeromargin.py`'s write-up (`RUNG2.md` §6.2), and `zm_mixed.py` tests points by calling
+  `zeromargin.py` itself, so the two share a point-test lineage and an error in that formulation would be common to
+  both.  Their treatments of the line masses were derived separately.
 * The run records: `verify.sh` re-summarises them; `--full` regenerates the `zm_mixed.py` one, and the default
   tier regenerates the `zmx2 --full` one and compares it root for root.
 

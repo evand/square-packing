@@ -1,8 +1,10 @@
 # s(k² − 3) = k for every k ≥ 6
 
 **Status.**  Working in public: a single-implementation exact certificate, adversarially reviewed by six independent
-agents with no errors found; the all-k reduction is kernel-checked in Lean.  Not yet independently re-implemented,
-externally reviewed, or fully formalised.
+agents with no errors found; the all-k reduction is kernel-checked in Lean, conditional on the finite statement
+`Valid7` (not proved in Lean).  Not yet independently re-implemented (a second implementation, `zmx2` with area
+density, is in progress and does not yet cover the smallest tilts: `search/ZMX2_AREA.md`), externally reviewed, or
+fully formalised.  The fast `verify.sh` does not recompute the positive-tilt part of the proof; `--full` does (below).
 
 **Claim.**  For every integer `k ≥ 6`, no `k² − 3` unit squares fit in a square of side less than `k`.  Since `k²`
 unit squares tile the `k × k` square, **`s(k² − 3) = k` for all `k ≥ 6`**: `s(33) = 6`, `s(46) = 7`, `s(61) = 8`,
@@ -22,8 +24,17 @@ Only `k = 3` is taken from the literature [Kearney–Shiu 2002].  (For `k = 2` t
 References: Kearney & Shiu, Electron. J. Combin. 9 (2002) #R14; Bentz, "Optimal packings of 13 and 46 unit squares in
 a square", Electron. J. Combin. 17 (2010) #R126; Bentz, "Optimal packings of 22 and 33 unit squares in a square",
 arXiv:1606.03746 (2016, preprint); Friedman, "Packing unit squares in squares: a survey and new results", Electron. J.
-Combin. Dynamic Survey DS7 (1998, latest 2009); Nagamochi, Electron. J. Combin. 12 (2005) #R37 (`s(k² − 2) =
-s(k² − 1) = k`).
+Combin. Dynamic Survey DS7 (1998, latest 2009); Nagamochi, Electron. J. Combin. 12 (2005) #R37 (states `s(k² − 2) =
+s(k² − 1) = k`; its Lemma 1 is false, so the published proof is incomplete: chelokot's Lean counterexample and
+replacement proof of `s(k² − 2) = k`, https://github.com/chelokot/square-packing-archive ; Karakuş, arXiv:2609.37410,
+which re-proves `s(k² − 1) = k`).
+
+**Corollary: `s(k² − 2) = k` for every `k ≥ 2`, without Nagamochi's Lemma 1.**  `s` is non-decreasing, so
+`s(k² − 3) ≤ s(k² − 2) ≤ s(k² − 1) ≤ k`.  Hence `k ≥ 6` from this family (for `k ≥ 9` resting on this single-checker
+certificate alone among our results; `k = 6, 7, 8` also from `s(32)`, `s(45)`, `s(60)`), `k = 5` from `s(21) = 5`,
+`k = 4` from `s(13) = 4`, `k = 3` from `s(6) = 3` [Kearney–Shiu 2002] (and El Moumni 1999 directly), `k = 2` from
+`s(2) = 2` [Göbel 1979].  None of these certificates uses Nagamochi's Lemma 1 or rectangle bound.  chelokot's
+kernel-checked proof is an earlier, separate route for all `k ≥ 2`.
 
 Computer-assisted, not peer reviewed.  The proof is designed to be re-checked: `./verify.sh` here.
 
@@ -58,7 +69,7 @@ arrangement as rational functions of `u = tan(θ/2)`.
 | `Valid7` at `θ = 0` | **Lemma Z** (`search/QUADRANT_EXACT.md` §4.1): `qx2_zm.py axis`, exact enumeration of the 900 one-sided limit corners over centres `[½, 7/2]²` (D4): minimum exactly 1, 188 corners exactly tight (`qx2_zm/lemmaZ.out`) | exact `Fraction` arithmetic; paper lemma |
 | `Valid7` for `θ > 0` on the D4 domain | **`qx2_zm.py` run V3** (`qx2_zm/`): 9,800 / 9,800 root boxes certified, 0 uncertified; leaves are exact primitives with paper proofs (`QUADRANT_EXACT.md` §3–4, `ZM_MIXED.md` §2) | exact `Fraction` arithmetic (floats only choose which exact test to try, and omit lines by a float distance test with ≈ 10⁻⁴ slack, below); the program is not formally verified |
 | the D4 reduction (centres in `[0, 7/2]²`, `θ ∈ [0°, 45°]` suffice) | the cover's exact D4 invariance (above); the reduction itself on paper ([`../s21/FORMAT.md`](../s21/FORMAT.md)); the SYM leaves use it for `θ > 45°` | paper |
-| the run record: settings, roots, every leaf, coverage | `search/qx2_records.py record` (below), independent of `qx2_zm.py`'s control flow | script |
+| the run record: settings, roots, every leaf, coverage | `search/qx2_records.py record` (below), independent of `qx2_zm.py`'s control flow.  It checks the record's structure and that the leaves cover every root; it does **not** recompute any leaf's mass bound | script |
 
 **`qx2_records.py record`** re-checks the V3 record from scratch: the header's sha256 are the files in
 `qx2_zm/checker/` and the box cover; the argv has the certificate settings; the roots are exactly the D4 grid
@@ -69,6 +80,14 @@ root they leave uncovered (the slabs cut away by `clip_bin`) contains no admissi
 `w(u) = cos θ + sin θ = (1 + 2u − u²)/(1 + u²)` against the centre range.  So leaves + slabs tile each root (volume
 `49/8` in total, exact).  Finally the census totals equal the `.out`.  Mutation tests (a leaf dropped, a leaf's bin
 shortened by 1/1000, a leaf relabelled EMPTY, a leaf duplicated, a region restriction in argv) are all refused.
+
+**What `qx2_records.py` does not do.**  It does not re-prove any leaf.  A `PIECE`, `EXACT`, `LEB` or `CAP` leaf is
+accepted on its label, its interval and the coverage checks above; the inequality the label stands for (mass `≥ 1` on
+that box) is not recomputed.  (EMPTY, AXIS and SYM labels are checked exactly, as above: no admissible pose; only `θ = 0`, which Lemma Z
+covers; `θ ≥ 45°`.)  So the
+fast `verify.sh` establishes that the shipped record is a complete, well-formed proof skeleton made by the shipped
+checker files, plus Lemma Z (re-run), but it is not a fresh geometric check of `θ > 0` and not a second checker.  Only
+`verify.sh --full`, which re-runs `qx2_zm.py`, recomputes the leaves; it uses the same program.
 
 ## Files
 
@@ -88,7 +107,8 @@ shortened by 1/1000, a leaf relabelled EMPTY, a leaf duplicated, a region restri
 ```
 certificates/k2m3/verify.sh          # ~3 s:  hashes; cover total and D4 invariance (own parser); family = box cover;
                                      #   Lemma Z re-run; the V3 record re-checked (settings, roots, every leaf,
-                                     #   coverage, census); Lean data regenerated and compared
+                                     #   coverage, census) -- structure only, no leaf's mass bound recomputed;
+                                     #   Lean data regenerated and compared
 certificates/k2m3/verify.sh --full   # also re-runs qx2_zm.py (the shipped checker/) with the V3 settings
                                      #   (~81,000 CPU-s; about 3 h on 8 processes) and compares root for root
 cd lean && lake build && lake env lean Axioms.lean                         # the Lean side
@@ -109,9 +129,12 @@ Proofs: `search/QUADRANT_EXACT.md` §3–4, `search/ZM_MIXED.md` §2.
 
 * `Valid7` itself.  Lean proves `Valid7 → s(k² − 3) = k` for all `k ≥ 6`; `Valid7` is the Python certificate's claim.
   The certifying programs (`qx2_zm.py`, ~1,300 lines, with the zm_mixed/zeromargin primitives it imports) are one
-  implementation; their lemmas are proved on paper, not in Lean.  There is no second, independent implementation of
-  the `θ > 0` part: the Rust checker `zmx2` of the other bundles takes no polygons, and the Lebesgue square cannot be
-  removed from this cover.
+  implementation; their lemmas are proved on paper, not in Lean.  There is no complete second, independent
+  implementation of the `θ > 0` part yet.  The Rust checker `zmx2` of the other bundles has been extended to area
+  density (`search/ZMX2_AREA.md`, 2026-09-30, written without opening `qx2_zm.py` or its write-ups): it certifies
+  `θ = 0` and every `θ ≥ 0.014°` over the whole pose space with no symmetry assumed, but at `0 < θ < 0.01°` it leaves
+  120 boxes of the D4 region (1,108 of the full space) uncertified at the double germs (ZMX2_AREA.md §11.4), so it
+  does not yet certify `Valid7`.
 * The D4 reduction to the fundamental domain and Lemma Z's reduction to finitely many corner limits (paper).
 * Floats in the checker only choose which exact test to try, with one exception (review lemmaE-code, minor):
   `lines_in_reach` omits lines from Lemma E's arrangement by a float distance test (radius `0.7072 + ½·diagonal`; a
