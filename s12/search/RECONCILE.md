@@ -238,10 +238,10 @@ so at an interior anchor point it only ever tries `eps <= 0.05`, and along a wal
 
 | measure / dual | family searched | best clique mass or `ȳ(K)` | where |
 |---|---|---|---|
-| certified `12.008230754` at `3.99` (`runs/dual_exact_3.99_support.txt`) | `CLIQUE_CONTINUUM.md` §4, "the usable number" | `1.0242` | wall distance `0.55` |
+| certified `12.008230754` at `3.99` (`search/dual_exact_3.99_support.txt`) | `CLIQUE_CONTINUUM.md` §4, "the usable number" | `1.0242` | wall distance `0.55` |
 | the same measure | `clique_family.py separate` (as shipped: `anchor_local` + the polygon greedy) | `1.098045` | `p = (2.045, 2.705)`, **wall distance `1.285`**, segment of length `0.3675`, 165 members |
 | **the same measure** | segment anchors, 24 directions, **offset cap lifted** (`search/clique_scan.py`) | **`1.220095`** | `p = (2.365, 2.765)`, **wall distance `1.225`**, `eps = 0.225`, `\|A\| = 0.588`, 163 members |
-| certified `12.028160771` at `3.99` (`runs/cqx_PURE99_support.txt`) | `separate` as shipped | `1.088559` | wall distance `1.285` |
+| certified `12.028160771` at `3.99` (`search/cqx_PURE99_support.txt`) | `separate` as shipped | `1.088559` | wall distance `1.285` |
 | the same measure | segment anchors, cap lifted | **`1.216331`** | `p = (2.765, 2.435)`, wall distance `1.225`, `eps = 0.225`, `\|A\| = 0.686`, 281 members |
 | converged dual of the `k = 4` leaf at `3.98`, mass exactly `12.000000` (`runs/branch_t398hk4_dual_it16.txt`) | `ANCHOR.md` §3 = `anchorsep.separate` (wall band, wall-perpendicular) | `1.054176` | wall distance `0.99` |
 | **the same dual, same cover-side credit rule** (`anchorclique.member`, `sigma_k`-square and hexagon at each row's own `h`) | any `p`, any direction (`reconcile.py dualsep`) | **`1.143071`** | `p = (1.22, 1.52)`, **wall distance `1.22`**, `eps = 0.225`, `\|A\| = 0.8575`; the point clique there is `ȳ(P_p) = 1.000000` exactly |

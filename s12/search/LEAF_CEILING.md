@@ -342,8 +342,8 @@ test and the maximum).  Every digit agrees:
 
 | measure | poses / squares | arrangement vertices (whole container, no D4 reduction) | mass | exact `M` | published |
 |---|---|---|---|---|---|
-| `runs/dual_exact_3.99_support.txt` | 156 / 1248 | 836,576 | `6004115377/500000000 = 12.008230754` | `7999999981/8000000000` at `~(0.989619, 0.998349)` | `DUAL_EXACT.md`: identical |
-| `runs/cqx_PURE99_support.txt` | 240 / 1920 | 2,042,328 | `12028160771/1000000000 = 12.028160771` | `3999999987/4000000000` at `~(0.999939, 0.999939)` | `CLIQUE_CONTINUUM.md` §3: identical |
+| `search/dual_exact_3.99_support.txt` | 156 / 1248 | 836,576 | `6004115377/500000000 = 12.008230754` | `7999999981/8000000000` at `~(0.989619, 0.998349)` | `DUAL_EXACT.md`: identical |
+| `search/cqx_PURE99_support.txt` | 240 / 1920 | 2,042,328 | `12028160771/1000000000 = 12.028160771` | `3999999987/4000000000` at `~(0.999939, 0.999939)` | `CLIQUE_CONTINUUM.md` §3: identical |
 
 (`dual_exact.py check` enumerates the fundamental domain and reports 104,947 and 255,893 vertices;
 eight times those, minus the vertices fixed by a symmetry, is what this run enumerates over the
