@@ -1,5 +1,24 @@
 # Literature check: s(32), the k^2 - 4 family, exact values (2026-09-26)
 
+> **Update 2026-10-01** (the body below is the 2026-09-26 snapshot; superseded statements are marked inline).
+> * Ours since: s(32) = 6 (09-26), s(21) = 5 and s(45) = 7 (09-27), s(60) = 8 and s(61) = 8 (09-28), s(k² − 3) = k
+>   for every k ≥ 6 (09-29, single-checker certificate; Lean reduction conditional on Valid7).  So the "open" bottom line
+>   below is history.
+> * **s(11) is settled**: s(11) = 3.877083…, Trump's 1979 packing is optimal (Queuingtheorydotcom,
+>   https://github.com/Queuingtheorydotcom/11SquaresOptimal , 2026-09-29, computer-assisted, unrefereed, replayed by
+>   jlevy/squares T-060).  The floor before it was Kleddamag's s(11) > 31/8 = 3.875 (2026-09-22,
+>   https://github.com/Kleddamag/11-squares-certified-bound), from jlevy's T-026; jlevy reached 3.827 and tokoharu 3.81.
+> * s(12): the prior 2026 floor was jlevy's T-017 s(12) ≥ 99/25 = 3.96 (2026-09-04, https://github.com/jlevy/squares);
+>   ours, 15680/3951 = 3.968616, is still the best we know of (now kernel-checked in Lean with no hypothesis).
+> * **Nagamochi 2005**: his Lemma 1 is false (chelokot, Lean-checked; H. Karakuş, arXiv:2609.37410, 2026-09-29, a family
+>   of counterexamples), so the published proofs of his rectangle bound, of s(k² − 1) = s(k² − 2) = k and of his general
+>   bound are incomplete (not disproved).  s(k² − 1) = k is re-proved by Karakuş; s(k² − 2) = k by chelokot (Lean,
+>   https://github.com/chelokot/square-packing-archive ) and, for k ≥ 4, by our results via s(k² − 3) ≤ s(k² − 2).
+>   The "refereed" status of the Nagamochi rows below should be read with that caveat.
+> * Other 2026 sources cited below: jlevy/squares (https://github.com/jlevy/squares), tokoharu
+>   (https://github.com/tokoharu/square-packing-density-bounds), wand125 (https://github.com/wand125/square-packing-bounds),
+>   chelokot (https://github.com/chelokot/square-packing-archive); Wolfram Bentz's s(22), s(33) is arXiv:1606.03746.
+
 Bottom line: **s(32) = 6 is open.** No proof anywhere: journals, arXiv, the record catalogue, or
 the 2026 GitHub certificate repos.  No member of `n = k^2 - 4` (k >= 4) has a known exact value
 (s(12), s(21), s(32), s(45), ...).  A proof of s(32) = 6 would be the first exact k^2 - 4 value.
@@ -18,7 +37,7 @@ certificates: s(32) >= 5.95 and s(45) >= 6.945, both posted 2026-09-25/26; detai
 | 13 (=4²-3) | 4 | Bentz, EJC 17 (2010) #R126 | refereed, but see caveat |
 | 14, 15 | 4 | Friedman DS7 (14 is n²-2, also Nagamochi) | |
 | 22, 33 (=5²-3, 6²-3) | 5, 6 | Bentz, arXiv:1606.03746 (v1 2016, PDF dated Oct 2018) | **preprint only, no journal ref**; Lean-formalized by chelokot (below) |
-| 23, 24; 34, 35; 47, 48; 62, 63; ... | k | Nagamochi, EJC 12 (2005) #R37: s(k²-1) = s(k²-2) = k for all k | refereed, but see caveat |
+| 23, 24; 34, 35; 47, 48; 62, 63; ... | k | Nagamochi, EJC 12 (2005) #R37: s(k²-1) = s(k²-2) = k for all k | refereed, but its proof has a gap (Lemma 1 false; see caveat and the 10-01 update): re-proved by Karakuş (k²-1) and chelokot (k²-2) |
 | 46 (=7²-3) | 7 | Bentz 2010 | refereed |
 
 - s(k²-3) = k: proved for k = 3..7 only (k = 3 Kearney–Shiu 2002; 4, 7 Bentz 2010; 5, 6 Bentz preprint).  Bentz 2016 says
@@ -35,7 +54,9 @@ Caveats found (not in our README):
   are *avoidable*; repaired with modified sets; theorem stands, formally checked.
   https://github.com/chelokot/square-packing-archive/blob/main/docs/bentz-13-formalization.md
 - **Nagamochi 2005 Lemma 1** is false (explicit square of side 1.0001 in [0,4]² scoring 0.9775 < 1,
-  Lean-checked); s(n²-2) = n re-proved by a replacement argument (square containers only).
+  Lean-checked); s(n²-2) = n re-proved by a replacement argument (square containers only).  Independently, H. Karakuş,
+  arXiv:2609.37410 (2026-09-29): a family of counterexamples; the rectangle bound's published proof is incomplete;
+  s(k²-1) = k re-proved by a weaker strip-measure bound; s(k²-2) = k and the general bound not established there.
   https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-score-counterexample.md
 - **Stromquist's s(11) >= 2 + 4/√5**: jlevy (T-010) reports the printed Figure 14 unavoidable set has a
   strict counterexample; bound repaired with a new point set.  https://github.com/jlevy/squares
@@ -61,7 +82,8 @@ Ellsworth's https://kingbird.myphotos.cc/packing/squares_in_squares.html .  Ther
 | 32 | 5.6415 via s(31) | **1+√23 = 5.7958** | **wand125 119/20 = 5.95** (09-26; ladder 5.82 → 5.95 over 09-25/26) | — |
 | 45 | 6.4061 via s(41) | **1+√34 = 6.8310** | **wand125 1389/200 = 6.945** (09-25/26) | — |
 
-Nagamochi: s(N) >= min(⌈√N⌉, √(N - 2⌊√N⌋ + 1) + 1); at n = k²-4 this is 1 + √((k-3)(k+1)).
+Nagamochi: s(N) >= min(⌈√N⌉, √(N - 2⌊√N⌋ + 1) + 1); at n = k²-4 this is 1 + √((k-3)(k+1)).  (Its published proof
+rests on the false Lemma 1; Karakuş 2026's replacement is the weaker s(N) >= 1/2 + √(N - ⌊√N⌋ + 1/4).)
 
 - wand125/square-packing-bounds https://github.com/wand125/square-packing-bounds — weighted point
   certificates plus "rectangle-density" certificates (tokoharu's format: D4-symmetrized uniform
@@ -100,7 +122,7 @@ arbitrarily close in principle, and are cheap — a "5.99" from them would take 
 
 - README "Credits" cites none of jlevy, tokoharu, wand125, Kleddamag, Guzhou0806, chelokot.
 - **s(11) claim is superseded**: ours 3.8143 beats tokoharu's 3.81 but is below jlevy's 3.827 and
-  Kleddamag's 3.875 (Sept 2026).  The README calls ours an improvement on Stromquist and should acknowledge these.
+  Kleddamag's 3.875 (Sept 2026), and s(11) is now settled (Queuingtheorydotcom, 2026-09-29: s(11) = 3.877083…).  The README calls ours an improvement on Stromquist and should acknowledge these.
 - s(12): "previous published bound 3.788854" is outdated — jlevy T-017 s(12) >= 99/25 = 3.96 (2026-09-04,
   unrefereed) predates our publication; ours (3.9686) is still the best.
 - s(21): status.md says "previous best 4.7438 (DS7)"; actually jlevy 4.88 (09-23) and wand125 4.98 (09-26);
