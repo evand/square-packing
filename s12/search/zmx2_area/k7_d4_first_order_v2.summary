@@ -1,0 +1,2 @@
+done in 7s wall: roots 4900 (missing 0), boxes 1158478, certified 577204, empty 4485, uncertified 0, max depth 23, cpu 53s
+VERIFIED-D4: every closed unit square in [0,s]^2 has mu >= 1 (D4-reduced sweep, all roots)

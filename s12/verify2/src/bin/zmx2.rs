@@ -1566,8 +1566,29 @@ fn coupled_side(ctx: &Ctx, fb: &FrameBox, line: Option<&Line>, pos: i64, left: b
     let hi_max_f = add_hi(fb.y1.hi, f2.hi.min(g2.hi));
     let ext_lo = add_lo(fb.y0.lo, -mh);
     let ext_hi = add_hi(fb.y1.hi, mh);
-    let ilo = (ctx.glo(lo_min_f.max(ext_lo)), ctx.ghi(lo_max_f.min(ext_hi)));
-    let ihi = (ctx.glo(hi_min_f.max(ext_lo)), ctx.ghi(hi_max_f.min(ext_hi)));
+    let mut ilo = (ctx.glo(lo_min_f.max(ext_lo)), ctx.ghi(lo_max_f.min(ext_hi)));
+    let mut ihi = (ctx.glo(hi_min_f.max(ext_lo)), ctx.ghi(hi_max_f.min(ext_hi)));
+    // Lemma K (d), exact clip of the chord ends: g1 = -dT - R/2 = -dT - 1/2 - u^2/(1-u^2) >= -1/2 when
+    // -d >= u1/(2(1-u1^2)) (as -dT >= -2du and u^2/(1-u^2) <= u u1/(1-u1^2)), so lo = c + max(f1, g1) >= c - 1/2 >=
+    // y0 - 1/2 (a grid point; at u = 0 the limit chord starts at c - 1/2); symmetrically hi <= y1 + 1/2 when
+    // d >= u1/(2(1-u1^2))
+    {
+        let u1v = Iv::exact(fb.u1.hi);
+        let thr = u1v.div_pos(Iv::exact(1.0).sub(u1v.mul(u1v)).scale(2.0)).hi; // >= u1/(2(1-u1^2))
+        let (dmin, dmax) = (Iv::rat(fb.xn[0] * dd - (pos as I) * fb.xd, den).lo, Iv::rat(fb.xn[1] * dd - (pos as I) * fb.xd, den).hi);
+        let g = ctx.g;
+        let pb = &fb.pb;
+        if dmax <= -thr {
+            let y0g = fdiv(pb.yn[0] * g, pb.cd()) - g / 2; // <= y0 - 1/2
+            ilo.0 = ilo.0.max(y0g);
+            ihi.0 = ihi.0.max(y0g);
+        }
+        if dmin >= thr {
+            let y1g = cdiv(pb.yn[1] * g, pb.cd()) + g / 2; // >= y1 + 1/2
+            ilo.1 = ilo.1.min(y1g);
+            ihi.1 = ihi.1.min(y1g);
+        }
+    }
     // the chord is non-empty at every pose of the box (Lemma K (c))
     let far0 = fb.u0zero && 2 * hn_max > den; // a theta = 0 pose with |d| > 1/2 (empty chord)
     let nonempty = lo_max_f < hi_min_f && !far0;
@@ -1853,7 +1874,11 @@ fn area_bound(ctx: &Ctx, b: &PBox, bg: &BoxGeo, have: I) -> I {
                 _ => (&fh, hl, true),
             };
             let line = lines.iter().find(|l| l.pos == pos);
-            t += coupled_side(ctx, fb, line, pos, left, ri, whi, bg);
+            let cs_v = coupled_side(ctx, fb, line, pos, left, ri, whi, bg);
+            if debug {
+                eprintln!("  coupled side rect {} side {} pos {}: {}", ri, k, pos, cs_v);
+            }
+            t += cs_v;
         }
         t += family_bound_ex(ctx, &fv, vl, &skip_v) + family_bound_ex(ctx, &fh, hl, &skip_h);
         best1 = Some(best1.map_or(t, |x| x.max(t)));
@@ -2329,6 +2354,11 @@ fn run_root(ctx: &Ctx, id: usize, root: PBox, st: &Settings) -> RootResult {
 // at theta = 0).  Every piece of mu is bounded below at P by (its theta -> 0+ value at the base) + u * (a
 // slope bound), and the infimum over the base of the sum of the base values is taken jointly (as Lemma
 // Z0).  Line pairs at germs (Lemma Z) enter through inf over zeta, with their losses paid from the slope.
+// Since 2026-10-01 (sec 11.5-11.7): everything is evaluated per cell of the base grid (rates, breakpoint
+// corrections and the pair forms uniform on the cell, so the cell bound is concave and its minimum is at the
+// cell's corners), and the poses near a germ pair can be split by its cone |eta| <= K u (Lemma V): inside, the
+// perpendicular coordinate follows c = g + kappa u from the single base g; outside, the pair is uncut and one
+// of its lines is an ordinary window line.
 
 /// smallest and largest density of line l on the open grid interval (lo, hi) (0 off the support); F on
 /// [e, e'] only depends on the density on (e, e')
@@ -2364,12 +2394,39 @@ struct ULine<'a> {
     l: &'a Line,
     lo_ok: bool,
     hi_ok: bool,
-    al: f64, // upper bound of the lo slope (per unit u, length units)
-    be: f64, // lower bound of the hi slope
+    al: f64,   // upper bound of the lo slope (per unit u, length units), path shift included
+    be: f64,   // lower bound of the hi slope, path shift included
+    al_g: f64, // the g-end parts alone (no path shift): g1 <= -1/2 + al_g u, g2 >= 1/2 + be_g u
+    be_g: f64,
 }
 
-/// the end bounds of a line at frame position `pos` over the box (frame `fb`), u in [0, u1] (Lemma U (a))
-fn u_line<'a>(ctx: &Ctx, fb: &FrameBox, l: &'a Line, sig_along: i32, u1: f64) -> ULine<'a> {
+/// the path of one centre coordinate in Lemma U: `Path(sig)`: c = b + sig (w(u) - 1)/2 with a base b
+/// (sec 11.2); `Cone`: c = g + kappa u with kappa in [k0, k1] and the single base g (the cone of a germ
+/// pair, Lemma V, sec 11.5)
+#[derive(Clone, Copy, Debug)]
+enum AxisMode {
+    Path(i32),
+    Cone { g: I, k0: f64, k1: f64 },
+}
+/// one piece of one centre axis: the path and the centre range (grid units) whose poses it covers
+#[derive(Clone, Copy, Debug)]
+struct AxisSpec {
+    mode: AxisMode,
+    cr: (I, I),
+}
+/// bounds (upper, lower) of (c - b)/u along the path of an axis, u in (0, u1]; wlo = (1-u1)/(1+u1^2) rounded down
+fn shift_rates(m: AxisMode, wlo: f64) -> (f64, f64) {
+    match m {
+        AxisMode::Path(1) => (1.0, wlo),
+        AxisMode::Path(-1) => (-wlo, -1.0),
+        AxisMode::Path(_) => (0.0, 0.0),
+        AxisMode::Cone { k0, k1, .. } => (k1, k0),
+    }
+}
+
+/// the end bounds of a line at frame position `pos` over the box (frame `fb`), u in [0, u1] (Lemma U (a));
+/// `sh` = (upper, lower) bound of the shift rate of the along coordinate (shift_rates)
+fn u_line<'a>(ctx: &Ctx, fb: &FrameBox, l: &'a Line, sh: (f64, f64), u1: f64) -> ULine<'a> {
     let dd = ctx.cv.d;
     let den = fb.xd * dd;
     let pos = l.pos;
@@ -2392,13 +2449,6 @@ fn u_line<'a>(ctx: &Ctx, fb: &FrameBox, l: &'a Line, sig_along: i32, u1: f64) ->
     // g1 = -dT - R/2 <= -1/2 + al_g u ;  g2 = -dT + R/2 >= 1/2 + be_g u   (T in [2u, 2u/(1-u1^2)], R >= 1)
     let al_g = if dmin >= 0.0 { Iv::exact(dmin).scale(-2.0).hi } else { Iv::exact(-dmin).scale(2.0).div_pos(one_m).hi };
     let be_g = if dmax <= 0.0 { Iv::exact(-dmax).scale(2.0).lo } else { Iv::exact(dmax).scale(-2.0).div_pos(one_m).lo };
-    // the along-coordinate path: c_along = b + sig (w(u) - 1)/2, (w - 1)/2 in [u (1-u1)/(1+u1^2), u]
-    let wlo = Iv::exact(1.0).sub(u1i).div_pos(Iv::exact(1.0).add(u1i.mul(u1i))).lo;
-    let (sig_lo, sig_hi) = match sig_along {
-        1 => (1.0, wlo),
-        -1 => (-wlo, -1.0),
-        _ => (0.0, 0.0),
-    };
     // domination of the f-ends (Lemma C): lo = c + max(f1, g1) <= c + g1-bound if f1 <= -1/2 + min(0, al_g u1)
     let lo_dom = f1.hi <= Iv::exact(-0.5).add(Iv::exact(al_g.min(0.0)).mul(u1i)).lo;
     let hi_dom = f2.lo >= Iv::exact(0.5).add(Iv::exact(be_g.max(0.0)).mul(u1i)).hi;
@@ -2421,7 +2471,7 @@ fn u_line<'a>(ctx: &Ctx, fb: &FrameBox, l: &'a Line, sig_along: i32, u1: f64) ->
     } else {
         (false, be_g)
     };
-    ULine { l, lo_ok, hi_ok, al: Iv::exact(al).add(Iv::exact(sig_lo)).hi, be: Iv::exact(be).add(Iv::exact(sig_hi)).lo }
+    ULine { l, lo_ok, hi_ok, al: Iv::exact(al).add(Iv::exact(sh.0)).hi, be: Iv::exact(be).add(Iv::exact(sh.1)).lo, al_g, be_g }
 }
 
 /// densities left and right of the breakpoints of l strictly inside (lo, hi): Some((p, rho_left, rho_right))
@@ -2443,175 +2493,220 @@ fn one_bp(l: &Line, lo: I, hi: I) -> Result<Option<(I, I, I)>, ()> {
     Ok(found)
 }
 
-/// Lemma U (b): F(b + 1/2 + be u) - F(b - 1/2 + al u) >= W(b) + u s - corr(b) for b in [blo, bhi], u in [0, u1]:
-/// s from the densities on the swept ranges (bound units per unit u, rounded down); for an end that moves the
-/// adverse way across one breakpoint p, the density beyond p is used in s and the excess of the density before p
-/// enters corr(b) = (rho_before - rho_beyond)+ min(dist(end(b), p)+, dmax) (Lemma U (b'), returned as terms)
-fn u_slope<'a>(ctx: &Ctx, l: &'a Line, blo: I, bhi: I, al: f64, be: f64, u1: f64, use_corr: bool) -> (f64, Vec<UTerm<'a>>) {
+/// the sweep of an end moving at rate k for u <= u1, in grid units, rounded up: >= |k| u1 G
+fn sweep(ctx: &Ctx, k: f64, u1: f64) -> I {
+    ctx.ghi((k.abs() * u1 * 1.0000001).max(0.0)) + 1
+}
+
+/// Lemma U (b) for one end (sec 11.2, 11.6): the end e = b + off (b in [c0, c1], grid) moves to e + k u, u in
+/// [0, u1].  hi = true (the hi end of a chord): F(e + k u) - F(e) >= k rho u G - corr(b);  hi = false (a lo end):
+/// F(e + k u) - F(e) <= k rho u G + corr(b), with corr(b) >= 0 returned as a `Corr` term (its negative).  rho is the
+/// smallest (gain) or largest (loss) density on the swept range; with `use_corr`, an end that moves the adverse
+/// way across exactly one breakpoint p uses the density beyond p and corr(b) = (excess)+ min(dist(e, p)+, dmax).
+fn end_rate<'a>(ctx: &Ctx, l: &Line, c0: I, c1: I, off: I, k: f64, u1: f64, hi: bool, use_corr: bool) -> (I, Option<UTerm<'a>>) {
+    let sw = sweep(ctx, k, u1);
+    let (e0, e1) = (c0 + off, c1 + off);
+    let gain = if hi { k >= 0.0 } else { k <= 0.0 };
+    if gain {
+        let (lo, hi_) = if k >= 0.0 { (e0, e1 + sw) } else { (e0 - sw, e1) };
+        return (dens_range(l, lo, hi_).0, None);
+    }
+    let (lo, hi_) = if k >= 0.0 { (e0, e1 + sw) } else { (e0 - sw, e1) };
+    if use_corr {
+        if let Ok(Some((p, rl, rr))) = one_bp(l, lo, hi_) {
+            return if k < 0.0 {
+                // moving left from the right piece (rr) into the left one (rl):
+                // int_{e - d}^{e} rho <= rl d + (rr - rl)+ min((e - p)+, d);  (e - p)+ = (b - (p - off))+
+                (rl, if rr > rl { Some(UTerm::Corr { coef: rr - rl, pb: p - off, sg: -1, dmax: sw }) } else { None })
+            } else {
+                // moving right from rl into rr: int_e^{e + d} rho <= rr d + (rl - rr)+ min((p - e)+, d)
+                (rr, if rl > rr { Some(UTerm::Corr { coef: rl - rr, pb: p - off, sg: 1, dmax: sw }) } else { None })
+            };
+        }
+    }
+    (dens_range(l, lo, hi_).1, None)
+}
+
+/// k rho G * u1 rounded down (bound units), k rho G = the rate of an end per unit u
+fn rate_u1(k: f64, rho: I, gf: f64, u1: f64) -> f64 {
+    Iv::exact(k).mul(Iv::exact(rho as f64)).mul(Iv::exact(gf)).mul(Iv::exact(u1)).lo
+}
+
+/// Lemma U (b) on a base cell [c0, c1]: the window F(b + 1/2 + be u) - F(b - 1/2 + al u) >= W(b) + u s - corr(b):
+/// returns s * u1 (bound units, rounded down) and the correction terms
+fn u_slope<'a>(ctx: &Ctx, l: &Line, c0: I, c1: I, al: f64, be: f64, u1: f64, use_corr: bool) -> (f64, Vec<UTerm<'a>>) {
     let half = ctx.g / 2;
-    let gf = ctx.gf;
-    let sw = |k: f64| -> I { ctx.ghi((k.abs() * u1 * 1.0000001).max(0.0)) + 1 };
-    let mut corr: Vec<UTerm> = Vec::new();
-    // hi end e = b + 1/2 moving by be u
-    let rho_hi = if be >= 0.0 {
-        dens_range(l, blo + half, bhi + half + sw(be)).0
-    } else {
-        let (lo, hi) = (blo + half - sw(be), bhi + half);
-        match if use_corr { one_bp(l, lo, hi) } else { Err(()) } {
-            Ok(None) => dens_range(l, lo, hi).1,
-            Ok(Some((p, rl, rr))) => {
-                // moving left from the right piece (rr) into the left one (rl): loss <= rl |d| + (rr - rl)+ min((e - p)+, dmax)
-                if rr > rl {
-                    corr.push(UTerm::Corr { coef: rr - rl, pb: p - half, sg: -1, dmax: sw(be) });
-                }
-                rl
-            }
-            Err(()) => dens_range(l, lo, hi).1,
-        }
-    };
-    let mut s = Iv::exact(be).mul(Iv::exact(rho_hi as f64)).mul(Iv::exact(gf)).lo;
-    // lo end e = b - 1/2 moving by al u
-    let rho_lo = if al <= 0.0 {
-        dens_range(l, blo - half - sw(al), bhi - half).0
-    } else {
-        let (lo, hi) = (blo - half, bhi - half + sw(al));
-        match if use_corr { one_bp(l, lo, hi) } else { Err(()) } {
-            Ok(None) => dens_range(l, lo, hi).1,
-            Ok(Some((p, rl, rr))) => {
-                // moving right from rl into rr: loss <= rr d + (rl - rr)+ min((p - e)+, dmax)
-                if rl > rr {
-                    corr.push(UTerm::Corr { coef: rl - rr, pb: p + half, sg: 1, dmax: sw(al) });
-                }
-                rr
-            }
-            Err(()) => dens_range(l, lo, hi).1,
-        }
-    };
-    s = Iv::exact(s).sub(Iv::exact(al).mul(Iv::exact(rho_lo as f64)).mul(Iv::exact(gf))).lo;
-    (s, corr)
+    let (rh, ch) = end_rate(ctx, l, c0, c1, half, be, u1, true, use_corr);
+    let (rl, cl) = end_rate(ctx, l, c0, c1, -half, al, u1, false, use_corr);
+    // (the lo-end term enters with a minus sign: rate_u1(-al, rl) <= -(al rl G u1), as rate_u1 rounds down)
+    let s = Iv::exact(rate_u1(be, rh, ctx.gf, u1)).add(Iv::exact(rate_u1(-al, rl, ctx.gf, u1))).lo;
+    (s, ch.into_iter().chain(cl).collect())
 }
 
-/// Lemma U (c): inf over zeta of ka A(zeta) + kb B(zeta), A = [Fa(ha) - Fa(max(zeta, la))]+,
-/// B = [Fb(min(zeta, hb)) - Fb(lb)]+ (grid units); exact when ka, kb are 0 or 1, else rounded down
-fn u_pair_inf(la_: &Line, ha: I, la: I, lb_: &Line, hb: I, lb: I, ka: f64, kb: f64) -> I {
-    let at = |z: I| -> I { if ha > la.max(z) { fval(la_, ha) - fval(la_, la.max(z)) } else { 0 } };
-    let bt = |z: I| -> I { if hb.min(z) > lb { fval(lb_, hb.min(z)) - fval(lb_, lb) } else { 0 } };
-    let mut cands: Vec<I> = vec![la, ha, lb, hb];
-    for &bp in &la_.bps {
-        let y = (bp as I) << K;
-        if y > la && y < ha {
-            cands.push(y);
-        }
-    }
-    for &bp in &lb_.bps {
-        let y = (bp as I) << K;
-        if y > lb && y < hb {
-            cands.push(y);
-        }
-    }
-    // zeta -> -inf: A full, B = 0; zeta -> +inf: A = 0, B full (both are attained at candidates below/above)
-    let lo_all = *cands.iter().min().unwrap() - 1;
-    let hi_all = *cands.iter().max().unwrap() + 1;
-    cands.push(lo_all);
-    cands.push(hi_all);
-    let exact = (ka == 0.0 || ka == 1.0) && (kb == 0.0 || kb == 1.0);
-    let mut best: Option<I> = None;
-    for &z in &cands {
-        let (a, b) = (at(z), bt(z));
-        let v = if exact {
-            (if ka == 1.0 { a } else { 0 }) + (if kb == 1.0 { b } else { 0 })
-        } else {
-            let fa = dn(dn(a as f64) * ka);
-            let fb = dn(dn(b as f64) * kb);
-            dn(fa + fb).floor().max(0.0) as I
-        };
-        best = Some(best.map_or(v, |x| x.min(v)));
-    }
-    best.unwrap()
+/// the sweep (grid units) of the zeta-dependent ends of a germ pair: a's lo end (rate al_a+) and b's hi end (rate
+/// min(1, be_b))
+fn pair_sweep(ctx: &Ctx, sl: (f64, f64, f64, f64), u1: f64) -> I {
+    sweep(ctx, sl.0.max(0.0), u1).max(sweep(ctx, sl.3.min(1.0), u1))
 }
 
-/// Lemma U (c'): for a germ pair at base b (along coordinate, grid) and u = u1, a lower bound of
-/// inf over zeta of [a-term(u1) + b-term(u1)] of the form inf_zeta [Psi0(zeta) + u1 r(zeta)] (rounded down):
-/// for every zeta each term at u is >= (its value at u = 0) + u (its end rates) when that value is > 0, and
-/// >= 0 always; the rates: a's hi end Ha + be_a u, a's lo end max(zeta, La + al_a u) <= max(zeta, La) + al_a+ u,
-/// b's hi end min(zeta + u, Hb + be_b u) >= min(zeta, Hb) + min(1, be_b) u, b's lo end Lb + al_b u.  Densities
-/// over the ranges these ends can sweep for every base in [blo, bhi] and every zeta of the cell.  For fixed zeta
-/// the bound is affine in u, so the inf over zeta is concave in u (Lemma U (f)).  Also returns an upper bound of
-/// the positive rates (for phi).
-fn u_pair_q(ctx: &Ctx, a: &Line, bl: &Line, b: I, blo: I, bhi: I, sl: (f64, f64, f64, f64), u1: f64) -> (I, f64) {
+/// Lemma U (c), per base cell (sec 11.2 (c), 11.6): a germ pair, a at l with its lo end cut by zeta, b at
+/// l + 1 with its hi end cut by zeta + u; base along-coordinate b in the cell [c0, c1] (grid), H = b + 1/2,
+/// L = b - 1/2.  For every zeta: a-term(u) >= max(0, X_a + u r_a), b-term(u) >= max(0, X_b + u r_b) with
+/// X_a = F_a(H) - F_a(max(zeta, L)), X_b = F_b(min(zeta, H)) - F_b(L).  The zeta-axis is cut at the candidates
+/// (b +- 1/2 and the breakpoints of both lines), whose order is the same at every b inside the cell; on each
+/// zeta-cell the rates r and the choice affine/0 of each term are fixed for the whole base cell, so the bound
+/// at each zeta-cell end is jointly affine in (b, u), and their minimum Pi(b, u) is jointly concave.  Returns
+/// Pi at (c0, 0), (c1, 0), (c0, u1), (c1, u1) (without the end corrections) and the correction terms of the
+/// two base-anchored ends (a's hi end, b's lo end).
+fn u_pair_cell<'a>(ctx: &Ctx, a: &Line, bl: &Line, c0: I, c1: I, sl: (f64, f64, f64, f64), u1: f64, use_corr: bool) -> ([I; 2], [I; 2], Vec<UTerm<'a>>) {
     let half = ctx.g / 2;
     let gf = ctx.gf;
     let (al_a, be_a, al_b, be_b) = sl;
-    let sw = |k: f64| -> I { ctx.ghi((k.abs() * u1 * 1.0000001).max(0.0)) + 1 };
-    let (ha, la, hb, lb) = (b + half, b - half, b + half, b - half);
-    let xa = |z: I| -> I { if ha > la.max(z) { fval(a, ha) - fval(a, la.max(z)) } else { 0 } };
-    let xb = |z: I| -> I { if hb.min(z) > lb { fval(bl, hb.min(z)) - fval(bl, lb) } else { 0 } };
-    // rates that do not depend on zeta (ends at the base, pessimised over the base range)
-    let ra_hi = if be_a >= 0.0 {
-        be_a * dens_range(a, blo + half, bhi + half + sw(be_a)).0 as f64
-    } else {
-        be_a * dens_range(a, blo + half - sw(be_a), bhi + half).1 as f64
+    let mut corr: Vec<UTerm> = Vec::new();
+    let (rha, ca) = end_rate(ctx, a, c0, c1, half, be_a, u1, true, use_corr);
+    let (rlb, cb) = end_rate(ctx, bl, c0, c1, -half, al_b, u1, false, use_corr);
+    corr.extend(ca);
+    corr.extend(cb);
+    let ra_hi = rate_u1(be_a, rha, gf, u1);
+    let rb_lo = rate_u1(-al_b, rlb, gf, u1);
+    // candidates: C(y) a constant, R(o) the moving point b + o
+    #[derive(Clone, Copy, PartialEq, Eq)]
+    enum Zc {
+        C(I),
+        R(I),
+    }
+    let at = |z: Zc, b: I| -> I {
+        match z {
+            Zc::C(y) => y,
+            Zc::R(o) => b + o,
+        }
     };
-    let rb_lo = if al_b > 0.0 { -al_b * dens_range(bl, blo - half, bhi - half + sw(al_b)).1 as f64 } else { 0.0 };
-    let kb = be_b.min(1.0);
-    let mut cands: Vec<I> = vec![la, ha, lb, hb];
+    // (the breakpoints and their translates by -+ the sweep of the zeta-dependent ends, so that a zeta-cell's
+    // swept range crosses no breakpoint it does not need to; the base grid has every candidate -+ 1/2)
+    let psw = pair_sweep(ctx, sl, u1);
+    let mut zs: Vec<Zc> = vec![Zc::R(-half), Zc::R(half)];
     for l in [a, bl] {
         for &bp in &l.bps {
-            let y = (bp as I) << K;
-            if y > lb.min(la) - 2 * half && y < ha.max(hb) + 2 * half {
-                cands.push(y);
+            for y in [(bp as I) << K, ((bp as I) << K) - psw, ((bp as I) << K) + psw] {
+                if y >= c0 - 3 * half && y <= c1 + 3 * half && !zs.contains(&Zc::C(y)) {
+                    zs.push(Zc::C(y));
+                }
             }
         }
     }
-    cands.sort();
-    cands.dedup();
-    let lo_all = cands[0] - 1;
-    let hi_all = cands[cands.len() - 1] + 1;
-    let mut pts: Vec<I> = vec![lo_all];
-    pts.extend(cands.iter().copied());
-    pts.push(hi_all);
-    let rate = |z0: I, z1: I| -> (f64, f64) {
-        // a: lo end l0 = max(zeta, La) in [max(z0, blo - half), max(z1, bhi - half)], loss al_a+ rho_max
-        let ra_lo = if al_a > 0.0 {
-            let l0 = z0.max(blo - half);
-            let l1 = z1.max(bhi - half);
-            -al_a * dens_range(a, l0, l1 + sw(al_a)).1 as f64
+    // the order inside the open cell, by the value at its midpoint (doubled); ties only if c0 = c1
+    zs.sort_by_key(|z| match *z {
+        Zc::C(y) => 2 * y,
+        Zc::R(o) => c0 + c1 + 2 * o,
+    });
+    let xa = |z: I, b: I| -> I {
+        let (h, l) = (b + half, (b - half).max(z));
+        if h > l {
+            fval(a, h) - fval(a, l)
         } else {
-            0.0
-        };
-        // b: hi end h0 = min(zeta, Hb) in [min(z0, blo + half), min(z1, bhi + half)], rate kb
-        let h0 = z0.min(blo + half);
-        let h1 = z1.min(bhi + half);
-        let rb_hi = if kb >= 0.0 {
-            kb * dens_range(bl, h0, h1 + sw(kb)).0 as f64
-        } else {
-            kb * dens_range(bl, h0 - sw(kb), h1).1 as f64
-        };
-        (dn(dn(ra_hi + ra_lo) * gf), dn(dn(rb_hi + rb_lo) * gf))
+            0
+        }
     };
-    let mut best: Option<f64> = None;
-    let mut rup = 0.0f64;
-    let n = pts.len();
-    // cells: (-inf, lo_all], [pts[i], pts[i+1]], [hi_all, +inf); on each the bound is Psi0 (linear) + u1 * rate
-    let mut cells: Vec<(I, I, I, I)> = Vec::new(); // (eval z0, eval z1, rate z0, rate z1)
-    cells.push((pts[0], pts[0], pts[0] - 4 * half, pts[0]));
-    for i in 0..n - 1 {
-        cells.push((pts[i], pts[i + 1], pts[i], pts[i + 1]));
+    let xb = |z: I, b: I| -> I {
+        let (h, l) = (z.min(b + half), b - half);
+        if h > l {
+            fval(bl, h) - fval(bl, l)
+        } else {
+            0
+        }
+    };
+    let far = 8 * half; // stands for -inf / +inf in the ranges of the sentinel cells
+    let n = zs.len();
+    let cs = [c0, c1];
+    // pass 1: per zeta-cell the values of X_a, X_b at its ends and both vertices, the activity, the rates
+    struct ZCell {
+        vals: Vec<(I, I, usize)>, // (X_a, X_b, vertex)
+        act_a: bool,
+        act_b: bool,
+        ra: f64,
+        rb: f64,
     }
-    cells.push((pts[n - 1], pts[n - 1], pts[n - 1], pts[n - 1] + 4 * half));
-    for &(e0, e1, r0, r1) in &cells {
-        let (ra, rb) = rate(r0, r1);
-        rup = rup.max(ra.max(0.0) + rb.max(0.0));
-        let act_a = xa(e0) > 0 || xa(e1) > 0;
-        let act_b = xb(e0) > 0 || xb(e1) > 0;
-        for &z in &[e0, e1] {
-            let v = (xa(z) as f64) + (xb(z) as f64) + u1 * (if act_a { ra } else { 0.0 } + if act_b { rb } else { 0.0 });
-            best = Some(best.map_or(v, |x: f64| x.min(v)));
+    let mut zcells: Vec<ZCell> = Vec::new();
+    let mut pstar = [I::MAX; 2]; // the exact limit P at the two vertices: min of X_a + X_b
+    for k in 0..=n {
+        let lft = if k == 0 { None } else { Some(zs[k - 1]) };
+        let rgt = if k == n { None } else { Some(zs[k]) };
+        let ends: Vec<Zc> = [lft, rgt].iter().flatten().copied().collect();
+        let mut vals: Vec<(I, I, usize)> = Vec::new();
+        for (ci, &c) in cs.iter().enumerate() {
+            for &z in &ends {
+                let zz = at(z, c);
+                let v = (xa(zz, c), xb(zz, c), ci);
+                pstar[ci] = pstar[ci].min(v.0 + v.1);
+                vals.push(v);
+            }
+        }
+        let act_a = vals.iter().any(|v| v.0 > 0);
+        let act_b = vals.iter().any(|v| v.1 > 0);
+        // the zeta-range of this cell over the base cell
+        let zlo = lft.map_or(at(zs[0], c0) - far, |z| at(z, c0));
+        let zhi = rgt.map_or(at(zs[n - 1], c1) + far, |z| at(z, c1));
+        let mut ra = ra_hi;
+        if act_a && al_a > 0.0 {
+            // a's lo end max(zeta, L + al_a u) <= max(zeta, L) + al_a u: loss <= al_a rho_max u
+            let (m0, m1) = (zlo.max(c0 - half), zhi.max(c1 - half));
+            let rho = dens_range(a, m0, m1 + sweep(ctx, al_a, u1)).1;
+            ra = Iv::exact(ra).add(Iv::exact(rate_u1(-al_a, rho, gf, u1))).lo;
+        }
+        let mut rb = rb_lo;
+        if act_b {
+            // b's hi end min(zeta + u, H + be_b u) >= min(zeta, H) + kb u, kb = min(1, be_b)
+            let kb = be_b.min(1.0);
+            let (h0, h1) = (zlo.min(c0 + half), zhi.min(c1 + half));
+            let sw = sweep(ctx, kb, u1);
+            let rho = if kb >= 0.0 { dens_range(bl, h0, h1 + sw).0 } else { dens_range(bl, h0 - sw, h1).1 };
+            rb = Iv::exact(rb).add(Iv::exact(rate_u1(kb, rho, gf, u1))).lo;
+        }
+        zcells.push(ZCell { vals, act_a, act_b, ra, rb });
+    }
+    // pass 2: the form of each term on each zeta-cell, fixed for the whole base cell and all u: affine (only where
+    // the term is active, i.e. X >= 0 is its unclamped value) or 0 (always valid); among the forms that keep the
+    // u = 0 values >= P at both vertices (so the limit stays exact), the one with the best u = u1 values
+    let val_u1 = |zc: &ZCell, fa: bool, fbb: bool, v: &(I, I, usize)| -> (I, f64) {
+        let b0 = (if fa { v.0 } else { 0 }) + (if fbb { v.1 } else { 0 });
+        let mut t = Iv::exact(b0 as f64);
+        if fa {
+            t = t.add(Iv::exact(zc.ra));
+        }
+        if fbb {
+            t = t.add(Iv::exact(zc.rb));
+        }
+        (b0, t.lo)
+    };
+    let mut v0 = [I::MAX; 2];
+    let mut v1 = [f64::INFINITY; 2];
+    for zc in &zcells {
+        let mut best: Option<(f64, bool, bool)> = None;
+        for fa in [false, true] {
+            for fbb in [false, true] {
+                if (fa && !zc.act_a) || (fbb && !zc.act_b) {
+                    continue;
+                }
+                let ok = zc.vals.iter().all(|v| val_u1(zc, fa, fbb, v).0 >= pstar[v.2]);
+                if !ok && !(fa == zc.act_a && fbb == zc.act_b) {
+                    continue;
+                }
+                let w = zc.vals.iter().map(|v| val_u1(zc, fa, fbb, v).1).fold(f64::INFINITY, f64::min);
+                if best.map_or(true, |(bw, _, _)| w > bw) {
+                    best = Some((w, fa, fbb));
+                }
+            }
+        }
+        let (_, fa, fbb) = best.unwrap();
+        for v in &zc.vals {
+            let (b0, t) = val_u1(zc, fa, fbb, v);
+            v0[v.2] = v0[v.2].min(b0);
+            v1[v.2] = v1[v.2].min(t);
         }
     }
-    // values below 2^80: one relative 2^-50 margin covers the f64 roundings of the sum, then the floor
-    let bst = best.unwrap();
-    (dn(bst - bst.abs() * 1e-15 - 1.0).floor() as I, up(rup))
+    // values below 2^80: a relative 2^-50 margin covers the f64 roundings of base as f64, then the floor
+    let fl = |x: f64| -> I { dn(x - x.abs() * 1e-15 - 1.0).floor() as I };
+    (v0, [fl(v1[0]), fl(v1[1])], corr)
 }
 
 /// Lemma U (d): for c in the box and theta in [0, theta1]: a lower bound `st` of d area(Q cap R)/d theta (per
@@ -2672,55 +2767,35 @@ fn u_area_slope(b: &PBox, r: &Rect, d: I, c1: f64, s1: f64) -> (f64, Iv, Iv) {
     (tot, nx, ny)
 }
 
-/// a term of the base function of one coordinate (Lemma U): a line window; an edge term
+/// a u-independent term of the base function of one coordinate (Lemma U): a line window; an edge term
 /// rho min(G, max(0, sg (b - e)) / s1) (sg = -1: left-type line, e = l + 1/2; sg = +1: right-type, e = l - 1/2);
-/// a germ pair's value as a function of the along coordinate (at u = 0: eval, at u = u1: eval_u1); a breakpoint
-/// correction
+/// a breakpoint correction
 enum UTerm<'a> {
     Window(&'a Line),
     Edge { rho: I, e: I, sg: I },
-    PairP { a: &'a Line, bl: &'a Line, sl: (f64, f64, f64, f64), brange: (I, I), u1: f64 },
     /// minus coef * min(max(0, sg (pb - b)), dmax)
     Corr { coef: I, pb: I, sg: I, dmax: I },
 }
 
 impl<'a> UTerm<'a> {
     fn eval(&self, b: I, half: I, g: I, s1: f64) -> I {
-        let edge = |rho: I, e: I, sg: I| -> I {
-            let t = sg * (b - e);
-            if t <= 0 || rho == 0 {
-                return 0;
-            }
-            // chord >= min(1, tau/s1) (length), i.e. min(G, t/s1) grid units, rounded down
-            let lenf = dn(t as f64 / up(s1));
-            let len = if lenf >= g as f64 { g } else { lenf.floor().max(0.0) as I };
-            rho * len
-        };
         match self {
             UTerm::Window(l) => fval(l, b + half) - fval(l, b - half),
-            UTerm::Edge { rho, e, sg } => edge(*rho, *e, *sg),
-            // (eval: the u = 0 value; the u = u1 value is eval_u1)
-            UTerm::PairP { a, bl, .. } => u_pair_inf(a, b + half, b - half, bl, b + half, b - half, 1.0, 1.0),
+            UTerm::Edge { rho, e, sg } => {
+                let t = sg * (b - e);
+                if t <= 0 || *rho == 0 {
+                    return 0;
+                }
+                // chord >= min(1, tau/s1) (length), i.e. min(G, t/s1) grid units, rounded down
+                let lenf = dn(t as f64 / up(s1));
+                let len = if lenf >= g as f64 { g } else { lenf.floor().max(0.0) as I };
+                rho * len
+            }
             UTerm::Corr { coef, pb, sg, dmax } => -coef * (sg * (pb - b)).max(0).min(*dmax),
-        }
-    }
-    /// the value at u = u1 (Lemma U (f)): pairs by u_pair_q, every other term is u-independent
-    fn eval_u1(&self, ctx: &Ctx, b: I, half: I, g: I, s1: f64) -> I {
-        match self {
-            UTerm::PairP { a, bl, sl, brange, u1 } => u_pair_q(ctx, a, bl, b, brange.0, brange.1, *sl, *u1).0,
-            _ => self.eval(b, half, g, s1),
         }
     }
     /// kinks of the term (grid points where its slope changes)
     fn kinks(&self, half: I, g: I, s1: f64, out: &mut Vec<I>) {
-        let gs1 = up(g as f64 * up(s1));
-        let ek = |e: I, sg: I, out: &mut Vec<I>| {
-            out.push(e);
-            let w = gs1.ceil() as I;
-            out.push(e + sg * w);
-            out.push(e + sg * (w - 1));
-            out.push(e + sg * (w + 1));
-        };
         match self {
             UTerm::Window(l) => {
                 for &bp in &l.bps {
@@ -2729,88 +2804,142 @@ impl<'a> UTerm<'a> {
                     out.push(y + half);
                 }
             }
-            UTerm::Edge { e, sg, .. } => ek(*e, *sg, out),
+            UTerm::Edge { e, sg, .. } => {
+                let w = up(g as f64 * up(s1)).ceil() as I;
+                for k in [0, w - 1, w, w + 1] {
+                    out.push(e + sg * k);
+                }
+            }
             UTerm::Corr { pb, sg, dmax, .. } => {
                 out.push(*pb);
                 out.push(*pb - sg * dmax);
-            }
-            UTerm::PairP { a, bl, .. } => {
-                for l in [a, bl] {
-                    for &bp in &l.bps {
-                        let y = (bp as I) << K;
-                        out.push(y - half);
-                        out.push(y + half);
-                    }
-                }
             }
         }
     }
 }
 
-/// Lemma U for one choice of the path signs (sx, sy).  See ZMX2_AREA.md sec 11.
-fn first_order_sig(ctx: &Ctx, b: &PBox, bg: &BoxGeo, inw: I, sx: i32, sy: i32, corr_mask: u32, pair_mask: u32) -> Option<I> {
+/// a germ pair in Lemma U: along axis, the two lines, their slopes (al_a, be_a, al_b, be_b), and the edge terms of
+/// the two lines on the perpendicular axis (Lemma U (e)), used instead of the pair value when chosen
+struct UPair<'a> {
+    along: usize,
+    a: &'a Line,
+    bl: &'a Line,
+    sl: (f64, f64, f64, f64),
+    edges: Vec<UTerm<'a>>,
+}
+
+/// the data of one base cell of one axis for one choice of the corrections: values of the u-independent terms at
+/// its two vertices (u = 0 and u = u1 differ only through the pairs), slope * u1, pair values (u = 0, u = u1)
+struct UVar {
+    base: [I; 2],
+    su1: f64,
+    pv0: Vec<[I; 2]>,
+    pv1: Vec<[I; 2]>,
+}
+
+/// Lemma U for one choice of the axis pieces (paths and centre ranges) and the pair-region overrides
+/// `ovr` = (family, frame position of line a, region: 1 = a is a window line, 2 = b is) of Lemma V.
+/// See ZMX2_AREA.md sec 11.  The bound is the minimum over the 2-d base cells of the best over the
+/// correction variants of each 1-d cell and the pair/edge choices (each a valid bound for the poses whose
+/// base lies in that cell).
+fn first_order_sig(ctx: &Ctx, b: &PBox, bg: &BoxGeo, inw: I, ax: [AxisSpec; 2], ovr: &[(usize, i64, u8)]) -> Option<I> {
     let cv = ctx.cv;
     let g = ctx.g;
     let half = g / 2;
     let cd = b.cd();
     let u1 = bg.u1.hi;
+    let u1i = Iv::exact(u1);
     let s1 = cs_at(bg.u1).1.hi; // S(u1) >= p = S(u) on the box (theta <= 45 deg)
     let whi = w_hi(bg);
     let ext = ctx.ghi(Iv::exact(whi).sub(Iv::exact(1.0)).scale(0.5).hi).max(0); // >= (w - 1)/2 on the box
     let sg = cv.sx << K;
-    // base ranges per axis (grid units): b = c - sig (w(u) - 1)/2; at a wall the base is admissible at theta = 0
-    let base = |n: [I; 2], sig: i32| -> (I, I) {
-        let lo = fdiv(n[0] * g, cd);
-        let hi = cdiv(n[1] * g, cd);
-        match sig {
-            1 => ((lo - ext).max(half), hi),
-            -1 => (lo, (hi + ext).min(sg - half)),
-            _ => (lo, hi),
+    let wlo = Iv::exact(1.0).sub(u1i).div_pos(Iv::exact(1.0).add(u1i.mul(u1i))).lo; // (w - 1)/2 >= wlo u
+    // base ranges per axis (grid units): Path: b = c - sig (w(u) - 1)/2 (bases of admissible poses are >= 1/2
+    // from the walls); Cone: the single base g
+    let base = |s: &AxisSpec| -> (I, I) {
+        match s.mode {
+            AxisMode::Path(1) => ((s.cr.0 - ext).max(half), s.cr.1),
+            AxisMode::Path(-1) => (s.cr.0, (s.cr.1 + ext).min(sg - half)),
+            AxisMode::Path(_) => s.cr,
+            AxisMode::Cone { g, .. } => (g, g),
         }
     };
-    let (bx0, bx1) = base(b.xn, sx);
-    let (by0, by1) = base(b.yn, sy);
-    if bx0 > bx1 || by0 > by1 {
+    let br = [base(&ax[0]), base(&ax[1])];
+    if br[0].0 > br[0].1 || br[1].0 > br[1].1 {
         return None;
     }
+    let sh = [shift_rates(ax[0].mode, wlo), shift_rates(ax[1].mode, wlo)];
     let (fv, fh) = frames(ctx, b, bg);
     let debug = std::env::var("ZMX2_DEBUG").is_ok();
     let mut konst: I = inw; // points and certain atoms
-    let mut slope = 0.0f64; // bound units per unit u
-    // terms of the base function: functions of b_x and of b_y
-    let mut tx: Vec<UTerm> = Vec::new();
-    let mut ty: Vec<UTerm> = Vec::new();
-    // pairs: (a, b, ha, la, hb, lb, lambda_a, lambda_b, edge a, edge b, family)
-    let mut pairs: Vec<(&Line, &Line, (f64, f64, f64, f64), (I, I), (I, I, I), (I, I, I), usize)> = Vec::new();
+    // per axis: window lines (line, al, be) and u-independent terms (edges)
+    let mut wins: [Vec<(&Line, f64, f64)>; 2] = [Vec::new(), Vec::new()];
+    let mut terms: [Vec<UTerm>; 2] = [Vec::new(), Vec::new()];
+    let mut pairs: Vec<UPair> = Vec::new();
     for fam in 0..2 {
-        // vertical lines: perp x, along y; horizontal lines (rotated frame x' = -y): perp -y, along x
-        let (fb, lines, sig_along, (blo, bhi)) = if fam == 0 { (&fv, &cv.vl, sy, (by0, by1)) } else { (&fh, &cv.hl, sx, (bx0, bx1)) };
+        // vertical lines: frame = identity, perp x (axis 0), along y (axis 1); horizontal lines: frame x' = -y,
+        // perp axis 1, along x (axis 0)
+        let (fb, lines, along, perp) = if fam == 0 { (&fv, &cv.vl, 1usize, 0usize) } else { (&fh, &cv.hl, 0usize, 1usize) };
         let xlo = (fb.xn[0] as f64) / (fb.xd as f64) - 0.75;
         let xhi = (fb.xn[1] as f64) / (fb.xd as f64) + 0.75;
-        let us: Vec<ULine> = lines
+        let mut us: Vec<ULine> = lines
             .iter()
             .filter(|l| {
                 let p = l.pos as f64 / cv.d as f64;
                 p >= xlo && p <= xhi
             })
-            .map(|l| u_line(ctx, fb, l, sig_along, u1))
+            .map(|l| u_line(ctx, fb, l, sh[along], u1))
             .collect();
+        // Lemma V regions: line a resp. b of a germ pair is a window line there
+        for &(f, pa, reg) in ovr {
+            if f != fam {
+                continue;
+            }
+            for ul in us.iter_mut() {
+                if reg == 1 && ul.l.pos == pa {
+                    ul.lo_ok = true;
+                }
+                if reg == 2 && ul.l.pos == pa + cv.d as i64 {
+                    ul.hi_ok = true;
+                }
+            }
+        }
+        // the perp axis's path slopes in the frame (cone slack of the edge terms, sec 11.5): frame perp = real
+        // perp (vertical) or minus it (horizontal)
+        let slack = |left: bool| -> I {
+            match ax[perp].mode {
+                AxisMode::Cone { k0, k1, .. } => {
+                    let (q0, q1) = if fam == 0 { (k0, k1) } else { (-k1, -k0) };
+                    let v = if left { Iv::exact(q1).sub(Iv::exact(wlo)).hi } else { Iv::exact(-q0).sub(Iv::exact(wlo)).hi };
+                    if v > 0.0 {
+                        ctx.ghi(Iv::exact(v).mul(u1i).hi) + 1
+                    } else {
+                        0
+                    }
+                }
+                _ => 0,
+            }
+        };
         // edge term of a line whose lo (left-type) / hi (right-type) end is the cut by an edge of Q (Lemma U (e)):
         // its chord has length >= min(1, tau / S(u1)) with tau >= 1/2 + l - b_perp (left) or 1/2 + b_perp - l
-        // (right) in the frame, at a density >= rho_min over where the chord can lie
-        let edge_term = |ul: &ULine, left: bool| -> Option<(I, I, I)> {
+        // (right) in the frame (minus the cone slack), at a density >= rho_min over where the chord can lie;
+        // returned on the real perp axis
+        let edge_term = |ul: &ULine, left: bool| -> Option<UTerm> {
             let dd = cv.d;
             let d0 = fb.xn[0] * dd - (ul.l.pos as I) * fb.xd;
             let d1 = fb.xn[1] * dd - (ul.l.pos as I) * fb.xd;
             if (left && d0 < 0) || (!left && d1 > 0) {
                 return None; // the centre must stay on one side (|d| = d resp. -d)
             }
-            // where the chord can lie: the along-range of Q, [c_along - M, c_along + M]
             let (ylo, yhi) = (ctx.glo(add_lo(fb.y0.lo, -whi * 0.5)), ctx.ghi(add_hi(fb.y1.hi, whi * 0.5)));
             let (rho, _) = dens_range(ul.l, ylo, yhi);
-            // the base perp coordinate in the frame: vertical b_x; horizontal -b_y
+            if rho == 0 {
+                return None;
+            }
             let lg = (ul.l.pos as I) << K;
-            Some(if left { (rho, lg + half, -1) } else { (rho, lg - half, 1) })
+            let (e, sgn) = if left { (lg + half - slack(true), -1) } else { (lg - half + slack(false), 1) };
+            // frame -> real perp coordinate: vertical identity; horizontal x' = -y
+            Some(if fam == 0 { UTerm::Edge { rho, e, sg: sgn } } else { UTerm::Edge { rho, e: -e, sg: -sgn } })
         };
         let mut used = vec![false; us.len()];
         for i in 0..us.len() {
@@ -2822,21 +2951,7 @@ fn first_order_sig(ctx: &Ctx, b: &PBox, bg: &BoxGeo, inw: I, sx: i32, sy: i32, c
             }
             if ul.lo_ok && ul.hi_ok {
                 used[i] = true;
-                let (sl, corr) = u_slope(ctx, ul.l, blo, bhi, ul.al, ul.be, u1, (corr_mask >> fam) & 1 == 1);
-                if fam == 0 {
-                    ty.extend(corr);
-                } else {
-                    tx.extend(corr);
-                }
-                if debug {
-                    eprintln!("    U line fam {} pos {} al {:.4} be {:.4} slope {:.6}", fam, ul.l.pos, ul.al, ul.be, sl / ctx.target as f64);
-                }
-                slope = dn(slope + sl);
-                if fam == 0 {
-                    ty.push(UTerm::Window(ul.l));
-                } else {
-                    tx.push(UTerm::Window(ul.l));
-                }
+                wins[along].push((ul.l, ul.al, ul.be));
             }
         }
         // germ pairs (Lemma Z): a at pos with its lo end cut, b at pos + D with its hi end cut
@@ -2848,12 +2963,8 @@ fn first_order_sig(ctx: &Ctx, b: &PBox, bg: &BoxGeo, inw: I, sx: i32, sy: i32, c
                 used[i] = true;
                 used[j] = true;
                 let (a, bl) = (&us[i], &us[j]);
-                let (ha, la) = (blo + half, bhi - half);
-                let (hb, lb) = (blo + half, bhi - half);
-                let _ = (ha, la, hb, lb);
-                let ea = edge_term(a, true).unwrap_or((0, 0, -1));
-                let eb = edge_term(bl, false).unwrap_or((0, 0, 1));
-                pairs.push((a.l, bl.l, (a.al, a.be, bl.al, bl.be), (blo, bhi), ea, eb, fam));
+                let edges: Vec<UTerm> = [edge_term(a, true), edge_term(bl, false)].into_iter().flatten().collect();
+                pairs.push(UPair { along, a: a.l, bl: bl.l, sl: (a.al, a.be, bl.al, bl.be), edges });
             }
         }
         // unpaired edge lines
@@ -2869,52 +2980,53 @@ fn first_order_sig(ctx: &Ctx, b: &PBox, bg: &BoxGeo, inw: I, sx: i32, sy: i32, c
             } else {
                 None
             };
-            if let Some((rho, e, sgn)) = et {
-                if rho > 0 {
-                    // the perp coordinate: vertical family b_x (= frame x); horizontal family frame x' = -b_y
-                    if fam == 0 {
-                        tx.push(UTerm::Edge { rho, e, sg: sgn });
-                    } else {
-                        ty.push(UTerm::Edge { rho, e: -e, sg: -sgn });
-                    }
-                }
+            if let Some(t) = et {
+                terms[perp].push(t);
             }
         }
     }
     // rectangles: base area in the grid minimum; slope by Reynolds and the path motion (Lemma U (d))
     let dd = cv.d;
     let (c1i, s1i) = cs_at(bg.u1);
-    let u1i = Iv::exact(u1);
     // w'(t)/2 = (1 - 2t - t^2)/(1+t^2)^2 is decreasing on [0, u1]: c'(t) = sig w'(t)/2 in sig [w'(u1)/2, 1]
     let wp1 = Iv::exact(1.0).sub(u1i.scale(2.0)).sub(u1i.mul(u1i)).div_pos(Iv::exact(1.0).add(u1i.mul(u1i)).mul(Iv::exact(1.0).add(u1i.mul(u1i)))).lo;
-    let cprime = |sig: i32| -> Iv {
-        match sig {
-            1 => Iv { lo: wp1, hi: 1.0 },
-            -1 => Iv { lo: -1.0, hi: -wp1 },
-            _ => Iv::exact(0.0),
+    let cprime = |m: AxisMode| -> Iv {
+        match m {
+            AxisMode::Path(1) => Iv { lo: wp1, hi: 1.0 },
+            AxisMode::Path(-1) => Iv { lo: -1.0, hi: -wp1 },
+            AxisMode::Path(_) => Iv::exact(0.0),
+            AxisMode::Cone { k0, k1, .. } => Iv { lo: k0, hi: k1 },
         }
     };
+    let mut area_su1 = 0.0f64; // area slope * u1, bound units, rounded down
     for (ri, r) in cv.rects.iter().enumerate() {
-        // enclosures over the path: centre box extended by ext towards the base
+        // enclosures over the paths: the centre box extended by ext towards the base (cone paths stay in the box)
         let mut eb = *b;
-        if sx != 0 || sy != 0 {
-            let extl = Iv::exact(whi).sub(Iv::exact(1.0)).scale(0.5).hi;
-            let k = (extl * cd as f64).ceil() as I + 1;
-            if sx == 1 {
-                eb.xn[0] -= k;
-            } else if sx == -1 {
-                eb.xn[1] += k;
-            }
-            if sy == 1 {
-                eb.yn[0] -= k;
-            } else if sy == -1 {
-                eb.yn[1] += k;
+        let extl = Iv::exact(whi).sub(Iv::exact(1.0)).scale(0.5).hi;
+        let kx = (extl * cd as f64).ceil() as I + 1;
+        for (axi, s) in ax.iter().enumerate() {
+            match s.mode {
+                AxisMode::Path(1) => {
+                    if axi == 0 {
+                        eb.xn[0] -= kx
+                    } else {
+                        eb.yn[0] -= kx
+                    }
+                }
+                AxisMode::Path(-1) => {
+                    if axi == 0 {
+                        eb.xn[1] += kx
+                    } else {
+                        eb.yn[1] += kx
+                    }
+                }
+                _ => {}
             }
         }
         let (st, nx, ny) = u_area_slope(&eb, r, dd, c1i.lo, s1i.hi);
         // d area/dt = theta'(t) dA/dtheta + c'(t) . N,  theta' in [2/(1+u1^2), 2]
         let thp = Iv { lo: Iv::exact(2.0).div_pos(Iv::exact(1.0).add(u1i.mul(u1i))).lo, hi: 2.0 };
-        let du = thp.mul(Iv::exact(st)).add(cprime(sx).mul(nx)).add(cprime(sy).mul(ny)).lo;
+        let du = thp.mul(Iv::exact(st)).add(cprime(ax[0].mode).mul(nx)).add(cprime(ax[1].mode).mul(ny)).lo;
         if du == 0.0 {
             continue;
         }
@@ -2922,137 +3034,352 @@ fn first_order_sig(ctx: &Ctx, b: &PBox, bg: &BoxGeo, inw: I, sx: i32, sy: i32, c
         if debug {
             eprintln!("    U area dA/dtheta >= {:.6}, N_x {:?}, N_y {:?}, dA/du >= {:.6}", st, nx, ny, du);
         }
-        slope = dn(slope + Iv::exact(du).mul(Iv::exact(tr)).lo);
+        area_su1 = Iv::exact(area_su1).add(Iv::exact(du).mul(Iv::exact(tr)).mul(u1i)).lo;
     }
-    // germ pairs: their value at u = 0 and u = u1 as functions of the along base coordinate (Lemma U (c'), (f));
-    // the edge terms enter as their excess over phi >= every pair value on the box (max(P, E) >= P + (E - phi)+)
-    // a germ pair contributes max(pair value, its two edge terms) >= either: bit k of pair_mask chooses the pair
-    // value (Lemma Z, as a function of the along base coordinate, Lemma U (c'), (f)) or the edge terms (Lemma U (e))
-    for (k, p) in pairs.iter().enumerate() {
-        let (la_, lb_, sl, brange, ea, ebb, fam) = *p;
-        if (pair_mask >> k) & 1 == 1 {
-            let pt = UTerm::PairP { a: la_, bl: lb_, sl, brange, u1 };
-            if debug {
-                eprintln!("    U pair {} {} slopes {:?} (pair value)", la_.pos, lb_.pos, sl);
-            }
-            if fam == 0 {
-                ty.push(pt);
-            } else {
-                tx.push(pt);
-            }
-        } else {
-            for (rho, e, sgn) in [ea, ebb] {
-                if rho > 0 {
-                    if fam == 0 {
-                        tx.push(UTerm::Edge { rho, e, sg: sgn });
-                    } else {
-                        ty.push(UTerm::Edge { rho, e: -e, sg: -sgn });
-                    }
+    // the base grid per axis: kinks of every term, correction kinks, rectangle sides -+ 1/2, range ends
+    let mut grid: [Vec<I>; 2] = [vec![br[0].0, br[0].1], vec![br[1].0, br[1].1]];
+    for axi in 0..2 {
+        let out = &mut grid[axi];
+        for t in &terms[axi] {
+            t.kinks(half, g, s1, out);
+        }
+        for p in pairs.iter() {
+            for t in &p.edges {
+                // edge terms of a pair live on its perp axis
+                if p.along != axi {
+                    t.kinks(half, g, s1, out);
                 }
             }
         }
-    }
-    // the base grid: kinks of every term, rectangle sides -+ 1/2, range ends
-    let mut xs: Vec<I> = vec![bx0, bx1];
-    let mut ys: Vec<I> = vec![by0, by1];
-    for t in &tx {
-        t.kinks(half, g, s1, &mut xs);
-    }
-    for t in &ty {
-        t.kinks(half, g, s1, &mut ys);
-    }
-    for r in &cv.rects {
-        for e in [r.x0, r.x1] {
-            let e = (e as I) << K;
-            xs.push(e - half);
-            xs.push(e + half);
+        for &(l, al, be) in &wins[axi] {
+            for &bp in &l.bps {
+                let y = (bp as I) << K;
+                for v in [y - half, y + half, y + half - sweep(ctx, al, u1), y - half + sweep(ctx, be, u1)] {
+                    out.push(v);
+                }
+            }
         }
-        for e in [r.y0, r.y1] {
-            let e = (e as I) << K;
-            ys.push(e - half);
-            ys.push(e + half);
+        for p in pairs.iter().filter(|p| p.along == axi) {
+            for (l, k, hi) in [(p.a, p.sl.1, true), (p.bl, p.sl.2, false)] {
+                let sw = sweep(ctx, k, u1);
+                let psw = pair_sweep(ctx, p.sl, u1);
+                for ln in [p.a, p.bl] {
+                    for &bp in &ln.bps {
+                        let y = (bp as I) << K;
+                        for yy in [y, y - psw, y + psw] {
+                            out.push(yy - half);
+                            out.push(yy + half);
+                        }
+                    }
+                }
+                for &bp in &l.bps {
+                    let y = (bp as I) << K;
+                    out.push(if hi { y - half + sw } else { y + half - sw });
+                }
+            }
         }
+        for r in &cv.rects {
+            let es = if axi == 0 { [r.x0, r.x1] } else { [r.y0, r.y1] };
+            for e in es {
+                let e = (e as I) << K;
+                out.push(e - half);
+                out.push(e + half);
+            }
+        }
+        let (lo, hi) = br[axi];
+        out.retain(|&v| v >= lo && v <= hi);
+        out.sort();
+        out.dedup();
     }
-    xs.retain(|&v| v >= bx0 && v <= bx1);
-    ys.retain(|&v| v >= by0 && v <= by1);
-    xs.sort();
-    xs.dedup();
-    ys.sort();
-    ys.dedup();
-    let ev = |t: &UTerm, b: I| -> I { t.eval(b, half, g, s1) };
-    // the total is concave in u for every base (the pair bounds are infima of affine functions of u, the rest is
-    // affine in u), so its minimum over u in [0, u1] is at u = 0 or u = u1: two grid minima
-    let ev1 = |t: &UTerm, b: I| -> I { t.eval_u1(ctx, b, half, g, s1) };
-    let hv0: Vec<I> = xs.iter().map(|&x| tx.iter().map(|t| ev(t, x)).sum()).collect();
-    let vv0: Vec<I> = ys.iter().map(|&y| ty.iter().map(|t| ev(t, y)).sum()).collect();
-    let hv1: Vec<I> = xs.iter().map(|&x| tx.iter().map(|t| ev1(t, x)).sum()).collect();
-    let vv1: Vec<I> = ys.iter().map(|&y| ty.iter().map(|t| ev1(t, y)).sum()).collect();
-    let su1: I = Iv::exact(slope).mul(Iv::exact(u1)).lo.floor() as I; // slope * u1, rounded down
-    let ov = |c: I, r0: I, r1: I| -> I { ((c + half).min(r1) - (c - half).max(r0)).max(0) };
-    let mut gmin: Option<I> = None;
-    for (i, &x) in xs.iter().enumerate() {
-        for (j, &y) in ys.iter().enumerate() {
-            let mut v = (hv0[i] + vv0[j]).min(hv1[i] + vv1[j] + su1);
-            for (ri, r) in cv.rects.iter().enumerate() {
-                let ox = ov(x, (r.x0 as I) << K, (r.x1 as I) << K);
-                let oy = ov(y, (r.y0 as I) << K, (r.y1 as I) << K);
-                if ox == 0 || oy == 0 {
+    // per axis and base cell: the correction variants (all off / all on / per line the better one)
+    let npairs = pairs.len();
+    let mut cells: [Vec<(usize, usize, Vec<UVar>)>; 2] = [Vec::new(), Vec::new()];
+    for axi in 0..2 {
+        let xs = &grid[axi];
+        let idx: Vec<(usize, usize)> = if xs.len() == 1 { vec![(0, 0)] } else { (0..xs.len() - 1).map(|i| (i, i + 1)).collect() };
+        for (i0, i1) in idx {
+            let (c0, c1) = (xs[i0], xs[i1]);
+            let cs = [c0, c1];
+            let mut fixed = [0 as I; 2]; // windows and edges at the two vertices
+            for t in &terms[axi] {
+                for k in 0..2 {
+                    fixed[k] += t.eval(cs[k], half, g, s1);
+                }
+            }
+            // per window line: (off, on) = (su1, corr values at the vertices)
+            let mut opts: Vec<[(f64, [I; 2]); 2]> = Vec::new();
+            for &(l, al, be) in &wins[axi] {
+                let w = UTerm::Window(l);
+                for k in 0..2 {
+                    fixed[k] += w.eval(cs[k], half, g, s1);
+                }
+                let mut o = [(0.0, [0 as I; 2]); 2];
+                for (j, uc) in [false, true].iter().enumerate() {
+                    let (s, corr) = u_slope(ctx, l, c0, c1, al, be, u1, *uc);
+                    let mut cvv = [0 as I; 2];
+                    for t in &corr {
+                        for k in 0..2 {
+                            cvv[k] += t.eval(cs[k], half, g, s1);
+                        }
+                    }
+                    o[j] = (s, cvv);
+                }
+                opts.push(o);
+            }
+            // per pair along this axis: (off, on) = (pv0, pv1) with the corrections included
+            let mut popts: Vec<[([I; 2], [I; 2]); 2]> = Vec::new();
+            for p in pairs.iter() {
+                if p.along != axi {
+                    popts.push([([0; 2], [0; 2]); 2]);
                     continue;
                 }
-                let pn = ((r.x1 - r.x0) as I) * ((r.y1 - r.y0) as I);
-                v += match ctx.rect_wlc[ri].checked_mul(ox).and_then(|t| t.checked_mul(oy)) {
-                    Some(n) => n / (pn << K),
-                    None => return None,
-                };
+                let mut o = [([0 as I; 2], [0 as I; 2]); 2];
+                for (j, uc) in [false, true].iter().enumerate() {
+                    let (p0, p1, corr) = u_pair_cell(ctx, p.a, p.bl, c0, c1, p.sl, u1, *uc);
+                    let mut cvv = [0 as I; 2];
+                    for t in &corr {
+                        for k in 0..2 {
+                            cvv[k] += t.eval(cs[k], half, g, s1);
+                        }
+                    }
+                    o[j] = ([p0[0] + cvv[0], p0[1] + cvv[1]], [p1[0] + cvv[0], p1[1] + cvv[1]]);
+                }
+                popts.push(o);
             }
-            gmin = Some(gmin.map_or(v, |m| m.min(v)));
+            let worst = |s: f64, c: [I; 2]| -> f64 { (c[0].min(c[1]) as f64) + s.min(0.0) };
+            let pworst = |v: &([I; 2], [I; 2])| -> I { v.0[0].min(v.0[1]).min(v.1[0]).min(v.1[1]) };
+            let mut vars: Vec<UVar> = Vec::new();
+            let mut seen: Vec<(Vec<bool>, Vec<bool>)> = Vec::new();
+            for mode in 0..3 {
+                let wch: Vec<bool> = opts
+                    .iter()
+                    .map(|o| match mode {
+                        0 => false,
+                        1 => true,
+                        _ => worst(o[1].0, o[1].1) > worst(o[0].0, o[0].1),
+                    })
+                    .collect();
+                let pch: Vec<bool> = popts
+                    .iter()
+                    .map(|o| match mode {
+                        0 => false,
+                        1 => true,
+                        _ => pworst(&o[1]) > pworst(&o[0]),
+                    })
+                    .collect();
+                // a choice that changes nothing is the same variant
+                let wch: Vec<bool> = wch.iter().zip(opts.iter()).map(|(&c, o)| c && (o[1].1 != [0, 0] || o[1].0 != o[0].0)).collect();
+                let pch: Vec<bool> = pch.iter().zip(popts.iter()).map(|(&c, o)| c && o[1] != o[0]).collect();
+                if seen.contains(&(wch.clone(), pch.clone())) {
+                    continue;
+                }
+                seen.push((wch.clone(), pch.clone()));
+                let mut bs = fixed;
+                let mut su1 = 0.0f64;
+                for (o, &c) in opts.iter().zip(wch.iter()) {
+                    let (s, cvv) = o[c as usize];
+                    su1 = dn(su1 + s);
+                    bs[0] += cvv[0];
+                    bs[1] += cvv[1];
+                }
+                let pv0: Vec<[I; 2]> = popts.iter().zip(pch.iter()).map(|(o, &c)| o[c as usize].0).collect();
+                let pv1: Vec<[I; 2]> = popts.iter().zip(pch.iter()).map(|(o, &c)| o[c as usize].1).collect();
+                vars.push(UVar { base: bs, su1, pv0, pv1 });
+            }
+            cells[axi].push((i0, i1, vars));
         }
     }
-    let tot = konst + gmin.unwrap();
-    if debug {
-        let m0 = xs.iter().enumerate().map(|(i, _)| ys.iter().enumerate().map(|(j, _)| hv0[i] + vv0[j]).min().unwrap()).min().unwrap();
-        let m1 = xs.iter().enumerate().map(|(i, _)| ys.iter().enumerate().map(|(j, _)| hv1[i] + vv1[j] + su1).min().unwrap()).min().unwrap();
-        eprintln!("    U grid minima without area: u=0 {:.9} u=u1 {:.9} (u1 = {:.3e})", m0 as f64 / ctx.target as f64, m1 as f64 / ctx.target as f64, u1);
-        // the argmin of the full grid and the term values there
-        let mut bestp = (0usize, 0usize, I::MAX);
-        for (i, &x) in xs.iter().enumerate() {
-            for (j, &y) in ys.iter().enumerate() {
-                let mut v = (hv0[i] + vv0[j]).min(hv1[i] + vv1[j] + su1);
-                for (ri, r) in cv.rects.iter().enumerate() {
-                    let ox = ov(x, (r.x0 as I) << K, (r.x1 as I) << K);
-                    let oy = ov(y, (r.y0 as I) << K, (r.y1 as I) << K);
-                    if ox > 0 && oy > 0 {
-                        let pn = ((r.x1 - r.x0) as I) * ((r.y1 - r.y0) as I);
-                        v += ctx.rect_wlc[ri] * ox * oy / (pn << K);
+    // edge alternatives of the pairs, on their perp axis, at every grid vertex
+    let evals: Vec<Vec<I>> = pairs
+        .iter()
+        .map(|p| {
+            let perp = 1 - p.along;
+            grid[perp].iter().map(|&v| p.edges.iter().map(|t| t.eval(v, half, g, s1)).sum()).collect()
+        })
+        .collect();
+    // pair choices: bit set = pair value, clear = edge terms
+    let masks: Vec<u32> = if npairs <= 4 {
+        (0..(1u32 << npairs)).collect()
+    } else {
+        let all = (1u32 << npairs.min(31)) - 1;
+        let mut m = vec![all, 0];
+        for k in 0..npairs.min(31) {
+            m.push(all ^ (1 << k));
+            m.push(1 << k);
+        }
+        m
+    };
+    let ov = |c: I, r0: I, r1: I| -> I { ((c + half).min(r1) - (c - half).max(r0)).max(0) };
+    let area_at = |x: I, y: I| -> Option<I> {
+        let mut v: I = 0;
+        for (ri, r) in cv.rects.iter().enumerate() {
+            let ox = ov(x, (r.x0 as I) << K, (r.x1 as I) << K);
+            let oy = ov(y, (r.y0 as I) << K, (r.y1 as I) << K);
+            if ox == 0 || oy == 0 {
+                continue;
+            }
+            let pn = ((r.x1 - r.x0) as I) * ((r.y1 - r.y0) as I);
+            v += ctx.rect_wlc[ri].checked_mul(ox)?.checked_mul(oy)? / (pn << K);
+        }
+        Some(v)
+    };
+    let mut gmin: Option<I> = None;
+    let mut arg = (0usize, 0usize, 0u32);
+    for (cx, &(ix0, ix1, ref vxs)) in cells[0].iter().enumerate() {
+        for (cy, &(iy0, iy1, ref vys)) in cells[1].iter().enumerate() {
+            let xsv = [ix0, ix1];
+            let ysv = [iy0, iy1];
+            let mut areas = [[0 as I; 2]; 2];
+            for a in 0..2 {
+                for bb in 0..2 {
+                    areas[a][bb] = area_at(grid[0][xsv[a]], grid[1][ysv[bb]])?;
+                }
+            }
+            let mut best: Option<(I, u32)> = None;
+            for vx in vxs {
+                for vy in vys {
+                    let su1 = Iv::exact(vx.su1).add(Iv::exact(vy.su1)).add(Iv::exact(area_su1)).lo.floor() as I;
+                    for &m in &masks {
+                        let mut cell_min: Option<I> = None;
+                        for a in 0..2 {
+                            for bb in 0..2 {
+                                let (mut s0, mut s1v) = (vx.base[a] + vy.base[bb], vx.base[a] + vy.base[bb] + su1);
+                                for (k, p) in pairs.iter().enumerate() {
+                                    if (m >> k) & 1 == 1 {
+                                        let (vv, c) = if p.along == 0 { (vx, a) } else { (vy, bb) };
+                                        s0 += vv.pv0[k][c];
+                                        s1v += vv.pv1[k][c];
+                                    } else {
+                                        let e = if p.along == 0 { evals[k][ysv[bb]] } else { evals[k][xsv[a]] };
+                                        s0 += e;
+                                        s1v += e;
+                                    }
+                                }
+                                let v = s0.min(s1v) + areas[a][bb];
+                                cell_min = Some(cell_min.map_or(v, |x| x.min(v)));
+                            }
+                        }
+                        let cmv = cell_min.unwrap();
+                        if best.map_or(true, |(x, _)| cmv > x) {
+                            best = Some((cmv, m));
+                        }
                     }
                 }
-                if v < bestp.2 {
-                    bestp = (i, j, v);
+            }
+            let (bv, bm) = best.unwrap();
+            if gmin.map_or(true, |x| bv < x) {
+                gmin = Some(bv);
+                arg = (cx, cy, bm);
+            }
+        }
+    }
+    let tot = konst + gmin?;
+    if debug && std::env::var("ZMX2_DEBUG_CELL").is_ok() {
+        let (cx, cy, bm) = arg;
+        let tu = ctx.target as f64;
+        let (ix0, ix1, vxs) = &cells[0][cx];
+        let (iy0, iy1, vys) = &cells[1][cy];
+        for (nvx, vx) in vxs.iter().enumerate() {
+            for (nvy, vy) in vys.iter().enumerate() {
+                eprintln!("    variant x{} y{}: su1 x {:.3e} y {:.3e} area {:.3e}", nvx, nvy, vx.su1 / tu, vy.su1 / tu, area_su1 / tu);
+                for (a, &ix) in [*ix0, *ix1].iter().enumerate() {
+                    for (bb, &iy) in [*iy0, *iy1].iter().enumerate() {
+                        let mut line = format!("      corner x {:.9} y {:.9}: base x {:.9} y {:.9} area {:.9}", grid[0][ix] as f64 / ctx.gf, grid[1][iy] as f64 / ctx.gf, vx.base[a] as f64 / tu, vy.base[bb] as f64 / tu, area_at(grid[0][ix], grid[1][iy]).unwrap() as f64 / tu);
+                        for (k, p) in pairs.iter().enumerate() {
+                            let (vv, c) = if p.along == 0 { (vx, a) } else { (vy, bb) };
+                            let e = if p.along == 0 { evals[k][iy] } else { evals[k][ix] };
+                            line += &format!(" | pair{} along {} P0 {:.9} P1 {:.9} E {:.9}", k, p.along, vv.pv0[k][c] as f64 / tu, vv.pv1[k][c] as f64 / tu, e as f64 / tu);
+                        }
+                        eprintln!("{}", line);
+                    }
                 }
             }
         }
-        let (i, j, _) = bestp;
-        let tu = ctx.target as f64;
-        eprintln!("    U argmin x {:.9} y {:.9}: hv0 {:.9} vv0 {:.9} hv1 {:.9} vv1 {:.9} su1 {:.9}", xs[i] as f64 / ctx.gf, ys[j] as f64 / ctx.gf, hv0[i] as f64 / tu, vv0[j] as f64 / tu, hv1[i] as f64 / tu, vv1[j] as f64 / tu, su1 as f64 / tu);
-        for t in &tx {
-            eprintln!("      x-term {:.9} / {:.9}", ev(t, xs[i]) as f64 / tu, ev1(t, xs[i]) as f64 / tu);
-        }
-        for t in &ty {
-            eprintln!("      y-term {:.9} / {:.9}", ev(t, ys[j]) as f64 / tu, ev1(t, ys[j]) as f64 / tu);
-        }
+        let _ = bm;
     }
     if debug {
+        let (cx, cy, bm) = arg;
+        let (ix0, ix1, _) = &cells[0][cx];
+        let (iy0, iy1, _) = &cells[1][cy];
         eprintln!(
-            "  lemma U sigma ({},{}) corr {} pairs {:x}: base x [{:.7},{:.7}] y [{:.7},{:.7}] konst {} gmin {:.9} slope {:.6} pairs {} -> {:.9}",
-            sx, sy, corr_mask, pair_mask, bx0 as f64 / ctx.gf, bx1 as f64 / ctx.gf, by0 as f64 / ctx.gf, by1 as f64 / ctx.gf,
-            konst, gmin.unwrap() as f64 / ctx.target as f64, slope / ctx.target as f64, pairs.len(), tot as f64 / ctx.target as f64
+            "  lemma U {:?}/{:?} ovr {:?}: base x [{:.9},{:.9}] y [{:.9},{:.9}] pairs {} windows {}/{} area_su1 {:.3e}; worst cell x [{:.9},{:.9}] y [{:.9},{:.9}] mask {:b} -> {:.9}",
+            ax[0].mode,
+            ax[1].mode,
+            ovr,
+            br[0].0 as f64 / ctx.gf,
+            br[0].1 as f64 / ctx.gf,
+            br[1].0 as f64 / ctx.gf,
+            br[1].1 as f64 / ctx.gf,
+            npairs,
+            wins[0].len(),
+            wins[1].len(),
+            area_su1 / ctx.target as f64,
+            grid[0][*ix0] as f64 / ctx.gf,
+            grid[0][*ix1] as f64 / ctx.gf,
+            grid[1][*iy0] as f64 / ctx.gf,
+            grid[1][*iy1] as f64 / ctx.gf,
+            bm,
+            tot as f64 / ctx.target as f64
         );
     }
     Some(tot)
 }
 
-/// Lemma U: the first-order bound of a box with u0 = 0 and u1 <= 1/16 (None if not applicable): the best over
-/// the admissible path signs (forced at a wall, free otherwise).  `inw` = the certain point weight.
+/// a germ pair whose cone (Lemma V) can split the poses of the box: family, frame position of line a, the
+/// germ coordinate g (real, grid units; the centre coordinate where both lines are at distance 1/2) and the
+/// cone slopes (k0, k1) of that real axis
+struct GermSplit {
+    fam: usize,
+    pos_a: i64,
+    g: I,
+    k0: f64,
+    k1: f64,
+}
+
+/// Lemma V candidates: germ pairs of the box with the germ inside the box's centre range on their perp axis
+fn germ_splits(ctx: &Ctx, b: &PBox, bg: &BoxGeo, cr: [(I, I); 2]) -> Vec<GermSplit> {
+    let cv = ctx.cv;
+    let u1 = bg.u1.hi;
+    let u1i = Iv::exact(u1);
+    let (fv, fh) = frames(ctx, b, bg);
+    let mut out = Vec::new();
+    let half = ctx.g / 2;
+    for fam in 0..2 {
+        let (fb, lines, perp) = if fam == 0 { (&fv, &cv.vl, 0usize) } else { (&fh, &cv.hl, 1usize) };
+        let xlo = (fb.xn[0] as f64) / (fb.xd as f64) - 0.75;
+        let xhi = (fb.xn[1] as f64) / (fb.xd as f64) + 0.75;
+        let us: Vec<ULine> = lines
+            .iter()
+            .filter(|l| {
+                let p = l.pos as f64 / cv.d as f64;
+                p >= xlo && p <= xhi
+            })
+            .map(|l| u_line(ctx, fb, l, (0.0, 0.0), u1))
+            .collect();
+        for a in us.iter().filter(|a| a.hi_ok && !a.lo_ok) {
+            if let Some(bl) = us.iter().find(|bl| bl.l.pos == a.l.pos + cv.d as i64 && bl.lo_ok && !bl.hi_ok) {
+                // K_a = 1 + 2 max(0, -al_g(a)) u1, K_b = 1 + 2 max(0, be_g(b)) u1 (rounded up)
+                let ka = Iv::exact(1.0).add(Iv::exact((-a.al_g).max(0.0)).scale(2.0).mul(u1i)).hi;
+                let kb = Iv::exact(1.0).add(Iv::exact(bl.be_g.max(0.0)).scale(2.0).mul(u1i)).hi;
+                let pa = (a.l.pos as I) << K;
+                // frame germ g' = l_a + 1/2; real: vertical g = g', horizontal g_y = -g'
+                let (g, k0, k1) = if fam == 0 { (pa + half, -ka, kb) } else { (-pa - half, -kb, ka) };
+                let (c0, c1) = cr[perp];
+                // eta = d_a - 1/2 must stay in (-1, 1) on the box: |c - g| < 1
+                if g >= c0 && g <= c1 && c0 > g - ctx.g && c1 < g + ctx.g {
+                    out.push(GermSplit { fam, pos_a: a.l.pos, g, k0, k1 });
+                }
+            }
+        }
+    }
+    out
+}
+
+/// Lemma U (+ Lemma V): the first-order bound of a box with u0 = 0 and u1 <= 1/16 (None if not applicable).
+/// `inw` = the certain point weight.  First the plain bound (best over the admissible path signs: forced at a
+/// wall, free otherwise); if it does not reach the target, the poses are split by the cones of germ pairs (one
+/// per axis, on axes whose path sign is free) and the bound is the minimum over the pieces of the best over the
+/// path signs of each piece.
 fn first_order_bound(ctx: &Ctx, b: &PBox, bg: &BoxGeo, inw: I) -> Option<I> {
     if b.un[0] != 0 || 16 * b.un[1] > b.ud() {
         return None;
@@ -3063,34 +3390,102 @@ fn first_order_bound(ctx: &Ctx, b: &PBox, bg: &BoxGeo, inw: I) -> Option<I> {
     let whi = w_hi(bg);
     let ext = ctx.ghi(Iv::exact(whi).sub(Iv::exact(1.0)).scale(0.5).hi).max(0);
     let sg = ctx.cv.sx << K;
-    let opts = |n: [I; 2]| -> Vec<i32> {
-        let lo = fdiv(n[0] * g, cd);
-        let hi = cdiv(n[1] * g, cd);
-        if lo < half + ext {
+    let cr = [(fdiv(b.xn[0] * g, cd), cdiv(b.xn[1] * g, cd)), (fdiv(b.yn[0] * g, cd), cdiv(b.yn[1] * g, cd))];
+    let opts = |r: (I, I)| -> Vec<i32> {
+        if r.0 < half + ext {
             vec![1] // near the low wall: the base must be admissible
-        } else if hi > sg - half - ext {
+        } else if r.1 > sg - half - ext {
             vec![-1]
         } else {
             vec![0, 1, -1]
         }
     };
-    let mut best: Option<I> = None;
-    for &sx in &opts(b.xn) {
-        for &sy in &opts(b.yn) {
-            // breakpoint corrections in the base (Lemma U (b')) or the plain largest density in the slope
-            for corr_mask in [3u32, 0, 1, 2] {
-                for pair_mask in [u32::MAX, 0, 1, 2, 0xfffffffe, 0xfffffffd] {
-                    if let Some(v) = first_order_sig(ctx, b, bg, inw, sx, sy, corr_mask, pair_mask) {
-                        best = Some(best.map_or(v, |x| x.max(v)));
-                        if v >= ctx.target {
-                            return best;
-                        }
+    // the best over the path signs of the Path axes of one piece
+    let piece = |px: (AxisMode, (I, I)), py: (AxisMode, (I, I)), ovr: &[(usize, i64, u8)]| -> Option<I> {
+        let sx: Vec<AxisMode> = match px.0 {
+            AxisMode::Path(_) => opts(px.1).into_iter().map(AxisMode::Path).collect(),
+            m => vec![m],
+        };
+        let sy: Vec<AxisMode> = match py.0 {
+            AxisMode::Path(_) => opts(py.1).into_iter().map(AxisMode::Path).collect(),
+            m => vec![m],
+        };
+        let mut best: Option<I> = None;
+        for &mx in &sx {
+            for &my in &sy {
+                let spec = [AxisSpec { mode: mx, cr: px.1 }, AxisSpec { mode: my, cr: py.1 }];
+                if let Some(v) = first_order_sig(ctx, b, bg, inw, spec, ovr) {
+                    best = Some(best.map_or(v, |x| x.max(v)));
+                    if v >= ctx.target {
+                        return best;
                     }
                 }
             }
         }
+        best
+    };
+    let plain = piece((AxisMode::Path(0), cr[0]), (AxisMode::Path(0), cr[1]), &[]);
+    if plain.map_or(false, |v| v >= ctx.target) {
+        return plain;
     }
-    best
+    // Lemma V: split by germ cones (at most one per axis, on free axes); every subset of the splittable axes is a
+    // partition of the poses, so the best over the subsets is valid
+    let splits = germ_splits(ctx, b, bg, cr);
+    let mut sp: [Option<&GermSplit>; 2] = [None, None];
+    for axi in 0..2 {
+        // vertical pairs cut the x axis (family 0), horizontal pairs the y axis (family 1)
+        if opts(cr[axi]).len() == 3 {
+            sp[axi] = splits.iter().find(|s| s.fam == axi);
+        }
+    }
+    let mut worst_best: Option<I> = None;
+    for subset in [1u32, 2, 3] {
+        if (0..2).any(|axi| (subset >> axi) & 1 == 1 && sp[axi].is_none()) {
+            continue;
+        }
+        let mut pieces: [Vec<((AxisMode, (I, I)), Option<(usize, i64, u8)>)>; 2] = [Vec::new(), Vec::new()];
+        for axi in 0..2 {
+            match sp[axi].filter(|_| (subset >> axi) & 1 == 1) {
+                Some(s) => {
+                    let (c0, c1) = cr[axi];
+                    let fam = s.fam;
+                    pieces[axi].push(((AxisMode::Cone { g: s.g, k0: s.k0, k1: s.k1 }, cr[axi]), None));
+                    // vertical: c <= g is region 1 (a window), c >= g region 2; horizontal: c_y >= g region 1
+                    let (r_lo, r_hi) = if fam == 0 { (1u8, 2u8) } else { (2u8, 1u8) };
+                    pieces[axi].push(((AxisMode::Path(0), (c0, s.g)), Some((fam, s.pos_a, r_lo))));
+                    pieces[axi].push(((AxisMode::Path(0), (s.g, c1)), Some((fam, s.pos_a, r_hi))));
+                }
+                None => pieces[axi].push(((AxisMode::Path(0), cr[axi]), None)),
+            }
+        }
+        let mut worst: Option<I> = None;
+        'outer: for &(px, ox) in &pieces[0] {
+            for &(py, oy) in &pieces[1] {
+                let ovr: Vec<(usize, i64, u8)> = [ox, oy].into_iter().flatten().collect();
+                match piece(px, py, &ovr) {
+                    Some(v) => worst = Some(worst.map_or(v, |x| x.min(v))),
+                    None => {
+                        worst = None;
+                        break 'outer;
+                    }
+                }
+                if worst.map_or(false, |w| w < ctx.target) {
+                    break 'outer; // this subset cannot certify
+                }
+            }
+        }
+        if let Some(w) = worst {
+            worst_best = Some(worst_best.map_or(w, |x| x.max(w)));
+            if w >= ctx.target {
+                break;
+            }
+        }
+    }
+    let worst = worst_best;
+    match (plain, worst) {
+        (Some(p), Some(w)) => Some(p.max(w)),
+        (p, w) => p.or(w),
+    }
 }
 
 // =====================================================================================
