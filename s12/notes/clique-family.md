@@ -144,9 +144,26 @@ Admissibility in `x` bounds `s_1` and `s_2`:
 If `cos θ ≤ p_x` (i.e. `θ ≥ θ₀`) the min is `½` and the requirement is `ρ ≥ ε cot θ`, implied by
 `ρ ≥ ε cot θ₀` since `cot` decreases.  If `cos θ > p_x` (`θ < θ₀`) the requirement is
 `f(θ) := p_x/cos θ + ε cos θ - ρ sin θ - 1 ≤ 0`.  Now `f(0) = p_x + ε - 1 < 0` by hypothesis, and
-`f(θ₀) = ε p_x - ρ sqrt(1-p_x²) ≤ 0` exactly when `ρ ≥ ρ*`.  Finally
-`f'(θ) = sin θ (p_x/cos²θ - ε) - ρ cos θ` is increasing on `[0°, 90°)` (both terms are), so `f`
-is **convex** and hence `f ≤ max(f(0), f(θ₀)) ≤ 0` on `[0, θ₀]`.
+`f(θ₀) = ε p_x - ρ sqrt(1-p_x²) ≤ 0` exactly when `ρ ≥ ρ*`.  It remains to show `f ≤ 0` on
+all of `[0, θ₀]`.
+
+*Erratum (2026-10-01).*  An earlier version claimed `f` is convex on `[0, θ₀]`.  That is false:
+`f''(0) = p_x - ε < 0` whenever `ε > p_x` (e.g. `p_x = 1/4`, `ε = 1/2`).  Found by the jlevy/squares
+review `docs/project/reviews/review-2026-10-01-evand-mathematical-transfer.md`, which also gives
+the algebraic argument below (checked here by hand).  The tabulated anchors of §6 were certified by
+the exact certifier of §4, which does not use this step.
+
+Since `f` decreases in `ρ`, take `ρ = ρ*`.  Put `a = p_x`, `z = cos θ ∈ [a, 1]`, `S = sqrt(1 - a²)`,
+`T = sin θ = sqrt(1 - z²)`.  Then
+
+    f  =  (a - z)/z + ε B,      B  =  z - aT/S  =  (z² - a²) / (S (zS + aT)),
+
+using `z²S² - a²T² = z² - a²`.  All denominators are positive, `B ≥ 0`, and since
+`S(zS + aT) ≥ z(1 - a²)` and `(z + a)/(1 - a²) ≤ (1 + a)/(1 - a²) = 1/(1 - a)`,
+
+    B  ≤  (z - a) / (z (1 - a)),   so   f  ≤  ((z - a)/z) · (ε/(1 - a) - 1)  ≤  0,
+
+because `z ≥ a` and `ε < 1 - a`.
 
 **(2,-).**  Need `ε sin θ - s_2 - ½ ≤ ρ cos θ`.  If `sin θ < p_x` use `s_2 ≥ -½`: the requirement
 is `ρ ≥ ε tan θ`, and `tan θ < tan(90° - θ₀) = cot θ₀`, so `ρ ≥ ρ*` suffices.  If `sin θ ≥ p_x`
@@ -314,9 +331,9 @@ discharged today.
 
 Lemma 2 (`K(p,A) ⊇ P_p`) is *not* needed for soundness and would not be formalised: it says the
 clique constraint dominates the point row, which is a statement about the strength of the
-certificate, not its validity.  Formalising it is real one-parameter trigonometry (the convexity
-of `f(θ) = p_x/cos θ + ε cos θ - ρ sin θ - 1` on `[0, θ₀]`), and the exact certifier of §4 is the
-practical substitute.
+certificate, not its validity.  Formalising it is one-parameter trigonometry, now reduced to an
+algebraic inequality in `z = cos θ` (the `(1,+)` case above; the earlier convexity argument was
+wrong), and the exact certifier of §4 is the practical substitute.
 
 ## 6. The measured facts (what the family is worth)
 
