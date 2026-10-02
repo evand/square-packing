@@ -337,7 +337,7 @@ wrong), and the exact certifier of §4 is the practical substitute.
 
 ## 6. The measured facts (what the family is worth)
 
-On the exact certified extremal measure at `t = 3.99` (`runs/dual_exact_3.99_support.txt`, mass
+On the exact certified extremal measure at `t = 3.99` (`search/dual_exact_3.99_support.txt`, mass
 `12.008230754`, coverage `≤ 1` at every arrangement vertex):
 
 | object | max mass | note |

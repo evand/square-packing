@@ -116,7 +116,10 @@ mass than at `t = 4`: the fractional mixture fills the bigger interior.  The rig
   check at `t = 5` (3.65 G pairs) drove available memory below 12 GB and was killed by a guard.  The streamed one peaked at a few GB (system memory stayed at `~11 GB` used).
   Both modes give identical output on the `F` check (`--tag s5killXEs`).
 * `dual_exact.py --n N` (build and check, default 12): the target that the log line compares `L`
-  with.  It is display only, and was hard-coded `12`.
+  with.  It is display only, and was hard-coded `12`.  *(2026-10-01: for `check`, `--n N` now also
+  asserts: the exit status is 0 iff `L > N` exactly, 1 otherwise; with no `--n` nothing is asserted and
+  the log line compares with 12.  So `--n 20` asserts the certified bound, while `--n 21` exits 1 —
+  that is the kill test not firing.)*
 * `packing_dual.py analyse`: adds a `[2.0, t/2]` centre-distance bin when `t > 4`.  Before, centres
   farther than 2 from every wall were silently dropped from the table.  The output at `t <= 4` is unchanged.
 * No hard-coded side 4 found in `packing_dual.py`, `dual_exact.py` or `cover4_cg.py`.  `cover4_cg.py`'s `--t`
@@ -147,9 +150,15 @@ python3 search/packing_dual.py 5 s5killE --warm runs/dual_s5killC_support.txt --
 python3 search/dual_exact.py build --t 5 --n 21 --no-lp --tag s5killXE --src runs/dual_s5killE_support.txt \
     --Q 10000000 --Dc 100000000 --procs 8
 # independent re-certification from the support file alone
-python3 search/dual_exact.py check search/s21_nuf5_exact_support.txt --t 5 --n 21 --procs 8          # F, ~1.5 min
-python3 search/dual_exact.py check search/s21_nuf5_exact_support.txt --t 5 --n 21 --full --stream --procs 8   # full, ~11 min, a few GB
+# --n 20: exit 0 iff L > 20 (the certified claim);  --n 21 would exit 1 (L < 21: the kill test does not fire)
+python3 search/dual_exact.py check search/s21_nuf5_exact_support.txt --t 5 --n 20 --procs 8          # F, ~1.5 min
+python3 search/dual_exact.py check search/s21_nuf5_exact_support.txt --t 5 --n 20 --full --stream --procs 8   # full, ~11 min, a few GB
 ```
+
+Re-checked 2026-10-01 after the `dual_exact.py` hardening (explicit pool initializer, asserting `--n`,
+strict support parser): `check search/s21_nuf5_exact_support.txt --t 5 --n 20 --stream --procs 4` gives the
+same 1,311,398 vertices, 456,658,626 pairs, `M = 499999999/500000000`, `L = 10323890641/499999999`, exit 0
+(138 s on 4 processes).
 
 `warmC.txt` is the exact-CG support `runs/dual_exact_cgs5killG32_support.txt` converted to float
 format.  The CG was bootstrapped from `s5killA` round 0: `dual_exact.py build --t 5` on it, then

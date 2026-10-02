@@ -198,7 +198,8 @@ The pure run on the calibrated lattice produced a measure that certifies, in exa
     L    = mass / M = 48112643084 / 3999999987 = 12.028160810092  >  12
 
 so **`ν_f(399/100) >= 12.0281608…`**, improving `DUAL_EXACT.md`'s `12.00823078`.  Support file
-`runs/cqx_PURE99_support.txt` (240 poses with positive mass, 1920 images).  Everything
+**`search/cqx_PURE99_support.txt`** (byte-identical copy of `runs/cqx_PURE99_support.txt`; 240 poses
+with positive mass, 1920 images).  Everything
 load-bearing is integer/`Fraction`: the poses are rational rotations `2 arctan(p/q)` with rational
 centres clamped exactly into the closed container, the arrangement vertices are exact integer
 triples, the coverage test is the integer one of `dual_exact.py`, and the masses were rounded
@@ -208,7 +209,8 @@ triples, the coverage test is the integer one of `dual_exact.py`, and the masses
 everything with no shared code path with the search:
 
 ```
-python3 search/dual_exact.py check runs/cqx_PURE99_support.txt
+python3 search/dual_exact.py check search/cqx_PURE99_support.txt --n 12    # exit 0 iff L > 12 (exact)
+  # re-run 2026-10-01 (--stream --procs 4): identical M and L, ASSERT L > 12: PASS, exit 0, 15 s
   EXACT: 255893 vertices checked; mass = 12028160771/1000000000;
   M = 3999999987/4000000000 (attained at ~(0.999939, 0.999939));
   L = 48112643084/3999999987 = 12.028160810092  (>= 12);  63.8 s
@@ -242,7 +244,7 @@ validation.
 ## 4. What the measures say, directly
 
 Independently of any LP, on the **certified** extremal measure at `t = 3.99`
-(`runs/dual_exact_3.99_support.txt`, mass `12.008230754`, coverage `<= 1` exactly):
+(`search/dual_exact_3.99_support.txt`, mass `12.008230754`, coverage `<= 1` exactly):
 
 | object | max mass | status |
 |---|---|---|

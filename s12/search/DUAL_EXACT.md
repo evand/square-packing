@@ -1,8 +1,9 @@
 # Exact (rational) certificate:  `L(399/100) >= 12`
 
-Code: `search/dual_exact.py`.  Certificate: `runs/dual_exact_3.99_support.txt`
-(logs `runs/dual_exact_3.99.log`, `runs/dual_exact_3.99_check_F.log`, `runs/dual_exact_3.99_check_full.log`;
-numbers in `runs/dual_exact_3.99.json`).  This makes the float-with-margins bound of `search/DUAL.md`
+Code: `search/dual_exact.py`.  Certificate: **`search/dual_exact_3.99_support.txt`** (byte-identical copy
+of the build output `runs/dual_exact_3.99_support.txt`; `runs/` is not published, so the logs
+`runs/dual_exact_3.99.log`, `runs/dual_exact_3.99_check_F.log`, `runs/dual_exact_3.99_check_full.log` and
+`runs/dual_exact_3.99.json` are local only — rerun `check` below to reproduce them).  This makes the float-with-margins bound of `search/DUAL.md`
 exact: every load-bearing quantity is a Python integer or `Fraction`; floats only *choose* the masses.
 
 ## Statement proved
@@ -109,9 +110,13 @@ perturbed arrangement with *all* vertex rows at once.
 
 ```sh
 python3 search/dual_exact.py build                     # -> runs/dual_exact_3.99_support.txt, .json, .log   (24 s)
-python3 search/dual_exact.py check runs/dual_exact_3.99_support.txt          # fundamental domain (5 s)
-python3 search/dual_exact.py check runs/dual_exact_3.99_support.txt --full   # whole container   (38 s)
+python3 search/dual_exact.py check search/dual_exact_3.99_support.txt --n 12          # fundamental domain (5 s)
+python3 search/dual_exact.py check search/dual_exact_3.99_support.txt --n 12 --full   # whole container   (38 s)
 ```
+
+With `--n 12` the exit status asserts the strict exact inequality `L > 12` (0 iff it holds); a
+malformed support or a negative mass exits 2.  Re-checked 2026-10-01 (fork, spawn and forkserver start
+methods, and `--procs 1` in-process): `M = 7999999981/8000000000`, `L = 96065846032/7999999981`, exit 0.
 
 `build` is deterministic given HiGHS; `check` depends only on the support file and Python integers.
 Support file format: `pose p q cx cy mass` with `cx, cy, mass` as fractions, `t = 399/100`.

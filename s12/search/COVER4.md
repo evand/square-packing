@@ -196,12 +196,17 @@ python3 search/packing_dual.py 4 E1 --warm runs/dual_PC1_support.txt --seed-file
 python3 search/dual_exact.py build --t 4 --tag 4 --src runs/dual_E1_support.txt --Q 10000000 --Dc 100000000 --procs 4
 # (optional) exact restricted-master column generation over a larger pose pool
 python3 search/cover4_cg.py pool runs/pool4.txt runs/dual_E1_support.txt runs/dual_C1_support.txt runs/dual_PC1_support.txt
-python3 search/cover4_cg.py pool runs/pool399.txt --scale 1.002506266 runs/dual_exact_3.99_support.txt
+python3 search/cover4_cg.py pool runs/pool399.txt --scale 1.002506266 search/dual_exact_3.99_support.txt
 python3 search/cover4_cg.py cg runs/pool4.txt search/cover4_exact_support.txt G --batch 130 --rounds 10
 # independent exact re-certification from the support file alone (no LP)
-python3 search/dual_exact.py check search/cover4_exact_support.txt --t 4 --tag 4 --procs 4            # F,    ~2 min
-python3 search/dual_exact.py check search/cover4_exact_support.txt --t 4 --tag 4 --full --procs 4     # full, ~16 min
+python3 search/dual_exact.py check search/cover4_exact_support.txt --t 4 --tag 4 --n 12 --procs 4            # F,    ~2 min
+python3 search/dual_exact.py check search/cover4_exact_support.txt --t 4 --tag 4 --n 12 --full --procs 4     # full, ~16 min
 ```
+
+`--n 12` makes the exit status assert the strict exact inequality `L > 12` (exit 0 iff it holds; 1 if
+not; 2 for a malformed support).  Re-checked 2026-10-01 with
+`check search/cover4_exact_support.txt --t 4 --n 12 --stream --procs 4`: unchanged
+`M = 1999999999/2000000000`, `L = 24537607710/1999999999`, exit 0.
 
 Support file format: `pose p q cx cy mass` with `cx, cy, mass` as fractions and the header
 `# t = 4/1` (which `check` reads).  `build` is deterministic given HiGHS; `check` depends only on

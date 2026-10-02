@@ -34,9 +34,19 @@ Usage
                                        [--Q 100000] [--Dc 1000000] [--procs 4]
         reads a float support (default runs/dual_PA2_support.txt), snaps, enumerates, polishes,
         certifies, writes runs/dual_exact_<TAG>_support.txt (+ .json, .log); TAG defaults to t
-    python3 search/dual_exact.py check runs/dual_exact_3.99_support.txt [--t T] [--full] [--procs 4]
+    python3 search/dual_exact.py check search/dual_exact_3.99_support.txt [--t T] [--full] [--procs 4]
+                                       [--n N] [--stream] [--start-method fork|spawn|forkserver]
         independent exact re-certification from the exact support file (no LP); t is read from the
-        file's "# t = p/q" header unless --t is given
+        file's "# t = p/q" header unless --t is given (a header that disagrees with --t is an error).
+        With --n N the exit status ASSERTS the strict inequality  L > N  (exact Fractions): exit 0 iff
+        it holds, exit 1 if it fails.  A malformed support (a non-comment line that is not
+        `pose p q cx cy mass` with integers p, q > 0 and fractions cx, cy, mass >= 0) exits 2.
+        Without --n the log line still compares L with 12 for display, and the exit status only
+        reports that the check ran.
+
+Multiprocessing: workers receive the arrangement state through an explicit Pool initializer, so the
+checker is correct under every start method (fork, spawn, forkserver; --start-method, default the
+platform's); --procs 1 runs everything in-process with no pool.
 
 The angle snap Q is the binding approximation: the LP optimum is degenerate on tight vertices, so
 Q = 10^5 can cost 0.3 of mass on a support the float search polished.  Q = 10^7 reproduces the
@@ -46,7 +56,7 @@ import sys, os, re, math, time, json, argparse
 from fractions import Fraction as Fr
 from math import gcd, lcm
 from collections import Counter
-from multiprocessing import Pool
+import multiprocessing as mp
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
@@ -113,7 +123,8 @@ def make_square(cx, cy, p, q, pose):
     for X, Y in corners: g = gcd(g, gcd(abs(X), abs(Y)))
     corners = [(X // g, Y // g) for X, Y in corners]; Dq //= g
     for X, Y in corners:                                       # admissibility: closed square in closed container
-        assert 0 <= X and TD * X <= TN * Dq and 0 <= Y and TD * Y <= TN * Dq, ('not admissible', pose, cx, cy, p, q)
+        if not (0 <= X and TD * X <= TN * Dq and 0 <= Y and TD * Y <= TN * Dq):     # explicit: survives python -O
+            raise SupportError(f'not admissible: pose {pose}, centre ({cx}, {cy}), p/q = {p}/{q}')
     return (CX, CY, Dk, a, b, r, corners, Dq, pose)
 
 
@@ -140,7 +151,8 @@ def in_F(v):
     X, Y, D = v
     return X >= 0 and X <= Y and 2 * TD * Y <= TN * D
 
-# globals shared with forked workers
+# module globals read by the workers; a worker process gets them from _init_worker (pool initializer),
+# never by inheritance, so every start method (fork / spawn / forkserver) sees the same state
 EDGES = []; EMIN = []; EBUCKET = {}; SQ = []; SBUCKET = {}; VERTS = []; REGION_F = True
 
 def pair_worker(cells):
@@ -181,6 +193,25 @@ def cov_worker(rng):
     return lo, res
 
 SQW = []          # per-square integer weight (check mode, streaming)
+START_METHOD = None   # multiprocessing start method (None: platform default)
+
+def _init_worker(state):
+    """pool initializer: install the arrangement state (and the container side) in this worker"""
+    global T
+    globals().update(state)
+    T = Fr(state['TN'], state['TD'])
+
+def _pool_map(procs, func, items, state_keys, unordered=False):
+    """map func over items: in-process when procs <= 1, else in a pool whose workers are initialised
+    with the named module globals (plus TN, TD) -- independent of the start method"""
+    if procs <= 1:
+        for it in items: yield func(it)
+        return
+    g = globals()
+    state = {k: g[k] for k in ('TN', 'TD') + tuple(state_keys)}
+    ctx = mp.get_context(START_METHOD)
+    with ctx.Pool(procs, initializer=_init_worker, initargs=(state,)) as pool:
+        yield from (pool.imap_unordered(func, items) if unordered else pool.imap(func, items))
 
 def covmax_worker(rng):
     """streaming variant of cov_worker for `check`: the max weighted coverage over the range, without
@@ -200,10 +231,9 @@ def max_coverage(procs, weights):
     t0 = time.time()
     n = len(VERTS); rngs = [(i, min(i + 2000, n)) for i in range(0, n, 2000)]
     best = -1; bi = -1; npairs = 0
-    with Pool(procs) as pool:
-        for b, i, np_ in pool.imap_unordered(covmax_worker, rngs):
-            npairs += np_
-            if b > best or (b == best and i < bi): best = b; bi = i
+    for b, i, np_ in _pool_map(procs, covmax_worker, rngs, ('VERTS', 'SQ', 'SBUCKET', 'SQW'), unordered=True):
+        npairs += np_
+        if b > best or (b == best and i < bi): best = b; bi = i
     log(f"  incidences (streamed): {n} vertices, {npairs} (vertex, square) pairs, {time.time() - t0:.1f} s")
     return best, bi
 
@@ -231,8 +261,7 @@ def enumerate_vertices(squares, full, procs):
                     EBUCKET.setdefault((cx, cy), []).append(ei)
     cells = sorted(EBUCKET.keys())
     t0 = time.time()
-    with Pool(procs) as pool:
-        parts = pool.map(pair_worker, chunks(cells, 8 * procs))
+    parts = list(_pool_map(procs, pair_worker, chunks(cells, 8 * procs), ('EDGES', 'EMIN', 'EBUCKET', 'REGION_F')))
     verts = set()
     for part in parts: verts.update(part)
     n_int = len(verts)
@@ -260,9 +289,8 @@ def incidences(procs):
     t0 = time.time()
     n = len(VERTS); rngs = [(i, min(i + 2000, n)) for i in range(0, n, 2000)]
     out = [None] * n
-    with Pool(procs) as pool:
-        for lo, res in pool.imap_unordered(cov_worker, rngs):
-            out[lo:lo + len(res)] = res
+    for lo, res in _pool_map(procs, cov_worker, rngs, ('VERTS', 'SQ', 'SBUCKET'), unordered=True):
+        out[lo:lo + len(res)] = res
     log(f"  incidences: {n} vertices, {sum(map(len, out))} (vertex, square) pairs, {time.time() - t0:.1f} s")
     return out
 
@@ -299,12 +327,33 @@ def support_t(path):
         if m: return Fr(m.group(1))
     return None
 
+class SupportError(ValueError):
+    pass
+
+_INT = re.compile(r'[+-]?\d+$')
+_FRAC = re.compile(r'[+-]?\d+(/\d+)?$')
+
 def read_exact_support(path):
+    """strict parser: every non-blank, non-comment line must be `pose p q cx cy mass` with integers
+    p, q (q > 0) and exact fractions cx, cy, mass (mass >= 0); anything else raises SupportError"""
     poses = []
-    for line in open(path):
+    for ln, line in enumerate(open(path), 1):
         if line.startswith('#') or not line.strip(): continue
         q = line.split()
-        if q[0] == 'pose': poses.append((int(q[1]), int(q[2]), Fr(q[3]), Fr(q[4]), Fr(q[5])))
+        where = f"{path}:{ln}"
+        if q[0] != 'pose' or len(q) != 6:
+            raise SupportError(f"{where}: expected 'pose p q cx cy mass', got {line.strip()!r}")
+        if not (_INT.match(q[1]) and _INT.match(q[2])) or not all(_FRAC.match(x) for x in q[3:6]):
+            raise SupportError(f"{where}: p, q must be integers and cx, cy, mass fractions: {line.strip()!r}")
+        try:
+            cx, cy, m = Fr(q[3]), Fr(q[4]), Fr(q[5])
+        except ZeroDivisionError:
+            raise SupportError(f"{where}: zero denominator: {line.strip()!r}")
+        p_, q_ = int(q[1]), int(q[2])
+        if q_ <= 0: raise SupportError(f"{where}: q must be positive: {line.strip()!r}")
+        if m < 0: raise SupportError(f"{where}: negative mass: {line.strip()!r}")
+        poses.append((p_, q_, cx, cy, m))
+    if not poses: raise SupportError(f"{path}: no pose lines")
     return poses
 
 def write_exact_support(path, poses, MU, DM, M, L, note):
@@ -399,12 +448,12 @@ def cmd_build(args):
     log(f"  wrote {out}; total {time.time() - t_all:.1f} s")
     return L
 
-def cmd_check(args):
+def cmd_check(args, sup):
     global LOG
     tag = 'full' if args.full else 'F'
+    os.makedirs(RUNS, exist_ok=True)
     LOG = open(os.path.join(RUNS, f'dual_exact_{TAG}_check_{tag}.log'), 'w')
     t_all = time.time()
-    sup = read_exact_support(args.support)
     poses = [(p, q, cx, cy) for (p, q, cx, cy, m) in sup]
     masses = [m for (_, _, _, _, m) in sup]
     DM = 1
@@ -424,12 +473,22 @@ def cmd_check(args):
         for vi, lst in enumerate(inc):
             num = sum(MU[pose_of[s]] for s in lst)
             if num > best: best = num; bi = vi
-    M = Fr(best, 8 * DM); mass = Fr(sum(MU), DM); L = mass / M
+    mass = Fr(sum(MU), DM)
+    if best <= 0 or mass <= 0:
+        raise SupportError(f"degenerate support: total mass {mass}, max coverage numerator {best}")
+    M = Fr(best, 8 * DM); L = mass / M
     X, Y, D = verts[bi]
+    n = args.n if args.n is not None else 12            # display target when nothing is asserted
     log(f"  EXACT: {len(verts)} vertices checked; mass = {mass} = {float(mass):.12f};  M = {M} = {float(M):.15f} "
         f"(attained at ({X}/{D}, {Y}/{D}) ~ ({X/D:.6f}, {Y/D:.6f}));  L = mass/M = {L} = {float(L):.12f}  "
-        f"({'>=' if L >= args.n else '<'} {args.n});  {time.time() - t_all:.1f} s")
-    return L
+        f"({'>=' if L >= n else '<'} {n});  {time.time() - t_all:.1f} s")
+    if args.n is None:
+        log("  no --n given: nothing asserted (exit status 0 only means the check ran)")
+        return 0
+    ok = L > args.n
+    log(f"  ASSERT L > {args.n}: {'PASS' if ok else 'FAIL'} (L - {args.n} = {L - args.n} = "
+        f"{float(L - args.n):+.6e}, exact)")
+    return 0 if ok else 1
 
 
 def main():
@@ -452,17 +511,33 @@ def main():
     c.add_argument('--full', action='store_true', help='whole container instead of the fundamental domain')
     c.add_argument('--stream', action='store_true', help='do not keep the incidence lists (low memory; same exact test)')
     c.add_argument('--procs', type=int, default=4)
-    c.add_argument('--n', type=int, default=12, help='target the log line compares L with (display only)')
+    c.add_argument('--n', type=Fr, default=None,
+                   help='ASSERT the strict exact inequality L > N: exit 0 iff it holds, 1 otherwise '
+                        '(without --n nothing is asserted; the log line compares with 12 for display)')
+    for q in (b, c):
+        q.add_argument('--start-method', choices=('fork', 'spawn', 'forkserver'), default=None,
+                       help='multiprocessing start method (default: platform default; all are supported)')
     args = ap.parse_args()
+    global START_METHOD
+    START_METHOD = args.start_method
     sys.set_int_max_str_digits(0)
     if args.cmd == 'build':
         set_t(Fr(args.t), args.tag)
         cmd_build(args)
     else:
-        t = Fr(args.t) if args.t else support_t(args.support)
-        assert t is not None, 'no "# t = p/q" header in the support file; pass --t'
-        set_t(t, args.tag)
-        cmd_check(args)
+        try:
+            th = support_t(args.support)
+            t = Fr(args.t) if args.t else th
+            if t is None: raise SupportError('no "# t = p/q" header in the support file; pass --t')
+            if th is not None and th != t:
+                raise SupportError(f'--t {t} disagrees with the support header t = {th}')
+            if t <= 0: raise SupportError(f't = {t} must be positive')
+            set_t(t, args.tag)
+            sup = read_exact_support(args.support)
+            rc = cmd_check(args, sup)
+        except (SupportError, OSError, ValueError) as e:
+            print(f"error: {e}", file=sys.stderr); sys.exit(2)
+        sys.exit(rc)
 
 if __name__ == '__main__':
     main()
