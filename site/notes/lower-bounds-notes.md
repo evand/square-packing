@@ -254,3 +254,38 @@ additionally trivial as a perfect square.
   value stays `claimed`, now with this note.  The same configuration re-tuned verifies `s(17) ≥ 111/25 = 4.44` (not
   entered: far below today's floors).  n = 19–20: Friedman's 18-point set verifies exactly at `1121/250 = 4.484`
   (just below `6√2 − 4 ≈ 4.48528`; the run at 4.485 hit its depth limit); stays `proved`.
+- 2026-10-01, **Nagamochi 2005 has a proof gap** (status `"gap"`).  Nagamochi's Theorem 2 (the `k² − 1` and `k² − 2`
+  families and the general bound `s(N) ≥ 1 + √(N − 2⌊√N⌋ + 1)`) all come from his rectangle bound (Theorem 1), whose
+  proof rests on Lemma 1 (every square scores more than 1).  Lemma 1 is false: chelokot/square-packing-archive gives a
+  Lean-checked counterexample (side 1.0001 in `[0,4]²`, score 0.9775, 2026-09-04), and H. Karakuş, "A counterexample to
+  Nagamochi's scoring lemma and a new rectangle packing bound", arXiv:2609.37410 (2026-09-29; abstract and PDF read)
+  gives a family of counterexamples near a corner of every rectangle with `a > 3`, `b > 2`.  Karakuş says the
+  published proof of the rectangle bound "is incomplete, but [the counterexamples] do not disprove the bound itself",
+  and that his own argument does not establish `s(k² − 2) = k` or Nagamochi's general bound.  So every `Nagamochi2005`
+  entry (except at perfect squares) is now `"status": "gap"`, with a note: kept in the history, never `best`, and
+  excluded from the floor on the Bounds page, like `claimed`.  Replacements:
+  - `Karakus2026` (`preprint`): Corollary 1.2, `s(k² − 1) = k` for `k ≥ 3` (strip-measure rectangle bound
+    `ν(a,b) < ab − Δ(a)`), at `n = 8, 15, 24, …, 99`; and Corollary 6.2, `s(N) ≥ 1/2 + √(N − ⌊√N⌋ + 1/4)` for every
+    nonsquare `N ≥ 8`, at every such `n`.  It is weaker than Nagamochi's stated bound.
+  - `chelokot2026` (`preprint`, kernel-checked Lean, unrefereed): `s(k² − 2) = k` for every `k ≥ 2` by a compensation
+    argument that keeps Nagamochi's resource measure but not Lemma 1
+    (`docs/nagamochi-compensation-proof.md` of that repository, commit of 2026-09-04), at `n = 2, 7, 14, …, 98`.
+  - Our own route to `s(k² − 2) = k` (monotonicity from `s(k² − 3) = k`, `k ≥ 4`; `/k2m3/#k2m2`) is not entered: as
+    before, nothing is carried here by monotonicity.  For `k ≥ 9` it would rest on the k2m3 single-checker certificate.
+  - `best` changed where it was a Nagamochi entry: to the earlier specific proof where one exists (n = 2, 3 Göbel;
+    8, 15, 24, 35 Friedman), to chelokot at 23, 34, 47, 62, 79, 98, to Karakuş's Corollary 1.2 at 48, 63, 80, 99, and to
+    Karakuş's general bound at 37, 38, 42–44, 50, 51, 54, 57–59, 65–67, 73–77, 82–96 (a drop of 0.004–0.05 each).
+    `n = 7, 14` keep Friedman.  This is a judgment call (Evan's to revisit): a refereed theorem whose proof is known to
+    have a gap is treated like an unreviewable claim, although nobody has shown the statement false.
+  - None of this project's own results uses Nagamochi's Lemma 1 or his rectangle bound (repository-wide check,
+    2026-10-01).  The wall-strip chord lemma (his Lemma 7(i), also Stromquist's) is proved from scratch in
+    `s12/lean/Sqpack/Chord.lean`.
+- 2026-10-01, n = 17.  Lower bound: `best` stays Guzhou0806's R068 `116511/25000` (replayed by jlevy/squares, T-043;
+  still its verified floor in `packing/frontier/n-017.md` on 2026-10-01).  Added to the history as `reported` (the
+  author's own checkers and CI only): Kleddamag `46601/10000 = 4.6601` (2026-09-29, commit `17d18245`), Guzhou0806 R070
+  `46604427/10000000` (2026-09-29, `8988d933`) and R071 `18641771/4000000 = 4.66044275` (2026-09-30, `8c11f696`;
+  its "R071 exact replay" GitHub Actions run succeeded; its README says the old C027 partition records are missing).
+  If R071 is to be `best`, drop its `reported` flag.  Upper bound: the catalogue's Bidwell value 4.67553009360455 is
+  unchanged; jlevy/squares T-065 (PR #265, merged 2026-10-01) certifies the packing exactly at the root of its contact
+  chart, `s(17) ≤ 4.6755300936045509516…` (a rational ceiling; Kleddamag's rational witness `4675530093604551/10^15`
+  also replays).  The site's upper bounds come from the catalogue, so nothing changes in the data.

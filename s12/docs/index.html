@@ -440,7 +440,7 @@ $ lean/scripts/gen_data.sh S12H &amp;&amp; lean/scripts/build_parts.sh S12H Sqpa
   const SHORT = { EvanDaniel2026: 'this project', jlevy2026: 'jlevy/squares', Kleddamag2026: 'Kleddamag', tokoharu2026: 'tokoharu', Stromquist2003: 'Stromquist' };
   const label = h => SHORT[h.source] || ((B.sources[h.source] || {}).authors || h.source);
   const rows = [];
-  for (const n of [11, 12]) for (const h of (B[n] && B[n].history) || []) if ((h.year || 0) >= 2003 && h.source !== 'Nagamochi2005' && !h.reported) rows.push([n, h]);
+  for (const n of [11, 12]) for (const h of (B[n] && B[n].history) || []) if ((h.year || 0) >= 2003 && h.source !== 'Nagamochi2005' && h.source !== 'Karakus2026' && !h.reported) rows.push([n, h]);
   rows.sort((a, b) => String(a[1].date || a[1].year).localeCompare(String(b[1].date || b[1].year)) || a[0] - b[0]);
   const tb = document.querySelector('#rectbl tbody'); tb.innerHTML = '';
   for (const [n, h] of rows) {

@@ -33,11 +33,11 @@
   "best": {
    "value": 2.0,
    "exact_form": "2",
-   "source": "Nagamochi2005",
-   "year": 2005,
+   "source": "Gobel1979",
+   "year": 1979,
    "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "n=2==2^2-2; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+   "url": null,
+   "note": null
   },
   "history": [
    {
@@ -62,9 +62,19 @@
     "exact_form": "2",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "n=2==2^2-2; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+    "note": "n=2==2^2-2; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 2.0,
+    "exact_form": "2",
+    "source": "chelokot2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-compensation-proof.md",
+    "date": "2026-09-04",
+    "note": "n = 2^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed"
    }
   ]
  },
@@ -72,11 +82,11 @@
   "best": {
    "value": 2.0,
    "exact_form": "2",
-   "source": "Nagamochi2005",
-   "year": 2005,
+   "source": "Gobel1979",
+   "year": 1979,
    "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "n=3==2^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+   "url": null,
+   "note": null
   },
   "history": [
    {
@@ -101,9 +111,9 @@
     "exact_form": "2",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "n=3==2^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+    "note": "n=3==2^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    }
   ]
  },
@@ -170,9 +180,9 @@
     "exact_form": "sqrt(5 - 2*floor(sqrt(5)) + 1) + 1 = sqrt(2)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    }
   ]
  },
@@ -209,9 +219,9 @@
     "exact_form": "sqrt(6 - 2*floor(sqrt(6)) + 1) + 1 = sqrt(3)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    }
   ]
  },
@@ -248,9 +258,9 @@
     "exact_form": "3",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "n=7==3^2-2; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+    "note": "n=7==3^2-2; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 3.0,
@@ -260,6 +270,16 @@
     "status": "proved",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
+   },
+   {
+    "value": 3.0,
+    "exact_form": "3",
+    "source": "chelokot2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-compensation-proof.md",
+    "date": "2026-09-04",
+    "note": "n = 3^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed"
    }
   ]
  },
@@ -267,11 +287,11 @@
   "best": {
    "value": 3.0,
    "exact_form": "3",
-   "source": "Nagamochi2005",
-   "year": 2005,
+   "source": "Friedman1998",
+   "year": 1998,
    "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "n=8==3^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+   "url": "https://www.combinatorics.org/files/Surveys/ds7/ds7v1-1998.pdf",
+   "note": null
   },
   "history": [
    {
@@ -305,9 +325,19 @@
     "exact_form": "3",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "n=8==3^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+    "note": "n=8==3^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 3.0,
+    "exact_form": "3",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "n = 3^2 - 1: Corollary 1.2, s(k^2 - 1) = k for k >= 3, from a strip-measure rectangle bound that does not use Nagamochi's Lemma 1; unrefereed"
    }
   ]
  },
@@ -374,9 +404,19 @@
     "exact_form": "sqrt(10 - 2*floor(sqrt(10)) + 1) + 1 = sqrt(5)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 3.192582403567252,
+    "exact_form": "1/2 + sqrt(10 - 3 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -414,9 +454,9 @@
     "exact_form": "sqrt(11 - 2*floor(sqrt(11)) + 1) + 1 = sqrt(6)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 3.81,
@@ -487,6 +527,16 @@
     "url": "https://github.com/Queuingtheorydotcom/11SquaresOptimal",
     "note": "s(11) = Trump's 1979 side: a computer-assisted certificate proof (a closed centre cover reduces any smaller packing to 2,184 cell patterns; exact certificates exclude 2,180, symmetry reduces the other four to one case, whose branch cover forces the packing into a certified isolation neighbourhood of Trump's packing); Astra-assisted, building on jlevy's T-026 and Kleddamag's 31/8; commit f9e0de7 (2026-09-29 UTC); independently replayed by jlevy/squares (T-060, V4/C5); not formalised, unrefereed",
     "date": "2026-09-29"
+   },
+   {
+    "value": 3.3722813232690143,
+    "exact_form": "1/2 + sqrt(11 - 3 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -524,9 +574,9 @@
     "exact_form": "sqrt(12 - 2*floor(sqrt(12)) + 1) + 1 = sqrt(7)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 3.9317953861584756,
@@ -567,6 +617,16 @@
     "url": "https://github.com/jlevy/squares",
     "note": "T-017: weighted fractional unavoidable-set certificate, reached independently of ours",
     "date": "2026-09-04"
+   },
+   {
+    "value": 3.5413812651491097,
+    "exact_form": "1/2 + sqrt(12 - 3 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -594,9 +654,9 @@
     "exact_form": "sqrt(13 - 2*floor(sqrt(13)) + 1) + 1 = sqrt(8)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 3.8437,
@@ -615,6 +675,16 @@
     "status": "proved",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v17i1r126",
     "note": null
+   },
+   {
+    "value": 3.7015621187164243,
+    "exact_form": "1/2 + sqrt(13 - 3 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -642,9 +712,9 @@
     "exact_form": "4",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "n=14==4^2-2; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+    "note": "n=14==4^2-2; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 4.0,
@@ -654,6 +724,26 @@
     "status": "proved",
     "url": "https://erich-friedman.github.io/papers/squares/squares.html",
     "note": null
+   },
+   {
+    "value": 4.0,
+    "exact_form": "4",
+    "source": "chelokot2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-compensation-proof.md",
+    "date": "2026-09-04",
+    "note": "n = 4^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed"
+   },
+   {
+    "value": 3.8541019662496847,
+    "exact_form": "1/2 + sqrt(14 - 3 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -661,11 +751,11 @@
   "best": {
    "value": 4.0,
    "exact_form": "4",
-   "source": "Nagamochi2005",
-   "year": 2005,
+   "source": "Friedman1998",
+   "year": 1998,
    "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "n=15==4^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+   "url": "https://www.combinatorics.org/files/Surveys/ds7/ds7v1-1998.pdf",
+   "note": null
   },
   "history": [
    {
@@ -690,9 +780,19 @@
     "exact_form": "4",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "n=15==4^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+    "note": "n=15==4^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 4.0,
+    "exact_form": "4",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "n = 4^2 - 1: Corollary 1.2, s(k^2 - 1) = k for k >= 3, from a strip-measure rectangle bound that does not use Nagamochi's Lemma 1; unrefereed"
    }
   ]
  },
@@ -734,7 +834,7 @@
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/Guzhou0806/n17-square-packing/tree/815b16261f852e389968513eec94b4b9e5b3206d/certificates/R068-C010",
-   "note": "R068, strict; continues Kleddamag's 4.66001 charge through R067 (4.66018); replayed by jlevy/squares (T-043, V4/C3); the repository has since published R070 (4.6604427, 2026-09-29) and R071 (4.66044275, 2026-09-30), not yet replayed there",
+   "note": "R068, strict; continues Kleddamag's 4.66001 charge through R067 (4.66018); replayed by jlevy/squares (T-043, V4/C3), still its verified floor on 2026-10-01; the repository's later R070 (4.6604427) and R071 (4.66044275) are in this history as reported",
    "date": "2026-09-28"
   },
   "history": [
@@ -760,9 +860,9 @@
     "exact_form": "sqrt(17 - 2*floor(sqrt(17)) + 1) + 1 = sqrt(10)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 4.4811,
@@ -911,8 +1011,51 @@
     "year": 2026,
     "status": "preprint",
     "url": "https://github.com/Guzhou0806/n17-square-packing/tree/815b16261f852e389968513eec94b4b9e5b3206d/certificates/R068-C010",
-    "note": "R068, strict; continues Kleddamag's 4.66001 charge through R067 (4.66018); replayed by jlevy/squares (T-043, V4/C3); the repository has since published R070 (4.6604427, 2026-09-29) and R071 (4.66044275, 2026-09-30), not yet replayed there",
+    "note": "R068, strict; continues Kleddamag's 4.66001 charge through R067 (4.66018); replayed by jlevy/squares (T-043, V4/C3), still its verified floor on 2026-10-01; the repository's later R070 (4.6604427) and R071 (4.66044275) are in this history as reported",
     "date": "2026-09-28"
+   },
+   {
+    "value": 4.140054944640259,
+    "exact_form": "1/2 + sqrt(17 - 4 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 4.6601,
+    "exact_form": "46601/10000",
+    "source": "Kleddamag2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/Kleddamag/17-squares-certified-bound",
+    "date": "2026-09-29",
+    "reported": true,
+    "note": "strict; 2,543 orientation intervals, Python and JavaScript BigInt checkers (the author's); not yet replayed elsewhere; below Guzhou0806's R068"
+   },
+   {
+    "value": 4.6604427,
+    "exact_form": "46604427/10000000",
+    "source": "Guzhou0806_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/Guzhou0806/n17-square-packing/tree/8988d9333/certificates/R070-4.6604427",
+    "date": "2026-09-29",
+    "reported": true,
+    "note": "R070, strict; the repository's own CI replay; not yet replayed elsewhere"
+   },
+   {
+    "value": 4.66044275,
+    "exact_form": "18641771/4000000",
+    "source": "Guzhou0806_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/Guzhou0806/n17-square-packing/tree/8c11f696/certificates/R071-C029",
+    "date": "2026-09-30",
+    "reported": true,
+    "note": "R071 (retained C027 certificate), strict; the repository's own CI replay (GitHub Actions 'R071 exact replay', success, 2026-09-30); its README notes the old C027 partition records are missing; not yet replayed elsewhere"
    }
   ]
  },
@@ -950,9 +1093,9 @@
     "exact_form": "sqrt(18 - 2*floor(sqrt(18)) + 1) + 1 = sqrt(11)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 4.59,
@@ -984,6 +1127,16 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
+   },
+   {
+    "value": 4.274917217635375,
+    "exact_form": "1/2 + sqrt(18 - 4 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -1012,9 +1165,9 @@
     "exact_form": "sqrt(19 - 2*floor(sqrt(19)) + 1) + 1 = sqrt(12)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 4.485281374238571,
@@ -1045,6 +1198,16 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
+   },
+   {
+    "value": 4.405124837953327,
+    "exact_form": "1/2 + sqrt(19 - 4 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -1073,9 +1236,9 @@
     "exact_form": "sqrt(20 - 2*floor(sqrt(20)) + 1) + 1 = sqrt(13)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 4.485281374238571,
@@ -1116,6 +1279,16 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
+   },
+   {
+    "value": 4.531128874149275,
+    "exact_form": "1/2 + sqrt(20 - 4 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -1144,9 +1317,9 @@
     "exact_form": "sqrt(21 - 2*floor(sqrt(21)) + 1) + 1 = sqrt(14)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 4.7438,
@@ -1239,6 +1412,16 @@
     "note": "a second certificate for s(21) = 5, point-only (no line segments), commit d38917c; reported, not independently replayed (jlevy/squares T-055, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 4.653311931459037,
+    "exact_form": "1/2 + sqrt(21 - 4 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -1275,9 +1458,9 @@
     "exact_form": "sqrt(22 - 2*floor(sqrt(22)) + 1) + 1 = sqrt(15)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 5.0,
@@ -1287,6 +1470,16 @@
     "status": "proved",
     "url": "https://arxiv.org/abs/1606.03746",
     "note": null
+   },
+   {
+    "value": 4.772001872658765,
+    "exact_form": "1/2 + sqrt(22 - 4 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -1294,11 +1487,12 @@
   "best": {
    "value": 5.0,
    "exact_form": "5",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": null
+   "source": "chelokot2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-compensation-proof.md",
+   "date": "2026-09-04",
+   "note": "n = 5^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed"
   },
   "history": [
    {
@@ -1314,9 +1508,29 @@
     "exact_form": "5",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": null
+    "note": "published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 5.0,
+    "exact_form": "5",
+    "source": "chelokot2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-compensation-proof.md",
+    "date": "2026-09-04",
+    "note": "n = 5^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed"
+   },
+   {
+    "value": 4.887482193696061,
+    "exact_form": "1/2 + sqrt(23 - 4 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -1324,11 +1538,11 @@
   "best": {
    "value": 5.0,
    "exact_form": "5",
-   "source": "Nagamochi2005",
-   "year": 2005,
+   "source": "Friedman1998",
+   "year": 1998,
    "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "n=24==5^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+   "url": "https://www.combinatorics.org/files/Surveys/ds7/ds7v1-1998.pdf",
+   "note": null
   },
   "history": [
    {
@@ -1353,9 +1567,19 @@
     "exact_form": "5",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "n=24==5^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+    "note": "n=24==5^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 5.0,
+    "exact_form": "5",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "n = 5^2 - 1: Corollary 1.2, s(k^2 - 1) = k for k >= 3, from a strip-measure rectangle bound that does not use Nagamochi's Lemma 1; unrefereed"
    }
   ]
  },
@@ -1423,9 +1647,9 @@
     "exact_form": "sqrt(26 - 2*floor(sqrt(26)) + 1) + 1 = sqrt(17)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 5.508,
@@ -1447,6 +1671,16 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
+   },
+   {
+    "value": 5.1097722286464435,
+    "exact_form": "1/2 + sqrt(26 - 5 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -1484,9 +1718,9 @@
     "exact_form": "sqrt(27 - 2*floor(sqrt(27)) + 1) + 1 = sqrt(18)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 5.508,
@@ -1507,6 +1741,16 @@
     "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n27_L56",
     "note": "rectangle-density certificate in tokoharu's format; replayed by jlevy/squares (T-045, V4/C3)",
     "date": "2026-09-26"
+   },
+   {
+    "value": 5.216990566028302,
+    "exact_form": "1/2 + sqrt(27 - 5 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -1544,9 +1788,9 @@
     "exact_form": "sqrt(28 - 2*floor(sqrt(28)) + 1) + 1 = sqrt(19)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 5.508,
@@ -1578,6 +1822,16 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 5.3218253804964775,
+    "exact_form": "1/2 + sqrt(28 - 5 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -1615,9 +1869,9 @@
     "exact_form": "sqrt(29 - 2*floor(sqrt(29)) + 1) + 1 = sqrt(20)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 5.71,
@@ -1639,6 +1893,16 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
+   },
+   {
+    "value": 5.424428900898052,
+    "exact_form": "1/2 + sqrt(29 - 5 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -1676,9 +1940,9 @@
     "exact_form": "sqrt(30 - 2*floor(sqrt(30)) + 1) + 1 = sqrt(21)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 5.71,
@@ -1700,6 +1964,16 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
+   },
+   {
+    "value": 5.524937810560445,
+    "exact_form": "1/2 + sqrt(30 - 5 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -1737,9 +2011,9 @@
     "exact_form": "sqrt(31 - 2*floor(sqrt(31)) + 1) + 1 = sqrt(22)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 5.71,
@@ -1771,6 +2045,16 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 5.623475382979799,
+    "exact_form": "1/2 + sqrt(31 - 5 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -1799,9 +2083,9 @@
     "exact_form": "sqrt(32 - 2*floor(sqrt(32)) + 1) + 1 = sqrt(23)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 5.95,
@@ -1822,6 +2106,16 @@
     "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s32",
     "note": "2026-09-26; s(32) = 6: weighted closed cover of [0,6]^2, total 31.7135 < 32, certified by two exact checkers; kernel-checked in Lean with no hypothesis (S32Lower.lean, 2026-09-28); unrefereed",
     "date": "2026-09-26"
+   },
+   {
+    "value": 5.720153254455275,
+    "exact_form": "1/2 + sqrt(32 - 5 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -1849,9 +2143,9 @@
     "exact_form": "sqrt(33 - 2*floor(sqrt(33)) + 1) + 1 = sqrt(24)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 6.0,
@@ -1871,6 +2165,16 @@
     "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
     "note": "2026-09-29; s(33) = 6 as the k = 6 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by a single exact checker (search/qx2_zm.py) and adversarially reviewed; the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); not independently re-implemented; unrefereed",
     "date": "2026-09-29"
+   },
+   {
+    "value": 5.815072906367325,
+    "exact_form": "1/2 + sqrt(33 - 5 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -1878,11 +2182,12 @@
   "best": {
    "value": 6.0,
    "exact_form": "6",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": null
+   "source": "chelokot2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-compensation-proof.md",
+   "date": "2026-09-04",
+   "note": "n = 6^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed"
   },
   "history": [
    {
@@ -1898,9 +2203,29 @@
     "exact_form": "6",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": null
+    "note": "published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 6.0,
+    "exact_form": "6",
+    "source": "chelokot2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-compensation-proof.md",
+    "date": "2026-09-04",
+    "note": "n = 6^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed"
+   },
+   {
+    "value": 5.908326913195984,
+    "exact_form": "1/2 + sqrt(34 - 5 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -1908,11 +2233,11 @@
   "best": {
    "value": 6.0,
    "exact_form": "6",
-   "source": "Nagamochi2005",
-   "year": 2005,
+   "source": "Friedman1998",
+   "year": 1998,
    "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "n=35==6^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+   "url": "https://www.combinatorics.org/files/Surveys/ds7/ds7v1-1998.pdf",
+   "note": null
   },
   "history": [
    {
@@ -1937,9 +2262,19 @@
     "exact_form": "6",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "n=35==6^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+    "note": "n=35==6^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 6.0,
+    "exact_form": "6",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "n = 6^2 - 1: Corollary 1.2, s(k^2 - 1) = k for k >= 3, from a strip-measure rectangle bound that does not use Nagamochi's Lemma 1; unrefereed"
    }
   ]
  },
@@ -1975,13 +2310,14 @@
  },
  "37": {
   "best": {
-   "value": 6.0990195135927845,
-   "exact_form": "sqrt(37 - 2*floor(sqrt(37)) + 1) + 1 = sqrt(26)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 6.0901699437494745,
+   "exact_form": "1/2 + sqrt(37 - 6 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -2006,9 +2342,9 @@
     "exact_form": "sqrt(37 - 2*floor(sqrt(37)) + 1) + 1 = sqrt(26)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 6.425,
@@ -2020,18 +2356,29 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 6.0901699437494745,
+    "exact_form": "1/2 + sqrt(37 - 6 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "38": {
   "best": {
-   "value": 6.196152422706632,
-   "exact_form": "sqrt(38 - 2*floor(sqrt(38)) + 1) + 1 = sqrt(27)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 6.178908345800274,
+   "exact_form": "1/2 + sqrt(38 - 6 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -2056,9 +2403,9 @@
     "exact_form": "sqrt(38 - 2*floor(sqrt(38)) + 1) + 1 = sqrt(27)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 6.54,
@@ -2070,6 +2417,16 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 6.178908345800274,
+    "exact_form": "1/2 + sqrt(38 - 6 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -2107,9 +2464,9 @@
     "exact_form": "sqrt(39 - 2*floor(sqrt(39)) + 1) + 1 = sqrt(28)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 6.5,
@@ -2131,6 +2488,16 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
+   },
+   {
+    "value": 6.266281297335398,
+    "exact_form": "1/2 + sqrt(39 - 6 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -2168,9 +2535,9 @@
     "exact_form": "sqrt(40 - 2*floor(sqrt(40)) + 1) + 1 = sqrt(29)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 6.5,
@@ -2192,6 +2559,16 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
+   },
+   {
+    "value": 6.352349955359813,
+    "exact_form": "1/2 + sqrt(40 - 6 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -2229,9 +2606,9 @@
     "exact_form": "sqrt(41 - 2*floor(sqrt(41)) + 1) + 1 = sqrt(30)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 6.5,
@@ -2253,18 +2630,29 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
+   },
+   {
+    "value": 6.437171043518958,
+    "exact_form": "1/2 + sqrt(41 - 6 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "42": {
   "best": {
-   "value": 6.5677643628300215,
-   "exact_form": "sqrt(42 - 2*floor(sqrt(42)) + 1) + 1 = sqrt(31)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 6.520797289396148,
+   "exact_form": "1/2 + sqrt(42 - 6 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -2280,9 +2668,9 @@
     "exact_form": "sqrt(42 - 2*floor(sqrt(42)) + 1) + 1 = sqrt(31)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 6.79,
@@ -2294,18 +2682,29 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 6.520797289396148,
+    "exact_form": "1/2 + sqrt(42 - 6 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "43": {
   "best": {
-   "value": 6.656854249492381,
-   "exact_form": "sqrt(43 - 2*floor(sqrt(43)) + 1) + 1 = sqrt(32)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 6.603277807866851,
+   "exact_form": "1/2 + sqrt(43 - 6 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -2321,9 +2720,9 @@
     "exact_form": "sqrt(43 - 2*floor(sqrt(43)) + 1) + 1 = sqrt(32)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 6.865,
@@ -2335,18 +2734,29 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
+   },
+   {
+    "value": 6.603277807866851,
+    "exact_form": "1/2 + sqrt(43 - 6 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "44": {
   "best": {
-   "value": 6.744562646538029,
-   "exact_form": "sqrt(44 - 2*floor(sqrt(44)) + 1) + 1 = sqrt(33)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 6.68465843842649,
+   "exact_form": "1/2 + sqrt(44 - 6 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -2362,9 +2772,9 @@
     "exact_form": "sqrt(44 - 2*floor(sqrt(44)) + 1) + 1 = sqrt(33)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 6.935,
@@ -2376,6 +2786,16 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 6.68465843842649,
+    "exact_form": "1/2 + sqrt(44 - 6 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -2404,9 +2824,9 @@
     "exact_form": "sqrt(45 - 2*floor(sqrt(45)) + 1) + 1 = sqrt(34)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 6.945,
@@ -2449,6 +2869,16 @@
     "url": "https://github.com/wand125/square-packing-bounds/tree/main/point_n45_L7",
     "note": "second proof of s(45) = 7 by a point-only certificate (no line segments), commit 39d8ecc; replayed by jlevy/squares (T-054, V4/C3)",
     "date": "2026-09-28"
+   },
+   {
+    "value": 6.764982043070834,
+    "exact_form": "1/2 + sqrt(45 - 6 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -2476,9 +2906,9 @@
     "exact_form": "sqrt(46 - 2*floor(sqrt(46)) + 1) + 1 = sqrt(35)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 7.0,
@@ -2498,6 +2928,16 @@
     "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
     "note": "2026-09-29; s(46) = 7 as the k = 7 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by a single exact checker (search/qx2_zm.py) and adversarially reviewed; the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); not independently re-implemented; unrefereed",
     "date": "2026-09-29"
+   },
+   {
+    "value": 6.84428877022476,
+    "exact_form": "1/2 + sqrt(46 - 6 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -2505,11 +2945,12 @@
   "best": {
    "value": 7.0,
    "exact_form": "7",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": null
+   "source": "chelokot2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-compensation-proof.md",
+   "date": "2026-09-04",
+   "note": "n = 7^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed"
   },
   "history": [
    {
@@ -2525,9 +2966,29 @@
     "exact_form": "7",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": null
+    "note": "published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 7.0,
+    "exact_form": "7",
+    "source": "chelokot2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-compensation-proof.md",
+    "date": "2026-09-04",
+    "note": "n = 7^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed"
+   },
+   {
+    "value": 6.922616289332565,
+    "exact_form": "1/2 + sqrt(47 - 6 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -2535,11 +2996,12 @@
   "best": {
    "value": 7.0,
    "exact_form": "7",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": null
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "n = 7^2 - 1: Corollary 1.2, s(k^2 - 1) = k for k >= 3, from a strip-measure rectangle bound that does not use Nagamochi's Lemma 1; unrefereed"
   },
   "history": [
    {
@@ -2555,9 +3017,19 @@
     "exact_form": "7",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": null
+    "note": "published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 7.0,
+    "exact_form": "7",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "n = 7^2 - 1: Corollary 1.2, s(k^2 - 1) = k for k >= 3, from a strip-measure rectangle bound that does not use Nagamochi's Lemma 1; unrefereed"
    }
   ]
  },
@@ -2593,13 +3065,14 @@
  },
  "50": {
   "best": {
-   "value": 7.082762530298219,
-   "exact_form": "sqrt(50 - 2*floor(sqrt(50)) + 1) + 1 = sqrt(37)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 7.076473218982953,
+   "exact_form": "1/2 + sqrt(50 - 7 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -2624,9 +3097,9 @@
     "exact_form": "sqrt(50 - 2*floor(sqrt(50)) + 1) + 1 = sqrt(37)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 7.4,
@@ -2638,18 +3111,29 @@
     "note": "mixed point-and-segment certificate, commit 75dd095; reported, not independently replayed (jlevy/squares T-048, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 7.076473218982953,
+    "exact_form": "1/2 + sqrt(50 - 7 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "51": {
   "best": {
-   "value": 7.164414002968976,
-   "exact_form": "sqrt(51 - 2*floor(sqrt(51)) + 1) + 1 = sqrt(38)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 7.152067347825035,
+   "exact_form": "1/2 + sqrt(51 - 7 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -2674,9 +3158,9 @@
     "exact_form": "sqrt(51 - 2*floor(sqrt(51)) + 1) + 1 = sqrt(38)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 7.4425,
@@ -2688,6 +3172,16 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 7.152067347825035,
+    "exact_form": "1/2 + sqrt(51 - 7 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -2725,9 +3219,9 @@
     "exact_form": "sqrt(52 - 2*floor(sqrt(52)) + 1) + 1 = sqrt(39)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 7.38,
@@ -2749,6 +3243,16 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
+   },
+   {
+    "value": 7.226812023536855,
+    "exact_form": "1/2 + sqrt(52 - 7 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -2786,9 +3290,9 @@
     "exact_form": "sqrt(53 - 2*floor(sqrt(53)) + 1) + 1 = sqrt(40)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 7.38,
@@ -2810,18 +3314,29 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 7.300735254367722,
+    "exact_form": "1/2 + sqrt(53 - 7 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "54": {
   "best": {
-   "value": 7.4031242374328485,
-   "exact_form": "sqrt(54 - 2*floor(sqrt(54)) + 1) + 1 = sqrt(41)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 7.37386354243376,
+   "exact_form": "1/2 + sqrt(54 - 7 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -2837,9 +3352,9 @@
     "exact_form": "sqrt(54 - 2*floor(sqrt(54)) + 1) + 1 = sqrt(41)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 7.6675,
@@ -2851,6 +3366,16 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
+   },
+   {
+    "value": 7.37386354243376,
+    "exact_form": "1/2 + sqrt(54 - 7 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -2879,9 +3404,9 @@
     "exact_form": "sqrt(55 - 2*floor(sqrt(55)) + 1) + 1 = sqrt(42)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 7.54,
@@ -2903,6 +3428,16 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 7.446221994724902,
+    "exact_form": "1/2 + sqrt(55 - 7 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -2931,9 +3466,9 @@
     "exact_form": "sqrt(56 - 2*floor(sqrt(56)) + 1) + 1 = sqrt(43)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 7.62,
@@ -2955,18 +3490,29 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 7.5178344238090995,
+    "exact_form": "1/2 + sqrt(56 - 7 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "57": {
   "best": {
-   "value": 7.6332495807108,
-   "exact_form": "sqrt(57 - 2*floor(sqrt(57)) + 1) + 1 = sqrt(44)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 7.588723439378913,
+   "exact_form": "1/2 + sqrt(57 - 7 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -2982,9 +3528,9 @@
     "exact_form": "sqrt(57 - 2*floor(sqrt(57)) + 1) + 1 = sqrt(44)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 7.835,
@@ -2996,18 +3542,29 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
+   },
+   {
+    "value": 7.588723439378913,
+    "exact_form": "1/2 + sqrt(57 - 7 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "58": {
   "best": {
-   "value": 7.708203932499369,
-   "exact_form": "sqrt(58 - 2*floor(sqrt(58)) + 1) + 1 = sqrt(45)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 7.658910531638177,
+   "exact_form": "1/2 + sqrt(58 - 7 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -3023,9 +3580,9 @@
     "exact_form": "sqrt(58 - 2*floor(sqrt(58)) + 1) + 1 = sqrt(45)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 7.89,
@@ -3037,18 +3594,29 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
+   },
+   {
+    "value": 7.658910531638177,
+    "exact_form": "1/2 + sqrt(58 - 7 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "59": {
   "best": {
-   "value": 7.782329983125268,
-   "exact_form": "sqrt(59 - 2*floor(sqrt(59)) + 1) + 1 = sqrt(46)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 7.72841614740048,
+   "exact_form": "1/2 + sqrt(59 - 7 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -3064,9 +3632,9 @@
     "exact_form": "sqrt(59 - 2*floor(sqrt(59)) + 1) + 1 = sqrt(46)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 7.92,
@@ -3078,6 +3646,16 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 7.72841614740048,
+    "exact_form": "1/2 + sqrt(59 - 7 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -3106,9 +3684,9 @@
     "exact_form": "sqrt(60 - 2*floor(sqrt(60)) + 1) + 1 = sqrt(47)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 7.94,
@@ -3129,6 +3707,16 @@
     "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s60",
     "note": "2026-09-28; s(60) = 8: mixed cover of [0,8]^2 (23,744 weighted points + mass spread uniformly on grid-line segments), total 59.8587 < 60, certified by two separately written exact checkers (no shared code; shared point-test lineage); no Lean; unrefereed",
     "date": "2026-09-28"
+   },
+   {
+    "value": 7.797259759663212,
+    "exact_form": "1/2 + sqrt(60 - 7 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -3157,9 +3745,9 @@
     "exact_form": "sqrt(61 - 2*floor(sqrt(61)) + 1) + 1 = sqrt(48)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 7.96,
@@ -3192,6 +3780,16 @@
     "date": "2026-09-29"
    },
    {
+    "value": 7.865459931328117,
+    "exact_form": "1/2 + sqrt(61 - 7 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
     "value": 8.0,
     "exact_form": "8",
     "source": "wand125_2026",
@@ -3207,11 +3805,12 @@
   "best": {
    "value": 8.0,
    "exact_form": "8",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": null
+   "source": "chelokot2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-compensation-proof.md",
+   "date": "2026-09-04",
+   "note": "n = 8^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed"
   },
   "history": [
    {
@@ -3227,9 +3826,29 @@
     "exact_form": "8",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": null
+    "note": "published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 8.0,
+    "exact_form": "8",
+    "source": "chelokot2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-compensation-proof.md",
+    "date": "2026-09-04",
+    "note": "n = 8^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed"
+   },
+   {
+    "value": 7.933034373659253,
+    "exact_form": "1/2 + sqrt(62 - 7 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -3237,11 +3856,12 @@
   "best": {
    "value": 8.0,
    "exact_form": "8",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": null
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "n = 8^2 - 1: Corollary 1.2, s(k^2 - 1) = k for k >= 3, from a strip-measure rectangle bound that does not use Nagamochi's Lemma 1; unrefereed"
   },
   "history": [
    {
@@ -3257,9 +3877,19 @@
     "exact_form": "8",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": null
+    "note": "published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 8.0,
+    "exact_form": "8",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "n = 8^2 - 1: Corollary 1.2, s(k^2 - 1) = k for k >= 3, from a strip-measure rectangle bound that does not use Nagamochi's Lemma 1; unrefereed"
    }
   ]
  },
@@ -3295,13 +3925,14 @@
  },
  "65": {
   "best": {
-   "value": 8.071067811865476,
-   "exact_form": "sqrt(65 - 2*floor(sqrt(65)) + 1) + 1 = sqrt(50)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 8.06637297521078,
+   "exact_form": "1/2 + sqrt(65 - 8 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -3326,21 +3957,32 @@
     "exact_form": "sqrt(65 - 2*floor(sqrt(65)) + 1) + 1 = sqrt(50)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 8.06637297521078,
+    "exact_form": "1/2 + sqrt(65 - 8 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "66": {
   "best": {
-   "value": 8.14142842854285,
-   "exact_form": "sqrt(66 - 2*floor(sqrt(66)) + 1) + 1 = sqrt(51)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 8.132168761236873,
+   "exact_form": "1/2 + sqrt(66 - 8 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -3365,9 +4007,9 @@
     "exact_form": "sqrt(66 - 2*floor(sqrt(66)) + 1) + 1 = sqrt(51)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 8.375,
@@ -3379,18 +4021,29 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 8.132168761236873,
+    "exact_form": "1/2 + sqrt(66 - 8 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "67": {
   "best": {
-   "value": 8.21110255092798,
-   "exact_form": "sqrt(67 - 2*floor(sqrt(67)) + 1) + 1 = sqrt(52)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 8.197402159170327,
+   "exact_form": "1/2 + sqrt(67 - 8 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -3415,9 +4068,9 @@
     "exact_form": "sqrt(67 - 2*floor(sqrt(67)) + 1) + 1 = sqrt(52)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 8.455,
@@ -3429,6 +4082,16 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 8.197402159170327,
+    "exact_form": "1/2 + sqrt(67 - 8 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -3466,9 +4129,9 @@
     "exact_form": "sqrt(68 - 2*floor(sqrt(68)) + 1) + 1 = sqrt(53)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 8.41,
@@ -3490,6 +4153,16 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
+   },
+   {
+    "value": 8.262087348130013,
+    "exact_form": "1/2 + sqrt(68 - 8 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -3518,9 +4191,9 @@
     "exact_form": "sqrt(69 - 2*floor(sqrt(69)) + 1) + 1 = sqrt(54)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 8.41,
@@ -3542,6 +4215,16 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
+   },
+   {
+    "value": 8.326237921249264,
+    "exact_form": "1/2 + sqrt(69 - 8 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -3570,9 +4253,9 @@
     "exact_form": "sqrt(70 - 2*floor(sqrt(70)) + 1) + 1 = sqrt(55)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 8.55,
@@ -3594,6 +4277,16 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 8.38986691902975,
+    "exact_form": "1/2 + sqrt(70 - 8 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -3622,9 +4315,9 @@
     "exact_form": "sqrt(71 - 2*floor(sqrt(71)) + 1) + 1 = sqrt(56)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 8.55,
@@ -3646,6 +4339,16 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
+   },
+   {
+    "value": 8.452986860293432,
+    "exact_form": "1/2 + sqrt(71 - 8 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -3674,9 +4377,9 @@
     "exact_form": "sqrt(72 - 2*floor(sqrt(72)) + 1) + 1 = sqrt(57)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 8.61,
@@ -3698,18 +4401,29 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 8.5156097709407,
+    "exact_form": "1/2 + sqrt(72 - 8 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "73": {
   "best": {
-   "value": 8.615773105863909,
-   "exact_form": "sqrt(73 - 2*floor(sqrt(73)) + 1) + 1 = sqrt(58)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 8.577747210701755,
+   "exact_form": "1/2 + sqrt(73 - 8 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -3725,9 +4439,9 @@
     "exact_form": "sqrt(73 - 2*floor(sqrt(73)) + 1) + 1 = sqrt(58)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 8.78,
@@ -3739,18 +4453,29 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
+   },
+   {
+    "value": 8.577747210701755,
+    "exact_form": "1/2 + sqrt(73 - 8 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "74": {
   "best": {
-   "value": 8.681145747868609,
-   "exact_form": "sqrt(74 - 2*floor(sqrt(74)) + 1) + 1 = sqrt(59)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 8.639410298049853,
+   "exact_form": "1/2 + sqrt(74 - 8 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -3766,9 +4491,9 @@
     "exact_form": "sqrt(74 - 2*floor(sqrt(74)) + 1) + 1 = sqrt(59)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 8.84,
@@ -3780,18 +4505,29 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 8.639410298049853,
+    "exact_form": "1/2 + sqrt(74 - 8 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "75": {
   "best": {
-   "value": 8.745966692414834,
-   "exact_form": "sqrt(75 - 2*floor(sqrt(75)) + 1) + 1 = sqrt(60)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 8.700609733428363,
+   "exact_form": "1/2 + sqrt(75 - 8 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -3807,9 +4543,9 @@
     "exact_form": "sqrt(75 - 2*floor(sqrt(75)) + 1) + 1 = sqrt(60)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 8.89,
@@ -3821,18 +4557,29 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
+   },
+   {
+    "value": 8.700609733428363,
+    "exact_form": "1/2 + sqrt(75 - 8 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "76": {
   "best": {
-   "value": 8.810249675906654,
-   "exact_form": "sqrt(76 - 2*floor(sqrt(76)) + 1) + 1 = sqrt(61)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 8.761355820929152,
+   "exact_form": "1/2 + sqrt(76 - 8 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -3848,9 +4595,9 @@
     "exact_form": "sqrt(76 - 2*floor(sqrt(76)) + 1) + 1 = sqrt(61)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 8.92,
@@ -3862,18 +4609,29 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
+   },
+   {
+    "value": 8.761355820929152,
+    "exact_form": "1/2 + sqrt(76 - 8 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "77": {
   "best": {
-   "value": 8.874007874011811,
-   "exact_form": "sqrt(77 - 2*floor(sqrt(77)) + 1) + 1 = sqrt(62)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 8.82165848854662,
+   "exact_form": "1/2 + sqrt(77 - 8 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -3889,9 +4647,9 @@
     "exact_form": "sqrt(77 - 2*floor(sqrt(77)) + 1) + 1 = sqrt(62)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 8.92,
@@ -3903,6 +4661,16 @@
     "note": "the n = 76 rectangle-density certificate, whose mass is below 77; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
+   },
+   {
+    "value": 8.82165848854662,
+    "exact_form": "1/2 + sqrt(77 - 8 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -3931,9 +4699,9 @@
     "exact_form": "sqrt(78 - 2*floor(sqrt(78)) + 1) + 1 = sqrt(63)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 9.0,
@@ -3944,6 +4712,16 @@
     "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
     "note": "2026-09-29; s(78) = 9 as the k = 9 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by a single exact checker (search/qx2_zm.py) and adversarially reviewed; the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); not independently re-implemented; unrefereed",
     "date": "2026-09-29"
+   },
+   {
+    "value": 8.881527307120106,
+    "exact_form": "1/2 + sqrt(78 - 8 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -3951,11 +4729,12 @@
   "best": {
    "value": 9.0,
    "exact_form": "9",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": null
+   "source": "chelokot2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-compensation-proof.md",
+   "date": "2026-09-04",
+   "note": "n = 9^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed"
   },
   "history": [
    {
@@ -3971,9 +4750,29 @@
     "exact_form": "9",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": null
+    "note": "published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 9.0,
+    "exact_form": "9",
+    "source": "chelokot2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-compensation-proof.md",
+    "date": "2026-09-04",
+    "note": "n = 9^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed"
+   },
+   {
+    "value": 8.940971508067067,
+    "exact_form": "1/2 + sqrt(79 - 8 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -3981,11 +4780,12 @@
   "best": {
    "value": 9.0,
    "exact_form": "9",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": null
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "n = 9^2 - 1: Corollary 1.2, s(k^2 - 1) = k for k >= 3, from a strip-measure rectangle bound that does not use Nagamochi's Lemma 1; unrefereed"
   },
   "history": [
    {
@@ -4001,9 +4801,19 @@
     "exact_form": "9",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": null
+    "note": "published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 9.0,
+    "exact_form": "9",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "n = 9^2 - 1: Corollary 1.2, s(k^2 - 1) = k for k >= 3, from a strip-measure rectangle bound that does not use Nagamochi's Lemma 1; unrefereed"
    }
   ]
  },
@@ -4039,13 +4849,14 @@
  },
  "82": {
   "best": {
-   "value": 9.06225774829855,
-   "exact_form": "sqrt(82 - 2*floor(sqrt(82)) + 1) + 1 = sqrt(65)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 9.058621384311845,
+   "exact_form": "1/2 + sqrt(82 - 9 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -4070,21 +4881,32 @@
     "exact_form": "sqrt(82 - 2*floor(sqrt(82)) + 1) + 1 = sqrt(65)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 9.058621384311845,
+    "exact_form": "1/2 + sqrt(82 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "83": {
   "best": {
-   "value": 9.12403840463596,
-   "exact_form": "sqrt(83 - 2*floor(sqrt(83)) + 1) + 1 = sqrt(66)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 9.116843969807043,
+   "exact_form": "1/2 + sqrt(83 - 9 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -4109,21 +4931,32 @@
     "exact_form": "sqrt(83 - 2*floor(sqrt(83)) + 1) + 1 = sqrt(66)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 9.116843969807043,
+    "exact_form": "1/2 + sqrt(83 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "84": {
   "best": {
-   "value": 9.18535277187245,
-   "exact_form": "sqrt(84 - 2*floor(sqrt(84)) + 1) + 1 = sqrt(67)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 9.174675786448736,
+   "exact_form": "1/2 + sqrt(84 - 9 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -4148,21 +4981,32 @@
     "exact_form": "sqrt(84 - 2*floor(sqrt(84)) + 1) + 1 = sqrt(67)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 9.174675786448736,
+    "exact_form": "1/2 + sqrt(84 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "85": {
   "best": {
-   "value": 9.246211251235321,
-   "exact_form": "sqrt(85 - 2*floor(sqrt(85)) + 1) + 1 = sqrt(68)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 9.23212459828649,
+   "exact_form": "1/2 + sqrt(85 - 9 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -4187,21 +5031,32 @@
     "exact_form": "sqrt(85 - 2*floor(sqrt(85)) + 1) + 1 = sqrt(68)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 9.23212459828649,
+    "exact_form": "1/2 + sqrt(85 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "86": {
   "best": {
-   "value": 9.306623862918075,
-   "exact_form": "sqrt(86 - 2*floor(sqrt(86)) + 1) + 1 = sqrt(69)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 9.289197915623474,
+   "exact_form": "1/2 + sqrt(86 - 9 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -4217,9 +5072,9 @@
     "exact_form": "sqrt(86 - 2*floor(sqrt(86)) + 1) + 1 = sqrt(69)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 9.355,
@@ -4231,18 +5086,29 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 9.289197915623474,
+    "exact_form": "1/2 + sqrt(86 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "87": {
   "best": {
-   "value": 9.366600265340756,
-   "exact_form": "sqrt(87 - 2*floor(sqrt(87)) + 1) + 1 = sqrt(70)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 9.345903006477066,
+   "exact_form": "1/2 + sqrt(87 - 9 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -4258,21 +5124,32 @@
     "exact_form": "sqrt(87 - 2*floor(sqrt(87)) + 1) + 1 = sqrt(70)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 9.345903006477066,
+    "exact_form": "1/2 + sqrt(87 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "88": {
   "best": {
-   "value": 9.426149773176359,
-   "exact_form": "sqrt(88 - 2*floor(sqrt(88)) + 1) + 1 = sqrt(71)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 9.402246907382429,
+   "exact_form": "1/2 + sqrt(88 - 9 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -4288,9 +5165,9 @@
     "exact_form": "sqrt(88 - 2*floor(sqrt(88)) + 1) + 1 = sqrt(71)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 9.45,
@@ -4302,18 +5179,29 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 9.402246907382429,
+    "exact_form": "1/2 + sqrt(88 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "89": {
   "best": {
-   "value": 9.48528137423857,
-   "exact_form": "sqrt(89 - 2*floor(sqrt(89)) + 1) + 1 = sqrt(72)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 9.458236433584458,
+   "exact_form": "1/2 + sqrt(89 - 9 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -4329,9 +5217,9 @@
     "exact_form": "sqrt(89 - 2*floor(sqrt(89)) + 1) + 1 = sqrt(72)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 9.55,
@@ -4343,18 +5231,29 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 9.458236433584458,
+    "exact_form": "1/2 + sqrt(89 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "90": {
   "best": {
-   "value": 9.54400374531753,
-   "exact_form": "sqrt(90 - 2*floor(sqrt(90)) + 1) + 1 = sqrt(73)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 9.513878188659973,
+   "exact_form": "1/2 + sqrt(90 - 9 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -4370,9 +5269,9 @@
     "exact_form": "sqrt(90 - 2*floor(sqrt(90)) + 1) + 1 = sqrt(73)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 9.55,
@@ -4384,18 +5283,29 @@
     "note": "the n = 89 rectangle-density certificate, whose mass is below 90; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 9.513878188659973,
+    "exact_form": "1/2 + sqrt(90 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "91": {
   "best": {
-   "value": 9.602325267042627,
-   "exact_form": "sqrt(91 - 2*floor(sqrt(91)) + 1) + 1 = sqrt(74)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 9.569178573608527,
+   "exact_form": "1/2 + sqrt(91 - 9 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -4411,9 +5321,9 @@
     "exact_form": "sqrt(91 - 2*floor(sqrt(91)) + 1) + 1 = sqrt(74)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 9.645,
@@ -4425,18 +5335,29 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 9.569178573608527,
+    "exact_form": "1/2 + sqrt(91 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "92": {
   "best": {
-   "value": 9.660254037844387,
-   "exact_form": "sqrt(92 - 2*floor(sqrt(92)) + 1) + 1 = sqrt(75)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 9.62414379544733,
+   "exact_form": "1/2 + sqrt(92 - 9 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -4452,21 +5373,32 @@
     "exact_form": "sqrt(92 - 2*floor(sqrt(92)) + 1) + 1 = sqrt(75)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 9.62414379544733,
+    "exact_form": "1/2 + sqrt(92 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "93": {
   "best": {
-   "value": 9.717797887081348,
-   "exact_form": "sqrt(93 - 2*floor(sqrt(93)) + 1) + 1 = sqrt(76)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 9.67877987534291,
+   "exact_form": "1/2 + sqrt(93 - 9 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -4482,21 +5414,32 @@
     "exact_form": "sqrt(93 - 2*floor(sqrt(93)) + 1) + 1 = sqrt(76)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 9.67877987534291,
+    "exact_form": "1/2 + sqrt(93 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "94": {
   "best": {
-   "value": 9.774964387392123,
-   "exact_form": "sqrt(94 - 2*floor(sqrt(94)) + 1) + 1 = sqrt(77)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 9.733092656309694,
+   "exact_form": "1/2 + sqrt(94 - 9 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -4512,9 +5455,9 @@
     "exact_form": "sqrt(94 - 2*floor(sqrt(94)) + 1) + 1 = sqrt(77)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 9.795,
@@ -4526,18 +5469,29 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 9.733092656309694,
+    "exact_form": "1/2 + sqrt(94 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "95": {
   "best": {
-   "value": 9.831760866327848,
-   "exact_form": "sqrt(95 - 2*floor(sqrt(95)) + 1) + 1 = sqrt(78)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 9.787087810503355,
+   "exact_form": "1/2 + sqrt(95 - 9 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -4553,9 +5507,9 @@
     "exact_form": "sqrt(95 - 2*floor(sqrt(95)) + 1) + 1 = sqrt(78)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 9.8418,
@@ -4567,18 +5521,29 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
+   },
+   {
+    "value": 9.787087810503355,
+    "exact_form": "1/2 + sqrt(95 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
  "96": {
   "best": {
-   "value": 9.888194417315589,
-   "exact_form": "sqrt(96 - 2*floor(sqrt(96)) + 1) + 1 = sqrt(79)+1",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "general lower bound, Theorem 2(ii)"
+   "value": 9.840770846134703,
+   "exact_form": "1/2 + sqrt(96 - 9 + 1/4)",
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
   },
   "history": [
    {
@@ -4594,9 +5559,19 @@
     "exact_form": "sqrt(96 - 2*floor(sqrt(96)) + 1) + 1 = sqrt(79)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 9.840770846134703,
+    "exact_form": "1/2 + sqrt(96 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -4625,9 +5600,9 @@
     "exact_form": "sqrt(97 - 2*floor(sqrt(97)) + 1) + 1 = sqrt(80)+1",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "general lower bound, Theorem 2(ii)"
+    "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
     "value": 10.0,
@@ -4638,6 +5613,16 @@
     "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
     "note": "2026-09-29; s(97) = 10 as the k = 10 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by a single exact checker (search/qx2_zm.py) and adversarially reviewed; the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); not independently re-implemented; unrefereed",
     "date": "2026-09-29"
+   },
+   {
+    "value": 9.894147114027968,
+    "exact_form": "1/2 + sqrt(97 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -4645,11 +5630,12 @@
   "best": {
    "value": 10.0,
    "exact_form": "10",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "n=98==10^2-2; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+   "source": "chelokot2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-compensation-proof.md",
+   "date": "2026-09-04",
+   "note": "n = 10^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed"
   },
   "history": [
    {
@@ -4665,9 +5651,29 @@
     "exact_form": "10",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "n=98==10^2-2; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+    "note": "n=98==10^2-2; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 10.0,
+    "exact_form": "10",
+    "source": "chelokot2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-compensation-proof.md",
+    "date": "2026-09-04",
+    "note": "n = 10^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed"
+   },
+   {
+    "value": 9.947221813845593,
+    "exact_form": "1/2 + sqrt(98 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    }
   ]
  },
@@ -4675,11 +5681,12 @@
   "best": {
    "value": 10.0,
    "exact_form": "10",
-   "source": "Nagamochi2005",
-   "year": 2005,
-   "status": "proved",
-   "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-   "note": "n=99==10^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+   "source": "Karakus2026",
+   "year": 2026,
+   "status": "preprint",
+   "url": "https://arxiv.org/abs/2609.37410",
+   "date": "2026-09-29",
+   "note": "n = 10^2 - 1: Corollary 1.2, s(k^2 - 1) = k for k >= 3, from a strip-measure rectangle bound that does not use Nagamochi's Lemma 1; unrefereed"
   },
   "history": [
    {
@@ -4695,9 +5702,19 @@
     "exact_form": "10",
     "source": "Nagamochi2005",
     "year": 2005,
-    "status": "proved",
+    "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
-    "note": "n=99==10^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries)"
+    "note": "n=99==10^2-1; general case of Nagamochi 2005 Thm 2(i) (special cases proved earlier by Gobel/Kearney-Shiu/El Moumni/Friedman -- see other history entries); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
+   },
+   {
+    "value": 10.0,
+    "exact_form": "10",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "n = 10^2 - 1: Corollary 1.2, s(k^2 - 1) = k for k >= 3, from a strip-measure rectangle bound that does not use Nagamochi's Lemma 1; unrefereed"
    }
   ]
  },
@@ -4899,16 +5916,24 @@
    "venue": "GitHub repository (computer-assisted, unrefereed; independently replayed by jlevy/squares, T-060)",
    "year": 2026,
    "url": "https://github.com/Queuingtheorydotcom/11SquaresOptimal"
+  },
+  "Karakus2026": {
+   "authors": "H. Karakus (Hakan Karakuş)",
+   "title": "A counterexample to Nagamochi's scoring lemma and a new rectangle packing bound",
+   "venue": "arXiv:2609.37410 [math.CO] (preprint)",
+   "year": 2026,
+   "url": "https://arxiv.org/abs/2609.37410"
   }
  },
  "meta": {
   "description": "Best-known PROVEN lower bounds for s(n), the side of the smallest square that can contain n non-overlapping axis-free unit squares, for n=1..100.",
   "generated": "2026-09-08",
-  "caveats": "See site/notes/lower-bounds-notes.md for sourcing notes and uncertainties. Entries with status 'preprint' are computer-assisted 2026 results that have not been refereed. Others' certificates are linked as published; this project replays only its own. Where a 2026 repository is still moving (n = 17 especially), the history keeps the main steps and the linked repository has the rest.",
+  "caveats": "See site/notes/lower-bounds-notes.md for sourcing notes and uncertainties. Entries with status 'preprint' are 2026 results that have not been refereed (most computer-assisted; Karakus 2026 is a conventional arXiv proof). Others' certificates are linked as published; this project replays only its own. Where a 2026 repository is still moving (n = 17 especially), the history keeps the main steps and the linked repository has the rest.",
   "precision": "`value` is the full double-precision evaluation of `exact_form`, not a rounded decimal: storing the n=5 floor as 2.7071068 put it ABOVE the true 2+1/sqrt(2)=2.707106781..., so it compared as greater than the matching upper bound and s(5) and s(10) were reported open with a gap of -0.0000. Entries whose exact_form is absent or flagged unreliable keep their curated decimal.",
-  "updated": "2026-09-30",
+  "updated": "2026-10-01",
   "families": "s(k^2-3) = k is proved here for every k >= 6 (EvanDaniel2026, 2026-09-29, s12/certificates/k2m3). The table covers n <= 100, so it holds the cases n = 33, 46, 61, 78, 97 (k = 6..10); for n = 33, 46, 61, which were already settled, it is a history entry and `best` keeps the earlier proof; for n = 78, 97 it is `best`. The family continues beyond the table (n = 118, 141, ...).",
   "reported": "Entries with \"reported\": true are values their authors report but that no one other than the author has replayed (jlevy/squares grades them V0/C0). They are kept in `history` for the record and are never `best`, even where they are larger.",
-  "claimed": "Entries with status \"claimed\" are values whose proof was never published and cannot be reviewed: T. Green's 2000 bounds, cited in Friedman's survey DS7 as a private communication (Theorems 9-10 and Table 2), and Friedman's table values for n = 13 (3.8437) and n = 21 (4.7438), which the survey gives without figure or proof. They are kept in the history for the record and are never `best`. For n = 17-18 the survey's Figure 34 draws Green's unavoidable set, which could be checked; it has not been checked here."
+  "claimed": "Entries with status \"claimed\" are values whose proof was never published and cannot be reviewed: T. Green's 2000 bounds, cited in Friedman's survey DS7 as a private communication (Theorems 9-10 and Table 2), and Friedman's table values for n = 13 (3.8437) and n = 21 (4.7438), which the survey gives without figure or proof. They are kept in the history for the record and are never `best`. For n = 17-18 the survey's Figure 34 draws Green's unavoidable set, which could be checked; it has not been checked here.",
+  "gap": "Entries with status \"gap\" are published results whose published proof is known to be incomplete: Nagamochi 2005 (Theorem 2, both the k^2-1 / k^2-2 families and the general bound) rests on his Lemma 1, which is false (chelokot 2026, a Lean-checked counterexample; H. Karakus, arXiv:2609.37410, a family of counterexamples). The statements are not disproved. They are kept in the history and are never best. s(k^2-1) = k is re-proved by Karakus 2026 and s(k^2-2) = k by chelokot 2026 (Lean); Karakus's weaker general bound 1/2 + sqrt(N - floor(sqrt N) + 1/4) has a complete proof and is listed for every nonsquare N >= 8."
  }
 }

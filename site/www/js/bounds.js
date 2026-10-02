@@ -20,7 +20,7 @@ function lower(n) {
   const t = Math.sqrt(n); return { value: t, source: 'area', year: null, status: 'proved' };
 }
 const isSettled = (u, l) => Math.abs(u.s - l.value) < 1e-9;
-const SHORT = { 'area-bound': 'area', 'trivial-square': 'grid = area', 'Nagamochi2005': 'Nagamochi 2005', 'FriedmanDS7': 'Friedman', 'Gobel1979': 'Göbel 1979', 'Stromquist2003': 'Stromquist 2003', 'Green2000': 'Green 2000', 'Bentz2010': 'Bentz 2010', 'Bentz2016': 'Bentz 2016', 'KearneyShiu2002': 'Kearney–Shiu 2002', 'ElMoumni1999': 'El Moumni 1999', 'EvanDaniel2026': 'evand 2026', 'MiraAcc2026': 'Mira 2026', 'Burns2026': 'Burns 2026', 'Massaccesi2026': 'Massaccesi 2026', 'Fort2026': 'Fort 2026', 'jlevy2026': 'jlevy 2026', 'wand125_2026': 'wand125 2026', 'Kleddamag2026': 'Kleddamag 2026', 'Guzhou0806_2026': 'Guzhou0806 2026', 'tokoharu2026': 'tokoharu 2026', 'chelokot2026': 'chelokot 2026', 'Queuingtheorydotcom2026': 'Queuingtheorydotcom 2026' };
+const SHORT = { 'area-bound': 'area', 'trivial-square': 'grid = area', 'Nagamochi2005': 'Nagamochi 2005', 'FriedmanDS7': 'Friedman', 'Gobel1979': 'Göbel 1979', 'Stromquist2003': 'Stromquist 2003', 'Green2000': 'Green 2000', 'Bentz2010': 'Bentz 2010', 'Bentz2016': 'Bentz 2016', 'KearneyShiu2002': 'Kearney–Shiu 2002', 'ElMoumni1999': 'El Moumni 1999', 'EvanDaniel2026': 'evand 2026', 'MiraAcc2026': 'Mira 2026', 'Burns2026': 'Burns 2026', 'Massaccesi2026': 'Massaccesi 2026', 'Fort2026': 'Fort 2026', 'jlevy2026': 'jlevy 2026', 'wand125_2026': 'wand125 2026', 'Kleddamag2026': 'Kleddamag 2026', 'Guzhou0806_2026': 'Guzhou0806 2026', 'tokoharu2026': 'tokoharu 2026', 'chelokot2026': 'chelokot 2026', 'Karakus2026': 'Karakuş 2026', 'Queuingtheorydotcom2026': 'Queuingtheorydotcom 2026' };
 const srcLabel = h => { if (!h || !h.source) return ''; if (SHORT[h.source]) return SHORT[h.source]; const S = LB && LB.sources && LB.sources[h.source]; return S ? `${S.authors} ${S.year || ''}`.trim() : h.source; };
 
 // ---------- chart 1: gap per n ----------
@@ -86,7 +86,7 @@ function chart2() {
   // lower-bound steps
   const hist = (LB && LB[String(n)] && LB[String(n)].history) || [];
   const lo = [{ y: 1979, v: Math.sqrt(n), src: 'area bound', when: '' }]; let bl = Math.sqrt(n);
-  for (const h of hist.filter(h => !h.reported && h.status !== 'claimed').sort((a, b) => hy(a) - hy(b))) if (h.value > bl + 1e-9) { bl = h.value; lo.push({ y: Math.max(1979, hy(h)), v: h.value, src: srcLabel(h), status: h.status, when: h.date || String(h.year || '') }); }
+  for (const h of hist.filter(h => !h.reported && h.status !== 'claimed' && h.status !== 'gap').sort((a, b) => hy(a) - hy(b))) if (h.value > bl + 1e-9) { bl = h.value; lo.push({ y: Math.max(1979, hy(h)), v: h.value, src: srcLabel(h), status: h.status, when: h.date || String(h.year || '') }); }
   // "2026 only" zooms to August–September 2026, when most floors moved; steps from before the
   // window start at its left edge.
   const zoom = $('zoom').checked, y0 = zoom ? 2026 + 7 / 12 : 1978, y1 = zoom ? 2026 + 9 / 12 + 0.004 : 2027;
@@ -137,7 +137,7 @@ function histTable(n, hist) {
     const S = LB.sources && LB.sources[h.source], url = h.url || (S && S.url);
     const src = url ? `<a href="${esc(url)}">${esc(srcLabel(h))}</a>` : esc(srcLabel(h));
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td class="num">${esc(h.date || h.year || '')}</td><td class="num">${h.value.toFixed(6)}</td><td>${src}${h.reported ? ' <span class="tag open">reported, not replayed</span>' : h.status === 'claimed' ? ' <span class="tag open">claimed, no published proof</span>' : h.status === 'preprint' ? ' <span class="tag open">unrefereed</span>' : ''}</td><td>${esc(h.note || '')}</td>`;
+    tr.innerHTML = `<td class="num">${esc(h.date || h.year || '')}</td><td class="num">${h.value.toFixed(6)}</td><td>${src}${h.reported ? ' <span class="tag open">reported, not replayed</span>' : h.status === 'claimed' ? ' <span class="tag open">claimed, no published proof</span>' : h.status === 'gap' ? ' <span class="tag open">published proof incomplete</span>' : h.status === 'preprint' ? ' <span class="tag open">unrefereed</span>' : ''}</td><td>${esc(h.note || '')}</td>`;
     tb.appendChild(tr);
   }
   if (!rows.length) tb.innerHTML = '<tr><td colspan="4">Only the area bound √n is recorded for this n.</td></tr>';
