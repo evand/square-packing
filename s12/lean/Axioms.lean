@@ -139,3 +139,18 @@ import Sqpack
 #print axioms SquarePacking.anchor_lemma2
 #print axioms SquarePacking.anchor_lemma2_sharp
 #print axioms SquarePacking.anchor_lemma2_iff
+-- common specification (Sqpack/Spec.lean, namespace UnitSquarePacking) and the bridge from ours
+-- (Sqpack/SpecBridge.lean); the headline restatements are in the opt-in Sqpack/SpecHeadline.lean
+#print axioms UnitSquarePacking.unitSq_eq_setOf
+#print axioms UnitSquarePacking.interior_unitSq
+#print axioms UnitSquarePacking.packs_iff
+#print axioms UnitSquarePacking.minSide_eq
+#print axioms UnitSquarePacking.lower_of_le_minSide
+#print axioms UnitSquarePacking.isLeast_of_le_minSide
+#print axioms UnitSquarePacking.s12_lower_3920_997
+#print axioms UnitSquarePacking.s32_isLeast_of_checker
+-- bridge to google-deepmind/formal-conjectures' Packing (Sqpack/{FCSquarePacking,SpecFC}.lean)
+#print axioms UnitSquarePacking.exists_frame
+#print axioms UnitSquarePacking.frame_image
+#print axioms UnitSquarePacking.packs_iff_nonempty_packing
+#print axioms UnitSquarePacking.setOf_packs_eq

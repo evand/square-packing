@@ -25,3 +25,7 @@ import Sqpack.S12WLower
 import Sqpack.BentzData
 import Sqpack.Bentz
 import Sqpack.AnchorLemma2
+import Sqpack.Spec
+import Sqpack.SpecBridge
+import Sqpack.FCSquarePacking
+import Sqpack.SpecFC
