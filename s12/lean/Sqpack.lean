@@ -5,6 +5,7 @@ import Sqpack.D4
 import Sqpack.Cover
 import Sqpack.S32Data
 import Sqpack.S32
+import Sqpack.Attain
 import Sqpack.MixedMeasure
 import Sqpack.SegTree
 import Sqpack.S21Data

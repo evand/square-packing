@@ -1,4 +1,5 @@
 import Sqpack.S13.Cov
+import Sqpack.Attain
 
 /-!
 # `s(13) = 4`, kernel-checked (the first zero-margin rung of the Lean ladder)
@@ -38,5 +39,9 @@ theorem s13_eq_4 : minSide 13 = 4 := by
     rw [minSide, Real.sInf_of_not_bddBelow hnb] at h1
     norm_num at h1
   exact le_antisymm (csInf_le hb hp) h1
+
+/-- The minimum is attained: `4` is the least side for 13 unit squares (`isLeast_minSide`). -/
+theorem s13_isLeast : IsLeast {s | Packs 13 s} 4 :=
+  (minSide_eq_iff_isLeast (by norm_num)).mp s13_eq_4
 
 end SquarePacking

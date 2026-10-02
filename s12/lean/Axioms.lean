@@ -154,3 +154,16 @@ import Sqpack
 #print axioms UnitSquarePacking.frame_image
 #print axioms UnitSquarePacking.packs_iff_nonempty_packing
 #print axioms UnitSquarePacking.setOf_packs_eq
+-- attainment: s(n) is a minimum for n >= 1 (Sqpack/Attain.lean)
+#print axioms SquarePacking.packs_mono
+#print axioms SquarePacking.packs_nonempty
+#print axioms SquarePacking.one_le_of_packs
+#print axioms SquarePacking.bddBelow_packs
+#print axioms SquarePacking.minSide_le
+#print axioms SquarePacking.le_minSide_iff
+#print axioms SquarePacking.isLeast_minSide
+#print axioms SquarePacking.packs_minSide
+#print axioms SquarePacking.packs_iff_minSide_le
+#print axioms SquarePacking.minSide_eq_iff_isLeast
+#print axioms SquarePacking.s3_eq_2
+#print axioms SquarePacking.s3_isLeast

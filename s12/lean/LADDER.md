@@ -422,6 +422,26 @@ the image of the standard basis is orthonormal, so `u = (cos φ, sin φ)`, `v = 
 `ε = ±1` (`exists_frame`); either way `(0,1)²` maps onto the interior of a unit square
 (`frame_image`); closure/interior between the open and closed formulations.
 
+## Attainment: `s(n)` is a minimum (`Attain.lean`, default build, 2026-10-01)
+
+`minSide n` is defined as `sInf {s | Packs n s}`; `Attain.lean` proves the infimum is attained:
+
+* **`isLeast_minSide (hn : 1 ≤ n) : IsLeast {s | Packs n s} (minSide n)`**, i.e. `packs_minSide :
+  Packs n (minSide n)`;
+* `packs_mono : Packs n s → s ≤ t → Packs n t`, `packs_nonempty n : Packs n n` (grid),
+  `one_le_of_packs (hn : 1 ≤ n) : Packs n s → 1 ≤ s`, `bddBelow_packs`, `minSide_le`;
+* `le_minSide_iff (hn) : a ≤ minSide n ↔ ∀ s, Packs n s → a ≤ s`,
+  `packs_iff_minSide_le (hn) : Packs n s ↔ minSide n ≤ s`,
+  `minSide_eq_iff_isLeast (hn) : minSide n = k ↔ IsLeast {s | Packs n s} k`.
+
+Proof: a sequence of sides `s_m ↓ minSide n` with packings; angles reduced into `[0, 2π)` by
+`toIcoMod` (the squares only see `cos θ`, `sin θ`), centres in `box s_0`, so the parameters lie in a
+compact product and a subsequence converges (`IsCompact.tendsto_subseq`).  Containment passes to the
+limit through the parametrisation `sqPt c θ a b` of the closed square and the closed set
+`{(q, t) | q ∈ box t}`; disjoint interiors pass to the limit because `{(c, θ) | p ∈ sqInt c θ 1}` is
+open.  ~190 lines, ~4 s to check.  Exports: `s3_eq_2`, `s3_isLeast` (`S3Lower.lean`, default build) and
+`s13_isLeast` (`S13Lower.lean`, opt-in).  `#print axioms` = `[propext, Classical.choice, Quot.sound]`.
+
 ## Remaining gaps / next steps
 
 * No `sorry`; nothing is assumed about the tree, the generator or the decoder.
