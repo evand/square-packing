@@ -22,6 +22,7 @@ External posts: ask Evan explicitly per post.
 - [ ] Watch: jlevy#316 (k2m4 registration), #311 (is our s(61) replay independent of zmx2?), PR #290, chelokot#18.
 
 ## Lean
+- [ ] n = 12 batch (`notes/n12-gap.md` §2.2): `s(12) = 4` as an open statement in `Spec.lean` (check formal-conjectures first); axis-parallel ≤ 9 (item 1); Lemma CC chain counting (item 5, "Lean-ready").
 - [ ] s(6) = 3 (Kearney–Shiu 2002) in Lean, if nobody has: last missing k of k²−3. Self-contained agent task; check external Lean repos first.
 - [ ] Common spec (`lean/Sqpack/Spec.lean`): propose on jlevy/squares as shared spec; offer bridges to chelokot (Frame), Queuingtheorydotcom. Draft → Evan approves.
 - [ ] `ValidTilt7/9` are the only unformalised steps of k²−3/k²−4. Route: Lemma E + polygon (Lebesgue) mass in CovM, then SPLIT, L′, V (`lean/LADDER.md`).
