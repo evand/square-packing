@@ -109,9 +109,9 @@ All three: projection consistent (0 inconsistent, 0 negative, σ = 0), θ = 0 fa
 
 **Result (2026-10-03 02:26): VERIFIED-D4, 0 uncertified.**  `qx2_zm.py` (sha `6294052a…`, zeromargin `640fe453…` =
 pinned) on `sol_exact_box9.txt` (input sha `4151d7c4…`): 16,200 roots, 214,336 boxes, max depth 17, **815,343 CPU-s
-(≈ 226 CPU-h; 56,808 s wall on 15 procs)** — 4.3× the ~190k CPU-s estimate, nearly all in roots 5,400–12,000.  Leaves:
+(≈ 226 CPU-h; 56,808 s wall on 15 procs)** — 4.3× the ~190k CPU-s estimate, nearly all at cx ∈ [2.4, 2.6], cy ∈ [2.5, 3.3] (squares straddling the Lebesgue edge 14/5 and the doubled line 3) and in the u-bin [0, 1/16] (53 % of CPU); the slowest roots' true minimum mass is ≈ 1.0036, so the cost is bound looseness, not a tight pose (review `leaves`, 2026-10-03).  Leaves:
 PIECE 84,152, EXACT 20,577 (+ EXACT0 1,424, EXACT45 1,392), SYM 2,676, EMPTY 3,890, LEB 683, CAP 393, AXIS 81, UNCERT 0.
-With the θ = 0 face (Lemma Z, exact, min 1, 348 tight) and the exact germ scan (min 1), `Valid9` holds for this box by
+With the θ = 0 face (Lemma Z, exact: `qx2_zm.py axis` min 1, 208 tight in the D4 region; the 348 in §4's xloop output is `qx2_exact.py axis`'s count of tight θ = 0 LP rows, 1,397 corners; Lean `validAxis9` re-proves it over the whole box, 6,400 corners, 832 tight) and the exact germ scan (min 1), `Valid9` holds for this box by
 our single implementation: total `81 − 4D = 76.704595…< 77`.  Record: `runs/qx2_k4x_k008/qxzm_full.{out,jsonl}` (not
 yet bundled).  Still to do for all k: the all-k reduction (Lean, analogue of `bentz_of_valid7`; task
 `lean-k2m4-reduction`), k = 5..7 from s(21), s(32), s(45), bundle, review.

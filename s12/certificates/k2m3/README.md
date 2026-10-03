@@ -1,8 +1,8 @@
 # s(k² − 3) = k for every k ≥ 6
 
 **Status.**  Working in public: a single-implementation exact certificate, adversarially reviewed by six independent
-agents with no errors found; the all-k reduction is kernel-checked in Lean, conditional on the finite statement
-`Valid7` (not proved in Lean).  Independently re-implemented (2026-10-02): an independent second implementation by wand125 (https://github.com/wand125/valid7-independent-check, reported 2026-10-02 in evand/square-packing#1; written from FORMAT.md and the claim only, per its READ_LOG) certifies `Valid7` over the whole pose space with no symmetry assumed: 156,800 roots, 0 uncertified, exact rationals.  We reran its record check in a sandbox (2026-10-03: `RECORD OK` over all 156,800 roots, a fixed 2,300-leaf sample re-certified, three mutant covers refused; jlevy/squares#298 got the same) and read its method: sound, with one measure-zero logical gap in a Tier B positivity test that cannot matter for this cover.  Per-leaf assurance rests on its own 626 core-hour run.  Our own `zmx2` with area density
+agents with no errors found; in Lean, the all-k reduction, the D4 reduction and the axis-parallel face (Lemma Z) are
+kernel-checked, conditional on the finite statement `ValidTilt7` (the tilted part of `Valid7`; not proved in Lean).  Independently re-implemented (2026-10-02): an independent second implementation by wand125 (https://github.com/wand125/valid7-independent-check, reported 2026-10-02 in evand/square-packing#1; written from FORMAT.md and the claim only, per its READ_LOG) certifies `Valid7` over the whole pose space with no symmetry assumed: 156,800 roots, 0 uncertified, exact rationals.  We reran its record check in a sandbox (2026-10-03: `RECORD OK` over all 156,800 roots, a fixed 2,300-leaf sample re-certified, three mutant covers refused; jlevy/squares#298 got the same) and read its method: sound, with one measure-zero logical gap in a Tier B positivity test that cannot matter for this cover.  Per-leaf assurance rests on its own 626 core-hour run.  Our own `zmx2` with area density
 is partial (it does not cover the smallest tilts: `search/ZMX2_AREA.md`).  Not yet externally reviewed or fully
 formalised.  The fast `verify.sh` does not recompute the positive-tilt part of the proof; `--full` does (below).
 
@@ -66,9 +66,9 @@ arrangement as rational functions of `u = tan(θ/2)`.
 | that the Lean data is these files | `lean/scripts/gen_bentz_data.py` regenerated from the bundled cover and family, compared byte for byte in `verify.sh` | script |
 | the family: `σ = 0`, symmetries, `D`, it rebuilds the box file exactly, total `49 − 4D` | `search/qx2_family_check.py` (own code, reads only the two text files); and in Lean (`box7Cover_measure`, `famCover_total`) | script; kernel |
 | the box cover is well-formed, total `< 46`, D4-invariant | `search/qx2_records.py cover` (own parser); `qx2_zm.py` also refuses a non-invariant cover | script |
-| `Valid7` at `θ = 0` | **Lemma Z** (`search/QUADRANT_EXACT.md` §4.1): `qx2_zm.py axis`, exact enumeration of the 900 one-sided limit corners over centres `[½, 7/2]²` (D4): minimum exactly 1, 188 corners exactly tight (`qx2_zm/lemmaZ.out`) | exact `Fraction` arithmetic; paper lemma |
+| `Valid7` at `θ = 0` | **Lemma Z** (`search/QUADRANT_EXACT.md` §4.1): `qx2_zm.py axis`, exact enumeration of the 900 one-sided limit corners over centres `[½, 7/2]²` (D4): minimum exactly 1, 188 corners exactly tight (`qx2_zm/lemmaZ.out`) | exact; **and kernel-checked in Lean** (`validAxis7`, whole box, no symmetry) |
 | `Valid7` for `θ > 0` on the D4 domain | **`qx2_zm.py` run V3** (`qx2_zm/`): 9,800 / 9,800 root boxes certified, 0 uncertified; leaves are exact primitives with paper proofs (`QUADRANT_EXACT.md` §3–4, `ZM_MIXED.md` §2) | exact `Fraction` arithmetic (floats only choose which exact test to try, and omit lines by a float distance test with ≈ 10⁻⁴ slack, below); the program is not formally verified |
-| the D4 reduction (centres in `[0, 7/2]²`, `θ ∈ [0°, 45°]` suffice) | the cover's exact D4 invariance (above); the reduction itself on paper ([`../s21/FORMAT.md`](../s21/FORMAT.md)); the SYM leaves use it for `θ > 45°` | paper |
+| the D4 reduction (centres in `[0, 7/2]²`, `0 < θ ≤ 45°`, plus `θ = 0`, suffice) | **Lean**: `valid7_of_tilt_axis` (`lean/Sqpack/ValidSplit*.lean`), with the cover's D4 invariance checked by the kernel (`d4_box7`); the remaining hypothesis `ValidTilt7` is exactly the run's region (`notes/lean-valid-split.md`) | kernel-checked |
 | the run record: settings, roots, every leaf, coverage | `search/qx2_records.py record` (below), independent of `qx2_zm.py`'s control flow.  It checks the record's structure and that the leaves cover every root; it does **not** recompute any leaf's mass bound | script |
 
 **`qx2_records.py record`** re-checks the V3 record from scratch: the header's sha256 are the files in
@@ -134,7 +134,7 @@ Proofs: `search/QUADRANT_EXACT.md` §3–4, `search/ZM_MIXED.md` §2.
   `θ = 0` and every `θ ≥ 0.014°` over the whole pose space with no symmetry assumed, but at `0 < θ < 0.01°` it leaves
   120 boxes of the D4 region (1,108 of the full space) uncertified at the double germs (ZMX2_AREA.md §11.4), so it
   does not yet certify `Valid7`.
-* The D4 reduction to the fundamental domain and Lemma Z's reduction to finitely many corner limits (paper).
+* Kernel-checked in Lean since 2026-10-03 (`lean/Sqpack/ValidSplit*.lean`, `notes/lean-valid-split.md`): the D4 reduction (`valid7_of_tilt_axis`: the box cover is D4-invariant, and the tilted region the run covers — centres in `[0, m/2]²`, `0 < u`, `u² + 2u ≤ 1`, i.e. `0 < θ ≤ 45°` — plus the axis face gives every pose) and Lemma Z itself (`validAxis7`: every axis-parallel unit square in the box, by exact corner limits over the whole box).  So the only unformalised step is the tilted run (`ValidTilt7`).  Lean: `bentz_of_validTilt7 : ValidTilt7 → ∀ k ≥ 6, minSide (k² − 3) = k`.
 * Floats in the checker only choose which exact test to try, with one exception (review lemmaE-code, minor):
   `lines_in_reach` omits lines from Lemma E's arrangement by a float distance test (radius `0.7072 + ½·diagonal`; a
   unit square lies within `√2/2 = 0.70711` of its centre, a slack of `≈ 9·10⁻⁵`, far above float error).

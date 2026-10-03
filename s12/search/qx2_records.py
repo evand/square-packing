@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Re-check the shipped records of the s(k^2 - 3) = k bundle (certificates/k2m3/README.md) from scratch.
+"""Re-check the shipped records of the s(k^2 - 3) = k and s(k^2 - 4) = k bundles (certificates/k2m3/, box k = 7,
+9,800 roots; certificates/k2m4/, box k = 9, 16,200 roots) from scratch.  Generic in the box side m, which is read
+from the box file; everything else (pitch 1/10, 8 u-bins over [0,1/2], the certificate settings) is the same.
 Independent of qx2_zm.py's control flow: it reads only the files, enumerates the root region itself and re-derives
 the admissibility condition; nothing is imported from the checkers.  Exact (Fraction) arithmetic throughout.
 
@@ -9,11 +11,13 @@ the admissibility condition; nothing is imported from the checkers.  Exact (Frac
       exact total < N; the measure is invariant under x -> m-x and x <-> y (so under D4), as multisets of pieces.
 
   python3 search/qx2_records.py record REC.jsonl.gz REC.out CHECKERDIR BOX
-      REC = the qx2_zm.py --dump-leaves record (run V3).  Checks:
+      REC = a qx2_zm.py --dump-leaves record (k2m3: run V3; k2m4: run qx2_k4x_k008).  Checks:
       * header sha256 of qx2_zm.py, zm_mixed.py, zeromargin.py, mixed_cover.py = the files in CHECKERDIR, and of the
         input = BOX; the argv has the certificate settings (--depth 18, --exact-umax 1/2, --exact-from 3,
         --dump-leaves, default pitch and u-bins, no region restriction, EXACT on); the .out repeats these shas;
-      * the roots are exactly the D4 grid [0,m/2]^2 x u in [0,1/2], pitch 1/10, 8 u-bins, each once;
+      * the roots are exactly the D4 grid [0,m/2]^2 x u in [0,1/2], pitch 1/10, 8 u-bins, each once
+        ((5m)^2 * 8 roots: 9,800 for m = 7, 16,200 for m = 9); the .out states the same container side, root
+        count and argv;
       * per root: UNCERT 0, no uncertified box; every leaf kind is a certifying kind; the census counts equal the
         leaf list; boxes = 2 leaves - 1 (a binary tree); max depth <= 18; every leaf lies in its root; the labels are
         consistent (AXIS: u1 = 0; SYM: u0^2 + 2u0 - 1 >= 0, i.e. theta0 >= 45 deg; EXACT0: u0 = 0; EXACT45:
@@ -28,7 +32,7 @@ the admissibility condition; nothing is imported from the checkers.  Exact (Frac
       * the census totals (boxes, max depth, every leaf kind) equal the .out's, and the .out says VERIFIED-D4.
       NOT checked: the mass inequality itself at any PIECE / EXACT / EXACT0 / EXACT45 / LEB / CAP leaf.  Those labels
       are accepted on their intervals and the coverage above; re-proving them needs a re-run of qx2_zm.py
-      (certificates/k2m3/verify.sh --full).  So a clean record is a complete, well-formed proof skeleton, not a
+      (certificates/k2m3/verify.sh --full, certificates/k2m4/verify.sh --full).  So a clean record is a complete, well-formed proof skeleton, not a
       fresh geometric check and not a second checker.
 Exit 0 iff clean.
 """
@@ -266,6 +270,11 @@ def record_check(rec, out, chkdir, box):
     for k, v in want.items():
         name = 'input' if k == 'input' else k
         if not re.search(rf"^sha256 {v}  {re.escape(name)}$", txt, re.M): fail(f".out does not state sha256 {k} = {v}")
+    if not re.search(rf"^argv: {re.escape(' '.join(hdr['argv']))}$", txt, re.M): fail(".out argv != the header's")
+    if not re.search(rf"^container \[0,{m}\]\^2, ", txt, re.M): fail(f".out does not state container [0,{m}]^2")
+    if not re.search(rf"^D4 roots \[0,m/2\]\^2 x u in \[0,1/2\]: {len(grid)} roots; depth 18; ", txt, re.M):
+        fail(f".out does not state {len(grid)} D4 roots, depth 18")
+    print(f".out: same argv, container [0,{m}]^2, {len(grid)} D4 roots, depth 18")
     mo = re.search(r"done in \d+s: boxes (\d+), max depth (\d+), CPU (\d+) s", txt)
     ml = re.search(r"^  leaves: (.*)$", txt, re.M)
     if not mo or not ml: fail(".out has no census")
