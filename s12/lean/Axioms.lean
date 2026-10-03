@@ -135,6 +135,14 @@ import Sqpack
 #print axioms SquarePacking.s3_ge_2_mixed
 -- s(k^2 - 3) = k for all k >= 6, from the one finite hypothesis Valid7 (Sqpack/Bentz.lean, certificates/k2m3/)
 #print axioms SquarePacking.Bentz.bentz_of_valid7
+-- s(k^2 - 4) = k for all k >= 8, from the one finite hypothesis Valid9 (Sqpack/BentzFam.lean, Sqpack/Bentz4.lean)
+#print axioms SquarePacking.BentzFam.fileCover_measure
+#print axioms SquarePacking.BentzFam.mass_shift
+#print axioms SquarePacking.BentzFam.famCover_total
+#print axioms SquarePacking.BentzFam.minSide_eq
+#print axioms SquarePacking.Bentz4.box9Cover_measure
+#print axioms SquarePacking.Bentz4.famCover_total4
+#print axioms SquarePacking.Bentz4.bentz4_of_valid9
 -- clique-family.md Lemma 2, the transversal threshold at a wall (Sqpack/AnchorLemma2.lean)
 #print axioms SquarePacking.anchor_lemma2
 #print axioms SquarePacking.anchor_lemma2_sharp

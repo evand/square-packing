@@ -25,6 +25,9 @@ import Sqpack.S12Lower
 import Sqpack.S12WLower
 import Sqpack.BentzData
 import Sqpack.Bentz
+import Sqpack.BentzFam
+import Sqpack.Bentz4Data
+import Sqpack.Bentz4
 import Sqpack.AnchorLemma2
 import Sqpack.Spec
 import Sqpack.SpecBridge
