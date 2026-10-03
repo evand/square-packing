@@ -16,6 +16,7 @@ External posts: ask Evan explicitly per post.
 - [ ] Corner coupling (R3): does D(w) ≥ κ M(w)? Start with the corner dual at w = 1 (D = ½, corner cost ¼?).
 
 ## Correctness / review
+- [ ] Owed on jlevy (`notes/jlevy-s17-techniques.md` §4): #238 `s12/verify` exits 0 on NOT VERIFIED / partial runs, `cargo build | tail -1` hides failures; #256 stale s60 README paragraph, pin/print zmx2 source digest; #279 replay wand125's s59/s77 (he said yes); site s(17) floor R067 → R068.
 - [ ] Second implementation of `Valid9` (F₄ k ≥ 8 rests on qx2 alone): deferred 10-03, Lean/simplification first; others may do it (k2m3 route: `ZMX2_AREA.md`).
 - [ ] k2m3 2nd impl (zmx2 area density): needs a 2nd reader for the 4 mutation-blind refinements (`ZMX2_AREA.md` §13).
 - [ ] zeromargin.py should-fixes (audit 09-26): int64 guard on `sum(W·weight)`; `zm_d4_sweep.py summary` sha/settings gate; stale docstrings. Re-pin s(32) bundle.
@@ -30,6 +31,7 @@ External posts: ask Evan explicitly per post.
 - [ ] Lean explainer (`notes/lean-explainer-draft.html`, artifact FJPhwWoQLhdkcerwh4VBwY): Evan reviews → site page.
 
 ## s(17)
+- [ ] Techniques from jlevy/Kleddamag/Guzhou (`notes/jlevy-s17-techniques.md` §2): rule atoms as LP columns, near-tight cells as exact LP rows (their re-solve of our s(12) points: ≥ 3.9702002), gmpy2 in exact checkers. s(17) exact: their PR #307 is far ahead; help with an independent check of its local theorem, not a restart.
 - [ ] Ceiling test at t = 4.6604 (`cover4_cg.py --t`, ~1 CPU-h): ν_f ≥ 17 ⇒ pure covers are at their limit. Nobody has computed it.
 - [ ] s(17) exact via the s(11) method: on hold (CPU). `tasks/s17-core-isolation/`
 
