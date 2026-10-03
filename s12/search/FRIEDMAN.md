@@ -17,7 +17,7 @@ packings), `runs/quad_band_w{4,5,6}/` (band LP, pending).  Labels **[proved] [me
   `A` is open, and so is `c*(k) → ∞`.  Known: `3 ≤ c*(k)` for `k ≥ 3`; `c*(k) ≤ k−1` for `k ≥ 12` (Arslanov et al. 2021);
   `c*(k) = O(k^{0.6})` (waste bounds).
 * **Status by c.**  `F_1`, `F_2`: Nagamochi.  `F_3`: **now a theorem** (KS `k=3`, Bentz `4..7`, ours `k ≥ 6`).
-  `F_4` ⇔ `s(k²−4) = k` ∀k ≥ 5, **independent of `s(12)`**; it is the k²−4 family (R = w = 3, `k ≥ 8`) plus our k = 5..8.
+  `F_4` ⇔ `s(k²−4) = k` ∀k ≥ 5, **independent of `s(12)`**: **now holds** (2026-10-03, `certificates/k2m4/`): the k²−4 family (R = w = 3, `k ≥ 8`, resting on `ValidTilt9`, one implementation) plus our k = 5..8.
   `F_5` needs `D > 5/4` plus per-k certificates starting at a threshold that is itself open (`s(20)`, `s(31)`).
 * **Two proof routes.**  *Dual (certificates):* the insertion lemma (§2) propagates a certificate from k to every k' ≥ k.
   This is exactly the mechanism of the k²−3 proof, and it generalises verbatim to any c.  But it proves values, not
@@ -134,8 +134,8 @@ discarded.
    decomposition into rigid blocks, each descended in its own frame.  **Not reachable** without a structure theory.
 2. **`F_c` one c at a time** by the dual route.
    * `F_3`: done.
-   * `F_4`: reachable.  It is exactly the open k²−4 family item (w = 3) plus the shipped k = 5..8, with no s(12)
-     needed.  The announcement could say "Friedman's conjecture holds for c ≤ 4".
+   * `F_4`: done (2026-10-03, `certificates/k2m4/`): the k²−4 family (w = 3, `k ≥ 8`, resting on `ValidTilt9`,
+     certified by one implementation) plus the shipped k = 5..8, with no s(12) needed.
    * `F_5`: needs `D > 5/4` (w ≥ 4?) and certificates from the threshold on.  `k₁(5) ∈ {5, 6, ...}` is open (s(20)).
      A sufficient target is `s(k²−5) = k` ∀k ≥ 6, whatever s(20) is.  The shipped s(32) cover saves 4.29 at k = 6 (LP value not
      recorded), below 5.  So k = 6 is doubtful, and `F_5` may hinge on a threshold we cannot certify.
@@ -144,7 +144,7 @@ discarded.
    "general" statement within conceivable reach.
 4. Small, done here: the ascent `c*(k+1) ≤ c*(k)+2`; the insertion lemma; the logical map; the Roth–Vaughan correction.
 
-## 5. F₄ plan and compute estimate (2026-09-30; parked, not top priority)
+## 5. F₄ plan and compute estimate (2026-09-30; done 2026-10-03: `certificates/k2m4/`, k ≥ 8 rests on `ValidTilt9`)
 
 **Order:** golf first, then the exact w = 3 run.  The cheap go/no-go comes first: does `D > 1` survive exactness?
 * **Exactness price.**  At w = 2, D went 0.945 → 0.847 (layer + pitch 0.2: 0.035; tilt margin: 0.06; germ rows ~10⁻⁵).
@@ -170,7 +170,7 @@ No saturation so far.  Read the final `log.txt` values into §2.2 when the runs 
 roughly like √w, a genuine D(w) family (with corners) at w = 4–6 is the next measurement toward `c*(k) → ∞`.
 
 ## 6. Open items (also in TODO.md)
-* F₄: go/no-go exactness LP at R = w = 3 → golf (window checker, lines-only, germ primitives) → exact run (§5).
+* F₄: done (2026-10-03, `certificates/k2m4/`; k ≥ 8 rests on `ValidTilt9`, one implementation).  Open: a second implementation of `Valid9`.
 * `c*(k) → ∞`: read the band LP results; if growing, run the corner-coupled LP at w = 4, 5 (R = w, pitch 0.2) and fit D(w).
 * Parametrise `bentz_of_valid7` over c and the box predicate (the Lean form of the insertion lemma, §2.1).
 * Descent: optional.  Characterise why n = 89 fails (block re-packing); not a proof route without a structure theory.
