@@ -143,6 +143,27 @@ import Sqpack
 #print axioms SquarePacking.Bentz4.box9Cover_measure
 #print axioms SquarePacking.Bentz4.famCover_total4
 #print axioms SquarePacking.Bentz4.bentz4_of_valid9
+-- Valid7 / Valid9 split: D4 reduction and Lemma Z (theta = 0) in Lean, only the tilted run's region left
+-- (Sqpack/ValidSplit.lean, ValidSplit7.lean, ValidSplit9.lean, notes/lean-valid-split.md)
+#print axioms SquarePacking.ValidSplit.valid_of_tilt_axis
+#print axioms SquarePacking.ValidSplit.d4InvM_gridCover
+#print axioms SquarePacking.ValidSplit.validAxis_gridCover
+#print axioms SquarePacking.ValidSplit.famCover_measure_eq
+#print axioms SquarePacking.ValidSplit.gridCover_fit
+#print axioms SquarePacking.ValidSplit.d4InvM_packed
+#print axioms SquarePacking.ValidSplit.validAxis_packed
+#print axioms SquarePacking.Bentz.box7_grid
+#print axioms SquarePacking.Bentz.d4_box7
+#print axioms SquarePacking.Bentz.validAxis7
+#print axioms SquarePacking.Bentz.valid7_of_tilt_axis
+#print axioms SquarePacking.Bentz.valid7_of_tilt
+#print axioms SquarePacking.Bentz.bentz_of_validTilt7
+#print axioms SquarePacking.Bentz4.box9_grid
+#print axioms SquarePacking.Bentz4.d4_box9
+#print axioms SquarePacking.Bentz4.validAxis9
+#print axioms SquarePacking.Bentz4.valid9_of_tilt_axis
+#print axioms SquarePacking.Bentz4.valid9_of_tilt
+#print axioms SquarePacking.Bentz4.bentz4_of_validTilt9
 -- clique-family.md Lemma 2, the transversal threshold at a wall (Sqpack/AnchorLemma2.lean)
 #print axioms SquarePacking.anchor_lemma2
 #print axioms SquarePacking.anchor_lemma2_sharp

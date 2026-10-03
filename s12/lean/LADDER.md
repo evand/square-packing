@@ -46,7 +46,8 @@ build**, ~2 min).  `Valid7` = every closed unit square in `[0,7]²` has mass `�
 which is exactly what the Python certificate asserts (Lemma Z + `qx2_zm.py` run V3, `search/QUADRANT_EXACT.md`).  The
 kernel checks the whole all-k reduction: the family measure `μ_k` for every `k`, `μ₇` = the box file, total mass
 `k² − 4D < k² − 3`, and localisation by integer shifts.  `#print axioms` = `[propext, Classical.choice, Quot.sound]`.
-Discharging `Valid7` in Lean needs polygon mass in `CovM`, Lemma Z, and Lemma E (`notes/lean-bentz-reduction.md`).
+Discharging `Valid7` in Lean needs polygon mass in `CovM`, Lemma Z, and Lemma E (`notes/lean-bentz-reduction.md`);
+Lemma Z and the D4 reduction are now done (next paragraph but one).
 
 **`s(k² − 4) = k` for all `k ≥ 8`, conditional on one finite statement (2026-10-03):**
 `SquarePacking.Bentz4.bentz4_of_valid9 : Valid9 → ∀ k : ℕ, 8 ≤ k → minSide (k ^ 2 - 4) = k` (`Bentz4.lean`, **default
@@ -56,6 +57,13 @@ build**, ~35 s).  `Valid9` = every closed unit square in `[0,9]²` has mass `≥
 `k² − 3`, now generic in the edge-zone width `R` (`BentzFam.lean`; `k² − 4` is `R = 3`, box `2R + 3 = 9`, threshold
 `2R + 2 = 8`).  `#print axioms` = `[propext, Classical.choice, Quot.sound]`.  Section below and
 `notes/lean-k2m4-reduction.md`.
+
+**Only the tilted run's region left (2026-10-03):** `Bentz.bentz_of_validTilt7 : ValidTilt7 → ∀ k ≥ 6, minSide
+(k ^ 2 - 3) = k` and `Bentz4.bentz4_of_validTilt9 : ValidTilt9 → ∀ k ≥ 8, minSide (k ^ 2 - 4) = k`
+(`ValidSplit{,7,9}.lean`, **default build**, ~45 s).  `ValidTilt` = exactly the pose region `qx2_zm.py`'s box run
+certifies (centres in `[0, m/2]²`, `0 < θ ≤ 45°` as `u = tan(θ/2)`, admissible squares); the D4 reduction and Lemma Z
+(`θ = 0`, `validAxis7`, `validAxis9`, proved by a kernel check of all corner limits over the whole box) are in Lean.
+Section below and `notes/lean-valid-split.md`.
 
 ## Files
 
@@ -77,6 +85,9 @@ build**, ~35 s).  `Valid9` = every closed unit square in `[0,9]²` has mass `≥
 | `Sqpack/BentzFam.lean` | the all-`k` reduction for a fixed-profile family of any edge-zone width `R` (two-layer code tables, box-file check by sorted keys, localisation, accounting, `minSide_eq`) |
 | `Sqpack/Bentz4Data.lean`, `Sqpack/Bentz4.lean` | generated data (the `k² − 4` box file verbatim, the two family tables, the entry keys; input sha256s in the header) and `bentz4_of_valid9` |
 | `scripts/gen_bentzfam_data.py` | writes `Bentz4Data.lean` from `search/qx2_data/K4_k008_*` (generic in `R`; deterministic, byte for byte) |
+| `Sqpack/ValidSplit.lean` | `ValidTilt`, `ValidAxis`, `valid_of_tilt_axis` (the D4 split); grid covers (`gridCover`), their D4 invariance (`d4InvM_gridCover`) and Lemma Z (`validAxis_gridCover`); packed weight tables and the kernel checks `fitOK`, `symOKP`, `axisOKP` |
+| `Sqpack/ValidSplitData.lean`, `Sqpack/ValidSplit7.lean`, `Sqpack/ValidSplit9.lean` | generated data (the two box files' weights packed, 48 bits per grid segment; input sha256s in the header) and the instances `validAxis7`, `valid7_of_tilt`, `bentz_of_validTilt7`, `validAxis9`, `valid9_of_tilt`, `bentz4_of_validTilt9` |
+| `scripts/gen_validsplit_data.py` | writes `ValidSplitData.lean` from the two box files, with a Python mirror of `symOKP` / `axisOKP` (deterministic) |
 | `scripts/build_parts.sh` | builds a data set's part files a few at a time (plain `lake build` starts them all at once) |
 
 Regenerate: `python3 lean/scripts/gen_boxtree.py certificates/s12_uniform_7of81_3.888.txt --n 12
@@ -503,6 +514,40 @@ plus five `decide +kernel` data checks and the accounting constants.  Difference
 Build (cores 12–15, `LEAN_NUM_THREADS=4`): `Bentz4Data` 5.8 s, `BentzFam` 10 s, `Bentz4` 22 s.  `Bentz.lean` is
 unchanged (the `k² − 3` data also passes `gen_bentzfam_data.py`'s mirror with an empty layer 2, so it could be
 re-expressed as a `BentzFam` instance).
+
+## `Valid7` / `Valid9` split: D4 and Lemma Z in Lean (`ValidSplit*.lean`, default build, 2026-10-03)
+
+```lean
+def ValidTilt (m : ℝ) (μ : Measure (ℝ × ℝ)) : Prop :=
+  ∀ (c : ℝ × ℝ) (u : ℝ), c.1 ∈ Set.Icc 0 (m / 2) → c.2 ∈ Set.Icc 0 (m / 2) → 0 < u →
+    u ^ 2 + 2 * u ≤ 1 → sq c (2 * Real.arctan u) 1 ⊆ box m → 1 ≤ μ (sq c (2 * Real.arctan u) 1)
+def ValidAxis (m : ℝ) (μ : Measure (ℝ × ℝ)) : Prop := ∀ c, sq c 0 1 ⊆ box m → 1 ≤ μ (sq c 0 1)
+theorem ValidSplit.valid_of_tilt_axis (hinv : D4InvM m μ) (ht : ValidTilt m μ) (ha : ValidAxis m μ) :
+    ∀ c θ, sq c θ 1 ⊆ box m → 1 ≤ μ (sq c θ 1)
+theorem Bentz.validAxis7 : ValidAxis7          -- ValidAxis 7 box7Cover.measure
+theorem Bentz.valid7_of_tilt (ht : ValidTilt7) : Valid7
+theorem Bentz4.validAxis9 : ValidAxis9         -- ValidAxis 9 box9Cover.measure
+theorem Bentz4.valid9_of_tilt (ht : ValidTilt9) : Valid9
+```
+
+`ValidTilt` is the domain of `qx2_zm.py`'s box run read off the code: `d4_roots` (centres `[0, m/2]²`, `u ∈ [0, 1/2]`),
+minus what its leaves delegate (`AXIS`: `θ = 0`, Lemma Z; `SYM`: `θ ≥ 45°`, the diagonal symmetry; `EMPTY` /
+`clip_bin`: no admissible pose).  No mismatch with what the reduction needs (`θ ∈ [0, π/4]`).
+
+* **Grid covers.**  Both box files are `gridCover K A den w` (unit segments of the `1/5`-grid in `[0,K]²` with mass
+  `w/den`, Lebesgue on `[A/5, K − A/5]²`), via `box7Cover_measure` / `box9Cover_measure` and the families.
+* **D4** from invariance of the weight table under the index maps of `x ↦ K − x`, `x ↔ y` (`MixedCover.d4InvM`).
+* **Lemma Z** as "every cell of lower-left corners, every closed corner": per cell `(p, q)` of `(1/5)ℤ²` and corner
+  `(a, b)`, the inside limit is an integer sum over 50 unit segments plus `lov·lov/25`; on the closed cell the mass is
+  at least the bilinear interpolation of the four corner values (segment fractions by sub-intervals, line indicators
+  by closedness, Lebesgue overlaps exactly), so `≥ 1`.  3,600 corners (`K = 7`) / 6,400 (`K = 9`), the whole box.
+  Agrees with `qx2_zm.py axis` (tight corners 4·188 / 4·208).
+* **Kernel speed.**  `Finset` sums in a `decide` cost ~3 s per corner; a family weight (`ℤ` codes) ~1.2 ms per
+  evaluation.  The weights are packed into one `ℕ` literal per file (48-bit fields, read by GMP `>>>`/`%`), tied to the
+  family by one `fitOK` pass.  Checks: `fitOK` 4.3 s / 8.0 s, `axisOKP` 4.4 s / 9.0 s, `symOKP`, `outOK` < 0.5 s.
+  Build: `ValidSplit` 10 s, `ValidSplit7` 12 s, `ValidSplit9` 20 s (cores 8–15).
+
+Left: `ValidTilt7`, `ValidTilt9` (Lemmas S/T/L/R, U, K, E of the leaf primitives, with the Lebesgue polygon).
 
 ## Remaining gaps / next steps
 
