@@ -2163,7 +2163,7 @@
     "year": 2026,
     "status": "preprint",
     "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
-    "note": "2026-09-29; s(33) = 6 as the k = 6 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by an exact checker (search/qx2_zm.py), adversarially reviewed, and independently re-checked over the whole pose space by wand125's separately written checker (github.com/wand125/valid7-independent-check, 2026-10-02; not replayed here); the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); unrefereed",
+    "note": "2026-09-29; s(33) = 6 as the k = 6 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by an exact checker (search/qx2_zm.py), adversarially reviewed, and independently re-checked over the whole pose space by wand125's separately written checker (github.com/wand125/valid7-independent-check, 2026-10-02; record check rerun and method read here 2026-10-03); the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); unrefereed",
     "date": "2026-09-29"
    },
    {
@@ -2926,7 +2926,7 @@
     "year": 2026,
     "status": "preprint",
     "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
-    "note": "2026-09-29; s(46) = 7 as the k = 7 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by an exact checker (search/qx2_zm.py), adversarially reviewed, and independently re-checked over the whole pose space by wand125's separately written checker (github.com/wand125/valid7-independent-check, 2026-10-02; not replayed here); the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); unrefereed",
+    "note": "2026-09-29; s(46) = 7 as the k = 7 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by an exact checker (search/qx2_zm.py), adversarially reviewed, and independently re-checked over the whole pose space by wand125's separately written checker (github.com/wand125/valid7-independent-check, 2026-10-02; record check rerun and method read here 2026-10-03); the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); unrefereed",
     "date": "2026-09-29"
    },
    {
@@ -3776,7 +3776,7 @@
     "year": 2026,
     "status": "preprint",
     "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
-    "note": "2026-09-29; s(61) = 8 as the k = 8 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by an exact checker (search/qx2_zm.py), adversarially reviewed, and independently re-checked over the whole pose space by wand125's separately written checker (github.com/wand125/valid7-independent-check, 2026-10-02; not replayed here); the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); unrefereed",
+    "note": "2026-09-29; s(61) = 8 as the k = 8 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by an exact checker (search/qx2_zm.py), adversarially reviewed, and independently re-checked over the whole pose space by wand125's separately written checker (github.com/wand125/valid7-independent-check, 2026-10-02; record check rerun and method read here 2026-10-03); the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); unrefereed",
     "date": "2026-09-29"
    },
    {
@@ -4682,7 +4682,7 @@
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
-   "note": "2026-09-29; s(78) = 9 as the k = 9 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by an exact checker (search/qx2_zm.py), adversarially reviewed, and independently re-checked over the whole pose space by wand125's separately written checker (github.com/wand125/valid7-independent-check, 2026-10-02; not replayed here); the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); unrefereed",
+   "note": "2026-09-29; s(78) = 9 as the k = 9 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by an exact checker (search/qx2_zm.py), adversarially reviewed, and independently re-checked over the whole pose space by wand125's separately written checker (github.com/wand125/valid7-independent-check, 2026-10-02; record check rerun and method read here 2026-10-03); the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); unrefereed",
    "date": "2026-09-29"
   },
   "history": [
@@ -4710,7 +4710,7 @@
     "year": 2026,
     "status": "preprint",
     "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
-    "note": "2026-09-29; s(78) = 9 as the k = 9 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by an exact checker (search/qx2_zm.py), adversarially reviewed, and independently re-checked over the whole pose space by wand125's separately written checker (github.com/wand125/valid7-independent-check, 2026-10-02; not replayed here); the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); unrefereed",
+    "note": "2026-09-29; s(78) = 9 as the k = 9 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by an exact checker (search/qx2_zm.py), adversarially reviewed, and independently re-checked over the whole pose space by wand125's separately written checker (github.com/wand125/valid7-independent-check, 2026-10-02; record check rerun and method read here 2026-10-03); the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); unrefereed",
     "date": "2026-09-29"
    },
    {
@@ -5583,7 +5583,7 @@
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
-   "note": "2026-09-29; s(97) = 10 as the k = 10 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by an exact checker (search/qx2_zm.py), adversarially reviewed, and independently re-checked over the whole pose space by wand125's separately written checker (github.com/wand125/valid7-independent-check, 2026-10-02; not replayed here); the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); unrefereed",
+   "note": "2026-09-29; s(97) = 10 as the k = 10 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by an exact checker (search/qx2_zm.py), adversarially reviewed, and independently re-checked over the whole pose space by wand125's separately written checker (github.com/wand125/valid7-independent-check, 2026-10-02; record check rerun and method read here 2026-10-03); the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); unrefereed",
    "date": "2026-09-29"
   },
   "history": [
@@ -5611,7 +5611,7 @@
     "year": 2026,
     "status": "preprint",
     "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
-    "note": "2026-09-29; s(97) = 10 as the k = 10 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by an exact checker (search/qx2_zm.py), adversarially reviewed, and independently re-checked over the whole pose space by wand125's separately written checker (github.com/wand125/valid7-independent-check, 2026-10-02; not replayed here); the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); unrefereed",
+    "note": "2026-09-29; s(97) = 10 as the k = 10 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by an exact checker (search/qx2_zm.py), adversarially reviewed, and independently re-checked over the whole pose space by wand125's separately written checker (github.com/wand125/valid7-independent-check, 2026-10-02; record check rerun and method read here 2026-10-03); the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); unrefereed",
     "date": "2026-09-29"
    },
    {
