@@ -48,6 +48,15 @@ kernel checks the whole all-k reduction: the family measure `μ_k` for every `k`
 `k² − 4D < k² − 3`, and localisation by integer shifts.  `#print axioms` = `[propext, Classical.choice, Quot.sound]`.
 Discharging `Valid7` in Lean needs polygon mass in `CovM`, Lemma Z, and Lemma E (`notes/lean-bentz-reduction.md`).
 
+**`s(k² − 4) = k` for all `k ≥ 8`, conditional on one finite statement (2026-10-03):**
+`SquarePacking.Bentz4.bentz4_of_valid9 : Valid9 → ∀ k : ℕ, 8 ≤ k → minSide (k ^ 2 - 4) = k` (`Bentz4.lean`, **default
+build**, ~35 s).  `Valid9` = every closed unit square in `[0,9]²` has mass `≥ 1` under the box cover
+`search/qx2_data/K4_k008_box9.txt` taken verbatim as a `MixedCover` (2076 segments + the Lebesgue square
+`[14/5, 31/5]²`), the statement of the Python certificate of record (`qx2_k4x_k008`, VERIFIED-D4).  Same argument as
+`k² − 3`, now generic in the edge-zone width `R` (`BentzFam.lean`; `k² − 4` is `R = 3`, box `2R + 3 = 9`, threshold
+`2R + 2 = 8`).  `#print axioms` = `[propext, Classical.choice, Quot.sound]`.  Section below and
+`notes/lean-k2m4-reduction.md`.
+
 ## Files
 
 | file | what |
@@ -65,6 +74,9 @@ Discharging `Valid7` in Lean needs polygon mass in `CovM`, Lemma Z, and Lemma E 
 | `Sqpack/S32Z/{Pts,Part0..95,Cov}.lean`, `Sqpack/S32Lower.lean` | generated (gitignored): the 13,085 points; 5,990 chunk theorems; `cov_root`.  `s32_ge_6`, `s32_checkerCover` (the hypothesis of `S32.lean`, proved), `s32_eq_6` (opt-in) |
 | `Sqpack/BentzData.lean`, `Sqpack/Bentz.lean` | generated data (the box file verbatim + the family table, input sha256s in the header) and `bentz_of_valid7` |
 | `scripts/gen_bentz_data.py` | writes `BentzData.lean` from `search/qx2_data/` (deterministic, byte for byte) |
+| `Sqpack/BentzFam.lean` | the all-`k` reduction for a fixed-profile family of any edge-zone width `R` (two-layer code tables, box-file check by sorted keys, localisation, accounting, `minSide_eq`) |
+| `Sqpack/Bentz4Data.lean`, `Sqpack/Bentz4.lean` | generated data (the `k² − 4` box file verbatim, the two family tables, the entry keys; input sha256s in the header) and `bentz4_of_valid9` |
+| `scripts/gen_bentzfam_data.py` | writes `Bentz4Data.lean` from `search/qx2_data/K4_k008_*` (generic in `R`; deterministic, byte for byte) |
 | `scripts/build_parts.sh` | builds a data set's part files a few at a time (plain `lake build` starts them all at once) |
 
 Regenerate: `python3 lean/scripts/gen_boxtree.py certificates/s12_uniform_7of81_3.888.txt --n 12
@@ -458,6 +470,39 @@ open.  ~190 lines, ~4 s to check.  Exports: `s3_eq_2`, `s3_isLeast` (`S3Lower.le
   applies to the average.
 
 ~200 lines, ~4 s to check.  `#print axioms` = `[propext, Classical.choice, Quot.sound]`.
+
+## `s(k² − 4) = k` for `k ≥ 8` from `Valid9` (`BentzFam.lean`, `Bentz4.lean`, default build, 2026-10-03)
+
+```lean
+theorem SquarePacking.Bentz4.bentz4_of_valid9 (h : Valid9) : ∀ k : ℕ, 8 ≤ k → minSide (k ^ 2 - 4) = k
+def Valid9 : Prop := ∀ (c : ℝ × ℝ) (θ : ℝ), sq c θ 1 ⊆ box 9 → 1 ≤ box9Cover.measure (sq c θ 1)
+```
+
+`box9Cover = fileCover 2000000000000 boxSegs boxPolyVerts boxPolyW`: `K4_k008_box9.txt` verbatim (no points, 2076 unit
+segments in file order with mass `w/(2·10¹²)` uniform by length, the polygon `[14/5, 31/5]²` with mass `11.56`
+uniform by area).  The proof is `bentz_of_valid7`'s, written once for any `R` in `BentzFam.lean` (`Fam` = `R`,
+Lebesgue corner `A/5`, mass denominator, two code tables); `Bentz4.lean` is the instance (`fam4`: `R = 3`, `A = 14`)
+plus five `decide +kernel` data checks and the accounting constants.  Differences from `k² − 3`:
+
+* **Two entries on one segment.**  The `k² − 4` corner module puts mass on the band's end lines `x = R`, `y = R`
+  (`H 3 4/5 1`, `H 3 1 6/5` and their diagonal images), where the profile's phase-0 line also lies; the box file lists
+  these 16 unit segments twice (corner entry + profile entry).  So the end lines get their own line code (offset
+  `5R`, distinct from interior phase 0) and the family has a second table (`famTab2`, the corner part); a file entry's
+  layer is "the layer-1 mass matches, else layer 2", checked.
+* **The box-file check is `O(n log n)`.**  The pairwise `Nodup` / `contains` checks of `Bentz.lean` cost ~100 µs per
+  comparison in the kernel (400 entries: 32 s; the full 2076: > 5 min and 26 GB before it was stopped).  Now the
+  generator also writes the entries' natural-number keys (`boxKeys`) and their sorted list (`boxGridKeys`); the kernel
+  checks `keys = map key file` (3 s), a fuel-based merge sort (`msort`, proved a permutation) of them `= boxGridKeys` (3 s),
+  `boxGridKeys` strictly increasing, and `boxGridKeys` = the keys of the non-zero (segment, layer)s of `[0,9]²`
+  enumerated in order (`gridKeys`, 11 s); the per-entry check `segOK` (unit grid segment, mass = the family's) takes 5 s.  Strictly increasing ⇒ no entry twice; equality ⇒ every non-zero
+  (segment, layer) is an entry (`keyN` is injective on the grid).
+* Threshold `k₀ = 2R + 2 = 8` (localisation: a range of width `< 2` cannot touch both `x ≤ R` and `x ≥ k − R`); the
+  accounting holds for `k ≥ 2R + 1 = 7`, total `= k² − 4D`, `D = 214770225571/200000000000`; segment mass
+  `22.4·10¹² m + 85489190977160` (units `1/(2·10¹²)`, `k = m + 7`).
+
+Build (cores 12–15, `LEAN_NUM_THREADS=4`): `Bentz4Data` 5.8 s, `BentzFam` 10 s, `Bentz4` 22 s.  `Bentz.lean` is
+unchanged (the `k² − 3` data also passes `gen_bentzfam_data.py`'s mirror with an empty layer 2, so it could be
+re-expressed as a `BentzFam` instance).
 
 ## Remaining gaps / next steps
 
