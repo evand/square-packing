@@ -29,6 +29,10 @@ import Sqpack.Bentz
 import Sqpack.BentzFam
 import Sqpack.Bentz4Data
 import Sqpack.Bentz4
+import Sqpack.ValidSplit
+import Sqpack.ValidSplitData
+import Sqpack.ValidSplit7
+import Sqpack.ValidSplit9
 import Sqpack.AnchorLemma2
 import Sqpack.Spec
 import Sqpack.SpecBridge
