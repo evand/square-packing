@@ -6,6 +6,7 @@ Paths relative to `public/s12`.  Public since 10-03 (outreach stays in `private/
 External posts: ask Evan explicitly per post.
 
 ## Next (picked 2026-10-03)
+Proof-piece wishlist (new candidates N1–N15 + 65 open items, picks at the end): `search/WISHLIST.md`.
 1. Lean, small and interesting: `E(n) ≤ 0` + seam bound `D ≤ m_v`, then `M(1) ≤ ¾` (FRIEDMAN §9.6 item 5).
 2. `M(1) = ¾` fully proved: SEAM_W1 §2.3 casework (or interval arithmetic).
 
