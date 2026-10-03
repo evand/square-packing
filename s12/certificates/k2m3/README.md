@@ -19,7 +19,7 @@ often called Bentz's conjecture) and proved the cases `m = 5, 6` in an arXiv pre
 implies `s(k² − 3) = k`, so this project's `s(21) = 5`, `s(32) = 6`, `s(45) = 7` ([`../s21/`](../s21/README.md),
 [`../s32/`](../s32/README.md), [`../s45/`](../s45/README.md)) also give `k = 5, 6, 7`, and the case-free `s(13) = 4`
 ([`../rung2/`](../rung2/README.md)) gives `k = 4`: no case `k ≥ 4` depends on Bentz's proofs, though his came first.
-Only `k = 3` is taken from the literature [Kearney–Shiu 2002].  (For `k = 2` the statement is false: `s(1) = 1`.)
+Only `k = 3` is taken from the literature [Kearney–Shiu 2002]; it is kernel-checked in Lean in chelokot's archive (`s6_eq_three`, `formal/SquarePackingArchive/Records/Square6Exact.lean`, Stromquist's 1984 argument; not rebuilt here).  (For `k = 2` the statement is false: `s(1) = 1`.)
 
 References: Kearney & Shiu, Electron. J. Combin. 9 (2002) #R14; Bentz, "Optimal packings of 13 and 46 unit squares in
 a square", Electron. J. Combin. 17 (2010) #R126; Bentz, "Optimal packings of 22 and 33 unit squares in a square",

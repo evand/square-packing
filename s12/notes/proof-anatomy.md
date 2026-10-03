@@ -445,6 +445,9 @@ with centre inside [0,1]². Suppose that one corner of U touches the x-axis with
 square covers X it cannot avoid Y" implications with the numbers above, i.e. again wall-line
 intercept bookkeeping. This is the red/blue idea B16 uses, in 1×1-grid form.
 
+Lean: s(6) = 3 is kernel-checked in chelokot/square-packing-archive (`Records/Square6Exact.lean`,
+`s6_eq_three`), by Stromquist's 1984 nine-point argument rather than Kearney–Shiu's (noted 2026-10-03).
+
 ### 5.3 Friedman DS7 (2009 version)
 
 Technical lemmas (§4), all for a unit square u (closed containment implicit):
