@@ -65,6 +65,12 @@ certifies (centres in `[0, m/2]²`, `0 < θ ≤ 45°` as `u = tan(θ/2)`, admiss
 (`θ = 0`, `validAxis7`, `validAxis9`, proved by a kernel check of all corner limits over the whole box) are in Lean.
 Section below and `notes/lean-valid-split.md`.
 
+**Lebesgue-square leaf primitives, Lemma U (LEB) and Lemma K (CAP), done (2026-10-03):** `LebMass.leb_sound`,
+`LebMass.cap_sound` (`LebMass.lean`, **default build**): leaf tests on a rational pose box, proved sound for `CovT`, a
+box predicate on the measure in exactly `ValidTilt`'s pose region; the smoke test `LebMass7.lean` checks **all** 689
+LEB and 374 CAP leaves of run V3 in the kernel (`leb7_cov`, `cap7_cov`: `CovT` of each box for `box7Cover.measure`).
+`#print axioms` = `[propext, Classical.choice, Quot.sound]`.  Section below and `notes/lean-leb-mass.md`.
+
 ## Files
 
 | file | what |
@@ -88,6 +94,9 @@ Section below and `notes/lean-valid-split.md`.
 | `Sqpack/ValidSplit.lean` | `ValidTilt`, `ValidAxis`, `valid_of_tilt_axis` (the D4 split); grid covers (`gridCover`), their D4 invariance (`d4InvM_gridCover`) and Lemma Z (`validAxis_gridCover`); packed weight tables and the kernel checks `fitOK`, `symOKP`, `axisOKP` |
 | `Sqpack/ValidSplitData.lean`, `Sqpack/ValidSplit7.lean`, `Sqpack/ValidSplit9.lean` | generated data (the two box files' weights packed, 48 bits per grid segment; input sha256s in the header) and the instances `validAxis7`, `valid7_of_tilt`, `bentz_of_validTilt7`, `validAxis9`, `valid9_of_tilt`, `bentz4_of_validTilt9` |
 | `scripts/gen_validsplit_data.py` | writes `ValidSplitData.lean` from the two box files, with a Python mirror of `symOKP` / `axisOKP` (deterministic) |
+| `Sqpack/LebMass.lean` | `CovT` (box predicate on a measure, `ValidTilt`'s region), `PBox`, `whi`; `volume_sq`; Lemma U (`lebOK`, `leb_sound`, `leb_sound_grid`); width lemma (`vol_hsl_le`, `vol_below_le`, `sq_below_le`, `sq_left_le`); segments on the boundary lines (`segMeasure_h/v`, `line_mass_ge`); tangent cap (`cone_BL/TL`, `chordY/X`); Lemma K (`capOK`, `cap_sound`) |
+| `Sqpack/LebMass7Data.lean`, `Sqpack/LebMass7.lean` | generated: run V3's LEB / CAP leaf boxes; the kernel checks `leb7_ok`, `cap7_ok` and `leb7_cov`, `cap7_cov` |
+| `scripts/gen_lebmass_data.py` | writes `LebMass7Data.lean` from the V3 leaf dump, with an exact mirror of `lebOK` / `capOK` (deterministic) |
 | `scripts/build_parts.sh` | builds a data set's part files a few at a time (plain `lake build` starts them all at once) |
 
 Regenerate: `python3 lean/scripts/gen_boxtree.py certificates/s12_uniform_7of81_3.888.txt --n 12
@@ -547,7 +556,39 @@ minus what its leaves delegate (`AXIS`: `θ = 0`, Lemma Z; `SYM`: `θ ≥ 45°`,
   family by one `fitOK` pass.  Checks: `fitOK` 4.3 s / 8.0 s, `axisOKP` 4.4 s / 9.0 s, `symOKP`, `outOK` < 0.5 s.
   Build: `ValidSplit` 10 s, `ValidSplit7` 12 s, `ValidSplit9` 20 s (cores 8–15).
 
-Left: `ValidTilt7`, `ValidTilt9` (Lemmas S/T/L/R, U, K, E of the leaf primitives, with the Lebesgue polygon).
+Left: `ValidTilt7`, `ValidTilt9` (Lemmas S/T/L/R, U, K, E of the leaf primitives, with the Lebesgue polygon).  U and K:
+next section.
+
+## Lemma U (LEB) and Lemma K (CAP): `LebMass.lean`, default build, 2026-10-03
+
+```lean
+def LebMass.CovT (m : ℝ) (μ : Measure (ℝ × ℝ)) (x0 x1 y0 y1 u0 u1 : ℝ) : Prop :=
+  ∀ c u, x0 ≤ c.1 → c.1 ≤ x1 → y0 ≤ c.2 → c.2 ≤ y1 → u0 ≤ u → u ≤ u1 → 0 < u → u ^ 2 + 2 * u ≤ 1 →
+    sq c (2 * Real.arctan u) 1 ⊆ box m → 1 ≤ μ (sq c (2 * Real.arctan u) 1)
+theorem LebMass.validTilt_of_covT (h : CovT m μ 0 (m / 2) 0 (m / 2) 0 (1 / 2)) : ValidTilt m μ
+theorem LebMass.leb_sound {a b : ℚ} (hμ : ∀ S, MeasurableSet S → volume (S ∩ lsq a b) ≤ μ S)
+    {B : PBox} (h : lebOK a b B = true) : B.Cov m μ
+theorem LebMass.cap_sound (hA : 2 * A < 5 * K) (hden : 0 < den) {B : PBox}
+    (h : capOK K A den w B = true) : B.Cov K (gridCover K A den w).measure
+theorem Bentz.leb7_cov : ∀ B ∈ lebLeaves7, B.Cov 7 box7Cover.measure
+theorem Bentz.cap7_cov : ∀ B ∈ capLeaves7, B.Cov 7 box7Cover.measure
+```
+
+* **Box and bin.**  A leaf is a `PBox` of six rationals (the dump's `Fraction`s); tests are `ℚ` comparisons by
+  `decide +kernel` (only ~1,000 such leaves per run, so `ℚ` costs nothing).  `ŵ = whi u1` (`w(u1)` below 45°, else
+  `14143/10000`), sound on `ValidTilt`'s region by monotonicity of `widU` (`widU_le_whi`).
+* **Lemma U.**  `λ(sq c θ 1) = 1` (`volume_sq`: preimage of `[−½,½]²` under a translation and a linear map of
+  determinant 1); a grid cover is `≥ λ` on its Lebesgue square (`gridCover_vol_le`).
+* **Lemma K.**  Width lemma for compact convex centrally symmetric sets (slices below the centre are no longer than
+  the slice at `a`), Fubini (`Measure.prod_apply_symm`) for `λ(Q ∩ {y < a}) ≤ d·λ₁(Q_a)`, a unit grid segment
+  captures `5 λ₁(slice ∩ cell)`, the chord range from the box (crude, and the tangent cap from the cone at the lowest
+  / leftmost vertex), cell indices by floor/ceil; the final inequality entirely in `ℝ≥0∞`.
+* **Smoke test.**  All 689 LEB and 374 CAP leaves of run V3 pass (`decide +kernel`, a few seconds); the mirror in
+  `gen_lebmass_data.py` agrees (0 rejections).  Without the tangent refinement 124 CAP leaves fail; with zero weights
+  all 374 fail.  Build: `LebMass` 12 s, `LebMass7Data` 6 s, `LebMass7` 10 s (`LEAN_NUM_THREADS=4`).
+
+Left for `ValidTilt7` / `ValidTilt9` (`notes/lean-leb-mass.md` §7): the `CovT` tree layer, PIECE with the polygon
+(Lemma S(b), plus the existing S/T/L), and Lemma E (11 k leaves, the large part): ~5–8 k lines, several weeks.
 
 ## Remaining gaps / next steps
 

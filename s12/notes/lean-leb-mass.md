@@ -1,6 +1,8 @@
-# Lean: uniform-area (Lebesgue) mass primitives, Lemma U and Lemma K (design, 2026-10-03)
+# Lean: uniform-area (Lebesgue) mass primitives, Lemma U and Lemma K (2026-10-03)
 
-Task `lean-leb-mass` (brief: `private/s12/tasks/lean-leb-mass/README.md`).  Math: `search/QUADRANT_EXACT.md` §4.2
+Task `lean-leb-mass` (brief: `tasks/lean-leb-mass/README.md`).  **Status: done** — Lemma U, Lemma K (with the
+width lemma and the tangent-cap refinement) proved sound, and all 689 LEB + 374 CAP leaves of run V3 checked in the
+kernel (§6).  §1–§5 are the design as written before the code; the code follows it (deviations in §6).  Math: `search/QUADRANT_EXACT.md` §4.2
 (LEB = Lemma U, CAP = Lemma K), §4.3 (chord ends); the tests as run: `search/qx2_zm.py` `cert_leb`, `cert_cap`
 (~l. 939–1010).  Lean file: `lean/Sqpack/LebMass.lean` (generic), `lean/Sqpack/LebMass7.lean` (smoke test).
 
@@ -87,7 +89,7 @@ theorem cap_sound (hA : 2 * A < 5 * K) (h : capOK K A den w B = true) :
 boxes, after `clip_bin`), as literal `PBox` lists, checked by `decide +kernel` against the packed `μ₇` weights
 (`wP box7Packed 35`), giving `CovT 7 box7Cover.measure` for each.  Generator `lean/scripts/gen_lebmass_data.py`.
 
-## 5. Size (estimate before writing)
+## 5. Size (estimate before writing; actual in §6)
 
 | piece | new / reused | est. lines |
 |---|---|---|
@@ -103,3 +105,78 @@ boxes, after `clip_bin`), as literal `PBox` lists, checked by `decide +kernel` a
 About 900 lines: one to two sessions.  The segment lemmas of batch 1 (S/T/L/P) are not needed here: U and K only use
 the Lebesgue part and the two boundary lines `x = a`, `y = a`, by exact slicing; the chord-end formulas of §4.3 are
 replaced by the cone bound (the same numbers, with a containment proof instead of four options).
+
+## 6. Result (what was built)
+
+Files (default build): `lean/Sqpack/LebMass.lean` (951 lines), `lean/Sqpack/LebMass7Data.lean` (generated, the
+leaf boxes), `lean/Sqpack/LebMass7.lean` (smoke test), `lean/scripts/gen_lebmass_data.py` (generator + exact Python
+mirror of `lebOK` / `capOK`).  Every theorem below prints `[propext, Classical.choice, Quot.sound]`
+(`lean/Axioms.lean`); no `sorry`, no `native_decide`.
+
+```lean
+-- LebMass.lean (namespace SquarePacking.LebMass)
+def CovT (m : ℝ) (μ : Measure (ℝ × ℝ)) (x0 x1 y0 y1 u0 u1 : ℝ) : Prop      -- §1, + splitX/Y/U
+theorem validTilt_of_covT (h : CovT m μ 0 (m / 2) 0 (m / 2) 0 (1 / 2)) : ValidTilt m μ
+theorem volume_sq (c : ℝ × ℝ) (θ : ℝ) : volume (sq c θ 1) = 1
+theorem leb_sound {a b : ℚ} (hμ : ∀ S, MeasurableSet S → volume (S ∩ lsq a b) ≤ μ S)
+    {B : PBox} (h : lebOK a b B = true) : B.Cov m μ                                       -- Lemma U
+theorem gridCover_vol_le (hA : 2 * A < 5 * K) (S) (hS : MeasurableSet S) :
+    volume (S ∩ BentzFam.lebSq A K) ≤ (gridCover K A den w).measure S
+theorem vol_hsl_le (hconv : Convex ℝ Q) (hcomp : IsCompact Q)
+    (hsym : ∀ p ∈ Q, (2 * c.1 - p.1, 2 * c.2 - p.2) ∈ Q) (hya : y ≤ a) (hac : a ≤ c.2) :
+    volume (hsl Q y) ≤ volume (hsl Q a)                                                  -- width lemma
+theorem sq_below_le (c) (θ) (hac : a ≤ c.2) (hb : ∀ p ∈ sq c θ 1, a - d ≤ p.2) :
+    volume (sq c θ 1 ∩ {p | p.2 < a}) ≤ ENNReal.ofReal d * volume (hsl (sq c θ 1) a)
+theorem cap_sound (hA : 2 * A < 5 * K) (hden : 0 < den) {B : PBox}
+    (h : capOK K A den w B = true) : B.Cov K (gridCover K A den w).measure                -- Lemma K
+-- LebMass7.lean (namespace SquarePacking.Bentz)
+theorem leb7_cov : ∀ B ∈ lebLeaves7, B.Cov 7 box7Cover.measure
+theorem cap7_cov : ∀ B ∈ capLeaves7, B.Cov 7 box7Cover.measure
+```
+
+**Deviations from §1–§4.**  None of substance.  (i) `capOK` checks the cells one by one (`d·den ≤ 5 w_i` for each
+cell meeting the chord range) instead of taking the minimum density; same test.  (ii) The tangent-cap range is
+intersected with the crude one whenever `0 < u0`, `u1 < 1` (the cone bound holds at every depth), where `cert_cap` asks
+`d ≤ min(sin θ₀, cos θ₁)` first; so `capOK` is at least as strong.  (iii) The chord-end table of §4.3 is not used:
+the tangent cap is proved from the cone inclusions `C(p₁ − x_BL) + S(p₂ − y_BL) ≥ 0`, `S(p₁ − x_BL) − C(p₂ − y_BL)
+≤ 0` (`cone_BL`; `cone_TL` for `x = a`), each an identity `= X + ½`, `= −Y − ½` in the rotated coordinates.
+(iv) The `x = a` cap reuses the width lemma through `swapXY` (`sq_left_le`), the segment lemma is proved for both
+orientations (`segMeasure_h`, `segMeasure_v`: a unit grid segment captures `5 λ₁(slice ∩ cell)`).  (v) The whole
+final inequality is in `ℝ≥0∞`, with no subtraction: `1 = λ(Q) ≤ λ(Q∩U) + λ(Q∩{y<a}) + λ(Q∩{x<a}) ≤ λ(Q∩U) +
+Σ_cells(line y = a) + Σ_cells(line x = a) ≤ μ(Q)`.
+
+**Smoke test.**  `leb7_ok`, `cap7_ok` (`decide +kernel`) run the tests on all 689 LEB and 374 CAP leaves of run V3
+(the full census of those kinds, not a sample) against the packed `μ₇` weights; `leb7_cov` / `cap7_cov` give `CovT`
+of each box for `box7Cover.measure` via `box7_grid`.  The Python mirror rejects none (and the kernel agrees).
+Mutation checks (`#eval`, not committed): with all weights 0, `capOK` rejects all 374 CAP leaves; without the tangent
+refinement (`u0 := 0`) it rejects 124 of them (so the refinement is exercised); with every weight scaled by 0.99 it
+still accepts all (the line densities are far above the cap depths at these leaves).  No CAP leaf passes `lebOK`.
+
+**Timings** (`LEAN_NUM_THREADS=4`, no pinning, load ~3): `LebMass` 12 s, `LebMass7Data` 6 s, `LebMass7` 10 s (both
+kernel checks together a few seconds; the file is dominated by the Mathlib import); full default `lake build` after
+the change: 34 s wall (everything else cached).
+
+## 7. What is left for `ValidTilt7` (estimate)
+
+Run V3's leaves: PIECE 15,926, EXACT 9,763 + EXACT0 381 + EXACT45 759, CAP 374, LEB 689, SYM 1,171, AXIS 61, EMPTY 2,955
+(no ADM/P1/MIX/SPLIT: the cover has no points).  Done in Lean: LEB, CAP (here), AXIS (Lemma Z, `validAxis7`),
+SYM/EMPTY/clip (`ValidSplit`, `clip_bin_no_loss`, `sq_subset_box_iff`).  Missing:
+
+1. **The tree layer** (`CovT` tree with `X/Y/U/XM/YM/UM` splits, clip and SYM nodes, leaf dispatch; generator from the
+   leaf dump): ~400 lines + generator, mechanical; the dump already records every leaf box.
+2. **PIECE with the polygon** (zm_mixed's `piece_bound`: Lemma S/T/L on the segments, which `ZMTreeM`/`LBlock` have,
+   plus **Lemma S(b)** for the Lebesgue square: area of `U ∩ K`, `K` the intersection of certified half-planes, a
+   convex-polygon clip in the kernel and its soundness), and the bridge from `CovM`-style segment mass to the grid
+   cover's measure.  Also L′/V if the census needs them (`notes/lean-segments.md` §5).  Estimate 1–2 k lines, 3–5
+   sessions; kernel ~16 k leaves × ~0.1–0.5 s.
+3. **Lemma E** (11 k leaves, the bulk of the Python CPU): the E′/E″ concave minorants of `λ(Q ∩ U)` (cap areas
+   `g(d)`, the corner3/xcut inclusion–exclusion, McCormick), the line-arrangement argument (piecewise concavity on
+   cells, minimum at vertices, continuity), and the vertex certificates (rational vertices `X/Δ`, sign of `Δ`,
+   general-degree Bernstein, S-procedure, every combination of alternatives).  The width lemma and slices here help
+   with E′, but the arrangement/vertex part is new and large.  A Lean-friendly reformulation (the generator emits, per
+   leaf, the explicit cells or a per-vertex certificate the kernel only checks) is advisable.  Estimate 3–6 k lines,
+   **2–4 weeks of sessions**, and a kernel run likely tens of CPU-hours.
+
+So `ValidTilt7` in Lean is **~5–8 k lines beyond this batch, several weeks**; `ValidTilt9` reuses everything (a
+second run's leaf dump and build).  The order: tree layer + PIECE first (closes 17 k of 32 k leaves with what
+exists), then Lemma E.

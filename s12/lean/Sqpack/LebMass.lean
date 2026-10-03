@@ -835,7 +835,8 @@ lemma capY_claim {K A den : ℕ} {w : SegIx → ℕ} (hden : 0 < den) {B : PBox}
   refine ⟨Finset.Ico (cellLo (loY B d)) (cellHi K (hiY B d)), fun i hi => ?_, ?_⟩
   · rw [Finset.mem_Ico] at hi; have := min_le_left (5 * K) (⌈5 * hiY B d⌉).toNat
     simp only [cellHi] at hi; omega
-  have hT : hsl Q ((A : ℝ) / 5) ⊆ Set.Icc ((cellLo (loY B d) : ℝ) / 5) ((cellHi K (hiY B d) : ℝ) / 5) := by
+  have hT : hsl Q ((A : ℝ) / 5) ⊆
+      Set.Icc ((cellLo (loY B d) : ℝ) / 5) ((cellHi K (hiY B d) : ℝ) / 5) := by
     intro x hx
     have hb := hbox hx
     obtain ⟨l1, l2⟩ := chordY hx0 hx1 hy0 hu0 hu1 hu hu' hd hd0' hx
@@ -893,7 +894,8 @@ lemma capX_claim {K A den : ℕ} {w : SegIx → ℕ} (hden : 0 < den) {B : PBox}
   refine ⟨Finset.Ico (cellLo (loX B d)) (cellHi K (hiX B d)), fun i hi => ?_, ?_⟩
   · rw [Finset.mem_Ico] at hi; have := min_le_left (5 * K) (⌈5 * hiX B d⌉).toNat
     simp only [cellHi] at hi; omega
-  have hT : vsl Q ((A : ℝ) / 5) ⊆ Set.Icc ((cellLo (loX B d) : ℝ) / 5) ((cellHi K (hiX B d) : ℝ) / 5) := by
+  have hT : vsl Q ((A : ℝ) / 5) ⊆
+      Set.Icc ((cellLo (loX B d) : ℝ) / 5) ((cellHi K (hiX B d) : ℝ) / 5) := by
     intro y hy
     have hb := hbox hy
     obtain ⟨l1, l2⟩ := chordX hx0 hy0 hy1 hu0 hu1 hu hu' hd hd0' hy
@@ -939,7 +941,8 @@ theorem cap_sound {K A den : ℕ} {w : SegIx → ℕ} (hA : 2 * A < 5 * K) (hden
   calc (1 : ℝ≥0∞) = volume Q := (volume_sq c _).symm
     _ ≤ volume (Q ∩ BentzFam.lebSq A K) + volume (Q ∩ {p | p.2 < (A : ℝ) / 5}) +
           volume (Q ∩ {p | p.1 < (A : ℝ) / 5}) :=
-        (measure_mono hcov).trans ((measure_union_le _ _).trans (by gcongr; exact measure_union_le _ _))
+        (measure_mono hcov).trans
+          ((measure_union_le _ _).trans (by gcongr; exact measure_union_le _ _))
     _ ≤ volume (Q ∩ BentzFam.lebSq A K) + (_ + _) := by
         rw [add_assoc]; gcongr
     _ ≤ _ := gridCover_ge hA (measurableSet_sq c _ 1) hI hJ

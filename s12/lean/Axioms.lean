@@ -196,3 +196,27 @@ import Sqpack
 #print axioms SquarePacking.minSide_eq_iff_isLeast
 #print axioms SquarePacking.s3_eq_2
 #print axioms SquarePacking.s3_isLeast
+-- Lemma U (LEB) and Lemma K (CAP): Lebesgue-square leaf tests (Sqpack/LebMass.lean, notes/lean-leb-mass.md)
+#print axioms SquarePacking.LebMass.validTilt_of_covT
+#print axioms SquarePacking.LebMass.widU_le_whi
+#print axioms SquarePacking.LebMass.volume_sq
+#print axioms SquarePacking.LebMass.leb_sound
+#print axioms SquarePacking.LebMass.gridCover_vol_le
+#print axioms SquarePacking.LebMass.leb_sound_grid
+#print axioms SquarePacking.LebMass.vol_hsl_le
+#print axioms SquarePacking.LebMass.vol_below_le
+#print axioms SquarePacking.LebMass.sq_below_le
+#print axioms SquarePacking.LebMass.sq_left_le
+#print axioms SquarePacking.LebMass.segMeasure_h
+#print axioms SquarePacking.LebMass.segMeasure_v
+#print axioms SquarePacking.LebMass.cone_BL
+#print axioms SquarePacking.LebMass.cone_TL
+#print axioms SquarePacking.LebMass.chordY
+#print axioms SquarePacking.LebMass.chordX
+#print axioms SquarePacking.LebMass.gridCover_ge
+#print axioms SquarePacking.LebMass.cap_sound
+-- smoke test: all 689 LEB and 374 CAP leaves of the k^2 - 3 run V3 (Sqpack/LebMass7.lean)
+#print axioms SquarePacking.Bentz.leb7_ok
+#print axioms SquarePacking.Bentz.cap7_ok
+#print axioms SquarePacking.Bentz.leb7_cov
+#print axioms SquarePacking.Bentz.cap7_cov
