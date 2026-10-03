@@ -112,7 +112,7 @@ section>*{min-width:0}
   <span class="brand">Square Packing Atlas</span>
   <nav><a href="../index.html">Overview</a><a href="../explore.html">Explore</a><a href="../compare.html">Compare</a><a href="../bounds.html">Bounds</a><a href="../proofs.html" class="here">Proofs &amp; results</a><a href="../sources.html">Sources</a></nav>
 </div>
-<div class="subnav"><span class="lbl">Results</span><a href="../s12/">s(11), s(12)</a><a href="../s13/">s(13)</a><a href="../s21/">s(21)</a><a href="../s32/">s(32)</a><a href="../s45/">s(45)</a><a href="../s60/">s(60)</a><a href="./" class="here">s(k²−3)</a></div>
+<div class="subnav"><span class="lbl">Results</span><a href="../s12/">s(11), s(12)</a><a href="../s13/">s(13)</a><a href="../s21/">s(21)</a><a href="../s32/">s(32)</a><a href="../s45/">s(45)</a><a href="../s60/">s(60)</a><a href="./" class="here">s(k²−3)</a><a href="../k2m4/">s(k²−4)</a></div>
 <div class="wrap">
 <header>
   <span class="eyebrow">Discrete geometry · computer-assisted proof</span>
@@ -125,12 +125,12 @@ section>*{min-width:0}
   a single pattern of mass that stretches to any box size; it is checked once, in the 7 × 7 box, and a Lean proof carries
   that one check to every <span class="mono">k</span>.</p>
   <p class="status"><b>Status.</b> Working in public: a single-implementation exact certificate, adversarially
-  reviewed by six independent agents with no errors found; the all-k reduction is kernel-checked in Lean. Not yet
-  independently re-implemented (a second implementation is in progress, §04), externally reviewed, or fully formalised.</p>
+  reviewed by six independent agents with no errors found; in Lean everything except the tilted squares of the 7 × 7 box (<span class="mono">ValidTilt7</span>) is kernel-checked. Independently
+  re-checked over the whole pose space by <a href="https://github.com/wand125/valid7-independent-check">wand125's separately written checker</a> (2 Oct 2026; its record check rerun and its method read here). Not yet externally reviewed or fully formalised.</p>
   <div class="tags">
     <span class="tag neutral">one exact checker</span>
-    <span class="tag ok">all-k reduction kernel-checked in Lean</span>
-    <span class="tag open">not independently re-implemented</span>
+    <span class="tag ok">reduction to the tilted run kernel-checked in Lean</span>
+    <span class="tag ok">independently re-checked (wand125)</span>
     <span class="tag open">not peer reviewed</span>
     <a class="tag neutral" href="https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3">Certificate &amp; checker on GitHub →</a>
   </div>
@@ -1564,6 +1564,8 @@ section>*{min-width:0}
 <section id="lean">
   <div class="sechead"><span class="eyebrow">05 · Lean</span><h2>What is formally proved</h2></div>
   <pre><code>theorem SquarePacking.Bentz.bentz_of_valid7 (h : Valid7) :
+    ∀ k : ℕ, 6 ≤ k → minSide (k ^ 2 - 3) = k
+theorem SquarePacking.Bentz.bentz_of_validTilt7 (ht : ValidTilt7) :
     ∀ k : ℕ, 6 ≤ k → minSide (k ^ 2 - 3) = k</code></pre>
   <p><span class="mono">minSide</span> is the Lean definition used for <a href="../s13/#lean"><span class="mono">s(13)</span></a>
   and <a href="../s32/#lean"><span class="mono">s(32)</span></a>. The hypothesis <span class="mono">Valid7</span> says that every
@@ -1574,20 +1576,25 @@ section>*{min-width:0}
   <span class="mono">k² − 4D &lt; k² − 3</span>; the move of any unit square into the 7 × 7 box; the scaling argument; and
   the grid. Standard axioms only, no <span class="mono">sorry</span>, no <span class="mono">native_decide</span>. It is in
   the default build and takes about two minutes.</p>
-  <p><span class="mono">Valid7</span> itself is not proved in Lean. The kernel verifier that proves the covering property for
-  <span class="mono">s(13)</span> and <span class="mono">s(32)</span> handles weighted points; this cover would need area
-  density, the zero-tilt lemma and the exact lemma of §04.</p>
+  <p>Since 2026-10-03 part of <span class="mono">Valid7</span> is kernel-checked too: the reduction by the square's eight
+  symmetries (the box file's symmetry checked by the kernel) and the zero-tilt lemma, by exact corner limits over the whole
+  box. What is left is <span class="mono">ValidTilt7</span>: unit squares with centre in <span class="mono">[0, 7/2]²</span>
+  and tilt in <span class="mono">(0°, 45°]</span>, exactly the region of the positive-tilt run of §04, which is not proved
+  in Lean. The kernel verifier that proves the covering property for <span class="mono">s(13)</span> and
+  <span class="mono">s(32)</span> handles weighted points; the tilted run would need area density and the exact lemma of
+  §04.</p>
 </section>
 
 <section id="limits">
   <div class="sechead"><span class="eyebrow">06 · Caveats</span><h2>What to keep in mind</h2></div>
   <ul>
     <li>The covering property of the 7 × 7 box rests on one program, <span class="mono">search/qx2_zm.py</span>, with about 900
-    lines of new code on top of the reviewed <span class="mono">zm_mixed.py</span>. It has been tested hard and reviewed, but
-    not re-implemented independently. Our other exact values each have two separately written checkers that share no code
+    lines of new code on top of the reviewed <span class="mono">zm_mixed.py</span>. It has been tested hard and reviewed, and
+    <a href="https://github.com/wand125/valid7-independent-check">wand125's separately written checker</a> (written from the format and the claim only) certifies the same box over the whole pose space; per-leaf assurance
+    rests on each program's own run. Our other exact values each have two separately written checkers that share no code
     (they do share the formulation of the point test, <a href="../s21/#limits">s(21) §06</a>).</li>
     <li>The reviews were done by AI agents, not by outside mathematicians. Nothing here is peer reviewed.</li>
-    <li>The Lean proof is conditional on <span class="mono">Valid7</span> (§05).</li>
+    <li>The Lean proof is conditional on <span class="mono">ValidTilt7</span>, the tilted part of <span class="mono">Valid7</span> (§05).</li>
     <li>This family covers <span class="mono">k ≥ 6</span> only. The statement for all <span class="mono">k ≥ 3</span> also needs
     <span class="mono">k = 3, 4, 5</span>: <span class="mono">k = 4</span> and <span class="mono">k = 5</span> follow from this project's
     case-free <span class="mono">s(13) = 4</span> and <span class="mono">s(21) = 5</span> as well as from Bentz's proofs, and
@@ -1625,7 +1632,9 @@ python3 qx2_zm.py qx2_data/L4_k02_box7.txt --depth 18 --nproc 8 \
       <tr><td class="num">search/QUADRANT_EXACT.md</td><td>the proofs of the lemmas, the reduction, the tests and the runs</td></tr>
       <tr><td class="num">search/QUADRANT.md</td><td>the float linear program that found the family's shape</td></tr>
       <tr><td class="num">lean/Sqpack/Bentz.lean, BentzData.lean</td><td>the theorem; the box file and family table as Lean data</td></tr>
+      <tr><td class="num">lean/Sqpack/ValidSplit.lean, ValidSplit7.lean</td><td>the symmetry reduction and the zero-tilt lemma: <span class="mono">bentz_of_validTilt7</span></td></tr>
       <tr><td class="num">notes/lean-bentz-reduction.md</td><td>how the Lean proof goes</td></tr>
+      <tr><td class="num">notes/lean-valid-split.md</td><td>how the reduction to the tilted run goes</td></tr>
     </tbody>
   </table></div>
 </section>

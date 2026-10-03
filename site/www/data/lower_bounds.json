@@ -3717,6 +3717,16 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 8.0,
+    "exact_form": "8",
+    "source": "EvanDaniel2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m4",
+    "note": "2026-10-03; s(60) = 8 as the k = 8 case of s(k^2-4) = k for all k >= 5: for k >= 8 one fixed-profile family of measures (corner modules + periodic wall band of width 3 + Lebesgue interior, total k^2 - 4D, D = 214770225571/200000000000 = 1.073851 > 1), its k = 9 box certified at margin zero by one exact checker (search/qx2_zm.py, the reviewed k^2-3 checker code), adversarially reviewed (three agents, no errors found); no second implementation has checked the k = 9 box yet; the reduction from the 9 x 9 box to every k >= 8, the D4 reduction and the axis-parallel case are kernel-checked in Lean (bentz4_of_validTilt9), so the tilted part of the k = 9 box is the one unformalised step; unrefereed; s(60) = 8 itself was first proved by the separate s60 bundle (2026-09-28), which stays best",
+    "date": "2026-10-03"
    }
   ]
  },
@@ -4624,14 +4634,14 @@
  },
  "77": {
   "best": {
-   "value": 8.82165848854662,
-   "exact_form": "1/2 + sqrt(77 - 8 + 1/4)",
-   "source": "Karakus2026",
+   "value": 9.0,
+   "exact_form": "9",
+   "source": "EvanDaniel2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m4",
+   "note": "2026-10-03; s(77) = 9 as the k = 9 case of s(k^2-4) = k for all k >= 5: for k >= 8 one fixed-profile family of measures (corner modules + periodic wall band of width 3 + Lebesgue interior, total k^2 - 4D, D = 214770225571/200000000000 = 1.073851 > 1), its k = 9 box certified at margin zero by one exact checker (search/qx2_zm.py, the reviewed k^2-3 checker code), adversarially reviewed (three agents, no errors found); no second implementation has checked the k = 9 box yet; the reduction from the 9 x 9 box to every k >= 8, the D4 reduction and the axis-parallel case are kernel-checked in Lean (bentz4_of_validTilt9), so the tilted part of the k = 9 box is the one unformalised step; unrefereed; s(77) = 9 was first proved by wand125 (2026-10-01, history), so this is a second route",
+   "date": "2026-10-03"
   },
   "history": [
    {
@@ -4671,6 +4681,26 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.0,
+    "exact_form": "9",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/k2m4_n77_L9",
+    "note": "first proof of s(77) = 9: a band inserted into the s(60) = 8 mixed cover (EvanDaniel2026), certified with that project's two exact checkers (zm_mixed.py, zmx2) (jlevy/squares#279); not replayed here",
+    "date": "2026-10-01"
+   },
+   {
+    "value": 9.0,
+    "exact_form": "9",
+    "source": "EvanDaniel2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m4",
+    "note": "2026-10-03; s(77) = 9 as the k = 9 case of s(k^2-4) = k for all k >= 5: for k >= 8 one fixed-profile family of measures (corner modules + periodic wall band of width 3 + Lebesgue interior, total k^2 - 4D, D = 214770225571/200000000000 = 1.073851 > 1), its k = 9 box certified at margin zero by one exact checker (search/qx2_zm.py, the reviewed k^2-3 checker code), adversarially reviewed (three agents, no errors found); no second implementation has checked the k = 9 box yet; the reduction from the 9 x 9 box to every k >= 8, the D4 reduction and the axis-parallel case are kernel-checked in Lean (bentz4_of_validTilt9), so the tilted part of the k = 9 box is the one unformalised step; unrefereed; s(77) = 9 was first proved by wand125 (2026-10-01, history), so this is a second route",
+    "date": "2026-10-03"
    }
   ]
  },
@@ -5536,14 +5566,14 @@
  },
  "96": {
   "best": {
-   "value": 9.840770846134703,
-   "exact_form": "1/2 + sqrt(96 - 9 + 1/4)",
-   "source": "Karakus2026",
+   "value": 10.0,
+   "exact_form": "10",
+   "source": "EvanDaniel2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m4",
+   "note": "2026-10-03; s(96) = 10 as the k = 10 case of s(k^2-4) = k for all k >= 5: for k >= 8 one fixed-profile family of measures (corner modules + periodic wall band of width 3 + Lebesgue interior, total k^2 - 4D, D = 214770225571/200000000000 = 1.073851 > 1), its k = 9 box certified at margin zero by one exact checker (search/qx2_zm.py, the reviewed k^2-3 checker code), adversarially reviewed (three agents, no errors found); no second implementation has checked the k = 9 box yet; the reduction from the 9 x 9 box to every k >= 8, the D4 reduction and the axis-parallel case are kernel-checked in Lean (bentz4_of_validTilt9), so the tilted part of the k = 9 box is the one unformalised step; unrefereed",
+   "date": "2026-10-03"
   },
   "history": [
    {
@@ -5572,6 +5602,16 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 10.0,
+    "exact_form": "10",
+    "source": "EvanDaniel2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m4",
+    "note": "2026-10-03; s(96) = 10 as the k = 10 case of s(k^2-4) = k for all k >= 5: for k >= 8 one fixed-profile family of measures (corner modules + periodic wall band of width 3 + Lebesgue interior, total k^2 - 4D, D = 214770225571/200000000000 = 1.073851 > 1), its k = 9 box certified at margin zero by one exact checker (search/qx2_zm.py, the reviewed k^2-3 checker code), adversarially reviewed (three agents, no errors found); no second implementation has checked the k = 9 box yet; the reduction from the 9 x 9 box to every k >= 8, the D4 reduction and the axis-parallel case are kernel-checked in Lean (bentz4_of_validTilt9), so the tilted part of the k = 9 box is the one unformalised step; unrefereed",
+    "date": "2026-10-03"
    }
   ]
  },
@@ -5863,7 +5903,7 @@
   },
   "EvanDaniel2026": {
    "authors": "Evan Daniel (evand)",
-   "title": "square-packing (s12/): exact certificates for s(11) >= 3040/797, s(12) >= 15680/3951, s(21) = 5, s(32) = 6, s(45) = 7, s(60) = 8 and s(k^2-3) = k for all k >= 6, and a case-free proof of s(13) = 4",
+   "title": "square-packing (s12/): exact certificates for s(11) >= 3040/797, s(12) >= 15680/3951, s(21) = 5, s(32) = 6, s(45) = 7, s(60) = 8, s(k^2-3) = k for all k >= 6 and s(k^2-4) = k for all k >= 5, and a case-free proof of s(13) = 4",
    "venue": "GitHub repository + write-up (computer-assisted, unrefereed)",
    "year": 2026,
    "url": "https://github.com/evand/square-packing/tree/main/s12"
@@ -5930,8 +5970,8 @@
   "generated": "2026-09-08",
   "caveats": "See site/notes/lower-bounds-notes.md for sourcing notes and uncertainties. Entries with status 'preprint' are 2026 results that have not been refereed (most computer-assisted; Karakus 2026 is a conventional arXiv proof). Others' certificates are linked as published; this project replays only its own. Where a 2026 repository is still moving (n = 17 especially), the history keeps the main steps and the linked repository has the rest.",
   "precision": "`value` is the full double-precision evaluation of `exact_form`, not a rounded decimal: storing the n=5 floor as 2.7071068 put it ABOVE the true 2+1/sqrt(2)=2.707106781..., so it compared as greater than the matching upper bound and s(5) and s(10) were reported open with a gap of -0.0000. Entries whose exact_form is absent or flagged unreliable keep their curated decimal.",
-  "updated": "2026-10-01",
-  "families": "s(k^2-3) = k is proved here for every k >= 6 (EvanDaniel2026, 2026-09-29, s12/certificates/k2m3). The table covers n <= 100, so it holds the cases n = 33, 46, 61, 78, 97 (k = 6..10); for n = 33, 46, 61, which were already settled, it is a history entry and `best` keeps the earlier proof; for n = 78, 97 it is `best`. The family continues beyond the table (n = 118, 141, ...).",
+  "updated": "2026-10-03",
+  "families": "s(k^2-3) = k is proved here for every k >= 6 (EvanDaniel2026, 2026-09-29, s12/certificates/k2m3). The table covers n <= 100, so it holds the cases n = 33, 46, 61, 78, 97 (k = 6..10); for n = 33, 46, 61, which were already settled, it is a history entry and `best` keeps the earlier proof; for n = 78, 97 it is `best`. The family continues beyond the table (n = 118, 141, ...). s(k^2-4) = k is proved here for every k >= 5 (EvanDaniel2026, 2026-10-03, s12/certificates/k2m4): for k >= 8 by one family (its 9 x 9 box certified by one exact checker, the box-to-every-k reduction in Lean), for k = 5, 6, 7 by the separate s21, s32, s45 bundles, which are the entries for n = 21, 32, 45. In the table: n = 60 (k = 8) gets a history entry and `best` keeps the s60 bundle; n = 77 (k = 9) is `best`, with wand125's earlier s(77) = 9 (2026-10-01) in the history; n = 96 (k = 10) is `best`. The family continues beyond the table (n = 117, 140, ...).",
   "reported": "Entries with \"reported\": true are values their authors report but that no one other than the author has replayed (jlevy/squares grades them V0/C0). They are kept in `history` for the record and are never `best`, even where they are larger.",
   "claimed": "Entries with status \"claimed\" are values whose proof was never published and cannot be reviewed: T. Green's 2000 bounds, cited in Friedman's survey DS7 as a private communication (Theorems 9-10 and Table 2), and Friedman's table values for n = 13 (3.8437) and n = 21 (4.7438), which the survey gives without figure or proof. They are kept in the history for the record and are never `best`. For n = 17-18 the survey's Figure 34 draws Green's unavoidable set, which could be checked; it has not been checked here.",
   "gap": "Entries with status \"gap\" are published results whose published proof is known to be incomplete: Nagamochi 2005 (Theorem 2, both the k^2-1 / k^2-2 families and the general bound) rests on his Lemma 1, which is false (chelokot 2026, a Lean-checked counterexample; H. Karakus, arXiv:2609.37410, a family of counterexamples). The statements are not disproved. They are kept in the history and are never best. s(k^2-1) = k is re-proved by Karakus 2026 and s(k^2-2) = k by chelokot 2026 (Lean); Karakus's weaker general bound 1/2 + sqrt(N - floor(sqrt N) + 1/4) has a complete proof and is listed for every nonsquare N >= 8."

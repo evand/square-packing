@@ -7,8 +7,9 @@ Readable write-ups: **https://evand.github.io/square-packing/s12/** (s(12), s(11
 **https://evand.github.io/square-packing/s21/** (s(21) = 5),
 **https://evand.github.io/square-packing/s32/** (s(32) = 6),
 **https://evand.github.io/square-packing/s45/** (s(45) = 7),
-**https://evand.github.io/square-packing/s60/** (s(60) = 8) and
-**https://evand.github.io/square-packing/k2m3/** (s(k² − 3) = k for all k ≥ 6).
+**https://evand.github.io/square-packing/s60/** (s(60) = 8),
+**https://evand.github.io/square-packing/k2m3/** (s(k² − 3) = k for all k ≥ 6) and
+**https://evand.github.io/square-packing/k2m4/** (s(k² − 4) = k for all k ≥ 5).
 
 This directory is the s(12) research tree.  The rest of the
 [square-packing](../README.md) repository is the Square Packing Atlas, an explorer for the
@@ -24,26 +25,45 @@ computer-assisted, unrefereed, replayed by jlevy/squares).
 ## Results
 
 Each is an exact certificate with a `verify.sh`; nothing here is peer reviewed.  What the default (fast) re-check
-covers differs: for `certificates/k2m3/` it checks the run record's structure and coverage but does not recompute
-the positive-tilt leaves (`--full` does); for `certificates/{s21,s45,s60}/` it includes a fresh run of `zmx2`.
+covers differs: for `certificates/k2m3/` and `certificates/k2m4/` it checks the run record's structure and coverage
+but does not recompute the positive-tilt leaves (`--full` does); for `certificates/{s21,s45,s60}/` it includes a fresh run of `zmx2`.
 
+* **`s(k² − 4) = k` for every `k ≥ 5`** (2026-10-03), so the deficit-4 case of Friedman's Conjecture 1 holds.  For
+  `k ≥ 8`: the same kind of fixed-profile family as for `k² − 3` below, with `R = w = 3` (corner modules on `[0,3]²`,
+  a wall band of width 3 with period 1, Lebesgue measure on `[14/5, k − 14/5]²`), total `k² − 4D`,
+  `D = 214770225571/200000000000 = 1.073851 > 1`; integer shifts reduce every `k ≥ 8` to the `9 × 9` box
+  (`K4_k008_box9.txt`: 2,076 segments + the Lebesgue square), whose validity `Valid9` is certified by Lemma Z (θ = 0)
+  and the same `search/qx2_zm.py` files as `k² − 3` (θ > 0, 16,200 D4 roots, 0 uncertified, every leaf recorded).  In
+  Lean the all-k reduction, the D4 reduction and Lemma Z are kernel-checked (`bentz4_of_validTilt9 : ValidTilt9 →
+  ∀ k ≥ 8, minSide (k² − 4) = k`, `lean/Sqpack/{Bentz4,ValidSplit9}.lean`), so `k ≥ 8` rests on the one finite
+  statement `ValidTilt9` (the tilted run), certified by one implementation.  `k = 5, 6, 7` are the separate bundles
+  `s(21)`, `s(32)`, `s(45)` below (`k = 8` also `s(60)`).  *Working in public: a single-implementation exact
+  certificate (checker code byte-identical to the six-agent-reviewed `k² − 3` checker, apart from an assert and a dump
+  flag), this run adversarially reviewed by three agents with no errors found; no second implementation has checked
+  `Valid9`.  Not yet externally reviewed or fully formalised.*  Known before: no exact `s(k² − 4)` for `k ≥ 4` before
+  2026 (`s(12)` is open); ours `k = 5…8` (2026-09-26/28, below); wand125 proved `s(77) = 9` first (2026-10-01, a band
+  inserted into our `s(60)` cover, checked with our checkers).  New here: `k ≥ 10`, and `k = 9` by a second route.
+  It re-derives `s(k² − 3) = k` for `k ≥ 5`.  `search/K2M4_MARGIN.md`, `notes/lean-k2m4-reduction.md`,
+  `notes/lean-valid-split.md`; [`certificates/k2m4/`](certificates/k2m4/README.md).
 * **`s(k² − 3) = k` for every `k ≥ 6`** (2026-09-29): one *fixed-profile family* of measures on the 1/5-grid, no
   points: a corner module on `[0,2]²` at each corner, a wall band of width 2 repeating with period 1, and Lebesgue
   measure on `[9/5, k − 9/5]²`; total `k² − 4D`, `D = 423621306389/500000000000 = 0.847243`, so `k² − 3.388970 < k² − 3`
   for every `k`.  Integer shifts move any unit square in `[0,k]²` into the `7 × 7` box, so validity of that one box
   (`search/qx2_data/L4_k02_box7.txt`: 800 segments + the Lebesgue square) gives every `k ≥ 6`; that reduction, the
   accounting and the dilation are kernel-checked in Lean (`bentz_of_valid7 : Valid7 → ∀ k ≥ 6, minSide (k² − 3) = k`,
-  `lean/Sqpack/Bentz.lean`, default build).  `Valid7` is certified by Lemma Z (θ = 0) and `search/qx2_zm.py` (θ > 0,
+  `lean/Sqpack/Bentz.lean`, default build), and since 2026-10-03 so are the D4 reduction and Lemma Z
+  (`bentz_of_validTilt7 : ValidTilt7 → ∀ k ≥ 6, minSide (k² − 3) = k`, `lean/Sqpack/ValidSplit7.lean`,
+  `notes/lean-valid-split.md`): only the tilted run (`ValidTilt7`) is unformalised.  `Valid7` is certified by Lemma Z (θ = 0) and `search/qx2_zm.py` (θ > 0,
   9,800 D4 roots, 0 uncertified, every leaf recorded), and independently by wand125's checker (whole pose space, no
   symmetry, 156,800 roots, 0 uncertified; https://github.com/wand125/valid7-independent-check;
   its record check rerun here 2026-10-03 (RECORD OK, sampled leaf re-certification, mutants refused) and its method read, sound; per-leaf assurance rests on its own run;
   our own `zmx2` with area density is partial: `search/ZMX2_AREA.md`); the bundle's fast `verify.sh` re-checks that record's structure and coverage, not
   each leaf's mass bound: *Working in public: an exact certificate with an
-  independent second implementation (wand125; record check and method read here), adversarially reviewed by six independent agents with no errors found; the all-k reduction is
-  kernel-checked in Lean. Not yet externally reviewed or fully formalised.*  Known before:
+  independent second implementation (wand125; record check and method read here), adversarially reviewed by six independent agents with no errors found; in Lean everything but the
+  tilted run `ValidTilt7` is kernel-checked. Not yet externally reviewed or fully formalised.*  Known before:
   `k = 3` (Kearney–Shiu 2002), `k = 4, 7` (Bentz 2010), `k = 5, 6` (Bentz, arXiv:1606.03746, preprint), `k = 8` (ours,
   from `s(60) = 8` below); ours also give `k = 4…7` independently of Bentz (case-free `s(13) = 4`; `s(k² − 4) = k` ⇒
-  `s(k² − 3) = k` for `s(21)`, `s(32)`, `s(45)`); Bentz suggested it for all `k ≥ 3` (it also follows from Conjecture 1 of Friedman's survey with
+  `s(k² − 3) = k` for `s(21)`, `s(32)`, `s(45)`, and now for every `k ≥ 5`, above); Bentz suggested it for all `k ≥ 3` (it also follows from Conjecture 1 of Friedman's survey with
   `s(6) = 3`).  `search/QUADRANT_EXACT.md`, `search/QUADRANT.md`, `notes/lean-bentz-reduction.md`;
   [`certificates/k2m3/`](certificates/k2m3/README.md).
 * **`s(60) = 8`** (2026-09-28): one *mixed* cover of `[0,8]²`, 23,744 weighted points plus mass spread uniformly
