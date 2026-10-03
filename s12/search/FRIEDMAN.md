@@ -32,6 +32,11 @@ packings), `runs/quad_band_w{4,5,6}/` (band LP, pending).  Labels **[proved] [me
   proof has to re-pack tilted blocks.  That needs a structure theory of tilted regions in near-optimal packings, which
   nobody has.
 
+* **Conjecture ladder (§9, 2026-10-02).**  Thresholds `k₁ ≤ k_LP = k_D4 ≤ k_ins ≤ k_fam` by certificate class; group
+  symmetry is free, insertability is the first paid restriction and its price is seam capacity.  Rate side R1–R3
+  (families prove A iff seam capacity grows and corners cost a bounded fraction); structure side S1–S5 (bounded splice
+  cost ⇒ almost-monotone fractional Friedman).  Any threshold is ≳ c^{5/3}.  First test: S2 at c = 4, k = 5.
+
 ## 1. Definitions and elementary facts
 
 ### 1.1 Reformulations  [proved]
@@ -89,8 +94,9 @@ That is cheap, and it is the Lean form of this lemma.
   family starts.  At `k₁(c)` the truth is barely on the grid side, so an integrality gap is likely there (s(12) is the
   c = 4 candidate).  Handling all c this way would take infinitely many thresholds, so it cannot prove Friedman.
 * Fixed-profile families: `D ≤ m_v ≤ w` (seam bound, proved) and `D ≤ min(w, O(R^{0.6}))` (the box `2R+2` and waste
-  `O(s^{0.6})`) [proved].  The band LP `m_v^band(w)` bounds D for every R: 0.750, 1.433, ≤ 1.755 for w = 1, 2, 3; w = 4..6
-  pending (`runs/quad_band_w*`).  If `m_v^band` saturates, this family class caps at some c and cannot prove `A`.
+  `O(s^{0.6})`) [proved].  The seam capacity `M(w)` bounds D for every R.  `M(1) = ¾` exactly (SEAM_W1.md);
+  for w ≥ 2 the band LP values 1.433, ≈1.755, 1.965, 2.116, 2.231 (w = 2..6) are **lower bounds** on `M(w)` (columns
+  restricted to the pitch-0.1 lattice; correction 2026-10-02, SEAM_W1 §4.1), and the only proved cap is `w − ¼`.  If `m_v^band` saturates, this family class caps at some c and cannot prove `A`.
   If it grows (the D values 0.50, 0.945, ≈1.2 look roughly `∝ √w`), an analytic family with `D(w) → ∞` would prove
   **`A`, which is open and new**.  This is the best "general" target the dual route offers.
 
@@ -175,3 +181,219 @@ roughly like √w, a genuine D(w) family (with corners) at w = 4–6 is the next
 * Parametrise `bentz_of_valid7` over c and the box predicate (the Lean form of the insertion lemma, §2.1).
 * Descent: optional.  Characterise why n = 89 fails (block re-packing); not a proof route without a structure theory.
 * Roth–Vaughan primary source: confirm Theorem 1's exact form if the paper is ever in hand (secondhand sources agree).
+
+## 7. Conjectures and weaker variants (2026-10-01)
+
+Notation: `L(k) := k² − (value of the exact continuum closed cover LP on [0,k]²)`, the best saving any LP certificate can
+show.  `L(k) > c ⇒ s(k²−c) = k`, and `L(k) ≤ c*(k) + 1`.  `S_ins(k)` := best saving over *insertable* certificates at k
+(§2.1: one 1-periodic slab of width `1+√2` per direction, period masses summing to `2k+1`).  `M(w) := m_v^band(w)`
+(seam capacity of a σ = 0 band of width w, QUADRANT §4); `M(∞) := sup_w M(w)`.
+
+| # | statement | status | kind of attack |
+|---|---|---|---|
+| C1 | Friedman: `c*(k+1) ≥ c*(k)` | open; translation descent refuted (n = 89, §3) | primal structure theory |
+| C2 | **Fractional Friedman**: `L(k+1) ≥ L(k)` (every LP certificate propagates upward) | open; data `L(4) ≤ 4, L(5) ≈ 4.25, L(7) ≈ 5.21, L(8) ≈ 5.60` (sampled-row LP, S60_COVER §4) consistent | fractional descent (§7.1) |
+| C3 | `S_ins` is nondecreasing | **[proved]** (insertion lemma: an insertable cert at k gives one at k+1 with the same saving) | — |
+| C4 | Insertable class is asymptotically complete: `L(k) − S_ins(k) → 0` (or stays bounded) | open; `lim S_ins = 4 sup D ≤ 4 M(∞)` | compare LPs |
+| C5 | **Seam capacity**: is `M(∞) < ∞`?  If yes, every fixed-profile/insertable family has `D ≤ M(∞)`, so the dual route caps at `c < 4M(∞)` (≈ 10–12 if M(∞) ≈ 2.5–3) | open; `M(1) = ¾` (SEAM_W1); measured **lower bounds** `M` ≥ 1.43, ≈1.76, 1.97, 2.12, 2.23 (w = 2..6, pitch-0.1 columns; not caps, SEAM_W1 §4.1); §8, §9 | analytic dual (§8) |
+| C6 | `A_c` with explicit threshold: `s(k²−c) = k` ∀k ≥ k₀(c) (no base case at the true threshold k₁(c) needed) | c ≤ 4 proved (c = 4: R = w = 3, k₀ = 8, `certificates/k2m4/`, 2026-10-03); c = 5 open | `S_ins(8 or 9) > 5` would give c = 5 from one box |
+| C7 | `c*(k) → ∞` (A) | open in the literature | `L(k) → ∞` suffices; via C4+C5 only if `M(∞) = ∞` |
+| C8 | Rectangle Friedman: `c*(a,b) := max{c : ab − c unit squares need an a×b box}` is nondecreasing in each of a, b separately | open; half-step of C1; each step is one insertion (one periodic slab) | as C1–C3, one direction at a time |
+
+Finer ladder between these (rate conjectures R1–R3, structure conjectures S1–S5, thresholds by certificate class): §9.
+
+Logical map: C3 is the certificate-level Friedman for the insertable class.  C2 ⇒ (any LP cert at k gives `A_c` from k).
+C4 ∧ ¬C5-finite ⇒ C7.  If C5 holds (`M(∞) < ∞`) and `L(k)` grows, then C4 fails: the growth of `L` must come from
+aperiodic walls, and the families route cannot prove C7.
+
+### 7.1 Fractional descent (C2): the four-sub-box average  [proved as stated; not a proof of C2]
+Let `P` be a fractional strict packing of `[0,k+1]²` (k ≥ 3).  Restrict it to the four sub-boxes `[i,i+k]×[j,j+k]`,
+`i,j ∈ {0,1}`, translate each to `[0,k]²` and average: a fractional packing of `[0,k]²` of weight
+`W(P) − Loss`, `Loss = ½(W_L + W_R + W_B + W_T) − ¼(W_BL + W_BR + W_TL + W_TR)`, where `W_L` = weight of squares whose
+x-extent starts below 1, and so on (no square is near two opposite walls when k ≥ 3).  Hence
+`L(k+1) ≥ L(k) + (2k+1) − Loss(P*)` for an optimal `P*` at k+1.  For the grid, `Loss = 2k+1` exactly (tight).  It
+does not prove C2 unconditionally: wall layers can have weight ≈ √2 per unit length (alternate axis squares at x ∈ [0,1]
+with 45° squares whose left vertex is at x ≈ 0.99).  So C2 needs control of the wall layer of *optimal* packings.  General shift laws π on [0,1]² give the same shape: the
+loss is `E_{(u,v)~π}[weight of squares not inside [u,u+k]×[v,v+k]]`, i.e. squares cut by the boundary lines x = u,
+x = u+k, y = v, y = v+k.  So **C2 ⇐ some optimal fractional packing at k+1 has a boundary frame (on average over a shift law)
+cut by weight ≤ 2k+1**.  The dual (cover) side of the same move: smooth the optimal cover by π and repair near the walls;
+the repair is a wall-layer cover problem whose naive price (≥ √2 per unit wall) is too high, so the repair has to use
+the smoothed μ's own partial mass near the walls.  Both sides point at the same missing input: wall structure of optima.
+
+## 8. Seam capacity (C5)
+
+Setting (band LP of QUADRANT §4): `μ ≥ 0` on the half-plane `H = {y ≥ 0}`, 1-periodic in x, Lebesgue on `y > w`,
+`μ([0,1)×[0,w]) = w` (σ = 0), valid (`μ(S) ≥ 1` for every closed unit square `S ⊂ H`).  `M(w) = sup μ({0}×[0,w])`.
+Per-period height profile `m(A) := μ([0,1)×A)`; excess `ν̄ := m − Leb`, a signed measure on `[0,w]`, total 0, `ν̄ ≥ −Leb`.
+
+**Budget lemma** [proved].  (i) `m(I) ≥ 1` for every closed unit interval `I ⊂ [0,∞)`.  (ii)
+`∫_{1/2}^{∞} (m([c−½, c+½]) − 1) dc ≤ ½`.
+Proof.  (i) Average the axis squares `[t,t+1]×I` over `t ∈ [0,1)`: each point of `[0,1)×I` lies in `[t,t+1]` (mod 1)
+for a t-set of measure 1, so the average is `m(I)`, and every term is ≥ 1.  (ii) The integral is
+`∫ ν̄(dy)·|{c ≥ ½ : |y − c| ≤ ½}| = ∫ ν̄(dy) min(y,1) = ∫ν̄ − ∫_{[0,1]}(1−y) ν̄(dy) ≤ 0 + ∫_0^1 (1−y) dy = ½`. ∎
+Equality needs `m([0,1)) = 0` with `m([0,1]) ≥ 1`, i.e. the whole first row's mass on the line `y = 1` (Nagamochi's line).
+The same holds with tilted squares at angle θ (window = the chord-length kernel of height `h_θ = cos θ + sin θ`), with
+bound `h_θ/2`.
+
+**Measured** (`search/seam_budget.py` on `runs/quad_band_w{1,4,6}/support.txt`): budget used 0.31 / 0.40 / 0.41 of ½.
+Per row j, (seam mass in `[j,j+1)`, excess integral over `c ∈ [j+½, j+1½)`): w = 6: (0.51, 0.19), (0.51, 0.087),
+(0.40, 0.058), (0.34, 0.033), (0.28, 0.024), (0.18, 0.013).  The seam carried per unit of excess *grows with height*
+(2.7 → 14).  So the naive bound "each unit of seam costs ≥ κ of excess" (true for y-invariant profiles, κ ≈ 0.17 from the
+45° square between seams) is false for the optimum, and `M(∞) < ∞` is not implied by the budget lemma alone.
+`M(∞) < ∞` ⇔ the global ratio seam / excess is bounded (budget ≤ ½ is fixed).  Next: read the LP duals
+(`search/seam_dual.py`, `runs/seam_dual/`): they are fractional packings certifying `M(w)`; an analytic pattern in them
+valid for all w would prove C5, and a pattern whose cost decays with height would point to `M(∞) = ∞`.
+
+**Bulk price of seam: sublinear** [measured, float; `search/seam_1d.py`].  In the bulk a y-invariant profile
+`ρ(x) × Leb_y` is *exactly* a 1D problem: a square (θ, centre offset cx) gets `∫ρ(x) V_θ(x − cx) dx`, `V_θ` = its
+vertical chord at horizontal offset d.  1D LP: atoms on `(1/N)ℤ`, seam atom g at 0, total `1 + e`, all θ on a 0.5° grid
+(+ tiny tilts), cx on a `1/2N` grid shifted off the atoms (no ε-gap freebies):
+
+| e | 0.0025 | 0.005 | 0.01 | 0.02 | 0.05 | 0.1 | 0.2 |
+|---|---|---|---|---|---|---|---|
+| g (N = 200) | 0.0808 | 0.1273 | 0.2069 | 0.3003 | 0.4506 | 0.700 | 1.177 |
+| κ = e/g | 0.031 | 0.039 | 0.048 | 0.067 | 0.111 | 0.143 | 0.170 |
+
+N = 400 reproduces every g to 4 digits (atom resolution is not binding).  Smaller e (gridded LP, N = 400, float): e = 0.001, 0.0005, 0.00025 → g = 0.0475, 0.0307, 0.0204 (κ = 0.021, 0.016, 0.012; local exponent of e in g ≈ 1.6–1.7); the continuum values sit 3–7 % lower in g (SEAM_1D.md).  **Exact certificates** (SEAM_1D.md, `seam_1d_exact.py`): κ = 0.0221, 0.0314, 0.0397, 0.0486 at e ≈ 0.001, 0.0025, 0.005, 0.01.  Dense re-check of the e = 0.005 solution (θ every 0.01°, cx dense + every atom-at-chord-end ε-pose): min mass 0.99975
+(θ = 19.83°), so `g = 0.127` at `e ≈ 0.00525` after a uniform top-up.  Fit: **`e ≈ 0.1·g^{1.5}`** for small g (local
+exponent 1.4–1.9).  The naive construction (condense a width-g Lebesgue strip onto the seam line) has price ≈ g/8
+(linear: loss at the convex kink of `V_θ` at the far vertex, worst at tilt ≈ g); the LP beats it with mass bunched at
+mid-phase `[¼, ¾]` plus off-seam pieces, the same structure the w = 6 band optimum shows in its upper rows.
+
+**Analytic witness: the condensed seam** [measured, float; `search/seam_condense.py`].  ρ = Lebesgue off the strips
+`(−g/2, g/2) + ℤ`, plus the seam line of density g (the strip's mass condensed onto x = 0), plus a uniform top-up e.
+Needed `e = 0.1421, 0.1378, 0.1367, 0.1363 × g^{1.5}` for g = 0.1, 0.03, 0.01, 0.003, worst tilt `θ ≈ 0.82 √g`.  Why
+g^{1.5} [heuristic, matches]: the loss is at the far vertex of a tilted square (convex kink of `V_θ`, slope `1/(sc)`), but
+the *next* seam image sits at the opposite plateau corner (concave kink) only `δ = 1 − cos θ ≈ θ²/2` away, so the two
+nearly cancel: loss ≈ `gθ/4` for `θ² ≲ g`, ≈ `g²/(8θ)` for `θ² ≳ g`; worst at `θ ~ √g`.  (A first estimate that ignored
+the pairing gave a linear price g/8; wrong.)  The LP improves the constant 0.136 → ≈ 0.1.
+
+**Row lemma** [proved].  Let `X(t) := m([0,t]) − t` (per-period running deficit; σ = 0 means `X(w) = 0`, and `X` is
+constant above w).  Validity of the axis squares `[s,s+1]×[t,t+1]` (averaged over s) gives `m([t,t+1]) ≥ 1`, i.e.
+`X(t+1) ≥ X(t⁻)` for `t ≥ 0`.  Hence along each residue class `r + ℕ` (r ∈ [0,1)) the sequence `X(r+n)` is
+nondecreasing except where the class carries y-atoms (horizontal line mass), `X(r) ≥ −r` (m ≥ 0), and `X(r+n) ≤ 0`
+for every class without y-atoms (chain up to the Lebesgue region).  So: (i) **the total rise along class r is ≤ r**
+(average over r: the budget lemma's ½ again); (ii) if no line mass sits at integer heights, **every integer-aligned row
+`(n, n+1]` has mass exactly 1**; (iii) a bulk that is 1-periodic in y has every half-open unit row of mass 1 in every
+class, so every square's mass averages to exactly 1 over positions, hence (validity + Fourier rigidity) it is Lebesgue:
+**no seam without drift**.  The w = 6 optimum shows exactly this: `X ≤ −0.0002` everywhere, `X(n) = −0.001…0` at
+integers, and along class r the values climb monotonically from ≈ −r (empty floor) to 0 (class 0.05: −0.051 → −0.001;
+class 0.8: −0.619 → −0.001).
+
+**Correction to the heuristic below.**  The y-invariant bulk with uniform excess e is *not* realisable in a band: by
+(i)–(ii) the excess seen by a square depends on its height phase, and windows centred at half-integer heights see
+none.  What survives: the excess is a drift, per class ≤ r, total ≤ ½, and the question is whether seam can sit where
+squares see excess.  Small-tilt squares centred at height c miss seam only near heights `c ± ½` (≈ s/4 each), so seam
+placed away from integer heights is invisible to the zero-excess (half-integer-centred) squares; the w = 6 optimum does
+thin the seam just above integers (0.06 vs 0.16–0.19 per 0.1 slab, rows 1–4).  Whether the price stays sublinear under
+these constraints is open; the next model is the 1D problem with a height phase (x-periodic, y-structure within rows,
+slow drift).
+
+**Consequence (heuristic, superseded in part, see the correction above).**  The excess is a fixed budget (≤ ½, budget lemma) and per-row seam g costs `≈ 0.1 g^{1.5}`
+per unit height, so spreading it as g ∝ w^{−2/3} over w rows gives **`M(w) ≳ C·w^{1/3}` → ∞**.  Linear prices
+(κ > 0) would have capped M; a superlinear price doesn't.  The band LP at pitch 0.1 can't resolve the fine structure
+(the 1D optimum at small e uses pitch ≤ 0.005), which is consistent with its values (2.23 at w = 6) sitting below the
+prediction (≈ 4).  Missing for a proof of `M(∞) = ∞`: (a) an exact 1D certificate at some small e (1D, small; exact
+check over continuous θ is the only real work) — **done** [proved, exact B&B; `search/SEAM_1D.md`]: κ ≤ 0.0221 at
+g = 0.0459, κ ≤ 0.0315 at g = 0.0799, κ ≤ 0.0397 at g = 0.1265, κ ≤ 0.0486 at g = 0.2064; (b) a valid wall row that spends the budget (≤ ½) while feeding the
+bulk; (c) slow-variation lemma: a profile with amplitude `g(y)` varying on scale ≫ 1 costs `O(|g'|)` extra excess
+(first-order term, total O(max g)); (d) the top transition to Lebesgue.  None looks hard.  It would **not** by itself
+give `D → ∞`: the corner coupling (QUADRANT §6: the corner is the binding constraint) is the next question, and
+`D(w) ≤ O(w^{0.6})` anyway (box saving ≤ c*(k)+1).
+
+## 9. Conjecture ladder: between the large-constant asymptotics and Friedman (2026-10-02)
+
+Purpose: name the statements strictly between "c*(k) = O(k^{0.6}) with unusable constants" and C1, chosen so that our
+family / certificate machinery can test them and so that lemmas proved on the way are reusable.  Seam capacity
+results: SEAM_W1.md.  Labels as above.
+
+### 9.0 The constraint every rate conjecture must respect
+Packing constructions with waste `O(x^α)` for every real x (α = 0.6 as cited in §0; **re-check the source and
+whether the constant is effective** before quoting) give `c*(k) ≤ C k^{0.6}`, i.e. **s(k²−c) = k forces
+k ≳ (c/C)^{5/3}**.  So no threshold can be linear in c: "k₁(c) ≤ a·c + b" is false for large c.  The only explicit
+small-k statement known to us: `c*(k) ≤ k − 1` for k ≥ 12 (Arslanov et al. 2021, secondhand), i.e. k ≥ c + 1.
+Roth–Vaughan gives nothing here (§0).  Every conjecture below is either polynomial with exponent ≥ 5/3 or structural.
+
+### 9.1 Threshold hierarchy by certificate class
+For a class X of certificates let **`k_X(c)` := least k at which an X-certificate proves s(k²−c) = k**.
+
+| class X | restriction on the certificate | X upward closed? | threshold |
+|---|---|---|---|
+| truth | none | C1 (Friedman) | `k₁(c)` |
+| LP | valid closed cover measure on `[0,k]²` | C2 (open) | `k_LP ≥ k₁` |
+| D4-LP | D4-invariant | as LP | **`= k_LP`** (9.1.1) |
+| insertable | one 1-periodic slab of width `1+√2` per direction, period masses totalling `2k+1` (§2.1) | **yes, C3** | `k_ins ≥ k_LP` |
+| family | corner modules + σ = 0 periodic walls + Lebesgue interior (QUADRANT) | yes | `k_fam ≤ 2R(c)+2`, `≥ k_ins` |
+| analytic wall | e.g. x-uniform + seam (SEAM_W1 §5) | yes | `≥ k_fam` |
+
+**9.1.1 Averaging lemma [proved, trivial].**  If G is a finite group of isometries of `[0,k]²` and μ is valid, then
+`μ̄ = |G|⁻¹ Σ g_*μ` is valid (`μ̄(S) = avg μ(g⁻¹S)` and each `g⁻¹S` is a closed unit square in the box) with the same
+total mass.  So *group* symmetry of the box is free.  Insertability is a translation symmetry of a strip, not a
+symmetry of the box; it is the first restriction that costs anything.  **Lean:** `exists_d4InvM_cover` (`lean/Sqpack/Average.lean`, generic `coverValid_avg` for any finite family of square-good maps).  Its cost is paid where a slab crosses a wall
+(the interior is Lebesgue and splices for free): there the wall must continue as a σ = 0 periodic band, so **seam
+capacity is the price of insertability**.
+
+**9.1.2 The gaps mean different things.**  `k_LP − k₁`: integrality gap (no measure proves the truth; s(12) is the
+c = 4 candidate, `notes/n12-gap.md`).  `k_ins − k_LP`: price of extensibility (C4 at the threshold).
+`k_fam − k_ins`: price of periodic *whole* walls, mostly corners (9.3).
+
+**9.1.3 Status for c = 4.**  `k₁ ∈ {4, 5}` (s(12) open); `k_LP ≤ 5` (s(21) cover); `k_fam ≤ 8` (R = w = 3, `certificates/k2m4/`,
+resting on `ValidTilt9`); **`k_ins ∈ [5, 8]` unknown**.  For c = 3: `k₁ = 3`, `k_fam = 6` (proved, k2m3 bundle).
+
+### 9.2 Rate ladder (the A side)
+| # | statement | relations | handle |
+|---|---|---|---|
+| R1 | **polynomial growth** `c*(k) ≥ k^β`, some β > 0 | ⇒ A (C7); β ≤ 0.6 forced (9.0) | follows from `D(w) ≳ w^β` (a family of width w lives in boxes ≈ 2w+2) |
+| R2 | **polynomial seam capacity** `M(w) ≳ w^β` (heuristic β = ⅓, §8) | necessary for R1 via families; ⇒ `M(∞) = ∞` (¬C5-finite) | 1D exact certs exist (SEAM_1D); need wall-row + slow-variation lemmas (§8 (b)–(d)); rigorous caps via dual-side LP (SEAM_W1 §4) |
+| R3 | **corner costs a bounded fraction** `D(w) ≥ κ M(w)` | R2 ∧ R3 ⇒ R1 | corner duals; start with the exact ¼ at w = 1 |
+
+R2 ∧ R3 is the cleanest "families prove A" programme: one band question, one corner question, each local.
+
+### 9.3 Data behind R3 and the family delay  [measured; M for w ≥ 2 are lower bounds]
+| w | M(w) band | D(w) with corner | D/M | largest c with 4D > c | family start 2w+2 | first LP instance of that c |
+|---|---|---|---|---|---|---|
+| 1 | ¾ (exact) | 0.500 | 0.67 | 1 | 4 | — |
+| 2 | ≥ 1.433 | 0.945 | 0.66 | 3 | 6 | k = 3 (truth) |
+| 3 | ≈ 1.755 | 1.154 | 0.66 | 4 | 8 | k = 5 (s(21)) |
+| 4 | ≥ 1.965 | ≈ 1.26 (K2M4_MARGIN k²−5 caps) | ≈ 0.64 | 5 | 10 | k = 8 proved (s(59), wand125); L(7) ≈ 5.2 |
+| 5 | ≥ 2.116 | ≈ 1.30 (κ = 0.02) | ≈ 0.61 | 5 | 12 | |
+| 6 | ≥ 2.231 | — | — | (5–6 if D/M ≈ 0.62) | 14 | |
+
+Family delay `k_fam / k_LP` ≈ 2, 1.6, 1.3–1.7 for c = 3, 4, 5 [heuristic].  If M saturates near 2.5–3 the route
+stalls near c ≈ 6–7; if R2 holds with β = ⅓ then `k_fam ~ c³` against the floor `c^{5/3}`: polynomially late but
+every c reachable.  The apparent saturation may be the pitch-0.1 grid (SEAM_1D: small-amplitude seam structure
+needs pitch ≤ 0.005); undecided.
+
+### 9.4 Structure ladder (the Friedman side)
+| # | statement | relations | handle |
+|---|---|---|---|
+| S1 | **bounded splice cost**: ∃ δ < ∞ ∀ k ≥ k₀ ∀ valid μ on `[0,k]²` ∃ insertable valid μ′ with `μ′([0,k]²) ≤ μ([0,k]²) + 2δ` | ⇒ **`L(k′) ≥ L(k) − 2δ` ∀ k′ ≥ k** (C3) — almost-monotone fractional Friedman | cost is local: two wall crossings per direction, each a "splice a periodic band segment into an arbitrary wall" LP; families = whole wall periodic; seam capacity bounds what the patch carries |
+| S2 | **free splice at thresholds**: `k_ins(c) = k_LP(c)` | S1 with δ = 0 at the threshold; ⇒ every LP-provable value starts a family | **testable now**: insertable box LP at k = 5 for c = 4 |
+| S3 | fractional Friedman (C2) `L(k+1) ≥ L(k)` | ⇐ S1 with δ = 0 for all k | §7.1 four-sub-box averaging (needs wall-layer control) |
+| S4 | **bounded family delay** `k_fam(c) ≤ 2 k_LP(c)` | quantitative isolated → family bridge; false if M saturates (9.3) | sharpen with rigorous `M(w)` |
+| S5 | Friedman up to bounded loss `c*(k′) ≥ c*(k) − O(1)`, k′ ≥ k | integer version of S1; needs integrality-gap control | not by LP tools alone |
+
+Logical map: C1 ⇒ S5.  S1(δ=0 ∀k) ⇒ S3 ⇒ (LP-provable values have no gaps).  S1 ⇒ S3 up to 2δ.  S2 ⇒ C4 at
+thresholds.  R2 ∧ R3 ⇒ R1 ⇒ C7.  None of the S-statements gives A; none of the R-statements gives monotonicity.
+
+### 9.5 How the current work feeds the ladder
+* k²−3 bundle (`certificates/k2m3`, Lean `bentz_of_valid7`): `k_fam(3) = 6`, the template for "family from one box".
+* k²−4 certificate run (κ = 0.08, box 9; `certificates/k2m4`, Lean `bentz4_of_validTilt9`): `k_fam(4) ≤ 8`; together with the per-k covers gives F₄, which now holds (k ≥ 8 resting on `ValidTilt9`).
+* s(21), s(32), s(45), s(60) covers: `k_LP(4) ≤ 5`; the base cases a family needs.
+* Seam capacity (§8, SEAM_W1, SEAM_1D): R2, and the ceiling for S1's splice patches.
+* Corner LPs (QUADRANT, K2M4_MARGIN): R3.
+* Descent experiment (§3): rules out translation descent for C1/S5; says nothing about the cover-side S1.
+
+### 9.6 Next tests and lemmas, most tractable first
+1. **S2 at c = 4**: box LP at k = 5 with slab-periodicity equalities in both directions (S60_COVER machinery).  Yes ⇒
+   k²−4 tail from one k = 5 box.  No ⇒ measure `L(k) − S_ins(k)` for k = 5..8 (empirical δ).  ~10³–10⁴ CPU-s; ask.
+2. **Splicing LP**: one wall crossing in isolation (arbitrary wall left and right, periodic patch of length ≈ 3.4);
+   its exact cost at small w, the way SEAM_W1 did w = 1.
+3. **Dual-side band LP** at w = 2, 3: rigorous caps on `M(w)` (SEAM_W1 §4).
+4. **Corner dual at w = 1**: explain D = ½ (corner cost exactly ¼?) by a few squares.
+5. **Lemmas now in hand** [proved]: averaging lemma (9.1.1); seam bound `D ≤ m_v` and `E(n) ≤ 0` (QUADRANT §1.4);
+   `M(1) ≤ ¾` and the w − ¼ cap for seam-avoiding certificates (SEAM_W1 §1, §3); unfilled-area duality (SEAM_W1 §4);
+   insertion lemma (§2.1).  **Lean candidates**, in order: `E(n) ≤ 0` (nearly a corollary of `packing_le_measure`:
+   n² disjoint closed squares on a stretched grid, then continuity from above) and the seam bound; then `M(1) ≤ ¾`
+   (one square, triangle area, δ → 0).  Not yet: validity of the w = 1 profile (Cavalieri + trig casework; the
+   reusable piece is the slice lemma `N(y) ≥ 1[W(y) ≥ 1]`).

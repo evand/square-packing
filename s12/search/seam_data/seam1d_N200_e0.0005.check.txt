@@ -1,0 +1,12 @@
+certificate seam_data/seam1d_N200_e0.0005.json  sha256 d054933ab4ce44002be27398db646cbf4928f0fdedb44902e098c114b8e1f398
+N = 200  atoms = 178  Q = 1000000000  symmetric = True
+g = 28603899/1000000000  (0.02860390)
+e = 506373/1000000000  (0.00050637)
+eta = 101/15625000  (6.464e-06, eta/e = 0.0128)
+kappa = e/g = 0.017703
+theta = 0: min F = 1000506373/1000000000 over 356 breakpoints+midpoints  ok=True
+B&B over t = tan(th/2) in [0, 107/256] (th <= 45.367 deg), cx in [0, 1/2]: ok=True
+  leaves 14443308 (+ 3179 boxes with th >= 45 deg skipped)  nodes 28892973  max depth 35  min leaf bound 1.000000000
+  leaves by th-depth {6: 16, 7: 69, 8: 627, 9: 4508, 10: 114213, 11: 476689, 12: 884767, 13: 1599056, 14: 2641250, 15: 3897593, 16: 3385644, 17: 1413325, 18: 25551}
+CPU 45457.3s
+RESULT CERTIFIED

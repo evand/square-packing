@@ -1,0 +1,13 @@
+[1] V formula (reduced to [0,45]) vs polygon chord at random th in (-180,180): max |diff| = 1.10e-14
+[2] G closed form vs periodised definition, exact, 3000 rational poses: 0 mismatches
+[3] exact F vs seam_1d.V at 300 random poses (seam_data/seam1d_N200_e0.005.json): max |diff| = 4.44e-16
+[4] box lower bound <= F (by definition) at 1500 random points of 300 random boxes: 0 violations
+[4b] 10100 sampled certificate leaves x 4 random points: 0 violations (B&B ok=True)
+    float min of F without eta: 0.99999865 at th = 17.9934 deg, cx = 0.370000
+[5a] eta = 0, atoms x (1 - 1e-4): ok=False reason=counterexample at th = 40.1798 deg, cx = 0.000122, F - 1 = -4.141e-05  (nodes 151664, 54s)
+    perturbed measure at the float-min pose (th = 17.9934, cx = 0.370000): exact F - 1 = -2.200e-04
+[5b] atom k=82 (x=0.41) lowered by 1.14e-04 (mirror too; float min pose th=17.9934, cx=0.370000): ok=False reason=counterexample th = 44.9980 deg, cx = 0.182922, F - 1 = -5.712e-06  (0s)
+[5c] one-sided perturbation: symmetric() = False (must be False)
+     ok=False reason=counterexample th = 40.1824 deg, cx = 0.999878, F - 1 = -1.431e-05
+[5d] half measure: theta=0 min F = 0.5025 (must be < 1)
+TESTS PASSED 0
