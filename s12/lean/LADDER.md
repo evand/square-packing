@@ -454,6 +454,19 @@ the image of the standard basis is orthonormal, so `u = (cos φ, sin φ)`, `v = 
 `ε = ±1` (`exists_frame`); either way `(0,1)²` maps onto the interior of a unit square
 (`frame_image`); closure/interior between the open and closed formulations.
 
+Bridge to chelokot/square-packing-archive (commit `753079e`, `formal/SquarePackingArchive/
+Geometry.lean`; records such as `s6_eq_three : IsMinimumSide 6 3` in `Records/Square6Exact.lean`):
+`Sqpack/SpecChelokot.lean` (default build, namespace `UnitSquarePacking.Chelokot`) restates their
+`Point`/`Frame` (`(cos, sin)` with `cos² + sin² = 1`)/`PlacedSquare`/`Packing`/`HasPacking`/
+`IsLowerBound`/`IsMinimumSide` in our own code (checked against their source by reading; nothing
+imported, copied, or run) and proves `hasPacking_iff : HasPacking n s ↔ Packs n s ∧ 0 ≤ s`,
+`hasPacking_iff_packs` (`n ≥ 1`), `isLowerBound_iff`, `isMinimumSide_iff_isLeast`, and
+`isMinimumSide_iff_minSide_eq (hn : 1 ≤ n) : IsMinimumSide n s ↔ minSide n = s`.  So, as a remark,
+their `s6_eq_three` gives `minSide 6 = 3` (likewise `s10_eq_goebel`, `s13_eq_four`, `s22_eq_five`,
+`s33_eq_six`).  Only mismatch: their `Packing` requires `0 ≤ side`; irrelevant for `n ≥ 1`, but at
+`n = 0` their `IsMinimumSide 0 0` holds while `{s | Packs 0 s} = univ` (`isMinimumSide_zero`).
+Closed squares, closed box, interior-disjointness and the counterclockwise angle convention match.
+
 ## Attainment: `s(n)` is a minimum (`Attain.lean`, default build, 2026-10-01)
 
 `minSide n` is defined as `sInf {s | Packs n s}`; `Attain.lean` proves the infimum is attained:

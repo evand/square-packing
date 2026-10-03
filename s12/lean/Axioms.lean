@@ -183,6 +183,13 @@ import Sqpack
 #print axioms UnitSquarePacking.frame_image
 #print axioms UnitSquarePacking.packs_iff_nonempty_packing
 #print axioms UnitSquarePacking.setOf_packs_eq
+-- bridge to chelokot/square-packing-archive's IsMinimumSide (restated, Sqpack/SpecChelokot.lean)
+#print axioms UnitSquarePacking.Chelokot.hasPacking_iff
+#print axioms UnitSquarePacking.Chelokot.hasPacking_iff_packs
+#print axioms UnitSquarePacking.Chelokot.isLowerBound_iff
+#print axioms UnitSquarePacking.Chelokot.isMinimumSide_iff_isLeast
+#print axioms UnitSquarePacking.Chelokot.isMinimumSide_iff_minSide_eq
+#print axioms UnitSquarePacking.Chelokot.isMinimumSide_zero
 -- attainment: s(n) is a minimum for n >= 1 (Sqpack/Attain.lean)
 #print axioms SquarePacking.packs_mono
 #print axioms SquarePacking.packs_nonempty
