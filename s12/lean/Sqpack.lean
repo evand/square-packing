@@ -33,6 +33,9 @@ import Sqpack.ValidSplit
 import Sqpack.ValidSplitData
 import Sqpack.ValidSplit7
 import Sqpack.ValidSplit9
+import Sqpack.LebMass
+import Sqpack.LebMass7Data
+import Sqpack.LebMass7
 import Sqpack.AnchorLemma2
 import Sqpack.Spec
 import Sqpack.SpecBridge
