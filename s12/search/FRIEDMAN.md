@@ -338,7 +338,7 @@ c = 4 candidate, `notes/n12-gap.md`).  `k_ins − k_LP`: price of extensibility 
 `k_fam − k_ins`: price of periodic *whole* walls, mostly corners (9.3).
 
 **9.1.3 Status for c = 4.**  `k₁ ∈ {4, 5}` (s(12) open); `k_LP ≤ 5` (s(21) cover); `k_fam ≤ 8` (R = w = 3, `certificates/k2m4/`,
-resting on `ValidTilt9`); **`k_ins ∈ [5, 8]` unknown**.  For c = 3: `k₁ = 3`, `k_fam = 6` (proved, k2m3 bundle).
+resting on `ValidTilt9`); **`k_ins ∈ [6, 8]`** (S2 no-go at k = 5, `S2_INSERTABLE.md`: full insertability costs ≈ 1.7–1.9, crossing square forced Lebesgue).  For c = 3: `k₁ = 3`, `k_fam = 6` (proved, k2m3 bundle).
 
 ### 9.2 Rate ladder (the A side)
 | # | statement | relations | handle |

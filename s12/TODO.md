@@ -6,13 +6,13 @@ Paths relative to `public/s12`.  Public since 10-03 (outreach stays in `private/
 External posts: ask Evan explicitly per post.
 
 ## Next (picked 2026-10-03)
-1. S2 test, c = 3 k = 4 then c = 4 k = 5: insertable box LP (FRIEDMAN §9.6). Yes ⇒ all of F₃/F₄ from one box, Lean-checkable. Running 10-03. `tasks/s2-insertable/`
-2. Lean, small and interesting: `E(n) ≤ 0` + seam bound `D ≤ m_v`, then `M(1) ≤ ¾` (FRIEDMAN §9.6 item 5).
-3. `M(1) = ¾` fully proved: SEAM_W1 §2.3 casework (or interval arithmetic).
+1. Lean, small and interesting: `E(n) ≤ 0` + seam bound `D ≤ m_v`, then `M(1) ≤ ¾` (FRIEDMAN §9.6 item 5).
+2. `M(1) = ¾` fully proved: SEAM_W1 §2.3 casework (or interval arithmetic).
 
 ## Major: exact results
-- [ ] k²−5 for all large k: R = w = 5 κ = 0.02 D ≈ 1.30, conditional GO, margin ≈ 0.05 (`K2M4_MARGIN.md`); box 13 pitch 0.1. Make it cheaper first: cert golf (`tasks/cert-slack/`), insertable cert at k = 8 (S2-style), finer-pitch D at w = 4.
+- [ ] k²−5 for all large k: R = w = 5 κ = 0.02 D ≈ 1.30, conditional GO, margin ≈ 0.05 (`K2M4_MARGIN.md`); box 13 pitch 0.1. Make it cheaper first: cert golf (`tasks/cert-slack/`), finer-pitch D at w = 4 (insertable shortcut dead: price ≈ 1.8, `S2_INSERTABLE.md`).
 - [ ] Seam capacity `M(∞)` (C5/R2; FRIEDMAN §8–9, `SEAM_W1.md`, `SEAM_1D.md`): `M(w) → ∞` ⇒ families give s(k²−c) = k for every c. Next: dual-side band LP w = 2, 3 (rigorous caps); wall-row + slow-variation lemmas.
+- [ ] S1 measurement (optional): full insertable LP class (b) at k = 6, 7; is the price ≈ 1.8 k-independent? ~1–2e4 CPU-s (`S2_INSERTABLE.md` §5).
 - [ ] Corner coupling (R3): does D(w) ≥ κ M(w)? Start with the corner dual at w = 1 (D = ½, corner cost ¼?).
 
 ## Correctness / review
