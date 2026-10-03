@@ -1,0 +1,3 @@
+germs 2060
+evaluated 153660 violations 0 time 600.9811773300171
+min (m-1)/t 0.0 m 1.0 ['14/5', '14/5', '-1', '19/5', '14/5'] (Fraction(1, 1000000), Fraction(0, 1), Fraction(-1, 10))

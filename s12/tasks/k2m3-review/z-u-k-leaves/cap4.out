@@ -1,0 +1,2 @@
+seed 4 accepted {'CAP': 467, 'LEB': 164} poses 40384 lemma-hyp failures 0
+worst 1.0 CAP ['47/20', '19/8', '23/10', '93/40', '0', '1/16384'] [2.35, 2.325, 0.0]

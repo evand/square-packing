@@ -1,0 +1,18 @@
+zeromargin.py sha256 640fe453c1a32f4aa580ca2b1261c6406923a4d7c131f65604a432c7fc2086ab (= pinned)
+sha256 cdade4b6c105f991e21f8a23877dfd4b92db5ea25df3c29d7999cee8d081a1b7  qx2_zm.py
+sha256 ee3e2915349b8795128417bca6414b205d526db9f01f88cd4cd32c32e8d760ac  zm_mixed.py
+sha256 640fe453c1a32f4aa580ca2b1261c6406923a4d7c131f65604a432c7fc2086ab  zeromargin.py
+sha256 bb89de15ecf5821dd7e1a36ebab8a50d792a406b7fb0f5cb38059f99ef74aae5  mixed_cover.py
+sha256 add13a34aadce7d05e81a77bbf915a164fa49584cf945689619f8acd7fad1e89  input
+argv: qx2_zm.py /home/evand/math/square-packing/private/s12/tasks/k2m3-review/break-it/mut5.txt --nproc 2 --cx-lo 1.49 --cx-hi 1.51 --cy-lo 1.49 --cy-hi 1.51 --u-hi 0.01
+container [0,7]^2, 0 points, 800 segments on 60 lines, Lebesgue square [9/5,26/5]^2; total 5701278693611/125000000000 = 45.610229548888
+D4 roots [0,m/2]^2 x u in [0,1/2]: 4 roots (PARTIAL); depth 18; EXACT on for u1 <= 1/20
+done in 1424s: boxes 112, max depth 18, CPU 1555 s
+  leaves: LEB 0  CAP 0  EXACT 10  EXACT0 10  EXACT45 0  AXIS 0  SYM 0  PIECE 37  ADM 0  P1 0  MIX 0  SPLIT 0  EMPTY 0  UNCERT 1
+uncertified boxes (cx0 cx1 cy0 cy1 theta0 theta1 deg):
+   1.500000 1.501562 1.500000 1.501562 0.00000 0.11191
+NOT VERIFIED (PARTIAL)
+
+real	23m43.900s
+user	25m4.643s
+sys	0m50.602s

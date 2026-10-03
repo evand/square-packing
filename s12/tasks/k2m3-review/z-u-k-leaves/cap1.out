@@ -1,0 +1,2 @@
+seed 1 accepted {'CAP': 52, 'LEB': 34} poses 5504 lemma-hyp failures 0
+worst 1.0 LEB ['5/2', '13/5', '5/2', '13/5', '0', '1/16'] [2.5, 2.5, 0.0]

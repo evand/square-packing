@@ -1,0 +1,2 @@
+root ['13/10', '7/5', '17/5', '7/2', '1/8', '3/16'] {'PIECE': 5, 'boxes': 13, 'maxdepth': 3, 'THR': 2, 'LIN': 5, 'cpu': 14.578819268, 'EXACT': 2} unc 0 15s
+PIECE leaves with polygon part > 0: 5; poses 280; bad 0; min mass 1.1081284975861245; min area-polybound gap 0.007582886381981259

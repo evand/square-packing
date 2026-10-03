@@ -1,0 +1,183 @@
+root ['23/10', '12/5', '23/10', '12/5', '7/16', '1/2'] {'boxes': 1, 'cpu': 4.8601999999994816e-05, 'SYM': 1} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['17/10', '9/5', '17/10', '9/5', '3/16', '1/4'] {'PIECE': 2, 'boxes': 3, 'maxdepth': 1, 'LIN': 2, 'cpu': 0.334067683} unc 0 0s
+PIECE leaves with polygon part > 0: 2; poses 112; bad 0; min mass 1.0768720827316713; min area-polybound gap 0.009642236314965132
+root ['21/10', '11/5', '23/10', '12/5', '0', '1/16'] {'PIECE': 6, 'boxes': 15, 'maxdepth': 3, 'LIN': 8, 'cpu': 55.597567489000006, 'EXACT': 2} unc 0 56s
+PIECE leaves with polygon part > 0: 6; poses 336; bad 0; min mass 1.1060885810508085; min area-polybound gap 0.05565847838409153
+root ['17/10', '9/5', '5/2', '13/5', '7/16', '1/2'] {'boxes': 1, 'cpu': 4.679800000000067e-05, 'SYM': 1} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['11/10', '6/5', '27/10', '14/5', '5/16', '3/8'] {'PIECE': 1, 'boxes': 1, 'LIN': 1, 'cpu': 0.267998644} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['7/5', '3/2', '9/5', '19/10', '7/16', '1/2'] {'boxes': 1, 'cpu': 5.008399999999191e-05, 'SYM': 1} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['21/10', '11/5', '3', '31/10', '3/16', '1/4'] {'boxes': 15, 'maxdepth': 3, 'LIN': 8, 'cpu': 16.404423527000002, 'EXACT': 8} unc 0 16s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['12/5', '5/2', '23/10', '12/5', '5/16', '3/8'] {'boxes': 15, 'maxdepth': 3, 'LIN': 8, 'cpu': 10.594722962, 'EXACT': 8} unc 0 11s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['9/5', '19/10', '3/2', '8/5', '3/8', '7/16'] {'PIECE': 62, 'boxes': 129, 'maxdepth': 10, 'LIN': 62, 'cpu': 36.031055834, 'SYM': 3} unc 0 36s
+timeout/err 18/10 15/10 6
+root ['9/5', '19/10', '17/5', '7/2', '0', '1/16'] {'PIECE': 8, 'boxes': 15, 'maxdepth': 3, 'LIN': 8, 'cpu': 0.887623515} unc 0 1s
+PIECE leaves with polygon part > 0: 8; poses 448; bad 0; min mass 1.082331822832743; min area-polybound gap 0.039727698814199054
+root ['19/10', '2', '9/5', '19/10', '1/4', '5/16'] {'PIECE': 1, 'boxes': 1, 'LIN': 1, 'cpu': 0.19164416700000003} unc 0 0s
+PIECE leaves with polygon part > 0: 1; poses 56; bad 0; min mass 1.273269020525885; min area-polybound gap 0.027386009966548257
+root ['9/5', '19/10', '13/5', '27/10', '7/16', '1/2'] {'boxes': 1, 'cpu': 5.0355000000001926e-05, 'SYM': 1} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['3/2', '8/5', '6/5', '13/10', '1/8', '3/16'] {'PIECE': 3, 'boxes': 5, 'maxdepth': 2, 'THR': 2, 'LIN': 1, 'cpu': 0.585855305} unc 0 1s
+PIECE leaves with polygon part > 0: 2; poses 112; bad 0; min mass 1.1901806025316328; min area-polybound gap 1.801003087614758e-06
+root ['12/5', '5/2', '31/10', '16/5', '1/16', '1/8'] {'boxes': 1, 'cpu': 0.00040130600000000405, 'CAP': 1} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['11/10', '6/5', '23/10', '12/5', '1/4', '5/16'] {'PIECE': 1, 'boxes': 1, 'LIN': 1, 'cpu': 0.267730935} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['11/10', '6/5', '8/5', '17/10', '3/16', '1/4'] {'PIECE': 1, 'boxes': 1, 'LIN': 1, 'cpu': 0.17073505} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['7/5', '3/2', '7/5', '3/2', '5/16', '3/8'] {'PIECE': 1, 'boxes': 1, 'LIN': 1, 'cpu': 0.26989344} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['13/10', '7/5', '9/5', '19/10', '3/16', '1/4'] {'PIECE': 1, 'boxes': 1, 'LIN': 1, 'cpu': 0.21157607699999997} unc 0 0s
+PIECE leaves with polygon part > 0: 1; poses 56; bad 0; min mass 1.396442731597276; min area-polybound gap 0.0
+root ['17/10', '9/5', '9/5', '19/10', '1/4', '5/16'] {'PIECE': 1, 'boxes': 1, 'LIN': 1, 'cpu': 0.12255537000000001} unc 0 0s
+PIECE leaves with polygon part > 0: 1; poses 56; bad 0; min mass 1.1272931203260874; min area-polybound gap 0.01176696234750064
+root ['21/10', '11/5', '11/5', '23/10', '3/16', '1/4'] {'PIECE': 8, 'boxes': 15, 'maxdepth': 3, 'LIN': 8, 'cpu': 2.5122862560000003} unc 0 3s
+PIECE leaves with polygon part > 0: 8; poses 448; bad 0; min mass 1.1235086834765653; min area-polybound gap 0.043010090469639294
+root ['3/2', '8/5', '2', '21/10', '5/16', '3/8'] {'PIECE': 35, 'boxes': 69, 'maxdepth': 9, 'LIN': 34, 'cpu': 20.397463058} unc 0 20s
+PIECE leaves with polygon part > 0: 35; poses 1960; bad 0; min mass 1.0396161340462948; min area-polybound gap 0.004528324132093781
+root ['12/5', '5/2', '5/2', '13/5', '3/16', '1/4'] {'boxes': 11, 'maxdepth': 3, 'cpu': 7.884786399, 'CAP': 2, 'EXACT': 4} unc 0 8s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['8/5', '17/10', '6/5', '13/10', '3/16', '1/4'] {'PIECE': 3, 'boxes': 5, 'maxdepth': 2, 'LIN': 3, 'cpu': 0.834011069} unc 0 1s
+PIECE leaves with polygon part > 0: 3; poses 168; bad 0; min mass 1.166761757454246; min area-polybound gap 0.0009580587790483996
+root ['23/10', '12/5', '23/10', '12/5', '3/8', '7/16'] {'boxes': 17, 'maxdepth': 4, 'LIN': 8, 'cpu': 37.989735397, 'EXACT': 4, 'EXACT45': 4, 'SYM': 1} unc 0 38s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['19/10', '2', '29/10', '3', '5/16', '3/8'] {'PIECE': 4, 'boxes': 7, 'maxdepth': 2, 'LIN': 4, 'cpu': 1.0342240280000001} unc 0 1s
+PIECE leaves with polygon part > 0: 4; poses 224; bad 0; min mass 1.2435830571349704; min area-polybound gap 0.09727646727094733
+root ['8/5', '17/10', '12/5', '5/2', '1/8', '3/16'] {'boxes': 15, 'maxdepth': 3, 'LIN': 8, 'cpu': 43.740591563, 'EXACT': 8} unc 0 44s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['7/5', '3/2', '14/5', '29/10', '5/16', '3/8'] {'PIECE': 5, 'boxes': 11, 'maxdepth': 3, 'LIN': 6, 'cpu': 5.050214307, 'EXACT': 1} unc 0 5s
+PIECE leaves with polygon part > 0: 5; poses 280; bad 0; min mass 1.0943499128330034; min area-polybound gap 0.022613509289710156
+root ['8/5', '17/10', '7/5', '3/2', '3/16', '1/4'] {'PIECE': 16, 'boxes': 31, 'maxdepth': 8, 'THR': 2, 'LIN': 14, 'cpu': 7.90531438} unc 0 8s
+PIECE leaves with polygon part > 0: 16; poses 896; bad 0; min mass 1.0288778314938427; min area-polybound gap 0.0009580587790483996
+root ['2', '21/10', '21/10', '11/5', '0', '1/16'] {'PIECE': 1, 'boxes': 1, 'LIN': 1, 'cpu': 0.037837932000000005} unc 0 0s
+PIECE leaves with polygon part > 0: 1; poses 56; bad 0; min mass 1.213119900111; min area-polybound gap 0.01838624189274739
+root ['6/5', '13/10', '16/5', '33/10', '3/8', '7/16'] {'PIECE': 1, 'boxes': 1, 'LIN': 1, 'cpu': 0.27585956500000003} unc 0 0s
+PIECE leaves with polygon part > 0: 1; poses 56; bad 0; min mass 1.164001666312708; min area-polybound gap 0.010411629032120793
+root ['2', '21/10', '21/10', '11/5', '1/16', '1/8'] {'PIECE': 3, 'boxes': 5, 'maxdepth': 2, 'LIN': 3, 'cpu': 0.876651661} unc 0 1s
+PIECE leaves with polygon part > 0: 3; poses 168; bad 0; min mass 1.1743359283688561; min area-polybound gap 0.012045864557981727
+root ['3/2', '8/5', '17/5', '7/2', '1/8', '3/16'] {'PIECE': 2, 'boxes': 15, 'maxdepth': 3, 'THR': 1, 'LIN': 7, 'cpu': 23.819583662, 'EXACT': 6} unc 0 24s
+PIECE leaves with polygon part > 0: 2; poses 112; bad 0; min mass 1.0950672099969225; min area-polybound gap 0.022777713640359555
+root ['3/2', '8/5', '3', '31/10', '7/16', '1/2'] {'boxes': 1, 'cpu': 5.156700000000236e-05, 'SYM': 1} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['11/5', '23/10', '2', '21/10', '1/8', '3/16'] {'PIECE': 2, 'boxes': 3, 'maxdepth': 1, 'LIN': 2, 'cpu': 0.563866937} unc 0 1s
+PIECE leaves with polygon part > 0: 2; poses 112; bad 0; min mass 1.19339106721018; min area-polybound gap 0.038306466659684214
+root ['19/10', '2', '8/5', '17/10', '7/16', '1/2'] {'boxes': 1, 'cpu': 4.866199999999099e-05, 'SYM': 1} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['13/10', '7/5', '5/2', '13/5', '0', '1/16'] {'PIECE': 3, 'boxes': 5, 'maxdepth': 2, 'THR': 3, 'cpu': 0.666050756} unc 0 1s
+PIECE leaves with polygon part > 0: 2; poses 112; bad 0; min mass 1.1428679750189976; min area-polybound gap 0.0033877937146989914
+root ['11/10', '6/5', '8/5', '17/10', '5/16', '3/8'] {'PIECE': 1, 'boxes': 1, 'LIN': 1, 'cpu': 0.185462968} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['11/5', '23/10', '31/10', '16/5', '7/16', '1/2'] {'boxes': 1, 'cpu': 4.866200000000487e-05, 'SYM': 1} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['9/5', '19/10', '17/5', '7/2', '1/8', '3/16'] {'boxes': 15, 'maxdepth': 3, 'THR': 1, 'LIN': 7, 'cpu': 28.574035342000002, 'EXACT': 8} unc 0 29s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['11/10', '6/5', '13/5', '27/10', '1/16', '1/8'] {'PIECE': 1, 'boxes': 1, 'THR': 1, 'cpu': 0.25455950299999996} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['7/5', '3/2', '29/10', '3', '1/8', '3/16'] {'PIECE': 5, 'boxes': 13, 'maxdepth': 3, 'LIN': 7, 'cpu': 9.101249944000001, 'EXACT': 2} unc 0 9s
+PIECE leaves with polygon part > 0: 5; poses 280; bad 0; min mass 1.0819053584405307; min area-polybound gap 0.017325145384695477
+root ['21/10', '11/5', '11/10', '6/5', '0', '1/16'] {'PIECE': 1, 'boxes': 1, 'LIN': 1, 'cpu': 0.038671080999999996} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['23/10', '12/5', '31/10', '16/5', '1/16', '1/8'] {'boxes': 13, 'maxdepth': 3, 'LIN': 2, 'cpu': 27.508941715000002, 'CAP': 2, 'EXACT': 5} unc 0 28s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['9/5', '19/10', '23/10', '12/5', '0', '1/16'] {'PIECE': 6, 'boxes': 11, 'maxdepth': 3, 'THR': 4, 'LIN': 2, 'cpu': 0.857540929} unc 0 1s
+PIECE leaves with polygon part > 0: 6; poses 336; bad 0; min mass 1.0945836198283863; min area-polybound gap 0.04231135168102905
+root ['8/5', '17/10', '17/10', '9/5', '1/16', '1/8'] {'PIECE': 4, 'boxes': 11, 'maxdepth': 3, 'LIN': 6, 'cpu': 35.669685587000004, 'EXACT': 2} unc 0 36s
+PIECE leaves with polygon part > 0: 4; poses 224; bad 0; min mass 1.0239075296582436; min area-polybound gap 0.006127688764286744
+root ['7/5', '3/2', '12/5', '5/2', '7/16', '1/2'] {'boxes': 1, 'cpu': 5.057499999999715e-05, 'SYM': 1} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['11/10', '6/5', '14/5', '29/10', '1/4', '5/16'] {'PIECE': 1, 'boxes': 1, 'LIN': 1, 'cpu': 0.23795787799999998} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['23/10', '12/5', '12/5', '5/2', '7/16', '1/2'] {'boxes': 1, 'cpu': 4.9894000000008654e-05, 'SYM': 1} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['7/5', '3/2', '31/10', '16/5', '3/16', '1/4'] {'PIECE': 2, 'boxes': 35, 'maxdepth': 11, 'THR': 2, 'LIN': 16, 'cpu': 86.82996935, 'EXACT': 16} unc 0 87s
+PIECE leaves with polygon part > 0: 2; poses 112; bad 0; min mass 1.014011276219346; min area-polybound gap 0.005102258625213016
+root ['12/5', '5/2', '16/5', '33/10', '7/16', '1/2'] {'boxes': 1, 'cpu': 4.8501000000006345e-05, 'SYM': 1} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['2', '21/10', '8/5', '17/10', '1/16', '1/8'] {'PIECE': 2, 'boxes': 3, 'maxdepth': 1, 'LIN': 2, 'cpu': 0.534608967} unc 0 1s
+PIECE leaves with polygon part > 0: 2; poses 112; bad 0; min mass 1.0804930511916342; min area-polybound gap 0.015993941157468338
+root ['7/5', '3/2', '5/2', '13/5', '7/16', '1/2'] {'boxes': 1, 'cpu': 4.7258999999993945e-05, 'SYM': 1} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['2', '21/10', '9/5', '19/10', '1/16', '1/8'] {'PIECE': 1, 'boxes': 1, 'LIN': 1, 'cpu': 0.19366439800000002} unc 0 0s
+PIECE leaves with polygon part > 0: 1; poses 56; bad 0; min mass 1.1862819403623608; min area-polybound gap 0.023463113368659357
+root ['19/10', '2', '17/10', '9/5', '0', '1/16'] {'PIECE': 1, 'boxes': 1, 'LIN': 1, 'cpu': 0.03644275200000001} unc 0 0s
+PIECE leaves with polygon part > 0: 1; poses 56; bad 0; min mass 1.1022969829781253; min area-polybound gap 0.015310768005197225
+root ['11/10', '6/5', '12/5', '5/2', '0', '1/16'] {'PIECE': 1, 'boxes': 1, 'THR': 1, 'cpu': 0.039942440999999995} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['21/10', '11/5', '21/10', '11/5', '3/8', '7/16'] {'PIECE': 4, 'boxes': 7, 'maxdepth': 2, 'LIN': 4, 'cpu': 1.214383225} unc 0 1s
+PIECE leaves with polygon part > 0: 4; poses 224; bad 0; min mass 1.1847912847287465; min area-polybound gap 0.05907673867909321
+root ['12/5', '5/2', '23/10', '12/5', '7/16', '1/2'] {'boxes': 1, 'cpu': 4.7299000000000646e-05, 'SYM': 1} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['8/5', '17/10', '2', '21/10', '1/8', '3/16'] {'PIECE': 4, 'boxes': 7, 'maxdepth': 2, 'LIN': 4, 'cpu': 1.138734573} unc 0 1s
+PIECE leaves with polygon part > 0: 4; poses 224; bad 0; min mass 1.087511195581999; min area-polybound gap 0.008721858583217888
+root ['7/5', '3/2', '17/10', '9/5', '1/16', '1/8'] {'PIECE': 4, 'boxes': 7, 'maxdepth': 2, 'THR': 2, 'LIN': 2, 'cpu': 1.145973778} unc 0 1s
+PIECE leaves with polygon part > 0: 4; poses 224; bad 0; min mass 1.1682404040399352; min area-polybound gap 5.819004830457924e-06
+root ['2', '21/10', '14/5', '29/10', '7/16', '1/2'] {'boxes': 1, 'cpu': 5.16170000000038e-05, 'SYM': 1} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['9/5', '19/10', '23/10', '12/5', '1/16', '1/8'] {'boxes': 15, 'maxdepth': 3, 'THR': 5, 'LIN': 3, 'cpu': 63.786656296, 'EXACT': 8} unc 0 64s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['3/2', '8/5', '9/5', '19/10', '1/4', '5/16'] {'PIECE': 8, 'boxes': 15, 'maxdepth': 6, 'LIN': 8, 'cpu': 2.94330074} unc 0 3s
+PIECE leaves with polygon part > 0: 8; poses 448; bad 0; min mass 1.0437369861370254; min area-polybound gap 0.0012546303236802884
+root ['21/10', '11/5', '13/5', '27/10', '1/16', '1/8'] {'PIECE': 7, 'boxes': 13, 'maxdepth': 3, 'LIN': 6, 'cpu': 1.512636718} unc 0 2s
+PIECE leaves with polygon part > 0: 7; poses 392; bad 0; min mass 1.1267982936619731; min area-polybound gap 0.0639695001005996
+root ['2', '21/10', '33/10', '17/5', '1/4', '5/16'] {'boxes': 15, 'maxdepth': 3, 'LIN': 8, 'cpu': 11.869750994, 'EXACT': 8} unc 0 12s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['23/10', '12/5', '9/5', '19/10', '5/16', '3/8'] {'PIECE': 3, 'boxes': 17, 'maxdepth': 4, 'LIN': 9, 'cpu': 24.842529602, 'EXACT': 6} unc 0 25s
+PIECE leaves with polygon part > 0: 3; poses 168; bad 0; min mass 1.0915908528934875; min area-polybound gap 0.026558798870143962
+root ['2', '21/10', '12/5', '5/2', '7/16', '1/2'] {'boxes': 1, 'cpu': 5.329999999999224e-05, 'SYM': 1} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['13/10', '7/5', '6/5', '13/10', '3/16', '1/4'] {'PIECE': 6, 'boxes': 11, 'maxdepth': 5, 'LIN': 6, 'cpu': 2.313243841} unc 0 2s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['23/10', '12/5', '13/5', '27/10', '5/16', '3/8'] {'boxes': 15, 'maxdepth': 3, 'LIN': 8, 'cpu': 8.154192661000002, 'EXACT': 8} unc 0 8s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['8/5', '17/10', '9/5', '19/10', '3/16', '1/4'] {'PIECE': 4, 'boxes': 9, 'maxdepth': 3, 'LIN': 5, 'cpu': 4.742973685, 'EXACT': 1} unc 0 5s
+PIECE leaves with polygon part > 0: 4; poses 224; bad 0; min mass 1.0556292541921442; min area-polybound gap 0.0036978515291942182
+root ['7/5', '3/2', '13/10', '7/5', '5/16', '3/8'] {'PIECE': 5, 'boxes': 9, 'maxdepth': 3, 'LIN': 5, 'cpu': 1.548280436} unc 0 2s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['21/10', '11/5', '19/10', '2', '3/16', '1/4'] {'PIECE': 1, 'boxes': 1, 'LIN': 1, 'cpu': 0.113778463} unc 0 0s
+PIECE leaves with polygon part > 0: 1; poses 56; bad 0; min mass 1.231833965351093; min area-polybound gap 0.036968581797583056
+root ['12/5', '5/2', '17/10', '9/5', '1/4', '5/16'] {'boxes': 15, 'maxdepth': 3, 'LIN': 8, 'cpu': 13.585407882, 'EXACT': 8} unc 0 14s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['7/5', '3/2', '8/5', '17/10', '7/16', '1/2'] {'boxes': 1, 'cpu': 4.5545999999993536e-05, 'SYM': 1} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['11/10', '6/5', '33/10', '17/5', '0', '1/16'] {'PIECE': 1, 'boxes': 1, 'THR': 1, 'cpu': 0.03863333399999999} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['11/5', '23/10', '21/10', '11/5', '1/4', '5/16'] {'PIECE': 7, 'boxes': 15, 'maxdepth': 3, 'LIN': 8, 'cpu': 3.8079319789999997, 'EXACT': 1} unc 0 4s
+PIECE leaves with polygon part > 0: 7; poses 392; bad 0; min mass 1.138983518491977; min area-polybound gap 0.04515896405091162
+root ['8/5', '17/10', '17/10', '9/5', '1/8', '3/16'] {'PIECE': 2, 'boxes': 11, 'maxdepth': 3, 'LIN': 6, 'cpu': 45.592978844, 'EXACT': 4} unc 0 46s
+PIECE leaves with polygon part > 0: 2; poses 112; bad 0; min mass 1.0511505769498604; min area-polybound gap 0.006242456103815408
+root ['13/10', '7/5', '17/5', '7/2', '3/8', '7/16'] {'PIECE': 1, 'boxes': 1, 'LIN': 1, 'cpu': 0.13852358199999998} unc 0 0s
+PIECE leaves with polygon part > 0: 1; poses 56; bad 0; min mass 1.1337925801006068; min area-polybound gap 0.02462067602377648
+root ['11/10', '6/5', '11/10', '6/5', '0', '1/16'] {'PIECE': 1, 'boxes': 1, 'LIN': 1, 'cpu': 0.02461219199999999} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['3/2', '8/5', '33/10', '17/5', '3/8', '7/16'] {'PIECE': 6, 'boxes': 21, 'maxdepth': 6, 'LIN': 10, 'cpu': 7.1616922149999995, 'EXACT': 2, 'EXACT45': 2, 'SYM': 1} unc 0 7s
+PIECE leaves with polygon part > 0: 6; poses 336; bad 0; min mass 1.0539169705762912; min area-polybound gap 0.015336081865323955
+timeout/err 16/10 15/10 1
+root ['17/10', '9/5', '6/5', '13/10', '7/16', '1/2'] {'boxes': 1, 'cpu': 4.6397000000003574e-05, 'SYM': 1} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['8/5', '17/10', '16/5', '33/10', '1/8', '3/16'] {'boxes': 15, 'maxdepth': 3, 'LIN': 8, 'cpu': 33.12625429, 'EXACT': 8} unc 0 33s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['3/2', '8/5', '19/10', '2', '3/8', '7/16'] {'PIECE': 7, 'boxes': 15, 'maxdepth': 6, 'LIN': 7, 'cpu': 2.559031552, 'SYM': 1} unc 0 3s
+PIECE leaves with polygon part > 0: 7; poses 392; bad 0; min mass 1.0300726742568127; min area-polybound gap 0.004554081833568786
+root ['8/5', '17/10', '8/5', '17/10', '3/16', '1/4'] {'boxes': 15, 'maxdepth': 3, 'THR': 1, 'LIN': 7, 'cpu': 51.181149024, 'EXACT': 8} unc 0 51s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['3/2', '8/5', '16/5', '33/10', '3/16', '1/4'] {'boxes': 15, 'maxdepth': 3, 'LIN': 8, 'cpu': 27.938419533, 'EXACT': 8} unc 0 28s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['17/10', '9/5', '16/5', '33/10', '5/16', '3/8'] {'PIECE': 1, 'boxes': 19, 'maxdepth': 5, 'LIN': 10, 'cpu': 13.864897778, 'EXACT': 9} unc 0 14s
+PIECE leaves with polygon part > 0: 1; poses 56; bad 0; min mass 1.067269832010762; min area-polybound gap 0.03329216231683697
+root ['9/5', '19/10', '31/10', '16/5', '3/16', '1/4'] {'PIECE': 8, 'boxes': 15, 'maxdepth': 3, 'LIN': 8, 'cpu': 2.2537819960000003} unc 0 2s
+PIECE leaves with polygon part > 0: 8; poses 448; bad 0; min mass 1.1046520887085705; min area-polybound gap 0.05064276741440506
+timeout/err 15/10 17/10 0
+root ['21/10', '11/5', '27/10', '14/5', '7/16', '1/2'] {'boxes': 1, 'cpu': 4.809999999999537e-05, 'SYM': 1} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['11/5', '23/10', '17/10', '9/5', '3/16', '1/4'] {'PIECE': 4, 'boxes': 7, 'maxdepth': 3, 'LIN': 4, 'cpu': 1.083306025} unc 0 1s
+PIECE leaves with polygon part > 0: 4; poses 224; bad 0; min mass 1.0739733117043584; min area-polybound gap 0.022632516074211833
+root ['19/10', '2', '11/10', '6/5', '5/16', '3/8'] {'PIECE': 1, 'boxes': 1, 'LIN': 1, 'cpu': 0.212666737} unc 0 0s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+root ['8/5', '17/10', '17/5', '7/2', '3/16', '1/4'] {'boxes': 15, 'maxdepth': 3, 'LIN': 8, 'cpu': 18.548621996, 'EXACT': 8} unc 0 19s
+PIECE leaves with polygon part > 0: 0; poses 0; bad 0; min mass None; min area-polybound gap None
+DONE

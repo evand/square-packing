@@ -1,0 +1,1 @@
+{'trials': 6000, 'pts': 72000, 'fails': 0} {('tan',): 518, ('std', 'tan'): 538, ('std', 'std', 'corner3'): 786, ('std',): 1398, (): 1360, ('std', 'xcut'): 334, ('tan', 'std'): 384, ('std', 'std'): 382, ('tan', 'tan'): 300}

@@ -1,0 +1,4 @@
+EXACT: re-checked 12/60 in 1106s; power test (tau = sampled min + 1e-9 fails / certifies): [12, 0]; problems 0
+EXACT0: re-checked 5/60 in 970s; power test (tau = sampled min + 1e-9 fails / certifies): [3, 0]; problems 0
+EXACT45: re-checked 60/60 in 251s; power test (tau = sampled min + 1e-9 fails / certifies): [29, 0]; problems 0
+PIECE: re-checked 0/0 in 0s; power test (tau = sampled min + 1e-9 fails / certifies): [0, 0]; problems 0

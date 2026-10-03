@@ -5,15 +5,9 @@ __pycache__/
 runs/
 .claude/
 *.so
-# private working material: symlinks into ../../private (never committed)
-/tasks
+# private material (outreach, publishing meta): symlinks into ../../private, never committed
 /outreach
-/TODO.md
-/Completed.md
-/notes/status.md
 /notes/publish-inventory.md
-/notes/TODO-archive-*
-/notes/review-*
 
 # Lean certificate data too big to commit: regenerate with lean/scripts/gen_data.sh
 lean/Sqpack/S11/

@@ -1,0 +1,2 @@
+part 1 roots 1869 stat mismatches vs V2 0 leaves {'EMPTY': 1476, 'PIECE': 3, 'EXACT': 6, 'LEB': 342, 'CAP': 64, 'EXACT45': 1} bad 0
+{'PIECE': 1.0224338301985114, 'EXACT': 1.0101540192383902, 'LEB': 1.0, 'CAP': 1.0, 'EXACT45': 1.011488533656994}

@@ -1,0 +1,39 @@
+# TODO — square packing
+
+Goals (Evan): **major** an exact result for something open; **secondary** s(17) lower bound, Lean, packings (low expectation).
+Priorities (10-01): correctness first, then interesting Lean, then cleverness over compute; others building on our tools is a win.
+Paths relative to `public/s12`.  Public since 10-03 (outreach stays in `private/s12/outreach`).  Done: `Completed.md`.  Conventions: `~/math/TODO.md`.
+External posts: ask Evan explicitly per post.
+
+## Next (picked 2026-10-03)
+1. S2 test, c = 3 k = 4 then c = 4 k = 5: insertable box LP (FRIEDMAN §9.6). Yes ⇒ all of F₃/F₄ from one box, Lean-checkable. Running 10-03. `tasks/s2-insertable/`
+2. Lean, small and interesting: `E(n) ≤ 0` + seam bound `D ≤ m_v`, then `M(1) ≤ ¾` (FRIEDMAN §9.6 item 5).
+3. `M(1) = ¾` fully proved: SEAM_W1 §2.3 casework (or interval arithmetic).
+
+## Major: exact results
+- [ ] k²−5 for all large k: R = w = 5 κ = 0.02 D ≈ 1.30, conditional GO, margin ≈ 0.05 (`K2M4_MARGIN.md`); box 13 pitch 0.1. Make it cheaper first: cert golf (`tasks/cert-slack/`), insertable cert at k = 8 (S2-style), finer-pitch D at w = 4.
+- [ ] Seam capacity `M(∞)` (C5/R2; FRIEDMAN §8–9, `SEAM_W1.md`, `SEAM_1D.md`): `M(w) → ∞` ⇒ families give s(k²−c) = k for every c. Next: dual-side band LP w = 2, 3 (rigorous caps); wall-row + slow-variation lemmas.
+- [ ] Corner coupling (R3): does D(w) ≥ κ M(w)? Start with the corner dual at w = 1 (D = ½, corner cost ¼?).
+
+## Correctness / review
+- [ ] Second implementation of `Valid9` (F₄ k ≥ 8 rests on qx2 alone): deferred 10-03, Lean/simplification first; others may do it (k2m3 route: `ZMX2_AREA.md`).
+- [ ] k2m3 2nd impl (zmx2 area density): needs a 2nd reader for the 4 mutation-blind refinements (`ZMX2_AREA.md` §13).
+- [ ] zeromargin.py should-fixes (audit 09-26): int64 guard on `sum(W·weight)`; `zm_d4_sweep.py summary` sha/settings gate; stale docstrings. Re-pin s(32) bundle.
+- [ ] Watch: jlevy#316 (k2m4 registration), #311 (is our s(61) replay independent of zmx2?), PR #290, chelokot#18.
+
+## Lean
+- [ ] s(6) = 3 (Kearney–Shiu 2002) in Lean, if nobody has: last missing k of k²−3. Self-contained agent task; check external Lean repos first.
+- [ ] Common spec (`lean/Sqpack/Spec.lean`): propose on jlevy/squares as shared spec; offer bridges to chelokot (Frame), Queuingtheorydotcom. Draft → Evan approves.
+- [ ] `ValidTilt7/9` are the only unformalised steps of k²−3/k²−4. Route: Lemma E + polygon (Lebesgue) mass in CovM, then SPLIT, L′, V (`lean/LADDER.md`).
+- [ ] s(21) Lean on cand A (`search/golf/candA_verified/`, ~51 CPU-h); levers: SPLIT leaf for 8 hot cells, per-leaf overhead.
+- [ ] Lean explainer (`notes/lean-explainer-draft.html`, artifact FJPhwWoQLhdkcerwh4VBwY): Evan reviews → site page.
+
+## s(17)
+- [ ] Ceiling test at t = 4.6604 (`cover4_cg.py --t`, ~1 CPU-h): ν_f ≥ 17 ⇒ pure covers are at their limit. Nobody has computed it.
+- [ ] s(17) exact via the s(11) method: on hold (CPU). `tasks/s17-core-isolation/`
+
+## Outreach / hygiene
+- [ ] Announce: VibeMathed entries for s(21), s(32) (and now k²−3, k²−4 / F₄); X drafts `outreach/drafts-s21-s32.md`.
+- [ ] `notes/status.md` frozen at 09-22: add k²−3, k²−4, s(21), s(32), s(45), s(60/61), Lean state.
+- [ ] Repo unification, rest: outreach → a small private GitHub repo (versioned, backed up); `wip/*` branches + pre-push hook if needed.
+- [ ] Prune ~30 `worktree-agent-*` branches on the private `square-packing-research` remote.

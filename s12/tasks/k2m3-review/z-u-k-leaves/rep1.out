@@ -1,0 +1,2 @@
+part 1 roots 512 stat mismatches vs V2 0 leaves {'SYM': 429, 'AXIS': 26, 'CAP': 78, 'PIECE': 17, 'EXACT': 26, 'EXACT45': 2} bad 0
+{'SYM': 1.0, 'CAP': 1.0, 'PIECE': 1.0300726742568127, 'EXACT': 1.0, 'EXACT45': 1.0115274845712117}

@@ -1,0 +1,2 @@
+{'boxes': 853, 'poses': 95408, 'pos_poly': 448, 'viol_poly': 0, 'viol_vertex': 0, 'viol_total': 0, 'minratio': None}
+smallest area(Q∩U) - polygon bound over samples: 0.000e+00 at box ['4153/2500', '4153/2500', '67/50', '13437/10000', '783/2500', '1261/4000'] pose ['4153/2500', '67/50', '1261/4000']
