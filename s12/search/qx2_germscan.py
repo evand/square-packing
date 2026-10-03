@@ -6,7 +6,8 @@ u -> 0 converges to a piecewise-linear function of t (the germ blow-up, LINE_COV
 EXACT mass (zm_mixed.exact_mass, Fractions) at u = 10^-12 and both tilt directions (theta and 90deg - theta, the latter
 as the diagonal image), for c0 on the 1/10-grid of [1/2, 7/2]^2 and t on a grid of [-T, T]^2.  A diagnostic, not a
 certificate: it reports the minimum and every pose below 1.
-usage: python3 qx2_germscan.py COVER [--pitch 1/10] [--tmax 6/5] [--tstep 1/10] [--nproc 4]
+usage: python3 qx2_germscan.py COVER [--pitch 1/10] [--tmax 6/5] [--tstep 1/10] [--hi 7/2] [--nproc 4]
+(--hi: upper end of the centre grid; 7/2 for the R = 2 box, R + 3/2 in general)
 """
 import sys, os, argparse
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -36,13 +37,13 @@ def main():
     global _COV
     ap = argparse.ArgumentParser(); ap.add_argument('cover')
     ap.add_argument('--pitch', default='1/10'); ap.add_argument('--tmax', default='6/5'); ap.add_argument('--tstep', default='1/10')
-    ap.add_argument('--u', default='1/1000000000000'); ap.add_argument('--nproc', type=int, default=4)
+    ap.add_argument('--u', default='1/1000000000000'); ap.add_argument('--hi', default='7/2'); ap.add_argument('--nproc', type=int, default=4)
     a = ap.parse_args()
     _COV = ZM.Cover(MC.load(a.cover))
     p = F(a.pitch); T = F(a.tmax); dt = F(a.tstep); u = F(a.u)
     n = int(T / dt)
     ts = [k * dt for k in range(-n, n + 1)]
-    g = [F(1, 2) + k * p for k in range(int((F(7, 2) - F(1, 2)) / p) + 1)]
+    g = [F(1, 2) + k * p for k in range(int((F(a.hi) - F(1, 2)) / p) + 1)]
     jobs = []
     for sgn in (1, -1):
         for x in g:

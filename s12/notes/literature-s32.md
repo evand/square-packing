@@ -2,7 +2,8 @@
 
 > **Update 2026-10-01** (the body below is the 2026-09-26 snapshot; superseded statements are marked inline).
 > * Ours since: s(32) = 6 (09-26), s(21) = 5 and s(45) = 7 (09-27), s(60) = 8 and s(61) = 8 (09-28), s(k² − 3) = k
->   for every k ≥ 6 (09-29, single-checker certificate; Lean reduction conditional on Valid7).  So the "open" bottom line
+>   for every k ≥ 6 (09-29; Lean reduction conditional on Valid7; Valid7 independently re-checked by wand125 10-02, whole pose
+>   space, https://github.com/wand125/valid7-independent-check).  So the "open" bottom line
 >   below is history.
 > * **s(11) is settled**: s(11) = 3.877083…, Trump's 1979 packing is optimal (Queuingtheorydotcom,
 >   https://github.com/Queuingtheorydotcom/11SquaresOptimal , 2026-09-29, computer-assisted, unrefereed, replayed by

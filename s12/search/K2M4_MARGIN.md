@@ -82,3 +82,36 @@ checker's first-order slope near the θ = 0 tight families is ¼ of k2m3's (κ =
 * w = 4 earlier note: band allows κ = 0.064 at m_v = 1.25, but the full R = 4 model at κ = 0.05 sits at D ≈ 1.22, m_v ≈ 1.27
   (round 15: 1.219, settling < 1.25 → no-go at this setting): corner deficit E ≈ −0.05 and an m_v far below the band capacity 1.97.  The corner, not the slope, binds at
   w = 4 (QUADRANT §6 saw the same).  Runs: R = 5 w = 4, and R = 4 w = 4 κ = 0 to separate margin from corner.
+
+## 4. Exact loop toward a k² − 4 certificate (2026-10-02)  [exact unless stated]
+
+Pipeline per candidate (`qx2_xloop.sh RUNDIR 9`): `qx2_exact.py project` (tight θ = 0 + germ rows exact, support fixed,
+free vars rounded to 10⁻¹²) → `axis` (Lemma Z, exact) → family + box k = 9 (= 2R + 3, R = 3) → `qx2_germscan.py --hi 9/2`
+(exact, 3362 centres × 625 offsets) → zmx2 d4 / cert0 / `cert --d4 --first-order` → rows from uncertified boxes.
+
+| candidate | exact D | zmx2 boxes | zmx2 uncertified | of which θ ≥ 0.05° | float-min < 1 |
+|---|---|---|---|---|---|
+| κ = 0.05, θ₀ = 0.5° (first projection) | 1.121226946718 | 140.6 M | 10,709 | — | 94 (2 confirmed exactly: 0.9999629 at (3.4875, 1.5122, 1.45°), 0.9999650 at (1.6, 2.6, 13°)) |
+| κ = 0.05 + filtered zmx2 rows (`k4x_it2b`) | 1.120958235386 | 141.8 M | 6,562 | 227 | 1 (0.999999) |
+| **κ = 0.08, θ₀ = 3°** (`k4x_k008`) | **1.073851127855** | **15.6 M** (772 CPU-s) | 4,844 | **0** | 0 |
+
+All three: projection consistent (0 inconsistent, 0 negative, σ = 0), θ = 0 face min exactly 1, germ scan min exactly 1.
+* **Lessons.**  (i) The float LP's oracle (random + lattice + random hill climb) misses genuine violations at generic
+  angles; zmx2 finds them in minutes.  (ii) zmx2 prints poses to ~10⁻⁶: rows rebuilt from its log are wrong at
+  near-tangent tiny-θ poses, and diagonal images at θ = 90° are outside the quadrant model's domain — together they
+  dragged D to 1.080 then 0.896 before being filtered out (keep θ ∈ [0.05°, 89.95°], admissible poses, no images).  The
+  genuine zmx2 rows cost only 2·10⁻⁴ in D.  (iii) Spending surplus D on margin (κ 0.05 → 0.08, θ₀ 0.5° → 3°) cuts the
+  zmx2 work 9× and removes every generic-angle uncertified box; rank of the exact identities 21–23 → 13.
+* What is left is tiny-θ germ boxes, which zmx2's first-order lemmas cannot close at these slopes but qx2_zm's Lemma E
+  (exact, zero margin allowed) can: pilot on the κ = 0.05 box, cx ∈ [1.4, 1.6], cy ∈ [3.5, 4.1]: 50/96 roots, 0
+  uncertified.  **Certificate run of record**: `qx2_zm.py` on the κ = 0.08 box, 16,200 roots, depth 18, Lemma E for
+  u ≤ 1/2 from depth 3, `--dump-leaves` (`runs/qx2_k4x_k008/qxzm_full.*`).
+
+**Result (2026-10-03 02:26): VERIFIED-D4, 0 uncertified.**  `qx2_zm.py` (sha `6294052a…`, zeromargin `640fe453…` =
+pinned) on `sol_exact_box9.txt` (input sha `4151d7c4…`): 16,200 roots, 214,336 boxes, max depth 17, **815,343 CPU-s
+(≈ 226 CPU-h; 56,808 s wall on 15 procs)** — 4.3× the ~190k CPU-s estimate, nearly all in roots 5,400–12,000.  Leaves:
+PIECE 84,152, EXACT 20,577 (+ EXACT0 1,424, EXACT45 1,392), SYM 2,676, EMPTY 3,890, LEB 683, CAP 393, AXIS 81, UNCERT 0.
+With the θ = 0 face (Lemma Z, exact, min 1, 348 tight) and the exact germ scan (min 1), `Valid9` holds for this box by
+our single implementation: total `81 − 4D = 76.704595…< 77`.  Record: `runs/qx2_k4x_k008/qxzm_full.{out,jsonl}` (not
+yet bundled).  Still to do for all k: the all-k reduction (Lean, analogue of `bentz_of_valid7`; task
+`lean-k2m4-reduction`), k = 5..7 from s(21), s(32), s(45), bundle, review.

@@ -2,9 +2,9 @@
 
 **Status.**  Working in public: a single-implementation exact certificate, adversarially reviewed by six independent
 agents with no errors found; the all-k reduction is kernel-checked in Lean, conditional on the finite statement
-`Valid7` (not proved in Lean).  Not yet independently re-implemented (a second implementation, `zmx2` with area
-density, is in progress and does not yet cover the smallest tilts: `search/ZMX2_AREA.md`), externally reviewed, or
-fully formalised.  The fast `verify.sh` does not recompute the positive-tilt part of the proof; `--full` does (below).
+`Valid7` (not proved in Lean).  Independently re-implemented (2026-10-02): an independent second implementation by wand125 (https://github.com/wand125/valid7-independent-check, reported 2026-10-02 in evand/square-packing#1; written from FORMAT.md and the claim only, per its READ_LOG) certifies `Valid7` over the whole pose space with no symmetry assumed: 156,800 roots, 0 uncertified, exact rationals.  We have not yet replayed or reviewed it; jlevy/squares ran its record check (`RECORD OK`, jlevy/squares#298).  Our own `zmx2` with area density
+is partial (it does not cover the smallest tilts: `search/ZMX2_AREA.md`).  Not yet externally reviewed or fully
+formalised.  The fast `verify.sh` does not recompute the positive-tilt part of the proof; `--full` does (below).
 
 **Claim.**  For every integer `k ≥ 6`, no `k² − 3` unit squares fit in a square of side less than `k`.  Since `k²`
 unit squares tile the `k × k` square, **`s(k² − 3) = k` for all `k ≥ 6`**: `s(33) = 6`, `s(46) = 7`, `s(61) = 8`,
@@ -129,8 +129,7 @@ Proofs: `search/QUADRANT_EXACT.md` §3–4, `search/ZM_MIXED.md` §2.
 
 * `Valid7` itself.  Lean proves `Valid7 → s(k² − 3) = k` for all `k ≥ 6`; `Valid7` is the Python certificate's claim.
   The certifying programs (`qx2_zm.py`, ~1,300 lines, with the zm_mixed/zeromargin primitives it imports) are one
-  implementation; their lemmas are proved on paper, not in Lean.  There is no complete second, independent
-  implementation of the `θ > 0` part yet.  The Rust checker `zmx2` of the other bundles has been extended to area
+  implementation; their lemmas are proved on paper, not in Lean.  Second implementation: an independent second implementation by wand125 (https://github.com/wand125/valid7-independent-check, reported 2026-10-02 in evand/square-packing#1; written from FORMAT.md and the claim only, per its READ_LOG) certifies `Valid7` over the whole pose space with no symmetry assumed: 156,800 roots, 0 uncertified, exact rationals.  We have not yet replayed or reviewed it; jlevy/squares ran its record check (`RECORD OK`, jlevy/squares#298).  The Rust checker `zmx2` of the other bundles has been extended to area
   density (`search/ZMX2_AREA.md`, 2026-09-30, written without opening `qx2_zm.py` or its write-ups): it certifies
   `θ = 0` and every `θ ≥ 0.014°` over the whole pose space with no symmetry assumed, but at `0 < θ < 0.01°` it leaves
   120 boxes of the D4 region (1,108 of the full space) uncertified at the double germs (ZMX2_AREA.md §11.4), so it
