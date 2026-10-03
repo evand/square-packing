@@ -7,6 +7,7 @@ import Sqpack.S32Data
 import Sqpack.S32
 import Sqpack.Attain
 import Sqpack.MixedMeasure
+import Sqpack.Average
 import Sqpack.SegTree
 import Sqpack.S21Data
 import Sqpack.S21

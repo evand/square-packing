@@ -442,6 +442,23 @@ limit through the parametrisation `sqPt c θ a b` of the closed square and the c
 open.  ~190 lines, ~4 s to check.  Exports: `s3_eq_2`, `s3_isLeast` (`S3Lower.lean`, default build) and
 `s13_isLeast` (`S13Lower.lean`, opt-in).  `#print axioms` = `[propext, Classical.choice, Quot.sound]`.
 
+## Averaging: D4 symmetry is free (`Average.lean`, default build, 2026-10-02)
+
+`search/FRIEDMAN.md` §9.1.1.  For any measure on the plane:
+
+* `CoverValid C μ` (every closed unit square `⊆ C` has measure `≥ 1`), `SqGood C g` (`g` pulls closed unit
+  squares of `C` back to closed unit squares of `C`; closed under `∘`), `avgMap g μ = |ι|⁻¹ • Σᵢ μ.map (g i)`;
+* **`coverValid_avg`**: averaging a valid cover over finitely many square-good maps keeps it valid;
+  `avgMap_apply_of_preimage`: same mass on `C` if every `g i` preserves `C`; `avgMap_preimage_eq`: invariance
+  under `h` when `h ∘ g i = g (σ i)` for a permutation `σ`;
+* `d4map m : Fin 8 → …`, the eight words in `reflX m`, `swapXY`, with `reflX_comp_d4map`, `swapXY_comp_d4map`
+  (left multiplication as explicit involutions of `Fin 8`);
+* **`exists_d4InvM_cover`**: every valid cover measure of `box m` has a D4-invariant (`D4InvM m`) valid cover
+  measure of the same total mass.  So D4-invariant certificates lose nothing, and `d4_reduction_measure`
+  applies to the average.
+
+~200 lines, ~4 s to check.  `#print axioms` = `[propext, Classical.choice, Quot.sound]`.
+
 ## Remaining gaps / next steps
 
 * No `sorry`; nothing is assumed about the tree, the generator or the decoder.
