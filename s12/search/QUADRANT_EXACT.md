@@ -489,7 +489,7 @@ differs only by the added case split, which only adds certifications).
 11 processes, 6,836 s wall, 74,551 CPU-s; 54,358 boxes, max depth 17; leaves PIECE 15,926, EXACT 9,763, EXACT0 381,
 EXACT45 759, CAP 374, LEB 689, SYM 1,171, AXIS 61, EMPTY 2,955; **UNCERTIFIED 0: VERIFIED-D4** (θ > 0; θ = 0 by Lemma Z).
 
-**Run V3 (2026-09-29, after the adversarial review; the new certificate of record)** (`qx2_data/cert/runV3_6294052a_leaves.*`): `qx2_zm.py` sha `6294052a…e737` (commit 6717ff8: run V2's code plus an assert against empty alternative lists and `--dump-leaves`), `zm_mixed.py` `1fd20346…ba95` (guard: `region_phi` refuses zero-width bins); same settings, 8 processes, 10,232 s wall, 81,377 CPU-s.  **VERIFIED-D4, 0 uncertified; census identical to run V2 root for root.**  The record carries every leaf (box after `clip_bin`, kind) of every root: 32,079 leaves, all inside their root, pairwise disjoint, `boxes = 2·leaves − 1` per root.  (The slabs removed by `clip_bin` are not recorded; an auditor recomputes them.)  Reviews: `private/s12/tasks/k2m3-review/`.
+**Run V3 (2026-09-29, after the adversarial review; the new certificate of record)** (`qx2_data/cert/runV3_6294052a_leaves.*`): `qx2_zm.py` sha `6294052a…e737` (commit 6717ff8: run V2's code plus an assert against empty alternative lists and `--dump-leaves`), `zm_mixed.py` `1fd20346…ba95` (guard: `region_phi` refuses zero-width bins); same settings, 8 processes, 10,232 s wall, 81,377 CPU-s.  **VERIFIED-D4, 0 uncertified; census identical to run V2 root for root.**  The record carries every leaf (box after `clip_bin`, kind) of every root: 32,079 leaves, all inside their root, pairwise disjoint, `boxes = 2·leaves − 1` per root.  (The slabs removed by `clip_bin` are not recorded; an auditor recomputes them.)  Reviews: `tasks/k2m3-review/`.
 
 Reproduce: `cd s12/search; python3 qx2_zm.py axis qx2_data/L4_k02_box7.txt` (Lemma Z, seconds);
 `python3 qx2_family_check.py qx2_data/L4_k02_family.txt qx2_data/L4_k02_box7.txt`;
@@ -507,7 +507,7 @@ Reproduce: `cd s12/search; python3 qx2_zm.py axis qx2_data/L4_k02_box7.txt` (Lem
 
 ## 8. Corrections after the adversarial review (2026-09-29/30)
 
-Six independent reviews (`private/s12/tasks/k2m3-review/*/REPORT.md`) found no error that affects the claim.  Corrections
+Six independent reviews (`tasks/k2m3-review/*/REPORT.md`) found no error that affects the claim.  Corrections
 to the text above (the bundle README `certificates/k2m3/README.md` is written with them applied):
 * §0: the certificate of record is now **run V3** (§6); `k = 2` is not a case (`s(1) = 1`); small cases: `k = 3`
   Kearney–Shiu 2002, `k = 4, 7` Bentz 2010, `k = 5, 6` Bentz arXiv:1606.03746 (preprint); Bentz writes "strongly

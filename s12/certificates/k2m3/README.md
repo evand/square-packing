@@ -180,4 +180,4 @@ here) and `qx2_zm.py` `6294052a…` (was `cdade4b6…`: the empty-alternatives a
 message naming `qx2_zm.py axis`).  **Run V3** repeated the whole certificate with these files and every leaf
 recorded: VERIFIED-D4, 0 uncertified, **census identical to run V2's root for root** (all 9,800 roots, every
 count).  Earlier runs A, B, V2: `search/qx2_data/cert/`, `search/QUADRANT_EXACT.md` §6.  Reviews:
-`private/s12/tasks/k2m3-review/` (not public).
+`tasks/k2m3-review/`.
