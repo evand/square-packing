@@ -25,7 +25,7 @@ External posts: ask Evan explicitly per post.
 - [ ] n = 12 batch (`notes/n12-gap.md` §2.2): `s(12) = 4` as an open statement in `Spec.lean` (check formal-conjectures first); axis-parallel ≤ 9 (item 1); Lemma CC chain counting (item 5, "Lean-ready").
 - [ ] s(6) = 3 (Kearney–Shiu 2002) in Lean, if nobody has: last missing k of k²−3. Self-contained agent task; check external Lean repos first.
 - [ ] Common spec (`lean/Sqpack/Spec.lean`): propose on jlevy/squares as shared spec; offer bridges to chelokot (Frame), Queuingtheorydotcom. Draft → Evan approves.
-- [ ] `ValidTilt7/9` are the only unformalised steps of k²−3/k²−4. Route: Lemma E + polygon (Lebesgue) mass in CovM, then SPLIT, L′, V (`lean/LADDER.md`).
+- [ ] `ValidTilt7/9` in Lean (`notes/lean-leb-mass.md` §7): LEB + CAP done 10-03 (`LebMass.lean`). Next: `CovT` tree layer + generator (~400 lines), then PIECE with polygon clip (1–2k lines; with the tree, ~17k of V3's 32k leaves), then Lemma E (3–6k lines, weeks). k2m4 needs a leaf dump.
 - [ ] s(21) Lean on cand A (`search/golf/candA_verified/`, ~51 CPU-h); levers: SPLIT leaf for 8 hot cells, per-leaf overhead.
 - [ ] Lean explainer (`notes/lean-explainer-draft.html`, artifact FJPhwWoQLhdkcerwh4VBwY): Evan reviews → site page.
 
