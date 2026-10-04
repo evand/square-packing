@@ -495,10 +495,19 @@ fn build_cover(
     // line positions: interior unit-grid lines and every segment's line (sec 4.5: atoms)
     let mut vpos: HashSet<i64> = HashSet::new();
     let mut hpos: HashSet<i64> = HashSet::new();
+    // Grid lines x = k for integers 1 <= k <= s - 1, and (2026-10-03, S20_LB.md) their mirror
+    // images x = s - k.  For an integer side this is exactly the set of interior unit-grid lines,
+    // as before.  At a non-integer side it is invariant under x -> s - x, so a D4-symmetric
+    // cover's points on x = s - 1 are line atoms like those on x = 1; lines within 1 of a wall
+    // (k > s - 1, e.g. x = 4 at s = 4.886) are left out on both sides.  Any axis-parallel line
+    // position is admissible for the line lemmas (segment lines are arbitrary), so the choice of
+    // atoms affects only the strength of the bound, not its soundness.
     let mut k = d;
-    while k < sx {
-        vpos.insert(k as i64);
-        hpos.insert(k as i64);
+    while k <= sx - d {
+        for pos in [k, sx - k] {
+            vpos.insert(pos as i64);
+            hpos.insert(pos as i64);
+        }
         k += d;
     }
     for &(x0, y0, x1, _y1, wt) in &raw_segs {
@@ -4022,14 +4031,22 @@ fn cmd_cert(args: &[String], cv: Cover) {
         tight: arg_val(args, "--tight").map(|s| s.parse().unwrap()).unwrap_or(0.0),
     };
     let mut tightf = arg_val(args, "--dump-tight").map(|p| std::fs::File::create(p).unwrap());
-    // container must be a multiple of 1/10 (1/5 under --d4)
+    // Root cells of 1/10.  If the side is a multiple of 1/10 (1/5 under --d4) the cells tile
+    // [0,s] ([0,s/2] under --d4) exactly, as before.  Otherwise (2026-10-03, S20_LB.md) the cells
+    // cover the *superset* [0, ceil(10s)/10] ([0, ceil(5s)/10] under --d4): every pose of the
+    // required region is still in some root, and the extra poses are either admissible (then
+    // checking them is merely redundant) or rejected by Lemma E, which uses the exact side s.
     let tenths = cv.sx * 10;
-    if tenths % cv.d != 0 {
-        die("container side must be a multiple of 1/10");
-    }
-    let ncell = (tenths / cv.d) as i64;
-    if d4 && ncell % 2 != 0 {
-        die("--d4 needs the container side to be a multiple of 1/5");
+    let ncell = ((tenths + cv.d - 1) / cv.d) as i64; // ceil(10 s)
+    let cmax_d4 = ((cv.sx * 5 + cv.d - 1) / cv.d) as i64; // ceil(5 s)
+    if tenths % cv.d != 0 || (d4 && (tenths / cv.d) % 2 != 0) {
+        println!(
+            "note: side {}/{} is not a multiple of 1/10{}: roots cover [0,{}/10] (a superset of the region)",
+            cv.sx,
+            cv.d,
+            if d4 { " (1/5 for --d4)" } else { "" },
+            if d4 { cmax_d4 } else { ncell }
+        );
     }
     if d4 {
         match check_d4(&cv) {
@@ -4037,7 +4054,7 @@ fn cmd_cert(args: &[String], cv: Cover) {
             Err(e) => die(&format!("--d4: cover is not D4-invariant: {}", e)),
         }
     }
-    let cmax = if d4 { ncell / 2 } else { ncell };
+    let cmax = if d4 { cmax_d4 } else { ncell };
     let lim = |k: &str, dflt: i64| -> i64 { arg_val(args, k).map(|s| s.parse().unwrap()).unwrap_or(dflt) };
     let (xlo, xhi, ylo, yhi) = (lim("--xlo", 0), lim("--xhi", cmax - 1), lim("--ylo", 0), lim("--yhi", cmax - 1));
     let (blo, bhi) = match arg_val(args, "--bins") {
