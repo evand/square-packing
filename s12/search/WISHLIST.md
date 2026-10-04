@@ -94,6 +94,10 @@ nondecreasing, so Friedman's C1 (A1) points at no specific n today; it would if 
   (20-21-29), per `notes/conjectures-literature-2026-10-04.md` §2.
 * `W_m(s)`: least waste using ≤ m distinct angles.  W₁ = Θ(s) (axis only).  Is W_m = Θ(s) for each fixed m (then
   optimal packings need ever more angles)?  Checked 2026-10-04: Erdős–Graham and every later construction vary the tilt per stack; nothing published on bounded angle counts.
+* Best waste coefficient κ (waste ≈ κ s) of a fixed-shape family at a given fractional part.  Göbel strips: κ ≈ 1;
+  the grid at fractional part 0.707: κ ≈ 1.41.  An explicit family with κ < 1 beating the strips from modest n (below
+  the observed first fall, n = 2043)?  Are the strips optimal among two-angle families (ties to W_2)?  Existence of
+  some explicit beating family is folklore (Erdős–Graham with explicit constants, A13); the crossover is bookkeeping.
 * Does the many-angle regime spread down from the top of each k-interval as k grows?  Related: are optimal packings
   eventually asymmetric?
 
