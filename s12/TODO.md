@@ -24,7 +24,7 @@ Proof-piece wishlist (new candidates N1–N15 + 65 open items, picks at the end)
 - [ ] Watch: jlevy#281 (s(19) target offered to wand125, 10-04), jlevy#316 (k2m4 registration; when T-081 is verified: Overview `FAMILIES` += {4: 5}, `register: verified` on n = 96), #311 (is our s(61) replay independent of zmx2?), PR #290, chelokot#18.
 
 ## Lean
-- [ ] n = 12 batch (`notes/n12-gap.md` §2.2): `s(12) = 4` as an open statement in `Spec.lean` (check formal-conjectures first); axis-parallel ≤ 9 (item 1); Lemma CC chain counting (item 5, "Lean-ready").
+- [ ] n = 12 batch (`notes/n12-gap.md` §2.2): `s(12) = 4` as an open statement in `Spec.lean` (formal-conjectures has only s(11), s(17): offer it upstream too); axis-parallel ≤ 9 (item 1); Lemma CC chain counting (item 5, "Lean-ready").
 - [ ] Common spec (`lean/Sqpack/Spec.lean`): propose on jlevy/squares as shared spec; offer bridges to chelokot (Frame), Queuingtheorydotcom. Draft → Evan approves.
 - [ ] `ValidTilt7/9` in Lean (`notes/lean-leb-mass.md` §7): LEB + CAP done 10-03 (`LebMass.lean`). Next: `CovT` tree layer + generator (~400 lines), then PIECE with polygon clip (1–2k lines; with the tree, ~17k of V3's 32k leaves), then Lemma E (3–6k lines, weeks). k2m4 needs a leaf dump.
 - [ ] s(21) Lean on cand A (`search/golf/candA_verified/`, ~51 CPU-h); levers: SPLIT leaf for 8 hot cells, per-leaf overhead.
@@ -36,7 +36,11 @@ Proof-piece wishlist (new candidates N1–N15 + 65 open items, picks at the end)
 - [ ] s(19) > (7+√7)/2 ⇒ s(18) < s(19): **on hold** (wand125 at 1927/400, 0.11 % short; our pure-cover LP has ≈ 0.8 % room, CEILINGS §6). Offer the target on jlevy instead of racing.
 - [ ] s(17) exact via the s(11) method: on hold (CPU). `tasks/s17-core-isolation/`
 
+## Packings (low expectation)
+- [ ] Targets from the conjectures (`search/WISHLIST.md` §P): s(90) < 10 first, then s(183/242/274/308) and the top √7/45° family members (299, 234). Check jlevy's register first.
+
 ## Outreach / hygiene
+- [ ] Site `problems.html` is the reader-facing copy of WISHLIST's object-level items (§P questions, A1/A3, N16): edit both together.
 - [ ] Site: draw every packing we have numbers for (Couzo's 49 for n = 68–307, de Winter's n = 211, n > 324); coords are fair game, credit + link, copy no code/text. `tasks/site-all-packings/`
 - [ ] Announce: VibeMathed entries for s(21), s(32) (and now k²−3, k²−4 / F₄); X drafts `outreach/drafts-s21-s32.md`.
 - [ ] `notes/status.md` frozen at 09-22: add k²−3, k²−4, s(21), s(32), s(45), s(60/61), Lean state.
