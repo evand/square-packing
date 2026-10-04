@@ -12,7 +12,7 @@ s(k²−c) = k`, so `c*(k) ≥ ⌈L(k)⌉ − 1`.  `S_ins(k)` = best saving of a
 Sections: **N** new candidates (literature-checked 2026-10-03, citations in `notes/wishlist-literature-2026-10-03.md`), then **A–F** items already stated in our notes (A
 Friedman structure, B seam/wall/corner, C threshold certificates, D n = 12, E n = 11 and 17, F Lean), then picks.
 Superseded or refuted items are omitted on purpose: n12-gap §7's list, the Roth–Vaughan route to A, the slide
-conjecture (n = 89), corner-local savings (`D*(R) = 0`), S2 at c = 3, 4 (`S2_INSERTABLE.md`), band-LP values as caps
+conjecture (n = 89), corner-local savings (`D*(R) = 0`), S2 at c = 3, 4 (`S2_INSERTABLE.md`), exact SOS certificates for n = 12 (`SOS_PROBE.md`, n12-gap §4.12), band-LP values as caps
 on M(w), clique certificates below 12, the s(12) ≥ 3.98 consolation prize.
 
 ## N. New candidates

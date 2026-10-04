@@ -489,6 +489,17 @@ Rule applied: no route for `s(12)` that cannot handle `s(6)`.
 
 ---
 
+### 4.12 Exact algebraic (SOS / Positivstellensatz) certificates per separation type (2026-10-03)
+
+Tried on the s(6) rehearsal (`search/SOS_PROBE.md`): at a fixed separation type and sign orthant, angle-only SOS
+multipliers give **exact rational certificates of `T > 3 − ε`** (e.g. T ≥ 2.9 on a 5-square core, 2.999 on a 2-angle
+pinwheel family) [proved, modulo the encoding], with the margin decaying like ε³ at degree 4 and degree 6 needed
+(and too large) beyond three free angles.  **ε = 0 is out of reach**: the SDP has no interior and one facial
+reduction step still leaves none; the next level is the second-order contact along the plateau, i.e. obstruction X
+reappears in the degree instead of the box width.  Certificates are not local (smallest true sub-systems use 5 of 6
+squares) and do not transfer across neighbouring types.  **Closed: exact SOS hits the same zero-margin wall; at
+n = 12 it would be per-type, per-orthant (4,096), degree ≥ 6 on 18–24 angle variables, and still only `T > 4 − ε`.**
+
 ## 5. The sanity filter every proposed mechanism must pass
 
 `s(n^2 - n) < n` for **all `n >= 12`** (Arslanov–Mustafin–Shangitbayev, Electron. J. Combin. 28(4) 2021,
