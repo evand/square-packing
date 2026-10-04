@@ -37,6 +37,7 @@ Proof-piece wishlist (new candidates N1–N15 + 65 open items, picks at the end)
 - [ ] s(17) exact via the s(11) method: on hold (CPU). `tasks/s17-core-isolation/`
 
 ## Outreach / hygiene
+- [ ] Site: draw every packing we have numbers for (Couzo's 49 for n = 68–307, de Winter's n = 211, n > 324); coords are fair game, credit + link, copy no code/text. `tasks/site-all-packings/`
 - [ ] Announce: VibeMathed entries for s(21), s(32) (and now k²−3, k²−4 / F₄); X drafts `outreach/drafts-s21-s32.md`.
 - [ ] `notes/status.md` frozen at 09-22: add k²−3, k²−4, s(21), s(32), s(45), s(60/61), Lean state.
 - [ ] Repo unification, rest: outreach → a small private GitHub repo (versioned, backed up); `wip/*` branches + pre-push hook if needed.
