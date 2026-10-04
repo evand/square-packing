@@ -1,5 +1,7 @@
 # Wishlist: proof pieces, conjectures, and partial results (2026-10-03)
 
+Reader-facing version (object-level problems and conjectures only): the site's `problems.html` ("Open problems").
+
 A working list of statements whose proof (or refutation) would move this project forward, for us and for anyone who
 wants to help.  Each item: statement · status · what it unlocks · source.  Labels as elsewhere in the repo:
 **[proved]** (exact or Lean), **[measured]** (float LP / scan), **[heuristic]**, **open**.  **(Lean-ready)**: a full
@@ -9,7 +11,7 @@ Notation: `c*(k) = max{c : s(k²−c) = k}`.  `L(k)` = best saving `k² − (clo
 s(k²−c) = k`, so `c*(k) ≥ ⌈L(k)⌉ − 1`.  `S_ins(k)` = best saving of an insertable certificate (FRIEDMAN §2.1).
 `M(w)` = seam capacity of a σ = 0 band of width w (SEAM_W1).  `D(w)` = per-corner saving of a fixed-profile family.
 
-Sections: **N** new candidates (literature-checked 2026-10-03, citations in `notes/wishlist-literature-2026-10-03.md`), then **A–F** items already stated in our notes (A
+Sections: **N** new candidates (literature-checked 2026-10-03, citations in `notes/wishlist-literature-2026-10-03.md`), **P** packing targets (2026-10-04), then **A–F** items already stated in our notes (A
 Friedman structure, B seam/wall/corner, C threshold certificates, D n = 12, E n = 11 and 17, F Lean), then picks.
 Superseded or refuted items are omitted on purpose: n12-gap §7's list, the Roth–Vaughan route to A, the slide
 conjecture (n = 89), corner-local savings (`D*(R) = 0`), S2 at c = 3, 4 (`S2_INSERTABLE.md`), exact SOS certificates for n = 12 (`SOS_PROBE.md`, n12-gap §4.12), band-LP values as caps
@@ -35,6 +37,65 @@ on M(w), clique certificates below 12, the s(12) ≥ 3.98 consolation prize.
 | N14 | **Cheap s(12) gain: re-solve our 1,736 s(12) points with near-tight-cell rows.**  jlevy got `s(12) ≥ 3.9702002` this way (ours 3.9686155), with LP slack left. | [reported] on jlevy; not replayed here. | better Lean s(12) bound with existing machinery; the technique (cert-slack lever 3) generalises | notes/jlevy-s17-techniques.md §2 |
 | N15 | **Rule atoms as LP columns** (capacity-one k-of-m and winning-subset rules, as in the s(17) floors R068/R071). | [measured] elsewhere: points-only stalled at ≈ 4.614 for s(17); rules reached 4.66044.  Lean: an instance of our clique lemma. | strict bounds (s(17), s(11)); probably not zero-margin exact proofs | notes/jlevy-s17-techniques.md §2 |
 | N16 | **Non-integer plateaus.**  Least n with `s(n) = s(n+1) ∉ ℤ` (equivalently `s(n) = s(n+1) ≠ ⌈√n⌉`).  Provable frontier: the least n not yet ruled out. | **Conjecturally 147**: Friedman's table gives n = 147, 232, 264, 290, 295 as the (n+1) packing minus a square, at sides 7+4√2, 8+11√2/2, 9+11√2/2, 14+5√2/2, 17+√2/2 (site data).  **Provably the frontier is n = 18**: strictness proved for every non-integer pair below ((4,5), (5,6), (9,10), (10,11), (11,12), (16,17), (17,18)) and for (19,20) (wand125 s(20) ≥ 1959/400 > 3+4√2/3); (12,13), (20,21) are integer-plateau questions (s(12), c = 5).  (18,19) is open: s(18) ≤ (7+√7)/2 vs s(19) ≥ 1927/400. | a clean public frontier; each strict pair is a lower-bound milestone (next: s(19) > (7+√7)/2, offered on jlevy#281) | CEILINGS_17_20 §6 |
+
+---
+
+## P. Packing targets: where conjectures predict a better packing  (2026-10-04)
+
+The other sections ask for proofs.  This one asks for **packings**: n where a conjecture or a trend in the best-known
+table predicts that the current record can be beaten.  A new packing at any of these n is a record, and for a family
+member it also removes n from the family.  Data: `search/record_structure.py` over the site's best-known table
+(Ellsworth's, as mirrored by the site build: complete for n ≤ 323, plus a few larger n).  These are best-known values,
+not optima.  **Before searching, check jlevy's register for current values** (TODO rule).
+
+| # | Target | Why | What it would show |
+|---|---|---|---|
+| P1 | **s(90) < 10** | The k²−k family at k = 10.  In the margin table below, the c = 10 column reads .153 (k = 8), .056 (k = 9); a straight extension crosses 0 at k ≈ 10.  The c = 11 column ends at .0032 (Cantrell's s(110)). | The last k with s(k²−k) = k is ≤ 9 (now: in [3, 10]; true at 2, 3; false at 11 and ≥ 12).  s(72) < 9 looks less likely (c = 9 column: .054 at k = 8). |
+| P2 | **Frontier borderlines:** s(183) < 14 (c = 13), s(242) < 16 (c = 14), s(274) < 17 (c = 15), s(308) < 18 (c = 16) | Each column extends to ≈ 0 at the first "= k" entry.  The columns slow down (c = 16: .065, .041, .024, .012), so straight extension overstates the chance. | Lowers the record upper bound on c\*(k) at that k |
+| P3 | **The √7 family**, side k + (√7−1)/2, angles 0° and 24.295°: records at n = 18, 53, 86, 127, 151, 176, 204, 234, 299 (k = 4, 7, 9, 11–15, 17).  Best bets: the largest k (299, 234, 204). | Waste grows linearly (s² − n: 5.3 at k = 4, 18.7 at k = 17), so O(s^0.6) packings eventually beat every member.  The family already has no record at k = 5, 6, 8, 10, 16.  None is proved optimal (s(18) ≥ 4.695, wand125, vs 4.8229).  At n = 53 and 151 packings with 4 and 3 rotation groups tie the family value. | Removes a member; evidence on when fixed-shape families die |
+| P4 | **Other fixed-fractional-part families** (45°-based): 0.7071 = √2/2 (Göbel strips, 16 records with n ≤ 296; per Ellsworth best known for every a < 44 except a = 3, first beaten at a = 44, n = 2043); 0.5355 (11 records, n = 65 … 291); 0.6569 (9, n = 66 … 294); 0.7782 (8, n = 150 … 298); 0.8467 (4: 54, 107, 178, 267). | Same linear-waste argument as P3.  The largest-k members go first. | As P3 |
+| P5 | **Conjectured non-integer plateaus** n = 147, 232, 264, 290, 295 (N16) | Each is drawn as the (n+1) packing minus one square, and **each lies in a P4 family**: 147 at 0.6569, 232 and 264 at 0.7782, 290 at 0.5355, 295 at 0.7071. | A better packing at n removes that plateau; one at 147 moves the conjectured first plateau |
+
+Margin table, `k − s(k²−c)` for the best-known packings ("= k": best known is the grid; blank: not in the k-interval):
+
+| k \ c | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
+|---|---|---|---|---|---|---|---|---|
+| 8 | .0542 | .1533 | .1771 | .2929 | .2992 | .4286 | | |
+| 9 | = k | .0559 | .1183 | .1728 | .2012 | .2929 | .3431 | .4645 |
+| 10 | | = k | .0503 | .1118 | .1612 | .1771 | .2574 | .2929 |
+| 11 | | = k | .0032 | .0503 | .0741 | .1533 | .1770 | .1924 |
+| 12 | | | = k | .0086 | .0435 | .0888 | .1187 | .1749 |
+| 13 | | | | = k | .0179 | .0416 | .0683 | .1183 |
+| 14 | | | | | = k | .0258 | .0431 | .0649 |
+| 15 | | | | | | = k | .0259 | .0414 |
+| 16 | | | | | | = k | .0092 | .0244 |
+| 17 | | | | | | | = k | .0118 |
+| 18 | | | | | | | | = k |
+
+Record upper bounds on c\*(k), k = 4..18: 4, 5, 6, 7, 8, 9, 10, 10, 11, 12, 13, 14, 14, 15, 16.  They are
+nondecreasing, so Friedman's C1 (A1) points at no specific n today; it would if a new record broke the pattern.
+
+**Structure of the records** (context for the questions below).  "Rotation groups" = distinct angles mod 90°.
+* s(11) (proved) uses **one** tilt angle (49.818°) plus axis squares; its minimal polynomial is an irreducible
+  octic (constructibility not decided: Galois group not computed).  s(28) (best known, Ellsworth 2025, rigid) uses one
+  tilt angle (59.709°); its polynomial is an irreducible sextic with Galois group **S6** (sympy), so the best-known
+  s(28) is not expressible in radicals.
+* Packings with ≥ 5 rotation groups sit mostly at fractional parts ≳ 0.87, just below k², where the Erdős–Graham
+  small-tilt packings live.  Exceptions: n = 68, 103, 123, 297.  Packings with ≤ 3 groups hold about half of each
+  k-interval through k = 17 (9 of 18 at k = 17), with no visible decline.
+
+**Questions these targets bear on** (object-order; not yet stated elsewhere in this list):
+* Sharpened ascent `c*(k+1) ≤ c*(k) + 1` (proved: + 2, FRIEDMAN §1.2).  It would make {k : s(k²−k) = k} an
+  initial segment; today nothing rules out the family resuming after a failure (s(12) < 4 would not decide s(20)).
+* Is each fractional part `{s(n)}` attained by only finitely many n?  (Fixed-part families with linear waste must
+  die; sublinear waste does not obviously forbid a repeat.)
+* Does the degree of s(n) over ℚ tend to ∞ along non-integer optima?  Is any optimal side a non-integer rational?
+  Rational *records* exist: s(50) ≤ 7+4/7 (3-4-5 tilt), s(230) ≤ 15+28/41, s(261) ≤ 16+28/41, s(293) ≤ 17+26/41
+  (20-21-29), per `notes/conjectures-literature-2026-10-04.md` §2.
+* `W_m(s)`: least waste using ≤ m distinct angles.  W₁ = Θ(s) (axis only).  Is W_m = Θ(s) for each fixed m (then
+  optimal packings need ever more angles)?  Checked 2026-10-04: Erdős–Graham and every later construction vary the tilt per stack; nothing published on bounded angle counts.
+* Does the many-angle regime spread down from the top of each k-interval as k grows?  Related: are optimal packings
+  eventually asymmetric?
 
 ---
 

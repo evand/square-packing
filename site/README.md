@@ -13,7 +13,7 @@ Attributions and dates are quoted from his wording. See `www/sources.html`.
 
 | path | what |
 |---|---|
-| `www/` | the site: `index.html` (overview grid), `explore.html` (one packing, analysed), `compare.html` (history + morph), `bounds.html`, `proofs.html`, `sources.html`; static JSON under `www/data/` |
+| `www/` | the site: `index.html` (overview grid), `explore.html` (one packing, analysed), `compare.html` (history + morph), `bounds.html`, `proofs.html`, `problems.html` (open problems and conjectures; its working list is `s12/search/WISHLIST.md`), `sources.html`; static JSON under `www/data/` |
 | `tools/parse_svg.py` | independent parser for Ellsworth's SVG dialect → exact squares (mpmath, 50 digits) |
 | `tools/analysis.py` | contacts (exact-checked), first-order rigidity LP + nonlinear verification, sampled free regions, symmetry, angle groups |
 | `tools/parse_all.py`, `tools/export.py`, `tools/timeline.py`, `tools/scrape_pages.py` | the pipeline, see `build.sh` |

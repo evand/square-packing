@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Open Problems · Square Packing Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
+<style>
+.wrap{max-width:900px;margin:0 auto;padding:28px 20px 80px;display:flex;flex-direction:column;gap:36px}
+.wrap h1{font-size:2rem}
+.wrap h2{font-size:1.4rem;margin-top:8px}
+.wrap p{max-width:68ch}
+section{display:flex;flex-direction:column;gap:14px}
+.lede{font-size:1.08rem;color:var(--muted)}
+.item{border-left:3px solid var(--rule);background:var(--surface);padding:12px 16px;border-radius:3px;display:flex;flex-direction:column;gap:8px;max-width:76ch}
+.item.conj{border-left-color:var(--accent)}
+.item.q{border-left-color:var(--gold)}
+.item .hd{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.item .hd b{font-size:1.04rem;margin-right:4px}
+.item .st{font-size:.9rem;color:var(--muted)}
+.item p{margin:0}
+.tbl{border-collapse:collapse;font-size:.88rem}
+.tbl th,.tbl td{text-align:right;padding:3px 12px 3px 0;border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums}
+.tbl th{font-family:"IBM Plex Mono",monospace;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.tbl td:first-child,.tbl th:first-child{text-align:left}
+.tblwrap{overflow-x:auto;max-width:100%}
+.aside{font-size:.9rem;color:var(--muted);border-left:3px solid var(--rule);padding-left:14px}
+.keyline{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:.9rem;align-items:center}
+.toc{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:.92rem}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="brand">Square Packing Atlas</span>
+  <nav><a href="index.html">Overview</a><a href="explore.html">Explore</a><a href="compare.html">Compare</a><a href="bounds.html">Bounds</a><a href="proofs.html">Proofs &amp; results</a><a href="problems.html" class="here">Open problems</a><a href="sources.html">Sources</a></nav>
+</div>
+<div class="wrap">
+  <section>
+    <div class="eyebrow">what nobody knows yet</div>
+    <h1>Open problems and conjectures</h1>
+    <p class="lede">Every <i>n</i> has its own open question: what is <span class="mono">s(n)</span>, the side of the smallest square that holds <i>n</i> unit squares? This page is about the questions that cover many <i>n</i> at once: patterns in the answers, how they behave as <i>n</i> grows, and what optimal packings look like. A few single values close the page.</p>
+    <div class="keyline">
+      <span><span class="tag neutral">conjecture</span> someone has predicted the answer</span>
+      <span><span class="tag open">question</span> no confident prediction</span>
+      <span><span class="tag ok">known</span> proved; given for context</span>
+    </div>
+    <p class="note">Each item also says which <i>n</i> it concerns (<b>all n</b>, <b>large n</b> or <b>one n</b>) and who stated it. "Stated here" means we found no earlier statement; tell us if you know one. Statements of method (lemmas about certificates, covering measures, Lean) are in the project's <a href="https://github.com/evand/square-packing/blob/main/s12/search/WISHLIST.md">research wishlist</a>, not here.</p>
+    <div class="toc"><a href="#staircase">1 · Friedman's staircase</a><a href="#waste">2 · Wasted space</a><a href="#plateaus">3 · Plateaus and families</a><a href="#complexity">4 · How complicated are optimal packings?</a><a href="#local">5 · Local optimality</a><a href="#single">6 · Single values</a><a href="#neighbours">7 · Neighbouring problems</a></div>
+  </section>
+
+  <section>
+    <h2 id="staircase">1 · Friedman's staircase: when is the plain grid optimal?</h2>
+    <p>Take the <i>k</i> × <i>k</i> grid and remove <i>c</i> squares. For small <i>c</i> nothing better exists: <span class="mono">s(k² − c) = k</span>. For larger <i>c</i>, tilting some squares lets the rest squeeze into a smaller box. Write <span class="mono">c*(k)</span> for the largest <i>c</i> for which the grid is still optimal. It is the single number that says how far below <i>k</i>² the integer answers reach.</p>
+    <div class="tblwrap"><table class="tbl">
+      <tr><th>k</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th></tr>
+      <tr><td>c*(k) ≥ (proved)</td><td>2</td><td>3</td><td>3</td><td>4</td><td>4</td><td>4</td><td>5</td><td>4</td><td>4</td><td>4</td><td>4</td></tr>
+      <tr><td>c*(k) ≤ (best packings)</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>10</td><td>11</td></tr>
+    </table></div>
+    <p class="note">Lower row: s(6) = 3 (Kearney–Shiu 2002), s(13) = 4 (Bentz 2010), and the 2026 results on <a href="proofs.html#results">Proofs &amp; results</a>: <span class="mono">s(k² − 4) = k</span> for every <i>k</i> ≥ 5 (this project, unrefereed) and s(59) = 8 (wand125). Upper row: the best known packings, which beat <i>k</i> at <span class="mono">n = k² − c* − 1</span>. Exact so far only for <i>k</i> = 2, 3; <span class="mono">c*(4)</span> is 4 exactly when <span class="mono">s(12) = 4</span>.</p>
+
+    <div class="item conj"><div class="hd"><b>Monotone</b><span class="tag neutral">conjecture</span><span class="eyebrow">all k</span></div>
+      <p><span class="mono">c*(k+1) ≥ c*(k)</span>: if removing <i>c</i> squares from the <i>k</i> × <i>k</i> grid never allows a smaller box, the same holds for every larger grid.</p>
+      <p class="st">Erich Friedman's Conjecture 1 (Dynamic Survey DS7, 1998), "true of all the best known packings". It still is: the upper row above never decreases, through <i>k</i> = 18. Proved for each <i>c</i> ≤ 4. Nagamochi (2005) covered <i>c</i> ≤ 2, but Karakuş found a gap in his proof in 2026. The 2026 results for <i>c</i> = 3 and 4 (unrefereed) imply the cases <i>c</i> ≤ 2 anyway.</p></div>
+
+    <div class="item q"><div class="hd"><b>Unbounded</b><span class="tag open">question</span><span class="eyebrow">large n</span></div>
+      <p>Does <span class="mono">c*(k) → ∞</span>? Equivalently: for every <i>c</i>, is <span class="mono">s(k² − c) = k</span> for all large enough <i>k</i>?</p>
+      <p class="st">Stated here; we found no attack on it in print. Proved for <i>c</i> ≤ 4. We expect yes. It does not follow from the monotone conjecture (a monotone c* could stall), and it is probably the more tractable of the two.</p></div>
+
+    <div class="item q"><div class="hd"><b>Unit steps</b><span class="tag open">question</span><span class="eyebrow">all k</span></div>
+      <p>Is <span class="mono">c*(k+1) ≤ c*(k) + 1</span>?</p>
+      <p class="st">Stated here. The bound + 2 is easy: shrink a good packing for <i>k</i> and add an L-shaped border, which holds 2<i>k</i> − 1 squares, two fewer than the 2<i>k</i> + 1 that the grid's border holds. Together with the first two items, this says <span class="mono">c*</span> climbs by 0 or 1 at each step, forever. It cannot climb fast: the waste bounds below give <span class="mono">c*(k) = O(k<sup>3/5</sup>)</span>.</p></div>
+
+    <div class="item q"><div class="hd"><b>The last k with s(k² − k) = k</b><span class="tag open">question</span><span class="eyebrow">finitely many k</span></div>
+      <p>It was once conjectured that <span class="mono">s(k² − k) = k</span> always. It holds for <i>k</i> = 2, 3, fails for <i>k</i> = 11 (Cantrell 2025, s(110) ≈ 10.99679, unrefereed) and for every <i>k</i> ≥ 12 (Arslanov, Mustafin and Shangitbayev 2021). Which of <i>k</i> = 4, …, 10 hold?</p>
+      <p class="st">So the last good <i>k</i> lies between 3 and 10. Nothing known rules out gaps (a failure at <i>k</i> = 4 would not decide <i>k</i> = 5); unit steps would rule them out. The smallest case is <span class="mono">s(12) = 4</span> itself. On the packing side, <span class="mono">s(90) &lt; 10</span> is the natural next attempt (see <a href="#single">§6</a>).</p></div>
+  </section>
+
+  <section>
+    <h2 id="waste">2 · Wasted space</h2>
+    <p>In a box of side <i>s</i>, the best packing leaves some area <span class="mono">W(s)</span> uncovered. If <i>s</i> is an integer, <span class="mono">W = 0</span>. Otherwise the grid wastes about 2<i>s</i> times the fractional part, and tilting does much better.</p>
+    <div class="item conj"><div class="hd"><b>Square-root waste</b><span class="tag neutral">conjecture</span><span class="eyebrow">large n</span></div>
+      <p><span class="mono">W(s) = O(s<sup>1/2</sup>)</span>.</p>
+      <p class="st">Friedman's Conjecture 2 (DS7, 1998 version only); Erdős and Graham (1975): "Perhaps the correct bound is O(α<sup>1/2</sup>)". <span class="tag ok">known</span> Upper bounds: <span class="mono">O(s<sup>7/11</sup>)</span> (Erdős–Graham 1975), improved several times to <span class="mono">O(s<sup>3/5</sup>)</span> (Chung–Graham 2020 claimed it, with an error found by Arslanov and Bui; proved by Bui 2025 and by McClenagan 2026, preprints). Lower bound: <span class="mono">W(s) ≥ c·√(s·‖s‖)</span>, where ‖s‖ is the distance to the nearest integer (Roth–Vaughan 1978). So the exponent is between 1/2 and 3/5.</p>
+      <p class="st">Not everyone agrees with the conjecture. Chung and Graham (2020) note one might guess <span class="mono">O(x<sup>1/2</sup>)</span> and add "The authors don't believe this." They offer prizes: $100 for <span class="mono">W(x) = o(x<sup>3/5</sup>)</span>, $250 for <span class="mono">O(x<sup>3/5−c</sup>)</span>, and $500 for <span class="mono">W(N + ½) ≫ N<sup>1/2+c</sup></span> (a disproof also wins).</p></div>
+    <p class="aside">The lower bound fades as <i>s</i> approaches an integer, so it says nothing about <span class="mono">c*(k)</span>: the staircase questions are about exactly the regime that the waste theory leaves open.</p>
+  </section>
+
+  <section>
+    <h2 id="plateaus">3 · Plateaus and families</h2>
+    <p>More squares never fit in less room, so <span class="mono">s(n) ≤ s(n+1)</span>. Equality, a <b>plateau</b>, happens at every integer (the grid with a few holes). Away from integers it is rarer.</p>
+    <div class="item q"><div class="hd"><b>Is there a non-integer plateau?</b><span class="tag open">question</span><span class="eyebrow">one n at a time</span></div>
+      <p>Is there an <i>n</i> with <span class="mono">s(n) = s(n+1)</span> and <span class="mono">s(n)</span> not an integer?</p>
+      <p class="st">In the best-known table, yes: n = 147, 232, 264, 290, 295. In each case the best packing for n is the record for n + 1 with one square removed. None is proved. The proved bounds rule out a plateau for every n &lt; 18; the first open case is <span class="mono">s(18) = s(19)</span>.</p></div>
+    <div class="item conj"><div class="hd"><b>Finitely many</b><span class="tag neutral">conjecture</span><span class="eyebrow">all n</span></div>
+      <p>There are only finitely many non-integer plateaus. Stronger: each fractional part <span class="mono">s(n) − ⌊s(n)⌋</span> occurs for only finitely many n.</p>
+      <p class="st">Stated here. The evidence is structural. All five candidates belong to <b>fixed-shape families</b>: the same 45° construction repeated at side <i>k</i> + β for many <i>k</i>, with the same fractional part β. Each family's wasted area grows linearly in <i>k</i>, and the <span class="mono">O(s<sup>3/5</sup>)</span> constructions beat any such family eventually. So every family is optimal only finitely often. Ellsworth makes the same point from the data: "Even the known recurring patterns only extend finitely before becoming inoptimal." The strong form is a real question, because a family with sublinear waste is not obviously impossible.</p></div>
+    <div class="tblwrap"><table class="tbl">
+      <tr><th>fractional part β</th><th>records (n ≤ 323)</th><th>n</th></tr>
+      <tr><td class="mono">√2/2 ≈ 0.7071</td><td>16</td><td style="text-align:left">5, 10, 27, …, 295, 296: Göbel's strips (1979)</td></tr>
+      <tr><td class="mono">0.5355</td><td>11</td><td style="text-align:left">65, 82, …, 290, 291</td></tr>
+      <tr><td class="mono">(√7 − 1)/2 ≈ 0.8229</td><td>9</td><td style="text-align:left">18, 53, 86, 127, 151, 176, 204, 234, 299</td></tr>
+      <tr><td class="mono">0.6569</td><td>9</td><td style="text-align:left">66, 124, 147, 148, …, 294</td></tr>
+      <tr><td class="mono">0.7782</td><td>8</td><td style="text-align:left">150, 175, 203, 232, 233, 264, 265, 298</td></tr>
+    </table></div>
+    <p class="note">Göbel's strips are the best known packings for every strip size a &lt; 44 except a = 3 (n = 17). The first to be beaten is a = 44 (n = 2043, David Ellsworth, 2024); some larger strips (around n = 2938) are still listed unbeaten, so where the best-known strips stop is unsettled. The waste bound guarantees a last <i>optimal</i> one but gives no explicit place. A related pattern: Ellsworth's table notes that the best known <span class="mono">s(n² + 1)</span> has fractional part at least ½ for every n &lt; 42; Hajba's record for n = 42 (s(1765) ≈ 42.488) is the first below ½. Table computed from Ellsworth's catalogue (<a href="https://github.com/evand/square-packing/blob/main/s12/search/record_structure.py">script</a>).</p>
+  </section>
+
+  <section>
+    <h2 id="complexity">4 · How complicated are optimal packings?</h2>
+    <p><span class="mono">s(n)</span> is always an algebraic number: the set of valid packings is described by polynomial inequalities (Tarski–Seidenberg). Small cases are simple: integers, or numbers like 2 + 1/√2. Some records are even rational: <span class="mono">s(50) ≤ 7 + 4/7</span> tilts squares by the 3-4-5 angle, and <span class="mono">s(293) ≤ 17 + 26/41</span> (Ellsworth, 2024–25) uses the 20-21-29 triangle. The questions here ask whether that simplicity ever runs out for good.</p>
+    <div class="item q"><div class="hd"><b>Algebraic degree</b><span class="tag open">question</span><span class="eyebrow">large n</span></div>
+      <p>Does the algebraic degree of <span class="mono">s(n)</span> tend to infinity along the non-integer values? Is there a last <i>n</i> whose optimal side is built from square roots alone? Is any <i>optimal</i> non-integer side rational?</p>
+      <p class="st">Stated here. Two data points. The value s(11), settled in 2026 by a computer-assisted proof, uses a single tilt angle (49.8°), and its side is a root of an irreducible degree-8 polynomial. The best known s(28) (Ellsworth, 2025) also uses one tilt angle (59.7°), and its degree-6 polynomial has Galois group S<sub>6</sub>, so that side cannot be written with radicals at all. Yet values built from square roots alone still hold records as late as n = 626 (27/2 + 17√2/2). Rational records exist (n = 50, 230, 261, 293, all with Pythagorean tilt angles), but none is proved optimal. We found no literature on any of these questions.</p></div>
+    <div class="item q"><div class="hd"><b>Number of angles</b><span class="tag open">question</span><span class="eyebrow">large n</span></div>
+      <p>Must optimal packings use more and more distinct tilt angles as n grows? A cleaner large-n form: let <span class="mono">W<sub>m</sub>(s)</span> be the least waste using at most <i>m</i> distinct angles. Axis-parallel packings alone give <span class="mono">W<sub>1</sub> ≈ 2s·frac(s)</span>, linear in <i>s</i>. Is <span class="mono">W<sub>m</sub></span> linear for every fixed <i>m</i>?</p>
+      <p class="st">Stated here. If yes, the general <span class="mono">O(s<sup>3/5</sup>)</span> bound forces optimal packings to use ever more angles. Every sublinear construction we know of (Erdős–Graham onward) varies the tilt from stack to stack, and we found no result about packings with a bounded number of angles. In the catalogue, packings with five or more angle classes sit mostly just below a perfect square (fractional part ≳ 0.87), where the small-tilt constructions live. Packings with at most three classes still hold about half of each interval up to k = 17.</p></div>
+    <div class="item q"><div class="hd"><b>Symmetry</b><span class="tag open">question</span><span class="eyebrow">large n</span></div>
+      <p>Are optimal packings eventually asymmetric? The Explore page reports each record's symmetry.</p></div>
+  </section>
+
+  <section>
+    <h2 id="local">5 · Local optimality</h2>
+    <p>Call a packing <b>locally optimal</b> if no nearby arrangement fits in a smaller box. (A weaker notion: no smaller box is reachable by sliding and turning squares without overlap. A different one: <b>rigid</b>, which Ellsworth defines as "cannot be continuously transformed into any other valid packing without changing the size of its enclosing square"; he calls it rare. Explore reports rigidity for every record. Jamming theory, which studies these notions for disks and spheres, seems not to have been applied to squares.)</p>
+    <div class="item"><div class="hd"><b>Why the plain definition is too weak</b><span class="eyebrow">sketch</span></div>
+      <p>A complete row of <i>k</i> squares, all tilted together by a small angle θ, has width <span class="mono">k cos θ + sin θ ≈ k + θ − kθ²/2</span>. That stays above <i>k</i> until θ ≈ 2/<i>k</i>. So small motions of a full row cannot shrink the box, and we expect any packing with a complete row and a complete column to be locally optimal. Then the grid with <i>c</i> holes would be locally but not globally optimal for every <span class="mono">c &gt; c*(k)</span>, and so would 7 squares in an L inside a 4 × 4 box, although <span class="mono">s(7) = 3</span>. The interesting questions are quantitative.</p></div>
+    <div class="item q"><div class="hd"><b>How far away is the better packing?</b><span class="tag open">question</span><span class="eyebrow">all k</span></div>
+      <p>For <span class="mono">c &gt; c*(k)</span>, how large a change to the grid is needed to beat side <i>k</i>? Is the winner a small-tilt perturbation (tilts near 2/<i>k</i>, as in Erdős–Graham), or a different structure built from 45° blocks?</p></div>
+    <div class="item q"><div class="hd"><b>Stability</b><span class="tag open">question</span><span class="eyebrow">all n</span></div>
+      <p>Is every packing with side close to <span class="mono">s(n)</span> close to an optimal one, apart from squares that are free to move? Computer proofs that work by subdividing the space of placements are, in effect, proofs of this. Cases where it fails (several distant packings of nearly equal side) are where such proofs struggle.</p></div>
+  </section>
+
+  <section>
+    <h2 id="single">6 · Single values</h2>
+    <div class="item conj"><div class="hd"><b>s(12) = 4</b><span class="tag neutral">conjecture</span><span class="eyebrow">one n</span></div>
+      <p>The most wanted exact value: the smallest open case of <span class="mono">s(k² − k) = k</span>, and it decides whether <span class="mono">c*(4)</span> is 3 or 4. The best proved floor is 3.9702. See <a href="s12/">twelve squares</a>.</p></div>
+    <p>The questions above also point at specific <i>n</i> where a <b>better packing</b> is plausible:</p>
+    <ul>
+      <li><b>s(90) &lt; 10.</b> Track the margin <span class="mono">k − s(k² − c)</span> of the best packings along a fixed <i>c</i> (table below): it shrinks steadily as <i>k</i> grows, until no packing beats <i>k</i>. For <i>c</i> = 10 it is 0.153 at <i>k</i> = 8 and 0.056 at <i>k</i> = 9, so a straight-line guess lands right at zero for <i>k</i> = 10. A packing would show the last good <i>k</i> for <span class="mono">s(k² − k) = k</span> is at most 9.</li>
+      <li><b>The next borderline cases</b>, by the same reading: s(183) &lt; 14, s(242) &lt; 16, s(274) &lt; 17, s(308) &lt; 18. The margins are shrinking more slowly than linearly, so these are long shots.</li>
+      <li><b>Members of the fixed-shape families</b> with the largest k, such as s(299) and s(234) in the √7 family. Each family must eventually lose every member, and the √7 family already has no record at k = 5, 6, 8, 10 and 16.</li>
+      <li><b>s(147)</b>, the first conjectured non-integer plateau: any packing of 147 squares better than the 148 record minus one square removes it.</li>
+    </ul>
+    <div class="tblwrap"><table class="tbl">
+      <tr><th>k − s(k² − c)</th><th>c = 9</th><th>10</th><th>11</th><th>12</th><th>13</th></tr>
+      <tr><td>k = 8</td><td>.054</td><td>.153</td><td>.177</td><td>.293</td><td>.299</td></tr>
+      <tr><td>9</td><td>grid</td><td>.056</td><td>.118</td><td>.173</td><td>.201</td></tr>
+      <tr><td>10</td><td></td><td>grid</td><td>.050</td><td>.112</td><td>.161</td></tr>
+      <tr><td>11</td><td></td><td>grid</td><td>.003</td><td>.050</td><td>.074</td></tr>
+      <tr><td>12</td><td></td><td></td><td>grid</td><td>.009</td><td>.044</td></tr>
+      <tr><td>13</td><td></td><td></td><td></td><td>grid</td><td>.018</td></tr>
+      <tr><td>14</td><td></td><td></td><td></td><td></td><td>grid</td></tr>
+    </table></div>
+    <p class="note">"grid": no known packing beats side <i>k</i> (blank cells to its left are grids too, with fewer holes). Best-known packings from Ellsworth's catalogue, October 2026. All other single values, with their proved floors, are on <a href="bounds.html">Bounds</a>.</p>
+  </section>
+
+  <section>
+    <h2 id="neighbours">7 · Neighbouring problems</h2>
+    <div class="item conj"><div class="hd"><b>Rectangles, one side at a time</b><span class="tag neutral">conjecture</span><span class="eyebrow">all a, b</span></div>
+      <p>For an <i>a</i> × <i>b</i> grid, let <span class="mono">c*(a, b)</span> be the most squares one can remove while the grid stays optimal (no smaller <i>a′</i> × <i>b′</i> box). Is <span class="mono">c*(a, b)</span> nondecreasing in each of <i>a</i> and <i>b</i> separately? This is half a step of Friedman's conjecture. A related, easier-looking case keeps the height fixed and lets the width grow.</p>
+      <p class="st">Stated here. Rectangles that can be squeezed are known (Arslanov, Mustafin and Shangitbayev 2021). Nagamochi's lower bound for rectangles (2005) has a gap (Karakuş 2026).</p></div>
+    <div class="item"><div class="hd"><b>Sum of sides</b><span class="tag ok">known</span><span class="eyebrow">context</span></div>
+      <p>Erdős Problem #106 asks for the largest total side length <span class="mono">f(n)</span> of <i>n</i> squares packed in a unit square. Its conjecture <span class="mono">f(k² + 1) = k</span> was disproved in 2026 (f(17) &gt; 4, Lean-checked; <a href="https://www.erdosproblems.com/106">erdosproblems.com/106</a>). Erdős also asked when <span class="mono">f(n+1) = f(n)</span>, the analogue of our plateaus.</p></div>
+    <div class="item q"><div class="hd"><b>Cubes</b><span class="tag open">question</span><span class="eyebrow">large n</span></div>
+      <p>Is <span class="mono">s₃(k³ − c) = k</span> for all large <i>k</i>, for each fixed <i>c</i>? Even <i>c</i> = 1 seems not to be in print for unit cubes in a cube. Friedman's "Cubes in Cubes" page lists packings only.</p></div>
+  </section>
+
+  <section>
+    <p class="note">Last revised 2026-10-04. References are on <a href="sources.html">Sources</a>. The working list behind this page, with proof pieces and their status, is the project's <a href="https://github.com/evand/square-packing/blob/main/s12/search/WISHLIST.md">wishlist</a>.</p>
+  </section>
+</div>
+</body>
+</html>
