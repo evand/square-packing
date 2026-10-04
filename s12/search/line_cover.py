@@ -313,6 +313,7 @@ class MixedModel:
         self.SI = []                                                               # segment atoms, integer tuples
         self.rows = []; self.rkey = set(); self.R = []; self.C = []; self.V = []
         self.hs = None
+        self.ban = set()                     # canonical D4 keys of point orbits never used as columns (--ban)
 
     @property
     def orbits(self):                        # closed4.price uses len(m.orbits) only through m.rows / y
@@ -322,7 +323,7 @@ class MixedModel:
     def add_point(self, x, y, tag=''):
         X = min(max(int(round(x * self.D)), 0), self.K); Y = min(max(int(round(y * self.D)), 0), self.K)
         imgs = d4_pt(X, Y, self.K); key = ('p', imgs[0])
-        if key in self.keys: return False
+        if key in self.keys or imgs[0] in self.ban: return False
         k = len(self.sizes); self.keys[key] = k; self.sizes.append(float(len(imgs))); self.kind.append('p')
         of = np.array(imgs, dtype=float) / self.D
         self.P = np.concatenate([self.P, of]); self.own = np.concatenate([self.own, np.full(len(of), k)])
@@ -479,6 +480,11 @@ def fmt(p):
 
 def build_model(a, log):
     s = float(a.s); m = MixedModel(s, D=1000); K = m.K; D = m.D
+    for b in (a.ban or '').split(';'):       # e.g. --ban 1,1 (S20_LB.md: zmx2 cannot count a point at the corner germ's
+        if b.strip():                        # second-order tangency (1,1); banning its orbit costs the LP almost nothing)
+            bx, by = (float(v) for v in b.split(','))
+            m.ban.add(d4_pt(int(round(bx * D)), int(round(by * D)), K)[0])
+    if m.ban: log(f"banned point orbits: {sorted(m.ban)}")
     lines = [float(v) for v in a.lines.split(',')] if a.lines else list(range(1, int(round(s))))
 
     def online(X, Y):
@@ -635,12 +641,18 @@ def loop(a):
             Dp = np.concatenate(Dp).reshape(-1, 3); Dv = np.concatenate(Dv); pm = Dv < a.protect
             CS.write_poses(f"runs/lc_{a.tag}_dips.txt", Dp[pm], Dv[pm], note=f"round {r} strict {smin:.7f}")
             n1 = add(Dp[pm], True) + add(st, True)
+            inj = f"runs/lc_{a.tag}_inject.txt"           # extra permanent rows dropped in by another process (S20_LB.md)
+            if os.path.exists(inj):
+                R_ = C.read_poses(inj, s); os.rename(inj, inj + f".used_r{r}")
+                ni = add(np.asarray(R_).reshape(-1, 3), True); n1 += ni; log(f"   injected {ni} permanent rows from {inj}")
             n2 = add(Dp[~pm], False) + add(LP_[~lowm], False)
             outs = pool.map(_sep, [(cov, th, 0.01, (0.0, 0.0), 100, 0.08, 1 - 1e-7) for th in thetas])
             n4 = add(np.concatenate([o[0] for o in outs]), False)
             ncols = 0
             if a.colgen_b and not a.no_colgen:
-                cand = C.price(m, y, pitch=0.01, want=a.cg_want // 2)
+                rows_all = m.rows; m.rows = rows_all[:len(y)]      # price against the rows y belongs to (rows were added above)
+                try: cand = C.price(m, y, pitch=0.01, want=a.cg_want // 2)
+                finally: m.rows = rows_all
                 for cv_, X, Y in cand:
                     if a.no_line_points and ((X % 1000 == 0 and 0 < Y < m.K) or (Y % 1000 == 0 and 0 < X < m.K)): continue
                     ncols += m.add_point(X / m.D, Y / m.D, 'priced')
@@ -738,6 +750,7 @@ def main():
     L.add_argument('--rounds', type=int, default=40); L.add_argument('--time', type=float, default=36000)
     L.add_argument('--stable', type=int, default=3); L.add_argument('--stable-tol', type=float, default=0.001)
     L.add_argument('--germ', action='store_true', help='tile-germ blow-up family: permanent rows + measured each round')
+    L.add_argument('--ban', default=None, help='point orbits never used as columns, "x,y;x,y"')
     L.add_argument('--simplex', action='store_true'); L.add_argument('--seed', type=int, default=1); L.add_argument('--nproc', type=int, default=20)
     E = sub.add_parser('eval'); E.add_argument('file'); E.add_argument('--pitch', type=float, default=0.004)
     E.add_argument('--germ-q', type=int, default=0)
