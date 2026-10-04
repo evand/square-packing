@@ -1,5 +1,10 @@
 # `zmx2`: an independent second exact checker for mixed covers (2026-09-27)
 
+> **2026-10-04 (b8157df, reviewed in `tasks/s20-review/REPORT.md`):** `cert` accepts sides that are not a multiple of 1/10
+> (1/5 under `--d4`): root cells then cover the superset `[0, ⌈10s⌉/10]` (`[0, ⌈5s⌉/10]` under `--d4`), and the grid-line atoms
+> are `x = k` and `x = s − k` for integers `1 ≤ k ≤ s − 1` (identical to before at integer sides).  Sections §1, §4.5 and §7
+> below describe the integer-side case.  Not monotone in the side (atom lines and Lemma W move): a completeness loss only.
+
 Brief: `tasks/s21-finish/xcheck.md`.  Re-verify `runs/line-cover_m5_candidate_x1003.txt` (the `s(21) = 5` mixed
 cover, `tasks/line-cover/FORMAT.md` v1) with a checker that shares no code and no lemma write-up with
 `search/zm_mixed.py`.  **Independence:** `zm_mixed.py`, `zm_mixed_test.py`, `ZM_MIXED.md` and every `ZM_MIXED_AUDIT*`

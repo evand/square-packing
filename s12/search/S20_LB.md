@@ -1,5 +1,7 @@
 # s(20) > 3 + 4√2/3 by a point cover at side 4.886 (task s20-lb, 2026-10-03/04)
 
+> **Review (2026-10-04, `tasks/s20-review/REPORT.md`): no soundness defect; all runs reproduced box for box.**  Superseded as a bound by wand125's s(20) ≥ 1959/400 (jlevy); kept as an independent confirmation.
+
 Goal (from `CEILINGS_17_20.md` §4): a closed cover of `[0,t]²`, `t > 3+4√2/3 ≈ 4.8856181`, with total `< 20`,
 checked by `zmx2` and `zm_mixed`.  With Wainwright's packing of 19 squares in side `3+4√2/3` this gives
 `s(19) ≤ 3+4√2/3 < s(20)`.  Labels as in `CEILINGS_17_20.md`: **[proved]** = exact checker verdict / exact
@@ -8,8 +10,8 @@ arithmetic, **[measured]** = float, **[heuristic]**.
 ## 0. Answer
 
 > **`search/s20lb_cover_4886.txt`** (mixed v1, points only): side `t = 2443/500 = 4.886`, 12,864 points
-> (10,220 distinct), exactly D4-invariant, **total `249862891/12500000 = 19.98903128 < 20`**.
-> sha256 `e0e25a06…ab8a50d7…` (full: `e0e25a0644fe8db1c2a346a1295eb8e966aedb2b36658d89d75813396338af97`).
+> (all positions distinct), exactly D4-invariant, **total `249862891/12500000 = 19.98903128 < 20`**.
+> sha256 `e0e25a06…6338af97` (full: `e0e25a0644fe8db1c2a346a1295eb8e966aedb2b36658d89d75813396338af97`).
 >
 > | checker | mode | verdict | roots / boxes / max depth | CPU |
 > |---|---|---|---|---|
@@ -49,7 +51,7 @@ certificate; the message has the argument):
    the container (redundant) or are rejected by Lemma E, which uses the exact side.  At a side that is a multiple
    of 1/10 (1/5) the root list is unchanged.
 2. **Atom lines.**  The unit-grid atom lines were `x = k`, `1 ≤ k < s`.  They are now `x = k` and `x = s − k`,
-   `1 ≤ k ≤ s − 1` (same for `y`): identical for integer `s`; at `s = 4.886` the set `{1, 2, 2.886, 3.886}`
+   `1 ≤ k ≤ s − 1` (same for `y`): identical for integer `s`; at `s = 4.886` the set `{1, 1.886, 2, 2.886, 3, 3.886}`
    is invariant under `x → s − x`, and `x = 4` (`0.886` from the wall) is dropped.  Atom assignment only decides
    which lemma bounds a point's mass (the line lemmas hold for any axis-parallel line, as for segment lines), so it
    affects strength, not soundness.  Why: with the old set, points on `x = s − 1` (the mirror of the heavy line
