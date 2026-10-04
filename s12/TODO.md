@@ -32,7 +32,7 @@ Proof-piece wishlist (new candidates N1–N15 + 65 open items, picks at the end)
 
 ## s(17)
 - [ ] Techniques from jlevy/Kleddamag/Guzhou (`notes/jlevy-s17-techniques.md` §2): rule atoms as LP columns, near-tight cells as exact LP rows (their re-solve of our s(12) points: ≥ 3.9702002), gmpy2 in exact checkers. s(17) exact: their PR #307 is far ahead; help with an independent check of its local theorem, not a restart.
-- [ ] Ceiling test at t = 4.6604 (`cover4_cg.py --t`, ~1 CPU-h): ν_f ≥ 17 ⇒ pure covers are at their limit. Nobody has computed it.
+- [ ] Ceilings n = 17–20 (running 10-03, `tasks/ceilings-17-20/`): bracket cover LP vs exact ceiling at s(17) 4.6604/4.6755, s(19) 4.8229/4.8856, s(20) 4.8856; milestone s(18) < s(19) < s(20) strict needs s(19) > (7+√7)/2, s(20) > 3+4√2/3.
 - [ ] s(17) exact via the s(11) method: on hold (CPU). `tasks/s17-core-isolation/`
 
 ## Outreach / hygiene
