@@ -33,7 +33,10 @@ const SYMS = {
 const proved = new Set();   // n known to be optimal, from Ellsworth's "Proved by" wording; refined by bounds data if present
 
 function recordAsOf(n, year) {
-  const L = TL[String(n)] || [];
+  // A catalogue entry can cover two n (s equal for both); its dated history is then filed under the
+  // other n only, so 147, 232, 264, 290, 295 showed as grid-only.  Pull that entry in too.
+  const rec = IDX.records[String(n)], rf = rec && IDX.files[rec.svg];
+  const L = (TL[String(n)] || []).concat(rf && rf.n !== n ? (TL[String(rf.n)] || []).filter(d => d.file === rec.svg) : []);
   // packings for this n with a date <= year; best = smallest s; undated ones count as always known if they're the trivial one
   let best = null;
   for (const d of L) {
@@ -104,7 +107,7 @@ function draw() {
     const a = document.createElement(openable(t) ? 'a' : 'span');
     a.className = 'tile' + (Number.isInteger(Math.sqrt(n)) ? ' sq' : '') + (proved.has(n) ? ' proved' : '') + (openable(t) ? '' : ' nolink');
     a.style.background = colour(t); a.textContent = n;
-    if (openable(t)) a.href = t.file ? `explore.html?p=${encodeURIComponent(t.file)}` : `explore.html?n=${n}`;
+    if (openable(t)) a.href = t.file && IDX.files[t.file] && IDX.files[t.file].n === n ? `explore.html?p=${encodeURIComponent(t.file)}` : `explore.html?n=${n}`;   // shared entry: ?n= so Explore says so
     a.onmouseenter = e => tip(e, t); a.onmousemove = e => move(e); a.onmouseleave = () => { $('tip').style.display = 'none'; };
     const p = place(n); if (p) { a.style.gridRow = p.row; a.style.gridColumn = p.col; }
     G.appendChild(a); inkFor(a);

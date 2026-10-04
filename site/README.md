@@ -4,7 +4,8 @@ A static site about the problem *how small a square can hold n unit squares?* (`
 packings, what can be said about them (angles, contacts, free squares, gaps, symmetry), how the
 records changed over time, the proven lower bounds, and how the few exact results are proved.
 
-Everything geometric is derived from the exact constants in David Ellsworth's SVG catalogue
+Everything geometric is parsed from David Ellsworth's SVG catalogue, at the precision each file gives (exact
+constants for most; decimals for the ~60 numerically optimised packings, flagged as numeric contacts)
 (https://kingbird.myphotos.cc/packing/squares_in_squares.html, continuing Erich Friedman's survey).
 Attributions and dates are quoted from his wording. See `www/sources.html`.
 
