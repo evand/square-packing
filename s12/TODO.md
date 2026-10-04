@@ -3,7 +3,7 @@
 Goals (Evan): **major** an exact result for something open; **secondary** s(17) lower bound, Lean, packings (low expectation).
 Priorities (10-01): correctness first, then interesting Lean, then cleverness over compute; others building on our tools is a win.
 Paths relative to `public/s12`.  Public since 10-03 (outreach stays in `private/s12/outreach`).  Done: `Completed.md`.  Conventions: `~/math/TODO.md`.
-External posts: ask Evan explicitly per post.
+External posts: ask Evan explicitly per post.  **Before any bound-chasing run, check jlevy's register (`jlevy.github.io/squares/cases/<n>.html`) for current values.**
 
 ## Next (picked 2026-10-03)
 Proof-piece wishlist (new candidates N1–N15 + 65 open items, picks at the end): `search/WISHLIST.md`.
@@ -33,8 +33,8 @@ Proof-piece wishlist (new candidates N1–N15 + 65 open items, picks at the end)
 ## s(17)
 - [ ] s(17): pure closed covers are at their limit (exact ceiling ν_f(4.660) ≥ 17.0447, `CEILINGS_17_20.md`); further lower-bound gains need rule atoms (WISHLIST N15).
 - [ ] Techniques from jlevy/Kleddamag/Guzhou (`notes/jlevy-s17-techniques.md` §2): rule atoms as LP columns, near-tight cells as exact LP rows (their re-solve of our s(12) points: ≥ 3.9702002), gmpy2 in exact checkers. s(17) exact: their PR #307 is far ahead; help with an independent check of its local theorem, not a restart.
-- [ ] s(20) > 3+4√2/3 **verified** (`search/S20_LB.md`, 2010d63; zmx2 d4/full + unmodified zm_mixed d4/full; checker change b8157df). Next: independent review, then bundle `certificates/s20/` + site (new s(20) ≥ 2443/500; s(19) < s(20) strict).
-- [ ] s(19) > (7+√7)/2 ⇒ s(18) < s(19): cover LP at 4.823 converged ≈ 18.84 (room ≈ 0.8 %, CEILINGS §6). Certificate = S20_LB recipe at 4.823 (needs overhead < 0.8 %; s(20) run reached 1.86 % before scaling: tight).
+- [ ] s(20) > 3+4√2/3 verified (`search/S20_LB.md`) but **superseded**: wand125 s(20) ≥ 1959/400 verified on jlevy (4.9 reported) already gives s(19) < s(20). Keep as independent confirmation (point cover, zmx2 non-1/10 sides); review running (`tasks/s20-review/`).
+- [ ] s(19) > (7+√7)/2 ⇒ s(18) < s(19): **on hold** (wand125 at 1927/400, 0.11 % short; our pure-cover LP has ≈ 0.8 % room, CEILINGS §6). Offer the target on jlevy instead of racing.
 - [ ] s(17) exact via the s(11) method: on hold (CPU). `tasks/s17-core-isolation/`
 
 ## Outreach / hygiene

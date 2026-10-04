@@ -1061,14 +1061,14 @@
  },
  "18": {
   "best": {
-   "value": 4.679,
-   "exact_form": "4679/1000",
-   "source": "jlevy2026",
+   "value": 4.695,
+   "exact_form": "939/200",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/jlevy/squares",
-   "note": "T-030: weighted fractional certificate, 957 atoms, mass 17.8934 < 18; replayed there (V4/C4); T-027..T-029 (4.67, 4.675, 4.6775, 2026-09-18/19) are the steps to it",
-   "date": "2026-09-19"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); replayed by jlevy/squares (evidence E-wand125-rectangle-source-replay)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -1137,19 +1137,29 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 4.679,
+    "exact_form": "4679/1000",
+    "source": "jlevy2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/jlevy/squares",
+    "note": "T-030: weighted fractional certificate, 957 atoms, mass 17.8934 < 18; replayed there (V4/C4); T-027..T-029 (4.67, 4.675, 4.6775, 2026-09-18/19) are the steps to it",
+    "date": "2026-09-19"
    }
   ]
  },
  "19": {
   "best": {
-   "value": 4.8,
-   "exact_form": "24/5",
-   "source": "jlevy2026",
+   "value": 4.8175,
+   "exact_form": "1927/400",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/jlevy/squares",
-   "note": "T-020: weighted fractional certificate, 2,260 atoms, mass 18.9226 < 19, so it holds for n = 19, 20, 21 (V4/C4)",
-   "date": "2026-09-04"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); replayed by jlevy/squares (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -1208,19 +1218,29 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 4.8,
+    "exact_form": "24/5",
+    "source": "jlevy2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/jlevy/squares",
+    "note": "T-020: weighted fractional certificate, 2,260 atoms, mass 18.9226 < 19, so it holds for n = 19, 20, 21 (V4/C4)",
+    "date": "2026-09-04"
    }
   ]
  },
  "20": {
   "best": {
-   "value": 4.85,
-   "exact_form": "97/20",
-   "source": "jlevy2026",
+   "value": 4.8975,
+   "exact_form": "1959/400",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/jlevy/squares",
-   "note": "T-021: weighted fractional certificate, 1,680 atoms, mass 19.8487 < 20 (V4/C4)",
-   "date": "2026-09-05"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1959/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 49/10 (2026-10-02, not yet replayed). Exceeds Wainwright's s(19) packing 3+4√2/3, so s(19) < s(20). Our independent point cover gives s(20) > 2443/500 = 4.886 (s12/search/S20_LB.md, 2026-10-04)",
+   "date": "2026-10-02"
   },
   "history": [
    {
@@ -1289,6 +1309,16 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 4.85,
+    "exact_form": "97/20",
+    "source": "jlevy2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/jlevy/squares",
+    "note": "T-021: weighted fractional certificate, 1,680 atoms, mass 19.8487 < 20 (V4/C4)",
+    "date": "2026-09-05"
    }
   ]
  },
