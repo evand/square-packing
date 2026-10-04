@@ -31,6 +31,13 @@ const SYMS = {
   'rotational (90°) only': ['90° rotation only', '#FDAE6B'], 'rotational (180°) only': ['180° rotation only', '#FDD0A2'], 'none': ['no symmetry', 'var(--sq-fill)'],
 };
 const proved = new Set();   // n known to be optimal, from Ellsworth's "Proved by" wording; refined by bounds data if present
+// Proved in 2026, unrefereed, and verified on jlevy/squares' register: the same bar for our results
+// as for anyone's.  n <= 100 come from lower_bounds.json (`register: 'verified'`); past the table,
+// the families s(k^2 - c) = k, with the k from which the register verifies them (2026-10-04).
+// c = 4 (T-081) is registered as reported while its full replay runs: add {4: 5} when it is verified.
+const accepted = new Set();
+const FAMILIES = { 1: 3, 2: 2, 3: 6 };   // c: smallest k
+function familyAccepted(n) { const k = Math.ceil(Math.sqrt(n)), c = k * k - n; return FAMILIES[c] != null && k >= FAMILIES[c] && n > 100; }
 
 function recordAsOf(n, year) {
   // A catalogue entry can cover two n (s equal for both); its dated history is then filed under the
@@ -97,7 +104,7 @@ function draw() {
   $('layoutnote').textContent = {
     grid: '',
     tri: 'Row k holds every n with ⌈√n⌉ = k, from (k − 1)² + 1 to k², as in David Ellsworth\'s triangular table. Packings that beat the grid stop near the centre column, n ≈ k² − k; to its right nothing better than the grid is known.',
-    deficit: 'Row k holds every n with ⌈√n⌉ = k, right-aligned, so each column is one deficit c = k² − n: the rightmost is the perfect squares, then k² − 1, k² − 2, … The five rightmost columns (c = 0 … 4) are proved grid-optimal for every k ≥ 6 (s(k² − c) = k; the families in the cards below).',
+    deficit: 'Row k holds every n with ⌈√n⌉ = k, right-aligned, so each column is one deficit c = k² − n: the rightmost is the perfect squares, then k² − 1, k² − 2, … The five rightmost columns (c = 0 … 4) are proved grid-optimal for every k ≥ 6 (s(k² − c) = k; the families in the cards below). c = 4 gets its rings when jlevy/squares finishes replaying it.',
   }[state.layout];
   const counts = {};
   for (let n = 1; n <= NMAX; n++) {
@@ -106,7 +113,7 @@ function draw() {
     // gotoN snap silently to the nearest n that does, so the tile showed a different packing than
     // the one clicked; they are not links now, and the hover says why.
     const a = document.createElement(openable(t) ? 'a' : 'span');
-    a.className = 'tile' + (Number.isInteger(Math.sqrt(n)) ? ' sq' : '') + (proved.has(n) ? ' proved' : '') + (openable(t) ? '' : ' nolink');
+    a.className = 'tile' + (Number.isInteger(Math.sqrt(n)) ? ' sq' : '') + (proved.has(n) ? ' proved' : accepted.has(n) ? ' accepted' : '') + (openable(t) ? '' : ' nolink');
     a.style.background = colour(t); a.textContent = n;
     if (openable(t)) a.href = t.file && IDX.files[t.file] && IDX.files[t.file].n === n ? `explore.html?p=${encodeURIComponent(t.file)}` : `explore.html?n=${n}`;   // shared entry: ?n= so Explore says so
     a.onmouseenter = e => tip(e, t); a.onmousemove = e => move(e); a.onmouseleave = () => { $('tip').style.display = 'none'; };
@@ -121,8 +128,10 @@ function tip(e, t) {
   if (t.file) {
     const ev = (t.rec.events || []).filter(x => x.who).map(x => `${x.verb.toLowerCase()} by ${x.who} ${x.date.text}`);
     if (ev.length) lines.push(ev.slice(0, 2).join('; '));
+    if (proved.has(t.n)) lines.push('proved optimal'); else if (accepted.has(t.n)) lines.push('proved optimal in 2026 (unrefereed; verified on jlevy/squares)');
     if (t.sum) lines.push(`${CATS[t.cat][0]} · ${t.sum.n_angles - 1} tilt angle${t.sum.n_angles === 2 ? '' : 's'} · ${t.sum.symmetry}`, t.sum.rigid ? 'rigid' : `${t.sum.free} free square${t.sum.free === 1 ? '' : 's'}`);
   } else if (proved.has(t.n)) lines.push('grid packing, proved optimal');
+  else if (accepted.has(t.n)) lines.push('grid packing, proved optimal in 2026 (unrefereed; verified on jlevy/squares)');
   else lines.push('no better packing than the grid is known');
   if (!openable(t)) lines.push('not in the catalogue — nothing to open');
   T.textContent = lines.join('\n'); T.style.display = 'block'; move(e);
@@ -131,9 +140,13 @@ function move(e) { const T = $('tip'); T.style.left = (e.clientX + 14) + 'px'; T
 
 async function main() {
   [IDX, TL] = await Promise.all([fetch('data/index.json').then(r => r.json()), fetch('data/timeline.json').then(r => r.json())]);
-  for (const [n, r] of Object.entries(IDX.records)) if (/Proved/.test(r.prose || '') || Number.isInteger(Math.sqrt(+n))) proved.add(+n);
+  // "Proved by Hiroshi Nagamochi" is not taken: his 2005 proof rests on a lemma shown false in 2026
+  // (Sources §3).  Those n (k^2 - 1, k^2 - 2) are re-proved by Karakuş and chelokot and come in
+  // below as register-verified instead.
+  for (const [n, r] of Object.entries(IDX.records)) if ((/Proved/.test(r.prose || '') && !/Nagamochi/.test(r.prose || '')) || Number.isInteger(Math.sqrt(+n))) proved.add(+n);
   for (let n = 1; n <= NMAX; n++) if (Number.isInteger(Math.sqrt(n))) proved.add(n);
-  try { const B = await fetch('data/lower_bounds.json').then(r => r.ok ? r.json() : null); if (B) for (const [n, b] of Object.entries(B)) { if (!b.best) continue; const t = tileInfo(+n); if (Math.abs(b.best.value - t.s) < 1e-9 && b.best.status === 'proved') proved.add(+n); } } catch (e) {}
+  try { const B = await fetch('data/lower_bounds.json').then(r => r.ok ? r.json() : null); if (B) for (const [n, b] of Object.entries(B)) { if (!b.best) continue; const t = tileInfo(+n); if (Math.abs(b.best.value - t.s) < 1e-9) { if (b.best.status === 'proved') proved.add(+n); else if (b.best.register === 'verified') accepted.add(+n); } } } catch (e) {}
+  for (let n = 101; n <= NMAX; n++) if (!proved.has(n) && familyAccepted(n)) accepted.add(n);
   $('mode').onchange = () => { state.mode = $('mode').value; draw(); };
   const q = new URLSearchParams(location.search).get('layout'); if (['grid', 'tri', 'deficit'].includes(q)) { state.layout = q; $('layout').value = q; }
   $('layout').onchange = () => { state.layout = $('layout').value; history.replaceState(null, '', state.layout === 'grid' ? location.pathname : `?layout=${state.layout}`); draw(); };

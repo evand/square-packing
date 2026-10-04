@@ -429,7 +429,8 @@
    "status": "preprint",
    "url": "https://github.com/Queuingtheorydotcom/11SquaresOptimal",
    "note": "s(11) = Trump's 1979 side: a computer-assisted certificate proof (a closed centre cover reduces any smaller packing to 2,184 cell patterns; exact certificates exclude 2,180, symmetry reduces the other four to one case, whose branch cover forces the packing into a certified isolation neighbourhood of Trump's packing); Astra-assisted, building on jlevy's T-026 and Kleddamag's 31/8; commit f9e0de7 (2026-09-29 UTC); independently replayed by jlevy/squares (T-060, V4/C5); not formalised, unrefereed",
-   "date": "2026-09-29"
+   "date": "2026-09-29",
+   "register": "verified"
   },
   "history": [
    {
@@ -1381,7 +1382,8 @@
    "status": "preprint",
    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s21",
    "note": "2026-09-27; s(21) = 5: mixed cover of [0,5]^2 (7,536 weighted points + mass spread uniformly on grid-line segments), total 20.8947 < 21, certified by two separately written exact checkers (no shared code; shared point-test lineage); Lean top theorem from the checker hypothesis; unrefereed",
-   "date": "2026-09-27"
+   "date": "2026-09-27",
+   "register": "verified"
   },
   "history": [
    {
@@ -1572,7 +1574,8 @@
    "status": "preprint",
    "url": "https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-compensation-proof.md",
    "date": "2026-09-04",
-   "note": "n = 5^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed"
+   "note": "n = 5^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed",
+   "register": "verified"
   },
   "history": [
    {
@@ -2267,7 +2270,8 @@
    "status": "preprint",
    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s32",
    "note": "2026-09-26; s(32) = 6: weighted closed cover of [0,6]^2, total 31.7135 < 32, certified by two exact checkers; kernel-checked in Lean with no hypothesis (S32Lower.lean, 2026-09-28); unrefereed",
-   "date": "2026-09-26"
+   "date": "2026-09-26",
+   "register": "verified"
   },
   "history": [
    {
@@ -2387,7 +2391,8 @@
    "status": "preprint",
    "url": "https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-compensation-proof.md",
    "date": "2026-09-04",
-   "note": "n = 6^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed"
+   "note": "n = 6^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed",
+   "register": "verified"
   },
   "history": [
    {
@@ -3168,7 +3173,8 @@
    "status": "preprint",
    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s45",
    "note": "2026-09-27; s(45) = 7: mixed cover of [0,7]^2 (19,989 weighted points + mass spread uniformly on grid-line segments), total 44.7735 < 45, certified by two separately written exact checkers (no shared code; shared point-test lineage); no Lean; unrefereed",
-   "date": "2026-09-27"
+   "date": "2026-09-27",
+   "register": "verified"
   },
   "history": [
    {
@@ -3310,7 +3316,8 @@
    "status": "preprint",
    "url": "https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-compensation-proof.md",
    "date": "2026-09-04",
-   "note": "n = 7^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed"
+   "note": "n = 7^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed",
+   "register": "verified"
   },
   "history": [
    {
@@ -3361,7 +3368,8 @@
    "status": "preprint",
    "url": "https://arxiv.org/abs/2609.37410",
    "date": "2026-09-29",
-   "note": "n = 7^2 - 1: Corollary 1.2, s(k^2 - 1) = k for k >= 3, from a strip-measure rectangle bound that does not use Nagamochi's Lemma 1; unrefereed"
+   "note": "n = 7^2 - 1: Corollary 1.2, s(k^2 - 1) = k for k >= 3, from a strip-measure rectangle bound that does not use Nagamochi's Lemma 1; unrefereed",
+   "register": "verified"
   },
   "history": [
    {
@@ -4156,7 +4164,8 @@
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 8 (evidence E-n059-wand125-mixed-cover-zmx2-replay)",
-   "date": "2026-10-01"
+   "date": "2026-10-01",
+   "register": "verified"
   },
   "history": [
    {
@@ -4228,7 +4237,8 @@
    "status": "preprint",
    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s60",
    "note": "2026-09-28; s(60) = 8: mixed cover of [0,8]^2 (23,744 weighted points + mass spread uniformly on grid-line segments), total 59.8587 < 60, certified by two separately written exact checkers (no shared code; shared point-test lineage); no Lean; unrefereed",
-   "date": "2026-09-28"
+   "date": "2026-09-28",
+   "register": "verified"
   },
   "history": [
    {
@@ -4299,7 +4309,8 @@
    "status": "preprint",
    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s60",
    "note": "2026-09-28; s(61) = 8 from s(60) = 8 by monotonicity (s(61) >= s(60); the 8 x 8 grid gives <= 8); s(k^2-3) = k had been proved only for k <= 7 (Kearney-Shiu k = 3, Bentz k = 4..7); no Lean; unrefereed",
-   "date": "2026-09-28"
+   "date": "2026-09-28",
+   "register": "verified"
   },
   "history": [
    {
@@ -4380,7 +4391,8 @@
    "status": "preprint",
    "url": "https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-compensation-proof.md",
    "date": "2026-09-04",
-   "note": "n = 8^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed"
+   "note": "n = 8^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed",
+   "register": "verified"
   },
   "history": [
    {
@@ -4431,7 +4443,8 @@
    "status": "preprint",
    "url": "https://arxiv.org/abs/2609.37410",
    "date": "2026-09-29",
-   "note": "n = 8^2 - 1: Corollary 1.2, s(k^2 - 1) = k for k >= 3, from a strip-measure rectangle bound that does not use Nagamochi's Lemma 1; unrefereed"
+   "note": "n = 8^2 - 1: Corollary 1.2, s(k^2 - 1) = k for k >= 3, from a strip-measure rectangle bound that does not use Nagamochi's Lemma 1; unrefereed",
+   "register": "verified"
   },
   "history": [
    {
@@ -5441,7 +5454,8 @@
    "status": "preprint",
    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m4",
    "note": "2026-10-03; s(77) = 9 as the k = 9 case of s(k^2-4) = k for all k >= 5: for k >= 8 one fixed-profile family of measures (corner modules + periodic wall band of width 3 + Lebesgue interior, total k^2 - 4D, D = 214770225571/200000000000 = 1.073851 > 1), its k = 9 box certified at margin zero by one exact checker (search/qx2_zm.py, the reviewed k^2-3 checker code), adversarially reviewed (three agents, no errors found); no second implementation has checked the k = 9 box yet; the reduction from the 9 x 9 box to every k >= 8, the D4 reduction and the axis-parallel case are kernel-checked in Lean (bentz4_of_validTilt9), so the tilted part of the k = 9 box is the one unformalised step; unrefereed; s(77) = 9 was first proved by wand125 (2026-10-01, history), so this is a second route",
-   "date": "2026-10-03"
+   "date": "2026-10-03",
+   "register": "verified"
   },
   "history": [
    {
@@ -5513,7 +5527,8 @@
    "status": "preprint",
    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
    "note": "2026-09-29; s(78) = 9 as the k = 9 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by an exact checker (search/qx2_zm.py), adversarially reviewed, and independently re-checked over the whole pose space by wand125's separately written checker (github.com/wand125/valid7-independent-check, 2026-10-02; record check rerun and method read here 2026-10-03); the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); unrefereed",
-   "date": "2026-09-29"
+   "date": "2026-09-29",
+   "register": "verified"
   },
   "history": [
    {
@@ -5564,7 +5579,8 @@
    "status": "preprint",
    "url": "https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-compensation-proof.md",
    "date": "2026-09-04",
-   "note": "n = 9^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed"
+   "note": "n = 9^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed",
+   "register": "verified"
   },
   "history": [
    {
@@ -5615,7 +5631,8 @@
    "status": "preprint",
    "url": "https://arxiv.org/abs/2609.37410",
    "date": "2026-09-29",
-   "note": "n = 9^2 - 1: Corollary 1.2, s(k^2 - 1) = k for k >= 3, from a strip-measure rectangle bound that does not use Nagamochi's Lemma 1; unrefereed"
+   "note": "n = 9^2 - 1: Corollary 1.2, s(k^2 - 1) = k for k >= 3, from a strip-measure rectangle bound that does not use Nagamochi's Lemma 1; unrefereed",
+   "register": "verified"
   },
   "history": [
    {
@@ -6704,7 +6721,8 @@
    "status": "preprint",
    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
    "note": "2026-09-29; s(97) = 10 as the k = 10 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by an exact checker (search/qx2_zm.py), adversarially reviewed, and independently re-checked over the whole pose space by wand125's separately written checker (github.com/wand125/valid7-independent-check, 2026-10-02; record check rerun and method read here 2026-10-03); the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); unrefereed",
-   "date": "2026-09-29"
+   "date": "2026-09-29",
+   "register": "verified"
   },
   "history": [
    {
@@ -6755,7 +6773,8 @@
    "status": "preprint",
    "url": "https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-compensation-proof.md",
    "date": "2026-09-04",
-   "note": "n = 10^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed"
+   "note": "n = 10^2 - 2: kernel-checked Lean proof of s(k^2 - 2) = k for every k >= 2 that replaces Nagamochi's false Lemma 1 (compensation argument; k = 2, 3 by separate proofs); unrefereed",
+   "register": "verified"
   },
   "history": [
    {
@@ -6806,7 +6825,8 @@
    "status": "preprint",
    "url": "https://arxiv.org/abs/2609.37410",
    "date": "2026-09-29",
-   "note": "n = 10^2 - 1: Corollary 1.2, s(k^2 - 1) = k for k >= 3, from a strip-measure rectangle bound that does not use Nagamochi's Lemma 1; unrefereed"
+   "note": "n = 10^2 - 1: Corollary 1.2, s(k^2 - 1) = k for k >= 3, from a strip-measure rectangle bound that does not use Nagamochi's Lemma 1; unrefereed",
+   "register": "verified"
   },
   "history": [
    {
@@ -7054,6 +7074,7 @@
   "families": "s(k^2-3) = k is proved here for every k >= 6 (EvanDaniel2026, 2026-09-29, s12/certificates/k2m3). The table covers n <= 100, so it holds the cases n = 33, 46, 61, 78, 97 (k = 6..10); for n = 33, 46, 61, which were already settled, it is a history entry and `best` keeps the earlier proof; for n = 78, 97 it is `best`. The family continues beyond the table (n = 118, 141, ...). s(k^2-4) = k is proved here for every k >= 5 (EvanDaniel2026, 2026-10-03, s12/certificates/k2m4): for k >= 8 by one family (its 9 x 9 box certified by one exact checker, the box-to-every-k reduction in Lean), for k = 5, 6, 7 by the separate s21, s32, s45 bundles, which are the entries for n = 21, 32, 45. In the table: n = 60 (k = 8) gets a history entry and `best` keeps the s60 bundle; n = 77 (k = 9) is `best`, with wand125's earlier s(77) = 9 (2026-10-01) in the history; n = 96 (k = 10) is `best`. The family continues beyond the table (n = 117, 140, ...).",
   "reported": "Entries with \"reported\": true are values their authors report but that no one other than the author has replayed (jlevy/squares grades them V0/C0). They are kept in `history` for the record and are never `best`, even where they are larger.",
   "claimed": "Entries with status \"claimed\" are values whose proof was never published and cannot be reviewed: T. Green's 2000 bounds, cited in Friedman's survey DS7 as a private communication (Theorems 9-10 and Table 2), and Friedman's table values for n = 13 (3.8437) and n = 21 (4.7438), which the survey gives without figure or proof. They are kept in the history for the record and are never `best`. For n = 17-18 the survey's Figure 34 draws Green's unavoidable set, which could be checked; it has not been checked here.",
-  "gap": "Entries with status \"gap\" are published results whose published proof is known to be incomplete: Nagamochi 2005 (Theorem 2, both the k^2-1 / k^2-2 families and the general bound) rests on his Lemma 1, which is false (chelokot 2026, a Lean-checked counterexample; H. Karakus, arXiv:2609.37410, a family of counterexamples). The statements are not disproved. They are kept in the history and are never best. s(k^2-1) = k is re-proved by Karakus 2026 and s(k^2-2) = k by chelokot 2026 (Lean); Karakus's weaker general bound 1/2 + sqrt(N - floor(sqrt N) + 1/4) has a complete proof and is listed for every nonsquare N >= 8."
+  "gap": "Entries with status \"gap\" are published results whose published proof is known to be incomplete: Nagamochi 2005 (Theorem 2, both the k^2-1 / k^2-2 families and the general bound) rests on his Lemma 1, which is false (chelokot 2026, a Lean-checked counterexample; H. Karakus, arXiv:2609.37410, a family of counterexamples). The statements are not disproved. They are kept in the history and are never best. s(k^2-1) = k is re-proved by Karakus 2026 and s(k^2-2) = k by chelokot 2026 (Lean); Karakus's weaker general bound 1/2 + sqrt(N - floor(sqrt N) + 1/4) has a complete proof and is listed for every nonsquare N >= 8.",
+  "register": "`register: verified` on a 2026 `best`: jlevy/squares' register lists that floor for n as verified (checked 2026-10-04). The Overview marks these n as proved, with a ring rather than a dot (unrefereed). n = 96 = 10^2 - 4 is not marked: there our s = 10 is registered as reported (T-081, full replay running)."
  }
 }
