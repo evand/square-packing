@@ -68,7 +68,8 @@ function tileInfo(n) {
 
 // Something Explore can actually show for this n: either a packing file of its own, or a catalogue
 // record under exactly this n (which Explore resolves and annotates itself).
-const openable = t => !!(t.file || IDX.records[String(t.n)]);
+const ownDrawing = n => Object.values(IDX.files).some(f => f.n === n && f.n_parsed && !f.start && !(f.errors || []).some(e => !e.startsWith('warn:')));
+const openable = t => !!(t.file || IDX.records[String(t.n)] || ownDrawing(t.n));   // 12, 20, 30, ...: grid drawings outside the table
 
 function colour(t) {
   if (state.mode === 'cat') return CATS[t.cat][1];
@@ -101,7 +102,7 @@ function draw() {
   const counts = {};
   for (let n = 1; n <= NMAX; n++) {
     const t = tileInfo(n); counts[t.cat] = (counts[t.cat] || 0) + 1;
-    // 135 of these 324 n have no catalogue entry at all. Linking them to explore.html?n=N made
+    // 105 of these 324 n have no catalogue entry or drawing at all. Linking them to explore.html?n=N made
     // gotoN snap silently to the nearest n that does, so the tile showed a different packing than
     // the one clicked; they are not links now, and the hover says why.
     const a = document.createElement(openable(t) ? 'a' : 'span');

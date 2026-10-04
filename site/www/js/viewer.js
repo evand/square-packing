@@ -625,6 +625,11 @@ function variantsFor(n, keep) {
   return files;
 }
 function recordNs() { return Object.keys(S.idx.records).map(Number).sort((a, b) => a - b); }
+// Every n there is something to draw for: the main table plus n drawn only on the catalogue's
+// sub-pages (the plain grids for 12, 20, 30, ..., and selected n past 324).  ‹ › step through these,
+// so n = 12 (grid conjectured optimal, so not in Ellsworth's table) is no longer skipped.
+const okFile = f => f.n && f.n_parsed && !f.start && !(f.errors && f.errors.some(e => !e.startsWith('warn:')));
+function drawnNs() { return [...new Set([...recordNs(), ...Object.values(S.idx.files).filter(okFile).map(f => f.n)])].sort((a, b) => a - b); }
 async function load(file, n) {
   // The tooltip is otherwise cleared only on pointerleave, so changing packings with the pointer
   // resting over the stage left one describing a square from the packing you just left.
@@ -670,7 +675,7 @@ function gotoN(n) {
     // show the best of those before snapping anywhere.
     const own = variantsFor(n).sort((a, b) => +S.idx.files[a].s - +S.idx.files[b].s);
     if (own.length) { S.asked = null; load(own[0], n); return; }
-    const drawn = [...new Set([...ns, ...Object.values(S.idx.files).filter(f => f.n_parsed && !f.start && !(f.errors && f.errors.length)).map(f => f.n)])];
+    const drawn = drawnNs();
     n = drawn.reduce((best, x) => { const d = Math.abs(x - n) - Math.abs(best - n); return d < 0 || (d === 0 && x > best) ? x : best; }, drawn[0]);
   }
   const rec = S.idx.records[n] || {};
@@ -681,8 +686,8 @@ function gotoN(n) {
          setText('shownfor', S.asked !== n ? `There is no catalogue entry for n = ${S.asked} either; the nearest is n = ${n}, and it has no drawing.` : ''); }
 }
 function initUI() {
-  $('prev').onclick = () => { const ns = recordNs().filter(x => x < S.n); if (ns.length) gotoN(ns[ns.length - 1]); };
-  $('next').onclick = () => { const ns = recordNs().filter(x => x > S.n); if (ns.length) gotoN(ns[0]); };
+  $('prev').onclick = () => { const ns = drawnNs().filter(x => x < S.n); if (ns.length) gotoN(ns[ns.length - 1]); };
+  $('next').onclick = () => { const ns = drawnNs().filter(x => x > S.n); if (ns.length) gotoN(ns[0]); };
   $('nbox').onchange = () => gotoN(+$('nbox').value);
   $('variant').onchange = () => load($('variant').value, S.n);   // same n: S.asked still applies
   $('colormode').onchange = () => { S.colormode = $('colormode').value; recolor(); };
