@@ -2,6 +2,7 @@
 
 Moved from `TODO.md`; one line each, newest first.  Details in the linked `search/*.md` / `notes/*.md`.
 
+- 2026-10-03 **Ceilings n = 17–20** (`search/CEILINGS_17_20.md`, 224ea77): exact fractional packings prove no pure closed cover gives s(17) > 4.660 (ν_f ≥ 17.0447; answers the old ceiling test) or s(19) > 3+4√2/3 (ν_f(4.8856) ≥ 19.375); s(20) > 3+4√2/3 looks feasible (cover LP 19.62 vs 20), s(19) > (7+√7)/2 marginal. ~13 CPU-h.
 - 2026-10-03 **SOS probe** (`search/SOS_PROBE.md`, cfb9ada): exact SOS certificates on s(6) cores prove `T > 3 − ε` (exact rational, ε down to 0.001 on 2-angle families) but never `T ≥ 3`: no interior at ε = 0 even after facial reduction (obstruction X in degree form); certificates not local (5 of 6 squares), no transfer across types. Recorded as closed for n = 12 (n12-gap §4.12). ~20k CPU-s.
 - 2026-10-03 s(6) = 3: already kernel-checked in chelokot's archive (`s6_eq_three`, Stromquist's argument); cited (k2m3 README, proof-anatomy §5.2); Lean bridge `SpecChelokot.lean` (their `IsMinimumSide n s ↔ minSide n = s` for n ≥ 1, definitions restated and compared to their source) so their s(6), s(10), s(13), s(22), s(33) transfer on paper.
 - 2026-10-03 **Lean LebMass** (`lean/Sqpack/LebMass.lean`, `notes/lean-leb-mass.md`, merge 4138a2b): Lemma U (LEB) and Lemma K (CAP, width lemma + tangent cap) proved sound for the Lebesgue square under a new pose-box predicate `CovT` (`validTilt_of_covT`); all 689 LEB + 374 CAP leaves of the k²−3 run V3 kernel-checked (`leb7_cov`, `cap7_cov`); standard axioms; default build 35 s.
