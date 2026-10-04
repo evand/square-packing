@@ -146,3 +146,35 @@ python3 search/dual_exact.py check search/ceil_nuf_4.660_exact_support.txt --n 1
 python3 search/dual_exact.py check search/ceil_nuf_4.660_exact_support.txt --full --stream --n 17
 bash $D/cover.sh 4.823 ceil_t4823; bash $D/cover.sh 4.886 ceil_t4886   # stopped after A4 (~1.9 h each)
 ```
+
+## 6. Addendum 2026-10-04: the 4.823 cover LP, converged
+
+Warm restart of the §2 point-cover LP (`lc_ceil_t4823w`): rows separated around `runs/lc_ceil_t4823_r4.txt`
+(`--warm`), columns = lattice 0.05 plus the support points of `_r3`/`_r4` (`--cols-from`), otherwise as `cover.sh`
+(`--nproc 4 --lp-tol 5e-5 --seed 2`).  Phase A only; killed after A5.
+
+| round | LP [measured] | lattice / polished min | rows | cols | LP solve |
+|---|---|---|---|---|---|
+| W0 | 18.808336 | 0.788 / 0.773 | 50.6k | 5094 | 813 s |
+| W1 | 18.871710 | 0.939 / 0.929 | 58.6k | 5251 | 1611 s |
+| W2 | 18.842167 | 0.968 / 0.942 | 66.8k | 5415 | 1689 s |
+| W3 | 18.848734 | 0.967 / 0.967 | 73.8k | 5574 | 2305 s |
+| W4 | 18.844039 | 0.982 / 0.972 | 80.5k | 5737 | 2753 s |
+| W5 | **18.840853** | 0.978 / 0.963 (tile/fam 0.978) | 86.5k | 5906 | 3396 s |
+
+The value is not monotone: pricing adds columns every round, which lowers it, while the cuts raise it.  The cold
+run's A4 value of 18.8796 was inflated by having too few columns, not by missing rows.  W2–W5 lie in
+`[18.841, 18.849]` (last steps `+0.007, −0.005, −0.003`).  Lattice minima are 0.97–0.98, so the remaining cuts are
+shallow.  **Converged value ≈ 18.84–18.85** [measured; not tight to 1e-3 in the last step, but the trend is flat or
+falling].  This is below the 18.90 go threshold, with room `19/18.845 − 1 ≈ 0.8 %`.
+
+So `s(19) > (7+√7)/2` by a pure point cover at `t = 4.823` **passes the room test** (open, not marginal).  The
+bracket is `ν_f^closed(4.823) ∈ [18.4703, ≈ 18.84]`.  Certificate not started (separate go-ahead): phase-B closing
+loop at `s = 4.823`, warm from `runs/lc_ceil_t4823w_r5.txt`, then `zmx2 --d4` / `zm_mixed`, as in §4 for 4.886.
+It needs an exactness overhead `≤ 0.8 %`.  CPU ≈ 3.7 h (LP-dominated).
+
+```
+python3 search/line_cover.py loop ceil_t4823w --s 4.823 --q 0 --nproc 4 --warm runs/lc_ceil_t4823_r4.txt \
+    --cols-from runs/lc_ceil_t4823_r4.txt,runs/lc_ceil_t4823_r3.txt --lp-rounds 10 --lp-tol 5e-5 --rounds 1 \
+    --prune-at 90000 --prune-keep 20000 --seed 2 --time 21600      # killed after A5 (3.7 h)
+```
