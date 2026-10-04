@@ -33,8 +33,8 @@ Proof-piece wishlist (new candidates N1–N15 + 65 open items, picks at the end)
 ## s(17)
 - [ ] s(17): pure closed covers are at their limit (exact ceiling ν_f(4.660) ≥ 17.0447, `CEILINGS_17_20.md`); further lower-bound gains need rule atoms (WISHLIST N15).
 - [ ] Techniques from jlevy/Kleddamag/Guzhou (`notes/jlevy-s17-techniques.md` §2): rule atoms as LP columns, near-tight cells as exact LP rows (their re-solve of our s(12) points: ≥ 3.9702002), gmpy2 in exact checkers. s(17) exact: their PR #307 is far ahead; help with an independent check of its local theorem, not a restart.
-- [ ] **s(20) > 3+4√2/3** (milestone, `search/CEILINGS_17_20.md`): cover LP 19.62 at side 4.886 vs ceiling 19.37, room ≈ 1.5–1.9 %. Next: converge `runs/lc_ceil_t4886_r4.txt`, phase-B closing loop, zmx2/zm_mixed. ~15–30 CPU-h.
-- [ ] s(19) > (7+√7)/2: marginal (cover LP 18.88, still rising, room ≤ 0.6 %). Converge the 4.823 loop first (~2 CPU-h); certificate only if ≤ 18.90.
+- [ ] s(20) > 3+4√2/3 **verified** (`search/S20_LB.md`, 2010d63; zmx2 d4/full + unmodified zm_mixed d4/full; checker change b8157df). Next: independent review, then bundle `certificates/s20/` + site (new s(20) ≥ 2443/500; s(19) < s(20) strict).
+- [ ] s(19) > (7+√7)/2 ⇒ s(18) < s(19): cover LP at 4.823 converged ≈ 18.84 (room ≈ 0.8 %, CEILINGS §6). Certificate = S20_LB recipe at 4.823 (needs overhead < 0.8 %; s(20) run reached 1.86 % before scaling: tight).
 - [ ] s(17) exact via the s(11) method: on hold (CPU). `tasks/s17-core-isolation/`
 
 ## Outreach / hygiene
