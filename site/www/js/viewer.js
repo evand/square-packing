@@ -478,24 +478,65 @@ function recolorOnly() {
   document.querySelectorAll('#squares .sq').forEach(g => { const i = +g.dataset.i; g.firstChild.setAttribute('opacity', S.hiGroup == null || S.hiGroup.includes(i) ? 1 : 0.25); });
 }
 
+// Proven floor for n from lower_bounds.json (n <= 100), else the area bound.
+function floorOf(n) {
+  const b = S.lb && S.lb[String(n)] && S.lb[String(n)].best;
+  if (b) { const src = S.lb.sources && S.lb.sources[b.source]; return { v: b.value, who: src ? `${src.authors.split(' (')[0]} ${src.year || ''}`.trim() : b.source, pre: b.status === 'preprint' }; }
+  return familyFloor(n) || generalFloor(n);
+}
+// Past the table (n > 100): the proved families s(k²−c) = k, else the best general bound.
+// Same sources as lower_bounds.json meta.families and the n <= 100 entries.
+function familyFloor(n) {
+  const k = Math.ceil(Math.sqrt(n)), c = k * k - n;
+  const F = { 0: [1, 'area: the k × k grid'], 1: [3, 'Karakuş 2026, s(k²−1) = k'], 2: [2, 'chelokot 2026, s(k²−2) = k, Lean'], 3: [6, 'evand 2026, s(k²−3) = k'], 4: [5, 'evand 2026, s(k²−4) = k'] }[c];
+  return F && k >= F[0] ? { v: k, who: F[1], pre: c > 0, family: true } : null;
+}
+function generalFloor(n) {   // Karakuş 2026 Cor. 6.2 (nonsquare n >= 8), else area
+  const a = Math.sqrt(n), r = Number.isInteger(a) || n < 8 ? 0 : 0.5 + Math.sqrt(n - Math.floor(a) + 0.25);
+  return r > a ? { v: r, who: 'Karakuş 2026 general bound, unrefereed; floors are collected only for n ≤ 100', pre: false } : { v: a, who: 'area bound √n only; floors are collected for n ≤ 100', pre: false };
+}
+function floorLine(n, s) {
+  if (!S.lb) return '';
+  const f = floorOf(n), settled = Math.abs(s - f.v) < 1e-9;
+  if (settled) return `Proved optimal: s(${n}) = ${+s.toFixed(6)} (${f.who}${f.pre ? ', unrefereed' : ''}).`;
+  return `Proven floor s(${n}) ≥ ${f.v.toFixed(6)} (${f.who}${f.pre ? ', unrefereed' : ''}); open by ${(s - f.v).toFixed(4)}.`;
+}
+// Best upper bound on record for an n with no packing of its own: the plain grid, or any drawn
+// packing of more squares with the extra squares removed.
+function upperFor(n) {
+  let best = { s: Math.ceil(Math.sqrt(n)), from: null };
+  for (const f of Object.values(S.idx.files)) if (f.n > n && f.n_parsed && !(f.errors && f.errors.length) && +f.s < best.s - 1e-12) best = { s: +f.s, from: f.n };
+  return best;
+}
+// The notice shown when there is no packing of exactly n squares on record and we show another n.
+function missingNote(n, shown) {
+  const k = Math.ceil(Math.sqrt(n));
+  if (k * k === n) return `s(${n}) = ${k} exactly: ${n} squares fill the ${k} × ${k} grid, and the area bound √${n} = ${k} rules out anything smaller. The catalogue draws no packing for a perfect square, so there is nothing of exactly ${n} squares to show; this is n = ${shown}, the nearest n that has a drawing.`;
+  const head = `No packing of exactly ${n} squares is on record here. `;
+  const fam = familyFloor(n);
+  if (fam) return head + `None is needed: s(${n}) = ${k} is proved (${fam.who}, unrefereed), so the plain grid, side ${k}, is optimal. Showing the nearest n that has a drawing, n = ${shown}.`;
+  if (n <= TABLE_MAX) return head + `Ellsworth's table lists every n up to ${TABLE_MAX} that beats the plain grid, and n = ${n} is not among them, so the best packing known is the grid: side ⌈√${n}⌉ = ${k}. Showing the nearest n that has a drawing, n = ${shown}.`;
+  const u = upperFor(n);
+  const g = generalFloor(n);
+  return head + `Past n = ${TABLE_MAX} the catalogue draws only selected n. Showing the nearest one it draws, n = ${shown}. Best bounds on record: s(${n}) ≤ ${u.from ? `${u.s.toFixed(6)}, from the n = ${u.from} packing with ${u.from - n} square${u.from - n > 1 ? 's' : ''} removed` : `${k}, the plain grid`}; s(${n}) ≥ ${g.v.toFixed(4)} (${g.who.split(';')[0]}).`;
+}
 const TABLE_MAX = 324;   // Ellsworth's main table: every n up to here with a packing better than the grid
 function renderSide() {
   const r = S.rec, a = r.analysis, meta = S.idx.files[S.file] || {}, recMeta = S.idx.records[S.n] || {};
   const isRecord = recMeta.svg === S.file, inTable = !!S.idx.records[S.n];
-  document.querySelector('.side .eyebrow').textContent = isRecord ? 'best known packing' : inTable ? 'alternative / older packing' : 'catalogued packing (not in the main table)';
+  const snapped = S.asked != null && S.asked !== S.n;
+  const isGrid = !inTable && Math.abs(+r.s - Math.ceil(Math.sqrt(S.n))) < 1e-9;   // nothing beats the plain grid
+  document.querySelector('.side .eyebrow').textContent = snapped ? `not n = ${S.asked}: nearest packing on record` : isRecord ? 'best known packing' : isGrid ? 'best known packing: the plain grid' : inTable ? 'alternative / older packing' : 'catalogued packing (not in the main table)';
   $('title').textContent = `${r.n} squares`;
   // Two different mismatches, and conflating them misreports both: the catalogue may cover two n
   // with one entry (s equal for both, so the picture holds the other count), or the n asked for may
   // have no entry at all, in which case gotoN snapped to the nearest that has one.
   // Absence means different things either side of TABLE_MAX: up to it the main table lists every n
   // that beats the grid, but past it the catalogue covers only selected n.
-  setText('shownfor',
-    S.asked != null && S.asked !== S.n
-      ? (S.asked <= TABLE_MAX
-        ? `Ellsworth's table has no entry for n = ${S.asked}: no packing better than the trivial one — the ${S.asked} squares set square in a container of side ⌈√${S.asked}⌉ = ${Math.ceil(Math.sqrt(S.asked))} — is recorded. Showing the nearest n that does have an entry, n = ${S.n}.`
-        : `The catalogue has no drawn packing for n = ${S.asked}; above n = ${TABLE_MAX} it covers only selected n. Showing the nearest n that has one, n = ${S.n}.`)
+  setText('shownfor', snapped ? missingNote(S.asked, r.n)
       : r.n === S.n ? ''
       : `You asked for n = ${S.n}. The catalogue covers n = ${Math.min(S.n, r.n)} and n = ${Math.max(S.n, r.n)} with one entry, because s is the same for both; this is the packing it pictures.`);
+  setText('floorline', snapped ? '' : floorLine(S.n, +r.s));
   const sShown = (+r.s).toFixed(12).replace(/0+$/, '').replace(/\.$/, '');
   $('sval').textContent = 's = ' + sShown + (+sShown === +r.s ? '' : '…');   // no ellipsis on an exact 2, 3, …
   // exact form.  The record's closed form and prose describe the record: never lend them to an alternative.
@@ -531,7 +572,7 @@ function renderSide() {
   const nv = variantsFor(S.n).length, xl = [];
   if (nv > 1) xl.push(`<a href="compare.html?n=${S.n}">compare all ${nv} packings of ${S.n}</a>`);
   if (S.n <= 100) xl.push(`<a href="bounds.html?n=${S.n}">floor and history for n = ${S.n}</a>`);
-  if (S.n === 12) xl.push(`<a href="s12/">our s(12) ≥ 3.9686</a>`);
+  if (S.n === 12) xl.push(`<a href="s12/">our s(12) certificate (≥ 3.9686; its exact re-solve gives the 3.9702 floor)</a>`);
   if (S.n === 13) xl.push(`<a href="proofs.html#bentz-proof">how s(13) = 4 is proved</a>`);
   $('xlinks').innerHTML = xl.join(' · ');
   // freedom
@@ -629,11 +670,12 @@ function gotoN(n) {
     // show the best of those before snapping anywhere.
     const own = variantsFor(n).sort((a, b) => +S.idx.files[a].s - +S.idx.files[b].s);
     if (own.length) { S.asked = null; load(own[0], n); return; }
-    n = ns.reduce((best, x) => Math.abs(x - n) < Math.abs(best - n) ? x : best, ns[0]);
+    const drawn = [...new Set([...ns, ...Object.values(S.idx.files).filter(f => f.n_parsed && !f.start && !(f.errors && f.errors.length)).map(f => f.n)])];
+    n = drawn.reduce((best, x) => { const d = Math.abs(x - n) - Math.abs(best - n); return d < 0 || (d === 0 && x > best) ? x : best; }, drawn[0]);
   }
-  const rec = S.idx.records[n];
+  const rec = S.idx.records[n] || {};
   const drawable = f => f && S.idx.files[f] && S.idx.files[f].n_parsed;
-  const file = drawable(rec.svg) ? rec.svg : variantsFor(n)[0];
+  const file = drawable(rec.svg) ? rec.svg : variantsFor(n).sort((a, b) => +S.idx.files[a].s - +S.idx.files[b].s)[0];
   if (file) load(file, n);
   else { S.rec = null; $('title').textContent = `no packing data for n = ${n}`; $('sval').textContent = '—';
          setText('shownfor', S.asked !== n ? `There is no catalogue entry for n = ${S.asked} either; the nearest is n = ${n}, and it has no drawing.` : ''); }
@@ -651,6 +693,7 @@ function initUI() {
 
 async function main() {
   S.idx = await (await fetch('data/index.json')).json();
+  fetch('data/lower_bounds.json').then(r => r.ok ? r.json() : null).then(lb => { S.lb = lb; if (S.rec && !(S.asked != null && S.asked !== S.n)) setText('floorline', floorLine(S.n, +S.rec.s)); }).catch(() => {});
   initUI();
   const q = parseQuery();
   if (q.p) { S.asked = null; const f = S.idx.files[q.p]; load(q.p, f ? f.n : +(q.p.match(/\d+/) || [17])[0]); }

@@ -542,14 +542,14 @@
  },
  "12": {
   "best": {
-   "value": 3.9686155403695267,
-   "exact_form": "15680/3951",
-   "source": "EvanDaniel2026",
+   "value": 3.970200203928523,
+   "exact_form": "15680000/3949423",
+   "source": "jlevy2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/evand/square-packing/tree/main/s12",
-   "note": "2026-08-26; 1736-point weighted certificate; still the best lower bound we know of for n = 12 (jlevy/squares replayed it by a second method and lists it as the verified bound)",
-   "date": "2026-08-26"
+   "url": "https://jlevy.github.io/squares/cases/12.html",
+   "date": "2026-10-03",
+   "note": "T-079: exact re-solve of evand's 1,736-point s(12) certificate (points kept, weights re-optimised exactly), replayed there (evidence E-n012-levy-15680000-3949423-source-replay, E-n012-levy-15680000-3949423-native-parent-core). squarepacker (Ryu Sungjoon, 2026-10-02) reported 31360/7901 = 3.969117 by the same kind of re-solve"
   },
   "history": [
    {
@@ -627,6 +627,26 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 3.9686155403695267,
+    "exact_form": "15680/3951",
+    "source": "EvanDaniel2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/evand/square-packing/tree/main/s12",
+    "note": "2026-08-26; 1736-point weighted certificate; still the best lower bound we know of for n = 12 (jlevy/squares replayed it by a second method and lists it as the verified bound)",
+    "date": "2026-08-26"
+   },
+   {
+    "value": 3.970200203928523,
+    "exact_form": "15680000/3949423",
+    "source": "jlevy2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://jlevy.github.io/squares/cases/12.html",
+    "date": "2026-10-03",
+    "note": "T-079: exact re-solve of evand's 1,736-point s(12) certificate (points kept, weights re-optimised exactly), replayed there (evidence E-n012-levy-15680000-3949423-source-replay, E-n012-levy-15680000-3949423-native-parent-core). squarepacker (Ryu Sungjoon, 2026-10-02) reported 31360/7901 = 3.969117 by the same kind of re-solve"
    }
   ]
  },
@@ -1147,6 +1167,16 @@
     "url": "https://github.com/jlevy/squares",
     "note": "T-030: weighted fractional certificate, 957 atoms, mass 17.8934 < 18; replayed there (V4/C4); T-027..T-029 (4.67, 4.675, 4.6775, 2026-09-18/19) are the steps to it",
     "date": "2026-09-19"
+   },
+   {
+    "value": 4.695,
+    "exact_form": "939/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); replayed by jlevy/squares (evidence E-wand125-rectangle-source-replay)",
+    "date": "2026-10-01"
    }
   ]
  },
@@ -1228,6 +1258,16 @@
     "url": "https://github.com/jlevy/squares",
     "note": "T-020: weighted fractional certificate, 2,260 atoms, mass 18.9226 < 19, so it holds for n = 19, 20, 21 (V4/C4)",
     "date": "2026-09-04"
+   },
+   {
+    "value": 4.8175,
+    "exact_form": "1927/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); replayed by jlevy/squares (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+    "date": "2026-10-01"
    }
   ]
  },
@@ -1319,6 +1359,16 @@
     "url": "https://github.com/jlevy/squares",
     "note": "T-021: weighted fractional certificate, 1,680 atoms, mass 19.8487 < 20 (V4/C4)",
     "date": "2026-09-05"
+   },
+   {
+    "value": 4.8975,
+    "exact_form": "1959/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1959/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 49/10 (2026-10-02, not yet replayed). Exceeds Wainwright's s(19) packing 3+4√2/3, so s(19) < s(20). Our independent point cover gives s(20) > 2443/500 = 4.886 (s12/search/S20_LB.md, 2026-10-04)",
+    "date": "2026-10-02"
    }
   ]
  },
@@ -1645,14 +1695,14 @@
  },
  "26": {
   "best": {
-   "value": 5.508,
-   "exact_form": "1377/250",
-   "source": "tokoharu2026",
+   "value": 5.5325,
+   "exact_form": "2213/400",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/tokoharu/square-packing-density-bounds/tree/main/certificates/cert_n26_L5508",
-   "note": "rectangle-density certificate; replayed by jlevy/squares (T-047, V4/C3)",
-   "date": "2026-09-21"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2213/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -1711,19 +1761,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 5.508,
+    "exact_form": "1377/250",
+    "source": "tokoharu2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/tokoharu/square-packing-density-bounds/tree/main/certificates/cert_n26_L5508",
+    "note": "rectangle-density certificate; replayed by jlevy/squares (T-047, V4/C3)",
+    "date": "2026-09-21"
+   },
+   {
+    "value": 5.5325,
+    "exact_form": "2213/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2213/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+    "date": "2026-10-01"
    }
   ]
  },
  "27": {
   "best": {
-   "value": 5.6,
-   "exact_form": "28/5",
+   "value": 5.635,
+   "exact_form": "1127/200",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n27_L56",
-   "note": "rectangle-density certificate in tokoharu's format; replayed by jlevy/squares (T-045, V4/C3)",
-   "date": "2026-09-26"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1127/200 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -1781,19 +1851,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 5.6,
+    "exact_form": "28/5",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n27_L56",
+    "note": "rectangle-density certificate in tokoharu's format; replayed by jlevy/squares (T-045, V4/C3)",
+    "date": "2026-09-26"
+   },
+   {
+    "value": 5.635,
+    "exact_form": "1127/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1127/200 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+    "date": "2026-10-01"
    }
   ]
  },
  "28": {
   "best": {
-   "value": 5.6,
-   "exact_form": "28/5",
+   "value": 5.7225,
+   "exact_form": "2289/400",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n27_L56",
-   "note": "the n = 27 rectangle-density certificate, whose mass is below 27; replayed by jlevy/squares (T-045, V4/C3)",
-   "date": "2026-09-26"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2289/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -1862,19 +1952,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 5.6,
+    "exact_form": "28/5",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n27_L56",
+    "note": "the n = 27 rectangle-density certificate, whose mass is below 27; replayed by jlevy/squares (T-045, V4/C3)",
+    "date": "2026-09-26"
+   },
+   {
+    "value": 5.7225,
+    "exact_form": "2289/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2289/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+    "date": "2026-10-01"
    }
   ]
  },
  "29": {
   "best": {
-   "value": 5.71,
-   "exact_form": "571/100",
-   "source": "tokoharu2026",
+   "value": 5.7975,
+   "exact_form": "2319/400",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/tokoharu/square-packing-density-bounds/tree/main/certificates/cert_n29_L571",
-   "note": "rectangle-density certificate; replayed by jlevy/squares (T-047, V4/C3)",
-   "date": "2026-09-21"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2319/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -1933,19 +2043,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 5.71,
+    "exact_form": "571/100",
+    "source": "tokoharu2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/tokoharu/square-packing-density-bounds/tree/main/certificates/cert_n29_L571",
+    "note": "rectangle-density certificate; replayed by jlevy/squares (T-047, V4/C3)",
+    "date": "2026-09-21"
+   },
+   {
+    "value": 5.7975,
+    "exact_form": "2319/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2319/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+    "date": "2026-10-01"
    }
   ]
  },
  "30": {
   "best": {
-   "value": 5.71,
-   "exact_form": "571/100",
-   "source": "tokoharu2026",
+   "value": 5.875,
+   "exact_form": "47/8",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/tokoharu/square-packing-density-bounds/tree/main/certificates/cert_n29_L571",
-   "note": "the n = 29 rectangle-density certificate, whose mass is below 29; replayed by jlevy/squares (T-047, V4/C3)",
-   "date": "2026-09-21"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 47/8 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -2004,19 +2134,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 5.71,
+    "exact_form": "571/100",
+    "source": "tokoharu2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/tokoharu/square-packing-density-bounds/tree/main/certificates/cert_n29_L571",
+    "note": "the n = 29 rectangle-density certificate, whose mass is below 29; replayed by jlevy/squares (T-047, V4/C3)",
+    "date": "2026-09-21"
+   },
+   {
+    "value": 5.875,
+    "exact_form": "47/8",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 47/8 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+    "date": "2026-10-01"
    }
   ]
  },
  "31": {
   "best": {
-   "value": 5.92,
-   "exact_form": "148/25",
+   "value": 5.9525,
+   "exact_form": "2381/400",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n31_L592",
-   "note": "rectangle-density certificate in tokoharu's format; replayed by jlevy/squares (T-045, V4/C3)",
-   "date": "2026-09-27"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2381/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -2085,6 +2235,26 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 5.92,
+    "exact_form": "148/25",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n31_L592",
+    "note": "rectangle-density certificate in tokoharu's format; replayed by jlevy/squares (T-045, V4/C3)",
+    "date": "2026-09-27"
+   },
+   {
+    "value": 5.9525,
+    "exact_form": "2381/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2381/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+    "date": "2026-10-01"
    }
   ]
  },
@@ -2340,14 +2510,14 @@
  },
  "37": {
   "best": {
-   "value": 6.0901699437494745,
-   "exact_form": "1/2 + sqrt(37 - 6 + 1/4)",
-   "source": "Karakus2026",
+   "value": 6.44,
+   "exact_form": "161/25",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 161/25 (evidence E-n037-wand125-mixed-644-source-replay)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -2396,19 +2566,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 6.0901699437494745,
+    "exact_form": "1/2 + sqrt(37 - 6 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 6.44,
+    "exact_form": "161/25",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 161/25 (evidence E-n037-wand125-mixed-644-source-replay)",
+    "date": "2026-10-01"
    }
   ]
  },
  "38": {
   "best": {
-   "value": 6.178908345800274,
-   "exact_form": "1/2 + sqrt(38 - 6 + 1/4)",
-   "source": "Karakus2026",
+   "value": 6.545,
+   "exact_form": "1309/200",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1309/200 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -2457,19 +2647,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 6.178908345800274,
+    "exact_form": "1/2 + sqrt(38 - 6 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 6.545,
+    "exact_form": "1309/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1309/200 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+    "date": "2026-10-01"
    }
   ]
  },
  "39": {
   "best": {
-   "value": 6.5,
-   "exact_form": "13/2",
+   "value": 6.635,
+   "exact_form": "1327/200",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n39_L650.json",
-   "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
-   "date": "2026-09-14"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1327/200 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -2528,19 +2738,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 6.5,
+    "exact_form": "13/2",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n39_L650.json",
+    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-14"
+   },
+   {
+    "value": 6.635,
+    "exact_form": "1327/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1327/200 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+    "date": "2026-10-01"
    }
   ]
  },
  "40": {
   "best": {
-   "value": 6.5,
-   "exact_form": "13/2",
+   "value": 6.7,
+   "exact_form": "67/10",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n40_L650.json",
-   "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
-   "date": "2026-09-14"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 67/10 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -2599,19 +2829,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 6.5,
+    "exact_form": "13/2",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n40_L650.json",
+    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-14"
+   },
+   {
+    "value": 6.7,
+    "exact_form": "67/10",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 67/10 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+    "date": "2026-10-01"
    }
   ]
  },
  "41": {
   "best": {
-   "value": 6.5,
-   "exact_form": "13/2",
+   "value": 6.76,
+   "exact_form": "169/25",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n39_L650.json",
-   "note": "the n = 39 certificate, carried to n = 41 by monotonicity (s(41) >= s(39)) as jlevy/squares does; replayed by jlevy/squares (T-044, V4/C3)",
-   "date": "2026-09-14"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 169/25 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -2670,19 +2920,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 6.5,
+    "exact_form": "13/2",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n39_L650.json",
+    "note": "the n = 39 certificate, carried to n = 41 by monotonicity (s(41) >= s(39)) as jlevy/squares does; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-14"
+   },
+   {
+    "value": 6.76,
+    "exact_form": "169/25",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 169/25 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+    "date": "2026-10-01"
    }
   ]
  },
  "42": {
   "best": {
-   "value": 6.520797289396148,
-   "exact_form": "1/2 + sqrt(42 - 6 + 1/4)",
-   "source": "Karakus2026",
+   "value": 6.815,
+   "exact_form": "1363/200",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1363/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 2731/400 = 6.8275 (2026-10-02, not yet replayed)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -2722,19 +2992,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 6.520797289396148,
+    "exact_form": "1/2 + sqrt(42 - 6 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 6.815,
+    "exact_form": "1363/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1363/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 2731/400 = 6.8275 (2026-10-02, not yet replayed)",
+    "date": "2026-10-01"
    }
   ]
  },
  "43": {
   "best": {
-   "value": 6.603277807866851,
-   "exact_form": "1/2 + sqrt(43 - 6 + 1/4)",
-   "source": "Karakus2026",
+   "value": 6.8875,
+   "exact_form": "551/80",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 551/80 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -2774,19 +3064,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 6.603277807866851,
+    "exact_form": "1/2 + sqrt(43 - 6 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 6.8875,
+    "exact_form": "551/80",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 551/80 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+    "date": "2026-10-01"
    }
   ]
  },
  "44": {
   "best": {
-   "value": 6.68465843842649,
-   "exact_form": "1/2 + sqrt(44 - 6 + 1/4)",
-   "source": "Karakus2026",
+   "value": 6.9425,
+   "exact_form": "2777/400",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2777/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -2826,6 +3136,26 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 6.68465843842649,
+    "exact_form": "1/2 + sqrt(44 - 6 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 6.9425,
+    "exact_form": "2777/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2777/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+    "date": "2026-10-01"
    }
   ]
  },
@@ -3095,14 +3425,14 @@
  },
  "50": {
   "best": {
-   "value": 7.076473218982953,
-   "exact_form": "1/2 + sqrt(50 - 7 + 1/4)",
-   "source": "Karakus2026",
+   "value": 7.4,
+   "exact_form": "37/5",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 37/5 (evidence E-n050-wand125-mixed-740-source-replay)",
+   "date": "2026-09-28"
   },
   "history": [
    {
@@ -3151,19 +3481,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 7.076473218982953,
+    "exact_form": "1/2 + sqrt(50 - 7 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 7.4,
+    "exact_form": "37/5",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 37/5 (evidence E-n050-wand125-mixed-740-source-replay)",
+    "date": "2026-09-28"
    }
   ]
  },
  "51": {
   "best": {
-   "value": 7.152067347825035,
-   "exact_form": "1/2 + sqrt(51 - 7 + 1/4)",
-   "source": "Karakus2026",
+   "value": 7.4,
+   "exact_form": "37/5",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 37/5 (evidence E-n050-wand125-mixed-740-source-replay); wand125 reports 373/50 = 7.46 (2026-10-03, not yet replayed)",
+   "date": "2026-09-28"
   },
   "history": [
    {
@@ -3212,19 +3562,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 7.152067347825035,
+    "exact_form": "1/2 + sqrt(51 - 7 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 7.4,
+    "exact_form": "37/5",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 37/5 (evidence E-n050-wand125-mixed-740-source-replay); wand125 reports 373/50 = 7.46 (2026-10-03, not yet replayed)",
+    "date": "2026-09-28"
    }
   ]
  },
  "52": {
   "best": {
-   "value": 7.38,
-   "exact_form": "369/50",
+   "value": 7.535,
+   "exact_form": "1507/200",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n53_L738.json",
-   "note": "the n = 53 certificate, whose exact mass 51.483 is below 52; replayed by jlevy/squares (T-044, V4/C3)",
-   "date": "2026-09-21"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1507/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 151/20 = 7.55 (2026-10-03, not yet replayed)",
+   "date": "2026-09-28"
   },
   "history": [
    {
@@ -3283,19 +3653,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 7.38,
+    "exact_form": "369/50",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n53_L738.json",
+    "note": "the n = 53 certificate, whose exact mass 51.483 is below 52; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-21"
+   },
+   {
+    "value": 7.535,
+    "exact_form": "1507/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1507/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 151/20 = 7.55 (2026-10-03, not yet replayed)",
+    "date": "2026-09-28"
    }
   ]
  },
  "53": {
   "best": {
-   "value": 7.38,
-   "exact_form": "369/50",
+   "value": 7.6075,
+   "exact_form": "3043/400",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n53_L738.json",
-   "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
-   "date": "2026-09-21"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3043/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -3354,19 +3744,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 7.38,
+    "exact_form": "369/50",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n53_L738.json",
+    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-21"
+   },
+   {
+    "value": 7.6075,
+    "exact_form": "3043/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3043/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+    "date": "2026-10-01"
    }
   ]
  },
  "54": {
   "best": {
-   "value": 7.37386354243376,
-   "exact_form": "1/2 + sqrt(54 - 7 + 1/4)",
-   "source": "Karakus2026",
+   "value": 7.6725,
+   "exact_form": "3069/400",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3069/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -3406,19 +3816,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 7.37386354243376,
+    "exact_form": "1/2 + sqrt(54 - 7 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 7.6725,
+    "exact_form": "3069/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3069/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+    "date": "2026-10-01"
    }
   ]
  },
  "55": {
   "best": {
-   "value": 7.54,
-   "exact_form": "377/50",
+   "value": 7.7125,
+   "exact_form": "617/80",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n55_L754.json",
-   "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
-   "date": "2026-09-17"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 617/80 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 966/125 = 7.728 (2026-10-03, not yet replayed)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -3468,19 +3898,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 7.54,
+    "exact_form": "377/50",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n55_L754.json",
+    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-17"
+   },
+   {
+    "value": 7.7125,
+    "exact_form": "617/80",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 617/80 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 966/125 = 7.728 (2026-10-03, not yet replayed)",
+    "date": "2026-10-01"
    }
   ]
  },
  "56": {
   "best": {
-   "value": 7.62,
-   "exact_form": "381/50",
+   "value": 7.7825,
+   "exact_form": "3113/400",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n56_L762.json",
-   "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
-   "date": "2026-09-17"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3113/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -3530,19 +3980,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 7.62,
+    "exact_form": "381/50",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n56_L762.json",
+    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-17"
+   },
+   {
+    "value": 7.7825,
+    "exact_form": "3113/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3113/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+    "date": "2026-10-01"
    }
   ]
  },
  "57": {
   "best": {
-   "value": 7.588723439378913,
-   "exact_form": "1/2 + sqrt(57 - 7 + 1/4)",
-   "source": "Karakus2026",
+   "value": 7.7825,
+   "exact_form": "3113/400",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3113/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 1567/200 = 7.835 (2026-09-28, not yet replayed)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -3582,19 +4052,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 7.588723439378913,
+    "exact_form": "1/2 + sqrt(57 - 7 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 7.7825,
+    "exact_form": "3113/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3113/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 1567/200 = 7.835 (2026-09-28, not yet replayed)",
+    "date": "2026-10-01"
    }
   ]
  },
  "58": {
   "best": {
-   "value": 7.658910531638177,
-   "exact_form": "1/2 + sqrt(58 - 7 + 1/4)",
-   "source": "Karakus2026",
+   "value": 7.7825,
+   "exact_form": "3113/400",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3113/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 1581/200 = 7.905 (2026-10-03, not yet replayed)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -3634,19 +4124,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 7.658910531638177,
+    "exact_form": "1/2 + sqrt(58 - 7 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 7.7825,
+    "exact_form": "3113/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3113/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 1581/200 = 7.905 (2026-10-03, not yet replayed)",
+    "date": "2026-10-01"
    }
   ]
  },
  "59": {
   "best": {
-   "value": 7.72841614740048,
-   "exact_form": "1/2 + sqrt(59 - 7 + 1/4)",
-   "source": "Karakus2026",
+   "value": 8.0,
+   "exact_form": "8",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 8 (evidence E-n059-wand125-mixed-cover-zmx2-replay)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -3686,6 +4196,26 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 7.72841614740048,
+    "exact_form": "1/2 + sqrt(59 - 7 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 8.0,
+    "exact_form": "8",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 8 (evidence E-n059-wand125-mixed-cover-zmx2-replay)",
+    "date": "2026-10-01"
    }
   ]
  },
@@ -3965,14 +4495,14 @@
  },
  "65": {
   "best": {
-   "value": 8.06637297521078,
-   "exact_form": "1/2 + sqrt(65 - 8 + 1/4)",
-   "source": "Karakus2026",
+   "value": 8.35,
+   "exact_form": "167/20",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 167/20 (evidence E-n065-wand125-mixed-835-source-replay)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -4010,19 +4540,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 8.06637297521078,
+    "exact_form": "1/2 + sqrt(65 - 8 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 8.35,
+    "exact_form": "167/20",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 167/20 (evidence E-n065-wand125-mixed-835-source-replay)",
+    "date": "2026-10-01"
    }
   ]
  },
  "66": {
   "best": {
-   "value": 8.132168761236873,
-   "exact_form": "1/2 + sqrt(66 - 8 + 1/4)",
-   "source": "Karakus2026",
+   "value": 8.42,
+   "exact_form": "421/50",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 421/50 (evidence E-n066-wand125-mixed-842-source-replay)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -4071,19 +4621,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 8.132168761236873,
+    "exact_form": "1/2 + sqrt(66 - 8 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 8.42,
+    "exact_form": "421/50",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 421/50 (evidence E-n066-wand125-mixed-842-source-replay)",
+    "date": "2026-10-01"
    }
   ]
  },
  "67": {
   "best": {
-   "value": 8.197402159170327,
-   "exact_form": "1/2 + sqrt(67 - 8 + 1/4)",
-   "source": "Karakus2026",
+   "value": 8.455,
+   "exact_form": "1691/200",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1691/200 (evidence E-wand125-rectangle-2026-09-28-source-replay)",
+   "date": "2026-09-28"
   },
   "history": [
    {
@@ -4132,19 +4702,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 8.197402159170327,
+    "exact_form": "1/2 + sqrt(67 - 8 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 8.455,
+    "exact_form": "1691/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1691/200 (evidence E-wand125-rectangle-2026-09-28-source-replay)",
+    "date": "2026-09-28"
    }
   ]
  },
  "68": {
   "best": {
-   "value": 8.41,
-   "exact_form": "841/100",
+   "value": 8.51,
+   "exact_form": "851/100",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n69_L841.json",
-   "note": "the n = 69 certificate, whose exact mass is below 68; replayed by jlevy/squares (T-044, V4/C3)",
-   "date": "2026-09-21"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 851/100 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -4203,19 +4793,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 8.41,
+    "exact_form": "841/100",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n69_L841.json",
+    "note": "the n = 69 certificate, whose exact mass is below 68; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-21"
+   },
+   {
+    "value": 8.51,
+    "exact_form": "851/100",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 851/100 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
+    "date": "2026-10-01"
    }
   ]
  },
  "69": {
   "best": {
-   "value": 8.41,
-   "exact_form": "841/100",
+   "value": 8.585,
+   "exact_form": "1717/200",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n69_L841.json",
-   "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
-   "date": "2026-09-21"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1717/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 2153/250 = 8.612 (2026-10-03, not yet replayed)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -4265,19 +4875,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 8.41,
+    "exact_form": "841/100",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n69_L841.json",
+    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-21"
+   },
+   {
+    "value": 8.585,
+    "exact_form": "1717/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1717/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 2153/250 = 8.612 (2026-10-03, not yet replayed)",
+    "date": "2026-10-01"
    }
   ]
  },
  "70": {
   "best": {
-   "value": 8.55,
-   "exact_form": "171/20",
+   "value": 8.625,
+   "exact_form": "69/8",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n70_L855.json",
-   "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
-   "date": "2026-09-17"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 69/8 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 3459/400 = 8.6475 (2026-10-03, not yet replayed)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -4327,19 +4957,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 8.55,
+    "exact_form": "171/20",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n70_L855.json",
+    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-17"
+   },
+   {
+    "value": 8.625,
+    "exact_form": "69/8",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 69/8 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 3459/400 = 8.6475 (2026-10-03, not yet replayed)",
+    "date": "2026-10-01"
    }
   ]
  },
  "71": {
   "best": {
-   "value": 8.55,
-   "exact_form": "171/20",
+   "value": 8.685,
+   "exact_form": "1737/200",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n70_L855.json",
-   "note": "the n = 70 certificate, carried to n = 71 by monotonicity (s(71) >= s(70)) as jlevy/squares does; replayed by jlevy/squares (T-044, V4/C3)",
-   "date": "2026-09-17"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1737/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 1741/200 = 8.705 (2026-10-03, not yet replayed)",
+   "date": "2026-09-28"
   },
   "history": [
    {
@@ -4389,19 +5039,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 8.55,
+    "exact_form": "171/20",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n70_L855.json",
+    "note": "the n = 70 certificate, carried to n = 71 by monotonicity (s(71) >= s(70)) as jlevy/squares does; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-17"
+   },
+   {
+    "value": 8.685,
+    "exact_form": "1737/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1737/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 1741/200 = 8.705 (2026-10-03, not yet replayed)",
+    "date": "2026-09-28"
    }
   ]
  },
  "72": {
   "best": {
-   "value": 8.61,
-   "exact_form": "861/100",
+   "value": 8.685,
+   "exact_form": "1737/200",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n72_L861.json",
-   "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
-   "date": "2026-09-17"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1737/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 437/50 = 8.74 (2026-09-28, not yet replayed)",
+   "date": "2026-09-28"
   },
   "history": [
    {
@@ -4451,19 +5121,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 8.61,
+    "exact_form": "861/100",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n72_L861.json",
+    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
+    "date": "2026-09-17"
+   },
+   {
+    "value": 8.685,
+    "exact_form": "1737/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1737/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 437/50 = 8.74 (2026-09-28, not yet replayed)",
+    "date": "2026-09-28"
    }
   ]
  },
  "73": {
   "best": {
-   "value": 8.577747210701755,
-   "exact_form": "1/2 + sqrt(73 - 8 + 1/4)",
-   "source": "Karakus2026",
+   "value": 8.685,
+   "exact_form": "1737/200",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1737/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 8809/1000 = 8.809 (2026-10-03, not yet replayed)",
+   "date": "2026-09-28"
   },
   "history": [
    {
@@ -4503,19 +5193,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 8.577747210701755,
+    "exact_form": "1/2 + sqrt(73 - 8 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 8.685,
+    "exact_form": "1737/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1737/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 8809/1000 = 8.809 (2026-10-03, not yet replayed)",
+    "date": "2026-09-28"
    }
   ]
  },
  "74": {
   "best": {
-   "value": 8.639410298049853,
-   "exact_form": "1/2 + sqrt(74 - 8 + 1/4)",
-   "source": "Karakus2026",
+   "value": 8.8475,
+   "exact_form": "3539/400",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3539/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 3547/400 = 8.8675 (2026-10-03, not yet replayed)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -4555,19 +5265,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 8.639410298049853,
+    "exact_form": "1/2 + sqrt(74 - 8 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 8.8475,
+    "exact_form": "3539/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3539/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 3547/400 = 8.8675 (2026-10-03, not yet replayed)",
+    "date": "2026-10-01"
    }
   ]
  },
  "75": {
   "best": {
-   "value": 8.700609733428363,
-   "exact_form": "1/2 + sqrt(75 - 8 + 1/4)",
-   "source": "Karakus2026",
+   "value": 8.9,
+   "exact_form": "89/10",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 89/10 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 223/25 = 8.92 (2026-10-03, not yet replayed)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -4607,19 +5337,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 8.700609733428363,
+    "exact_form": "1/2 + sqrt(75 - 8 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 8.9,
+    "exact_form": "89/10",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 89/10 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 223/25 = 8.92 (2026-10-03, not yet replayed)",
+    "date": "2026-10-01"
    }
   ]
  },
  "76": {
   "best": {
-   "value": 8.761355820929152,
-   "exact_form": "1/2 + sqrt(76 - 8 + 1/4)",
-   "source": "Karakus2026",
+   "value": 8.94,
+   "exact_form": "447/50",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 447/50 (evidence E-n076-wand125-mixed-894-source-replay); wand125 reports 224/25 = 8.96 (2026-10-03, not yet replayed)",
+   "date": "2026-10-02"
   },
   "history": [
    {
@@ -4659,6 +5409,26 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 8.761355820929152,
+    "exact_form": "1/2 + sqrt(76 - 8 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 8.94,
+    "exact_form": "447/50",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 447/50 (evidence E-n076-wand125-mixed-894-source-replay); wand125 reports 224/25 = 8.96 (2026-10-03, not yet replayed)",
+    "date": "2026-10-02"
    }
   ]
  },
@@ -4909,14 +5679,14 @@
  },
  "82": {
   "best": {
-   "value": 9.058621384311845,
-   "exact_form": "1/2 + sqrt(82 - 9 + 1/4)",
-   "source": "Karakus2026",
+   "value": 9.32,
+   "exact_form": "233/25",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "linear certificate (wand125/square-packing-bounds); jlevy/squares verified 233/25 (evidence E-n082-wand125-linear-932-source-replay)",
+   "date": "2026-10-02"
   },
   "history": [
    {
@@ -4954,19 +5724,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.058621384311845,
+    "exact_form": "1/2 + sqrt(82 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.32,
+    "exact_form": "233/25",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "linear certificate (wand125/square-packing-bounds); jlevy/squares verified 233/25 (evidence E-n082-wand125-linear-932-source-replay)",
+    "date": "2026-10-02"
    }
   ]
  },
  "83": {
   "best": {
-   "value": 9.116843969807043,
-   "exact_form": "1/2 + sqrt(83 - 9 + 1/4)",
-   "source": "Karakus2026",
+   "value": 9.37,
+   "exact_form": "937/100",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 937/100 (evidence E-n083-wand125-mixed-937-source-replay)",
+   "date": "2026-10-02"
   },
   "history": [
    {
@@ -5004,19 +5794,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.116843969807043,
+    "exact_form": "1/2 + sqrt(83 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.37,
+    "exact_form": "937/100",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 937/100 (evidence E-n083-wand125-mixed-937-source-replay)",
+    "date": "2026-10-02"
    }
   ]
  },
  "84": {
   "best": {
-   "value": 9.174675786448736,
-   "exact_form": "1/2 + sqrt(84 - 9 + 1/4)",
-   "source": "Karakus2026",
+   "value": 9.4,
+   "exact_form": "47/5",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 47/5 (evidence E-n084-wand125-mixed-940-source-replay)",
+   "date": "2026-10-02"
   },
   "history": [
    {
@@ -5054,19 +5864,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.174675786448736,
+    "exact_form": "1/2 + sqrt(84 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.4,
+    "exact_form": "47/5",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 47/5 (evidence E-n084-wand125-mixed-940-source-replay)",
+    "date": "2026-10-02"
    }
   ]
  },
  "85": {
   "best": {
-   "value": 9.23212459828649,
-   "exact_form": "1/2 + sqrt(85 - 9 + 1/4)",
-   "source": "Karakus2026",
+   "value": 9.46,
+   "exact_form": "473/50",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 473/50 (evidence E-n085-wand125-mixed-946-source-replay)",
+   "date": "2026-10-02"
   },
   "history": [
    {
@@ -5104,19 +5934,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.23212459828649,
+    "exact_form": "1/2 + sqrt(85 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.46,
+    "exact_form": "473/50",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 473/50 (evidence E-n085-wand125-mixed-946-source-replay)",
+    "date": "2026-10-02"
    }
   ]
  },
  "86": {
   "best": {
-   "value": 9.289197915623474,
-   "exact_form": "1/2 + sqrt(86 - 9 + 1/4)",
-   "source": "Karakus2026",
+   "value": 9.46,
+   "exact_form": "473/50",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 473/50 (evidence E-n085-wand125-mixed-946-source-replay); wand125 reports 19/2 = 9.5 (2026-10-03, not yet replayed)",
+   "date": "2026-10-02"
   },
   "history": [
    {
@@ -5156,19 +6006,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.289197915623474,
+    "exact_form": "1/2 + sqrt(86 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.46,
+    "exact_form": "473/50",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 473/50 (evidence E-n085-wand125-mixed-946-source-replay); wand125 reports 19/2 = 9.5 (2026-10-03, not yet replayed)",
+    "date": "2026-10-02"
    }
   ]
  },
  "87": {
   "best": {
-   "value": 9.345903006477066,
-   "exact_form": "1/2 + sqrt(87 - 9 + 1/4)",
-   "source": "Karakus2026",
+   "value": 9.48,
+   "exact_form": "237/25",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 237/25 (evidence E-n087-wand125-mixed-948-source-replay); wand125 reports 191/20 = 9.55 (2026-10-03, not yet replayed)",
+   "date": "2026-10-02"
   },
   "history": [
    {
@@ -5197,19 +6067,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.345903006477066,
+    "exact_form": "1/2 + sqrt(87 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.48,
+    "exact_form": "237/25",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 237/25 (evidence E-n087-wand125-mixed-948-source-replay); wand125 reports 191/20 = 9.55 (2026-10-03, not yet replayed)",
+    "date": "2026-10-02"
    }
   ]
  },
  "88": {
   "best": {
-   "value": 9.402246907382429,
-   "exact_form": "1/2 + sqrt(88 - 9 + 1/4)",
-   "source": "Karakus2026",
+   "value": 9.48,
+   "exact_form": "237/25",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 237/25 (evidence E-n087-wand125-mixed-948-source-replay); wand125 reports 48/5 = 9.6 (2026-10-03, not yet replayed)",
+   "date": "2026-10-02"
   },
   "history": [
    {
@@ -5249,19 +6139,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.402246907382429,
+    "exact_form": "1/2 + sqrt(88 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.48,
+    "exact_form": "237/25",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 237/25 (evidence E-n087-wand125-mixed-948-source-replay); wand125 reports 48/5 = 9.6 (2026-10-03, not yet replayed)",
+    "date": "2026-10-02"
    }
   ]
  },
  "89": {
   "best": {
-   "value": 9.458236433584458,
-   "exact_form": "1/2 + sqrt(89 - 9 + 1/4)",
-   "source": "Karakus2026",
+   "value": 9.565,
+   "exact_form": "1913/200",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1913/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 193/20 = 9.65 (2026-10-03, not yet replayed)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -5301,19 +6211,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.458236433584458,
+    "exact_form": "1/2 + sqrt(89 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.565,
+    "exact_form": "1913/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1913/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 193/20 = 9.65 (2026-10-03, not yet replayed)",
+    "date": "2026-10-01"
    }
   ]
  },
  "90": {
   "best": {
-   "value": 9.513878188659973,
-   "exact_form": "1/2 + sqrt(90 - 9 + 1/4)",
-   "source": "Karakus2026",
+   "value": 9.6,
+   "exact_form": "48/5",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 48/5 (evidence E-n090-wand125-mixed-960-source-replay); wand125 reports 389/40 = 9.725 (2026-10-03, not yet replayed)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -5353,19 +6283,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.513878188659973,
+    "exact_form": "1/2 + sqrt(90 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.6,
+    "exact_form": "48/5",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 48/5 (evidence E-n090-wand125-mixed-960-source-replay); wand125 reports 389/40 = 9.725 (2026-10-03, not yet replayed)",
+    "date": "2026-10-01"
    }
   ]
  },
  "91": {
   "best": {
-   "value": 9.569178573608527,
-   "exact_form": "1/2 + sqrt(91 - 9 + 1/4)",
-   "source": "Karakus2026",
+   "value": 9.7,
+   "exact_form": "97/10",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 97/10 (evidence E-n091-wand125-mixed-970-source-replay); wand125 reports 39/4 = 9.75 (2026-10-03, not yet replayed)",
+   "date": "2026-10-02"
   },
   "history": [
    {
@@ -5405,19 +6355,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.569178573608527,
+    "exact_form": "1/2 + sqrt(91 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.7,
+    "exact_form": "97/10",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 97/10 (evidence E-n091-wand125-mixed-970-source-replay); wand125 reports 39/4 = 9.75 (2026-10-03, not yet replayed)",
+    "date": "2026-10-02"
    }
   ]
  },
  "92": {
   "best": {
-   "value": 9.62414379544733,
-   "exact_form": "1/2 + sqrt(92 - 9 + 1/4)",
-   "source": "Karakus2026",
+   "value": 9.75,
+   "exact_form": "39/4",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 39/4 (evidence E-n092-wand125-mixed-975-source-replay); wand125 reports 977/100 = 9.77 (2026-10-03, not yet replayed)",
+   "date": "2026-10-02"
   },
   "history": [
    {
@@ -5446,19 +6416,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.62414379544733,
+    "exact_form": "1/2 + sqrt(92 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.75,
+    "exact_form": "39/4",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 39/4 (evidence E-n092-wand125-mixed-975-source-replay); wand125 reports 977/100 = 9.77 (2026-10-03, not yet replayed)",
+    "date": "2026-10-02"
    }
   ]
  },
  "93": {
   "best": {
-   "value": 9.67877987534291,
-   "exact_form": "1/2 + sqrt(93 - 9 + 1/4)",
-   "source": "Karakus2026",
+   "value": 9.75,
+   "exact_form": "39/4",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 39/4 (evidence E-n092-wand125-mixed-975-source-replay); wand125 reports 493/50 = 9.86 (2026-10-03, not yet replayed)",
+   "date": "2026-10-02"
   },
   "history": [
    {
@@ -5487,19 +6477,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.67877987534291,
+    "exact_form": "1/2 + sqrt(93 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.75,
+    "exact_form": "39/4",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 39/4 (evidence E-n092-wand125-mixed-975-source-replay); wand125 reports 493/50 = 9.86 (2026-10-03, not yet replayed)",
+    "date": "2026-10-02"
    }
   ]
  },
  "94": {
   "best": {
-   "value": 9.733092656309694,
-   "exact_form": "1/2 + sqrt(94 - 9 + 1/4)",
-   "source": "Karakus2026",
+   "value": 9.805,
+   "exact_form": "1961/200",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1961/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 248/25 = 9.92 (2026-10-03, not yet replayed)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -5539,19 +6549,39 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.733092656309694,
+    "exact_form": "1/2 + sqrt(94 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.805,
+    "exact_form": "1961/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1961/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 248/25 = 9.92 (2026-10-03, not yet replayed)",
+    "date": "2026-10-01"
    }
   ]
  },
  "95": {
   "best": {
-   "value": 9.787087810503355,
-   "exact_form": "1/2 + sqrt(95 - 9 + 1/4)",
-   "source": "Karakus2026",
+   "value": 9.8518,
+   "exact_form": "49259/5000",
+   "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://arxiv.org/abs/2609.37410",
-   "date": "2026-09-29",
-   "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   "url": "https://github.com/wand125/square-packing-bounds",
+   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 49259/5000 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 249/25 = 9.96 (2026-10-03, not yet replayed)",
+   "date": "2026-10-01"
   },
   "history": [
    {
@@ -5591,6 +6621,26 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.787087810503355,
+    "exact_form": "1/2 + sqrt(95 - 9 + 1/4)",
+    "source": "Karakus2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://arxiv.org/abs/2609.37410",
+    "date": "2026-09-29",
+    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
+   },
+   {
+    "value": 9.8518,
+    "exact_form": "49259/5000",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 49259/5000 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 249/25 = 9.96 (2026-10-03, not yet replayed)",
+    "date": "2026-10-01"
    }
   ]
  },
@@ -6000,7 +7050,7 @@
   "generated": "2026-09-08",
   "caveats": "See site/notes/lower-bounds-notes.md for sourcing notes and uncertainties. Entries with status 'preprint' are 2026 results that have not been refereed (most computer-assisted; Karakus 2026 is a conventional arXiv proof). Others' certificates are linked as published; this project replays only its own. Where a 2026 repository is still moving (n = 17 especially), the history keeps the main steps and the linked repository has the rest.",
   "precision": "`value` is the full double-precision evaluation of `exact_form`, not a rounded decimal: storing the n=5 floor as 2.7071068 put it ABOVE the true 2+1/sqrt(2)=2.707106781..., so it compared as greater than the matching upper bound and s(5) and s(10) were reported open with a gap of -0.0000. Entries whose exact_form is absent or flagged unreliable keep their curated decimal.",
-  "updated": "2026-10-03",
+  "updated": "2026-10-04",
   "families": "s(k^2-3) = k is proved here for every k >= 6 (EvanDaniel2026, 2026-09-29, s12/certificates/k2m3). The table covers n <= 100, so it holds the cases n = 33, 46, 61, 78, 97 (k = 6..10); for n = 33, 46, 61, which were already settled, it is a history entry and `best` keeps the earlier proof; for n = 78, 97 it is `best`. The family continues beyond the table (n = 118, 141, ...). s(k^2-4) = k is proved here for every k >= 5 (EvanDaniel2026, 2026-10-03, s12/certificates/k2m4): for k >= 8 by one family (its 9 x 9 box certified by one exact checker, the box-to-every-k reduction in Lean), for k = 5, 6, 7 by the separate s21, s32, s45 bundles, which are the entries for n = 21, 32, 45. In the table: n = 60 (k = 8) gets a history entry and `best` keeps the s60 bundle; n = 77 (k = 9) is `best`, with wand125's earlier s(77) = 9 (2026-10-01) in the history; n = 96 (k = 10) is `best`. The family continues beyond the table (n = 117, 140, ...).",
   "reported": "Entries with \"reported\": true are values their authors report but that no one other than the author has replayed (jlevy/squares grades them V0/C0). They are kept in `history` for the record and are never `best`, even where they are larger.",
   "claimed": "Entries with status \"claimed\" are values whose proof was never published and cannot be reviewed: T. Green's 2000 bounds, cited in Friedman's survey DS7 as a private communication (Theorems 9-10 and Table 2), and Friedman's table values for n = 13 (3.8437) and n = 21 (4.7438), which the survey gives without figure or proof. They are kept in the history for the record and are never `best`. For n = 17-18 the survey's Figure 34 draws Green's unavoidable set, which could be checked; it has not been checked here.",

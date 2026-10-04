@@ -36,6 +36,8 @@ td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;w
 .tablewrap{overflow-x:auto;max-height:420px;overflow-y:auto;border:1px solid var(--rule);border-radius:3px}
 .story{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
 .story div{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:12px 14px;font-size:.9rem}
+.xbtn{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:.84rem;padding:4px 10px;border:1px solid var(--chart-a);border-radius:3px;text-decoration:none;color:var(--chart-a)}
+.xbtn:hover{background:var(--chart-a);color:var(--paper)}
 .story b{font-family:"IBM Plex Mono",monospace;color:var(--chart-a)}
 </style>
 </head>
@@ -65,7 +67,7 @@ td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;w
 
   <section>
     <h2>How one <i>n</i> closed over time</h2>
-    <div class="ctl"><label><i>n</i> = <input id="npick" type="number" min="2" max="100" value="17"></label><label><input type="checkbox" id="zoom"> August–September 2026 only</label><span class="hint" id="npickhint"></span></div>
+    <div class="ctl"><label><i>n</i> = <input id="npick" type="number" min="2" max="100" value="17"></label><label><input type="checkbox" id="zoom"> since August 2026 only</label><span class="hint" id="npickhint"></span><a id="npickexplore" class="xbtn" href="explore.html?n=17">see the best packing for n = 17 →</a></div>
     <div class="legend"><span><i style="background:var(--chart-a)"></i>best packing (upper bound)</span><span><i style="background:var(--chart-b)"></i>proven floor (lower bound)</span></div>
     <div class="chart" id="c2"><div class="tt"></div></div>
     <div class="story" id="story"></div>
@@ -77,6 +79,7 @@ td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;w
 
   <section>
     <h2>Table</h2>
+    <p class="note">Click an <i>n</i> to open its best packing in <a href="explore.html">Explore</a>.</p>
     <details open><summary>all <i>n</i> up to 100</summary>
       <div class="tablewrap"><table id="tbl"><thead><tr><th>n</th><th>best packing</th><th>found by</th><th>proven floor</th><th>proved by</th><th>gap</th><th>status</th></tr></thead><tbody></tbody></table></div>
     </details>

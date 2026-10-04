@@ -37,7 +37,7 @@ function chart1() {
   const W = 1000, H = 360, ml = 48, mr = 12, mt = 14, mb = 34;
   const svg = el('svg', { viewBox: `0 0 ${W} ${H}` }, box);
   const xs = i => ml + (i + 0.5) / rows.length * (W - ml - mr);
-  const ymin = rel ? Math.min(-1, ...rows.map(r => r.yl)) : Math.min(...rows.map(r => r.yl), -0.5);
+  const ymin = rel ? Math.min(-1, ...rows.map(r => r.yl)) - 0.3 : Math.min(...rows.map(r => r.yl), -0.5) - 0.03;   // padding: the lowest dots sat on the edge
   const ymax = rel ? 0.5 : 0.05;
   const ys = v => mt + (ymax - v) / (ymax - ymin) * (H - mt - mb);
   // gridlines + axis labels
@@ -64,7 +64,7 @@ function chart1() {
     grp.onclick = () => { $('npick').value = r.n; chart2(); $('c2').scrollIntoView({ behavior: 'smooth', block: 'center' }); };
   });
   const settled = rows.filter(r => r.settled).length, open = rows.length - settled;
-  $('c1note').textContent = `${settled} of the ${rows.length} shown are settled; ${open} are open. Hover for details, click to see that n's history below.`;
+  $('c1note').textContent = `${settled} of the ${rows.length} shown are settled; ${open} are open. Hover for details; click to see that n's history below, with a link to its packing.`;
 }
 function tip(r) {
   const lines = [`n = ${r.n}`, `best packing  ${r.u.s.toFixed(6)}${r.u.trivial ? ' (grid)' : ''}${r.u.who ? '  ' + r.u.who : ''}${r.u.date ? ' ' + r.u.date[0] : ''}`,
@@ -84,19 +84,24 @@ function chart2() {
   const up = [{ y: 1979, s: t, who: 'grid', label: 'plain grid' }]; let best = t;
   for (const p of packs) if (p.s < best - 1e-9) { best = p.s; up.push(p); }
   // lower-bound steps
-  const hist = (LB && LB[String(n)] && LB[String(n)].history) || [];
+  // `best` is normally repeated in `history`; merge it in anyway so a data slip cannot hide the current floor.
+  const E = LB && LB[String(n)], hist = ((E && E.history) || []).slice();
+  if (E && E.best && !hist.some(h => Math.abs(h.value - E.best.value) < 1e-12 && h.source === E.best.source && !h.reported)) hist.push(E.best);
   const lo = [{ y: 1979, v: Math.sqrt(n), src: 'area bound', when: '' }]; let bl = Math.sqrt(n);
   for (const h of hist.filter(h => !h.reported && h.status !== 'claimed' && h.status !== 'gap').sort((a, b) => hy(a) - hy(b))) if (h.value > bl + 1e-9) { bl = h.value; lo.push({ y: Math.max(1979, hy(h)), v: h.value, src: srcLabel(h), status: h.status, when: h.date || String(h.year || '') }); }
-  // "2026 only" zooms to August–September 2026, when most floors moved; steps from before the
-  // window start at its left edge.
-  const zoom = $('zoom').checked, y0 = zoom ? 2026 + 7 / 12 : 1978, y1 = zoom ? 2026 + 9 / 12 + 0.004 : 2027;
+  // "since August 2026" zooms to the 2026 rush, when most floors moved; steps from before the
+  // window start at its left edge.  The right edge follows the newest dated floor (plus a week),
+  // so new results never fall off the end of the chart.
+  const newest = Math.max(2026 + 9 / 12, ...Object.keys(LB || {}).filter(k => /^\d+$/.test(k)).flatMap(k => (LB[k].history || []).concat(LB[k].best || [])).map(hy));
+  const zoom = $('zoom').checked, y0 = zoom ? 2026 + 7 / 12 : 1978, y1 = zoom ? newest + 7 / 365 : 2027;
   const inWin = (pts, key) => { const k = pts.findLastIndex(p => p.y < y0); return pts.filter((p, i) => i >= k).map(p => p[key]); };
   const allv = zoom ? [...inWin(up, 's'), ...inWin(lo, 'v')] : [...up.map(u => u.s), ...lo.map(l => l.v)]; let vmin = Math.min(...allv), vmax = Math.max(...allv); const pad = Math.max(0.02, (vmax - vmin) * 0.15); vmin -= pad; vmax += pad;
   const W = 1000, H = 300, ml = 62, mr = 16, mt = 14, mb = 30;
   const svg = el('svg', { viewBox: `0 0 ${W} ${H}` }, box);
   const xs = y => ml + (y - y0) / (y1 - y0) * (W - ml - mr), ys = v => mt + (vmax - v) / (vmax - vmin) * (H - mt - mb);
   const g = el('g', { class: 'grid' }, svg), ax = el('g', { class: 'axis' }, svg);
-  const ticks = zoom ? [['Aug 1', 7, 1], ['Aug 15', 7, 15], ['Sep 1', 8, 1], ['Sep 15', 8, 15], ['Oct 1', 9, 1]].map(([t, m, dd]) => [t, 2026 + (m + (dd - 1) / 31) / 12])
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const ticks = zoom ? Array.from({ length: 2 * (Math.floor((y1 - 2026) * 12) - 7 + 1) }, (_, i) => [7 + (i >> 1), i % 2 ? 15 : 1]).map(([m, dd]) => [`${MON[m]} ${dd}`, 2026 + (m + (dd - 1) / 31) / 12]).filter(t => t[1] <= y1)
                      : Array.from({ length: 10 }, (_, i) => [String(1980 + 5 * i), 1980 + 5 * i]);
   for (const [t, y] of ticks) { el('line', { x1: xs(y), x2: xs(y), y1: mt, y2: H - mb }, g); const tx = el('text', { x: xs(y), y: H - mb + 16, 'text-anchor': 'middle' }, ax); tx.textContent = t; }
   const vstep = niceStep((vmax - vmin) / 5);
@@ -122,6 +127,7 @@ function chart2() {
   const ll2 = lo[lo.length - 1]; cards.push(`Proven floor <b>${ll2.v.toFixed(6)}</b> (${ll2.src || 'area'}${ll2.when && ll2.when.length > 4 ? ', ' + ll2.when : ''}${ll2.status === 'preprint' ? ', unrefereed' : ''}).`);
   if (!settled) cards.push(`Open by <b>${(last.s - ll2.v).toFixed(5)}</b> — ${(100 * (last.s - ll2.v) / last.s).toFixed(2)}% of the side.`);
   for (const c of cards) { const d = document.createElement('div'); d.innerHTML = c; st.appendChild(d); }
+  const xb = $('npickexplore'); if (xb) { xb.href = `explore.html?n=${n}`; xb.textContent = `see the best packing for n = ${n} in Explore →`; }
   histTable(n, hist);
   history.replaceState(null, '', `?n=${n}`);
 }
