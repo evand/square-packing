@@ -47,7 +47,7 @@ section{display:flex;flex-direction:column;gap:14px}
       <span><span class="tag ok">known</span> proved; given for context</span>
     </div>
     <p class="note">Each item also says which <i>n</i> it concerns (<b>all n</b>, <b>large n</b> or <b>one n</b>) and who stated it. "Stated here" means we found no earlier statement; tell us if you know one. Statements of method (lemmas about certificates, covering measures, Lean) are in the project's <a href="https://github.com/evand/square-packing/blob/main/s12/search/WISHLIST.md">research wishlist</a>, not here.</p>
-    <div class="toc"><a href="#staircase">1 · Friedman's staircase</a><a href="#waste">2 · Wasted space</a><a href="#plateaus">3 · Plateaus and families</a><a href="#complexity">4 · How complicated are optimal packings?</a><a href="#local">5 · Local optimality</a><a href="#single">6 · Single values</a><a href="#neighbours">7 · Neighbouring problems</a></div>
+    <div class="toc"><a href="#staircase">1 · Friedman's staircase</a><a href="#waste">2 · Wasted space</a><a href="#plateaus">3 · Plateaus and families</a><a href="#complexity">4 · How complicated are optimal packings?</a><a href="#boundary">5 · Where small n meets large n</a><a href="#local">6 · Local optimality</a><a href="#single">7 · Single values</a><a href="#neighbours">8 · Neighbouring problems</a></div>
   </section>
 
   <section>
@@ -74,7 +74,7 @@ section{display:flex;flex-direction:column;gap:14px}
 
     <div class="item q"><div class="hd"><b>The last k with s(k² − k) = k</b><span class="tag open">question</span><span class="eyebrow">finitely many k</span></div>
       <p>It was once conjectured that <span class="mono">s(k² − k) = k</span> always. It holds for <i>k</i> = 2, 3, fails for <i>k</i> = 11 (Cantrell 2025, s(110) ≈ 10.99679, unrefereed) and for every <i>k</i> ≥ 12 (Arslanov, Mustafin and Shangitbayev 2021). Which of <i>k</i> = 4, …, 10 hold?</p>
-      <p class="st">So the last good <i>k</i> lies between 3 and 10. Nothing known rules out gaps (a failure at <i>k</i> = 4 would not decide <i>k</i> = 5); unit steps would rule them out. The smallest case is <span class="mono">s(12) = 4</span> itself. On the packing side, <span class="mono">s(90) &lt; 10</span> is the natural next attempt (see <a href="#single">§6</a>).</p></div>
+      <p class="st">So the last good <i>k</i> lies between 3 and 10. Nothing known rules out gaps (a failure at <i>k</i> = 4 would not decide <i>k</i> = 5); unit steps would rule them out. The smallest case is <span class="mono">s(12) = 4</span> itself. On the packing side, <span class="mono">s(90) &lt; 10</span> is the natural next attempt (see <a href="#single">§7</a>).</p></div>
   </section>
 
   <section>
@@ -104,7 +104,7 @@ section{display:flex;flex-direction:column;gap:14px}
       <tr><td class="mono">0.6569</td><td>9</td><td style="text-align:left">66, 124, 147, 148, …, 294</td></tr>
       <tr><td class="mono">0.7782</td><td>8</td><td style="text-align:left">150, 175, 203, 232, 233, 264, 265, 298</td></tr>
     </table></div>
-    <p class="note">Göbel's strips are the best known packings for every strip size a &lt; 44 except a = 3 (n = 17). The first to be beaten is a = 44 (n = 2043, David Ellsworth, 2024); some larger strips (around n = 2938) are still listed unbeaten, so where the best-known strips stop is unsettled. The waste bound guarantees a last <i>optimal</i> one but gives no explicit place. A related pattern: Ellsworth's table notes that the best known <span class="mono">s(n² + 1)</span> has fractional part at least ½ for every n &lt; 42; Hajba's record for n = 42 (s(1765) ≈ 42.488) is the first below ½. Table computed from Ellsworth's catalogue (<a href="https://github.com/evand/square-packing/blob/main/s12/search/record_structure.py">script</a>).</p>
+    <p class="note">Göbel's strips are the best known packings for every strip size a &lt; 44 except a = 3 (n = 17). The first to be beaten is a = 44 (n = 2043, David Ellsworth, 2024); the waste bound guarantees a last <i>optimal</i> one but gives no explicit place (see <a href="#boundary">§5</a>). Table computed from Ellsworth's catalogue (<a href="https://github.com/evand/square-packing/blob/main/s12/search/record_structure.py">script</a>).</p>
   </section>
 
   <section>
@@ -115,16 +115,25 @@ section{display:flex;flex-direction:column;gap:14px}
       <p class="st">Stated here. Two data points. The value s(11), settled in 2026 by a computer-assisted proof, uses a single tilt angle (49.8°), and its side is a root of an irreducible degree-8 polynomial. The best known s(28) (Ellsworth, 2025) also uses one tilt angle (59.7°), and its degree-6 polynomial has Galois group S<sub>6</sub>, so that side cannot be written with radicals at all. Yet values built from square roots alone still hold records as late as n = 626 (27/2 + 17√2/2). Rational records exist (n = 50, 230, 261, 293, all with Pythagorean tilt angles), but none is proved optimal. We found no literature on any of these questions.</p></div>
     <div class="item q"><div class="hd"><b>Number of angles</b><span class="tag open">question</span><span class="eyebrow">large n</span></div>
       <p>Must optimal packings use more and more distinct tilt angles as n grows? A cleaner large-n form: let <span class="mono">W<sub>m</sub>(s)</span> be the least waste using at most <i>m</i> distinct angles. Axis-parallel packings alone give <span class="mono">W<sub>1</sub> ≈ 2s·frac(s)</span>, linear in <i>s</i>. Is <span class="mono">W<sub>m</sub></span> linear for every fixed <i>m</i>?</p>
-      <p class="st">Stated here. If yes, the general <span class="mono">O(s<sup>3/5</sup>)</span> bound forces optimal packings to use ever more angles. Every sublinear construction we know of (Erdős–Graham onward) varies the tilt from stack to stack, and we found no result about packings with a bounded number of angles. In the catalogue, packings with five or more angle classes sit mostly just below a perfect square (fractional part ≳ 0.87), where the small-tilt constructions live. Packings with at most three classes still hold about half of each interval up to k = 17.</p></div>
-    <div class="item q"><div class="hd"><b>Beating Göbel's strips on purpose</b><span class="tag open">question</span><span class="eyebrow">where small n meets large n</span></div>
-      <p>A Göbel strip wastes area about equal to its side length (waste ≈ <i>s</i>). Any construction wasting less than (1 − ε)·<i>s</i> at fractional part near 0.707 beats it. So the sublinear constructions above beat every large enough strip, but their constants were never written down, and the crossover they give is presumably astronomical. In the catalogue, the first strip to fall (n = 2043) was beaten by an optimised one-off, not by a family. The question: what is the best waste coefficient κ (waste ≈ κ·<i>s</i>) of a <i>fixed-shape</i> family at a given fractional part? Göbel's strips have κ ≈ 1 and the plain grid at fractional part 0.707 has κ ≈ 1.41. Is there an explicit family with κ &lt; 1 that beats the strips from some modest n, ideally below 2043? And are the strips optimal among families with two angles (axis and 45°)?</p>
-      <p class="st">Stated here. Minor, but typical of the questions about where small-n patterns hand over to large-n behaviour. The existence of <i>some</i> explicit beating family is not in doubt; computing the crossover for a published construction is bookkeeping, not research.</p></div>
+      <p class="st">Stated here. If yes, the general <span class="mono">O(s<sup>3/5</sup>)</span> bound forces optimal packings to use ever more angles. Every sublinear construction we know of (Erdős–Graham onward) varies the tilt from stack to stack, and we found no result about packings with a bounded number of angles. §5 has what the catalogue shows so far.</p></div>
     <div class="item q"><div class="hd"><b>Symmetry</b><span class="tag open">question</span><span class="eyebrow">large n</span></div>
       <p>Are optimal packings eventually asymmetric? The Explore page reports each record's symmetry.</p></div>
   </section>
 
   <section>
-    <h2 id="local">5 · Local optimality</h2>
+    <h2 id="boundary">5 · Where small n meets large n</h2>
+    <p>Small <i>n</i> is full of patterns: explicit families, packings with two or three angles, simple side lengths. The large-<i>n</i> theory says most of these patterns must end, usually without saying where. The questions here ask where. They matter less than the ones above, but they are concrete, the catalogue gives data for them, and a single good packing can answer one. The last <i>k</i> with <span class="mono">s(k² − k) = k</span> (<a href="#staircase">§1</a>) and the fixed-shape families (<a href="#plateaus">§3</a>) are questions of the same kind.</p>
+    <div class="item q"><div class="hd"><b>Beating Göbel's strips on purpose</b><span class="tag open">question</span><span class="eyebrow">explicit families</span></div>
+      <p>A Göbel strip wastes area about equal to its side length (waste ≈ <i>s</i>). Any construction wasting less than (1 − ε)·<i>s</i> at fractional part near 0.707 beats it. So the sublinear constructions of §2 beat every large enough strip, but their constants were never written down, and the crossover they give is presumably astronomical. In the catalogue, the first strip to fall (n = 2043) was beaten by an optimised one-off, not by a family. The question: what is the best waste coefficient κ (waste ≈ κ·<i>s</i>) of a <i>fixed-shape</i> family at a given fractional part? Göbel's strips have κ ≈ 1 and the plain grid at fractional part 0.707 has κ ≈ 1.41. Is there an explicit family with κ &lt; 1 that beats the strips from some modest n, ideally below 2043? And are the strips optimal among families with two angles (axis and 45°)?</p>
+      <p class="st">Stated here. The existence of <i>some</i> explicit beating family is not in doubt; computing the crossover for a published construction is bookkeeping, not research.</p></div>
+    <div class="item q"><div class="hd"><b>Where do many-angle packings start?</b><span class="tag open">question</span><span class="eyebrow">data</span></div>
+      <p>In the catalogue, packings with five or more angle classes sit mostly just below a perfect square (fractional part ≳ 0.87), where the small-tilt constructions live. Exceptions are n = 68, 103, 123 and 297. Packings with at most three classes still hold about half of each interval up to <i>k</i> = 17, with no visible decline. Does the many-angle regime spread down from the top of each interval as <i>k</i> grows, and how fast?</p></div>
+    <div class="item q"><div class="hd"><b>Where do patterns in the record table break?</b><span class="tag open">question</span><span class="eyebrow">data</span></div>
+      <p>Two examples. Göbel's strips are the best known packings for every strip size a &lt; 44 except a = 3. The first strip to be beaten is n = 2043, but some larger strips (around n = 2938) are still listed unbeaten, so where the best-known strips stop is unsettled. Ellsworth's table also notes that the best known <span class="mono">s(n² + 1)</span> has fractional part at least ½ for every n &lt; 42; Hajba's record for n = 42 (s(1765) ≈ 42.488) is the first below ½. Patterns like these are only as good as the search behind them, so each break is partly a fact about packings and partly a fact about where searching got hard.</p></div>
+  </section>
+
+  <section>
+    <h2 id="local">6 · Local optimality</h2>
     <p>Call a packing <b>locally optimal</b> if no nearby arrangement fits in a smaller box. (A weaker notion: no smaller box is reachable by sliding and turning squares without overlap. A different one: <b>rigid</b>, which Ellsworth defines as "cannot be continuously transformed into any other valid packing without changing the size of its enclosing square"; he calls it rare. Explore reports rigidity for every record. Jamming theory, which studies these notions for disks and spheres, seems not to have been applied to squares.)</p>
     <div class="item"><div class="hd"><b>Why the plain definition is too weak</b><span class="eyebrow">sketch</span></div>
       <p>A complete row of <i>k</i> squares, all tilted together by a small angle θ, has width <span class="mono">k cos θ + sin θ ≈ k + θ − kθ²/2</span>. That stays above <i>k</i> until θ ≈ 2/<i>k</i>. So small motions of a full row cannot shrink the box, and we expect any packing with a complete row and a complete column to be locally optimal. Then the grid with <i>c</i> holes would be locally but not globally optimal for every <span class="mono">c &gt; c*(k)</span>, and so would 7 squares in an L inside a 4 × 4 box, although <span class="mono">s(7) = 3</span>. The interesting questions are quantitative.</p></div>
@@ -135,7 +144,7 @@ section{display:flex;flex-direction:column;gap:14px}
   </section>
 
   <section>
-    <h2 id="single">6 · Single values</h2>
+    <h2 id="single">7 · Single values</h2>
     <div class="item conj"><div class="hd"><b>s(12) = 4</b><span class="tag neutral">conjecture</span><span class="eyebrow">one n</span></div>
       <p>The most wanted exact value: the smallest open case of <span class="mono">s(k² − k) = k</span>, and it decides whether <span class="mono">c*(4)</span> is 3 or 4. The best proved floor is 3.9702. See <a href="s12/">twelve squares</a>.</p></div>
     <p>The questions above also point at specific <i>n</i> where a <b>better packing</b> is plausible:</p>
@@ -159,7 +168,7 @@ section{display:flex;flex-direction:column;gap:14px}
   </section>
 
   <section>
-    <h2 id="neighbours">7 · Neighbouring problems</h2>
+    <h2 id="neighbours">8 · Neighbouring problems</h2>
     <div class="item conj"><div class="hd"><b>Rectangles, one side at a time</b><span class="tag neutral">conjecture</span><span class="eyebrow">all a, b</span></div>
       <p>For an <i>a</i> × <i>b</i> grid, let <span class="mono">c*(a, b)</span> be the most squares one can remove while the grid stays optimal (no smaller <i>a′</i> × <i>b′</i> box). Is <span class="mono">c*(a, b)</span> nondecreasing in each of <i>a</i> and <i>b</i> separately? This is half a step of Friedman's conjecture. A related, easier-looking case keeps the height fixed and lets the width grow.</p>
       <p class="st">Stated here. Rectangles that can be squeezed are known (Arslanov, Mustafin and Shangitbayev 2021). Nagamochi's lower bound for rectangles (2005) has a gap (Karakuş 2026).</p></div>
