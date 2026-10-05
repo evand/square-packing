@@ -1,0 +1,25 @@
+== inputs/site71.txt: n = 71, S_in = 8.9440715575703155
+  contacts: 413 candidate incidences (|gap| < 1e-09), 51 vertex-vertex touches set aside; jam-LP dual residual 0.0e+00; load-bearing set 315 contacts on 68 squares; free squares (rattlers / force-free): [2, 22, 48]
+  projection onto 204 independent of 397 contact equations: max |g| 1.2e-15 -> 3.3e-73 (5 steps)
+  KKT: |A| = 397 contacts, independent |B| = 204, variables 205 (1 frozen flat), system 408x408, cond ~ 4.0e+02
+  Newton: 5 residual evaluations, residual 5.0e-16 -> 7.2e-75
+  free squares re-placed: min clearance -1.18e-16; 1 with clearance < 1e-12
+  free squares [48] cannot be given positive clearance: promoted into the KKT system; re-solving
+  projection onto 208 independent of 404 contact equations: max |g| 1.2e-15 -> 3.2e-73 (5 steps)
+  KKT: |A| = 404 contacts, independent |B| = 208, variables 208 (0 frozen flat), system 416x416, cond ~ 8.1e+02
+  Newton: 5 residual evaluations, residual 6.9e-16 -> 2.4e-74
+  free squares re-placed: min clearance 1.9e-5; 0 with clearance < 1e-12
+  89 weakly active (force-free) contacts kept closed
+  redundant contacts (196): max |g| = 3.4e-75; frozen flat variables (0): max |dL/dv| = 0.0e+00
+  S = 8.944071557570315506565203868717210448457074188519900669221705082   (input 8.9440715575703155, shift -2.79e-30)
+  multipliers: equilibrium residual 0.0e+00; best strictly positive choice over the 315 load-bearing contacts: min lambda = 1.870e-05, max 4.251e-01
+  zero modes: 25 of 25 realised by exact motions at fixed S (step 1e-3 both ways, projection residual <= 1.4e-61, correction <= 5.1e-12 t^2, |dS| <= 4.5e-62)
+  second order: rank J_A = 180, dim null(J_A) = 25; reduced Hessian: #neg 0, #zero 25, min eig -1.5570608171402954e-16, min positive None
+    => local minimum of S, strict modulo 25 exact flat motions (PD on the rest of null(J_A)); the configuration is not isolated
+  first-order rigid squares: 43 of 68 load-bearing; squares in zero modes: [16, 17, 18, 19, 20, 21, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 49, 51, 61]
+  corner-corner branches (50 touches as disjunctions, MILP): min first-order dS = 0.00e+00 => jammed in every branch
+  feasibility (mp SAT): active pairs min gap -4.92e-75; non-active pairs min -3.25e-75 (35, 36); vertex-vertex min -1.8e-75; non-active walls min 2.71e-78
+  200 pairs/walls touch (|SAT gap| < 1e-12; load-bearing, weakly active or corner-corner); every other pair/wall is separated by >= 1.9e-5 (2, 53)
+  weakly active (|gap| < 1e-12, not load-bearing): [('-2.7e-75', 16, 17), ('-3.5e-77', 17, 18), ('-3.5e-77', 18, 19), ('-1.4e-76', 19, 20), ('-1.4e-77', 20, 21), ('6.7e-80', 29, 30), ('-6.9e-76', 30, 31), ('0.0', 31, 32), ('-2.4e-76', 32, 33), ('2.1e-77', 33, 34), ('4.1e-76', 34, 61), ('-3.2e-75', 35, 36)] ...
+  certificate (site71.cert): exact check VALID; S' = 8.944071557570315506654644584293 (S' - S = 8.94e-20); exact min wall 5.00e-21, min pair 1.00e-20
+  done in 3.0 s

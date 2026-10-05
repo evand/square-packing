@@ -37,6 +37,7 @@ Proof-piece wishlist (new candidates N1–N15 + 65 open items, picks at the end)
 - [ ] s(17) exact via the s(11) method: on hold (CPU). `tasks/s17-core-isolation/`
 
 ## Packings (low expectation)
+- [ ] Exact solver `search/exact/` + `batch/` (10-05): all 324 register records, 321 certified (315 KKT), every n ≤ 104, 48 below the register.  Registration request to jlevy; open n = 105, 130, 292.
 - [ ] Targets from the conjectures (`search/WISHLIST.md` §P): s(90) < 10 first, then s(183/242/274/308) and the top √7/45° family members (299, 234). Check jlevy's register first.
 
 ## Outreach / hygiene

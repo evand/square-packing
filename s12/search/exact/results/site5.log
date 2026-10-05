@@ -1,0 +1,18 @@
+== inputs/site5.txt: n = 5, S_in = 2.7071067811865475
+  contacts: 20 candidate incidences (|gap| < 1e-09), 0 vertex-vertex touches set aside; jam-LP dual residual 0.0e+00; load-bearing set 20 contacts on 5 squares; free squares (rattlers / force-free): []
+  projection onto 15 independent of 20 contact equations: max |g| 8.8e-17 -> 3.0e-76 (5 steps)
+  KKT: |A| = 20 contacts, independent |B| = 15, variables 16 (0 frozen flat), system 31x31, cond ~ 1.5e+01
+  Newton: 5 residual evaluations, residual 6.0e-16 -> 6.5e-78
+  0 weakly active (force-free) contacts kept closed
+  redundant contacts (5): max |g| = 2.5e-78; frozen flat variables (0): max |dL/dv| = 0.0e+00
+  S = 2.707106781186547524400844362104849039284835937688474036588339869   (input 2.7071067811865475, shift 4.85e-30)
+  multipliers: equilibrium residual 0.0e+00; best strictly positive choice over the 20 load-bearing contacts: min lambda = 1.250e-01, max 3.536e-01
+  second order: rank J_A = 15, dim null(J_A) = 1; reduced Hessian: #neg 0, #zero 0, min eig 0.7071067811865467, min positive 0.7071067811865467
+    => PD: strict local minimum (second-order sufficient)
+  first-order rigid squares: 4 of 5 load-bearing; squares in zero modes: []
+  corner-corner branches (0 touches as disjunctions, MILP): min first-order dS = 0.00e+00 => jammed in every branch
+  feasibility (mp SAT): active pairs min gap -2.5e-78; non-active pairs min - ; vertex-vertex min -; non-active walls min 0.646
+  12 pairs/walls touch (|SAT gap| < 1e-12; load-bearing, weakly active or corner-corner); every other pair/wall is separated by >= 0.646 (4, 'L')
+  certificate (site5.cert): exact check VALID; S' = 2.707106781186547524427915429917 (S' - S = 2.71e-20); exact min wall 5.00e-21, min pair 1.21e-20
+  algebraic: minimal polynomial (deg 2): 2*x**2 - 8*x + 7
+  done in 0.2 s

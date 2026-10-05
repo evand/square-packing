@@ -1,0 +1,94 @@
+{
+ "input": "inputs/site10.txt",
+ "n": 10,
+ "S_input": "3.7071067811865475",
+ "dps": 80,
+ "jam_threshold": 1e-08,
+ "contact_tol": 1e-09,
+ "near_parallel_tol": 0.0,
+ "vertex_vertex_used": false,
+ "n_candidates": 48,
+ "n_vv": 2,
+ "n_active": 36,
+ "jam_residual": 0.0,
+ "load_bearing_squares": 8,
+ "free_squares": [
+  3,
+  7
+ ],
+ "n_weak_equations": 4,
+ "promoted": [],
+ "free_clearance": "0.000050002500083331252354660449640817032512356321911770310143890818382727156289394924",
+ "newton_converged": true,
+ "redundant_contacts": 17,
+ "redundant_max_residual": 3.2464698566178396e-78,
+ "frozen_vars": 1,
+ "frozen_max_stationarity": 1.9083416714929097e-79,
+ "S_exact": "3.707106781186547524400844362104849039284835937688474036588339869",
+ "n_new_contacts_exact": 0,
+ "n_active_exact": 36,
+ "load_bearing_squares_exact": 8,
+ "lambda_A_maxmin": 0.0625,
+ "equilibrium_residual_exact": 0.0,
+ "second_order": {
+  "rank_JA": 21,
+  "dim_null": 4,
+  "first_order_rigid": [
+   0,
+   1,
+   2,
+   4,
+   5,
+   6
+  ],
+  "eig": [
+   -4.080774939477317e-17,
+   1.0951034509855243e-19,
+   0.33901207162467434,
+   0.339012071624675
+  ],
+  "eig_min": -4.080774939477317e-17,
+  "eig_min_nonzero": 0.33901207162467434,
+  "eig_min_positive": 0.33901207162467434,
+  "n_zero": 2,
+  "n_neg": 0,
+  "flat_squares": [
+   8,
+   9
+  ],
+  "descent": [],
+  "status": "local minimum of S, strict modulo 2 exact flat motions (PD on the rest of null(J_A)); the configuration is not isolated",
+  "zero_modes_realised": 2.0,
+  "zero_mode_probe": {
+   "t": 0.001,
+   "worst_residual": 1.8906469017322545e-38,
+   "worst_correction_over_t2": 4.029402515131863e-13,
+   "worst_dS": 9.006935245968392e-38
+  }
+ },
+ "vv_milp_dS": 0.0,
+ "n_vv_exact": 2,
+ "min_gap_active_pairs": -1.0373522776138835e-78,
+ "min_gap_other_pairs": -3.245942746720678e-78,
+ "min_gap_vv": 0.0,
+ "min_wall_other": 5.000250008333125e-05,
+ "weakly_active": [
+  "(8, 9)",
+  "(1, 2)",
+  "(5, 6)"
+ ],
+ "violations": [],
+ "margin_separated": 5.000250008333125e-05,
+ "n_touching_pairs_walls": 19,
+ "cert_valid": true,
+ "S_cert": "3707106781186547524437915429917/1000000000000000000000000000000",
+ "S_cert_decimal": "3.707106781186547524437915429917",
+ "cert_min_wall": 5e-21,
+ "cert_min_pair": 9.999999999999993e-21,
+ "algebraic": [
+  2,
+  "2*x**2 - 12*x + 17",
+  2
+ ],
+ "seconds": 0.4
+}

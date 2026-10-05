@@ -1,0 +1,19 @@
+== inputs/site11.txt: n = 11, S_in = 3.8770835900228142
+  contacts: 44 candidate incidences (|gap| < 1e-09), 1 vertex-vertex touches set aside; jam-LP dual residual 0.0e+00; load-bearing set 44 contacts on 11 squares; free squares (rattlers / force-free): []
+  projection onto 34 independent of 44 contact equations: max |g| 3.8e-16 -> 1.1e-295 (20 steps)
+  KKT: |A| = 44 contacts, independent |B| = 34, variables 34 (0 frozen flat), system 68x68, cond ~ 5.5e+01
+  Newton: 19 residual evaluations, residual 6.6e-16 -> 2.5e-290
+  0 weakly active (force-free) contacts kept closed
+  redundant contacts (10): max |g| = 2.3e-301; frozen flat variables (0): max |dL/dv| = 0.0e+00
+  S = 3.87708359002281417730789706010096270637645566846316256076396834195899   (input 3.8770835900228142, shift 9.63e-31)
+  multipliers: equilibrium residual 0.0e+00; best strictly positive choice over the 44 load-bearing contacts: min lambda = 3.580e-02, max 3.209e-01
+  second order: rank J_A = 34, dim null(J_A) = 0; reduced Hessian: #neg 0, #zero 0, min eig None, min positive None
+    => rigid (null(J_A) = 0)
+  first-order rigid squares: 11 of 11 load-bearing; squares in zero modes: []
+  corner-corner branches (1 touches as disjunctions, MILP): min first-order dS = 0.00e+00 => jammed in every branch
+  feasibility (mp SAT): active pairs min gap -3.73e-301; non-active pairs min 0.0249 (8, 10); vertex-vertex min 0.0; non-active walls min 0.549
+  25 pairs/walls touch (|SAT gap| < 1e-12; load-bearing, weakly active or corner-corner); every other pair/wall is separated by >= 0.0249 (8, 10)
+  weakly active (|gap| < 1e-12, not load-bearing): [('0.0', 3, 5)]
+  certificate (site11.cert): exact check VALID; S' = 3.877083590022814177346667896002 (S' - S = 3.88e-20); exact min wall 5.00e-21, min pair 1.00e-20
+  algebraic: minimal polynomial (deg 8): x**8 - 20*x**7 + 178*x**6 - 842*x**5 + 1923*x**4 - 496*x**3 - 6754*x**2 + 12420*x - 6865
+  done in 3.0 s

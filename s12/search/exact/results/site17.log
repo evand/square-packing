@@ -1,0 +1,20 @@
+== inputs/site17.txt: n = 17, S_in = 4.675530093604551
+  contacts: 70 candidate incidences (|gap| < 1e-09), 2 vertex-vertex touches set aside; jam-LP dual residual 0.0e+00; load-bearing set 58 contacts on 16 squares; free squares (rattlers / force-free): [5]
+  projection onto 49 independent of 64 contact equations: max |g| 4.5e-16 -> 1.2e-74 (5 steps)
+  KKT: |A| = 64 contacts, independent |B| = 49, variables 49 (0 frozen flat), system 98x98, cond ~ 5.0e+01
+  Newton: 5 residual evaluations, residual 7.4e-16 -> 2.0e-77
+  free squares re-placed: min clearance 5.0e-5; 0 with clearance < 1e-12
+  6 weakly active (force-free) contacts kept closed
+  redundant contacts (15): max |g| = 3.9e-78; frozen flat variables (0): max |dL/dv| = 0.0e+00
+  S = 4.6755300936045509516341112704831466487671438550158796954168895041   (input 4.675530093604551, shift 3.15e-30)
+  multipliers: equilibrium residual 0.0e+00; best strictly positive choice over the 58 load-bearing contacts: min lambda = 6.079e-03, max 3.130e-01
+  zero modes: 3 of 3 realised by exact motions at fixed S (step 1e-3 both ways, projection residual <= 6.8e-63, correction <= 1.9e-12 t^2, |dS| <= 3.6e-63)
+  second order: rank J_A = 46, dim null(J_A) = 3; reduced Hessian: #neg 0, #zero 3, min eig -3.2470285690084955e-17, min positive None
+    => local minimum of S, strict modulo 3 exact flat motions (PD on the rest of null(J_A)); the configuration is not isolated
+  first-order rigid squares: 13 of 16 load-bearing; squares in zero modes: [4, 10, 12]
+  corner-corner branches (1 touches as disjunctions, MILP): min first-order dS = 0.00e+00 => jammed in every branch
+  feasibility (mp SAT): active pairs min gap -5.1e-78; non-active pairs min -2.51e-78 (8, 10); vertex-vertex min 0.0; non-active walls min 5.0e-5
+  36 pairs/walls touch (|SAT gap| < 1e-12; load-bearing, weakly active or corner-corner); every other pair/wall is separated by >= 5.0e-5 (4, 5)
+  weakly active (|gap| < 1e-12, not load-bearing): [('-2.5e-78', 8, 10), ('-2.1e-79', 10, 12), ('0.0', 1, 2)]
+  certificate (site17.cert): exact check VALID; S' = 4.67553009360455095168086657142 (S' - S = 4.68e-20); exact min wall 5.00e-21, min pair 1.00e-20
+  done in 0.1 s

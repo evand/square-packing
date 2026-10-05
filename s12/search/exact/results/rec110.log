@@ -1,0 +1,20 @@
+== inputs/rec110.txt: n = 110, S_in = 10.996793274019572
+  contacts: 603 candidate incidences (|gap| < 1e-09), 81 vertex-vertex touches set aside; jam-LP dual residual 0.0e+00; load-bearing set 577 contacts on 108 squares; free squares (rattlers / force-free): [67, 77]
+  projection onto 323 independent of 602 contact equations: max |g| 5.6e-11 -> 7.7e-79 (6 steps)
+  KKT: |A| = 602 contacts, independent |B| = 323, variables 325 (2 frozen flat), system 646x646, cond ~ 2.0e+03
+  Newton: 5 residual evaluations, residual 1.4e-15 -> 1.0e-74
+  free squares re-placed: min clearance 1.52e-5; 0 with clearance < 1e-12
+  25 weakly active (force-free) contacts kept closed
+  redundant contacts (279): max |g| = 1.2e-75; frozen flat variables (2): max |dL/dv| = 1.0e-76
+  S = 10.9967932739537492422230221993768718942121552940373660121884325   (input 10.996793274019572, shift -6.58e-11)
+  multipliers: equilibrium residual 0.0e+00; best strictly positive choice over the 577 load-bearing contacts: min lambda = 5.799e-05, max 2.115e-01
+  zero modes: 10 of 10 realised by exact motions at fixed S (step 1e-3 both ways, projection residual <= 4.5e-61, correction <= 7.7e-12 t^2, |dS| <= 1.4e-61)
+  second order: rank J_A = 315, dim null(J_A) = 10; reduced Hessian: #neg 0, #zero 10, min eig -1.0084148304678408e-16, min positive None
+    => local minimum of S, strict modulo 10 exact flat motions (PD on the rest of null(J_A)); the configuration is not isolated
+  first-order rigid squares: 98 of 108 load-bearing; squares in zero modes: [11, 49, 50, 51, 52, 53, 54, 63, 75, 78]
+  corner-corner branches (81 touches as disjunctions, MILP): min first-order dS = 0.00e+00 => jammed in every branch
+  feasibility (mp SAT): active pairs min gap -3.49e-75; non-active pairs min -3.39e-77 (53, 54); vertex-vertex min -6.77e-77; non-active walls min -6.91e-77
+  317 pairs/walls touch (|SAT gap| < 1e-12; load-bearing, weakly active or corner-corner); every other pair/wall is separated by >= 1.52e-5 (77, 78)
+  weakly active (|gap| < 1e-12, not load-bearing): [('1.6e-79', 49, 50), ('-1.1e-79', 50, 51), ('-6.7e-78', 51, 52), ('-9.5e-78', 52, 53), ('-3.4e-77', 53, 54), ('1.3e-76', 63, 85), ('6.8e-77', 2, 7), ('-1.3e-80', 3, 6), ('2.2e-79', 3, 8), ('6.8e-77', 4, 7), ('0.0', 5, 8), ('1.4e-76', 6, 10)] ...
+  certificate (rec110.cert): exact check VALID; S' = 10.996793273953749242332990132117 (S' - S = 1.1e-19); exact min wall 5.00e-21, min pair 1.00e-20
+  done in 2.8 s

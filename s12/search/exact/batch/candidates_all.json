@@ -1,0 +1,2832 @@
+[
+ {
+  "n": 1,
+  "register": "1.0",
+  "verified": "1",
+  "by": [],
+  "analytic": true,
+  "status": "proved"
+ },
+ {
+  "n": 2,
+  "register": "2.0",
+  "verified": "2",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 3,
+  "register": "2.0",
+  "verified": "2",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 4,
+  "register": "2.0",
+  "verified": "2",
+  "by": [],
+  "analytic": true,
+  "status": "proved"
+ },
+ {
+  "n": 5,
+  "register": "2.70710678118654",
+  "verified": "2.70710678118654752440084436210485",
+  "by": [
+   "Frits G\u00f6bel"
+  ],
+  "analytic": true,
+  "status": "proved"
+ },
+ {
+  "n": 6,
+  "register": "3.0",
+  "verified": "3",
+  "by": [
+   "Michael Kearney",
+   "Peter Shiu"
+  ],
+  "analytic": true,
+  "status": "proved"
+ },
+ {
+  "n": 7,
+  "register": "3.0",
+  "verified": "3",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 8,
+  "register": "3.0",
+  "verified": "3",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 9,
+  "register": "3.0",
+  "verified": "3",
+  "by": [],
+  "analytic": true,
+  "status": "proved"
+ },
+ {
+  "n": 10,
+  "register": "3.70710678118654",
+  "verified": "3.70710678118654752440084436210485",
+  "by": [
+   "Frits G\u00f6bel"
+  ],
+  "analytic": true,
+  "status": "proved"
+ },
+ {
+  "n": 11,
+  "register": "3.87708359002281",
+  "verified": "3.87708359002281417730789706010096",
+  "by": [
+   "Walter Trump"
+  ],
+  "analytic": true,
+  "status": "proved"
+ },
+ {
+  "n": 12,
+  "register": "4.0",
+  "verified": "4",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 13,
+  "register": "4.0",
+  "verified": "4",
+  "by": [
+   "Wolfram Bentz"
+  ],
+  "analytic": true,
+  "status": "proved"
+ },
+ {
+  "n": 14,
+  "register": "4.0",
+  "verified": "4",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 15,
+  "register": "4.0",
+  "verified": "4",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 16,
+  "register": "4.0",
+  "verified": "4",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 17,
+  "register": "4.67553009360455",
+  "verified": "4.6755300936045509516342148538535054",
+  "by": [
+   "John Bidwell"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 18,
+  "register": "4.82287565553229",
+  "verified": "4.82287565553229529525080787681963",
+  "by": [
+   "Pertti H\u00e4m\u00e4l\u00e4inen"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 19,
+  "register": "4.88561808316412",
+  "verified": "4.88561808316412673173558496561293",
+  "by": [
+   "Robert Wainwright"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 20,
+  "register": "5.0",
+  "verified": "5",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 21,
+  "register": "5.0",
+  "verified": "5",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 22,
+  "register": "5.0",
+  "verified": "5",
+  "by": [
+   "Wolfram Bentz"
+  ],
+  "analytic": true,
+  "status": "proved"
+ },
+ {
+  "n": 23,
+  "register": "5.0",
+  "verified": "5",
+  "by": [
+   "Hiroshi Nagamochi"
+  ],
+  "analytic": true,
+  "status": "proved"
+ },
+ {
+  "n": 24,
+  "register": "5.0",
+  "verified": "5",
+  "by": [
+   "Erich Friedman"
+  ],
+  "analytic": true,
+  "status": "proved"
+ },
+ {
+  "n": 25,
+  "register": "5.0",
+  "verified": "5",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 26,
+  "register": "5.62132034355964",
+  "verified": "5.62132034355964257320253308631455",
+  "by": [
+   "Erich Friedman"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 27,
+  "register": "5.70710678118654",
+  "verified": "5.70710678118654752440084436210485",
+  "by": [
+   "Frits G\u00f6bel"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 28,
+  "register": "5.82444461667405",
+  "verified": "6",
+  "by": [
+   "David Ellsworth"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 29,
+  "register": "5.93383346267692",
+  "verified": "5.93383346267692918974379895098",
+  "by": [
+   "Thomas Schadt"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 30,
+  "register": "6.0",
+  "verified": "6",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 31,
+  "register": "6.0",
+  "verified": "6",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 32,
+  "register": "6.0",
+  "verified": "6",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 33,
+  "register": "6.0",
+  "verified": "6",
+  "by": [
+   "Wolfram Bentz"
+  ],
+  "analytic": true,
+  "status": "proved"
+ },
+ {
+  "n": 34,
+  "register": "6.0",
+  "verified": "6",
+  "by": [
+   "Hiroshi Nagamochi"
+  ],
+  "analytic": true,
+  "status": "proved"
+ },
+ {
+  "n": 35,
+  "register": "6.0",
+  "verified": "6",
+  "by": [
+   "Erich Friedman"
+  ],
+  "analytic": true,
+  "status": "proved"
+ },
+ {
+  "n": 36,
+  "register": "6.0",
+  "verified": "6",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 37,
+  "register": "6.59861960924436",
+  "verified": "7",
+  "by": [
+   "David W. Cantrell"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 38,
+  "register": "6.70710678118654",
+  "verified": "6.70710678118654752440084436210485",
+  "by": [
+   "Frits G\u00f6bel"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 39,
+  "register": "6.81072208306864",
+  "verified": "7",
+  "by": [
+   "Thomas Schadt"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 40,
+  "register": "6.82842712474619",
+  "verified": "6.82842712474619009760337744842",
+  "by": [
+   "Frits G\u00f6bel"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 41,
+  "register": "6.92669309446880",
+  "verified": "7",
+  "by": [
+   "Thomas Schadt"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 42,
+  "register": "7.0",
+  "verified": "7",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 43,
+  "register": "7.0",
+  "verified": "7",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 44,
+  "register": "7.0",
+  "verified": "7",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 45,
+  "register": "7.0",
+  "verified": "7",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 46,
+  "register": "7.0",
+  "verified": "7",
+  "by": [
+   "Wolfram Bentz"
+  ],
+  "analytic": true,
+  "status": "proved"
+ },
+ {
+  "n": 47,
+  "register": "7.0",
+  "verified": "7",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 48,
+  "register": "7.0",
+  "verified": "7",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 49,
+  "register": "7.0",
+  "verified": "7",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 50,
+  "register": "7.57142857142857",
+  "verified": "8",
+  "by": [
+   "Thomas Schadt"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 51,
+  "register": "7.70079923541701",
+  "verified": "8",
+  "by": [
+   "Thomas Schadt"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 52,
+  "register": "7.70710678118654",
+  "verified": "7.70710678118654752440084436210485",
+  "by": [
+   "Frits G\u00f6bel"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 53,
+  "register": "7.82287565553229",
+  "verified": "8",
+  "by": [
+   "David W. Cantrell"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 54,
+  "register": "7.84666719284348",
+  "verified": "8",
+  "by": [
+   "David W. Cantrell"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 55,
+  "register": "7.94577100750391",
+  "verified": "8",
+  "by": [
+   "Thomas Schadt"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 56,
+  "register": "8.0",
+  "verified": "8",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 57,
+  "register": "8.0",
+  "verified": "8",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 58,
+  "register": "8.0",
+  "verified": "8",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 59,
+  "register": "8.0",
+  "verified": "8",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 60,
+  "register": "8.0",
+  "verified": "8",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 61,
+  "register": "8.0",
+  "verified": "8",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 62,
+  "register": "8.0",
+  "verified": "8",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 63,
+  "register": "8.0",
+  "verified": "8",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 64,
+  "register": "8.0",
+  "verified": "8",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 65,
+  "register": "8.53553390593273",
+  "verified": "8.53553390593273762200422181052425",
+  "by": [
+   "Frits G\u00f6bel"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 66,
+  "register": "8.65685424949238",
+  "verified": "8.65685424949238019520675489683879",
+  "by": [
+   "Evert Stenlund"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 67,
+  "register": "8.70710678118654",
+  "verified": "8.70710678118654752440084436210485",
+  "by": [
+   "Evert Stenlund"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 68,
+  "register": "8.798795237222592",
+  "verified": "8.798795237222592",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 69,
+  "register": "8.82719465572973",
+  "verified": "8.82719465572975",
+  "by": [
+   "Maurizio Morandi"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 70,
+  "register": "8.88166675700900",
+  "verified": "9",
+  "by": [
+   "Joe DeVincentis"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 71,
+  "register": "8.94407155757031",
+  "verified": "9",
+  "by": [
+   "Thomas Schadt"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 72,
+  "register": "9.0",
+  "verified": "9",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 73,
+  "register": "9.0",
+  "verified": "9",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 74,
+  "register": "9.0",
+  "verified": "9",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 75,
+  "register": "9.0",
+  "verified": "9",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 76,
+  "register": "9.0",
+  "verified": "9",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 77,
+  "register": "9.0",
+  "verified": "9",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 78,
+  "register": "9.0",
+  "verified": "9",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 79,
+  "register": "9.0",
+  "verified": "9",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 80,
+  "register": "9.0",
+  "verified": "9",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 81,
+  "register": "9.0",
+  "verified": "9",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 82,
+  "register": "9.53553390593273",
+  "verified": "9.53553390593273762200422181052425",
+  "by": [
+   "Frits G\u00f6bel"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 83,
+  "register": "9.63475764863108",
+  "verified": "9.63475764863195",
+  "by": [
+   "K\u00e1roly Hajba"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 84,
+  "register": "9.70710678118654",
+  "verified": "9.70710678118654752440084436210485",
+  "by": [
+   "Evert Stenlund"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 85,
+  "register": "9.74264068711928",
+  "verified": "9.74264068711928514640506617262909",
+  "by": [
+   "Erich Friedman"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 86,
+  "register": "9.82287565553229",
+  "verified": "9.82287565553229529525080787681963",
+  "by": [
+   "Erich Friedman"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 87,
+  "register": "9.83881526994826",
+  "verified": "9.83881526994915",
+  "by": [
+   "David Ellsworth"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 88,
+  "register": "9.88815305375857",
+  "verified": "10",
+  "by": [
+   "David Ellsworth"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 89,
+  "register": "9.94974746830583",
+  "verified": "9.94974746830583267080591053473394",
+  "by": [
+   "Evert Stenlund"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 90,
+  "register": "10.0",
+  "verified": "10",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 91,
+  "register": "10.0",
+  "verified": "10",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 92,
+  "register": "10.0",
+  "verified": "10",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 93,
+  "register": "10.0",
+  "verified": "10",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 94,
+  "register": "10.0",
+  "verified": "10",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 95,
+  "register": "10.0",
+  "verified": "10",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 96,
+  "register": "10.0",
+  "verified": "10",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 97,
+  "register": "10.0",
+  "verified": "10",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 98,
+  "register": "10.0",
+  "verified": "10",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 99,
+  "register": "10.0",
+  "verified": "10",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 100,
+  "register": "10.0",
+  "verified": "10",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 101,
+  "register": "10.53553390593273",
+  "verified": "11",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 102,
+  "register": "10.607174680178947",
+  "verified": "10.607174680178947",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 103,
+  "register": "10.703516755580015",
+  "verified": "10.703516755580016",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 104,
+  "register": "10.70710678118654",
+  "verified": "11",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 105,
+  "register": "10.806077865540567",
+  "verified": "10.806077865540568",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 106,
+  "register": "10.822908044141968",
+  "verified": "10.822908044141969",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 107,
+  "register": "10.84666719284348",
+  "verified": "11",
+  "by": [
+   "K\u00e1roly Hajba"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 108,
+  "register": "10.92591939016138",
+  "verified": "11",
+  "by": [
+   "K\u00e1roly Hajba"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 109,
+  "register": "10.94974746830583",
+  "verified": "11",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 110,
+  "register": "10.996783396634358",
+  "verified": "10.996783396634359",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 111,
+  "register": "11.0",
+  "verified": "11",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 112,
+  "register": "11.0",
+  "verified": "11",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 113,
+  "register": "11.0",
+  "verified": "11",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 114,
+  "register": "11.0",
+  "verified": "11",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 115,
+  "register": "11.0",
+  "verified": "11",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 116,
+  "register": "11.0",
+  "verified": "11",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 117,
+  "register": "11.0",
+  "verified": "11",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 118,
+  "register": "11.0",
+  "verified": "11",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 119,
+  "register": "11.0",
+  "verified": "11",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 120,
+  "register": "11.0",
+  "verified": "11",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 121,
+  "register": "11.0",
+  "verified": "11",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 122,
+  "register": "11.53553390593273",
+  "verified": "12",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 123,
+  "register": "11.601384658385687",
+  "verified": "11.601384658385687",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 124,
+  "register": "11.65685424949238",
+  "verified": "12",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 125,
+  "register": "11.70710678118654",
+  "verified": "12",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 126,
+  "register": "11.77473513240654",
+  "verified": "12",
+  "by": [
+   "Joost de Winter"
+  ],
+  "analytic": false,
+  "status": "open"
+ },
+ {
+  "n": 127,
+  "register": "11.82287565553229",
+  "verified": "12",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 128,
+  "register": "11.82509196821368",
+  "verified": "12",
+  "by": [
+   "David Ellsworth"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 129,
+  "register": "11.88130621809000",
+  "verified": "12",
+  "by": [
+   "David Ellsworth"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 130,
+  "register": "11.911187706548755",
+  "verified": "11.911187706548756",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 131,
+  "register": "11.954916830219048",
+  "verified": "11.954916830219049",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 132,
+  "register": "11.991327887694469",
+  "verified": "11.991327887694469",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 133,
+  "register": "12.0",
+  "verified": "12",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 134,
+  "register": "12.0",
+  "verified": "12",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 135,
+  "register": "12.0",
+  "verified": "12",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 136,
+  "register": "12.0",
+  "verified": "12",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 137,
+  "register": "12.0",
+  "verified": "12",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 138,
+  "register": "12.0",
+  "verified": "12",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 139,
+  "register": "12.0",
+  "verified": "12",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 140,
+  "register": "12.0",
+  "verified": "12",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 141,
+  "register": "12.0",
+  "verified": "12",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 142,
+  "register": "12.0",
+  "verified": "12",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 143,
+  "register": "12.0",
+  "verified": "12",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 144,
+  "register": "12.0",
+  "verified": "12",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 145,
+  "register": "12.53553390593273",
+  "verified": "13",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 146,
+  "register": "12.60090777851301",
+  "verified": "13",
+  "by": [
+   "David W. Cantrell"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 147,
+  "register": "12.65685424949238",
+  "verified": "13",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 148,
+  "register": "12.65685424949238",
+  "verified": "13",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 149,
+  "register": "12.70710678118654",
+  "verified": "13",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 150,
+  "register": "12.77817459305202",
+  "verified": "13",
+  "by": [
+   "David Ellsworth"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 151,
+  "register": "12.82287565553229",
+  "verified": "13",
+  "by": [
+   "David Ellsworth"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 152,
+  "register": "12.830718800982252",
+  "verified": "12.830718800982253",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 153,
+  "register": "12.88166675700900",
+  "verified": "13",
+  "by": [
+   "David Ellsworth"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 154,
+  "register": "12.931663721169976",
+  "verified": "12.931663721169976",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 155,
+  "register": "12.955619592137850",
+  "verified": "12.955619592137851",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 156,
+  "register": "12.982082698520427",
+  "verified": "12.982082698520428",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 157,
+  "register": "13.0",
+  "verified": "13",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 158,
+  "register": "13.0",
+  "verified": "13",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 159,
+  "register": "13.0",
+  "verified": "13",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 160,
+  "register": "13.0",
+  "verified": "13",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 161,
+  "register": "13.0",
+  "verified": "13",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 162,
+  "register": "13.0",
+  "verified": "13",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 163,
+  "register": "13.0",
+  "verified": "13",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 164,
+  "register": "13.0",
+  "verified": "13",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 165,
+  "register": "13.0",
+  "verified": "13",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 166,
+  "register": "13.0",
+  "verified": "13",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 167,
+  "register": "13.0",
+  "verified": "13",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 168,
+  "register": "13.0",
+  "verified": "13",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 169,
+  "register": "13.0",
+  "verified": "13",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 170,
+  "register": "13.53553390593273",
+  "verified": "14",
+  "by": [
+   "K\u00e1roly Hajba"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 171,
+  "register": "13.57142857142857",
+  "verified": "14",
+  "by": [
+   "David Ellsworth"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 172,
+  "register": "13.618988956935731",
+  "verified": "13.618988956935731",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 173,
+  "register": "13.65685424949238",
+  "verified": "14",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 174,
+  "register": "13.70710678118654",
+  "verified": "14",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 175,
+  "register": "13.77817459305202",
+  "verified": "14",
+  "by": [
+   "David Ellsworth"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 176,
+  "register": "13.82287565553229",
+  "verified": "14",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 177,
+  "register": "13.822979734183507",
+  "verified": "13.822979734183508",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 178,
+  "register": "13.84666719284348",
+  "verified": "14",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 179,
+  "register": "13.89534106997649",
+  "verified": "14",
+  "by": [
+   "David Ellsworth"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 180,
+  "register": "13.927888140501693",
+  "verified": "13.927888140501694",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 181,
+  "register": "13.953748821957927",
+  "verified": "13.953748821957928",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 182,
+  "register": "13.974090713124822",
+  "verified": "13.974090713124822",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 183,
+  "register": "14.0",
+  "verified": "14",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 184,
+  "register": "14.0",
+  "verified": "14",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 185,
+  "register": "14.0",
+  "verified": "14",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 186,
+  "register": "14.0",
+  "verified": "14",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 187,
+  "register": "14.0",
+  "verified": "14",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 188,
+  "register": "14.0",
+  "verified": "14",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 189,
+  "register": "14.0",
+  "verified": "14",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 190,
+  "register": "14.0",
+  "verified": "14",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 191,
+  "register": "14.0",
+  "verified": "14",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 192,
+  "register": "14.0",
+  "verified": "14",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 193,
+  "register": "14.0",
+  "verified": "14",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 194,
+  "register": "14.0",
+  "verified": "14",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 195,
+  "register": "14.0",
+  "verified": "14",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 196,
+  "register": "14.0",
+  "verified": "14",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 197,
+  "register": "14.53553390593273",
+  "verified": "15",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 198,
+  "register": "14.57142857142857",
+  "verified": "15",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 199,
+  "register": "14.618988956907218",
+  "verified": "14.618988956907219",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 200,
+  "register": "14.65685424949238",
+  "verified": "15",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 201,
+  "register": "14.70710678118654",
+  "verified": "15",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 202,
+  "register": "14.72792206135785",
+  "verified": "15",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 203,
+  "register": "14.77817459305202",
+  "verified": "15",
+  "by": [
+   "David Ellsworth"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 204,
+  "register": "14.82287565553229",
+  "verified": "15",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 205,
+  "register": "14.82445114612408",
+  "verified": "15",
+  "by": [
+   "David Ellsworth"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 206,
+  "register": "14.860158663395859",
+  "verified": "14.860158663395861",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 207,
+  "register": "14.893954634242480",
+  "verified": "14.893954634242480",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 208,
+  "register": "14.926534459703511",
+  "verified": "14.926534459703512",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 209,
+  "register": "14.953939011860642",
+  "verified": "14.953939011860643",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 210,
+  "register": "14.973001116591412",
+  "verified": "14.973001116591413",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 211,
+  "register": "14.99796070496771500150",
+  "verified": "14.99796070496771500150",
+  "by": [
+   "Joost de Winter"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 212,
+  "register": "15.0",
+  "verified": "15",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 213,
+  "register": "15.0",
+  "verified": "15",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 214,
+  "register": "15.0",
+  "verified": "15",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 215,
+  "register": "15.0",
+  "verified": "15",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 216,
+  "register": "15.0",
+  "verified": "15",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 217,
+  "register": "15.0",
+  "verified": "15",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 218,
+  "register": "15.0",
+  "verified": "15",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 219,
+  "register": "15.0",
+  "verified": "15",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 220,
+  "register": "15.0",
+  "verified": "15",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 221,
+  "register": "15.0",
+  "verified": "15",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 222,
+  "register": "15.0",
+  "verified": "15",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 223,
+  "register": "15.0",
+  "verified": "15",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 224,
+  "register": "15.0",
+  "verified": "15",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 225,
+  "register": "15.0",
+  "verified": "15",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 226,
+  "register": "15.53553390593273",
+  "verified": "16",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 227,
+  "register": "15.57106781186547",
+  "verified": "16",
+  "by": [
+   "David Ellsworth"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 228,
+  "register": "15.604602454552252",
+  "verified": "15.604602454552252",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 229,
+  "register": "15.65685424949238",
+  "verified": "16",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 230,
+  "register": "15.68292682926829",
+  "verified": "16",
+  "by": [
+   "David Ellsworth"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 231,
+  "register": "15.70710678118654",
+  "verified": "16",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 232,
+  "register": "15.77817459305202",
+  "verified": "16",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 233,
+  "register": "15.77817459305202",
+  "verified": "16",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 234,
+  "register": "15.82287565553229",
+  "verified": "16",
+  "by": [
+   "David Ellsworth"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 235,
+  "register": "15.82660563342856",
+  "verified": "16",
+  "by": [
+   "David Ellsworth",
+   "David W. Cantrell"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 236,
+  "register": "15.872219025616040",
+  "verified": "15.872219025616041",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 237,
+  "register": "15.911191683008479",
+  "verified": "15.911191683008479",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 238,
+  "register": "15.931725503598480",
+  "verified": "15.931725503598481",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 239,
+  "register": "15.953819333484685",
+  "verified": "15.953819333484685",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 240,
+  "register": "15.969685337536875",
+  "verified": "15.969685337536875",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 241,
+  "register": "15.988132439537539",
+  "verified": "15.988132439537540",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 242,
+  "register": "16.0",
+  "verified": "16",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 243,
+  "register": "16.0",
+  "verified": "16",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 244,
+  "register": "16.0",
+  "verified": "16",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 245,
+  "register": "16.0",
+  "verified": "16",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 246,
+  "register": "16.0",
+  "verified": "16",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 247,
+  "register": "16.0",
+  "verified": "16",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 248,
+  "register": "16.0",
+  "verified": "16",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 249,
+  "register": "16.0",
+  "verified": "16",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 250,
+  "register": "16.0",
+  "verified": "16",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 251,
+  "register": "16.0",
+  "verified": "16",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 252,
+  "register": "16.0",
+  "verified": "16",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 253,
+  "register": "16.0",
+  "verified": "16",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 254,
+  "register": "16.0",
+  "verified": "16",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 255,
+  "register": "16.0",
+  "verified": "16",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 256,
+  "register": "16.0",
+  "verified": "16",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 257,
+  "register": "16.53553390593273",
+  "verified": "17",
+  "by": [
+   "David Ellsworth"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 258,
+  "register": "16.57106781186547",
+  "verified": "17",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 259,
+  "register": "16.602568490497649",
+  "verified": "16.602568490497652",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 260,
+  "register": "16.65685424949238",
+  "verified": "17",
+  "by": [
+   "David Ellsworth"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 261,
+  "register": "16.68292682926829",
+  "verified": "17",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 262,
+  "register": "16.70710678118654",
+  "verified": "17",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 263,
+  "register": "16.742270262031791",
+  "verified": "16.742270262031792",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 264,
+  "register": "16.77817459305202",
+  "verified": "17",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 265,
+  "register": "16.77817459305202",
+  "verified": "17",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 266,
+  "register": "16.82306208283780",
+  "verified": "17",
+  "by": [
+   "David Ellsworth"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 267,
+  "register": "16.84666719284348",
+  "verified": "17",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 268,
+  "register": "16.878814821018413",
+  "verified": "16.878814821018413",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 269,
+  "register": "16.905967058598858",
+  "verified": "16.905967058598859",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 270,
+  "register": "16.937810329390629",
+  "verified": "16.937810329390629",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 271,
+  "register": "16.950820792633813",
+  "verified": "16.950820792633813",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 272,
+  "register": "16.968165867864400",
+  "verified": "16.968165867864400",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 273,
+  "register": "16.983925962660670",
+  "verified": "16.983925962660670",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 274,
+  "register": "17.0",
+  "verified": "17",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 275,
+  "register": "17.0",
+  "verified": "17",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 276,
+  "register": "17.0",
+  "verified": "17",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 277,
+  "register": "17.0",
+  "verified": "17",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 278,
+  "register": "17.0",
+  "verified": "17",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 279,
+  "register": "17.0",
+  "verified": "17",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 280,
+  "register": "17.0",
+  "verified": "17",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 281,
+  "register": "17.0",
+  "verified": "17",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 282,
+  "register": "17.0",
+  "verified": "17",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 283,
+  "register": "17.0",
+  "verified": "17",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 284,
+  "register": "17.0",
+  "verified": "17",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 285,
+  "register": "17.0",
+  "verified": "17",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 286,
+  "register": "17.0",
+  "verified": "17",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 287,
+  "register": "17.0",
+  "verified": "17",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 288,
+  "register": "17.0",
+  "verified": "17",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 289,
+  "register": "17.0",
+  "verified": "17",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 290,
+  "register": "17.53553390593273",
+  "verified": "18",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 291,
+  "register": "17.53553390593273",
+  "verified": "18",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 292,
+  "register": "17.597249391199519",
+  "verified": "17.597249391199519",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 293,
+  "register": "17.63414634146341",
+  "verified": "18",
+  "by": [
+   "David Ellsworth"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 294,
+  "register": "17.65685424949238",
+  "verified": "18",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 295,
+  "register": "17.70710678118654",
+  "verified": "18",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 296,
+  "register": "17.70710678118654",
+  "verified": "18",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 297,
+  "register": "17.740417287548325",
+  "verified": "17.740417287548325",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 298,
+  "register": "17.77817459305202",
+  "verified": "18",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 299,
+  "register": "17.82287565553229",
+  "verified": "18",
+  "by": [],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 300,
+  "register": "17.82412338847854",
+  "verified": "18",
+  "by": [
+   "David Ellsworth"
+  ],
+  "analytic": true,
+  "status": "open"
+ },
+ {
+  "n": 301,
+  "register": "17.846667192848074",
+  "verified": "17.846667192848075",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 302,
+  "register": "17.885993892536710",
+  "verified": "17.885993892536711",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 303,
+  "register": "17.924341009860250",
+  "verified": "17.924341009860250",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 304,
+  "register": "17.934650018395903",
+  "verified": "17.934650018395904",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 305,
+  "register": "17.952959459023539",
+  "verified": "17.952959459023541",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 306,
+  "register": "17.963438139777139",
+  "verified": "17.963438139777141",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 307,
+  "register": "17.981030548643712",
+  "verified": "17.981030548643712",
+  "by": [
+   "Francisco Couzo"
+  ],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 308,
+  "register": "18.0",
+  "verified": "18",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 309,
+  "register": "18.0",
+  "verified": "18",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 310,
+  "register": "18.0",
+  "verified": "18",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 311,
+  "register": "18.0",
+  "verified": "18",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 312,
+  "register": "18.0",
+  "verified": "18",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 313,
+  "register": "18.0",
+  "verified": "18",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 314,
+  "register": "18.0",
+  "verified": "18",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 315,
+  "register": "18.0",
+  "verified": "18",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 316,
+  "register": "18.0",
+  "verified": "18",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 317,
+  "register": "18.0",
+  "verified": "18",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 318,
+  "register": "18.0",
+  "verified": "18",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 319,
+  "register": "18.0",
+  "verified": "18",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 320,
+  "register": "18.0",
+  "verified": "18",
+  "by": [],
+  "analytic": null,
+  "status": "open"
+ },
+ {
+  "n": 321,
+  "register": "18.0",
+  "verified": "18",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 322,
+  "register": "18.0",
+  "verified": "18",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 323,
+  "register": "18.0",
+  "verified": "18",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ },
+ {
+  "n": 324,
+  "register": "18.0",
+  "verified": "18",
+  "by": [],
+  "analytic": null,
+  "status": "proved"
+ }
+]
