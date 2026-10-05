@@ -12,7 +12,8 @@ s(k²−c) = k`, so `c*(k) ≥ ⌈L(k)⌉ − 1`.  `S_ins(k)` = best saving of a
 `M(w)` = seam capacity of a σ = 0 band of width w (SEAM_W1).  `D(w)` = per-corner saving of a fixed-profile family.
 
 Sections: **N** new candidates (literature-checked 2026-10-03, citations in `notes/wishlist-literature-2026-10-03.md`), **P** packing targets (2026-10-04), then **A–F** items already stated in our notes (A
-Friedman structure, B seam/wall/corner, C threshold certificates, D n = 12, E n = 11 and 17, F Lean), then picks.
+Friedman structure, B seam/wall/corner, C threshold certificates, D n = 12, E n = 11 and 17, F Lean), **G** algebraic
+degree of s(n) (notes only), then picks.
 Superseded or refuted items are omitted on purpose: n12-gap §7's list, the Roth–Vaughan route to A, the slide
 conjecture (n = 89), corner-local savings (`D*(R) = 0`), S2 at c = 3, 4 (`S2_INSERTABLE.md`), exact SOS certificates for n = 12 (`SOS_PROBE.md`, n12-gap §4.12), band-LP values as caps
 on M(w), clique certificates below 12, the s(12) ≥ 3.98 consolation prize.
@@ -201,6 +202,24 @@ four-sub-box identity (§7.1); the crossing-square Lemma 1 (S2_INSERTABLE §2).
 | F9 | **Validity of the w = 1 profile** (M(1) ≥ ¾), via the reusable slice lemma `N(y) ≥ 1[W(y) ≥ 1]`. | blocked on B1 (Cavalieri plus trig casework). | `M(1) = ¾` in Lean | FRIEDMAN §9.6 item 5 |
 | F10 | **Insertion lemma in Lean:** parametrise `bentz_of_valid7` / `BentzFam` over c and the box predicate. | **(Lean-ready)**: the paper proof is short and `BentzFam` is already generic in R. | certificate-level Friedman (C3) in Lean | FRIEDMAN §2.1, §6 |
 | F11 | **Ascent `c*(k+1) ≤ c*(k) + 2`**, the budget lemma, the row lemma (FRIEDMAN §8). | **(Lean-ready)** elementary, with packing-side and measure-side proofs on paper.  Low payoff each. | groundwork for C2/C5 statements in Lean | FRIEDMAN §1.2, §8 |
+
+## G. Algebraic degree of s(n)  (4 items; notes only, not for `problems.html`: Evan 2026-10-04, "neat but extremely niche")
+
+Every s(n) is algebraic (routine: Tarski–Seidenberg, angles as (c, s) with c² + s² = 1).  Data: Ellsworth's
+exact forms (`notes/conjectures-literature-2026-10-04.md` §2).  **s(83) ≤ 9.634757648631…** has degree **672**: we factored the
+`Root[…, 27]` polynomial from `square-83.svg` with python-flint (2026-10-04).  It is irreducible over ℚ, has coefficients up to
+724 digits and 52 real roots, and s is the 27th.  Structure (from the SVG's Mathematica model): 55 axis-parallel squares, and 28
+tilted squares in four groups at three angles (a, b ≈ 43°, c ≈ 36°).  There are 3 contact equations in (s, a, b, c), so the
+contacts leave a one-parameter motion.  The fourth equation is that s is stationary along it,
+`det ∂(f1, f2, f3)/∂(a, b, c) = 0`, and that condition is where the degree comes from.  Rigid records stay small (s(11), s(37):
+degree 8).  Next largest on the page: 198 (s(206)), 158 (s(179)), 144 (s(108)), 83 (s(235)).
+
+| # | Statement | Status / evidence | Would unlock | Source |
+|---|---|---|---|---|
+| G1 | **Is deg s(n) unbounded?** | open.  Every proved non-integer value has degree ≤ 2 until s(11) (below).  Best-known values reach 672 (n = 83), but those are not optima. | — | this list |
+| G2 | **Least n with s(n) provably of degree ≥ 3.** | **n = 11 once E3 is confirmed**: s(11) is Trump's octic root (degree 8).  It is least because s(n) is known for every n ≤ 10, and those values all lie in ℚ(√2) (s(5) = 2+½√2, s(10) = 3+½√2, the rest integers).  So s(11) is also the first s(n) outside ℚ(√2). | a one-line corollary of T-060 | E3; README |
+| G3 | **Growth of the maximum degree** of a locally optimal packing of n squares (or of s(n)). | Upper bound **2^{O(n)}**: routine via quantifier-elimination / critical-point degree bounds (Basu–Pollack–Roy; cf. Nie–Ranestad, algebraic degree of polynomial optimization).  Probably really 2^{O(#tilted squares)}.  Not stated for packings anywhere we found.  Lower bound for local optima: probably easy by chaining mechanisms like s(83)'s; for s(n) itself it is G1. | — | conjectures-literature §2 |
+| G4 | **Degree from the contact structure:** bound deg s in terms of the number of distinct angles and how far the contacts are from rigid (number of stationarity conditions). | open; data only (Ellsworth's table).  This is the same pipeline as TODO "pose → certified local optimum → closed-form s". | predicts which records hide large degrees (37 entries are "not yet analytically optimized") | TODO Packings |
 
 ---
 

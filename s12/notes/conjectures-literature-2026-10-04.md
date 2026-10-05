@@ -30,6 +30,9 @@ prize challenges, the status of Erdős #106, and Ellsworth's implicit {s(n²+1)}
 * DS7 (1998–2009) and Wikipedia have no discussion of algebraicity, degree, rationality or radicals [P, full-text grep].
 * [I] Algebraicity of every s(n) follows from Tarski–Seidenberg: it is the minimum of a semialgebraic problem, with angles as
   (c,s), c²+s²=1.  No source states this.  No source discusses constructibility or radicals; s(11)'s octic is not solved in radicals.
+* [P, our check 2026-10-04] The s(83) polynomial (`Root[…, 27]` in `square-83.svg`; Chang + GPT, Sep 2026, checked by Ellsworth to
+  10⁶ digits) is **irreducible over ℚ** (python-flint), so 672 is the true degree.  Its 52 real roots include s as the 27th.  Why it
+  is so large, and the open questions: `search/WISHLIST.md` §G.
 
 ## 3. Non-integer plateaus — **data only; no discussion found**
 * Ellsworth [P] groups equal best-known values together: 147,148 (7+4√2); 232,233 (8+11√2/2); 264,265 (9+11√2/2); 290,291 (14+5√2/2,
