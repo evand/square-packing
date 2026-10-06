@@ -73,3 +73,8 @@ Other cases `ΣK <= 3` need `Z <= ΣK − 1` too: corner-occupancy lemmas.
   <= 2 edge squares per wall).  Two candidate joint lemmas with room: (A) z >= 5 ⇒ margin <= −0.034; (B) 3 edge squares
   on one wall ⇒ <= −0.050.  Neither touches the 18 zero-margin classes, which each need the leaf-A rigidity argument.
   Witness margins rechecked independently 10-06.
+* 10-06 follow-up [measured]: all 80 margin-0 census witnesses (18 classes) contain a wall-to-wall touching path of
+  exactly axis-parallel squares (tilted squares up to 44.7° ride along).  Same picture as `BANDCUT_K.md` §0 and
+  `RANK8.md`: occupancy class does not change the per-configuration problem (chain existence at δ >= 0 = obstruction X,
+  `notes/n12-gap.md` §4.11).  Only 4 witnesses per class except the equality class (12): optimiser outputs, not a
+  plateau sample.
