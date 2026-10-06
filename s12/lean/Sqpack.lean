@@ -1,5 +1,6 @@
 import Sqpack.Basic
 import Sqpack.Chord
+import Sqpack.ChordLine
 import Sqpack.ZeroMargin
 import Sqpack.D4
 import Sqpack.Cover

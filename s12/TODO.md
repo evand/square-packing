@@ -16,6 +16,12 @@ Proof-piece wishlist (new candidates N1–N15 + 65 open items, picks at the end)
 - [ ] S1 measurement (optional): full insertable LP class (b) at k = 6, 7; is the price ≈ 1.8 k-independent? ~1–2e4 CPU-s (`S2_INSERTABLE.md` §5).
 - [ ] Corner coupling (R3): does D(w) ≥ κ M(w)? Start with the corner dual at w = 1 (D = ½, corner cost ¼?).
 
+## s(12): group-chat lemmas (10-05, `tasks/n12-chat-lemmas/`; low priority, not a route change)
+- [ ] Ask the group for `n12_progress_evidence_2026-10-04.tar.gz`; replay wall-strip h = 1.2071 (8.2M leaves), p37_b24, E2 point certs with our checkers.
+- [ ] Lean: strip demo h = 1.13 (`strip-demo/PROOF.md` §8: 26 boxes, 234 rational leaves + ordering/chain lemmas).
+- [ ] Lean: their corner–edge lemma `U+V ≥ 3.91c − 1.91` (side-free, holds at t = 4; analytic + one Bernstein quartic).
+- [ ] Counting route (README Outcome): partitions the zero set into 18 margin-0 classes, doesn't shrink it. Only (A) z ≥ 5, (B) 3 edge/wall have room.
+
 ## Correctness / review
 - [ ] Owed on jlevy (`notes/jlevy-s17-techniques.md` §4): #238 `s12/verify` exits 0 on NOT VERIFIED / partial runs, `cargo build | tail -1` hides failures; #256 stale s60 README paragraph, pin/print zmx2 source digest; #279 replay wand125's s59/s77 (he said yes).
 - [ ] Second implementation of `Valid9` (F₄ k ≥ 8 rests on qx2 alone): deferred 10-03, Lean/simplification first; others may do it (k2m3 route: `ZMX2_AREA.md`).
