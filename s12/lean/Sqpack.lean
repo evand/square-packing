@@ -44,6 +44,7 @@ import Sqpack.FCSquarePacking
 import Sqpack.SpecFC
 import Sqpack.SpecChelokot
 import Sqpack.ExactPack
+import Sqpack.ShadowCheck
 import Sqpack.Exact.N5
 import Sqpack.ExactCheck
 import Sqpack.Exact.N5c

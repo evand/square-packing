@@ -1,4 +1,5 @@
 import Sqpack.ExactPack
+import Sqpack.ShadowCheck
 
 /-!
 # A checker for packings over a number field
@@ -15,6 +16,11 @@ the given side line.  Each such condition, multiplied by a positive denominator,
 `N ∈ ℚ[T]` (`boxN`, `sepN`), and is proved either as an identity (`N = q f`, so `N(t) = 0`) or by a bound:
 `r = N - q f` has `r(t) = N(t)`, and `r(m) - w B > 0` where `m` is the midpoint, `w` the half-width and `B` bounds
 `|r'|` (`posOK`).  Polynomial division is not trusted: `N = q f + r` is re-checked as an identity of coefficient lists.
+
+Rational shadows (`ShadowCheck`): each square also carries rational enclosures of `(x, y, c, s)` (`encl`, proved once
+per square by `enclOK`), and `S ≥ Sl`.  Walls and pairs try the cheap interval / disc tests first and fall back to
+the exact conditions only where those fail (in practice: at contacts), so the field arithmetic is O(contacts), not
+O(n²).
 
 `packs_of_check`: `check C = true`, `f(t) = 0`, `t ∈ [a, b]` ⟹ `Packs n (S(t))`.  With a sign change of `f` on
 `[a, b]` (`exists_root`), such a `t` exists.  Everything is decidable, so a concrete certificate is checked by
@@ -369,37 +375,59 @@ structure Cert (n : ℕ) where
   sq : Fin n → SqD
   /-- For `i < j`: `(true, k)` = side `k` of `i` separates; `(false, k)` = side `k` of `j`. -/
   sep : Fin n → Fin n → Bool × Fin 4
+  /-- Rational enclosures of each square's data at the root. -/
+  encl : Fin n → Shadow.Encl
+  /-- A rational lower bound for the side. -/
+  Sl : ℚ
+
+/-- `encl i` encloses square `i`'s data: eight positivity conditions (`c = cN/d` with `d > 0`). -/
+def enclOK {n : ℕ} (C : Cert n) (i : Fin n) : Bool :=
+  let q := C.sq i
+  let E := C.encl i
+  [psub q.x [E.x.1], psub [E.x.2] q.x, psub q.y [E.y.1], psub [E.y.2] q.y,
+   psub (csN q).1 (psmul E.c.1 (dd q)), psub (psmul E.c.2 (dd q)) (csN q).1,
+   psub (csN q).2 (psmul E.s.1 (dd q)), psub (psmul E.s.2 (dd q)) (csN q).2].all (nonnegOK C.f C.a C.b)
+
+/-- The exact wall conditions. -/
+def boxOKx {n : ℕ} (C : Cert n) (i : Fin n) : Bool :=
+  halves.all fun a => halves.all fun b => (boxN C.S (C.sq i) a b).all (nonnegOK C.f C.a C.b)
 
 def boxOK {n : ℕ} (C : Cert n) (i : Fin n) : Bool :=
-  sqOK C.f (C.sq i) &&
-    halves.all fun a => halves.all fun b => (boxN C.S (C.sq i) a b).all (nonnegOK C.f C.a C.b)
+  sqOK C.f (C.sq i) && enclOK C i && (Shadow.inBoxOK (C.encl i) C.Sl || boxOKx C i)
 
-def pairOK {n : ℕ} (C : Cert n) (i j : Fin n) : Bool :=
+/-- `S ≥ Sl`. -/
+def SlOK {n : ℕ} (C : Cert n) : Bool := nonnegOK C.f C.a C.b (psub C.S [C.Sl])
+
+/-- The exact pair conditions. -/
+def pairOKx {n : ℕ} (C : Cert n) (i j : Fin n) : Bool :=
   halves.all fun a => halves.all fun b =>
     if (C.sep i j).1 then nonnegOK C.f C.a C.b (sepN (C.sq i) (C.sq j) (C.sep i j).2 a b)
     else nonnegOK C.f C.a C.b (sepN (C.sq j) (C.sq i) (C.sep i j).2 a b)
+
+def pairOK {n : ℕ} (C : Cert n) (i j : Fin n) : Bool :=
+  Shadow.pairOK (C.encl i) (C.encl j) || pairOKx C i j
 
 /-- The pairs `(i, j)`, `j > i`: one row. -/
 def rowOK {n : ℕ} (C : Cert n) (i : Fin n) : Bool :=
   (List.finRange n).all fun j => !decide (i < j) || pairOK C i j
 
 def check {n : ℕ} (C : Cert n) : Bool :=
-  (List.finRange n).all (boxOK C) && (List.finRange n).all (rowOK C)
+  SlOK C && (List.finRange n).all (boxOK C) && (List.finRange n).all (rowOK C)
 
 /-! ## Soundness -/
 
 section sound
 variable {n : ℕ} (C : Cert n) {t : ℝ}
 
-lemma inBox_of_boxOK {i : Fin n} (h : boxOK C i = true) (hf : peval C.f t = 0) (ha : (C.a : ℝ) ≤ t)
-    (hb : t ≤ C.b) :
+lemma inBox_of_boxOKx {i : Fin n} (hsq : sqOK C.f (C.sq i) = true) (h : boxOKx C i = true)
+    (hf : peval C.f t = 0) (ha : (C.a : ℝ) ≤ t) (hb : t ≤ C.b) :
     InBox (peval C.S t) (xR (C.sq i) t) (yR (C.sq i) t) (cR (C.sq i) t) (sR (C.sq i) t) := by
   intro a b ha' hb'
   obtain ⟨a', ha'm, rfl⟩ := half_cases ha'
   obtain ⟨b', hb'm, rfl⟩ := half_cases hb'
-  simp only [boxOK, Bool.and_eq_true, List.all_eq_true] at h
-  have hl := h.2 a' ha'm b' hb'm
-  have hd := dd_pos h.1 hf
+  simp only [boxOKx, List.all_eq_true] at h
+  have hl := h a' ha'm b' hb'm
+  have hd := dd_pos hsq hf
   have g : ∀ N ∈ boxN C.S (C.sq i) a' b', 0 ≤ peval N t := fun N hN =>
     nonneg_of_nonnegOK (hl N hN) hf ha hb
   simp only [boxN, List.mem_cons, List.mem_nil_iff, or_false, forall_eq_or_imp, forall_eq] at g
@@ -455,28 +483,90 @@ lemma sepSide_of_sepN {qi qj : SqD} {k : Fin 4}
     rw [e]; push_cast at g; apply div_nonneg _ (by positivity); linarith
   linarith
 
-theorem packs_of_parts (hbox : ∀ i, boxOK C i = true) (hrow : ∀ i, rowOK C i = true)
+lemma sqOK_of_boxOK {i : Fin n} (h : boxOK C i = true) : sqOK C.f (C.sq i) = true := by
+  simp only [boxOK, Bool.and_eq_true] at h; exact h.1.1
+
+lemma encl_mem {i : Fin n} (h : boxOK C i = true) (hf : peval C.f t = 0) (ha : (C.a : ℝ) ≤ t) (hb : t ≤ C.b) :
+    (C.encl i).Mem (xR (C.sq i) t) (yR (C.sq i) t) (cR (C.sq i) t) (sR (C.sq i) t) := by
+  have hsq := sqOK_of_boxOK C h
+  simp only [boxOK, enclOK, Bool.and_eq_true, List.all_eq_true] at h
+  have g : ∀ N ∈ [psub (C.sq i).x [(C.encl i).x.1], psub [(C.encl i).x.2] (C.sq i).x,
+      psub (C.sq i).y [(C.encl i).y.1], psub [(C.encl i).y.2] (C.sq i).y,
+      psub (csN (C.sq i)).1 (psmul (C.encl i).c.1 (dd (C.sq i))),
+      psub (psmul (C.encl i).c.2 (dd (C.sq i))) (csN (C.sq i)).1,
+      psub (csN (C.sq i)).2 (psmul (C.encl i).s.1 (dd (C.sq i))),
+      psub (psmul (C.encl i).s.2 (dd (C.sq i))) (csN (C.sq i)).2], 0 ≤ peval N t :=
+    fun N hN => nonneg_of_nonnegOK (h.1.2 N hN) hf ha hb
+  simp only [List.mem_cons, List.mem_nil_iff, or_false, forall_eq_or_imp, forall_eq] at g
+  obtain ⟨g1, g2, g3, g4, g5, g6, g7, g8⟩ := g
+  simp only [peval_psub, peval_psmul, peval_cons, peval_nil] at g1 g2 g3 g4 g5 g6 g7 g8
+  push_cast at g1 g2 g3 g4 g5 g6 g7 g8
+  have hd := dd_pos hsq hf
+  simp only [Shadow.Encl.Mem, Shadow.Iv.Mem, xR, yR, cR, sR]
+  refine ⟨⟨by linarith, by linarith⟩, ⟨by linarith, by linarith⟩, ⟨?_, ?_⟩, ⟨?_, ?_⟩⟩
+  · rw [le_div_iff₀ hd]; linarith
+  · rw [div_le_iff₀ hd]; linarith
+  · rw [le_div_iff₀ hd]; linarith
+  · rw [div_le_iff₀ hd]; linarith
+
+lemma Sl_le (hSl : SlOK C = true) (hf : peval C.f t = 0) (ha : (C.a : ℝ) ≤ t) (hb : t ≤ C.b) :
+    (C.Sl : ℝ) ≤ peval C.S t := by
+  have := nonneg_of_nonnegOK hSl hf ha hb
+  simp only [peval_psub, peval_cons, peval_nil] at this; push_cast at this; linarith
+
+lemma inBox_of_boxOK {i : Fin n} (h : boxOK C i = true) (hSl : SlOK C = true) (hf : peval C.f t = 0)
+    (ha : (C.a : ℝ) ≤ t) (hb : t ≤ C.b) :
+    InBox (peval C.S t) (xR (C.sq i) t) (yR (C.sq i) t) (cR (C.sq i) t) (sR (C.sq i) t) := by
+  have hsq := sqOK_of_boxOK C h
+  have hE := encl_mem C h hf ha hb
+  simp only [boxOK, Bool.and_eq_true, Bool.or_eq_true] at h
+  rcases h.2 with h2 | h2
+  · exact Shadow.inBox_of_inBoxOK hE (Sl_le C hSl hf ha hb) h2
+  · exact inBox_of_boxOKx C hsq h2 hf ha hb
+
+lemma disjoint_of_pairOK {i j : Fin n} (hi : boxOK C i = true) (hj : boxOK C j = true) (h : pairOK C i j = true)
+    (hf : peval C.f t = 0) (ha : (C.a : ℝ) ≤ t) (hb : t ≤ C.b) {θi θj : ℝ}
+    (hci : Real.cos θi = cR (C.sq i) t) (hsi : Real.sin θi = sR (C.sq i) t)
+    (hcj : Real.cos θj = cR (C.sq j) t) (hsj : Real.sin θj = sR (C.sq j) t) :
+    Disjoint (interior (unitSq (xR (C.sq i) t, yR (C.sq i) t) θi))
+      (interior (unitSq (xR (C.sq j) t, yR (C.sq j) t) θj)) := by
+  have hqi := sqOK_of_boxOK C hi
+  have hqj := sqOK_of_boxOK C hj
+  have hui := cR_sq_add hqi hf
+  have huj := cR_sq_add hqj hf
+  simp only [pairOK, Bool.or_eq_true] at h
+  rcases h with h | h
+  · simp only [Shadow.pairOK, Bool.or_eq_true, List.any_eq_true, List.mem_finRange, true_and] at h
+    have hEi := encl_mem C hi hf ha hb
+    have hEj := encl_mem C hj hf ha hb
+    rcases h with (h | ⟨k, hk⟩) | ⟨k, hk⟩
+    · exact Shadow.disjoint_of_farOK hEi hEj h
+    · exact disjoint_of_sepSide hci hsi hcj hsj hui huj (Shadow.sepSide_of_sepOK hEi hEj hk)
+    · exact (disjoint_of_sepSide hcj hsj hci hsi huj hui (Shadow.sepSide_of_sepOK hEj hEi hk)).symm
+  · simp only [pairOKx, List.all_eq_true] at h
+    by_cases hs : (C.sep i j).1 = true
+    · simp only [hs, if_true] at h
+      exact disjoint_of_sepSide hci hsi hcj hsj hui huj (sepSide_of_sepN C h hqi hqj hf ha hb)
+    · simp only [hs, if_false, Bool.false_eq_true] at h
+      exact (disjoint_of_sepSide hcj hsj hci hsi huj hui (sepSide_of_sepN C h hqj hqi hf ha hb)).symm
+
+lemma pairOK_of_rowOK {i j : Fin n} (hrow : rowOK C i = true) (hij : i < j) : pairOK C i j = true := by
+  simp only [rowOK, List.all_eq_true, List.mem_finRange, true_implies] at hrow
+  have hp := hrow j
+  simpa [hij] using hp
+
+theorem packs_of_parts (hSl : SlOK C = true) (hbox : ∀ i, boxOK C i = true) (hrow : ∀ i, rowOK C i = true)
     (hf : peval C.f t = 0) (ha : (C.a : ℝ) ≤ t) (hb : t ≤ C.b) : Packs n (peval C.S t) := by
-  have hsq : ∀ i, sqOK C.f (C.sq i) = true := fun i => by
-    have := hbox i; simp only [boxOK, Bool.and_eq_true] at this; exact this.1
-  refine packs_of_cert (fun i => xR (C.sq i) t) (fun i => yR (C.sq i) t) (fun i => cR (C.sq i) t)
-    (fun i => sR (C.sq i) t) (fun i => cR_sq_add (hsq i) hf) (fun i => inBox_of_boxOK C (hbox i) hf ha hb) ?_
-  intro i j hij
-  have hp := hrow i
-  simp only [rowOK, List.all_eq_true, List.mem_finRange, true_implies] at hp
-  have hp := hp j
-  simp only [hij, decide_true, Bool.not_true, Bool.false_or] at hp
-  simp only [pairOK, List.all_eq_true] at hp
-  by_cases hs : (C.sep i j).1 = true
-  · simp only [hs, if_true] at hp
-    exact Or.inl ⟨_, sepSide_of_sepN C hp (hsq i) (hsq j) hf ha hb⟩
-  · simp only [hs, if_false, Bool.false_eq_true] at hp
-    exact Or.inr ⟨_, sepSide_of_sepN C hp (hsq j) (hsq i) hf ha hb⟩
+  refine Shadow.packs_of_disjoint (fun i => xR (C.sq i) t) (fun i => yR (C.sq i) t) (fun i => cR (C.sq i) t)
+    (fun i => sR (C.sq i) t) (fun i => cR_sq_add (sqOK_of_boxOK C (hbox i)) hf)
+    (fun i => inBox_of_boxOK C (hbox i) hSl hf ha hb) ?_
+  intro i j hij θi θj hci hsi hcj hsj
+  exact disjoint_of_pairOK C (hbox i) (hbox j) (pairOK_of_rowOK C (hrow i) hij) hf ha hb hci hsi hcj hsj
 
 theorem packs_of_check (h : check C = true) (hf : peval C.f t = 0) (ha : (C.a : ℝ) ≤ t) (hb : t ≤ C.b) :
     Packs n (peval C.S t) := by
   simp only [check, Bool.and_eq_true, List.all_eq_true, List.mem_finRange, true_implies] at h
-  exact packs_of_parts C h.1 h.2 hf ha hb
+  exact packs_of_parts C h.1.1 h.1.2 h.2 hf ha hb
 
 end sound
 
@@ -503,12 +593,12 @@ theorem exists_root {f : Poly} {a b : ℚ} (hab : a ≤ b) (h : qeval f a * qeva
 
 /-- **The packing theorem from a certificate.**  `pS` is the integer polynomial of `S`; `[Sa, Sb]` contains `S(t)`. -/
 theorem packs_exact {n : ℕ} (C : Cert n) (pS : Poly) (Sa Sb : ℚ) (hab : C.a ≤ C.b)
-    (hsign : qeval C.f C.a * qeval C.f C.b ≤ 0) (hbox : ∀ i, boxOK C i = true) (hrow : ∀ i, rowOK C i = true)
+    (hsign : qeval C.f C.a * qeval C.f C.b ≤ 0) (hSl : SlOK C = true) (hbox : ∀ i, boxOK C i = true) (hrow : ∀ i, rowOK C i = true)
     (hp : zeroOK C.f (pcomp pS C.S) = true)
     (hlo : nonnegOK C.f C.a C.b (psub C.S [Sa]) = true) (hhi : nonnegOK C.f C.a C.b (psub [Sb] C.S) = true) :
     ∃ s : ℝ, peval pS s = 0 ∧ (Sa : ℝ) ≤ s ∧ s ≤ Sb ∧ Packs n s := by
   obtain ⟨t, ha, hb, hf⟩ := exists_root hab hsign
-  refine ⟨peval C.S t, ?_, ?_, ?_, packs_of_parts C hbox hrow hf ha hb⟩
+  refine ⟨peval C.S t, ?_, ?_, ?_, packs_of_parts C hSl hbox hrow hf ha hb⟩
   · have := zero_of_zeroOK hp hf; rwa [peval_pcomp] at this
   · have := nonneg_of_nonnegOK hlo hf ha hb; simp at this; linarith
   · have := nonneg_of_nonnegOK hhi hf ha hb; simp at this; linarith

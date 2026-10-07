@@ -14,7 +14,7 @@ Proof-piece wishlist (new candidates N1–N15 + 65 open items, picks at the end)
 First deliverable: a table of exact forms of S + a handful of Lean local-optimality proofs.  n = 83 (deg 672) optional.
 - [ ] Table: 265/324 verified (minpoly → verify_exact; 84 cross-checks agree), plus Ellsworth-cited polys for some open n.  Site page / jlevy #375: ask Evan.
 - [ ] Lean local minima: s(11), s(28) done (`Exact/N11L`, `N28L`; sparse G check 10-07); next n = 5 (grade B), one grade C (10 or 19).
-- [ ] Lean rational-shadow packing checker (enclosures once per square, disc test for far pairs, exact only at contacts): general tool, needed at larger n.
+- [ ] Lean `Packs n S*` for the 254 field-degree ≤ 8 records: batch lean_cert.py (rational shadows 10-07: N17c 402 → 112 s); budget compile time first.
 - [ ] Grade-C exact certificate (`grade-C.md`: paper proof done, numerics pass for 7 n).
 - [ ] Coverage, 59 open by cost: flat rotation (10), multi-direction force balance (11), block-triangular elimination (26 + msolve-hard 9), field 108/206; 292 (packer agent 10-07).
 - [ ] Explainer: local optimality of the n ≤ 324 records (for the s(11) explainer to cite). `notes/local-optimality-explainer-draft.md`.

@@ -6,6 +6,10 @@ The checks are replayed here in Python with exactly the Lean checker's arithmeti
 bound), so the generated file is expected to compile; the t interval is narrowed by exact bisection until every
 strict bound passes, and each pair gets a separating side line.
 
+Rational shadows (lean/Sqpack/ShadowCheck.lean): each square gets rational enclosures of (x, y, c, s) at 20 digits,
+proved once in the field; walls and pairs that pass the cheap interval / disc tests (replayed here with the same
+arithmetic) need no field conditions.  Only contacts and near-contacts keep exact ones.
+
   python3 lean_cert.py minpoly/solve/n-11.minpoly.json ../../lean/Sqpack/Exact/N11.lean
 """
 import sys, json
@@ -191,6 +195,38 @@ def lean_poly(p):
     return '[' + ', '.join(lean_q(x) for x in p) + ']'
 
 
+# ------------------------------------------------------------------ the shadow checks, as in ShadowCheck.lean
+def iadd(a, b): return (a[0] + b[0], a[1] + b[1])
+def ineg(a): return (-a[1], -a[0])
+def isub(a, b): return iadd(a, ineg(b))
+def imul(a, b):
+    p = (a[0] * b[0], a[0] * b[1], a[1] * b[0], a[1] * b[1])
+    return (min(p), max(p))
+def gap(a, b): return max(F(0), max(b[0] - a[1], a[0] - b[1]))
+def far_ok(Ei, Ej): return 2 <= gap(Ei['x'], Ej['x']) ** 2 + gap(Ei['y'], Ej['y']) ** 2
+def nrm_i(c, s, k): return [(c, s), (ineg(s), c), (ineg(c), ineg(s)), (s, ineg(c))][k]
+def corner_x(E, a, b): return iadd(iadd(E['x'], imul(E['c'], (a, a))), ineg(imul(E['s'], (b, b))))
+def corner_y(E, a, b): return iadd(iadd(E['y'], imul(E['s'], (a, a))), imul(E['c'], (b, b)))
+def sep_ok(Ei, Ej, k):
+    N = nrm_i(Ei['c'], Ei['s'], k)
+    return all(F(1, 2) <= iadd(imul(N[0], isub(corner_x(Ej, a, b), Ei['x'])),
+                               imul(N[1], isub(corner_y(Ej, a, b), Ei['y'])))[0] for a in HALVES for b in HALVES)
+def pair_ok(Ei, Ej):
+    return far_ok(Ei, Ej) or any(sep_ok(Ei, Ej, k) for k in range(4)) or any(sep_ok(Ej, Ei, k) for k in range(4))
+def inbox_ok(E, Sl):
+    return all(0 <= corner_x(E, a, b)[0] and corner_x(E, a, b)[1] <= Sl and
+               0 <= corner_y(E, a, b)[0] and corner_y(E, a, b)[1] <= Sl for a in HALVES for b in HALVES)
+
+ENCL_DIGITS = 20
+
+
+def enclose(v, digits=ENCL_DIGITS):
+    """A rational interval around the mpmath value v, on a 10^-digits grid, one grid step of slack each side."""
+    import mpmath
+    sc = 10 ** digits
+    return (F(int(mpmath.floor(v * sc)) - 1, sc), F(int(mpmath.ceil(v * sc)) + 1, sc))
+
+
 def build(path, out, mod, extra=None):
     """extra(sqs, f, S) -> (polys that must be >= 0 on the t interval, emit(ta, tb) -> Lean lines)."""
     D = json.load(open(path))
@@ -207,28 +243,35 @@ def build(path, out, mod, extra=None):
     fv = lambda x: qeval(f, x)
     if ta == tb:                                  # K = Q: f = T, t = 0
         assert fv(ta) == 0
-    # every numerator, then narrow [ta, tb] until all strict ones pass
-    def all_numerators(choice):
-        Ns = []
-        for i, q in enumerate(sqs):
-            for a in HALVES:
-                for b in HALVES:
-                    Ns += boxN(S, q, a, b)
-        for (i, j), (own, k) in choice.items():
-            qi, qj = (sqs[i], sqs[j]) if own else (sqs[j], sqs[i])
-            Ns += [sepN(qi, qj, k, a, b) for a in HALVES for b in HALVES]
-        return Ns
-    # separating line per pair, chosen at a fine interval
     import mpmath
     mpmath.mp.dps = 60
     ctx = Ctx(f, ta, tb)
-    # numeric value of t for choosing lines
     tm = ctx.m
+    tmp = mpmath.mpf(tm.numerator) / tm.denominator
+    def mval(p):
+        return sum(mpmath.mpf(c.numerator) / c.denominator * tmp ** e for e, c in enumerate(p))
     def numval(N):
         return float(qeval(pdivmod(N, f)[1], tm))
+    # enclosures (proved once per square in the field) and S >= Sl
+    encl = []
+    encl_polys = []
+    for q in sqs:
+        d = mval(dd(q))
+        E = {'x': enclose(mval(q['x'])), 'y': enclose(mval(q['y'])),
+             'c': enclose(mval(csN(q)[0]) / d), 's': enclose(mval(csN(q)[1]) / d)}
+        encl.append(E)
+        encl_polys += [psub(q['x'], [E['x'][0]]), psub([E['x'][1]], q['x']),
+                       psub(q['y'], [E['y'][0]]), psub([E['y'][1]], q['y']),
+                       psub(csN(q)[0], psmul(E['c'][0], dd(q))), psub(psmul(E['c'][1], dd(q)), csN(q)[0]),
+                       psub(csN(q)[1], psmul(E['s'][0], dd(q))), psub(psmul(E['s'][1], dd(q)), csN(q)[1])]
+    Sl = enclose(mval(S))[0]
+    # exact conditions only where the shadow tests fail
+    box_exact = [i for i in range(n) if not inbox_ok(encl[i], Sl)]
     choice = {}
     for i in range(n):
         for j in range(i + 1, n):
+            if pair_ok(encl[i], encl[j]):
+                continue
             best = None
             for own in (True, False):
                 for k in range(4):
@@ -237,7 +280,16 @@ def build(path, out, mod, extra=None):
                     if best is None or worst > best[0]:
                         best = (worst, own, k)
             choice[(i, j)] = (best[1], best[2])
-    Ns = all_numerators(choice) + [psub(S, [Sa]), psub([Sb], S)]
+    Ns = []
+    for i in box_exact:
+        for a in HALVES:
+            for b in HALVES:
+                Ns += boxN(S, sqs[i], a, b)
+    for (i, j), (own, k) in choice.items():
+        qi, qj = (sqs[i], sqs[j]) if own else (sqs[j], sqs[i])
+        Ns += [sepN(qi, qj, k, a, b) for a in HALVES for b in HALVES]
+    n_exact = len(Ns)
+    Ns = Ns + encl_polys + [psub(S, [Sl]), psub(S, [Sa]), psub([Sb], S)]
     if extra:
         ex_polys, ex_emit = extra(sqs, f, S)
         Ns = Ns + ex_polys
@@ -277,7 +329,9 @@ def build(path, out, mod, extra=None):
     L.append(f'import Sqpack.ExactCheck\n')
     L.append(f'/-! Generated by `search/exact/lean_cert.py` from `{path.split("/")[-1]}`: register record n = {n}, '
              f'field degree {len(f) - 1}, `S` of degree {len(pS) - 1}.\n'
-             f'{eqs} touching conditions are identities mod `f`, {len(Ns) - eqs} are strict. -/\n')
+             f'{eqs} touching conditions are identities mod `f`, {len(Ns) - eqs} are strict; walls and pairs: '
+             f'{n - len(box_exact)}/{n} squares and {n * (n - 1) // 2 - len(choice)}/{n * (n - 1) // 2} pairs by '
+             f'rational shadows. -/\n')
     L.append(f'namespace UnitSquarePacking.EC.{mod}\n')
     L.append('set_option maxHeartbeats 0\n')
     L.append(f'def cert : Cert {n} where')
@@ -295,7 +349,10 @@ def build(path, out, mod, extra=None):
             own, k = choice.get((i, j), (True, 0))
             row.append(f'({"true" if own else "false"}, {k})')
         rows.append('![' + ', '.join(row) + ']')
-    L.append('  sep := ![' + ',\n    '.join(rows) + ']\n')
+    L.append('  sep := ![' + ',\n    '.join(rows) + ']')
+    L.append('  encl := ![' + ',\n    '.join('⟨' + ', '.join(f'({lean_q(E[v][0])}, {lean_q(E[v][1])})' for v in 'xycs') + '⟩'
+                                             for E in encl) + ']')
+    L.append(f'  Sl := {lean_q(Sl)}\n')
     L.append(f'/-- The polynomial of `S` (ascending coefficients). -/\ndef pS : Poly := {lean_poly(pS)}\n')
     for i in range(n):
         L.append(f'theorem box_{i} : boxOK cert {i} = true := by decide +kernel')
@@ -310,13 +367,15 @@ def build(path, out, mod, extra=None):
     L.append(f'/-- `s({n}) ≤ S*`, `S*` the root of `pS` in `[{float(Sa):.12g}, {float(Sb):.12g}]`. -/')
     L.append(f'theorem packs : ∃ s : ℝ, peval pS s = 0 ∧ (({lean_q(Sa)} : ℚ) : ℝ) ≤ s ∧ s ≤ (({lean_q(Sb)} : ℚ) : ℝ) ∧ '
              f'Packs {n} s :=')
-    L.append(f'  packs_exact cert pS _ _ (by decide +kernel) (by decide +kernel) boxes rows (by decide +kernel)\n'
+    L.append(f'  packs_exact cert pS _ _ (by decide +kernel) (by decide +kernel) (by decide +kernel) boxes rows\n'
+             f'    (by decide +kernel)\n'
              f'    (by decide +kernel) (by decide +kernel)\n')
     if extra:
         L += ex_emit(ta, tb, Sa, Sb)
     L.append(f'end UnitSquarePacking.EC.{mod}\n')
     open(out, 'w').write('\n'.join(L))
-    print(f'{out}: n = {n}, {len(Ns)} conditions ({eqs} identities), t interval width {float(tb - ta):.3g}')
+    print(f'{out}: n = {n}, {len(Ns)} field conditions ({eqs} identities; {n_exact} for walls/pairs, '
+          f'{len(choice)} exact pairs, {len(box_exact)} exact boxes), t interval width {float(tb - ta):.3g}')
 
 
 if __name__ == '__main__':

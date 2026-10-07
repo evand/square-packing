@@ -239,14 +239,13 @@ lemma AyP_peval (j : Fin n) (a b : ℚ) (i : Fin n) (t : ℝ) :
 
 /-! ## Soundness -/
 
-theorem isLocalMin_of_lcert (hbox : ∀ i, boxOK L.P i = true) (hrowP : ∀ i, EC.rowOK L.P i = true)
+theorem isLocalMin_of_lcert (hSl : SlOK L.P = true) (hbox : ∀ i, boxOK L.P i = true) (hrowP : ∀ i, EC.rowOK L.P i = true)
     (hunit : ∀ i, unitOK L i = true) (hrows : ∀ r, rowOKb L (L.rows r) = true) (hlam : ∀ r, lamOK L r = true)
     (hlamS : lamSumOK L = true) (hkkt : ∀ v, kktOK L v = true) (hbnd : ∀ r v, boundOK L r v = true)
     (hcol : ∀ w, colOK L w = true) (hGn : ∀ v, GnOK L v = true) (hG : ∀ v, GOK L v = true) {t : ℝ} (hf : peval L.P.f t = 0) (ha : (L.P.a : ℝ) ≤ t)
     (hb : t ≤ L.P.b) :
     ∃ θ : Fin n → ℝ, IsLocalMinPacking n (peval L.P.S t) (fun i => (peval (Xp L i) t, peval (Yp L i) t)) θ := by
-  have hsq : ∀ i, sqOK L.P.f (L.P.sq i) = true := fun i => by
-    have := hbox i; simp only [boxOK, Bool.and_eq_true] at this; exact this.1
+  have hsq : ∀ i, sqOK L.P.f (L.P.sq i) = true := fun i => sqOK_of_boxOK L.P (hbox i)
   have hCS : ∀ i, peval (L.C i) t = cR (L.P.sq i) t ∧ peval (L.S i) t = sR (L.P.sq i) t := by
     intro i
     have h := hunit i
@@ -261,23 +260,11 @@ theorem isLocalMin_of_lcert (hbox : ∀ i, boxOK L.P i = true) (hrowP : ∀ i, E
   refine ⟨θ, ?_⟩
   -- the record is a packing
   have hpack : IsPacking n (peval L.P.S t) (fun i => (peval (Xp L i) t, peval (Yp L i) t)) θ := by
-    refine ⟨fun i => unitSq_subset_container (hθc i) (hθs i) (inBox_of_boxOK L.P (hbox i) hf ha hb), ?_⟩
-    have hu := fun i => cR_sq_add (hsq i) hf
+    refine ⟨fun i => unitSq_subset_container (hθc i) (hθs i) (inBox_of_boxOK L.P (hbox i) hSl hf ha hb), ?_⟩
     have pos : ∀ i j, i < j → Disjoint (interior (unitSq (peval (Xp L i) t, peval (Yp L i) t) (θ i)))
-        (interior (unitSq (peval (Xp L j) t, peval (Yp L j) t) (θ j))) := by
-      intro i j hij
-      have hp := hrowP i
-      simp only [EC.rowOK, List.all_eq_true, List.mem_finRange, true_implies] at hp
-      have hp := hp j
-      simp only [hij, decide_true, Bool.not_true, Bool.false_or] at hp
-      simp only [pairOK, List.all_eq_true] at hp
-      by_cases hs : (L.P.sep i j).1 = true
-      · simp only [hs, if_true] at hp
-        exact disjoint_of_sepSide (hθc i) (hθs i) (hθc j) (hθs j) (hu i) (hu j)
-          (sepSide_of_sepN L.P hp (hsq i) (hsq j) hf ha hb)
-      · simp only [hs, if_false, Bool.false_eq_true] at hp
-        exact (disjoint_of_sepSide (hθc j) (hθs j) (hθc i) (hθs i) (hu j) (hu i)
-          (sepSide_of_sepN L.P hp (hsq j) (hsq i) hf ha hb)).symm
+        (interior (unitSq (peval (Xp L j) t, peval (Yp L j) t) (θ j))) := fun i j hij =>
+      disjoint_of_pairOK L.P (hbox i) (hbox j) (pairOK_of_rowOK L.P (hrowP i) hij) hf ha hb
+        (hθc i) (hθs i) (hθc j) (hθs j)
     intro i j hij
     rcases lt_or_gt_of_ne hij with h | h
     · exact pos i j h

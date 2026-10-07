@@ -162,7 +162,7 @@ theorem localmin : ∃ s : ℝ, peval pS s = 0 ∧ (({lean_q(Sa)} : ℚ) : ℝ) 
     ∃ c θ, IsLocalMinPacking {n} s c θ := by
   obtain ⟨t, ha, hb, hf⟩ := exists_root (f := cert.f) (a := cert.a) (b := cert.b) (by decide +kernel)
     (by decide +kernel)
-  obtain ⟨θ, hθ⟩ := UnitSquarePacking.LMC.isLocalMin_of_lcert (L := lcert) boxes rows unit_ok rowsL_ok lam_ok
+  obtain ⟨θ, hθ⟩ := UnitSquarePacking.LMC.isLocalMin_of_lcert (L := lcert) (by decide +kernel) boxes rows unit_ok rowsL_ok lam_ok
     lamS_ok kkt_ok bnd_ok col_ok Gn_ok G_ok hf ha hb
   refine ⟨peval cert.S t, ?_, ?_, ?_, _, θ, hθ⟩
   · have := zero_of_zeroOK (f := cert.f) (N := pcomp pS cert.S) (by decide +kernel) hf
