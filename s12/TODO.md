@@ -13,6 +13,7 @@ Proof-piece wishlist (new candidates N1–N15 + 65 open items, picks at the end)
 ## Exact forms (10-06)
 - [ ] Every n ≤ 324 best known: integer min poly + isolating interval + exact field configuration, mechanized (contact graph → msolve; LLL cross-check). Test n = 83 (deg 672). `tasks/exact-minpoly/`
 - [ ] Lean demo, one small n by hand first: exact config + contact graph + polynomial → `Packs n S*`, then a full local min (n = 5 vs 11 tradeoff: task doc §Lean demo).
+- [ ] Explainer: local optimality of the n ≤ 324 records (for the s(11) explainer to cite). Draft + open pieces: `notes/local-optimality-explainer-draft.md`.
 
 ## Major: exact results
 - [ ] k²−5 for all large k: R = w = 5 κ = 0.02 D ≈ 1.30, conditional GO, margin ≈ 0.05 (`K2M4_MARGIN.md`); box 13 pitch 0.1. Make it cheaper first: cert golf (`tasks/cert-slack/`), finer-pitch D at w = 4 (insertable shortcut dead: price ≈ 1.8, `S2_INSERTABLE.md`).
