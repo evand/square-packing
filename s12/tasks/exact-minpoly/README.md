@@ -26,18 +26,19 @@ changes the field the coordinates live in.
 
 ## State (10-07)
 
-**265 of 324 verified** (`search/exact/minpoly/results.md`).  That is all 176 axis-parallel records (S an integer)
-plus 89 tilted ones, up to field degree 48.  Field degrees: 1: 182, 2: 61, 4–8: 11, 16–48: 11.  **84 cross-checks
-agree, none differ** (findpoly on the 68-digit values; Ellsworth's degrees).  254 of the 265 have field degree ≤ 8.
+**269 of 324 verified** (`search/exact/minpoly/results.md`; 10-07 evening: + 53, 106, 129, 177 from settling flat
+angle directions).  That is all 176 axis-parallel records (S an integer) plus 93 tilted ones, up to field degree 48.
+Field degrees: 1: 182, 2: 61, 4–8: 12, 16–48: 14.  **86 cross-checks agree, none differ** (findpoly on the 68-digit
+values; Ellsworth's degrees, now including 129).  255 of the 269 have field degree ≤ 8.
 
-Open (59):
+Open (55); below 83 only 29, 55, 68, 71 remain:
 
 | group | # | n | what it needs |
 |---|---|---|---|
 | many angle classes, large system (timeout) | 26 | 103, 105, 110, 131, 132, 154–156, 180, 181, 208–211, 238–241, 263, 270, 272, 273, 302, 304, 306, 307 | block-triangular (Dulmage–Mendelsohn) elimination: rigid clusters in dependency order |
 | force balance in > 1 angle direction | 11 | 88, 123, 130, 172, 179, 199, 236, 237, 259, 269, 297 | multi-direction Lagrange conditions (today: one direction, a determinant) |
-| flat rotation parallel to fixed squares | 10 | 53, 106, 129, 177, 207, 268, 271, 301, 303, 305 | settling pass: probably the cheapest group |
-| msolve too slow or fails | 9 | 29, 55, 68, 71, 83, 126, 182, 228, 235 | same elimination work; 83 also needs force balance |
+| flat rotation parallel to fixed squares (rest) | 6 | 207, 268 (Lagrange determinant ≡ 0), 271, 305 (timeout), 301, 303 (12G cap) | 53, 106, 129, 177 done by pinning flat angle classes |
+| msolve too slow or fails | 9 | 29, 55, 68, 71, 83, 126, 182, 228, 235 | genuinely large systems, not a factor-choice problem (below); 83 also needs force balance |
 | field too large | 2 | 108 (field 144), 206 (field 56) | — |
 | no exact point | 1 | 292 | packer agent, 10-07 (`search/packer/s292.md`) |
 
@@ -95,7 +96,7 @@ packing in a smaller square.
 2. **Lean local minima, a handful**: n = 11 and 28 (grade A) done.  Next grade B (n = 5, a second-order lemma), then
    one grade C (n = 10 or 19, field degree 2) once the grade-C certificate exists.
    Packing-only Lean certificates for the field-degree ≤ 8 records (254) are now cheap enough to batch.
-3. Coverage, by cost: flat-rotation group (10), multi-direction force balance (11), then block-triangular elimination
+3. Coverage, by cost: flat-rotation rest (6), multi-direction force balance (11), then block-triangular elimination
    (26 + most of the msolve-hard ones).  n = 83 only if it falls out.
 
 ## Numerics: what is it needed for? (Evan's question, 10-07; to revisit)
@@ -106,9 +107,19 @@ packing in a smaller square.
   overlapping configurations; the eliminating polynomial factors, and only one root of one factor is the
   record.  This needs only a coarse t*: isolate every candidate factor's real roots exactly (flint) and take the
   interval containing t*.  `verify_exact.py` then checks the configuration exactly, so a wrong pick cannot pass.
-* **Today** `minpoly.py` picks the factor by `|p(t*)| < tol`, which with high-degree / large-height factors can't
-  tell several apart (n = 29, 68, 71, 126, 228).  Exact root isolation should fix this with no more digits;
-  re-solving at 2000 digits is the brute-force fallback.
+* **Done (10-07)**: `minpoly.py` picks the univariate factor (k = 1) and msolve's root (k ≥ 2) by exact real-root
+  isolation (`pick_root`: flint's certified root balls, refined until one candidate maps to t*; it fails loudly
+  otherwise).  Regression: 5, 10, 11, 17, 37, 39, 51, 87, 102, 202 give the same polynomials and verify.
+* **n = 29, 68, 71, 126, 228 were not a factor-choice problem.**  Their "k factors vanishing at t*" are k
+  *multivariate* polynomials in k class parameters (n = 29: 5 in t1..t5, total degrees 12–26, up to 2773 terms),
+  which together cut out t*: that is the expected input to msolve, not an ambiguity.  msolve times out (600 s);
+  even its F4 run mod a single prime had not finished after 15 min.  Shortcuts tried at n = 29: (a) no small
+  subsystems: every dependency at t* involves ≥ 99 of the 152 contact rows; (b) resultants explode (eliminating t5
+  alone: total degree 112, 431k terms); (c) LLL on S and t1 refined to 15000 digits finds no relation of degree
+  ≤ 120 with height ≤ ~120 digits, so the field degree is probably > 120.  These need the block-triangular work or a
+  much better solver.
+* **n = 55**: S depends only on t5, t6; the Lagrange determinant of the 5 consistency factors has total degree 85
+  and 5.7M terms, and msolve fails on it.  A multiplier formulation (11 variables) is the next thing to try.
 * Open question: work purely from contact graphs (e.g. perturbations of known graphs), with every real root a
   candidate and validity / local optimality checked exactly: a combinatorial search, different from the record
   pipeline.
@@ -123,7 +134,9 @@ packing in a smaller square.
   * k = 1: gcd of the consistency numerators.  k ≥ 2: their irreducible factors through t*, then msolve's
     parametrization.
   * Force balance when the contacts leave one direction (Lagrange determinant).
-  * Flat directions settled on near-contacts, then pinned at 30-digit rationals.
+  * Flat directions settled on near-contacts, then pinned at 30-digit rationals; angle classes S does not depend on
+    are pinned too when more than one angle direction is left.
+  * Factor and root choice by exact real-root isolation (`pick_root`).
   * Refuses invalid exactsolve points.
 * `verify_exact.py`: an independent stdlib checker (exact identities mod f, rational intervals).  It does not trust
   msolve, whose ℚ arithmetic is multimodular.

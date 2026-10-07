@@ -29,6 +29,9 @@ for n in range(1, 325):
     if not os.path.exists(b + '.minpoly.json'):
         m = re.search(r'not handled: (.*)', log)
         r['status'] = 'open: ' + (m.group(1)[:90] if m else (log.strip().splitlines() or ['?'])[-2 if 'exit' in log else -1][:90])
+        if log.rstrip().endswith(('exit 124', 'exit 137')):                # killed: timeout / memory cap
+            r['status'] = r['status'].replace('open: ', 'open (%s): ' % ('timeout' if log.rstrip().endswith('124') else
+                                                                        'memory cap'), 1)
         rows.append(r)
         continue
     d = json.load(open(b + '.minpoly.json'))

@@ -25,7 +25,7 @@ optimum of the same packing).  See `batch/README.md`.
 |---|---|
 | `minpoly.py` | contact graph → number field `K = ℚ[t]/f`, exact configuration over `K`, the minimal polynomial of S and an isolating interval |
 | `verify_exact.py` | independent stdlib check of `minpoly.py`'s output: contacts ≡ 0 mod f, the rest separated by interval arithmetic |
-| `minpoly/run_minpoly.sh`, `minpoly/summary.py` | batch over the register → `minpoly/results.md` (265/324 verified 10-07) |
+| `minpoly/run_minpoly.sh`, `minpoly/summary.py` | batch over the register → `minpoly/results.md` (269/324 verified 10-07) |
 | `localmin.py` | grade-A local-minimum certificates (exact multipliers in `K`, rational left inverse) |
 | `lean_cert.py`, `localmin_lean.py` | Lean certificates (`lean/Sqpack/Exact/`) |
 

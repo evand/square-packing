@@ -180,7 +180,7 @@
 "S_degree": 8,
 "height_digits": 5,
 "stationary": false,
-"seconds": 0.01,
+"seconds": 0.02,
 "S": "3.877083590022814177",
 "poly": [
 -6865,
@@ -289,7 +289,7 @@
 "S_degree": 18,
 "height_digits": 12,
 "stationary": false,
-"seconds": 0.36,
+"seconds": 0.39,
 "S": "4.675530093604550951",
 "poly": null,
 "crosscheck": "Ellsworth deg ok"
@@ -492,7 +492,7 @@
 },
 {
 "n": 29,
-"status": "open:   15 consistency rows -> 5 distinct irreducible factors vanishing at t*: degrees [26, 16, "
+"status": "open (timeout):   15 consistency rows -> 5 distinct irreducible factors vanishing at t*: degrees [26, 16, "
 },
 {
 "n": 30,
@@ -622,7 +622,7 @@
 "S_degree": 8,
 "height_digits": 8,
 "stationary": true,
-"seconds": 0.06,
+"seconds": 0.08,
 "S": "6.598619609244360116",
 "poly": [
 64068561,
@@ -870,7 +870,7 @@
 "S_degree": 12,
 "height_digits": 8,
 "stationary": true,
-"seconds": 41.71,
+"seconds": 42.4,
 "S": "7.700799235417011723",
 "poly": null,
 "crosscheck": "Ellsworth deg ok"
@@ -895,7 +895,21 @@
 },
 {
 "n": 53,
-"status": "open: square 51: flat rotation, but parallel to squares that do not rotate"
+"status": "VALID",
+"classes": 3,
+"free_classes": 2,
+"field_degree": 4,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": true,
+"seconds": 0.41,
+"S": "7.822875655532295295",
+"poly": [
+81,
+-26,
+2
+],
+"crosscheck": "findpoly ok"
 },
 {
 "n": 54,
@@ -1130,7 +1144,7 @@
 },
 {
 "n": 68,
-"status": "open:   16 consistency rows -> 8 distinct irreducible factors vanishing at t*: degrees [27, 18, "
+"status": "open (timeout):   16 consistency rows -> 8 distinct irreducible factors vanishing at t*: degrees [27, 18, "
 },
 {
 "n": 69,
@@ -1168,7 +1182,7 @@
 },
 {
 "n": 71,
-"status": "open:   14 consistency rows -> 5 distinct irreducible factors vanishing at t*: degrees [23, 16, "
+"status": "open (timeout):   14 consistency rows -> 5 distinct irreducible factors vanishing at t*: degrees [23, 16, "
 },
 {
 "n": 72,
@@ -1425,7 +1439,7 @@
 "S_degree": 41,
 "height_digits": 54,
 "stationary": true,
-"seconds": 352.88,
+"seconds": 357.03,
 "S": "9.838815269948262260",
 "poly": null,
 "crosscheck": "Ellsworth deg ok"
@@ -1666,7 +1680,7 @@
 "S_degree": 8,
 "height_digits": 13,
 "stationary": true,
-"seconds": 0.41,
+"seconds": 0.39,
 "S": "10.60717468017605112",
 "poly": [
 1580808833648,
@@ -1683,7 +1697,7 @@
 },
 {
 "n": 103,
-"status": "open: n = 103: 97 squares in the system, 6 free; 13 tilted angle classes; 446 contact equations "
+"status": "open (memory cap): n = 103: 97 squares in the system, 6 free; 13 tilted angle classes; 446 contact equations "
 },
 {
 "n": 104,
@@ -1705,11 +1719,21 @@
 },
 {
 "n": 105,
-"status": "open: n = 105: 97 squares in the system, 8 free; 18 tilted angle classes; 509 contact equations "
+"status": "open (memory cap): n = 105: 97 squares in the system, 8 free; 18 tilted angle classes; 509 contact equations "
 },
 {
 "n": 106,
-"status": "open: square 105: flat rotation, but parallel to squares that do not rotate"
+"status": "VALID",
+"classes": 4,
+"free_classes": 2,
+"field_degree": 32,
+"S_degree": 32,
+"height_digits": 35,
+"stationary": true,
+"seconds": 37.81,
+"S": "10.82290804413284755",
+"poly": null,
+"crosscheck": ""
 },
 {
 "n": 107,
@@ -1733,7 +1757,7 @@
 },
 {
 "n": 108,
-"status": "open:   field: degree 144 (factor of the eliminating polynomial with root t*)"
+"status": "open (timeout):   field: degree 144 (factor of the eliminating polynomial with root t*)"
 },
 {
 "n": 109,
@@ -1755,7 +1779,7 @@
 },
 {
 "n": 110,
-"status": "open: n = 110: 108 squares in the system, 2 free; 15 tilted angle classes; 929 contact equations"
+"status": "open (memory cap): n = 110: 108 squares in the system, 2 free; 15 tilted angle classes; 929 contact equations"
 },
 {
 "n": 111,
@@ -2004,7 +2028,7 @@
 },
 {
 "n": 126,
-"status": "open:   18 consistency rows -> 6 distinct irreducible factors vanishing at t*: degrees [20, 34, "
+"status": "open (timeout):   18 consistency rows -> 6 distinct irreducible factors vanishing at t*: degrees [20, 34, "
 },
 {
 "n": 127,
@@ -2040,7 +2064,17 @@
 },
 {
 "n": 129,
-"status": "open: square 116: flat rotation, but parallel to squares that do not rotate"
+"status": "VALID",
+"classes": 4,
+"free_classes": 2,
+"field_degree": 20,
+"S_degree": 20,
+"height_digits": 23,
+"stationary": true,
+"seconds": 3.89,
+"S": "11.88130621809000306",
+"poly": null,
+"crosscheck": "Ellsworth deg ok"
 },
 {
 "n": 130,
@@ -2048,11 +2082,11 @@
 },
 {
 "n": 131,
-"status": "open: n = 131: 131 squares in the system, 0 free; 19 tilted angle classes; 1116 contact equation"
+"status": "open (timeout): n = 131: 131 squares in the system, 0 free; 19 tilted angle classes; 1116 contact equation"
 },
 {
 "n": 132,
-"status": "open: n = 132: 131 squares in the system, 1 free; 15 tilted angle classes; 993 contact equations"
+"status": "open (memory cap): n = 132: 131 squares in the system, 1 free; 15 tilted angle classes; 993 contact equations"
 },
 {
 "n": 133,
@@ -2416,15 +2450,15 @@
 },
 {
 "n": 154,
-"status": "open: n = 154: 154 squares in the system, 0 free; 8 tilted angle classes; 1354 contact equations"
+"status": "open (timeout): n = 154: 154 squares in the system, 0 free; 8 tilted angle classes; 1354 contact equations"
 },
 {
 "n": 155,
-"status": "open: n = 155: 152 squares in the system, 3 free; 16 tilted angle classes; 1124 contact equation"
+"status": "open (memory cap): n = 155: 152 squares in the system, 3 free; 16 tilted angle classes; 1124 contact equation"
 },
 {
 "n": 156,
-"status": "open: n = 156: 155 squares in the system, 1 free; 15 tilted angle classes; 1296 contact equation"
+"status": "open (timeout): n = 156: 155 squares in the system, 1 free; 15 tilted angle classes; 1296 contact equation"
 },
 {
 "n": 157,
@@ -2760,7 +2794,17 @@
 },
 {
 "n": 177,
-"status": "open: square 173: flat rotation, but parallel to squares that do not rotate"
+"status": "VALID",
+"classes": 6,
+"free_classes": 2,
+"field_degree": 32,
+"S_degree": 32,
+"height_digits": 40,
+"stationary": true,
+"seconds": 3.4,
+"S": "13.82297973416944860",
+"poly": null,
+"crosscheck": ""
 },
 {
 "n": 178,
@@ -2788,15 +2832,15 @@
 },
 {
 "n": 180,
-"status": "open: n = 180: 180 squares in the system, 0 free; 16 tilted angle classes; 1581 contact equation"
+"status": "open (timeout): n = 180: 180 squares in the system, 0 free; 16 tilted angle classes; 1581 contact equation"
 },
 {
 "n": 181,
-"status": "open: n = 181: 180 squares in the system, 1 free; 19 tilted angle classes; 1723 contact equation"
+"status": "open (memory cap): n = 181: 180 squares in the system, 1 free; 19 tilted angle classes; 1723 contact equation"
 },
 {
 "n": 182,
-"status": "open:   elimination: 337 pivots, 23 consistency rows"
+"status": "open (memory cap):   elimination: 337 pivots, 23 consistency rows"
 },
 {
 "n": 183,
@@ -3120,7 +3164,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": true,
-"seconds": 41.99,
+"seconds": 41.84,
 "S": "14.72792206135785543",
 "poly": [
 -158,
@@ -3181,27 +3225,27 @@
 },
 {
 "n": 206,
-"status": "open:   field: degree 56 (factor of the eliminating polynomial with root t*)"
+"status": "open (timeout):   field: degree 56 (factor of the eliminating polynomial with root t*)"
 },
 {
 "n": 207,
-"status": "open: square 73: flat rotation, but parallel to squares that do not rotate"
+"status": "open: Lagrange determinant vanishes identically"
 },
 {
 "n": 208,
-"status": "open: n = 208: 206 squares in the system, 2 free; 13 tilted angle classes; 2006 contact equation"
+"status": "open (timeout): n = 208: 206 squares in the system, 2 free; 13 tilted angle classes; 2006 contact equation"
 },
 {
 "n": 209,
-"status": "open: n = 209: 206 squares in the system, 3 free; 26 tilted angle classes; 1729 contact equation"
+"status": "open (memory cap): n = 209: 206 squares in the system, 3 free; 26 tilted angle classes; 1729 contact equation"
 },
 {
 "n": 210,
-"status": "open: n = 210: 208 squares in the system, 2 free; 26 tilted angle classes; 1681 contact equation"
+"status": "open (memory cap): n = 210: 208 squares in the system, 2 free; 26 tilted angle classes; 1681 contact equation"
 },
 {
 "n": 211,
-"status": "open: n = 211: 211 squares in the system, 0 free; 20 tilted angle classes; 1981 contact equation"
+"status": "open (memory cap): n = 211: 211 squares in the system, 0 free; 20 tilted angle classes; 1981 contact equation"
 },
 {
 "n": 212,
@@ -3479,7 +3523,7 @@
 },
 {
 "n": 228,
-"status": "open:   27 consistency rows -> 12 distinct irreducible factors vanishing at t*: degrees [12, 15,"
+"status": "open (timeout):   27 consistency rows -> 12 distinct irreducible factors vanishing at t*: degrees [12, 15,"
 },
 {
 "n": 229,
@@ -3602,19 +3646,19 @@
 },
 {
 "n": 238,
-"status": "open: n = 238: 237 squares in the system, 1 free; 17 tilted angle classes; 2104 contact equation"
+"status": "open (memory cap): n = 238: 237 squares in the system, 1 free; 17 tilted angle classes; 2104 contact equation"
 },
 {
 "n": 239,
-"status": "open: n = 239: 236 squares in the system, 3 free; 24 tilted angle classes; 1937 contact equation"
+"status": "open (memory cap): n = 239: 236 squares in the system, 3 free; 24 tilted angle classes; 1937 contact equation"
 },
 {
 "n": 240,
-"status": "open: n = 240: 237 squares in the system, 3 free; 18 tilted angle classes; 1822 contact equation"
+"status": "open (memory cap): n = 240: 237 squares in the system, 3 free; 18 tilted angle classes; 1822 contact equation"
 },
 {
 "n": 241,
-"status": "open: n = 241: 238 squares in the system, 3 free; 21 tilted angle classes; 2023 contact equation"
+"status": "open (memory cap): n = 241: 238 squares in the system, 3 free; 21 tilted angle classes; 2023 contact equation"
 },
 {
 "n": 242,
@@ -3966,7 +4010,7 @@
 },
 {
 "n": 263,
-"status": "open: n = 263: 263 squares in the system, 0 free; 37 tilted angle classes; 2336 contact equation"
+"status": "open (timeout): n = 263: 263 squares in the system, 0 free; 37 tilted angle classes; 2336 contact equation"
 },
 {
 "n": 264,
@@ -4040,7 +4084,7 @@
 },
 {
 "n": 268,
-"status": "open: square 94: flat rotation, but parallel to squares that do not rotate"
+"status": "open: Lagrange determinant vanishes identically"
 },
 {
 "n": 269,
@@ -4048,19 +4092,19 @@
 },
 {
 "n": 270,
-"status": "open: n = 270: 270 squares in the system, 0 free; 26 tilted angle classes; 2713 contact equation"
+"status": "open (memory cap): n = 270: 270 squares in the system, 0 free; 26 tilted angle classes; 2713 contact equation"
 },
 {
 "n": 271,
-"status": "open: square 184: flat rotation, but parallel to squares that do not rotate"
+"status": "open (timeout):   square 184: flat rotation, kept parallel to its class (t7)"
 },
 {
 "n": 272,
-"status": "open: n = 272: 265 squares in the system, 7 free; 28 tilted angle classes; 2334 contact equation"
+"status": "open (memory cap): n = 272: 265 squares in the system, 7 free; 28 tilted angle classes; 2334 contact equation"
 },
 {
 "n": 273,
-"status": "open: n = 273: 264 squares in the system, 9 free; 21 tilted angle classes; 2389 contact equation"
+"status": "open (memory cap): n = 273: 264 squares in the system, 9 free; 21 tilted angle classes; 2389 contact equation"
 },
 {
 "n": 274,
@@ -4501,31 +4545,31 @@
 },
 {
 "n": 301,
-"status": "open: square 267: flat rotation, but parallel to squares that do not rotate"
+"status": "open (memory cap):   settled 1 flat directions on near-contacts (|g| <= 9.2e-11 at the point)"
 },
 {
 "n": 302,
-"status": "open: n = 302: 281 squares in the system, 21 free; 12 tilted angle classes; 2160 contact equatio"
+"status": "open (timeout): n = 302: 281 squares in the system, 21 free; 12 tilted angle classes; 2160 contact equatio"
 },
 {
 "n": 303,
-"status": "open: square 265: flat rotation, but parallel to squares that do not rotate"
+"status": "open (memory cap):   square 265: flat rotation, kept parallel to its class (t14)"
 },
 {
 "n": 304,
-"status": "open: n = 304: 301 squares in the system, 3 free; 21 tilted angle classes; 2748 contact equation"
+"status": "open (memory cap): n = 304: 301 squares in the system, 3 free; 21 tilted angle classes; 2748 contact equation"
 },
 {
 "n": 305,
-"status": "open: square 205: flat rotation, but parallel to squares that do not rotate"
+"status": "open (timeout):   square 205: flat rotation, kept parallel to its class (t3)"
 },
 {
 "n": 306,
-"status": "open: n = 306: 304 squares in the system, 2 free; 28 tilted angle classes; 2705 contact equation"
+"status": "open (memory cap): n = 306: 304 squares in the system, 2 free; 28 tilted angle classes; 2705 contact equation"
 },
 {
 "n": 307,
-"status": "open: n = 307: 302 squares in the system, 5 free; 24 tilted angle classes; 2494 contact equation"
+"status": "open (timeout): n = 307: 302 squares in the system, 5 free; 24 tilted angle classes; 2494 contact equation"
 },
 {
 "n": 308,

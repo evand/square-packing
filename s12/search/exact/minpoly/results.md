@@ -1,6 +1,6 @@
 # minpoly results (register batch)
 
-VALID: 265, not run: 1, open: 58
+VALID: 269, not run: 1, open: 16, open (memory cap): 21, open (timeout): 17
 
 | n | status | tilted classes (free) | field deg | S deg | height digits | stationary | s | cross-check |
 |---|---|---|---|---|---|---|---|---|
@@ -14,13 +14,13 @@ VALID: 265, not run: 1, open: 58
 | 8 | VALID | 0 (0) | 1 | 1 | 1 |  | 0.01 |  |
 | 9 | VALID | 0 (0) | 1 | 1 | 1 |  | 0.01 |  |
 | 10 | VALID | 1 (1) | 2 | 2 | 2 | yes | 0.03 | findpoly ok |
-| 11 | VALID | 1 (1) | 8 | 8 | 5 |  | 0.01 | findpoly ok, Ellsworth deg ok |
+| 11 | VALID | 1 (1) | 8 | 8 | 5 |  | 0.02 | findpoly ok, Ellsworth deg ok |
 | 12 | VALID | 0 (0) | 1 | 1 | 1 |  | 0.01 |  |
 | 13 | VALID | 0 (0) | 1 | 1 | 1 |  | 0.02 |  |
 | 14 | VALID | 0 (0) | 1 | 1 | 1 |  | 0.02 |  |
 | 15 | VALID | 0 (0) | 1 | 1 | 1 |  | 0.03 |  |
 | 16 | VALID | 0 (0) | 1 | 1 | 1 |  | 0.02 |  |
-| 17 | VALID | 2 (2) | 18 | 18 | 12 |  | 0.36 | Ellsworth deg ok |
+| 17 | VALID | 2 (2) | 18 | 18 | 12 |  | 0.39 | Ellsworth deg ok |
 | 18 | VALID | 1 (1) | 2 | 2 | 2 | yes | 0.01 | findpoly ok |
 | 19 | VALID | 1 (1) | 2 | 2 | 2 | yes | 0.02 | findpoly ok |
 | 20 | VALID | 0 (0) | 1 | 1 | 1 |  | 0.04 |  |
@@ -32,7 +32,7 @@ VALID: 265, not run: 1, open: 58
 | 26 | VALID | 1 (1) | 2 | 2 | 2 |  | 0.03 | findpoly ok |
 | 27 | VALID | 1 (1) | 2 | 2 | 2 | yes | 0.18 | findpoly ok |
 | 28 | VALID | 1 (1) | 6 | 6 | 4 |  | 0.03 | findpoly ok, Ellsworth deg ok |
-| 29 | open:   15 consistency rows -> 5 distinct irreducible factors vanishing at t*: degrees [26, 16,  | | | | | | | |
+| 29 | open (timeout):   15 consistency rows -> 5 distinct irreducible factors vanishing at t*: degrees [26, 16,  | | | | | | | |
 | 30 | VALID | 0 (0) | 1 | 1 | 1 |  | 0.04 |  |
 | 31 | VALID | 0 (0) | 1 | 1 | 1 |  | 0.07 |  |
 | 32 | VALID | 0 (0) | 1 | 1 | 1 |  | 0.05 |  |
@@ -40,7 +40,7 @@ VALID: 265, not run: 1, open: 58
 | 34 | VALID | 0 (0) | 1 | 1 | 1 |  | 0.05 |  |
 | 35 | VALID | 0 (0) | 1 | 1 | 1 |  | 0.05 |  |
 | 36 | VALID | 0 (0) | 1 | 1 | 1 |  | 0.06 |  |
-| 37 | VALID | 2 (2) | 8 | 8 | 8 | yes | 0.06 | Ellsworth deg ok |
+| 37 | VALID | 2 (2) | 8 | 8 | 8 | yes | 0.08 | Ellsworth deg ok |
 | 38 | VALID | 1 (1) | 2 | 2 | 2 | yes | 0.33 | findpoly ok |
 | 39 | VALID | 1 (1) | 5 | 5 | 4 | yes | 0.03 | findpoly ok, Ellsworth deg ok |
 | 40 | VALID | 1 (1) | 2 | 2 | 1 |  | 0.08 | findpoly ok |
@@ -54,9 +54,9 @@ VALID: 265, not run: 1, open: 58
 | 48 | VALID | 0 (0) | 1 | 1 | 1 |  | 0.08 |  |
 | 49 | VALID | 0 (0) | 1 | 1 | 1 |  | 0.08 |  |
 | 50 | VALID | 1 (1) | 1 | 1 | 2 |  | 0.25 | findpoly ok |
-| 51 | VALID | 3 (3) | 48 | 12 | 8 | yes | 41.71 | Ellsworth deg ok |
+| 51 | VALID | 3 (3) | 48 | 12 | 8 | yes | 42.4 | Ellsworth deg ok |
 | 52 | VALID | 1 (1) | 2 | 2 | 2 | yes | 0.57 | findpoly ok |
-| 53 | open: square 51: flat rotation, but parallel to squares that do not rotate | | | | | | | |
+| 53 | VALID | 3 (2) | 4 | 2 | 2 | yes | 0.41 | findpoly ok |
 | 54 | VALID | 1 (1) | 4 | 4 | 4 |  | 0.09 | findpoly ok |
 | 55 | open: RuntimeError: msolve failed:  | | | | | | | |
 | 56 | VALID | 0 (0) | 1 | 1 | 1 |  | 0.09 |  |
@@ -71,10 +71,10 @@ VALID: 265, not run: 1, open: 58
 | 65 | VALID | 1 (1) | 2 | 2 | 2 |  | 1.07 | findpoly ok |
 | 66 | VALID | 1 (1) | 2 | 2 | 2 |  | 1.03 |  |
 | 67 | VALID | 1 (1) | 2 | 2 | 3 | yes | 0.94 | findpoly ok |
-| 68 | open:   16 consistency rows -> 8 distinct irreducible factors vanishing at t*: degrees [27, 18,  | | | | | | | |
+| 68 | open (timeout):   16 consistency rows -> 8 distinct irreducible factors vanishing at t*: degrees [27, 18,  | | | | | | | |
 | 69 | VALID | 2 (2) | 38 | 38 | 44 | yes | 127.86 | Ellsworth deg ok |
 | 70 | VALID | 1 (1) | 4 | 4 | 5 |  | 0.42 | findpoly ok, Ellsworth deg ok |
-| 71 | open:   14 consistency rows -> 5 distinct irreducible factors vanishing at t*: degrees [23, 16,  | | | | | | | |
+| 71 | open (timeout):   14 consistency rows -> 5 distinct irreducible factors vanishing at t*: degrees [23, 16,  | | | | | | | |
 | 72 | VALID | 0 (0) | 1 | 1 | 1 |  | 0.13 |  |
 | 73 | VALID | 0 (0) | 1 | 1 | 1 |  | 0.13 |  |
 | 74 | VALID | 0 (0) | 1 | 1 | 1 |  | 0.14 |  |
@@ -90,7 +90,7 @@ VALID: 265, not run: 1, open: 58
 | 84 | VALID | 1 (1) | 2 | 2 | 3 | yes | 1.27 | findpoly ok |
 | 85 | VALID | 1 (1) | 2 | 2 | 2 |  | 0.22 | findpoly ok |
 | 86 | VALID | 1 (1) | 2 | 2 | 3 | yes | 1.22 | findpoly ok |
-| 87 | VALID | 2 (2) | 41 | 41 | 54 | yes | 352.88 | Ellsworth deg ok |
+| 87 | VALID | 2 (2) | 41 | 41 | 54 | yes | 357.03 | Ellsworth deg ok |
 | 88 | open: 1 consistency polynomials for 3 class angles: more than one angle direction left to force  | | | | | | | |
 | 89 | VALID | 1 (1) | 2 | 2 | 2 |  | 7.42 | findpoly ok |
 | 90 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.25 |  |
@@ -105,15 +105,15 @@ VALID: 265, not run: 1, open: 58
 | 99 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.21 |  |
 | 100 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.2 |  |
 | 101 | VALID | 1 (1) | 2 | 2 | 2 |  | 2.25 | findpoly ok |
-| 102 | VALID | 2 (2) | 8 | 8 | 13 | yes | 0.41 |  |
-| 103 | open: n = 103: 97 squares in the system, 6 free; 13 tilted angle classes; 446 contact equations  | | | | | | | |
+| 102 | VALID | 2 (2) | 8 | 8 | 13 | yes | 0.39 |  |
+| 103 | open (memory cap): n = 103: 97 squares in the system, 6 free; 13 tilted angle classes; 446 contact equations  | | | | | | | |
 | 104 | VALID | 1 (1) | 2 | 2 | 3 | yes | 2.35 | findpoly ok |
-| 105 | open: n = 105: 97 squares in the system, 8 free; 18 tilted angle classes; 509 contact equations  | | | | | | | |
-| 106 | open: square 105: flat rotation, but parallel to squares that do not rotate | | | | | | | |
+| 105 | open (memory cap): n = 105: 97 squares in the system, 8 free; 18 tilted angle classes; 509 contact equations  | | | | | | | |
+| 106 | VALID | 4 (2) | 32 | 32 | 35 | yes | 37.81 |  |
 | 107 | VALID | 1 (1) | 4 | 4 | 5 |  | 0.25 | findpoly ok |
-| 108 | open:   field: degree 144 (factor of the eliminating polynomial with root t*) | | | | | | | |
+| 108 | open (timeout):   field: degree 144 (factor of the eliminating polynomial with root t*) | | | | | | | |
 | 109 | VALID | 1 (1) | 2 | 2 | 2 |  | 4.68 | findpoly ok |
-| 110 | open: n = 110: 108 squares in the system, 2 free; 15 tilted angle classes; 929 contact equations | | | | | | | |
+| 110 | open (memory cap): n = 110: 108 squares in the system, 2 free; 15 tilted angle classes; 929 contact equations | | | | | | | |
 | 111 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.23 |  |
 | 112 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.23 |  |
 | 113 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.23 |  |
@@ -129,13 +129,13 @@ VALID: 265, not run: 1, open: 58
 | 123 | open: 3 consistency polynomials for 5 class angles: more than one angle direction left to force  | | | | | | | |
 | 124 | VALID | 1 (1) | 2 | 2 | 2 |  | 4.7 | findpoly ok |
 | 125 | VALID | 1 (1) | 2 | 2 | 3 | yes | 3.23 | findpoly ok |
-| 126 | open:   18 consistency rows -> 6 distinct irreducible factors vanishing at t*: degrees [20, 34,  | | | | | | | |
+| 126 | open (timeout):   18 consistency rows -> 6 distinct irreducible factors vanishing at t*: degrees [20, 34,  | | | | | | | |
 | 127 | VALID | 1 (1) | 2 | 2 | 3 | yes | 1.2 |  |
 | 128 | VALID | 2 (2) | 40 | 40 | 48 | yes | 3.47 | Ellsworth deg ok |
-| 129 | open: square 116: flat rotation, but parallel to squares that do not rotate | | | | | | | |
+| 129 | VALID | 4 (2) | 20 | 20 | 23 | yes | 3.89 | Ellsworth deg ok |
 | 130 | open: 2 consistency polynomials for 5 class angles: more than one angle direction left to force  | | | | | | | |
-| 131 | open: n = 131: 131 squares in the system, 0 free; 19 tilted angle classes; 1116 contact equation | | | | | | | |
-| 132 | open: n = 132: 131 squares in the system, 1 free; 15 tilted angle classes; 993 contact equations | | | | | | | |
+| 131 | open (timeout): n = 131: 131 squares in the system, 0 free; 19 tilted angle classes; 1116 contact equation | | | | | | | |
+| 132 | open (memory cap): n = 132: 131 squares in the system, 1 free; 15 tilted angle classes; 993 contact equations | | | | | | | |
 | 133 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.28 |  |
 | 134 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.29 |  |
 | 135 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.3 |  |
@@ -157,9 +157,9 @@ VALID: 265, not run: 1, open: 58
 | 151 | VALID | 1 (1) | 2 | 2 | 3 | yes | 3.95 | findpoly ok |
 | 152 | VALID | 2 (2) | 40 | 40 | 52 | yes | 3.97 |  |
 | 153 | VALID | 1 (1) | 4 | 4 | 6 |  | 4.97 | findpoly ok, Ellsworth deg ok |
-| 154 | open: n = 154: 154 squares in the system, 0 free; 8 tilted angle classes; 1354 contact equations | | | | | | | |
-| 155 | open: n = 155: 152 squares in the system, 3 free; 16 tilted angle classes; 1124 contact equation | | | | | | | |
-| 156 | open: n = 156: 155 squares in the system, 1 free; 15 tilted angle classes; 1296 contact equation | | | | | | | |
+| 154 | open (timeout): n = 154: 154 squares in the system, 0 free; 8 tilted angle classes; 1354 contact equations | | | | | | | |
+| 155 | open (memory cap): n = 155: 152 squares in the system, 3 free; 16 tilted angle classes; 1124 contact equation | | | | | | | |
+| 156 | open (timeout): n = 156: 155 squares in the system, 1 free; 15 tilted angle classes; 1296 contact equation | | | | | | | |
 | 157 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.5 |  |
 | 158 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.39 |  |
 | 159 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.55 |  |
@@ -180,12 +180,12 @@ VALID: 265, not run: 1, open: 58
 | 174 | VALID | 1 (1) | 2 | 2 | 3 | yes | 7.29 | findpoly ok |
 | 175 | VALID | 1 (1) | 2 | 2 | 2 |  | 52.55 | findpoly ok |
 | 176 | VALID | 1 (1) | 2 | 2 | 3 | yes | 7.27 | findpoly ok |
-| 177 | open: square 173: flat rotation, but parallel to squares that do not rotate | | | | | | | |
+| 177 | VALID | 6 (2) | 32 | 32 | 40 | yes | 3.4 |  |
 | 178 | VALID | 1 (1) | 4 | 4 | 6 |  | 1.39 | findpoly ok |
 | 179 | open: 1 consistency polynomials for 5 class angles: more than one angle direction left to force  | | | | | | | |
-| 180 | open: n = 180: 180 squares in the system, 0 free; 16 tilted angle classes; 1581 contact equation | | | | | | | |
-| 181 | open: n = 181: 180 squares in the system, 1 free; 19 tilted angle classes; 1723 contact equation | | | | | | | |
-| 182 | open:   elimination: 337 pivots, 23 consistency rows | | | | | | | |
+| 180 | open (timeout): n = 180: 180 squares in the system, 0 free; 16 tilted angle classes; 1581 contact equation | | | | | | | |
+| 181 | open (memory cap): n = 181: 180 squares in the system, 1 free; 19 tilted angle classes; 1723 contact equation | | | | | | | |
+| 182 | open (memory cap):   elimination: 337 pivots, 23 consistency rows | | | | | | | |
 | 183 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.6 |  |
 | 184 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.46 |  |
 | 185 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.47 |  |
@@ -205,16 +205,16 @@ VALID: 265, not run: 1, open: 58
 | 199 | open: 1 consistency polynomials for 3 class angles: more than one angle direction left to force  | | | | | | | |
 | 200 | VALID | 1 (1) | 2 | 2 | 2 |  | 18.58 | findpoly ok |
 | 201 | VALID | 1 (1) | 2 | 2 | 3 | yes | 7.84 | findpoly ok |
-| 202 | VALID | 1 (1) | 2 | 2 | 3 | yes | 41.99 | findpoly ok |
+| 202 | VALID | 1 (1) | 2 | 2 | 3 | yes | 41.84 | findpoly ok |
 | 203 | VALID | 1 (1) | 2 | 2 | 2 |  | 58.97 | findpoly ok |
 | 204 | VALID | 1 (1) | 2 | 2 | 3 | yes | 10.67 | findpoly ok |
 | 205 | VALID | 2 (2) | 40 | 40 | 52 | yes | 4.55 | Ellsworth deg ok |
-| 206 | open:   field: degree 56 (factor of the eliminating polynomial with root t*) | | | | | | | |
-| 207 | open: square 73: flat rotation, but parallel to squares that do not rotate | | | | | | | |
-| 208 | open: n = 208: 206 squares in the system, 2 free; 13 tilted angle classes; 2006 contact equation | | | | | | | |
-| 209 | open: n = 209: 206 squares in the system, 3 free; 26 tilted angle classes; 1729 contact equation | | | | | | | |
-| 210 | open: n = 210: 208 squares in the system, 2 free; 26 tilted angle classes; 1681 contact equation | | | | | | | |
-| 211 | open: n = 211: 211 squares in the system, 0 free; 20 tilted angle classes; 1981 contact equation | | | | | | | |
+| 206 | open (timeout):   field: degree 56 (factor of the eliminating polynomial with root t*) | | | | | | | |
+| 207 | open: Lagrange determinant vanishes identically | | | | | | | |
+| 208 | open (timeout): n = 208: 206 squares in the system, 2 free; 13 tilted angle classes; 2006 contact equation | | | | | | | |
+| 209 | open (memory cap): n = 209: 206 squares in the system, 3 free; 26 tilted angle classes; 1729 contact equation | | | | | | | |
+| 210 | open (memory cap): n = 210: 208 squares in the system, 2 free; 26 tilted angle classes; 1681 contact equation | | | | | | | |
+| 211 | open (memory cap): n = 211: 211 squares in the system, 0 free; 20 tilted angle classes; 1981 contact equation | | | | | | | |
 | 212 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.55 |  |
 | 213 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.56 |  |
 | 214 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.57 |  |
@@ -231,7 +231,7 @@ VALID: 265, not run: 1, open: 58
 | 225 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.62 |  |
 | 226 | VALID | 1 (1) | 2 | 2 | 3 |  | 8.54 | findpoly ok |
 | 227 | VALID | 1 (1) | 2 | 2 | 2 |  | 0.89 | findpoly ok |
-| 228 | open:   27 consistency rows -> 12 distinct irreducible factors vanishing at t*: degrees [12, 15, | | | | | | | |
+| 228 | open (timeout):   27 consistency rows -> 12 distinct irreducible factors vanishing at t*: degrees [12, 15, | | | | | | | |
 | 229 | VALID | 1 (1) | 2 | 2 | 2 |  | 26.67 | findpoly ok |
 | 230 | VALID | 1 (1) | 1 | 1 | 3 |  | 2.81 | findpoly ok |
 | 231 | VALID | 1 (1) | 2 | 2 | 3 | yes | 14.14 | findpoly ok |
@@ -241,10 +241,10 @@ VALID: 265, not run: 1, open: 58
 | 235 | open: msolve: system not zero-dimensional (code 1) | | | | | | | |
 | 236 | open: 1 consistency polynomials for 3 class angles: more than one angle direction left to force  | | | | | | | |
 | 237 | open: 1 consistency polynomials for 5 class angles: more than one angle direction left to force  | | | | | | | |
-| 238 | open: n = 238: 237 squares in the system, 1 free; 17 tilted angle classes; 2104 contact equation | | | | | | | |
-| 239 | open: n = 239: 236 squares in the system, 3 free; 24 tilted angle classes; 1937 contact equation | | | | | | | |
-| 240 | open: n = 240: 237 squares in the system, 3 free; 18 tilted angle classes; 1822 contact equation | | | | | | | |
-| 241 | open: n = 241: 238 squares in the system, 3 free; 21 tilted angle classes; 2023 contact equation | | | | | | | |
+| 238 | open (memory cap): n = 238: 237 squares in the system, 1 free; 17 tilted angle classes; 2104 contact equation | | | | | | | |
+| 239 | open (memory cap): n = 239: 236 squares in the system, 3 free; 24 tilted angle classes; 1937 contact equation | | | | | | | |
+| 240 | open (memory cap): n = 240: 237 squares in the system, 3 free; 18 tilted angle classes; 1822 contact equation | | | | | | | |
+| 241 | open (memory cap): n = 241: 238 squares in the system, 3 free; 21 tilted angle classes; 2023 contact equation | | | | | | | |
 | 242 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.68 |  |
 | 243 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.69 |  |
 | 244 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.68 |  |
@@ -266,17 +266,17 @@ VALID: 265, not run: 1, open: 58
 | 260 | VALID | 1 (1) | 2 | 2 | 2 |  | 173.94 | findpoly ok |
 | 261 | VALID | 1 (1) | 1 | 1 | 3 |  | 3.35 | findpoly ok |
 | 262 | VALID | 1 (1) | 2 | 2 | 3 | yes | 15.28 | findpoly ok |
-| 263 | open: n = 263: 263 squares in the system, 0 free; 37 tilted angle classes; 2336 contact equation | | | | | | | |
+| 263 | open (timeout): n = 263: 263 squares in the system, 0 free; 37 tilted angle classes; 2336 contact equation | | | | | | | |
 | 264 | VALID | 1 (1) | 2 | 2 | 2 |  | 54.74 | findpoly ok |
 | 265 | VALID | 1 (1) | 2 | 2 | 2 |  | 56.92 | findpoly ok |
 | 266 | VALID | 2 (2) | 32 | 32 | 44 | yes | 179.21 | Ellsworth deg ok |
 | 267 | VALID | 1 (1) | 4 | 4 | 6 |  | 0.93 | findpoly ok |
-| 268 | open: square 94: flat rotation, but parallel to squares that do not rotate | | | | | | | |
+| 268 | open: Lagrange determinant vanishes identically | | | | | | | |
 | 269 | open: 1 consistency polynomials for 4 class angles: more than one angle direction left to force  | | | | | | | |
-| 270 | open: n = 270: 270 squares in the system, 0 free; 26 tilted angle classes; 2713 contact equation | | | | | | | |
-| 271 | open: square 184: flat rotation, but parallel to squares that do not rotate | | | | | | | |
-| 272 | open: n = 272: 265 squares in the system, 7 free; 28 tilted angle classes; 2334 contact equation | | | | | | | |
-| 273 | open: n = 273: 264 squares in the system, 9 free; 21 tilted angle classes; 2389 contact equation | | | | | | | |
+| 270 | open (memory cap): n = 270: 270 squares in the system, 0 free; 26 tilted angle classes; 2713 contact equation | | | | | | | |
+| 271 | open (timeout):   square 184: flat rotation, kept parallel to its class (t7) | | | | | | | |
+| 272 | open (memory cap): n = 272: 265 squares in the system, 7 free; 28 tilted angle classes; 2334 contact equation | | | | | | | |
+| 273 | open (memory cap): n = 273: 264 squares in the system, 9 free; 21 tilted angle classes; 2389 contact equation | | | | | | | |
 | 274 | VALID | 0 (0) | 1 | 1 | 2 |  | 1.04 |  |
 | 275 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.82 |  |
 | 276 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.82 |  |
@@ -304,13 +304,13 @@ VALID: 265, not run: 1, open: 58
 | 298 | VALID | 1 (1) | 2 | 2 | 2 |  | 87.67 | findpoly ok |
 | 299 | VALID | 2 (1) | 2 | 2 | 3 | yes | 6.52 |  |
 | 300 | VALID | 2 (2) | 40 | 40 | 56 | yes | 5.99 | Ellsworth deg ok |
-| 301 | open: square 267: flat rotation, but parallel to squares that do not rotate | | | | | | | |
-| 302 | open: n = 302: 281 squares in the system, 21 free; 12 tilted angle classes; 2160 contact equatio | | | | | | | |
-| 303 | open: square 265: flat rotation, but parallel to squares that do not rotate | | | | | | | |
-| 304 | open: n = 304: 301 squares in the system, 3 free; 21 tilted angle classes; 2748 contact equation | | | | | | | |
-| 305 | open: square 205: flat rotation, but parallel to squares that do not rotate | | | | | | | |
-| 306 | open: n = 306: 304 squares in the system, 2 free; 28 tilted angle classes; 2705 contact equation | | | | | | | |
-| 307 | open: n = 307: 302 squares in the system, 5 free; 24 tilted angle classes; 2494 contact equation | | | | | | | |
+| 301 | open (memory cap):   settled 1 flat directions on near-contacts (|g| <= 9.2e-11 at the point) | | | | | | | |
+| 302 | open (timeout): n = 302: 281 squares in the system, 21 free; 12 tilted angle classes; 2160 contact equatio | | | | | | | |
+| 303 | open (memory cap):   square 265: flat rotation, kept parallel to its class (t14) | | | | | | | |
+| 304 | open (memory cap): n = 304: 301 squares in the system, 3 free; 21 tilted angle classes; 2748 contact equation | | | | | | | |
+| 305 | open (timeout):   square 205: flat rotation, kept parallel to its class (t3) | | | | | | | |
+| 306 | open (memory cap): n = 306: 304 squares in the system, 2 free; 28 tilted angle classes; 2705 contact equation | | | | | | | |
+| 307 | open (timeout): n = 307: 302 squares in the system, 5 free; 24 tilted angle classes; 2494 contact equation | | | | | | | |
 | 308 | VALID | 0 (0) | 1 | 1 | 2 |  | 1.23 |  |
 | 309 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.98 |  |
 | 310 | VALID | 0 (0) | 1 | 1 | 2 |  | 0.97 |  |
