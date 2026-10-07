@@ -231,3 +231,6 @@ import Sqpack
 #print axioms SquarePacking.Bentz.cap7_cov
 #print axioms UnitSquarePacking.packs_of_cert
 #print axioms UnitSquarePacking.N5.packs_five
+#print axioms UnitSquarePacking.EC.packs_exact
+#print axioms UnitSquarePacking.EC.N5c.packs
+#print axioms UnitSquarePacking.EC.N11c.packs

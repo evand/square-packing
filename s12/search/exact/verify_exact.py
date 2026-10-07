@@ -237,10 +237,17 @@ def check(path, quiet=False):
     Sa, Sb = (F(x) for x in D['S']['interval'])
     assert Sa <= S.i.lo and S.i.hi <= Sb, 'S(t*) not inside [Sa, Sb]'
     pS = lambda x: sum(c * x ** i for i, c in enumerate(p))
-    assert pS(Sa) * pS(Sb) < 0, 'no sign change of p on [Sa, Sb]'
     dp = [i * c for i, c in enumerate(p)][1:]
-    dpi = ev_iv(dp, I(Sa, Sb))
-    assert dpi.lo > 0 or dpi.hi < 0, "p' changes sign on [Sa, Sb]: root not proved unique"
+    # uniqueness: p changes sign and p' has constant sign on [Sa, Sb]; if the given interval is too wide for the
+    # interval bound on p', tighten it around the enclosure of S(t*) (the statement then uses the tighter interval)
+    for delta in [None] + [F(1, 10 ** e) for e in (30, 40, 50, 60, 70, 80)]:
+        if delta is not None:
+            Sa, Sb = rdn(S.i.lo - delta), rup(S.i.hi + delta)
+        dpi = ev_iv(dp, I(Sa, Sb))
+        if (dpi.lo > 0 or dpi.hi < 0) and pS(Sa) * pS(Sb) < 0:
+            break
+    else:
+        raise AssertionError("p' changes sign on [Sa, Sb]: root not proved unique")
 
     H = F(1, 2)
 

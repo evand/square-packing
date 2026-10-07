@@ -45,3 +45,6 @@ import Sqpack.SpecFC
 import Sqpack.SpecChelokot
 import Sqpack.ExactPack
 import Sqpack.Exact.N5
+import Sqpack.ExactCheck
+import Sqpack.Exact.N5c
+import Sqpack.Exact.N11c

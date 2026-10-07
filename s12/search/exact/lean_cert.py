@@ -1,0 +1,319 @@
+"""Lean certificate from a minpoly.py output: writes a Lean file whose theorem
+  ∃ s, pS(s) = 0 ∧ Sa ≤ s ≤ Sb ∧ Packs n s
+is proved by `EC.packs_exact` and `decide +kernel` (lean/Sqpack/ExactCheck.lean).
+
+The checks are replayed here in Python with exactly the Lean checker's arithmetic (same division, same positivity
+bound), so the generated file is expected to compile; the t interval is narrowed by exact bisection until every
+strict bound passes, and each pair gets a separating side line.
+
+  python3 lean_cert.py minpoly/solve/n-11.minpoly.json ../../lean/Sqpack/Exact/N11.lean
+"""
+import sys, json
+from fractions import Fraction as F
+
+
+# ------------------------------------------------------------------ the Lean checker's polynomial arithmetic
+def padd(p, q):
+    if not p:
+        return list(q)
+    if not q:
+        return list(p)
+    return [p[0] + q[0]] + padd(p[1:], q[1:]) if len(p) < 400 and len(q) < 400 else _padd_it(p, q)
+
+
+def _padd_it(p, q):
+    r = []
+    for i in range(max(len(p), len(q))):
+        if i < len(p) and i < len(q):
+            r.append(p[i] + q[i])
+        elif i < len(p):
+            r.append(p[i])
+        else:
+            r.append(q[i])
+    return r
+
+
+def psmul(c, p):
+    return [c * x for x in p]
+
+
+def psub(p, q):
+    return padd(p, psmul(F(-1), q))
+
+
+def pmul(p, q):
+    if not p:
+        return []
+    r = [F(0)] * (len(p) + len(q) - 1) if q else []
+    for i, a in enumerate(p):
+        for j, b in enumerate(q):
+            r[i + j] += a * b
+    # Lean's pmul keeps the length len(p) + len(q) - 1 (no trimming); the value is what matters
+    return r
+
+
+def pdivmod(p, f):
+    fr = list(reversed(f))
+    if not fr:
+        return [], p
+    lc, fd = fr[0], fr[1:]
+    q, pr = [], list(reversed(p))
+    for _ in range(len(p)):
+        if len(pr) <= len(fd):
+            break
+        c = pr[0]
+        k = c / lc
+        rest = pr[1:]
+        rest = [x - k * fd[i] if i < len(fd) else x for i, x in enumerate(rest)]
+        q = [k] + q
+        pr = rest
+    return q, list(reversed(pr))
+
+
+def qeval(p, t):
+    v = F(0)
+    for c in reversed(p):
+        v = c + t * v
+    return v
+
+
+def bndA(R, p):
+    v = F(0)
+    for c in reversed(p):
+        v = abs(c) + R * v
+    return v
+
+
+def bndB(R, p):
+    # bndB (c :: p) = bndA p + R * bndB p
+    A, B = F(0), F(0)
+    for c in reversed(p):
+        A, B = abs(c) + R * A, A + R * B
+    return B
+
+
+def all_zero(p):
+    return all(x == 0 for x in p)
+
+
+class Ctx:
+    def __init__(self, f, a, b):
+        self.f, self.a, self.b = f, a, b
+        self.m, self.w, self.R = (a + b) / 2, (b - a) / 2, max(abs(a), abs(b))
+
+    def nonneg(self, N):
+        """None if fails, 'eq' or 'gt'; also the margin r(m) - w B for diagnostics."""
+        q, r = pdivmod(N, self.f)
+        assert all_zero(psub(N, padd(pmul(q, self.f), r))), 'division identity failed'
+        if all_zero(r):
+            return 'eq', None
+        val, B = qeval(r, self.m), bndB(self.R, r)
+        return ('gt' if self.w * B < val else None), (val, B)
+
+
+# ------------------------------------------------------------------ geometry, as in ExactCheck.lean
+def csN0(sq):
+    u = sq['u']
+    c, s = psub([F(1)], pmul(u, u)), psmul(F(2), u)
+    for _ in range(sq['m']):
+        c, s = psmul(F(-1), s), c
+    return c, s
+
+
+def dd0(sq):
+    return padd([F(1)], pmul(sq['u'], sq['u']))
+
+
+def trim(p):
+    p = list(p)
+    while p and p[-1] == 0:
+        p.pop()
+    return p
+
+
+def add_reduced(sq, f):
+    """The stored c, s, d (reduced mod f), as the Lean SqD fields."""
+    c0, s0 = csN0(sq)
+    sq['c'] = trim(pdivmod(c0, f)[1]) or [F(0)]
+    sq['s'] = trim(pdivmod(s0, f)[1]) or [F(0)]
+    sq['d'] = trim(pdivmod(dd0(sq), f)[1]) or [F(0)]
+
+
+def csN(sq):
+    return sq['c'], sq['s']
+
+
+def dd(sq):
+    return sq['d']
+
+
+def lin2(c, d, a, b):
+    return psub(psmul(a, c), psmul(b, d))
+
+
+def lin2p(c, d, a, b):
+    return padd(psmul(a, c), psmul(b, d))
+
+
+def boxN(S, sq, a, b):
+    c, s = csN(sq)
+    d = dd(sq)
+    return [padd(pmul(d, sq['x']), lin2(c, s, a, b)),
+            psub(pmul(d, psub(S, sq['x'])), lin2(c, s, a, b)),
+            padd(pmul(d, sq['y']), lin2p(s, c, a, b)),
+            psub(pmul(d, psub(S, sq['y'])), lin2p(s, c, a, b))]
+
+
+def nrmN(c, s, k):
+    return [(c, s), (psmul(F(-1), s), c), (psmul(F(-1), c), psmul(F(-1), s)), (s, psmul(F(-1), c))][k]
+
+
+def sepN(qi, qj, k, a, b):
+    ci, si = csN(qi)
+    cj, sj = csN(qj)
+    nx, ny = nrmN(ci, si, k)
+    return psub(psmul(F(2), padd(pmul(nx, padd(pmul(dd(qj), psub(qj['x'], qi['x'])), lin2(cj, sj, a, b))),
+                                 pmul(ny, padd(pmul(dd(qj), psub(qj['y'], qi['y'])), lin2p(sj, cj, a, b))))),
+                pmul(dd(qi), dd(qj)))
+
+
+HALVES = [F(1, 2), F(-1, 2)]
+
+
+def lean_q(x):
+    x = F(x)
+    if x.denominator == 1:
+        return f'({x.numerator} : ℚ)' if x.numerator < 0 else str(x.numerator)
+    return f'({x.numerator}/{x.denominator} : ℚ)'
+
+
+def lean_poly(p):
+    return '[' + ', '.join(lean_q(x) for x in p) + ']'
+
+
+def build(path, out, mod):
+    D = json.load(open(path))
+    n = D['n']
+    f = [F(x) for x in D['field']['f']]
+    ta, tb = (F(x) for x in D['field']['t_interval'])
+    sqs = [{'x': [F(v) for v in q['x']], 'y': [F(v) for v in q['y']], 'u': [F(v) for v in q['u']], 'm': q['m']}
+           for q in D['squares']]
+    for q in sqs:
+        add_reduced(q, f)
+    S = [F(v) for v in D['S']['in_K']]
+    pS = [F(v) for v in D['S']['poly']]
+    Sa, Sb = (F(x) for x in D['S']['interval'])
+    fv = lambda x: qeval(f, x)
+    if ta == tb:                                  # K = Q: f = T, t = 0
+        assert fv(ta) == 0
+    # every numerator, then narrow [ta, tb] until all strict ones pass
+    def all_numerators(choice):
+        Ns = []
+        for i, q in enumerate(sqs):
+            for a in HALVES:
+                for b in HALVES:
+                    Ns += boxN(S, q, a, b)
+        for (i, j), (own, k) in choice.items():
+            qi, qj = (sqs[i], sqs[j]) if own else (sqs[j], sqs[i])
+            Ns += [sepN(qi, qj, k, a, b) for a in HALVES for b in HALVES]
+        return Ns
+    # separating line per pair, chosen at a fine interval
+    import mpmath
+    mpmath.mp.dps = 60
+    ctx = Ctx(f, ta, tb)
+    # numeric value of t for choosing lines
+    tm = ctx.m
+    def numval(N):
+        return float(qeval(pdivmod(N, f)[1], tm))
+    choice = {}
+    for i in range(n):
+        for j in range(i + 1, n):
+            best = None
+            for own in (True, False):
+                for k in range(4):
+                    qi, qj = (sqs[i], sqs[j]) if own else (sqs[j], sqs[i])
+                    worst = min(numval(sepN(qi, qj, k, a, b)) for a in HALVES for b in HALVES)
+                    if best is None or worst > best[0]:
+                        best = (worst, own, k)
+            choice[(i, j)] = (best[1], best[2])
+    Ns = all_numerators(choice) + [psub(S, [Sa]), psub([Sb], S)]
+    for it in range(400):
+        ctx = Ctx(f, ta, tb)
+        bad = 0
+        for N in Ns:
+            r, _ = ctx.nonneg(N)
+            if r is None:
+                bad += 1
+        if not bad:
+            break
+        if ta == tb:
+            raise RuntimeError(f'{bad} conditions fail at the exact rational point')
+        # halve the interval (exact bisection keeps a root), round outward to dyadics
+        for _ in range(8):
+            mid = (ta + tb) / 2
+            if fv(mid) == 0:
+                ta = tb = mid
+                break
+            if fv(ta) * fv(mid) < 0:
+                tb = mid
+            else:
+                ta = mid
+    else:
+        raise RuntimeError('could not narrow the t interval enough')
+    assert ta == tb or fv(ta) * fv(tb) < 0
+    # p_S(S(t)) = 0 mod f
+    comp = []
+    for c in reversed(pS):
+        comp = padd([c], pmul(S, comp))
+    qq, rr = pdivmod(comp, f)
+    assert all_zero(psub(comp, padd(pmul(qq, f), rr))) and all_zero(rr), 'pS(S) != 0 mod f'
+    eqs = sum(1 for N in Ns if ctx.nonneg(N)[0] == 'eq')
+    # Lean file
+    L = []
+    L.append(f'import Sqpack.ExactCheck\n')
+    L.append(f'/-! Generated by `search/exact/lean_cert.py` from `{path.split("/")[-1]}`: register record n = {n}, '
+             f'field degree {len(f) - 1}, `S` of degree {len(pS) - 1}.\n'
+             f'{eqs} touching conditions are identities mod `f`, {len(Ns) - eqs} are strict. -/\n')
+    L.append(f'namespace UnitSquarePacking.EC.{mod}\n')
+    L.append('set_option maxHeartbeats 0\n')
+    L.append(f'def cert : Cert {n} where')
+    L.append(f'  f := {lean_poly(f)}')
+    L.append(f'  a := {lean_q(ta)}')
+    L.append(f'  b := {lean_q(tb)}')
+    L.append(f'  S := {lean_poly(S)}')
+    L.append('  sq := ![' + ',\n    '.join(f'⟨{lean_poly(q["x"])}, {lean_poly(q["y"])}, {lean_poly(q["u"])}, {q["m"]}, '
+                                          f'{lean_poly(q["c"])}, {lean_poly(q["s"])}, {lean_poly(q["d"])}⟩'
+                                          for q in sqs) + ']')
+    rows = []
+    for i in range(n):
+        row = []
+        for j in range(n):
+            own, k = choice.get((i, j), (True, 0))
+            row.append(f'({"true" if own else "false"}, {k})')
+        rows.append('![' + ', '.join(row) + ']')
+    L.append('  sep := ![' + ',\n    '.join(rows) + ']\n')
+    L.append(f'/-- The polynomial of `S` (ascending coefficients). -/\ndef pS : Poly := {lean_poly(pS)}\n')
+    for i in range(n):
+        L.append(f'theorem box_{i} : boxOK cert {i} = true := by decide +kernel')
+    L.append('')
+    for i in range(n):
+        L.append(f'theorem row_{i} : rowOK cert {i} = true := by decide +kernel')
+    L.append('')
+    L.append('theorem boxes : ∀ i, boxOK cert i = true := by\n  intro i; fin_cases i\n  exacts [' +
+             ', '.join(f'box_{i}' for i in range(n)) + ']\n')
+    L.append('theorem rows : ∀ i, rowOK cert i = true := by\n  intro i; fin_cases i\n  exacts [' +
+             ', '.join(f'row_{i}' for i in range(n)) + ']\n')
+    L.append(f'/-- `s({n}) ≤ S*`, `S*` the root of `pS` in `[{float(Sa):.12g}, {float(Sb):.12g}]`. -/')
+    L.append(f'theorem packs : ∃ s : ℝ, peval pS s = 0 ∧ (({lean_q(Sa)} : ℚ) : ℝ) ≤ s ∧ s ≤ (({lean_q(Sb)} : ℚ) : ℝ) ∧ '
+             f'Packs {n} s :=')
+    L.append(f'  packs_exact cert pS _ _ (by decide +kernel) (by decide +kernel) boxes rows (by decide +kernel)\n'
+             f'    (by decide +kernel) (by decide +kernel)\n')
+    L.append(f'end UnitSquarePacking.EC.{mod}\n')
+    open(out, 'w').write('\n'.join(L))
+    print(f'{out}: n = {n}, {len(Ns)} conditions ({eqs} identities), t interval width {float(tb - ta):.3g}')
+
+
+if __name__ == '__main__':
+    path, out = sys.argv[1], sys.argv[2]
+    mod = out.split('/')[-1].replace('.lean', '')
+    build(path, out, mod)

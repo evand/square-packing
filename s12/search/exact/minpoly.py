@@ -236,6 +236,25 @@ def run(base, quiet=False):
     sysq = sorted({c[1] for c in eqs} | {c[3] for c in eqs if c[0] == 'C'})
     free = [i for i in range(n) if i not in sysq]
     tolang = mpf(10) ** -40
+    # corner-corner touches (exactsolve sets them aside as disjunctive): every incidence of a touching pair that holds
+    # at the exact point (|g| < 1e-50, corner within the side's closed extent) is an equation too
+    Cm = [mp.cos(th * mp.pi / 180) for th in TH]
+    Sm = [mp.sin(th * mp.pi / 180) for th in TH]
+    have = set(eqs)
+    nvv = 0
+    for i, j in ct.get('vv', []):
+        if i not in sysq or j not in sysq:
+            continue
+        for own, oth in ((i, j), (j, i)):
+            for k in range(4):
+                for a in range(4):
+                    c = ('C', oth, a, own, k)
+                    g = geom.eval_contact(c, X, Y, Cm, Sm, S0, mpf(1) / 2, order=1)[0]
+                    if abs(g) < mpf(10) ** -50 and abs(geom.tangential(c, X, Y, Cm, Sm, mpf(1) / 2)) <= \
+                            mpf(1) / 2 + mpf(10) ** -50 and c not in have:
+                        eqs.append(c)
+                        have.add(c)
+                        nvv += 1
 
     # angle classes over the squares in the system: class 0 = axis (u = 0)
     reps = [mpf(0)]                                                # representative angle, degrees, in (-45, 45]
@@ -262,7 +281,7 @@ def run(base, quiet=False):
     tstar = [mp.tan(r * mp.pi / 360) for r in reps]
     ncls = len(reps) - 1
     log(f'n = {n}: {len(sysq)} squares in the system, {len(free)} free; {ncls} tilted angle classes; '
-        f'{len(eqs)} contact equations')
+        f'{len(eqs)} contact equations ({nvv} from corner-corner touches)')
 
     # class angles that exactsolve froze as exact flat directions: pinned at a nearby rational t
     frozen_sq = {v // 3 for v in ct.get('frozen_vars', []) if v % 3 == 2}
@@ -300,29 +319,70 @@ def run(base, quiet=False):
         Cs[i], Ss[i] = rot90(c, s if sg > 0 else -s, m)
     half = RF.c(Fraction(1, 2))
 
-    def build_rows():
+    def build_rows(eqlist):
         Xs = {i: Lin(k=RF.c(pins[f'x{i}'])) if f'x{i}' in pins else Lin.var(f'x{i}') for i in sysq}
         Ys = {i: Lin(k=RF.c(pins[f'y{i}'])) if f'y{i}' in pins else Lin.var(f'y{i}') for i in sysq}
-        return [contact_expr(c, Xs, Ys, Cs, Ss, Lin.var('S'), half) for c in eqs]
+        return [contact_expr(c, Xs, Ys, Cs, Ss, Lin.var('S'), half) for c in eqlist]
 
-    # sparse elimination over Q(t), pivots nonzero at t*; variables left without a pivot are free (given t the
-    # system is linear): pin them at nearby rationals and eliminate again
-    for attempt in range(2):
-        rows = build_rows()
-        piv_rows, leftover = eliminate(rows, tv)
-        pivv = {v for v, _ in piv_rows}
-        freev = sorted({v for r in rows for v in r.c} - pivv)
-        if not freev:
-            break
+    def free_vars(rows, piv_rows):
+        return sorted({v for r in rows for v in r.c} - {v for v, _ in piv_rows})
+
+    def consistent(left):
+        thr = mpf(10) ** -50
+        for r in left:
+            if not kts:
+                if r.c or not r.k.zero():
+                    return False
+            elif abs(r.k.ev(tv)) > thr:
+                return False
+        return True
+
+    # sparse elimination over Q(t), pivots nonzero at t*.  Variables left without a pivot are free (given t the
+    # system is linear).  Settle them first: add near-contacts (|g| < 1e-9 at the point, not yet equations) one at a
+    # time when that removes a free variable and keeps the system consistent at t*; pin what is left at nearby
+    # rationals and eliminate again.
+    rows = build_rows(eqs)
+    piv_rows, leftover = eliminate(rows, tv)
+    freev = free_vars(rows, piv_rows)
+    settled = []
+    if freev:
         if 'S' in freev:
             raise NotHandled('S is not fixed by the contacts (force-determined S): not handled yet')
-        if attempt:
-            raise RuntimeError(f'variables still free after pinning: {freev}')
         dep = s_dependence(piv_rows, freev, tv)
         if dep:
             raise NotHandled(f'S depends on centres not fixed by the contacts ({dep[:4]}): force-determined, not handled')
+        cands = near_incidences(sysq, X, Y, Cm, Sm, S0, mpf(10) ** -9, set(eqs))
+        Xs0 = {i: Lin.var(f'x{i}') for i in sysq}
+        Ys0 = {i: Lin.var(f'y{i}') for i in sysq}
+        progress = True
+        while freev and progress:
+            progress = False
+            fs = set(freev)
+            for gabs, c in cands:
+                if c in settled:
+                    continue
+                g = contact_expr(c, Xs0, Ys0, Cs, Ss, Lin.var('S'), half)
+                if not (set(g.c) & fs):
+                    continue
+                rows2 = rows + [g]
+                p2, l2 = eliminate(rows2, tv)
+                f2 = free_vars(rows2, p2)
+                if len(f2) < len(freev) and 'S' not in f2 and consistent(l2):
+                    eqs.append(c)
+                    settled.append(c)
+                    rows, piv_rows, leftover, freev = rows2, p2, l2, f2
+                    progress = True
+                    break
+        if settled:
+            log(f'  settled {len(settled)} flat directions on near-contacts (|g| <= '
+                f'{mp.nstr(max(g for g, c in cands if c in settled), 2)} at the point)')
+    if freev:
         for v in freev:
-            pins[v] = frac_near((X if v[0] == 'x' else Y)[int(v[1:])], 12)
+            pins[v] = frac_near((X if v[0] == 'x' else Y)[int(v[1:])], 30)
+        rows = build_rows(eqs)
+        piv_rows, leftover = eliminate(rows, tv)
+        if free_vars(rows, piv_rows):
+            raise RuntimeError('variables still free after pinning')
     if pins:
         log(f'  pinned (flat directions): {", ".join(f"{v} = {float(q):.12g}" for v, q in pins.items())}')
     log(f'  elimination: {len(piv_rows)} pivots, {len(leftover)} consistency rows')
@@ -363,7 +423,7 @@ def run(base, quiet=False):
         f, tmap, troot = Q(cand[0][1]), [T], tv[0]
         log(f'  f(t): degree {f.degree()}, from gcd of degree {g.degree()} ({len(cand)} factors)')
     else:
-        f, tmap, troot = multi_field(leftover, tv, base, log)
+        f, tmap, troot, stationary = multi_field(leftover, tv, base, log, piv_rows)
     Kf = K(f, tmap)
     # back-substitution in K
     val = {}
@@ -497,15 +557,40 @@ def msolve_param(polys, k, tag):
     params = [(P(g), int(c)) for g, c in par[2]]
     if len(vars_) - 1 != len(params):
         raise RuntimeError('unexpected msolve output shape')
-    # the last variable is the separating element A; the first k are t1..tk (msolve may add one variable)
-    if vars_[:k] != names:
+    # the last variable is the separating element A (msolve may add it, or reorder t1..tk); the others are
+    # parametrized in the order listed
+    if sorted(v for v in vars_ if v in names) != sorted(names):
         raise RuntimeError(f'unexpected msolve variables {vars_}')
-    if len(vars_) == k:                                            # A = t_k itself
-        params.append((-(Q([0, 1]) * den), 1))
-    return f, den, params[:k]
+    byname = dict(zip(vars_[:-1], params))
+    byname[vars_[-1]] = (-(Q([0, 1]) * den), 1)                    # A itself: -g/(c den) = A
+    return f, den, [byname[nm] for nm in names]
 
 
-def multi_field(leftover, tv, base, log):
+def back_rf(piv_rows):
+    """Back-substitution over the rational function field: every pivot variable as an RF."""
+    vrf = {}
+    for v, pr in reversed(piv_rows):
+        acc = pr.k
+        for w, a in pr.c.items():
+            if w != v:
+                acc = acc + a * vrf[w]
+        vrf[v] = -acc / pr.c[v]
+    return vrf
+
+
+def mdet(M):
+    """Determinant of a small square matrix of fmpq_mpoly (cofactor expansion)."""
+    if len(M) == 1:
+        return M[0][0]
+    acc = None
+    for j in range(len(M)):
+        minor = [row[:j] + row[j + 1:] for row in M[1:]]
+        term = M[0][j] * mdet(minor)
+        acc = term if acc is None else (acc + term if j % 2 == 0 else acc - term)
+    return acc
+
+
+def multi_field(leftover, tv, base, log, piv_rows):
     """K for k >= 2 free class parameters: the consistency polynomials (numerators of the rows left after
     elimination), their irreducible factors that vanish at t*, msolve's parametrization, and the factor of f and root
     that reproduce t*.  Returns (f1, tmap, A*)."""
@@ -526,9 +611,34 @@ def multi_field(leftover, tv, base, log):
                     keep.append(fac)
     log(f'  {len(leftover)} consistency rows -> {len(keep)} distinct irreducible factors vanishing at t*: degrees '
         f'{[q.total_degree() for q in keep]}')
+    stationary = False
+    if len(keep) == k - 1:
+        # the contacts leave a curve of angles; S is stationary along it at t* (force balance): Lagrange condition
+        # det [grad C_1; ...; grad C_{k-1}; grad S] = 0, with the numerator of grad S
+        Sr = back_rf(piv_rows)['S']
+        names = [f't{i + 1}' for i in range(k)]
+        gS = [Sr.n.derivative(nm) * Sr.d - Sr.n * Sr.d.derivative(nm) for nm in names]
+        M = [[q.derivative(nm) for nm in names] for q in keep] + [gS]
+        det = mdet(M)
+        if det.is_zero():
+            raise NotHandled('Lagrange determinant vanishes identically')
+        _, facs = det.factor()
+        new = []
+        for fac, _m in facs:
+            if fac.is_constant():
+                continue
+            h = max(abs(float(c)) for c in fac.coeffs())
+            if abs(R.ev(fac, tv)) / max(1.0, h) < thr:
+                new.append(fac)
+        log(f'  angles fixed by force balance along a curve: Lagrange determinant of total degree {det.total_degree()}, '
+            f'{len(new)} factors vanishing at t*: degrees {[q.total_degree() for q in new]}')
+        if not new:
+            raise RuntimeError('no factor of the Lagrange determinant vanishes at t*')
+        keep += new
+        stationary = True
     if len(keep) < k:
-        raise NotHandled(f'{len(keep)} consistency polynomials for {k} class angles: angles not fixed by the contacts '
-                         f'(force-determined), not handled')
+        raise NotHandled(f'{len(keep)} consistency polynomials for {k} class angles: more than one angle direction left '
+                         f'to force balance, not handled')
     t0 = time.time()
     f, den, params = msolve_param(keep, k, base)
     log(f'  msolve: eliminating polynomial of degree {f.degree()} ({time.time() - t0:.1f} s)')
@@ -552,7 +662,36 @@ def multi_field(leftover, tv, base, log):
     dinv = Kf.inv(den % f1)
     tmap = [Kf.red(-g * dinv / c) for g, c in params]
     log(f'  field: degree {f1.degree()} (factor of the eliminating polynomial with root t*)')
-    return f1, tmap, A
+    return f1, tmap, A, stationary
+
+
+def near_incidences(sysq, X, Y, Cm, Sm, S0, tol, have):
+    """Incidences (corner on a side line within the side's closed extent, or corner on a wall) with |g| < tol at the
+    numerical point, not in `have`; sorted by |g|."""
+    H = mpf(1) / 2
+    out = []
+    ss = set(sysq)
+    for j in sysq:
+        for a in range(4):
+            for w in 'LRBT':
+                c = ('W', j, a, w)
+                g = geom.eval_contact(c, X, Y, Cm, Sm, S0, H, order=1)[0]
+                if abs(g) < tol and c not in have:
+                    out.append((abs(g), c))
+    for i in sysq:
+        for j in sysq:
+            if i == j or (X[i] - X[j]) ** 2 + (Y[i] - Y[j]) ** 2 > 2.5:
+                continue
+            for k in range(4):
+                for a in range(4):
+                    c = ('C', j, a, i, k)
+                    if c in have:
+                        continue
+                    g = geom.eval_contact(c, X, Y, Cm, Sm, S0, H, order=1)[0]
+                    if abs(g) < tol and abs(geom.tangential(c, X, Y, Cm, Sm, H)) <= H + tol:
+                        out.append((abs(g), c))
+    out.sort(key=lambda z: z[0])
+    return out
 
 
 def s_dependence(piv_rows, freev, tv):
