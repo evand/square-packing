@@ -1087,7 +1087,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); replayed by jlevy/squares (evidence E-wand125-rectangle-source-replay)",
    "date": "2026-10-01"
   },
@@ -1144,7 +1144,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n18_L4695",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n18_L4695",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
@@ -1175,7 +1175,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); replayed by jlevy/squares (evidence E-wand125-rectangle-source-replay)",
     "date": "2026-10-01"
    }
@@ -1188,7 +1188,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); replayed by jlevy/squares (evidence E-wand125-rectangle-2026-10-01-source-replay)",
    "date": "2026-10-01"
   },
@@ -1235,7 +1235,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n19_L4815",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n19_L4815",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
@@ -1266,7 +1266,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); replayed by jlevy/squares (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
    }
@@ -1279,7 +1279,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1959/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 49/10 (2026-10-02, not yet replayed). Exceeds Wainwright's s(19) packing 3+4√2/3, so s(19) < s(20). Our independent point cover gives s(20) > 2443/500 = 4.886 (s12/search/S20_LB.md, 2026-10-04)",
    "date": "2026-10-02"
   },
@@ -1336,7 +1336,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n20_L4895",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n20_L4895",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
@@ -1367,7 +1367,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1959/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 49/10 (2026-10-02, not yet replayed). Exceeds Wainwright's s(19) packing 3+4√2/3, so s(19) < s(20). Our independent point cover gives s(20) > 2443/500 = 4.886 (s12/search/S20_LB.md, 2026-10-04)",
     "date": "2026-10-02"
    }
@@ -1458,7 +1458,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "2026-09-26; rectangle-density certificate, reported, not independently replayed",
     "date": "2026-09-26",
     "reported": true
@@ -1469,7 +1469,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "2026-09-27, after 249/50; rectangle-density certificate, reported, not independently replayed",
     "reported": true,
     "date": "2026-09-27"
@@ -1490,7 +1490,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/point_n21_L5",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/point_n21_L5",
     "note": "a second certificate for s(21) = 5, point-only (no line segments), commit d38917c; reported, not independently replayed (jlevy/squares T-055, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -1703,7 +1703,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2213/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
    "date": "2026-10-01"
   },
@@ -1750,7 +1750,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n26_L553",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n26_L553",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
@@ -1781,7 +1781,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2213/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
    }
@@ -1794,7 +1794,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1127/200 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
    "date": "2026-10-01"
   },
@@ -1841,7 +1841,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n27_L56",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n27_L56",
     "note": "rectangle-density certificate in tokoharu's format; replayed by jlevy/squares (T-045, V4/C3)",
     "date": "2026-09-26"
    },
@@ -1861,7 +1861,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n27_L56",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n27_L56",
     "note": "rectangle-density certificate in tokoharu's format; replayed by jlevy/squares (T-045, V4/C3)",
     "date": "2026-09-26"
    },
@@ -1871,7 +1871,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1127/200 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
    }
@@ -1884,7 +1884,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2289/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
    "date": "2026-10-01"
   },
@@ -1931,7 +1931,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n27_L56",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n27_L56",
     "note": "the n = 27 rectangle-density certificate, whose mass is below 27; replayed by jlevy/squares (T-045, V4/C3)",
     "date": "2026-09-26"
    },
@@ -1941,7 +1941,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n28_L572",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n28_L572",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -1962,7 +1962,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n27_L56",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n27_L56",
     "note": "the n = 27 rectangle-density certificate, whose mass is below 27; replayed by jlevy/squares (T-045, V4/C3)",
     "date": "2026-09-26"
    },
@@ -1972,7 +1972,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2289/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
    }
@@ -1985,7 +1985,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2319/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
    "date": "2026-10-01"
   },
@@ -2032,7 +2032,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n29_L579",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n29_L579",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
@@ -2063,7 +2063,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2319/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
    }
@@ -2076,7 +2076,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 47/8 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
    "date": "2026-10-01"
   },
@@ -2123,7 +2123,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n30_L5865",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n30_L5865",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
@@ -2154,7 +2154,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 47/8 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
    }
@@ -2167,7 +2167,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2381/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
    "date": "2026-10-01"
   },
@@ -2214,7 +2214,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n31_L592",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n31_L592",
     "note": "rectangle-density certificate in tokoharu's format; replayed by jlevy/squares (T-045, V4/C3)",
     "date": "2026-09-27"
    },
@@ -2224,7 +2224,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n31_L5935",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n31_L5935",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -2245,7 +2245,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n31_L592",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n31_L592",
     "note": "rectangle-density certificate in tokoharu's format; replayed by jlevy/squares (T-045, V4/C3)",
     "date": "2026-09-27"
    },
@@ -2255,7 +2255,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2381/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
    }
@@ -2297,7 +2297,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "2026-09-26; rectangle-density certificate",
     "date": "2026-09-26"
    },
@@ -2520,7 +2520,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 161/25 (evidence E-n037-wand125-mixed-644-source-replay)",
    "date": "2026-10-01"
   },
@@ -2557,7 +2557,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n37_L6425",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n37_L6425",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -2588,7 +2588,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 161/25 (evidence E-n037-wand125-mixed-644-source-replay)",
     "date": "2026-10-01"
    }
@@ -2601,7 +2601,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1309/200 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
    "date": "2026-10-01"
   },
@@ -2638,7 +2638,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n38_L654",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n38_L654",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -2669,7 +2669,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1309/200 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
    }
@@ -2682,7 +2682,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1327/200 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
    "date": "2026-10-01"
   },
@@ -2719,7 +2719,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n39_L650.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n39_L650.json.ASSET.json",
     "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-14"
    },
@@ -2729,7 +2729,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n39_L663",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n39_L663",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
@@ -2750,7 +2750,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n39_L650.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n39_L650.json.ASSET.json",
     "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-14"
    },
@@ -2760,7 +2760,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1327/200 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
    }
@@ -2773,7 +2773,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 67/10 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
    "date": "2026-10-01"
   },
@@ -2810,7 +2810,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n40_L650.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n40_L650.json.ASSET.json",
     "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-14"
    },
@@ -2820,7 +2820,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n40_L6695",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n40_L6695",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
@@ -2841,7 +2841,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n40_L650.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n40_L650.json.ASSET.json",
     "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-14"
    },
@@ -2851,7 +2851,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 67/10 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
    }
@@ -2864,7 +2864,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 169/25 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
    "date": "2026-10-01"
   },
@@ -2901,7 +2901,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n39_L650.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n39_L650.json.ASSET.json",
     "note": "the n = 39 certificate, carried to n = 41 by monotonicity (s(41) >= s(39)) as jlevy/squares does; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-14"
    },
@@ -2911,7 +2911,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n41_L6755",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n41_L6755",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
@@ -2932,7 +2932,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n39_L650.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n39_L650.json.ASSET.json",
     "note": "the n = 39 certificate, carried to n = 41 by monotonicity (s(41) >= s(39)) as jlevy/squares does; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-14"
    },
@@ -2942,7 +2942,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 169/25 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
    }
@@ -2955,7 +2955,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1363/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 2731/400 = 6.8275 (2026-10-02, not yet replayed)",
    "date": "2026-10-01"
   },
@@ -2983,7 +2983,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n42_L679",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n42_L679",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -3014,7 +3014,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1363/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 2731/400 = 6.8275 (2026-10-02, not yet replayed)",
     "date": "2026-10-01"
    }
@@ -3027,7 +3027,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 551/80 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
    "date": "2026-10-01"
   },
@@ -3055,7 +3055,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n43_L6865",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n43_L6865",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
@@ -3086,7 +3086,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 551/80 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
    }
@@ -3099,7 +3099,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2777/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
    "date": "2026-10-01"
   },
@@ -3127,7 +3127,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n44_L6935",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n44_L6935",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -3158,7 +3158,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2777/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
    }
@@ -3200,7 +3200,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "2026-09-25/26; rectangle-density certificate; rectangle-density certificate, reported, not independently replayed",
     "date": "2026-09-26",
     "reported": true
@@ -3211,7 +3211,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "2026-09-27; rectangle-density certificate; rectangle-density certificate, reported, not independently replayed",
     "date": "2026-09-27",
     "reported": true
@@ -3232,7 +3232,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/point_n45_L7",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/point_n45_L7",
     "note": "second proof of s(45) = 7 by a point-only certificate (no line segments), commit 39d8ecc; replayed by jlevy/squares (T-054, V4/C3)",
     "date": "2026-09-28"
    },
@@ -3438,7 +3438,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 37/5 (evidence E-n050-wand125-mixed-740-source-replay)",
    "date": "2026-09-28"
   },
@@ -3475,7 +3475,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "mixed point-and-segment certificate, commit 75dd095; reported, not independently replayed (jlevy/squares T-048, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -3506,7 +3506,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 37/5 (evidence E-n050-wand125-mixed-740-source-replay)",
     "date": "2026-09-28"
    }
@@ -3519,7 +3519,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 37/5 (evidence E-n050-wand125-mixed-740-source-replay); wand125 reports 373/50 = 7.46 (2026-10-03, not yet replayed)",
    "date": "2026-09-28"
   },
@@ -3556,7 +3556,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n51_L74425",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n51_L74425",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -3587,7 +3587,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 37/5 (evidence E-n050-wand125-mixed-740-source-replay); wand125 reports 373/50 = 7.46 (2026-10-03, not yet replayed)",
     "date": "2026-09-28"
    }
@@ -3600,7 +3600,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1507/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 151/20 = 7.55 (2026-10-03, not yet replayed)",
    "date": "2026-09-28"
   },
@@ -3637,7 +3637,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n53_L738.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n53_L738.json.ASSET.json",
     "note": "the n = 53 certificate, whose exact mass 51.483 is below 52; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-21"
    },
@@ -3647,7 +3647,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n52_L7535",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n52_L7535",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
@@ -3668,7 +3668,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n53_L738.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n53_L738.json.ASSET.json",
     "note": "the n = 53 certificate, whose exact mass 51.483 is below 52; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-21"
    },
@@ -3678,7 +3678,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1507/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 151/20 = 7.55 (2026-10-03, not yet replayed)",
     "date": "2026-09-28"
    }
@@ -3691,7 +3691,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3043/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
    "date": "2026-10-01"
   },
@@ -3728,7 +3728,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n53_L738.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n53_L738.json.ASSET.json",
     "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-21"
    },
@@ -3738,7 +3738,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n53_L7595",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n53_L7595",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -3759,7 +3759,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n53_L738.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n53_L738.json.ASSET.json",
     "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-21"
    },
@@ -3769,7 +3769,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3043/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
    }
@@ -3782,7 +3782,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3069/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
    "date": "2026-10-01"
   },
@@ -3810,7 +3810,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n54_L76675",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n54_L76675",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
@@ -3841,7 +3841,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3069/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
    }
@@ -3854,7 +3854,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 617/80 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 966/125 = 7.728 (2026-10-03, not yet replayed)",
    "date": "2026-10-01"
   },
@@ -3882,7 +3882,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n55_L754.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n55_L754.json.ASSET.json",
     "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-17"
    },
@@ -3892,7 +3892,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n55_L771",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n55_L771",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -3913,7 +3913,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n55_L754.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n55_L754.json.ASSET.json",
     "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-17"
    },
@@ -3923,7 +3923,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 617/80 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 966/125 = 7.728 (2026-10-03, not yet replayed)",
     "date": "2026-10-01"
    }
@@ -3936,7 +3936,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3113/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
    "date": "2026-10-01"
   },
@@ -3964,7 +3964,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n56_L762.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n56_L762.json.ASSET.json",
     "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-17"
    },
@@ -3974,7 +3974,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n56_L777",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n56_L777",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -3995,7 +3995,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n56_L762.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n56_L762.json.ASSET.json",
     "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-17"
    },
@@ -4005,7 +4005,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3113/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
    }
@@ -4018,7 +4018,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3113/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 1567/200 = 7.835 (2026-09-28, not yet replayed)",
    "date": "2026-10-01"
   },
@@ -4046,7 +4046,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n57_L7835",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n57_L7835",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
@@ -4077,7 +4077,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3113/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 1567/200 = 7.835 (2026-09-28, not yet replayed)",
     "date": "2026-10-01"
    }
@@ -4090,7 +4090,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3113/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 1581/200 = 7.905 (2026-10-03, not yet replayed)",
    "date": "2026-10-01"
   },
@@ -4118,7 +4118,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n58_L789",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n58_L789",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
@@ -4149,7 +4149,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3113/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 1581/200 = 7.905 (2026-10-03, not yet replayed)",
     "date": "2026-10-01"
    }
@@ -4162,7 +4162,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 8 (evidence E-n059-wand125-mixed-cover-zmx2-replay)",
    "date": "2026-10-01",
    "register": "verified"
@@ -4191,7 +4191,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n59_L792",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n59_L792",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -4222,7 +4222,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 8 (evidence E-n059-wand125-mixed-cover-zmx2-replay)",
     "date": "2026-10-01"
    }
@@ -4264,7 +4264,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "2026-09-26/27; rectangle-density certificate (raised in steps from 3151/400 on 2026-09-26)",
     "date": "2026-09-27"
    },
@@ -4336,7 +4336,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "2026-09-26/27; rectangle-density certificate (raised in steps from 793/100 on 2026-09-26)",
     "date": "2026-09-27"
    },
@@ -4376,7 +4376,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/f8846cec9661773dbd0cc7cbeee7d01ddb12a2b8/point_n61_L8",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/tree/f8846cec9661773dbd0cc7cbeee7d01ddb12a2b8/point_n61_L8",
     "note": "2026-09-30; a second, point-only route: 15,193 weighted points, total 60.9999878 < 61, checked by its author with our zmx2; replayed here with the separately written zeromargin.py and zmcheck (both certify every root; s12/search/S61_WAND125_REPLAY.md)",
     "date": "2026-09-30"
    }
@@ -4513,7 +4513,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 167/20 (evidence E-n065-wand125-mixed-835-source-replay)",
    "date": "2026-10-01"
   },
@@ -4570,7 +4570,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 167/20 (evidence E-n065-wand125-mixed-835-source-replay)",
     "date": "2026-10-01"
    }
@@ -4583,7 +4583,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 421/50 (evidence E-n066-wand125-mixed-842-source-replay)",
    "date": "2026-10-01"
   },
@@ -4620,7 +4620,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n66_L8375",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n66_L8375",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -4651,7 +4651,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 421/50 (evidence E-n066-wand125-mixed-842-source-replay)",
     "date": "2026-10-01"
    }
@@ -4664,7 +4664,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1691/200 (evidence E-wand125-rectangle-2026-09-28-source-replay)",
    "date": "2026-09-28"
   },
@@ -4701,7 +4701,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n67_L8455",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n67_L8455",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -4732,7 +4732,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1691/200 (evidence E-wand125-rectangle-2026-09-28-source-replay)",
     "date": "2026-09-28"
    }
@@ -4745,7 +4745,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 851/100 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
    "date": "2026-10-01"
   },
@@ -4782,7 +4782,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n69_L841.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n69_L841.json.ASSET.json",
     "note": "the n = 69 certificate, whose exact mass is below 68; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-21"
    },
@@ -4792,7 +4792,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n68_L8495",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n68_L8495",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
@@ -4813,7 +4813,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n69_L841.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n69_L841.json.ASSET.json",
     "note": "the n = 69 certificate, whose exact mass is below 68; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-21"
    },
@@ -4823,7 +4823,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 851/100 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
    }
@@ -4836,7 +4836,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1717/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 2153/250 = 8.612 (2026-10-03, not yet replayed)",
    "date": "2026-10-01"
   },
@@ -4864,7 +4864,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n69_L841.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n69_L841.json.ASSET.json",
     "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-21"
    },
@@ -4874,7 +4874,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n69_L8575",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n69_L8575",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
@@ -4895,7 +4895,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n69_L841.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n69_L841.json.ASSET.json",
     "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-21"
    },
@@ -4905,7 +4905,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1717/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 2153/250 = 8.612 (2026-10-03, not yet replayed)",
     "date": "2026-10-01"
    }
@@ -4918,7 +4918,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 69/8 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 3459/400 = 8.6475 (2026-10-03, not yet replayed)",
    "date": "2026-10-01"
   },
@@ -4946,7 +4946,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n70_L855.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n70_L855.json.ASSET.json",
     "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-17"
    },
@@ -4956,7 +4956,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n70_L862",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n70_L862",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -4977,7 +4977,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n70_L855.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n70_L855.json.ASSET.json",
     "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-17"
    },
@@ -4987,7 +4987,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 69/8 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 3459/400 = 8.6475 (2026-10-03, not yet replayed)",
     "date": "2026-10-01"
    }
@@ -5000,7 +5000,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1737/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 1741/200 = 8.705 (2026-10-03, not yet replayed)",
    "date": "2026-09-28"
   },
@@ -5028,7 +5028,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n70_L855.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n70_L855.json.ASSET.json",
     "note": "the n = 70 certificate, carried to n = 71 by monotonicity (s(71) >= s(70)) as jlevy/squares does; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-17"
    },
@@ -5038,7 +5038,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n71_L8685",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n71_L8685",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
@@ -5059,7 +5059,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n70_L855.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n70_L855.json.ASSET.json",
     "note": "the n = 70 certificate, carried to n = 71 by monotonicity (s(71) >= s(70)) as jlevy/squares does; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-17"
    },
@@ -5069,7 +5069,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1737/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 1741/200 = 8.705 (2026-10-03, not yet replayed)",
     "date": "2026-09-28"
    }
@@ -5082,7 +5082,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1737/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 437/50 = 8.74 (2026-09-28, not yet replayed)",
    "date": "2026-09-28"
   },
@@ -5110,7 +5110,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n72_L861.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n72_L861.json.ASSET.json",
     "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-17"
    },
@@ -5120,7 +5120,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n72_L874",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n72_L874",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -5141,7 +5141,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/blob/main/certificates/cert_n72_L861.json",
+    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n72_L861.json.ASSET.json",
     "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
     "date": "2026-09-17"
    },
@@ -5151,7 +5151,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1737/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 437/50 = 8.74 (2026-09-28, not yet replayed)",
     "date": "2026-09-28"
    }
@@ -5164,7 +5164,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1737/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 8809/1000 = 8.809 (2026-10-03, not yet replayed)",
    "date": "2026-09-28"
   },
@@ -5192,7 +5192,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n73_L878",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n73_L878",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
@@ -5223,7 +5223,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1737/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 8809/1000 = 8.809 (2026-10-03, not yet replayed)",
     "date": "2026-09-28"
    }
@@ -5236,7 +5236,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3539/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 3547/400 = 8.8675 (2026-10-03, not yet replayed)",
    "date": "2026-10-01"
   },
@@ -5264,7 +5264,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n74_L884",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n74_L884",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -5295,7 +5295,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3539/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 3547/400 = 8.8675 (2026-10-03, not yet replayed)",
     "date": "2026-10-01"
    }
@@ -5308,7 +5308,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 89/10 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 223/25 = 8.92 (2026-10-03, not yet replayed)",
    "date": "2026-10-01"
   },
@@ -5336,7 +5336,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n75_L889",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n75_L889",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
@@ -5367,7 +5367,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 89/10 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 223/25 = 8.92 (2026-10-03, not yet replayed)",
     "date": "2026-10-01"
    }
@@ -5380,7 +5380,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 447/50 (evidence E-n076-wand125-mixed-894-source-replay); wand125 reports 224/25 = 8.96 (2026-10-03, not yet replayed)",
    "date": "2026-10-02"
   },
@@ -5408,7 +5408,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n76_L892",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n76_L892",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
@@ -5439,7 +5439,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 447/50 (evidence E-n076-wand125-mixed-894-source-replay); wand125 reports 224/25 = 8.96 (2026-10-03, not yet replayed)",
     "date": "2026-10-02"
    }
@@ -5481,7 +5481,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n76_L892",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n76_L892",
     "note": "the n = 76 rectangle-density certificate, whose mass is below 77; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
@@ -5502,7 +5502,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/k2m4_n77_L9",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/k2m4_n77_L9",
     "note": "first proof of s(77) = 9: a band inserted into the s(60) = 8 mixed cover (EvanDaniel2026), certified with that project's two exact checkers (zm_mixed.py, zmx2) (jlevy/squares#279); not replayed here",
     "date": "2026-10-01"
    },
@@ -5701,7 +5701,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "linear certificate (wand125/square-packing-bounds); jlevy/squares verified 233/25 (evidence E-n082-wand125-linear-932-source-replay)",
    "date": "2026-10-02"
   },
@@ -5758,7 +5758,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "linear certificate (wand125/square-packing-bounds); jlevy/squares verified 233/25 (evidence E-n082-wand125-linear-932-source-replay)",
     "date": "2026-10-02"
    }
@@ -5771,7 +5771,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 937/100 (evidence E-n083-wand125-mixed-937-source-replay)",
    "date": "2026-10-02"
   },
@@ -5828,7 +5828,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 937/100 (evidence E-n083-wand125-mixed-937-source-replay)",
     "date": "2026-10-02"
    }
@@ -5841,7 +5841,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 47/5 (evidence E-n084-wand125-mixed-940-source-replay)",
    "date": "2026-10-02"
   },
@@ -5898,7 +5898,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 47/5 (evidence E-n084-wand125-mixed-940-source-replay)",
     "date": "2026-10-02"
    }
@@ -5911,7 +5911,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 473/50 (evidence E-n085-wand125-mixed-946-source-replay)",
    "date": "2026-10-02"
   },
@@ -5968,7 +5968,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 473/50 (evidence E-n085-wand125-mixed-946-source-replay)",
     "date": "2026-10-02"
    }
@@ -5981,7 +5981,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 473/50 (evidence E-n085-wand125-mixed-946-source-replay); wand125 reports 19/2 = 9.5 (2026-10-03, not yet replayed)",
    "date": "2026-10-02"
   },
@@ -6009,7 +6009,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n86_L9355",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n86_L9355",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -6040,7 +6040,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 473/50 (evidence E-n085-wand125-mixed-946-source-replay); wand125 reports 19/2 = 9.5 (2026-10-03, not yet replayed)",
     "date": "2026-10-02"
    }
@@ -6053,7 +6053,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 237/25 (evidence E-n087-wand125-mixed-948-source-replay); wand125 reports 191/20 = 9.55 (2026-10-03, not yet replayed)",
    "date": "2026-10-02"
   },
@@ -6101,7 +6101,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 237/25 (evidence E-n087-wand125-mixed-948-source-replay); wand125 reports 191/20 = 9.55 (2026-10-03, not yet replayed)",
     "date": "2026-10-02"
    }
@@ -6114,7 +6114,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 237/25 (evidence E-n087-wand125-mixed-948-source-replay); wand125 reports 48/5 = 9.6 (2026-10-03, not yet replayed)",
    "date": "2026-10-02"
   },
@@ -6142,7 +6142,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n88_L945",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n88_L945",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -6173,7 +6173,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 237/25 (evidence E-n087-wand125-mixed-948-source-replay); wand125 reports 48/5 = 9.6 (2026-10-03, not yet replayed)",
     "date": "2026-10-02"
    }
@@ -6186,7 +6186,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1913/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 193/20 = 9.65 (2026-10-03, not yet replayed)",
    "date": "2026-10-01"
   },
@@ -6214,7 +6214,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n89_L955",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n89_L955",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -6245,7 +6245,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1913/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 193/20 = 9.65 (2026-10-03, not yet replayed)",
     "date": "2026-10-01"
    }
@@ -6258,7 +6258,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 48/5 (evidence E-n090-wand125-mixed-960-source-replay); wand125 reports 389/40 = 9.725 (2026-10-03, not yet replayed)",
    "date": "2026-10-01"
   },
@@ -6286,7 +6286,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n89_L955",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n89_L955",
     "note": "the n = 89 rectangle-density certificate, whose mass is below 90; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -6317,7 +6317,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 48/5 (evidence E-n090-wand125-mixed-960-source-replay); wand125 reports 389/40 = 9.725 (2026-10-03, not yet replayed)",
     "date": "2026-10-01"
    }
@@ -6330,7 +6330,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 97/10 (evidence E-n091-wand125-mixed-970-source-replay); wand125 reports 39/4 = 9.75 (2026-10-03, not yet replayed)",
    "date": "2026-10-02"
   },
@@ -6358,7 +6358,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n91_L9645",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n91_L9645",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -6389,7 +6389,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 97/10 (evidence E-n091-wand125-mixed-970-source-replay); wand125 reports 39/4 = 9.75 (2026-10-03, not yet replayed)",
     "date": "2026-10-02"
    }
@@ -6402,7 +6402,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 39/4 (evidence E-n092-wand125-mixed-975-source-replay); wand125 reports 977/100 = 9.77 (2026-10-03, not yet replayed)",
    "date": "2026-10-02"
   },
@@ -6450,7 +6450,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 39/4 (evidence E-n092-wand125-mixed-975-source-replay); wand125 reports 977/100 = 9.77 (2026-10-03, not yet replayed)",
     "date": "2026-10-02"
    }
@@ -6463,7 +6463,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 39/4 (evidence E-n092-wand125-mixed-975-source-replay); wand125 reports 493/50 = 9.86 (2026-10-03, not yet replayed)",
    "date": "2026-10-02"
   },
@@ -6511,7 +6511,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 39/4 (evidence E-n092-wand125-mixed-975-source-replay); wand125 reports 493/50 = 9.86 (2026-10-03, not yet replayed)",
     "date": "2026-10-02"
    }
@@ -6524,7 +6524,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1961/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 248/25 = 9.92 (2026-10-03, not yet replayed)",
    "date": "2026-10-01"
   },
@@ -6552,7 +6552,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n94_L9795",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n94_L9795",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -6583,7 +6583,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1961/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 248/25 = 9.92 (2026-10-03, not yet replayed)",
     "date": "2026-10-01"
    }
@@ -6596,7 +6596,7 @@
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing-bounds",
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
    "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 49259/5000 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 249/25 = 9.96 (2026-10-03, not yet replayed)",
    "date": "2026-10-01"
   },
@@ -6624,7 +6624,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds/tree/main/certificates/rect_n95_L98418",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n95_L98418",
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
@@ -6655,7 +6655,7 @@
     "source": "wand125_2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/wand125/square-packing-bounds",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 49259/5000 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 249/25 = 9.96 (2026-10-03, not yet replayed)",
     "date": "2026-10-01"
    }
@@ -7013,7 +7013,7 @@
    "title": "square-packing-bounds: rectangle-density lower-bound certificates",
    "venue": "GitHub repository (computer-assisted, unrefereed)",
    "year": 2026,
-   "url": "https://github.com/wand125/square-packing-bounds"
+   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds"
   },
   "jlevy2026": {
    "authors": "Joshua Levy (jlevy), the Squares Project",
