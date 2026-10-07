@@ -644,12 +644,15 @@ def multi_field(leftover, tv, base, log, piv_rows):
     log(f'  msolve: eliminating polynomial of degree {f.degree()} ({time.time() - t0:.1f} s)')
     fz = flint.fmpz_poly([int(x * f.denom()) for x in f.coeffs()])
     best = []
-    for fac, _m in fz.factor()[1]:
-        for rt, _ in fac.complex_roots():
+    prec0 = flint.ctx.prec
+    flint.ctx.prec = int(3.4 * mp.dps) + 64                       # certified root balls at the working precision
+    roots = [(fac, rt) for fac, _m in fz.factor()[1] for rt, _ in fac.complex_roots()]
+    flint.ctx.prec = prec0
+    for fac, rt in roots:
+        if True:
             if abs(float(rt.imag.mid())) > 1e-6:
                 continue
-            A = mpf(rt.real.mid().str(60, radius=False))
-            A = mp.findroot(lambda z: ev_poly(Q(fac), z), A) if fac.degree() > 1 else -mpf(int(fac.coeffs()[0])) / int(fac.coeffs()[1])
+            A = mpf(rt.real.mid().str(mp.dps, radius=False, more=True))
             ts = [-ev_poly(g, A) / (c * ev_poly(den, A)) for g, c in params]
             err = max(abs(a - b) for a, b in zip(ts, tv))
             best.append((err, fac, A))

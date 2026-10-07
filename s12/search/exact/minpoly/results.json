@@ -1,0 +1,4761 @@
+[
+{
+"n": 1,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.0,
+"S": "1.0",
+"poly": [
+-1,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 2,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.0,
+"S": "2.0",
+"poly": [
+-2,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 3,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.0,
+"S": "2.0",
+"poly": [
+-2,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 4,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.0,
+"S": "2.0",
+"poly": [
+-2,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 5,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 1,
+"stationary": true,
+"seconds": 0.0,
+"S": "2.707106781186547524",
+"poly": [
+7,
+-8,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 6,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.01,
+"S": "3.0",
+"poly": [
+-3,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 7,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.01,
+"S": "3.0",
+"poly": [
+-3,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 8,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.01,
+"S": "3.0",
+"poly": [
+-3,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 9,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.01,
+"S": "3.0",
+"poly": [
+-3,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 10,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": true,
+"seconds": 0.02,
+"S": "3.707106781186547524",
+"poly": [
+17,
+-12,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 11,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 8,
+"S_degree": 8,
+"height_digits": 5,
+"stationary": false,
+"seconds": 0.01,
+"S": "3.877083590022814177",
+"poly": [
+-6865,
+12420,
+-6754,
+-496,
+1923,
+-842,
+178,
+-20,
+1
+],
+"crosscheck": "findpoly ok, Ellsworth deg ok"
+},
+{
+"n": 12,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.01,
+"S": "4.0",
+"poly": [
+-4,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 13,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.01,
+"S": "4.0",
+"poly": [
+-4,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 14,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.02,
+"S": "4.0",
+"poly": [
+-4,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 15,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.03,
+"S": "4.0",
+"poly": [
+-4,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 16,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.02,
+"S": "4.0",
+"poly": [
+-4,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 17,
+"status": "VALID",
+"classes": 2,
+"free_classes": 2,
+"field_degree": 18,
+"S_degree": 18,
+"height_digits": 12,
+"stationary": false,
+"seconds": 0.37,
+"S": "4.675530093604550951",
+"poly": null,
+"crosscheck": "Ellsworth deg ok"
+},
+{
+"n": 18,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": true,
+"seconds": 0.01,
+"S": "4.822875655532295295",
+"poly": [
+21,
+-14,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 19,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": true,
+"seconds": 0.03,
+"S": "4.885618083164126731",
+"poly": [
+49,
+-54,
+9
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 20,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.05,
+"S": "5.0",
+"poly": [
+-5,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 21,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.05,
+"S": "5.0",
+"poly": [
+-5,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 22,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.03,
+"S": "5.0",
+"poly": [
+-5,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 23,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.03,
+"S": "5.0",
+"poly": [
+-5,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 24,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.06,
+"S": "5.0",
+"poly": [
+-5,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 25,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.04,
+"S": "5.0",
+"poly": [
+-5,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 26,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.03,
+"S": "5.621320343559642573",
+"poly": [
+31,
+-28,
+4
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 27,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": true,
+"seconds": 0.17,
+"S": "5.707106781186547524",
+"poly": [
+49,
+-20,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 28,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 6,
+"S_degree": 6,
+"height_digits": 4,
+"stationary": false,
+"seconds": 0.04,
+"S": "5.824444616674059296",
+"poly": [
+-1615,
+882,
+1025,
+-812,
+212,
+-24,
+1
+],
+"crosscheck": "findpoly ok, Ellsworth deg ok"
+},
+{
+"n": 29,
+"status": "open:   15 consistency rows -> 5 distinct irreducible factors vanishing at t*: degrees [26, 16, "
+},
+{
+"n": 30,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.04,
+"S": "6.0",
+"poly": [
+-6,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 31,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.06,
+"S": "6.0",
+"poly": [
+-6,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 32,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.05,
+"S": "6.0",
+"poly": [
+-6,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 33,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.05,
+"S": "6.0",
+"poly": [
+-6,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 34,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.06,
+"S": "6.0",
+"poly": [
+-6,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 35,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.06,
+"S": "6.0",
+"poly": [
+-6,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 36,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.05,
+"S": "6.0",
+"poly": [
+-6,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 37,
+"status": "VALID",
+"classes": 2,
+"free_classes": 2,
+"field_degree": 8,
+"S_degree": 8,
+"height_digits": 8,
+"stationary": true,
+"seconds": 0.07,
+"S": "6.598619609244360116",
+"poly": [
+64068561,
+-96673872,
+63458276,
+-23462672,
+5289248,
+-733760,
+59768,
+-2496,
+36
+],
+"crosscheck": "Ellsworth deg ok"
+},
+{
+"n": 38,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": true,
+"seconds": 0.32,
+"S": "6.707106781186547524",
+"poly": [
+71,
+-24,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 39,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 5,
+"S_degree": 5,
+"height_digits": 4,
+"stationary": true,
+"seconds": 0.04,
+"S": "6.810722083068648851",
+"poly": [
+166,
+1636,
+-1959,
+999,
+-171,
+9
+],
+"crosscheck": "findpoly ok, Ellsworth deg ok"
+},
+{
+"n": 40,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.09,
+"S": "6.828427124746190097",
+"poly": [
+8,
+-8,
+1
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 41,
+"status": "VALID",
+"classes": 2,
+"free_classes": 2,
+"field_degree": 42,
+"S_degree": 42,
+"height_digits": 35,
+"stationary": false,
+"seconds": 2.64,
+"S": "6.926693094468802231",
+"poly": null,
+"crosscheck": "Ellsworth deg ok"
+},
+{
+"n": 42,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.1,
+"S": "7.0",
+"poly": [
+-7,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 43,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.07,
+"S": "7.0",
+"poly": [
+-7,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 44,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.11,
+"S": "7.0",
+"poly": [
+-7,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 45,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.1,
+"S": "7.0",
+"poly": [
+-7,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 46,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.08,
+"S": "7.0",
+"poly": [
+-7,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 47,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.08,
+"S": "7.0",
+"poly": [
+-7,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 48,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.08,
+"S": "7.0",
+"poly": [
+-7,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 49,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.08,
+"S": "7.0",
+"poly": [
+-7,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 50,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.25,
+"S": "7.571428571428571428",
+"poly": [
+-53,
+7
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 51,
+"status": "VALID",
+"classes": 3,
+"free_classes": 3,
+"field_degree": 48,
+"S_degree": 12,
+"height_digits": 8,
+"stationary": true,
+"seconds": 41.53,
+"S": "7.700799235417011723",
+"poly": null,
+"crosscheck": "Ellsworth deg ok"
+},
+{
+"n": 52,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": true,
+"seconds": 0.56,
+"S": "7.707106781186547524",
+"poly": [
+97,
+-28,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 53,
+"status": "open: square 51: flat rotation, but parallel to squares that do not rotate"
+},
+{
+"n": 54,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 4,
+"S_degree": 4,
+"height_digits": 4,
+"stationary": false,
+"seconds": 0.08,
+"S": "7.846667192843489782",
+"poly": [
+8897,
+-5304,
+1164,
+-112,
+4
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 55,
+"status": "open: RuntimeError: msolve failed: "
+},
+{
+"n": 56,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.1,
+"S": "8.0",
+"poly": [
+-8,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 57,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.1,
+"S": "8.0",
+"poly": [
+-8,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 58,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.14,
+"S": "8.0",
+"poly": [
+-8,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 59,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.11,
+"S": "8.0",
+"poly": [
+-8,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 60,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.12,
+"S": "8.0",
+"poly": [
+-8,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 61,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.1,
+"S": "8.0",
+"poly": [
+-8,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 62,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.1,
+"S": "8.0",
+"poly": [
+-8,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 63,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.12,
+"S": "8.0",
+"poly": [
+-8,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 64,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.12,
+"S": "8.0",
+"poly": [
+-8,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 65,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 1.09,
+"S": "8.535533905932737622",
+"poly": [
+25,
+-20,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 66,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 1.06,
+"S": "8.656854249492380195",
+"poly": [
+-23,
+-6,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 67,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": true,
+"seconds": 0.96,
+"S": "8.707106781186547524",
+"poly": [
+127,
+-32,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 68,
+"status": "open:   16 consistency rows -> 8 distinct irreducible factors vanishing at t*: degrees [27, 18, "
+},
+{
+"n": 69,
+"status": "VALID",
+"classes": 2,
+"free_classes": 2,
+"field_degree": 38,
+"S_degree": 38,
+"height_digits": 44,
+"stationary": true,
+"seconds": 128.48,
+"S": "8.827194655729738914",
+"poly": null,
+"crosscheck": "Ellsworth deg ok"
+},
+{
+"n": 70,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 4,
+"S_degree": 4,
+"height_digits": 5,
+"stationary": false,
+"seconds": 0.4,
+"S": "8.881666757009004624",
+"poly": [
+86229,
+-45876,
+8848,
+-742,
+23
+],
+"crosscheck": "findpoly ok, Ellsworth deg ok"
+},
+{
+"n": 71,
+"status": "open:   14 consistency rows -> 5 distinct irreducible factors vanishing at t*: degrees [23, 16, "
+},
+{
+"n": 72,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.12,
+"S": "9.0",
+"poly": [
+-9,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 73,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.14,
+"S": "9.0",
+"poly": [
+-9,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 74,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.13,
+"S": "9.0",
+"poly": [
+-9,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 75,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.2,
+"S": "9.0",
+"poly": [
+-9,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 76,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.2,
+"S": "9.0",
+"poly": [
+-9,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 77,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.2,
+"S": "9.0",
+"poly": [
+-9,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 78,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.2,
+"S": "9.0",
+"poly": [
+-9,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 79,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.15,
+"S": "9.0",
+"poly": [
+-9,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 80,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.15,
+"S": "9.0",
+"poly": [
+-9,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 81,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 1,
+"stationary": false,
+"seconds": 0.15,
+"S": "9.0",
+"poly": [
+-9,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 82,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.92,
+"S": "9.535533905932737622",
+"poly": [
+47,
+-24,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 83,
+"status": "open: msolve: system not zero-dimensional (code 1)"
+},
+{
+"n": 84,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": true,
+"seconds": 1.22,
+"S": "9.707106781186547524",
+"poly": [
+161,
+-36,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 85,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.2,
+"S": "9.742640687119285146",
+"poly": [
+49,
+-44,
+4
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 86,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": true,
+"seconds": 1.24,
+"S": "9.822875655532295295",
+"poly": [
+141,
+-34,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 87,
+"status": "verify failed",
+"classes": 2,
+"free_classes": 2,
+"field_degree": 41,
+"S_degree": 41,
+"height_digits": 54,
+"stationary": true,
+"seconds": 351.47,
+"S": "9.838815269948262260",
+"poly": null,
+"crosscheck": "Ellsworth deg ok"
+},
+{
+"n": 88,
+"status": "open: 1 consistency polynomials for 3 class angles: more than one angle direction left to force "
+},
+{
+"n": 89,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 7.49,
+"S": "9.949747468305832670",
+"poly": [
+1,
+-20,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 90,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.23,
+"S": "10.0",
+"poly": [
+-10,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 91,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.17,
+"S": "10.0",
+"poly": [
+-10,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 92,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.18,
+"S": "10.0",
+"poly": [
+-10,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 93,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.2,
+"S": "10.0",
+"poly": [
+-10,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 94,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.19,
+"S": "10.0",
+"poly": [
+-10,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 95,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.18,
+"S": "10.0",
+"poly": [
+-10,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 96,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.19,
+"S": "10.0",
+"poly": [
+-10,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 97,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.2,
+"S": "10.0",
+"poly": [
+-10,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 98,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.19,
+"S": "10.0",
+"poly": [
+-10,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 99,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.2,
+"S": "10.0",
+"poly": [
+-10,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 100,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.2,
+"S": "10.0",
+"poly": [
+-10,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 101,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 2.28,
+"S": "10.53553390593273762",
+"poly": [
+73,
+-28,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 102,
+"status": "open: KeyError: 'x0'"
+},
+{
+"n": 103,
+"status": "open: n = 103: 98 squares in the system, 5 free; 14 tilted angle classes; 447 contact equations "
+},
+{
+"n": 104,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": true,
+"seconds": 2.34,
+"S": "10.70710678118654752",
+"poly": [
+199,
+-40,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 105,
+"status": "open: n = 105: 97 squares in the system, 8 free; 18 tilted angle classes; 509 contact equations "
+},
+{
+"n": 106,
+"status": "open: square 105: flat rotation, but parallel to squares that do not rotate"
+},
+{
+"n": 107,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 4,
+"S_degree": 4,
+"height_digits": 5,
+"stationary": false,
+"seconds": 0.23,
+"S": "10.84666719284348978",
+"poly": [
+38633,
+-15744,
+2388,
+-160,
+4
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 108,
+"status": "open:   field: degree 144 (factor of the eliminating polynomial with root t*)"
+},
+{
+"n": 109,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 4.66,
+"S": "10.94974746830583267",
+"poly": [
+23,
+-24,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 110,
+"status": "open: n = 110: 108 squares in the system, 2 free; 15 tilted angle classes; 929 contact equations"
+},
+{
+"n": 111,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.21,
+"S": "11.0",
+"poly": [
+-11,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 112,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.23,
+"S": "11.0",
+"poly": [
+-11,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 113,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.24,
+"S": "11.0",
+"poly": [
+-11,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 114,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.23,
+"S": "11.0",
+"poly": [
+-11,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 115,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.23,
+"S": "11.0",
+"poly": [
+-11,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 116,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.23,
+"S": "11.0",
+"poly": [
+-11,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 117,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.26,
+"S": "11.0",
+"poly": [
+-11,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 118,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.26,
+"S": "11.0",
+"poly": [
+-11,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 119,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.25,
+"S": "11.0",
+"poly": [
+-11,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 120,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.25,
+"S": "11.0",
+"poly": [
+-11,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 121,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.24,
+"S": "11.0",
+"poly": [
+-11,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 122,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": false,
+"seconds": 2.88,
+"S": "11.53553390593273762",
+"poly": [
+103,
+-32,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 123,
+"status": "open: 3 consistency polynomials for 5 class angles: more than one angle direction left to force "
+},
+{
+"n": 124,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 4.61,
+"S": "11.65685424949238019",
+"poly": [
+4,
+-12,
+1
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 125,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": true,
+"seconds": 3.25,
+"S": "11.70710678118654752",
+"poly": [
+241,
+-44,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 126,
+"status": "open:   18 consistency rows -> 6 distinct irreducible factors vanishing at t*: degrees [20, 34, "
+},
+{
+"n": 127,
+"status": "open: KeyError: 'y94'"
+},
+{
+"n": 128,
+"status": "VALID",
+"classes": 2,
+"free_classes": 2,
+"field_degree": 40,
+"S_degree": 40,
+"height_digits": 48,
+"stationary": true,
+"seconds": 3.39,
+"S": "11.82509196821368702",
+"poly": null,
+"crosscheck": "Ellsworth deg ok"
+},
+{
+"n": 129,
+"status": "open: square 116: flat rotation, but parallel to squares that do not rotate"
+},
+{
+"n": 130,
+"status": "open: 2 consistency polynomials for 5 class angles: more than one angle direction left to force "
+},
+{
+"n": 131,
+"status": "open: n = 131: 131 squares in the system, 0 free; 19 tilted angle classes; 1116 contact equation"
+},
+{
+"n": 132,
+"status": "open: n = 132: 131 squares in the system, 1 free; 15 tilted angle classes; 993 contact equations"
+},
+{
+"n": 133,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.28,
+"S": "12.0",
+"poly": [
+-12,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 134,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.29,
+"S": "12.0",
+"poly": [
+-12,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 135,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.29,
+"S": "12.0",
+"poly": [
+-12,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 136,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.3,
+"S": "12.0",
+"poly": [
+-12,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 137,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.29,
+"S": "12.0",
+"poly": [
+-12,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 138,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.31,
+"S": "12.0",
+"poly": [
+-12,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 139,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.31,
+"S": "12.0",
+"poly": [
+-12,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 140,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.31,
+"S": "12.0",
+"poly": [
+-12,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 141,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.32,
+"S": "12.0",
+"poly": [
+-12,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 142,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.33,
+"S": "12.0",
+"poly": [
+-12,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 143,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.32,
+"S": "12.0",
+"poly": [
+-12,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 144,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.34,
+"S": "12.0",
+"poly": [
+-12,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 145,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": false,
+"seconds": 4.02,
+"S": "12.53553390593273762",
+"poly": [
+137,
+-36,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 146,
+"status": "VALID",
+"classes": 2,
+"free_classes": 2,
+"field_degree": 16,
+"S_degree": 16,
+"height_digits": 18,
+"stationary": true,
+"seconds": 1.85,
+"S": "12.60090777851301824",
+"poly": null,
+"crosscheck": "Ellsworth deg ok"
+},
+{
+"n": 147,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 11.03,
+"S": "12.65685424949238019",
+"poly": [
+17,
+-14,
+1
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 148,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 10.84,
+"S": "12.65685424949238019",
+"poly": [
+17,
+-14,
+1
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 149,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": true,
+"seconds": 5.21,
+"S": "12.70710678118654752",
+"poly": [
+287,
+-48,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 150,
+"status": "verify failed",
+"classes": 5,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 14.0,
+"S": "12.77817459305202276",
+"poly": [
+-71,
+-20,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 151,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": true,
+"seconds": 4.02,
+"S": "12.82287565553229529",
+"poly": [
+261,
+-46,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 152,
+"status": "open: KeyError: 'y2'"
+},
+{
+"n": 153,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 4,
+"S_degree": 4,
+"height_digits": 6,
+"stationary": false,
+"seconds": 4.97,
+"S": "12.88166675700900462",
+"poly": [
+464677,
+-158164,
+19960,
+-1110,
+23
+],
+"crosscheck": "findpoly ok, Ellsworth deg ok"
+},
+{
+"n": 154,
+"status": "open: n = 154: 154 squares in the system, 0 free; 8 tilted angle classes; 1354 contact equations"
+},
+{
+"n": 155,
+"status": "open: n = 155: 152 squares in the system, 3 free; 16 tilted angle classes; 1124 contact equation"
+},
+{
+"n": 156,
+"status": "open: n = 156: 155 squares in the system, 1 free; 15 tilted angle classes; 1296 contact equation"
+},
+{
+"n": 157,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.48,
+"S": "13.0",
+"poly": [
+-13,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 158,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.38,
+"S": "13.0",
+"poly": [
+-13,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 159,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.5,
+"S": "13.0",
+"poly": [
+-13,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 160,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.37,
+"S": "13.0",
+"poly": [
+-13,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 161,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.49,
+"S": "13.0",
+"poly": [
+-13,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 162,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.53,
+"S": "13.0",
+"poly": [
+-13,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 163,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.4,
+"S": "13.0",
+"poly": [
+-13,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 164,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.39,
+"S": "13.0",
+"poly": [
+-13,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 165,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.39,
+"S": "13.0",
+"poly": [
+-13,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 166,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.39,
+"S": "13.0",
+"poly": [
+-13,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 167,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.4,
+"S": "13.0",
+"poly": [
+-13,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 168,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.4,
+"S": "13.0",
+"poly": [
+-13,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 169,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.41,
+"S": "13.0",
+"poly": [
+-13,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 170,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": false,
+"seconds": 36.55,
+"S": "13.53553390593273762",
+"poly": [
+175,
+-40,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 171,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 2.23,
+"S": "13.57142857142857142",
+"poly": [
+-95,
+7
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 172,
+"status": "open: 1 consistency polynomials for 3 class angles: more than one angle direction left to force "
+},
+{
+"n": 173,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 13.32,
+"S": "13.65685424949238019",
+"poly": [
+32,
+-16,
+1
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 174,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": true,
+"seconds": 7.36,
+"S": "13.70710678118654752",
+"poly": [
+337,
+-52,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 175,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 52.59,
+"S": "13.77817459305202276",
+"poly": [
+-49,
+-24,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 176,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": true,
+"seconds": 7.93,
+"S": "13.82287565553229529",
+"poly": [
+309,
+-50,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 177,
+"status": "open: square 173: flat rotation, but parallel to squares that do not rotate"
+},
+{
+"n": 178,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 4,
+"S_degree": 4,
+"height_digits": 6,
+"stationary": false,
+"seconds": 1.39,
+"S": "13.84666719284348978",
+"poly": [
+112001,
+-34824,
+4044,
+-208,
+4
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 179,
+"status": "open: 1 consistency polynomials for 5 class angles: more than one angle direction left to force "
+},
+{
+"n": 180,
+"status": "open: n = 180: 180 squares in the system, 0 free; 16 tilted angle classes; 1581 contact equation"
+},
+{
+"n": 181,
+"status": "open: n = 181: 180 squares in the system, 1 free; 19 tilted angle classes; 1723 contact equation"
+},
+{
+"n": 182,
+"status": "open:   elimination: 337 pivots, 23 consistency rows"
+},
+{
+"n": 183,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.58,
+"S": "14.0",
+"poly": [
+-14,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 184,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.43,
+"S": "14.0",
+"poly": [
+-14,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 185,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.44,
+"S": "14.0",
+"poly": [
+-14,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 186,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.61,
+"S": "14.0",
+"poly": [
+-14,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 187,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.47,
+"S": "14.0",
+"poly": [
+-14,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 188,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.45,
+"S": "14.0",
+"poly": [
+-14,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 189,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.45,
+"S": "14.0",
+"poly": [
+-14,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 190,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.45,
+"S": "14.0",
+"poly": [
+-14,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 191,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.46,
+"S": "14.0",
+"poly": [
+-14,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 192,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.47,
+"S": "14.0",
+"poly": [
+-14,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 193,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.5,
+"S": "14.0",
+"poly": [
+-14,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 194,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.64,
+"S": "14.0",
+"poly": [
+-14,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 195,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.48,
+"S": "14.0",
+"poly": [
+-14,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 196,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.49,
+"S": "14.0",
+"poly": [
+-14,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 197,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": false,
+"seconds": 6.95,
+"S": "14.53553390593273762",
+"poly": [
+217,
+-44,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 198,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 3,
+"stationary": false,
+"seconds": 3.13,
+"S": "14.57142857142857142",
+"poly": [
+-102,
+7
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 199,
+"status": "open: 1 consistency polynomials for 3 class angles: more than one angle direction left to force "
+},
+{
+"n": 200,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 19.15,
+"S": "14.65685424949238019",
+"poly": [
+49,
+-18,
+1
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 201,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": true,
+"seconds": 7.84,
+"S": "14.70710678118654752",
+"poly": [
+391,
+-56,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 202,
+"status": "verify failed",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": true,
+"seconds": 24.73,
+"S": "14.72792206135785543",
+"poly": [
+-158,
+-4,
+1
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 203,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 60.83,
+"S": "14.77817459305202276",
+"poly": [
+-23,
+-28,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 204,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": true,
+"seconds": 10.88,
+"S": "14.82287565553229529",
+"poly": [
+361,
+-54,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 205,
+"status": "VALID",
+"classes": 2,
+"free_classes": 2,
+"field_degree": 40,
+"S_degree": 40,
+"height_digits": 52,
+"stationary": true,
+"seconds": 4.61,
+"S": "14.82445114612408822",
+"poly": null,
+"crosscheck": "Ellsworth deg ok"
+},
+{
+"n": 206,
+"status": "open:   field: degree 56 (factor of the eliminating polynomial with root t*)"
+},
+{
+"n": 207,
+"status": "open: square 73: flat rotation, but parallel to squares that do not rotate"
+},
+{
+"n": 208,
+"status": "open: n = 208: 206 squares in the system, 2 free; 13 tilted angle classes; 2006 contact equation"
+},
+{
+"n": 209,
+"status": "open: n = 209: 206 squares in the system, 3 free; 26 tilted angle classes; 1729 contact equation"
+},
+{
+"n": 210,
+"status": "open: n = 210: 208 squares in the system, 2 free; 26 tilted angle classes; 1681 contact equation"
+},
+{
+"n": 211,
+"status": "open: n = 211: 211 squares in the system, 0 free; 20 tilted angle classes; 1981 contact equation"
+},
+{
+"n": 212,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.52,
+"S": "15.0",
+"poly": [
+-15,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 213,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.53,
+"S": "15.0",
+"poly": [
+-15,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 214,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.54,
+"S": "15.0",
+"poly": [
+-15,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 215,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.53,
+"S": "15.0",
+"poly": [
+-15,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 216,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.73,
+"S": "15.0",
+"poly": [
+-15,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 217,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.55,
+"S": "15.0",
+"poly": [
+-15,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 218,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.55,
+"S": "15.0",
+"poly": [
+-15,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 219,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.56,
+"S": "15.0",
+"poly": [
+-15,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 220,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.56,
+"S": "15.0",
+"poly": [
+-15,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 221,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.57,
+"S": "15.0",
+"poly": [
+-15,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 222,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.58,
+"S": "15.0",
+"poly": [
+-15,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 223,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.59,
+"S": "15.0",
+"poly": [
+-15,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 224,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.6,
+"S": "15.0",
+"poly": [
+-15,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 225,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.61,
+"S": "15.0",
+"poly": [
+-15,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 226,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": false,
+"seconds": 8.76,
+"S": "15.53553390593273762",
+"poly": [
+263,
+-48,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 227,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.83,
+"S": "15.57106781186547524",
+"poly": [
+89,
+-68,
+4
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 228,
+"status": "open:   27 consistency rows -> 12 distinct irreducible factors vanishing at t*: degrees [12, 15,"
+},
+{
+"n": 229,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 27.08,
+"S": "15.65685424949238019",
+"poly": [
+68,
+-20,
+1
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 230,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 3,
+"stationary": false,
+"seconds": 2.77,
+"S": "15.68292682926829268",
+"poly": [
+-643,
+41
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 231,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": true,
+"seconds": 14.27,
+"S": "15.70710678118654752",
+"poly": [
+449,
+-60,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 232,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 78.86,
+"S": "15.77817459305202276",
+"poly": [
+7,
+-32,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 233,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 82.88,
+"S": "15.77817459305202276",
+"poly": [
+7,
+-32,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 234,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": true,
+"seconds": 3.11,
+"S": "15.82287565553229529",
+"poly": [
+417,
+-58,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 235,
+"status": "open: msolve: system not zero-dimensional (code 1)"
+},
+{
+"n": 236,
+"status": "open: 1 consistency polynomials for 3 class angles: more than one angle direction left to force "
+},
+{
+"n": 237,
+"status": "open: 1 consistency polynomials for 5 class angles: more than one angle direction left to force "
+},
+{
+"n": 238,
+"status": "open: n = 238: 237 squares in the system, 1 free; 17 tilted angle classes; 2104 contact equation"
+},
+{
+"n": 239,
+"status": "open: n = 239: 236 squares in the system, 3 free; 24 tilted angle classes; 1937 contact equation"
+},
+{
+"n": 240,
+"status": "open: n = 240: 237 squares in the system, 3 free; 18 tilted angle classes; 1822 contact equation"
+},
+{
+"n": 241,
+"status": "open: n = 241: 238 squares in the system, 3 free; 21 tilted angle classes; 2023 contact equation"
+},
+{
+"n": 242,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.64,
+"S": "16.0",
+"poly": [
+-16,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 243,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.68,
+"S": "16.0",
+"poly": [
+-16,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 244,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.65,
+"S": "16.0",
+"poly": [
+-16,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 245,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.66,
+"S": "16.0",
+"poly": [
+-16,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 246,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.66,
+"S": "16.0",
+"poly": [
+-16,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 247,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.68,
+"S": "16.0",
+"poly": [
+-16,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 248,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.68,
+"S": "16.0",
+"poly": [
+-16,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 249,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.69,
+"S": "16.0",
+"poly": [
+-16,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 250,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.7,
+"S": "16.0",
+"poly": [
+-16,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 251,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.71,
+"S": "16.0",
+"poly": [
+-16,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 252,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.69,
+"S": "16.0",
+"poly": [
+-16,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 253,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.74,
+"S": "16.0",
+"poly": [
+-16,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 254,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.71,
+"S": "16.0",
+"poly": [
+-16,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 255,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.73,
+"S": "16.0",
+"poly": [
+-16,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 256,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.72,
+"S": "16.0",
+"poly": [
+-16,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 257,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": false,
+"seconds": 35.61,
+"S": "16.53553390593273762",
+"poly": [
+313,
+-52,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 258,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": false,
+"seconds": 1.01,
+"S": "16.57106781186547524",
+"poly": [
+161,
+-76,
+4
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 259,
+"status": "open: 1 consistency polynomials for 4 class angles: more than one angle direction left to force "
+},
+{
+"n": 260,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 175.33,
+"S": "16.65685424949238019",
+"poly": [
+89,
+-22,
+1
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 261,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 3,
+"stationary": false,
+"seconds": 3.34,
+"S": "16.68292682926829268",
+"poly": [
+-684,
+41
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 262,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": true,
+"seconds": 15.19,
+"S": "16.70710678118654752",
+"poly": [
+511,
+-64,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 263,
+"status": "open: n = 263: 263 squares in the system, 0 free; 37 tilted angle classes; 2336 contact equation"
+},
+{
+"n": 264,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 56.03,
+"S": "16.77817459305202276",
+"poly": [
+41,
+-36,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 265,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 57.31,
+"S": "16.77817459305202276",
+"poly": [
+41,
+-36,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 266,
+"status": "VALID",
+"classes": 2,
+"free_classes": 2,
+"field_degree": 32,
+"S_degree": 32,
+"height_digits": 44,
+"stationary": true,
+"seconds": 181.82,
+"S": "16.82306208283780464",
+"poly": null,
+"crosscheck": "Ellsworth deg ok"
+},
+{
+"n": 267,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 4,
+"S_degree": 4,
+"height_digits": 6,
+"stationary": false,
+"seconds": 0.87,
+"S": "16.84666719284348978",
+"poly": [
+258809,
+-65136,
+6132,
+-256,
+4
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 268,
+"status": "open: square 94: flat rotation, but parallel to squares that do not rotate"
+},
+{
+"n": 269,
+"status": "open: 1 consistency polynomials for 4 class angles: more than one angle direction left to force "
+},
+{
+"n": 270,
+"status": "open: n = 270: 270 squares in the system, 0 free; 26 tilted angle classes; 2713 contact equation"
+},
+{
+"n": 271,
+"status": "open: square 184: flat rotation, but parallel to squares that do not rotate"
+},
+{
+"n": 272,
+"status": "open: n = 272: 265 squares in the system, 7 free; 28 tilted angle classes; 2334 contact equation"
+},
+{
+"n": 273,
+"status": "open: n = 273: 264 squares in the system, 9 free; 21 tilted angle classes; 2389 contact equation"
+},
+{
+"n": 274,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 1.03,
+"S": "17.0",
+"poly": [
+-17,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 275,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.81,
+"S": "17.0",
+"poly": [
+-17,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 276,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.81,
+"S": "17.0",
+"poly": [
+-17,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 277,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.8,
+"S": "17.0",
+"poly": [
+-17,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 278,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.81,
+"S": "17.0",
+"poly": [
+-17,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 279,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.8,
+"S": "17.0",
+"poly": [
+-17,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 280,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.8,
+"S": "17.0",
+"poly": [
+-17,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 281,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.81,
+"S": "17.0",
+"poly": [
+-17,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 282,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.83,
+"S": "17.0",
+"poly": [
+-17,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 283,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.84,
+"S": "17.0",
+"poly": [
+-17,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 284,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 1.07,
+"S": "17.0",
+"poly": [
+-17,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 285,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.84,
+"S": "17.0",
+"poly": [
+-17,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 286,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.85,
+"S": "17.0",
+"poly": [
+-17,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 287,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.89,
+"S": "17.0",
+"poly": [
+-17,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 288,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 1.1,
+"S": "17.0",
+"poly": [
+-17,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 289,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.89,
+"S": "17.0",
+"poly": [
+-17,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 290,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": false,
+"seconds": 1.07,
+"S": "17.53553390593273762",
+"poly": [
+367,
+-56,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 291,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": false,
+"seconds": 1.09,
+"S": "17.53553390593273762",
+"poly": [
+367,
+-56,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 292,
+"status": "not run"
+},
+{
+"n": 293,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 3,
+"stationary": false,
+"seconds": 0.92,
+"S": "17.63414634146341463",
+"poly": [
+-723,
+41
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 294,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": false,
+"seconds": 267.48,
+"S": "17.65685424949238019",
+"poly": [
+112,
+-24,
+1
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 295,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": true,
+"seconds": 19.58,
+"S": "17.70710678118654752",
+"poly": [
+577,
+-68,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 296,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": true,
+"seconds": 21.18,
+"S": "17.70710678118654752",
+"poly": [
+577,
+-68,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 297,
+"status": "open: 1 consistency polynomials for 3 class angles: more than one angle direction left to force "
+},
+{
+"n": 298,
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 2,
+"stationary": false,
+"seconds": 86.64,
+"S": "17.77817459305202276",
+"poly": [
+79,
+-40,
+2
+],
+"crosscheck": "findpoly ok"
+},
+{
+"n": 299,
+"status": "open: KeyError: 'y254'"
+},
+{
+"n": 300,
+"status": "VALID",
+"classes": 2,
+"free_classes": 2,
+"field_degree": 40,
+"S_degree": 40,
+"height_digits": 56,
+"stationary": true,
+"seconds": 5.82,
+"S": "17.82412338847854347",
+"poly": null,
+"crosscheck": "Ellsworth deg ok"
+},
+{
+"n": 301,
+"status": "open: square 267: flat rotation, but parallel to squares that do not rotate"
+},
+{
+"n": 302,
+"status": "open: 2 consistency polynomials for 8 class angles: more than one angle direction left to force "
+},
+{
+"n": 303,
+"status": "open: square 265: flat rotation, but parallel to squares that do not rotate"
+},
+{
+"n": 304,
+"status": "open: n = 304: 301 squares in the system, 3 free; 21 tilted angle classes; 2748 contact equation"
+},
+{
+"n": 305,
+"status": "open: square 205: flat rotation, but parallel to squares that do not rotate"
+},
+{
+"n": 306,
+"status": "open: n = 306: 304 squares in the system, 2 free; 28 tilted angle classes; 2705 contact equation"
+},
+{
+"n": 307,
+"status": "open: n = 307: 302 squares in the system, 5 free; 24 tilted angle classes; 2494 contact equation"
+},
+{
+"n": 308,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 1.21,
+"S": "18.0",
+"poly": [
+-18,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 309,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.96,
+"S": "18.0",
+"poly": [
+-18,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 310,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.95,
+"S": "18.0",
+"poly": [
+-18,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 311,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.99,
+"S": "18.0",
+"poly": [
+-18,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 312,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.99,
+"S": "18.0",
+"poly": [
+-18,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 313,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.98,
+"S": "18.0",
+"poly": [
+-18,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 314,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.98,
+"S": "18.0",
+"poly": [
+-18,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 315,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 0.99,
+"S": "18.0",
+"poly": [
+-18,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 316,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 1.0,
+"S": "18.0",
+"poly": [
+-18,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 317,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 1.0,
+"S": "18.0",
+"poly": [
+-18,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 318,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 1.01,
+"S": "18.0",
+"poly": [
+-18,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 319,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 1.3,
+"S": "18.0",
+"poly": [
+-18,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 320,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 1.34,
+"S": "18.0",
+"poly": [
+-18,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 321,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 1.02,
+"S": "18.0",
+"poly": [
+-18,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 322,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 1.02,
+"S": "18.0",
+"poly": [
+-18,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 323,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 1.04,
+"S": "18.0",
+"poly": [
+-18,
+1
+],
+"crosscheck": ""
+},
+{
+"n": 324,
+"status": "VALID",
+"classes": 0,
+"free_classes": 0,
+"field_degree": 1,
+"S_degree": 1,
+"height_digits": 2,
+"stationary": false,
+"seconds": 1.05,
+"S": "18.0",
+"poly": [
+-18,
+1
+],
+"crosscheck": ""
+}
+]

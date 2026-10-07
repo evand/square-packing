@@ -15,3 +15,4 @@ _site/
 
 # Claude Code agent worktrees
 .claude/
+s12/search/exact/minpoly/solve/
