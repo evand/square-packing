@@ -53,3 +53,5 @@ import Sqpack.LocalMin
 import Sqpack.LocalMinRows
 import Sqpack.LocalMinCheck
 import Sqpack.Exact.N11L
+import Sqpack.ChainLocalMin
+import Sqpack.Exact.N8Chain

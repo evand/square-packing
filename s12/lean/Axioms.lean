@@ -238,3 +238,8 @@ import Sqpack
 #print axioms UnitSquarePacking.LMC.isLocalMin_of_lcert
 #print axioms UnitSquarePacking.EC.N11L.localmin
 #print axioms UnitSquarePacking.Shadow.packs_of_shadow
+-- band (wall-to-wall row) local minima for integer-side records (Sqpack/ChainLocalMin.lean)
+#print axioms UnitSquarePacking.le_side_of_band
+#print axioms UnitSquarePacking.isLocalMin_of_band
+#print axioms UnitSquarePacking.isLocalMin_of_axisCert
+#print axioms UnitSquarePacking.Chain.N8.localMin
