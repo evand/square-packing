@@ -10,10 +10,13 @@ Proof-piece wishlist (new candidates N1–N15 + 65 open items, picks at the end)
 1. Lean, small and interesting: `E(n) ≤ 0` + seam bound `D ≤ m_v`, then `M(1) ≤ ¾` (FRIEDMAN §9.6 item 5).
 2. `M(1) = ¾` fully proved: SEAM_W1 §2.3 casework (or interval arithmetic).
 
-## Exact forms (10-06)
-- [ ] Every n ≤ 324 best known: integer min poly + isolating interval + exact field configuration, mechanized (contact graph → msolve; LLL cross-check). Test n = 83 (deg 672). `tasks/exact-minpoly/`
-- [ ] Lean demo, one small n by hand first: exact config + contact graph + polynomial → `Packs n S*`, then a full local min (n = 5 vs 11 tradeoff: task doc §Lean demo).
-- [ ] Explainer: local optimality of the n ≤ 324 records (for the s(11) explainer to cite). Draft + open pieces: `notes/local-optimality-explainer-draft.md`.
+## Exact forms (10-07; `tasks/exact-minpoly/`)
+First deliverable: a table of exact forms of S + a handful of Lean local-optimality proofs.  n = 83 (deg 672) optional.
+- [ ] Table: 265/324 verified (minpoly → verify_exact; 84 cross-checks agree), plus Ellsworth-cited polys for some open n.  Site page / jlevy #375: ask Evan.
+- [ ] Lean local minima: s(11) done (`Exact/N11L`); next n = 28 (grade A), n = 5 (grade B), one grade C (10 or 19).  Lever: cheap far-pair test.
+- [ ] Grade-C exact certificate (`grade-C.md`: paper proof done, numerics pass for 7 n).
+- [ ] Coverage, 59 open by cost: flat rotation (10), multi-direction force balance (11), block-triangular elimination (26 + msolve-hard 9), field 108/206; 292 (packer agent 10-07).
+- [ ] Explainer: local optimality of the n ≤ 324 records (for the s(11) explainer to cite). `notes/local-optimality-explainer-draft.md`.
 
 ## Major: exact results
 - [ ] k²−5 for all large k: R = w = 5 κ = 0.02 D ≈ 1.30, conditional GO, margin ≈ 0.05 (`K2M4_MARGIN.md`); box 13 pitch 0.1. Make it cheaper first: cert golf (`tasks/cert-slack/`), finer-pitch D at w = 4 (insertable shortcut dead: price ≈ 1.8, `S2_INSERTABLE.md`).

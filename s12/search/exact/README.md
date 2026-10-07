@@ -1,7 +1,7 @@
 # exact — exact-contact solver for packings of unit squares
 
 Input: an approximate packing (text: `n s`, then `x y theta_deg` per square, centres, lower-left origin).
-Output: a nearby **exact KKT point** of *min S subject to non-overlap* (60–1000 digits), numerical optimality checks, and an
+Output: a nearby **exact KKT point** of *min S subject to non-overlap* (`--dps`, default 80; 2000 tested at n = 17), numerical optimality checks, and an
 **exact rational certificate** of `s(n) <= S'`, with `S' - S ~ 1e-19`.
 
 ```
@@ -17,6 +17,17 @@ Requires python3 with numpy, scipy (HiGHS LP/MILP), mpmath.  The verifiers need 
 **`batch/`: every record in jlevy's register (n = 1–324), 2026-10-05.**  323 certified (317 numerically KKT local
 minima), every n ≤ 291 included; 50 certified values lie 3e-13 … 5e-11 below the register's printed bounds (the exact
 optimum of the same packing).  See `batch/README.md`.
+
+**Exact forms and local-minimum certificates (2026-10-07; details and state: `../../tasks/exact-minpoly/README.md`).**
+`exactsolve.py` also writes `NAME.contacts.json`, the input for the following tools (run via `./env.sh`):
+
+| tool | does |
+|---|---|
+| `minpoly.py` | contact graph → number field `K = ℚ[t]/f`, exact configuration over `K`, the minimal polynomial of S and an isolating interval |
+| `verify_exact.py` | independent stdlib check of `minpoly.py`'s output: contacts ≡ 0 mod f, the rest separated by interval arithmetic |
+| `minpoly/run_minpoly.sh`, `minpoly/summary.py` | batch over the register → `minpoly/results.md` (265/324 verified 10-07) |
+| `localmin.py` | grade-A local-minimum certificates (exact multipliers in `K`, rational left inverse) |
+| `lean_cert.py`, `localmin_lean.py` | Lean certificates (`lean/Sqpack/Exact/`) |
 
 ## Method
 
