@@ -6,7 +6,8 @@ produce and check them, and the **Square Packing Atlas**, an explorer for the re
 **https://evand.github.io/square-packing/**
 
 [![verify](https://github.com/evand/square-packing/actions/workflows/verify.yml/badge.svg)](https://github.com/evand/square-packing/actions/workflows/verify.yml)
-re-checks every certificate (fast tier) and builds the Lean on each push; `./verify.sh --full` runs the slow sweeps.
+spot-checks each push (hashes, the point certificates, every bundle's shipped run records, a small Lean target).  The real checks run locally:
+`./verify.sh` (fresh sweeps and rejection suites, ~4 min on 16 cores), `./verify.sh --full` (slow sweeps), `cd lean && lake build` (some modules need > 16 GB).
 
 ## Results
 
@@ -19,9 +20,9 @@ Status, caveats and independent checks are in each bundle's README; nothing here
 | **s(k² − 4) = k** for every k ≥ 5 | [`certificates/k2m4/`](certificates/k2m4/) | `certificates/k2m4/verify.sh [--full]` | [/k2m4/](https://evand.github.io/square-packing/k2m4/) | all-k reduction `bentz4_of_validTilt9`, conditional on the tilted box statement (re-checked by wand125's separate exact checker, 10-06; not yet register-verified) |
 | **s(60) = s(61) = 8** | [`certificates/s60/`](certificates/s60/) | `certificates/s60/verify.sh [--full]` | [/s60/](https://evand.github.io/square-packing/s60/) | — |
 | **s(45) = 7** | [`certificates/s45/`](certificates/s45/) | `certificates/s45/verify.sh [--full]` | [/s45/](https://evand.github.io/square-packing/s45/) | — |
-| **s(32) = 6** | [`certificates/s32/`](certificates/s32/) | `certificates/s32/verify.sh [--full]` | [/s32/](https://evand.github.io/square-packing/s32/) | `s32_eq_6`, no hypothesis |
+| **s(32) = 6** | [`certificates/s32/`](certificates/s32/) | `certificates/s32/verify.sh [--full]` | [/s32/](https://evand.github.io/square-packing/s32/) | `s32_eq_6`, no hypothesis (opt-in build) |
 | **s(21) = 5** | [`certificates/s21/`](certificates/s21/) | `certificates/s21/verify.sh [--full]` | [/s21/](https://evand.github.io/square-packing/s21/) | `s21_eq_five_of_checker`, conditional |
-| **s(13) = 4**, case-free | [`certificates/rung2/`](certificates/rung2/) | `./verify.sh` | [/s13/](https://evand.github.io/square-packing/s13/) | `s13_eq_4`, no hypothesis |
+| **s(13) = 4**, case-free | [`certificates/rung2/`](certificates/rung2/) | `./verify.sh` | [/s13/](https://evand.github.io/square-packing/s13/) | `s13_eq_4`, no hypothesis (opt-in build) |
 | **s(12) ≥ 15680/3951** = 3.9686 (squarepacker's 3.9715 re-weights these points) | [`certificates/`](certificates/) `s12_lower_3.9686.txt` | `./verify.sh` | [/s12/](https://evand.github.io/square-packing/s12/) | `s12_ge_15680_3951`, no hypothesis (opt-in build) |
 | s(11) ≥ 3040/797 (superseded: s(11) = 3.877… is now proved) | [`certificates/`](certificates/) `s11_lower_3.8143.txt` | `./verify.sh` | [/s12/](https://evand.github.io/square-packing/s12/) | `s11_ge_3040_797`, no hypothesis (opt-in build) |
 | **Exact forms** of the record packings, n ≤ 324 (S* as an algebraic number; Lean `Packs n S*`; local minimality) | [`search/exact/`](search/exact/) | `search/exact/batch/verify_all.sh` | [`EXACT_FORMS.md`](search/exact/EXACT_FORMS.md) | `lean/Sqpack/Exact/` |

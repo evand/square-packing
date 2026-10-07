@@ -1,17 +1,22 @@
 #!/bin/sh
 # Re-verify the certificates in this repo, from scratch.
 #
-#   ./verify.sh          fast tier: every certificate at its primary angle net, the exact Python
-#                        re-checks that take seconds, and all rejection tests.  A few minutes on
-#                        4 cores; what CI runs on every change.
+#   ./verify.sh --spot   spot tier (CI on every push): build both checkers, hashes, the s(12)/s(11)
+#                        point certificates, the shipped run records of every bundle re-summarised;
+#                        no fresh sweeps, no rejection suites.  ~1 min here, a few on a CI runner.
+#   ./verify.sh          fast tier (run locally after touching a checker or a certificate; CI only
+#                        by hand): adds the bundles' fresh zmx2 sweeps, the unavoid13 checks and all
+#                        rejection suites.  ~4 min on 16 cores, ~18 min on a 4-core runner.
 #   ./verify.sh --full   adds the slow sweeps: the N = 12000 re-runs, the box-clique Python
 #                        re-check, and the full-domain zero-margin sweep for s(13) = 4
 #                        (~35 min at 4 threads here; 3 h 40 min on a GitHub runner).
 set -e
 cd "$(dirname "$0")"
-FULL=0
-case "${1:-}" in --full) FULL=1 ;; "") ;; *) echo "usage: $0 [--full]"; exit 2 ;; esac
+FULL=0; SPOT=
+case "${1:-}" in --full) FULL=1 ;; --spot) SPOT=1 ;; --fast|"") ;; *) echo "usage: $0 [--spot|--fast|--full]"; exit 2 ;; esac
+export SPOT   # the bundle scripts skip their fresh sweeps when it is set
 full() { [ "$FULL" = 1 ]; }
+spot() { [ -n "$SPOT" ]; }
 echo "=== building verifiers ==="
 ( cd verify && cargo build --release )
 ( cd verify2 && cargo build --release )
@@ -115,6 +120,7 @@ echo "    both checkers re-summarised, and a fresh zmx2 run over the whole pose 
 # The zm_mixed.py re-sweep is ~19.6 CPU-h; CI skips it (S60_SEPARATE=1): run it locally.
 if full && [ -z "${S60_SEPARATE:-}" ]; then certificates/s60/verify.sh --full; else certificates/s60/verify.sh; fi
 echo
+if ! spot; then
 echo "=== rung-2 rejection tests (23 checks: mutations, invalid historical covers, malformed input) ==="
 ./tests/rung2/rejection_tests.sh
 echo
@@ -139,10 +145,11 @@ echo
 echo "=== rejection tests (a verifier that never says no is worthless) ==="
 ./tests/rejection_tests.sh
 echo
+fi   # ! spot
 echo "=== points.json companions: json -> txt reproduces the shipped .txt byte for byte ==="
 for c in certificates/s12_lower_*.txt; do python3 search/export_points.py --roundtrip "$c" "${c%.txt}.json"; done
 python3 search/export_points.py --roundtrip certificates/s12_56points_3.8.txt certificates/s12_56points_3.8.json
 python3 search/export_points.py --roundtrip certificates/s11_lower_3.8143.txt certificates/s11_lower_3.8143.json
 for c in certificates/s12_uniform_*.txt; do python3 search/export_points.py --roundtrip "$c" "${c%.txt}.json"; done
 echo
-if full; then echo "=== ALL CHECKS PASSED (full tier) ==="; else echo "=== ALL CHECKS PASSED (fast tier; ./verify.sh --full adds the slow sweeps) ==="; fi
+if full; then echo "=== ALL CHECKS PASSED (full tier) ==="; elif spot; then echo "=== ALL CHECKS PASSED (spot tier; ./verify.sh adds the fresh sweeps and rejection suites) ==="; else echo "=== ALL CHECKS PASSED (fast tier; ./verify.sh --full adds the slow sweeps) ==="; fi

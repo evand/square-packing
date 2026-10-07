@@ -16,7 +16,8 @@ Start at `TODO.md` (open items; conventions in `~/math/TODO.md`), then `README.m
 - `s12/README.md` is only a signpost: everything lived under `s12/` until 2026-10-07.
 
 ## Checking
-- `./verify.sh` (fast tier, ~15 min on 16 cores; CI runs it on every push touching code/certificates) and `./verify.sh --full` (slow sweeps).
+- Tiers: `./verify.sh --spot` (~25 s; what CI runs on push), `./verify.sh` (fast: + fresh sweeps, rejection suites; ~4 min on 16 cores; run it after touching a checker or certificate), `./verify.sh --full` (slow sweeps).
+- Lean: CI builds only the spot target (`lean/AxiomsSpot.lean`); `cd lean && lake build && lake env lean Axioms.lean` locally (`Sqpack.Bentz` peaks at 23.5 GB).  CI is a courtesy spot check, not a reproduction; don't engineer it for hosted-runner limits.
 - Rejection suites: `tests/rejection_tests.sh`, `tests/rung2/rejection_tests.sh`.  Exact batch: `search/exact/batch/verify_all.sh`.
 - Run scripts from the repo root unless they `cd` themselves.
 

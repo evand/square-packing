@@ -40,6 +40,7 @@ run python3 search/s21_records.py zmx2 $B/zmx2_d4/roots.log $C d4
 run python3 search/s21_records.py zmx2 $B/zmx2_full/roots.log $C full
 
 echo "--- fresh zmx2 run: the whole pose space, no symmetry assumed (--full: cover + mirror, 20,000 roots)"
+if [ -n "${SPOT:-}" ]; then echo "    (spot tier: skipped)"; else
 ( cd verify2 && cargo build --release --bin zmx2 -q ) || { echo "cargo build of zmx2 failed"; exit 1; }
 Z=verify2/target/release/zmx2
 $Z d4 $C
@@ -56,6 +57,7 @@ a, b = census(sys.argv[1]), census(sys.argv[2])
 assert a == b, "fresh zmx2 census differs from the shipped zmx2_full/roots.log"
 print("    fresh census identical to the shipped zmx2_full/roots.log, root for root")
 EOF
+fi
 
 if [ "$FULL" = 1 ]; then
   echo "--- full re-run: zm_mixed.py --d4 --cert-mode over the D4 region (40,000 roots; ~20 CPU-h)"

@@ -29,6 +29,7 @@ summ() {   # $1 = records dir; summarised in a scratch copy (summary rewrites SU
 for d in zeromargin_d4 zeromargin_d4_shift_v1; do echo "--- shipped zeromargin.py run: $d"; summ $d; done
 
 echo "--- fast re-execution: two interior tile-germ roots of s32_closed_cover_6.txt, census must equal the shipped records"
+if [ -n "${SPOT:-}" ]; then echo "    (spot tier: skipped)"; else
 for r in '3/2,8/5,7/5,3/2,1/16,1/8' '7/5,3/2,7/5,3/2,0,1/16'; do
   python3 search/zm_d4_sweep.py run --cert $B/s32_closed_cover_6.txt --out "$TMP/sample" --depth 24 --nproc 2 --only "$r" > /dev/null 2>&1
 done
@@ -43,6 +44,7 @@ for r in new:
     assert r["stats"]["UNCERT"] == 0 and r["stats"] == old[r["root"]]["stats"], (r, old[r["root"]])
     print(f"    {r['root']}: {r['stats']['boxes']} boxes, certified, census identical")
 EOF
+fi
 
 echo "--- shipped zmx2 --full --pair-points --sym-atoms run (zmx2_full_sym/): all 28,800 roots, none uncertified, no D4 fold"
 xz -dc certificates/s32/zmx2_full_sym/roots.log.xz | python3 -c '

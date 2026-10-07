@@ -1,11 +1,13 @@
 name: verify
 
-# The point of these results is that they are checkable, so they are checked whenever the
-# checking code or the certificates change.  If this badge is not green, do not believe the numbers.
-#
-# Two tiers (verify.sh): the fast tier (minutes) runs on every push and pull request touching the
-# checkers, certificates or Lean (not site/, docs/, notes/, tasks/ or Markdown); the full tier (the slow sweeps) runs only when started by hand from the Actions tab, since
-# re-running our own code on our own certificates is not an independent check.
+# Spot checks, not reproductions.  On every push touching code, certificates or Lean (not site/,
+# docs/, notes/, tasks/ or Markdown) and monthly: `./verify.sh --spot` (build both checkers, hashes,
+# the point certificates, every bundle's shipped run records; no fresh sweeps) and a small Lean
+# target (definitions, zero-margin primitives, exact forms and local minima at n = 5, 8, 11).
+# The real checks run locally: `./verify.sh` (fast tier: fresh sweeps + rejection suites) after
+# touching a checker or certificate, `./verify.sh --full`, and `cd lean && lake build` (several
+# modules need > 16 GB, more than a hosted runner has).  The fast and full certificate tiers can
+# still be started by hand from the Actions tab.
 
 on:
   push:
@@ -15,18 +17,18 @@ on:
   workflow_dispatch:
     inputs:
       tier:
-        description: 'fast or full'
+        description: 'spot, fast or full (certificates only; Lean is always the spot target)'
         type: choice
-        options: [fast, full]
-        default: fast
+        options: [spot, fast, full]
+        default: spot
   schedule:
-    # Monthly, fast tier only, so bit-rot in the toolchain surfaces before someone else finds it.
+    # Monthly, spot tier, so bit-rot in the toolchain surfaces before someone else finds it.
     - cron: '0 6 1 * *'
 
 jobs:
   certificates:
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ inputs.tier == 'full' && 350 || 45 }}
+    timeout-minutes: ${{ inputs.tier == 'full' && 350 || 30 }}
     steps:
       - uses: actions/checkout@v4
 
@@ -52,40 +54,28 @@ jobs:
       - name: Check certificate hashes
         run: sha256sum -c certificates/SHA256SUMS
 
-      - name: Verify certificates and run the rejection tests (${{ inputs.tier || 'fast' }} tier)
+      - name: Verify certificates (${{ inputs.tier || 'spot' }} tier)
         env:
           S32_SEPARATE: '1'   # the s(32) full re-sweep (~5 CPU-h) is left to certificates/s32/verify.sh --full, run locally
           S21_SEPARATE: '1'   # likewise the s(21) zm_mixed.py re-sweep (~20 CPU-h); the zmx2 full run stays in CI
           S45_SEPARATE: '1'   # likewise the s(45) zm_mixed.py re-sweep (~16.5 CPU-h); the zmx2 full run stays in CI
           S60_SEPARATE: '1'   # likewise the s(60) zm_mixed.py re-sweep (~19.6 CPU-h); the zmx2 full run stays in CI
-        run: ./verify.sh ${{ inputs.tier == 'full' && '--full' || '' }}
+        run: ./verify.sh ${{ inputs.tier == 'full' && '--full' || inputs.tier == 'fast' && '--fast' || '--spot' }}
 
   lean:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
-      # Bridge for the 2026-10-07 flatten (s12/lean -> lean): a cache entry is keyed by its path, and a cold
-      # build of the data modules is killed on a hosted runner, so seed lean/.lake from the last pre-flatten
-      # cache (saved under s12/lean/.lake).  Harmless once lean-action has saved a cache under lean/.lake;
-      # remove then.
-      - name: Seed lean/.lake from the pre-flatten cache
-        uses: actions/cache/restore@v4
-        with:
-          path: s12/lean/.lake
-          key: lake-preflatten-seed
-          restore-keys: lake-Linux-X64-
-      - name: Move the seeded cache into place
-        run: if [ -d s12/lean/.lake ] && [ ! -d lean/.lake ]; then mv s12/lean/.lake lean/.lake && echo seeded; fi
-
-      - name: Build the Lean project (Mathlib from its cache)
+      - name: Build the Lean spot target (Mathlib from its cache)
         uses: leanprover/lean-action@v1
         with:
           lake-package-directory: lean
+          build-args: Sqpack.Spec Sqpack.SpecFC Sqpack.ZeroMargin Sqpack.ChordLine Sqpack.Cover Sqpack.Exact.N5c Sqpack.Exact.N11c Sqpack.LocalMinCheck Sqpack.ChainLocalMin Sqpack.Exact.N8Chain
 
-      - name: No sorry anywhere a checker relies on
+      - name: No sorry in the spot target (the full list, Axioms.lean, runs locally)
         working-directory: lean
         run: |
-          lake env lean Axioms.lean | tee axioms.out
+          lake env lean AxiomsSpot.lean | tee axioms.out
           ! grep -n 'sorryAx' axioms.out
