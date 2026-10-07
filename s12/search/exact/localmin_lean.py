@@ -180,7 +180,7 @@ theorem localmin : ∃ s : ℝ, peval pS s = 0 ∧ (({lean_q(Sa)} : ℚ) : ℝ) 
     # import the local-minimum checker too
     txt = open(out).read().replace('import Sqpack.ExactCheck\n', 'import Sqpack.ExactCheck\nimport Sqpack.LocalMinCheck\n', 1)
     # the G and column tables are large literals (noncomputable: only the kernel evaluates them)
-    txt = txt.replace('set_option maxHeartbeats 0\n', 'set_option maxHeartbeats 0\nset_option maxRecDepth 100000\n', 1)
+    # (maxRecDepth for the large literals is in lean_cert.py's header)
     open(out, 'w').write(txt)
     print(f'{out}: local-minimum certificate, {m} rows, lmin {float(lmin):.4g}, mu {float(mu):.4g}, Gn {float(Gn):.4g}')
 
