@@ -6,7 +6,7 @@ Paths relative to the repo root (`public/`; flattened from `public/s12/` on 10-0
 External posts: ask Evan explicitly per post.  **Before any bound-chasing run, check jlevy's register (`jlevy.github.io/squares/cases/<n>.html`) for current values.**
 
 ## Next (Evan, 10-07)
-Exact-forms route paused after jlevy#419/#420.  Next session: general cleanup, syncs with other repos' new data (register, Couzo, chelokot), website updates; then optimizer work.  Git: single checkout on `main`, no worktrees; exact-minpoly working data (raw solve outputs, gitignored) is in `search/exact/minpoly/solve/`.
+Cleanup session 10-07 done (Completed.md): flatten s12/ → root, exit codes, upstream sync, site refresh.  Next: optimizer work; exact-forms route paused after jlevy#419/#420.  Git: single checkout on `main`; exact-minpoly raw solve outputs (gitignored) in `search/exact/minpoly/solve/`.
 
 ## Next (picked 2026-10-03)
 Proof-piece wishlist (new candidates N1–N15 + 65 open items, picks at the end): `search/WISHLIST.md`.
@@ -38,7 +38,10 @@ First deliverable: a table of exact forms of S + a handful of Lean local-optimal
 - [ ] Counting route (README Outcome): partitions the zero set into 18 margin-0 classes, doesn't shrink it. Only (A) z ≥ 5, (B) 3 edge/wall have room.
 
 ## Correctness / review
-- [ ] Owed on jlevy (`notes/jlevy-s17-techniques.md` §4): #238 `s12/verify` exits 0 on NOT VERIFIED / partial runs, `cargo build | tail -1` hides failures; #256 stale s60 README paragraph, pin/print zmx2 source digest; #279 replay wand125's s59/s77 (he said yes).
+- [ ] Owed on jlevy (drafts: `outreach/draft-jlevy-replies-2026-10-07.md`; #238, #375 posted 10-07): #256 confirm s60 re-run reading (README fixed in cca7bf1); #279 drop or run wand125's s59/s77 replay; #419 superseded-records note.  Each needs Evan's OK.
+- [ ] Upstream data to pull (10-07 sync): itsnaka SQUISH certs (18 better packings, `itsnaka/squish-certs`, jlevy#401); Couzo HEAD 6042c56b (n = 208, 209, 228, 263, 272, 303, 306); re-pin `_untrusted-third-party` clones (all behind; wand125's repos merged into `wand125/square-packing`).
+- [ ] k2m3 wording: `docs/k2m3.html` ("one exact checker" tag, status) and `docs/s32.html:147` still say single-checker; wand125's Valid7 check exists: check the register status, then reword.
+- [ ] `zmx2` exit status: still 0 on NOT VERIFIED / INCOMPLETE (verify, zmcheck changed 10-07); ~30 callers incl. bisect scripts to adapt first.
 - [ ] Second implementation of `Valid9`: wand125 did one (ValidTilt9, `wand125/valid7-independent-check` c561dbb3, 10-06; register: reported, T-081 stays V0/C1).  Read it, then update site/READMEs that say "no second implementation".
 - [ ] k2m3 2nd impl (zmx2 area density): needs a 2nd reader for the 4 mutation-blind refinements (`ZMX2_AREA.md` §13).
 - [ ] zeromargin.py should-fixes (audit 09-26; + s20 review 10-04: divisibility assert in `roots()` like `d4_roots`, else a non-dividing `--pitch` silently skips a strip): int64 guard on `sum(W·weight)`; `zm_d4_sweep.py summary` sha/settings gate; stale docstrings. Re-pin s(32) bundle.
@@ -81,6 +84,5 @@ done enough: sub-11 funnel small and well sampled, plateau above 11 rough; the n
 - [ ] Site `problems.html` is the reader-facing copy of WISHLIST's object-level items (§P questions, A1/A3, N16): edit both together.
 - [ ] Site: draw every packing we have numbers for (Couzo's 49 for n = 68–307, de Winter's n = 211, n > 324); coords are fair game, credit + link, copy no code/text. `tasks/site-all-packings/`
 - [ ] Announce: VibeMathed entries for s(21), s(32) (and now k²−3, k²−4 / F₄); X drafts `outreach/drafts-s21-s32.md`.
-- [ ] `notes/status.md` frozen at 09-22: add k²−3, k²−4, s(21), s(32), s(45), s(60/61), Lean state.
 - [ ] Repo unification, rest: outreach → a small private GitHub repo (versioned, backed up); `wip/*` branches + pre-push hook if needed.
 - [ ] Prune ~30 `worktree-agent-*` branches on the private `square-packing-research` remote.

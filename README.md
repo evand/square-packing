@@ -16,7 +16,7 @@ Status, caveats and independent checks are in each bundle's README; nothing here
 | Result | Certificate bundle | Re-check | Write-up | Lean |
 |---|---|---|---|---|
 | **s(k² − 3) = k** for every k ≥ 6 | [`certificates/k2m3/`](certificates/k2m3/) | `certificates/k2m3/verify.sh [--full]` | [/k2m3/](https://evand.github.io/square-packing/k2m3/) | all-k reduction `bentz_of_validTilt7`, conditional on the box statement |
-| **s(k² − 4) = k** for every k ≥ 5 | [`certificates/k2m4/`](certificates/k2m4/) | `certificates/k2m4/verify.sh [--full]` | [/k2m4/](https://evand.github.io/square-packing/k2m4/) | all-k reduction `bentz4_of_valid9`, conditional |
+| **s(k² − 4) = k** for every k ≥ 5 | [`certificates/k2m4/`](certificates/k2m4/) | `certificates/k2m4/verify.sh [--full]` | [/k2m4/](https://evand.github.io/square-packing/k2m4/) | all-k reduction `bentz4_of_validTilt9`, conditional on the tilted box statement (re-checked by wand125's separate exact checker, 10-06; not yet register-verified) |
 | **s(60) = s(61) = 8** | [`certificates/s60/`](certificates/s60/) | `certificates/s60/verify.sh [--full]` | [/s60/](https://evand.github.io/square-packing/s60/) | — |
 | **s(45) = 7** | [`certificates/s45/`](certificates/s45/) | `certificates/s45/verify.sh [--full]` | [/s45/](https://evand.github.io/square-packing/s45/) | — |
 | **s(32) = 6** | [`certificates/s32/`](certificates/s32/) | `certificates/s32/verify.sh [--full]` | [/s32/](https://evand.github.io/square-packing/s32/) | `s32_eq_6`, no hypothesis |

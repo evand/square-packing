@@ -543,14 +543,14 @@
  },
  "12": {
   "best": {
-   "value": 3.970200203928523,
-   "exact_form": "15680000/3949423",
-   "source": "jlevy2026",
+   "value": 3.9715,
+   "exact_form": "7943/2000",
+   "source": "squarepacker2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://jlevy.github.io/squares/cases/12.html",
-   "date": "2026-10-03",
-   "note": "T-079: exact re-solve of evand's 1,736-point s(12) certificate (points kept, weights re-optimised exactly), replayed there (evidence E-n012-levy-15680000-3949423-source-replay, E-n012-levy-15680000-3949423-native-parent-core). squarepacker (Ryu Sungjoon, 2026-10-02) reported 31360/7901 = 3.969117 by the same kind of re-solve"
+   "url": "https://github.com/squarepacker/s12-lower-bound/releases/tag/v1.1",
+   "date": "2026-10-05",
+   "note": "T-095 (V3/C3): Evan Daniel's 1,736 points of the 15680/3951 certificate, dilated to side 7943/2000, rounded orbit by orbit, with new weights by linear programming (total 11.9974808 < 12); decided on the rational angle net 2 arctan(k/96000). Replayed by jlevy/squares with Daniel's verifier and an independent parent-core interval branch and bound (evidence E-n012-squarepacker-7943-2000-source-replay, E-n012-squarepacker-7943-2000-native-parent-core)"
   },
   "history": [
    {
@@ -606,7 +606,7 @@
     "year": 2026,
     "status": "preprint",
     "url": "https://github.com/evand/square-packing/tree/main",
-    "note": "2026-08-26; 1736-point weighted certificate; still the best lower bound we know of for n = 12 (jlevy/squares replayed it by a second method and lists it as the verified bound)",
+    "note": "2026-08-26; our 1736-point weighted certificate, kernel-checked in Lean (s12_ge_15680_3951); jlevy/squares replayed it by a second method. Its points carry the later floors: jlevy's exact re-solve (15680000/3949423) and squarepacker's re-weighting (7943/2000)",
     "date": "2026-08-26"
    },
    {
@@ -636,7 +636,7 @@
     "year": 2026,
     "status": "preprint",
     "url": "https://github.com/evand/square-packing/tree/main",
-    "note": "2026-08-26; 1736-point weighted certificate; still the best lower bound we know of for n = 12 (jlevy/squares replayed it by a second method and lists it as the verified bound)",
+    "note": "2026-08-26; our 1736-point weighted certificate, kernel-checked in Lean (s12_ge_15680_3951); jlevy/squares replayed it by a second method. Its points carry the later floors: jlevy's exact re-solve (15680000/3949423) and squarepacker's re-weighting (7943/2000)",
     "date": "2026-08-26"
    },
    {
@@ -648,6 +648,16 @@
     "url": "https://jlevy.github.io/squares/cases/12.html",
     "date": "2026-10-03",
     "note": "T-079: exact re-solve of evand's 1,736-point s(12) certificate (points kept, weights re-optimised exactly), replayed there (evidence E-n012-levy-15680000-3949423-source-replay, E-n012-levy-15680000-3949423-native-parent-core). squarepacker (Ryu Sungjoon, 2026-10-02) reported 31360/7901 = 3.969117 by the same kind of re-solve"
+   },
+   {
+    "value": 3.9715,
+    "exact_form": "7943/2000",
+    "source": "squarepacker2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/squarepacker/s12-lower-bound/releases/tag/v1.1",
+    "date": "2026-10-05",
+    "note": "T-095 (V3/C3): Evan Daniel's 1,736 points of the 15680/3951 certificate, dilated to side 7943/2000, rounded orbit by orbit, with new weights by linear programming (total 11.9974808 < 12); decided on the rational angle net 2 arctan(k/96000). Replayed by jlevy/squares with Daniel's verifier and an independent parent-core interval branch and bound (evidence E-n012-squarepacker-7943-2000-source-replay, E-n012-squarepacker-7943-2000-native-parent-core)"
    }
   ]
  },
@@ -849,14 +859,14 @@
  },
  "17": {
   "best": {
-   "value": 4.66044,
-   "exact_form": "116511/25000",
+   "value": 4.66044275,
+   "exact_form": "18641771/4000000",
    "source": "Guzhou0806_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/Guzhou0806/n17-square-packing/tree/815b16261f852e389968513eec94b4b9e5b3206d/certificates/R068-C010",
-   "note": "R068, strict; continues Kleddamag's 4.66001 charge through R067 (4.66018); replayed by jlevy/squares (T-043, V4/C3), still its verified floor on 2026-10-01; the repository's later R070 (4.6604427) and R071 (4.66044275) are in this history as reported",
-   "date": "2026-09-28"
+   "url": "https://github.com/Guzhou0806/n17-square-packing/tree/8c11f696/certificates/R071-C029",
+   "date": "2026-09-30",
+   "note": "R071 (retained C027 certificate), strict, on R068's charge over 5,114 parent-angle intervals; the repository's own CI replay (2026-09-30), and replayed in full by jlevy/squares on 2026-10-05 with the source's two checkers (T-093, V3/C3, evidence E-n017-guzhou-r071-source-replay)"
   },
   "history": [
    {
@@ -1032,7 +1042,7 @@
     "year": 2026,
     "status": "preprint",
     "url": "https://github.com/Guzhou0806/n17-square-packing/tree/815b16261f852e389968513eec94b4b9e5b3206d/certificates/R068-C010",
-    "note": "R068, strict; continues Kleddamag's 4.66001 charge through R067 (4.66018); replayed by jlevy/squares (T-043, V4/C3), still its verified floor on 2026-10-01; the repository's later R070 (4.6604427) and R071 (4.66044275) are in this history as reported",
+    "note": "R068, strict; continues Kleddamag's 4.66001 charge through R067 (4.66018); replayed by jlevy/squares (T-043, V4/C3), still its verified floor on 2026-10-01; superseded by the repository's R071 (4.66044275), replayed there on 2026-10-05",
     "date": "2026-09-28"
    },
    {
@@ -1075,21 +1085,20 @@
     "status": "preprint",
     "url": "https://github.com/Guzhou0806/n17-square-packing/tree/8c11f696/certificates/R071-C029",
     "date": "2026-09-30",
-    "reported": true,
-    "note": "R071 (retained C027 certificate), strict; the repository's own CI replay (GitHub Actions 'R071 exact replay', success, 2026-09-30); its README notes the old C027 partition records are missing; not yet replayed elsewhere"
+    "note": "R071 (retained C027 certificate), strict, on R068's charge over 5,114 parent-angle intervals; the repository's own CI replay (2026-09-30), and replayed in full by jlevy/squares on 2026-10-05 with the source's two checkers (T-093, V3/C3, evidence E-n017-guzhou-r071-source-replay)"
    }
   ]
  },
  "18": {
   "best": {
-   "value": 4.695,
-   "exact_form": "939/200",
+   "value": 4.705,
+   "exact_form": "941/200",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); replayed by jlevy/squares (evidence E-wand125-rectangle-source-replay)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-102; jlevy/squares verified 941/200 (evidence E-n018-wand125-mixed-4705-sqverify-fast-replay)",
+   "date": "2026-10-06"
   },
   "history": [
    {
@@ -1178,19 +1187,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); replayed by jlevy/squares (evidence E-wand125-rectangle-source-replay)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 4.705,
+    "exact_form": "941/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-102; jlevy/squares verified 941/200 (evidence E-n018-wand125-mixed-4705-sqverify-fast-replay)",
+    "date": "2026-10-06"
    }
   ]
  },
  "19": {
   "best": {
-   "value": 4.8175,
-   "exact_form": "1927/400",
+   "value": 4.825,
+   "exact_form": "193/40",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); replayed by jlevy/squares (evidence E-wand125-rectangle-2026-10-01-source-replay)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-103; jlevy/squares verified 193/40 (evidence E-n019-wand125-mixed-4825-sqverify-fast-replay). Exceeds (7 + √7)/2 = 4.82288, the side of Hämäläinen's s(18) packing, so s(18) < s(19)",
+   "date": "2026-10-06"
   },
   "history": [
    {
@@ -1269,19 +1288,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); replayed by jlevy/squares (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 4.825,
+    "exact_form": "193/40",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-103; jlevy/squares verified 193/40 (evidence E-n019-wand125-mixed-4825-sqverify-fast-replay). Exceeds (7 + √7)/2 = 4.82288, the side of Hämäläinen's s(18) packing, so s(18) < s(19)",
+    "date": "2026-10-06"
    }
   ]
  },
  "20": {
   "best": {
-   "value": 4.8975,
-   "exact_form": "1959/400",
+   "value": 4.905,
+   "exact_form": "981/200",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1959/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 49/10 (2026-10-02, not yet replayed). Exceeds Wainwright's s(19) packing 3+4√2/3, so s(19) < s(20). Our independent point cover gives s(20) > 2443/500 = 4.886 (s12/search/S20_LB.md, 2026-10-04)",
-   "date": "2026-10-02"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-104; jlevy/squares verified 981/200 (evidence E-n020-wand125-mixed-4905-sqverify-fast-replay). Exceeds Wainwright's s(19) packing 3+4√2/3, so s(19) < s(20)",
+   "date": "2026-10-06"
   },
   "history": [
    {
@@ -1370,6 +1399,16 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1959/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 49/10 (2026-10-02, not yet replayed). Exceeds Wainwright's s(19) packing 3+4√2/3, so s(19) < s(20). Our independent point cover gives s(20) > 2443/500 = 4.886 (s12/search/S20_LB.md, 2026-10-04)",
     "date": "2026-10-02"
+   },
+   {
+    "value": 4.905,
+    "exact_form": "981/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-104; jlevy/squares verified 981/200 (evidence E-n020-wand125-mixed-4905-sqverify-fast-replay). Exceeds Wainwright's s(19) packing 3+4√2/3, so s(19) < s(20)",
+    "date": "2026-10-06"
    }
   ]
  },
@@ -1698,14 +1737,14 @@
  },
  "26": {
   "best": {
-   "value": 5.5325,
-   "exact_form": "2213/400",
+   "value": 5.545,
+   "exact_form": "1109/200",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2213/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-105; jlevy/squares verified 1109/200 (evidence E-n026-wand125-mixed-5545-sqverify-fast-replay)",
+   "date": "2026-10-06"
   },
   "history": [
    {
@@ -1784,19 +1823,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2213/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 5.545,
+    "exact_form": "1109/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-105; jlevy/squares verified 1109/200 (evidence E-n026-wand125-mixed-5545-sqverify-fast-replay)",
+    "date": "2026-10-06"
    }
   ]
  },
  "27": {
   "best": {
-   "value": 5.635,
-   "exact_form": "1127/200",
+   "value": 5.6435,
+   "exact_form": "11287/2000",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1127/200 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-106; jlevy/squares verified 11287/2000 (evidence E-n027-wand125-mixed-56435-sqverify-fast-replay)",
+   "date": "2026-10-06"
   },
   "history": [
    {
@@ -1874,19 +1923,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1127/200 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 5.6435,
+    "exact_form": "11287/2000",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-106; jlevy/squares verified 11287/2000 (evidence E-n027-wand125-mixed-56435-sqverify-fast-replay)",
+    "date": "2026-10-06"
    }
   ]
  },
  "28": {
   "best": {
-   "value": 5.7225,
-   "exact_form": "2289/400",
+   "value": 5.735,
+   "exact_form": "1147/200",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2289/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-107; jlevy/squares verified 1147/200 (evidence E-n028-wand125-mixed-5735-sqverify-fast-replay)",
+   "date": "2026-10-06"
   },
   "history": [
    {
@@ -1975,19 +2034,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2289/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 5.735,
+    "exact_form": "1147/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-107; jlevy/squares verified 1147/200 (evidence E-n028-wand125-mixed-5735-sqverify-fast-replay)",
+    "date": "2026-10-06"
    }
   ]
  },
  "29": {
   "best": {
-   "value": 5.7975,
-   "exact_form": "2319/400",
+   "value": 5.81,
+   "exact_form": "581/100",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2319/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-108; jlevy/squares verified 581/100 (evidence E-n029-wand125-mixed-581-sqverify-fast-replay)",
+   "date": "2026-10-06"
   },
   "history": [
    {
@@ -2066,19 +2135,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2319/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 5.81,
+    "exact_form": "581/100",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-108; jlevy/squares verified 581/100 (evidence E-n029-wand125-mixed-581-sqverify-fast-replay)",
+    "date": "2026-10-06"
    }
   ]
  },
  "30": {
   "best": {
-   "value": 5.875,
-   "exact_form": "47/8",
+   "value": 5.8835,
+   "exact_form": "11767/2000",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 47/8 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-109; jlevy/squares verified 11767/2000 (evidence E-n030-wand125-mixed-58835-sqverify-fast-replay)",
+   "date": "2026-10-06"
   },
   "history": [
    {
@@ -2157,6 +2236,16 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 47/8 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 5.8835,
+    "exact_form": "11767/2000",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-109; jlevy/squares verified 11767/2000 (evidence E-n030-wand125-mixed-58835-sqverify-fast-replay)",
+    "date": "2026-10-06"
    }
   ]
  },
@@ -2677,14 +2766,14 @@
  },
  "39": {
   "best": {
-   "value": 6.635,
-   "exact_form": "1327/200",
+   "value": 6.65,
+   "exact_form": "133/20",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1327/200 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-110; jlevy/squares verified 133/20 (evidence E-n039-wand125-mixed-665-sqverify-fast-replay)",
+   "date": "2026-10-06"
   },
   "history": [
    {
@@ -2763,6 +2852,16 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1327/200 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 6.65,
+    "exact_form": "133/20",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-110; jlevy/squares verified 133/20 (evidence E-n039-wand125-mixed-665-sqverify-fast-replay)",
+    "date": "2026-10-06"
    }
   ]
  },
@@ -2859,14 +2958,14 @@
  },
  "41": {
   "best": {
-   "value": 6.76,
-   "exact_form": "169/25",
+   "value": 6.775,
+   "exact_form": "271/40",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 169/25 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-111; jlevy/squares verified 271/40 (evidence E-n041-wand125-mixed-6775-sqverify-fast-replay)",
+   "date": "2026-10-06"
   },
   "history": [
    {
@@ -2945,19 +3044,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 169/25 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 6.775,
+    "exact_form": "271/40",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-111; jlevy/squares verified 271/40 (evidence E-n041-wand125-mixed-6775-sqverify-fast-replay)",
+    "date": "2026-10-06"
    }
   ]
  },
  "42": {
   "best": {
-   "value": 6.815,
-   "exact_form": "1363/200",
+   "value": 6.8475,
+   "exact_form": "2739/400",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1363/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 2731/400 = 6.8275 (2026-10-02, not yet replayed)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 2739/400 (evidence E-n042-wand125-mixed-68475-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -3017,19 +3126,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1363/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 2731/400 = 6.8275 (2026-10-02, not yet replayed)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 6.8475,
+    "exact_form": "2739/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 2739/400 (evidence E-n042-wand125-mixed-68475-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
  "43": {
   "best": {
-   "value": 6.8875,
-   "exact_form": "551/80",
+   "value": 6.9075,
+   "exact_form": "2763/400",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 551/80 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 2763/400 (evidence E-n043-wand125-mixed-69075-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -3089,19 +3208,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 551/80 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 6.9075,
+    "exact_form": "2763/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 2763/400 (evidence E-n043-wand125-mixed-69075-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
  "44": {
   "best": {
-   "value": 6.9425,
-   "exact_form": "2777/400",
+   "value": 6.9725,
+   "exact_form": "2789/400",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2777/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 2789/400 (evidence E-n044-wand125-mixed-69725-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -3161,6 +3290,16 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2777/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 6.9725,
+    "exact_form": "2789/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 2789/400 (evidence E-n044-wand125-mixed-69725-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
@@ -3514,14 +3653,14 @@
  },
  "51": {
   "best": {
-   "value": 7.4,
-   "exact_form": "37/5",
+   "value": 7.47,
+   "exact_form": "747/100",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 37/5 (evidence E-n050-wand125-mixed-740-source-replay); wand125 reports 373/50 = 7.46 (2026-10-03, not yet replayed)",
-   "date": "2026-09-28"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 747/100 (evidence E-n051-wand125-mixed-747-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -3590,19 +3729,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 37/5 (evidence E-n050-wand125-mixed-740-source-replay); wand125 reports 373/50 = 7.46 (2026-10-03, not yet replayed)",
     "date": "2026-09-28"
+   },
+   {
+    "value": 7.47,
+    "exact_form": "747/100",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 747/100 (evidence E-n051-wand125-mixed-747-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
  "52": {
   "best": {
-   "value": 7.535,
-   "exact_form": "1507/200",
+   "value": 7.55,
+   "exact_form": "151/20",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1507/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 151/20 = 7.55 (2026-10-03, not yet replayed)",
-   "date": "2026-09-28"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-082; jlevy/squares verified 151/20 (evidence E-n052-wand125-mixed-755-sqverify-fast-replay)",
+   "date": "2026-10-03"
   },
   "history": [
    {
@@ -3681,19 +3830,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1507/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 151/20 = 7.55 (2026-10-03, not yet replayed)",
     "date": "2026-09-28"
+   },
+   {
+    "value": 7.55,
+    "exact_form": "151/20",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-082; jlevy/squares verified 151/20 (evidence E-n052-wand125-mixed-755-sqverify-fast-replay)",
+    "date": "2026-10-03"
    }
   ]
  },
  "53": {
   "best": {
-   "value": 7.6075,
-   "exact_form": "3043/400",
+   "value": 7.6275,
+   "exact_form": "3051/400",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3043/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 3051/400 (evidence E-n053-wand125-mixed-76275-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -3772,19 +3931,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3043/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 7.6275,
+    "exact_form": "3051/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 3051/400 (evidence E-n053-wand125-mixed-76275-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
  "54": {
   "best": {
-   "value": 7.6725,
-   "exact_form": "3069/400",
+   "value": 7.685,
+   "exact_form": "1537/200",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3069/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 1537/200 (evidence E-n054-wand125-mixed-7685-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -3844,19 +4013,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3069/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 7.685,
+    "exact_form": "1537/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 1537/200 (evidence E-n054-wand125-mixed-7685-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
  "55": {
   "best": {
-   "value": 7.7125,
-   "exact_form": "617/80",
+   "value": 7.728,
+   "exact_form": "966/125",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 617/80 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 966/125 = 7.728 (2026-10-03, not yet replayed)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-082; jlevy/squares verified 966/125 (evidence E-n055-wand125-mixed-7728-sqverify-fast-replay)",
+   "date": "2026-10-03"
   },
   "history": [
    {
@@ -3926,19 +4105,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 617/80 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 966/125 = 7.728 (2026-10-03, not yet replayed)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 7.728,
+    "exact_form": "966/125",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-082; jlevy/squares verified 966/125 (evidence E-n055-wand125-mixed-7728-sqverify-fast-replay)",
+    "date": "2026-10-03"
    }
   ]
  },
  "56": {
   "best": {
-   "value": 7.7825,
-   "exact_form": "3113/400",
+   "value": 7.8025,
+   "exact_form": "3121/400",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3113/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 3121/400 (evidence E-n056-wand125-mixed-78025-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -4008,19 +4197,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3113/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 7.8025,
+    "exact_form": "3121/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 3121/400 (evidence E-n056-wand125-mixed-78025-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
  "57": {
   "best": {
-   "value": 7.7825,
-   "exact_form": "3113/400",
+   "value": 7.8725,
+   "exact_form": "3149/400",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3113/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 1567/200 = 7.835 (2026-09-28, not yet replayed)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 3149/400 (evidence E-n057-wand125-mixed-78725-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -4080,19 +4279,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3113/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 1567/200 = 7.835 (2026-09-28, not yet replayed)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 7.8725,
+    "exact_form": "3149/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 3149/400 (evidence E-n057-wand125-mixed-78725-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
  "58": {
   "best": {
-   "value": 7.7825,
-   "exact_form": "3113/400",
+   "value": 7.935,
+   "exact_form": "1587/200",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3113/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 1581/200 = 7.905 (2026-10-03, not yet replayed)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 1587/200 (evidence E-n058-wand125-mixed-7935-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -4152,6 +4361,16 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3113/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 1581/200 = 7.905 (2026-10-03, not yet replayed)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 7.935,
+    "exact_form": "1587/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 1587/200 (evidence E-n058-wand125-mixed-7935-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
@@ -4578,14 +4797,14 @@
  },
  "66": {
   "best": {
-   "value": 8.42,
-   "exact_form": "421/50",
+   "value": 8.43,
+   "exact_form": "843/100",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 421/50 (evidence E-n066-wand125-mixed-842-source-replay)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-097; jlevy/squares verified 843/100 (evidence E-n066-wand125-mixed-843-sqverify-fast-replay)",
+   "date": "2026-10-05"
   },
   "history": [
    {
@@ -4654,19 +4873,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 421/50 (evidence E-n066-wand125-mixed-842-source-replay)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 8.43,
+    "exact_form": "843/100",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-097; jlevy/squares verified 843/100 (evidence E-n066-wand125-mixed-843-sqverify-fast-replay)",
+    "date": "2026-10-05"
    }
   ]
  },
  "67": {
   "best": {
-   "value": 8.455,
-   "exact_form": "1691/200",
+   "value": 8.48,
+   "exact_form": "212/25",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1691/200 (evidence E-wand125-rectangle-2026-09-28-source-replay)",
-   "date": "2026-09-28"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-094; jlevy/squares verified 212/25 (evidence E-n067-wand125-mixed-848-sqverify-fast-replay)",
+   "date": "2026-10-05"
   },
   "history": [
    {
@@ -4735,6 +4964,16 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1691/200 (evidence E-wand125-rectangle-2026-09-28-source-replay)",
     "date": "2026-09-28"
+   },
+   {
+    "value": 8.48,
+    "exact_form": "212/25",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-094; jlevy/squares verified 212/25 (evidence E-n067-wand125-mixed-848-sqverify-fast-replay)",
+    "date": "2026-10-05"
    }
   ]
  },
@@ -4831,14 +5070,14 @@
  },
  "69": {
   "best": {
-   "value": 8.585,
-   "exact_form": "1717/200",
+   "value": 8.62,
+   "exact_form": "431/50",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1717/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 2153/250 = 8.612 (2026-10-03, not yet replayed)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 431/50 (evidence E-n069-wand125-mixed-862-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -4908,19 +5147,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1717/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 2153/250 = 8.612 (2026-10-03, not yet replayed)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 8.62,
+    "exact_form": "431/50",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 431/50 (evidence E-n069-wand125-mixed-862-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
  "70": {
   "best": {
-   "value": 8.625,
-   "exact_form": "69/8",
+   "value": 8.6575,
+   "exact_form": "3463/400",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 69/8 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 3459/400 = 8.6475 (2026-10-03, not yet replayed)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 3463/400 (evidence E-n070-wand125-mixed-86575-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -4990,19 +5239,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 69/8 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 3459/400 = 8.6475 (2026-10-03, not yet replayed)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 8.6575,
+    "exact_form": "3463/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 3463/400 (evidence E-n070-wand125-mixed-86575-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
  "71": {
   "best": {
-   "value": 8.685,
-   "exact_form": "1737/200",
+   "value": 8.721,
+   "exact_form": "8721/1000",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1737/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 1741/200 = 8.705 (2026-10-03, not yet replayed)",
-   "date": "2026-09-28"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 8721/1000 (evidence E-n071-wand125-mixed-8721-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -5072,19 +5331,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1737/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 1741/200 = 8.705 (2026-10-03, not yet replayed)",
     "date": "2026-09-28"
+   },
+   {
+    "value": 8.721,
+    "exact_form": "8721/1000",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 8721/1000 (evidence E-n071-wand125-mixed-8721-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
  "72": {
   "best": {
-   "value": 8.685,
-   "exact_form": "1737/200",
+   "value": 8.76,
+   "exact_form": "219/25",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1737/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 437/50 = 8.74 (2026-09-28, not yet replayed)",
-   "date": "2026-09-28"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 219/25 (evidence E-n072-wand125-mixed-876-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -5154,19 +5423,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1737/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 437/50 = 8.74 (2026-09-28, not yet replayed)",
     "date": "2026-09-28"
+   },
+   {
+    "value": 8.76,
+    "exact_form": "219/25",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 219/25 (evidence E-n072-wand125-mixed-876-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
  "73": {
   "best": {
-   "value": 8.685,
-   "exact_form": "1737/200",
+   "value": 8.813,
+   "exact_form": "8813/1000",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1737/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 8809/1000 = 8.809 (2026-10-03, not yet replayed)",
-   "date": "2026-09-28"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 8813/1000 (evidence E-n073-wand125-mixed-8813-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -5226,19 +5505,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1737/200 (evidence E-wand125-rectangle-2026-09-28-source-replay); wand125 reports 8809/1000 = 8.809 (2026-10-03, not yet replayed)",
     "date": "2026-09-28"
+   },
+   {
+    "value": 8.813,
+    "exact_form": "8813/1000",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 8813/1000 (evidence E-n073-wand125-mixed-8813-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
  "74": {
   "best": {
-   "value": 8.8475,
-   "exact_form": "3539/400",
+   "value": 8.8675,
+   "exact_form": "3547/400",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3539/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 3547/400 = 8.8675 (2026-10-03, not yet replayed)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-082; jlevy/squares verified 3547/400 (evidence E-n074-wand125-mixed-88675-sqverify-fast-replay)",
+   "date": "2026-10-03"
   },
   "history": [
    {
@@ -5298,19 +5587,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 3539/400 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 3547/400 = 8.8675 (2026-10-03, not yet replayed)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 8.8675,
+    "exact_form": "3547/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-082; jlevy/squares verified 3547/400 (evidence E-n074-wand125-mixed-88675-sqverify-fast-replay)",
+    "date": "2026-10-03"
    }
   ]
  },
  "75": {
   "best": {
-   "value": 8.9,
-   "exact_form": "89/10",
+   "value": 8.94,
+   "exact_form": "447/50",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 89/10 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 223/25 = 8.92 (2026-10-03, not yet replayed)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 447/50 (evidence E-n075-wand125-mixed-894-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -5370,19 +5669,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 89/10 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 223/25 = 8.92 (2026-10-03, not yet replayed)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 8.94,
+    "exact_form": "447/50",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 447/50 (evidence E-n075-wand125-mixed-894-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
  "76": {
   "best": {
-   "value": 8.94,
-   "exact_form": "447/50",
+   "value": 8.965,
+   "exact_form": "1793/200",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 447/50 (evidence E-n076-wand125-mixed-894-source-replay); wand125 reports 224/25 = 8.96 (2026-10-03, not yet replayed)",
-   "date": "2026-10-02"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 1793/200 (evidence E-n076-wand125-mixed-8965-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -5442,6 +5751,16 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 447/50 (evidence E-n076-wand125-mixed-894-source-replay); wand125 reports 224/25 = 8.96 (2026-10-03, not yet replayed)",
     "date": "2026-10-02"
+   },
+   {
+    "value": 8.965,
+    "exact_form": "1793/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 1793/200 (evidence E-n076-wand125-mixed-8965-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
@@ -5836,14 +6155,14 @@
  },
  "84": {
   "best": {
-   "value": 9.4,
-   "exact_form": "47/5",
+   "value": 9.411,
+   "exact_form": "9411/1000",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 47/5 (evidence E-n084-wand125-mixed-940-source-replay)",
-   "date": "2026-10-02"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-094; jlevy/squares verified 9411/1000 (evidence E-n084-wand125-mixed-9411-sqverify-fast-replay)",
+   "date": "2026-10-05"
   },
   "history": [
    {
@@ -5901,6 +6220,16 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 47/5 (evidence E-n084-wand125-mixed-940-source-replay)",
     "date": "2026-10-02"
+   },
+   {
+    "value": 9.411,
+    "exact_form": "9411/1000",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-094; jlevy/squares verified 9411/1000 (evidence E-n084-wand125-mixed-9411-sqverify-fast-replay)",
+    "date": "2026-10-05"
    }
   ]
  },
@@ -5976,14 +6305,14 @@
  },
  "86": {
   "best": {
-   "value": 9.46,
-   "exact_form": "473/50",
+   "value": 9.503,
+   "exact_form": "9503/1000",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 473/50 (evidence E-n085-wand125-mixed-946-source-replay); wand125 reports 19/2 = 9.5 (2026-10-03, not yet replayed)",
-   "date": "2026-10-02"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 9503/1000 (evidence E-n086-wand125-mixed-9503-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -6043,19 +6372,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 473/50 (evidence E-n085-wand125-mixed-946-source-replay); wand125 reports 19/2 = 9.5 (2026-10-03, not yet replayed)",
     "date": "2026-10-02"
+   },
+   {
+    "value": 9.503,
+    "exact_form": "9503/1000",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 9503/1000 (evidence E-n086-wand125-mixed-9503-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
  "87": {
   "best": {
-   "value": 9.48,
-   "exact_form": "237/25",
+   "value": 9.58,
+   "exact_form": "479/50",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 237/25 (evidence E-n087-wand125-mixed-948-source-replay); wand125 reports 191/20 = 9.55 (2026-10-03, not yet replayed)",
-   "date": "2026-10-02"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 479/50 (evidence E-n087-wand125-mixed-958-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -6104,19 +6443,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 237/25 (evidence E-n087-wand125-mixed-948-source-replay); wand125 reports 191/20 = 9.55 (2026-10-03, not yet replayed)",
     "date": "2026-10-02"
+   },
+   {
+    "value": 9.58,
+    "exact_form": "479/50",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 479/50 (evidence E-n087-wand125-mixed-958-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
  "88": {
   "best": {
-   "value": 9.48,
-   "exact_form": "237/25",
+   "value": 9.62,
+   "exact_form": "481/50",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 237/25 (evidence E-n087-wand125-mixed-948-source-replay); wand125 reports 48/5 = 9.6 (2026-10-03, not yet replayed)",
-   "date": "2026-10-02"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 481/50 (evidence E-n088-wand125-mixed-962-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -6176,19 +6525,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 237/25 (evidence E-n087-wand125-mixed-948-source-replay); wand125 reports 48/5 = 9.6 (2026-10-03, not yet replayed)",
     "date": "2026-10-02"
+   },
+   {
+    "value": 9.62,
+    "exact_form": "481/50",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 481/50 (evidence E-n088-wand125-mixed-962-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
  "89": {
   "best": {
-   "value": 9.565,
-   "exact_form": "1913/200",
+   "value": 9.65,
+   "exact_form": "193/20",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1913/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 193/20 = 9.65 (2026-10-03, not yet replayed)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-082; jlevy/squares verified 193/20 (evidence E-n089-wand125-mixed-965-sqverify-fast-replay)",
+   "date": "2026-10-03"
   },
   "history": [
    {
@@ -6248,19 +6607,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1913/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 193/20 = 9.65 (2026-10-03, not yet replayed)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 9.65,
+    "exact_form": "193/20",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-082; jlevy/squares verified 193/20 (evidence E-n089-wand125-mixed-965-sqverify-fast-replay)",
+    "date": "2026-10-03"
    }
   ]
  },
  "90": {
   "best": {
-   "value": 9.6,
-   "exact_form": "48/5",
+   "value": 9.73,
+   "exact_form": "973/100",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 48/5 (evidence E-n090-wand125-mixed-960-source-replay); wand125 reports 389/40 = 9.725 (2026-10-03, not yet replayed)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 973/100 (evidence E-n090-wand125-mixed-973-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -6320,19 +6689,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 48/5 (evidence E-n090-wand125-mixed-960-source-replay); wand125 reports 389/40 = 9.725 (2026-10-03, not yet replayed)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 9.73,
+    "exact_form": "973/100",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 973/100 (evidence E-n090-wand125-mixed-973-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
  "91": {
   "best": {
-   "value": 9.7,
-   "exact_form": "97/10",
+   "value": 9.7625,
+   "exact_form": "781/80",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 97/10 (evidence E-n091-wand125-mixed-970-source-replay); wand125 reports 39/4 = 9.75 (2026-10-03, not yet replayed)",
-   "date": "2026-10-02"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 781/80 (evidence E-n091-wand125-mixed-97625-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -6392,19 +6771,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 97/10 (evidence E-n091-wand125-mixed-970-source-replay); wand125 reports 39/4 = 9.75 (2026-10-03, not yet replayed)",
     "date": "2026-10-02"
+   },
+   {
+    "value": 9.7625,
+    "exact_form": "781/80",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 781/80 (evidence E-n091-wand125-mixed-97625-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
  "92": {
   "best": {
-   "value": 9.75,
-   "exact_form": "39/4",
+   "value": 9.77,
+   "exact_form": "977/100",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 39/4 (evidence E-n092-wand125-mixed-975-source-replay); wand125 reports 977/100 = 9.77 (2026-10-03, not yet replayed)",
-   "date": "2026-10-02"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-082; jlevy/squares verified 977/100 (evidence E-n092-wand125-mixed-977-sqverify-fast-replay)",
+   "date": "2026-10-03"
   },
   "history": [
    {
@@ -6453,19 +6842,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 39/4 (evidence E-n092-wand125-mixed-975-source-replay); wand125 reports 977/100 = 9.77 (2026-10-03, not yet replayed)",
     "date": "2026-10-02"
+   },
+   {
+    "value": 9.77,
+    "exact_form": "977/100",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-082; jlevy/squares verified 977/100 (evidence E-n092-wand125-mixed-977-sqverify-fast-replay)",
+    "date": "2026-10-03"
    }
   ]
  },
  "93": {
   "best": {
-   "value": 9.75,
-   "exact_form": "39/4",
+   "value": 9.88,
+   "exact_form": "247/25",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 39/4 (evidence E-n092-wand125-mixed-975-source-replay); wand125 reports 493/50 = 9.86 (2026-10-03, not yet replayed)",
-   "date": "2026-10-02"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 247/25 (evidence E-n093-wand125-mixed-988-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -6514,19 +6913,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "mixed rectangle-measure certificate (wand125/square-packing-bounds); jlevy/squares verified 39/4 (evidence E-n092-wand125-mixed-975-source-replay); wand125 reports 493/50 = 9.86 (2026-10-03, not yet replayed)",
     "date": "2026-10-02"
+   },
+   {
+    "value": 9.88,
+    "exact_form": "247/25",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 247/25 (evidence E-n093-wand125-mixed-988-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
  "94": {
   "best": {
-   "value": 9.805,
-   "exact_form": "1961/200",
+   "value": 9.95,
+   "exact_form": "199/20",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1961/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 248/25 = 9.92 (2026-10-03, not yet replayed)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 199/20 (evidence E-n094-wand125-mixed-995-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -6586,19 +6995,29 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 1961/200 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 248/25 = 9.92 (2026-10-03, not yet replayed)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 9.95,
+    "exact_form": "199/20",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-091; jlevy/squares verified 199/20 (evidence E-n094-wand125-mixed-995-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
  "95": {
   "best": {
-   "value": 9.8518,
-   "exact_form": "49259/5000",
+   "value": 9.965,
+   "exact_form": "1993/200",
    "source": "wand125_2026",
    "year": 2026,
    "status": "preprint",
    "url": "https://github.com/wand125/square-packing-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 49259/5000 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 249/25 = 9.96 (2026-10-03, not yet replayed)",
-   "date": "2026-10-01"
+   "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 1993/200 (evidence E-n095-wand125-mixed-9965-sqverify-fast-replay)",
+   "date": "2026-10-04"
   },
   "history": [
    {
@@ -6658,6 +7077,16 @@
     "url": "https://github.com/wand125/square-packing-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 49259/5000 (evidence E-wand125-rectangle-2026-10-01-source-replay); wand125 reports 249/25 = 9.96 (2026-10-03, not yet replayed)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 9.965,
+    "exact_form": "1993/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing-bounds",
+    "note": "rectangle-density certificate (wand125/square-packing-bounds), T-090; jlevy/squares verified 1993/200 (evidence E-n095-wand125-mixed-9965-sqverify-fast-replay)",
+    "date": "2026-10-04"
    }
   ]
  },
@@ -7063,6 +7492,13 @@
    "venue": "arXiv:2609.37410 [math.CO] (preprint)",
    "year": 2026,
    "url": "https://arxiv.org/abs/2609.37410"
+  },
+  "squarepacker2026": {
+   "authors": "squarepacker (Ryu Sungjoon)",
+   "title": "s12-lower-bound: s(12) >= 7943/2000, a rescaled and re-weighted certificate on Evan Daniel's 1,736 points",
+   "venue": "GitHub repository (computer-assisted, unrefereed)",
+   "year": 2026,
+   "url": "https://github.com/squarepacker/s12-lower-bound"
   }
  },
  "meta": {
@@ -7070,11 +7506,11 @@
   "generated": "2026-09-08",
   "caveats": "See site/notes/lower-bounds-notes.md for sourcing notes and uncertainties. Entries with status 'preprint' are 2026 results that have not been refereed (most computer-assisted; Karakus 2026 is a conventional arXiv proof). Others' certificates are linked as published; this project replays only its own. Where a 2026 repository is still moving (n = 17 especially), the history keeps the main steps and the linked repository has the rest.",
   "precision": "`value` is the full double-precision evaluation of `exact_form`, not a rounded decimal: storing the n=5 floor as 2.7071068 put it ABOVE the true 2+1/sqrt(2)=2.707106781..., so it compared as greater than the matching upper bound and s(5) and s(10) were reported open with a gap of -0.0000. Entries whose exact_form is absent or flagged unreliable keep their curated decimal.",
-  "updated": "2026-10-04",
-  "families": "s(k^2-3) = k is proved here for every k >= 6 (EvanDaniel2026, 2026-09-29, s12/certificates/k2m3). The table covers n <= 100, so it holds the cases n = 33, 46, 61, 78, 97 (k = 6..10); for n = 33, 46, 61, which were already settled, it is a history entry and `best` keeps the earlier proof; for n = 78, 97 it is `best`. The family continues beyond the table (n = 118, 141, ...). s(k^2-4) = k is proved here for every k >= 5 (EvanDaniel2026, 2026-10-03, s12/certificates/k2m4): for k >= 8 by one family (its 9 x 9 box certified by one exact checker, the box-to-every-k reduction in Lean), for k = 5, 6, 7 by the separate s21, s32, s45 bundles, which are the entries for n = 21, 32, 45. In the table: n = 60 (k = 8) gets a history entry and `best` keeps the s60 bundle; n = 77 (k = 9) is `best`, with wand125's earlier s(77) = 9 (2026-10-01) in the history; n = 96 (k = 10) is `best`. The family continues beyond the table (n = 117, 140, ...).",
+  "updated": "2026-10-07",
+  "families": "s(k^2-3) = k is proved here for every k >= 6 (EvanDaniel2026, 2026-09-29, s12/certificates/k2m3). The table covers n <= 100, so it holds the cases n = 33, 46, 61, 78, 97 (k = 6..10); for n = 33, 46, 61, which were already settled, it is a history entry and `best` keeps the earlier proof; for n = 78, 97 it is `best`. The family continues beyond the table (n = 118, 141, ...). s(k^2-4) = k is proved here for every k >= 5 (EvanDaniel2026, 2026-10-03, s12/certificates/k2m4): for k >= 8 by one family (its 9 x 9 box certified by our exact checker and, for the tilted squares, re-checked by wand125's separately written exact checker (2026-10-06; reviewed by jlevy/squares, recorded there as reported evidence, T-081 not yet register-verified), the box-to-every-k reduction in Lean), for k = 5, 6, 7 by the separate s21, s32, s45 bundles, which are the entries for n = 21, 32, 45. In the table: n = 60 (k = 8) gets a history entry and `best` keeps the s60 bundle; n = 77 (k = 9) is `best`, with wand125's earlier s(77) = 9 (2026-10-01) in the history; n = 96 (k = 10) is `best`. The family continues beyond the table (n = 117, 140, ...).",
   "reported": "Entries with \"reported\": true are values their authors report but that no one other than the author has replayed (jlevy/squares grades them V0/C0). They are kept in `history` for the record and are never `best`, even where they are larger.",
   "claimed": "Entries with status \"claimed\" are values whose proof was never published and cannot be reviewed: T. Green's 2000 bounds, cited in Friedman's survey DS7 as a private communication (Theorems 9-10 and Table 2), and Friedman's table values for n = 13 (3.8437) and n = 21 (4.7438), which the survey gives without figure or proof. They are kept in the history for the record and are never `best`. For n = 17-18 the survey's Figure 34 draws Green's unavoidable set, which could be checked; it has not been checked here.",
   "gap": "Entries with status \"gap\" are published results whose published proof is known to be incomplete: Nagamochi 2005 (Theorem 2, both the k^2-1 / k^2-2 families and the general bound) rests on his Lemma 1, which is false (chelokot 2026, a Lean-checked counterexample; H. Karakus, arXiv:2609.37410, a family of counterexamples). The statements are not disproved. They are kept in the history and are never best. s(k^2-1) = k is re-proved by Karakus 2026 and s(k^2-2) = k by chelokot 2026 (Lean); Karakus's weaker general bound 1/2 + sqrt(N - floor(sqrt N) + 1/4) has a complete proof and is listed for every nonsquare N >= 8.",
-  "register": "`register: verified` on a 2026 `best`: jlevy/squares' register lists that floor for n as verified (checked 2026-10-04). The Overview marks these n as proved, with a ring rather than a dot (unrefereed). n = 96 = 10^2 - 4 is not marked: there our s = 10 is registered as reported (T-081, full replay running)."
+  "register": "`register: verified` on a 2026 `best`: jlevy/squares' register lists that floor for n as verified (checked 2026-10-07). The Overview marks these n as proved, with a ring rather than a dot (unrefereed). n = 96 = 10^2 - 4 is not marked: there our s = 10 is registered as reported (T-081, full replay running)."
  }
 }

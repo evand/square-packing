@@ -36,7 +36,8 @@ but does not recompute the positive-tilt leaves (`--full` does); for `certificat
   and the same `search/qx2_zm.py` files as `k² − 3` (θ > 0, 16,200 D4 roots, 0 uncertified, every leaf recorded).  In
   Lean the all-k reduction, the D4 reduction and Lemma Z are kernel-checked (`bentz4_of_validTilt9 : ValidTilt9 →
   ∀ k ≥ 8, minSide (k² − 4) = k`, `lean/Sqpack/{Bentz4,ValidSplit9}.lean`), so `k ≥ 8` rests on the one finite
-  statement `ValidTilt9` (the tilted run), certified by one implementation.  `k = 5, 6, 7` are the separate bundles
+  statement `ValidTilt9` (the tilted run), certified by our checker and, since 2026-10-06, re-checked by wand125's
+  independent exact-rational checker (`wand125/valid7-independent-check` c561dbb3; reported, not yet register-verified).  `k = 5, 6, 7` are the separate bundles
   `s(21)`, `s(32)`, `s(45)` below (`k = 8` also `s(60)`).  *Working in public: a single-implementation exact
   certificate (checker code byte-identical to the six-agent-reviewed `k² − 3` checker, apart from an assert and a dump
   flag), this run adversarially reviewed by three agents with no errors found; no second implementation has checked

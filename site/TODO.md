@@ -217,6 +217,19 @@ public unfixed — see the Publishing section for why each one is on that list.
   the closed-convention aside now say the conclusion covers every smaller box.
 * ✓ Links point at the new repository; the fetch User-Agent no longer carries a personal address.
 
+## Open (2026-10-07)
+
+* **Draw every record packing** (`../tasks/site-all-packings/`): Explore, Compare, Overview and Bounds
+  still draw only Ellsworth's catalogue.  57 counts n ≤ 307 have smaller packings outside it: Couzo's
+  (re-pull at HEAD `6042c56b`), de Winter's n = 211, itsnaka's SQUISH packings (18 counts in jlevy#401,
+  more being added), and ours at 266, 270, 272 (jlevy#399).  Until then a stopgap notes them:
+  `NEWER` in `js/viewer.js` (Explore), a line on Overview, a paragraph in Sources §1.  `NEWER` is
+  hand-built from the register on 10-07 and goes stale; delete it with the redraw.
+* **Explore: show the exact form and local-minimum status** from `search/exact/exact_forms.json`
+  (S* as an algebraic number, Lean `Packs n S*`, Lean local minimum) for each record.
+* **Lean explainer** (`../notes/lean-explainer-draft.html`) and **local-optimality explainer**
+  (`../notes/local-optimality-explainer-draft.md`): site pages once Evan has reviewed the drafts.
+
 ## Bugs
 
 1. `proofs.html`: the theorem box is written for the 81-point set; after switching to `cert_56` it
@@ -254,7 +267,8 @@ Refuted in the review, so not a bug: `hover()` does not trail the pointer while 
 * No glossary.  free / slides / moves-with-neighbours / wedged / jammed, and the 1e-8 and 1e-20
   thresholds, exist only as tooltip fragments.  Which packings are drawn with truncated constants is
   never listed, though the "numeric contacts" tag hints at it.
-* `proofs.html` never mentions the 2026 n = 17 certificates that `sources.html` §5 lists.
+* ✓ (done) `proofs.html` never mentions the 2026 n = 17 certificates that `sources.html` §5 lists: the
+  §Results aside now names them and links Sources §5.
 
 ## Accessibility and small screens
 
@@ -264,8 +278,9 @@ Refuted in the review, so not a bug: `hover()` does not trail the pointer while 
   touch.
 * Explore zoom is wheel-only with `touch-action:none`: on a phone you can pan but never zoom, and
   hover tooltips fire on tap.
-* `site.css` hard-codes the topbar at 49 px (`height:calc(100% - 49px)`) but `.topbar` wraps, so the
-  stage overflows between ~720 and ~900 px.
+* ✓ (obsolete, re-checked 2026-10-07) `site.css` hard-codes the topbar at 49 px: no `49px` or
+  `calc(100% …)` is left anywhere under `www/`; fixed in the 2026-09-22 review ("Explore's stage no
+  longer assumes a 49 px topbar").
 * Bounds charts use a fixed 1000x360 viewBox: at 360 px wide the 11 px axis labels render at ~4 px,
   and tooltips are `mouseenter`-only.
 * `overview.js` never clamps its tooltip to the viewport, so it clips at the right and bottom edges.
@@ -336,9 +351,11 @@ claims is small.
 
 ## Publishing
 
-The site lives in `site/` of github.com/evand/square-packing, next to the published s(12) proof in
-`s12/`.  Pages deploys `site/www/` as the site root and `docs/` as `/s12/`
-(`.github/workflows/pages.yml`).  Active research stays in a private repository until it is ready.
+The site lives in `site/` of github.com/evand/square-packing.  Pages deploys `site/www/` as the site
+root and the write-ups in `docs/` as `/s12/`, `/s13/`, `/s21/`, `/s32/`, `/s45/`, `/s60/` and `/k2m3/`
+(`.github/workflows/pages.yml`).  ~~Active research stays in a private repository until it is ready.~~
+Out of date since 2026-10-03: the research is in this public repository (flattened to the repo root on
+2026-10-07); only outreach drafts and contacts stay private.
 
 Before announcing it anywhere, tell David Ellsworth: his prose for all 194 records ships verbatim in
 `index.json`, and every packing is derived from his SVGs.  Offer to change or remove anything.

@@ -149,7 +149,7 @@ section>*{min-width:0}
     <tbody>
       <tr><td class="num">10</td><td class="num">3.707107…</td><td>proved: Stromquist 2003</td></tr>
       <tr><td class="num">11</td><td class="num">3.877084…</td><td>proved: <a href="https://github.com/Queuingtheorydotcom/11SquaresOptimal">Queuingtheorydotcom</a> 2026 (preprint, replayed by jlevy/squares); packing Trump 1979</td></tr>
-      <tr><td class="num">12</td><td class="num">4 (conj.)</td><td><strong>open</strong>, at least 3.9686 (here)</td></tr>
+      <tr><td class="num">12</td><td class="num">4 (conj.)</td><td><strong>open</strong>, at least 3.9715 (3.9686 here, re-weighted by squarepacker)</td></tr>
       <tr><td class="num">13</td><td class="num">4</td><td>proved: Bentz 2010; <a href="../s13/">without cases</a> here</td></tr>
       <tr><td class="num">14–16</td><td class="num">4</td><td>proved: Friedman, El Moumni, area</td></tr>
     </tbody>
@@ -157,7 +157,7 @@ section>*{min-width:0}
   <p>Because <span class="mono">s(13) = 4</span> is proved and <span class="mono">s(11) &lt; 4</span>, the largest
   <span class="mono">n</span> with <span class="mono">s(n) &lt; 4</span> is either 11 or 12, and deciding which
   <em>is</em> the open problem. For n = 12 the gap was <span class="mono">[3.788854, 4]</span>; it is now
-  <span class="mono">[3.9686, 4]</span>. From the other direction, a basin-hopping search over all 36 coordinates,
+  <span class="mono">[3.9715, 4]</span>: 3.9686 here, raised to 3.9715 by a re-weighting of the same points. From the other direction, a basin-hopping search over all 36 coordinates,
   validated on n = 5, 10 and 11, finds nothing below side 4: every run collapses to the compressed
   <span class="mono">4 × 4</span> grid. Schadt's and Ellsworth's 2025–26 annealing campaigns, which improved many
   records, never improved 12.</p>
@@ -170,8 +170,12 @@ section>*{min-width:0}
   reached <span class="mono">99/25 = 3.96</span> on 2026-09-04 with its own weighted certificates. It has since
   replayed ours, by a second method as well as with our checker, and lists 3.968616 as the verified bound for
   n = 12. On 2026-10-03 it re-solved the weights of our 1,736 points exactly, keeping the points, and got
-  <span class="mono">15680000/3949423 = 3.970200</span>, now the best lower bound for <span class="mono">s(12)</span> that we know of
-  (squarepacker reported <span class="mono">31360/7901 = 3.969117</span> the same way a day earlier).</p>
+  <span class="mono">15680000/3949423 = 3.970200</span> (squarepacker reported <span class="mono">31360/7901 = 3.969117</span>
+  the same way a day earlier). On 2026-10-05 <a href="https://github.com/squarepacker/s12-lower-bound">squarepacker</a> (Ryu Sungjoon) dilated the same points to a
+  larger box, rounded them, and found new weights by linear programming, checked on a finer angle net:
+  <span class="mono">7943/2000 = 3.9715</span>, replayed by jlevy/squares with our verifier and with its own interval
+  method (T-095), now the best lower bound for <span class="mono">s(12)</span> that we know of. Our
+  <span class="mono">15680/3951</span> remains the bound kernel-checked in Lean.</p>
   <p><strong>s(11).</strong> We found <span class="mono">s(11) ≥ 3040/797 = 3.8143</span> on 2026-08-26 but first
   published it on 2026-09-22. By then jlevy/squares had published 3.81 (2026-09-04) and 3.8264 (2026-09-09), so ours
   was never the best public bound: 3.8143, since superseded by jlevy's 3.827 and Kleddamag's 3.875.
@@ -296,7 +300,7 @@ section>*{min-width:0}
   (Göbel, Stromquist, Friedman, Nagamochi, Bentz) hand-design them. The bound was sharpened in three
   steps: scaling the first certificate up to its critical container (3.92 → 3.9318), re-optimising the
   weights with the exact verifier supplying violated placements as cutting planes (3.9486), and growing
-  the point set by column generation (3.9686); at 3.9696 column generation no longer gets under 12. The
+  the point set by column generation (3.9686); at 3.9696 column generation no longer gets under 12 (re-weighting the same points on a finer angle net later reached 3.9715, §02). The
   uniform certificates come from an integer program that forces equal weights:
   <span class="mono">1/7</span> each for the 81-point set. The 1736-point certificate does not draw as cleanly.</p>
 </section>
@@ -374,7 +378,7 @@ theorem s11_ge_3040_797   : (3040 / 797 : ℝ) ≤ minSide 11</code></pre>
   <span class="mono">12.0282</span> at <span class="mono">s = 3.99</span> shows that no weighted cover
   below 12 exists at any side ≥ 3.99, whatever points or verifier are used
   (<a href="https://github.com/evand/square-packing/blob/main/search/DUAL_EXACT.md">DUAL_EXACT.md</a>).
-  So the ceiling of this whole family of arguments lies in <span class="mono">[3.968616, 3.99)</span>.
+  So the ceiling of this whole family of arguments lies in <span class="mono">[3.9715, 3.99)</span>.
   It is not 4.</p>
   <p>The container itself does not help: a cover of <span class="mono">[0,4]²</span> in the
   <a href="../s13/#closed">closed convention</a>, where a point on a square's edge counts, weighs at least

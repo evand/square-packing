@@ -122,15 +122,16 @@ section>*{min-width:0}
   <span class="mono">k² − 4</span>: <span class="mono">s(k² − 4) = k</span>. That is the deficit-4 case of Friedman's
   Conjecture 1. From <span class="mono">k = 8</span> up the proof is the <a href="../k2m3/"><span class="mono">k² − 3</span></a>
   method with a wider band, checked once in the 9 × 9 box; <span class="mono">k = 5, 6, 7</span> are separate results.</p>
-  <p class="status"><b>Status.</b> Working in public. For <span class="mono">k ≥ 8</span>: a single-implementation exact
-  certificate, made by the same checker code as the <span class="mono">k² − 3</span> certificate, this run adversarially
-  reviewed by three agents with no errors found; in Lean everything except the tilted squares of the 9 × 9 box is
-  kernel-checked. Not yet independently re-implemented, externally reviewed, or fully formalised. The evidence differs by
-  <span class="mono">k</span> (§01).</p>
+  <p class="status"><b>Status.</b> Working in public. For <span class="mono">k ≥ 8</span>: an exact certificate, made by the
+  same checker code as the <span class="mono">k² − 3</span> certificate, this run adversarially reviewed by three agents
+  with no errors found; the tilted squares of the 9 × 9 box have since been re-checked by
+  <a href="https://github.com/wand125/valid7-independent-check/tree/c561dbb3fcea9178599db017f51f56b42ad9f91f">wand125's separately written exact checker</a> (6 Oct 2026), which jlevy/squares has reviewed and records as
+  reported evidence, not yet as a verification. In Lean everything except those tilted squares is kernel-checked. Not yet
+  externally reviewed or fully formalised. The evidence differs by <span class="mono">k</span> (§01).</p>
   <div class="tags">
-    <span class="tag neutral">one exact checker (k ≥ 8)</span>
+    <span class="tag neutral">two exact checkers (k ≥ 8)</span>
     <span class="tag ok">reduction to the tilted run kernel-checked in Lean</span>
-    <span class="tag open">not independently re-implemented</span>
+    <span class="tag open">second check not yet register-verified</span>
     <span class="tag open">not peer reviewed</span>
     <a class="tag neutral" href="https://github.com/evand/square-packing/tree/main/certificates/k2m4">Certificate &amp; checker on GitHub →</a>
   </div>
@@ -165,8 +166,9 @@ section>*{min-width:0}
       <tr><td class="num">≥ 10</td><td class="num">96, 117, …</td><td><b>this family</b> only, 2026-10-03</td></tr>
     </tbody>
   </table></div>
-  <p>For <span class="mono">k ≥ 8</span>: one exact checker, the reviewed <span class="mono">k² − 3</span> code, certifies the
-  9 × 9 box (§04); Lean carries that to every <span class="mono">k</span> (§05). Nothing here is peer reviewed.</p>
+  <p>For <span class="mono">k ≥ 8</span>: our exact checker, the reviewed <span class="mono">k² − 3</span> code, certifies the
+  9 × 9 box, and wand125's separately written one re-checks its tilted squares (§04); Lean carries that to every
+  <span class="mono">k</span> (§05). Nothing here is peer reviewed.</p>
 </section>
 
 <section id="context">
@@ -2779,7 +2781,15 @@ section>*{min-width:0}
   exactly-tight sets is about <span class="mono">1 + 4.5·10⁻⁵</span>); the run record (coverage reconstructed independently,
   all area-density leaves re-proved, about 0.9 million exact masses, none below 1); and the statement chain and literature.
   None found an error in the mathematics. The Rust checker <span class="mono">zmx2</span> certifies all but 4,844 boxes, all
-  at tilts below 0.05°; <strong>no second implementation has checked <span class="mono">Valid9</span></strong>.</p>
+  at tilts below 0.05°.</p>
+  <p><strong>A second checker.</strong> On 6 October 2026 wand125 published an exact re-check of
+  <span class="mono">ValidTilt9</span>, the tilted part of <span class="mono">Valid9</span> (§05), with the separately written
+  checker that had corroborated <span class="mono">Valid7</span>
+  (<a href="https://github.com/wand125/valid7-independent-check/tree/c561dbb3fcea9178599db017f51f56b42ad9f91f">valid7-independent-check</a>, commit <span class="mono">c561dbb3</span>, records in release
+  <span class="mono">records-tilt9-v1</span>): centres in <span class="mono">[0, 9/2]²</span>, no symmetry used, 28,350 root
+  boxes, none uncertified. jlevy/squares <a href="https://github.com/jlevy/squares/blob/main/docs/project/reviews/review-2026-10-06-wand125-validtilt9-independent-check.md">reviewed it</a>: its region contains
+  <span class="mono">ValidTilt9</span>'s, the source's record check reports every root certified, and it found no defect. The register records
+  it as reported evidence; the case itself (T-081) is not yet register-verified, and we have not re-run it here.</p>
 </section>
 
 <section id="lean">
@@ -2800,9 +2810,10 @@ section>*{min-width:0}
 <section id="limits">
   <div class="sechead"><span class="eyebrow">06 · Caveats</span><h2>What to keep in mind</h2></div>
   <ul>
-    <li>For <span class="mono">k ≥ 10</span> everything rests on one program's run, <span class="mono">search/qx2_zm.py</span>
-    on the 9 × 9 box. Its code was reviewed and corroborated for <span class="mono">k² − 3</span>, but this cover is new
-    (larger box, wider band, corner pieces on the band's end lines) and no second implementation has checked it.</li>
+    <li>For <span class="mono">k ≥ 10</span> everything rests on the 9 × 9 box: our run of <span class="mono">search/qx2_zm.py</span>,
+    and Lean for the rest. Its code was reviewed and corroborated for <span class="mono">k² − 3</span>, but this cover is new
+    (larger box, wider band, corner pieces on the band's end lines). wand125's separately written exact checker has
+    re-checked its tilted squares (§04); that check is reviewed but not yet replayed or register-verified.</li>
     <li>The reviews were done by AI agents, not by outside mathematicians. Nothing here is peer reviewed.</li>
     <li>The Lean proof is conditional on <span class="mono">ValidTilt9</span> (§05).</li>
     <li><span class="mono">k = 5, 6, 7</span> rest on their own bundles, with the trust stated in §01; only

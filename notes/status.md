@@ -1,5 +1,7 @@
 # Where the proof stands (2026-09-22)
 
+> **Frozen at 2026-09-22.**  Current status of every result: the results table in [`README.md`](../README.md).
+
 Moved out of `TODO.md` on 2026-09-13; update when a row changes.  Status log: `notes/review-*.md`.
 
 ## Since 2026-09-22 (added 2026-10-03)

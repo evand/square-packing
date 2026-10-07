@@ -1,11 +1,14 @@
 # s(k² − 4) = k for every k ≥ 5
 
-**Status.**  Working in public.  For `k ≥ 8`: a single-implementation exact certificate of the finite statement
+**Status.**  Working in public.  For `k ≥ 8`: an exact certificate of the finite statement
 `Valid9`, made by the same checker code as the `k² − 3` certificate ([`../k2m3/`](../k2m3/README.md): six agents
 reviewed that code adversarially, and wand125's independent checker corroborated its claim `Valid7`); in Lean, the
 all-k reduction, the D4 reduction and the axis-parallel face (Lemma Z) are kernel-checked, so `s(k² − 4) = k` for all
-`k ≥ 8` rests on one finite statement, `ValidTilt9` (the tilted squares of the run's region), certified by that one
-implementation.  Not yet independently re-implemented, externally reviewed, or fully formalised.  The fast `verify.sh` does not recompute the positive-tilt
+`k ≥ 8` rests on one finite statement, `ValidTilt9` (the tilted squares of the run's region), certified by our run and,
+since 2026-10-06, re-checked by wand125's separately written exact checker
+([`valid7-independent-check`](https://github.com/wand125/valid7-independent-check/tree/c561dbb3fcea9178599db017f51f56b42ad9f91f) `c561dbb3`, release `records-tilt9-v1`; see below).  jlevy/squares has reviewed that
+check and records it as reported evidence; T-081 is not yet register-verified.  Not yet externally reviewed or fully
+formalised.  The fast `verify.sh` does not recompute the positive-tilt
 part of the proof; `--full` does (below).  `k = 5, 6, 7` are separate bundles (below).
 
 **Claim.**  For every integer `k ≥ 5`, no `k² − 4` unit squares fit in a square of side less than `k`.  Since `k²`
@@ -123,11 +126,15 @@ EMPTY).  Before it, the Rust checker `zmx2` (first-order lemmas only) certified 
 ## What is not machine-verified
 
 * `ValidTilt9` (the tilted part of `Valid9`).  Lean proves `ValidTilt9 → s(k² − 4) = k` for all `k ≥ 8`; `ValidTilt9` is the Python certificate's
-  claim, made by one implementation (`qx2_zm.py` with the zm_mixed/zeromargin primitives), whose lemmas are proved on
+  claim, made by our implementation (`qx2_zm.py` with the zm_mixed/zeromargin primitives), whose lemmas are proved on
   paper, not in Lean.  The code is byte-identical to the reviewed `k² − 3` checker, but this run's cover (box 9,
-  `R = 3`, Lebesgue from `14/5`, corner pieces on the band's end lines) has not been reviewed, and **no second
-  implementation has checked `Valid9`** (wand125's checker corroborated `Valid7`, not `Valid9`; `zmx2` leaves 4,844
-  tiny-tilt boxes open).
+  `R = 3`, Lebesgue from `14/5`, corner pieces on the band's end lines) has not been reviewed.
+  **A second implementation has checked `ValidTilt9`:** wand125's exact checker (the one that corroborated `Valid7`),
+  [`valid7-independent-check`](https://github.com/wand125/valid7-independent-check/tree/c561dbb3fcea9178599db017f51f56b42ad9f91f) commit `c561dbb3`, records in release `records-tilt9-v1` (2026-10-06): centres
+  `[0, 9/2]²`, `u ∈ [0, 7/16]`, no symmetry used, 28,350 roots, none uncertified.  jlevy/squares'
+  [review](https://github.com/jlevy/squares/blob/main/docs/project/reviews/review-2026-10-06-wand125-validtilt9-independent-check.md) found that its region contains `ValidTilt9`'s and no defect, and records it as reported evidence on
+  T-081, which stays V0/C1 (not register-verified).  We have not re-run its record check here.  (`zmx2` leaves 4,844
+  tiny-tilt boxes open.)
 * Kernel-checked in Lean since 2026-10-03 (`lean/Sqpack/ValidSplit*.lean`, `notes/lean-valid-split.md`): the D4 reduction (`valid9_of_tilt_axis`: the box cover is D4-invariant, and the tilted region the run covers — centres in `[0, m/2]²`, `0 < u`, `u² + 2u ≤ 1`, i.e. `0 < θ ≤ 45°` — plus the axis face gives every pose) and Lemma Z itself (`validAxis9`: every axis-parallel unit square in the box, by exact corner limits over the whole box).  So the only unformalised step is the tilted run (`ValidTilt9`).  Lean: `bentz4_of_validTilt9 : ValidTilt9 → ∀ k ≥ 8, minSide (k² − 4) = k`.
 * Floats in the checker only choose which exact test to try, with the one exception noted for `k² − 3`
   (`lines_in_reach`, slack `≈ 9·10⁻⁵`).
