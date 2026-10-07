@@ -28,7 +28,7 @@ First deliverable: a table of exact forms of S + a handful of Lean local-optimal
 - [ ] Group-chat lemmas (10-05, low priority, `tasks/n12-chat-lemmas/` lists them): replay their evidence tarball with our checkers; Lean strip demo h = 1.13 and the corner–edge lemma `U+V ≥ 3.91c − 1.91`.
 
 ## Correctness / review
-- [ ] Owed on jlevy (drafts: `outreach/draft-jlevy-replies-2026-10-07.md`; #238, #375 posted 10-07): #256 confirm s60 re-run reading (README fixed in cca7bf1); #279 s(59) zm_mixed replay running 10-07 (`runs/s59_wand125/`), then reply.  Each needs Evan's OK.
+- [ ] Owed on jlevy (drafts: `outreach/draft-jlevy-replies-2026-10-07.md`; #238, #375, #256 posted 10-07): #279 s(59) zm_mixed replay running 10-07 (`runs/s59_wand125/`), then reply.  Each needs Evan's OK.
 - [ ] (perf, scales) `lean/Sqpack/Bentz.lean` peaks at 23.5 GB / 126 s alone (next: S32 11.8 GB, ValidSplit9 9.8 GB, rest ≤ 7 GB): find the heavy term/tactic before the families grow.
 - [ ] Format bridge: read wand125/tokoharu rectangle-density certificates in `zmx2` (converter or reader); first use: replay s(19) ≥ 193/40 (T-103), which alone settles s(18) < s(19) (jlevy may replay it too).
 - [ ] `zmx2` exit status: still 0 on NOT VERIFIED / INCOMPLETE (verify, zmcheck changed 10-07); ~30 callers incl. bisect scripts to adapt first.
@@ -69,4 +69,3 @@ done enough: sub-11 funnel small and well sampled, plateau above 11 rough; the n
 - [ ] Site: draw every packing we have numbers for (Couzo's 49, itsnaka's 23 SQUISH (local copies + pins: `tasks/site-all-packings/README.md`), de Winter's 211, ours 266/270/272, n > 324; replaces the `NEWER` stopgap in viewer.js); coords with credit, no code/text. `tasks/site-all-packings/`
 - [ ] Announce: VibeMathed entries for s(21), s(32) (and now k²−3, k²−4 / F₄); X drafts `outreach/drafts-s21-s32.md`.
 - [ ] Repo unification, rest: outreach → a small private GitHub repo (versioned, backed up); `wip/*` branches + pre-push hook if needed.
-- [ ] Prune ~30 `worktree-agent-*` branches on the private `square-packing-research` remote.
