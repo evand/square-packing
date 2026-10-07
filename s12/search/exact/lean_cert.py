@@ -191,7 +191,8 @@ def lean_poly(p):
     return '[' + ', '.join(lean_q(x) for x in p) + ']'
 
 
-def build(path, out, mod):
+def build(path, out, mod, extra=None):
+    """extra(sqs, f, S) -> (polys that must be >= 0 on the t interval, emit(ta, tb) -> Lean lines)."""
     D = json.load(open(path))
     n = D['n']
     f = [F(x) for x in D['field']['f']]
@@ -237,6 +238,9 @@ def build(path, out, mod):
                         best = (worst, own, k)
             choice[(i, j)] = (best[1], best[2])
     Ns = all_numerators(choice) + [psub(S, [Sa]), psub([Sb], S)]
+    if extra:
+        ex_polys, ex_emit = extra(sqs, f, S)
+        Ns = Ns + ex_polys
     for it in range(400):
         ctx = Ctx(f, ta, tb)
         bad = 0
@@ -308,6 +312,8 @@ def build(path, out, mod):
              f'Packs {n} s :=')
     L.append(f'  packs_exact cert pS _ _ (by decide +kernel) (by decide +kernel) boxes rows (by decide +kernel)\n'
              f'    (by decide +kernel) (by decide +kernel)\n')
+    if extra:
+        L += ex_emit(ta, tb, Sa, Sb)
     L.append(f'end UnitSquarePacking.EC.{mod}\n')
     open(out, 'w').write('\n'.join(L))
     print(f'{out}: n = {n}, {len(Ns)} conditions ({eqs} identities), t interval width {float(tb - ta):.3g}')

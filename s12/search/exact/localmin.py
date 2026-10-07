@@ -258,6 +258,8 @@ def build(base, quiet=False):
         f'{float(Gnorm):.4g}, ||GL - I|| = {float(worst):.3g}; projection margin {float(mu):.4g}')
     log(f'  => grade A certificate VALID (strict local minimum in a pose-space ball)')
     json.dump(out, open(base + '.localmin.json', 'w'))
+    out['_internal'] = {'rows': rows, 'lam': lam, 'C': C, 'S': S_, 'G': G, 'Ls': Ls, 'N': N, 'm': m,
+                        'lam_min': lam_min, 'Lam': Lam, 'Gnorm': Gnorm, 'mu': mu, 'K': K}
     return out
 
 

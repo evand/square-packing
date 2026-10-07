@@ -24,6 +24,49 @@ statement (the other half is the local-optimality checks).  It should be citable
 The polynomial for S depends only on the contact structure.  The canonical placement (below) affects only the field in
 which the coordinates live, and so the size of the proof object.
 
+## State on 10-07 (pipeline built; read this first)
+
+Tools (all in `search/exact/`, run via `./env.sh`, which pins numpy 2.4.2 / scipy 1.17.0 / python-flint 0.9.0,
+msolve from nixpkgs):
+* `exactsolve.py` writes `NAME.contacts.json` (closed contacts, load-bearing set, corner-corner touches, free squares).
+  Precision fix: residual scaling only below 1e-200 (applying it at 80 digits flipped a rank decision at n = 202).
+* `minpoly.py`: number field, exact configuration, minimal polynomial of S.  Angle classes (parallel or mirror mod
+  90°, t = tan(θ/2)); elimination of centres over Q(t₁..t_k); k = 1: gcd of consistency numerators; k ≥ 2: their
+  irreducible factors through t*, then msolve's parametrization; force balance when the contacts leave one direction
+  (dS/dt = 0; Lagrange determinant for a curve of angles); flat directions settled on near-contacts, then pinned at
+  30-digit rationals.  Refuses invalid exactsolve points; drops listed equations that do not hold at the point.
+* `verify_exact.py`: independent stdlib checker (exact identities mod f, rational intervals; lazy exact values).
+* `minpoly/solve_all.sh`, `minpoly/run_minpoly.sh` (systemd MemoryMax caps; the machine is shared), `minpoly/summary.py`
+  → `minpoly/results.md`.
+* `localmin.py`: grade-A local-minimum certificates (below); `lean_cert.py`, `localmin_lean.py`: Lean certificates.
+
+Results (10-07): **258+ of 323 register records verified exact** (fixes since then cleared 87, 102, 127, 150, 202;
+final table in `minpoly/results.md`); 81 cross-checks (findpoly, Ellsworth degrees) agree, none differ.  Open: ~25
+many-class records time out (needs block-triangular elimination), ~12 with more than one force-balance direction, ~10
+flat rotations parallel to fixed squares, msolve-hard (29, 68, 71, 126, 228, 55, 182, 83, 235), 108/206 (large field).
+
+Lean (`lean/Sqpack/`, no `native_decide` anywhere):
+* `ExactPack`, `ExactCheck`: exact data ⇒ `Packs`; kernel-checked certificates `Exact/N5c`, `Exact/N11c`
+  (n = 17 compiles: 402 s, 15.6 GB, not committed).  Frontier to aim for: field degree ≤ 8 (249 records incl. the
+  176 axis-parallel ones via `packs_grid`); needs a cheap far-pair test and integer arithmetic, not compute.
+* `LocalMin` (`IsLocalMinPacking`: a pose-space ball around the record with no packing in a smaller square; rigidity
+  lemma; row expansion with w = sin δ, u = cos δ − 1, |u| ≤ w², no Taylor), `LocalMinRows` (`isLocalMin_of_rows`),
+  `LocalMinCheck` (certificates over Q[T]/f, soundness `isLocalMin_of_lcert`).  Instance: `Exact/N11L` (n = 11).
+
+### Local minima: grades (exactsolve's checks over the register)
+* **A** (20): first-order rigid with all forces > 0: n = 1, 11, 28 and the perfect squares (those are globally optimal
+  by area anyway).  Proof: rows "point P of closed square j lies beyond side k of i" (valid near the record when P
+  projects strictly inside the side: P ∉ open square i, the other three side values stay < 1/2) and walls; aligned
+  side-side pairs become one *midpoint* row (the average of the two corner incidences; branch-free, no SAT needed,
+  and n = 11, 28 stay rigid with the same max-min λ).  Certificate: exact λ ∈ K (Σλ L = e_S, λ > 0), rational G with
+  ‖GL − I‖ ≤ 1/2, margins.  `localmin.py`: n = 11 (λ_min 0.048, ‖G‖ 18.9, margin 0.021) and n = 28 valid.
+* **B** (1): n = 5, strict only at second order.
+* **C** (295): strict modulo flat motions.  Next: the paper argument.  Removing squares only relaxes the
+  constraints, so it suffices to treat the load-bearing squares; the open part is load-bearing squares in exact flat
+  families (often translations).
+* Out of scope for now: 177, 211, 230, 261, 263 (no strictly positive forces), 272 (not a local min), 292.
+* The definition fails on broad plateaus with a far downhill exit (s(7)'s L arrangements): accepted for step one.
+
 ## State on 10-06 (exploration in the main session; prototypes in `proto/`, data in `results/`)
 
 The 323 certified register packings (`search/exact/batch/`):
