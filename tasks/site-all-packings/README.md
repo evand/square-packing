@@ -37,3 +37,15 @@ not just Ellsworth's SVGs: including n > 324 and packings outside the catalogue.
 3. Explore/Compare draw them, with credit lines; Sources §1 sentence ("parsed from Ellsworth's SVG
    files") must change.
 4. Ellsworth's own SVGs for n > 324 are already parsed (up to 9465); the Overview stops at 324.
+
+## Local copies (2026-10-07)
+
+Read-only clones in `~/math/_untrusted-third-party/` (no LICENSE in either: coordinates with credit only):
+- `franciscouzo-square-packing/` @ 6042c56b (2026-10-03; supersedes f3c5a529 above, which changed
+  n = 208, 209, 228, 263, 272, 303, 306): `nNNN.txt` = header `# s = ...` then `x y theta(rad)` per
+  square, 49 n (68..307); README table has side values.
+- `itsnaka-squish-certs/` @ e63e4e52 (2026-10-07; SQUISH, jlevy/squares#401): 23 n (88..303) below
+  the catalogue/Couzo; `squish-submission-*/nNNN/nNNN.cert.json` = exact rationals (centre x, y,
+  t = tan(θ/2), `s_exact`); README table says which folder is current per n.
+- jlevy-squares @ be8172aa has rational witnesses for both (`packing/witnesses/squish-401-2026/`,
+  `franciscouzo-2026-10-03/`, `kingbird-2026/`).

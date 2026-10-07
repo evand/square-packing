@@ -29,7 +29,6 @@ First deliverable: a table of exact forms of S + a handful of Lean local-optimal
 
 ## Correctness / review
 - [ ] Owed on jlevy (drafts: `outreach/draft-jlevy-replies-2026-10-07.md`; #238, #375 posted 10-07): #256 confirm s60 re-run reading (README fixed in cca7bf1); #279 s(59) zm_mixed replay running 10-07 (`runs/s59_wand125/`), then reply.  Each needs Evan's OK.
-- [ ] Upstream data to pull (10-07 sync): itsnaka SQUISH certs (18 better packings, `itsnaka/squish-certs`, jlevy#401); Couzo HEAD 6042c56b (n = 208, 209, 228, 263, 272, 303, 306); re-pin `_untrusted-third-party` clones (all behind; wand125's repos merged into `wand125/square-packing`).
 - [ ] (perf, scales) `lean/Sqpack/Bentz.lean` peaks at 23.5 GB / 126 s alone (next: S32 11.8 GB, ValidSplit9 9.8 GB, rest ≤ 7 GB): find the heavy term/tactic before the families grow.
 - [ ] Format bridge: read wand125/tokoharu rectangle-density certificates in `zmx2` (converter or reader); first use: replay s(19) ≥ 193/40 (T-103), which alone settles s(18) < s(19) (jlevy may replay it too).
 - [ ] `zmx2` exit status: still 0 on NOT VERIFIED / INCOMPLETE (verify, zmcheck changed 10-07); ~30 callers incl. bisect scripts to adapt first.
@@ -67,7 +66,7 @@ done enough: sub-11 funnel small and well sampled, plateau above 11 rough; the n
 - [ ] Later targets for the same instrument: s(183/242/274/308), 299, 234, s(147) (`search/WISHLIST.md` §P).
 
 ## Outreach / hygiene
-- [ ] Site: draw every packing we have numbers for (Couzo's 49, itsnaka's SQUISH, de Winter's 211, ours 266/270/272, n > 324; replaces the `NEWER` stopgap in viewer.js); coords with credit, no code/text. `tasks/site-all-packings/`
+- [ ] Site: draw every packing we have numbers for (Couzo's 49, itsnaka's 23 SQUISH (local copies + pins: `tasks/site-all-packings/README.md`), de Winter's 211, ours 266/270/272, n > 324; replaces the `NEWER` stopgap in viewer.js); coords with credit, no code/text. `tasks/site-all-packings/`
 - [ ] Announce: VibeMathed entries for s(21), s(32) (and now k²−3, k²−4 / F₄); X drafts `outreach/drafts-s21-s32.md`.
 - [ ] Repo unification, rest: outreach → a small private GitHub repo (versioned, backed up); `wip/*` branches + pre-push hook if needed.
 - [ ] Prune ~30 `worktree-agent-*` branches on the private `square-packing-research` remote.

@@ -5,7 +5,7 @@ For each register record: `S*`, the side of the packing, is the unique root of a
 * exact forms: **269** of 324 (independent replay VALID: 269); open: 29, 55, 68, 71, 83, 88, 103, 105, 108, 110, 123, 126, 130, 131, 132, 154, 155, 156, 172, 179, 180, 181, 182, 199, 206, 207, 208, 209, 210, 211, 228, 235, 236, 237, 238, 239, 240, 241, 259, 263, 268, 269, 270, 271, 272, 273, 292, 297, 301, 302, 303, 304, 305, 306, 307
 * Lean `Packs n S*` (kernel-checked, standard axioms; `lean_batch.py`): 258
 * Lean local minimum (`IsLocalMinPacking`): 178 (band lemma: integer-side records; grade A: n = 11, 28)
-* **Superseded records (2026-10-07).**  The table is for the register's records as of 10-06.  Since then, better packings: itsnaka's SQUISH (jlevy/squares#401) at n = 108, 123, 126, 129, 130, 153, 154, 155, 179, 180, 208, 209, 237, 238, 239, 258, 263, 303, and ours (#399) at 266, 270, 272.  Of those n, the rows with an exact form (129, 153, 258, 266) are exact for a packing that is no longer the record: still true statements and valid upper bounds, but not the best ones.
+* **Superseded records (2026-10-07).**  The table is for the register's records as of 10-06.  Since then, better packings: itsnaka's SQUISH (jlevy/squares#401) at n = 88, 108, 123, 126, 129, 130, 153, 154, 155, 179, 180, 199, 207, 208, 209, 236, 237, 238, 239, 258, 263, 302, 303, and ours (#399) at 266, 270, 272.  Of those n, the rows with an exact form (129, 153, 258, 266) are exact for a packing that is no longer the record: still true statements and valid upper bounds, but not the best ones.
 
 | n | S* | deg p | p | field deg | verify_exact | Lean Packs | Lean local min | cross-check |
 |---|---|---|---|---|---|---|---|---|
