@@ -445,3 +445,28 @@ jlevy register, ask Evan before any external post.
   budget 180 s, 1.5 h, ~14 CPU-h): nothing below.**  Only 158–292 proposals per n (quench 40–110 s at n ≈ 270), 47–136 distinct
   minima each.  Total extra compute on the three: ~1000 census quenches + ~700 chain proposals (≈ 10× the original per-n
   effort).  Submission list: s(266) ≤ 16.8230287508, s(270) ≤ 16.9378072284, s(272) ≤ 16.9681101458.
+
+## fq: smooth lifted quench + face-branch SLP polish (10-07; `src/fq.rs`, `bench_quench.py`, `runs/bq0`, `runs/bq1`)
+Motivation: SQUISH (itsnaka, jlevy#401/#422: 23 n in 88–303, gains up to 1.6e-2) wins by volume (neighbour/graft seeds +
+basin hopping + polish); our quench (soft squeeze + slp2) costs 4–8 s at n = 110, 16–40 s at n = 270 (~500 HiGHS LPs).
+* **Formulation.**  Each nearby pair gets its own separating line (direction phi, offset d from the centres' midpoint);
+  constraints "4 corners of i on one side, 4 of j on the other" + corners inside the walls, objective s.  Each constraint is
+  smooth, so the PHR augmented Lagrangian is C^1 (no SAT max-over-axes kink).  Gradient checked (rel err 3e-8).
+* **ALM alone is not enough:** linear multiplier convergence; at mu >= 1e5 L-BFGS is ill-conditioned and stops feasible but
+  not stationary (|grad| 1e-2; e.g. 8e-5 above the slp2 minimum at n = 270).
+* **Lifting does not remove the corner-corner disjunction** (my first guess): at a corner-corner touch, rotating the line
+  changes both corners' rows equally and oppositely, so phi enters at second order; the LP sees one half-plane (a strict
+  subset of the true union of two face branches) and crawls.  Fix = incidence model inside the lifted one: before each LP,
+  snap every separator to a face (largest gap), phi tied to the owner's theta (column substitution + tie at trial points);
+  on a stall, flip ambiguous pairs (>= 2 non-parallel faces within 1e-7 of contact; real in axis blocks: diagonal
+  neighbours touch at corners, ~260 at n = 270), candidates ranked by LP row duals (top 8, first improving flip).
+* **Polish** = trust-region SLP (Clarabel 0.11.1 interior point, pure Rust; variables scaled to the box, one elastic
+  slack, l_inf merit s + 3s·viol, second-order correction when rho < 0.75), from the ALM point at mu <= 1e2.  ~10–25 SLP
+  iterations, ~40 ms per LP at n = 270 (only columns that occur in near rows).
+* **Head-to-head (`runs/bq1`, same kicked states, n = 110 / 270, sigma 0.01/0.03/0.1 × 5):** fq 0.3–5 s at 110, median
+  ~3 s at 270 (outliers 12–45 s at sigma 0.1) vs slp2 pipeline 1–10 s / 16–186 s.  slp2 run on fq's output changes nothing
+  (< 1e-10) in 22/30; the rest gain 3e-7 … 6e-4 (missed flips).  Basins differ from the slp2 pipeline's (different descent
+  path); neither is better on average; at 270 sigma 0.01 fq lands in the 16.93797x family (near our record) 4/5 vs slp2 0/5.
+  At 110 the result is independent of mu cap / skin (same 6 minima for every setting).
+* Next: hopping driver on the SQUISH set (benchmark: from each pre-SQUISH register packing, CPU budget per n, reach their
+  side?); speed (ALM evals dominate at mu <= 1e2 only for big kicks; LPs ~40 ms each).
