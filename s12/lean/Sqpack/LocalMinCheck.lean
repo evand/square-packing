@@ -6,7 +6,10 @@ import Sqpack.ExactCheck
 
 `LCert`: an exact packing certificate `P` (`ExactCheck.Cert`), the rotations `(C, S)` as field elements
 (`C d ≡ c`, `S d ≡ s` with `P`'s numerators `c, s` and denominator `d`), rows, multipliers `λ_r` (field elements),
-a rational approximate left inverse `G`, and rational bounds `lo ≤ L_rv ≤ hi` for the linear parts.
+a rational approximate left inverse `G` (one list per variable), and sparse rational midpoints of the linear parts
+(`Lc w`: the nonzero entries of column `w`) with one global radius `eps`.  The left-inverse condition
+`Σ_w |Σ_r G_vr L_rw − δ_vw| ≤ 1/2` is checked on the midpoints (sparse dot products) plus `(3n+1)·Gn·eps`, so the
+cost is linear in the number of nonzero entries rather than `(3n+1)²·m` interval products.
 
 Every check is decidable with exact rational arithmetic (`decide +kernel`), and `isLocalMin_of_lcert` turns them
 into `IsLocalMinPacking` for the exact configuration at any root `t ∈ [a, b]` of `f`.
@@ -25,10 +28,12 @@ structure LCert (n m : ℕ) where
   lam : Fin m → Poly
   lmin : ℚ
   Lam : ℚ
-  G : Var n → Fin m → ℚ
+  /-- Row `v` of the left inverse, a list of length `m`. -/
+  Gr : Var n → List ℚ
   Gn : ℚ
-  lo : Fin m → Var n → ℚ
-  hi : Fin m → Var n → ℚ
+  /-- Column `w` of the linear parts at the record: rational midpoints of its nonzero entries, `(row, value)`. -/
+  Lc : Var n → List (Fin m × ℚ)
+  eps : ℚ
 
 variable {n m : ℕ} (L : LCert n m)
 
@@ -127,6 +132,54 @@ lemma rowLP_peval (row : Row n) (v : Var n) (t : ℝ) : peval (rowLP L row v) t 
     · fin_cases w <;> simp
     · simp
 
+/-! ## Sparse sums -/
+
+/-- Sparse lookup: the value stored for `r`, or `0`. -/
+def lk {m : ℕ} : List (Fin m × ℚ) → Fin m → ℚ
+  | [], _ => 0
+  | p :: l, r => if p.1 = r then p.2 else lk l r
+
+/-- Σ over the variables, as nested list sums (`none` = the side `S`, then `(i, c)`). -/
+def sumV {n : ℕ} (h : Var n → ℚ) : ℚ :=
+  h none + ((List.finRange n).map fun i => ((List.finRange 3).map fun c => h (some (i, c))).sum).sum
+
+lemma lk_eq_zero {m : ℕ} {l : List (Fin m × ℚ)} {r : Fin m} (h : r ∉ l.map Prod.fst) : lk l r = 0 := by
+  induction l with
+  | nil => rfl
+  | cons p l ih =>
+    simp only [List.map_cons, List.mem_cons, not_or] at h
+    simp only [lk, if_neg (Ne.symm h.1), ih h.2]
+
+lemma sum_mul_lk {m : ℕ} (g : Fin m → ℝ) {l : List (Fin m × ℚ)} (hl : (l.map Prod.fst).Nodup) :
+    ∑ r, g r * (lk l r : ℝ) = (l.map fun p => g p.1 * (p.2 : ℝ)).sum := by
+  induction l with
+  | nil => simp [lk]
+  | cons p l ih =>
+    simp only [List.map_cons, List.nodup_cons] at hl
+    have e : ∀ r, g r * (lk (p :: l) r : ℝ) = (if p.1 = r then g r * p.2 else 0) + g r * lk l r := by
+      intro r
+      by_cases h : p.1 = r
+      · subst h; simp [lk, lk_eq_zero hl.1]
+      · simp [lk, h]
+    simp only [e, Finset.sum_add_distrib, Finset.sum_ite_eq, Finset.mem_univ, if_true, ih hl.2,
+      List.map_cons, List.sum_cons]
+
+lemma sum_getD {m : ℕ} (f : ℚ → ℝ) {l : List ℚ} (hl : l.length = m) :
+    ∑ r : Fin m, f (l.getD r 0) = (l.map f).sum := by
+  subst hl
+  rw [← List.sum_ofFn]
+  congr 1
+  apply List.ext_getElem <;> simp
+
+lemma sumV_cast {n : ℕ} (h : Var n → ℚ) : ((sumV h : ℚ) : ℝ) = ∑ w, (h w : ℝ) := by
+  simp [sumV, Fintype.sum_option, Fintype.sum_prod_type, Fin.sum_univ_def, Rat.cast_list_sum, List.map_map,
+    Function.comp_def]
+
+lemma sum_const_var {n : ℕ} (c : ℝ) : ∑ _w : Var n, c = (3 * n + 1) * c := by
+  rw [Finset.sum_const, Finset.card_univ, Fintype.card_option, Fintype.card_prod, Fintype.card_fin, Fintype.card_fin,
+    nsmul_eq_mul]
+  push_cast; ring
+
 /-! ## The checks -/
 
 variable (L)
@@ -152,15 +205,19 @@ def lamOK (r : Fin m) : Bool := nn L (psub (L.lam r) [L.lmin])
 def lamSumOK : Bool := nn L (psub [L.Lam] (psumF L.lam)) && decide (0 < L.lmin) && decide (0 < L.mu)
 def kktOK (v : Var n) : Bool :=
   zeroOK L.P.f (psub (psumF fun r => pmul (L.lam r) (rowLP L (L.rows r) v)) [if v = none then 1 else 0])
-def boundOK (r : Fin m) (v : Var n) : Bool :=
-  nn L (psub (rowLP L (L.rows r) v) [L.lo r v]) && nn L (psub [L.hi r v] (rowLP L (L.rows r) v))
-def GnOK (v : Var n) : Prop := ∑ r, |L.G v r| ≤ L.Gn
-def GOK (v : Var n) : Prop :=
-  ∑ w, max |(∑ r, min (L.G v r * L.lo r w) (L.G v r * L.hi r w)) - (if v = w then 1 else 0)|
-      |(∑ r, max (L.G v r * L.lo r w) (L.G v r * L.hi r w)) - (if v = w then 1 else 0)| ≤ 1 / 2
-
-instance (v : Var n) : Decidable (GnOK L v) := by unfold GnOK; infer_instance
-instance (v : Var n) : Decidable (GOK L v) := by unfold GOK; infer_instance
+/-- `|L_rw − Lc_rw| ≤ eps`: structurally zero entries outside the support pass without field arithmetic. -/
+def boundOK (r : Fin m) (w : Var n) : Bool :=
+  (allZero (rowLP L (L.rows r) w) && decide (lk (L.Lc w) r = 0)) ||
+    (nn L (psub (rowLP L (L.rows r) w) [lk (L.Lc w) r - L.eps]) &&
+      nn L (psub [lk (L.Lc w) r + L.eps] (rowLP L (L.rows r) w)))
+/-- Column supports without repeated rows. -/
+def colOK (w : Var n) : Bool := decide ((L.Lc w).map Prod.fst).Nodup
+def GnOK (v : Var n) : Bool := decide ((L.Gr v).length = m) && decide (((L.Gr v).map abs).sum ≤ L.Gn)
+/-- Sparse `Σ_r g_r Lc_rw`. -/
+def dotS (g : List ℚ) (l : List (Fin m × ℚ)) : ℚ := (l.map fun p => g.getD p.1 0 * p.2).sum
+def GOK (v : Var n) : Bool :=
+  decide (0 ≤ L.eps) &&
+    decide (sumV (fun w => |dotS (L.Gr v) (L.Lc w) - (if v = w then 1 else 0)|) + (3 * n + 1) * L.Gn * L.eps ≤ 1 / 2)
 
 variable {L}
 
@@ -172,24 +229,6 @@ lemma psumF_peval (g : Fin m → Poly) (t : ℝ) : peval (psumF g) t = ∑ r, pe
 
 lemma nn_le {p : Poly} (h : nn L p = true) {t : ℝ} (hf : peval L.P.f t = 0) (ha : (L.P.a : ℝ) ≤ t)
     (hb : t ≤ L.P.b) : 0 ≤ peval p t := nonneg_of_nonnegOK h hf ha hb
-
-/-- An interval bound for `Σ_r g_r x_r` from bounds on each `x_r`. -/
-lemma abs_sum_sub_le {ι : Type*} [Fintype ι] (g lo hi x : ι → ℝ) (d : ℝ) (hx : ∀ r, lo r ≤ x r ∧ x r ≤ hi r) :
-    |(∑ r, g r * x r) - d| ≤ max |(∑ r, min (g r * lo r) (g r * hi r)) - d| |(∑ r, max (g r * lo r) (g r * hi r)) - d| := by
-  have h1 : ∀ r, min (g r * lo r) (g r * hi r) ≤ g r * x r ∧ g r * x r ≤ max (g r * lo r) (g r * hi r) := by
-    intro r
-    rcases le_total 0 (g r) with hg | hg
-    · exact ⟨(min_le_left _ _).trans (mul_le_mul_of_nonneg_left (hx r).1 hg),
-        (mul_le_mul_of_nonneg_left (hx r).2 hg).trans (le_max_right _ _)⟩
-    · exact ⟨(min_le_right _ _).trans (mul_le_mul_of_nonpos_left (hx r).2 hg),
-        (mul_le_mul_of_nonpos_left (hx r).1 hg).trans (le_max_left _ _)⟩
-  have lo' : ∑ r, min (g r * lo r) (g r * hi r) ≤ ∑ r, g r * x r := Finset.sum_le_sum fun r _ => (h1 r).1
-  have hi' : ∑ r, g r * x r ≤ ∑ r, max (g r * lo r) (g r * hi r) := Finset.sum_le_sum fun r _ => (h1 r).2
-  have a1 := neg_abs_le ((∑ r, min (g r * lo r) (g r * hi r)) - d)
-  have a2 := le_abs_self ((∑ r, max (g r * lo r) (g r * hi r)) - d)
-  have m1 := le_max_left |(∑ r, min (g r * lo r) (g r * hi r)) - d| |(∑ r, max (g r * lo r) (g r * hi r)) - d|
-  have m2 := le_max_right |(∑ r, min (g r * lo r) (g r * hi r)) - d| |(∑ r, max (g r * lo r) (g r * hi r)) - d|
-  rw [abs_le]; constructor <;> linarith
 
 lemma AxP_peval (j : Fin n) (a b : ℚ) (i : Fin n) (t : ℝ) :
     peval (AxP L j a b i) t = (cfg L t).X j + qx (cfg L t) j a b - (cfg L t).X i := by
@@ -203,7 +242,7 @@ lemma AyP_peval (j : Fin n) (a b : ℚ) (i : Fin n) (t : ℝ) :
 theorem isLocalMin_of_lcert (hbox : ∀ i, boxOK L.P i = true) (hrowP : ∀ i, EC.rowOK L.P i = true)
     (hunit : ∀ i, unitOK L i = true) (hrows : ∀ r, rowOKb L (L.rows r) = true) (hlam : ∀ r, lamOK L r = true)
     (hlamS : lamSumOK L = true) (hkkt : ∀ v, kktOK L v = true) (hbnd : ∀ r v, boundOK L r v = true)
-    (hGn : ∀ v, GnOK L v) (hG : ∀ v, GOK L v) {t : ℝ} (hf : peval L.P.f t = 0) (ha : (L.P.a : ℝ) ≤ t)
+    (hcol : ∀ w, colOK L w = true) (hGn : ∀ v, GnOK L v = true) (hG : ∀ v, GOK L v = true) {t : ℝ} (hf : peval L.P.f t = 0) (ha : (L.P.a : ℝ) ≤ t)
     (hb : t ≤ L.P.b) :
     ∃ θ : Fin n → ℝ, IsLocalMinPacking n (peval L.P.S t) (fun i => (peval (Xp L i) t, peval (Yp L i) t)) θ := by
   have hsq : ∀ i, sqOK L.P.f (L.P.sq i) = true := fun i => by
@@ -248,7 +287,7 @@ theorem isLocalMin_of_lcert (hbox : ∀ i, boxOK L.P i = true) (hrowP : ∀ i, E
   simp only [lamSumOK, Bool.and_eq_true, decide_eq_true_eq] at hlamS
   obtain ⟨⟨hΛ, hlmin⟩, hmu⟩ := hlamS
   refine isLocalMin_of_rows (cfg L t) θ hθc' hθs' hpack L.rows (μ := L.mu) (by exact_mod_cast hmu) ?_
-    (fun r => peval (L.lam r) t) (fun v r => (L.G v r : ℝ)) (lmin := L.lmin) (Λ := L.Lam) (Gn := L.Gn)
+    (fun r => peval (L.lam r) t) (fun v r => (((L.Gr v).getD r 0 : ℚ) : ℝ)) (lmin := L.lmin) (Λ := L.Lam) (Gn := L.Gn)
     (by exact_mod_cast hlmin) ?_ ?_ ?_ ?_ ?_
   · -- rows
     intro r
@@ -291,34 +330,76 @@ theorem isLocalMin_of_lcert (hbox : ∀ i, boxOK L.P i = true) (hrowP : ∀ i, E
     split_ifs at this ⊢ <;> push_cast at this <;> linarith
   · -- Σ |G| ≤ Gn
     intro v
-    have := hGn v
-    simp only [GnOK] at this
-    exact_mod_cast this
+    have h := hGn v
+    simp only [GnOK, Bool.and_eq_true, decide_eq_true_eq] at h
+    rw [sum_getD (fun q => |(q : ℝ)|) h.1]
+    have := (Rat.cast_le (K := ℝ)).mpr h.2
+    simpa [Rat.cast_list_sum, List.map_map, Function.comp_def] using this
   · -- ‖G L - I‖ ≤ 1/2
     intro v
-    have hbd : ∀ r w, (L.lo r w : ℝ) ≤ rowL (cfg L t) (L.rows r) w ∧ rowL (cfg L t) (L.rows r) w ≤ L.hi r w := by
+    have h := hG v
+    simp only [GOK, Bool.and_eq_true, decide_eq_true_eq] at h
+    obtain ⟨heps, hq⟩ := h
+    have heps' : (0 : ℝ) ≤ L.eps := by exact_mod_cast heps
+    have hgl : (L.Gr v).length = m := by
+      have h := hGn v; simp only [GnOK, Bool.and_eq_true, decide_eq_true_eq] at h; exact h.1
+    have hGn' : ∑ r : Fin m, |(((L.Gr v).getD (r : ℕ) 0 : ℚ) : ℝ)| ≤ L.Gn := by
+      have h := hGn v
+      simp only [GnOK, Bool.and_eq_true, decide_eq_true_eq] at h
+      rw [sum_getD (fun q => |(q : ℝ)|) h.1]
+      have := (Rat.cast_le (K := ℝ)).mpr h.2
+      simpa [Rat.cast_list_sum, List.map_map, Function.comp_def] using this
+    -- entry bounds
+    have hbd : ∀ r w, |rowL (cfg L t) (L.rows r) w - (lk (L.Lc w) r : ℝ)| ≤ L.eps := by
       intro r w
       have h := hbnd r w
-      simp only [boundOK, Bool.and_eq_true] at h
-      have e1 := nn_le h.1 hf ha hb
-      have e2 := nn_le h.2 hf ha hb
-      simp only [peval_psub, peval_cons, peval_nil, rowLP_peval] at e1 e2
-      constructor <;> linarith
-    have hq := hG v
-    simp only [GOK] at hq
+      simp only [boundOK, Bool.or_eq_true, Bool.and_eq_true, decide_eq_true_eq] at h
+      rcases h with ⟨hz, hd⟩ | ⟨h1, h2⟩
+      · rw [← rowLP_peval, peval_eq_zero_of_allZero hz, hd]; simpa using heps'
+      · have e1 := nn_le h1 hf ha hb
+        have e2 := nn_le h2 hf ha hb
+        simp only [peval_psub, peval_cons, peval_nil, rowLP_peval] at e1 e2
+        push_cast at e1 e2
+        rw [abs_le]; constructor <;> linarith
+    -- the midpoint products are the sparse dot products
+    have hdot : ∀ w, ∑ r : Fin m, (((L.Gr v).getD (r : ℕ) 0 : ℚ) : ℝ) * (lk (L.Lc w) r : ℝ) = (dotS (L.Gr v) (L.Lc w) : ℝ) := by
+      intro w
+      have hc := hcol w
+      simp only [colOK, decide_eq_true_eq] at hc
+      rw [sum_mul_lk _ hc, dotS]
+      simp [Rat.cast_list_sum, List.map_map, Function.comp_def]
+    have key : ∀ w, |(∑ r : Fin m, (((L.Gr v).getD (r : ℕ) 0 : ℚ) : ℝ) * rowL (cfg L t) (L.rows r) w) -
+        (if v = w then 1 else 0)| ≤ |((dotS (L.Gr v) (L.Lc w) : ℚ) : ℝ) - (if v = w then 1 else 0)| + L.Gn * L.eps := by
+      intro w
+      have e : (∑ r : Fin m, (((L.Gr v).getD (r : ℕ) 0 : ℚ) : ℝ) * rowL (cfg L t) (L.rows r) w) =
+          (dotS (L.Gr v) (L.Lc w) : ℝ) + ∑ r : Fin m, (((L.Gr v).getD (r : ℕ) 0 : ℚ) : ℝ) *
+            (rowL (cfg L t) (L.rows r) w - (lk (L.Lc w) r : ℝ)) := by
+        rw [← hdot w, ← Finset.sum_add_distrib]; congr 1; ext r; ring
+      have hE : |∑ r : Fin m, (((L.Gr v).getD (r : ℕ) 0 : ℚ) : ℝ) * (rowL (cfg L t) (L.rows r) w - (lk (L.Lc w) r : ℝ))| ≤
+          L.Gn * L.eps := by
+        calc _ ≤ ∑ r : Fin m, |(((L.Gr v).getD (r : ℕ) 0 : ℚ) : ℝ) * (rowL (cfg L t) (L.rows r) w - (lk (L.Lc w) r : ℝ))| :=
+              Finset.abs_sum_le_sum_abs _ _
+          _ ≤ ∑ r : Fin m, |(((L.Gr v).getD (r : ℕ) 0 : ℚ) : ℝ)| * L.eps := by
+              apply Finset.sum_le_sum; intro r _; rw [abs_mul]
+              exact mul_le_mul_of_nonneg_left (hbd r w) (abs_nonneg _)
+          _ = (∑ r : Fin m, |(((L.Gr v).getD (r : ℕ) 0 : ℚ) : ℝ)|) * L.eps := by rw [Finset.sum_mul]
+          _ ≤ L.Gn * L.eps := mul_le_mul_of_nonneg_right hGn' heps'
+      rw [e]
+      calc _ = |((dotS (L.Gr v) (L.Lc w) : ℚ) : ℝ) - (if v = w then 1 else 0) +
+              ∑ r : Fin m, (((L.Gr v).getD (r : ℕ) 0 : ℚ) : ℝ) * (rowL (cfg L t) (L.rows r) w - (lk (L.Lc w) r : ℝ))| := by
+            congr 1; ring
+        _ ≤ _ := (abs_add_le _ _).trans (by linarith)
     have hq' := (Rat.cast_le (K := ℝ)).mpr hq
-    have key : ∀ w, |(∑ r, (L.G v r : ℝ) * rowL (cfg L t) (L.rows r) w) - (if v = w then 1 else 0)| ≤
-        max |(∑ r, min ((L.G v r : ℝ) * L.lo r w) ((L.G v r : ℝ) * L.hi r w)) - (if v = w then 1 else 0)|
-          |(∑ r, max ((L.G v r : ℝ) * L.lo r w) ((L.G v r : ℝ) * L.hi r w)) - (if v = w then 1 else 0)| :=
-      fun w => abs_sum_sub_le (fun r => (L.G v r : ℝ)) (fun r => (L.lo r w : ℝ)) (fun r => (L.hi r w : ℝ))
-        (fun r => rowL (cfg L t) (L.rows r) w) _ (fun r => hbd r w)
-    have e : (∑ w, max |(∑ r, min ((L.G v r : ℝ) * L.lo r w) ((L.G v r : ℝ) * L.hi r w)) - (if v = w then 1 else 0)|
-          |(∑ r, max ((L.G v r : ℝ) * L.lo r w) ((L.G v r : ℝ) * L.hi r w)) - (if v = w then 1 else 0)|) =
-        ((∑ w, max |(∑ r, min (L.G v r * L.lo r w) (L.G v r * L.hi r w)) - (if v = w then 1 else 0)|
-          |(∑ r, max (L.G v r * L.lo r w) (L.G v r * L.hi r w)) - (if v = w then 1 else 0)| : ℚ) : ℝ) := by
-      push_cast; congr 1; ext w; split_ifs <;> simp
-    calc _ ≤ _ := Finset.sum_le_sum fun w _ => key w
-      _ = _ := e
-      _ ≤ 1 / 2 := by simpa using hq'
+    push_cast at hq'
+    rw [sumV_cast] at hq'
+    have e2 : ∀ w : Var n, (((|dotS (L.Gr v) (L.Lc w) - (if v = w then 1 else 0)| : ℚ)) : ℝ) =
+        |((dotS (L.Gr v) (L.Lc w) : ℚ) : ℝ) - (if v = w then 1 else 0)| := by
+      intro w; split_ifs <;> simp
+    simp only [e2] at hq'
+    calc _ ≤ ∑ w, (|((dotS (L.Gr v) (L.Lc w) : ℚ) : ℝ) - (if v = w then 1 else 0)| + L.Gn * L.eps) :=
+          Finset.sum_le_sum fun w _ => key w
+      _ = (∑ w, |((dotS (L.Gr v) (L.Lc w) : ℚ) : ℝ) - (if v = w then 1 else 0)|) + (3 * n + 1) * (L.Gn * L.eps) := by
+          rw [Finset.sum_add_distrib, sum_const_var]
+      _ ≤ 1 / 2 := by linarith
 
 end UnitSquarePacking.LMC

@@ -17,4 +17,3 @@ lean/Sqpack/S12H/
 lean/Sqpack/T1/
 # exact-form certificates too costly for the default build (search/exact/lean_cert.py, localmin_lean.py; tasks/exact-minpoly)
 lean/Sqpack/Exact/N17c.lean
-lean/Sqpack/Exact/N28L.lean

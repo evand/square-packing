@@ -63,19 +63,27 @@ packing in a smaller square.
 * `ExactPack`, `ExactCheck`: exact data ⇒ `Packs n S*` (kernel `decide` over ℚ[T]/f).  Instances: `Exact/N5c`, `Exact/N11c`.
 * `LocalMin`, `LocalMinRows` (`isLocalMin_of_rows`), `LocalMinCheck` (soundness `isLocalMin_of_lcert`).  Instance:
   `Exact/N11L`, the s(11) record is a local minimum (kernel-checked, standard axioms).
-* Generated but not committed (cost): `Exact/N17c` (compiles: 402 s, 15.6 GB); `Exact/N28L` (n = 28 local min: does *not* compile within 40 GB, killed at 544 s, 10-07).
-  Regenerate with `lean_cert.py` / `localmin_lean.py` (see their headers).  The bottleneck is the far pairs: 2319
-  strict conditions at n = 28 against 132 contacts.  A cheap far-pair test (bounding discs, integer arithmetic) is the
-  lever, not compute.
+* `Exact/N28L`: **the s(28) record is a local minimum** (10-07; kernel-checked, standard axioms).  Not in the default
+  build: `lake env lean Sqpack/Exact/N28L.lean` takes 185 s and 18 GB.  It became feasible when the left-inverse check
+  went sparse (below).  `Exact/N17c` (exact packing, 402 s, 15.6 GB) is still uncommitted: regenerate with
+  `lean_cert.py`.
+* Cost profile of the old N28L (10-07, one theorem per file): packing half 42 s / 9 GB; `G_ok` (dense
+  ‖GL − I‖ ≤ ½ over interval tables) > 40 GB; `bnd_ok` 25 GB; `Gn_ok` 15 GB.  The dense `![…]` table lookups
+  were the cost, not the field arithmetic.  The fix: G stored as lists; the linear parts as sparse rational
+  midpoints plus one radius ε (zero entries pass by `allZero`); the left-inverse check as sparse dot products
+  plus (3n+1)·Gn·ε.  N11L: 52 s / 9 GB.
+* Far pairs (O(n²) field checks) are not the bottleneck at n = 28.  They will be at larger n, and for
+  packing-only certificates: a rational-shadow checker (per-square rational enclosures proved once; a disc test
+  for far pairs; interval arithmetic for near ones; exact checks only for contacts) is the next general Lean tool.
 
 ## Next (10-07)
 
 1. **Table**: n, S* (30 digits), p (or its degree and height plus a link), field degree, and how it was obtained
    (derived / derived + cross-checked / cited).  Cover the 265, plus cited polynomials where we have them.  A site page
    and/or jlevy (#375 thread); ask Evan before posting.
-2. **Lean local minima, a handful**: n = 11 is done; n = 28 (grade A) next.  Then grade B (n = 5, a second-order
-   lemma) and one grade C (n = 10 or 19, field degree 2) once the grade-C certificate exists.  Each needs the cheap
-   far-pair test to stay small.
+2. **Lean local minima, a handful**: n = 11 and 28 (grade A) done.  Next grade B (n = 5, a second-order lemma), then
+   one grade C (n = 10 or 19, field degree 2) once the grade-C certificate exists.  The rational-shadow
+   checker for the packing part.
 3. Coverage, by cost: flat-rotation group (10), multi-direction force balance (11), then block-triangular elimination
    (26 + most of the msolve-hard ones).  n = 83 only if it falls out.
 

@@ -1,6 +1,7 @@
 """Lean local-minimum certificate (lean/Sqpack/LocalMinCheck.lean) for a grade-A record:
   ∃ s, pS(s) = 0 ∧ Sa ≤ s ≤ Sb ∧ ∃ c θ, IsLocalMinPacking n s c θ
-from minpoly.py's exact configuration and localmin.py's rows, exact multipliers and rational left inverse.
+from minpoly.py's exact configuration and localmin.py's rows, exact multipliers and rational left inverse
+(G as lists; the linear parts as sparse rational midpoints with one radius eps).
 The exact-packing certificate is lean_cert.py's; the local-minimum checks are replayed here with the Lean checker's
 arithmetic, and they take part in narrowing the t interval.
 
@@ -78,32 +79,29 @@ def main(base, out):
         return polys, lambda ta, tb, Sa, Sb: emit(ta, tb, f, lo, hi, Sa, Sb)
 
     def emit(ta, tb, f, lo, hi, Sa, Sb):
-        # numerical bounds for the non-constant entries at the final interval
+        # sparse midpoints of the linear parts: exact where constant, else rounded at 1e-15 (radius eps covers both)
         mpmath.mp.dps = 80
         tm = mpmath.mpf(ta.numerator) / ta.denominator
-        for key, val in list(lo.items()):
+        eps = F(2, 10 ** 15)
+        mid = {}
+        for key, val in lo.items():
             if isinstance(val, list):
                 x = sum(mpmath.mpf(c.numerator) / c.denominator * tm ** e for e, c in enumerate(val))
-                lo[key] = F(int(mpmath.floor(x * 10 ** 15)) - 1, 10 ** 15)
-                hi[key] = F(int(mpmath.ceil(x * 10 ** 15)) + 1, 10 ** 15)
-        # check the G condition here (rational)
-        def Lb(r, v):
-            return (lo.get((r, v), F(0)), hi.get((r, v), F(0)))
+                mid[key] = F(int(mpmath.nint(x * 10 ** 15)), 10 ** 15)
+            else:
+                mid[key] = val
+        cols = {w: sorted((r, d) for (r, v), d in mid.items() if v == w and d != 0) for w in range(n3)}
+        # the G condition as the Lean checker computes it
         worst = F(0)
         for v in range(n3):
             tot = F(0)
             for w in range(n3):
                 d = F(1) if v == w else F(0)
-                smin = smax = F(0)
-                for r in range(m):
-                    a, b = GL[v][r] * Lb(r, w)[0], GL[v][r] * Lb(r, w)[1]
-                    smin += min(a, b)
-                    smax += max(a, b)
-                tot += max(abs(smin - d), abs(smax - d))
-            worst = max(worst, tot)
+                tot += abs(sum(GL[v][r] * x for r, x in cols[w]) - d)
+            worst = max(worst, tot + n3 * Gn * eps)
             assert sum(abs(x) for x in GL[v]) <= Gn
         assert worst <= F(1, 2), f'G check fails: {float(worst)}'
-        # Lean text
+
         def row_lean(r):
             if r[0] == 'P':
                 _, j, (a, b), i, k = r
@@ -111,20 +109,19 @@ def main(base, out):
             _, j, (a, b), w = r
             return f'LM.Row.wall {j} {lean_q(a)} {lean_q(b)} {"LRBT".index(w)}'
 
-        def table(fn):            # Var n → ℚ as a match on a vector table
-            S_row = '![' + ', '.join(lean_q(fn(3 * n)) for _ in [0]) + ']'
-            return S_row
+        def qlist(xs):
+            return '[' + ', '.join(lean_q(x) for x in xs) + ']'
+
+        def clist(w):
+            return '[' + ', '.join(f'(({r} : Fin {m}), {lean_q(x)})' for r, x in cols[w]) + ']'
         Lt = []
         Lt.append('\n/-! ## The local-minimum certificate -/\n')
-        Lt.append(f'def GS : Fin {m} → ℚ := ![' + ', '.join(lean_q(GL[3 * n][r]) for r in range(m)) + ']')
-        Lt.append(f'def GT : Fin {n} → Fin 3 → Fin {m} → ℚ := ![' + ',\n  '.join(
-            '![' + ', '.join('![' + ', '.join(lean_q(GL[3 * i + c][r]) for r in range(m)) + ']' for c in range(3)) + ']'
-            for i in range(n)) + ']')
-        for nm, tab in (('lo', lo), ('hi', hi)):
-            Lt.append(f'def {nm}S : Fin {m} → ℚ := ![' + ', '.join(lean_q(tab.get((r, 3 * n), F(0))) for r in range(m)) + ']')
-            Lt.append(f'def {nm}T : Fin {m} → Fin {n} → Fin 3 → ℚ := ![' + ',\n  '.join(
-                '![' + ', '.join('![' + ', '.join(lean_q(tab.get((r, 3 * i + c), F(0))) for c in range(3)) + ']'
-                                 for i in range(n)) + ']' for r in range(m)) + ']')
+        Lt.append(f'def GS : List ℚ := {qlist(GL[3 * n])}')
+        Lt.append(f'def GT : Fin {n} → Fin 3 → List ℚ := ![' + ',\n  '.join(
+            '![' + ', '.join(qlist(GL[3 * i + c]) for c in range(3)) + ']' for i in range(n)) + ']')
+        Lt.append(f'def LcS : List (Fin {m} × ℚ) := {clist(3 * n)}')
+        Lt.append(f'def LcT : Fin {n} → Fin 3 → List (Fin {m} × ℚ) := ![' + ',\n  '.join(
+            '![' + ', '.join(clist(3 * i + c) for c in range(3)) + ']' for i in range(n)) + ']')
         Lt.append(f'''
 def lcert : UnitSquarePacking.LMC.LCert {n} {m} where
   P := cert
@@ -135,10 +132,10 @@ def lcert : UnitSquarePacking.LMC.LCert {n} {m} where
   lam := ![{', '.join(lean_poly(p) for p in lamP)}]
   lmin := {lean_q(lmin)}
   Lam := {lean_q(Lam)}
-  G := fun v r => match v with | none => GS r | some (i, c) => GT i c r
+  Gr := fun v => match v with | none => GS | some (i, c) => GT i c
   Gn := {lean_q(Gn)}
-  lo := fun r v => match v with | none => loS r | some (i, c) => loT r i c
-  hi := fun r v => match v with | none => hiS r | some (i, c) => hiT r i c
+  Lc := fun w => match w with | none => LcS | some (i, c) => LcT i c
+  eps := {lean_q(eps)}
 
 open UnitSquarePacking.LMC in
 theorem unit_ok : ∀ i, unitOK lcert i = true := by decide +kernel
@@ -153,9 +150,11 @@ theorem kkt_ok : ∀ v, kktOK lcert v = true := by decide +kernel
 open UnitSquarePacking.LMC in
 theorem bnd_ok : ∀ r v, boundOK lcert r v = true := by decide +kernel
 open UnitSquarePacking.LMC in
-theorem Gn_ok : ∀ v, GnOK lcert v := by decide +kernel
+theorem col_ok : ∀ w, colOK lcert w = true := by decide +kernel
 open UnitSquarePacking.LMC in
-theorem G_ok : ∀ v, GOK lcert v := by decide +kernel
+theorem Gn_ok : ∀ v, GnOK lcert v = true := by decide +kernel
+open UnitSquarePacking.LMC in
+theorem G_ok : ∀ v, GOK lcert v = true := by decide +kernel
 
 /-- **The record is a local minimum** (first-order rigid, all contact forces positive): there is a pose-space ball
 around it containing no packing of {n} unit squares in a smaller square. -/
@@ -164,7 +163,7 @@ theorem localmin : ∃ s : ℝ, peval pS s = 0 ∧ (({lean_q(Sa)} : ℚ) : ℝ) 
   obtain ⟨t, ha, hb, hf⟩ := exists_root (f := cert.f) (a := cert.a) (b := cert.b) (by decide +kernel)
     (by decide +kernel)
   obtain ⟨θ, hθ⟩ := UnitSquarePacking.LMC.isLocalMin_of_lcert (L := lcert) boxes rows unit_ok rowsL_ok lam_ok
-    lamS_ok kkt_ok bnd_ok Gn_ok G_ok hf ha hb
+    lamS_ok kkt_ok bnd_ok col_ok Gn_ok G_ok hf ha hb
   refine ⟨peval cert.S t, ?_, ?_, ?_, _, θ, hθ⟩
   · have := zero_of_zeroOK (f := cert.f) (N := pcomp pS cert.S) (by decide +kernel) hf
     rwa [peval_pcomp] at this
@@ -180,6 +179,8 @@ theorem localmin : ∃ s : ℝ, peval pS s = 0 ∧ (({lean_q(Sa)} : ℚ) : ℝ) 
     LC.build(base + '.minpoly.json', out, out.split('/')[-1].replace('.lean', ''), extra=extra)
     # import the local-minimum checker too
     txt = open(out).read().replace('import Sqpack.ExactCheck\n', 'import Sqpack.ExactCheck\nimport Sqpack.LocalMinCheck\n', 1)
+    # the G and column tables are large literals
+    txt = txt.replace('set_option maxHeartbeats 0\n', 'set_option maxHeartbeats 0\nset_option maxRecDepth 100000\n', 1)
     open(out, 'w').write(txt)
     print(f'{out}: local-minimum certificate, {m} rows, lmin {float(lmin):.4g}, mu {float(mu):.4g}, Gn {float(Gn):.4g}')
 
