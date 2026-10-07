@@ -49,7 +49,7 @@ done enough: sub-11 funnel small and well sampled, plateau above 11 rough; the n
 - [ ] Minima PT (`mcmin.py`): runs A and B at 110 both missed (A: hot replicas sink into the grid; B: 11.0076 funnel deep, staggered-chain trap at 11).  Temperature alone doesn't connect funnels: next, coordinated moves (vacancy → hole chain shift), bias in side.
 - [ ] Rediscovery calibration (`rediscover.py`, 52 old→new record pairs): detection vs δ and matching distance; then judge new moves on it and on new families at 110.
 - [ ] Is the plateau → funnel barrier entropic (first-order)?  If so temperature can't open it: bias / multicanonical in side, or gap-spanning moves (lessons from an earlier MH/PT project).
-- [ ] New records 10-06: s(266) ≤ 16.8230287508, s(270) ≤ 16.9378072284, s(272) ≤ 16.9681101458 (certified, `search/exact/results/sw2/`); not posted: ask Evan before the register.
+- [ ] New records 10-06: s(266) ≤ 16.8230287508, s(270) ≤ 16.9378072284, s(272) ≤ 16.9681101458 (certified, `search/exact/results/sw2/`); posted jlevy#399 (10-06): watch for registration.
 - [ ] (parked, low) p(δ): "a δ-better packing would have been found with probability p" from mixing/ESS on the no-grid measure, basin distance, δ-vs-weight; motivates mixing across the grid side (PACKER 10-06).
 - [ ] Landscape measure: nested sampling / splitting on side from random starts, log X(s) at 110 (content-agnostic "how hard is this n"; `lit-statmech.md` A2).
 - [ ] s(90): needle estimate from the 110 calibration (old step 4) before more compute; best so far 10.0095668 (certified local min).
