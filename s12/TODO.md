@@ -47,14 +47,15 @@ Proof-piece wishlist (new candidates N1–N15 + 65 open items, picks at the end)
 Engine `search/packer/` (map + plan: `README.md` "Plan (10-06)"; log: `PACKER.md`; merged to main 10-06).  s(110) calibration
 done enough: sub-11 funnel small and well sampled, plateau above 11 rough; the needle is entering the funnel.  Now: samplers that go uphill.
 - [ ] Minima PT (`mcmin.py`): runs A and B at 110 both missed (A: hot replicas sink into the grid; B: 11.0076 funnel deep, staggered-chain trap at 11).  Temperature alone doesn't connect funnels: next, coordinated moves (vacancy → hole chain shift), bias in side.
-- [ ] Rediscovery calibration (`rediscover.py`, 52 old→new record pairs): detection vs δ and matching distance; then judge new moves on it and on new families at 110.
+- [ ] New moves (vacancy → hole chain shift first): judge on `abtest.py` at 110 and on the 20 rediscovery pairs at distance > 0.06 that kicks never re-find (PACKER "Rediscovery result").
+- [ ] Record hunting, cheap: re-run the wide sweep n = 30–323 at slp2 budget 180 s (13 % of 60 s quenches at n ≥ 250 unconverged); kick every older packing we have (mirror, register histories, our off-record minima).
 - [ ] Is the plateau → funnel barrier entropic (first-order)?  If so temperature can't open it: bias / multicanonical in side, or gap-spanning moves (lessons from an earlier MH/PT project).
 - [ ] New records 10-06: s(266) ≤ 16.8230287508, s(270) ≤ 16.9378072284, s(272) ≤ 16.9681101458 (certified, `search/exact/results/sw2/`); posted jlevy#399 (10-06): watch for registration.
 - [ ] (parked, low) p(δ): "a δ-better packing would have been found with probability p" from mixing/ESS on the no-grid measure, basin distance, δ-vs-weight; motivates mixing across the grid side (PACKER 10-06).
 - [ ] Landscape measure: nested sampling / splitting on side from random starts, log X(s) at 110 (content-agnostic "how hard is this n"; `lit-statmech.md` A2).
 - [ ] s(90): needle estimate from the 110 calibration (old step 4) before more compute; best so far 10.0095668 (certified local min).
-- [ ] slp2 speed (it is the sampler's inner loop, 4–8 s per quench at 110): vectorise the contact-model pair loop, then consider Rust.
-- [ ] Exact batch (`search/exact/`, jlevy#375): 323/324 certified (n = 105, 130 added 10-05, unpushed: update #375); open n = 292.  Leftovers: 12/866 cen7 outputs unresolved.
+- [ ] slp2 speed: contact model vectorised 10-06 (bitwise identical, ~1.6x); now ~500 LP solves per quench dominate (40–110 s at n ≈ 270): fewer LPs per descent, warm starts, or Rust.
+- [ ] Exact batch (`search/exact/`, jlevy#375): 323/324 certified (n = 105, 130 added 10-05, pushed 10-06; comment on #375 owed: ask Evan); open n = 292.  Leftovers: 12/866 cen7 outputs unresolved.
 - [ ] Case study `search/packer/s110-landscape.md`: rewrite the census section from cen7 + rev1 + minima PT.
 - [ ] Side bet: rectangle containers in slp2; Arslanov 26-in-(4−δ)×8 control, then jlevy H-049 (20 in (4−δ)×6).  Refresh clone first.
 - [ ] Later targets for the same instrument: s(183/242/274/308), 299, 234, s(147) (`search/WISHLIST.md` §P).

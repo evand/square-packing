@@ -57,6 +57,14 @@ Formats: text `n s` + `x y deg` per line (centres).  `site2txt.py` / `txt2site.p
 6. Records near n = 50–135 mostly come from constructions + seeded annealing; Ellsworth: plain SA "almost always gets stuck just
    above the trivial size due to stacked rows and/or columns".
 
+7. **(10-06)** Grid obstructions include *staggered* axis chains (k axis squares, consecutive ones overlapping in the other
+   projection), not just straight lines (`layout.axis_chain`).  Under our moves the grid is absorbing: hot replicas sink into it.
+8. **(10-06)** Temperature alone doesn't connect funnels (minima PT runs A, B at 110 missed); reinsert-into-hole moves are
+   destructive in every variant tried (a jammed packing has no hole: best insert costs ~0.4 penetration).
+9. **(10-06)** Kick + good descent is short-range: reliable to matching distance ~0.02, rare beyond 0.05 (rediscovery, 51 record
+   pairs).  It still finds records: s(266), s(270), s(272) (jlevy#399).  Kicking *older* packings finds basins the current
+   record's kicks don't (272).  At n ≈ 270 give slp2 ≥ 180 s (60 s left 13 % unconverged, and that changed detection).
+
 ## Plan (10-06, with Evan)
 State: the s(110) calibration answered its main question (PACKER.md cen7, rev1, jx1, crop pass test): below 11 a smooth funnel
 (≥ ~47 exact minima, best basins common, descent to the bottom easy once inside); above 11 a rough plateau of small, densely
