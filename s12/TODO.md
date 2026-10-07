@@ -5,6 +5,9 @@ Priorities (10-01): correctness first, then interesting Lean, then cleverness ov
 Paths relative to `public/s12`.  Public since 10-03 (outreach stays in `private/s12/outreach`).  Done: `Completed.md`.  Conventions: `~/math/TODO.md`.
 External posts: ask Evan explicitly per post.  **Before any bound-chasing run, check jlevy's register (`jlevy.github.io/squares/cases/<n>.html`) for current values.**
 
+## Next (Evan, 10-07)
+Exact-forms route paused after jlevy#419/#420.  Next session: general cleanup, syncs with other repos' new data (register, Couzo, chelokot), website updates; then optimizer work.  Git: single checkout on `main`, no worktrees; exact-minpoly working data (raw solve outputs, gitignored) is in `search/exact/minpoly/solve/`.
+
 ## Next (picked 2026-10-03)
 Proof-piece wishlist (new candidates N1–N15 + 65 open items, picks at the end): `search/WISHLIST.md`.
 1. Lean, small and interesting: `E(n) ≤ 0` + seam bound `D ≤ m_v`, then `M(1) ≤ ¾` (FRIEDMAN §9.6 item 5).
