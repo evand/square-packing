@@ -94,6 +94,21 @@ packing in a smaller square.
 3. Coverage, by cost: flat-rotation group (10), multi-direction force balance (11), then block-triangular elimination
    (26 + most of the msolve-hard ones).  n = 83 only if it falls out.
 
+## Numerics: what is it needed for? (Evan's question, 10-07; to revisit)
+
+* **Finding the contact graph**: an optimizer must reach a jammed / locally optimal configuration first.  This is
+  the essential use.
+* **Choosing the root**: the contact system's real solutions include mirror images, other angle branches and
+  overlapping configurations; the eliminating polynomial factors, and only one root of one factor is the
+  record.  This needs only a coarse t*: isolate every candidate factor's real roots exactly (flint) and take the
+  interval containing t*.  `verify_exact.py` then checks the configuration exactly, so a wrong pick cannot pass.
+* **Today** `minpoly.py` picks the factor by `|p(t*)| < tol`, which with high-degree / large-height factors can't
+  tell several apart (n = 29, 68, 71, 126, 228).  Exact root isolation should fix this with no more digits;
+  re-solving at 2000 digits is the brute-force fallback.
+* Open question: work purely from contact graphs (e.g. perturbations of known graphs), with every real root a
+  candidate and validity / local optimality checked exactly: a combinatorial search, different from the record
+  pipeline.
+
 ## Tools (`search/exact/`, run via `./env.sh`)
 
 `env.sh` pins numpy 2.4.2, scipy 1.17.0, python-flint 0.9.0, and msolve from nixpkgs.
