@@ -48,3 +48,7 @@ import Sqpack.Exact.N5
 import Sqpack.ExactCheck
 import Sqpack.Exact.N5c
 import Sqpack.Exact.N11c
+import Sqpack.LocalMin
+import Sqpack.LocalMinRows
+import Sqpack.LocalMinCheck
+import Sqpack.Exact.N11L

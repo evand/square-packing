@@ -71,7 +71,7 @@ theorem packs_five : Packs 5 (2 + √2 / 2) := by
   rw [hS]
   refine packs_of_cert xs ys cs ss ?_ ?_ ?_
   · intro i
-    fin_cases i <;> (simp [cs, ss]; nlinarith [r_sq])
+    fin_cases i <;> (simp [cs, ss] <;> nlinarith [r_sq])
   · intro i a b ha hb
     fin_cases i <;>
       rcases ha with rfl | rfl <;> rcases hb with rfl | rfl <;>
