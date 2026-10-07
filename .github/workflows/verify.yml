@@ -66,6 +66,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Bridge for the 2026-10-07 flatten (s12/lean -> lean): a cache entry is keyed by its path, and a cold
+      # build of the data modules is killed on a hosted runner, so seed lean/.lake from the last pre-flatten
+      # cache (saved under s12/lean/.lake).  Harmless once lean-action has saved a cache under lean/.lake;
+      # remove then.
+      - name: Seed lean/.lake from the pre-flatten cache
+        uses: actions/cache/restore@v4
+        with:
+          path: s12/lean/.lake
+          key: lake-preflatten-seed
+          restore-keys: lake-Linux-X64-
+      - name: Move the seeded cache into place
+        run: if [ -d s12/lean/.lake ] && [ ! -d lean/.lake ]; then mv s12/lean/.lake lean/.lake && echo seeded; fi
+
       - name: Build the Lean project (Mathlib from its cache)
         uses: leanprover/lean-action@v1
         with:
