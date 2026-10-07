@@ -43,3 +43,5 @@ import Sqpack.SpecBridge
 import Sqpack.FCSquarePacking
 import Sqpack.SpecFC
 import Sqpack.SpecChelokot
+import Sqpack.ExactPack
+import Sqpack.Exact.N5

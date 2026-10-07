@@ -273,9 +273,11 @@ class KKT:
         self.V = [3 * i + k for i in sqs for k in range(3)] + [3 * P.n]
         self.vS = 3 * P.n
 
-    def polish(self, log_=log, maxit=40):
+    def polish(self, log_=log, maxit=None):
         """Gauss-Newton (minimum-norm) projection of the configuration onto {g_A = 0}, residuals in mp.  Removes the
-        input noise before rank decisions; stagnation means the contact equations are inconsistent."""
+        input noise before rank decisions; stagnation means the contact equations are inconsistent.  Residuals are
+        scaled by their norm before the f64 solve (no underflow below 1e-308, so any dps works)."""
+        maxit = maxit or 40 + mp.dps // 10
         P = self.P
         H = mpf(1) / 2
         hist = []
@@ -292,13 +294,13 @@ class KKT:
             C, Sn = P.trig()
             g = [eval_contact(c, P.X, P.Y, C, Sn, P.S, H, order=1)[0] for c in Ab]
             nr = max(abs(x) for x in g)
-            hist.append(float(nr))
-            if nr < mpf(10) ** (-(mp.dps - 15)) or (it > 4 and hist[-1] > 0.5 * hist[-4]):
+            hist.append(float(nr)); self.polish_nr = nr
+            if nr < mpf(10) ** (-(mp.dps - 15)) or (it > 4 and hist[-1] > 0.5 * hist[-4] and hist[-1] > 1e-300):
                 break
             J, _ = jacobian(P, Ab)
-            d, *_ = np.linalg.lstsq(J[:, self.V], -np.array([float(x) for x in g]), rcond=1e-12)
+            d, *_ = np.linalg.lstsq(J[:, self.V], -np.array([float(x / nr) for x in g]), rcond=1e-12)
             for k, v in enumerate(self.V):
-                P.add(v, mpf(float(d[k])))
+                P.add(v, mpf(float(d[k])) * nr)
         log_(f'  projection onto {len(Ab)} independent of {len(self.A)} contact equations: max |g| {hist[0]:.1e} -> '
              f'{hist[-1]:.1e} ({len(hist)} steps)')
         self.polish_hist = hist
@@ -307,7 +309,8 @@ class KKT:
     def setup(self, lam0, log_=log):
         """Choose an independent subset B of A and frozen variables so that the KKT Jacobian is nonsingular."""
         P = self.P
-        if self.polish(log_) > 10.0 ** (-(mp.dps // 2)):
+        self.polish(log_)
+        if self.polish_nr > mpf(10) ** (-(mp.dps // 2)):
             raise RuntimeError('contact equations inconsistent (projection stalls): the contact set is not that of a '
                                'nearby exact configuration')
         J, _ = jacobian(P, self.A)
@@ -399,14 +402,14 @@ class KKT:
                 self.lam_mp = lam
                 self.newton_hist = hist
                 raise Degenerate(f'KKT Jacobian singular near convergence (residual {float(nr):.1e})')
-            d = sla.lu_solve(sla.lu_factor(K), -np.array([float(f) for f in F]))
+            d = sla.lu_solve(sla.lu_factor(K), -np.array([float(f / nr) for f in F]))
             # backtracking: halve the step while the residual grows by more than 10x
             base = ([P.get(v) for v in self.Vf], list(lam))
             step = 1.0
             for _ in range(12):
                 for k, v in enumerate(self.Vf):
-                    P.add(v, base[0][k] + mpf(float(step * d[k])) - P.get(v))
-                lam = [base[1][r] + mpf(float(step * d[mz + r])) for r in range(len(lam))]
+                    P.add(v, base[0][k] + mpf(float(step * d[k])) * nr - P.get(v))
+                lam = [base[1][r] + mpf(float(step * d[mz + r])) * nr for r in range(len(lam))]
                 st2, gB2 = self.residual(lam)
                 if max(abs(f) for f in [st2[v] for v in self.Vf] + gB2) < 10 * nr:
                     break
@@ -989,6 +992,13 @@ def run(path, dps=80, eps='1e-20', outdir=None, algdeg=0, tol=0, quiet=False, fo
         log_(f'  !! VIOLATIONS (gap < -1e-{dps - 15}): {[(mpmath.nstr(r[0], 3),) + tuple(r[1:]) for r in viol[:10]]}')
 
     P.save(os.path.join(outdir, name + '.exact.txt'), dps - 10)
+    # contact structure, for minpoly.py (exact field configuration): every closed contact used as an equation,
+    # the load-bearing subset, corner-corner touches (not equations), free squares
+    with open(os.path.join(outdir, name + '.contacts.json'), 'w') as fh:
+        json.dump({'n': P.n, 'S': mpmath.nstr(P.S, dps - 10), 'equations': [list(c) for c in Eq],
+                   'load_bearing': [list(c) for c in A], 'vv': [list(p) for p in vv], 'free': free,
+                   'frozen_vars': [int(v) for v in kk.frozen], 'first_order_rigid': so.get('first_order_rigid'),
+                   'dim_null': so.get('dim_null'), 'rank_JA': so.get('rank_JA')}, fh)
     okc, Sp, wall, pair = certificate(P, mpf(eps), os.path.join(outdir, name + '.cert'))
     rep['cert_valid'] = ok_c = bool(okc)
     rep['S_cert'] = str(Sp)
