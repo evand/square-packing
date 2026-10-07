@@ -1,0 +1,21 @@
+== fix0a.txt: n = 292, S_in = 17.597249391156524
+  contacts: 1590 candidate incidences (|gap| < 1e-09), 234 vertex-vertex touches set aside; jam-LP dual residual 5.6e-09; load-bearing set 1466 contacts on 277 squares; free squares (rattlers / force-free): [40, 116, 120, 123, 126, 129, 198, 234, 235, 237, 257, 262, 264, 268, 290]
+  projection onto 740 independent of 1590 contact equations: max |g| 1.2e-13 -> 4.7e-69 (5 steps)
+  KKT: |A| = 1590 contacts, independent |B| = 740, variables 832 (89 frozen flat), system 1483x1483, cond ~ 5.2e+03
+  Newton: 7 residual evaluations, residual 6.7e-09 -> 4.4e-80
+  free squares re-placed: min clearance 9.02e-8; 0 with clearance < 1e-12
+  124 weakly active (force-free) contacts kept closed
+  redundant contacts (850): max |g| = 6.2e-80; frozen flat variables (89): max |dL/dv| = 3.2e-81
+  S = 17.597249391156465040471442005510389607032374738062745629985644408   (input 17.597249391156524, shift -5.9e-14)
+  load-bearing set at the exact point: 1398 contacts (was 1466 at the input); 68 of the input support carry no force
+  multipliers: equilibrium residual 0.0e+00; best strictly positive choice over the 1398 load-bearing contacts: min lambda = 2.148e-04, max 1.728e-01
+  zero modes: 119 of 119 realised by exact motions at fixed S (step 1e-3 both ways, projection residual <= 8.1e-61, correction <= 3.1e-11 t^2, |dS| <= 8.2e-36)
+  second order: rank J_A = 668, dim null(J_A) = 122; reduced Hessian: #neg 0, #zero 119, min eig -2.705078244684526e-16, min positive 0.025580401576709478
+    => local minimum of S, strict modulo 119 exact flat motions (PD on the rest of null(J_A)); the configuration is not isolated
+  first-order rigid squares: 135 of 263 load-bearing; squares in zero modes: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 26, 28, 30, 32, 41, 43, 45, 53, 55, 57, 64, 66, 68, 74, 76, 78, 83, 85, 87, 91, 93, 95, 98, 100, 102, 104, 105, 107, 109, 111, 113, 117, 118, 119, 121, 124, 125, 127, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 154, 156, 167, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 190, 191, 192, 193, 194, 195, 196, 197, 199, 207, 214, 220, 225, 229, 232, 236, 241, 242, 246, 247, 248, 250, 254, 255, 256, 260, 261, 263, 265, 267, 269, 271, 273, 276, 279, 283, 285, 288]
+  corner-corner branches (234 touches as disjunctions, MILP): min first-order dS = 0.00e+00 => jammed in every branch
+  feasibility (mp SAT): active pairs min gap -5.38e-80; non-active pairs min -3.06e-80 (45, 57); vertex-vertex min -4.43e-80; non-active walls min 0.0
+  782 pairs/walls touch (|SAT gap| < 1e-12; load-bearing, weakly active or corner-corner); every other pair/wall is separated by >= 7.15e-9 (179, 189)
+  weakly active (|gap| < 1e-12, not load-bearing): [('-1.1e-81', 1, 16), ('-4.2e-81', 2, 16), ('5.3e-81', 3, 18), ('-8.4e-81', 4, 18), ('-2.0e-80', 16, 30), ('-6.3e-81', 18, 32), ('0.0', 30, 43), ('-8.4e-81', 32, 45), ('1.5e-80', 43, 55), ('-3.1e-80', 45, 57), ('0.0', 55, 66), ('-2.1e-81', 57, 68)] ...
+  certificate (fix0a.cert): exact check VALID; S' = 17.597249391156465040647414499422 (S' - S = 1.76e-19); exact min wall 5.00e-21, min pair 1.00e-20
+  done in 123.9 s
