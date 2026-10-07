@@ -16,7 +16,7 @@ First deliverable: a table of exact forms of S + a handful of Lean local-optimal
 - [ ] Lean local minima: s(11), s(28) done (`Exact/N11L`, `N28L`; sparse G check 10-07); next n = 5 (grade B), one grade C (10 or 19).
 - [ ] Lean `Packs n S*` for the 254 field-degree ≤ 8 records: batch lean_cert.py (rational shadows 10-07: N17c 402 → 112 s); budget compile time first.
 - [ ] Target (Evan, 10-07): exact forms + Lean `Packs n S*` for all n ≤ 82 (open: 29, 53, 55, 68, 71; 83 = deg-672 wall), Lean local min for ~70 of them (not 17/41/51/69).  Large n Lean: split cert into modules (B294/B310 die on per-file memory accumulation).
-- [ ] Axis-parallel integer-S records (~53 ≤ 82): one wall-to-wall chain lemma (near-aligned k-chain needs width ≥ k) might give local min with no field arithmetic.  Check first (staggered chains, PACKER).
+- [ ] Band lemma (`ChainLocalMin.lean`, `tasks/exact-minpoly/chain-lemma.md`): extend `ChainUpTo82` to all 176 integer-side records n ≤ 324 (`chain_lean.py --upto 324`).
 - [ ] Grade-C exact certificate (`grade-C.md`: paper proof done, numerics pass for 7 n).
 - [ ] Coverage, 59 open by cost: flat rotation (10), multi-direction force balance (11), block-triangular elimination (26 + msolve-hard 9), field 108/206; 292 (packer agent 10-07).
 - [ ] Factor choice by exact root isolation, not |p(t*)| < tol (n = 29, 68, 71, 126, 228: "several factors vanish at t*").  Evan's question: how much does the pipeline need numerics beyond finding the contact graph?  (Notes: task doc §Numerics.)
