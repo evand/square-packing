@@ -63,7 +63,7 @@ packing in a smaller square.
 * `ExactPack`, `ExactCheck`: exact data ⇒ `Packs n S*` (kernel `decide` over ℚ[T]/f).  Instances: `Exact/N5c`, `Exact/N11c`.
 * `LocalMin`, `LocalMinRows` (`isLocalMin_of_rows`), `LocalMinCheck` (soundness `isLocalMin_of_lcert`).  Instance:
   `Exact/N11L`, the s(11) record is a local minimum (kernel-checked, standard axioms).
-* Generated but not committed (cost): `Exact/N17c` (compiles: 402 s, 15.6 GB); `Exact/N28L` (n = 28 local min).
+* Generated but not committed (cost): `Exact/N17c` (compiles: 402 s, 15.6 GB); `Exact/N28L` (n = 28 local min: does *not* compile within 40 GB, killed at 544 s, 10-07).
   Regenerate with `lean_cert.py` / `localmin_lean.py` (see their headers).  The bottleneck is the far pairs: 2319
   strict conditions at n = 28 against 132 contacts.  A cheap far-pair test (bounding discs, integer arithmetic) is the
   lever, not compute.
