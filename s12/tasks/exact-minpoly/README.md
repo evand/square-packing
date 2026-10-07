@@ -65,6 +65,10 @@ packing in a smaller square.
   `Exact/N11L`, the s(11) record is a local minimum (kernel-checked, standard axioms).
 * `Exact/N28L`: **the s(28) record is a local minimum** (10-07; kernel-checked, standard axioms).  `Exact/N17c`: the
   exact s(17) packing.  Both outside the default build (`lake env lean Sqpack/Exact/N28L.lean`).
+* `ChainLocalMin` (10-07, `chain-lemma.md`): **every integer-side record is a local minimum**, by a band lemma (k
+  squares meeting one horizontal line force side ≥ k; no multipliers).  `Exact/N8Chain` (default build) and
+  `Exact/ChainUpTo82` (all 53 integer-side records n ≤ 82, ~92 s, outside the default build); generator
+  `search/exact/chain_lean.py`.
 * `ShadowCheck` (10-07): general rational-shadow validity checker, independent of number fields.  Per-square rational
   enclosures of (x, y, c, s); far pairs by a disc test (centres ≥ √2 apart); near pairs and walls by interval
   arithmetic; `packs_of_shadow` takes an exact proof only where those fail.  `ExactCheck` proves each enclosure
