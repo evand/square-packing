@@ -67,6 +67,12 @@ class NotHandled(Exception):
     pass
 
 
+class PinAngles(Exception):
+    """Raised by multi_field: these classes (indices into kts) are flat angle directions; pin them and start again."""
+    def __init__(self, cls):
+        self.cls = cls
+
+
 # ---------------------------------------------------------------- rational functions in t, linear forms over them
 class RF:
     """num/den over the ring R, den with leading coefficient 1 (gcd-normalised)."""
@@ -221,7 +227,7 @@ def frac_near(x, digits):
     return Fraction(int(mp.nint(x * mpf(10) ** digits)), 10 ** digits)
 
 
-def run(base, quiet=False):
+def run(base, quiet=False, pin_cls=()):
     t0 = time.time()
     log = (lambda *a: None) if quiet else (lambda *a: print(*a, file=sys.stderr))
     ct = json.load(open(base + '.contacts.json'))
@@ -306,8 +312,12 @@ def run(base, quiet=False):
         k = memb[i][0]
         if k and f't{k}' not in pins:
             if any(memb[j][0] == k for j in sysq if j not in frozen_sq):
-                raise NotHandled(f'square {i}: flat rotation, but parallel to squares that do not rotate')
+                # parallel to squares whose angle the contacts fix: it keeps that angle (canonical placement)
+                log(f'  square {i}: flat rotation, kept parallel to its class (t{k})')
+                continue
             pins[f't{k}'] = frac_near(tstar[k], 30)
+    for k in pin_cls:                                              # flat angle directions found by multi_field
+        pins[f't{k}'] = frac_near(tstar[k], 30)
     kts = [k for k in range(1, ncls + 1) if f't{k}' not in pins]     # free tilted classes
     global R
     R = Ring(len(kts))
@@ -433,17 +443,18 @@ def run(base, quiet=False):
         if g.is_zero() or g.degree() < 1:
             raise NotHandled('no consistency polynomial and S constant in t')
         gz = flint.fmpz_poly([int(x) for x in g.numer().coeffs()])
-        cand = []
-        for fac, mult in gz.factor()[1]:
-            vals = abs(ev_poly(Q(fac), tv[0])) / max(1, max(abs(int(x)) for x in fac.coeffs()))
-            cand.append((vals, fac))
-        cand.sort(key=lambda z: z[0])
-        if not (cand[0][0] < mpf(10) ** -(mp.dps // 2)) or (len(cand) > 1 and cand[1][0] < mpf(10) ** -10):
-            raise RuntimeError(f'factor choice ambiguous: {[mp.nstr(c[0], 3) for c in cand[:3]]}')
-        f, tmap, troot = Q(cand[0][1]), [T], tv[0]
-        log(f'  f(t): degree {f.degree()}, from gcd of degree {g.degree()} ({len(cand)} factors)')
+        facs = [fac for fac, _m in gz.factor()[1] if fac.degree() > 0]
+        fac, _ = pick_root(facs, tv, mpf(10) ** -(mp.dps // 2))       # the factor with the real root t*
+        f, tmap, troot = Q(fac), [T], tv[0]
+        log(f'  f(t): degree {f.degree()}, from gcd of degree {g.degree()} ({len(facs)} factors)')
     else:
-        f, tmap, troot, stationary = multi_field(leftover, tv, base, log, piv_rows)
+        try:
+            f, tmap, troot, stationary = multi_field(leftover, tv, base, log, piv_rows,
+                                                     [kts.index(memb[i][0]) for i in frozen_sq if memb[i][0] in kts])
+        except PinAngles as ex:
+            cls = [kts[j] for j in ex.cls]
+            log(f'  S does not depend on {", ".join(f"t{k}" for k in cls)}: flat angle directions, pinned; again')
+            return run(base, quiet, tuple(pin_cls) + tuple(cls))
     Kf = K(f, tmap)
     # back-substitution in K
     val = {}
@@ -610,7 +621,7 @@ def mdet(M):
     return acc
 
 
-def multi_field(leftover, tv, base, log, piv_rows):
+def multi_field(leftover, tv, base, log, piv_rows, frozen=()):
     """K for k >= 2 free class parameters: the consistency polynomials (numerators of the rows left after
     elimination), their irreducible factors that vanish at t*, msolve's parametrization, and the factor of f and root
     that reproduce t*.  Returns (f1, tmap, A*)."""
@@ -632,6 +643,17 @@ def multi_field(leftover, tv, base, log, piv_rows):
     log(f'  {len(leftover)} consistency rows -> {len(keep)} distinct irreducible factors vanishing at t*: degrees '
         f'{[q.total_degree() for q in keep]}')
     stationary = False
+    if len(keep) < k - 1:
+        # more than one angle direction left: the ones S does not depend on (identically) are flat; pin enough of
+        # them (classes with a flat-rotating square first, then the highest degree in the consistency polynomials)
+        # to leave a curve, which force balance then fixes
+        Sr = back_rf(piv_rows)['S']
+        names = [f't{i + 1}' for i in range(k)]
+        flat = [j for j, nm in enumerate(names) if (Sr.n.derivative(nm) * Sr.d - Sr.n * Sr.d.derivative(nm)).is_zero()]
+        need = k - 1 - len(keep)
+        if len(flat) >= need:
+            flat.sort(key=lambda j: (j not in frozen, -max((q.degrees()[j] for q in keep), default=0)))
+            raise PinAngles(flat[:need])
     if len(keep) == k - 1:
         # the contacts leave a curve of angles; S is stationary along it at t* (force balance): Lagrange condition
         # det [grad C_1; ...; grad C_{k-1}; grad S] = 0, with the numerator of grad S
@@ -663,23 +685,10 @@ def multi_field(leftover, tv, base, log, piv_rows):
     f, den, params = msolve_param(keep, k, base)
     log(f'  msolve: eliminating polynomial of degree {f.degree()} ({time.time() - t0:.1f} s)')
     fz = flint.fmpz_poly([int(x * f.denom()) for x in f.coeffs()])
-    best = []
-    prec0 = flint.ctx.prec
-    flint.ctx.prec = int(3.4 * mp.dps) + 64                       # certified root balls at the working precision
-    roots = [(fac, rt) for fac, _m in fz.factor()[1] for rt, _ in fac.complex_roots()]
-    flint.ctx.prec = prec0
-    for fac, rt in roots:
-        if True:
-            if abs(float(rt.imag.mid())) > 1e-6:
-                continue
-            A = mpf(rt.real.mid().str(mp.dps, radius=False, more=True))
-            ts = [-ev_poly(g, A) / (c * ev_poly(den, A)) for g, c in params]
-            err = max(abs(a - b) for a, b in zip(ts, tv))
-            best.append((err, fac, A))
-    best.sort(key=lambda z: z[0])
-    if not best or best[0][0] > mpf(10) ** -30 or (len(best) > 1 and best[1][0] < mpf(10) ** -10):
-        raise RuntimeError(f'root choice ambiguous: {[mp.nstr(b[0], 3) for b in best[:3]]}')
-    _, fac, A = best[0]
+    # the real root A of a factor of f whose image (t_1..t_k)(A) is t*
+    fac, Ab = pick_root([fac for fac, _m in fz.factor()[1] if fac.degree() > 0], tv, mpf(10) ** -(mp.dps // 2),
+                        lambda A: [-ev_arb(g, A) / (c * ev_arb(den, A)) for g, c in params])
+    A = mpf(Ab.mid().str(mp.dps + 10, radius=False, more=True))
     f1 = Q(fac)
     Kf = K(f1, [])
     dinv = Kf.inv(den % f1)
@@ -766,6 +775,53 @@ def eliminate(rows, tv):
                 nxt.append(r)
         active = nxt
     return piv_rows, []
+
+
+def ev_arb(p, x):
+    """p (fmpz_poly or fmpq_poly) at the arb ball x."""
+    v = flint.arb(0)
+    for c in reversed(p.coeffs()):
+        v = v * x + flint.arb(c)
+    return v
+
+
+def pick_root(facs, x0, eps, image=lambda r: [r]):
+    """The unique real root, over the irreducible integer polynomials facs, whose image (a list of arb balls; default
+    the root itself) lies within eps of the target vector x0 (mpf; t* is known to about eps).  Real roots are
+    isolated by flint (certified balls; a real root's imaginary part is exactly 0) and refined, doubling the
+    precision, until exactly one candidate's image can lie within eps of x0 and that image is narrower than eps.
+    Returns (fac, root ball at the working precision mp.dps).  Fails if no root qualifies, or if several remain once
+    their images are far narrower than eps."""
+    prec0 = flint.ctx.prec
+    dig = int(-mp.log10(eps)) + 10
+    prec = int(3.4 * dig) + 64
+    try:
+        while True:
+            flint.ctx.prec = prec
+            tgt = [flint.arb(mp.nstr(x, dig + 10, strip_zeros=False), mp.nstr(eps, 5)) for x in x0]
+            alive, wmax = [], 0
+            for fac in facs:
+                for rt, _m in fac.complex_roots():
+                    if not rt.imag.is_zero():
+                        continue
+                    im = image(rt.real)
+                    if all(a.overlaps(b) for a, b in zip(im, tgt)):
+                        alive.append((fac, rt.real))
+                        wmax = max(wmax, max(float(a.rad()) for a in im))
+            if not alive:
+                raise RuntimeError('no real root matches t*')
+            if len(alive) == 1 and wmax < float(eps):
+                fac, ball = alive[0]
+                flint.ctx.prec = max(prec, int(3.4 * mp.dps) + 64)    # the root at the working precision
+                return fac, next(rt.real for rt, _m in fac.complex_roots()
+                                 if rt.imag.is_zero() and rt.real.overlaps(ball))
+            if wmax < float(eps) * 1e-6:
+                raise RuntimeError(f'{len(alive)} real roots within {mp.nstr(eps, 2)} of t*: more digits of t* needed')
+            prec *= 2
+            if prec > 200000:
+                raise RuntimeError('root isolation: no convergence')
+    finally:
+        flint.ctx.prec = prec0
 
 
 def isolate(p, x0, w=Fraction(1, 10 ** 25)):
