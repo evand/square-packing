@@ -18,7 +18,7 @@ so the interiors are disjoint).  Inside: all four corners in [0, S]^2 (convexity
 
   python3 verify_exact.py results/NAME.minpoly.json [...]
 """
-import sys, json
+import sys, json, gzip
 from fractions import Fraction as F
 
 P2 = 2 ** 400                                   # interval endpoints are rounded outward to multiples of 2^-400
@@ -198,7 +198,7 @@ def nonneg(v):
 
 
 def check(path, quiet=False):
-    D = json.load(open(path))
+    D = json.load(gzip.open(path, 'rt') if path.endswith('.gz') else open(path))
     n = D['n']
     f = [F(x) for x in D['field']['f']]
     E.f = f

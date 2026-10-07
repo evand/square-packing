@@ -113,6 +113,8 @@ def block(n, space='Chain'):
     cast = 'Nat.cast_one' if k == 1 else 'Nat.cast_ofNat'
     text = f'''namespace UnitSquarePacking.{space}.N{n}
 
+set_option maxRecDepth 100000
+
 /-! Register record n = {n}, side {k}, all squares axis-parallel (`batch/certs/n-{n}.cert`, unscaled to side {k}).
 Band: squares {B} (0-based), centres within `1/2 - m` of `y = {lq(y0)}`, `m = {lq(m)}`. -/
 

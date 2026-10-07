@@ -28,6 +28,10 @@ optimum of the same packing).  See `batch/README.md`.
 | `minpoly/run_minpoly.sh`, `minpoly/summary.py` | batch over the register → `minpoly/results.md` (269/324 verified 10-07) |
 | `localmin.py` | grade-A local-minimum certificates (exact multipliers in `K`, rational left inverse) |
 | `lean_cert.py`, `localmin_lean.py` | Lean certificates (`lean/Sqpack/Exact/`) |
+| `minpoly/data/n-N.minpoly.json.gz` | the committed exact forms (only VALID ones); `minpoly/verify_data.sh` replays `verify_exact.py` on all |
+| `EXACT_FORMS.md`, `exact_forms.json` | the table: S*, p, isolating interval, field, checks per n (`minpoly/table.py`) |
+| `lean_batch.py` | Lean `Packs n S*` for every exact form (`lean_cert.py --split`: data + chunk modules); results in `lean_batch/results.{tsv,md}`, generated Lean gitignored |
+| `chain_lean.py` | band-lemma local-minimum certificates for the integer-side records (`lean/Sqpack/Exact/ChainUpTo82.lean`, `Exact/Chain/N*.lean`) |
 
 ## Method
 

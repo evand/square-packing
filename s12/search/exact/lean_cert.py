@@ -12,7 +12,7 @@ arithmetic) need no field conditions.  Only contacts and near-contacts keep exac
 
   python3 lean_cert.py minpoly/solve/n-11.minpoly.json ../../lean/Sqpack/Exact/N11.lean
 """
-import sys, json
+import sys, json, gzip
 from fractions import Fraction as F
 
 
@@ -229,7 +229,7 @@ def enclose(v, digits=ENCL_DIGITS):
 
 def build(path, out, mod, extra=None, split=None):
     """extra(sqs, f, S) -> (polys that must be >= 0 on the t interval, emit(ta, tb) -> Lean lines)."""
-    D = json.load(open(path))
+    D = json.load(gzip.open(path, 'rt') if path.endswith('.gz') else open(path))
     n = D['n']
     f = [F(x) for x in D['field']['f']]
     ta, tb = (F(x) for x in D['field']['t_interval'])

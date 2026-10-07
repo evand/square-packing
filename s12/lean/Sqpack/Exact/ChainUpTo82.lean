@@ -6,6 +6,8 @@ that row into `IsLocalMinPacking` (ball radius `m / 2` in pose space).  No multi
 
 namespace UnitSquarePacking.ChainUpTo82.N1
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 1, side 1, all squares axis-parallel (`batch/certs/n-1.cert`, unscaled to side 1).
 Band: squares [0] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -28,6 +30,8 @@ theorem localMin : IsLocalMinPacking 1 1 (fun i => cenOf P i) (fun _ => 0) := by
 end UnitSquarePacking.ChainUpTo82.N1
 
 namespace UnitSquarePacking.ChainUpTo82.N2
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 2, side 2, all squares axis-parallel (`batch/certs/n-2.cert`, unscaled to side 2).
 Band: squares [0, 1] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -52,6 +56,8 @@ theorem localMin : IsLocalMinPacking 2 2 (fun i => cenOf P i) (fun _ => 0) := by
 end UnitSquarePacking.ChainUpTo82.N2
 
 namespace UnitSquarePacking.ChainUpTo82.N3
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 3, side 2, all squares axis-parallel (`batch/certs/n-3.cert`, unscaled to side 2).
 Band: squares [0, 1] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -78,6 +84,8 @@ end UnitSquarePacking.ChainUpTo82.N3
 
 namespace UnitSquarePacking.ChainUpTo82.N4
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 4, side 2, all squares axis-parallel (`batch/certs/n-4.cert`, unscaled to side 2).
 Band: squares [0, 1] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -103,6 +111,8 @@ theorem localMin : IsLocalMinPacking 4 2 (fun i => cenOf P i) (fun _ => 0) := by
 end UnitSquarePacking.ChainUpTo82.N4
 
 namespace UnitSquarePacking.ChainUpTo82.N6
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 6, side 3, all squares axis-parallel (`batch/certs/n-6.cert`, unscaled to side 3).
 Band: squares [0, 1, 2] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -132,6 +142,8 @@ end UnitSquarePacking.ChainUpTo82.N6
 
 namespace UnitSquarePacking.ChainUpTo82.N7
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 7, side 3, all squares axis-parallel (`batch/certs/n-7.cert`, unscaled to side 3).
 Band: squares [0, 1, 2] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -160,6 +172,8 @@ theorem localMin : IsLocalMinPacking 7 3 (fun i => cenOf P i) (fun _ => 0) := by
 end UnitSquarePacking.ChainUpTo82.N7
 
 namespace UnitSquarePacking.ChainUpTo82.N8
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 8, side 3, all squares axis-parallel (`batch/certs/n-8.cert`, unscaled to side 3).
 Band: squares [0, 1, 2] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -191,6 +205,8 @@ end UnitSquarePacking.ChainUpTo82.N8
 
 namespace UnitSquarePacking.ChainUpTo82.N9
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 9, side 3, all squares axis-parallel (`batch/certs/n-9.cert`, unscaled to side 3).
 Band: squares [0, 1, 2] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -221,6 +237,8 @@ theorem localMin : IsLocalMinPacking 9 3 (fun i => cenOf P i) (fun _ => 0) := by
 end UnitSquarePacking.ChainUpTo82.N9
 
 namespace UnitSquarePacking.ChainUpTo82.N12
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 12, side 4, all squares axis-parallel (`batch/certs/n-12.cert`, unscaled to side 4).
 Band: squares [0, 1, 2, 3] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -255,6 +273,8 @@ theorem localMin : IsLocalMinPacking 12 4 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N12
 
 namespace UnitSquarePacking.ChainUpTo82.N13
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 13, side 4, all squares axis-parallel (`batch/certs/n-13.cert`, unscaled to side 4).
 Band: squares [0, 1, 2, 3] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -291,6 +311,8 @@ end UnitSquarePacking.ChainUpTo82.N13
 
 namespace UnitSquarePacking.ChainUpTo82.N14
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 14, side 4, all squares axis-parallel (`batch/certs/n-14.cert`, unscaled to side 4).
 Band: squares [0, 1, 2, 3] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -326,6 +348,8 @@ theorem localMin : IsLocalMinPacking 14 4 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N14
 
 namespace UnitSquarePacking.ChainUpTo82.N15
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 15, side 4, all squares axis-parallel (`batch/certs/n-15.cert`, unscaled to side 4).
 Band: squares [0, 1, 2, 3] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -364,6 +388,8 @@ end UnitSquarePacking.ChainUpTo82.N15
 
 namespace UnitSquarePacking.ChainUpTo82.N16
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 16, side 4, all squares axis-parallel (`batch/certs/n-16.cert`, unscaled to side 4).
 Band: squares [0, 1, 2, 3] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -401,6 +427,8 @@ theorem localMin : IsLocalMinPacking 16 4 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N16
 
 namespace UnitSquarePacking.ChainUpTo82.N20
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 20, side 5, all squares axis-parallel (`batch/certs/n-20.cert`, unscaled to side 5).
 Band: squares [0, 1, 2, 3, 4] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -444,6 +472,8 @@ end UnitSquarePacking.ChainUpTo82.N20
 
 namespace UnitSquarePacking.ChainUpTo82.N21
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 21, side 5, all squares axis-parallel (`batch/certs/n-21.cert`, unscaled to side 5).
 Band: squares [0, 1, 2, 3, 4] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -486,6 +516,8 @@ theorem localMin : IsLocalMinPacking 21 5 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N21
 
 namespace UnitSquarePacking.ChainUpTo82.N22
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 22, side 5, all squares axis-parallel (`batch/certs/n-22.cert`, unscaled to side 5).
 Band: squares [0, 1, 2, 3, 4] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -531,6 +563,8 @@ end UnitSquarePacking.ChainUpTo82.N22
 
 namespace UnitSquarePacking.ChainUpTo82.N23
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 23, side 5, all squares axis-parallel (`batch/certs/n-23.cert`, unscaled to side 5).
 Band: squares [0, 1, 2, 3, 4] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -575,6 +609,8 @@ theorem localMin : IsLocalMinPacking 23 5 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N23
 
 namespace UnitSquarePacking.ChainUpTo82.N24
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 24, side 5, all squares axis-parallel (`batch/certs/n-24.cert`, unscaled to side 5).
 Band: squares [0, 1, 2, 3, 4] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -622,6 +658,8 @@ end UnitSquarePacking.ChainUpTo82.N24
 
 namespace UnitSquarePacking.ChainUpTo82.N25
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 25, side 5, all squares axis-parallel (`batch/certs/n-25.cert`, unscaled to side 5).
 Band: squares [0, 1, 2, 3, 4] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -668,6 +706,8 @@ theorem localMin : IsLocalMinPacking 25 5 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N25
 
 namespace UnitSquarePacking.ChainUpTo82.N30
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 30, side 6, all squares axis-parallel (`batch/certs/n-30.cert`, unscaled to side 6).
 Band: squares [0, 1, 2, 3, 4, 5] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -720,6 +760,8 @@ theorem localMin : IsLocalMinPacking 30 6 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N30
 
 namespace UnitSquarePacking.ChainUpTo82.N31
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 31, side 6, all squares axis-parallel (`batch/certs/n-31.cert`, unscaled to side 6).
 Band: squares [0, 1, 2, 3, 4, 5] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -774,6 +816,8 @@ end UnitSquarePacking.ChainUpTo82.N31
 
 namespace UnitSquarePacking.ChainUpTo82.N32
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 32, side 6, all squares axis-parallel (`batch/certs/n-32.cert`, unscaled to side 6).
 Band: squares [0, 1, 2, 3, 4, 5] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -827,6 +871,8 @@ theorem localMin : IsLocalMinPacking 32 6 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N32
 
 namespace UnitSquarePacking.ChainUpTo82.N33
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 33, side 6, all squares axis-parallel (`batch/certs/n-33.cert`, unscaled to side 6).
 Band: squares [0, 1, 2, 3, 4, 5] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -883,6 +929,8 @@ end UnitSquarePacking.ChainUpTo82.N33
 
 namespace UnitSquarePacking.ChainUpTo82.N34
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 34, side 6, all squares axis-parallel (`batch/certs/n-34.cert`, unscaled to side 6).
 Band: squares [0, 1, 2, 3, 4, 5] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -938,6 +986,8 @@ theorem localMin : IsLocalMinPacking 34 6 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N34
 
 namespace UnitSquarePacking.ChainUpTo82.N35
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 35, side 6, all squares axis-parallel (`batch/certs/n-35.cert`, unscaled to side 6).
 Band: squares [0, 1, 2, 3, 4, 5] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -996,6 +1046,8 @@ end UnitSquarePacking.ChainUpTo82.N35
 
 namespace UnitSquarePacking.ChainUpTo82.N36
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 36, side 6, all squares axis-parallel (`batch/certs/n-36.cert`, unscaled to side 6).
 Band: squares [0, 1, 2, 3, 4, 5] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -1053,6 +1105,8 @@ theorem localMin : IsLocalMinPacking 36 6 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N36
 
 namespace UnitSquarePacking.ChainUpTo82.N42
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 42, side 7, all squares axis-parallel (`batch/certs/n-42.cert`, unscaled to side 7).
 Band: squares [0, 1, 2, 3, 4, 5, 6] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -1118,6 +1172,8 @@ end UnitSquarePacking.ChainUpTo82.N42
 
 namespace UnitSquarePacking.ChainUpTo82.N43
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 43, side 7, all squares axis-parallel (`batch/certs/n-43.cert`, unscaled to side 7).
 Band: squares [0, 1, 2, 3, 4, 5, 6] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -1182,6 +1238,8 @@ theorem localMin : IsLocalMinPacking 43 7 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N43
 
 namespace UnitSquarePacking.ChainUpTo82.N44
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 44, side 7, all squares axis-parallel (`batch/certs/n-44.cert`, unscaled to side 7).
 Band: squares [0, 1, 2, 3, 4, 5, 6] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -1249,6 +1307,8 @@ end UnitSquarePacking.ChainUpTo82.N44
 
 namespace UnitSquarePacking.ChainUpTo82.N45
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 45, side 7, all squares axis-parallel (`batch/certs/n-45.cert`, unscaled to side 7).
 Band: squares [0, 1, 2, 3, 4, 5, 6] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -1315,6 +1375,8 @@ theorem localMin : IsLocalMinPacking 45 7 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N45
 
 namespace UnitSquarePacking.ChainUpTo82.N46
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 46, side 7, all squares axis-parallel (`batch/certs/n-46.cert`, unscaled to side 7).
 Band: squares [0, 1, 2, 3, 4, 5, 6] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -1384,6 +1446,8 @@ end UnitSquarePacking.ChainUpTo82.N46
 
 namespace UnitSquarePacking.ChainUpTo82.N47
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 47, side 7, all squares axis-parallel (`batch/certs/n-47.cert`, unscaled to side 7).
 Band: squares [0, 1, 2, 3, 4, 5, 6] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -1452,6 +1516,8 @@ theorem localMin : IsLocalMinPacking 47 7 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N47
 
 namespace UnitSquarePacking.ChainUpTo82.N48
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 48, side 7, all squares axis-parallel (`batch/certs/n-48.cert`, unscaled to side 7).
 Band: squares [0, 1, 2, 3, 4, 5, 6] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -1523,6 +1589,8 @@ end UnitSquarePacking.ChainUpTo82.N48
 
 namespace UnitSquarePacking.ChainUpTo82.N49
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 49, side 7, all squares axis-parallel (`batch/certs/n-49.cert`, unscaled to side 7).
 Band: squares [0, 1, 2, 3, 4, 5, 6] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -1593,6 +1661,8 @@ theorem localMin : IsLocalMinPacking 49 7 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N49
 
 namespace UnitSquarePacking.ChainUpTo82.N56
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 56, side 8, all squares axis-parallel (`batch/certs/n-56.cert`, unscaled to side 8).
 Band: squares [0, 1, 2, 3, 4, 5, 6, 7] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -1671,6 +1741,8 @@ theorem localMin : IsLocalMinPacking 56 8 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N56
 
 namespace UnitSquarePacking.ChainUpTo82.N57
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 57, side 8, all squares axis-parallel (`batch/certs/n-57.cert`, unscaled to side 8).
 Band: squares [0, 1, 2, 3, 4, 5, 6, 7] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -1751,6 +1823,8 @@ end UnitSquarePacking.ChainUpTo82.N57
 
 namespace UnitSquarePacking.ChainUpTo82.N58
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 58, side 8, all squares axis-parallel (`batch/certs/n-58.cert`, unscaled to side 8).
 Band: squares [0, 1, 2, 3, 4, 5, 6, 7] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -1830,6 +1904,8 @@ theorem localMin : IsLocalMinPacking 58 8 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N58
 
 namespace UnitSquarePacking.ChainUpTo82.N59
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 59, side 8, all squares axis-parallel (`batch/certs/n-59.cert`, unscaled to side 8).
 Band: squares [0, 1, 2, 3, 4, 5, 6, 7] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -1912,6 +1988,8 @@ end UnitSquarePacking.ChainUpTo82.N59
 
 namespace UnitSquarePacking.ChainUpTo82.N60
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 60, side 8, all squares axis-parallel (`batch/certs/n-60.cert`, unscaled to side 8).
 Band: squares [0, 1, 2, 3, 4, 5, 6, 7] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -1993,6 +2071,8 @@ theorem localMin : IsLocalMinPacking 60 8 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N60
 
 namespace UnitSquarePacking.ChainUpTo82.N61
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 61, side 8, all squares axis-parallel (`batch/certs/n-61.cert`, unscaled to side 8).
 Band: squares [0, 1, 2, 3, 4, 5, 6, 7] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -2077,6 +2157,8 @@ end UnitSquarePacking.ChainUpTo82.N61
 
 namespace UnitSquarePacking.ChainUpTo82.N62
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 62, side 8, all squares axis-parallel (`batch/certs/n-62.cert`, unscaled to side 8).
 Band: squares [0, 1, 2, 3, 4, 5, 6, 7] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -2160,6 +2242,8 @@ theorem localMin : IsLocalMinPacking 62 8 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N62
 
 namespace UnitSquarePacking.ChainUpTo82.N63
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 63, side 8, all squares axis-parallel (`batch/certs/n-63.cert`, unscaled to side 8).
 Band: squares [0, 1, 2, 3, 4, 5, 6, 7] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -2246,6 +2330,8 @@ end UnitSquarePacking.ChainUpTo82.N63
 
 namespace UnitSquarePacking.ChainUpTo82.N64
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 64, side 8, all squares axis-parallel (`batch/certs/n-64.cert`, unscaled to side 8).
 Band: squares [0, 1, 2, 3, 4, 5, 6, 7] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -2331,6 +2417,8 @@ theorem localMin : IsLocalMinPacking 64 8 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N64
 
 namespace UnitSquarePacking.ChainUpTo82.N72
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 72, side 9, all squares axis-parallel (`batch/certs/n-72.cert`, unscaled to side 9).
 Band: squares [0, 1, 2, 3, 4, 5, 6, 7, 8] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -2425,6 +2513,8 @@ theorem localMin : IsLocalMinPacking 72 9 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N72
 
 namespace UnitSquarePacking.ChainUpTo82.N73
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 73, side 9, all squares axis-parallel (`batch/certs/n-73.cert`, unscaled to side 9).
 Band: squares [0, 1, 2, 3, 4, 5, 6, 7, 8] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -2521,6 +2611,8 @@ end UnitSquarePacking.ChainUpTo82.N73
 
 namespace UnitSquarePacking.ChainUpTo82.N74
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 74, side 9, all squares axis-parallel (`batch/certs/n-74.cert`, unscaled to side 9).
 Band: squares [0, 1, 2, 3, 4, 5, 6, 7, 8] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -2616,6 +2708,8 @@ theorem localMin : IsLocalMinPacking 74 9 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N74
 
 namespace UnitSquarePacking.ChainUpTo82.N75
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 75, side 9, all squares axis-parallel (`batch/certs/n-75.cert`, unscaled to side 9).
 Band: squares [0, 1, 2, 3, 4, 5, 6, 7, 8] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -2714,6 +2808,8 @@ end UnitSquarePacking.ChainUpTo82.N75
 
 namespace UnitSquarePacking.ChainUpTo82.N76
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 76, side 9, all squares axis-parallel (`batch/certs/n-76.cert`, unscaled to side 9).
 Band: squares [0, 1, 2, 3, 4, 5, 6, 7, 8] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -2811,6 +2907,8 @@ theorem localMin : IsLocalMinPacking 76 9 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N76
 
 namespace UnitSquarePacking.ChainUpTo82.N77
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 77, side 9, all squares axis-parallel (`batch/certs/n-77.cert`, unscaled to side 9).
 Band: squares [0, 1, 2, 3, 4, 5, 6, 7, 8] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -2911,6 +3009,8 @@ end UnitSquarePacking.ChainUpTo82.N77
 
 namespace UnitSquarePacking.ChainUpTo82.N78
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 78, side 9, all squares axis-parallel (`batch/certs/n-78.cert`, unscaled to side 9).
 Band: squares [0, 1, 2, 3, 4, 5, 6, 7, 8] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -3010,6 +3110,8 @@ theorem localMin : IsLocalMinPacking 78 9 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N78
 
 namespace UnitSquarePacking.ChainUpTo82.N79
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 79, side 9, all squares axis-parallel (`batch/certs/n-79.cert`, unscaled to side 9).
 Band: squares [0, 1, 2, 3, 4, 5, 6, 7, 8] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
@@ -3112,6 +3214,8 @@ end UnitSquarePacking.ChainUpTo82.N79
 
 namespace UnitSquarePacking.ChainUpTo82.N80
 
+set_option maxRecDepth 100000
+
 /-! Register record n = 80, side 9, all squares axis-parallel (`batch/certs/n-80.cert`, unscaled to side 9).
 Band: squares [0, 1, 2, 3, 4, 5, 6, 7, 8] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
 
@@ -3213,6 +3317,8 @@ theorem localMin : IsLocalMinPacking 80 9 (fun i => cenOf P i) (fun _ => 0) := b
 end UnitSquarePacking.ChainUpTo82.N80
 
 namespace UnitSquarePacking.ChainUpTo82.N81
+
+set_option maxRecDepth 100000
 
 /-! Register record n = 81, side 9, all squares axis-parallel (`batch/certs/n-81.cert`, unscaled to side 9).
 Band: squares [0, 1, 2, 3, 4, 5, 6, 7, 8] (0-based), centres within `1/2 - m` of `y = 1/2`, `m = 1/2`. -/
