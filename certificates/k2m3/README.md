@@ -4,7 +4,8 @@
 wand125's, below), adversarially reviewed by six independent agents with no errors found; jlevy/squares replayed both
 checkers in full (2–3 Oct) and lists the theorem as confirmed (T-064, V3/C3); in Lean, the all-k reduction, the D4 reduction and the axis-parallel face (Lemma Z) are
 kernel-checked, conditional on the finite statement `ValidTilt7` (the tilted part of `Valid7`; not proved in Lean).  Independently re-implemented (2026-10-02): an independent second implementation by wand125 (https://github.com/wand125/valid7-independent-check, reported 2026-10-02 in evand/square-packing#1; written from FORMAT.md and the claim only, per its READ_LOG) certifies `Valid7` over the whole pose space with no symmetry assumed: 156,800 roots, 0 uncertified, exact rationals.  We reran its record check in a sandbox (2026-10-03: `RECORD OK` over all 156,800 roots, a fixed 2,300-leaf sample re-certified, three mutant covers refused; jlevy/squares#298 got the same) and read its method: sound, with one measure-zero logical gap in a Tier B positivity test that cannot matter for this cover.  Per-leaf assurance rests on its own 626 core-hour run.  Our own `zmx2` with area density
-is partial (it does not cover the smallest tilts: `search/ZMX2_AREA.md`).  Not yet externally reviewed or fully
+also certifies `Valid7` over every pose with no symmetry assumed (2026-10-01, `cert --full --first-order`); its newest
+lemmas (U, V) still await a second reader (`search/ZMX2_AREA.md` §0, §13).  Not yet externally reviewed or fully
 formalised.  The fast `verify.sh` does not recompute the positive-tilt part of the proof; `--full` does (below).
 
 **Claim.**  For every integer `k ≥ 6`, no `k² − 3` unit squares fit in a square of side less than `k`.  Since `k²`

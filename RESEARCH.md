@@ -58,7 +58,7 @@ but does not recompute the positive-tilt leaves (`--full` does); for `certificat
   9,800 D4 roots, 0 uncertified, every leaf recorded), and independently by wand125's checker (whole pose space, no
   symmetry, 156,800 roots, 0 uncertified; https://github.com/wand125/valid7-independent-check;
   its record check rerun here 2026-10-03 (RECORD OK, sampled leaf re-certification, mutants refused) and its method read, sound; per-leaf assurance rests on its own run;
-  our own `zmx2` with area density is partial: `search/ZMX2_AREA.md`); the bundle's fast `verify.sh` re-checks that record's structure and coverage, not
+  our own `zmx2` with area density also certifies `Valid7` over every pose, no symmetry assumed (2026-10-01, `cert --full --first-order`), but its newest lemmas (U, V) still await a second reader: `search/ZMX2_AREA.md` §0, §13); the bundle's fast `verify.sh` re-checks that record's structure and coverage, not
   each leaf's mass bound: *Working in public: an exact certificate with an
   independent second implementation (wand125; record check and method read here), adversarially reviewed by six independent agents with no errors found; in Lean everything but the
   tilted run `ValidTilt7` is kernel-checked. Not yet externally reviewed or fully formalised.*  Known before:
