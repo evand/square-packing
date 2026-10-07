@@ -1,0 +1,8387 @@
+[
+ {
+  "n": 1,
+  "status": "exact",
+  "S": "1.0",
+  "S_poly_ascending": [
+   -1,
+   1
+  ],
+  "S_interval": [
+   "9999999999999999999999999/10000000000000000000000000",
+   "10000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-1.minpoly.json.gz"
+ },
+ {
+  "n": 2,
+  "status": "exact",
+  "S": "2.0",
+  "S_poly_ascending": [
+   -2,
+   1
+  ],
+  "S_interval": [
+   "19999999999999999999999999/10000000000000000000000000",
+   "20000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-2.minpoly.json.gz"
+ },
+ {
+  "n": 3,
+  "status": "exact",
+  "S": "2.0",
+  "S_poly_ascending": [
+   -2,
+   1
+  ],
+  "S_interval": [
+   "19999999999999999999999999/10000000000000000000000000",
+   "20000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-3.minpoly.json.gz"
+ },
+ {
+  "n": 4,
+  "status": "exact",
+  "S": "2.0",
+  "S_poly_ascending": [
+   -2,
+   1
+  ],
+  "S_interval": [
+   "19999999999999999999999999/10000000000000000000000000",
+   "20000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-4.minpoly.json.gz"
+ },
+ {
+  "n": 5,
+  "status": "exact",
+  "S": "2.707106781186547524",
+  "S_poly_ascending": [
+   7,
+   -8,
+   2
+  ],
+  "S_interval": [
+   "1691941738241592202750527663815530649553/625000000000000000000000000000000000000",
+   "1691941738241592202750527788815530649553/625000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-5.minpoly.json.gz"
+ },
+ {
+  "n": 6,
+  "status": "exact",
+  "S": "3.0",
+  "S_poly_ascending": [
+   -3,
+   1
+  ],
+  "S_interval": [
+   "29999999999999999999999999/10000000000000000000000000",
+   "30000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-6.minpoly.json.gz"
+ },
+ {
+  "n": 7,
+  "status": "exact",
+  "S": "3.0",
+  "S_poly_ascending": [
+   -3,
+   1
+  ],
+  "S_interval": [
+   "29999999999999999999999999/10000000000000000000000000",
+   "30000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-7.minpoly.json.gz"
+ },
+ {
+  "n": 8,
+  "status": "exact",
+  "S": "3.0",
+  "S_poly_ascending": [
+   -3,
+   1
+  ],
+  "S_interval": [
+   "29999999999999999999999999/10000000000000000000000000",
+   "30000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-8.minpoly.json.gz"
+ },
+ {
+  "n": 9,
+  "status": "exact",
+  "S": "3.0",
+  "S_poly_ascending": [
+   -3,
+   1
+  ],
+  "S_interval": [
+   "29999999999999999999999999/10000000000000000000000000",
+   "30000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-9.minpoly.json.gz"
+ },
+ {
+  "n": 10,
+  "status": "exact",
+  "S": "3.707106781186547524",
+  "S_poly_ascending": [
+   17,
+   -12,
+   2
+  ],
+  "S_interval": [
+   "2316941738241592202750527663815530649553/625000000000000000000000000000000000000",
+   "2316941738241592202750527788815530649553/625000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-10.minpoly.json.gz"
+ },
+ {
+  "n": 11,
+  "status": "exact",
+  "S": "3.877083590022814177",
+  "S_poly_ascending": [
+   -6865,
+   12420,
+   -6754,
+   -496,
+   1923,
+   -842,
+   178,
+   -20,
+   1
+  ],
+  "S_interval": [
+   "7754167180045628354615793920201925412753/2000000000000000000000000000000000000000",
+   "7754167180045628354615794320201925412753/2000000000000000000000000000000000000000"
+  ],
+  "S_degree": 8,
+  "height_digits": 5,
+  "field_poly_ascending": [
+   -1,
+   -2,
+   2,
+   6,
+   12,
+   -14,
+   -2,
+   10,
+   5
+  ],
+  "field_degree": 8,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "grade A (N11L)",
+  "crosscheck": "findpoly ok, Ellsworth deg ok",
+  "new": false,
+  "data": "minpoly/data/n-11.minpoly.json.gz"
+ },
+ {
+  "n": 12,
+  "status": "exact",
+  "S": "4.0",
+  "S_poly_ascending": [
+   -4,
+   1
+  ],
+  "S_interval": [
+   "39999999999999999999999999/10000000000000000000000000",
+   "40000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-12.minpoly.json.gz"
+ },
+ {
+  "n": 13,
+  "status": "exact",
+  "S": "4.0",
+  "S_poly_ascending": [
+   -4,
+   1
+  ],
+  "S_interval": [
+   "39999999999999999999999999/10000000000000000000000000",
+   "40000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-13.minpoly.json.gz"
+ },
+ {
+  "n": 14,
+  "status": "exact",
+  "S": "4.0",
+  "S_poly_ascending": [
+   -4,
+   1
+  ],
+  "S_interval": [
+   "39999999999999999999999999/10000000000000000000000000",
+   "40000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-14.minpoly.json.gz"
+ },
+ {
+  "n": 15,
+  "status": "exact",
+  "S": "4.0",
+  "S_poly_ascending": [
+   -4,
+   1
+  ],
+  "S_interval": [
+   "39999999999999999999999999/10000000000000000000000000",
+   "40000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-15.minpoly.json.gz"
+ },
+ {
+  "n": 16,
+  "status": "exact",
+  "S": "4.0",
+  "S_poly_ascending": [
+   -4,
+   1
+  ],
+  "S_interval": [
+   "39999999999999999999999999/10000000000000000000000000",
+   "40000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-16.minpoly.json.gz"
+ },
+ {
+  "n": 17,
+  "status": "exact",
+  "S": "4.675530093604550951",
+  "S_poly_ascending": [
+   -2631254953,
+   26662976550,
+   -126167814419,
+   358189195800,
+   -660388959899,
+   808819596154,
+   -662986732745,
+   350268230564,
+   -93528282146,
+   -18522084588,
+   32970034584,
+   -18310153596,
+   6502333062,
+   -1640654808,
+   300416928,
+   -39318012,
+   3501307,
+   -190430,
+   4775
+  ],
+  "S_interval": [
+   "46755300936045509516341111704831466487671/10000000000000000000000000000000000000000",
+   "46755300936045509516341113704831466487671/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 18,
+  "height_digits": 12,
+  "field_poly_ascending": [
+   10162025,
+   -15276890,
+   -78317547,
+   77816496,
+   -90707800,
+   46393792,
+   -25031216,
+   8791328,
+   -5574046,
+   560268,
+   -259038,
+   -27728,
+   -51552,
+   -28400,
+   -5384,
+   -1408,
+   -19,
+   -2,
+   1
+  ],
+  "field_degree": 18,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "Ellsworth deg ok",
+  "new": false,
+  "data": "minpoly/data/n-17.minpoly.json.gz"
+ },
+ {
+  "n": 18,
+  "status": "exact",
+  "S": "4.822875655532295295",
+  "S_poly_ascending": [
+   21,
+   -14,
+   2
+  ],
+  "S_interval": [
+   "48228756555322952952508077768196302128551/10000000000000000000000000000000000000000",
+   "48228756555322952952508079768196302128551/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   4,
+   3
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-18.minpoly.json.gz"
+ },
+ {
+  "n": 19,
+  "status": "exact",
+  "S": "4.885618083164126731",
+  "S_poly_ascending": [
+   49,
+   -54,
+   9
+  ],
+  "S_interval": [
+   "24428090415820633658677924328064653857131/5000000000000000000000000000000000000000",
+   "24428090415820633658677925328064653857131/5000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-19.minpoly.json.gz"
+ },
+ {
+  "n": 20,
+  "status": "exact",
+  "S": "5.0",
+  "S_poly_ascending": [
+   -5,
+   1
+  ],
+  "S_interval": [
+   "49999999999999999999999999/10000000000000000000000000",
+   "50000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-20.minpoly.json.gz"
+ },
+ {
+  "n": 21,
+  "status": "exact",
+  "S": "5.0",
+  "S_poly_ascending": [
+   -5,
+   1
+  ],
+  "S_interval": [
+   "49999999999999999999999999/10000000000000000000000000",
+   "50000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-21.minpoly.json.gz"
+ },
+ {
+  "n": 22,
+  "status": "exact",
+  "S": "5.0",
+  "S_poly_ascending": [
+   -5,
+   1
+  ],
+  "S_interval": [
+   "49999999999999999999999999/10000000000000000000000000",
+   "50000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-22.minpoly.json.gz"
+ },
+ {
+  "n": 23,
+  "status": "exact",
+  "S": "5.0",
+  "S_poly_ascending": [
+   -5,
+   1
+  ],
+  "S_interval": [
+   "49999999999999999999999999/10000000000000000000000000",
+   "50000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-23.minpoly.json.gz"
+ },
+ {
+  "n": 24,
+  "status": "exact",
+  "S": "5.0",
+  "S_poly_ascending": [
+   -5,
+   1
+  ],
+  "S_interval": [
+   "49999999999999999999999999/10000000000000000000000000",
+   "50000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-24.minpoly.json.gz"
+ },
+ {
+  "n": 25,
+  "status": "exact",
+  "S": "5.0",
+  "S_poly_ascending": [
+   -5,
+   1
+  ],
+  "S_interval": [
+   "49999999999999999999999999/10000000000000000000000000",
+   "50000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-25.minpoly.json.gz"
+ },
+ {
+  "n": 26,
+  "status": "exact",
+  "S": "5.621320343559642573",
+  "S_poly_ascending": [
+   31,
+   -28,
+   4
+  ],
+  "S_interval": [
+   "11242640687119285146405065972629094235709/2000000000000000000000000000000000000000",
+   "11242640687119285146405066372629094235709/2000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-26.minpoly.json.gz"
+ },
+ {
+  "n": 27,
+  "status": "exact",
+  "S": "5.707106781186547524",
+  "S_poly_ascending": [
+   49,
+   -20,
+   2
+  ],
+  "S_interval": [
+   "3566941738241592202750527663815530649553/625000000000000000000000000000000000000",
+   "3566941738241592202750527788815530649553/625000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-27.minpoly.json.gz"
+ },
+ {
+  "n": 28,
+  "status": "exact",
+  "S": "5.824444616674059296",
+  "S_poly_ascending": [
+   -1615,
+   882,
+   1025,
+   -812,
+   212,
+   -24,
+   1
+  ],
+  "S_interval": [
+   "58244446166740592969586286588483810199039/10000000000000000000000000000000000000000",
+   "58244446166740592969586288588483810199039/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 6,
+  "height_digits": 4,
+  "field_poly_ascending": [
+   1,
+   4,
+   3,
+   4,
+   -13,
+   -8,
+   1
+  ],
+  "field_degree": 6,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "grade A (N28L)",
+  "crosscheck": "findpoly ok, Ellsworth deg ok",
+  "new": false,
+  "data": "minpoly/data/n-28.minpoly.json.gz"
+ },
+ {
+  "n": 29,
+  "status": "open",
+  "reason": "open (timeout):   15 consistency rows -> 5 distinct irreducible factors vanishing at t*: degrees [26, 16, "
+ },
+ {
+  "n": 30,
+  "status": "exact",
+  "S": "6.0",
+  "S_poly_ascending": [
+   -6,
+   1
+  ],
+  "S_interval": [
+   "59999999999999999999999999/10000000000000000000000000",
+   "60000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-30.minpoly.json.gz"
+ },
+ {
+  "n": 31,
+  "status": "exact",
+  "S": "6.0",
+  "S_poly_ascending": [
+   -6,
+   1
+  ],
+  "S_interval": [
+   "59999999999999999999999999/10000000000000000000000000",
+   "60000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-31.minpoly.json.gz"
+ },
+ {
+  "n": 32,
+  "status": "exact",
+  "S": "6.0",
+  "S_poly_ascending": [
+   -6,
+   1
+  ],
+  "S_interval": [
+   "59999999999999999999999999/10000000000000000000000000",
+   "60000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-32.minpoly.json.gz"
+ },
+ {
+  "n": 33,
+  "status": "exact",
+  "S": "6.0",
+  "S_poly_ascending": [
+   -6,
+   1
+  ],
+  "S_interval": [
+   "59999999999999999999999999/10000000000000000000000000",
+   "60000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-33.minpoly.json.gz"
+ },
+ {
+  "n": 34,
+  "status": "exact",
+  "S": "6.0",
+  "S_poly_ascending": [
+   -6,
+   1
+  ],
+  "S_interval": [
+   "59999999999999999999999999/10000000000000000000000000",
+   "60000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-34.minpoly.json.gz"
+ },
+ {
+  "n": 35,
+  "status": "exact",
+  "S": "6.0",
+  "S_poly_ascending": [
+   -6,
+   1
+  ],
+  "S_interval": [
+   "59999999999999999999999999/10000000000000000000000000",
+   "60000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-35.minpoly.json.gz"
+ },
+ {
+  "n": 36,
+  "status": "exact",
+  "S": "6.0",
+  "S_poly_ascending": [
+   -6,
+   1
+  ],
+  "S_interval": [
+   "59999999999999999999999999/10000000000000000000000000",
+   "60000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-36.minpoly.json.gz"
+ },
+ {
+  "n": 37,
+  "status": "exact",
+  "S": "6.598619609244360116",
+  "S_poly_ascending": [
+   64068561,
+   -96673872,
+   63458276,
+   -23462672,
+   5289248,
+   -733760,
+   59768,
+   -2496,
+   36
+  ],
+  "S_interval": [
+   "6598619609244360116178370362678348804391/1000000000000000000000000000000000000000",
+   "6598619609244360116178370562678348804391/1000000000000000000000000000000000000000"
+  ],
+  "S_degree": 8,
+  "height_digits": 8,
+  "field_poly_ascending": [
+   -1,
+   0,
+   -4,
+   0,
+   66,
+   0,
+   44,
+   0,
+   7
+  ],
+  "field_degree": 8,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "Ellsworth deg ok",
+  "new": false,
+  "data": "minpoly/data/n-37.minpoly.json.gz"
+ },
+ {
+  "n": 38,
+  "status": "exact",
+  "S": "6.707106781186547524",
+  "S_poly_ascending": [
+   71,
+   -24,
+   2
+  ],
+  "S_interval": [
+   "4191941738241592202750527663815530649553/625000000000000000000000000000000000000",
+   "4191941738241592202750527788815530649553/625000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-38.minpoly.json.gz"
+ },
+ {
+  "n": 39,
+  "status": "exact",
+  "S": "6.810722083068648851",
+  "S_poly_ascending": [
+   166,
+   1636,
+   -1959,
+   999,
+   -171,
+   9
+  ],
+  "S_interval": [
+   "68107220830686488516977793443517526346473/10000000000000000000000000000000000000000",
+   "68107220830686488516977795443517526346473/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 5,
+  "height_digits": 4,
+  "field_poly_ascending": [
+   2,
+   -4,
+   -6,
+   1,
+   0,
+   1
+  ],
+  "field_degree": 5,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok, Ellsworth deg ok",
+  "new": false,
+  "data": "minpoly/data/n-39.minpoly.json.gz"
+ },
+ {
+  "n": 40,
+  "status": "exact",
+  "S": "6.828427124746190097",
+  "S_poly_ascending": [
+   8,
+   -8,
+   1
+  ],
+  "S_interval": [
+   "68284271247461900976033773484193961571393/10000000000000000000000000000000000000000",
+   "68284271247461900976033775484193961571393/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-40.minpoly.json.gz"
+ },
+ {
+  "n": 41,
+  "status": "exact",
+  "S": "6.926693094468802231",
+  "S_poly_ascending": [
+   192930128676231207430057837613968,
+   -1682258751137636203725622554061120,
+   7023595398126017089078028623797120,
+   -18873332426700882570902855047275200,
+   36867848125763978702951438802849616,
+   -55949600498940958320310297578555360,
+   68756165329665893470887878785349152,
+   -70370773645277985938951580858638528,
+   61200148145342575539111090507985440,
+   -45904080196423917967770013765165584,
+   30033784585675389426408059928238624,
+   -17292499393880618294971765830702496,
+   8823126218415607049547609565313808,
+   -4011703707846363075271797958908992,
+   1632807555219691500831155576662224,
+   -597075318553361988026330293830592,
+   196742347065286547712609208667628,
+   -58556476540137831140983424890112,
+   15771592794879254264477226832440,
+   -3849639590878015114188275848896,
+   852412555299622931388971786184,
+   -171331300125735569491450805184,
+   31267085211757278545052994144,
+   -5180160724110239826615572336,
+   778709778173545540562913112,
+   -106115059640167069135194108,
+   13090219490685085049164304,
+   -1459056537531761947694412,
+   146588403144234109714492,
+   -13234280063158548374864,
+   1069597207525632250760,
+   -77021965442580593792,
+   4913118839607229315,
+   -275622556171657148,
+   13476130642163772,
+   -567715628580628,
+   20303247278518,
+   -604345329616,
+   14568177368,
+   -273229120,
+   3740531,
+   -33248,
+   144
+  ],
+  "S_interval": [
+   "13853386188937604463162157627120417897363/2000000000000000000000000000000000000000",
+   "13853386188937604463162158027120417897363/2000000000000000000000000000000000000000"
+  ],
+  "S_degree": 42,
+  "height_digits": 35,
+  "field_poly_ascending": [
+   -1,
+   -16,
+   -333,
+   3340,
+   -6646,
+   -13792,
+   62554,
+   -18012,
+   -277293,
+   421120,
+   710431,
+   -2570576,
+   2291448,
+   3299200,
+   -21764616,
+   35459152,
+   41768366,
+   -169459936,
+   49283702,
+   256034280,
+   -196378244,
+   56190912,
+   -273699684,
+   -419973896,
+   1777706414,
+   -366701760,
+   -2831489658,
+   2055445744,
+   1827331064,
+   -2486100608,
+   -100505224,
+   1280887696,
+   -402238637,
+   -265424784,
+   150272151,
+   27577708,
+   -28006518,
+   -782048,
+   3031450,
+   -85628,
+   -193921,
+   6208,
+   6043
+  ],
+  "field_degree": 42,
+  "verify_exact": true,
+  "lean_packs": false,
+  "lean_local_min": "",
+  "crosscheck": "Ellsworth deg ok",
+  "new": false,
+  "data": "minpoly/data/n-41.minpoly.json.gz"
+ },
+ {
+  "n": 42,
+  "status": "exact",
+  "S": "7.0",
+  "S_poly_ascending": [
+   -7,
+   1
+  ],
+  "S_interval": [
+   "69999999999999999999999999/10000000000000000000000000",
+   "70000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-42.minpoly.json.gz"
+ },
+ {
+  "n": 43,
+  "status": "exact",
+  "S": "7.0",
+  "S_poly_ascending": [
+   -7,
+   1
+  ],
+  "S_interval": [
+   "69999999999999999999999999/10000000000000000000000000",
+   "70000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-43.minpoly.json.gz"
+ },
+ {
+  "n": 44,
+  "status": "exact",
+  "S": "7.0",
+  "S_poly_ascending": [
+   -7,
+   1
+  ],
+  "S_interval": [
+   "69999999999999999999999999/10000000000000000000000000",
+   "70000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-44.minpoly.json.gz"
+ },
+ {
+  "n": 45,
+  "status": "exact",
+  "S": "7.0",
+  "S_poly_ascending": [
+   -7,
+   1
+  ],
+  "S_interval": [
+   "69999999999999999999999999/10000000000000000000000000",
+   "70000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-45.minpoly.json.gz"
+ },
+ {
+  "n": 46,
+  "status": "exact",
+  "S": "7.0",
+  "S_poly_ascending": [
+   -7,
+   1
+  ],
+  "S_interval": [
+   "69999999999999999999999999/10000000000000000000000000",
+   "70000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-46.minpoly.json.gz"
+ },
+ {
+  "n": 47,
+  "status": "exact",
+  "S": "7.0",
+  "S_poly_ascending": [
+   -7,
+   1
+  ],
+  "S_interval": [
+   "69999999999999999999999999/10000000000000000000000000",
+   "70000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-47.minpoly.json.gz"
+ },
+ {
+  "n": 48,
+  "status": "exact",
+  "S": "7.0",
+  "S_poly_ascending": [
+   -7,
+   1
+  ],
+  "S_interval": [
+   "69999999999999999999999999/10000000000000000000000000",
+   "70000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-48.minpoly.json.gz"
+ },
+ {
+  "n": 49,
+  "status": "exact",
+  "S": "7.0",
+  "S_poly_ascending": [
+   -7,
+   1
+  ],
+  "S_interval": [
+   "69999999999999999999999999/10000000000000000000000000",
+   "70000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-49.minpoly.json.gz"
+ },
+ {
+  "n": 50,
+  "status": "exact",
+  "S": "7.571428571428571428",
+  "S_poly_ascending": [
+   -53,
+   7
+  ],
+  "S_interval": [
+   "37857142857142857142857142357142857142857/5000000000000000000000000000000000000000",
+   "37857142857142857142857143357142857142857/5000000000000000000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   3
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-50.minpoly.json.gz"
+ },
+ {
+  "n": 51,
+  "status": "exact",
+  "S": "7.700799235417011723",
+  "S_poly_ascending": [
+   -1119939,
+   14600744,
+   -1070690,
+   -4669592,
+   5185145,
+   -3878332,
+   1885642,
+   -584196,
+   116250,
+   -14808,
+   1168,
+   -52,
+   1
+  ],
+  "S_interval": [
+   "19251998088542529308572119142297413583381/2500000000000000000000000000000000000000",
+   "19251998088542529308572119642297413583381/2500000000000000000000000000000000000000"
+  ],
+  "S_degree": 12,
+  "height_digits": 8,
+  "field_poly_ascending": [
+   -1008401,
+   19635352,
+   -168572160,
+   846385272,
+   -2663120372,
+   4357322872,
+   5691963008,
+   -71924242088,
+   315500060926,
+   -1001548596184,
+   2629381610112,
+   -6042534612152,
+   12528722491292,
+   -23871240893560,
+   42350404604928,
+   -70639507639128,
+   111485601021953,
+   -167258848962064,
+   239469752157184,
+   -328114544781136,
+   431056279959576,
+   -543863140434512,
+   659857627796224,
+   -770381465109904,
+   865860510140260,
+   -937158456124592,
+   976635710328576,
+   -979500050993776,
+   944934685174680,
+   -876062173569776,
+   779531202274816,
+   -664818212616368,
+   542525953263329,
+   -422677490650120,
+   313635254949120,
+   -221067429686440,
+   147493499784156,
+   -92771044746152,
+   54777896139392,
+   -30187420460872,
+   15410254049662,
+   -7229935608312,
+   3082979750528,
+   -1173926591832,
+   390909025996,
+   -110518344472,
+   24757731840,
+   -3783514232,
+   283589199
+  ],
+  "field_degree": 48,
+  "verify_exact": true,
+  "lean_packs": false,
+  "lean_local_min": "",
+  "crosscheck": "Ellsworth deg ok",
+  "new": false,
+  "data": "minpoly/data/n-51.minpoly.json.gz"
+ },
+ {
+  "n": 52,
+  "status": "exact",
+  "S": "7.707106781186547524",
+  "S_poly_ascending": [
+   97,
+   -28,
+   2
+  ],
+  "S_interval": [
+   "4816941738241592202750527663815530649553/625000000000000000000000000000000000000",
+   "4816941738241592202750527788815530649553/625000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-52.minpoly.json.gz"
+ },
+ {
+  "n": 53,
+  "status": "exact",
+  "S": "7.822875655532295295",
+  "S_poly_ascending": [
+   81,
+   -26,
+   2
+  ],
+  "S_interval": [
+   "78228756555322952952508077768196302128551/10000000000000000000000000000000000000000",
+   "78228756555322952952508079768196302128551/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   6267892545427332136168693280432075111972106702395939850778202648383454272941447246215622086782087652160613954979614637323250563355489853543173726806786695577469272027509763633177174574994723310229579108074593651414989925556835347956446324027,
+   -42431168512614685326350130576088361078107920696549277056000045460326997674156549432202373297112167349992856756786452465420103948803909380339460196158758647186091272500079168862144270478026681726309152560400509728453387063696878144232286271856,
+   73697516147436419490393697411142064006733207565612166438082794047604310050668216003945521255353672227985395772813221999673457365671706330387827357442427709336841818500866834722800990009922681674340174352254519998829979851113670695912892648054,
+   -49964559131168616371937838693157275436349306502481146167784947798212599633965733615065787105789675421726680418715713770728662707692209889516461879550660531593333905899500062100809885109163375205464487893653537839546612936303121855767713728144,
+   97357358071389296092049656562020179945881861985826376836572375642356061479175128733490292929248735651433580368039426576255352623741550453591691362583930471343753916965472455039562941567604371540098987062336544171414989925556835347956446324027
+  ],
+  "field_degree": 4,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-53.minpoly.json.gz"
+ },
+ {
+  "n": 54,
+  "status": "exact",
+  "S": "7.846667192843489782",
+  "S_poly_ascending": [
+   8897,
+   -5304,
+   1164,
+   -112,
+   4
+  ],
+  "S_interval": [
+   "78466671928434897829433144909582979088797/10000000000000000000000000000000000000000",
+   "78466671928434897829433146909582979088797/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 4,
+  "height_digits": 4,
+  "field_poly_ascending": [
+   -1,
+   -4,
+   -2,
+   4,
+   7
+  ],
+  "field_degree": 4,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-54.minpoly.json.gz"
+ },
+ {
+  "n": 55,
+  "status": "open",
+  "reason": "open: RuntimeError: msolve failed: "
+ },
+ {
+  "n": 56,
+  "status": "exact",
+  "S": "8.0",
+  "S_poly_ascending": [
+   -8,
+   1
+  ],
+  "S_interval": [
+   "79999999999999999999999999/10000000000000000000000000",
+   "80000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-56.minpoly.json.gz"
+ },
+ {
+  "n": 57,
+  "status": "exact",
+  "S": "8.0",
+  "S_poly_ascending": [
+   -8,
+   1
+  ],
+  "S_interval": [
+   "79999999999999999999999999/10000000000000000000000000",
+   "80000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-57.minpoly.json.gz"
+ },
+ {
+  "n": 58,
+  "status": "exact",
+  "S": "8.0",
+  "S_poly_ascending": [
+   -8,
+   1
+  ],
+  "S_interval": [
+   "79999999999999999999999999/10000000000000000000000000",
+   "80000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-58.minpoly.json.gz"
+ },
+ {
+  "n": 59,
+  "status": "exact",
+  "S": "8.0",
+  "S_poly_ascending": [
+   -8,
+   1
+  ],
+  "S_interval": [
+   "79999999999999999999999999/10000000000000000000000000",
+   "80000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-59.minpoly.json.gz"
+ },
+ {
+  "n": 60,
+  "status": "exact",
+  "S": "8.0",
+  "S_poly_ascending": [
+   -8,
+   1
+  ],
+  "S_interval": [
+   "79999999999999999999999999/10000000000000000000000000",
+   "80000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-60.minpoly.json.gz"
+ },
+ {
+  "n": 61,
+  "status": "exact",
+  "S": "8.0",
+  "S_poly_ascending": [
+   -8,
+   1
+  ],
+  "S_interval": [
+   "79999999999999999999999999/10000000000000000000000000",
+   "80000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-61.minpoly.json.gz"
+ },
+ {
+  "n": 62,
+  "status": "exact",
+  "S": "8.0",
+  "S_poly_ascending": [
+   -8,
+   1
+  ],
+  "S_interval": [
+   "79999999999999999999999999/10000000000000000000000000",
+   "80000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-62.minpoly.json.gz"
+ },
+ {
+  "n": 63,
+  "status": "exact",
+  "S": "8.0",
+  "S_poly_ascending": [
+   -8,
+   1
+  ],
+  "S_interval": [
+   "79999999999999999999999999/10000000000000000000000000",
+   "80000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-63.minpoly.json.gz"
+ },
+ {
+  "n": 64,
+  "status": "exact",
+  "S": "8.0",
+  "S_poly_ascending": [
+   -8,
+   1
+  ],
+  "S_interval": [
+   "79999999999999999999999999/10000000000000000000000000",
+   "80000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-64.minpoly.json.gz"
+ },
+ {
+  "n": 65,
+  "status": "exact",
+  "S": "8.535533905932737622",
+  "S_poly_ascending": [
+   25,
+   -20,
+   2
+  ],
+  "S_interval": [
+   "42677669529663688110021108552621225982121/5000000000000000000000000000000000000000",
+   "42677669529663688110021109552621225982121/5000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-65.minpoly.json.gz"
+ },
+ {
+  "n": 66,
+  "status": "exact",
+  "S": "8.656854249492380195",
+  "S_poly_ascending": [
+   -23,
+   -6,
+   1
+  ],
+  "S_interval": [
+   "86568542494923801952067547968387923142787/10000000000000000000000000000000000000000",
+   "86568542494923801952067549968387923142787/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-66.minpoly.json.gz"
+ },
+ {
+  "n": 67,
+  "status": "exact",
+  "S": "8.707106781186547524",
+  "S_poly_ascending": [
+   127,
+   -32,
+   2
+  ],
+  "S_interval": [
+   "5441941738241592202750527663815530649553/625000000000000000000000000000000000000",
+   "5441941738241592202750527788815530649553/625000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-67.minpoly.json.gz"
+ },
+ {
+  "n": 68,
+  "status": "open",
+  "reason": "open (timeout):   16 consistency rows -> 8 distinct irreducible factors vanishing at t*: degrees [27, 18, "
+ },
+ {
+  "n": 69,
+  "status": "exact",
+  "S": "8.827194655729738914",
+  "S_poly_ascending": [
+   300960026822030303197535159473011904723200,
+   -1792484013885364748863660129313634141949440,
+   5167024257764217164738251979559001338572800,
+   -9606162873067568461640260181436144725451264,
+   12949817958432226471818398759855930531156576,
+   -13493274359917789164533005128265733469017664,
+   11311614553968265661577013966735125061994832,
+   -7841165369938484467586544581577081643396512,
+   4584317608215237678155409786149782768011273,
+   -2294308954050269031230179998690216453404126,
+   994216884424276401423335698871285020707985,
+   -376414247910270517652017635811678355038352,
+   125403836805698177483260817124143647392140,
+   -36974202589471451032943485493066311174020,
+   9692063874895738415420653194734406751544,
+   -2266937665352554353042893913025871449260,
+   474457787911865211855977644074062259782,
+   -89046296239964031900552502113814618932,
+   15008858814920291691105441001482481624,
+   -2274020073251445027912869583624012836,
+   309825113740305715280880132903457548,
+   -37952371996362529715956150997532140,
+   4176814076501073678281411498975320,
+   -412446197135659965111111115148396,
+   36472471517701260043451354594463,
+   -2880683107043356321003091570862,
+   202519768098228233530040391047,
+   -12617710317272491257736882500,
+   692847158160404835260800581,
+   -33298140362310941134404674,
+   1388387472142272839607339,
+   -49662306385311523793708,
+   1501792088159447213787,
+   -37649261182139638630,
+   761478949851472121,
+   -11939519654019440,
+   136173939449975,
+   -1005045994750,
+   3603000625
+  ],
+  "S_interval": [
+   "1765438931145947782986293856117664390313/200000000000000000000000000000000000000",
+   "1765438931145947782986293896117664390313/200000000000000000000000000000000000000"
+  ],
+  "S_degree": 38,
+  "height_digits": 44,
+  "field_poly_ascending": [
+   4892877018955776,
+   73462395534180352,
+   467346721324138496,
+   1821667009119256576,
+   6837634327229415424,
+   28977214833125752832,
+   99242385843094224896,
+   222715256892907438080,
+   277813069235129696256,
+   14878705069180657664,
+   -705101108115810713600,
+   -1652213683996825145344,
+   -2347622480817746444288,
+   -2506851348642959558656,
+   -2264024848478216165376,
+   -1920387391869493339136,
+   -1603744121253484099584,
+   -1251425829339753473024,
+   -822023724836359643904,
+   -401759852362243417600,
+   -112903434469872094208,
+   7994810575746456192,
+   20203897858745711616,
+   2031462424521935808,
+   -7700200266402542784,
+   -6898058522929355296,
+   -3485448089981625120,
+   -1349125405961275040,
+   -476938437998450732,
+   -154757231363035264,
+   -41122357174994036,
+   -8505515476908520,
+   -1419459676232520,
+   -191416683646764,
+   -17113680818092,
+   -325271023792,
+   113055985095,
+   11286889980,
+   328961500
+  ],
+  "field_degree": 38,
+  "verify_exact": true,
+  "lean_packs": false,
+  "lean_local_min": "",
+  "crosscheck": "Ellsworth deg ok",
+  "new": false,
+  "data": "minpoly/data/n-69.minpoly.json.gz"
+ },
+ {
+  "n": 70,
+  "status": "exact",
+  "S": "8.881666757009004624",
+  "S_poly_ascending": [
+   86229,
+   -45876,
+   8848,
+   -742,
+   23
+  ],
+  "S_interval": [
+   "88816667570090046248235120489096372070621/10000000000000000000000000000000000000000",
+   "88816667570090046248235122489096372070621/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 4,
+  "height_digits": 5,
+  "field_poly_ascending": [
+   -1,
+   -6,
+   -4,
+   6,
+   9
+  ],
+  "field_degree": 4,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok, Ellsworth deg ok",
+  "new": false,
+  "data": "minpoly/data/n-70.minpoly.json.gz"
+ },
+ {
+  "n": 71,
+  "status": "open",
+  "reason": "open (timeout):   14 consistency rows -> 5 distinct irreducible factors vanishing at t*: degrees [23, 16, "
+ },
+ {
+  "n": 72,
+  "status": "exact",
+  "S": "9.0",
+  "S_poly_ascending": [
+   -9,
+   1
+  ],
+  "S_interval": [
+   "89999999999999999999999999/10000000000000000000000000",
+   "90000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-72.minpoly.json.gz"
+ },
+ {
+  "n": 73,
+  "status": "exact",
+  "S": "9.0",
+  "S_poly_ascending": [
+   -9,
+   1
+  ],
+  "S_interval": [
+   "89999999999999999999999999/10000000000000000000000000",
+   "90000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-73.minpoly.json.gz"
+ },
+ {
+  "n": 74,
+  "status": "exact",
+  "S": "9.0",
+  "S_poly_ascending": [
+   -9,
+   1
+  ],
+  "S_interval": [
+   "89999999999999999999999999/10000000000000000000000000",
+   "90000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-74.minpoly.json.gz"
+ },
+ {
+  "n": 75,
+  "status": "exact",
+  "S": "9.0",
+  "S_poly_ascending": [
+   -9,
+   1
+  ],
+  "S_interval": [
+   "89999999999999999999999999/10000000000000000000000000",
+   "90000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-75.minpoly.json.gz"
+ },
+ {
+  "n": 76,
+  "status": "exact",
+  "S": "9.0",
+  "S_poly_ascending": [
+   -9,
+   1
+  ],
+  "S_interval": [
+   "89999999999999999999999999/10000000000000000000000000",
+   "90000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-76.minpoly.json.gz"
+ },
+ {
+  "n": 77,
+  "status": "exact",
+  "S": "9.0",
+  "S_poly_ascending": [
+   -9,
+   1
+  ],
+  "S_interval": [
+   "89999999999999999999999999/10000000000000000000000000",
+   "90000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-77.minpoly.json.gz"
+ },
+ {
+  "n": 78,
+  "status": "exact",
+  "S": "9.0",
+  "S_poly_ascending": [
+   -9,
+   1
+  ],
+  "S_interval": [
+   "89999999999999999999999999/10000000000000000000000000",
+   "90000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-78.minpoly.json.gz"
+ },
+ {
+  "n": 79,
+  "status": "exact",
+  "S": "9.0",
+  "S_poly_ascending": [
+   -9,
+   1
+  ],
+  "S_interval": [
+   "89999999999999999999999999/10000000000000000000000000",
+   "90000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-79.minpoly.json.gz"
+ },
+ {
+  "n": 80,
+  "status": "exact",
+  "S": "9.0",
+  "S_poly_ascending": [
+   -9,
+   1
+  ],
+  "S_interval": [
+   "89999999999999999999999999/10000000000000000000000000",
+   "90000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-80.minpoly.json.gz"
+ },
+ {
+  "n": 81,
+  "status": "exact",
+  "S": "9.0",
+  "S_poly_ascending": [
+   -9,
+   1
+  ],
+  "S_interval": [
+   "89999999999999999999999999/10000000000000000000000000",
+   "90000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 1,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-81.minpoly.json.gz"
+ },
+ {
+  "n": 82,
+  "status": "exact",
+  "S": "9.535533905932737622",
+  "S_poly_ascending": [
+   47,
+   -24,
+   2
+  ],
+  "S_interval": [
+   "47677669529663688110021108552621225982121/5000000000000000000000000000000000000000",
+   "47677669529663688110021109552621225982121/5000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-82.minpoly.json.gz"
+ },
+ {
+  "n": 83,
+  "status": "open",
+  "reason": "open: msolve: system not zero-dimensional (code 1)"
+ },
+ {
+  "n": 84,
+  "status": "exact",
+  "S": "9.707106781186547524",
+  "S_poly_ascending": [
+   161,
+   -36,
+   2
+  ],
+  "S_interval": [
+   "6066941738241592202750527663815530649553/625000000000000000000000000000000000000",
+   "6066941738241592202750527788815530649553/625000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-84.minpoly.json.gz"
+ },
+ {
+  "n": 85,
+  "status": "exact",
+  "S": "9.742640687119285146",
+  "S_poly_ascending": [
+   49,
+   -44,
+   4
+  ],
+  "S_interval": [
+   "9742640687119285146405066072629094235709/1000000000000000000000000000000000000000",
+   "9742640687119285146405066272629094235709/1000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-85.minpoly.json.gz"
+ },
+ {
+  "n": 86,
+  "status": "exact",
+  "S": "9.822875655532295295",
+  "S_poly_ascending": [
+   141,
+   -34,
+   2
+  ],
+  "S_interval": [
+   "98228756555322952952508077768196302128551/10000000000000000000000000000000000000000",
+   "98228756555322952952508079768196302128551/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   4,
+   3
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-86.minpoly.json.gz"
+ },
+ {
+  "n": 87,
+  "status": "exact",
+  "S": "9.838815269948262260",
+  "S_poly_ascending": [
+   -40713255613779415843542530464505405012243371476335712,
+   174058431885383017168301054798869519419156663420841104,
+   -361526879215743172054055979436537894486717614578636048,
+   486189941772275013925272339904814305044565423103995032,
+   -476023020468375739639805546881775966503839963726895558,
+   361750364280689018403811976024779603977698517101723145,
+   -222147244707603864456988847170719586930861075287740628,
+   113321069106447712596580868743552493265952488234823718,
+   -48990779766174603280048359215946380995121710109494534,
+   18223056032757299723677197115436840451867570016972507,
+   -5901246920996930027398353258672134375430501093674292,
+   1679388253814034927573955963119705211986770685692096,
+   -423191412819701606939170449776991221026762564762134,
+   95016805440277798948791961880071724979254840468929,
+   -19106150905180433836841370840720520730254423881608,
+   3455479274253097667022850781839771753624423234904,
+   -564086063872321283227377898505524964337647972874,
+   83359977144350715989613270579963432566238081343,
+   -11178540405656965169266972892454725769640656752,
+   1362881877915611850892299499081591847601465974,
+   -151290636916775476415335869190639328205348698,
+   15307137247658900045468881290413317552796953,
+   -1412422433204366537751908713688696962361368,
+   118875608243304759698567892229598143622096,
+   -9123142651123815912924967464745910766112,
+   637919759433576077791960763102863780704,
+   -40584536283281213359626117013929897088,
+   2344536513361885703387448672473538944,
+   -122650753043892752991823722606592000,
+   5789615258919641550986089322782464,
+   -245477764824240454187103594450944,
+   9295045312996485053157554915328,
+   -312043320073195198376736546816,
+   9202924880800443179863388160,
+   -235679978290994076214263808,
+   5162415165495309756628992,
+   -94800850229256853389312,
+   1419678736423203438592,
+   -16651943649315127296,
+   143485478259130368,
+   -807732655423488,
+   2229025112064
+  ],
+  "S_interval": [
+   "98388152699482622602660930895036575396753/10000000000000000000000000000000000000000",
+   "98388152699482622602660932895036575396753/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 41,
+  "height_digits": 54,
+  "field_poly_ascending": [
+   1086630925522011984232448,
+   17846643440955316236713984,
+   108926389331910387088883712,
+   264669069170202118261309440,
+   -39084207999097963197120512,
+   -1358380521733998833221566464,
+   -1711091043306659253567340544,
+   2420860108167740319463702528,
+   9274384231912114224785645568,
+   11590929465151236361057574912,
+   5389573787618515759651790848,
+   -7049549785907160996064763904,
+   -23090486024556714731401671680,
+   -41125228799994204367589818368,
+   -60225440539220494429635885056,
+   -76423253079318065659855650816,
+   -84052633114004996091288869120,
+   -79261898392976531508000570368,
+   -63715756508157463809887347968,
+   -43680429897203399493580487936,
+   -25489516681097149512860940608,
+   -12597757079040687433946379904,
+   -5164507796544911167750771648,
+   -1670184077868962503294760256,
+   -357586286019105695654154464,
+   7191167831369902385781888,
+   54435723755618714230695456,
+   33849350704755116518249456,
+   14464337759064312951619004,
+   4999236949359645801879672,
+   1450998061233506219650368,
+   374212761091303242658228,
+   84117249150602332167937,
+   17583508539617520826554,
+   3403155703752637620891,
+   631285394432733245940,
+   109214067519086464127,
+   16565187379354558418,
+   2090522638464819749,
+   143304096029418116,
+   4212534102560676,
+   47415117130560
+  ],
+  "field_degree": 41,
+  "verify_exact": true,
+  "lean_packs": false,
+  "lean_local_min": "",
+  "crosscheck": "Ellsworth deg ok",
+  "new": false,
+  "data": "minpoly/data/n-87.minpoly.json.gz"
+ },
+ {
+  "n": 88,
+  "status": "open",
+  "reason": "open: 1 consistency polynomials for 3 class angles: more than one angle direction left to force "
+ },
+ {
+  "n": 89,
+  "status": "exact",
+  "S": "9.949747468305832670",
+  "S_poly_ascending": [
+   1,
+   -20,
+   2
+  ],
+  "S_interval": [
+   "99497474683058326708059104347339432749939/10000000000000000000000000000000000000000",
+   "99497474683058326708059106347339432749939/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-89.minpoly.json.gz"
+ },
+ {
+  "n": 90,
+  "status": "exact",
+  "S": "10.0",
+  "S_poly_ascending": [
+   -10,
+   1
+  ],
+  "S_interval": [
+   "99999999999999999999999999/10000000000000000000000000",
+   "100000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-90.minpoly.json.gz"
+ },
+ {
+  "n": 91,
+  "status": "exact",
+  "S": "10.0",
+  "S_poly_ascending": [
+   -10,
+   1
+  ],
+  "S_interval": [
+   "99999999999999999999999999/10000000000000000000000000",
+   "100000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-91.minpoly.json.gz"
+ },
+ {
+  "n": 92,
+  "status": "exact",
+  "S": "10.0",
+  "S_poly_ascending": [
+   -10,
+   1
+  ],
+  "S_interval": [
+   "99999999999999999999999999/10000000000000000000000000",
+   "100000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-92.minpoly.json.gz"
+ },
+ {
+  "n": 93,
+  "status": "exact",
+  "S": "10.0",
+  "S_poly_ascending": [
+   -10,
+   1
+  ],
+  "S_interval": [
+   "99999999999999999999999999/10000000000000000000000000",
+   "100000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-93.minpoly.json.gz"
+ },
+ {
+  "n": 94,
+  "status": "exact",
+  "S": "10.0",
+  "S_poly_ascending": [
+   -10,
+   1
+  ],
+  "S_interval": [
+   "99999999999999999999999999/10000000000000000000000000",
+   "100000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-94.minpoly.json.gz"
+ },
+ {
+  "n": 95,
+  "status": "exact",
+  "S": "10.0",
+  "S_poly_ascending": [
+   -10,
+   1
+  ],
+  "S_interval": [
+   "99999999999999999999999999/10000000000000000000000000",
+   "100000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-95.minpoly.json.gz"
+ },
+ {
+  "n": 96,
+  "status": "exact",
+  "S": "10.0",
+  "S_poly_ascending": [
+   -10,
+   1
+  ],
+  "S_interval": [
+   "99999999999999999999999999/10000000000000000000000000",
+   "100000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-96.minpoly.json.gz"
+ },
+ {
+  "n": 97,
+  "status": "exact",
+  "S": "10.0",
+  "S_poly_ascending": [
+   -10,
+   1
+  ],
+  "S_interval": [
+   "99999999999999999999999999/10000000000000000000000000",
+   "100000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-97.minpoly.json.gz"
+ },
+ {
+  "n": 98,
+  "status": "exact",
+  "S": "10.0",
+  "S_poly_ascending": [
+   -10,
+   1
+  ],
+  "S_interval": [
+   "99999999999999999999999999/10000000000000000000000000",
+   "100000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-98.minpoly.json.gz"
+ },
+ {
+  "n": 99,
+  "status": "exact",
+  "S": "10.0",
+  "S_poly_ascending": [
+   -10,
+   1
+  ],
+  "S_interval": [
+   "99999999999999999999999999/10000000000000000000000000",
+   "100000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-99.minpoly.json.gz"
+ },
+ {
+  "n": 100,
+  "status": "exact",
+  "S": "10.0",
+  "S_poly_ascending": [
+   -10,
+   1
+  ],
+  "S_interval": [
+   "99999999999999999999999999/10000000000000000000000000",
+   "100000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-100.minpoly.json.gz"
+ },
+ {
+  "n": 101,
+  "status": "exact",
+  "S": "10.53553390593273762",
+  "S_poly_ascending": [
+   73,
+   -28,
+   2
+  ],
+  "S_interval": [
+   "52677669529663688110021108552621225982121/5000000000000000000000000000000000000000",
+   "52677669529663688110021109552621225982121/5000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-101.minpoly.json.gz"
+ },
+ {
+  "n": 102,
+  "status": "exact",
+  "S": "10.60717468017605112",
+  "S_poly_ascending": [
+   1580808833648,
+   -1332604124616,
+   490308874228,
+   -102847985308,
+   13453474321,
+   -1123907648,
+   58564592,
+   -1740544,
+   22592
+  ],
+  "S_interval": [
+   "106071746801760511253425231780890033270787/10000000000000000000000000000000000000000",
+   "106071746801760511253425233780890033270787/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 8,
+  "height_digits": 13,
+  "field_poly_ascending": [
+   -1284,
+   -3481,
+   -6106,
+   -9699,
+   205,
+   -8803,
+   15876,
+   -2585,
+   11045
+  ],
+  "field_degree": 8,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "**new** (no published form)",
+  "new": true,
+  "data": "minpoly/data/n-102.minpoly.json.gz"
+ },
+ {
+  "n": 103,
+  "status": "open",
+  "reason": "open (memory cap): n = 103: 97 squares in the system, 6 free; 13 tilted angle classes; 446 contact equations "
+ },
+ {
+  "n": 104,
+  "status": "exact",
+  "S": "10.70710678118654752",
+  "S_poly_ascending": [
+   199,
+   -40,
+   2
+  ],
+  "S_interval": [
+   "6691941738241592202750527663815530649553/625000000000000000000000000000000000000",
+   "6691941738241592202750527788815530649553/625000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-104.minpoly.json.gz"
+ },
+ {
+  "n": 105,
+  "status": "open",
+  "reason": "open (memory cap): n = 105: 97 squares in the system, 8 free; 18 tilted angle classes; 509 contact equations "
+ },
+ {
+  "n": 106,
+  "status": "exact",
+  "S": "10.82290804413284755",
+  "S_poly_ascending": [
+   13989907516788220921545557126236897,
+   -33601533577237835690009618885564128,
+   37989415986435670555243749510129422,
+   -26616632515410124502729111779682612,
+   12667352164590760655619999466729405,
+   -4109234606733060957816109100005820,
+   772330011761766828293865041535306,
+   28430253999736080501139754428672,
+   -82340443359582328270467243054380,
+   34381680990864627031497782529220,
+   -8818194919228568338625859410932,
+   1461709415172892765413862693344,
+   -96513404515258230709744395027,
+   -30006975201021872359257399740,
+   13519151847465906134802022926,
+   -3234263675223869780258524092,
+   573728382773980790914518639,
+   -81905937443198717810565756,
+   9726273825542098863324774,
+   -976171270677071548403852,
+   83462771188357850093577,
+   -6098882621933944089028,
+   380860429530384661682,
+   -20267411463981723188,
+   913934700810498501,
+   -34621405164832940,
+   1088025856009736,
+   -27864839254828,
+   566803245731,
+   -8810325440,
+   98302526,
+   -701092,
+   2401
+  ],
+  "S_interval": [
+   "6764317527583029721928879851805420204703/625000000000000000000000000000000000000",
+   "6764317527583029721928879976805420204703/625000000000000000000000000000000000000"
+  ],
+  "S_degree": 32,
+  "height_digits": 35,
+  "field_poly_ascending": [
+   4052025973312121,
+   112267118968762666,
+   1190311510163455138,
+   6275311408545069418,
+   19269237735928009964,
+   46989321916100313598,
+   119967649915322909134,
+   275231255938539219814,
+   468927044638882107408,
+   585771043135497414570,
+   565938508976353262066,
+   446979894743513900346,
+   301853169740487672620,
+   176903104037687521550,
+   85450861887132657582,
+   28306417767525946470,
+   828424007657677882,
+   -7721965000587468914,
+   -7438649602872700010,
+   -4458310516498333266,
+   -1896298695746806940,
+   -584857750267018230,
+   -132379165681244326,
+   -23213675197456478,
+   -3702593365753032,
+   -614951925798242,
+   -89780322729258,
+   -9194428327506,
+   -747914158076,
+   -69783067158,
+   -3679575510,
+   114468498,
+   12233349
+  ],
+  "field_degree": 32,
+  "verify_exact": true,
+  "lean_packs": false,
+  "lean_local_min": "",
+  "crosscheck": "**new** (no published form)",
+  "new": true,
+  "data": "minpoly/data/n-106.minpoly.json.gz"
+ },
+ {
+  "n": 107,
+  "status": "exact",
+  "S": "10.84666719284348978",
+  "S_poly_ascending": [
+   38633,
+   -15744,
+   2388,
+   -160,
+   4
+  ],
+  "S_interval": [
+   "108466671928434897829433144909582979088797/10000000000000000000000000000000000000000",
+   "108466671928434897829433146909582979088797/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 4,
+  "height_digits": 5,
+  "field_poly_ascending": [
+   -1,
+   4,
+   -2,
+   -4,
+   7
+  ],
+  "field_degree": 4,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-107.minpoly.json.gz"
+ },
+ {
+  "n": 108,
+  "status": "open",
+  "reason": "open (timeout):   field: degree 144 (factor of the eliminating polynomial with root t*)"
+ },
+ {
+  "n": 109,
+  "status": "exact",
+  "S": "10.94974746830583267",
+  "S_poly_ascending": [
+   23,
+   -24,
+   2
+  ],
+  "S_interval": [
+   "109497474683058326708059104347339432749939/10000000000000000000000000000000000000000",
+   "109497474683058326708059106347339432749939/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-109.minpoly.json.gz"
+ },
+ {
+  "n": 110,
+  "status": "open",
+  "reason": "open (memory cap): n = 110: 108 squares in the system, 2 free; 15 tilted angle classes; 929 contact equations"
+ },
+ {
+  "n": 111,
+  "status": "exact",
+  "S": "11.0",
+  "S_poly_ascending": [
+   -11,
+   1
+  ],
+  "S_interval": [
+   "109999999999999999999999999/10000000000000000000000000",
+   "110000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-111.minpoly.json.gz"
+ },
+ {
+  "n": 112,
+  "status": "exact",
+  "S": "11.0",
+  "S_poly_ascending": [
+   -11,
+   1
+  ],
+  "S_interval": [
+   "109999999999999999999999999/10000000000000000000000000",
+   "110000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-112.minpoly.json.gz"
+ },
+ {
+  "n": 113,
+  "status": "exact",
+  "S": "11.0",
+  "S_poly_ascending": [
+   -11,
+   1
+  ],
+  "S_interval": [
+   "109999999999999999999999999/10000000000000000000000000",
+   "110000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-113.minpoly.json.gz"
+ },
+ {
+  "n": 114,
+  "status": "exact",
+  "S": "11.0",
+  "S_poly_ascending": [
+   -11,
+   1
+  ],
+  "S_interval": [
+   "109999999999999999999999999/10000000000000000000000000",
+   "110000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-114.minpoly.json.gz"
+ },
+ {
+  "n": 115,
+  "status": "exact",
+  "S": "11.0",
+  "S_poly_ascending": [
+   -11,
+   1
+  ],
+  "S_interval": [
+   "109999999999999999999999999/10000000000000000000000000",
+   "110000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-115.minpoly.json.gz"
+ },
+ {
+  "n": 116,
+  "status": "exact",
+  "S": "11.0",
+  "S_poly_ascending": [
+   -11,
+   1
+  ],
+  "S_interval": [
+   "109999999999999999999999999/10000000000000000000000000",
+   "110000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-116.minpoly.json.gz"
+ },
+ {
+  "n": 117,
+  "status": "exact",
+  "S": "11.0",
+  "S_poly_ascending": [
+   -11,
+   1
+  ],
+  "S_interval": [
+   "109999999999999999999999999/10000000000000000000000000",
+   "110000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-117.minpoly.json.gz"
+ },
+ {
+  "n": 118,
+  "status": "exact",
+  "S": "11.0",
+  "S_poly_ascending": [
+   -11,
+   1
+  ],
+  "S_interval": [
+   "109999999999999999999999999/10000000000000000000000000",
+   "110000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-118.minpoly.json.gz"
+ },
+ {
+  "n": 119,
+  "status": "exact",
+  "S": "11.0",
+  "S_poly_ascending": [
+   -11,
+   1
+  ],
+  "S_interval": [
+   "109999999999999999999999999/10000000000000000000000000",
+   "110000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-119.minpoly.json.gz"
+ },
+ {
+  "n": 120,
+  "status": "exact",
+  "S": "11.0",
+  "S_poly_ascending": [
+   -11,
+   1
+  ],
+  "S_interval": [
+   "109999999999999999999999999/10000000000000000000000000",
+   "110000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-120.minpoly.json.gz"
+ },
+ {
+  "n": 121,
+  "status": "exact",
+  "S": "11.0",
+  "S_poly_ascending": [
+   -11,
+   1
+  ],
+  "S_interval": [
+   "109999999999999999999999999/10000000000000000000000000",
+   "110000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-121.minpoly.json.gz"
+ },
+ {
+  "n": 122,
+  "status": "exact",
+  "S": "11.53553390593273762",
+  "S_poly_ascending": [
+   103,
+   -32,
+   2
+  ],
+  "S_interval": [
+   "57677669529663688110021108552621225982121/5000000000000000000000000000000000000000",
+   "57677669529663688110021109552621225982121/5000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-122.minpoly.json.gz"
+ },
+ {
+  "n": 123,
+  "status": "open",
+  "reason": "open: 3 consistency polynomials for 5 class angles: more than one angle direction left to force "
+ },
+ {
+  "n": 124,
+  "status": "exact",
+  "S": "11.65685424949238019",
+  "S_poly_ascending": [
+   4,
+   -12,
+   1
+  ],
+  "S_interval": [
+   "116568542494923801952067547968387923142787/10000000000000000000000000000000000000000",
+   "116568542494923801952067549968387923142787/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-124.minpoly.json.gz"
+ },
+ {
+  "n": 125,
+  "status": "exact",
+  "S": "11.70710678118654752",
+  "S_poly_ascending": [
+   241,
+   -44,
+   2
+  ],
+  "S_interval": [
+   "7316941738241592202750527663815530649553/625000000000000000000000000000000000000",
+   "7316941738241592202750527788815530649553/625000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-125.minpoly.json.gz"
+ },
+ {
+  "n": 126,
+  "status": "open",
+  "reason": "open (timeout):   18 consistency rows -> 6 distinct irreducible factors vanishing at t*: degrees [20, 34, "
+ },
+ {
+  "n": 127,
+  "status": "exact",
+  "S": "11.82287565553229529",
+  "S_poly_ascending": [
+   217,
+   -42,
+   2
+  ],
+  "S_interval": [
+   "118228756555322952952508077768196302128551/10000000000000000000000000000000000000000",
+   "118228756555322952952508079768196302128551/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   4,
+   3
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-127.minpoly.json.gz"
+ },
+ {
+  "n": 128,
+  "status": "exact",
+  "S": "11.82509196821368702",
+  "S_poly_ascending": [
+   47601488782509082091988946077133401472942285824,
+   -153189145317923709976188931598288062177638461184,
+   230091479010044538699295485926277667974383569488,
+   -211311873022032856645395618371922980818558351272,
+   129236789770564934710391555764344704402747982753,
+   -52105146308542520023979647560364421311730107464,
+   10946284003184957815907569175715318463243584102,
+   1793492920161456183420660943446317121911023248,
+   -2664006348624383405491809555245054393205103691,
+   1267518021830549968006069595148713683301836788,
+   -381139020218879456095819418101710611273627456,
+   71735791138334020614589956733651574834185892,
+   -3038946790141535208034747244682683990472658,
+   -3688451224681060758343247748983014976447272,
+   1760771073593491738800908345083273891209716,
+   -517669550834165752088850944695261707233564,
+   117836973554812356574280571124747241305248,
+   -22233865523258917656574596200774765950936,
+   3586164305875893817104519150255679222830,
+   -502864388097908644186877008296638914520,
+   61932541245281919280766873166108057833,
+   -6743132871649823544913588155645442656,
+   651753580603034236066787916795623964,
+   -56062026207183424768909339152161084,
+   4296830596115061642805514450068373,
+   -293485855211047587757484370460572,
+   17849625763191276058228284471146,
+   -964953122823176982192672366676,
+   46240556849238042597672084213,
+   -1956653332398832550681084364,
+   72739322148379315505619294,
+   -2360056578357132809629748,
+   66264078654438595433370,
+   -1592401650332728651212,
+   32282461276159060998,
+   -541478198967270496,
+   7313700827489408,
+   -76444672534332,
+   580218189444,
+   -2845098648,
+   6765201
+  ],
+  "S_interval": [
+   "59125459841068435145746411623767215884617/5000000000000000000000000000000000000000",
+   "59125459841068435145746412623767215884617/5000000000000000000000000000000000000000"
+  ],
+  "S_degree": 40,
+  "height_digits": 48,
+  "field_poly_ascending": [
+   -108,
+   1404,
+   117,
+   -62856,
+   171966,
+   680960,
+   -3901035,
+   4899884,
+   24757860,
+   -118639056,
+   59906644,
+   328920096,
+   -350125160,
+   3300262080,
+   -12529433660,
+   -11284220112,
+   108150620904,
+   -90002226296,
+   -302680866218,
+   578492265104,
+   203874668036,
+   -1335215624320,
+   655583842822,
+   1492521155560,
+   -1754914651576,
+   -622457324944,
+   2009671101636,
+   -470475635296,
+   -1281456884424,
+   891899420096,
+   353933121556,
+   -609024817680,
+   108485105860,
+   175846044764,
+   -106559793635,
+   3965122360,
+   17181894766,
+   -7610130432,
+   1528461453,
+   -153314100,
+   6196500
+  ],
+  "field_degree": 40,
+  "verify_exact": true,
+  "lean_packs": false,
+  "lean_local_min": "",
+  "crosscheck": "Ellsworth deg ok",
+  "new": false,
+  "data": "minpoly/data/n-128.minpoly.json.gz"
+ },
+ {
+  "n": 129,
+  "status": "exact",
+  "S": "11.88130621809000306",
+  "S_poly_ascending": [
+   30347196858954912683392,
+   -63640403941763504944184,
+   63498519812052276506109,
+   -40018900764845892469246,
+   17845354889140483660018,
+   -5979678235068566487856,
+   1561244435270252784700,
+   -325093619883814992744,
+   54814239105846342840,
+   -7556258973091735104,
+   856196296518997712,
+   -79879749327995680,
+   6125462923505760,
+   -383997272257792,
+   19488070063424,
+   -788425574784,
+   24833686144,
+   -586977280,
+   9795328,
+   -102912,
+   512
+  ],
+  "S_interval": [
+   "11881306218090003063213703846542229069947/1000000000000000000000000000000000000000",
+   "11881306218090003063213704046542229069947/1000000000000000000000000000000000000000"
+  ],
+  "S_degree": 20,
+  "height_digits": 23,
+  "field_poly_ascending": [
+   940302,
+   -28403,
+   3926480,
+   -5117403,
+   -6986114,
+   -32638188,
+   -64009448,
+   -91733660,
+   -144619260,
+   -144376730,
+   -161578600,
+   -138719962,
+   -96523404,
+   -84455292,
+   -27748408,
+   -31183820,
+   -866226,
+   -4513803,
+   1830328,
+   807965,
+   409518
+  ],
+  "field_degree": 20,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "Ellsworth deg ok",
+  "new": false,
+  "data": "minpoly/data/n-129.minpoly.json.gz"
+ },
+ {
+  "n": 130,
+  "status": "open",
+  "reason": "open: 2 consistency polynomials for 5 class angles: more than one angle direction left to force "
+ },
+ {
+  "n": 131,
+  "status": "open",
+  "reason": "open (timeout): n = 131: 131 squares in the system, 0 free; 19 tilted angle classes; 1116 contact equation"
+ },
+ {
+  "n": 132,
+  "status": "open",
+  "reason": "open (memory cap): n = 132: 131 squares in the system, 1 free; 15 tilted angle classes; 993 contact equations"
+ },
+ {
+  "n": 133,
+  "status": "exact",
+  "S": "12.0",
+  "S_poly_ascending": [
+   -12,
+   1
+  ],
+  "S_interval": [
+   "119999999999999999999999999/10000000000000000000000000",
+   "120000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-133.minpoly.json.gz"
+ },
+ {
+  "n": 134,
+  "status": "exact",
+  "S": "12.0",
+  "S_poly_ascending": [
+   -12,
+   1
+  ],
+  "S_interval": [
+   "119999999999999999999999999/10000000000000000000000000",
+   "120000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-134.minpoly.json.gz"
+ },
+ {
+  "n": 135,
+  "status": "exact",
+  "S": "12.0",
+  "S_poly_ascending": [
+   -12,
+   1
+  ],
+  "S_interval": [
+   "119999999999999999999999999/10000000000000000000000000",
+   "120000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-135.minpoly.json.gz"
+ },
+ {
+  "n": 136,
+  "status": "exact",
+  "S": "12.0",
+  "S_poly_ascending": [
+   -12,
+   1
+  ],
+  "S_interval": [
+   "119999999999999999999999999/10000000000000000000000000",
+   "120000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-136.minpoly.json.gz"
+ },
+ {
+  "n": 137,
+  "status": "exact",
+  "S": "12.0",
+  "S_poly_ascending": [
+   -12,
+   1
+  ],
+  "S_interval": [
+   "119999999999999999999999999/10000000000000000000000000",
+   "120000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-137.minpoly.json.gz"
+ },
+ {
+  "n": 138,
+  "status": "exact",
+  "S": "12.0",
+  "S_poly_ascending": [
+   -12,
+   1
+  ],
+  "S_interval": [
+   "119999999999999999999999999/10000000000000000000000000",
+   "120000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-138.minpoly.json.gz"
+ },
+ {
+  "n": 139,
+  "status": "exact",
+  "S": "12.0",
+  "S_poly_ascending": [
+   -12,
+   1
+  ],
+  "S_interval": [
+   "119999999999999999999999999/10000000000000000000000000",
+   "120000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-139.minpoly.json.gz"
+ },
+ {
+  "n": 140,
+  "status": "exact",
+  "S": "12.0",
+  "S_poly_ascending": [
+   -12,
+   1
+  ],
+  "S_interval": [
+   "119999999999999999999999999/10000000000000000000000000",
+   "120000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-140.minpoly.json.gz"
+ },
+ {
+  "n": 141,
+  "status": "exact",
+  "S": "12.0",
+  "S_poly_ascending": [
+   -12,
+   1
+  ],
+  "S_interval": [
+   "119999999999999999999999999/10000000000000000000000000",
+   "120000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-141.minpoly.json.gz"
+ },
+ {
+  "n": 142,
+  "status": "exact",
+  "S": "12.0",
+  "S_poly_ascending": [
+   -12,
+   1
+  ],
+  "S_interval": [
+   "119999999999999999999999999/10000000000000000000000000",
+   "120000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-142.minpoly.json.gz"
+ },
+ {
+  "n": 143,
+  "status": "exact",
+  "S": "12.0",
+  "S_poly_ascending": [
+   -12,
+   1
+  ],
+  "S_interval": [
+   "119999999999999999999999999/10000000000000000000000000",
+   "120000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-143.minpoly.json.gz"
+ },
+ {
+  "n": 144,
+  "status": "exact",
+  "S": "12.0",
+  "S_poly_ascending": [
+   -12,
+   1
+  ],
+  "S_interval": [
+   "119999999999999999999999999/10000000000000000000000000",
+   "120000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-144.minpoly.json.gz"
+ },
+ {
+  "n": 145,
+  "status": "exact",
+  "S": "12.53553390593273762",
+  "S_poly_ascending": [
+   137,
+   -36,
+   2
+  ],
+  "S_interval": [
+   "62677669529663688110021108552621225982121/5000000000000000000000000000000000000000",
+   "62677669529663688110021109552621225982121/5000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-145.minpoly.json.gz"
+ },
+ {
+  "n": 146,
+  "status": "exact",
+  "S": "12.60090777851301824",
+  "S_poly_ascending": [
+   82323170428761425,
+   -119456945705052640,
+   82161582314776868,
+   -35571513994776316,
+   10847755732088938,
+   -2468567342450368,
+   433020664362230,
+   -59622322943944,
+   6500206337793,
+   -561971068668,
+   38335080074,
+   -2038683388,
+   82758797,
+   -2476628,
+   51488,
+   -664,
+   4
+  ],
+  "S_interval": [
+   "126009077785130182401120309470790924733093/10000000000000000000000000000000000000000",
+   "126009077785130182401120311470790924733093/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 16,
+  "height_digits": 18,
+  "field_poly_ascending": [
+   3333,
+   -10036,
+   676,
+   17756,
+   -60440,
+   144780,
+   -293036,
+   334876,
+   -497910,
+   573508,
+   -403988,
+   441332,
+   -305312,
+   -10652,
+   -157284,
+   -63596,
+   6697
+  ],
+  "field_degree": 16,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "Ellsworth deg ok",
+  "new": false,
+  "data": "minpoly/data/n-146.minpoly.json.gz"
+ },
+ {
+  "n": 147,
+  "status": "exact",
+  "S": "12.65685424949238019",
+  "S_poly_ascending": [
+   17,
+   -14,
+   1
+  ],
+  "S_interval": [
+   "126568542494923801952067547968387923142787/10000000000000000000000000000000000000000",
+   "126568542494923801952067549968387923142787/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-147.minpoly.json.gz"
+ },
+ {
+  "n": 148,
+  "status": "exact",
+  "S": "12.65685424949238019",
+  "S_poly_ascending": [
+   17,
+   -14,
+   1
+  ],
+  "S_interval": [
+   "126568542494923801952067547968387923142787/10000000000000000000000000000000000000000",
+   "126568542494923801952067549968387923142787/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-148.minpoly.json.gz"
+ },
+ {
+  "n": 149,
+  "status": "exact",
+  "S": "12.70710678118654752",
+  "S_poly_ascending": [
+   287,
+   -48,
+   2
+  ],
+  "S_interval": [
+   "7941941738241592202750527663815530649553/625000000000000000000000000000000000000",
+   "7941941738241592202750527788815530649553/625000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-149.minpoly.json.gz"
+ },
+ {
+  "n": 150,
+  "status": "exact",
+  "S": "12.77817459305202276",
+  "S_poly_ascending": [
+   -71,
+   -20,
+   2
+  ],
+  "S_interval": [
+   "31945436482630056921023219707883348580333/2500000000000000000000000000000000000000",
+   "31945436482630056921023220207883348580333/2500000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-150.minpoly.json.gz"
+ },
+ {
+  "n": 151,
+  "status": "exact",
+  "S": "12.82287565553229529",
+  "S_poly_ascending": [
+   261,
+   -46,
+   2
+  ],
+  "S_interval": [
+   "128228756555322952952508077768196302128551/10000000000000000000000000000000000000000",
+   "128228756555322952952508079768196302128551/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   4,
+   3
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-151.minpoly.json.gz"
+ },
+ {
+  "n": 152,
+  "status": "exact",
+  "S": "12.83071880097660995",
+  "S_poly_ascending": [
+   967934231335142865261845154124251918195696520440064,
+   -3815645610032333278043528122833316516189130534266880,
+   7294367313064160969645297899668534905969735857612032,
+   -9012675306375232989859231935898301500466286927259136,
+   8092971771019569163893318507128163085125616249692512,
+   -5630493490028596740621655204240511416187455337442944,
+   3159672337856596550559633888053219006354787902283120,
+   -1470108400400855304203364333473083049052030510769120,
+   578519259152812810310611396977695674359288540363705,
+   -195458370514612822035786666714863960833612668596016,
+   57357746316652013889741757947589360310782878601458,
+   -14753771706700721421781262139975986386454097703612,
+   3350923046159741537567538200849916461768719527589,
+   -675987906038850649119302402858357427350187933468,
+   121702556287806622928442000044997243425592647686,
+   -19629966875427293949330263509251037737186075824,
+   2845346278261987563864537507077430630250016920,
+   -371529644300147809662988402092078036849187188,
+   43781022502377868721615505837763260790890896,
+   -4661994147066535741826842882639344374454608,
+   448945992213632372462463786101081529137405,
+   -39110117691047449401549154461714988423700,
+   3081689400032073387054636528575137390138,
+   -219491921938120497124536159333007529044,
+   14115219331875466011654750473997935071,
+   -818227830989264474371720822478359580,
+   42658104936277287344308694726518286,
+   -1994363328441388202365707823875820,
+   83307141408469634670230233492533,
+   -3094826639577859845399031760724,
+   101666954215878695025224069078,
+   -2932333752611923569795024612,
+   73594527291625855296466321,
+   -1589006492110354277080740,
+   29082570188841355550240,
+   -442391167408498631420,
+   5442327881049254075,
+   -52022489786156400,
+   362519026243150,
+   -1638203500500,
+   3603000625
+  ],
+  "S_interval": [
+   "64153594004883049774327581777006243486683/5000000000000000000000000000000000000000",
+   "64153594004883049774327582777006243486683/5000000000000000000000000000000000000000"
+  ],
+  "S_degree": 40,
+  "height_digits": 52,
+  "field_poly_ascending": [
+   -7,
+   72,
+   603,
+   -7728,
+   -14465,
+   252540,
+   -254783,
+   -2711732,
+   12225364,
+   -20208928,
+   -83840772,
+   539048640,
+   -743730468,
+   -1382512208,
+   5947563236,
+   -14025320400,
+   30836599006,
+   904655600,
+   -203918692870,
+   358607082016,
+   208927973570,
+   -1205659808248,
+   687628310206,
+   1632823517992,
+   -2232043768476,
+   -716885659296,
+   2926733620460,
+   -812423384768,
+   -2105437085524,
+   1552049241328,
+   689454791956,
+   -1155341927952,
+   151465294641,
+   385805432456,
+   -200186960189,
+   -9804056048,
+   38833919799,
+   -14677175588,
+   2632447369,
+   -238022292,
+   8710208
+  ],
+  "field_degree": 40,
+  "verify_exact": true,
+  "lean_packs": false,
+  "lean_local_min": "",
+  "crosscheck": "**new** (no published form)",
+  "new": true,
+  "data": "minpoly/data/n-152.minpoly.json.gz"
+ },
+ {
+  "n": 153,
+  "status": "exact",
+  "S": "12.88166675700900462",
+  "S_poly_ascending": [
+   464677,
+   -158164,
+   19960,
+   -1110,
+   23
+  ],
+  "S_interval": [
+   "128816667570090046248235120489096372070621/10000000000000000000000000000000000000000",
+   "128816667570090046248235122489096372070621/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 4,
+  "height_digits": 6,
+  "field_poly_ascending": [
+   -1,
+   -6,
+   -4,
+   6,
+   9
+  ],
+  "field_degree": 4,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok, Ellsworth deg ok",
+  "new": false,
+  "data": "minpoly/data/n-153.minpoly.json.gz"
+ },
+ {
+  "n": 154,
+  "status": "open",
+  "reason": "open (timeout): n = 154: 154 squares in the system, 0 free; 8 tilted angle classes; 1354 contact equations"
+ },
+ {
+  "n": 155,
+  "status": "open",
+  "reason": "open (memory cap): n = 155: 152 squares in the system, 3 free; 16 tilted angle classes; 1124 contact equation"
+ },
+ {
+  "n": 156,
+  "status": "open",
+  "reason": "open (timeout): n = 156: 155 squares in the system, 1 free; 15 tilted angle classes; 1296 contact equation"
+ },
+ {
+  "n": 157,
+  "status": "exact",
+  "S": "13.0",
+  "S_poly_ascending": [
+   -13,
+   1
+  ],
+  "S_interval": [
+   "129999999999999999999999999/10000000000000000000000000",
+   "130000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-157.minpoly.json.gz"
+ },
+ {
+  "n": 158,
+  "status": "exact",
+  "S": "13.0",
+  "S_poly_ascending": [
+   -13,
+   1
+  ],
+  "S_interval": [
+   "129999999999999999999999999/10000000000000000000000000",
+   "130000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-158.minpoly.json.gz"
+ },
+ {
+  "n": 159,
+  "status": "exact",
+  "S": "13.0",
+  "S_poly_ascending": [
+   -13,
+   1
+  ],
+  "S_interval": [
+   "129999999999999999999999999/10000000000000000000000000",
+   "130000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-159.minpoly.json.gz"
+ },
+ {
+  "n": 160,
+  "status": "exact",
+  "S": "13.0",
+  "S_poly_ascending": [
+   -13,
+   1
+  ],
+  "S_interval": [
+   "129999999999999999999999999/10000000000000000000000000",
+   "130000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-160.minpoly.json.gz"
+ },
+ {
+  "n": 161,
+  "status": "exact",
+  "S": "13.0",
+  "S_poly_ascending": [
+   -13,
+   1
+  ],
+  "S_interval": [
+   "129999999999999999999999999/10000000000000000000000000",
+   "130000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-161.minpoly.json.gz"
+ },
+ {
+  "n": 162,
+  "status": "exact",
+  "S": "13.0",
+  "S_poly_ascending": [
+   -13,
+   1
+  ],
+  "S_interval": [
+   "129999999999999999999999999/10000000000000000000000000",
+   "130000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-162.minpoly.json.gz"
+ },
+ {
+  "n": 163,
+  "status": "exact",
+  "S": "13.0",
+  "S_poly_ascending": [
+   -13,
+   1
+  ],
+  "S_interval": [
+   "129999999999999999999999999/10000000000000000000000000",
+   "130000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-163.minpoly.json.gz"
+ },
+ {
+  "n": 164,
+  "status": "exact",
+  "S": "13.0",
+  "S_poly_ascending": [
+   -13,
+   1
+  ],
+  "S_interval": [
+   "129999999999999999999999999/10000000000000000000000000",
+   "130000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-164.minpoly.json.gz"
+ },
+ {
+  "n": 165,
+  "status": "exact",
+  "S": "13.0",
+  "S_poly_ascending": [
+   -13,
+   1
+  ],
+  "S_interval": [
+   "129999999999999999999999999/10000000000000000000000000",
+   "130000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-165.minpoly.json.gz"
+ },
+ {
+  "n": 166,
+  "status": "exact",
+  "S": "13.0",
+  "S_poly_ascending": [
+   -13,
+   1
+  ],
+  "S_interval": [
+   "129999999999999999999999999/10000000000000000000000000",
+   "130000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-166.minpoly.json.gz"
+ },
+ {
+  "n": 167,
+  "status": "exact",
+  "S": "13.0",
+  "S_poly_ascending": [
+   -13,
+   1
+  ],
+  "S_interval": [
+   "129999999999999999999999999/10000000000000000000000000",
+   "130000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-167.minpoly.json.gz"
+ },
+ {
+  "n": 168,
+  "status": "exact",
+  "S": "13.0",
+  "S_poly_ascending": [
+   -13,
+   1
+  ],
+  "S_interval": [
+   "129999999999999999999999999/10000000000000000000000000",
+   "130000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-168.minpoly.json.gz"
+ },
+ {
+  "n": 169,
+  "status": "exact",
+  "S": "13.0",
+  "S_poly_ascending": [
+   -13,
+   1
+  ],
+  "S_interval": [
+   "129999999999999999999999999/10000000000000000000000000",
+   "130000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-169.minpoly.json.gz"
+ },
+ {
+  "n": 170,
+  "status": "exact",
+  "S": "13.53553390593273762",
+  "S_poly_ascending": [
+   175,
+   -40,
+   2
+  ],
+  "S_interval": [
+   "67677669529663688110021108552621225982121/5000000000000000000000000000000000000000",
+   "67677669529663688110021109552621225982121/5000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-170.minpoly.json.gz"
+ },
+ {
+  "n": 171,
+  "status": "exact",
+  "S": "13.57142857142857142",
+  "S_poly_ascending": [
+   -95,
+   7
+  ],
+  "S_interval": [
+   "67857142857142857142857142357142857142857/5000000000000000000000000000000000000000",
+   "67857142857142857142857143357142857142857/5000000000000000000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   3
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-171.minpoly.json.gz"
+ },
+ {
+  "n": 172,
+  "status": "open",
+  "reason": "open: 1 consistency polynomials for 3 class angles: more than one angle direction left to force "
+ },
+ {
+  "n": 173,
+  "status": "exact",
+  "S": "13.65685424949238019",
+  "S_poly_ascending": [
+   32,
+   -16,
+   1
+  ],
+  "S_interval": [
+   "136568542494923801952067547968387923142787/10000000000000000000000000000000000000000",
+   "136568542494923801952067549968387923142787/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-173.minpoly.json.gz"
+ },
+ {
+  "n": 174,
+  "status": "exact",
+  "S": "13.70710678118654752",
+  "S_poly_ascending": [
+   337,
+   -52,
+   2
+  ],
+  "S_interval": [
+   "8566941738241592202750527663815530649553/625000000000000000000000000000000000000",
+   "8566941738241592202750527788815530649553/625000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-174.minpoly.json.gz"
+ },
+ {
+  "n": 175,
+  "status": "exact",
+  "S": "13.77817459305202276",
+  "S_poly_ascending": [
+   -49,
+   -24,
+   2
+  ],
+  "S_interval": [
+   "34445436482630056921023219707883348580333/2500000000000000000000000000000000000000",
+   "34445436482630056921023220207883348580333/2500000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-175.minpoly.json.gz"
+ },
+ {
+  "n": 176,
+  "status": "exact",
+  "S": "13.82287565553229529",
+  "S_poly_ascending": [
+   309,
+   -50,
+   2
+  ],
+  "S_interval": [
+   "138228756555322952952508077768196302128551/10000000000000000000000000000000000000000",
+   "138228756555322952952508079768196302128551/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   4,
+   3
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-176.minpoly.json.gz"
+ },
+ {
+  "n": 177,
+  "status": "exact",
+  "S": "13.82297973416944860",
+  "S_poly_ascending": [
+   600318806549328868962615860899264670608,
+   -1019868278760324292675037902865153795232,
+   822575073395315786867118688638707393912,
+   -422672982294306143594496446526608795944,
+   157592239295775753173807858133804083305,
+   -46297661463462287253135335202861170112,
+   11355835459087442849657983618125182022,
+   -2398727665212132708342228212709761468,
+   434924467358131284469796467900457095,
+   -65064206847209854378721097338733076,
+   7335264863777553371082291856693316,
+   -460727028601576935278200216633000,
+   -28061388694294799743903552379877,
+   12849286065035700776098938447440,
+   -2042478849554854362936211622856,
+   207172683922245406751419408636,
+   -13084523076418652222810946931,
+   170701153401013719226552228,
+   76721508725152301082142358,
+   -11717160762882867982213440,
+   1081717528148082272214022,
+   -75019999131402788141116,
+   4153127470832973457796,
+   -187792748088189195096,
+   6989573120355152399,
+   -213940780839823612,
+   5344270191319438,
+   -107377578501324,
+   1695091455663,
+   -20261018820,
+   172451678,
+   -931588,
+   2401
+  ],
+  "S_interval": [
+   "5529191893667779440037461199575567775739/400000000000000000000000000000000000000",
+   "5529191893667779440037461279575567775739/400000000000000000000000000000000000000"
+  ],
+  "S_degree": 32,
+  "height_digits": 40,
+  "field_poly_ascending": [
+   -108,
+   1836,
+   -6507,
+   -38068,
+   259894,
+   -244448,
+   -1695609,
+   9147672,
+   -9786920,
+   -50797180,
+   51404637,
+   5955732,
+   839878242,
+   -803892984,
+   -6113992857,
+   12477220560,
+   5884832916,
+   -40732113100,
+   35805300183,
+   23996571060,
+   -64238969286,
+   31309382032,
+   19990603341,
+   -20101032296,
+   -13611675968,
+   27421750940,
+   -13487163849,
+   -1363579412,
+   4477786990,
+   -2181464632,
+   516315077,
+   -61622784,
+   2941952
+  ],
+  "field_degree": 32,
+  "verify_exact": true,
+  "lean_packs": false,
+  "lean_local_min": "",
+  "crosscheck": "**new** (no published form)",
+  "new": true,
+  "data": "minpoly/data/n-177.minpoly.json.gz"
+ },
+ {
+  "n": 178,
+  "status": "exact",
+  "S": "13.84666719284348978",
+  "S_poly_ascending": [
+   112001,
+   -34824,
+   4044,
+   -208,
+   4
+  ],
+  "S_interval": [
+   "138466671928434897829433144909582979088797/10000000000000000000000000000000000000000",
+   "138466671928434897829433146909582979088797/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 4,
+  "height_digits": 6,
+  "field_poly_ascending": [
+   -1,
+   -4,
+   -2,
+   4,
+   7
+  ],
+  "field_degree": 4,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-178.minpoly.json.gz"
+ },
+ {
+  "n": 179,
+  "status": "open",
+  "reason": "open: 1 consistency polynomials for 5 class angles: more than one angle direction left to force "
+ },
+ {
+  "n": 180,
+  "status": "open",
+  "reason": "open (timeout): n = 180: 180 squares in the system, 0 free; 16 tilted angle classes; 1581 contact equation"
+ },
+ {
+  "n": 181,
+  "status": "open",
+  "reason": "open (memory cap): n = 181: 180 squares in the system, 1 free; 19 tilted angle classes; 1723 contact equation"
+ },
+ {
+  "n": 182,
+  "status": "open",
+  "reason": "open (memory cap):   elimination: 337 pivots, 23 consistency rows"
+ },
+ {
+  "n": 183,
+  "status": "exact",
+  "S": "14.0",
+  "S_poly_ascending": [
+   -14,
+   1
+  ],
+  "S_interval": [
+   "139999999999999999999999999/10000000000000000000000000",
+   "140000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-183.minpoly.json.gz"
+ },
+ {
+  "n": 184,
+  "status": "exact",
+  "S": "14.0",
+  "S_poly_ascending": [
+   -14,
+   1
+  ],
+  "S_interval": [
+   "139999999999999999999999999/10000000000000000000000000",
+   "140000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-184.minpoly.json.gz"
+ },
+ {
+  "n": 185,
+  "status": "exact",
+  "S": "14.0",
+  "S_poly_ascending": [
+   -14,
+   1
+  ],
+  "S_interval": [
+   "139999999999999999999999999/10000000000000000000000000",
+   "140000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-185.minpoly.json.gz"
+ },
+ {
+  "n": 186,
+  "status": "exact",
+  "S": "14.0",
+  "S_poly_ascending": [
+   -14,
+   1
+  ],
+  "S_interval": [
+   "139999999999999999999999999/10000000000000000000000000",
+   "140000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-186.minpoly.json.gz"
+ },
+ {
+  "n": 187,
+  "status": "exact",
+  "S": "14.0",
+  "S_poly_ascending": [
+   -14,
+   1
+  ],
+  "S_interval": [
+   "139999999999999999999999999/10000000000000000000000000",
+   "140000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-187.minpoly.json.gz"
+ },
+ {
+  "n": 188,
+  "status": "exact",
+  "S": "14.0",
+  "S_poly_ascending": [
+   -14,
+   1
+  ],
+  "S_interval": [
+   "139999999999999999999999999/10000000000000000000000000",
+   "140000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-188.minpoly.json.gz"
+ },
+ {
+  "n": 189,
+  "status": "exact",
+  "S": "14.0",
+  "S_poly_ascending": [
+   -14,
+   1
+  ],
+  "S_interval": [
+   "139999999999999999999999999/10000000000000000000000000",
+   "140000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-189.minpoly.json.gz"
+ },
+ {
+  "n": 190,
+  "status": "exact",
+  "S": "14.0",
+  "S_poly_ascending": [
+   -14,
+   1
+  ],
+  "S_interval": [
+   "139999999999999999999999999/10000000000000000000000000",
+   "140000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-190.minpoly.json.gz"
+ },
+ {
+  "n": 191,
+  "status": "exact",
+  "S": "14.0",
+  "S_poly_ascending": [
+   -14,
+   1
+  ],
+  "S_interval": [
+   "139999999999999999999999999/10000000000000000000000000",
+   "140000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-191.minpoly.json.gz"
+ },
+ {
+  "n": 192,
+  "status": "exact",
+  "S": "14.0",
+  "S_poly_ascending": [
+   -14,
+   1
+  ],
+  "S_interval": [
+   "139999999999999999999999999/10000000000000000000000000",
+   "140000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-192.minpoly.json.gz"
+ },
+ {
+  "n": 193,
+  "status": "exact",
+  "S": "14.0",
+  "S_poly_ascending": [
+   -14,
+   1
+  ],
+  "S_interval": [
+   "139999999999999999999999999/10000000000000000000000000",
+   "140000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-193.minpoly.json.gz"
+ },
+ {
+  "n": 194,
+  "status": "exact",
+  "S": "14.0",
+  "S_poly_ascending": [
+   -14,
+   1
+  ],
+  "S_interval": [
+   "139999999999999999999999999/10000000000000000000000000",
+   "140000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-194.minpoly.json.gz"
+ },
+ {
+  "n": 195,
+  "status": "exact",
+  "S": "14.0",
+  "S_poly_ascending": [
+   -14,
+   1
+  ],
+  "S_interval": [
+   "139999999999999999999999999/10000000000000000000000000",
+   "140000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-195.minpoly.json.gz"
+ },
+ {
+  "n": 196,
+  "status": "exact",
+  "S": "14.0",
+  "S_poly_ascending": [
+   -14,
+   1
+  ],
+  "S_interval": [
+   "139999999999999999999999999/10000000000000000000000000",
+   "140000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-196.minpoly.json.gz"
+ },
+ {
+  "n": 197,
+  "status": "exact",
+  "S": "14.53553390593273762",
+  "S_poly_ascending": [
+   217,
+   -44,
+   2
+  ],
+  "S_interval": [
+   "72677669529663688110021108552621225982121/5000000000000000000000000000000000000000",
+   "72677669529663688110021109552621225982121/5000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-197.minpoly.json.gz"
+ },
+ {
+  "n": 198,
+  "status": "exact",
+  "S": "14.57142857142857142",
+  "S_poly_ascending": [
+   -102,
+   7
+  ],
+  "S_interval": [
+   "72857142857142857142857142357142857142857/5000000000000000000000000000000000000000",
+   "72857142857142857142857143357142857142857/5000000000000000000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   3
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-198.minpoly.json.gz"
+ },
+ {
+  "n": 199,
+  "status": "open",
+  "reason": "open: 1 consistency polynomials for 3 class angles: more than one angle direction left to force "
+ },
+ {
+  "n": 200,
+  "status": "exact",
+  "S": "14.65685424949238019",
+  "S_poly_ascending": [
+   49,
+   -18,
+   1
+  ],
+  "S_interval": [
+   "146568542494923801952067547968387923142787/10000000000000000000000000000000000000000",
+   "146568542494923801952067549968387923142787/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-200.minpoly.json.gz"
+ },
+ {
+  "n": 201,
+  "status": "exact",
+  "S": "14.70710678118654752",
+  "S_poly_ascending": [
+   391,
+   -56,
+   2
+  ],
+  "S_interval": [
+   "9191941738241592202750527663815530649553/625000000000000000000000000000000000000",
+   "9191941738241592202750527788815530649553/625000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-201.minpoly.json.gz"
+ },
+ {
+  "n": 202,
+  "status": "exact",
+  "S": "14.72792206135785543",
+  "S_poly_ascending": [
+   -158,
+   -4,
+   1
+  ],
+  "S_interval": [
+   "14727922061357855439215198417887282707127/1000000000000000000000000000000000000000",
+   "14727922061357855439215198617887282707127/1000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-202.minpoly.json.gz"
+ },
+ {
+  "n": 203,
+  "status": "exact",
+  "S": "14.77817459305202276",
+  "S_poly_ascending": [
+   -23,
+   -28,
+   2
+  ],
+  "S_interval": [
+   "36945436482630056921023219707883348580333/2500000000000000000000000000000000000000",
+   "36945436482630056921023220207883348580333/2500000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-203.minpoly.json.gz"
+ },
+ {
+  "n": 204,
+  "status": "exact",
+  "S": "14.82287565553229529",
+  "S_poly_ascending": [
+   361,
+   -54,
+   2
+  ],
+  "S_interval": [
+   "148228756555322952952508077768196302128551/10000000000000000000000000000000000000000",
+   "148228756555322952952508079768196302128551/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   4,
+   3
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-204.minpoly.json.gz"
+ },
+ {
+  "n": 205,
+  "status": "exact",
+  "S": "14.82445114612408822",
+  "S_poly_ascending": [
+   1694040395896101772224866098180283214283057728000000,
+   -4315559969700226767159393981391684637349630444000000,
+   5169742707762800848775847149992971475362078199650000,
+   -3838064311683628303762259793886602147590339042385000,
+   1948735509481744597514888658808885791132097191929625,
+   -695527958949195756061996697585676748194320009594040,
+   165869320264318841451647718375161237581492991097810,
+   -18138284909745955939878418372807115317752603411176,
+   -4490901292932914262604076259256067123710050815195,
+   2995081869452847889056141420143309758645762048480,
+   -887645374096288133345472520371583078066772417438,
+   171806640590364466782586102889249290168160938968,
+   -20274687460176342070123115001595419340631113986,
+   47787548247188382784775375655144589392168024,
+   668299828757988666056469128930860611880478162,
+   -200557184022962853819962178120475887680432104,
+   39656170956144484959733239448754004343189341,
+   -6181562346162193722542638238059633411805108,
+   805381183069421598181526905692816890290502,
+   -90126731671943479290165241436087360926864,
+   8794114159490040759213225924279409129174,
+   -755020486735335189866154838905984601284,
+   57359828211423634121225283370282978472,
+   -3869279274647141302600286447060842028,
+   232178750736807601084495428509773447,
+   -12400310845434669601706739856078348,
+   589158528037990588430776578667278,
+   -24862568075564651560878275579812,
+   929494097506723220926745638527,
+   -30670374642432504931208393536,
+   888775367178021320983990528,
+   -22471266124455622725351620,
+   491532552940826676421598,
+   -9200231755130148537584,
+   145244607337067116310,
+   -1896817614997924732,
+   19944495118895680,
+   -162258762163956,
+   958435862652,
+   -3656922768,
+   6765201
+  ],
+  "S_interval": [
+   "2964890229224817644703096290844374460953/200000000000000000000000000000000000000",
+   "2964890229224817644703096330844374460953/200000000000000000000000000000000000000"
+  ],
+  "S_degree": 40,
+  "height_digits": 52,
+  "field_poly_ascending": [
+   -540,
+   7560,
+   -13239,
+   -232196,
+   1014203,
+   1169516,
+   -13736753,
+   18447536,
+   41367233,
+   -10576768,
+   -238026348,
+   -3575957232,
+   13157582572,
+   24760464336,
+   -155791783108,
+   39785435488,
+   760371200364,
+   -989353137648,
+   -1561485883330,
+   4139280432872,
+   172075296618,
+   -8217906460536,
+   5488759883394,
+   8259630342016,
+   -11838664377474,
+   -2333340082368,
+   12526436468324,
+   -4294350677232,
+   -7187549349188,
+   6067366156240,
+   1369974458572,
+   -3566062832864,
+   945320148360,
+   856727581352,
+   -630011595647,
+   63008282108,
+   87665647667,
+   -44873081492,
+   9907416999,
+   -1088503472,
+   48475625
+  ],
+  "field_degree": 40,
+  "verify_exact": true,
+  "lean_packs": false,
+  "lean_local_min": "",
+  "crosscheck": "Ellsworth deg ok",
+  "new": false,
+  "data": "minpoly/data/n-205.minpoly.json.gz"
+ },
+ {
+  "n": 206,
+  "status": "open",
+  "reason": "open (timeout):   field: degree 56 (factor of the eliminating polynomial with root t*)"
+ },
+ {
+  "n": 207,
+  "status": "open",
+  "reason": "open: Lagrange determinant vanishes identically"
+ },
+ {
+  "n": 208,
+  "status": "open",
+  "reason": "open (timeout): n = 208: 206 squares in the system, 2 free; 13 tilted angle classes; 2006 contact equation"
+ },
+ {
+  "n": 209,
+  "status": "open",
+  "reason": "open (memory cap): n = 209: 206 squares in the system, 3 free; 26 tilted angle classes; 1729 contact equation"
+ },
+ {
+  "n": 210,
+  "status": "open",
+  "reason": "open (memory cap): n = 210: 208 squares in the system, 2 free; 26 tilted angle classes; 1681 contact equation"
+ },
+ {
+  "n": 211,
+  "status": "open",
+  "reason": "open (memory cap): n = 211: 211 squares in the system, 0 free; 20 tilted angle classes; 1981 contact equation"
+ },
+ {
+  "n": 212,
+  "status": "exact",
+  "S": "15.0",
+  "S_poly_ascending": [
+   -15,
+   1
+  ],
+  "S_interval": [
+   "149999999999999999999999999/10000000000000000000000000",
+   "150000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-212.minpoly.json.gz"
+ },
+ {
+  "n": 213,
+  "status": "exact",
+  "S": "15.0",
+  "S_poly_ascending": [
+   -15,
+   1
+  ],
+  "S_interval": [
+   "149999999999999999999999999/10000000000000000000000000",
+   "150000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-213.minpoly.json.gz"
+ },
+ {
+  "n": 214,
+  "status": "exact",
+  "S": "15.0",
+  "S_poly_ascending": [
+   -15,
+   1
+  ],
+  "S_interval": [
+   "149999999999999999999999999/10000000000000000000000000",
+   "150000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-214.minpoly.json.gz"
+ },
+ {
+  "n": 215,
+  "status": "exact",
+  "S": "15.0",
+  "S_poly_ascending": [
+   -15,
+   1
+  ],
+  "S_interval": [
+   "149999999999999999999999999/10000000000000000000000000",
+   "150000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-215.minpoly.json.gz"
+ },
+ {
+  "n": 216,
+  "status": "exact",
+  "S": "15.0",
+  "S_poly_ascending": [
+   -15,
+   1
+  ],
+  "S_interval": [
+   "149999999999999999999999999/10000000000000000000000000",
+   "150000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-216.minpoly.json.gz"
+ },
+ {
+  "n": 217,
+  "status": "exact",
+  "S": "15.0",
+  "S_poly_ascending": [
+   -15,
+   1
+  ],
+  "S_interval": [
+   "149999999999999999999999999/10000000000000000000000000",
+   "150000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-217.minpoly.json.gz"
+ },
+ {
+  "n": 218,
+  "status": "exact",
+  "S": "15.0",
+  "S_poly_ascending": [
+   -15,
+   1
+  ],
+  "S_interval": [
+   "149999999999999999999999999/10000000000000000000000000",
+   "150000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-218.minpoly.json.gz"
+ },
+ {
+  "n": 219,
+  "status": "exact",
+  "S": "15.0",
+  "S_poly_ascending": [
+   -15,
+   1
+  ],
+  "S_interval": [
+   "149999999999999999999999999/10000000000000000000000000",
+   "150000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-219.minpoly.json.gz"
+ },
+ {
+  "n": 220,
+  "status": "exact",
+  "S": "15.0",
+  "S_poly_ascending": [
+   -15,
+   1
+  ],
+  "S_interval": [
+   "149999999999999999999999999/10000000000000000000000000",
+   "150000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-220.minpoly.json.gz"
+ },
+ {
+  "n": 221,
+  "status": "exact",
+  "S": "15.0",
+  "S_poly_ascending": [
+   -15,
+   1
+  ],
+  "S_interval": [
+   "149999999999999999999999999/10000000000000000000000000",
+   "150000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-221.minpoly.json.gz"
+ },
+ {
+  "n": 222,
+  "status": "exact",
+  "S": "15.0",
+  "S_poly_ascending": [
+   -15,
+   1
+  ],
+  "S_interval": [
+   "149999999999999999999999999/10000000000000000000000000",
+   "150000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-222.minpoly.json.gz"
+ },
+ {
+  "n": 223,
+  "status": "exact",
+  "S": "15.0",
+  "S_poly_ascending": [
+   -15,
+   1
+  ],
+  "S_interval": [
+   "149999999999999999999999999/10000000000000000000000000",
+   "150000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-223.minpoly.json.gz"
+ },
+ {
+  "n": 224,
+  "status": "exact",
+  "S": "15.0",
+  "S_poly_ascending": [
+   -15,
+   1
+  ],
+  "S_interval": [
+   "149999999999999999999999999/10000000000000000000000000",
+   "150000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-224.minpoly.json.gz"
+ },
+ {
+  "n": 225,
+  "status": "exact",
+  "S": "15.0",
+  "S_poly_ascending": [
+   -15,
+   1
+  ],
+  "S_interval": [
+   "149999999999999999999999999/10000000000000000000000000",
+   "150000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-225.minpoly.json.gz"
+ },
+ {
+  "n": 226,
+  "status": "exact",
+  "S": "15.53553390593273762",
+  "S_poly_ascending": [
+   263,
+   -48,
+   2
+  ],
+  "S_interval": [
+   "77677669529663688110021108552621225982121/5000000000000000000000000000000000000000",
+   "77677669529663688110021109552621225982121/5000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-226.minpoly.json.gz"
+ },
+ {
+  "n": 227,
+  "status": "exact",
+  "S": "15.57106781186547524",
+  "S_poly_ascending": [
+   89,
+   -68,
+   4
+  ],
+  "S_interval": [
+   "38927669529663688110021108802621225982121/2500000000000000000000000000000000000000",
+   "38927669529663688110021109302621225982121/2500000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-227.minpoly.json.gz"
+ },
+ {
+  "n": 228,
+  "status": "open",
+  "reason": "open (timeout):   27 consistency rows -> 12 distinct irreducible factors vanishing at t*: degrees [12, 15,"
+ },
+ {
+  "n": 229,
+  "status": "exact",
+  "S": "15.65685424949238019",
+  "S_poly_ascending": [
+   68,
+   -20,
+   1
+  ],
+  "S_interval": [
+   "156568542494923801952067547968387923142787/10000000000000000000000000000000000000000",
+   "156568542494923801952067549968387923142787/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-229.minpoly.json.gz"
+ },
+ {
+  "n": 230,
+  "status": "exact",
+  "S": "15.68292682926829268",
+  "S_poly_ascending": [
+   -643,
+   41
+  ],
+  "S_interval": [
+   "156829268292682926829268291682926829268293/10000000000000000000000000000000000000000",
+   "156829268292682926829268293682926829268293/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   2,
+   5
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-230.minpoly.json.gz"
+ },
+ {
+  "n": 231,
+  "status": "exact",
+  "S": "15.70710678118654752",
+  "S_poly_ascending": [
+   449,
+   -60,
+   2
+  ],
+  "S_interval": [
+   "9816941738241592202750527663815530649553/625000000000000000000000000000000000000",
+   "9816941738241592202750527788815530649553/625000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-231.minpoly.json.gz"
+ },
+ {
+  "n": 232,
+  "status": "exact",
+  "S": "15.77817459305202276",
+  "S_poly_ascending": [
+   7,
+   -32,
+   2
+  ],
+  "S_interval": [
+   "39445436482630056921023219707883348580333/2500000000000000000000000000000000000000",
+   "39445436482630056921023220207883348580333/2500000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-232.minpoly.json.gz"
+ },
+ {
+  "n": 233,
+  "status": "exact",
+  "S": "15.77817459305202276",
+  "S_poly_ascending": [
+   7,
+   -32,
+   2
+  ],
+  "S_interval": [
+   "39445436482630056921023219707883348580333/2500000000000000000000000000000000000000",
+   "39445436482630056921023220207883348580333/2500000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-233.minpoly.json.gz"
+ },
+ {
+  "n": 234,
+  "status": "exact",
+  "S": "15.82287565553229529",
+  "S_poly_ascending": [
+   417,
+   -58,
+   2
+  ],
+  "S_interval": [
+   "158228756555322952952508077768196302128551/10000000000000000000000000000000000000000",
+   "158228756555322952952508079768196302128551/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   4,
+   3
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-234.minpoly.json.gz"
+ },
+ {
+  "n": 235,
+  "status": "open",
+  "reason": "open: msolve: system not zero-dimensional (code 1)"
+ },
+ {
+  "n": 236,
+  "status": "open",
+  "reason": "open: 1 consistency polynomials for 3 class angles: more than one angle direction left to force "
+ },
+ {
+  "n": 237,
+  "status": "open",
+  "reason": "open: 1 consistency polynomials for 5 class angles: more than one angle direction left to force "
+ },
+ {
+  "n": 238,
+  "status": "open",
+  "reason": "open (memory cap): n = 238: 237 squares in the system, 1 free; 17 tilted angle classes; 2104 contact equation"
+ },
+ {
+  "n": 239,
+  "status": "open",
+  "reason": "open (memory cap): n = 239: 236 squares in the system, 3 free; 24 tilted angle classes; 1937 contact equation"
+ },
+ {
+  "n": 240,
+  "status": "open",
+  "reason": "open (memory cap): n = 240: 237 squares in the system, 3 free; 18 tilted angle classes; 1822 contact equation"
+ },
+ {
+  "n": 241,
+  "status": "open",
+  "reason": "open (memory cap): n = 241: 238 squares in the system, 3 free; 21 tilted angle classes; 2023 contact equation"
+ },
+ {
+  "n": 242,
+  "status": "exact",
+  "S": "16.0",
+  "S_poly_ascending": [
+   -16,
+   1
+  ],
+  "S_interval": [
+   "159999999999999999999999999/10000000000000000000000000",
+   "160000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-242.minpoly.json.gz"
+ },
+ {
+  "n": 243,
+  "status": "exact",
+  "S": "16.0",
+  "S_poly_ascending": [
+   -16,
+   1
+  ],
+  "S_interval": [
+   "159999999999999999999999999/10000000000000000000000000",
+   "160000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-243.minpoly.json.gz"
+ },
+ {
+  "n": 244,
+  "status": "exact",
+  "S": "16.0",
+  "S_poly_ascending": [
+   -16,
+   1
+  ],
+  "S_interval": [
+   "159999999999999999999999999/10000000000000000000000000",
+   "160000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-244.minpoly.json.gz"
+ },
+ {
+  "n": 245,
+  "status": "exact",
+  "S": "16.0",
+  "S_poly_ascending": [
+   -16,
+   1
+  ],
+  "S_interval": [
+   "159999999999999999999999999/10000000000000000000000000",
+   "160000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-245.minpoly.json.gz"
+ },
+ {
+  "n": 246,
+  "status": "exact",
+  "S": "16.0",
+  "S_poly_ascending": [
+   -16,
+   1
+  ],
+  "S_interval": [
+   "159999999999999999999999999/10000000000000000000000000",
+   "160000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-246.minpoly.json.gz"
+ },
+ {
+  "n": 247,
+  "status": "exact",
+  "S": "16.0",
+  "S_poly_ascending": [
+   -16,
+   1
+  ],
+  "S_interval": [
+   "159999999999999999999999999/10000000000000000000000000",
+   "160000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-247.minpoly.json.gz"
+ },
+ {
+  "n": 248,
+  "status": "exact",
+  "S": "16.0",
+  "S_poly_ascending": [
+   -16,
+   1
+  ],
+  "S_interval": [
+   "159999999999999999999999999/10000000000000000000000000",
+   "160000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-248.minpoly.json.gz"
+ },
+ {
+  "n": 249,
+  "status": "exact",
+  "S": "16.0",
+  "S_poly_ascending": [
+   -16,
+   1
+  ],
+  "S_interval": [
+   "159999999999999999999999999/10000000000000000000000000",
+   "160000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-249.minpoly.json.gz"
+ },
+ {
+  "n": 250,
+  "status": "exact",
+  "S": "16.0",
+  "S_poly_ascending": [
+   -16,
+   1
+  ],
+  "S_interval": [
+   "159999999999999999999999999/10000000000000000000000000",
+   "160000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-250.minpoly.json.gz"
+ },
+ {
+  "n": 251,
+  "status": "exact",
+  "S": "16.0",
+  "S_poly_ascending": [
+   -16,
+   1
+  ],
+  "S_interval": [
+   "159999999999999999999999999/10000000000000000000000000",
+   "160000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-251.minpoly.json.gz"
+ },
+ {
+  "n": 252,
+  "status": "exact",
+  "S": "16.0",
+  "S_poly_ascending": [
+   -16,
+   1
+  ],
+  "S_interval": [
+   "159999999999999999999999999/10000000000000000000000000",
+   "160000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-252.minpoly.json.gz"
+ },
+ {
+  "n": 253,
+  "status": "exact",
+  "S": "16.0",
+  "S_poly_ascending": [
+   -16,
+   1
+  ],
+  "S_interval": [
+   "159999999999999999999999999/10000000000000000000000000",
+   "160000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-253.minpoly.json.gz"
+ },
+ {
+  "n": 254,
+  "status": "exact",
+  "S": "16.0",
+  "S_poly_ascending": [
+   -16,
+   1
+  ],
+  "S_interval": [
+   "159999999999999999999999999/10000000000000000000000000",
+   "160000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-254.minpoly.json.gz"
+ },
+ {
+  "n": 255,
+  "status": "exact",
+  "S": "16.0",
+  "S_poly_ascending": [
+   -16,
+   1
+  ],
+  "S_interval": [
+   "159999999999999999999999999/10000000000000000000000000",
+   "160000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-255.minpoly.json.gz"
+ },
+ {
+  "n": 256,
+  "status": "exact",
+  "S": "16.0",
+  "S_poly_ascending": [
+   -16,
+   1
+  ],
+  "S_interval": [
+   "159999999999999999999999999/10000000000000000000000000",
+   "160000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-256.minpoly.json.gz"
+ },
+ {
+  "n": 257,
+  "status": "exact",
+  "S": "16.53553390593273762",
+  "S_poly_ascending": [
+   313,
+   -52,
+   2
+  ],
+  "S_interval": [
+   "82677669529663688110021108552621225982121/5000000000000000000000000000000000000000",
+   "82677669529663688110021109552621225982121/5000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-257.minpoly.json.gz"
+ },
+ {
+  "n": 258,
+  "status": "exact",
+  "S": "16.57106781186547524",
+  "S_poly_ascending": [
+   161,
+   -76,
+   4
+  ],
+  "S_interval": [
+   "41427669529663688110021108802621225982121/2500000000000000000000000000000000000000",
+   "41427669529663688110021109302621225982121/2500000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-258.minpoly.json.gz"
+ },
+ {
+  "n": 259,
+  "status": "open",
+  "reason": "open: 1 consistency polynomials for 4 class angles: more than one angle direction left to force "
+ },
+ {
+  "n": 260,
+  "status": "exact",
+  "S": "16.65685424949238019",
+  "S_poly_ascending": [
+   89,
+   -22,
+   1
+  ],
+  "S_interval": [
+   "166568542494923801952067547968387923142787/10000000000000000000000000000000000000000",
+   "166568542494923801952067549968387923142787/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-260.minpoly.json.gz"
+ },
+ {
+  "n": 261,
+  "status": "exact",
+  "S": "16.68292682926829268",
+  "S_poly_ascending": [
+   -684,
+   41
+  ],
+  "S_interval": [
+   "166829268292682926829268291682926829268293/10000000000000000000000000000000000000000",
+   "166829268292682926829268293682926829268293/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   2,
+   5
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-261.minpoly.json.gz"
+ },
+ {
+  "n": 262,
+  "status": "exact",
+  "S": "16.70710678118654752",
+  "S_poly_ascending": [
+   511,
+   -64,
+   2
+  ],
+  "S_interval": [
+   "10441941738241592202750527663815530649553/625000000000000000000000000000000000000",
+   "10441941738241592202750527788815530649553/625000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-262.minpoly.json.gz"
+ },
+ {
+  "n": 263,
+  "status": "open",
+  "reason": "open (timeout): n = 263: 263 squares in the system, 0 free; 37 tilted angle classes; 2336 contact equation"
+ },
+ {
+  "n": 264,
+  "status": "exact",
+  "S": "16.77817459305202276",
+  "S_poly_ascending": [
+   41,
+   -36,
+   2
+  ],
+  "S_interval": [
+   "41945436482630056921023219707883348580333/2500000000000000000000000000000000000000",
+   "41945436482630056921023220207883348580333/2500000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-264.minpoly.json.gz"
+ },
+ {
+  "n": 265,
+  "status": "exact",
+  "S": "16.77817459305202276",
+  "S_poly_ascending": [
+   41,
+   -36,
+   2
+  ],
+  "S_interval": [
+   "41945436482630056921023219707883348580333/2500000000000000000000000000000000000000",
+   "41945436482630056921023220207883348580333/2500000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-265.minpoly.json.gz"
+ },
+ {
+  "n": 266,
+  "status": "exact",
+  "S": "16.82306208283780464",
+  "S_poly_ascending": [
+   25142156270060598069723106950936800398659193,
+   -35874639749283350605126520242841070953510704,
+   23996879793794528190240708983850819688279982,
+   -9961121615142990990156112009477337084333564,
+   2858083210066295032341927117330041150532457,
+   -595883639785360944056309451122760067196636,
+   91890490062472897914498395018088233984940,
+   -10342818482011428376427887130138935213892,
+   791230647693671970529285145442783714082,
+   -30113420634289372798330615891075770272,
+   -1078437021027255344046160578887057944,
+   178773674416065677195226856423404204,
+   4864413227687588362660593637481982,
+   -3166929683248511957762311522115552,
+   412614513240021198536387912093202,
+   -32123383071505854643466513964696,
+   1608559573416436468095371051805,
+   -39814767996810201813233201880,
+   -1180165534713863709787052484,
+   181074087488548519346667052,
+   -10052823560617182774582207,
+   326745541238344524670064,
+   -4426818799267672804198,
+   -171760035794017558004,
+   13805430523268790240,
+   -519901936408593644,
+   13408548240776810,
+   -254523535144036,
+   3593304360857,
+   -36971795756,
+   263199482,
+   -1162084,
+   2401
+  ],
+  "S_interval": [
+   "168230620828378046461920139109003462915469/10000000000000000000000000000000000000000",
+   "168230620828378046461920141109003462915469/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 32,
+  "height_digits": 44,
+  "field_poly_ascending": [
+   -191316059611332459590,
+   -1894165911297142038860,
+   -8635589619205313741077,
+   -7736384215803324188414,
+   63972886293322683419581,
+   242737701882643921396264,
+   383905050933860794646111,
+   310265255402060766437830,
+   127547438327895636958665,
+   63187685380502945890572,
+   93848014842025146167071,
+   64512711689082206356338,
+   -17545394143106488152071,
+   -52696624267230163582768,
+   -30472969330034685486477,
+   -4155945353475339266970,
+   2647583555948447327849,
+   375055938551696824972,
+   -916706687386340471695,
+   -551677188495103454922,
+   -120645560161732517785,
+   -1125661481823461400,
+   1947047230506140653,
+   -1791486016588753982,
+   -1160195320405927173,
+   -336789567691815884,
+   -64183454852272443,
+   -8848785046427562,
+   -827327783600989,
+   -35284154335584,
+   1815573805569,
+   291025944594,
+   10104104025
+  ],
+  "field_degree": 32,
+  "verify_exact": true,
+  "lean_packs": false,
+  "lean_local_min": "",
+  "crosscheck": "Ellsworth deg ok",
+  "new": false,
+  "data": "minpoly/data/n-266.minpoly.json.gz"
+ },
+ {
+  "n": 267,
+  "status": "exact",
+  "S": "16.84666719284348978",
+  "S_poly_ascending": [
+   258809,
+   -65136,
+   6132,
+   -256,
+   4
+  ],
+  "S_interval": [
+   "168466671928434897829433144909582979088797/10000000000000000000000000000000000000000",
+   "168466671928434897829433146909582979088797/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 4,
+  "height_digits": 6,
+  "field_poly_ascending": [
+   -1,
+   4,
+   -2,
+   -4,
+   7
+  ],
+  "field_degree": 4,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-267.minpoly.json.gz"
+ },
+ {
+  "n": 268,
+  "status": "open",
+  "reason": "open: Lagrange determinant vanishes identically"
+ },
+ {
+  "n": 269,
+  "status": "open",
+  "reason": "open: 1 consistency polynomials for 4 class angles: more than one angle direction left to force "
+ },
+ {
+  "n": 270,
+  "status": "open",
+  "reason": "open (memory cap): n = 270: 270 squares in the system, 0 free; 26 tilted angle classes; 2713 contact equation"
+ },
+ {
+  "n": 271,
+  "status": "open",
+  "reason": "open (timeout):   square 184: flat rotation, kept parallel to its class (t7)"
+ },
+ {
+  "n": 272,
+  "status": "open",
+  "reason": "open (memory cap): n = 272: 265 squares in the system, 7 free; 28 tilted angle classes; 2334 contact equation"
+ },
+ {
+  "n": 273,
+  "status": "open",
+  "reason": "open (memory cap): n = 273: 264 squares in the system, 9 free; 21 tilted angle classes; 2389 contact equation"
+ },
+ {
+  "n": 274,
+  "status": "exact",
+  "S": "17.0",
+  "S_poly_ascending": [
+   -17,
+   1
+  ],
+  "S_interval": [
+   "169999999999999999999999999/10000000000000000000000000",
+   "170000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-274.minpoly.json.gz"
+ },
+ {
+  "n": 275,
+  "status": "exact",
+  "S": "17.0",
+  "S_poly_ascending": [
+   -17,
+   1
+  ],
+  "S_interval": [
+   "169999999999999999999999999/10000000000000000000000000",
+   "170000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-275.minpoly.json.gz"
+ },
+ {
+  "n": 276,
+  "status": "exact",
+  "S": "17.0",
+  "S_poly_ascending": [
+   -17,
+   1
+  ],
+  "S_interval": [
+   "169999999999999999999999999/10000000000000000000000000",
+   "170000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-276.minpoly.json.gz"
+ },
+ {
+  "n": 277,
+  "status": "exact",
+  "S": "17.0",
+  "S_poly_ascending": [
+   -17,
+   1
+  ],
+  "S_interval": [
+   "169999999999999999999999999/10000000000000000000000000",
+   "170000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-277.minpoly.json.gz"
+ },
+ {
+  "n": 278,
+  "status": "exact",
+  "S": "17.0",
+  "S_poly_ascending": [
+   -17,
+   1
+  ],
+  "S_interval": [
+   "169999999999999999999999999/10000000000000000000000000",
+   "170000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-278.minpoly.json.gz"
+ },
+ {
+  "n": 279,
+  "status": "exact",
+  "S": "17.0",
+  "S_poly_ascending": [
+   -17,
+   1
+  ],
+  "S_interval": [
+   "169999999999999999999999999/10000000000000000000000000",
+   "170000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-279.minpoly.json.gz"
+ },
+ {
+  "n": 280,
+  "status": "exact",
+  "S": "17.0",
+  "S_poly_ascending": [
+   -17,
+   1
+  ],
+  "S_interval": [
+   "169999999999999999999999999/10000000000000000000000000",
+   "170000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-280.minpoly.json.gz"
+ },
+ {
+  "n": 281,
+  "status": "exact",
+  "S": "17.0",
+  "S_poly_ascending": [
+   -17,
+   1
+  ],
+  "S_interval": [
+   "169999999999999999999999999/10000000000000000000000000",
+   "170000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-281.minpoly.json.gz"
+ },
+ {
+  "n": 282,
+  "status": "exact",
+  "S": "17.0",
+  "S_poly_ascending": [
+   -17,
+   1
+  ],
+  "S_interval": [
+   "169999999999999999999999999/10000000000000000000000000",
+   "170000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-282.minpoly.json.gz"
+ },
+ {
+  "n": 283,
+  "status": "exact",
+  "S": "17.0",
+  "S_poly_ascending": [
+   -17,
+   1
+  ],
+  "S_interval": [
+   "169999999999999999999999999/10000000000000000000000000",
+   "170000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-283.minpoly.json.gz"
+ },
+ {
+  "n": 284,
+  "status": "exact",
+  "S": "17.0",
+  "S_poly_ascending": [
+   -17,
+   1
+  ],
+  "S_interval": [
+   "169999999999999999999999999/10000000000000000000000000",
+   "170000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-284.minpoly.json.gz"
+ },
+ {
+  "n": 285,
+  "status": "exact",
+  "S": "17.0",
+  "S_poly_ascending": [
+   -17,
+   1
+  ],
+  "S_interval": [
+   "169999999999999999999999999/10000000000000000000000000",
+   "170000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-285.minpoly.json.gz"
+ },
+ {
+  "n": 286,
+  "status": "exact",
+  "S": "17.0",
+  "S_poly_ascending": [
+   -17,
+   1
+  ],
+  "S_interval": [
+   "169999999999999999999999999/10000000000000000000000000",
+   "170000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-286.minpoly.json.gz"
+ },
+ {
+  "n": 287,
+  "status": "exact",
+  "S": "17.0",
+  "S_poly_ascending": [
+   -17,
+   1
+  ],
+  "S_interval": [
+   "169999999999999999999999999/10000000000000000000000000",
+   "170000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-287.minpoly.json.gz"
+ },
+ {
+  "n": 288,
+  "status": "exact",
+  "S": "17.0",
+  "S_poly_ascending": [
+   -17,
+   1
+  ],
+  "S_interval": [
+   "169999999999999999999999999/10000000000000000000000000",
+   "170000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-288.minpoly.json.gz"
+ },
+ {
+  "n": 289,
+  "status": "exact",
+  "S": "17.0",
+  "S_poly_ascending": [
+   -17,
+   1
+  ],
+  "S_interval": [
+   "169999999999999999999999999/10000000000000000000000000",
+   "170000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-289.minpoly.json.gz"
+ },
+ {
+  "n": 290,
+  "status": "exact",
+  "S": "17.53553390593273762",
+  "S_poly_ascending": [
+   367,
+   -56,
+   2
+  ],
+  "S_interval": [
+   "87677669529663688110021108552621225982121/5000000000000000000000000000000000000000",
+   "87677669529663688110021109552621225982121/5000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-290.minpoly.json.gz"
+ },
+ {
+  "n": 291,
+  "status": "exact",
+  "S": "17.53553390593273762",
+  "S_poly_ascending": [
+   367,
+   -56,
+   2
+  ],
+  "S_interval": [
+   "87677669529663688110021108552621225982121/5000000000000000000000000000000000000000",
+   "87677669529663688110021109552621225982121/5000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-291.minpoly.json.gz"
+ },
+ {
+  "n": 292,
+  "status": "open",
+  "reason": "not run"
+ },
+ {
+  "n": 293,
+  "status": "exact",
+  "S": "17.63414634146341463",
+  "S_poly_ascending": [
+   -723,
+   41
+  ],
+  "S_interval": [
+   "35268292682926829268292682726829268292683/2000000000000000000000000000000000000000",
+   "35268292682926829268292683126829268292683/2000000000000000000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -2,
+   5
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-293.minpoly.json.gz"
+ },
+ {
+  "n": 294,
+  "status": "exact",
+  "S": "17.65685424949238019",
+  "S_poly_ascending": [
+   112,
+   -24,
+   1
+  ],
+  "S_interval": [
+   "176568542494923801952067547968387923142787/10000000000000000000000000000000000000000",
+   "176568542494923801952067549968387923142787/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-294.minpoly.json.gz"
+ },
+ {
+  "n": 295,
+  "status": "exact",
+  "S": "17.70710678118654752",
+  "S_poly_ascending": [
+   577,
+   -68,
+   2
+  ],
+  "S_interval": [
+   "11066941738241592202750527663815530649553/625000000000000000000000000000000000000",
+   "11066941738241592202750527788815530649553/625000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-295.minpoly.json.gz"
+ },
+ {
+  "n": 296,
+  "status": "exact",
+  "S": "17.70710678118654752",
+  "S_poly_ascending": [
+   577,
+   -68,
+   2
+  ],
+  "S_interval": [
+   "11066941738241592202750527663815530649553/625000000000000000000000000000000000000",
+   "11066941738241592202750527788815530649553/625000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-296.minpoly.json.gz"
+ },
+ {
+  "n": 297,
+  "status": "open",
+  "reason": "open: 1 consistency polynomials for 3 class angles: more than one angle direction left to force "
+ },
+ {
+  "n": 298,
+  "status": "exact",
+  "S": "17.77817459305202276",
+  "S_poly_ascending": [
+   79,
+   -40,
+   2
+  ],
+  "S_interval": [
+   "44445436482630056921023219707883348580333/2500000000000000000000000000000000000000",
+   "44445436482630056921023220207883348580333/2500000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   -1,
+   2,
+   1
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "findpoly ok",
+  "new": false,
+  "data": "minpoly/data/n-298.minpoly.json.gz"
+ },
+ {
+  "n": 299,
+  "status": "exact",
+  "S": "17.82287565553229529",
+  "S_poly_ascending": [
+   541,
+   -66,
+   2
+  ],
+  "S_interval": [
+   "178228756555322952952508077768196302128551/10000000000000000000000000000000000000000",
+   "178228756555322952952508079768196302128551/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 2,
+  "height_digits": 3,
+  "field_poly_ascending": [
+   -1,
+   4,
+   3
+  ],
+  "field_degree": 2,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-299.minpoly.json.gz"
+ },
+ {
+  "n": 300,
+  "status": "exact",
+  "S": "17.82412338847854347",
+  "S_poly_ascending": [
+   6401405918124622124119207874790462553248468260156250000,
+   -13426397690512873291977824583646716429736153596450000000,
+   13278518858240943321872383441026571982205038824476375000,
+   -8177313821139351944992551555783250987371382184946020000,
+   3473810396018259264801879879806884179343515176608754025,
+   -1055948455747248748890178989019952798681204013121554736,
+   224981301926271768349655651977718726650378985178322646,
+   -28305247058854021955410328849850580588215220244356248,
+   -614601349329475752238933120184261110575651083354603,
+   1336650893593888696724108652818662244745263296865588,
+   -381562083381768156325668597682082463480074995868360,
+   67387777391090638044324068706351575262477706086740,
+   -7828936745814934561867828618761111333890039348250,
+   394782152673201159198736947784032596106016880136,
+   69800847299887214247772249238723707512987918380,
+   -23948399126640716409385371068745856498999580804,
+   4248816809091624736372842695988910574840203032,
+   -566147126795280425805190165571461577530656336,
+   61914526137823063569936032519366359362310830,
+   -5764247971291523576624473899585978835759824,
+   465583759504110006491405487605416144111553,
+   -32985932723685807897922726019150035754248,
+   2063707000134940629708077092426963028132,
+   -114477712300768469604781612467804162660,
+   5643119674396861410915876260884036989,
+   -247404094366714093683897197709917204,
+   9643524705514237911246918698322714,
+   -333724070621087598910090605855348,
+   10227647719730769459718165452749,
+   -276576685299846988827282188436,
+   6566863009941672632548971230,
+   -136013384348919954233715980,
+   2436831832955268577880066,
+   -37353497397438488815260,
+   482878985597614632366,
+   -5163220519287531048,
+   44445603736025352,
+   -295991953326108,
+   1431055332684,
+   -4468746888,
+   6765201
+  ],
+  "S_interval": [
+   "178241233884785434708932017073574102917879/10000000000000000000000000000000000000000",
+   "178241233884785434708932019073574102917879/10000000000000000000000000000000000000000"
+  ],
+  "S_degree": 40,
+  "height_digits": 56,
+  "field_poly_ascending": [
+   -1600,
+   22320,
+   -46971,
+   -557052,
+   2240326,
+   4049292,
+   -17318379,
+   -77390400,
+   74367040,
+   2289034944,
+   -5153359692,
+   -25512148400,
+   99273493848,
+   83526032240,
+   -804461242652,
+   477711369920,
+   3186191313120,
+   -5002927096224,
+   -5419900088874,
+   17866887830520,
+   -1935553378028,
+   -32838933398936,
+   25508818032550,
+   30743518667136,
+   -49908193291008,
+   -5577547431104,
+   50344811150436,
+   -20486149691632,
+   -26984214861384,
+   25478959206576,
+   3665765848948,
+   -13825496264000,
+   4368799185184,
+   2945406476912,
+   -2467281181555,
+   338314407076,
+   309823672214,
+   -175202734612,
+   40995752941,
+   -4753607360,
+   223907840
+  ],
+  "field_degree": 40,
+  "verify_exact": true,
+  "lean_packs": false,
+  "lean_local_min": "",
+  "crosscheck": "Ellsworth deg ok",
+  "new": false,
+  "data": "minpoly/data/n-300.minpoly.json.gz"
+ },
+ {
+  "n": 301,
+  "status": "open",
+  "reason": "open (memory cap):   settled 1 flat directions on near-contacts (|g| <= 9.2e-11 at the point)"
+ },
+ {
+  "n": 302,
+  "status": "open",
+  "reason": "open (timeout): n = 302: 281 squares in the system, 21 free; 12 tilted angle classes; 2160 contact equatio"
+ },
+ {
+  "n": 303,
+  "status": "open",
+  "reason": "open (memory cap):   square 265: flat rotation, kept parallel to its class (t14)"
+ },
+ {
+  "n": 304,
+  "status": "open",
+  "reason": "open (memory cap): n = 304: 301 squares in the system, 3 free; 21 tilted angle classes; 2748 contact equation"
+ },
+ {
+  "n": 305,
+  "status": "open",
+  "reason": "open (timeout):   square 205: flat rotation, kept parallel to its class (t3)"
+ },
+ {
+  "n": 306,
+  "status": "open",
+  "reason": "open (memory cap): n = 306: 304 squares in the system, 2 free; 28 tilted angle classes; 2705 contact equation"
+ },
+ {
+  "n": 307,
+  "status": "open",
+  "reason": "open (timeout): n = 307: 302 squares in the system, 5 free; 24 tilted angle classes; 2494 contact equation"
+ },
+ {
+  "n": 308,
+  "status": "exact",
+  "S": "18.0",
+  "S_poly_ascending": [
+   -18,
+   1
+  ],
+  "S_interval": [
+   "179999999999999999999999999/10000000000000000000000000",
+   "180000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-308.minpoly.json.gz"
+ },
+ {
+  "n": 309,
+  "status": "exact",
+  "S": "18.0",
+  "S_poly_ascending": [
+   -18,
+   1
+  ],
+  "S_interval": [
+   "179999999999999999999999999/10000000000000000000000000",
+   "180000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-309.minpoly.json.gz"
+ },
+ {
+  "n": 310,
+  "status": "exact",
+  "S": "18.0",
+  "S_poly_ascending": [
+   -18,
+   1
+  ],
+  "S_interval": [
+   "179999999999999999999999999/10000000000000000000000000",
+   "180000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-310.minpoly.json.gz"
+ },
+ {
+  "n": 311,
+  "status": "exact",
+  "S": "18.0",
+  "S_poly_ascending": [
+   -18,
+   1
+  ],
+  "S_interval": [
+   "179999999999999999999999999/10000000000000000000000000",
+   "180000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-311.minpoly.json.gz"
+ },
+ {
+  "n": 312,
+  "status": "exact",
+  "S": "18.0",
+  "S_poly_ascending": [
+   -18,
+   1
+  ],
+  "S_interval": [
+   "179999999999999999999999999/10000000000000000000000000",
+   "180000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-312.minpoly.json.gz"
+ },
+ {
+  "n": 313,
+  "status": "exact",
+  "S": "18.0",
+  "S_poly_ascending": [
+   -18,
+   1
+  ],
+  "S_interval": [
+   "179999999999999999999999999/10000000000000000000000000",
+   "180000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-313.minpoly.json.gz"
+ },
+ {
+  "n": 314,
+  "status": "exact",
+  "S": "18.0",
+  "S_poly_ascending": [
+   -18,
+   1
+  ],
+  "S_interval": [
+   "179999999999999999999999999/10000000000000000000000000",
+   "180000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-314.minpoly.json.gz"
+ },
+ {
+  "n": 315,
+  "status": "exact",
+  "S": "18.0",
+  "S_poly_ascending": [
+   -18,
+   1
+  ],
+  "S_interval": [
+   "179999999999999999999999999/10000000000000000000000000",
+   "180000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-315.minpoly.json.gz"
+ },
+ {
+  "n": 316,
+  "status": "exact",
+  "S": "18.0",
+  "S_poly_ascending": [
+   -18,
+   1
+  ],
+  "S_interval": [
+   "179999999999999999999999999/10000000000000000000000000",
+   "180000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-316.minpoly.json.gz"
+ },
+ {
+  "n": 317,
+  "status": "exact",
+  "S": "18.0",
+  "S_poly_ascending": [
+   -18,
+   1
+  ],
+  "S_interval": [
+   "179999999999999999999999999/10000000000000000000000000",
+   "180000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-317.minpoly.json.gz"
+ },
+ {
+  "n": 318,
+  "status": "exact",
+  "S": "18.0",
+  "S_poly_ascending": [
+   -18,
+   1
+  ],
+  "S_interval": [
+   "179999999999999999999999999/10000000000000000000000000",
+   "180000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-318.minpoly.json.gz"
+ },
+ {
+  "n": 319,
+  "status": "exact",
+  "S": "18.0",
+  "S_poly_ascending": [
+   -18,
+   1
+  ],
+  "S_interval": [
+   "179999999999999999999999999/10000000000000000000000000",
+   "180000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-319.minpoly.json.gz"
+ },
+ {
+  "n": 320,
+  "status": "exact",
+  "S": "18.0",
+  "S_poly_ascending": [
+   -18,
+   1
+  ],
+  "S_interval": [
+   "179999999999999999999999999/10000000000000000000000000",
+   "180000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-320.minpoly.json.gz"
+ },
+ {
+  "n": 321,
+  "status": "exact",
+  "S": "18.0",
+  "S_poly_ascending": [
+   -18,
+   1
+  ],
+  "S_interval": [
+   "179999999999999999999999999/10000000000000000000000000",
+   "180000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-321.minpoly.json.gz"
+ },
+ {
+  "n": 322,
+  "status": "exact",
+  "S": "18.0",
+  "S_poly_ascending": [
+   -18,
+   1
+  ],
+  "S_interval": [
+   "179999999999999999999999999/10000000000000000000000000",
+   "180000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-322.minpoly.json.gz"
+ },
+ {
+  "n": 323,
+  "status": "exact",
+  "S": "18.0",
+  "S_poly_ascending": [
+   -18,
+   1
+  ],
+  "S_interval": [
+   "179999999999999999999999999/10000000000000000000000000",
+   "180000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-323.minpoly.json.gz"
+ },
+ {
+  "n": 324,
+  "status": "exact",
+  "S": "18.0",
+  "S_poly_ascending": [
+   -18,
+   1
+  ],
+  "S_interval": [
+   "179999999999999999999999999/10000000000000000000000000",
+   "180000000000000000000000001/10000000000000000000000000"
+  ],
+  "S_degree": 1,
+  "height_digits": 2,
+  "field_poly_ascending": [
+   0,
+   1
+  ],
+  "field_degree": 1,
+  "verify_exact": true,
+  "lean_packs": true,
+  "lean_local_min": "band lemma",
+  "crosscheck": "",
+  "new": false,
+  "data": "minpoly/data/n-324.minpoly.json.gz"
+ }
+]

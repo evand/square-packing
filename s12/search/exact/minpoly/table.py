@@ -10,6 +10,9 @@ import argparse, gzip, json, os, re
 from fractions import Fraction as F
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+# No published exact form for the current record (checked 2026-10-07 against Ellsworth's page and the register's
+# reported exact_form fields; at 102, 106, 177 the page's polynomial belongs to the earlier, larger packing).
+NEW = {102, 106, 152, 177}
 EX = os.path.dirname(HERE)
 
 
@@ -67,11 +70,13 @@ def main():
         lm = 'band lemma' if n in chain else (f'grade A ({gradeA[n]})' if n in gradeA else '')
         lp = 'yes' if lean.get(n) == 'ok' else ('' if n not in lean else 'failed')
         cc = r.get('crosscheck', '')
+        if n in NEW:
+            cc = ('**new** (no published form) ' + cc).strip()
         js.append({'n': n, 'status': 'exact', 'S': Sdec, 'S_poly_ascending': p, 'S_interval': [a, b],
                    'S_degree': len(p) - 1, 'height_digits': max(len(str(abs(c))) for c in p),
                    'field_poly_ascending': D['field']['f'], 'field_degree': fdeg,
                    'verify_exact': bool(ver.get(n)), 'lean_packs': lp == 'yes', 'lean_local_min': lm,
-                   'crosscheck': cc, 'data': f'minpoly/data/n-{n}.minpoly.json.gz'})
+                   'crosscheck': cc, 'new': n in NEW, 'data': f'minpoly/data/n-{n}.minpoly.json.gz'})
         ps = poly_str(p) if len(p) <= 9 and max(len(str(abs(c))) for c in p) <= 12 else f'degree {len(p) - 1}, {max(len(str(abs(c))) for c in p)}-digit coefficients (JSON)'
         rows.append(f'| {n} | {str(Sdec)[:22]} | {len(p) - 1} | `{ps}` | {fdeg} | {"✓" if ver.get(n) else ""} | '
                     f'{lp} | {lm} | {cc} |')
