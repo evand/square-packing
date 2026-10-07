@@ -225,6 +225,13 @@ def run(base, quiet=False):
     t0 = time.time()
     log = (lambda *a: None) if quiet else (lambda *a: print(*a, file=sys.stderr))
     ct = json.load(open(base + '.contacts.json'))
+    try:
+        rep = json.load(open(base + '.json'))                      # exactsolve's report
+    except FileNotFoundError:
+        rep = {}
+    if rep and not rep.get('cert_valid'):
+        raise NotHandled(f"exactsolve's point is not a valid packing ({len(rep.get('violations') or [])} overlapping "
+                         f"pairs, certificate invalid): re-solve first")
     L = [l.split() for l in open(base + '.exact.txt') if l.strip()]
     n = int(L[0][0])
     mp.dps = max(30, len(L[0][1]) - 2)
@@ -233,6 +240,15 @@ def run(base, quiet=False):
     Y = [mpf(l[1]) for l in L[1:n + 1]]
     TH = [mpf(l[2]) for l in L[1:n + 1]]                          # degrees
     eqs = [tuple(c) for c in ct['equations']]
+    # keep only equations that hold at the exact point (exactsolve's list can contain active-set incidences of free
+    # squares that were moved afterwards for clearance)
+    Cm0 = [mp.cos(th * mp.pi / 180) for th in TH]
+    Sm0 = [mp.sin(th * mp.pi / 180) for th in TH]
+    held = [c for c in eqs if abs(geom.eval_contact(c, X, Y, Cm0, Sm0, S0, mpf(1) / 2, order=1)[0]) < mpf(10) ** -40]
+    if len(held) < len(eqs):
+        log(f'  dropped {len(eqs) - len(held)} listed equations that do not hold at the point: '
+            f'{[c for c in eqs if c not in held][:4]}')
+    eqs = held
     sysq = sorted({c[1] for c in eqs} | {c[3] for c in eqs if c[0] == 'C'})
     free = [i for i in range(n) if i not in sysq]
     tolang = mpf(10) ** -40
@@ -284,14 +300,14 @@ def run(base, quiet=False):
         f'{len(eqs)} contact equations ({nvv} from corner-corner touches)')
 
     # class angles that exactsolve froze as exact flat directions: pinned at a nearby rational t
-    frozen_sq = {v // 3 for v in ct.get('frozen_vars', []) if v % 3 == 2}
+    frozen_sq = {v // 3 for v in ct.get('frozen_vars', []) if v % 3 == 2 and v // 3 in memb}
     pins = {}
     for i in frozen_sq:
         k = memb[i][0]
         if k and f't{k}' not in pins:
             if any(memb[j][0] == k for j in sysq if j not in frozen_sq):
                 raise NotHandled(f'square {i}: flat rotation, but parallel to squares that do not rotate')
-            pins[f't{k}'] = frac_near(tstar[k], 12)
+            pins[f't{k}'] = frac_near(tstar[k], 30)
     kts = [k for k in range(1, ncls + 1) if f't{k}' not in pins]     # free tilted classes
     global R
     R = Ring(len(kts))
@@ -324,8 +340,12 @@ def run(base, quiet=False):
         Ys = {i: Lin(k=RF.c(pins[f'y{i}'])) if f'y{i}' in pins else Lin.var(f'y{i}') for i in sysq}
         return [contact_expr(c, Xs, Ys, Cs, Ss, Lin.var('S'), half) for c in eqlist]
 
+    allv = {f'{a}{i}' for i in sysq for a in 'xy'} | {'S'}
+
     def free_vars(rows, piv_rows):
-        return sorted({v for r in rows for v in r.c} - {v for v, _ in piv_rows})
+        # every unpinned centre coordinate counts, including ones that occur in no equation (their coefficient is
+        # identically 0: e.g. a square held only by side contacts with horizontal normals is free vertically)
+        return sorted((allv - set(pins)) - {v for v, _ in piv_rows})
 
     def consistent(left):
         thr = mpf(10) ** -50

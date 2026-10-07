@@ -277,7 +277,7 @@ class KKT:
         """Gauss-Newton (minimum-norm) projection of the configuration onto {g_A = 0}, residuals in mp.  Removes the
         input noise before rank decisions; stagnation means the contact equations are inconsistent.  Residuals are
         scaled by their norm before the f64 solve (no underflow below 1e-308, so any dps works)."""
-        maxit = maxit or 40 + mp.dps // 10
+        maxit = maxit or 40 + max(0, mp.dps - 300) // 10
         P = self.P
         H = mpf(1) / 2
         hist = []
@@ -298,9 +298,10 @@ class KKT:
             if nr < mpf(10) ** (-(mp.dps - 15)) or (it > 4 and hist[-1] > 0.5 * hist[-4] and hist[-1] > 1e-300):
                 break
             J, _ = jacobian(P, Ab)
-            d, *_ = np.linalg.lstsq(J[:, self.V], -np.array([float(x / nr) for x in g]), rcond=1e-12)
+            sc = nr if nr < mpf(10) ** -200 else 1                 # scale only where f64 would underflow
+            d, *_ = np.linalg.lstsq(J[:, self.V], -np.array([float(x / sc) for x in g]), rcond=1e-12)
             for k, v in enumerate(self.V):
-                P.add(v, mpf(float(d[k])) * nr)
+                P.add(v, mpf(float(d[k])) * sc)
         log_(f'  projection onto {len(Ab)} independent of {len(self.A)} contact equations: max |g| {hist[0]:.1e} -> '
              f'{hist[-1]:.1e} ({len(hist)} steps)')
         self.polish_hist = hist
@@ -402,14 +403,15 @@ class KKT:
                 self.lam_mp = lam
                 self.newton_hist = hist
                 raise Degenerate(f'KKT Jacobian singular near convergence (residual {float(nr):.1e})')
-            d = sla.lu_solve(sla.lu_factor(K), -np.array([float(f / nr) for f in F]))
+            sc = nr if nr < mpf(10) ** -200 else 1                 # scale only where f64 would underflow
+            d = sla.lu_solve(sla.lu_factor(K), -np.array([float(f / sc) for f in F]))
             # backtracking: halve the step while the residual grows by more than 10x
             base = ([P.get(v) for v in self.Vf], list(lam))
             step = 1.0
             for _ in range(12):
                 for k, v in enumerate(self.Vf):
-                    P.add(v, base[0][k] + mpf(float(step * d[k])) * nr - P.get(v))
-                lam = [base[1][r] + mpf(float(step * d[mz + r])) * nr for r in range(len(lam))]
+                    P.add(v, base[0][k] + mpf(float(step * d[k])) * sc - P.get(v))
+                lam = [base[1][r] + mpf(float(step * d[mz + r])) * sc for r in range(len(lam))]
                 st2, gB2 = self.residual(lam)
                 if max(abs(f) for f in [st2[v] for v in self.Vf] + gB2) < 10 * nr:
                     break

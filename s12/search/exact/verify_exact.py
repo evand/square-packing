@@ -153,18 +153,27 @@ def ev_iv(p, t):
 
 
 class V:
-    """A value carried both exactly (E) and as an interval over t in [ta, tb]."""
-    __slots__ = ('e', 'i')
+    """A value carried as an interval over t in [ta, tb], with its exact value in K computed lazily (only when the
+    interval cannot decide a sign)."""
+    __slots__ = ('_e', 'i')
 
     def __init__(self, e, i):
-        self.e, self.i = e, i
+        self._e, self.i = e, i                 # e: an E, or a thunk returning one
+
+    @property
+    def e(self):
+        if callable(self._e):
+            self._e = self._e()
+        return self._e
 
     def __add__(a, b):
-        return V(a.e + b.e, a.i + b.i) if isinstance(b, V) else V(a.e + b, a.i + b)
+        if isinstance(b, V):
+            return V(lambda: a.e + b.e, a.i + b.i)
+        return V(lambda: a.e + b, a.i + b)
     __radd__ = __add__
 
     def __neg__(a):
-        return V(-a.e, -a.i)
+        return V(lambda: -a.e, -a.i)
 
     def __sub__(a, b):
         return a + (-b if isinstance(b, V) else -F(b))
@@ -173,7 +182,9 @@ class V:
         return (-a) + b
 
     def __mul__(a, b):
-        return V(a.e * b.e, a.i * b.i) if isinstance(b, V) else V(a.e * b, a.i * b)
+        if isinstance(b, V):
+            return V(lambda: a.e * b.e, a.i * b.i)
+        return V(lambda: a.e * b, a.i * b)
     __rmul__ = __mul__
 
 
