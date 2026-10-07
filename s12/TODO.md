@@ -17,7 +17,8 @@ First deliverable: a table of exact forms of S + a handful of Lean local-optimal
 - [ ] Lean `Packs n S*` for the 254 field-degree ≤ 8 records: batch lean_cert.py (rational shadows 10-07: N17c 402 → 112 s); budget compile time first.
 - [ ] Target (Evan, 10-07): exact forms + Lean `Packs n S*` for all n ≤ 82 (open: 29, 53, 55, 68, 71; 83 = deg-672 wall), Lean local min for ~70 of them (not 17/41/51/69).  Large n Lean: split cert into modules (B294/B310 die on per-file memory accumulation).
 - [ ] Band lemma (`ChainLocalMin.lean`, `tasks/exact-minpoly/chain-lemma.md`): extend `ChainUpTo82` to all 176 integer-side records n ≤ 324 (`chain_lean.py --upto 324`).
-- [ ] Grade-C exact certificate (`grade-C.md`: paper proof done, numerics pass for 7 n).
+- [ ] (low, curiosity) n = 10 second order: Göbel's 10a record has dim null(J_A) = 4 on the two 45° squares (2 exact flat, 2 PD eig 0.339): what are the coupled motions?  10b (one 45° square, contacts at all 4 edge midpoints) is the n = 5 motif.  Not needed: s(10) global via Stromquist / chelokot bridge.
+- [ ] Grade-C exact certificate (`grade-C.md`: paper proof done, numerics pass for 7 n).  Needs the second-order lemma too (hypothesis 3); build it on n = 5 first (grade B = no flat motions).
 - [ ] Coverage, 59 open by cost: flat rotation (10), multi-direction force balance (11), block-triangular elimination (26 + msolve-hard 9), field 108/206; 292 (packer agent 10-07).
 - [ ] Factor choice by exact root isolation, not |p(t*)| < tol (n = 29, 68, 71, 126, 228: "several factors vanish at t*").  Evan's question: how much does the pipeline need numerics beyond finding the contact graph?  (Notes: task doc §Numerics.)
 - [ ] Explainer: local optimality of the n ≤ 324 records (for the s(11) explainer to cite). `notes/local-optimality-explainer-draft.md`.
