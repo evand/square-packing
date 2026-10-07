@@ -162,7 +162,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": true,
-"seconds": 0.02,
+"seconds": 0.03,
 "S": "3.707106781186547524",
 "poly": [
 17,
@@ -221,7 +221,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.01,
+"seconds": 0.02,
 "S": "4.0",
 "poly": [
 -4,
@@ -289,7 +289,7 @@
 "S_degree": 18,
 "height_digits": 12,
 "stationary": false,
-"seconds": 0.37,
+"seconds": 0.36,
 "S": "4.675530093604550951",
 "poly": null,
 "crosscheck": "Ellsworth deg ok"
@@ -321,7 +321,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": true,
-"seconds": 0.03,
+"seconds": 0.02,
 "S": "4.885618083164126731",
 "poly": [
 49,
@@ -339,7 +339,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.05,
+"seconds": 0.04,
 "S": "5.0",
 "poly": [
 -5,
@@ -356,7 +356,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.05,
+"seconds": 0.04,
 "S": "5.0",
 "poly": [
 -5,
@@ -407,7 +407,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.06,
+"seconds": 0.05,
 "S": "5.0",
 "poly": [
 -5,
@@ -424,7 +424,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.04,
+"seconds": 0.03,
 "S": "5.0",
 "poly": [
 -5,
@@ -459,7 +459,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": true,
-"seconds": 0.17,
+"seconds": 0.18,
 "S": "5.707106781186547524",
 "poly": [
 49,
@@ -477,7 +477,7 @@
 "S_degree": 6,
 "height_digits": 4,
 "stationary": false,
-"seconds": 0.04,
+"seconds": 0.03,
 "S": "5.824444616674059296",
 "poly": [
 -1615,
@@ -520,7 +520,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.06,
+"seconds": 0.07,
 "S": "6.0",
 "poly": [
 -6,
@@ -571,7 +571,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.06,
+"seconds": 0.05,
 "S": "6.0",
 "poly": [
 -6,
@@ -588,7 +588,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.06,
+"seconds": 0.05,
 "S": "6.0",
 "poly": [
 -6,
@@ -605,7 +605,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.05,
+"seconds": 0.06,
 "S": "6.0",
 "poly": [
 -6,
@@ -622,7 +622,7 @@
 "S_degree": 8,
 "height_digits": 8,
 "stationary": true,
-"seconds": 0.07,
+"seconds": 0.06,
 "S": "6.598619609244360116",
 "poly": [
 64068561,
@@ -646,7 +646,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": true,
-"seconds": 0.32,
+"seconds": 0.33,
 "S": "6.707106781186547524",
 "poly": [
 71,
@@ -664,7 +664,7 @@
 "S_degree": 5,
 "height_digits": 4,
 "stationary": true,
-"seconds": 0.04,
+"seconds": 0.03,
 "S": "6.810722083068648851",
 "poly": [
 166,
@@ -685,7 +685,7 @@
 "S_degree": 2,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.09,
+"seconds": 0.08,
 "S": "6.828427124746190097",
 "poly": [
 8,
@@ -703,7 +703,7 @@
 "S_degree": 42,
 "height_digits": 35,
 "stationary": false,
-"seconds": 2.64,
+"seconds": 2.65,
 "S": "6.926693094468802231",
 "poly": null,
 "crosscheck": "Ellsworth deg ok"
@@ -751,7 +751,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.11,
+"seconds": 0.1,
 "S": "7.0",
 "poly": [
 -7,
@@ -768,7 +768,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.1,
+"seconds": 0.11,
 "S": "7.0",
 "poly": [
 -7,
@@ -785,7 +785,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.08,
+"seconds": 0.09,
 "S": "7.0",
 "poly": [
 -7,
@@ -870,7 +870,7 @@
 "S_degree": 12,
 "height_digits": 8,
 "stationary": true,
-"seconds": 41.53,
+"seconds": 41.71,
 "S": "7.700799235417011723",
 "poly": null,
 "crosscheck": "Ellsworth deg ok"
@@ -884,7 +884,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": true,
-"seconds": 0.56,
+"seconds": 0.57,
 "S": "7.707106781186547524",
 "poly": [
 97,
@@ -906,7 +906,7 @@
 "S_degree": 4,
 "height_digits": 4,
 "stationary": false,
-"seconds": 0.08,
+"seconds": 0.09,
 "S": "7.846667192843489782",
 "poly": [
 8897,
@@ -930,7 +930,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.1,
+"seconds": 0.09,
 "S": "8.0",
 "poly": [
 -8,
@@ -981,7 +981,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.11,
+"seconds": 0.1,
 "S": "8.0",
 "poly": [
 -8,
@@ -1015,7 +1015,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.1,
+"seconds": 0.11,
 "S": "8.0",
 "poly": [
 -8,
@@ -1032,7 +1032,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.1,
+"seconds": 0.13,
 "S": "8.0",
 "poly": [
 -8,
@@ -1049,7 +1049,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.12,
+"seconds": 0.11,
 "S": "8.0",
 "poly": [
 -8,
@@ -1066,7 +1066,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.12,
+"seconds": 0.11,
 "S": "8.0",
 "poly": [
 -8,
@@ -1083,7 +1083,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": false,
-"seconds": 1.09,
+"seconds": 1.07,
 "S": "8.535533905932737622",
 "poly": [
 25,
@@ -1101,7 +1101,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": false,
-"seconds": 1.06,
+"seconds": 1.03,
 "S": "8.656854249492380195",
 "poly": [
 -23,
@@ -1119,7 +1119,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": true,
-"seconds": 0.96,
+"seconds": 0.94,
 "S": "8.707106781186547524",
 "poly": [
 127,
@@ -1141,7 +1141,7 @@
 "S_degree": 38,
 "height_digits": 44,
 "stationary": true,
-"seconds": 128.48,
+"seconds": 127.86,
 "S": "8.827194655729738914",
 "poly": null,
 "crosscheck": "Ellsworth deg ok"
@@ -1155,7 +1155,7 @@
 "S_degree": 4,
 "height_digits": 5,
 "stationary": false,
-"seconds": 0.4,
+"seconds": 0.42,
 "S": "8.881666757009004624",
 "poly": [
 86229,
@@ -1179,7 +1179,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.12,
+"seconds": 0.13,
 "S": "9.0",
 "poly": [
 -9,
@@ -1196,7 +1196,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.14,
+"seconds": 0.13,
 "S": "9.0",
 "poly": [
 -9,
@@ -1213,7 +1213,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.13,
+"seconds": 0.14,
 "S": "9.0",
 "poly": [
 -9,
@@ -1247,7 +1247,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.2,
+"seconds": 0.21,
 "S": "9.0",
 "poly": [
 -9,
@@ -1264,7 +1264,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.2,
+"seconds": 0.21,
 "S": "9.0",
 "poly": [
 -9,
@@ -1281,7 +1281,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.2,
+"seconds": 0.22,
 "S": "9.0",
 "poly": [
 -9,
@@ -1332,7 +1332,7 @@
 "S_degree": 1,
 "height_digits": 1,
 "stationary": false,
-"seconds": 0.15,
+"seconds": 0.16,
 "S": "9.0",
 "poly": [
 -9,
@@ -1349,7 +1349,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.92,
+"seconds": 0.95,
 "S": "9.535533905932737622",
 "poly": [
 47,
@@ -1371,7 +1371,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": true,
-"seconds": 1.22,
+"seconds": 1.27,
 "S": "9.707106781186547524",
 "poly": [
 161,
@@ -1389,7 +1389,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.2,
+"seconds": 0.22,
 "S": "9.742640687119285146",
 "poly": [
 49,
@@ -1407,7 +1407,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": true,
-"seconds": 1.24,
+"seconds": 1.22,
 "S": "9.822875655532295295",
 "poly": [
 141,
@@ -1418,14 +1418,14 @@
 },
 {
 "n": 87,
-"status": "verify failed",
+"status": "VALID",
 "classes": 2,
 "free_classes": 2,
 "field_degree": 41,
 "S_degree": 41,
 "height_digits": 54,
 "stationary": true,
-"seconds": 351.47,
+"seconds": 352.88,
 "S": "9.838815269948262260",
 "poly": null,
 "crosscheck": "Ellsworth deg ok"
@@ -1443,7 +1443,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": false,
-"seconds": 7.49,
+"seconds": 7.42,
 "S": "9.949747468305832670",
 "poly": [
 1,
@@ -1461,7 +1461,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.23,
+"seconds": 0.25,
 "S": "10.0",
 "poly": [
 -10,
@@ -1478,7 +1478,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.17,
+"seconds": 0.18,
 "S": "10.0",
 "poly": [
 -10,
@@ -1512,7 +1512,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.2,
+"seconds": 0.18,
 "S": "10.0",
 "poly": [
 -10,
@@ -1529,7 +1529,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.19,
+"seconds": 0.18,
 "S": "10.0",
 "poly": [
 -10,
@@ -1546,7 +1546,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.18,
+"seconds": 0.19,
 "S": "10.0",
 "poly": [
 -10,
@@ -1580,7 +1580,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.2,
+"seconds": 0.19,
 "S": "10.0",
 "poly": [
 -10,
@@ -1597,7 +1597,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.19,
+"seconds": 0.2,
 "S": "10.0",
 "poly": [
 -10,
@@ -1614,7 +1614,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.2,
+"seconds": 0.21,
 "S": "10.0",
 "poly": [
 -10,
@@ -1648,7 +1648,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": false,
-"seconds": 2.28,
+"seconds": 2.25,
 "S": "10.53553390593273762",
 "poly": [
 73,
@@ -1659,11 +1659,31 @@
 },
 {
 "n": 102,
-"status": "open: KeyError: 'x0'"
+"status": "VALID",
+"classes": 2,
+"free_classes": 2,
+"field_degree": 8,
+"S_degree": 8,
+"height_digits": 13,
+"stationary": true,
+"seconds": 0.41,
+"S": "10.60717468017605112",
+"poly": [
+1580808833648,
+-1332604124616,
+490308874228,
+-102847985308,
+13453474321,
+-1123907648,
+58564592,
+-1740544,
+22592
+],
+"crosscheck": ""
 },
 {
 "n": 103,
-"status": "open: n = 103: 98 squares in the system, 5 free; 14 tilted angle classes; 447 contact equations "
+"status": "open: n = 103: 97 squares in the system, 6 free; 13 tilted angle classes; 446 contact equations "
 },
 {
 "n": 104,
@@ -1674,7 +1694,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": true,
-"seconds": 2.34,
+"seconds": 2.35,
 "S": "10.70710678118654752",
 "poly": [
 199,
@@ -1700,7 +1720,7 @@
 "S_degree": 4,
 "height_digits": 5,
 "stationary": false,
-"seconds": 0.23,
+"seconds": 0.25,
 "S": "10.84666719284348978",
 "poly": [
 38633,
@@ -1724,7 +1744,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": false,
-"seconds": 4.66,
+"seconds": 4.68,
 "S": "10.94974746830583267",
 "poly": [
 23,
@@ -1746,7 +1766,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.21,
+"seconds": 0.23,
 "S": "11.0",
 "poly": [
 -11,
@@ -1780,7 +1800,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.24,
+"seconds": 0.23,
 "S": "11.0",
 "poly": [
 -11,
@@ -1814,7 +1834,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.23,
+"seconds": 0.24,
 "S": "11.0",
 "poly": [
 -11,
@@ -1831,7 +1851,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.23,
+"seconds": 0.24,
 "S": "11.0",
 "poly": [
 -11,
@@ -1848,7 +1868,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.26,
+"seconds": 0.24,
 "S": "11.0",
 "poly": [
 -11,
@@ -1865,7 +1885,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.26,
+"seconds": 0.25,
 "S": "11.0",
 "poly": [
 -11,
@@ -1916,7 +1936,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.24,
+"seconds": 0.25,
 "S": "11.0",
 "poly": [
 -11,
@@ -1933,7 +1953,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": false,
-"seconds": 2.88,
+"seconds": 2.95,
 "S": "11.53553390593273762",
 "poly": [
 103,
@@ -1955,7 +1975,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": false,
-"seconds": 4.61,
+"seconds": 4.7,
 "S": "11.65685424949238019",
 "poly": [
 4,
@@ -1973,7 +1993,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": true,
-"seconds": 3.25,
+"seconds": 3.23,
 "S": "11.70710678118654752",
 "poly": [
 241,
@@ -1988,7 +2008,21 @@
 },
 {
 "n": 127,
-"status": "open: KeyError: 'y94'"
+"status": "VALID",
+"classes": 1,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": true,
+"seconds": 1.2,
+"S": "11.82287565553229529",
+"poly": [
+217,
+-42,
+2
+],
+"crosscheck": ""
 },
 {
 "n": 128,
@@ -1999,7 +2033,7 @@
 "S_degree": 40,
 "height_digits": 48,
 "stationary": true,
-"seconds": 3.39,
+"seconds": 3.47,
 "S": "11.82509196821368702",
 "poly": null,
 "crosscheck": "Ellsworth deg ok"
@@ -2063,7 +2097,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.29,
+"seconds": 0.3,
 "S": "12.0",
 "poly": [
 -12,
@@ -2097,7 +2131,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.29,
+"seconds": 0.3,
 "S": "12.0",
 "poly": [
 -12,
@@ -2131,7 +2165,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.31,
+"seconds": 0.32,
 "S": "12.0",
 "poly": [
 -12,
@@ -2182,7 +2216,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.33,
+"seconds": 0.32,
 "S": "12.0",
 "poly": [
 -12,
@@ -2199,7 +2233,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.32,
+"seconds": 0.34,
 "S": "12.0",
 "poly": [
 -12,
@@ -2233,7 +2267,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": false,
-"seconds": 4.02,
+"seconds": 3.9,
 "S": "12.53553390593273762",
 "poly": [
 137,
@@ -2251,7 +2285,7 @@
 "S_degree": 16,
 "height_digits": 18,
 "stationary": true,
-"seconds": 1.85,
+"seconds": 1.82,
 "S": "12.60090777851301824",
 "poly": null,
 "crosscheck": "Ellsworth deg ok"
@@ -2265,7 +2299,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": false,
-"seconds": 11.03,
+"seconds": 10.88,
 "S": "12.65685424949238019",
 "poly": [
 17,
@@ -2283,7 +2317,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": false,
-"seconds": 10.84,
+"seconds": 10.6,
 "S": "12.65685424949238019",
 "poly": [
 17,
@@ -2301,7 +2335,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": true,
-"seconds": 5.21,
+"seconds": 5.16,
 "S": "12.70710678118654752",
 "poly": [
 287,
@@ -2312,14 +2346,14 @@
 },
 {
 "n": 150,
-"status": "verify failed",
-"classes": 5,
+"status": "VALID",
+"classes": 1,
 "free_classes": 1,
 "field_degree": 2,
 "S_degree": 2,
 "height_digits": 2,
 "stationary": false,
-"seconds": 14.0,
+"seconds": 13.35,
 "S": "12.77817459305202276",
 "poly": [
 -71,
@@ -2337,7 +2371,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": true,
-"seconds": 4.02,
+"seconds": 3.95,
 "S": "12.82287565553229529",
 "poly": [
 261,
@@ -2348,7 +2382,17 @@
 },
 {
 "n": 152,
-"status": "open: KeyError: 'y2'"
+"status": "VALID",
+"classes": 2,
+"free_classes": 2,
+"field_degree": 40,
+"S_degree": 40,
+"height_digits": 52,
+"stationary": true,
+"seconds": 3.97,
+"S": "12.83071880097660995",
+"poly": null,
+"crosscheck": ""
 },
 {
 "n": 153,
@@ -2391,7 +2435,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.48,
+"seconds": 0.5,
 "S": "13.0",
 "poly": [
 -13,
@@ -2408,7 +2452,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.38,
+"seconds": 0.39,
 "S": "13.0",
 "poly": [
 -13,
@@ -2425,7 +2469,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.5,
+"seconds": 0.55,
 "S": "13.0",
 "poly": [
 -13,
@@ -2442,7 +2486,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.37,
+"seconds": 0.39,
 "S": "13.0",
 "poly": [
 -13,
@@ -2459,7 +2503,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.49,
+"seconds": 0.53,
 "S": "13.0",
 "poly": [
 -13,
@@ -2476,7 +2520,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.53,
+"seconds": 0.54,
 "S": "13.0",
 "poly": [
 -13,
@@ -2510,7 +2554,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.39,
+"seconds": 0.44,
 "S": "13.0",
 "poly": [
 -13,
@@ -2527,7 +2571,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.39,
+"seconds": 0.41,
 "S": "13.0",
 "poly": [
 -13,
@@ -2544,7 +2588,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.39,
+"seconds": 0.43,
 "S": "13.0",
 "poly": [
 -13,
@@ -2561,7 +2605,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.4,
+"seconds": 0.43,
 "S": "13.0",
 "poly": [
 -13,
@@ -2578,7 +2622,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.4,
+"seconds": 0.42,
 "S": "13.0",
 "poly": [
 -13,
@@ -2595,7 +2639,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.41,
+"seconds": 0.43,
 "S": "13.0",
 "poly": [
 -13,
@@ -2612,7 +2656,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": false,
-"seconds": 36.55,
+"seconds": 36.68,
 "S": "13.53553390593273762",
 "poly": [
 175,
@@ -2630,7 +2674,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 2.23,
+"seconds": 2.25,
 "S": "13.57142857142857142",
 "poly": [
 -95,
@@ -2651,7 +2695,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": false,
-"seconds": 13.32,
+"seconds": 13.62,
 "S": "13.65685424949238019",
 "poly": [
 32,
@@ -2669,7 +2713,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": true,
-"seconds": 7.36,
+"seconds": 7.29,
 "S": "13.70710678118654752",
 "poly": [
 337,
@@ -2687,7 +2731,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": false,
-"seconds": 52.59,
+"seconds": 52.55,
 "S": "13.77817459305202276",
 "poly": [
 -49,
@@ -2705,7 +2749,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": true,
-"seconds": 7.93,
+"seconds": 7.27,
 "S": "13.82287565553229529",
 "poly": [
 309,
@@ -2763,7 +2807,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.58,
+"seconds": 0.6,
 "S": "14.0",
 "poly": [
 -14,
@@ -2780,7 +2824,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.43,
+"seconds": 0.46,
 "S": "14.0",
 "poly": [
 -14,
@@ -2797,7 +2841,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.44,
+"seconds": 0.47,
 "S": "14.0",
 "poly": [
 -14,
@@ -2814,7 +2858,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.61,
+"seconds": 0.63,
 "S": "14.0",
 "poly": [
 -14,
@@ -2831,7 +2875,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.47,
+"seconds": 0.49,
 "S": "14.0",
 "poly": [
 -14,
@@ -2848,7 +2892,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.45,
+"seconds": 0.47,
 "S": "14.0",
 "poly": [
 -14,
@@ -2865,7 +2909,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.45,
+"seconds": 0.48,
 "S": "14.0",
 "poly": [
 -14,
@@ -2882,7 +2926,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.45,
+"seconds": 0.47,
 "S": "14.0",
 "poly": [
 -14,
@@ -2899,7 +2943,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.46,
+"seconds": 0.49,
 "S": "14.0",
 "poly": [
 -14,
@@ -2916,7 +2960,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.47,
+"seconds": 0.51,
 "S": "14.0",
 "poly": [
 -14,
@@ -2933,7 +2977,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.5,
+"seconds": 0.51,
 "S": "14.0",
 "poly": [
 -14,
@@ -2950,7 +2994,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.64,
+"seconds": 0.7,
 "S": "14.0",
 "poly": [
 -14,
@@ -2967,7 +3011,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.48,
+"seconds": 0.52,
 "S": "14.0",
 "poly": [
 -14,
@@ -2984,7 +3028,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.49,
+"seconds": 0.52,
 "S": "14.0",
 "poly": [
 -14,
@@ -3001,7 +3045,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": false,
-"seconds": 6.95,
+"seconds": 6.66,
 "S": "14.53553390593273762",
 "poly": [
 217,
@@ -3019,7 +3063,7 @@
 "S_degree": 1,
 "height_digits": 3,
 "stationary": false,
-"seconds": 3.13,
+"seconds": 3.0,
 "S": "14.57142857142857142",
 "poly": [
 -102,
@@ -3040,7 +3084,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": false,
-"seconds": 19.15,
+"seconds": 18.58,
 "S": "14.65685424949238019",
 "poly": [
 49,
@@ -3069,14 +3113,14 @@
 },
 {
 "n": 202,
-"status": "verify failed",
+"status": "VALID",
 "classes": 1,
 "free_classes": 1,
 "field_degree": 2,
 "S_degree": 2,
 "height_digits": 3,
 "stationary": true,
-"seconds": 24.73,
+"seconds": 41.99,
 "S": "14.72792206135785543",
 "poly": [
 -158,
@@ -3094,7 +3138,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": false,
-"seconds": 60.83,
+"seconds": 58.97,
 "S": "14.77817459305202276",
 "poly": [
 -23,
@@ -3112,7 +3156,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": true,
-"seconds": 10.88,
+"seconds": 10.67,
 "S": "14.82287565553229529",
 "poly": [
 361,
@@ -3130,7 +3174,7 @@
 "S_degree": 40,
 "height_digits": 52,
 "stationary": true,
-"seconds": 4.61,
+"seconds": 4.55,
 "S": "14.82445114612408822",
 "poly": null,
 "crosscheck": "Ellsworth deg ok"
@@ -3168,7 +3212,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.52,
+"seconds": 0.55,
 "S": "15.0",
 "poly": [
 -15,
@@ -3185,7 +3229,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.53,
+"seconds": 0.56,
 "S": "15.0",
 "poly": [
 -15,
@@ -3202,7 +3246,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.54,
+"seconds": 0.57,
 "S": "15.0",
 "poly": [
 -15,
@@ -3219,7 +3263,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.53,
+"seconds": 0.57,
 "S": "15.0",
 "poly": [
 -15,
@@ -3236,7 +3280,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.73,
+"seconds": 0.77,
 "S": "15.0",
 "poly": [
 -15,
@@ -3253,7 +3297,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.55,
+"seconds": 0.57,
 "S": "15.0",
 "poly": [
 -15,
@@ -3270,7 +3314,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.55,
+"seconds": 0.58,
 "S": "15.0",
 "poly": [
 -15,
@@ -3287,7 +3331,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.56,
+"seconds": 0.59,
 "S": "15.0",
 "poly": [
 -15,
@@ -3304,7 +3348,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.56,
+"seconds": 0.59,
 "S": "15.0",
 "poly": [
 -15,
@@ -3321,7 +3365,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.57,
+"seconds": 0.6,
 "S": "15.0",
 "poly": [
 -15,
@@ -3338,7 +3382,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.58,
+"seconds": 0.6,
 "S": "15.0",
 "poly": [
 -15,
@@ -3355,7 +3399,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.59,
+"seconds": 0.62,
 "S": "15.0",
 "poly": [
 -15,
@@ -3372,7 +3416,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.6,
+"seconds": 0.62,
 "S": "15.0",
 "poly": [
 -15,
@@ -3389,7 +3433,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.61,
+"seconds": 0.62,
 "S": "15.0",
 "poly": [
 -15,
@@ -3406,7 +3450,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": false,
-"seconds": 8.76,
+"seconds": 8.54,
 "S": "15.53553390593273762",
 "poly": [
 263,
@@ -3424,7 +3468,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.83,
+"seconds": 0.89,
 "S": "15.57106781186547524",
 "poly": [
 89,
@@ -3446,7 +3490,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": false,
-"seconds": 27.08,
+"seconds": 26.67,
 "S": "15.65685424949238019",
 "poly": [
 68,
@@ -3464,7 +3508,7 @@
 "S_degree": 1,
 "height_digits": 3,
 "stationary": false,
-"seconds": 2.77,
+"seconds": 2.81,
 "S": "15.68292682926829268",
 "poly": [
 -643,
@@ -3481,7 +3525,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": true,
-"seconds": 14.27,
+"seconds": 14.14,
 "S": "15.70710678118654752",
 "poly": [
 449,
@@ -3499,7 +3543,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": false,
-"seconds": 78.86,
+"seconds": 76.71,
 "S": "15.77817459305202276",
 "poly": [
 7,
@@ -3517,7 +3561,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": false,
-"seconds": 82.88,
+"seconds": 82.9,
 "S": "15.77817459305202276",
 "poly": [
 7,
@@ -3535,7 +3579,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": true,
-"seconds": 3.11,
+"seconds": 3.06,
 "S": "15.82287565553229529",
 "poly": [
 417,
@@ -3581,7 +3625,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.64,
+"seconds": 0.68,
 "S": "16.0",
 "poly": [
 -16,
@@ -3598,7 +3642,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.68,
+"seconds": 0.69,
 "S": "16.0",
 "poly": [
 -16,
@@ -3615,7 +3659,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.65,
+"seconds": 0.68,
 "S": "16.0",
 "poly": [
 -16,
@@ -3632,7 +3676,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.66,
+"seconds": 0.69,
 "S": "16.0",
 "poly": [
 -16,
@@ -3649,7 +3693,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.66,
+"seconds": 0.7,
 "S": "16.0",
 "poly": [
 -16,
@@ -3666,7 +3710,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.68,
+"seconds": 0.72,
 "S": "16.0",
 "poly": [
 -16,
@@ -3683,7 +3727,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.68,
+"seconds": 0.72,
 "S": "16.0",
 "poly": [
 -16,
@@ -3700,7 +3744,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.69,
+"seconds": 0.72,
 "S": "16.0",
 "poly": [
 -16,
@@ -3717,7 +3761,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.7,
+"seconds": 0.77,
 "S": "16.0",
 "poly": [
 -16,
@@ -3734,7 +3778,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.71,
+"seconds": 0.77,
 "S": "16.0",
 "poly": [
 -16,
@@ -3751,7 +3795,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.69,
+"seconds": 0.75,
 "S": "16.0",
 "poly": [
 -16,
@@ -3768,7 +3812,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.74,
+"seconds": 0.77,
 "S": "16.0",
 "poly": [
 -16,
@@ -3785,7 +3829,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.71,
+"seconds": 0.78,
 "S": "16.0",
 "poly": [
 -16,
@@ -3802,7 +3846,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.73,
+"seconds": 0.74,
 "S": "16.0",
 "poly": [
 -16,
@@ -3819,7 +3863,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.72,
+"seconds": 0.76,
 "S": "16.0",
 "poly": [
 -16,
@@ -3836,7 +3880,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": false,
-"seconds": 35.61,
+"seconds": 34.61,
 "S": "16.53553390593273762",
 "poly": [
 313,
@@ -3854,7 +3898,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": false,
-"seconds": 1.01,
+"seconds": 1.09,
 "S": "16.57106781186547524",
 "poly": [
 161,
@@ -3876,7 +3920,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": false,
-"seconds": 175.33,
+"seconds": 173.94,
 "S": "16.65685424949238019",
 "poly": [
 89,
@@ -3894,7 +3938,7 @@
 "S_degree": 1,
 "height_digits": 3,
 "stationary": false,
-"seconds": 3.34,
+"seconds": 3.35,
 "S": "16.68292682926829268",
 "poly": [
 -684,
@@ -3911,7 +3955,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": true,
-"seconds": 15.19,
+"seconds": 15.28,
 "S": "16.70710678118654752",
 "poly": [
 511,
@@ -3933,7 +3977,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": false,
-"seconds": 56.03,
+"seconds": 54.74,
 "S": "16.77817459305202276",
 "poly": [
 41,
@@ -3951,7 +3995,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": false,
-"seconds": 57.31,
+"seconds": 56.92,
 "S": "16.77817459305202276",
 "poly": [
 41,
@@ -3969,7 +4013,7 @@
 "S_degree": 32,
 "height_digits": 44,
 "stationary": true,
-"seconds": 181.82,
+"seconds": 179.21,
 "S": "16.82306208283780464",
 "poly": null,
 "crosscheck": "Ellsworth deg ok"
@@ -3983,7 +4027,7 @@
 "S_degree": 4,
 "height_digits": 6,
 "stationary": false,
-"seconds": 0.87,
+"seconds": 0.93,
 "S": "16.84666719284348978",
 "poly": [
 258809,
@@ -4027,7 +4071,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 1.03,
+"seconds": 1.04,
 "S": "17.0",
 "poly": [
 -17,
@@ -4044,7 +4088,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.81,
+"seconds": 0.82,
 "S": "17.0",
 "poly": [
 -17,
@@ -4061,7 +4105,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.81,
+"seconds": 0.82,
 "S": "17.0",
 "poly": [
 -17,
@@ -4078,7 +4122,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.8,
+"seconds": 0.84,
 "S": "17.0",
 "poly": [
 -17,
@@ -4095,7 +4139,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.81,
+"seconds": 0.84,
 "S": "17.0",
 "poly": [
 -17,
@@ -4112,7 +4156,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.8,
+"seconds": 0.84,
 "S": "17.0",
 "poly": [
 -17,
@@ -4129,7 +4173,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.8,
+"seconds": 0.86,
 "S": "17.0",
 "poly": [
 -17,
@@ -4146,7 +4190,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.81,
+"seconds": 0.85,
 "S": "17.0",
 "poly": [
 -17,
@@ -4163,7 +4207,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.83,
+"seconds": 0.89,
 "S": "17.0",
 "poly": [
 -17,
@@ -4180,7 +4224,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.84,
+"seconds": 0.87,
 "S": "17.0",
 "poly": [
 -17,
@@ -4197,7 +4241,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 1.07,
+"seconds": 1.13,
 "S": "17.0",
 "poly": [
 -17,
@@ -4214,7 +4258,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.84,
+"seconds": 0.9,
 "S": "17.0",
 "poly": [
 -17,
@@ -4231,7 +4275,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.85,
+"seconds": 0.88,
 "S": "17.0",
 "poly": [
 -17,
@@ -4248,7 +4292,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.89,
+"seconds": 0.88,
 "S": "17.0",
 "poly": [
 -17,
@@ -4265,7 +4309,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 1.1,
+"seconds": 1.17,
 "S": "17.0",
 "poly": [
 -17,
@@ -4282,7 +4326,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.89,
+"seconds": 0.91,
 "S": "17.0",
 "poly": [
 -17,
@@ -4299,7 +4343,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": false,
-"seconds": 1.07,
+"seconds": 1.13,
 "S": "17.53553390593273762",
 "poly": [
 367,
@@ -4317,7 +4361,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": false,
-"seconds": 1.09,
+"seconds": 1.14,
 "S": "17.53553390593273762",
 "poly": [
 367,
@@ -4339,7 +4383,7 @@
 "S_degree": 1,
 "height_digits": 3,
 "stationary": false,
-"seconds": 0.92,
+"seconds": 1.0,
 "S": "17.63414634146341463",
 "poly": [
 -723,
@@ -4356,7 +4400,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": false,
-"seconds": 267.48,
+"seconds": 267.74,
 "S": "17.65685424949238019",
 "poly": [
 112,
@@ -4374,7 +4418,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": true,
-"seconds": 19.58,
+"seconds": 19.35,
 "S": "17.70710678118654752",
 "poly": [
 577,
@@ -4392,7 +4436,7 @@
 "S_degree": 2,
 "height_digits": 3,
 "stationary": true,
-"seconds": 21.18,
+"seconds": 20.79,
 "S": "17.70710678118654752",
 "poly": [
 577,
@@ -4414,7 +4458,7 @@
 "S_degree": 2,
 "height_digits": 2,
 "stationary": false,
-"seconds": 86.64,
+"seconds": 87.67,
 "S": "17.77817459305202276",
 "poly": [
 79,
@@ -4425,7 +4469,21 @@
 },
 {
 "n": 299,
-"status": "open: KeyError: 'y254'"
+"status": "VALID",
+"classes": 2,
+"free_classes": 1,
+"field_degree": 2,
+"S_degree": 2,
+"height_digits": 3,
+"stationary": true,
+"seconds": 6.52,
+"S": "17.82287565553229529",
+"poly": [
+541,
+-66,
+2
+],
+"crosscheck": ""
 },
 {
 "n": 300,
@@ -4436,7 +4494,7 @@
 "S_degree": 40,
 "height_digits": 56,
 "stationary": true,
-"seconds": 5.82,
+"seconds": 5.99,
 "S": "17.82412338847854347",
 "poly": null,
 "crosscheck": "Ellsworth deg ok"
@@ -4447,7 +4505,7 @@
 },
 {
 "n": 302,
-"status": "open: 2 consistency polynomials for 8 class angles: more than one angle direction left to force "
+"status": "open: n = 302: 281 squares in the system, 21 free; 12 tilted angle classes; 2160 contact equatio"
 },
 {
 "n": 303,
@@ -4478,7 +4536,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 1.21,
+"seconds": 1.23,
 "S": "18.0",
 "poly": [
 -18,
@@ -4495,7 +4553,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.96,
+"seconds": 0.98,
 "S": "18.0",
 "poly": [
 -18,
@@ -4512,7 +4570,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.95,
+"seconds": 0.97,
 "S": "18.0",
 "poly": [
 -18,
@@ -4529,7 +4587,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.99,
+"seconds": 1.01,
 "S": "18.0",
 "poly": [
 -18,
@@ -4546,7 +4604,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.99,
+"seconds": 1.01,
 "S": "18.0",
 "poly": [
 -18,
@@ -4563,7 +4621,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.98,
+"seconds": 1.01,
 "S": "18.0",
 "poly": [
 -18,
@@ -4580,7 +4638,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.98,
+"seconds": 1.03,
 "S": "18.0",
 "poly": [
 -18,
@@ -4597,7 +4655,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 0.99,
+"seconds": 1.01,
 "S": "18.0",
 "poly": [
 -18,
@@ -4614,7 +4672,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 1.0,
+"seconds": 1.02,
 "S": "18.0",
 "poly": [
 -18,
@@ -4631,7 +4689,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 1.0,
+"seconds": 1.03,
 "S": "18.0",
 "poly": [
 -18,
@@ -4648,7 +4706,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 1.01,
+"seconds": 1.05,
 "S": "18.0",
 "poly": [
 -18,
@@ -4665,7 +4723,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 1.3,
+"seconds": 1.36,
 "S": "18.0",
 "poly": [
 -18,
@@ -4682,7 +4740,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 1.34,
+"seconds": 1.37,
 "S": "18.0",
 "poly": [
 -18,
@@ -4699,7 +4757,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 1.02,
+"seconds": 1.06,
 "S": "18.0",
 "poly": [
 -18,
@@ -4716,7 +4774,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 1.02,
+"seconds": 1.06,
 "S": "18.0",
 "poly": [
 -18,
@@ -4733,7 +4791,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 1.04,
+"seconds": 1.05,
 "S": "18.0",
 "poly": [
 -18,
@@ -4750,7 +4808,7 @@
 "S_degree": 1,
 "height_digits": 2,
 "stationary": false,
-"seconds": 1.05,
+"seconds": 1.08,
 "S": "18.0",
 "poly": [
 -18,
