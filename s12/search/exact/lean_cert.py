@@ -334,7 +334,7 @@ def build(path, out, mod, extra=None):
              f'rational shadows. -/\n')
     L.append(f'namespace UnitSquarePacking.EC.{mod}\n')
     L.append('set_option maxHeartbeats 0\n')
-    L.append(f'def cert : Cert {n} where')
+    L.append(f'noncomputable def cert : Cert {n} where')
     L.append(f'  f := {lean_poly(f)}')
     L.append(f'  a := {lean_q(ta)}')
     L.append(f'  b := {lean_q(tb)}')

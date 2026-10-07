@@ -116,14 +116,14 @@ def main(base, out):
             return '[' + ', '.join(f'(({r} : Fin {m}), {lean_q(x)})' for r, x in cols[w]) + ']'
         Lt = []
         Lt.append('\n/-! ## The local-minimum certificate -/\n')
-        Lt.append(f'def GS : List ℚ := {qlist(GL[3 * n])}')
-        Lt.append(f'def GT : Fin {n} → Fin 3 → List ℚ := ![' + ',\n  '.join(
+        Lt.append(f'noncomputable def GS : List ℚ := {qlist(GL[3 * n])}')
+        Lt.append(f'noncomputable def GT : Fin {n} → Fin 3 → List ℚ := ![' + ',\n  '.join(
             '![' + ', '.join(qlist(GL[3 * i + c]) for c in range(3)) + ']' for i in range(n)) + ']')
-        Lt.append(f'def LcS : List (Fin {m} × ℚ) := {clist(3 * n)}')
-        Lt.append(f'def LcT : Fin {n} → Fin 3 → List (Fin {m} × ℚ) := ![' + ',\n  '.join(
+        Lt.append(f'noncomputable def LcS : List (Fin {m} × ℚ) := {clist(3 * n)}')
+        Lt.append(f'noncomputable def LcT : Fin {n} → Fin 3 → List (Fin {m} × ℚ) := ![' + ',\n  '.join(
             '![' + ', '.join(clist(3 * i + c) for c in range(3)) + ']' for i in range(n)) + ']')
         Lt.append(f'''
-def lcert : UnitSquarePacking.LMC.LCert {n} {m} where
+noncomputable def lcert : UnitSquarePacking.LMC.LCert {n} {m} where
   P := cert
   C := ![{', '.join(lean_poly(c) for c in C)}]
   S := ![{', '.join(lean_poly(c) for c in S_)}]
@@ -179,7 +179,7 @@ theorem localmin : ∃ s : ℝ, peval pS s = 0 ∧ (({lean_q(Sa)} : ℚ) : ℝ) 
     LC.build(base + '.minpoly.json', out, out.split('/')[-1].replace('.lean', ''), extra=extra)
     # import the local-minimum checker too
     txt = open(out).read().replace('import Sqpack.ExactCheck\n', 'import Sqpack.ExactCheck\nimport Sqpack.LocalMinCheck\n', 1)
-    # the G and column tables are large literals
+    # the G and column tables are large literals (noncomputable: only the kernel evaluates them)
     txt = txt.replace('set_option maxHeartbeats 0\n', 'set_option maxHeartbeats 0\nset_option maxRecDepth 100000\n', 1)
     open(out, 'w').write(txt)
     print(f'{out}: local-minimum certificate, {m} rows, lmin {float(lmin):.4g}, mu {float(mu):.4g}, Gn {float(Gn):.4g}')
