@@ -1,0 +1,3 @@
+ 105 reg 10.806077865540567     cert 10.806077865519704632682  Δ -2.09e-11  λmin 8.4e-06  KKT  local minimum of S, strict mod  via slp2
+ 130 reg 11.911187706548755     cert 11.911187706535762355657  Δ -1.30e-11  λmin 1.8e-06  KKT  local minimum of S, strict mod  via witness
+ 292 reg 17.597249391199519     NOT CERTIFIED  [('witness', 'not jammed', None), ('slp2', 'solve failed', None)]

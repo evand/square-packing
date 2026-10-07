@@ -2195,7 +2195,28 @@
   "by": [
    "Francisco Couzo"
   ],
-  "status": "not certified"
+  "status": "KKT local min",
+  "S_exact": "10.8060778655197046325749053504461393768",
+  "S_cert": "10.806077865519704632682966129102",
+  "S_cert_fraction": "5403038932759852316341483064551/500000000000000000000000000000",
+  "delta": -2.086236731703387e-11,
+  "lam": 8.411620861777759e-06,
+  "second": "local minimum of S, strict modulo 28 exact flat motions (PD on the rest of null(J_A)); the configuration is not isolated",
+  "from_": "polished",
+  "forced": null,
+  "verify1": true,
+  "verify2": true,
+  "free": [
+   11,
+   20,
+   49,
+   73,
+   87,
+   99,
+   100,
+   103
+  ],
+  "input": "witness polished by SLP (local optimizer)"
  },
  {
   "n": 106,
@@ -2816,7 +2837,34 @@
   "by": [
    "Francisco Couzo"
   ],
-  "status": "not certified"
+  "status": "KKT local min",
+  "S_exact": "11.9111877065357623555388760138120346685",
+  "S_cert": "11.911187706535762355657987890878",
+  "S_cert_fraction": "5955593853267881177828993945439/500000000000000000000000000000",
+  "delta": -1.2992644342012109e-11,
+  "lam": 1.8456873755559007e-06,
+  "second": "local minimum of S, strict modulo 63 exact flat motions (PD on the rest of null(J_A)); the configuration is not isolated",
+  "from_": "witness",
+  "forced": [
+   [
+    21,
+    28
+   ],
+   [
+    83,
+    84
+   ]
+  ],
+  "verify1": true,
+  "verify2": true,
+  "free": [
+   29,
+   71,
+   89,
+   108,
+   116
+  ],
+  "input": "register witness"
  },
  {
   "n": 131,

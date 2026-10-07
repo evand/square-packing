@@ -1,0 +1,4 @@
+== /home/evand/math/square-packing/public/.claude/worktrees/agent-a90d6fefa1c862279/s12/search/packer/exact/descended/cen3_0.003_19.c0.txt: n = 110, S_in = 10.996783568282469
+  !! no contact tolerance in the ladder gives an equilibrium with smooth contacts (residual 1.2e-03)
+  corner-corner branch MILP on the input: min dS over first-order motions (|z| <= 1) = -9.833e-03 (62 corner-corner touches as disjunctions)
+  => NOT a local minimum: a first-order descent exists once corner-corner touches may slip along either side (the f64 squeeze linearises each pair on one fixed separating axis and stalls here).  No exact solve attempted.

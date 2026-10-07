@@ -27,13 +27,14 @@ Proof-piece wishlist (new candidates N1–N15 + 65 open items, picks at the end)
 - [ ] Second implementation of `Valid9` (F₄ k ≥ 8 rests on qx2 alone): deferred 10-03, Lean/simplification first; others may do it (k2m3 route: `ZMX2_AREA.md`).
 - [ ] k2m3 2nd impl (zmx2 area density): needs a 2nd reader for the 4 mutation-blind refinements (`ZMX2_AREA.md` §13).
 - [ ] zeromargin.py should-fixes (audit 09-26; + s20 review 10-04: divisibility assert in `roots()` like `d4_roots`, else a non-dividing `--pitch` silently skips a strip): int64 guard on `sum(W·weight)`; `zm_d4_sweep.py summary` sha/settings gate; stale docstrings. Re-pin s(32) bundle.
-- [ ] Watch: jlevy#281 (s(19) target offered to wand125, 10-04), jlevy#316 (k2m4 registration; when T-081 is verified: Overview `FAMILIES` += {4: 5}, `register: verified` on n = 96), #311 (is our s(61) replay independent of zmx2?), PR #290, chelokot#18.
+- [ ] Watch: jlevy#281 (s(19) target offered to wand125, 10-04), jlevy#316 (k2m4 registration; when T-081 is verified: Overview `FAMILIES` += {4: 5}, `register: verified` on n = 96), #311 (is our s(61) replay independent of zmx2?), PR #290, chelokot#18, #375 (analytic batch).
 
 ## Lean
 - [ ] n = 12 batch (`notes/n12-gap.md` §2.2): `s(12) = 4` as an open statement in `Spec.lean` (formal-conjectures has only s(11), s(17): offer it upstream too); axis-parallel ≤ 9 (item 1); Lemma CC chain counting (item 5, "Lean-ready").
 - [ ] Common spec (`lean/Sqpack/Spec.lean`): propose on jlevy/squares as shared spec; offer bridges to chelokot (Frame), Queuingtheorydotcom. Draft → Evan approves.
 - [ ] `ValidTilt7/9` in Lean (`notes/lean-leb-mass.md` §7): LEB + CAP done 10-03 (`LebMass.lean`). Next: `CovT` tree layer + generator (~400 lines), then PIECE with polygon clip (1–2k lines; with the tree, ~17k of V3's 32k leaves), then Lemma E (3–6k lines, weeks). k2m4 needs a leaf dump.
 - [ ] s(21) Lean on cand A (`search/golf/candA_verified/`, ~51 CPU-h); levers: SPLIT leaf for 8 hot cells, per-leaf overhead.
+- [ ] Arslanov rectangle decomposition in Lean (squeezable rectangles glue to side < m; s(k²−k) < k for k ≥ 12?).  Read the paper first (2019 E-JC doi:10.37236/8586; 2021 secondhand).  None in Lean anywhere (10-05).
 - [ ] Lean explainer (`notes/lean-explainer-draft.html`, artifact FJPhwWoQLhdkcerwh4VBwY): Evan reviews → site page.
 
 ## s(17)
@@ -42,9 +43,23 @@ Proof-piece wishlist (new candidates N1–N15 + 65 open items, picks at the end)
 - [ ] s(19) > (7+√7)/2 ⇒ s(18) < s(19): **on hold** (wand125 at 1927/400, 0.11 % short; our pure-cover LP has ≈ 0.8 % room, CEILINGS §6). Offer the target on jlevy instead of racing.
 - [ ] s(17) exact via the s(11) method: on hold (CPU). `tasks/s17-core-isolation/`
 
-## Packings (low expectation)
-- [ ] Exact solver `search/exact/` + `batch/` (10-05): all 324 register records, 321 certified (315 KKT), every n ≤ 104, 48 below the register.  Registration request to jlevy; open n = 105, 130, 292.
-- [ ] Targets from the conjectures (`search/WISHLIST.md` §P): s(90) < 10 first, then s(183/242/274/308) and the top √7/45° family members (299, 234). Check jlevy's register first.
+## Packings (active, 10-06)
+Engine `search/packer/` (map + plan: `README.md` "Plan (10-06)"; log: `PACKER.md`; merged to main 10-06).  s(110) calibration
+done enough: sub-11 funnel small and well sampled, plateau above 11 rough; the needle is entering the funnel.  Now: samplers that go uphill.
+- [ ] Minima PT (`mcmin.py`): runs A and B at 110 both missed (A: hot replicas sink into the grid; B: 11.0076 funnel deep, staggered-chain trap at 11).  Temperature alone doesn't connect funnels: next, coordinated moves (vacancy → hole chain shift), bias in side.
+- [ ] Rediscovery calibration (`rediscover.py`, 52 old→new record pairs): detection vs δ and matching distance; then judge new moves on it and on new families at 110.
+- [ ] Is the plateau → funnel barrier entropic (first-order)?  If so temperature can't open it: bias / multicanonical in side, or gap-spanning moves (lessons from an earlier MH/PT project).
+- [ ] New records 10-06: s(266) ≤ 16.8230287508, s(270) ≤ 16.9378072284, s(272) ≤ 16.9681101458 (certified, `search/exact/results/sw2/`); not posted: ask Evan before the register.
+- [ ] (parked, low) p(δ): "a δ-better packing would have been found with probability p" from mixing/ESS on the no-grid measure, basin distance, δ-vs-weight; motivates mixing across the grid side (PACKER 10-06).
+- [ ] Landscape measure: nested sampling / splitting on side from random starts, log X(s) at 110 (content-agnostic "how hard is this n"; `lit-statmech.md` A2).
+- [ ] s(90): needle estimate from the 110 calibration (old step 4) before more compute; best so far 10.0095668 (certified local min).
+- [ ] slp2 speed (it is the sampler's inner loop, 4–8 s per quench at 110): vectorise the contact-model pair loop, then consider Rust.
+- [ ] Exact batch (`search/exact/`, jlevy#375): 323/324 certified (n = 105, 130 added 10-05, unpushed: update #375); open n = 292.  Leftovers: 12/866 cen7 outputs unresolved.
+- [ ] Case study `search/packer/s110-landscape.md`: rewrite the census section from cen7 + rev1 + minima PT.
+- [ ] Side bet: rectangle containers in slp2; Arslanov 26-in-(4−δ)×8 control, then jlevy H-049 (20 in (4−δ)×6).  Refresh clone first.
+- [ ] Later targets for the same instrument: s(183/242/274/308), 299, 234, s(147) (`search/WISHLIST.md` §P).
+- [ ] Reference hygiene: before claiming a packing, check jlevy's register and grep the local clone `frontier/n-<n>.md` (refresh per `_untrusted-third-party/PROVENANCE.txt`).
+- [ ] (parked) contact-graph counts (force-bearing network), pose → closed form beyond `exact/` (`lit-provenance.md`).
 
 ## Outreach / hygiene
 - [ ] Site `problems.html` is the reader-facing copy of WISHLIST's object-level items (§P questions, A1/A3, N16): edit both together.

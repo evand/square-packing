@@ -6,27 +6,29 @@ non-overlap* with `../exactsolve.py` (80 digits), and wrote an exact rational ce
 `s(n) <= S'` (`S' - S ~ 1e-19`).
 
 **Result** (`results.md`, `results.json`; summary as of the final run):
-* 321 of 324 certified; both independent exact verifiers accept every certificate (`./verify_all.sh`).
-* 315 are numerically KKT local minima: multipliers λ ≥ 0 at the exact point (equilibrium residual 0), reduced Hessian
+* 323 of 324 certified; both independent exact verifiers accept every certificate (`./verify_all.sh`).
+* 317 are numerically KKT local minima: multipliers λ ≥ 0 at the exact point (equilibrium residual 0), reduced Hessian
   PSD/PD modulo exact flat motions, first-order jammed in every corner–corner branch.  6 are certified bounds only
   (n = 177, 211, 230, 261, 263, 272: zero or no multipliers, or negative curvature in a flat direction).
-* **Every n ≤ 104 is certified, and a KKT local minimum.**
-* 48 certified S' lie below the register's printed value, by 3e-13 … 5e-11: the analytic optimum of the same packing (the
+* **Every n ≤ 291 is certified; every n ≤ 176 is a KKT local minimum.**
+* 50 certified S' lie below the register's printed value, by 3e-13 … 5e-11: the analytic optimum of the same packing (the
   f64 slack removed), not a new structure.  Most are Francisco Couzo's packings of 2026-09-27 and 2026-10-03.
 * Records already in closed form agree with S' to ~1e-15 or better (e.g. the (7+√7)/2 family n = 18, 53, 86, …).
-* Not certified: n = 105, 130, 292 (see `../README.md`, Limitations).  At n = 105 the witness has equilibrium residual
-  1e-3, and a first-order descent exists with corner–corner touches as disjunctions (−2.8e-6 per unit step), so it may
-  not be a local minimum; we have not resolved it.
+* Not certified: n = 292 (contact equations inconsistent after the slp2 polish; see `../README.md`, Limitations).
+* n = 105 and 130 added 10-05 (evening) after two exactsolve fixes: at n = 105 the register witness is not a local minimum
+  (a first-order descent with corner–corner touches as disjunctions); its slp2 polish is jammed only with corner–corner
+  touches as equations (one branch), and is a KKT local minimum there.  At n = 130 Newton's Jacobian turned singular near
+  convergence (the independent contact subset chosen at the f64 input became dependent); exactsolve now re-chooses it.
 * Curiosity: s(172) ≤ 13.6189889568993984289… and s(199) ≤ 14.6189889568993984290…, exactly 1 apart.
 
 **Inputs** (`inputs/n-N.txt`, the exact file each certificate was solved from).  Column *input* in `results.md`:
-`W` = the register witness converted to our text format (centres, angle in degrees mod 90); `P` (16 records) = that
+`W` = the register witness converted to our text format (centres, angle in degrees mod 90); `P` (17 records) = that
 witness polished by our SLP squeeze (a local optimizer, not yet published).  A `P` input is just an f64 packing: the
 certificate's validity does not depend on how it was produced.
 
 **Checking.**
 ```
-./verify_all.sh                 # both exact verifiers on all 321 certificates (~2 min)
+./verify_all.sh                 # both exact verifiers on all 323 certificates (~2 min)
 ./reproduce.sh [-j 8] [n ...]   # re-solve from inputs/ and compare with certs/ byte for byte (~1-2 CPU-hours for all)
 ```
 `../verify_cert.py` (separating axes) and `../verify_cert2.py` (vertex-in-polygon and edge-intersection tests) share no

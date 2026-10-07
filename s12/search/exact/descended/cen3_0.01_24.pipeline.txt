@@ -1,0 +1,5 @@
+cycle 0: input S = 10.996882655941942, exact S = -, MILP dS* = -0.0005231406603836173, descend
+    round 0: S = 10.9968826559419, MILP first-order dS* = -5.231e-04
+      kick -> 10.9968826554243, slp2 -> 10.9968664498866 (12s)
+    round 1: S = 10.9968664498866, MILP first-order dS* = -6.106e-12
+cycle 1: input S = 10.996866449886614, exact S = 10.9968664493289481217378, MILP dS* = 0.0, jammed in every branch: stop

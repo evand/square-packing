@@ -1,0 +1,101 @@
+1000 trials, 866 below 11 without lines; 54 to solve
+
+per run and sigma (sub-k classes keyed by exact S to 1e-20):
+       cand s=0.01: N= 125  sub-k certified  125 (distinct   4, f1   0, f2   0, f1/N 0.000, Chao1    4.0; 2nd-order inconclusive 2)  not-min 0  unresolved 0  >=k/lines 0  failed 0
+       cand s=0.03: N= 125  sub-k certified  119 (distinct   7, f1   2, f2   0, f1/N 0.017, Chao1    8.0; 2nd-order inconclusive 1)  not-min 0  unresolved 2  >=k/lines 4  failed 0
+       cand s=0.05: N= 125  sub-k certified  109 (distinct   9, f1   2, f2   1, f1/N 0.018, Chao1   11.0; 2nd-order inconclusive 1)  not-min 1  unresolved 3  >=k/lines 12  failed 0
+        cand s=0.1: N= 125  sub-k certified   68 (distinct  16, f1   5, f2   3, f1/N 0.074, Chao1   20.2; 2nd-order inconclusive 0)  not-min 0  unresolved 4  >=k/lines 53  failed 0
+          cand all: N= 500  sub-k certified  421 (distinct  18, f1   6, f2   2, f1/N 0.014, Chao1   27.0; 2nd-order inconclusive 4)  not-min 1  unresolved 9  >=k/lines 69  failed 0
+        rec s=0.01: N= 125  sub-k certified  125 (distinct   4, f1   0, f2   0, f1/N 0.000, Chao1    4.0; 2nd-order inconclusive 1)  not-min 0  unresolved 0  >=k/lines 0  failed 0
+        rec s=0.03: N= 125  sub-k certified  122 (distinct   7, f1   1, f2   1, f1/N 0.008, Chao1    7.5; 2nd-order inconclusive 1)  not-min 0  unresolved 1  >=k/lines 2  failed 0
+        rec s=0.05: N= 125  sub-k certified  114 (distinct   9, f1   3, f2   0, f1/N 0.026, Chao1   12.0; 2nd-order inconclusive 0)  not-min 0  unresolved 1  >=k/lines 10  failed 0
+         rec s=0.1: N= 125  sub-k certified   71 (distinct  17, f1   7, f2   2, f1/N 0.099, Chao1   29.2; 2nd-order inconclusive 1)  not-min 0  unresolved 1  >=k/lines 53  failed 0
+           rec all: N= 500  sub-k certified  432 (distinct  18, f1   7, f2   2, f1/N 0.016, Chao1   30.2; 2nd-order inconclusive 3)  not-min 0  unresolved 3  >=k/lines 65  failed 0
+            pooled: N=1000  sub-k certified  853 (distinct  21, f1   6, f2   2, f1/N 0.007, Chao1   30.0; 2nd-order inconclusive 7)  not-min 1  unresolved 12  >=k/lines 134  failed 0
+
+certified sub-k classes (S_exact, hits by run):
+  10.99678339663159163950   219  {'rec': 95, 'cand': 124}
+  10.99679327395374924222   119  {'rec': 72, 'cand': 47}
+  10.99718876013594760368   236  {'rec': 108, 'cand': 128}
+  10.99719765402827360197   166  {'rec': 97, 'cand': 69}
+  10.99756726622101311218     7  {'rec': 4, 'cand': 3}
+  10.99756849434017632669     1  {'rec': 1}
+  10.99762847524631761731     5  {'rec': 2, 'cand': 3}
+  10.99763020497943474525     5  {'rec': 2, 'cand': 3}
+  10.99784088858674094354     1  {'cand': 1}
+  10.99792111363696775698     4  {'rec': 3, 'cand': 1}
+  10.99793569653433055939     1  {'cand': 1}
+  10.99796436368636113344     3  {'rec': 1, 'cand': 2}
+  10.99796787986905580211     1  {'rec': 1}
+  10.99819368031444198718     3  {'rec': 1, 'cand': 2}
+  10.99824969255996623869     2  {'rec': 1, 'cand': 1}
+  10.99841239090868854806    29  {'rec': 16, 'cand': 13}
+  10.99841389280699495822    40  {'rec': 23, 'cand': 17}
+  10.99879066485266600117     1  {'rec': 1}
+  10.99885633254920004275     7  {'rec': 3, 'cand': 4}
+  10.99886934262144914597     1  {'cand': 1}
+  10.99888759728561407412     2  {'rec': 1, 'cand': 1}
+
+other outcomes:
+  >=k 11.0000000 t40 L  3
+  >=k 11.0000000 t41 L  7
+  >=k 11.0000000 t42 L  23
+  >=k 11.0000000 t43 L  19
+  >=k 11.0000000 t44 L  11
+  >=k 11.0000000 t45 L  3
+  >=k 11.0000000 t46 L  2
+  >=k 11.0000000 t47 L  1
+  >=k 11.0000000 t48 L  1
+  >=k 11.0000000 t49 L  1
+  >=k 11.0009674 t46  1
+  >=k 11.0009685 t45  1
+  >=k 11.0016290 t42 L  2
+  >=k 11.0018985 t42 L  1
+  >=k 11.0018985 t43 L  1
+  >=k 11.0042943 t44  2
+  >=k 11.0042943 t45  4
+  >=k 11.0042943 t46  1
+  >=k 11.0048881 t44  1
+  >=k 11.0130745 t39 L  1
+  >=k 11.0132609 t38 L  1
+  >=k 11.0173904 t41  2
+  >=k 11.0184806 t40 L  1
+  >=k 11.0190027 t40 L  1
+  >=k 11.0197992 t43  1
+  >=k 11.0197992 t44  1
+  >=k 11.0211069 t42  2
+  >=k 11.0217831 t40  1
+  >=k 11.0217835 t43  1
+  >=k 11.0221275 t42  2
+  >=k 11.0228774 t44  1
+  >=k 11.0231494 t46  1
+  >=k 11.0242343 t43  1
+  >=k 11.0260048 t40 L  2
+  >=k 11.0278932 t42  1
+  >=k 11.0278932 t43  1
+  >=k 11.0280415 t43  1
+  >=k 11.0333373 t44 L  1
+  >=k 11.0333375 t46  1
+  >=k 11.0423521 t42  2
+  >=k 11.0459813 t42  1
+  >=k 11.0503662 t45  1
+  >=k 11.0503662 t46  1
+  >=k 11.0522012 t44  1
+  >=k 11.0752254 t48  1
+  >=k 11.0823893 t50  2
+  >=k 11.1213203 t45  2
+  >=k 11.1213203 t48  2
+  >=k 11.1213203 t49  1
+  >=k 11.1213203 t50  1
+  >=k 11.1213203 t52  1
+  >=k 11.1213203 t56  1
+  >=k 11.1554127 t49  3
+  >=k 11.1554127 t50  1
+  >=k 11.2426407 t80  1
+  >=k 11.2426407 t84  1
+  >=k 11.2426407 t85  1
+  >=k 11.2426407 t88  1
+  not-min ~10.9988168  1
+  unresolved ~10.9984124  2
+  unresolved ~10.9984139  9
+  unresolved ~10.9987907  1

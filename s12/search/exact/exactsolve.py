@@ -260,6 +260,11 @@ def vv_branch_test(P, cands, vv, tol):
 
 
 # ------------------------------------------------------------------------------------------------- 3. KKT solve
+class Degenerate(RuntimeError):
+    """Newton's Jacobian turned singular near convergence: the independent subset B chosen at the f64 input became
+    dependent at the exact point (e.g. two near-parallel contacts).  run() re-chooses B at the current point."""
+
+
 class KKT:
     def __init__(self, P, A):
         self.P, self.A = P, list(A)
@@ -390,6 +395,10 @@ class KKT:
             if it > 6 and hist[-1] > 1e3 * min(hist):
                 raise RuntimeError(f'Newton diverging: residual history {hist}')
             K = self.jac(np.array([float(l) for l in lam]))
+            if nr < 1e-8 and np.linalg.cond(K) > 1e13:
+                self.lam_mp = lam
+                self.newton_hist = hist
+                raise Degenerate(f'KKT Jacobian singular near convergence (residual {float(nr):.1e})')
             d = sla.lu_solve(sla.lu_factor(K), -np.array([float(f) for f in F]))
             # backtracking: halve the step while the residual grows by more than 10x
             base = ([P.get(v) for v in self.Vf], list(lam))
@@ -779,18 +788,33 @@ def run(path, dps=80, eps='1e-20', outdir=None, algdeg=0, tol=0, quiet=False, fo
         if dS is not None and dS < -1e-6:
             return not_jammed(dS, nvv, 'a first-order descent exists once corner-corner touches may slip along either '
                               'side (an optimizer that linearises each pair on one fixed separating axis can stall here).')
-        # jammed with corner-corner disjunctions but not with smooth contacts: try "near side-side" incidences
-        # (nearly parallel touching sides whose angle has not converged in f64)
-        for atol in (1e-6, 1e-5, 1e-4, 1e-3, 3e-3):
-            tol = 1e-7
-            cands, vv = find_contacts(P, tol, atol=atol)
+        # Jammed with corner-corner disjunctions but not with smooth contacts.  The MILP minimum over the union of
+        # branches is >= 0, so every branch is jammed and (LP duality) has an equilibrium: take one branch (each
+        # corner-corner touch on its best separating line) as equations.  The certificate below is checked exactly
+        # whatever the branch; second-order statements are then for that branch.
+        use_vv = False
+        for tol in (1e-8, 1e-7, 1e-6):
+            cands, vv = find_contacts(P, tol, use_vv=True)
             J, g = jacobian(P, cands)
             lam, supp, eta = max_support(J)
             if eta < 1e-8:
+                use_vv = True
+                atol = 0.0
+                log_(f'  equilibrium with corner-corner touches on their best separating line (tol {tol:g})')
                 break
+        # else: "near side-side" incidences (nearly parallel touching sides whose angle has not converged in f64)
+        if not use_vv:
+            for atol in (1e-6, 1e-5, 1e-4, 1e-3, 3e-3):
+                tol = 1e-7
+                cands, vv = find_contacts(P, tol, atol=atol)
+                J, g = jacobian(P, cands)
+                lam, supp, eta = max_support(J)
+                if eta < 1e-8:
+                    break
         if eta >= 1e-8:
             return not_jammed(dS, nvv, 'no equilibrium with smooth contacts (not first-order jammed).')
-    use_vv = False
+    else:
+        use_vv = False
     forced = []
     if force:
         fp = {tuple(sorted(p)) for p in force}
@@ -827,7 +851,20 @@ def run(path, dps=80, eps='1e-20', outdir=None, algdeg=0, tol=0, quiet=False, fo
         kk = KKT(P, Eq)
         try:
             kk.setup(np.concatenate([lamA, np.zeros(len(weakc) + len(forced))]), log_)
-            ok = kk.newton(mpf(10) ** (-(dps - 12)), log_=log_)
+            for resetup in range(4):
+                try:
+                    ok = kk.newton(mpf(10) ** (-(dps - 12)), log_=log_)
+                    break
+                except Degenerate as ex:
+                    if resetup == 3:
+                        raise
+                    # re-choose the independent subset at the (now nearly exact) point, multipliers carried over
+                    lam_full = np.zeros(len(Eq))
+                    for r, b in enumerate(kk.B):
+                        lam_full[b] = float(kk.lam_mp[r])
+                    log_(f'  {ex}: re-choosing the independent contacts at the current point (round {resetup + 1})')
+                    rep['kkt_resetups'] = resetup + 1
+                    kk.setup(lam_full, log_)
         except (RuntimeError, ValueError, np.linalg.LinAlgError) as ex:
             log_(f'  !! KKT solve failed: {str(ex)[:200]}')
             rep.update(status='solve failed', S_exact=None, cert_valid=None, vv_milp_dS=None)

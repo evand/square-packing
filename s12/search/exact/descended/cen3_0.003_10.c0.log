@@ -1,0 +1,27 @@
+== /home/evand/math/square-packing/public/.claude/worktrees/agent-a90d6fefa1c862279/s12/search/packer/exact/descended/cen3_0.003_10.c0.txt: n = 110, S_in = 10.99719766358428
+  contacts: 579 candidate incidences (|gap| < 1e-07), 58 vertex-vertex touches set aside; jam-LP dual residual 1.3e-10; load-bearing set 549 contacts on 108 squares; free squares (rattlers / force-free): [52, 77]
+  projection onto the contact equations: max |g| 9.9e-08 -> 7.2e-69 (6 steps)
+  KKT: |A| = 570 contacts, independent |B| = 323, variables 325 (2 frozen flat), system 646x646, cond ~ 9.1e+02
+  Newton: 5 residual evaluations, residual 7.4e-16 -> 1.5e-73
+  free squares re-placed: min clearance -2.61e-15; 1 with clearance < 1e-12
+  free squares [52] cannot be given positive clearance: promoted into the KKT system; re-solving
+  projection onto the contact equations: max |g| 9.9e-08 -> 3.8e-69 (6 steps)
+  KKT: |A| = 578 contacts, independent |B| = 327, variables 328 (1 frozen flat), system 654x654, cond ~ 8.3e+02
+  Newton: 5 residual evaluations, residual 8.3e-16 -> 4.0e-74
+  free squares re-placed: min clearance 0.00012; 0 with clearance < 1e-12
+  29 weakly active (force-free) contacts kept closed
+  redundant contacts (251): max |g| = 3.2e-80; frozen flat variables (1): max |dL/dv| = 6.6e-83
+  S = 10.997197654028273601979566267528359902451041884006007217604359815   (input 10.99719766358428, shift -9.56e-9)
+  17 contacts closed at the exact point but not at the input: corner 3 of #24 on side 2 of #23, corner 1 of #23 on side 0 of #24, corner 0 of #25 on side 2 of #24, corner 2 of #24 on side 0 of #25, corner 1 of #48 on side 3 of #41, corner 3 of #41 on side 1 of #48 ...
+  load-bearing set at the exact point: 561 contacts (was 549 at the input); 4 of the input support carry no force
+  multipliers: equilibrium residual 0.0e+00; best strictly positive choice over the 561 load-bearing contacts: min lambda = 5.594e-05, max 1.923e-01
+  zero modes: 13 of 13 realised by exact motions at fixed S (step 1e-3 both ways, projection residual <= 2.3e-61, correction <= 5.8e-12 t^2, |dS| <= 5.8e-62)
+  second order: rank J_A = 312, dim null(J_A) = 13; reduced Hessian: #neg 0, #zero 13, min eig -6.219323251853011e-17, min positive None
+    => local minimum of S, strict modulo 13 exact flat motions (PD on the rest of null(J_A)); the configuration is not isolated
+  first-order rigid squares: 95 of 108 load-bearing; squares in zero modes: [11, 15, 24, 32, 39, 46, 52, 53, 54, 58, 63, 75, 78]
+  corner-corner branches (61 touches as disjunctions, MILP): min first-order dS = 0.00e+00 => jammed in every branch
+  feasibility (mp SAT): active pairs min gap -2.64e-80; non-active pairs min -7.38e-81 (66, 67); vertex-vertex min -7.38e-81; non-active walls min -1.05e-81
+  308 pairs/walls touch (|SAT gap| < 1e-12; load-bearing, weakly active or corner-corner); every other pair/wall is separated by >= 0.00012 (77, 'L')
+  weakly active (|gap| < 1e-12, not load-bearing): [('0.0', 11, 83), ('-2.1e-81', 15, 24), ('-3.2e-81', 32, 39), ('8.4e-81', 46, 52), ('-5.3e-81', 52, 58), ('8.4e-81', 53, 54), ('-6.3e-81', 54, 63), ('0.0', 58, 96), ('0.0', 63, 85), ('-7.4e-81', 66, 67), ('2.1e-81', 67, 69), ('0.0', 75, 76)] ...
+  certificate (cen3_0.003_10.c0.cert): exact check VALID; S' = 10.997197654028273602089538244069 (S' - S = 1.1e-19); exact min wall 5.00e-21, min pair 1.00e-20
+  done in 3.5 s

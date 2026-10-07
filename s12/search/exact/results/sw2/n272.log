@@ -1,0 +1,21 @@
+== inputs/rd1_n272.txt: n = 272, S_in = 16.968110145769902
+  contacts: 1502 candidate incidences (|gap| < 1e-09), 179 vertex-vertex touches set aside; jam-LP dual residual 3.2e-08; load-bearing set 1497 contacts on 270 squares; free squares (rattlers / force-free): [14, 269]
+  projection onto 777 independent of 1502 contact equations: max |g| 7.0e-15 -> 5.9e-69 (5 steps)
+  KKT: |A| = 1502 contacts, independent |B| = 777, variables 811 (32 frozen flat), system 1556x1556, cond ~ 4.7e+03
+  Newton: 7 residual evaluations, residual 5.2e-08 -> 2.6e-77
+  free squares re-placed: min clearance 0.000381; 0 with clearance < 1e-12
+  5 weakly active (force-free) contacts kept closed
+  redundant contacts (725): max |g| = 2.9e-78; frozen flat variables (32): max |dL/dv| = 6.1e-79
+  S = 16.968110145769600504835678134133437948168682402063625338217112194   (input 16.968110145769902, shift -3.01e-13)
+  load-bearing set at the exact point: 1489 contacts (was 1497 at the input); 8 of the input support carry no force
+  multipliers: equilibrium residual 0.0e+00; best strictly positive choice over the 1489 load-bearing contacts: min lambda = 4.975e-06, max 2.001e-01
+  zero modes: 40 of 40 realised by exact motions at fixed S (step 1e-3 both ways, projection residual <= 9.7e-61, correction <= 3.3e-11 t^2, |dS| <= 1.6e-37)
+  second order: rank J_A = 769, dim null(J_A) = 42; reduced Hessian: #neg 0, #zero 40, min eig -1.927813131946558e-16, min positive 0.00596706671563917
+    => local minimum of S, strict modulo 40 exact flat motions (PD on the rest of null(J_A)); the configuration is not isolated
+  first-order rigid squares: 148 of 270 load-bearing; squares in zero modes: [0, 2, 5, 11, 12, 13, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 182, 187, 189, 193, 195, 199, 205, 210, 215, 216, 222, 228, 248]
+  corner-corner branches (179 touches as disjunctions, MILP): min first-order dS = 0.00e+00 => jammed in every branch
+  feasibility (mp SAT): active pairs min gap -1.32e-77; non-active pairs min -1.15e-78 (182, 184); vertex-vertex min -7.69e-79; non-active walls min 4.42e-7
+  768 pairs/walls touch (|SAT gap| < 1e-12; load-bearing, weakly active or corner-corner); every other pair/wall is separated by >= 5.8e-8 (215, 220)
+  weakly active (|gap| < 1e-12, not load-bearing): [('-1.2e-78', 182, 184), ('-3.4e-79', 189, 195), ('1.7e-79', 199, 204), ('-4.8e-80', 205, 209), ('-4.8e-80', 215, 216), ('-7.0e-79', 216, 222), ('4.9e-79', 228, 230), ('-5.1e-80', 248, 253), ('4.0e-80', 6, 9), ('4.2e-80', 7, 8), ('-4.3e-80', 7, 10), ('1.0e-79', 15, 21)] ...
+  certificate (rd1_n272.cert): exact check VALID; S' = 16.968110145769600505005359235592 (S' - S = 1.7e-19); exact min wall 5.00e-21, min pair 1.00e-20
+  done in 43.1 s

@@ -1,0 +1,22 @@
+== /home/evand/math/square-packing/public/.claude/worktrees/agent-a90d6fefa1c862279/s12/search/packer/exact/descended/cen3_0.1_28.c0.txt: n = 110, S_in = 10.997567271447501
+  !! no contact tolerance in the ladder gives an equilibrium with smooth contacts (residual 2.1e-08)
+  contacts: 613 candidate incidences (|gap| < 1e-07, near side-side < 0.0001), 79 vertex-vertex touches set aside; jam-LP dual residual 0.0e+00; load-bearing set 613 contacts on 110 squares; free squares (rattlers / force-free): []
+  projection onto the contact equations: max |g| 5.1e-05 -> 9.2e-69 (7 steps)
+  KKT: |A| = 613 contacts, independent |B| = 331, variables 331 (0 frozen flat), system 662x662, cond ~ 4.7e+03
+  Newton: 5 residual evaluations, residual 9.7e-16 -> 1.2e-73
+  0 weakly active (force-free) contacts kept closed
+  redundant contacts (282): max |g| = 2.5e-80; frozen flat variables (0): max |dL/dv| = 0.0e+00
+  S = 10.997567272534772248718323479050360239455097968654304728260283475   (input 10.997567271447501, shift 1.09e-9)
+  7 contacts closed at the exact point but not at the input: corner 1 of #47 on side 3 of #40, corner 3 of #40 on side 1 of #47, corner 1 of #48 on side 3 of #41, corner 3 of #41 on side 1 of #48, corner 2 of #93 on side 1 of #92, corner 3 of #93 on side 1 of #92 ...
+  load-bearing set at the exact point: 620 contacts (was 613 at the input); 0 of the input support carry no force
+  multipliers: equilibrium residual 9.6e-07; best strictly positive choice over the 620 load-bearing contacts: min lambda = None, max nan
+  !! no multiplier lambda >= 0 balances the load at the exact point: NOT a KKT point of min S
+  second order: rank J_A = 331, dim null(J_A) = 0; reduced Hessian: #neg 0, #zero 0, min eig None, min positive None
+    => rigid (null(J_A) = 0)
+  first-order rigid squares: 110 of 110 load-bearing; squares in zero modes: []
+  corner-corner branches (81 touches as disjunctions, MILP): min first-order dS = -1.93e-05 => DESCENT in some branch: not a local minimum
+  feasibility (mp SAT): active pairs min gap -2.21e-80; non-active pairs min 0.000273 (66, 69); vertex-vertex min -9.49e-81; non-active walls min 0.0429
+  326 pairs/walls touch (|SAT gap| < 1e-12; load-bearing, weakly active or corner-corner); every other pair/wall is separated by >= 0.000273 (66, 69)
+  weakly active (|gap| < 1e-12, not load-bearing): [('0.0', 2, 7), ('0.0', 3, 6), ('1.1e-81', 3, 8), ('1.1e-81', 4, 7), ('2.1e-81', 5, 8), ('0.0', 6, 10), ('0.0', 7, 9), ('1.1e-81', 8, 10), ('0.0', 10, 11), ('6.3e-81', 12, 22), ('1.9e-80', 13, 21), ('2.1e-81', 13, 23)] ...
+  certificate (cen3_0.1_28.c0.cert): exact check VALID; S' = 10.997567272534772248828299151776 (S' - S = 1.1e-19); exact min wall 5.00e-21, min pair 1.00e-20
+  done in 1.2 s

@@ -101,6 +101,9 @@ nondecreasing, so Friedman's C1 (A1) points at no specific n today; it would if 
   some explicit beating family is folklore (Erdős–Graham with explicit constants, A13); the crossover is bookkeeping.
 * Does the many-angle regime spread down from the top of each k-interval as k grows?  Related: are optimal packings
   eventually asymmetric?
+* (Evan, 10-04) How many locally optimal (rigid) packings exist at n = 90, and how are their sides distributed?  Guess: exponentially
+  many jammed at exactly 10 (any full axis line of 10 pins the side), sub-10 basins rare; that would make "hard for annealing"
+  precise.  Measurable with `search/packer` (quench, squeeze, dedupe by side + contact graph).  Cf. jlevy H-012.
 
 ---
 

@@ -1,0 +1,13 @@
+{
+ "input": "/home/evand/math/square-packing/public/.claude/worktrees/agent-a90d6fefa1c862279/s12/search/packer/exact/descended/cen3_0.003_1.c0.txt",
+ "n": 110,
+ "S_input": "10.996813433547853",
+ "dps": 80,
+ "jam_residual": 0.0003880026438773219,
+ "status": "not jammed",
+ "vv_milp_dS": -0.0016492953727633227,
+ "n_vv": 76,
+ "S_exact": null,
+ "cert_valid": null,
+ "why": "a first-order descent exists once corner-corner touches may slip along either side (the f64 squeeze linearises each pair on one fixed separating axis and stalls here)."
+}

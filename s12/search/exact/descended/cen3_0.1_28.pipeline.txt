@@ -1,0 +1,7 @@
+cycle 0: input S = 10.997567271447501, exact S = 10.9975672725347722487183, MILP dS* = -1.9344468140438747e-05, descend
+    round 0: S = 10.9975672725348, MILP first-order dS* = -1.934e-05
+      kick -> 10.9975672725221, slp2 -> 10.9975672662288 (19s)
+    round 1: S = 10.9975672662288, MILP first-order dS* = -6.769e-07
+cycle 1: input S = 10.997567266228822, exact S = -, MILP dS* = None, descend
+    round 0: S = 10.9975672662288, MILP first-order dS* = -6.769e-07
+    no decrease; stop

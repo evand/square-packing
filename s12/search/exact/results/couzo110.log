@@ -1,4 +1,4 @@
-== inputs/cand110.txt: n = 110, S_in = 10.996783403149346
+== inputs/couzo110.txt: n = 110, S_in = 10.996783403149346
   contacts: 599 candidate incidences (|gap| < 1e-07), 69 vertex-vertex touches set aside; jam-LP dual residual 2.0e-10; load-bearing set 552 contacts on 109 squares; free squares (rattlers / force-free): [77]
   projection onto 328 independent of 598 contact equations: max |g| 9.3e-08 -> 2.8e-68 (6 steps)
   KKT: |A| = 598 contacts, independent |B| = 325, variables 328 (3 frozen flat), system 650x650, cond ~ 2.5e+03
@@ -18,5 +18,5 @@
   feasibility (mp SAT): active pairs min gap -1.44e-73; non-active pairs min -7.52e-75 (75, 78); vertex-vertex min -2.56e-75; non-active walls min -7.94e-75
   310 pairs/walls touch (|SAT gap| < 1e-12; load-bearing, weakly active or corner-corner); every other pair/wall is separated by >= 2.6e-7 (53, 54)
   weakly active (|gap| < 1e-12, not load-bearing): [('-2.6e-75', 36, 37), ('1.0e-75', 37, 38), ('5.5e-76', 38, 39), ('3.1e-76', 41, 42), ('1.8e-75', 42, 76), ('-2.9e-75', 49, 50), ('-3.1e-76', 50, 51), ('1.9e-75', 51, 52), ('-1.8e-77', 54, 63), ('-5.5e-75', 63, 85), ('3.7e-73', 66, 67), ('1.5e-73', 67, 69)] ...
-  certificate (cand110.cert): exact check VALID; S' = 10.996783396631591639612746267957 (S' - S = 1.1e-19); exact min wall 5.00e-21, min pair 1.00e-20
-  done in 4.2 s
+  certificate (couzo110.cert): exact check VALID; S' = 10.996783396631591639612746267957 (S' - S = 1.1e-19); exact min wall 5.00e-21, min pair 1.00e-20
+  done in 4.4 s

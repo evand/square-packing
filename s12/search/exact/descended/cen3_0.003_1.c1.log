@@ -1,0 +1,20 @@
+== /home/evand/math/square-packing/public/.claude/worktrees/agent-a90d6fefa1c862279/s12/search/packer/exact/descended/cen3_0.003_1.c1.txt: n = 110, S_in = 10.996793274060735
+  contacts: 596 candidate incidences (|gap| < 1e-08), 76 vertex-vertex touches set aside; jam-LP dual residual -0.0e+00; load-bearing set 573 contacts on 108 squares; free squares (rattlers / force-free): [67, 77]
+  projection onto the contact equations: max |g| 8.6e-09 -> 5.4e-74 (6 steps)
+  KKT: |A| = 593 contacts, independent |B| = 322, variables 325 (3 frozen flat), system 644x644, cond ~ 2.2e+03
+  Newton: 5 residual evaluations, residual 6.9e-16 -> 2.6e-74
+  free squares re-placed: min clearance 9.93e-7; 0 with clearance < 1e-12
+  20 weakly active (force-free) contacts kept closed
+  redundant contacts (271): max |g| = 1.2e-75; frozen flat variables (3): max |dL/dv| = 3.9e-76
+  S = 10.9967932739537492422230221993768718942121552940373660121884325   (input 10.996793274060735, shift -1.07e-10)
+  multipliers: equilibrium residual 0.0e+00; best strictly positive choice over the 573 load-bearing contacts: min lambda = 5.799e-05, max 2.115e-01
+  zero modes: 10 of 10 realised by exact motions at fixed S (step 1e-3 both ways, projection residual <= 7.0e-61, correction <= 8.6e-12 t^2, |dS| <= 7.5e-62)
+  second order: rank J_A = 315, dim null(J_A) = 10; reduced Hessian: #neg 0, #zero 10, min eig -5.23128078732127e-17, min positive None
+    => local minimum of S, strict modulo 10 exact flat motions (PD on the rest of null(J_A)); the configuration is not isolated
+  first-order rigid squares: 98 of 108 load-bearing; squares in zero modes: [11, 49, 50, 51, 52, 53, 54, 63, 75, 78]
+  corner-corner branches (76 touches as disjunctions, MILP): min first-order dS = 0.00e+00 => jammed in every branch
+  feasibility (mp SAT): active pairs min gap -1.88e-75; non-active pairs min -4.75e-76 (54, 63); vertex-vertex min -4.14e-76; non-active walls min -2.15e-76
+  313 pairs/walls touch (|SAT gap| < 1e-12; load-bearing, weakly active or corner-corner); every other pair/wall is separated by >= 1.99e-8 (11, 83)
+  weakly active (|gap| < 1e-12, not load-bearing): [('-5.3e-77', 49, 50), ('4.7e-77', 50, 51), ('-4.1e-77', 51, 52), ('-4.7e-76', 54, 63), ('8.1e-77', 63, 85), ('-6.1e-77', 75, 78), ('1.8e-77', 2, 7), ('2.1e-81', 3, 6), ('1.8e-77', 3, 8), ('0.0', 4, 7), ('0.0', 5, 8), ('1.2e-78', 6, 10)] ...
+  certificate (cen3_0.003_1.c1.cert): exact check VALID; S' = 10.996793273953749242332990132117 (S' - S = 1.1e-19); exact min wall 5.00e-21, min pair 1.00e-20
+  done in 2.5 s

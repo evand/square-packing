@@ -1,0 +1,1 @@
+cycle 0: input S = 10.99719766358428, exact S = 10.9971976540282736019795, MILP dS* = 0.0, jammed in every branch: stop

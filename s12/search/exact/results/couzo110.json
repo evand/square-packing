@@ -1,5 +1,5 @@
 {
- "input": "inputs/cand110.txt",
+ "input": "inputs/couzo110.txt",
  "n": 110,
  "S_input": "10.996783403149346",
  "dps": 80,
@@ -268,5 +268,5 @@
  "S_cert_decimal": "10.996783396631591639612746267957",
  "cert_min_wall": 5e-21,
  "cert_min_pair": 9.99999999999999e-21,
- "seconds": 4.2
+ "seconds": 4.4
 }

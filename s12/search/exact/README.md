@@ -14,8 +14,8 @@ Outputs in `results/` (or `--out`): `NAME.log` (report), `NAME.json`, `NAME.exac
 `NAME.cert` (certificate).  Uses one core (BLAS threads pinned to 1); n = 110 takes ~5 s at 80 digits, n = 300 a few minutes.
 Requires python3 with numpy, scipy (HiGHS LP/MILP), mpmath.  The verifiers need only the standard library.
 
-**`batch/`: every record in jlevy's register (n = 1–324), 2026-10-05.**  321 certified (315 numerically KKT local
-minima), every n ≤ 104 included; 48 certified values lie 3e-13 … 5e-11 below the register's printed bounds (the exact
+**`batch/`: every record in jlevy's register (n = 1–324), 2026-10-05.**  323 certified (317 numerically KKT local
+minima), every n ≤ 291 included; 50 certified values lie 3e-13 … 5e-11 below the register's printed bounds (the exact
 optimum of the same packing).  See `batch/README.md`.
 
 ## Method
@@ -93,7 +93,7 @@ verified rational certificate; free = squares carrying no force (rattlers / forc
 minimum multiplier over the load-bearing set (> 0: strict complementarity); 2nd order = reduced Hessian on null(J_A),
 "exact flat modes" = zero modes verified to be exact motions at fixed S; MILP = first-order jamming with corner–corner
 touches as disjunctions.  Inputs: site JSON (n = 5, 10, 11, 17, 71), the s(110) record before and after Couzo's
-2026-09-27 improvement (rec110, cand110: our independent rediscovery of his packing).
+2026-09-27 improvement (rec110, couzo110: our independent rediscovery of his packing).
 
 | input | n | S input | S exact (KKT point) | certified S' | free squares | min λ | 2nd order | corner-corner MILP |
 | site5 | 5 | 2.7071067811865475 | 2.707106781186547524400844362104 | 2.707106781186547524427915429917 | [] | 1.25e-01 | PD (strict) | jammed |
@@ -102,13 +102,13 @@ touches as disjunctions.  Inputs: site JSON (n = 5, 10, 11, 17, 71), the s(110) 
 | site17 | 17 | 4.675530093604551 | 4.675530093604550951634111270483 | 4.67553009360455095168086657142 | [5] | 6.08e-03 | PSD, 3 exact flat modes | jammed |
 | site71 | 71 | 8.9440715575703155 | 8.944071557570315506565203868717 | 8.944071557570315506654644584293 | [2, 22] | 1.87e-05 | PSD, 25 exact flat modes | jammed |
 | **rec110** | 110 | 10.996793274019572 | **10.99679327395374924222302219937** | 10.99679327395374924233299013211 | [67, 77] | 5.80e-05 | PSD, 10 exact flat modes | jammed |
-| **cand110** | 110 | 10.996783403149346 | **10.99678339663159163950277843399** | **10.99678339663159163961274626795** | [77] | 1.08e-04 | PSD, 17 exact flat modes | jammed |
+| **couzo110** | 110 | 10.996783403149346 | **10.99678339663159163950277843399** | **10.99678339663159163961274626795** | [77] | 1.08e-04 | PSD, 17 exact flat modes | jammed |
 
 All 7 certificates check VALID with `verify_cert.py`.  Known values reproduced: s(5) = 2 + 1/√2 (`--algdeg` finds
 2x² − 8x + 7), s(10) = 3 + 1/√2 (2x² − 12x + 17), s(11), s(17), s(71) to all 28–30 digits given on the site.  At 300
 digits `--algdeg 16` finds for s(11) the irreducible octic
 **x⁸ − 20x⁷ + 178x⁶ − 842x⁵ + 1923x⁴ − 496x³ − 6754x² + 12420x − 6865**.  No polynomial of degree ≤ 16 with
-small coefficients was found for s(17), s(71), rec110 or cand110 (150–200 digits).
+small coefficients was found for s(17), s(71), rec110 or couzo110 (150–200 digits).
 
 
 ## Limitations
@@ -118,4 +118,10 @@ small coefficients was found for s(17), s(71), rec110 or cand110 (150–200 digi
 * The contact model needs a reasonably converged input.  Contacts open by more than 1e-6, or nearly parallel sides off
   by more than 3e-3 rad, are not recognised.  A wrong guess is caught (no λ ≥ 0, inconsistent equations, SAT
   violations, MILP descent) rather than silently accepted, but then no exact KKT point is produced.  In the batch this
-  happened at n = 105, 130, 292.
+  happened at n = 292 (n = 105, 130 resolved 10-05 evening, below).
+* Jammed only with corner–corner touches (MILP: jammed in every branch, no smooth equilibrium): every branch is then
+  jammed and has an equilibrium, so exactsolve takes one branch (each touch on its best separating line) as equations
+  before trying near side–side incidences.  Second-order and KKT statements are for that branch.  (Added 10-05; n = 105.)
+* If Newton's Jacobian turns singular near convergence (cond > 1e13 at residual < 1e-8: the independent contact subset
+  chosen at the f64 input becomes dependent at the exact point), the subset is re-chosen at the current point, up to 3
+  times (`kkt_resetups` in the JSON).  (Added 10-05; n = 130.)

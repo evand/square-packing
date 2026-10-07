@@ -1,0 +1,21 @@
+== inputs/sw2_n266.txt: n = 266, S_in = 16.823035606485497
+  contacts: 1676 candidate incidences (|gap| < 1e-09), 247 vertex-vertex touches set aside; jam-LP dual residual 2.3e-09; load-bearing set 1651 contacts on 260 squares; free squares (rattlers / force-free): [26, 101, 146, 225, 245, 263]
+  projection onto 738 independent of 1676 contact equations: max |g| 3.8e-11 -> 2.8e-76 (6 steps)
+  KKT: |A| = 1676 contacts, independent |B| = 738, variables 781 (42 frozen flat), system 1477x1477, cond ~ 8.6e+04
+  Newton: 7 residual evaluations, residual 2.8e-09 -> 1.1e-75
+  free squares re-placed: min clearance 8.28e-7; 0 with clearance < 1e-12
+  25 weakly active (force-free) contacts kept closed
+  redundant contacts (938): max |g| = 1.9e-78; frozen flat variables (42): max |dL/dv| = 5.9e-77
+  S = 16.823035606485442718094607654954193377769377778338894944729802898   (input 16.823035606485497, shift -5.43e-14)
+  load-bearing set at the exact point: 1635 contacts (was 1651 at the input); 16 of the input support carry no force
+  multipliers: equilibrium residual 0.0e+00; best strictly positive choice over the 1635 load-bearing contacts: min lambda = 3.484e-08, max 1.602e-01
+  zero modes: 52 of 52 realised by exact motions at fixed S (step 1e-3 both ways, projection residual <= 8.1e-61, correction <= 8.7e-11 t^2, |dS| <= 1.8e-37)
+  second order: rank J_A = 722, dim null(J_A) = 53; reduced Hessian: #neg 0, #zero 52, min eig -1.1564433205334003e-16, min positive 0.0005717421180552348
+    => local minimum of S, strict modulo 52 exact flat motions (PD on the rest of null(J_A)); the configuration is not isolated
+  first-order rigid squares: 205 of 258 load-bearing; squares in zero modes: [2, 12, 16, 29, 41, 52, 62, 71, 79, 86, 92, 97, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 149, 161, 172, 182, 191, 199, 206, 212, 217, 221, 226, 229, 231, 234, 235, 236, 239, 241, 243, 244, 247, 249, 251, 252, 255, 257, 262, 265]
+  corner-corner branches (247 touches as disjunctions, MILP): min first-order dS = 0.00e+00 => jammed in every branch
+  feasibility (mp SAT): active pairs min gap -7.21e-77; non-active pairs min -8.52e-79 (149, 161); vertex-vertex min -7.93e-79; non-active walls min 1.31e-6
+  800 pairs/walls touch (|SAT gap| < 1e-12; load-bearing, weakly active or corner-corner); every other pair/wall is separated by >= 8.28e-7 (26, 262)
+  weakly active (|gap| < 1e-12, not load-bearing): [('-3.2e-81', 135, 149), ('-2.1e-81', 136, 149), ('-8.5e-79', 149, 161), ('1.4e-80', 161, 172), ('-4.2e-81', 172, 182), ('5.3e-81', 227, 231), ('-1.1e-79', 235, 237), ('-9.8e-80', 236, 239), ('6.3e-81', 237, 239), ('-2.4e-79', 238, 241), ('-7.3e-80', 239, 241), ('9.5e-80', 240, 243)] ...
+  certificate (sw2_n266.cert): exact check VALID; S' = 16.82303560648544271826283801102 (S' - S = 1.68e-19); exact min wall 5.00e-21, min pair 1.00e-20
+  done in 65.9 s

@@ -1,0 +1,19 @@
+{
+ "input": "/home/evand/math/square-packing/public/.claude/worktrees/agent-a90d6fefa1c862279/s12/search/packer/exact/descended/cen3_0.1_28.c1.txt",
+ "n": 110,
+ "S_input": "10.997567266228822",
+ "dps": 80,
+ "contact_tol": 1e-07,
+ "near_parallel_tol": 0.001,
+ "vertex_vertex_used": false,
+ "n_candidates": 611,
+ "n_vv": 81,
+ "n_active": 611,
+ "jam_residual": 0.0,
+ "load_bearing_squares": 110,
+ "free_squares": [],
+ "status": "solve failed",
+ "S_exact": null,
+ "cert_valid": null,
+ "vv_milp_dS": null
+}
