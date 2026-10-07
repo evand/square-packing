@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Inline SVG of the s(k^2-3) fixed-profile family, for s12/docs/k2m3.html.
+"""Inline SVG of the s(k^2-3) fixed-profile family, for docs/k2m3.html.
 
-Reads the family file (s12/search/qx2_data/L4_k02_family.txt: profile pi, corner module nu, R = w = 2,
+Reads the family file (search/qx2_data/L4_k02_family.txt: profile pi, corner module nu, R = w = 2,
 Lebesgue from a = 9/5), builds the box measure mu_k exactly as QUADRANT_EXACT.md section 2 and
 notes/lean-bentz-reduction.md describe it (nu at the four corners, pi on [R, k-R] along each wall with
 the closed end x = k-R a phase-0 cross-section, Lebesgue on [a, k-a]^2), and prints an SVG drawing.
@@ -17,8 +17,8 @@ from fractions import Fraction as F
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-FAM = ROOT / 's12/search/qx2_data/L4_k02_family.txt'
-BOX7 = ROOT / 's12/search/qx2_data/L4_k02_box7.txt'
+FAM = ROOT / 'search/qx2_data/L4_k02_family.txt'
+BOX7 = ROOT / 'search/qx2_data/L4_k02_box7.txt'
 R, A = 2, F(9, 5)
 D = F(423621306389, 500000000000)
 

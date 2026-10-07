@@ -1,12 +1,12 @@
 name: pages
 
-# The site root is site/www/; the write-ups in s12/docs/ are served at /s12/ (s(11), s(12)), /s13/, /s21/, /s32/, /s45/,
+# The site root is site/www/; the write-ups in docs/ are served at /s12/ (s(11), s(12)), /s13/, /s21/, /s32/, /s45/,
 # /s60/ and /k2m3/ (s(k^2-3) = k).
 
 on:
   push:
     branches: [main]
-    paths: ['site/www/**', 's12/docs/**', 's12/certificates/rung2/s13_closed_cover_4.txt', 's12/certificates/s32/s32_closed_cover_6.txt', 's12/certificates/s21/s21_mixed_cover_5.txt', 's12/certificates/s45/s45_mixed_cover_7.txt', 's12/certificates/s60/s60_mixed_cover_8.txt', 's12/certificates/k2m3/L4_k02_box7.txt', '.github/workflows/pages.yml']
+    paths: ['site/www/**', 'docs/**', 'certificates/rung2/s13_closed_cover_4.txt', 'certificates/s32/s32_closed_cover_6.txt', 'certificates/s21/s21_mixed_cover_5.txt', 'certificates/s45/s45_mixed_cover_7.txt', 'certificates/s60/s60_mixed_cover_8.txt', 'certificates/k2m3/L4_k02_box7.txt', '.github/workflows/pages.yml']
   workflow_dispatch:
 
 permissions:
@@ -27,25 +27,25 @@ jobs:
         run: |
           mkdir -p _site/s12
           cp -r site/www/. _site/
-          cp s12/docs/index.html _site/s12/index.html
+          cp docs/index.html _site/s12/index.html
           mkdir -p _site/s32
-          cp s12/docs/s32.html _site/s32/index.html
-          cp s12/certificates/s32/s32_closed_cover_6.txt _site/s32/cover.txt
+          cp docs/s32.html _site/s32/index.html
+          cp certificates/s32/s32_closed_cover_6.txt _site/s32/cover.txt
           mkdir -p _site/s21
-          cp s12/docs/s21.html _site/s21/index.html
-          cp s12/certificates/s21/s21_mixed_cover_5.txt _site/s21/cover.txt
+          cp docs/s21.html _site/s21/index.html
+          cp certificates/s21/s21_mixed_cover_5.txt _site/s21/cover.txt
           mkdir -p _site/s13
-          cp s12/docs/s13.html _site/s13/index.html
-          cp s12/certificates/rung2/s13_closed_cover_4.txt _site/s13/cover.txt
+          cp docs/s13.html _site/s13/index.html
+          cp certificates/rung2/s13_closed_cover_4.txt _site/s13/cover.txt
           mkdir -p _site/s45
-          cp s12/docs/s45.html _site/s45/index.html
-          cp s12/certificates/s45/s45_mixed_cover_7.txt _site/s45/cover.txt
+          cp docs/s45.html _site/s45/index.html
+          cp certificates/s45/s45_mixed_cover_7.txt _site/s45/cover.txt
           mkdir -p _site/s60
-          cp s12/docs/s60.html _site/s60/index.html
-          cp s12/certificates/s60/s60_mixed_cover_8.txt _site/s60/cover.txt
+          cp docs/s60.html _site/s60/index.html
+          cp certificates/s60/s60_mixed_cover_8.txt _site/s60/cover.txt
           mkdir -p _site/k2m3
-          cp s12/docs/k2m3.html _site/k2m3/index.html
-          cp s12/certificates/k2m3/L4_k02_box7.txt _site/k2m3/cover.txt
+          cp docs/k2m3.html _site/k2m3/index.html
+          cp certificates/k2m3/L4_k02_box7.txt _site/k2m3/cover.txt
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

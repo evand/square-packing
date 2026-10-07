@@ -495,7 +495,7 @@
     "source": "EvanDaniel2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/evand/square-packing/tree/main/s12",
+    "url": "https://github.com/evand/square-packing/tree/main",
     "note": "680-point weighted certificate s11_lower_3.8143.txt, found 2026-08-26 but first published 2026-09-22, after jlevy's 3.8264; kernel-checked in Lean (s11_ge_3040_797)",
     "date": "2026-09-22"
    },
@@ -585,7 +585,7 @@
     "source": "EvanDaniel2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/evand/square-packing/tree/main/s12",
+    "url": "https://github.com/evand/square-packing/tree/main",
     "note": "2026-08-24; first certificate; kernel-checked in Lean (s12_ge_3920_997)",
     "date": "2026-08-24"
    },
@@ -595,7 +595,7 @@
     "source": "EvanDaniel2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/evand/square-packing/tree/main/s12",
+    "url": "https://github.com/evand/square-packing/tree/main",
     "note": "2026-08-26; 764-point sparsified certificate",
     "date": "2026-08-26"
    },
@@ -605,7 +605,7 @@
     "source": "EvanDaniel2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/evand/square-packing/tree/main/s12",
+    "url": "https://github.com/evand/square-packing/tree/main",
     "note": "2026-08-26; 1736-point weighted certificate; still the best lower bound we know of for n = 12 (jlevy/squares replayed it by a second method and lists it as the verified bound)",
     "date": "2026-08-26"
    },
@@ -635,7 +635,7 @@
     "source": "EvanDaniel2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/evand/square-packing/tree/main/s12",
+    "url": "https://github.com/evand/square-packing/tree/main",
     "note": "2026-08-26; 1736-point weighted certificate; still the best lower bound we know of for n = 12 (jlevy/squares replayed it by a second method and lists it as the verified bound)",
     "date": "2026-08-26"
    },
@@ -1380,7 +1380,7 @@
    "source": "EvanDaniel2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s21",
+   "url": "https://github.com/evand/square-packing/tree/main/certificates/s21",
    "note": "2026-09-27; s(21) = 5: mixed cover of [0,5]^2 (7,536 weighted points + mass spread uniformly on grid-line segments), total 20.8947 < 21, certified by two separately written exact checkers (no shared code; shared point-test lineage); Lean top theorem from the checker hypothesis; unrefereed",
    "date": "2026-09-27",
    "register": "verified"
@@ -1448,7 +1448,7 @@
     "source": "EvanDaniel2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s21",
+    "url": "https://github.com/evand/square-packing/tree/main/certificates/s21",
     "note": "2026-09-23; weighted point certificate (4,604 points) at side 5000/1001, verified exactly; certificates/s21/s21_lower_4.9950.txt",
     "date": "2026-09-23"
    },
@@ -1480,7 +1480,7 @@
     "source": "EvanDaniel2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s21",
+    "url": "https://github.com/evand/square-packing/tree/main/certificates/s21",
     "note": "2026-09-27; s(21) = 5: mixed cover of [0,5]^2 (7,536 weighted points + mass spread uniformly on grid-line segments), total 20.8947 < 21, certified by two separately written exact checkers (no shared code; shared point-test lineage); Lean top theorem from the checker hypothesis; unrefereed",
     "date": "2026-09-27"
    },
@@ -2268,7 +2268,7 @@
    "source": "EvanDaniel2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s32",
+   "url": "https://github.com/evand/square-packing/tree/main/certificates/s32",
    "note": "2026-09-26; s(32) = 6: weighted closed cover of [0,6]^2, total 31.7135 < 32, certified by two exact checkers; kernel-checked in Lean with no hypothesis (S32Lower.lean, 2026-09-28); unrefereed",
    "date": "2026-09-26",
    "register": "verified"
@@ -2307,7 +2307,7 @@
     "source": "EvanDaniel2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s32",
+    "url": "https://github.com/evand/square-packing/tree/main/certificates/s32",
     "note": "2026-09-26; s(32) = 6: weighted closed cover of [0,6]^2, total 31.7135 < 32, certified by two exact checkers; kernel-checked in Lean with no hypothesis (S32Lower.lean, 2026-09-28); unrefereed",
     "date": "2026-09-26"
    },
@@ -2366,7 +2366,7 @@
     "source": "EvanDaniel2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
+    "url": "https://github.com/evand/square-packing/tree/main/certificates/k2m3",
     "note": "2026-09-29; s(33) = 6 as the k = 6 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by an exact checker (search/qx2_zm.py), adversarially reviewed, and independently re-checked over the whole pose space by wand125's separately written checker (github.com/wand125/valid7-independent-check, 2026-10-02; record check rerun and method read here 2026-10-03); the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); unrefereed",
     "date": "2026-09-29"
    },
@@ -3171,7 +3171,7 @@
    "source": "EvanDaniel2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s45",
+   "url": "https://github.com/evand/square-packing/tree/main/certificates/s45",
    "note": "2026-09-27; s(45) = 7: mixed cover of [0,7]^2 (19,989 weighted points + mass spread uniformly on grid-line segments), total 44.7735 < 45, certified by two separately written exact checkers (no shared code; shared point-test lineage); no Lean; unrefereed",
    "date": "2026-09-27",
    "register": "verified"
@@ -3222,7 +3222,7 @@
     "source": "EvanDaniel2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s45",
+    "url": "https://github.com/evand/square-packing/tree/main/certificates/s45",
     "note": "2026-09-27; s(45) = 7: mixed cover of [0,7]^2 (19,989 weighted points + mass spread uniformly on grid-line segments), total 44.7735 < 45, certified by two separately written exact checkers (no shared code; shared point-test lineage); no Lean; unrefereed",
     "date": "2026-09-27"
    },
@@ -3291,7 +3291,7 @@
     "source": "EvanDaniel2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
+    "url": "https://github.com/evand/square-packing/tree/main/certificates/k2m3",
     "note": "2026-09-29; s(46) = 7 as the k = 7 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by an exact checker (search/qx2_zm.py), adversarially reviewed, and independently re-checked over the whole pose space by wand125's separately written checker (github.com/wand125/valid7-independent-check, 2026-10-02; record check rerun and method read here 2026-10-03); the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); unrefereed",
     "date": "2026-09-29"
    },
@@ -4235,7 +4235,7 @@
    "source": "EvanDaniel2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s60",
+   "url": "https://github.com/evand/square-packing/tree/main/certificates/s60",
    "note": "2026-09-28; s(60) = 8: mixed cover of [0,8]^2 (23,744 weighted points + mass spread uniformly on grid-line segments), total 59.8587 < 60, certified by two separately written exact checkers (no shared code; shared point-test lineage); no Lean; unrefereed",
    "date": "2026-09-28",
    "register": "verified"
@@ -4274,7 +4274,7 @@
     "source": "EvanDaniel2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s60",
+    "url": "https://github.com/evand/square-packing/tree/main/certificates/s60",
     "note": "2026-09-28; s(60) = 8: mixed cover of [0,8]^2 (23,744 weighted points + mass spread uniformly on grid-line segments), total 59.8587 < 60, certified by two separately written exact checkers (no shared code; shared point-test lineage); no Lean; unrefereed",
     "date": "2026-09-28"
    },
@@ -4294,7 +4294,7 @@
     "source": "EvanDaniel2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m4",
+    "url": "https://github.com/evand/square-packing/tree/main/certificates/k2m4",
     "note": "2026-10-03; s(60) = 8 as the k = 8 case of s(k^2-4) = k for all k >= 5: for k >= 8 one fixed-profile family of measures (corner modules + periodic wall band of width 3 + Lebesgue interior, total k^2 - 4D, D = 214770225571/200000000000 = 1.073851 > 1), its k = 9 box certified at margin zero by one exact checker (search/qx2_zm.py, the reviewed k^2-3 checker code), adversarially reviewed (three agents, no errors found); no second implementation has checked the k = 9 box yet; the reduction from the 9 x 9 box to every k >= 8, the D4 reduction and the axis-parallel case are kernel-checked in Lean (bentz4_of_validTilt9), so the tilted part of the k = 9 box is the one unformalised step; unrefereed; s(60) = 8 itself was first proved by the separate s60 bundle (2026-09-28), which stays best",
     "date": "2026-10-03"
    }
@@ -4307,7 +4307,7 @@
    "source": "EvanDaniel2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s60",
+   "url": "https://github.com/evand/square-packing/tree/main/certificates/s60",
    "note": "2026-09-28; s(61) = 8 from s(60) = 8 by monotonicity (s(61) >= s(60); the 8 x 8 grid gives <= 8); s(k^2-3) = k had been proved only for k <= 7 (Kearney-Shiu k = 3, Bentz k = 4..7); no Lean; unrefereed",
    "date": "2026-09-28",
    "register": "verified"
@@ -4346,7 +4346,7 @@
     "source": "EvanDaniel2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/s60",
+    "url": "https://github.com/evand/square-packing/tree/main/certificates/s60",
     "note": "2026-09-28; s(61) = 8 from s(60) = 8 by monotonicity (s(61) >= s(60); the 8 x 8 grid gives <= 8); s(k^2-3) = k had been proved only for k <= 7 (Kearney-Shiu k = 3, Bentz k = 4..7); no Lean; unrefereed",
     "date": "2026-09-28"
    },
@@ -4356,7 +4356,7 @@
     "source": "EvanDaniel2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
+    "url": "https://github.com/evand/square-packing/tree/main/certificates/k2m3",
     "note": "2026-09-29; s(61) = 8 as the k = 8 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by an exact checker (search/qx2_zm.py), adversarially reviewed, and independently re-checked over the whole pose space by wand125's separately written checker (github.com/wand125/valid7-independent-check, 2026-10-02; record check rerun and method read here 2026-10-03); the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); unrefereed",
     "date": "2026-09-29"
    },
@@ -5452,7 +5452,7 @@
    "source": "EvanDaniel2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m4",
+   "url": "https://github.com/evand/square-packing/tree/main/certificates/k2m4",
    "note": "2026-10-03; s(77) = 9 as the k = 9 case of s(k^2-4) = k for all k >= 5: for k >= 8 one fixed-profile family of measures (corner modules + periodic wall band of width 3 + Lebesgue interior, total k^2 - 4D, D = 214770225571/200000000000 = 1.073851 > 1), its k = 9 box certified at margin zero by one exact checker (search/qx2_zm.py, the reviewed k^2-3 checker code), adversarially reviewed (three agents, no errors found); no second implementation has checked the k = 9 box yet; the reduction from the 9 x 9 box to every k >= 8, the D4 reduction and the axis-parallel case are kernel-checked in Lean (bentz4_of_validTilt9), so the tilted part of the k = 9 box is the one unformalised step; unrefereed; s(77) = 9 was first proved by wand125 (2026-10-01, history), so this is a second route",
    "date": "2026-10-03",
    "register": "verified"
@@ -5512,7 +5512,7 @@
     "source": "EvanDaniel2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m4",
+    "url": "https://github.com/evand/square-packing/tree/main/certificates/k2m4",
     "note": "2026-10-03; s(77) = 9 as the k = 9 case of s(k^2-4) = k for all k >= 5: for k >= 8 one fixed-profile family of measures (corner modules + periodic wall band of width 3 + Lebesgue interior, total k^2 - 4D, D = 214770225571/200000000000 = 1.073851 > 1), its k = 9 box certified at margin zero by one exact checker (search/qx2_zm.py, the reviewed k^2-3 checker code), adversarially reviewed (three agents, no errors found); no second implementation has checked the k = 9 box yet; the reduction from the 9 x 9 box to every k >= 8, the D4 reduction and the axis-parallel case are kernel-checked in Lean (bentz4_of_validTilt9), so the tilted part of the k = 9 box is the one unformalised step; unrefereed; s(77) = 9 was first proved by wand125 (2026-10-01, history), so this is a second route",
     "date": "2026-10-03"
    }
@@ -5525,7 +5525,7 @@
    "source": "EvanDaniel2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
+   "url": "https://github.com/evand/square-packing/tree/main/certificates/k2m3",
    "note": "2026-09-29; s(78) = 9 as the k = 9 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by an exact checker (search/qx2_zm.py), adversarially reviewed, and independently re-checked over the whole pose space by wand125's separately written checker (github.com/wand125/valid7-independent-check, 2026-10-02; record check rerun and method read here 2026-10-03); the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); unrefereed",
    "date": "2026-09-29",
    "register": "verified"
@@ -5554,7 +5554,7 @@
     "source": "EvanDaniel2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
+    "url": "https://github.com/evand/square-packing/tree/main/certificates/k2m3",
     "note": "2026-09-29; s(78) = 9 as the k = 9 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by an exact checker (search/qx2_zm.py), adversarially reviewed, and independently re-checked over the whole pose space by wand125's separately written checker (github.com/wand125/valid7-independent-check, 2026-10-02; record check rerun and method read here 2026-10-03); the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); unrefereed",
     "date": "2026-09-29"
    },
@@ -6668,7 +6668,7 @@
    "source": "EvanDaniel2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m4",
+   "url": "https://github.com/evand/square-packing/tree/main/certificates/k2m4",
    "note": "2026-10-03; s(96) = 10 as the k = 10 case of s(k^2-4) = k for all k >= 5: for k >= 8 one fixed-profile family of measures (corner modules + periodic wall band of width 3 + Lebesgue interior, total k^2 - 4D, D = 214770225571/200000000000 = 1.073851 > 1), its k = 9 box certified at margin zero by one exact checker (search/qx2_zm.py, the reviewed k^2-3 checker code), adversarially reviewed (three agents, no errors found); no second implementation has checked the k = 9 box yet; the reduction from the 9 x 9 box to every k >= 8, the D4 reduction and the axis-parallel case are kernel-checked in Lean (bentz4_of_validTilt9), so the tilted part of the k = 9 box is the one unformalised step; unrefereed",
    "date": "2026-10-03"
   },
@@ -6706,7 +6706,7 @@
     "source": "EvanDaniel2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m4",
+    "url": "https://github.com/evand/square-packing/tree/main/certificates/k2m4",
     "note": "2026-10-03; s(96) = 10 as the k = 10 case of s(k^2-4) = k for all k >= 5: for k >= 8 one fixed-profile family of measures (corner modules + periodic wall band of width 3 + Lebesgue interior, total k^2 - 4D, D = 214770225571/200000000000 = 1.073851 > 1), its k = 9 box certified at margin zero by one exact checker (search/qx2_zm.py, the reviewed k^2-3 checker code), adversarially reviewed (three agents, no errors found); no second implementation has checked the k = 9 box yet; the reduction from the 9 x 9 box to every k >= 8, the D4 reduction and the axis-parallel case are kernel-checked in Lean (bentz4_of_validTilt9), so the tilted part of the k = 9 box is the one unformalised step; unrefereed",
     "date": "2026-10-03"
    }
@@ -6719,7 +6719,7 @@
    "source": "EvanDaniel2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
+   "url": "https://github.com/evand/square-packing/tree/main/certificates/k2m3",
    "note": "2026-09-29; s(97) = 10 as the k = 10 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by an exact checker (search/qx2_zm.py), adversarially reviewed, and independently re-checked over the whole pose space by wand125's separately written checker (github.com/wand125/valid7-independent-check, 2026-10-02; record check rerun and method read here 2026-10-03); the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); unrefereed",
    "date": "2026-09-29",
    "register": "verified"
@@ -6748,7 +6748,7 @@
     "source": "EvanDaniel2026",
     "year": 2026,
     "status": "preprint",
-    "url": "https://github.com/evand/square-packing/tree/main/s12/certificates/k2m3",
+    "url": "https://github.com/evand/square-packing/tree/main/certificates/k2m3",
     "note": "2026-09-29; s(97) = 10 as the k = 10 case of s(k^2-3) = k for all k >= 6: one fixed-profile family of measures (corner modules + periodic wall band + Lebesgue interior, total k^2 - 4D, D = 423621306389/500000000000 = 0.847243), its k = 7 box certified at margin zero by an exact checker (search/qx2_zm.py), adversarially reviewed, and independently re-checked over the whole pose space by wand125's separately written checker (github.com/wand125/valid7-independent-check, 2026-10-02; record check rerun and method read here 2026-10-03); the reduction from the 7 x 7 box to every k is kernel-checked in Lean (bentz_of_valid7); unrefereed",
     "date": "2026-09-29"
    },
@@ -7006,7 +7006,7 @@
    "title": "square-packing (s12/): exact certificates for s(11) >= 3040/797, s(12) >= 15680/3951, s(21) = 5, s(32) = 6, s(45) = 7, s(60) = 8, s(k^2-3) = k for all k >= 6 and s(k^2-4) = k for all k >= 5, and a case-free proof of s(13) = 4",
    "venue": "GitHub repository + write-up (computer-assisted, unrefereed)",
    "year": 2026,
-   "url": "https://github.com/evand/square-packing/tree/main/s12"
+   "url": "https://github.com/evand/square-packing/tree/main"
   },
   "wand125_2026": {
    "authors": "wand125 (GitHub user)",

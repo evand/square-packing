@@ -337,7 +337,7 @@ claims is small.
 ## Publishing
 
 The site lives in `site/` of github.com/evand/square-packing, next to the published s(12) proof in
-`s12/`.  Pages deploys `site/www/` as the site root and `s12/docs/` as `/s12/`
+`s12/`.  Pages deploys `site/www/` as the site root and `docs/` as `/s12/`
 (`.github/workflows/pages.yml`).  Active research stays in a private repository until it is ready.
 
 Before announcing it anywhere, tell David Ellsworth: his prose for all 194 records ships verbatim in

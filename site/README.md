@@ -31,7 +31,7 @@ python3 -m http.server -d www 8765
 
 A fresh clone has only the exported `www/data/`, which is enough to serve the site; rebuilding it
 needs `./build.sh fetch` first.  GitHub Pages deploys from `.github/workflows/pages.yml` at the
-repository root: `site/www/` becomes the site root and `s12/docs/` becomes `/s12/`.
+repository root: `site/www/` becomes the site root and `docs/` becomes `/s12/`, `/s13/`, … (see `.github/workflows/pages.yml`).
 
 ## Conventions
 

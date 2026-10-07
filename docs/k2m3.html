@@ -1,0 +1,1643 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Three Short of a Square · Square Packing Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --paper:#F2F4F1; --surface:#FBFCFA; --ink:#131A1E; --muted:#5F6B70; --rule:#D6DCD7;
+  --accent:#0E7490; --accent-soft:#DCEDF1; --gold:#9C6410; --gold-soft:#F5EBDA; --green:#2A6E4F; --green-soft:#DFEDE5;
+  --shadow:0 1px 2px rgba(19,26,30,.05),0 8px 24px -12px rgba(19,26,30,.14);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E1316; --surface:#151C20; --ink:#E4EBEA; --muted:#96A4A8; --rule:#263238;
+    --accent:#54C3D6; --accent-soft:#0F3138; --gold:#DBA745; --gold-soft:#33280F; --green:#63BE92; --green-soft:#122B20;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E1316; --surface:#151C20; --ink:#E4EBEA; --muted:#96A4A8; --rule:#263238;
+  --accent:#54C3D6; --accent-soft:#0F3138; --gold:#DBA745; --gold-soft:#33280F; --green:#63BE92; --green-soft:#122B20;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:Spectral,Georgia,"Times New Roman",serif;font-size:17.5px;line-height:1.65;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:760px;margin:0 auto;padding:64px 24px 96px}
+h1,h2,h3{text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:clamp(2.1rem,5.2vw,3rem);font-weight:700;letter-spacing:-.015em}
+h2{font-size:1.55rem;font-weight:600;margin-top:0}
+h3{font-size:1.1rem;font-weight:600}
+p{margin:0}
+a{color:var(--accent);text-decoration-thickness:.08em;text-underline-offset:.18em}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted);font-weight:500}
+header{display:flex;flex-direction:column;gap:18px;padding-bottom:34px;border-bottom:1px solid var(--rule)}
+.lede{font-size:1.16rem;color:var(--muted);max-width:60ch}
+section{display:flex;flex-direction:column;gap:18px;padding:44px 0;border-bottom:1px solid var(--rule)}
+section:last-of-type{border-bottom:none}
+.sechead{display:flex;flex-direction:column;gap:6px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:24px;box-shadow:var(--shadow)}
+.thm{border-left:3px solid var(--accent);display:flex;flex-direction:column;gap:14px}
+.thm .stmt{font-size:1.22rem;line-height:1.5}
+.big{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-weight:600;
+  font-size:clamp(1.9rem,5vw,2.5rem);color:var(--accent);letter-spacing:-.02em}
+.tag{display:inline-flex;align-items:center;gap:7px;font-family:"IBM Plex Mono",monospace;font-size:.72rem;
+  letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:999px;font-weight:500}
+.tag.ok{background:var(--green-soft);color:var(--green)}
+.tag.open{background:var(--gold-soft);color:var(--gold)}
+.tag.neutral{background:var(--accent-soft);color:var(--accent)}
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+.tablewrap{overflow-x:auto}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);font-weight:500}
+td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+figure{margin:0;display:flex;flex-direction:column;gap:12px}
+figcaption{font-size:.9rem;color:var(--muted)}
+.figbox{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:18px}
+pre{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:16px;overflow-x:auto;
+  font-family:"IBM Plex Mono",monospace;font-size:.83rem;line-height:1.6;margin:0}
+code{font-family:"IBM Plex Mono",monospace;font-size:.9em;background:var(--accent-soft);
+  padding:.1em .35em;border-radius:2px}
+pre code{background:none;padding:0;font-size:1em}
+ul{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:9px}
+li::marker{color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.axis{width:100%;height:96px}
+.footnote{font-size:.87rem;color:var(--muted)}
+section>*{min-width:0}
+.footnote .mono,td .mono{overflow-wrap:anywhere}
+@media (max-width:520px){th,td{padding:8px 6px}td.num{white-space:normal}.wrap{padding:40px 16px 72px}}
+.topbar{display:flex;align-items:center;gap:6px 18px;padding:10px 20px;border-bottom:1px solid var(--rule);background:var(--surface);flex-wrap:wrap;font-size:16px;line-height:1.5}
+.topbar .brand{font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+.topbar nav{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.92rem}
+.topbar nav a{text-decoration:none;color:var(--muted);white-space:nowrap}
+.topbar nav a.here,.topbar nav a:hover{color:var(--accent)}
+.cv{width:100%;aspect-ratio:1/1;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.85rem;color:var(--muted)}
+.stat{display:flex;flex-direction:column;gap:2px}
+.diag{width:100%;max-width:420px;display:block;margin:0 auto}
+.diag .gl{stroke:var(--rule);stroke-width:6}
+.diag .cell{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:4 4}
+.diag .sq{fill:var(--accent-soft);fill-opacity:.55;stroke:var(--ink);stroke-width:1.5}
+.diag .chord{stroke:var(--accent);stroke-width:7;stroke-linecap:butt}
+.diag .piv{stroke:var(--gold);stroke-width:1.2;stroke-dasharray:3 3}
+.diag .lab{font-family:"IBM Plex Mono",monospace;font-size:13px;fill:var(--muted)}
+.stat b{font-family:"IBM Plex Mono",monospace;font-size:1.25rem;color:var(--ink);font-weight:600}
+.subnav{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 14px;padding:6px 20px;border-bottom:1px solid var(--rule);font-size:15px;line-height:1.5}
+.subnav .lbl{font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.subnav a{text-decoration:none;color:var(--muted);white-space:nowrap}
+.subnav a.here,.subnav a:hover{color:var(--accent)}
+.fam{width:100%;max-width:560px;display:block;margin:0 auto}
+.fam .leb{fill:var(--accent-soft)}
+.fam .seg path{stroke:var(--accent);fill:none;stroke-linecap:butt}
+.fam .frame{fill:none;stroke:var(--muted);stroke-width:1.5}
+.fam .zone{fill:none;stroke:var(--gold);stroke-width:1.5;stroke-dasharray:6 5}
+.status{border-left:3px solid var(--gold);background:var(--gold-soft);padding:14px 18px;border-radius:3px;font-size:1.02rem;line-height:1.55}
+.status b{color:var(--gold)}
+.sw{display:inline-block;width:18px;height:10px;vertical-align:-1px;margin-right:6px;border-radius:1px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="brand">Square Packing Atlas</span>
+  <nav><a href="../index.html">Overview</a><a href="../explore.html">Explore</a><a href="../compare.html">Compare</a><a href="../bounds.html">Bounds</a><a href="../proofs.html" class="here">Proofs &amp; results</a><a href="../problems.html">Open problems</a><a href="../sources.html">Sources</a></nav>
+</div>
+<div class="subnav"><span class="lbl">Results</span><a href="../s12/">s(11), s(12)</a><a href="../s13/">s(13)</a><a href="../s21/">s(21)</a><a href="../s32/">s(32)</a><a href="../s45/">s(45)</a><a href="../s60/">s(60)</a><a href="./" class="here">s(k²−3)</a><a href="../k2m4/">s(k²−4)</a></div>
+<div class="wrap">
+<header>
+  <span class="eyebrow">Discrete geometry · computer-assisted proof</span>
+  <h1>Three Short of a Square</h1>
+  <p class="lede">Take a <span class="mono">k × k</span> grid of unit squares and remove three. The remaining
+  <span class="mono">k² − 3</span> squares fit in a square of side <span class="mono">k</span>, and for every
+  <span class="mono">k ≥ 6</span> we believe nothing smaller holds them: <span class="mono">s(k² − 3) = k</span>. Bentz
+  suggested that this holds for all <span class="mono">k ≥ 3</span> (it is often called Bentz's conjecture), and with the
+  cases already known it would settle the question. The proof is
+  a single pattern of mass that stretches to any box size; it is checked once, in the 7 × 7 box, and a Lean proof carries
+  that one check to every <span class="mono">k</span>.</p>
+  <p class="status"><b>Status.</b> Working in public: a single-implementation exact certificate, adversarially
+  reviewed by six independent agents with no errors found; in Lean everything except the tilted squares of the 7 × 7 box (<span class="mono">ValidTilt7</span>) is kernel-checked. Independently
+  re-checked over the whole pose space by <a href="https://github.com/wand125/valid7-independent-check">wand125's separately written checker</a> (2 Oct 2026; its record check rerun and its method read here). Not yet externally reviewed or fully formalised.</p>
+  <div class="tags">
+    <span class="tag neutral">one exact checker</span>
+    <span class="tag ok">reduction to the tilted run kernel-checked in Lean</span>
+    <span class="tag ok">independently re-checked (wand125)</span>
+    <span class="tag open">not peer reviewed</span>
+    <a class="tag neutral" href="https://github.com/evand/square-packing/tree/main/certificates/k2m3">Certificate &amp; checker on GitHub →</a>
+  </div>
+</header>
+
+<section id="result">
+  <div class="sechead"><span class="eyebrow">01 · The result</span><h2>s(k² − 3) = k for every k ≥ 6</h2></div>
+  <p><span class="mono">s(n)</span> is the side of the smallest square that holds <i>n</i> unit squares,
+  each at any position and any angle, overlapping at most along their edges. The grid gives
+  <span class="mono">s(k² − 3) ≤ k</span>. The work is the other direction, and here it is done for all
+  <span class="mono">k ≥ 6</span> at once.</p>
+  <div class="card thm">
+    <p class="stmt"><strong>Theorem.</strong> For every integer <span class="mono">k ≥ 6</span> there is a mass distribution
+    <span class="mono">μ_k</span> on <span class="mono">[0,k]²</span>, made of mass spread evenly along <strong>short segments
+    of the 1/5-grid</strong> near the walls and <strong>area density 1</strong> on the square
+    <span class="mono">[9/5, k − 9/5]²</span>, of total mass <span class="mono">k² − 4D</span> with
+    <span class="mono">D = 423621306389 / (5·10¹¹)</span>, such that <em>every</em> closed unit square inside
+    <span class="mono">[0,k]²</span>, at every position and every angle, captures mass at least 1.</p>
+    <p class="big">k² − 3.388970 &nbsp;&lt;&nbsp; k² − 3</p>
+    <p class="footnote">Suppose <span class="mono">k² − 3</span> unit squares fit in a square of side
+    <span class="mono">s &lt; k</span>. Spread their centres out by the factor <span class="mono">k/s</span>. The squares stay
+    inside <span class="mono">[0,k]²</span> and become <em>pairwise disjoint</em>, so no part of the mass lies in two of them.
+    Each captures mass at least 1, so between them they capture at least <span class="mono">k² − 3</span>, but there is only
+    <span class="mono">k² − 3.389</span> in total. So there is no such packing. "Captures" is meant for the closed square: a
+    segment lying along one of its edges counts in full.</p>
+  </div>
+  <p>The same measure is used for every <span class="mono">k</span>: four fixed corner pieces, a band along each wall that
+  repeats with period 1, and plain area inside (§03). The saving <span class="mono">4D = 3.388970</span> sits at the four
+  corners and does not depend on <span class="mono">k</span>, so the room below <span class="mono">k² − 3</span> is
+  <span class="mono">0.388970</span> for every box. Checking the property in the theorem for <span class="mono">k = 7</span>
+  is enough for all <span class="mono">k ≥ 6</span>: that step is proved in Lean (§05). The check for
+  <span class="mono">k = 7</span> itself was done by one exact program (§04).</p>
+</section>
+
+<section id="context">
+  <div class="sechead"><span class="eyebrow">02 · Context</span><h2>Three missing, one case at a time</h2></div>
+  <p>Nagamochi (2005) stated <span class="mono">s(k² − 2) = s(k² − 1) = k</span> for every <span class="mono">k ≥ 2</span>; his
+  published proof has a gap, and both have since been proved without it (below). With
+  three squares missing the answer was known only case by case. Friedman's survey (1998) conjectured that
+  <span class="mono">s(n² − k) = n</span> implies <span class="mono">s((n+1)² − k) = n + 1</span>, which together with
+  <span class="mono">s(6) = 3</span> (Kearney and Shiu, 2002) would give <span class="mono">s(k² − 3) = k</span> for all
+  <span class="mono">k ≥ 3</span>. Bentz, having proved <span class="mono">s(13) = 4</span> and <span class="mono">s(46) = 7</span>
+  (2010), stated that <span class="mono">s(m² − 3) = m</span> should hold for all <span class="mono">m ≥ 3</span>, and proved
+  <span class="mono">m = 5, 6</span> in an arXiv preprint (2016). (<span class="mono">k = 2</span> is not a case:
+  <span class="mono">s(1) = 1</span>.)</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>k</th><th>n = k² − 3</th><th>s(n) = k proved by</th></tr></thead>
+    <tbody>
+      <tr><td class="num">3</td><td class="num">6</td><td>Kearney and Shiu, <a href="https://www.combinatorics.org/ojs/index.php/eljc/article/view/v9i1r14">Electron. J. Combin. 9 (2002) #R14</a></td></tr>
+      <tr><td class="num">4</td><td class="num">13</td><td>Bentz, <a href="https://www.combinatorics.org/ojs/index.php/eljc/article/view/v17i1r126">Electron. J. Combin. 17 (2010) #R126</a>; in Lean by chelokot (2026); <a href="../s13/">without cases</a> here</td></tr>
+      <tr><td class="num">5</td><td class="num">22</td><td>Bentz, <a href="https://arxiv.org/abs/1606.03746">arXiv:1606.03746</a> (2016, preprint); in Lean by chelokot (2026); this project, 2026-09-27, from <a href="../s21/"><span class="mono">s(21) = 5</span></a></td></tr>
+      <tr><td class="num">6</td><td class="num">33</td><td>Bentz, arXiv:1606.03746 (preprint); in Lean by chelokot (2026); this project, 2026-09-26, from <a href="../s32/"><span class="mono">s(32) = 6</span></a>; <b>this work</b></td></tr>
+      <tr><td class="num">7</td><td class="num">46</td><td>Bentz, 2010; this project, 2026-09-27, from <a href="../s45/"><span class="mono">s(45) = 7</span></a>; <b>this work</b></td></tr>
+      <tr><td class="num">8</td><td class="num">61</td><td>this project, 2026-09-28, from <a href="../s60/"><span class="mono">s(60) = 8</span></a>; wand125, 2026-09-30, a point-only cover (checked here by two point checkers); <b>this work</b></td></tr>
+      <tr><td class="num">≥ 9</td><td class="num">78, 97, …</td><td><b>this work</b>, 2026-09-29 (unrefereed). Before it, the best floor we have on record for
+      <span class="mono">n = 78</span> and <span class="mono">97</span> was Nagamochi's general bound <span class="mono">1 + √(k² − 2k)</span>: 8.937254 and 9.944272 (its published proof has
+      the gap described below) (for <span class="mono">n = 78</span>, wand125 reported
+      <span class="mono">1791/200 = 8.955</span> on 2026-09-27, not yet independently replayed)</td></tr>
+    </tbody>
+  </table></div>
+  <p>So the cases <span class="mono">k ≥ 8</span> were open until this month: David Ellsworth's
+  <a href="https://kingbird.myphotos.cc/packing/squares_in_squares.html">Squares in Squares</a> lists 6, 13, 22, 33 and 46 as
+  proved and nothing for 61 or 78, and <a href="https://github.com/jlevy/squares">jlevy/squares</a> lists
+  "Can Bentz's method prove <span class="mono">s(61) = 8</span>?" as an open question (H-033, 2026-08-24). Since <span class="mono">s</span> never decreases, <span class="mono">s(k² − 4) = k</span> implies
+  <span class="mono">s(k² − 3) = k</span>, so our <span class="mono">s(21)</span>, <span class="mono">s(32)</span>, <span class="mono">s(45)</span>
+  and <span class="mono">s(60)</span> results each settle a case too. With them and our case-free <a href="../s13/"><span class="mono">s(13) = 4</span></a>,
+  none of <span class="mono">k = 4 … 8</span> depends on Bentz's proofs, though his came first.</p>
+  <p>Bentz's proofs and our covers for <a href="../s45/"><span class="mono">s(45)</span></a> and
+  <a href="../s60/"><span class="mono">s(60)</span></a> are one box at a time: each needs its own certificate, and the
+  effort grows with the box. A proof for every <span class="mono">k</span> needs something that does not grow. Nagamochi's
+  argument for <span class="mono">k² − 2</span> is of that kind (and so is chelokot's repair of it, below): resources along the walls and at the corners, in a fixed
+  pattern, saving 2 in every box. For <span class="mono">k² − 3</span> the saving must exceed 3, that is, more than ¾ per
+  corner. A float linear program over patterns of this shape found about 0.945 per corner; the exact family here has
+  0.847.</p>
+  <p id="k2m2"><strong>Two short: <span class="mono">s(k² − 2) = k</span> without Nagamochi's Lemma 1.</strong> Nagamochi's proof scores every
+  square against a fixed pattern of resources, and his Lemma 1 asserts that each square scores more than 1. That lemma is
+  false. chelokot gave a Lean-checked counterexample (a square of side 1.0001 in <span class="mono">[0,4]²</span> scoring 0.9775) and a
+  kernel-checked replacement proof of <span class="mono">s(k² − 2) = k</span> for every <span class="mono">k ≥ 2</span>
+  (<a href="https://github.com/chelokot/square-packing-archive/blob/main/docs/nagamochi-compensation-proof.md">chelokot/square-packing-archive</a>,
+  September 2026). Hakan Karakuş (<a href="https://arxiv.org/abs/2609.37410">arXiv:2609.37410</a>, 29 September 2026) gives a
+  family of counterexamples near a corner of every rectangle with sides <span class="mono">a > 3</span>, <span class="mono">b > 2</span>, and concludes that the
+  published proof of the rectangle bound is incomplete, not that the bound is false. He re-proves <span class="mono">s(k² − 1) = k</span>
+  with a weaker rectangle bound, and states that his argument does not establish <span class="mono">s(k² − 2) = k</span>.</p>
+  <p>Our certificates give a further route that uses neither Lemma 1 nor any rectangle bound. Since <span class="mono">s</span> never
+  decreases, <span class="mono">s(k² − 3) ≤ s(k² − 2) ≤ s(k² − 1) ≤ k</span>, so <span class="mono">s(k² − 3) = k</span> implies
+  <span class="mono">s(k² − 2) = k</span>. That gives:</p>
+  <ul>
+    <li><span class="mono">k ≥ 6</span> from this family. For <span class="mono">k ≥ 9</span> it is the only one of our results that applies, so there the
+    statement rests on the single-checker certificate of §04. <span class="mono">k = 6, 7, 8</span> also follow from
+    <a href="../s32/"><span class="mono">s(32) = 6</span></a> (kernel-checked in Lean with no hypothesis), <a href="../s45/"><span class="mono">s(45) = 7</span></a>
+    and <a href="../s60/"><span class="mono">s(60) = 8</span></a>;</li>
+    <li><span class="mono">k = 5</span> from <a href="../s21/"><span class="mono">s(21) = 5</span></a>, and <span class="mono">k = 4</span> from
+    <a href="../s13/"><span class="mono">s(13) = 4</span></a> (kernel-checked in Lean with no hypothesis);</li>
+    <li><span class="mono">k = 3</span>: <span class="mono">s(7) = 3</span> follows from <span class="mono">s(6) = 3</span> (Kearney and Shiu, 2002), and El Moumni (1999) proved it
+    directly; <span class="mono">k = 2</span>: <span class="mono">s(2) = 2</span> is classical (Göbel, 1979).</li>
+  </ul>
+  <p>Like the rest of this page, this is unrefereed.</p>
+</section>
+
+<section id="idea">
+  <div class="sechead"><span class="eyebrow">03 · The certificate</span><h2>One pattern for every box</h2></div>
+  <p>The measure is built from three parts, each on the grid of pitch 1/5, with no weighted points at all:</p>
+  <ul>
+    <li><b>Corner modules</b> on the 2 × 2 square at each corner: 36 pieces of mass spread along 1/5-segments, plus area
+    density on <span class="mono">[9/5, 2]²</span>. The same module, reflected, at all four corners.</li>
+    <li><b>A periodic wall band</b> of width 2 along each wall, between the corner modules: 52 segment pieces per unit
+    period, plus area density on the strip from 9/5 to 2. It repeats with period 1, however long the wall is.</li>
+    <li><b>Lebesgue interior</b>: mass equal to area on <span class="mono">[9/5, k − 9/5]²</span>. A unit square wholly
+    inside it captures exactly 1.</li>
+  </ul>
+  <figure>
+    <div class="figbox">
+<!-- generated by site/tools/k2m3_figure.py 9 from search/qx2_data/L4_k02_family.txt; do not edit by hand -->
+<svg viewBox="0 0 568 568" class="fam" role="img" aria-label="The measure for k = 9: mass on short grid segments near the walls and corners, even area density inside.">
+<rect x="122" y="122" width="324" height="324" class="leb"/>
+<g class="seg">
+<path d="M158 542L158 530" stroke-width="0.60"/>
+<path d="M158 26L158 38" stroke-width="0.60"/>
+<path d="M26 410L38 410" stroke-width="0.60"/>
+<path d="M542 410L530 410" stroke-width="0.60"/>
+<path d="M218 542L218 530" stroke-width="0.60"/>
+<path d="M218 26L218 38" stroke-width="0.60"/>
+<path d="M26 350L38 350" stroke-width="0.60"/>
+<path d="M542 350L530 350" stroke-width="0.60"/>
+<path d="M278 542L278 530" stroke-width="0.60"/>
+<path d="M278 26L278 38" stroke-width="0.60"/>
+<path d="M26 290L38 290" stroke-width="0.60"/>
+<path d="M542 290L530 290" stroke-width="0.60"/>
+<path d="M338 542L338 530" stroke-width="0.60"/>
+<path d="M338 26L338 38" stroke-width="0.60"/>
+<path d="M26 230L38 230" stroke-width="0.60"/>
+<path d="M542 230L530 230" stroke-width="0.60"/>
+<path d="M398 542L398 530" stroke-width="0.60"/>
+<path d="M398 26L398 38" stroke-width="0.60"/>
+<path d="M26 170L38 170" stroke-width="0.60"/>
+<path d="M542 170L530 170" stroke-width="0.60"/>
+<path d="M170 542L170 530" stroke-width="0.60"/>
+<path d="M170 26L170 38" stroke-width="0.60"/>
+<path d="M26 398L38 398" stroke-width="0.60"/>
+<path d="M542 398L530 398" stroke-width="0.60"/>
+<path d="M230 542L230 530" stroke-width="0.60"/>
+<path d="M230 26L230 38" stroke-width="0.60"/>
+<path d="M26 338L38 338" stroke-width="0.60"/>
+<path d="M542 338L530 338" stroke-width="0.60"/>
+<path d="M290 542L290 530" stroke-width="0.60"/>
+<path d="M290 26L290 38" stroke-width="0.60"/>
+<path d="M26 278L38 278" stroke-width="0.60"/>
+<path d="M542 278L530 278" stroke-width="0.60"/>
+<path d="M350 542L350 530" stroke-width="0.60"/>
+<path d="M350 26L350 38" stroke-width="0.60"/>
+<path d="M26 218L38 218" stroke-width="0.60"/>
+<path d="M542 218L530 218" stroke-width="0.60"/>
+<path d="M410 542L410 530" stroke-width="0.60"/>
+<path d="M410 26L410 38" stroke-width="0.60"/>
+<path d="M26 158L38 158" stroke-width="0.60"/>
+<path d="M542 158L530 158" stroke-width="0.60"/>
+<path d="M158 530L158 518" stroke-width="0.60"/>
+<path d="M158 38L158 50" stroke-width="0.60"/>
+<path d="M38 410L50 410" stroke-width="0.60"/>
+<path d="M530 410L518 410" stroke-width="0.60"/>
+<path d="M218 530L218 518" stroke-width="0.60"/>
+<path d="M218 38L218 50" stroke-width="0.60"/>
+<path d="M38 350L50 350" stroke-width="0.60"/>
+<path d="M530 350L518 350" stroke-width="0.60"/>
+<path d="M278 530L278 518" stroke-width="0.60"/>
+<path d="M278 38L278 50" stroke-width="0.60"/>
+<path d="M38 290L50 290" stroke-width="0.60"/>
+<path d="M530 290L518 290" stroke-width="0.60"/>
+<path d="M338 530L338 518" stroke-width="0.60"/>
+<path d="M338 38L338 50" stroke-width="0.60"/>
+<path d="M38 230L50 230" stroke-width="0.60"/>
+<path d="M530 230L518 230" stroke-width="0.60"/>
+<path d="M398 530L398 518" stroke-width="0.60"/>
+<path d="M398 38L398 50" stroke-width="0.60"/>
+<path d="M38 170L50 170" stroke-width="0.60"/>
+<path d="M530 170L518 170" stroke-width="0.60"/>
+<path d="M170 530L170 518" stroke-width="0.60"/>
+<path d="M170 38L170 50" stroke-width="0.60"/>
+<path d="M38 398L50 398" stroke-width="0.60"/>
+<path d="M530 398L518 398" stroke-width="0.60"/>
+<path d="M230 530L230 518" stroke-width="0.60"/>
+<path d="M230 38L230 50" stroke-width="0.60"/>
+<path d="M38 338L50 338" stroke-width="0.60"/>
+<path d="M530 338L518 338" stroke-width="0.60"/>
+<path d="M290 530L290 518" stroke-width="0.60"/>
+<path d="M290 38L290 50" stroke-width="0.60"/>
+<path d="M38 278L50 278" stroke-width="0.60"/>
+<path d="M530 278L518 278" stroke-width="0.60"/>
+<path d="M350 530L350 518" stroke-width="0.60"/>
+<path d="M350 38L350 50" stroke-width="0.60"/>
+<path d="M38 218L50 218" stroke-width="0.60"/>
+<path d="M530 218L518 218" stroke-width="0.60"/>
+<path d="M410 530L410 518" stroke-width="0.60"/>
+<path d="M410 38L410 50" stroke-width="0.60"/>
+<path d="M38 158L50 158" stroke-width="0.60"/>
+<path d="M530 158L518 158" stroke-width="0.60"/>
+<path d="M14 494L26 494" stroke-width="0.60"/>
+<path d="M554 494L542 494" stroke-width="0.60"/>
+<path d="M14 74L26 74" stroke-width="0.60"/>
+<path d="M554 74L542 74" stroke-width="0.60"/>
+<path d="M74 554L74 542" stroke-width="0.60"/>
+<path d="M494 554L494 542" stroke-width="0.60"/>
+<path d="M74 14L74 26" stroke-width="0.60"/>
+<path d="M494 14L494 26" stroke-width="0.60"/>
+<path d="M146 542L146 530" stroke-width="0.60"/>
+<path d="M146 26L146 38" stroke-width="0.60"/>
+<path d="M26 422L38 422" stroke-width="0.60"/>
+<path d="M542 422L530 422" stroke-width="0.60"/>
+<path d="M206 542L206 530" stroke-width="0.60"/>
+<path d="M206 26L206 38" stroke-width="0.60"/>
+<path d="M26 362L38 362" stroke-width="0.60"/>
+<path d="M542 362L530 362" stroke-width="0.60"/>
+<path d="M266 542L266 530" stroke-width="0.60"/>
+<path d="M266 26L266 38" stroke-width="0.60"/>
+<path d="M26 302L38 302" stroke-width="0.60"/>
+<path d="M542 302L530 302" stroke-width="0.60"/>
+<path d="M326 542L326 530" stroke-width="0.60"/>
+<path d="M326 26L326 38" stroke-width="0.60"/>
+<path d="M26 242L38 242" stroke-width="0.60"/>
+<path d="M542 242L530 242" stroke-width="0.60"/>
+<path d="M386 542L386 530" stroke-width="0.60"/>
+<path d="M386 26L386 38" stroke-width="0.60"/>
+<path d="M26 182L38 182" stroke-width="0.60"/>
+<path d="M542 182L530 182" stroke-width="0.60"/>
+<path d="M182 542L182 530" stroke-width="0.60"/>
+<path d="M182 26L182 38" stroke-width="0.60"/>
+<path d="M26 386L38 386" stroke-width="0.60"/>
+<path d="M542 386L530 386" stroke-width="0.60"/>
+<path d="M242 542L242 530" stroke-width="0.60"/>
+<path d="M242 26L242 38" stroke-width="0.60"/>
+<path d="M26 326L38 326" stroke-width="0.60"/>
+<path d="M542 326L530 326" stroke-width="0.60"/>
+<path d="M302 542L302 530" stroke-width="0.60"/>
+<path d="M302 26L302 38" stroke-width="0.60"/>
+<path d="M26 266L38 266" stroke-width="0.60"/>
+<path d="M542 266L530 266" stroke-width="0.60"/>
+<path d="M362 542L362 530" stroke-width="0.60"/>
+<path d="M362 26L362 38" stroke-width="0.60"/>
+<path d="M26 206L38 206" stroke-width="0.60"/>
+<path d="M542 206L530 206" stroke-width="0.60"/>
+<path d="M422 542L422 530" stroke-width="0.60"/>
+<path d="M422 26L422 38" stroke-width="0.60"/>
+<path d="M26 146L38 146" stroke-width="0.60"/>
+<path d="M542 146L530 146" stroke-width="0.60"/>
+<path d="M146 518L146 506" stroke-width="0.60"/>
+<path d="M146 50L146 62" stroke-width="0.60"/>
+<path d="M50 422L62 422" stroke-width="0.60"/>
+<path d="M518 422L506 422" stroke-width="0.60"/>
+<path d="M206 518L206 506" stroke-width="0.60"/>
+<path d="M206 50L206 62" stroke-width="0.60"/>
+<path d="M50 362L62 362" stroke-width="0.60"/>
+<path d="M518 362L506 362" stroke-width="0.60"/>
+<path d="M266 518L266 506" stroke-width="0.60"/>
+<path d="M266 50L266 62" stroke-width="0.60"/>
+<path d="M50 302L62 302" stroke-width="0.60"/>
+<path d="M518 302L506 302" stroke-width="0.60"/>
+<path d="M326 518L326 506" stroke-width="0.60"/>
+<path d="M326 50L326 62" stroke-width="0.60"/>
+<path d="M50 242L62 242" stroke-width="0.60"/>
+<path d="M518 242L506 242" stroke-width="0.60"/>
+<path d="M386 518L386 506" stroke-width="0.60"/>
+<path d="M386 50L386 62" stroke-width="0.60"/>
+<path d="M50 182L62 182" stroke-width="0.60"/>
+<path d="M518 182L506 182" stroke-width="0.60"/>
+<path d="M182 518L182 506" stroke-width="0.60"/>
+<path d="M182 50L182 62" stroke-width="0.60"/>
+<path d="M50 386L62 386" stroke-width="0.60"/>
+<path d="M518 386L506 386" stroke-width="0.60"/>
+<path d="M242 518L242 506" stroke-width="0.60"/>
+<path d="M242 50L242 62" stroke-width="0.60"/>
+<path d="M50 326L62 326" stroke-width="0.60"/>
+<path d="M518 326L506 326" stroke-width="0.60"/>
+<path d="M302 518L302 506" stroke-width="0.60"/>
+<path d="M302 50L302 62" stroke-width="0.60"/>
+<path d="M50 266L62 266" stroke-width="0.60"/>
+<path d="M518 266L506 266" stroke-width="0.60"/>
+<path d="M362 518L362 506" stroke-width="0.60"/>
+<path d="M362 50L362 62" stroke-width="0.60"/>
+<path d="M50 206L62 206" stroke-width="0.60"/>
+<path d="M518 206L506 206" stroke-width="0.60"/>
+<path d="M422 518L422 506" stroke-width="0.60"/>
+<path d="M422 50L422 62" stroke-width="0.60"/>
+<path d="M50 146L62 146" stroke-width="0.60"/>
+<path d="M518 146L506 146" stroke-width="0.60"/>
+<path d="M158 518L158 506" stroke-width="0.60"/>
+<path d="M158 50L158 62" stroke-width="0.60"/>
+<path d="M50 410L62 410" stroke-width="0.60"/>
+<path d="M518 410L506 410" stroke-width="0.60"/>
+<path d="M218 518L218 506" stroke-width="0.60"/>
+<path d="M218 50L218 62" stroke-width="0.60"/>
+<path d="M50 350L62 350" stroke-width="0.60"/>
+<path d="M518 350L506 350" stroke-width="0.60"/>
+<path d="M278 518L278 506" stroke-width="0.60"/>
+<path d="M278 50L278 62" stroke-width="0.60"/>
+<path d="M50 290L62 290" stroke-width="0.60"/>
+<path d="M518 290L506 290" stroke-width="0.60"/>
+<path d="M338 518L338 506" stroke-width="0.60"/>
+<path d="M338 50L338 62" stroke-width="0.60"/>
+<path d="M50 230L62 230" stroke-width="0.60"/>
+<path d="M518 230L506 230" stroke-width="0.60"/>
+<path d="M398 518L398 506" stroke-width="0.60"/>
+<path d="M398 50L398 62" stroke-width="0.60"/>
+<path d="M50 170L62 170" stroke-width="0.60"/>
+<path d="M518 170L506 170" stroke-width="0.60"/>
+<path d="M170 518L170 506" stroke-width="0.60"/>
+<path d="M170 50L170 62" stroke-width="0.60"/>
+<path d="M50 398L62 398" stroke-width="0.60"/>
+<path d="M518 398L506 398" stroke-width="0.60"/>
+<path d="M230 518L230 506" stroke-width="0.60"/>
+<path d="M230 50L230 62" stroke-width="0.60"/>
+<path d="M50 338L62 338" stroke-width="0.60"/>
+<path d="M518 338L506 338" stroke-width="0.60"/>
+<path d="M290 518L290 506" stroke-width="0.60"/>
+<path d="M290 50L290 62" stroke-width="0.60"/>
+<path d="M50 278L62 278" stroke-width="0.60"/>
+<path d="M518 278L506 278" stroke-width="0.60"/>
+<path d="M350 518L350 506" stroke-width="0.60"/>
+<path d="M350 50L350 62" stroke-width="0.60"/>
+<path d="M50 218L62 218" stroke-width="0.60"/>
+<path d="M518 218L506 218" stroke-width="0.60"/>
+<path d="M410 518L410 506" stroke-width="0.60"/>
+<path d="M410 50L410 62" stroke-width="0.60"/>
+<path d="M50 158L62 158" stroke-width="0.60"/>
+<path d="M518 158L506 158" stroke-width="0.60"/>
+<path d="M122 446L134 446" stroke-width="0.60"/>
+<path d="M446 446L434 446" stroke-width="0.60"/>
+<path d="M122 122L134 122" stroke-width="0.60"/>
+<path d="M446 122L434 122" stroke-width="0.60"/>
+<path d="M122 446L122 434" stroke-width="0.60"/>
+<path d="M446 446L446 434" stroke-width="0.60"/>
+<path d="M122 122L122 134" stroke-width="0.60"/>
+<path d="M446 122L446 134" stroke-width="0.60"/>
+<path d="M146 458L146 446" stroke-width="0.60"/>
+<path d="M146 110L146 122" stroke-width="0.60"/>
+<path d="M110 422L122 422" stroke-width="0.60"/>
+<path d="M458 422L446 422" stroke-width="0.60"/>
+<path d="M206 458L206 446" stroke-width="0.60"/>
+<path d="M206 110L206 122" stroke-width="0.60"/>
+<path d="M110 362L122 362" stroke-width="0.60"/>
+<path d="M458 362L446 362" stroke-width="0.60"/>
+<path d="M266 458L266 446" stroke-width="0.60"/>
+<path d="M266 110L266 122" stroke-width="0.60"/>
+<path d="M110 302L122 302" stroke-width="0.60"/>
+<path d="M458 302L446 302" stroke-width="0.60"/>
+<path d="M326 458L326 446" stroke-width="0.60"/>
+<path d="M326 110L326 122" stroke-width="0.60"/>
+<path d="M110 242L122 242" stroke-width="0.60"/>
+<path d="M458 242L446 242" stroke-width="0.60"/>
+<path d="M386 458L386 446" stroke-width="0.60"/>
+<path d="M386 110L386 122" stroke-width="0.60"/>
+<path d="M110 182L122 182" stroke-width="0.60"/>
+<path d="M458 182L446 182" stroke-width="0.60"/>
+<path d="M182 458L182 446" stroke-width="0.60"/>
+<path d="M182 110L182 122" stroke-width="0.60"/>
+<path d="M110 386L122 386" stroke-width="0.60"/>
+<path d="M458 386L446 386" stroke-width="0.60"/>
+<path d="M242 458L242 446" stroke-width="0.60"/>
+<path d="M242 110L242 122" stroke-width="0.60"/>
+<path d="M110 326L122 326" stroke-width="0.60"/>
+<path d="M458 326L446 326" stroke-width="0.60"/>
+<path d="M302 458L302 446" stroke-width="0.60"/>
+<path d="M302 110L302 122" stroke-width="0.60"/>
+<path d="M110 266L122 266" stroke-width="0.60"/>
+<path d="M458 266L446 266" stroke-width="0.60"/>
+<path d="M362 458L362 446" stroke-width="0.60"/>
+<path d="M362 110L362 122" stroke-width="0.60"/>
+<path d="M110 206L122 206" stroke-width="0.60"/>
+<path d="M458 206L446 206" stroke-width="0.60"/>
+<path d="M422 458L422 446" stroke-width="0.60"/>
+<path d="M422 110L422 122" stroke-width="0.60"/>
+<path d="M110 146L122 146" stroke-width="0.60"/>
+<path d="M458 146L446 146" stroke-width="0.60"/>
+<path d="M26 494L38 494" stroke-width="0.60"/>
+<path d="M542 494L530 494" stroke-width="0.60"/>
+<path d="M26 74L38 74" stroke-width="0.60"/>
+<path d="M542 74L530 74" stroke-width="0.60"/>
+<path d="M74 542L74 530" stroke-width="0.60"/>
+<path d="M494 542L494 530" stroke-width="0.60"/>
+<path d="M74 26L74 38" stroke-width="0.60"/>
+<path d="M494 26L494 38" stroke-width="0.60"/>
+<path d="M134 542L134 530" stroke-width="0.60"/>
+<path d="M134 26L134 38" stroke-width="0.60"/>
+<path d="M26 434L38 434" stroke-width="0.60"/>
+<path d="M542 434L530 434" stroke-width="0.60"/>
+<path d="M194 542L194 530" stroke-width="0.60"/>
+<path d="M194 26L194 38" stroke-width="0.60"/>
+<path d="M26 374L38 374" stroke-width="0.60"/>
+<path d="M542 374L530 374" stroke-width="0.60"/>
+<path d="M254 542L254 530" stroke-width="0.60"/>
+<path d="M254 26L254 38" stroke-width="0.60"/>
+<path d="M26 314L38 314" stroke-width="0.60"/>
+<path d="M542 314L530 314" stroke-width="0.60"/>
+<path d="M314 542L314 530" stroke-width="0.60"/>
+<path d="M314 26L314 38" stroke-width="0.60"/>
+<path d="M26 254L38 254" stroke-width="0.60"/>
+<path d="M542 254L530 254" stroke-width="0.60"/>
+<path d="M374 542L374 530" stroke-width="0.60"/>
+<path d="M374 26L374 38" stroke-width="0.60"/>
+<path d="M26 194L38 194" stroke-width="0.60"/>
+<path d="M542 194L530 194" stroke-width="0.60"/>
+<path d="M434 542L434 530" stroke-width="0.60"/>
+<path d="M434 26L434 38" stroke-width="0.60"/>
+<path d="M26 134L38 134" stroke-width="0.60"/>
+<path d="M542 134L530 134" stroke-width="0.60"/>
+<path d="M158 458L158 446" stroke-width="0.60"/>
+<path d="M158 110L158 122" stroke-width="0.60"/>
+<path d="M110 410L122 410" stroke-width="0.60"/>
+<path d="M458 410L446 410" stroke-width="0.60"/>
+<path d="M218 458L218 446" stroke-width="0.60"/>
+<path d="M218 110L218 122" stroke-width="0.60"/>
+<path d="M110 350L122 350" stroke-width="0.60"/>
+<path d="M458 350L446 350" stroke-width="0.60"/>
+<path d="M278 458L278 446" stroke-width="0.60"/>
+<path d="M278 110L278 122" stroke-width="0.60"/>
+<path d="M110 290L122 290" stroke-width="0.60"/>
+<path d="M458 290L446 290" stroke-width="0.60"/>
+<path d="M338 458L338 446" stroke-width="0.60"/>
+<path d="M338 110L338 122" stroke-width="0.60"/>
+<path d="M110 230L122 230" stroke-width="0.60"/>
+<path d="M458 230L446 230" stroke-width="0.60"/>
+<path d="M398 458L398 446" stroke-width="0.60"/>
+<path d="M398 110L398 122" stroke-width="0.60"/>
+<path d="M110 170L122 170" stroke-width="0.60"/>
+<path d="M458 170L446 170" stroke-width="0.60"/>
+<path d="M170 458L170 446" stroke-width="0.60"/>
+<path d="M170 110L170 122" stroke-width="0.60"/>
+<path d="M110 398L122 398" stroke-width="0.60"/>
+<path d="M458 398L446 398" stroke-width="0.60"/>
+<path d="M230 458L230 446" stroke-width="0.60"/>
+<path d="M230 110L230 122" stroke-width="0.60"/>
+<path d="M110 338L122 338" stroke-width="0.60"/>
+<path d="M458 338L446 338" stroke-width="0.60"/>
+<path d="M290 458L290 446" stroke-width="0.60"/>
+<path d="M290 110L290 122" stroke-width="0.60"/>
+<path d="M110 278L122 278" stroke-width="0.60"/>
+<path d="M458 278L446 278" stroke-width="0.60"/>
+<path d="M350 458L350 446" stroke-width="0.60"/>
+<path d="M350 110L350 122" stroke-width="0.60"/>
+<path d="M110 218L122 218" stroke-width="0.60"/>
+<path d="M458 218L446 218" stroke-width="0.60"/>
+<path d="M410 458L410 446" stroke-width="0.60"/>
+<path d="M410 110L410 122" stroke-width="0.60"/>
+<path d="M110 158L122 158" stroke-width="0.60"/>
+<path d="M458 158L446 158" stroke-width="0.60"/>
+<path d="M146 518L158 518" stroke-width="0.60"/>
+<path d="M146 50L158 50" stroke-width="0.60"/>
+<path d="M50 422L50 410" stroke-width="0.60"/>
+<path d="M518 422L518 410" stroke-width="0.60"/>
+<path d="M206 518L218 518" stroke-width="0.60"/>
+<path d="M206 50L218 50" stroke-width="0.60"/>
+<path d="M50 362L50 350" stroke-width="0.60"/>
+<path d="M518 362L518 350" stroke-width="0.60"/>
+<path d="M266 518L278 518" stroke-width="0.60"/>
+<path d="M266 50L278 50" stroke-width="0.60"/>
+<path d="M50 302L50 290" stroke-width="0.60"/>
+<path d="M518 302L518 290" stroke-width="0.60"/>
+<path d="M326 518L338 518" stroke-width="0.60"/>
+<path d="M326 50L338 50" stroke-width="0.60"/>
+<path d="M50 242L50 230" stroke-width="0.60"/>
+<path d="M518 242L518 230" stroke-width="0.60"/>
+<path d="M386 518L398 518" stroke-width="0.60"/>
+<path d="M386 50L398 50" stroke-width="0.60"/>
+<path d="M50 182L50 170" stroke-width="0.60"/>
+<path d="M518 182L518 170" stroke-width="0.60"/>
+<path d="M170 518L182 518" stroke-width="0.60"/>
+<path d="M170 50L182 50" stroke-width="0.60"/>
+<path d="M50 398L50 386" stroke-width="0.60"/>
+<path d="M518 398L518 386" stroke-width="0.60"/>
+<path d="M230 518L242 518" stroke-width="0.60"/>
+<path d="M230 50L242 50" stroke-width="0.60"/>
+<path d="M50 338L50 326" stroke-width="0.60"/>
+<path d="M518 338L518 326" stroke-width="0.60"/>
+<path d="M290 518L302 518" stroke-width="0.60"/>
+<path d="M290 50L302 50" stroke-width="0.60"/>
+<path d="M50 278L50 266" stroke-width="0.60"/>
+<path d="M518 278L518 266" stroke-width="0.60"/>
+<path d="M350 518L362 518" stroke-width="0.60"/>
+<path d="M350 50L362 50" stroke-width="0.60"/>
+<path d="M50 218L50 206" stroke-width="0.60"/>
+<path d="M518 218L518 206" stroke-width="0.60"/>
+<path d="M410 518L422 518" stroke-width="0.60"/>
+<path d="M410 50L422 50" stroke-width="0.60"/>
+<path d="M50 158L50 146" stroke-width="0.60"/>
+<path d="M518 158L518 146" stroke-width="0.60"/>
+<path d="M62 458L74 458" stroke-width="0.60"/>
+<path d="M506 458L494 458" stroke-width="0.60"/>
+<path d="M62 110L74 110" stroke-width="0.60"/>
+<path d="M506 110L494 110" stroke-width="0.60"/>
+<path d="M110 506L110 494" stroke-width="0.60"/>
+<path d="M458 506L458 494" stroke-width="0.60"/>
+<path d="M110 62L110 74" stroke-width="0.60"/>
+<path d="M458 62L458 74" stroke-width="0.60"/>
+<path d="M134 446L146 446" stroke-width="0.60"/>
+<path d="M134 122L146 122" stroke-width="0.60"/>
+<path d="M122 434L122 422" stroke-width="0.60"/>
+<path d="M446 434L446 422" stroke-width="0.60"/>
+<path d="M194 446L206 446" stroke-width="0.60"/>
+<path d="M194 122L206 122" stroke-width="0.60"/>
+<path d="M122 374L122 362" stroke-width="0.60"/>
+<path d="M446 374L446 362" stroke-width="0.60"/>
+<path d="M254 446L266 446" stroke-width="0.60"/>
+<path d="M254 122L266 122" stroke-width="0.60"/>
+<path d="M122 314L122 302" stroke-width="0.60"/>
+<path d="M446 314L446 302" stroke-width="0.60"/>
+<path d="M314 446L326 446" stroke-width="0.60"/>
+<path d="M314 122L326 122" stroke-width="0.60"/>
+<path d="M122 254L122 242" stroke-width="0.60"/>
+<path d="M446 254L446 242" stroke-width="0.60"/>
+<path d="M374 446L386 446" stroke-width="0.60"/>
+<path d="M374 122L386 122" stroke-width="0.60"/>
+<path d="M122 194L122 182" stroke-width="0.60"/>
+<path d="M446 194L446 182" stroke-width="0.60"/>
+<path d="M182 446L194 446" stroke-width="0.60"/>
+<path d="M182 122L194 122" stroke-width="0.60"/>
+<path d="M122 386L122 374" stroke-width="0.60"/>
+<path d="M446 386L446 374" stroke-width="0.60"/>
+<path d="M242 446L254 446" stroke-width="0.60"/>
+<path d="M242 122L254 122" stroke-width="0.60"/>
+<path d="M122 326L122 314" stroke-width="0.60"/>
+<path d="M446 326L446 314" stroke-width="0.60"/>
+<path d="M302 446L314 446" stroke-width="0.60"/>
+<path d="M302 122L314 122" stroke-width="0.60"/>
+<path d="M122 266L122 254" stroke-width="0.60"/>
+<path d="M446 266L446 254" stroke-width="0.60"/>
+<path d="M362 446L374 446" stroke-width="0.60"/>
+<path d="M362 122L374 122" stroke-width="0.60"/>
+<path d="M122 206L122 194" stroke-width="0.60"/>
+<path d="M446 206L446 194" stroke-width="0.60"/>
+<path d="M422 446L434 446" stroke-width="0.60"/>
+<path d="M422 122L434 122" stroke-width="0.60"/>
+<path d="M122 146L122 134" stroke-width="0.60"/>
+<path d="M446 146L446 134" stroke-width="0.60"/>
+<path d="M134 494L146 494" stroke-width="0.60"/>
+<path d="M134 74L146 74" stroke-width="0.60"/>
+<path d="M74 434L74 422" stroke-width="0.60"/>
+<path d="M494 434L494 422" stroke-width="0.60"/>
+<path d="M194 494L206 494" stroke-width="0.60"/>
+<path d="M194 74L206 74" stroke-width="0.60"/>
+<path d="M74 374L74 362" stroke-width="0.60"/>
+<path d="M494 374L494 362" stroke-width="0.60"/>
+<path d="M254 494L266 494" stroke-width="0.60"/>
+<path d="M254 74L266 74" stroke-width="0.60"/>
+<path d="M74 314L74 302" stroke-width="0.60"/>
+<path d="M494 314L494 302" stroke-width="0.60"/>
+<path d="M314 494L326 494" stroke-width="0.60"/>
+<path d="M314 74L326 74" stroke-width="0.60"/>
+<path d="M74 254L74 242" stroke-width="0.60"/>
+<path d="M494 254L494 242" stroke-width="0.60"/>
+<path d="M374 494L386 494" stroke-width="0.60"/>
+<path d="M374 74L386 74" stroke-width="0.60"/>
+<path d="M74 194L74 182" stroke-width="0.60"/>
+<path d="M494 194L494 182" stroke-width="0.60"/>
+<path d="M182 494L194 494" stroke-width="0.60"/>
+<path d="M182 74L194 74" stroke-width="0.60"/>
+<path d="M74 386L74 374" stroke-width="0.60"/>
+<path d="M494 386L494 374" stroke-width="0.60"/>
+<path d="M242 494L254 494" stroke-width="0.60"/>
+<path d="M242 74L254 74" stroke-width="0.60"/>
+<path d="M74 326L74 314" stroke-width="0.60"/>
+<path d="M494 326L494 314" stroke-width="0.60"/>
+<path d="M302 494L314 494" stroke-width="0.60"/>
+<path d="M302 74L314 74" stroke-width="0.60"/>
+<path d="M74 266L74 254" stroke-width="0.60"/>
+<path d="M494 266L494 254" stroke-width="0.60"/>
+<path d="M362 494L374 494" stroke-width="0.60"/>
+<path d="M362 74L374 74" stroke-width="0.60"/>
+<path d="M74 206L74 194" stroke-width="0.60"/>
+<path d="M494 206L494 194" stroke-width="0.60"/>
+<path d="M422 494L434 494" stroke-width="0.60"/>
+<path d="M422 74L434 74" stroke-width="0.60"/>
+<path d="M74 146L74 134" stroke-width="0.60"/>
+<path d="M494 146L494 134" stroke-width="0.60"/>
+<path d="M146 494L158 494" stroke-width="0.60"/>
+<path d="M146 74L158 74" stroke-width="0.60"/>
+<path d="M74 422L74 410" stroke-width="0.60"/>
+<path d="M494 422L494 410" stroke-width="0.60"/>
+<path d="M206 494L218 494" stroke-width="0.60"/>
+<path d="M206 74L218 74" stroke-width="0.60"/>
+<path d="M74 362L74 350" stroke-width="0.60"/>
+<path d="M494 362L494 350" stroke-width="0.60"/>
+<path d="M266 494L278 494" stroke-width="0.60"/>
+<path d="M266 74L278 74" stroke-width="0.60"/>
+<path d="M74 302L74 290" stroke-width="0.60"/>
+<path d="M494 302L494 290" stroke-width="0.60"/>
+<path d="M326 494L338 494" stroke-width="0.60"/>
+<path d="M326 74L338 74" stroke-width="0.60"/>
+<path d="M74 242L74 230" stroke-width="0.60"/>
+<path d="M494 242L494 230" stroke-width="0.60"/>
+<path d="M386 494L398 494" stroke-width="0.60"/>
+<path d="M386 74L398 74" stroke-width="0.60"/>
+<path d="M74 182L74 170" stroke-width="0.60"/>
+<path d="M494 182L494 170" stroke-width="0.60"/>
+<path d="M170 494L182 494" stroke-width="0.60"/>
+<path d="M170 74L182 74" stroke-width="0.60"/>
+<path d="M74 398L74 386" stroke-width="0.60"/>
+<path d="M494 398L494 386" stroke-width="0.60"/>
+<path d="M230 494L242 494" stroke-width="0.60"/>
+<path d="M230 74L242 74" stroke-width="0.60"/>
+<path d="M74 338L74 326" stroke-width="0.60"/>
+<path d="M494 338L494 326" stroke-width="0.60"/>
+<path d="M290 494L302 494" stroke-width="0.60"/>
+<path d="M290 74L302 74" stroke-width="0.60"/>
+<path d="M74 278L74 266" stroke-width="0.60"/>
+<path d="M494 278L494 266" stroke-width="0.60"/>
+<path d="M350 494L362 494" stroke-width="0.60"/>
+<path d="M350 74L362 74" stroke-width="0.60"/>
+<path d="M74 218L74 206" stroke-width="0.60"/>
+<path d="M494 218L494 206" stroke-width="0.60"/>
+<path d="M410 494L422 494" stroke-width="0.60"/>
+<path d="M410 74L422 74" stroke-width="0.60"/>
+<path d="M74 158L74 146" stroke-width="0.60"/>
+<path d="M494 158L494 146" stroke-width="0.60"/>
+<path d="M158 494L170 494" stroke-width="0.60"/>
+<path d="M158 74L170 74" stroke-width="0.60"/>
+<path d="M74 410L74 398" stroke-width="0.60"/>
+<path d="M494 410L494 398" stroke-width="0.60"/>
+<path d="M218 494L230 494" stroke-width="0.60"/>
+<path d="M218 74L230 74" stroke-width="0.60"/>
+<path d="M74 350L74 338" stroke-width="0.60"/>
+<path d="M494 350L494 338" stroke-width="0.60"/>
+<path d="M278 494L290 494" stroke-width="0.60"/>
+<path d="M278 74L290 74" stroke-width="0.60"/>
+<path d="M74 290L74 278" stroke-width="0.60"/>
+<path d="M494 290L494 278" stroke-width="0.60"/>
+<path d="M338 494L350 494" stroke-width="0.60"/>
+<path d="M338 74L350 74" stroke-width="0.60"/>
+<path d="M74 230L74 218" stroke-width="0.60"/>
+<path d="M494 230L494 218" stroke-width="0.60"/>
+<path d="M398 494L410 494" stroke-width="0.60"/>
+<path d="M398 74L410 74" stroke-width="0.60"/>
+<path d="M74 170L74 158" stroke-width="0.60"/>
+<path d="M494 170L494 158" stroke-width="0.60"/>
+<path d="M122 482L134 482" stroke-width="0.60"/>
+<path d="M446 482L434 482" stroke-width="0.60"/>
+<path d="M122 86L134 86" stroke-width="0.60"/>
+<path d="M446 86L434 86" stroke-width="0.60"/>
+<path d="M86 446L86 434" stroke-width="0.60"/>
+<path d="M482 446L482 434" stroke-width="0.60"/>
+<path d="M86 122L86 134" stroke-width="0.60"/>
+<path d="M482 122L482 134" stroke-width="0.60"/>
+<path d="M122 470L134 470" stroke-width="0.60"/>
+<path d="M446 470L434 470" stroke-width="0.60"/>
+<path d="M122 98L134 98" stroke-width="0.60"/>
+<path d="M446 98L434 98" stroke-width="0.60"/>
+<path d="M98 446L98 434" stroke-width="0.60"/>
+<path d="M470 446L470 434" stroke-width="0.60"/>
+<path d="M98 122L98 134" stroke-width="0.60"/>
+<path d="M470 122L470 134" stroke-width="0.60"/>
+<path d="M62 470L74 470" stroke-width="0.60"/>
+<path d="M506 470L494 470" stroke-width="0.60"/>
+<path d="M62 98L74 98" stroke-width="0.60"/>
+<path d="M506 98L494 98" stroke-width="0.60"/>
+<path d="M98 506L98 494" stroke-width="0.60"/>
+<path d="M470 506L470 494" stroke-width="0.60"/>
+<path d="M98 62L98 74" stroke-width="0.60"/>
+<path d="M470 62L470 74" stroke-width="0.60"/>
+<path d="M62 446L74 446" stroke-width="0.60"/>
+<path d="M506 446L494 446" stroke-width="0.60"/>
+<path d="M62 122L74 122" stroke-width="0.60"/>
+<path d="M506 122L494 122" stroke-width="0.60"/>
+<path d="M122 506L122 494" stroke-width="0.60"/>
+<path d="M446 506L446 494" stroke-width="0.60"/>
+<path d="M122 62L122 74" stroke-width="0.60"/>
+<path d="M446 62L446 74" stroke-width="0.60"/>
+<path d="M146 494L146 482" stroke-width="0.60"/>
+<path d="M146 74L146 86" stroke-width="0.60"/>
+<path d="M74 422L86 422" stroke-width="0.60"/>
+<path d="M494 422L482 422" stroke-width="0.60"/>
+<path d="M206 494L206 482" stroke-width="0.60"/>
+<path d="M206 74L206 86" stroke-width="0.60"/>
+<path d="M74 362L86 362" stroke-width="0.60"/>
+<path d="M494 362L482 362" stroke-width="0.60"/>
+<path d="M266 494L266 482" stroke-width="0.60"/>
+<path d="M266 74L266 86" stroke-width="0.60"/>
+<path d="M74 302L86 302" stroke-width="0.60"/>
+<path d="M494 302L482 302" stroke-width="0.60"/>
+<path d="M326 494L326 482" stroke-width="0.60"/>
+<path d="M326 74L326 86" stroke-width="0.60"/>
+<path d="M74 242L86 242" stroke-width="0.60"/>
+<path d="M494 242L482 242" stroke-width="0.60"/>
+<path d="M386 494L386 482" stroke-width="0.60"/>
+<path d="M386 74L386 86" stroke-width="0.60"/>
+<path d="M74 182L86 182" stroke-width="0.60"/>
+<path d="M494 182L482 182" stroke-width="0.60"/>
+<path d="M182 494L182 482" stroke-width="0.60"/>
+<path d="M182 74L182 86" stroke-width="0.60"/>
+<path d="M74 386L86 386" stroke-width="0.60"/>
+<path d="M494 386L482 386" stroke-width="0.60"/>
+<path d="M242 494L242 482" stroke-width="0.60"/>
+<path d="M242 74L242 86" stroke-width="0.60"/>
+<path d="M74 326L86 326" stroke-width="0.60"/>
+<path d="M494 326L482 326" stroke-width="0.60"/>
+<path d="M302 494L302 482" stroke-width="0.60"/>
+<path d="M302 74L302 86" stroke-width="0.60"/>
+<path d="M74 266L86 266" stroke-width="0.60"/>
+<path d="M494 266L482 266" stroke-width="0.60"/>
+<path d="M362 494L362 482" stroke-width="0.60"/>
+<path d="M362 74L362 86" stroke-width="0.60"/>
+<path d="M74 206L86 206" stroke-width="0.60"/>
+<path d="M494 206L482 206" stroke-width="0.60"/>
+<path d="M422 494L422 482" stroke-width="0.60"/>
+<path d="M422 74L422 86" stroke-width="0.60"/>
+<path d="M74 146L86 146" stroke-width="0.60"/>
+<path d="M494 146L482 146" stroke-width="0.60"/>
+<path d="M146 470L146 458" stroke-width="0.60"/>
+<path d="M146 98L146 110" stroke-width="0.60"/>
+<path d="M98 422L110 422" stroke-width="0.60"/>
+<path d="M470 422L458 422" stroke-width="0.60"/>
+<path d="M206 470L206 458" stroke-width="0.60"/>
+<path d="M206 98L206 110" stroke-width="0.60"/>
+<path d="M98 362L110 362" stroke-width="0.60"/>
+<path d="M470 362L458 362" stroke-width="0.60"/>
+<path d="M266 470L266 458" stroke-width="0.60"/>
+<path d="M266 98L266 110" stroke-width="0.60"/>
+<path d="M98 302L110 302" stroke-width="0.60"/>
+<path d="M470 302L458 302" stroke-width="0.60"/>
+<path d="M326 470L326 458" stroke-width="0.60"/>
+<path d="M326 98L326 110" stroke-width="0.60"/>
+<path d="M98 242L110 242" stroke-width="0.60"/>
+<path d="M470 242L458 242" stroke-width="0.60"/>
+<path d="M386 470L386 458" stroke-width="0.60"/>
+<path d="M386 98L386 110" stroke-width="0.60"/>
+<path d="M98 182L110 182" stroke-width="0.60"/>
+<path d="M470 182L458 182" stroke-width="0.60"/>
+<path d="M182 470L182 458" stroke-width="0.60"/>
+<path d="M182 98L182 110" stroke-width="0.60"/>
+<path d="M98 386L110 386" stroke-width="0.60"/>
+<path d="M470 386L458 386" stroke-width="0.60"/>
+<path d="M242 470L242 458" stroke-width="0.60"/>
+<path d="M242 98L242 110" stroke-width="0.60"/>
+<path d="M98 326L110 326" stroke-width="0.60"/>
+<path d="M470 326L458 326" stroke-width="0.60"/>
+<path d="M302 470L302 458" stroke-width="0.60"/>
+<path d="M302 98L302 110" stroke-width="0.60"/>
+<path d="M98 266L110 266" stroke-width="0.60"/>
+<path d="M470 266L458 266" stroke-width="0.60"/>
+<path d="M362 470L362 458" stroke-width="0.60"/>
+<path d="M362 98L362 110" stroke-width="0.60"/>
+<path d="M98 206L110 206" stroke-width="0.60"/>
+<path d="M470 206L458 206" stroke-width="0.60"/>
+<path d="M422 470L422 458" stroke-width="0.60"/>
+<path d="M422 98L422 110" stroke-width="0.60"/>
+<path d="M98 146L110 146" stroke-width="0.60"/>
+<path d="M470 146L458 146" stroke-width="0.60"/>
+<path d="M134 506L146 506" stroke-width="0.60"/>
+<path d="M134 62L146 62" stroke-width="0.60"/>
+<path d="M62 434L62 422" stroke-width="0.60"/>
+<path d="M506 434L506 422" stroke-width="0.60"/>
+<path d="M194 506L206 506" stroke-width="0.60"/>
+<path d="M194 62L206 62" stroke-width="0.60"/>
+<path d="M62 374L62 362" stroke-width="0.60"/>
+<path d="M506 374L506 362" stroke-width="0.60"/>
+<path d="M254 506L266 506" stroke-width="0.60"/>
+<path d="M254 62L266 62" stroke-width="0.60"/>
+<path d="M62 314L62 302" stroke-width="0.60"/>
+<path d="M506 314L506 302" stroke-width="0.60"/>
+<path d="M314 506L326 506" stroke-width="0.60"/>
+<path d="M314 62L326 62" stroke-width="0.60"/>
+<path d="M62 254L62 242" stroke-width="0.60"/>
+<path d="M506 254L506 242" stroke-width="0.60"/>
+<path d="M374 506L386 506" stroke-width="0.60"/>
+<path d="M374 62L386 62" stroke-width="0.60"/>
+<path d="M62 194L62 182" stroke-width="0.60"/>
+<path d="M506 194L506 182" stroke-width="0.60"/>
+<path d="M182 506L194 506" stroke-width="0.60"/>
+<path d="M182 62L194 62" stroke-width="0.60"/>
+<path d="M62 386L62 374" stroke-width="0.60"/>
+<path d="M506 386L506 374" stroke-width="0.60"/>
+<path d="M242 506L254 506" stroke-width="0.60"/>
+<path d="M242 62L254 62" stroke-width="0.60"/>
+<path d="M62 326L62 314" stroke-width="0.60"/>
+<path d="M506 326L506 314" stroke-width="0.60"/>
+<path d="M302 506L314 506" stroke-width="0.60"/>
+<path d="M302 62L314 62" stroke-width="0.60"/>
+<path d="M62 266L62 254" stroke-width="0.60"/>
+<path d="M506 266L506 254" stroke-width="0.60"/>
+<path d="M362 506L374 506" stroke-width="0.60"/>
+<path d="M362 62L374 62" stroke-width="0.60"/>
+<path d="M62 206L62 194" stroke-width="0.60"/>
+<path d="M506 206L506 194" stroke-width="0.60"/>
+<path d="M422 506L434 506" stroke-width="0.60"/>
+<path d="M422 62L434 62" stroke-width="0.60"/>
+<path d="M62 146L62 134" stroke-width="0.60"/>
+<path d="M506 146L506 134" stroke-width="0.60"/>
+<path d="M158 494L158 482" stroke-width="0.60"/>
+<path d="M158 74L158 86" stroke-width="0.60"/>
+<path d="M74 410L86 410" stroke-width="0.60"/>
+<path d="M494 410L482 410" stroke-width="0.60"/>
+<path d="M218 494L218 482" stroke-width="0.60"/>
+<path d="M218 74L218 86" stroke-width="0.60"/>
+<path d="M74 350L86 350" stroke-width="0.60"/>
+<path d="M494 350L482 350" stroke-width="0.60"/>
+<path d="M278 494L278 482" stroke-width="0.60"/>
+<path d="M278 74L278 86" stroke-width="0.60"/>
+<path d="M74 290L86 290" stroke-width="0.60"/>
+<path d="M494 290L482 290" stroke-width="0.60"/>
+<path d="M338 494L338 482" stroke-width="0.60"/>
+<path d="M338 74L338 86" stroke-width="0.60"/>
+<path d="M74 230L86 230" stroke-width="0.60"/>
+<path d="M494 230L482 230" stroke-width="0.60"/>
+<path d="M398 494L398 482" stroke-width="0.60"/>
+<path d="M398 74L398 86" stroke-width="0.60"/>
+<path d="M74 170L86 170" stroke-width="0.60"/>
+<path d="M494 170L482 170" stroke-width="0.60"/>
+<path d="M170 494L170 482" stroke-width="0.60"/>
+<path d="M170 74L170 86" stroke-width="0.60"/>
+<path d="M74 398L86 398" stroke-width="0.60"/>
+<path d="M494 398L482 398" stroke-width="0.60"/>
+<path d="M230 494L230 482" stroke-width="0.60"/>
+<path d="M230 74L230 86" stroke-width="0.60"/>
+<path d="M74 338L86 338" stroke-width="0.60"/>
+<path d="M494 338L482 338" stroke-width="0.60"/>
+<path d="M290 494L290 482" stroke-width="0.60"/>
+<path d="M290 74L290 86" stroke-width="0.60"/>
+<path d="M74 278L86 278" stroke-width="0.60"/>
+<path d="M494 278L482 278" stroke-width="0.60"/>
+<path d="M350 494L350 482" stroke-width="0.60"/>
+<path d="M350 74L350 86" stroke-width="0.60"/>
+<path d="M74 218L86 218" stroke-width="0.60"/>
+<path d="M494 218L482 218" stroke-width="0.60"/>
+<path d="M410 494L410 482" stroke-width="0.60"/>
+<path d="M410 74L410 86" stroke-width="0.60"/>
+<path d="M74 158L86 158" stroke-width="0.60"/>
+<path d="M494 158L482 158" stroke-width="0.60"/>
+<path d="M134 494L134 482" stroke-width="0.60"/>
+<path d="M134 74L134 86" stroke-width="0.60"/>
+<path d="M74 434L86 434" stroke-width="0.60"/>
+<path d="M494 434L482 434" stroke-width="0.60"/>
+<path d="M194 494L194 482" stroke-width="0.60"/>
+<path d="M194 74L194 86" stroke-width="0.60"/>
+<path d="M74 374L86 374" stroke-width="0.60"/>
+<path d="M494 374L482 374" stroke-width="0.60"/>
+<path d="M254 494L254 482" stroke-width="0.60"/>
+<path d="M254 74L254 86" stroke-width="0.60"/>
+<path d="M74 314L86 314" stroke-width="0.60"/>
+<path d="M494 314L482 314" stroke-width="0.60"/>
+<path d="M314 494L314 482" stroke-width="0.60"/>
+<path d="M314 74L314 86" stroke-width="0.60"/>
+<path d="M74 254L86 254" stroke-width="0.60"/>
+<path d="M494 254L482 254" stroke-width="0.60"/>
+<path d="M374 494L374 482" stroke-width="0.60"/>
+<path d="M374 74L374 86" stroke-width="0.60"/>
+<path d="M74 194L86 194" stroke-width="0.60"/>
+<path d="M494 194L482 194" stroke-width="0.60"/>
+<path d="M434 494L434 482" stroke-width="0.60"/>
+<path d="M434 74L434 86" stroke-width="0.60"/>
+<path d="M74 134L86 134" stroke-width="0.60"/>
+<path d="M494 134L482 134" stroke-width="0.60"/>
+<path d="M74 494L86 494" stroke-width="0.60"/>
+<path d="M494 494L482 494" stroke-width="0.60"/>
+<path d="M74 74L86 74" stroke-width="0.60"/>
+<path d="M494 74L482 74" stroke-width="0.60"/>
+<path d="M74 494L74 482" stroke-width="0.60"/>
+<path d="M494 494L494 482" stroke-width="0.60"/>
+<path d="M74 74L74 86" stroke-width="0.60"/>
+<path d="M494 74L494 86" stroke-width="0.60"/>
+<path d="M146 458L158 458" stroke-width="0.60"/>
+<path d="M146 110L158 110" stroke-width="0.60"/>
+<path d="M110 422L110 410" stroke-width="0.60"/>
+<path d="M458 422L458 410" stroke-width="0.60"/>
+<path d="M206 458L218 458" stroke-width="0.60"/>
+<path d="M206 110L218 110" stroke-width="0.60"/>
+<path d="M110 362L110 350" stroke-width="0.60"/>
+<path d="M458 362L458 350" stroke-width="0.60"/>
+<path d="M266 458L278 458" stroke-width="0.60"/>
+<path d="M266 110L278 110" stroke-width="0.60"/>
+<path d="M110 302L110 290" stroke-width="0.60"/>
+<path d="M458 302L458 290" stroke-width="0.60"/>
+<path d="M326 458L338 458" stroke-width="0.60"/>
+<path d="M326 110L338 110" stroke-width="0.60"/>
+<path d="M110 242L110 230" stroke-width="0.60"/>
+<path d="M458 242L458 230" stroke-width="0.60"/>
+<path d="M386 458L398 458" stroke-width="0.60"/>
+<path d="M386 110L398 110" stroke-width="0.60"/>
+<path d="M110 182L110 170" stroke-width="0.60"/>
+<path d="M458 182L458 170" stroke-width="0.60"/>
+<path d="M170 458L182 458" stroke-width="0.60"/>
+<path d="M170 110L182 110" stroke-width="0.60"/>
+<path d="M110 398L110 386" stroke-width="0.60"/>
+<path d="M458 398L458 386" stroke-width="0.60"/>
+<path d="M230 458L242 458" stroke-width="0.60"/>
+<path d="M230 110L242 110" stroke-width="0.60"/>
+<path d="M110 338L110 326" stroke-width="0.60"/>
+<path d="M458 338L458 326" stroke-width="0.60"/>
+<path d="M290 458L302 458" stroke-width="0.60"/>
+<path d="M290 110L302 110" stroke-width="0.60"/>
+<path d="M110 278L110 266" stroke-width="0.60"/>
+<path d="M458 278L458 266" stroke-width="0.60"/>
+<path d="M350 458L362 458" stroke-width="0.60"/>
+<path d="M350 110L362 110" stroke-width="0.60"/>
+<path d="M110 218L110 206" stroke-width="0.60"/>
+<path d="M458 218L458 206" stroke-width="0.60"/>
+<path d="M410 458L422 458" stroke-width="0.60"/>
+<path d="M410 110L422 110" stroke-width="0.60"/>
+<path d="M110 158L110 146" stroke-width="0.60"/>
+<path d="M458 158L458 146" stroke-width="0.60"/>
+<path d="M146 446L158 446" stroke-width="0.60"/>
+<path d="M146 122L158 122" stroke-width="0.60"/>
+<path d="M122 422L122 410" stroke-width="0.60"/>
+<path d="M446 422L446 410" stroke-width="0.60"/>
+<path d="M206 446L218 446" stroke-width="0.60"/>
+<path d="M206 122L218 122" stroke-width="0.60"/>
+<path d="M122 362L122 350" stroke-width="0.60"/>
+<path d="M446 362L446 350" stroke-width="0.60"/>
+<path d="M266 446L278 446" stroke-width="0.60"/>
+<path d="M266 122L278 122" stroke-width="0.60"/>
+<path d="M122 302L122 290" stroke-width="0.60"/>
+<path d="M446 302L446 290" stroke-width="0.60"/>
+<path d="M326 446L338 446" stroke-width="0.60"/>
+<path d="M326 122L338 122" stroke-width="0.60"/>
+<path d="M122 242L122 230" stroke-width="0.60"/>
+<path d="M446 242L446 230" stroke-width="0.60"/>
+<path d="M386 446L398 446" stroke-width="0.60"/>
+<path d="M386 122L398 122" stroke-width="0.60"/>
+<path d="M122 182L122 170" stroke-width="0.60"/>
+<path d="M446 182L446 170" stroke-width="0.60"/>
+<path d="M170 446L182 446" stroke-width="0.60"/>
+<path d="M170 122L182 122" stroke-width="0.60"/>
+<path d="M122 398L122 386" stroke-width="0.60"/>
+<path d="M446 398L446 386" stroke-width="0.60"/>
+<path d="M230 446L242 446" stroke-width="0.60"/>
+<path d="M230 122L242 122" stroke-width="0.60"/>
+<path d="M122 338L122 326" stroke-width="0.60"/>
+<path d="M446 338L446 326" stroke-width="0.60"/>
+<path d="M290 446L302 446" stroke-width="0.60"/>
+<path d="M290 122L302 122" stroke-width="0.60"/>
+<path d="M122 278L122 266" stroke-width="0.60"/>
+<path d="M446 278L446 266" stroke-width="0.60"/>
+<path d="M350 446L362 446" stroke-width="0.60"/>
+<path d="M350 122L362 122" stroke-width="0.60"/>
+<path d="M122 218L122 206" stroke-width="0.60"/>
+<path d="M446 218L446 206" stroke-width="0.60"/>
+<path d="M410 446L422 446" stroke-width="0.60"/>
+<path d="M410 122L422 122" stroke-width="0.60"/>
+<path d="M122 158L122 146" stroke-width="0.60"/>
+<path d="M446 158L446 146" stroke-width="0.60"/>
+<path d="M98 446L110 446" stroke-width="0.60"/>
+<path d="M470 446L458 446" stroke-width="0.60"/>
+<path d="M98 122L110 122" stroke-width="0.60"/>
+<path d="M470 122L458 122" stroke-width="0.60"/>
+<path d="M122 470L122 458" stroke-width="0.60"/>
+<path d="M446 470L446 458" stroke-width="0.60"/>
+<path d="M122 98L122 110" stroke-width="0.60"/>
+<path d="M446 98L446 110" stroke-width="0.60"/>
+<path d="M158 470L170 470" stroke-width="0.60"/>
+<path d="M158 98L170 98" stroke-width="0.60"/>
+<path d="M98 410L98 398" stroke-width="0.60"/>
+<path d="M470 410L470 398" stroke-width="0.60"/>
+<path d="M218 470L230 470" stroke-width="0.60"/>
+<path d="M218 98L230 98" stroke-width="0.60"/>
+<path d="M98 350L98 338" stroke-width="0.60"/>
+<path d="M470 350L470 338" stroke-width="0.60"/>
+<path d="M278 470L290 470" stroke-width="0.60"/>
+<path d="M278 98L290 98" stroke-width="0.60"/>
+<path d="M98 290L98 278" stroke-width="0.60"/>
+<path d="M470 290L470 278" stroke-width="0.60"/>
+<path d="M338 470L350 470" stroke-width="0.60"/>
+<path d="M338 98L350 98" stroke-width="0.60"/>
+<path d="M98 230L98 218" stroke-width="0.60"/>
+<path d="M470 230L470 218" stroke-width="0.60"/>
+<path d="M398 470L410 470" stroke-width="0.60"/>
+<path d="M398 98L410 98" stroke-width="0.60"/>
+<path d="M98 170L98 158" stroke-width="0.60"/>
+<path d="M470 170L470 158" stroke-width="0.60"/>
+<path d="M38 494L50 494" stroke-width="0.76"/>
+<path d="M530 494L518 494" stroke-width="0.76"/>
+<path d="M38 74L50 74" stroke-width="0.76"/>
+<path d="M530 74L518 74" stroke-width="0.76"/>
+<path d="M74 530L74 518" stroke-width="0.76"/>
+<path d="M494 530L494 518" stroke-width="0.76"/>
+<path d="M74 38L74 50" stroke-width="0.76"/>
+<path d="M494 38L494 50" stroke-width="0.76"/>
+<path d="M110 458L122 458" stroke-width="0.79"/>
+<path d="M458 458L446 458" stroke-width="0.79"/>
+<path d="M110 110L122 110" stroke-width="0.79"/>
+<path d="M458 110L446 110" stroke-width="0.79"/>
+<path d="M110 458L110 446" stroke-width="0.79"/>
+<path d="M458 458L458 446" stroke-width="0.79"/>
+<path d="M110 110L110 122" stroke-width="0.79"/>
+<path d="M458 110L458 122" stroke-width="0.79"/>
+<path d="M146 506L146 494" stroke-width="0.80"/>
+<path d="M146 62L146 74" stroke-width="0.80"/>
+<path d="M62 422L74 422" stroke-width="0.80"/>
+<path d="M506 422L494 422" stroke-width="0.80"/>
+<path d="M206 506L206 494" stroke-width="0.80"/>
+<path d="M206 62L206 74" stroke-width="0.80"/>
+<path d="M62 362L74 362" stroke-width="0.80"/>
+<path d="M506 362L494 362" stroke-width="0.80"/>
+<path d="M266 506L266 494" stroke-width="0.80"/>
+<path d="M266 62L266 74" stroke-width="0.80"/>
+<path d="M62 302L74 302" stroke-width="0.80"/>
+<path d="M506 302L494 302" stroke-width="0.80"/>
+<path d="M326 506L326 494" stroke-width="0.80"/>
+<path d="M326 62L326 74" stroke-width="0.80"/>
+<path d="M62 242L74 242" stroke-width="0.80"/>
+<path d="M506 242L494 242" stroke-width="0.80"/>
+<path d="M386 506L386 494" stroke-width="0.80"/>
+<path d="M386 62L386 74" stroke-width="0.80"/>
+<path d="M62 182L74 182" stroke-width="0.80"/>
+<path d="M506 182L494 182" stroke-width="0.80"/>
+<path d="M182 506L182 494" stroke-width="0.80"/>
+<path d="M182 62L182 74" stroke-width="0.80"/>
+<path d="M62 386L74 386" stroke-width="0.80"/>
+<path d="M506 386L494 386" stroke-width="0.80"/>
+<path d="M242 506L242 494" stroke-width="0.80"/>
+<path d="M242 62L242 74" stroke-width="0.80"/>
+<path d="M62 326L74 326" stroke-width="0.80"/>
+<path d="M506 326L494 326" stroke-width="0.80"/>
+<path d="M302 506L302 494" stroke-width="0.80"/>
+<path d="M302 62L302 74" stroke-width="0.80"/>
+<path d="M62 266L74 266" stroke-width="0.80"/>
+<path d="M506 266L494 266" stroke-width="0.80"/>
+<path d="M362 506L362 494" stroke-width="0.80"/>
+<path d="M362 62L362 74" stroke-width="0.80"/>
+<path d="M62 206L74 206" stroke-width="0.80"/>
+<path d="M506 206L494 206" stroke-width="0.80"/>
+<path d="M422 506L422 494" stroke-width="0.80"/>
+<path d="M422 62L422 74" stroke-width="0.80"/>
+<path d="M62 146L74 146" stroke-width="0.80"/>
+<path d="M506 146L494 146" stroke-width="0.80"/>
+<path d="M134 530L134 518" stroke-width="0.82"/>
+<path d="M134 38L134 50" stroke-width="0.82"/>
+<path d="M38 434L50 434" stroke-width="0.82"/>
+<path d="M530 434L518 434" stroke-width="0.82"/>
+<path d="M194 530L194 518" stroke-width="0.82"/>
+<path d="M194 38L194 50" stroke-width="0.82"/>
+<path d="M38 374L50 374" stroke-width="0.82"/>
+<path d="M530 374L518 374" stroke-width="0.82"/>
+<path d="M254 530L254 518" stroke-width="0.82"/>
+<path d="M254 38L254 50" stroke-width="0.82"/>
+<path d="M38 314L50 314" stroke-width="0.82"/>
+<path d="M530 314L518 314" stroke-width="0.82"/>
+<path d="M314 530L314 518" stroke-width="0.82"/>
+<path d="M314 38L314 50" stroke-width="0.82"/>
+<path d="M38 254L50 254" stroke-width="0.82"/>
+<path d="M530 254L518 254" stroke-width="0.82"/>
+<path d="M374 530L374 518" stroke-width="0.82"/>
+<path d="M374 38L374 50" stroke-width="0.82"/>
+<path d="M38 194L50 194" stroke-width="0.82"/>
+<path d="M530 194L518 194" stroke-width="0.82"/>
+<path d="M434 530L434 518" stroke-width="0.82"/>
+<path d="M434 38L434 50" stroke-width="0.82"/>
+<path d="M38 134L50 134" stroke-width="0.82"/>
+<path d="M530 134L518 134" stroke-width="0.82"/>
+<path d="M158 506L158 494" stroke-width="1.01"/>
+<path d="M158 62L158 74" stroke-width="1.01"/>
+<path d="M62 410L74 410" stroke-width="1.01"/>
+<path d="M506 410L494 410" stroke-width="1.01"/>
+<path d="M218 506L218 494" stroke-width="1.01"/>
+<path d="M218 62L218 74" stroke-width="1.01"/>
+<path d="M62 350L74 350" stroke-width="1.01"/>
+<path d="M506 350L494 350" stroke-width="1.01"/>
+<path d="M278 506L278 494" stroke-width="1.01"/>
+<path d="M278 62L278 74" stroke-width="1.01"/>
+<path d="M62 290L74 290" stroke-width="1.01"/>
+<path d="M506 290L494 290" stroke-width="1.01"/>
+<path d="M338 506L338 494" stroke-width="1.01"/>
+<path d="M338 62L338 74" stroke-width="1.01"/>
+<path d="M62 230L74 230" stroke-width="1.01"/>
+<path d="M506 230L494 230" stroke-width="1.01"/>
+<path d="M398 506L398 494" stroke-width="1.01"/>
+<path d="M398 62L398 74" stroke-width="1.01"/>
+<path d="M62 170L74 170" stroke-width="1.01"/>
+<path d="M506 170L494 170" stroke-width="1.01"/>
+<path d="M170 506L170 494" stroke-width="1.01"/>
+<path d="M170 62L170 74" stroke-width="1.01"/>
+<path d="M62 398L74 398" stroke-width="1.01"/>
+<path d="M506 398L494 398" stroke-width="1.01"/>
+<path d="M230 506L230 494" stroke-width="1.01"/>
+<path d="M230 62L230 74" stroke-width="1.01"/>
+<path d="M62 338L74 338" stroke-width="1.01"/>
+<path d="M506 338L494 338" stroke-width="1.01"/>
+<path d="M290 506L290 494" stroke-width="1.01"/>
+<path d="M290 62L290 74" stroke-width="1.01"/>
+<path d="M62 278L74 278" stroke-width="1.01"/>
+<path d="M506 278L494 278" stroke-width="1.01"/>
+<path d="M350 506L350 494" stroke-width="1.01"/>
+<path d="M350 62L350 74" stroke-width="1.01"/>
+<path d="M62 218L74 218" stroke-width="1.01"/>
+<path d="M506 218L494 218" stroke-width="1.01"/>
+<path d="M410 506L410 494" stroke-width="1.01"/>
+<path d="M410 62L410 74" stroke-width="1.01"/>
+<path d="M62 158L74 158" stroke-width="1.01"/>
+<path d="M506 158L494 158" stroke-width="1.01"/>
+<path d="M146 506L158 506" stroke-width="1.11"/>
+<path d="M146 62L158 62" stroke-width="1.11"/>
+<path d="M62 422L62 410" stroke-width="1.11"/>
+<path d="M506 422L506 410" stroke-width="1.11"/>
+<path d="M206 506L218 506" stroke-width="1.11"/>
+<path d="M206 62L218 62" stroke-width="1.11"/>
+<path d="M62 362L62 350" stroke-width="1.11"/>
+<path d="M506 362L506 350" stroke-width="1.11"/>
+<path d="M266 506L278 506" stroke-width="1.11"/>
+<path d="M266 62L278 62" stroke-width="1.11"/>
+<path d="M62 302L62 290" stroke-width="1.11"/>
+<path d="M506 302L506 290" stroke-width="1.11"/>
+<path d="M326 506L338 506" stroke-width="1.11"/>
+<path d="M326 62L338 62" stroke-width="1.11"/>
+<path d="M62 242L62 230" stroke-width="1.11"/>
+<path d="M506 242L506 230" stroke-width="1.11"/>
+<path d="M386 506L398 506" stroke-width="1.11"/>
+<path d="M386 62L398 62" stroke-width="1.11"/>
+<path d="M62 182L62 170" stroke-width="1.11"/>
+<path d="M506 182L506 170" stroke-width="1.11"/>
+<path d="M170 506L182 506" stroke-width="1.11"/>
+<path d="M170 62L182 62" stroke-width="1.11"/>
+<path d="M62 398L62 386" stroke-width="1.11"/>
+<path d="M506 398L506 386" stroke-width="1.11"/>
+<path d="M230 506L242 506" stroke-width="1.11"/>
+<path d="M230 62L242 62" stroke-width="1.11"/>
+<path d="M62 338L62 326" stroke-width="1.11"/>
+<path d="M506 338L506 326" stroke-width="1.11"/>
+<path d="M290 506L302 506" stroke-width="1.11"/>
+<path d="M290 62L302 62" stroke-width="1.11"/>
+<path d="M62 278L62 266" stroke-width="1.11"/>
+<path d="M506 278L506 266" stroke-width="1.11"/>
+<path d="M350 506L362 506" stroke-width="1.11"/>
+<path d="M350 62L362 62" stroke-width="1.11"/>
+<path d="M62 218L62 206" stroke-width="1.11"/>
+<path d="M506 218L506 206" stroke-width="1.11"/>
+<path d="M410 506L422 506" stroke-width="1.11"/>
+<path d="M410 62L422 62" stroke-width="1.11"/>
+<path d="M62 158L62 146" stroke-width="1.11"/>
+<path d="M506 158L506 146" stroke-width="1.11"/>
+<path d="M158 506L170 506" stroke-width="1.13"/>
+<path d="M158 62L170 62" stroke-width="1.13"/>
+<path d="M62 410L62 398" stroke-width="1.13"/>
+<path d="M506 410L506 398" stroke-width="1.13"/>
+<path d="M218 506L230 506" stroke-width="1.13"/>
+<path d="M218 62L230 62" stroke-width="1.13"/>
+<path d="M62 350L62 338" stroke-width="1.13"/>
+<path d="M506 350L506 338" stroke-width="1.13"/>
+<path d="M278 506L290 506" stroke-width="1.13"/>
+<path d="M278 62L290 62" stroke-width="1.13"/>
+<path d="M62 290L62 278" stroke-width="1.13"/>
+<path d="M506 290L506 278" stroke-width="1.13"/>
+<path d="M338 506L350 506" stroke-width="1.13"/>
+<path d="M338 62L350 62" stroke-width="1.13"/>
+<path d="M62 230L62 218" stroke-width="1.13"/>
+<path d="M506 230L506 218" stroke-width="1.13"/>
+<path d="M398 506L410 506" stroke-width="1.13"/>
+<path d="M398 62L410 62" stroke-width="1.13"/>
+<path d="M62 170L62 158" stroke-width="1.13"/>
+<path d="M506 170L506 158" stroke-width="1.13"/>
+<path d="M122 494L134 494" stroke-width="1.20"/>
+<path d="M446 494L434 494" stroke-width="1.20"/>
+<path d="M122 74L134 74" stroke-width="1.20"/>
+<path d="M446 74L434 74" stroke-width="1.20"/>
+<path d="M74 446L74 434" stroke-width="1.20"/>
+<path d="M494 446L494 434" stroke-width="1.20"/>
+<path d="M74 122L74 134" stroke-width="1.20"/>
+<path d="M494 122L494 134" stroke-width="1.20"/>
+<path d="M134 518L134 506" stroke-width="1.35"/>
+<path d="M134 50L134 62" stroke-width="1.35"/>
+<path d="M50 434L62 434" stroke-width="1.35"/>
+<path d="M518 434L506 434" stroke-width="1.35"/>
+<path d="M194 518L194 506" stroke-width="1.35"/>
+<path d="M194 50L194 62" stroke-width="1.35"/>
+<path d="M50 374L62 374" stroke-width="1.35"/>
+<path d="M518 374L506 374" stroke-width="1.35"/>
+<path d="M254 518L254 506" stroke-width="1.35"/>
+<path d="M254 50L254 62" stroke-width="1.35"/>
+<path d="M50 314L62 314" stroke-width="1.35"/>
+<path d="M518 314L506 314" stroke-width="1.35"/>
+<path d="M314 518L314 506" stroke-width="1.35"/>
+<path d="M314 50L314 62" stroke-width="1.35"/>
+<path d="M50 254L62 254" stroke-width="1.35"/>
+<path d="M518 254L506 254" stroke-width="1.35"/>
+<path d="M374 518L374 506" stroke-width="1.35"/>
+<path d="M374 50L374 62" stroke-width="1.35"/>
+<path d="M50 194L62 194" stroke-width="1.35"/>
+<path d="M518 194L506 194" stroke-width="1.35"/>
+<path d="M434 518L434 506" stroke-width="1.35"/>
+<path d="M434 50L434 62" stroke-width="1.35"/>
+<path d="M50 134L62 134" stroke-width="1.35"/>
+<path d="M518 134L506 134" stroke-width="1.35"/>
+<path d="M50 494L62 494" stroke-width="1.36"/>
+<path d="M518 494L506 494" stroke-width="1.36"/>
+<path d="M50 74L62 74" stroke-width="1.36"/>
+<path d="M518 74L506 74" stroke-width="1.36"/>
+<path d="M74 518L74 506" stroke-width="1.36"/>
+<path d="M494 518L494 506" stroke-width="1.36"/>
+<path d="M74 50L74 62" stroke-width="1.36"/>
+<path d="M494 50L494 62" stroke-width="1.36"/>
+<path d="M134 470L134 458" stroke-width="2.01"/>
+<path d="M134 98L134 110" stroke-width="2.01"/>
+<path d="M98 434L110 434" stroke-width="2.01"/>
+<path d="M470 434L458 434" stroke-width="2.01"/>
+<path d="M194 470L194 458" stroke-width="2.01"/>
+<path d="M194 98L194 110" stroke-width="2.01"/>
+<path d="M98 374L110 374" stroke-width="2.01"/>
+<path d="M470 374L458 374" stroke-width="2.01"/>
+<path d="M254 470L254 458" stroke-width="2.01"/>
+<path d="M254 98L254 110" stroke-width="2.01"/>
+<path d="M98 314L110 314" stroke-width="2.01"/>
+<path d="M470 314L458 314" stroke-width="2.01"/>
+<path d="M314 470L314 458" stroke-width="2.01"/>
+<path d="M314 98L314 110" stroke-width="2.01"/>
+<path d="M98 254L110 254" stroke-width="2.01"/>
+<path d="M470 254L458 254" stroke-width="2.01"/>
+<path d="M374 470L374 458" stroke-width="2.01"/>
+<path d="M374 98L374 110" stroke-width="2.01"/>
+<path d="M98 194L110 194" stroke-width="2.01"/>
+<path d="M470 194L458 194" stroke-width="2.01"/>
+<path d="M434 470L434 458" stroke-width="2.01"/>
+<path d="M434 98L434 110" stroke-width="2.01"/>
+<path d="M98 134L110 134" stroke-width="2.01"/>
+<path d="M470 134L458 134" stroke-width="2.01"/>
+<path d="M158 446L170 446" stroke-width="2.02"/>
+<path d="M158 122L170 122" stroke-width="2.02"/>
+<path d="M122 410L122 398" stroke-width="2.02"/>
+<path d="M446 410L446 398" stroke-width="2.02"/>
+<path d="M218 446L230 446" stroke-width="2.02"/>
+<path d="M218 122L230 122" stroke-width="2.02"/>
+<path d="M122 350L122 338" stroke-width="2.02"/>
+<path d="M446 350L446 338" stroke-width="2.02"/>
+<path d="M278 446L290 446" stroke-width="2.02"/>
+<path d="M278 122L290 122" stroke-width="2.02"/>
+<path d="M122 290L122 278" stroke-width="2.02"/>
+<path d="M446 290L446 278" stroke-width="2.02"/>
+<path d="M338 446L350 446" stroke-width="2.02"/>
+<path d="M338 122L350 122" stroke-width="2.02"/>
+<path d="M122 230L122 218" stroke-width="2.02"/>
+<path d="M446 230L446 218" stroke-width="2.02"/>
+<path d="M398 446L410 446" stroke-width="2.02"/>
+<path d="M398 122L410 122" stroke-width="2.02"/>
+<path d="M122 170L122 158" stroke-width="2.02"/>
+<path d="M446 170L446 158" stroke-width="2.02"/>
+<path d="M134 458L134 446" stroke-width="2.03"/>
+<path d="M134 110L134 122" stroke-width="2.03"/>
+<path d="M110 434L122 434" stroke-width="2.03"/>
+<path d="M458 434L446 434" stroke-width="2.03"/>
+<path d="M194 458L194 446" stroke-width="2.03"/>
+<path d="M194 110L194 122" stroke-width="2.03"/>
+<path d="M110 374L122 374" stroke-width="2.03"/>
+<path d="M458 374L446 374" stroke-width="2.03"/>
+<path d="M254 458L254 446" stroke-width="2.03"/>
+<path d="M254 110L254 122" stroke-width="2.03"/>
+<path d="M110 314L122 314" stroke-width="2.03"/>
+<path d="M458 314L446 314" stroke-width="2.03"/>
+<path d="M314 458L314 446" stroke-width="2.03"/>
+<path d="M314 110L314 122" stroke-width="2.03"/>
+<path d="M110 254L122 254" stroke-width="2.03"/>
+<path d="M458 254L446 254" stroke-width="2.03"/>
+<path d="M374 458L374 446" stroke-width="2.03"/>
+<path d="M374 110L374 122" stroke-width="2.03"/>
+<path d="M110 194L122 194" stroke-width="2.03"/>
+<path d="M458 194L446 194" stroke-width="2.03"/>
+<path d="M434 458L434 446" stroke-width="2.03"/>
+<path d="M434 110L434 122" stroke-width="2.03"/>
+<path d="M110 134L122 134" stroke-width="2.03"/>
+<path d="M458 134L446 134" stroke-width="2.03"/>
+<path d="M98 494L110 494" stroke-width="2.18"/>
+<path d="M470 494L458 494" stroke-width="2.18"/>
+<path d="M98 74L110 74" stroke-width="2.18"/>
+<path d="M470 74L458 74" stroke-width="2.18"/>
+<path d="M74 470L74 458" stroke-width="2.18"/>
+<path d="M494 470L494 458" stroke-width="2.18"/>
+<path d="M74 98L74 110" stroke-width="2.18"/>
+<path d="M494 98L494 110" stroke-width="2.18"/>
+<path d="M86 494L98 494" stroke-width="2.40"/>
+<path d="M482 494L470 494" stroke-width="2.40"/>
+<path d="M86 74L98 74" stroke-width="2.40"/>
+<path d="M482 74L470 74" stroke-width="2.40"/>
+<path d="M74 482L74 470" stroke-width="2.40"/>
+<path d="M494 482L494 470" stroke-width="2.40"/>
+<path d="M74 86L74 98" stroke-width="2.40"/>
+<path d="M494 86L494 98" stroke-width="2.40"/>
+<path d="M110 494L122 494" stroke-width="2.42"/>
+<path d="M458 494L446 494" stroke-width="2.42"/>
+<path d="M110 74L122 74" stroke-width="2.42"/>
+<path d="M458 74L446 74" stroke-width="2.42"/>
+<path d="M74 458L74 446" stroke-width="2.42"/>
+<path d="M494 458L494 446" stroke-width="2.42"/>
+<path d="M74 110L74 122" stroke-width="2.42"/>
+<path d="M494 110L494 122" stroke-width="2.42"/>
+<path d="M134 482L134 470" stroke-width="2.52"/>
+<path d="M134 86L134 98" stroke-width="2.52"/>
+<path d="M86 434L98 434" stroke-width="2.52"/>
+<path d="M482 434L470 434" stroke-width="2.52"/>
+<path d="M194 482L194 470" stroke-width="2.52"/>
+<path d="M194 86L194 98" stroke-width="2.52"/>
+<path d="M86 374L98 374" stroke-width="2.52"/>
+<path d="M482 374L470 374" stroke-width="2.52"/>
+<path d="M254 482L254 470" stroke-width="2.52"/>
+<path d="M254 86L254 98" stroke-width="2.52"/>
+<path d="M86 314L98 314" stroke-width="2.52"/>
+<path d="M482 314L470 314" stroke-width="2.52"/>
+<path d="M314 482L314 470" stroke-width="2.52"/>
+<path d="M314 86L314 98" stroke-width="2.52"/>
+<path d="M86 254L98 254" stroke-width="2.52"/>
+<path d="M482 254L470 254" stroke-width="2.52"/>
+<path d="M374 482L374 470" stroke-width="2.52"/>
+<path d="M374 86L374 98" stroke-width="2.52"/>
+<path d="M86 194L98 194" stroke-width="2.52"/>
+<path d="M482 194L470 194" stroke-width="2.52"/>
+<path d="M434 482L434 470" stroke-width="2.52"/>
+<path d="M434 86L434 98" stroke-width="2.52"/>
+<path d="M86 134L98 134" stroke-width="2.52"/>
+<path d="M482 134L470 134" stroke-width="2.52"/>
+<path d="M134 506L134 494" stroke-width="6.90"/>
+<path d="M134 62L134 74" stroke-width="6.90"/>
+<path d="M62 434L74 434" stroke-width="6.90"/>
+<path d="M506 434L494 434" stroke-width="6.90"/>
+<path d="M194 506L194 494" stroke-width="6.90"/>
+<path d="M194 62L194 74" stroke-width="6.90"/>
+<path d="M62 374L74 374" stroke-width="6.90"/>
+<path d="M506 374L494 374" stroke-width="6.90"/>
+<path d="M254 506L254 494" stroke-width="6.90"/>
+<path d="M254 62L254 74" stroke-width="6.90"/>
+<path d="M62 314L74 314" stroke-width="6.90"/>
+<path d="M506 314L494 314" stroke-width="6.90"/>
+<path d="M314 506L314 494" stroke-width="6.90"/>
+<path d="M314 62L314 74" stroke-width="6.90"/>
+<path d="M62 254L74 254" stroke-width="6.90"/>
+<path d="M506 254L494 254" stroke-width="6.90"/>
+<path d="M374 506L374 494" stroke-width="6.90"/>
+<path d="M374 62L374 74" stroke-width="6.90"/>
+<path d="M62 194L74 194" stroke-width="6.90"/>
+<path d="M506 194L494 194" stroke-width="6.90"/>
+<path d="M434 506L434 494" stroke-width="6.90"/>
+<path d="M434 62L434 74" stroke-width="6.90"/>
+<path d="M62 134L74 134" stroke-width="6.90"/>
+<path d="M506 134L494 134" stroke-width="6.90"/>
+<path d="M62 494L74 494" stroke-width="7.00"/>
+<path d="M506 494L494 494" stroke-width="7.00"/>
+<path d="M62 74L74 74" stroke-width="7.00"/>
+<path d="M506 74L494 74" stroke-width="7.00"/>
+<path d="M74 506L74 494" stroke-width="7.00"/>
+<path d="M494 506L494 494" stroke-width="7.00"/>
+<path d="M74 62L74 74" stroke-width="7.00"/>
+<path d="M494 62L494 74" stroke-width="7.00"/>
+</g>
+<rect x="14" y="14" width="540" height="540" class="frame"/>
+<rect x="14" y="434" width="120" height="120" class="zone"/>
+<rect x="434" y="434" width="120" height="120" class="zone"/>
+<rect x="14" y="14" width="120" height="120" class="zone"/>
+<rect x="434" y="14" width="120" height="120" class="zone"/>
+</svg>
+    </div>
+    <figcaption>The measure for <span class="mono">k = 9</span>. Line thickness is proportional to the density of mass along
+    each 1/5-segment; the shaded square has density 1 per unit area. Dashed: the four 2 × 2 corner modules. Between them, the
+    wall band repeats with period 1; a larger <span class="mono">k</span> adds periods and interior and nothing else. The
+    <span class="mono">k = 7</span> box, the one that is checked, has 800 segments.</figcaption>
+  </figure>
+  <div class="grid2">
+    <div class="stat"><span class="eyebrow">saving per corner</span><b>D = 0.847243</b></div>
+    <div class="stat"><span class="eyebrow">total, any k ≥ 6</span><b>k² − 3.388970</b></div>
+    <div class="stat"><span class="eyebrow">pieces</span><b>36 corner + 52 per period</b></div>
+    <div class="stat"><span class="eyebrow">checked box</span><b>k = 7, 800 segments</b></div>
+  </div>
+  <p><strong>Why the saving is 4D in every box.</strong> Each period of the band carries mass exactly 2, its own area, so
+  the band neither costs nor saves anything as the walls get longer; nor does the interior. Everything saved is saved at
+  the corners, <span class="mono">D</span> at each, and the total is <span class="mono">k² − 4D</span> for every
+  <span class="mono">k ≥ 6</span>.</p>
+  <p><strong>Why one box is enough.</strong> A unit square is less than 2 wide in each direction at any angle. So along
+  each axis it can be moved by a whole number of units into <span class="mono">[0,7]</span>, avoiding the places where
+  the pattern changes (the ends of the band, the edges of the interior). After the move it sees exactly the same mass in
+  the 7 × 7 box as it did in the <span class="mono">k × k</span> one. So if every unit square in the 7 × 7 box captures at
+  least 1, so does every unit square in every larger box, and in the 6 × 6 box too. (A 6 × 6 box on its own would not be
+  enough: a tilted square near a wall cannot always be moved without crossing a corner module.)</p>
+  <p><strong>Zero margin, along the walls.</strong> Because the band's saving is exactly zero, there is no slack along
+  it: the axis-parallel square <span class="mono">[t, t+1] × [0, 1]</span> resting on a wall captures exactly 1, for every
+  <span class="mono">t</span>, and so does the one a row above it along most of the wall. In the corners, some limits as the
+  tilt goes to zero, with the square's edges on grid lines, are exactly 1 too. Away from these, the linear program that chose
+  the masses was made to demand growth in proportion to the tilt angle (with factor <span class="mono">0.2</span>, scaled by the
+  part of the square outside the interior), so that nothing else is tight. That demand cost about 0.06 of
+  <span class="mono">D</span>; the whole price of exactness, from the float optimum 0.945 to 0.847, was about 0.1 per corner.
+  It leaves 0.097 per corner above the ¾ needed.</p>
+  <p>All masses are rationals with denominators at most <span class="mono">10¹²</span>; the files list them exactly.</p>
+</section>
+
+<section id="verification">
+  <div class="sechead"><span class="eyebrow">04 · Verification</span><h2>How the 7 × 7 box is checked</h2></div>
+  <p>The claim to check is that every closed unit square in <span class="mono">[0,7]²</span>, at every position and angle,
+  captures mass at least 1 under <span class="mono">μ₇</span>. The measure is unchanged by the eight symmetries of the
+  square (checked exactly), so it is enough to take centres in <span class="mono">[0, 7/2]²</span> and angles up to 45°;
+  the checker takes angles up to 53.13°.</p>
+  <p><strong>At zero tilt</strong> the captured mass is, piece by piece, a product of linear functions of the centre, so its
+  minimum is attained at finitely many one-sided limits. All 900 of them were computed exactly: the minimum is exactly 1,
+  reached at 188.</p>
+  <p><strong>At positive tilt</strong> a box checker subdivides the space of placements until every piece is proved. Most
+  pieces close with the bounds of <span class="mono">zm_mixed.py</span>, the checker behind
+  <a href="../s21/"><span class="mono">s(21)</span></a>, <a href="../s45/"><span class="mono">s(45)</span></a> and
+  <a href="../s60/"><span class="mono">s(60)</span></a>, imported, with one guard added after review. The places where the mass is exactly 1 need
+  more, because a bound that loses anything at all can never reach 1 there. The new ingredient is an exact lemma: on a box
+  of placements, for each tilt, the mass is bounded below by a function that is concave on the cells of an arrangement of
+  lines in the plane of centres, so its minimum is at a vertex; the checker evaluates it at every vertex as an exact rational
+  function of the tilt and proves it is at least 1. At a tight placement the bound is the exact value, with nothing lost.
+  Two further lemmas handle squares inside or just poking out of the area-density square.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>run of search/qx2_zm.py</th><th>result</th></tr></thead>
+    <tbody>
+      <tr><td>arithmetic</td><td>Python; exact <span class="mono">Fraction</span> throughout, floats only to choose tests</td></tr>
+      <tr><td>root boxes</td><td class="num">9,800 (centre pitch 1/10, 8 tilt bins)</td></tr>
+      <tr><td>certified</td><td class="num"><b>9,800</b></td></tr>
+      <tr><td>boxes, max depth</td><td class="num">54,358, 17</td></tr>
+      <tr><td>leaves, all recorded</td><td class="num">32,079: exact lemma 10,903; zm_mixed 15,926; other 5,250</td></tr>
+      <tr><td>uncertified</td><td class="num"><b>0</b></td></tr>
+      <tr><td>CPU</td><td class="num">81,377 s = 22.6 h (2.8 h on 8 processes)</td></tr>
+    </tbody>
+  </table></div>
+  <p>This is the run of record (2026-09-29). It repeats an earlier full run with the same result root for root, and adds a
+  record of every leaf so that any piece of the proof can be re-checked on its own.</p>
+  <p><strong>It caught a real error.</strong> The first exact solution of the linear program was not valid: at one
+  corner, in the limit as the tilt goes to zero, a square near <span class="mono">[1,2]²</span> captured
+  <span class="mono">0.999936</span>. The float program had missed it, because its containment tolerance over-counted mass
+  at tiny tilts. The checker refused exactly the two boxes of placements that contain the bad limit. Adding the exact
+  limits to the linear program fixed it, at a cost of 10⁻⁵ in <span class="mono">D</span>; the rejected cover is kept as a
+  test. Covers deliberately weakened by 10⁻⁶ overall, or by 10⁻⁴ on one wall piece or one seam, are refused too.</p>
+  <p><strong>Reviews.</strong> Six AI agents, working separately, were each given one part of the argument and asked to break
+  it: the exact lemma's mathematics; its code, line by line; the polygon bound of <span class="mono">zm_mixed.py</span>, used
+  here for the first time in a certificate; the zero-tilt lemma, the area-density lemmas and the leaves; the reduction to
+  one box and the coverage of the pose space; and an empirical attack on the cover itself. Each re-derived its part and wrote
+  its own exact tests. None found an error. They found wording to fix, and one gap in auditability: the earlier record kept
+  only per-root totals. The run of record keeps every leaf, and two guards suggested by the reviews were added to the code.
+  Among their findings: the tightest placement away from the known tight set, near 45°, captures
+  <span class="mono">1 + 1.03·10⁻⁴</span>; an independent zero-tilt check over the whole box, with no symmetry, again gives
+  exactly 1; and a cover weakened by 10⁻⁴ at a corner limit is refused where it should be.</p>
+  <p>There is no second checker yet. The Rust checker <span class="mono">zmx2</span> of <span class="mono">s(21)</span>,
+  <span class="mono">s(45)</span> and <span class="mono">s(60)</span> is being extended to area density (the area-density square cannot be
+  removed from this family). As of 2026-09-30 that extension certifies the zero-tilt face, and every tilt from 0.014° up,
+  over the whole pose space with no symmetry assumed; but at tilts below 0.01°, near a few placements where a square's
+  edges meet three grid lines at once, 120 boxes of the symmetry-reduced region are still uncertified
+  (<span class="mono">search/ZMX2_AREA.md</span>). So it does not yet certify <span class="mono">Valid7</span>. The cases
+  <span class="mono">k = 6, 7, 8</span> are also settled by other covers: <span class="mono">s(32)</span> (kernel-checked in Lean with no
+  hypothesis), <span class="mono">s(45)</span> and <span class="mono">s(60)</span> (each by two separately written checkers; one of them,
+  <span class="mono">zm_mixed.py</span>, also supplies the piece bounds used here).</p>
+</section>
+
+<section id="lean">
+  <div class="sechead"><span class="eyebrow">05 · Lean</span><h2>What is formally proved</h2></div>
+  <pre><code>theorem SquarePacking.Bentz.bentz_of_valid7 (h : Valid7) :
+    ∀ k : ℕ, 6 ≤ k → minSide (k ^ 2 - 3) = k
+theorem SquarePacking.Bentz.bentz_of_validTilt7 (ht : ValidTilt7) :
+    ∀ k : ℕ, 6 ≤ k → minSide (k ^ 2 - 3) = k</code></pre>
+  <p><span class="mono">minSide</span> is the Lean definition used for <a href="../s13/#lean"><span class="mono">s(13)</span></a>
+  and <a href="../s32/#lean"><span class="mono">s(32)</span></a>. The hypothesis <span class="mono">Valid7</span> says that every
+  closed unit square in <span class="mono">[0,7]²</span> captures mass at least 1 under the 7 × 7 box file, taken verbatim
+  (800 segments and the area-density square). That is exactly the claim of §04.</p>
+  <p>Everything else is checked by Lean's kernel: the measure for every <span class="mono">k</span>, generated from a table
+  of the family's masses; that for <span class="mono">k = 7</span> it is the box file, segment by segment; the total
+  <span class="mono">k² − 4D &lt; k² − 3</span>; the move of any unit square into the 7 × 7 box; the scaling argument; and
+  the grid. Standard axioms only, no <span class="mono">sorry</span>, no <span class="mono">native_decide</span>. It is in
+  the default build and takes about two minutes.</p>
+  <p>Since 2026-10-03 part of <span class="mono">Valid7</span> is kernel-checked too: the reduction by the square's eight
+  symmetries (the box file's symmetry checked by the kernel) and the zero-tilt lemma, by exact corner limits over the whole
+  box. What is left is <span class="mono">ValidTilt7</span>: unit squares with centre in <span class="mono">[0, 7/2]²</span>
+  and tilt in <span class="mono">(0°, 45°]</span>, exactly the region of the positive-tilt run of §04, which is not proved
+  in Lean. The kernel verifier that proves the covering property for <span class="mono">s(13)</span> and
+  <span class="mono">s(32)</span> handles weighted points; the tilted run would need area density and the exact lemma of
+  §04.</p>
+</section>
+
+<section id="limits">
+  <div class="sechead"><span class="eyebrow">06 · Caveats</span><h2>What to keep in mind</h2></div>
+  <ul>
+    <li>The covering property of the 7 × 7 box rests on one program, <span class="mono">search/qx2_zm.py</span>, with about 900
+    lines of new code on top of the reviewed <span class="mono">zm_mixed.py</span>. It has been tested hard and reviewed, and
+    <a href="https://github.com/wand125/valid7-independent-check">wand125's separately written checker</a> (written from the format and the claim only) certifies the same box over the whole pose space; per-leaf assurance
+    rests on each program's own run. Our other exact values each have two separately written checkers that share no code
+    (they do share the formulation of the point test, <a href="../s21/#limits">s(21) §06</a>).</li>
+    <li>The reviews were done by AI agents, not by outside mathematicians. Nothing here is peer reviewed.</li>
+    <li>The Lean proof is conditional on <span class="mono">ValidTilt7</span>, the tilted part of <span class="mono">Valid7</span> (§05).</li>
+    <li>This family covers <span class="mono">k ≥ 6</span> only. The statement for all <span class="mono">k ≥ 3</span> also needs
+    <span class="mono">k = 3, 4, 5</span>: <span class="mono">k = 4</span> and <span class="mono">k = 5</span> follow from this project's
+    case-free <span class="mono">s(13) = 4</span> and <span class="mono">s(21) = 5</span> as well as from Bentz's proofs, and
+    <span class="mono">k = 3</span> is Kearney and Shiu's (§02).</li>
+    <li>The consequence <span class="mono">s(k² − 2) = k</span> drawn in §02 rests, for <span class="mono">k ≥ 9</span>, on this
+    certificate alone among our results (chelokot's Lean proof is a separate route).</li>
+    <li>The family was found by a float linear program, and a float program can be wrong (§04). The certificate does not rely
+    on it: every acceptance is an exact rational test.</li>
+  </ul>
+</section>
+
+<section id="artifacts">
+  <div class="sechead"><span class="eyebrow">07 · Reproduce</span><h2>Artifacts</h2></div>
+  <p>The certificate bundle is <a href="https://github.com/evand/square-packing/tree/main/certificates/k2m3">certificates/k2m3</a>
+  of <a href="https://github.com/evand/square-packing">evand/square-packing</a>: its
+  <a href="https://github.com/evand/square-packing/blob/main/certificates/k2m3/README.md">README</a> says what checks
+  what, and <a href="https://github.com/evand/square-packing/blob/main/certificates/k2m3/verify.sh">verify.sh</a>
+  re-checks it. By default it takes seconds: hashes, the cover's total and symmetry, that the family rebuilds the box
+  file, the Lean data, a re-run of the exact zero-tilt check, and the run record's structure and coverage (every root
+  covered by its recorded leaves). It does <em>not</em> recompute the mass bound at any positive-tilt leaf, so it is not a
+  fresh geometric check; <span class="mono">verify.sh --full</span> is, re-running <span class="mono">qx2_zm.py</span>
+  (about 81,000 CPU-seconds) and comparing root for root. (The <a href="../s60/#artifacts">s(60)</a> bundle's default
+  check, by contrast, includes a fresh run of its Rust checker.) The 7 × 7 box file is also <a href="cover.txt">here</a>. From <span class="mono">search</span>:</p>
+  <pre><code>python3 qx2_zm.py axis qx2_data/L4_k02_box7.txt           # zero tilt, seconds
+python3 qx2_family_check.py qx2_data/L4_k02_family.txt qx2_data/L4_k02_box7.txt
+python3 qx2_zm.py qx2_data/L4_k02_box7.txt --depth 18 --nproc 8 \
+    --exact-umax 1/2 --exact-from 3                         # positive tilt, ~22 CPU-hours</code></pre>
+  <div class="tablewrap"><table>
+    <thead><tr><th>path</th><th>what</th></tr></thead>
+    <tbody>
+      <tr><td class="num">certificates/k2m3/</td><td>the bundle: the claim; copies of the family, box and exact-solution files; the checker files and the run record; verify.sh</td></tr>
+      <tr><td class="num">search/qx2_data/L4_k02_family.txt</td><td>the family: corner module and wall profile, exact masses</td></tr>
+      <tr><td class="num">search/qx2_data/L4_k02_box7.txt</td><td>the 7 × 7 box: 800 segments and the area-density square</td></tr>
+      <tr><td class="num">search/qx2_zm.py</td><td>the checker: zero-tilt lemma, exact lemma, area-density lemmas; imports search/zm_mixed.py</td></tr>
+      <tr><td class="num">search/QUADRANT_EXACT.md</td><td>the proofs of the lemmas, the reduction, the tests and the runs</td></tr>
+      <tr><td class="num">search/QUADRANT.md</td><td>the float linear program that found the family's shape</td></tr>
+      <tr><td class="num">lean/Sqpack/Bentz.lean, BentzData.lean</td><td>the theorem; the box file and family table as Lean data</td></tr>
+      <tr><td class="num">lean/Sqpack/ValidSplit.lean, ValidSplit7.lean</td><td>the symmetry reduction and the zero-tilt lemma: <span class="mono">bentz_of_validTilt7</span></td></tr>
+      <tr><td class="num">notes/lean-bentz-reduction.md</td><td>how the Lean proof goes</td></tr>
+      <tr><td class="num">notes/lean-valid-split.md</td><td>how the reduction to the tilted run goes</td></tr>
+    </tbody>
+  </table></div>
+</section>
+</div>
+</body>
+</html>

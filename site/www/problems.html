@@ -46,7 +46,7 @@ section{display:flex;flex-direction:column;gap:14px}
       <span><span class="tag open">question</span> no confident prediction</span>
       <span><span class="tag ok">known</span> proved; given for context</span>
     </div>
-    <p class="note">Each item also says which <i>n</i> it concerns (<b>all n</b>, <b>large n</b> or <b>one n</b>) and who stated it. "Stated here" means we found no earlier statement; tell us if you know one. Statements of method (lemmas about certificates, covering measures, Lean) are in the project's <a href="https://github.com/evand/square-packing/blob/main/s12/search/WISHLIST.md">research wishlist</a>, not here.</p>
+    <p class="note">Each item also says which <i>n</i> it concerns (<b>all n</b>, <b>large n</b> or <b>one n</b>) and who stated it. "Stated here" means we found no earlier statement; tell us if you know one. Statements of method (lemmas about certificates, covering measures, Lean) are in the project's <a href="https://github.com/evand/square-packing/blob/main/search/WISHLIST.md">research wishlist</a>, not here.</p>
     <div class="toc"><a href="#staircase">1 · Friedman's staircase</a><a href="#waste">2 · Wasted space</a><a href="#plateaus">3 · Plateaus and families</a><a href="#complexity">4 · How complicated are optimal packings?</a><a href="#boundary">5 · Where small n meets large n</a><a href="#local">6 · Local optimality</a><a href="#single">7 · Single values</a><a href="#neighbours">8 · Neighbouring problems</a></div>
   </section>
 
@@ -104,7 +104,7 @@ section{display:flex;flex-direction:column;gap:14px}
       <tr><td class="mono">0.6569</td><td>9</td><td style="text-align:left">66, 124, 147, 148, …, 294</td></tr>
       <tr><td class="mono">0.7782</td><td>8</td><td style="text-align:left">150, 175, 203, 232, 233, 264, 265, 298</td></tr>
     </table></div>
-    <p class="note">Göbel's strips are the best known packings for every strip size a &lt; 44 except a = 3 (n = 17). The first to be beaten is a = 44 (n = 2043, David Ellsworth, 2024); the waste bound guarantees a last <i>optimal</i> one but gives no explicit place (see <a href="#boundary">§5</a>). Table computed from Ellsworth's catalogue (<a href="https://github.com/evand/square-packing/blob/main/s12/search/record_structure.py">script</a>).</p>
+    <p class="note">Göbel's strips are the best known packings for every strip size a &lt; 44 except a = 3 (n = 17). The first to be beaten is a = 44 (n = 2043, David Ellsworth, 2024); the waste bound guarantees a last <i>optimal</i> one but gives no explicit place (see <a href="#boundary">§5</a>). Table computed from Ellsworth's catalogue (<a href="https://github.com/evand/square-packing/blob/main/search/record_structure.py">script</a>).</p>
   </section>
 
   <section>
@@ -142,7 +142,7 @@ section{display:flex;flex-direction:column;gap:14px}
       <p>A rigid packing is a reachable set of one, so it is automatically plateau-optimal. So rigid packings that are not optimal answer the bare question. Ellsworth's rigid alternative for n = 18 has side 2 + 2√2 ≈ 4.8284, above the best known 4.8229. The open question is about packings that can move: is there a plateau-optimal packing with free motion whose side is larger than <span class="mono">s(n)</span>? Natural candidates are the Göbel strip for n = 2043, which no longer holds the record (Ellsworth notes that Göbel's arrangement is not rigid at n = 149), and grids with <span class="mono">c &gt; c*(k)</span> holes.</p></div>
     <div class="item q"><div class="hd"><b>How many alternatives?</b><span class="tag open">question</span><span class="eyebrow">large n</span></div>
       <p>How many mutually unreachable packings can share the best side, and how fast can that number grow with n?</p>
-      <p class="st">Stated here. n = 149 already gives hundreds. Ellsworth's rigid alternative uses just five rotated squares, each in an s(5) block (four axis-parallel squares around one 45° square, side 2 + √2/2). We modelled such packings exactly as an integer program, with every axis-parallel square shifted by 0 or √2/2 in each coordinate. In that model, every packing of 149 squares uses exactly five blocks. Their <i>x</i>-corners form a chain from 0 to 10 in steps of 2 and 3, and so do their <i>y</i>-corners, giving 6 chains each. The blocks pair the two chains by a permutation. Not every pairing works (no simple rule about neighbouring blocks predicts which), but over 470 do. Each of them fixes the remaining squares uniquely in the model, which suggests each is rigid and is its own alternative. At n = 38, by contrast, two blocks have room to slide, which is why those alternatives have free motion. (Exploratory computation, not yet a theorem: <a href="https://github.com/evand/square-packing/tree/main/s12/search/goebel_alt">goebel_alt</a>.)</p></div>
+      <p class="st">Stated here. n = 149 already gives hundreds. Ellsworth's rigid alternative uses just five rotated squares, each in an s(5) block (four axis-parallel squares around one 45° square, side 2 + √2/2). We modelled such packings exactly as an integer program, with every axis-parallel square shifted by 0 or √2/2 in each coordinate. In that model, every packing of 149 squares uses exactly five blocks. Their <i>x</i>-corners form a chain from 0 to 10 in steps of 2 and 3, and so do their <i>y</i>-corners, giving 6 chains each. The blocks pair the two chains by a permutation. Not every pairing works (no simple rule about neighbouring blocks predicts which), but over 470 do. Each of them fixes the remaining squares uniquely in the model, which suggests each is rigid and is its own alternative. At n = 38, by contrast, two blocks have room to slide, which is why those alternatives have free motion. (Exploratory computation, not yet a theorem: <a href="https://github.com/evand/square-packing/tree/main/search/goebel_alt">goebel_alt</a>.)</p></div>
     <div class="item q"><div class="hd"><b>How far away is the better packing?</b><span class="tag open">question</span><span class="eyebrow">all k</span></div>
       <p>For <span class="mono">c &gt; c*(k)</span>, how large a change to the grid is needed to beat side <i>k</i>? Is the winner a small-tilt perturbation (tilts near 2/<i>k</i>, as in Erdős–Graham), or a different structure built from 45° blocks?</p></div>
     <div class="item q"><div class="hd"><b>Stability</b><span class="tag open">question</span><span class="eyebrow">all n</span></div>
@@ -185,7 +185,7 @@ section{display:flex;flex-direction:column;gap:14px}
   </section>
 
   <section>
-    <p class="note">Last revised 2026-10-04. References are on <a href="sources.html">Sources</a>. The working list behind this page, with proof pieces and their status, is the project's <a href="https://github.com/evand/square-packing/blob/main/s12/search/WISHLIST.md">wishlist</a>.</p>
+    <p class="note">Last revised 2026-10-04. References are on <a href="sources.html">Sources</a>. The working list behind this page, with proof pieces and their status, is the project's <a href="https://github.com/evand/square-packing/blob/main/search/WISHLIST.md">wishlist</a>.</p>
   </section>
 </div>
 </body>

@@ -1,5 +1,28 @@
 __pycache__/
 *.pyc
+*.so
+target/
+.lake/
+.claude/
+
+# local run outputs (big; never committed)
+runs/
+
+# private material (outreach, publishing meta): symlinks into ../private, never committed
+/outreach
+/notes/publish-inventory.md
+
+# Lean certificate data too big to commit: regenerate with lean/scripts/gen_data.sh
+/lean/Sqpack/S11/
+/lean/Sqpack/S13/
+/lean/Sqpack/S32Z/
+/lean/Sqpack/S12H/
+/lean/Sqpack/T1/
+# exact-form certificates too costly for the default build (search/exact/lean_cert.py, localmin_lean.py; tasks/exact-minpoly)
+/lean/Sqpack/Exact/Batch/
+/search/exact/lean_batch/logs/
+# exact-minpoly raw solve outputs
+/search/exact/minpoly/solve/
 
 # site: fetched third-party pages/SVGs and intermediate build products (site/build.sh regenerates them)
 site/data/ellsworth/*
@@ -12,7 +35,3 @@ site/data/*.stdout
 
 # local Pages assembly
 _site/
-
-# Claude Code agent worktrees
-.claude/
-s12/search/exact/minpoly/solve/
