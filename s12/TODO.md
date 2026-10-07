@@ -10,6 +10,10 @@ Proof-piece wishlist (new candidates N1–N15 + 65 open items, picks at the end)
 1. Lean, small and interesting: `E(n) ≤ 0` + seam bound `D ≤ m_v`, then `M(1) ≤ ¾` (FRIEDMAN §9.6 item 5).
 2. `M(1) = ¾` fully proved: SEAM_W1 §2.3 casework (or interval arithmetic).
 
+## Exact forms (10-06)
+- [ ] Every n ≤ 324 best known: integer min poly + isolating interval + exact field configuration, mechanized (contact graph → msolve; LLL cross-check). Test n = 83 (deg 672). `tasks/exact-minpoly/`
+- [ ] Lean demo, one small n by hand first: exact config + contact graph + polynomial → `Packs n S*`, then a full local min (n = 5 vs 11 tradeoff: task doc §Lean demo).
+
 ## Major: exact results
 - [ ] k²−5 for all large k: R = w = 5 κ = 0.02 D ≈ 1.30, conditional GO, margin ≈ 0.05 (`K2M4_MARGIN.md`); box 13 pitch 0.1. Make it cheaper first: cert golf (`tasks/cert-slack/`), finer-pitch D at w = 4 (insertable shortcut dead: price ≈ 1.8, `S2_INSERTABLE.md`).
 - [ ] Seam capacity `M(∞)` (C5/R2; FRIEDMAN §8–9, `SEAM_W1.md`, `SEAM_1D.md`): `M(w) → ∞` ⇒ families give s(k²−c) = k for every c. Next: dual-side band LP w = 2, 3 (rigorous caps); wall-row + slow-variation lemmas.
