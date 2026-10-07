@@ -14,7 +14,7 @@ non-overlap* with `../exactsolve.py` (80 digits), and wrote an exact rational ce
 * 50 certified S' lie below the register's printed value, by 3e-13 … 5e-11: the analytic optimum of the same packing (the
   f64 slack removed), not a new structure.  Most are Francisco Couzo's packings of 2026-09-27 and 2026-10-03.
 * Records already in closed form agree with S' to ~1e-15 or better (e.g. the (7+√7)/2 family n = 18, 53, 86, …).
-* Not certified: n = 292 (contact equations inconsistent after the slp2 polish; see `../README.md`, Limitations).
+* n = 292 (added 2026-10-07): the slp2 polish with square 0 (top-left corner) set to exactly 0°; at ~1e-6 rad its corner-on-corner touch gave a spurious load path and a nearly singular contact subset, so exactsolve stalled.  Log: `../../packer/s292.md`; the failed run is kept as `work/n-292/failed_polished.*` (gitignored).  Now 324/324.
 * n = 105 and 130 added 10-05 (evening) after two exactsolve fixes: at n = 105 the register witness is not a local minimum
   (a first-order descent with corner–corner touches as disjunctions); its slp2 polish is jammed only with corner–corner
   touches as equations (one branch), and is a KKT local minimum there.  At n = 130 Newton's Jacobian turned singular near

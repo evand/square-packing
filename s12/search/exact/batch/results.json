@@ -7068,7 +7068,35 @@
   "by": [
    "Francisco Couzo"
   ],
-  "status": "not certified"
+  "status": "KKT local min",
+  "S_exact": "17.5972493911564650404714420055103896070",
+  "S_cert": "17.597249391156465040647414499422",
+  "S_cert_fraction": "8798624695578232520323707249711/500000000000000000000000000000",
+  "delta": -4.3053959352585504e-11,
+  "lam": 0.0002147876449281554,
+  "second": "local minimum of S, strict modulo 119 exact flat motions (PD on the rest of null(J_A)); the configuration is not isolated",
+  "from_": "polished",
+  "forced": null,
+  "verify1": true,
+  "verify2": true,
+  "free": [
+   40,
+   116,
+   120,
+   123,
+   126,
+   129,
+   198,
+   234,
+   235,
+   237,
+   257,
+   262,
+   264,
+   268,
+   290
+  ],
+  "input": "witness polished by SLP (local optimizer)"
  },
  {
   "n": 293,
