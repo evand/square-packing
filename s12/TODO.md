@@ -55,7 +55,7 @@ done enough: sub-11 funnel small and well sampled, plateau above 11 rough; the n
 - [ ] Landscape measure: nested sampling / splitting on side from random starts, log X(s) at 110 (content-agnostic "how hard is this n"; `lit-statmech.md` A2).
 - [ ] s(90): needle estimate from the 110 calibration (old step 4) before more compute; best so far 10.0095668 (certified local min).
 - [ ] slp2 speed: contact model vectorised 10-06 (bitwise identical, ~1.6x); now ~500 LP solves per quench dominate (40–110 s at n ≈ 270): fewer LPs per descent, warm starts, or Rust.
-- [ ] Exact batch (`search/exact/`, jlevy#375): 323/324 certified (n = 105, 130 added 10-05, pushed 10-06; comment on #375 owed: ask Evan); open n = 292.  Leftovers: 12/866 cen7 outputs unresolved.
+- [ ] Exact batch (`search/exact/`, jlevy#375): 323/324 certified (n = 105, 130 added 10-05, pushed and commented on #375 10-06); open n = 292.  Leftovers: 12/866 cen7 outputs unresolved.
 - [ ] Case study `search/packer/s110-landscape.md`: rewrite the census section from cen7 + rev1 + minima PT.
 - [ ] Side bet: rectangle containers in slp2; Arslanov 26-in-(4−δ)×8 control, then jlevy H-049 (20 in (4−δ)×6).  Refresh clone first.
 - [ ] Later targets for the same instrument: s(183/242/274/308), 299, 234, s(147) (`search/WISHLIST.md` §P).
