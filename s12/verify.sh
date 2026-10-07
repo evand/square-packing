@@ -17,16 +17,19 @@ echo "=== building verifiers ==="
 ( cd verify2 && cargo build --release )
 V=verify/target/release/verify
 Z=verify2/target/release/zmcheck
-# `verify` exits 0 on NOT VERIFIED (it is a verdict, not an error), so under `set -e` the
-# verdict must be checked explicitly or CI would stay green on a rejected certificate.
-chk() { out=$("$@") || { echo "$out"; echo "verifier failed: $*"; exit 1; }
+# Exit status of `verify` and `zmcheck` (since 2026-10-07; jlevy/squares#238): 0 VERIFIED,
+# 1 NOT VERIFIED, 2 ERROR (bad input), 3 internal error, 4 partial run (no verdict), 101 panic.
+# chk still requires the VERIFIED: line too, so a verdict needs both the line and exit 0.
+chk() { rc=0; out=$("$@") || rc=$?
+        [ $rc -le 1 ] || [ $rc -eq 4 ] || { echo "$out"; echo "verifier failed (exit $rc): $*"; exit 1; }
         echo "$out" | grep -E '^(==>|    i\.e\.|min |VERIFIED|NOT VERIFIED)'
-        echo "$out" | grep -q '^VERIFIED:' || { echo "REJECTED: $*"; exit 1; }; }
-# Same contract for `zmcheck`: it exits 0 on `NOT VERIFIED` and on `PARTIAL SWEEP` (a restricted
-# sweep is a refusal to give a verdict, not a verdict), so both must fail the script here.
-chkzm() { out=$("$@") || { echo "$out"; echo "zmcheck failed: $*"; exit 1; }
+        [ $rc -eq 0 ] && echo "$out" | grep -q '^VERIFIED:' || { echo "REJECTED (exit $rc): $*"; exit 1; }; }
+# Same for `zmcheck`: `NOT VERIFIED` (exit 1) and `PARTIAL SWEEP` (exit 4: a restricted sweep
+# is a refusal to give a verdict) both fail the script here.
+chkzm() { rc=0; out=$("$@") || rc=$?
+          [ $rc -le 1 ] || [ $rc -eq 4 ] || { echo "$out"; echo "zmcheck failed (exit $rc): $*"; exit 1; }
           echo "$out" | grep -E '^(total weight|done in |  leaves:|VERIFIED|NOT VERIFIED|PARTIAL SWEEP)'
-          echo "$out" | grep -q '^VERIFIED:' || { echo "REJECTED: $*"; exit 1; }; }
+          [ $rc -eq 0 ] && echo "$out" | grep -q '^VERIFIED:' || { echo "REJECTED (exit $rc): $*"; exit 1; }; }
 echo
 echo "=== main certificate: s(12) >= 15680/3951 = 3.968616 ==="
 chk $V certificates/s12_lower_3.9686.txt 12 6000 "$(nproc)" 0

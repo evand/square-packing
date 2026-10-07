@@ -261,6 +261,9 @@ should fail, and watching it not fail.
    either way, and `set -e` only sees exit codes, so a rejected certificate would have left
    the badge green.  Every verdict is now checked explicitly; tested by breaking a
    certificate's header and watching `verify.sh` exit 1.
+   *2026-10-07 (jlevy/squares#238):* `verify` and `zmcheck` now also say it in the exit
+   status: 0 VERIFIED, 1 NOT VERIFIED, 2 ERROR (bad input), 3 internal error (`verify`),
+   4 partial run / no verdict, 101 panic.  `zmx2` is unchanged (exit 0 on any verdict).
 
 `tests/rejection_tests.sh` now has 42 checks (was 7); against the pre-fix binary 15 fail and
 8 panic.

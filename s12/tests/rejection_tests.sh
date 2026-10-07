@@ -3,7 +3,7 @@
 # shipped certificate, built in a temporary directory; each must produce the stated verdict.
 #
 # Verdicts:  VERIFIED  exit 0 and a "VERIFIED:" line
-#            REJECT    exit 0 and "NOT VERIFIED"   (a clean, reasoned rejection)
+#            REJECT    exit 1 (4: partial run) and "NOT VERIFIED"   (a clean, reasoned rejection)
 #            ERROR     non-zero exit, an ERROR: message, and NO verdict word in the output
 #                      (malformed / illegal input: the verifier refuses to give a verdict)
 #            PANIC     a Rust panic or abnormal exit.  Never acceptable, even on garbage input:
@@ -21,7 +21,7 @@ run() {  # file, n, [topk, witness-file]   -> sets $got, output in $LAST
   if [ -n "$3" ]; then $V "$1" "$2" 2000 4 "$3" "$4" >"$LAST" 2>&1; else $V "$1" "$2" 2000 4 0 >"$LAST" 2>&1; fi
   rc=$?
   if grep -q 'panicked at' "$LAST" || [ "$rc" -ge 100 ]; then got=PANIC; panics=$((panics+1))
-  elif grep -q '^NOT VERIFIED' "$LAST"; then got=REJECT
+  elif grep -q '^NOT VERIFIED' "$LAST" && { [ "$rc" -eq 1 ] || [ "$rc" -eq 4 ]; }; then got=REJECT
   elif grep -q '^VERIFIED:' "$LAST" && [ "$rc" -eq 0 ]; then got=VERIFIED
   elif [ "$rc" -ne 0 ] && ! grep -q 'VERIFIED' "$LAST"; then got=ERROR
   else got="UNKNOWN(rc=$rc)"; fi
@@ -493,7 +493,7 @@ A=certificates/s12_anchorclique_demo_3.9318.txt
 runN() {  # file, n, N -> $got
   $V "$1" "$2" "$3" 4 0 >"$LAST" 2>&1; rc=$?
   if grep -q 'panicked at' "$LAST" || [ "$rc" -ge 100 ]; then got=PANIC; panics=$((panics+1))
-  elif grep -q '^NOT VERIFIED' "$LAST"; then got=REJECT
+  elif grep -q '^NOT VERIFIED' "$LAST" && { [ "$rc" -eq 1 ] || [ "$rc" -eq 4 ]; }; then got=REJECT
   elif grep -q '^VERIFIED:' "$LAST" && [ "$rc" -eq 0 ]; then got=VERIFIED
   elif [ "$rc" -ne 0 ] && ! grep -q 'VERIFIED' "$LAST"; then got=ERROR
   else got="UNKNOWN(rc=$rc)"; fi

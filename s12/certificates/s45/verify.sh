@@ -41,7 +41,7 @@ run python3 search/mixed_records.py zmx2 $B/zmx2_d4/roots.log $C d4
 run python3 search/mixed_records.py zmx2 $B/zmx2_full/roots.log $C full
 
 echo "--- fresh zmx2 run: the whole pose space, no symmetry assumed (--full: cover + mirror, 39,200 roots)"
-( cd verify2 && cargo build --release --bin zmx2 2>&1 | tail -1 )
+( cd verify2 && cargo build --release --bin zmx2 -q ) || { echo "cargo build of zmx2 failed"; exit 1; }
 Z=verify2/target/release/zmx2
 $Z d4 $C
 out=$($Z cert $C --full --threads "$NP" --log "$TMP/full.log" 2>&1) || { echo "$out" | tail -20; echo "zmx2 failed"; exit 1; }

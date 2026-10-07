@@ -2481,7 +2481,9 @@ fn main() {
                     cen.uncert,
                     if partial { " (partial sweep)" } else { "" }
                 );
-                std::process::exit(0);
+                // Exit status: 0 VERIFIED, 1 NOT VERIFIED (some box uncertified), 2 ERROR,
+                // 4 partial sweep with no uncertified box (no verdict).
+                std::process::exit(if cen.uncert > 0 { 1 } else { 4 });
             }
         }
         _ => die(&format!("unknown mode {mode}")),

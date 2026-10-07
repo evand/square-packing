@@ -81,7 +81,7 @@ def run_job(job, a):
         fo.flush()
         rc = subprocess.run(c, stdout=fo, stderr=fe, env=env).returncode
     txt = open(base + '.log.part').read()
-    ok = rc == 0 and 'done in' in txt and 'NOT VERIFIED' in txt
+    ok = rc in (1, 4) and 'done in' in txt and 'NOT VERIFIED' in txt  # partial sweeps: exit 1 (uncertified boxes) or 4
     if ok:
         os.replace(base + '.err.part', base + '.err')
         os.replace(base + '.log.part', base + '.log')   # the .log is the completion marker

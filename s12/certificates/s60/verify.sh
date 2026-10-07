@@ -41,8 +41,10 @@ run python3 search/mixed_records.py zmx2 $B/zmx2_d4/roots.log $C d4
 run python3 search/mixed_records.py zmx2 $B/zmx2_full/roots.log $C full
 
 echo "--- fresh zmx2 run: the whole pose space, no symmetry assumed (--full: cover + mirror, 51,200 roots)"
-( cd verify2 && cargo build --release --bin zmx2 2>&1 | tail -1 )
+( cd verify2 && cargo build --release --bin zmx2 -q ) || { echo "cargo build of zmx2 failed"; exit 1; }
 Z=verify2/target/release/zmx2
+zs=$(sha256sum verify2/src/bin/zmx2.rs | cut -c1-8)
+echo "    zmx2.rs sha256 $zs… (the shipped zmx2 records were made with 6b7f0f79…$( [ "$zs" = 6b7f0f79 ] && echo ", same" || echo "; a census match below shows the later changes are inert here"))"
 $Z d4 $C
 out=$($Z cert $C --full --threads "$NP" --log "$TMP/full.log" 2>&1) || { echo "$out" | tail -20; echo "zmx2 failed"; exit 1; }
 echo "$out" | grep -E '^(cover:|done in|VERIFIED|NOT VERIFIED|INCOMPLETE)'

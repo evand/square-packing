@@ -18,7 +18,7 @@ B=certificates/s21
 C=$B/s21_mixed_cover_5.txt
 
 if [ "$WHAT" = zmx2 ] || [ "$WHAT" = all ]; then
-  (cd verify2 && cargo build --release --bin zmx2 2>&1 | tail -1)
+  (cd verify2 && cargo build --release --bin zmx2 -q) || { echo "cargo build of zmx2 failed"; exit 1; }
   Z=verify2/target/release/zmx2
   for mode in d4 full; do
     O=$B/zmx2_$mode; mkdir -p $O

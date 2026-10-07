@@ -17,7 +17,7 @@ TH=${TH:-6}
 CORES=${CORES:-0-5}
 OUT=runs/zmx2_sym; mkdir -p $OUT
 MAN=${MAN:-search/zmx2_sym_manifest.txt}
-(cd verify2 && cargo build --release --bin zmx2 2>&1 | tail -1)
+(cd verify2 && cargo build --release --bin zmx2 -q) || { echo "cargo build of zmx2 failed"; exit 1; }
 Z=verify2/target/release/zmx2
 S32=certificates/s32/s32_closed_cover_6.txt
 S21=certificates/s21/s21_mixed_cover_5.txt

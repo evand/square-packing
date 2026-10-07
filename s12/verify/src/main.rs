@@ -2,7 +2,7 @@
 //!
 //! Certificate: atoms p_a = (X_a/D, Y_a/D) in C=[0,s]^2 with weights w_a = W_a/WD >= 0.
 //! Claim to verify:  for EVERY unit square Q (any center, any angle) with Q subseteq C,
-//!                   sum over atoms in the interior of Q of w_a  >=  1.
+//!                   sum over atoms in the CLOSED square Q of w_a  >=  1   (Q closed, as in FORMAT.md).
 //!
 //! Method (all arithmetic exact in i128):
 //!   * angles theta_k = 2*arctan(k/N), k=0..K, covering [0,45deg]; cos/sin are RATIONAL:
@@ -1710,6 +1710,9 @@ fn main() {
     } else {
         println!("min covered weight over ALL placements = {}/{} = {:.6}  (at angle k={})", mg.0, cert.wd, mg.0 as f64/cert.wd as f64, mg.1);
     }
+    // Exit status: 0 VERIFIED, 1 NOT VERIFIED (complete sweep, rejected), 2 ERROR (bad input),
+    // 3 INTERNAL ERROR, 4 PARTIAL RUN (no verdict).  Panics exit 101.
+    let code: i32 = if partial { 4 } else if bad.load(Ordering::Relaxed)==0 && weight_ok { 0 } else { 1 };
     if partial {
         println!("NOT VERIFIED (PARTIAL RUN: only bins {}..{} of 0..{} were swept)", kb_lo, kb_hi, kk - 1);
     } else if bad.load(Ordering::Relaxed)==0 && weight_ok {
@@ -1734,4 +1737,5 @@ fn main() {
                   s.cl_cands, s.cl_tests, s.wits,
                   if s.cells > 0 { el * 1e9 * threads as f64 / s.cells as f64 } else { 0.0 });
     }
+    std::process::exit(code);
 }

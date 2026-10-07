@@ -29,7 +29,7 @@ def final_report(n):
 def check(cert):
     a = subprocess.run([sys.executable, os.path.join(EX, 'verify_cert.py'), cert], capture_output=True, text=True)
     b = subprocess.run([sys.executable, os.path.join(EX, 'verify_cert2.py'), cert], capture_output=True, text=True)
-    return ('VALID' in a.stdout.splitlines()[-1] if a.stdout else False, b.returncode == 0)
+    return (a.stdout.splitlines()[-1].strip().startswith('VALID:') if a.stdout else False, b.returncode == 0)
 
 
 if __name__ == '__main__':

@@ -86,7 +86,7 @@ def run_verifier(path, N, threads, n=12, dump=None, thresh=None, max_cells=None,
         if max_cells is not None: env['TIGHT_MAX'] = str(max_cells)
         if grid is not None: env['TIGHT_GRID'] = str(grid)
     r = subprocess.run([VERIFY, path, str(n), str(N), str(threads), '0'], capture_output=True, text=True, env=env)
-    if r.returncode != 0: raise RuntimeError(r.stdout[-800:] + r.stderr[-800:])
+    if r.returncode not in (0, 1): raise RuntimeError(r.stdout[-800:] + r.stderr[-800:])
     out = r.stdout
     tot = None; mn = None; ncell = None
     for l in out.split('\n'):

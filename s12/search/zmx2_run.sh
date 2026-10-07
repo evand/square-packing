@@ -11,7 +11,7 @@ TH=${TH:-10}
 CORES=${CORES:-0-9}
 OUT=runs/zmx2; mkdir -p $OUT
 MAN=search/zmx2_manifest.txt
-(cd verify2 && cargo build --release --bin zmx2 2>&1 | tail -1)
+(cd verify2 && cargo build --release --bin zmx2 -q) || { echo "cargo build of zmx2 failed"; exit 1; }
 Z=verify2/target/release/zmx2
 sweep() { # name, flags...
   local name=$1; shift

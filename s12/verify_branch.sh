@@ -10,9 +10,10 @@ cd "$(dirname "$0")"
 ( cd verify && cargo build --release )
 V=verify/target/release/verify
 N=${N:-2000}
-chk() { out=$("$@") || { echo "$out"; echo "verifier failed: $*"; exit 1; }
+chk() { rc=0; out=$("$@") || rc=$?
+        [ $rc -le 1 ] || [ $rc -eq 4 ] || { echo "$out"; echo "verifier failed (exit $rc): $*"; exit 1; }
         echo "$out" | grep -E '^(BRANCH|==>|min |VERIFIED|NOT VERIFIED)' | cut -c1-200
-        echo "$out" | grep -q '^VERIFIED:' || { echo "REJECTED: $*"; exit 1; }; }
+        [ $rc -eq 0 ] && echo "$out" | grep -q '^VERIFIED:' || { echo "REJECTED (exit $rc): $*"; exit 1; }; }
 for k in 0 1 2; do
   echo "=== corner leaf k=$k at s = 199/50 = 3.98 (N=$N) ==="
   chk $V certificates/branch/s12_t3.98_corner_k$k.txt 12 $N "$(nproc)" 0

@@ -61,15 +61,16 @@ latter; x86-64 SSE2).  It is a different kind of trust from `zm_mixed.py`'s, whi
 | `verify.sh` | re-check; below |
 | `SHA256SUMS` | |
 
-**Provenance of `zm_mixed_d4/`.**  The sweep was run once (2026-09-28, 19.6 CPU-h, 12 processes) on the same bytes
-under their working name `runs/s60_mixed_candidate_8.txt` (sha256 `2d0e456e…2a41`), with `--resume` records.  For
-the bundle those records were not recomputed: `search/s60_cert_runs.sh import` copied them verbatim, changed only
-the `input` *path* in the header line to `certificates/s60/s60_mixed_cover_8.txt`, and ran `zm_mixed.py` itself
-with `--resume` on them, which recomputes its header from the files (all four sha256, settings, total), refuses a
-file whose header differs, found all 102,400 roots done and wrote `manifest.json` (hence its `wall_s` of 0.1 and the
-`--nproc 1` in its argv).  `run.log` is the original run's log followed by that resume's log.  `verify.sh --full`
-recomputes everything from scratch.  The two `zmx2` runs were made fresh from the bundled file (`search/s60_cert_runs.sh
-zmx2`, 7 threads); their census equals that of the earlier runs on the working copy, root for root.
+**Provenance of `zm_mixed_d4/`.**  The shipped records are a complete fresh run on the bundled file (created
+2026-09-30 00:42:56, `--nproc 8`, `wall_s` 9024.2, about 20 CPU-h; its `argv` names the scratch paths
+`runs/rerun_0929/s60/…` it was written to before being copied here).  `run.log` is that one run.  An earlier sweep of
+the same bytes (2026-09-28, under the working name `runs/s60_mixed_candidate_8.txt`) gave the same census; it is not
+shipped.  (Until 2026-10-07 this paragraph described an import of the 09-28 records; that was out of date, as
+jlevy/squares#256 pointed out.)  The two `zmx2` runs were made fresh from the bundled file (`search/s60_cert_runs.sh
+zmx2`, 7 threads) with `zmx2.rs` sha256 `6b7f0f79…` (named in their manifests); their census equals that of the earlier
+runs on the working copy, root for root.  `verify.sh` builds whatever `zmx2.rs` is checked out and prints its digest:
+later versions add flags whose code paths are off by default, and the fresh run's census matching the shipped one is
+the test that they are inert here.  `verify.sh --full` recomputes everything from scratch.
 
 ## Re-checking
 
