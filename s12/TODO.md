@@ -12,11 +12,10 @@ Proof-piece wishlist (new candidates N1–N15 + 65 open items, picks at the end)
 
 ## Exact forms (10-07; `tasks/exact-minpoly/`)
 First deliverable: a table of exact forms of S + a handful of Lean local-optimality proofs.  n = 83 (deg 672) optional.
-- [ ] Exact forms batch (10-07): 269/324 exact (replay 269/269 VALID; 4 new: 102, 106, 152, 177), Lean `Packs` 258 (all field deg ≤ 20), Lean local min 178; `search/exact/EXACT_FORMS.md`.  Drafts for jlevy: `outreach/draft-jlevy-exact-forms-2026-10-07.md` (2 issues + #375 comment): Evan reviews.
+- [ ] Exact forms batch (10-07): 269/324 exact (4 new: 102, 106, 152, 177), Lean `Packs` 258, Lean local min 178; `search/exact/EXACT_FORMS.md`.  Posted 10-07: jlevy#419 (exact forms), #420 (local minima), #375 comment (s(292)): watch for import.
 - [ ] Lean local minima: s(11), s(28) done (`Exact/N11L`, `N28L`; sparse G check 10-07); next n = 5 (grade B), one grade C (10 or 19).
 - [ ] Lean `Packs` for field degree > 20 (41, 51, 69, 87, 106, 128, 152, 177, 205, 266, 300): field arithmetic too heavy (n = 41 > 35 GB); needs a cheaper field representation.
 - [ ] Target (Evan, 10-07): exact forms + Lean `Packs n S*` for all n ≤ 82 (open: 29, 55, 68, 71 = msolve-hard; 83 = deg-672 wall), Lean local min for ~70 of them (not 17/41/51/69).  Large n Lean: split cert into modules (B294/B310 die on per-file memory accumulation).
-- [ ] (done 10-07: band lemma for all 176 integer-side records, `Exact/Chain/`, `ChainUpTo82`; remove this line after the jlevy post)
 - [ ] (low, curiosity) n = 10 second order: Göbel's 10a record has dim null(J_A) = 4 on the two 45° squares (2 exact flat, 2 PD eig 0.339): what are the coupled motions?  10b (one 45° square, contacts at all 4 edge midpoints) is the n = 5 motif.  Not needed: s(10) global via Stromquist / chelokot bridge.
 - [ ] Grade-C exact certificate (`grade-C.md`: paper proof done, numerics pass for 7 n).  Needs the second-order lemma too (hypothesis 3); build it on n = 5 first (grade B = no flat motions).
 - [ ] Coverage, 59 open by cost: flat rotation (10), multi-direction force balance (11), block-triangular elimination (26 + msolve-hard 9), field 108/206; 292 (packer agent 10-07).
