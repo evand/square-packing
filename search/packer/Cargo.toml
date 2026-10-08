@@ -20,3 +20,7 @@ debug = 1
 [[bin]]
 name = "fq"
 path = "src/fq.rs"
+
+[[bin]]
+name = "anneal"
+path = "src/anneal.rs"

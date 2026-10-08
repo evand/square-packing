@@ -794,3 +794,28 @@ hard / soft patches), half (cut-and-splice control), kick control.  Paired trial
   (Grefenstette 1985, TSP), parameterized uniform crossover (Syswerda 1989; Spears & De Jong 1991), cut-and-splice (Deaven
   & Ho 1995).
 * Explorer move `--cross W` (bestfit 3 of 5 nearest of 30 sampled archive basins); test on the graded benchmark: `runs/be_cross`.
+
+## Disk -> square shape annealing as a constructor (10-08; `src/anneal.rs`, `anneal_test.py`, `runs/an1`-`an3_*`, `an_ex*`)
+Evan: start as a hot disk packing, anneal to squares as it cools (reported to work, also in 3D).  Hard rounded squares
+(inner square half-side 0.5 - r, Minkowski radius r; r = 0.5 disk, r = 0 square; exact inner-square distance, unit-tested
+vs brute force), NPT compression MC (translate / rotate / ln-area box moves, adaptive steps), schedule over progress t:
+bP = bp0 (bp1/bp0)^t (1 -> 3000), r = 0.5 (1 - clamp((t - t0)/(t1 - t0)))^p; shape steps accepted if overlap-free, else the
+smallest box growth <= 5 %.  Finish: `fq quench` (loosen 1.02) + grid test.  ~3 s per 20k sweeps at n = 110.
+* **n = 110: all grid.**  Every variant (morph early / mid / late, 4k ... 100k sweeps) and both controls (same MC with squares
+  throughout; random placement) end at >= 11.0, grid-obstructed; the anneal itself crystallises (~100 axis squares, side
+  11.03-11.13 before fq).  110 = 11^2 - 11: the square-lattice crystal is the equilibrium phase and the trivial packing is
+  the natural attractor; sub-11 needs a delicate tilted structure the anneal never forms.
+* **k^2 + m sizes (37 52 68 87 106 126; 24 runs per variant), gap to the register:** shape annealing beats both controls
+  clearly: grid-obstructed 0-4 / 24 (slow, 100k sweeps) vs 17-24 / 24 (squares-only MC, random); best gaps 0.04-0.11 vs
+  0.05-0.24 (controls' medians = the trivial grid value).  **n = 37: one slow run reached the register value (+1.4e-12).**
+* **Schedule (n = 68 / 106, 16 runs):** slower is better, sub-linearly: median gap 20k sweeps +0.16 / +0.16, 100k +0.11 /
+  +0.16, 300k +0.10 / +0.13, 1M +0.07 / +0.09 (47 / 84 s per anneal); best gaps barely move (0.04 / 0.055).  Morph timing
+  matters: early morph (square while still fluid, t in 0-0.5) falls back to the grid (12-16 / 16); late (disk until dense,
+  0.5-0.95) jams worse (+0.18 median); mid (0.2-0.8) best.  End pressure 3e4 vs 3e3: no gain.
+* **As explorer starts (3 best 1M-sweep anneals, explorer adaptive + elite 0.3, 4 procs x 5 min):** 68: 8.840 -> 8.834
+  (register 8.799), 106: 10.878 -> 10.870 (register 10.823): the anneal lands in other, worse funnels and local search does
+  not bridge them.
+* Reading: a real constructor of non-grid starts (the shape morph is what avoids the grid; squares-only MC crystallises),
+  but at these budgets 0.04-0.1 above records except at small n (37 hit).  Not competitive at n = 110 or as explorer seeds
+  yet.  Untried: much longer anneals / replica exchange in bP at fixed r schedule, r tied to packing fraction instead of
+  progress, anneal from a record's neighbourhood (partial melt: r up to ~0.1 locally, then re-cool) as a large-move proposal.
