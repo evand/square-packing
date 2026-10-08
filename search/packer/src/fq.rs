@@ -505,7 +505,7 @@ fn ident(p: &Prob, v0: &[f64], v1: &[f64], prev: &mut Vec<(u32, u32, u8, u8)>, t
     (dm, slack, na, diff)
 }
 
-struct POpt { r0: f64, rmin: f64, maxit: usize, cc_tol: f64, flip_top: usize, ident: bool, verbose: bool, stag_w: usize, stag_tol: f64 }
+struct POpt { rmax: f64, r0: f64, rmin: f64, maxit: usize, cc_tol: f64, flip_top: usize, ident: bool, verbose: bool, stag_w: usize, stag_tol: f64 }
 
 /// Snap each pair's separator to a face branch: `choice[pk]` = Some(face) forces that face while it stays ambiguous,
 /// None = the face with the largest gap.  Returns the ambiguous pairs (>= 2 faces within cc_tol of contact and of the
@@ -656,7 +656,7 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
                 (dm, sl, na, nd)
             } else { (0.0, 0.0, 0, 0) };
             trace.push((it, tp.elapsed().as_secs_f64(), m1, flips, dm, sl, na, nd));
-            if rho > 0.5 && wmax > 0.5 { r = (2.0 * r).min(o.r0 * 4.0); }
+            if rho > 0.5 && wmax > 0.5 { r = (2.0 * r).min(o.rmax); }
         } else {
             r /= 4.0;
         }
@@ -988,7 +988,7 @@ fn main() {
             let mut trace: Vec<(usize, f64, f64, usize, f64, f64, usize, usize)> = Vec::new();
             let mut load: Vec<(u32, u32, u8, u8)> = Vec::new();
             if !a.iter().any(|t| t == "--no-polish") {
-                let po = POpt { r0: arg(&a, "--r0", 1e-3), rmin: arg(&a, "--rmin", 1e-10), maxit: arg(&a, "--pit", 300), cc_tol: arg(&a, "--cc-tol", 1e-7), flip_top: arg(&a, "--flip-top", 8), ident: a.iter().any(|t| t == "--ident"), stag_w: arg(&a, "--stag-w", 15), stag_tol: arg(&a, "--stag-tol", 2e-9), verbose: o.verbose };
+                let po = POpt { rmax: arg(&a, "--rmax", 4e-3), r0: arg(&a, "--r0", 1e-3), rmin: arg(&a, "--rmin", 1e-10), maxit: arg(&a, "--pit", 300), cc_tol: arg(&a, "--cc-tol", 1e-7), flip_top: arg(&a, "--flip-top", 8), ident: a.iter().any(|t| t == "--ident"), stag_w: arg(&a, "--stag-w", 15), stag_tol: arg(&a, "--stag-tol", 2e-9), verbose: o.verbose };
                 let (s2, x2, it, rr, fl) = polish(&mut prob, sq, &xq, &po, &mut trace, &mut load);
                 sq = s2; xq = x2; pit = it; pr = rr; flips = fl;
             }

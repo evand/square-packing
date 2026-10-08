@@ -622,3 +622,41 @@ Evan: more explore, less exploit; the sub-11 set at 110 was 48 certified minima 
   the record is; SQUISH's record-beaters come from other seeds (their lineage notes).  Test of the recipe (neighbour seeds +
   explorer): `runs/tx237n` from 238 − 1 / 239 − 2 seeds (15.9306–15.9498; record 15.911192, SQUISH 15.903676), 16 procs ×
   30 min.
+* **tx237n (neighbour seeds 238 − 1 / 239 − 2 + explorer, 16 procs × 30 min):** 15.930596 → 15.929763 / 15.929178 /
+  15.924934 / 15.921655 at 4 / 10 / 20 / 30 min (31 min: 15.921096, (28,38,170,1), via rowslide); still descending ~3e-3 per
+  10 min, 1.0e-2 short of the record 15.911192.  ~6 s per proposal at n = 237 vs ~1 s at 110.
+* **Profile at n = 237:** screen 0.6–0.9 s (ALM ~0.2 s); full polish 1.6–5 s normally but **300-iteration crawls (18–20 s)**:
+  s settled by iteration ~12, then < 1e-8 total over 288 iterations (pred ~1e-10 > the 1e-14·s stop).  **Stagnation stop**
+  (`--stag-w 15 --stag-tol 2e-9`, default): s decreased < 2e-9 over the last 15 iterations → stop.  24 proposals at 237:
+  53 s vs 137 s (2.6×); |Δs| median 1e-10, max 1.2e-8 (4/24 > 2e-9: occasional archive duplicates; certification dedupes).
+  Deployed (release binary rebuilt between runs).  Before/after: `runs/tx237s` = tx237n settings.
+* **tx237s (stagnation stop on) vs tx237n:** 3100 vs 2518 proposals (+23 %, not 2.6×); best curves within noise
+  (15.924719 vs 15.921655 at 30 min).  91–94 % of CPU is the stage-2 polish of "new?" candidates (median 10–13 s each).
+* **Stage 2 at n = 237 is partly a long descent, not only a crawl** (30 proposals from tx237s lineages, screen then
+  `--no-alm` polish): default stop 197 s, median 56 it; 1e-8/10 + cap 60: 90 s; no stop 400 it: 315 s, and it ends up to
+  **1.3e-3 lower than the default stop and 2.2e-2 lower than the capped one**.  Truncation misjudges basin depth at large
+  n, so polish speed is a search-quality problem there, not only throughput.  Suspect: trust-region cap 4e-3 per
+  coordinate (= 4 r0).  `--rmax` flag added; test 2e-2 / 5e-2 vs a 400-iteration reference.
+* **Trust-region cap is not the bottleneck:** 30 proposals at 237, rmax 4e-3 / 2e-2 / 5e-2: same iterations (median 56)
+  and time (225–230 s); larger caps slightly worse (4 vs 1 proposal > 1e-6 above the best).  Default stop matches a
+  400-iteration no-stop reference in 29/30 (one genuine long descent, 1.3e-3).  Stage-2 cost at large n = ~56 SLP
+  iterations × 2 LPs (~0.07 s each): the lever is fewer iterations (SQP with rotation curvature; Clarabel takes QPs) or
+  cheaper LPs.
+* **ex10 (adaptive, global novelty, 14 procs × 30 min, ref 697):** 214 certified distinct sub-11, 23 new (3.3 / CPU-h vs
+  ex5's 7.5 at a smaller ref): in-family saturation continues.  **Census: 496 certified sub-11 minima at 110** (48 on
+  10-07 morning); best still Couzo's 10.99678339663.
+
+### Night summary (10-08, for the next session)
+* What worked (measured, concurrent controls where it mattered): quality-diversity explorer (48 → 229 in one hour);
+  screen-stage discards (1.4× certified per CPU); Thompson move selection **with a global-novelty reward** (2.3×; with a
+  run-local reward it backfired); elite share (only arm with deep novelty, costs ~20 % breadth); explorer as record hunter
+  (s108 seed: 98 % of SQUISH's gap in 20 min; s179: 38 %); polish stagnation stop (2.6× on quenches at 237, smaller in the
+  explorer).
+* What didn't: chainshift / mirror / crot / reinsert moves (destructive: leave the funnel); shrink descent (different map,
+  less efficient); 107–109 + k and 111–114 − k seeds (grid-trapped); crop frontier (enters the known funnel's rim, mostly
+  known basins); larger trust region.
+* Open: (1) **large-n polish = ~56 SLP iterations × 2 LPs** (stage 2 is 91–94 % of explorer CPU at 237): SQP polish with
+  rotation curvature is the next engineering step; (2) record starts are robust to exploration (r126 +13 %, r237 nothing):
+  record-beating needs other seeds (neighbours ± k worked partly at 237: 15.9306 → 15.9211 in 30 min, still descending);
+  (3) the sub-11 census at 110 lives in one two-channel funnel (all 2 outside entries landed on its rim); a different
+  funnel, if it exists, needs a different constructor.

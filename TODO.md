@@ -49,11 +49,13 @@ First deliverable: a table of exact forms of S + a handful of Lean local-optimal
 - [ ] Techniques from jlevy/Kleddamag/Guzhou (`notes/jlevy-s17-techniques.md` §2): rule atoms as LP columns, near-tight cells as exact LP rows gmpy2 in exact checkers.  s(17) exact: their PR #307 is far ahead and wand125 built its independent check (jlevy PR #410): not ours to do.
 - [ ] s(17) exact via the s(11) method: on hold (CPU). `tasks/s17-core-isolation/`
 
-## Packings (active, 10-06)
-Engine `search/packer/` (map + plan: `README.md` "Plan (10-06)"; log: `PACKER.md`; merged to main 10-06).  s(110) calibration
-done enough: sub-11 funnel small and well sampled, plateau above 11 rough; the needle is entering the funnel.  Now: samplers that go uphill.
-- [ ] Minima PT (`mcmin.py`): runs A and B at 110 both missed (A: hot replicas sink into the grid; B: 11.0076 funnel deep, staggered-chain trap at 11).  Temperature alone doesn't connect funnels: next, coordinated moves (vacancy → hole chain shift), bias in side.
-- [ ] New moves (vacancy → hole chain shift first): judge on `abtest.py` at 110 and on the 20 rediscovery pairs at distance > 0.06 that kicks never re-find (PACKER "Rediscovery result").
+## Packings (active, 10-08)
+Engine `search/packer/`: `fq` (Rust quench: lifted-separator ALM + face-branch SLP polish) + `explore.py` (quality-diversity basin
+explorer, Thompson move selection with global-novelty reward, elite / frontier budgets) + `explore_exact.py` / `arm_yield.py` /
+`lineage.py`.  Log + night summary: `search/packer/PACKER.md` (end).  s(110) census: 496 certified sub-11 minima (`runs/known110_all.json`).
+- [ ] SQP polish (rotation curvature, Clarabel QP): large-n stage 2 is ~56 SLP iterations × 2 LPs, 91–94 % of explorer CPU at n = 237.
+- [ ] s(110) survey write-up (census, funnel structure, discovery curves per method); a different sub-11 funnel needs a new constructor.
+- [ ] SQUISH gap: explorer + neighbour seeds (s108 seed: 98 % in 20 min; 237 from 238 − 1 still descending at 30 min); record starts don't move.
 - [ ] Record hunting, cheap: re-run the wide sweep n = 30–323 at slp2 budget 180 s (13 % of 60 s quenches at n ≥ 250 unconverged); kick every older packing we have (mirror, register histories, our off-record minima).
 - [ ] Is the plateau → funnel barrier entropic (first-order)?  If so temperature can't open it: bias / multicanonical in side, or gap-spanning moves (lessons from an earlier MH/PT project).
 - [ ] Landscape measure: nested sampling / splitting on side from random starts, log X(s) at 110 (content-agnostic "how hard is this n"; `lit-statmech.md` A2).
