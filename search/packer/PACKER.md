@@ -840,3 +840,16 @@ lineages; 8 slots, 1 h (16 cores), 112 rounds, 11-14 per n.
   11.9140 (record 11.9112); others slow.  Many removal seeds are copies (n+1 record minus a square, polished back to the
   same side: 126's lineage sits at record(127) all hour); 133 = 12 x 12 grid, useless as a seed source.
 * Next: reject non-shrinking removals / more removals per seed; live register + a window SQUISH has not covered.
+
+## Regional melt move, seed fix, live register (10-08; `anneal melt`, explorer `--melt`, `runs/be_melt`)
+* **Melt** (explorer kind `melt`: squares within R (1.5-3.5) of a random square rounded up to rmax 0.05-0.2, hard-particle
+  MC at bP 2000 for 3000 sweeps around them, squared again; ~3.3 s per proposal at n 108-238): graded tier v2, 5 paired
+  reps x 1 proc x 5 min, base vs base + `--melt 2`: +0.055, 95 % [-0.03, +0.12]; **s130 0.03 -> 0.55 (all 5 reps >= 0.43),
+  s154 0.04 -> 0.18, s108 0.15 -> 0.27; s179 0.17 -> 0.00 (basins 26 vs 47)**; s208 / s238 unchanged.  Size-dependent:
+  kept in the move set with the bandit deciding (adaptive, per-size statistics carried across chain rounds:
+  `--bandit-state`, discount 0.5).  165 melt proposals: 57 new archive entries, 47 screen-grid.
+* **Seeds v2** (chain): removals that do not shrink are rejected (copies of the n + k record), up to 12 tries; n = 123-131:
+  copies 15/36 -> 0/36, no usable seed 0 -> 13/36 (rigid neighbours), best seed gap 2.2e-3 -> 2.1e-4.
+* **Live register** (jlevy/squares main tarball 10-08 -> `../exact/batch/regnow/`, `inputs_live/`, both gitignored; table
+  `runs/register_live_2026-10-08.json`): 247 open (102 trivial-grid bounds), 54 changed since 10-05 (Couzo 31, SQUISH 23);
+  our 266 / 270 / 272 still below it and unregistered.

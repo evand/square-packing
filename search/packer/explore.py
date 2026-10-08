@@ -30,6 +30,25 @@ def mv_bigkick(s, sq, rng, a):
     return [(x + rng.gauss(0, sig), y + rng.gauss(0, sig), t + rng.gauss(0, 20 * sig)) for x, y, t in sq], f'bigkick {sig:.3f}'
 
 
+ANNEAL = os.path.join(HERE, 'target-dev/release/anneal')
+
+
+def mv_melt(s, sq, rng, a):
+    """Regional melt (anneal melt): squares within R of a random square get rounded corners (up to rmax), hard-particle MC
+    at high pressure around them, then squared up again; large but local, non-destructive rearrangement."""
+    tmp = tempfile.mkdtemp()
+    i = rng.randrange(len(sq))
+    rad, rmax = rng.uniform(1.5, 3.5), rng.uniform(0.05, 0.2)
+    mcmin.write_deg(f'{tmp}/in.txt', s, sq)
+    r = subprocess.run([ANNEAL, 'melt', '--in', f'{tmp}/in.txt', '--out', f'{tmp}/out.txt', '--cx', str(sq[i][0]), '--cy', str(sq[i][1]),
+                        '--rad', f'{rad:.3f}', '--rmax', f'{rmax:.3f}', '--sweeps', '3000', '--bp', '2000',
+                        '--seed', str(rng.randrange(1 << 30))], capture_output=True, text=True, timeout=300)
+    if r.returncode != 0 or not os.path.exists(f'{tmp}/out.txt'):
+        return mv_bigkick(s, sq, rng, a)
+    s2, sq2 = mcmin.load_deg(f'{tmp}/out.txt')
+    return sq2, f'melt R{rad:.2f} r{rmax:.2f}'
+
+
 def _axis(t, tol=3.0):
     a = t % 90
     return min(a, 90 - a) < tol
@@ -109,7 +128,7 @@ def mv_mirror(s, sq, rng, a):
     return out, f'mirror {kind} {n}'
 
 
-MOVES = dict(mcmin.MOVES, bigkick=mv_bigkick, rowslide=mv_rowslide, chainshift=mv_chainshift, mirror=mv_mirror)
+MOVES = dict(mcmin.MOVES, melt=mv_melt, bigkick=mv_bigkick, rowslide=mv_rowslide, chainshift=mv_chainshift, mirror=mv_mirror)
 CROSS_P, CROSS_K, CROSS_CANDS = 5, 3, 30
 WEIGHTS = dict(kick=2, kicksym=1, lkick=2, bigkick=2, crot=1, aswap=2, band=1, reinsert=0.5, rowslide=2, chainshift=2, mirror=2)
 
@@ -319,6 +338,8 @@ if __name__ == '__main__':
     ap.add_argument('--novel-ref', help='json list of sides: bandit rewards only basins not within 2e-9 of these (global novelty)')
     ap.add_argument('--polish-extra', default='', help='extra fq args for the stage-2 polish (e.g. "--stag-tol 1e-7": search precision)')
     ap.add_argument('--final-polish', type=int, default=0, help='at the end, full default polish of the K best archive entries')
+    ap.add_argument('--bandit-state', help='json file: load (discounted x0.5) and save the move-kind bandit statistics')
+    ap.add_argument('--melt', type=float, default=0, help='weight of the regional melt move (anneal melt); 0 = off')
     ap.add_argument('--cross', type=float, default=0, help='weight of the recombination move (cross.py bestfit 3 of 5); 0 = off')
     ap.add_argument('--adapt', action='store_true', help='Thompson sampling over move kinds (reward: new below-k basin)')
     ap.add_argument('--resume', action='store_true', help='continue from <out>/state.json (time offset carried over)')
@@ -349,8 +370,14 @@ if __name__ == '__main__':
             print('start', p, f'{r[0]:.10f}', e['desc'], e['roles'], flush=True)
     if a.cross:
         WEIGHTS['cross'] = a.cross
+    if a.melt:
+        WEIGHTS['melt'] = a.melt
     kinds, wts = zip(*WEIGHTS.items())
     bandit = KindBandit([kk for kk, w in WEIGHTS.items() if w > 0]) if a.adapt else None
+    if bandit and a.bandit_state and os.path.exists(a.bandit_state):   # carried per-size move statistics (chain rounds), discounted
+        bs = json.load(open(a.bandit_state))
+        for kk in bandit.kinds:
+            bandit.r[kk] = 0.5 * bs.get('r', {}).get(kk, 0.0); bandit.c[kk] = 0.5 * bs.get('c', {}).get(kk, 0.0)
     cellb = CellBandit() if a.adapt_cells else None
     import bisect
     nref = sorted(json.load(open(a.novel_ref))) if a.novel_ref else []
@@ -427,4 +454,7 @@ if __name__ == '__main__':
                 e2, isnew = ar.add(r[0], r[1], e['i'], 'refine', time.time() - t0)
                 print(f'refine b{e["i"]} {e["s"]:.12f} -> {r[0]:.12f}', flush=True)
     ar.dump(stats, time.time() - t0)
+    if bandit and a.bandit_state:
+        bandit.decay()
+        json.dump(dict(r=bandit.r, c=bandit.c), open(a.bandit_state, 'w'))
     report(a.out)

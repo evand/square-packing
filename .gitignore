@@ -39,3 +39,4 @@ search/packer/target-dev/
 search/packer/bench/polish*/out_*/*
 !search/packer/bench/polish*/out_base/
 !search/packer/bench/polish*/out_base/res.json
+search/exact/batch/inputs_live/
