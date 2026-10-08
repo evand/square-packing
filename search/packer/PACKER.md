@@ -553,3 +553,22 @@ Evan: more explore, less exploit; the sub-11 set at 110 was 48 certified minima 
   failure; then polish):** on 40 explorer proposals from ex0 basins, vs the ALM quench: same basin 20/40; where they differ
   ALM lower 14, shrink lower 6; new vs ex0 archive: ALM 6, shrink 5; shrink 1.6× slower.  A different map (keeps as a
   diversity arm) but not more efficient per CPU; not the SQUISH secret by itself.
+
+## Per-arm yields, new moves, adaptive selection, new starts (10-08 night; `arm_yield.py`, `runs/ex2`–`ex4`)
+* **Instrumentation:** `proposals.jsonl` per run (kind, outcome, CPU s, new archive index); `arm_yield.py` = new certified
+  sub-k minima (not in a reference set, credited to the kind that first produced the archive entry) per CPU-hour.
+* **New coordinated moves:** rowslide (a contiguous run of axis squares slides 0.2–0.6 along its row/column, sometimes one
+  end only), chainshift (remove a square, shift the chain on the segment to a clearance hole one step toward the vacancy,
+  re-insert at the hole), mirror (reflect a local cluster across h/v/diagonal through a random point).
+* **ex2 (8 procs × 30 min, all arms, fixed weights, ref = 275 known):** 13.7k proposals, 3.98 CPU-h, 140 distinct certified
+  sub-11 (52 new vs 275).  New per CPU-h: kick 33.5, bigkick 21.7, kicksym 17.9, aswap 17.4, **rowslide 12.1**, band 7.7,
+  lkick 7.7, **chainshift 2.8, mirror 0**, crot 0, reinsert 0.  Discard share (screen-grid / ≥ ceiling) tracks the
+  failure: chainshift 78 %, mirror 79 %, reinsert 95 %, crot 65 %.  Reading: inside the funnel small perturbations (random
+  or coordinated) make new minima; destructive moves leave the funnel (the quench lands ≥ 11 or on the grid).
+* **Seeds from neighbours:** records 111–114 minus 1–4 squares → all exactly 11 (grid; those records are grid-like).
+  Records 107–109 plus 1–3 squares at clearance holes, loosen 1.02–1.08 → 11.004–11.4; 6 distinct ≤ 11.05 kept
+  (`seeds110b/`): new structures (21,0,89,0), (1,10,99,0), (4,1,89,16), (7,4,98,1), (4,14,83,9) + one pure grid at 11.0.
+  (`seeds110/` holds 3 useless 111/114-derived files; left in place.)
+* ex3 = ex2 starts + `--adapt` (Thompson sampling over kinds, reward = new below-k archive entry, rate per CPU-s,
+  Gamma(1 + r, 60 s + c), half-life 10 min, 3 % floor per kind); ex4 = ex2 weights + the 6 seeds110b starts.  Both 8 procs ×
+  30 min, concurrently.

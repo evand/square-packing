@@ -30,8 +30,87 @@ def mv_bigkick(s, sq, rng, a):
     return [(x + rng.gauss(0, sig), y + rng.gauss(0, sig), t + rng.gauss(0, 20 * sig)) for x, y, t in sq], f'bigkick {sig:.3f}'
 
 
-MOVES = dict(mcmin.MOVES, bigkick=mv_bigkick)
-WEIGHTS = dict(kick=2, kicksym=1, lkick=3, bigkick=2, crot=2, aswap=2, band=1, reinsert=0.5)
+def _axis(t, tol=3.0):
+    a = t % 90
+    return min(a, 90 - a) < tol
+
+
+def mv_rowslide(s, sq, rng, a):
+    """Slide a contiguous run of axis squares along its row (or column) by 0.2-0.6: a coordinated move kicks never make."""
+    ax = [i for i, q in enumerate(sq) if _axis(q[2])]
+    if not ax:
+        return mv_bigkick(s, sq, rng, a)
+    i0 = rng.choice(ax)
+    horiz = rng.random() < 0.5
+    c = 1 if horiz else 0                    # coordinate shared by the row (y for a horizontal row)
+    run = [j for j in ax if abs(sq[j][c] - sq[i0][c]) < 0.35]
+    run.sort(key=lambda j: sq[j][1 - c])
+    # contiguous component containing i0 (gaps < 0.3 between neighbours along the row)
+    k = run.index(i0); lo = hi = k
+    while lo > 0 and sq[run[lo]][1 - c] - sq[run[lo - 1]][1 - c] < 1.3: lo -= 1
+    while hi < len(run) - 1 and sq[run[hi + 1]][1 - c] - sq[run[hi]][1 - c] < 1.3: hi += 1
+    seg = set(run[lo:hi + 1])
+    if rng.random() < 0.5:                   # sometimes only part of the run (one end stays)
+        seg = set(run[lo:k + 1]) if rng.random() < 0.5 else set(run[k:hi + 1])
+    d = rng.choice((-1, 1)) * rng.uniform(0.2, 0.6)
+    out = []
+    for j, (x, y, t) in enumerate(sq):
+        if j in seg:
+            x, y = (x + d, y) if horiz else (x, y + d)
+        out.append((x, y, t))
+    return out, f'rowslide {len(seg)} {d:+.2f} {"h" if horiz else "v"}'
+
+
+def mv_chainshift(s, sq, rng, a):
+    """Vacancy -> hole chain shift: remove a square, move a chain of squares one step each toward the vacancy along the
+    line to a clearance hole, re-insert the removed square at the hole."""
+    hs = mcmin.holes(s, sq)
+    if not hs:
+        return mv_bigkick(s, sq, rng, a)
+    hx, hy, _ = rng.choices(hs[:10], weights=[h[2] for h in hs[:10]])[0]
+    near = sorted(range(len(sq)), key=lambda j: math.hypot(sq[j][0] - hx, sq[j][1] - hy))[:12]
+    i = rng.choice(near[2:12]) if len(near) > 3 else near[-1]
+    px, py = sq[i][0], sq[i][1]
+    L = math.hypot(hx - px, hy - py) or 1.0
+    ux, uy = (hx - px) / L, (hy - py) / L
+    chain = []
+    for j, (x, y, t) in enumerate(sq):       # squares near the segment vacancy -> hole, ordered from the vacancy
+        if j == i: continue
+        u = (x - px) * ux + (y - py) * uy
+        w = abs(-(x - px) * uy + (y - py) * ux)
+        if 0 < u < L and w < 0.6:
+            chain.append((u, j))
+    chain.sort()
+    out = list(sq)
+    prev = (px, py)
+    for _, j in chain:                       # each takes its predecessor's place (keeps its own angle)
+        x, y, t = sq[j]
+        out[j] = (prev[0], prev[1], t)
+        prev = (x, y)
+    out[i] = (hx, hy, rng.choice((sq[i][2], 0.0)))
+    return out, f'chainshift {len(chain)} L={L:.2f}'
+
+
+def mv_mirror(s, sq, rng, a):
+    """Reflect a local cluster across a horizontal, vertical or diagonal line through a random point (flips junction
+    handedness; angles reflect accordingly)."""
+    p = (rng.uniform(0, s), rng.uniform(0, s)); r = rng.uniform(1.2, 3.0)
+    kind = rng.choice(('h', 'v', 'd'))
+    out = []
+    n = 0
+    for x, y, t in sq:
+        if math.hypot(x - p[0], y - p[1]) < r:
+            n += 1
+            dx, dy = x - p[0], y - p[1]
+            if kind == 'h': x, y, t = x, p[1] - dy, -t
+            elif kind == 'v': x, y, t = p[0] - dx, y, -t
+            else: x, y, t = p[0] + dy, p[1] + dx, 90 - t
+        out.append((x, y, t % 90))
+    return out, f'mirror {kind} {n}'
+
+
+MOVES = dict(mcmin.MOVES, bigkick=mv_bigkick, rowslide=mv_rowslide, chainshift=mv_chainshift, mirror=mv_mirror)
+WEIGHTS = dict(kick=2, kicksym=1, lkick=2, bigkick=2, crot=1, aswap=2, band=1, reinsert=0.5, rowslide=2, chainshift=2, mirror=2)
 
 
 def tilt_classes(sq, thr=1.0, gap=3.0):
@@ -88,11 +167,37 @@ def work(job):
     return dict(out, status='new?', s=s2, sq=sq2, lines=lines, s_screen=s1, sec=time.time() - t0)
 
 
+class KindBandit:
+    """Thompson sampling over move kinds: reward = new below-k archive entry; rate per CPU-second with a Gamma posterior;
+    counts decay with half-life `half` seconds (rates drift as the archive fills); each kind keeps a floor probability."""
+    def __init__(self, kinds, half=600.0, floor=0.03, a0=1.0, b0=60.0):
+        self.kinds = list(kinds); self.half, self.floor, self.a0, self.b0 = half, floor, a0, b0
+        self.r = {k: 0.0 for k in kinds}; self.c = {k: 0.0 for k in kinds}; self.last = time.time()
+
+    def decay(self):
+        now = time.time(); f = 0.5 ** ((now - self.last) / self.half); self.last = now
+        for k in self.kinds:
+            self.r[k] *= f; self.c[k] *= f
+
+    def update(self, kind, sec, reward):
+        self.decay(); self.c[kind] += sec; self.r[kind] += reward
+
+    def choose(self, rng):
+        if rng.random() < self.floor * len(self.kinds):
+            return rng.choice(self.kinds)
+        draw = {k: rng.gammavariate(self.a0 + self.r[k], 1.0) / (self.b0 + self.c[k]) for k in self.kinds}
+        return max(draw, key=draw.get)
+
+    def summary(self):
+        return {k: f'{self.r[k]:.1f}/{self.c[k]:.0f}s' for k in self.kinds}
+
+
 class Archive:
     def __init__(self, out, n, k, smax, known):
         self.out, self.n, self.k, self.smax, self.known = out, n, k, smax, known
         self.E = []                          # entries
         self.log = open(f'{out}/archive.jsonl', 'a')
+        self.plog = open(f'{out}/proposals.jsonl', 'a')
 
     def find(self, s, tol=2e-9):
         for e in self.E:
@@ -160,6 +265,7 @@ if __name__ == '__main__':
     ap.add_argument('--smax', type=float, default=None, help='stepping-stone ceiling (default k + 0.05)')
     ap.add_argument('--same', type=float, default=1e-6, help='screened side within this of a known basin = return')
     ap.add_argument('--star', action='store_true', help='control: always expand the first start (cen7-style sampling)')
+    ap.add_argument('--adapt', action='store_true', help='Thompson sampling over move kinds (reward: new below-k basin)')
     ap.add_argument('--resume', action='store_true', help='continue from <out>/state.json (time offset carried over)')
     ap.add_argument('--out'); ap.add_argument('--report'); ap.add_argument('--seed', type=int, default=1)
     a = ap.parse_args()
@@ -186,6 +292,7 @@ if __name__ == '__main__':
             e, _ = ar.add(r[0], r[1], -1, 'start:' + os.path.basename(p), 0)
             print('start', p, f'{r[0]:.10f}', e['desc'], e['roles'], flush=True)
     kinds, wts = zip(*WEIGHTS.items())
+    bandit = KindBandit([kk for kk, w in WEIGHTS.items() if w > 0]) if a.adapt else None
     pend = {}
     t_start = time.time()
     with ProcessPoolExecutor(a.procs) as ex:
@@ -193,7 +300,7 @@ if __name__ == '__main__':
             par = ar.E[0] if a.star else ar.pick(rng)
             par['expanded'] += 1
             s, sq = mcmin.load_deg(par['path'])
-            kind = rng.choices(kinds, weights=wts)[0]
+            kind = bandit.choose(rng) if bandit else rng.choices(kinds, weights=wts)[0]
             f = ex.submit(work, (s, sq, kind, rng.randrange(1 << 30), k, [e['s'] for e in ar.E], a.same, ar.smax))
             pend[f] = par
         for _ in range(a.procs):
@@ -209,6 +316,7 @@ if __name__ == '__main__':
                     stats['error'] += 1; r = None
                 if r:
                     stats[r['status']] += 1
+                    newi = None
                     if r['status'] == 'return':
                         e = ar.find(r['s'], tol=1e-9)
                         if e: e['visits'] += 1
@@ -220,12 +328,18 @@ if __name__ == '__main__':
                             stats['new' if isnew else 'dup'] += 1
                             if isnew:
                                 par['children'] += 1
+                                newi = e['i']
+                    if bandit:
+                        bandit.update(r['kind'], r.get('sec', 0.0), 1.0 if (newi is not None and r['s'] < k) else 0.0)
+                    ar.plog.write(json.dumps(dict(t=round(time.time() - t0, 1), kind=r['kind'], st=r['status'],
+                                                  sec=round(r.get('sec', 0), 2), s=r.get('s'), new=newi, par=par['i'])) + '\n')
                 if time.time() - t_start < 60 * a.minutes:
                     submit()
             if time.time() - last > 120:
                 last = time.time()
                 ar.dump(stats, time.time() - t0)
                 sub = [e for e in ar.E if e['s'] < k]
+                if bandit: print('  bandit', bandit.summary(), flush=True)
                 print(f'{time.time() - t0:7.0f}s basins {len(ar.E)} sub-k {len(sub)} (new vs known {sum(not e["known"] for e in sub)}) '
                       f'best {min(e["s"] for e in ar.E):.10f} cells {len({tuple(e["desc"]) for e in ar.E})} | {dict(stats)}', flush=True)
     ar.dump(stats, time.time() - t0)
