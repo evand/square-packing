@@ -192,6 +192,26 @@ class KindBandit:
         return {k: f'{self.r[k]:.1f}/{self.c[k]:.0f}s' for k in self.kinds}
 
 
+class CellBandit:
+    """Thompson sampling over descriptor cells for parent choice (reward: a child that is a new below-k basin; cost: CPU s),
+    decayed like KindBandit; with probability `uniform` the cell is drawn uniformly (exploration of new cells)."""
+    def __init__(self, half=900.0, uniform=0.3, a0=1.0, b0=60.0):
+        self.half, self.uniform, self.a0, self.b0 = half, uniform, a0, b0
+        self.r = collections.Counter(); self.c = collections.Counter(); self.last = time.time()
+
+    def update(self, cell, sec, reward):
+        now = time.time(); f = 0.5 ** ((now - self.last) / self.half); self.last = now
+        for d in (self.r, self.c):
+            for key in d: d[key] *= f
+        self.c[cell] += sec; self.r[cell] += reward
+
+    def choose(self, cells, rng):
+        if rng.random() < self.uniform:
+            return rng.choice(cells)
+        draw = {c: rng.gammavariate(self.a0 + self.r[c], 1.0) / (self.b0 + self.c[c]) for c in cells}
+        return max(draw, key=draw.get)
+
+
 class Archive:
     def __init__(self, out, n, k, smax, known):
         self.out, self.n, self.k, self.smax, self.known = out, n, k, smax, known
@@ -234,12 +254,12 @@ class Archive:
         self.E = d['E']
         return d.get('t', 0.0), collections.Counter(d.get('stats', {}))
 
-    def pick(self, rng, topk=8):
+    def pick(self, rng, topk=8, cb=None):
         cells = collections.defaultdict(list)
         for e in self.E:
             if e['s'] < self.smax:
                 cells[tuple(e['desc'])].append(e)
-        cell = rng.choice(list(cells))
+        cell = cb.choose(list(cells), rng) if cb else rng.choice(list(cells))
         es = sorted(cells[cell], key=lambda e: e['s'])[:topk]
         return rng.choices(es, weights=[1.0 / (1 + e['expanded']) ** 2 for e in es])[0]
 
@@ -265,6 +285,8 @@ if __name__ == '__main__':
     ap.add_argument('--smax', type=float, default=None, help='stepping-stone ceiling (default k + 0.05)')
     ap.add_argument('--same', type=float, default=1e-6, help='screened side within this of a known basin = return')
     ap.add_argument('--star', action='store_true', help='control: always expand the first start (cen7-style sampling)')
+    ap.add_argument('--adapt-cells', action='store_true', help='Thompson sampling over descriptor cells for parents')
+    ap.add_argument('--novel-ref', help='json list of sides: bandit rewards only basins not within 2e-9 of these (global novelty)')
     ap.add_argument('--adapt', action='store_true', help='Thompson sampling over move kinds (reward: new below-k basin)')
     ap.add_argument('--resume', action='store_true', help='continue from <out>/state.json (time offset carried over)')
     ap.add_argument('--out'); ap.add_argument('--report'); ap.add_argument('--seed', type=int, default=1)
@@ -293,11 +315,17 @@ if __name__ == '__main__':
             print('start', p, f'{r[0]:.10f}', e['desc'], e['roles'], flush=True)
     kinds, wts = zip(*WEIGHTS.items())
     bandit = KindBandit([kk for kk, w in WEIGHTS.items() if w > 0]) if a.adapt else None
+    cellb = CellBandit() if a.adapt_cells else None
+    import bisect
+    nref = sorted(json.load(open(a.novel_ref))) if a.novel_ref else []
+    def novel(s):
+        i = bisect.bisect_left(nref, s - 2e-9)
+        return not (i < len(nref) and abs(nref[i] - s) < 2e-9)
     pend = {}
     t_start = time.time()
     with ProcessPoolExecutor(a.procs) as ex:
         def submit():
-            par = ar.E[0] if a.star else ar.pick(rng)
+            par = ar.E[0] if a.star else ar.pick(rng, cb=cellb)
             par['expanded'] += 1
             s, sq = mcmin.load_deg(par['path'])
             kind = bandit.choose(rng) if bandit else rng.choices(kinds, weights=wts)[0]
@@ -329,8 +357,11 @@ if __name__ == '__main__':
                             if isnew:
                                 par['children'] += 1
                                 newi = e['i']
+                    rew = 1.0 if (newi is not None and r['s'] < k and novel(r['s'])) else 0.0
+                    if cellb:
+                        cellb.update(tuple(par['desc']), r.get('sec', 0.0), rew)
                     if bandit:
-                        bandit.update(r['kind'], r.get('sec', 0.0), 1.0 if (newi is not None and r['s'] < k) else 0.0)
+                        bandit.update(r['kind'], r.get('sec', 0.0), rew)
                     ar.plog.write(json.dumps(dict(t=round(time.time() - t0, 1), kind=r['kind'], st=r['status'],
                                                   sec=round(r.get('sec', 0), 2), s=r.get('s'), new=newi, par=par['i'])) + '\n')
                 if time.time() - t_start < 60 * a.minutes:

@@ -572,3 +572,14 @@ Evan: more explore, less exploit; the sub-11 set at 110 was 48 certified minima 
 * ex3 = ex2 starts + `--adapt` (Thompson sampling over kinds, reward = new below-k archive entry, rate per CPU-s,
   Gamma(1 + r, 60 s + c), half-life 10 min, 3 % floor per kind); ex4 = ex2 weights + the 6 seeds110b starts.  Both 8 procs ×
   30 min, concurrently.
+* **ex3 (adaptive kinds, reward = new below-k entry *in this run*):** 148 certified sub-11, only 38 new vs 275 (ex2: 52).
+  The bandit piled onto kicksym (2327 s of decayed cost vs ~500 for others): kicksym makes many basins new to the run but
+  mostly re-finds globally known ones (88 certified, 20 new).  **Lesson: the reward must be global novelty.**  Fixed:
+  `--novel-ref` (sorted sides; reward only basins not within 2e-9 of any).
+* **ex4 (fixed weights + 6 seeds110b starts):** 146 certified, 38 new vs 275; **the new families produced no archive child at
+  all**: ~130 proposals each, ~90 % screen-grid (these 107/108+k structures are 89–107 axis squares; any kick makes an axis
+  chain of 11).  Near-grid families are not stepping stones; useful starts need rich tilted structure (cf. the 132 → 110
+  crop that reached the rim).  The 11.0076 funnel start: 20 proposals, 13 grid, 8 basins, none below 11.
+* Certified union of sub-11 minima at 110 (known + all explorer runs through ex4): **372** (`runs/known110_all.json`).
+* ex5 (adaptive kinds, global-novelty reward vs `runs/ref110_ex5.json` = 528 sub-11 sides, certified + archive-level) and ex6
+  (fixed weights, same ref, concurrent control): 8 procs × 30 min each.
