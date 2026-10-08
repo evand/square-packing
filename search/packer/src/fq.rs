@@ -427,7 +427,83 @@ fn slp_lp(nv: usize, si: usize, cons: &[Con], r: f64, kappa: f64) -> Option<(Vec
     }
 }
 
-struct POpt { r0: f64, rmin: f64, maxit: usize, cc_tol: f64, flip_top: usize, verbose: bool }
+fn row_key(p: &Prob, v: &[f64], c: &Con) -> (u32, u32, u8, u8) {
+    match c.sp {
+        Spec::Wall(i, k, w) => (i as u32, 1_000_000 + w as u32, 99, k as u8),
+        Spec::PI(pk, k) => { let q = &p.pairs[pk]; (q.i as u32, q.j as u32, canon_face(v, q), k as u8) }
+        Spec::PJ(pk, k) => { let q = &p.pairs[pk]; (q.i as u32, q.j as u32, canon_face(v, q), 4 + k as u8) }
+    }
+}
+
+/// Load-bearing contacts: rows with LP dual > 1e-6 max dual (interior point = maximal-support dual = force network).
+fn load_keys(p: &Prob, v: &[f64], cons: &[Con], z: &[f64]) -> Vec<(u32, u32, u8, u8)> {
+    let zm = z.iter().cloned().fold(0.0, f64::max);
+    if std::env::var("FQ_ZHIST").is_ok() {
+        let mut h = [0usize; 16];
+        for &zz in z { let e = if zz <= 0.0 { 15 } else { ((-(zz / zm).log10()).floor() as usize).min(15) }; h[e] += 1; }
+        eprintln!("zhist (decades below max) {:?}", h);
+    }
+    // contact level: drop the corner index (which corners of a face contact carry load is not basin-invariant)
+    let mut out: Vec<_> = cons.iter().zip(z).filter(|(_, &zz)| zz > 1e-6 * zm).map(|(c, _)| { let k = row_key(p, v, c); (k.0, k.1, k.2, 0u8) }).collect();
+    out.sort();
+    out.dedup();
+    out
+}
+
+/// Active contacts at v (g > -tol): keys (i, j or 1_000_000 + wall, face (99 = wall), corner (0-3 of i, 4-7 of j)).
+fn contact_keys(p: &Prob, v: &[f64], tol: f64) -> Vec<(u32, u32, u8, u8)> {
+    let mut out: Vec<(u32, u32, u8, u8)> = p.near(v, tol).iter().map(|c| match c.sp {
+        Spec::Wall(i, k, w) => (i as u32, 1_000_000 + w as u32, 99, k as u8),
+        Spec::PI(pk, k) => { let q = &p.pairs[pk]; (q.i as u32, q.j as u32, canon_face(v, q), k as u8) }
+        Spec::PJ(pk, k) => { let q = &p.pairs[pk]; (q.i as u32, q.j as u32, canon_face(v, q), 4 + k as u8) }
+    }).collect();
+    out.sort();
+    out
+}
+
+/// Face label independent of tie-breaks: the lowest face index parallel to the chosen face; 98 when two non-parallel faces
+/// are both within 1e-7 of contact (corner-corner: either branch).
+fn canon_face(v: &[f64], q: &Pair) -> u8 {
+    let (i, j) = (q.i, q.j);
+    let f = face_seps(v[3 * i], v[3 * i + 1], v[3 * i + 2], v[3 * j], v[3 * j + 1], v[3 * j + 2]);
+    let par = |a: usize, b: usize| {
+        let dd = (f[a].1 - f[b].1).rem_euclid(2.0 * std::f64::consts::PI);
+        dd.min(2.0 * std::f64::consts::PI - dd) < 1e-6
+    };
+    let c = q.face.min(3);
+    let best = (0..4).map(|k| f[k].0).fold(f64::NEG_INFINITY, f64::max);
+    if (0..4).any(|k| !par(k, c) && f[k].0 > best - 1e-7 && f[k].0 > -1e-7) && f[c].0 > -1e-7 { return 98; }
+    (0..4).find(|&k| par(k, c)).unwrap() as u8
+}
+
+fn fingerprint(keys: &[(u32, u32, u8, u8)]) -> u64 {
+    let mut h: u64 = 0xcbf29ce484222325;
+    for &(a, b, c, d) in keys {
+        for x in [a as u64, b as u64, c as u64, d as u64] { h ^= x; h = h.wrapping_mul(0x100000001b3); }
+    }
+    h
+}
+
+/// Identification statistics of an accepted step from v0 to v1: (max corner displacement over squares, smallest slack of
+/// near-but-inactive constraints (g in (-0.05, -tol]), number of active, symmetric difference with `prev` active set).
+fn ident(p: &Prob, v0: &[f64], v1: &[f64], prev: &mut Vec<(u32, u32, u8, u8)>, tol: f64) -> (f64, f64, usize, usize) {
+    let n = p.n;
+    let mut dm: f64 = 0.0;
+    for i in 0..n {
+        let d = (v1[3 * i] - v0[3 * i]).hypot(v1[3 * i + 1] - v0[3 * i + 1]) + H * SQRT2 * (v1[3 * i + 2] - v0[3 * i + 2]).abs();
+        dm = dm.max(d);
+    }
+    let slack = p.near(v1, 0.05).iter().filter(|c| c.g <= -tol).map(|c| -c.g).fold(f64::INFINITY, f64::min);
+    let act = contact_keys(p, v1, tol);
+    let a: std::collections::HashSet<_> = act.iter().collect();
+    let b: std::collections::HashSet<_> = prev.iter().collect();
+    let diff = a.symmetric_difference(&b).count();
+    let na = act.len();
+    *prev = act;
+    (dm, slack, na, diff)
+}
+
+struct POpt { r0: f64, rmin: f64, maxit: usize, cc_tol: f64, flip_top: usize, ident: bool, verbose: bool }
 
 /// Snap each pair's separator to a face branch: `choice[pk]` = Some(face) forces that face while it stays ambiguous,
 /// None = the face with the largest gap.  Returns the ambiguous pairs (>= 2 faces within cc_tol of contact and of the
@@ -468,8 +544,9 @@ fn snap(p: &mut Prob, x: &[f64], choice: &mut [Option<usize>], cc_tol: f64) -> V
 /// Trust-region SLP on the lifted problem with face-branch separators (snapped each iteration), and a greedy branch
 /// search over ambiguous (corner-corner-like) pairs when the step stalls.
 /// Returns (s, x, iterations, final R, flips accepted).
-fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f64, f64, usize)>) -> (f64, Vec<f64>, usize, f64, usize) {
+fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f64, f64, usize, f64, f64, usize, usize)>, p_load: &mut Vec<(u32, u32, u8, u8)>) -> (f64, Vec<f64>, usize, f64, usize) {
     let tp = Instant::now();
+    let mut prev_act: Vec<(u32, u32, u8, u8)> = Vec::new();
     let n = p.n;
     let mut x = x0.to_vec();
     let mut s = s0;
@@ -563,7 +640,17 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
         if rho >= 0.1 {
             x.copy_from_slice(&v1[..3 * n]);
             s = v1[3 * n];
-            trace.push((it, tp.elapsed().as_secs_f64(), m1, flips));
+            let (dm, sl, na, nd) = if o.ident {
+                let (dm, sl, _, _) = ident(p, &v0, &v1, &mut Vec::new(), 1e-8);
+                let lk = load_keys(p, &v0, &cons, &zd);
+                let a: std::collections::HashSet<_> = lk.iter().collect();
+                let b: std::collections::HashSet<_> = prev_act.iter().collect();
+                let nd = a.symmetric_difference(&b).count();
+                let na = lk.len();
+                prev_act = lk;
+                (dm, sl, na, nd)
+            } else { (0.0, 0.0, 0, 0) };
+            trace.push((it, tp.elapsed().as_secs_f64(), m1, flips, dm, sl, na, nd));
             if rho > 0.5 && wmax > 0.5 { r = (2.0 * r).min(o.r0 * 4.0); }
         } else {
             r /= 4.0;
@@ -571,6 +658,11 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
     }
     // leave separators consistent with x for the caller
     snap(p, &x, &mut choice, o.cc_tol);
+    // final force network: one LP at small R at the final point
+    if let Some((_, _, cons, _, z)) = try_lp(p, &x, s, &mut choice, r.max(1e-9).min(1e-6)) {
+        let v = p.pack(&x, s);
+        *p_load = load_keys(p, &v, &cons, &z);
+    }
     (s, x, it, r, flips)
 }
 
@@ -806,7 +898,10 @@ fn main() {
                 mu0: arg(&a, "--mu0", 10.0), mu_max: arg(&a, "--mu-max", 1e2), tol: arg(&a, "--tol", 1e-7),
                 skin: arg(&a, "--skin", 0.3), max_outer: arg(&a, "--outer", 60), verbose: a.iter().any(|t| t == "--v"),
             };
-            let (mut sq, mut xq, nev, outer, viol, mut prob) = quench(s1, &x, &o);
+            let (mut sq, mut xq, nev, outer, viol, mut prob) = if a.iter().any(|t| t == "--no-alm") {
+                // already (nearly) feasible: polish directly
+                (s1, x.clone(), 0, 0, 0.0, Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0 })
+            } else { quench(s1, &x, &o) };
             let t_alm = t0.elapsed().as_secs_f64();
             let mut xc = xq.clone();
             let s_coarse = repair(sq, &mut xc, 1e-13);
@@ -814,17 +909,19 @@ fn main() {
             let mut pit = 0;
             let mut pr = 0.0;
             let mut flips = 0;
-            let mut trace: Vec<(usize, f64, f64, usize)> = Vec::new();
+            let mut trace: Vec<(usize, f64, f64, usize, f64, f64, usize, usize)> = Vec::new();
+            let mut load: Vec<(u32, u32, u8, u8)> = Vec::new();
             if !a.iter().any(|t| t == "--no-polish") {
-                let po = POpt { r0: arg(&a, "--r0", 1e-3), rmin: arg(&a, "--rmin", 1e-10), maxit: arg(&a, "--pit", 300), cc_tol: arg(&a, "--cc-tol", 1e-7), flip_top: arg(&a, "--flip-top", 8), verbose: o.verbose };
-                let (s2, x2, it, rr, fl) = polish(&mut prob, sq, &xq, &po, &mut trace);
+                let po = POpt { r0: arg(&a, "--r0", 1e-3), rmin: arg(&a, "--rmin", 1e-10), maxit: arg(&a, "--pit", 300), cc_tol: arg(&a, "--cc-tol", 1e-7), flip_top: arg(&a, "--flip-top", 8), ident: a.iter().any(|t| t == "--ident"), verbose: o.verbose };
+                let (s2, x2, it, rr, fl) = polish(&mut prob, sq, &xq, &po, &mut trace, &mut load);
                 sq = s2; xq = x2; pit = it; pr = rr; flips = fl;
             }
+            let (fp, ncont) = (fingerprint(&load), load.len());
             let sr = repair(sq, &mut xq, 1e-13);
             let (mg, mw) = check(sr, &xq);
             if let Some(out) = sarg(&a, "--out") { write_cfg(&out, sr, &xq); }
-            println!("{{\"s\": {:.15}, \"s_alm\": {:.15}, \"viol\": {:.2e}, \"evals\": {}, \"outer\": {}, \"slp_it\": {}, \"slp_r\": {:.1e}, \"flips\": {}, \"min_gap\": {:.2e}, \"min_wall\": {:.2e}, \"sec\": {:.3}, \"s_coarse\": {:.15}, \"t_alm\": {:.3}, \"s_alm0\": {:.15}, \"trace\": [{}]}}",
-                     sr, sq, viol, nev, outer, pit, pr, flips, mg, mw, t0.elapsed().as_secs_f64(), s_coarse, t_alm, s_alm0, trace.iter().map(|q| format!("[{},{:.4},{:.15},{}]", q.0, q.1, q.2, q.3)).collect::<Vec<_>>().join(","));
+            println!("{{\"s\": {:.15}, \"s_alm\": {:.15}, \"viol\": {:.2e}, \"evals\": {}, \"outer\": {}, \"slp_it\": {}, \"slp_r\": {:.1e}, \"flips\": {}, \"min_gap\": {:.2e}, \"min_wall\": {:.2e}, \"sec\": {:.3}, \"s_coarse\": {:.15}, \"t_alm\": {:.3}, \"s_alm0\": {:.15}, \"trace\": [{}], \"fp\": \"{:016x}\", \"ncontacts\": {}}}",
+                     sr, sq, viol, nev, outer, pit, pr, flips, mg, mw, t0.elapsed().as_secs_f64(), s_coarse, t_alm, s_alm0, trace.iter().map(|q| format!("[{},{:.4},{:.15},{},{:.3e},{:.3e},{},{}]", q.0, q.1, q.2, q.3, q.4, q.5, q.6, q.7)).collect::<Vec<_>>().join(","), fp, ncont);
         }
         "gradcheck" => {
             // random kick so many constraints are active, then compare analytic vs central differences

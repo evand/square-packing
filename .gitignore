@@ -35,3 +35,4 @@ site/data/*.stdout
 
 # local Pages assembly
 _site/
+search/packer/target-dev/

@@ -67,6 +67,68 @@ def seed_remove(n, k, m, rng, tmp):
     return best
 
 
+def search(s_start, sq_start, budget, rng, tmp, log, T=1e-5, patience=40, kinds=None):
+    """Baseline hop search from a given (already quenched) state for `budget` seconds.  Logs one JSON line per proposal
+    (t = seconds since start, s, kind, acc, best).  Returns (best_s, best_sq)."""
+    cur = best = (s_start, sq_start)
+    t_start = time.time()
+    since = 0
+    while time.time() - t_start < budget:
+        prop, kind = propose(cur[1], rng)
+        r = quench(cur[0], prop, tmp)
+        if r is None:
+            continue
+        s, sq, d = r
+        acc = s < cur[0] or rng.random() < math.exp(-(s - cur[0]) / T)
+        if acc:
+            cur = (s, sq)
+        if s < best[0] - 1e-11:
+            best = (s, sq); since = 0
+        else:
+            since += 1
+            if since >= patience:
+                cur = best; since = 0
+        log.write(json.dumps(dict(t=round(time.time() - t_start, 2), s=s, kind=kind, acc=acc, best=best[0])) + '\n')
+        log.flush()
+    return best
+
+
+def search_da(s_start, sq_start, budget, rng, tmp, log, T=1e-5, patience=40, k=8, reject=1e-4, same=3e-7):
+    """Delayed acceptance: screen each proposal with ALM + <= k SLP iterations and no flips; reject outright if the screened
+    side is > reject above the current one, count it as a return to the current basin if within `same`; otherwise polish
+    fully (--no-alm from the screened state) and apply the Metropolis test to the polished side."""
+    cur = best = (s_start, sq_start)
+    t_start = time.time()
+    since = 0
+    while time.time() - t_start < budget:
+        prop, kind = propose(cur[1], rng)
+        r = quench(cur[0], prop, tmp, extra=('--pit', str(k), '--flip-top', '0'))
+        if r is None:
+            continue
+        s1, sq1, _ = r
+        stage = 1
+        if s1 > cur[0] + reject or abs(s1 - cur[0]) < same:
+            s, acc = s1, False
+        else:
+            r2 = quench(s1, sq1, tmp, extra=('--no-alm',))
+            if r2 is None:
+                continue
+            s, sq, _ = r2
+            stage = 2
+            acc = s < cur[0] or rng.random() < math.exp(-(s - cur[0]) / T)
+            if acc:
+                cur = (s, sq)
+            if s < best[0] - 1e-11:
+                best = (s, sq); since = 0
+        if not (stage == 2 and s < best[0] + 1e-11 and acc):
+            since += 1
+            if since >= patience:
+                cur = best; since = 0
+        log.write(json.dumps(dict(t=round(time.time() - t_start, 2), s=s, kind=kind, acc=acc, best=best[0], stage=stage)) + '\n')
+        log.flush()
+    return best
+
+
 def chain(j):
     n, cid, minutes, T, patience, out, sk, sm = j
     rng = random.Random(n * 1000 + cid)
