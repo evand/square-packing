@@ -605,3 +605,9 @@ Evan: more explore, less exploit; the sub-11 set at 110 was 48 certified minima 
   Census: **429**.
 * ex8 (adaptive + elite share 0.3: parent from the global top-20 sub-11 basins, weight 1/(1+expanded)) vs ex9 (adaptive),
   concurrent, ref 620; metric adds deep novelty (new certified < 10.9975).
+* **ex8 (elite 0.3) vs ex9 (adaptive only), concurrent, ref 620:** certified sub-11 158 vs 186; new 18 vs 23; deep
+  (< 10.9975) basins visited 25 vs 15, **deep and new 4 vs 0**.  The elite budget converts breadth into depth (~20 % of
+  total novelty for the only deep novelty so far): census work wants elite ~0, record hunting wants it on.  Census: **473**.
+* Transfer tests (record hunting on the SQUISH benchmark seeds with the explorer: --adapt, elite 0.3, 8 procs × 30 min):
+  `runs/tx179` (s179 = Couzo 180 − 1, 13.923576; SQUISH 13.883795), `runs/tx108` (s108 = 110 − 2, 10.995103; SQUISH
+  10.909940).  Hop variants this morning: median gains ≤ 8e-3 (s179) / 7e-3 (s108) per 8 single-proc minutes.
