@@ -110,6 +110,20 @@ class Archive:
         self.log.write(json.dumps({k: v for k, v in e.items()}) + '\n'); self.log.flush()
         return e, True
 
+    def dump(self, stats, t):
+        tmp = f'{self.out}/state.json.tmp'
+        json.dump(dict(t=t, stats=dict(stats), E=self.E), open(tmp, 'w'))
+        os.replace(tmp, f'{self.out}/state.json')
+
+    def load(self, path):
+        if not os.path.exists(path):         # runs from before state dumps: rebuild from the archive log
+            E = [json.loads(l) for l in open(f'{self.out}/archive.jsonl')]
+            self.E = E
+            return max([e['t'] for e in E] + [0.0]), collections.Counter()
+        d = json.load(open(path))
+        self.E = d['E']
+        return d.get('t', 0.0), collections.Counter(d.get('stats', {}))
+
     def pick(self, rng, topk=8):
         cells = collections.defaultdict(list)
         for e in self.E:
@@ -141,6 +155,7 @@ if __name__ == '__main__':
     ap.add_argument('--smax', type=float, default=None, help='stepping-stone ceiling (default k + 0.05)')
     ap.add_argument('--same', type=float, default=1e-6, help='screened side within this of a known basin = return')
     ap.add_argument('--star', action='store_true', help='control: always expand the first start (cen7-style sampling)')
+    ap.add_argument('--resume', action='store_true', help='continue from <out>/state.json (time offset carried over)')
     ap.add_argument('--out'); ap.add_argument('--report'); ap.add_argument('--seed', type=int, default=1)
     a = ap.parse_args()
     if a.report:
@@ -152,6 +167,12 @@ if __name__ == '__main__':
     rng = random.Random(a.seed)
     tmp = tempfile.mkdtemp()
     t0 = time.time()
+    stats = collections.Counter()
+    if a.resume:
+        toff, stats = ar.load(f'{a.out}/state.json')
+        t0 -= toff
+        a.starts = []
+        print(f'resumed {len(ar.E)} basins at t = {toff:.0f}s', flush=True)
     hop.EXTRA[:] = ['--loosen', '1.0']
     for p in a.starts:                       # starts are polished in place (no ALM, no loosen: keep their basins)
         s, sq = mcmin.load_deg(p)
@@ -160,8 +181,8 @@ if __name__ == '__main__':
             e, _ = ar.add(r[0], r[1], -1, 'start:' + os.path.basename(p), 0)
             print('start', p, f'{r[0]:.10f}', e['desc'], e['roles'], flush=True)
     kinds, wts = zip(*WEIGHTS.items())
-    stats = collections.Counter()
     pend = {}
+    t_start = time.time()
     with ProcessPoolExecutor(a.procs) as ex:
         def submit():
             par = ar.E[0] if a.star else ar.pick(rng)
@@ -194,11 +215,13 @@ if __name__ == '__main__':
                             stats['new' if isnew else 'dup'] += 1
                             if isnew:
                                 par['children'] += 1
-                if time.time() - t0 < 60 * a.minutes:
+                if time.time() - t_start < 60 * a.minutes:
                     submit()
             if time.time() - last > 120:
                 last = time.time()
+                ar.dump(stats, time.time() - t0)
                 sub = [e for e in ar.E if e['s'] < k]
                 print(f'{time.time() - t0:7.0f}s basins {len(ar.E)} sub-k {len(sub)} (new vs known {sum(not e["known"] for e in sub)}) '
                       f'best {min(e["s"] for e in ar.E):.10f} cells {len({tuple(e["desc"]) for e in ar.E})} | {dict(stats)}', flush=True)
+    ar.dump(stats, time.time() - t0)
     report(a.out)

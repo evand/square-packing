@@ -536,3 +536,12 @@ Evan: more explore, less exploit; the sub-11 set at 110 was 48 certified minima 
   (19,24,67), (22,22,66), (23,19,68), (25,19,66) beside (22,21,67) and (19,23,68).  New near-bottom trio 10.99682777 /
   .99682787 / .99682933 (all certified, distinct; ~4.5e-5 above Couzo's).  Nothing below the record.  Still two-channel
   structures: groups are variations within the family, not new funnel types.
+* **ex0 (60 min, 15 procs, same starts; 22.6k proposals: 7.6k returns, 8.7k discarded ≥ 11.05 or grid, 5.5k new basins):**
+  268 sub-11 basins → exactsolve: 205 distinct certified minima (54 not minima, 8 unresolved; 1 f64 split), 172 not in the
+  known 48.  **Union of certified sub-11 minima at 110 (known + smoke + ex0): 229** (was 48).  28 role-count groups.
+  Discovery curve (distinct certified by t): 68 / 88 / 106 / 126 / 149 / 170 / 193 / 205 at 5 / 10 / 15 / 20 / 30 / 40 / 50
+  / 60 min: ~2.3 per minute and linear after the first 15 min (no sign of saturation).  Best: still Couzo's
+  10.99678339663; closest new 10.9967871155 (+3.7e-6; (22,21,67,0)), then .99682787, .99682933, .99683259, .99686519.  New
+  minima by move: lkick 48, kick 47, bigkick 41, aswap 41, kicksym 32, crot 16, band 9.  ~20 % of sub-11 archive entries are
+  not minima (screen + polish lets saddles/unjammed through): certification stays in the loop.  Not resumed (no record;
+  Evan: resume only on a record).
