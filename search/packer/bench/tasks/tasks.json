@@ -1,0 +1,126 @@
+{
+ "s108": {
+  "n": 108,
+  "path": "bench/seeds/s108.txt",
+  "start": 10.995103408431305,
+  "target": 10.909940073445,
+  "source": "SQUISH seed (bench_search.py)"
+ },
+ "s179": {
+  "n": 179,
+  "path": "bench/seeds/s179.txt",
+  "start": 13.923576345388348,
+  "target": 13.883795490512,
+  "source": "SQUISH seed (bench_search.py)"
+ },
+ "r126": {
+  "n": 126,
+  "path": "bench/seeds/r126.txt",
+  "start": 11.774735132390274,
+  "target": 11.773303606607,
+  "source": "SQUISH seed (bench_search.py)"
+ },
+ "r237": {
+  "n": 237,
+  "path": "bench/seeds/r237.txt",
+  "start": 15.911191683004997,
+  "target": 15.903676235191,
+  "source": "SQUISH seed (bench_search.py)"
+ },
+ "rd106": {
+  "n": 106,
+  "path": "bench/tasks/rd106.txt",
+  "start": 10.822979734171653,
+  "target": 10.822908044132884,
+  "mirror": 10.822979734169449,
+  "source": "rd1: 09-30 mirror -> register 10-05"
+ },
+ "rd177": {
+  "n": 177,
+  "path": "bench/tasks/rd177.txt",
+  "start": 13.823028750759281,
+  "target": 13.822979734183507,
+  "mirror": 13.823028750756476,
+  "source": "rd1: 09-30 mirror -> register 10-05"
+ },
+ "rd236": {
+  "n": 236,
+  "path": "bench/tasks/rd236.txt",
+  "start": 15.87606262399495,
+  "target": 15.872219025607325,
+  "mirror": 15.876075393152016,
+  "source": "rd1: 09-30 mirror -> register 10-05"
+ },
+ "rd130": {
+  "n": 130,
+  "path": "bench/tasks/rd130.txt",
+  "start": 11.911190501572827,
+  "target": 11.911187706548755,
+  "mirror": 11.911190520158987,
+  "source": "rd1: 09-30 mirror -> register 10-05"
+ },
+ "rd263": {
+  "n": 263,
+  "path": "bench/tasks/rd263.txt",
+  "start": 16.74264068712272,
+  "target": 16.74227026203179,
+  "mirror": 16.742640687119284,
+  "source": "rd1: 09-30 mirror -> register 10-05"
+ },
+ "rd307": {
+  "n": 307,
+  "path": "bench/tasks/rd307.txt",
+  "start": 17.982052033825262,
+  "target": 17.981030548643712,
+  "mirror": 17.9827220157961,
+  "source": "rd1: 09-30 mirror -> register 10-05"
+ },
+ "rd237": {
+  "n": 237,
+  "path": "bench/tasks/rd237.txt",
+  "start": 15.914213562376322,
+  "target": 15.911191683001825,
+  "mirror": 15.914213562373096,
+  "source": "rd1: 09-30 mirror -> register 10-05"
+ },
+ "rd210": {
+  "n": 210,
+  "path": "bench/tasks/rd210.txt",
+  "start": 14.973810444983155,
+  "target": 14.973001116591412,
+  "mirror": 14.974133418864046,
+  "source": "rd1: 09-30 mirror -> register 10-05"
+ },
+ "rd271": {
+  "n": 271,
+  "path": "bench/tasks/rd271.txt",
+  "start": 16.954804607456076,
+  "target": 16.950820792633813,
+  "mirror": 16.954999094125323,
+  "source": "rd1: 09-30 mirror -> register 10-05"
+ },
+ "rd131": {
+  "n": 131,
+  "path": "bench/tasks/rd131.txt",
+  "start": 11.95652190069644,
+  "target": 11.954916830219048,
+  "mirror": 11.956525432809265,
+  "source": "rd1: 09-30 mirror -> register 10-05"
+ },
+ "rd180": {
+  "n": 180,
+  "path": "bench/tasks/rd180.txt",
+  "start": 13.935004179863595,
+  "target": 13.927888140501693,
+  "mirror": 13.935087052911292,
+  "source": "rd1: 09-30 mirror -> register 10-05"
+ },
+ "rd305": {
+  "n": 305,
+  "path": "bench/tasks/rd305.txt",
+  "start": 17.96053667218429,
+  "target": 17.95295945902354,
+  "mirror": 17.960662014012055,
+  "source": "rd1: 09-30 mirror -> register 10-05"
+ }
+}
