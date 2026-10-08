@@ -15,9 +15,17 @@
 //!
 //!   fq quench --in A --out B [--loosen 1.02] [--kick SIGMA --seed K] [--mu0 10] [--v]
 //!   fq check --in A           (min pair gap, min wall clearance)
+//!   --dump-lp DIR: append every polish LP to DIR/lp-<pid>.jsonl (rows/columns with stable keys, Clarabel time; lp_bench.py)
 
 use std::fs;
 use std::time::Instant;
+use std::sync::atomic::{AtomicU8, AtomicUsize, Ordering};
+use std::sync::OnceLock;
+
+// --dump-lp DIR: append every polish LP (rows, columns with stable keys, Clarabel time) to DIR/lp-<pid>.jsonl
+static DUMP_LP: OnceLock<String> = OnceLock::new();
+static LP_TAG: AtomicU8 = AtomicU8::new(0); // 0 step, 1 second-order correction, 2 flip search, 3 final force network
+static LP_IT: AtomicUsize = AtomicUsize::new(0);
 
 const H: f64 = 0.5;
 const SQRT2: f64 = std::f64::consts::SQRT_2;
@@ -383,7 +391,7 @@ impl Prob {
 
 /// One LP: min w_s + kappa tau  s.t.  grad g . w - tau <= -g/R (near constraints), |w| <= 1, tau >= 0.
 /// Only columns that occur in some row (and s) are LP variables; the rest of w is 0.  Returns (w, tau, row duals).
-fn slp_lp(nv: usize, si: usize, cons: &[Con], r: f64, kappa: f64, hq: &[(usize, usize, f64)]) -> Option<(Vec<f64>, f64, Vec<f64>)> {
+fn slp_lp(nv: usize, si: usize, cons: &[Con], r: f64, kappa: f64, hq: &[(usize, usize, f64)], kp: &Prob) -> Option<(Vec<f64>, f64, Vec<f64>)> {
     use clarabel::algebra::*;
     use clarabel::solver::*;
     let mut col = vec![usize::MAX; nv];
@@ -427,6 +435,7 @@ fn slp_lp(nv: usize, si: usize, cons: &[Con], r: f64, kappa: f64, hq: &[(usize, 
     let mut solver = DefaultSolver::new(&p, &q, &a, &b, &cones, settings).ok()?;
     solver.solve();
     if std::env::var("FQ_LPT").is_ok() { eprintln!("lp rows {row} cols {nx} iters {} sec {:.3}", solver.info.iterations, t0.elapsed().as_secs_f64()); }
+    if let Some(dir) = DUMP_LP.get() { dump_lp(dir, kp, &used, cons, &b, kappa, r, row, nx, &solver, t0.elapsed().as_secs_f64()); }
     match solver.solution.status {
         SolverStatus::Solved | SolverStatus::AlmostSolved => {
             let x = &solver.solution.x;
@@ -583,6 +592,46 @@ struct POpt { sqp: bool, rmax: f64, r0: f64, rmin: f64, maxit: usize, cc_tol: f6
 /// Snap each pair's separator to a face branch: `choice[pk]` = Some(face) forces that face while it stays ambiguous,
 /// None = the face with the largest gap.  Returns the ambiguous pairs (>= 2 faces within cc_tol of contact and of the
 /// best) with their candidate faces; forced choices that are no longer ambiguous are cleared.
+fn dump_lp(dir: &str, p: &Prob, used: &[usize], cons: &[Con], b: &[f64], kappa: f64, r: f64, nrow: usize, nx: usize,
+           solver: &clarabel::solver::DefaultSolver<f64>, sec: f64) {
+    use std::io::Write;
+    let n = p.n;
+    let o = 3 * n + 1;
+    let ck = |k: usize| -> String {
+        if k < 3 * n { format!("{}{}", ["x", "y", "t"][k % 3], k / 3) } else if k == 3 * n { "s".into() } else {
+            let q = &p.pairs[(k - o) / 2];
+            format!("{}{}_{}", if (k - o) % 2 == 0 { "f" } else { "d" }, q.i, q.j)
+        }
+    };
+    let rk = |c: &Con| -> String {
+        match c.sp {
+            Spec::Wall(i, k, w) => format!("w{i}_{k}_{w}"),
+            Spec::PI(pk, k) => format!("a{}_{}_{k}", p.pairs[pk].i, p.pairs[pk].j),
+            Spec::PJ(pk, k) => format!("b{}_{}_{k}", p.pairs[pk].i, p.pairs[pk].j),
+        }
+    };
+    let mut col = std::collections::HashMap::new();
+    for (c, &k) in used.iter().enumerate() { col.insert(k, c); }
+    let mut s = String::with_capacity(64 * cons.len());
+    s.push_str(&format!("{{\"n\":{n},\"tag\":{},\"it\":{},\"r\":{:e},\"kappa\":{:e},\"nrow_total\":{nrow},\"nx\":{nx},\"cols\":[",
+        LP_TAG.load(Ordering::Relaxed), LP_IT.load(Ordering::Relaxed), r, kappa));
+    for (c, &k) in used.iter().enumerate() { if c > 0 { s.push(','); } s.push_str(&format!("\"{}\"", ck(k))); }
+    s.push_str("],\"rows\":[");
+    for (ri, c) in cons.iter().enumerate() {
+        if ri > 0 { s.push(','); }
+        s.push_str(&format!("[\"{}\",{:e},[", rk(c), b[ri]));
+        for (m, &(k, a)) in c.nz.iter().enumerate() { if m > 0 { s.push(','); } s.push_str(&format!("[{},{:e}]", col[&k], a)); }
+        s.push_str("]]");
+    }
+    let x = &solver.solution.x;
+    let obj = x[col[&(3 * n)]] + kappa * x[nx - 1];
+    s.push_str(&format!("],\"clarabel\":{{\"status\":\"{:?}\",\"iters\":{},\"sec\":{:e},\"solve_time\":{:e},\"obj\":{:e}}}}}\n",
+        solver.solution.status, solver.info.iterations, sec, solver.info.solve_time, obj));
+    let path = format!("{dir}/lp-{}.jsonl", std::process::id());
+    let mut f = fs::OpenOptions::new().create(true).append(true).open(path).expect("dump-lp");
+    f.write_all(s.as_bytes()).unwrap();
+}
+
 fn snap(p: &mut Prob, x: &[f64], choice: &mut [Option<usize>], cc_tol: f64) -> Vec<(usize, Vec<usize>)> {
     let mut amb = Vec::new();
     for (pk, pr) in p.pairs.iter_mut().enumerate() {
@@ -640,7 +689,7 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
         let v0 = p.pack(x, s);
         let m0 = merit(p, &v0);
         let cons = p.near(&v0, 5.0 * r + 1e-9);
-        let (w, tau, z) = slp_lp(v0.len(), 3 * p.n, &cons, r, kappa, hq)?;
+        let (w, tau, z) = slp_lp(v0.len(), 3 * p.n, &cons, r, kappa, hq, p)?;
         Some((m0 - (s + r * w[3 * p.n] + kappa * r * tau), w, cons, m0, z))
     };
     let mut stalls = 0;
@@ -661,6 +710,7 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
             hq.clear();
             xref = x.clone();
         }
+        LP_IT.store(it, Ordering::Relaxed); LP_TAG.store(0, Ordering::Relaxed);
         let Some((pred, w, mut cons, m0, zd)) = try_lp(p, &x, s, &mut choice, r, &hq) else { r /= 4.0; if r < o.rmin { break; } continue; };
         let small = pred < 1e-14 * s.max(1.0) || r < o.rmin;
         if small {
@@ -684,6 +734,7 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
                     if Some(c) == cur { continue; }
                     let mut ch = choice.clone();
                     ch[pk] = Some(c);
+                    LP_TAG.store(2, Ordering::Relaxed);
                     if let Some((pr2, ..)) = try_lp(p, &x, s, &mut ch, rt, &hq) {
                         if pr2 > 1e-12 * s && best.map_or(true, |b| pr2 > b.0) { best = Some((pr2, pk, c)); }
                     }
@@ -709,7 +760,8 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
                 let lin: f64 = c.nz.iter().map(|&(k, a)| a * r * w[k]).sum();
                 c.g = p.g_at(&v1, c.sp) - lin;
             }
-            if let Some((w2, _, _)) = slp_lp(nv, 3 * n, &cons, r, kappa, &hq) {
+            LP_TAG.store(1, Ordering::Relaxed);
+            if let Some((w2, _, _)) = slp_lp(nv, 3 * n, &cons, r, kappa, &hq, p) {
                 let mut v2: Vec<f64> = (0..nv).map(|k| v0[k] + r * w2[k]).collect();
                 p.tie(&v0, &mut v2);
                 let m2 = merit(p, &v2);
@@ -740,6 +792,7 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
     // leave separators consistent with x for the caller
     snap(p, &x, &mut choice, o.cc_tol);
     // final force network: one LP at small R at the final point
+    LP_TAG.store(3, Ordering::Relaxed);
     if let Some((_, _, cons, _, z)) = try_lp(p, &x, s, &mut choice, r.max(1e-9).min(1e-6), &[]) {
         let v = p.pack(&x, s);
         *p_load = load_keys(p, &v, &cons, &z);
@@ -1018,6 +1071,7 @@ fn main() {
     let a: Vec<String> = std::env::args().collect();
     let cmd = a.get(1).map(|s| s.as_str()).unwrap_or("");
     let inp = sarg(&a, "--in").expect("--in");
+    if let Some(d) = sarg(&a, "--dump-lp") { fs::create_dir_all(&d).expect("--dump-lp dir"); DUMP_LP.set(d).ok(); }
     let (s, mut x) = read_cfg(&inp);
     match cmd {
         "check" => {

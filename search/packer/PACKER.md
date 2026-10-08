@@ -673,3 +673,34 @@ Evan: more explore, less exploit; the sub-11 set at 110 was 48 certified minima 
   seems to matter more than count.  Single runs; tx237n vs tx237s already differ by 3e-3, so inconclusive.  Left off by
   default.  Next for large n: replicates before more policy changes; cheaper LPs (warm-started active-set / dual simplex
   instead of interior point) are the remaining throughput lever.
+
+## Polish LP timing: Clarabel vs HiGHS, warm starts (10-08; `fq --dump-lp`, `lp_bench.py`)
+Question: would a warm-started simplex (HiGHS dual simplex reusing the previous basis) cut the polish's LP cost at n = 237
+by >= 2x?  Dumped every polish LP of 8 polishes (screen then `--no-alm --loosen 1.0`; r237 register kicked 0.01 / 0.05,
+four tx237n archive states kicked / local-kicked, rec110 kicked 0.01 / 0.05): 1428 LPs, ~2500-2950 rows x ~1350 columns at
+237 (~1100-1240 x 600 at 110).  Timed offline one core each (highspy 1.15.1, threads 1).
+* **Cold, HiGHS is slower than Clarabel:** per-LP median at 237 Clarabel 32-46 ms, HiGHS dual simplex 44-93 ms (~1900
+  simplex iterations), HiGHS IPM 50-114 ms; totals over the 6 polishes at 237: Clarabel 52 s, dual 118 s, IPM 113 s.
+  Objectives agree to <= 1e-7 (abs, typical 1e-9).
+* **Structure persists:** consecutive LPs keep 100 % of columns and (median) 100 % of rows (min 62 % after a pair-list
+  rebuild); only coefficients and right-hand sides change.
+* **Second-order-correction LPs (half of all LPs: SOC runs and is accepted on every iteration) warm-start for free:** same
+  rows, shifted rhs; 1-2 simplex iterations, ~1-2 ms vs Clarabel ~37 ms; all optimal.  Total at 237: 25.3 s -> 1.2 s.
+* **Step LPs do not:** after an accepted step (new point, new coefficients, new rhs) the old basis is primal and dual
+  infeasible; warm dual simplex takes median ~1500-2700 iterations (tail 6000), total 67.6 s vs Clarabel 25.5 s; ~15 % of
+  mapped bases make HiGHS return kError at once (not diagnosed).  After a rejected step (same point, smaller box) warm is
+  0.5-2x Clarabel: no consistent gain.  Primal simplex warm start is worse.  Flip-search LPs: warm ~0.6x Clarabel (small).
+* **Hybrid (Clarabel for step LPs, warm simplex / active-set solve for SOC and flips): LP time 52 s -> ~27.5 s (1.9x)**;
+  LPs are ~73 % of polish wall time at 237 (71 s total), so ~1.5x on the polish.  Not the 2x+ hoped for.
+* **SOC is worth its LP:** with SOC off (experiment build) iterations per polish hit the 300 cap in 4/6 at 237 and end
+  1e-8 ... 1.5e-6 higher; per-iteration cost halves, net time similar or worse.
+* **Where the iterations go (spotted on the way):** 25-55 % of iterations are rejected (rho < 0.1: 2 LPs wasted each, then
+  R/4); R stays 6e-5 ... 1e-3, far below the 4e-3 cap (hence rmax didn't matter); before the SOC rho is hugely negative
+  (median -246 on t237c): near stationarity the second-order violation (~kappa R^2 with kappa = 3s ~ 48) swamps the
+  first-order prediction.  Long polishes are slow crawls along flat motions (r237big: 8e-8 over iterations 50-300, ~3e-10
+  per iteration: just above the 2e-9 / 15-iteration stagnation stop, so it runs to the cap).
+* Recommendation: no HiGHS replacement.  If anything, an active-set SOC (reuse the step LP's active rows / bound columns,
+  one sparse solve, verify, fall back to Clarabel; `faer`, pure Rust, ~1 day) for ~1.5x on polish; `highs` crates need
+  cmake + C++ (cmake not on PATH; nix-shell), ~1 day, same gain.  Probably larger and cheaper: the step-acceptance / stop
+  dynamics (rejection rate, R never growing, crawl tail), e.g. a stop on gain per LP relative to s, or a filter /
+  nonmonotone acceptance; measure against the benchmark first.
