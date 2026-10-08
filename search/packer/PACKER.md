@@ -497,3 +497,24 @@ basin hopping + polish); our quench (soft squeeze + slp2) costs 4–8 s at n = 1
   search (target just below current, overlap-only energy, hop until zero overlap, shrink again); overlap pressure spread over
   the packing drives vacancy propagation, which min-s descent does not.  Our old `packer hop` (descending target) was only ever
   run from random starts.  Next test.
+
+## Search benchmark, delayed acceptance, identification (10-07; `bench_search.py`, `bench/seeds/`, `runs/bs_*`, `runs/pv2`)
+* **Harness:** fixed seeds s108 = record(110) − 2 (10.995103), s179 = Couzo 180 − 1 (13.923576), r126/r237 = register
+  records (fq `--no-alm` polish; fq's ALM from a feasible jammed start can leave the basin: 126 +1.8e-4).  5 replicates ×
+  480 s; metric = median gain / SQUISH's gap at 60/120/240/480 s.
+* **Waste in the walk (hop0/hop1 logs):** 18–82 % of full quenches return to the current minimum (sigma 0.003 kicks: 72–82 %);
+  most seeded chains were still improving at the end (sample-limited).
+* **Variants (frac of SQUISH gap at 480 s, medians; s108 / s179 / r126 / r237):** base (loosen 1.0, full quench every
+  proposal) 0.01 / 0.03 / 0 / 0; l102 (loosen 1.02) 0.08 / 0.18 / 0.48 / 0; da (delayed acceptance: screen = ALM + <= 8 SLP
+  iterations, no flips; reject if > 1e-4 above current, "same basin" if within 3e-7, else full polish + Metropolis) 0.05 /
+  0.20 / 0.13 / 0 with 3–4× the proposals; da102 0.08 / 0.16 / 0 / 0.  Both changes ~5–10× over base, not additive (loosen
+  1.02 acts as a useful global move).  Replicate spread ~10× (5 reps cannot rank l102 vs da).  r237 never moves.  One l102
+  replicate reached 11.77373 at 126 (70 % of SQUISH's gap).
+* **Identification (Evan's corner-distance idea; `fq --ident`, `runs/pv2`, 60 traced quenches at 130/180):** load-bearing
+  contact network = support of the interior-point (max-support) LP duals, at contact level (pair + canonical face, corners
+  dropped: which corners of a face contact carry load drifts along flat motions); ~2.1–2.4 contacts per square at n = 130;
+  dual magnitudes have a clean gap (0–5 vs 10–11 decades below max).  Network settles by SLP iteration ~7–9 (s within 1e-7).
+  Stop rule "network unchanged for 3–4 accepted iterations": cost 0.37–0.41 of full, |err| median 4e-9–5e-10, 90 % 3e-6, max
+  4e-5 (fixed k = 8: 0.40, 1e-8, 1e-5, 3e-2): better tail at equal cost; ~10 % still gain > 1e-6 later via branch flips
+  (stable under the current branch), which only a stage-2 polish catches.  Late drift: a few contacts drop out of the
+  network after s has converged, so basin matching needs set similarity + side, not an exact hash.

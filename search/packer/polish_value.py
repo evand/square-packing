@@ -17,7 +17,7 @@ def job(j):
     tmp = tempfile.mkdtemp()
     a, b = os.path.join(tmp, 'a.txt'), os.path.join(tmp, 'b.txt')
     mcmin.write_deg(a, s0, prop)
-    r = subprocess.run([hop.FQ, 'quench', '--in', a, '--out', b, '--loosen', str(loosen)], capture_output=True, text=True, timeout=900)
+    r = subprocess.run([os.environ.get('FQ', hop.FQ), 'quench', '--in', a, '--out', b, '--loosen', str(loosen), *os.environ.get('FQ_ARGS', '').split()], capture_output=True, text=True, timeout=900)
     d = json.loads(r.stdout)
     d.update(n=n, k=k, kind=kind, loosen=loosen, start=s0)
     return d
