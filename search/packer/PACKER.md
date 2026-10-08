@@ -356,6 +356,11 @@ jlevy register, ask Evan before any external post.
   5. Content-agnostic swaps (pair exchanges, cluster rotations) alongside the band-aware moves.
 
 ## Minima PT (10-06; `mcmin.py`, `sweep.py`)
+* **Caveat (10-07, with Evan):** neither minima PT nor kick+quench hopping samples exp(−s/T): polish is a many-to-one descent
+  (zero reverse density, so not a valid MH component), and kick+quench is not symmetric between minima (P(B|A) != P(A|B) when
+  basins differ in size).  Fine for the goal (find the tail, not integrate over it); acceptance/swap rates, censuses and
+  detection rates are properties of the walk (protocol-relative), used to understand and tune it.  What they cannot show is
+  where the walk never goes: only external known-better answers (SQUISH set, rediscovery pairs) test for blind spots.
 * `mcmin.py`: Metropolis over quenched minima (E = side), replica exchange across a geometric T ladder (side units).  Moves:
   kick, local kick, **reinsert** (remove a random square, re-add at a hole picked with weight clearance^α, α = 2), cluster
   rotation, angle swap, band (movegen); 1 + Poisson(0.25) moves per proposal (Evan).  Quench = loosen 2 % + soft squeeze +
