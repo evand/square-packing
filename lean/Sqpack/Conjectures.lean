@@ -12,7 +12,8 @@ Status tags in each docstring:
 
 * **conjecture** — someone has predicted the answer (the `Prop` states the predicted answer);
 * **question** — no confident prediction (the `Prop` states one answer; its negation is the other);
-* **known** — proved on paper, not in Lean; stated so that a formalisation has a target.
+* **known** — proved on paper; stated so that a formalisation has a target.  The two elementary
+  ones (`TilingBound`, `CStarStepsOfTwo`) are proved in `Sqpack/ConjecturesProofs.lean`.
 
 Conventions, chosen to avoid `sInf` junk values:
 
@@ -59,8 +60,8 @@ def CStarUnbounded : Prop := ∀ c : ℕ, ∃ K : ℕ, ∀ k ≥ K, GridOptimal 
 /-- **Unit steps** (question; stated here): `c*(k+1) ≤ c*(k) + 1`. -/
 def CStarUnitSteps : Prop := ∀ k c : ℕ, 1 ≤ k → GridOptimal (k + 1) (c + 1) → GridOptimal k c
 
-/-- **Steps of two** (known on paper, WISHLIST F11): `c*(k+1) ≤ c*(k) + 2`, by an L-shaped
-border. -/
+/-- **Steps of two** (known; proved: `cStarStepsOfTwo` in `Sqpack/ConjecturesProofs.lean`):
+`c*(k+1) ≤ c*(k) + 2`, by an L-shaped border. -/
 def CStarStepsOfTwo : Prop := ∀ k c : ℕ, 1 ≤ k → GridOptimal (k + 1) (c + 2) → GridOptimal k c
 
 /-- **`s(k² − k) = k`** for one `k` (question for `k = 4, …, 10`; true for `k = 2, 3`, false for
@@ -142,7 +143,8 @@ packings `O(k^{7/11})` by Erdős–Graham).  Not in Lean. -/
 def TilingsEventuallyNotOptimal : Prop :=
   ∀ n : ℕ, 1 ≤ n → NonIntegral n → ∃ K : ℕ, ∀ k ≥ K, minSide (k ^ 2 * n) < k * minSide n
 
-/-- The tiling bound `s(k²n) ≤ k·s(n)` (known, elementary).  Not yet in Lean. -/
+/-- The tiling bound `s(k²n) ≤ k·s(n)` (known, elementary; proved: `tilingBound` in
+`Sqpack/ConjecturesProofs.lean`). -/
 def TilingBound : Prop := ∀ n k : ℕ, 1 ≤ n → 1 ≤ k → minSide (k ^ 2 * n) ≤ k * minSide n
 
 /-! ## §7 Single values and packing targets -/

@@ -11,6 +11,7 @@ import Sqpack.Exact.N11c
 import Sqpack.LocalMinCheck
 import Sqpack.ChainLocalMin
 import Sqpack.Exact.N8Chain
+import Sqpack.ConjecturesProofs
 #print axioms SquarePacking.lemmaA
 #print axioms UnitSquarePacking.setOf_packs_eq
 #print axioms UnitSquarePacking.EC.N5c.packs
@@ -18,3 +19,5 @@ import Sqpack.Exact.N8Chain
 #print axioms UnitSquarePacking.LMC.isLocalMin_of_lcert
 #print axioms UnitSquarePacking.isLocalMin_of_band
 #print axioms UnitSquarePacking.Chain.N8.localMin
+#print axioms UnitSquarePacking.Conjectures.tilingBound
+#print axioms UnitSquarePacking.Conjectures.cStarStepsOfTwo

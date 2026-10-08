@@ -72,7 +72,7 @@ jobs:
         uses: leanprover/lean-action@v1
         with:
           lake-package-directory: lean
-          build-args: Sqpack.Spec Sqpack.SpecFC Sqpack.ZeroMargin Sqpack.ChordLine Sqpack.Cover Sqpack.Exact.N5c Sqpack.Exact.N11c Sqpack.LocalMinCheck Sqpack.ChainLocalMin Sqpack.Exact.N8Chain
+          build-args: Sqpack.Spec Sqpack.SpecFC Sqpack.ZeroMargin Sqpack.ChordLine Sqpack.Cover Sqpack.Exact.N5c Sqpack.Exact.N11c Sqpack.LocalMinCheck Sqpack.ChainLocalMin Sqpack.Exact.N8Chain Sqpack.Conjectures Sqpack.ConjecturesProofs
 
       - name: No sorry in the spot target (the full list, Axioms.lean, runs locally)
         working-directory: lean

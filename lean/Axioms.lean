@@ -243,3 +243,9 @@ import Sqpack
 #print axioms UnitSquarePacking.isLocalMin_of_band
 #print axioms UnitSquarePacking.isLocalMin_of_axisCert
 #print axioms UnitSquarePacking.Chain.N8.localMin
+-- elementary items of the open-problems statements (Sqpack/Conjectures.lean, ConjecturesProofs.lean)
+#print axioms UnitSquarePacking.Conjectures.GridOptimal.mono
+#print axioms UnitSquarePacking.Conjectures.CStarUnitSteps.stepsOfTwo
+#print axioms UnitSquarePacking.Conjectures.packs_tile
+#print axioms UnitSquarePacking.Conjectures.tilingBound
+#print axioms UnitSquarePacking.Conjectures.cStarStepsOfTwo

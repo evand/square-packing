@@ -206,7 +206,7 @@ four-sub-box identity (§7.1); the crossing-square Lemma 1 (S2_INSERTABLE §2).
 | F8 | **Seam bound** `E(n) ≤ 0`, `D ≤ m_v`; then **`M(1) ≤ ¾`** (one 45° square, triangle area, δ → 0). | **(Lean-ready)** (B12 and SEAM_W1 §1). | first Lean results on the Friedman side | FRIEDMAN §9.6 item 5; TODO Next 1 |
 | F9 | **Validity of the w = 1 profile** (M(1) ≥ ¾), via the reusable slice lemma `N(y) ≥ 1[W(y) ≥ 1]`. | blocked on B1 (Cavalieri plus trig casework). | `M(1) = ¾` in Lean | FRIEDMAN §9.6 item 5 |
 | F10 | **Insertion lemma in Lean:** parametrise `bentz_of_valid7` / `BentzFam` over c and the box predicate. | **(Lean-ready)**: the paper proof is short and `BentzFam` is already generic in R. | certificate-level Friedman (C3) in Lean | FRIEDMAN §2.1, §6 |
-| F11 | **Ascent `c*(k+1) ≤ c*(k) + 2`**, the budget lemma, the row lemma (FRIEDMAN §8). | **(Lean-ready)** elementary, with packing-side and measure-side proofs on paper.  Low payoff each. | groundwork for C2/C5 statements in Lean | FRIEDMAN §1.2, §8 |
+| F11 | **Ascent `c*(k+1) ≤ c*(k) + 2`**, the budget lemma, the row lemma (FRIEDMAN §8). | **Ascent [proved] in Lean 2026-10-07** (`cStarStepsOfTwo`, `lean/Sqpack/ConjecturesProofs.lean`; also `tilingBound`, s(k²n) ≤ k·s(n)).  Budget and row lemmas: **(Lean-ready)** elementary, with packing-side and measure-side proofs on paper.  Low payoff each. | groundwork for C2/C5 statements in Lean | FRIEDMAN §1.2, §8 |
 
 ## G. Algebraic degree of s(n)  (4 items; notes only, not for `problems.html`: Evan 2026-10-04, "neat but extremely niche")
 
