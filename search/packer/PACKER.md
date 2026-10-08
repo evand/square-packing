@@ -485,3 +485,10 @@ basin hopping + polish); our quench (soft squeeze + slp2) costs 4–8 s at n = 1
   should scale with T; for greedy/cold chains use delayed acceptance (Christen & Fox 2005): screen at k ~ 4–8, full polish
   only within a few × the k-error of the current state.  A lazy rule on the ALM-only side alone saves ~2× but misses a
   quarter of the good basins (130: 17/24 at margin 1e-4).
+* **Neighbour seeds (`runs/hop1_108`, `hop1_179`; 7 chains × 8 min, loosen 1.0):** 108 from record(110) − 2: seeds
+  10.960–10.987, hopped to 10.9435 (register 10.9259, SQUISH 10.9099).  179 from Couzo's 180 − 1: seeds 13.922–13.924, hopped
+  to 13.9167 (register 13.8953, SQUISH 13.8838, i.e. 4.4e-2 below the 180 it came from).  Our quench after a removal shrinks
+  ~6e-3; the vacancy is never absorbed by a global rearrangement.  Guess at SQUISH's "shrink-hopping": fixed-side feasibility
+  search (target just below current, overlap-only energy, hop until zero overlap, shrink again); overlap pressure spread over
+  the packing drives vacancy propagation, which min-s descent does not.  Our old `packer hop` (descending target) was only ever
+  run from random starts.  Next test.
