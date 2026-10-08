@@ -29,7 +29,8 @@ RD_N = (106, 177, 236, 130, 263, 307, 237, 210, 271, 131, 180, 305)
 SQUISH = {'s108': (108, 10.909940073445), 's179': (179, 13.883795490512), 'r126': (126, 11.773303606607),
           'r237': (237, 15.903676235191)}
 TIERS = {'quick': ['s108', 's179', 'rd106', 'rd130', 'rd177', 'rd210', 'rd236', 'rd263'],
-         'graded': ['s108', 's179', 'rd263', 'rd237'],
+         'graded1': ['s108', 's179', 'rd263', 'rd237'],
+         'graded': ['s108', 's179', 's130', 's154', 's208', 's238'],   # 10-08: graded at 1 proc x 5 min (runs/be_newtasks)
          'full': ['s108', 's179', 'r126', 'r237'] + [f'rd{n}' for n in RD_N]}
 CHECK = (0.125, 0.25, 0.5, 1.0)
 
@@ -64,6 +65,23 @@ def make_tasks():
         mcmin.write_deg(os.path.join(HERE, p), s, sq)
         man[f'rd{n}'] = dict(n=n, path=p, start=s, target=rd[n]['s_new'], mirror=s0, source='rd1: 09-30 mirror -> register 10-05')
         print(f'rd{n}: mirror {s0:.10f} polished {s:.10f} target {rd[n]["s_new"]:.10f} gap {s - rd[n]["s_new"]:.2e}', flush=True)
+    json.dump(man, open(f'{TASKS}/tasks.json', 'w'), indent=1)
+
+
+def make_squish_seeds(ns, k=1):
+    """More SQUISH-lineage tasks: record(n + k) - k (best of 4 random removals, fq-quenched; 10-05 register inputs),
+    target = SQUISH's side (hop.squish_targets)."""
+    man = json.load(open(f'{TASKS}/tasks.json'))
+    T = hop.squish_targets()
+    hop.EXTRA[:] = ['--loosen', '1.0']
+    tmp = tempfile.mkdtemp()
+    for n in ns:
+        s, sq = hop.seed_remove(n, k, 4, random.Random(12345 + n), tmp)
+        name = f's{n}' if k == 1 else f's{n}k{k}'
+        p = f'bench/seeds/{name}.txt'
+        mcmin.write_deg(os.path.join(HERE, p), s, sq)
+        man[name] = dict(n=n, path=p, start=s, target=T[n], source=f'record({n}+{k}) - {k} (10-05 register), SQUISH target')
+        print(f'{name}: start {s:.10f} SQUISH {T[n]:.10f} gap {s - T[n]:.2e}', flush=True)
     json.dump(man, open(f'{TASKS}/tasks.json', 'w'), indent=1)
 
 
@@ -169,7 +187,7 @@ def paired(A, B, nboot=4000):
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
-    ap.add_argument('--make-tasks', action='store_true'); ap.add_argument('--summary', nargs='+')
+    ap.add_argument('--make-tasks', action='store_true'); ap.add_argument('--make-squish-seeds', type=int, nargs='+'); ap.add_argument('--summary', nargs='+')
     ap.add_argument('--variants', nargs='+', default=['base']); ap.add_argument('--tier', default='quick', choices=TIERS)
     ap.add_argument('--tasks', nargs='+'); ap.add_argument('--reps', type=int, default=2)
     ap.add_argument('--procs-per', type=int, default=2); ap.add_argument('--minutes', type=float, default=8)
@@ -177,6 +195,8 @@ if __name__ == '__main__':
     a = ap.parse_args()
     if a.make_tasks:
         make_tasks()
+    elif a.make_squish_seeds:
+        make_squish_seeds(a.make_squish_seeds)
     elif a.summary:
         summary(a.summary, a.ref)
     else:

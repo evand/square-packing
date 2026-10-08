@@ -823,3 +823,8 @@ smallest box growth <= 5 %.  Finish: `fq quench` (loosen 1.02) + grid test.  ~3 
   [-0.067, +0.135]; s108 / s179 worse (s179 basins per run 24 vs 47: the per-proposal alignment, 30 candidates x 8
   symmetries x Hungarian in Python, costs seconds at n = 179), rd263 / rd237 unchanged.  Parked as an available move (cheap
   fix if revisited: cache alignments per archive entry, fewer candidates).
+
+## Benchmark tier v2 (10-08; `bench_explore.py --make-squish-seeds`, `runs/be_newtasks`)
+New SQUISH-lineage tasks record(n + 1) - 1 (10-05 register, best of 4 removals), target SQUISH: base 3 reps x 1 proc x 5 min,
+gap fraction: s130 0.03-0.45, s154 0.04-0.27, s208 0.11-0.14, s238 0.09-0.10 (graded); s88, s263, s303 0 (stuck at this
+budget).  `graded` tier = s108 s179 s130 s154 s208 s238 (old 4-task tier kept as `graded1`).

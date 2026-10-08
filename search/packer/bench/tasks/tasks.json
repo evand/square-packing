@@ -122,5 +122,54 @@
   "target": 17.95295945902354,
   "mirror": 17.960662014012055,
   "source": "rd1: 09-30 mirror -> register 10-05"
+ },
+ "s88": {
+  "n": 88,
+  "path": "bench/seeds/s88.txt",
+  "start": 9.949747468307864,
+  "target": 9.882451030482,
+  "source": "record(88+1) - 1 (10-05 register), SQUISH target"
+ },
+ "s130": {
+  "n": 130,
+  "path": "bench/seeds/s130.txt",
+  "start": 11.946145693569791,
+  "target": 11.904483032517,
+  "source": "record(130+1) - 1 (10-05 register), SQUISH target"
+ },
+ "s154": {
+  "n": 154,
+  "path": "bench/seeds/s154.txt",
+  "start": 12.947454794399507,
+  "target": 12.926562245854,
+  "source": "record(154+1) - 1 (10-05 register), SQUISH target"
+ },
+ "s208": {
+  "n": 208,
+  "path": "bench/seeds/s208.txt",
+  "start": 14.951582443585922,
+  "target": 14.924518772033,
+  "source": "record(208+1) - 1 (10-05 register), SQUISH target"
+ },
+ "s238": {
+  "n": 238,
+  "path": "bench/seeds/s238.txt",
+  "start": 15.952743966884098,
+  "target": 15.926146857012,
+  "source": "record(238+1) - 1 (10-05 register), SQUISH target"
+ },
+ "s263": {
+  "n": 263,
+  "path": "bench/seeds/s263.txt",
+  "start": 16.77817459305569,
+  "target": 16.740419679539,
+  "source": "record(263+1) - 1 (10-05 register), SQUISH target"
+ },
+ "s303": {
+  "n": 303,
+  "path": "bench/seeds/s303.txt",
+  "start": 17.932205470358824,
+  "target": 17.92031237292,
+  "source": "record(303+1) - 1 (10-05 register), SQUISH target"
  }
 }
