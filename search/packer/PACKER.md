@@ -828,3 +828,15 @@ smallest box growth <= 5 %.  Finish: `fq quench` (loosen 1.02) + grid test.  ~3 
 New SQUISH-lineage tasks record(n + 1) - 1 (10-05 register, best of 4 removals), target SQUISH: base 3 reps x 1 proc x 5 min,
 gap fraction: s130 0.03-0.45, s154 0.04-0.27, s208 0.11-0.14, s238 0.09-0.10 (graded); s88, s263, s303 0 (stuck at this
 budget).  `graded` tier = s108 s179 s130 s154 s208 s238 (old 4-task tier kept as `graded1`).
+
+## Size chaining (10-08; `chain.py`, `runs/ch2`; v1 `runs/ch1` discarded: it dropped seed-lineage progress every round)
+Window 123-131 from the frozen 10-05 register (pre-SQUISH; seeds for the top from 132, 133), rounds = explorer 2 procs x 4 min
+from best(n) + carried lineage basins (top 3) + fresh seeds best(n+1)-1, best(n+2)-2; frontier share 0.7 on the seed
+lineages; 8 slots, 1 h (16 cores), 112 rounds, 11-14 per n.
+* **126: 11.7747351 -> 11.7735853 (-1.15e-3, 80 % of SQUISH's gain; SQUISH 11.7733036 registered 10-06: no claim).**
+  From the record's own lineage (bigkick in round 87, rowslide in 103), not the seeds: repeated fresh 4-min explorations of
+  the carried best move a record that one run (bench r126: 13 %) does not.
+* Seed lineages descend steadily but stay above the records: 129 11.9085 -> 11.8823 (record 11.8813), 130 11.9505 ->
+  11.9140 (record 11.9112); others slow.  Many removal seeds are copies (n+1 record minus a square, polished back to the
+  same side: 126's lineage sits at record(127) all hour); 133 = 12 x 12 grid, useless as a seed source.
+* Next: reject non-shrinking removals / more removals per seed; live register + a window SQUISH has not covered.
