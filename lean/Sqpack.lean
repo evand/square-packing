@@ -39,6 +39,7 @@ import Sqpack.LebMass7Data
 import Sqpack.LebMass7
 import Sqpack.AnchorLemma2
 import Sqpack.Spec
+import Sqpack.Conjectures
 import Sqpack.SpecBridge
 import Sqpack.FCSquarePacking
 import Sqpack.SpecFC
