@@ -518,3 +518,21 @@ basin hopping + polish); our quench (soft squeeze + slp2) costs 4–8 s at n = 1
   4e-5 (fixed k = 8: 0.40, 1e-8, 1e-5, 3e-2): better tail at equal cost; ~10 % still gain > 1e-6 later via branch flips
   (stable under the current branch), which only a stage-2 polish catches.  Late drift: a few contacts drop out of the
   network after s has converged, so basin matching needs set similarity + side, not an exact hash.
+
+## Breadth: basin explorer at s(110) (10-07; `explore.py`, `explore_exact.py`, `runs/ex_smoke`, `runs/ex0`)
+Evan: more explore, less exploit; the sub-11 set at 110 was 48 certified minima (cen7, jx1, rev1, pass1, pil7;
+`runs/known110.json`) in ~2 families.  Metric: distinct certified sub-11 minima and structural groups, not best side.
+* **Explorer:** quality-diversity archive of polished basins (MAP-Elites style), descriptor (ntilted/2, tilt-angle classes,
+  below k), parents uniform over cells (top 8 per cell, weight 1/(1+expanded)^2), stepping stones up to k + 0.05, grid
+  states discarded; moves = mcmin's kick/kicksym/lkick/crot/aswap/band/reinsert + bigkick (sigma 0.05–0.2); quench = fq screen
+  (<= 8 SLP iterations, no flips, loosen 1.0/1.02/1.05) → return if within 1e-6 of an archived side, else full polish
+  (--no-alm --loosen 1.0).  Starts: rec110, couzo110, junction (19,19,68,4), crop rim 10.998566, our 11.0076 funnel.
+* **Bugs fixed on the way:** fq defaults to loosen 1.02, so `--no-alm` polishes without an explicit `--loosen 1.0` polished a
+  2 %-loosened copy (record → .99718876); fq flags now take the last occurrence (`hop.quench` prepends EXTRA).  **The
+  `da102` benchmark variant's stage 2 was affected** (polished from a loosened copy, not the screened state): read da102 as
+  "screen + loosened re-quench", not as delayed acceptance at 1.02.
+* **Smoke (3 min, 15 procs):** 81 sub-11 basins; exactsolve: 68 certified distinct minima (1 archive entry each), 12 not
+  minima, 1 unresolved; **40 new → the known sub-11 set goes 48 → 88**; 14 role-count groups (L, B, axis, other), e.g.
+  (19,24,67), (22,22,66), (23,19,68), (25,19,66) beside (22,21,67) and (19,23,68).  New near-bottom trio 10.99682777 /
+  .99682787 / .99682933 (all certified, distinct; ~4.5e-5 above Couzo's).  Nothing below the record.  Still two-channel
+  structures: groups are variations within the family, not new funnel types.

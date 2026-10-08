@@ -862,9 +862,9 @@ fn write_cfg(path: &str, s: f64, v: &[f64]) {
 }
 
 fn arg<T: std::str::FromStr>(a: &[String], k: &str, def: T) -> T {
-    a.iter().position(|x| x == k).and_then(|i| a.get(i + 1)).and_then(|v| v.parse().ok()).unwrap_or(def)
+    a.iter().rposition(|x| x == k).and_then(|i| a.get(i + 1)).and_then(|v| v.parse().ok()).unwrap_or(def)
 }
-fn sarg(a: &[String], k: &str) -> Option<String> { a.iter().position(|x| x == k).and_then(|i| a.get(i + 1)).cloned() }
+fn sarg(a: &[String], k: &str) -> Option<String> { a.iter().rposition(|x| x == k).and_then(|i| a.get(i + 1)).cloned() }
 
 fn main() {
     let a: Vec<String> = std::env::args().collect();

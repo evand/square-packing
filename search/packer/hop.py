@@ -110,7 +110,7 @@ def search_da(s_start, sq_start, budget, rng, tmp, log, T=1e-5, patience=40, k=8
         if s1 > cur[0] + reject or abs(s1 - cur[0]) < same:
             s, acc = s1, False
         else:
-            r2 = quench(s1, sq1, tmp, extra=('--no-alm',))
+            r2 = quench(s1, sq1, tmp, extra=('--no-alm', '--loosen', '1.0'))
             if r2 is None:
                 continue
             s, sq, _ = r2

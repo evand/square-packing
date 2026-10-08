@@ -1,0 +1,204 @@
+#!/usr/bin/env python3
+"""Breadth-first basin exploration (10-07, Evan: more explore, less exploit).  Quality-diversity over basins (MAP-Elites
+style): an archive of distinct polished minima binned by a content-agnostic descriptor; parents are drawn uniformly over
+bins (not by quality), and within a bin favouring rarely expanded basins.  Basins up to S_MAX (above the integer k) are
+kept as stepping stones; grid-obstructed states (full lines / staggered axis chains) are discarded.
+
+Quench per proposal: fq screen (ALM + <= 8 SLP iterations, no flips, loosen drawn from 1.0/1.02/1.05).  A screened side
+within `same` of a known basin counts as a return (visit, no polish); otherwise full polish (fq --no-alm) and, if new,
+an archive entry.
+
+Descriptor (search): (ntilted bin of 2, number of tilt-angle classes, below-k flag).  Evaluation only (n = 110): role
+counts (L, B, axis, other) as in census_roles, and novelty against runs/known110.json (48 certified sub-11 minima).
+
+  explore.py --n 110 --starts seeds/rec110.txt ... --minutes 60 --procs 15 --out runs/ex0
+  explore.py --report runs/ex0
+"""
+import argparse, collections, json, math, os, random, subprocess, tempfile, time
+from concurrent.futures import ProcessPoolExecutor, FIRST_COMPLETED, wait
+import mcmin, hop
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+class A:                                     # attributes mcmin's moves look up
+    alpha = 2.0; reinsert = 'clear'; remove = 'uniform'; tau = 0.0
+
+
+def mv_bigkick(s, sq, rng, a):
+    sig = math.exp(rng.uniform(math.log(0.05), math.log(0.2)))
+    return [(x + rng.gauss(0, sig), y + rng.gauss(0, sig), t + rng.gauss(0, 20 * sig)) for x, y, t in sq], f'bigkick {sig:.3f}'
+
+
+MOVES = dict(mcmin.MOVES, bigkick=mv_bigkick)
+WEIGHTS = dict(kick=2, kicksym=1, lkick=3, bigkick=2, crot=2, aswap=2, band=1, reinsert=0.5)
+
+
+def tilt_classes(sq, thr=1.0, gap=3.0):
+    a = sorted(t % 90 for _, _, t in sq if min(t % 90, 90 - t % 90) > thr)
+    if not a:
+        return 0, 0
+    cl = 1 + sum(1 for u, v in zip(a, a[1:]) if v - u > gap)
+    return len(a), cl
+
+
+def roles(sq):
+    c = collections.Counter()
+    for _, _, t in sq:
+        a = t % 90; d = min(a, 90 - a)
+        c['A' if d < 3 else 'L' if 10 < a < 45 else 'B' if 45 <= a < 80 else 'O'] += 1
+    return (c['L'], c['B'], c['A'], c['O'])
+
+
+def descriptor(s, sq, k):
+    nt, ncl = tilt_classes(sq)
+    return (nt // 2, ncl, s < k)
+
+
+def work(job):
+    """One proposal: move, screen, (maybe) full polish, grid check.  Runs in a worker process."""
+    s, sq, kind, seed, k, known_sides, same = job
+    from layout import full_lines
+    rng = random.Random(seed)
+    prop, desc = MOVES[kind](s, sq, rng, A)
+    tmp = tempfile.mkdtemp()
+    loosen = rng.choice(('1.0', '1.02', '1.05'))
+    t0 = time.time()
+    hop.EXTRA[:] = ['--loosen', loosen]
+    r = hop.quench(s, prop, tmp, extra=('--pit', '8', '--flip-top', '0'))
+    out = dict(kind=kind, desc=desc, loosen=loosen)
+    if r is None:
+        return dict(out, status='fail', sec=time.time() - t0)
+    s1, sq1, _ = r
+    near = [x for x in known_sides if abs(x - s1) < same]
+    if near:
+        return dict(out, status='return', s=min(near, key=lambda x: abs(x - s1)), s_screen=s1, sec=time.time() - t0)
+    hop.EXTRA[:] = ['--loosen', '1.0']
+    r2 = hop.quench(s1, sq1, tmp, extra=('--no-alm',))
+    if r2 is None:
+        return dict(out, status='fail', sec=time.time() - t0)
+    s2, sq2, _ = r2
+    p = os.path.join(tmp, 'q.txt'); mcmin.write_deg(p, s2, sq2)
+    lines = bool(full_lines(p, k))
+    return dict(out, status='new?', s=s2, sq=sq2, lines=lines, s_screen=s1, sec=time.time() - t0)
+
+
+class Archive:
+    def __init__(self, out, n, k, smax, known):
+        self.out, self.n, self.k, self.smax, self.known = out, n, k, smax, known
+        self.E = []                          # entries
+        self.log = open(f'{out}/archive.jsonl', 'a')
+
+    def find(self, s, tol=2e-9):
+        for e in self.E:
+            if abs(e['s'] - s) < tol:
+                return e
+        return None
+
+    def add(self, s, sq, parent, kind, t):
+        e = self.find(s)
+        if e:
+            e['visits'] += 1
+            return e, False
+        i = len(self.E)
+        path = f'{self.out}/b{i:05d}.txt'
+        mcmin.write_deg(path, s, sq)
+        e = dict(i=i, s=s, path=path, desc=descriptor(s, sq, self.k), roles=roles(sq), parent=parent, kind=kind,
+                 visits=1, expanded=0, children=0, t=round(t, 1),
+                 known=any(abs(s - x) < 2e-9 for x in self.known))
+        self.E.append(e)
+        self.log.write(json.dumps({k: v for k, v in e.items()}) + '\n'); self.log.flush()
+        return e, True
+
+    def pick(self, rng, topk=8):
+        cells = collections.defaultdict(list)
+        for e in self.E:
+            if e['s'] < self.smax:
+                cells[tuple(e['desc'])].append(e)
+        cell = rng.choice(list(cells))
+        es = sorted(cells[cell], key=lambda e: e['s'])[:topk]
+        return rng.choices(es, weights=[1.0 / (1 + e['expanded']) ** 2 for e in es])[0]
+
+
+def report(out):
+    E = [json.loads(l) for l in open(f'{out}/archive.jsonl')]
+    k = math.ceil(math.sqrt(110))
+    sub = [e for e in E if e['s'] < k]
+    new = [e for e in sub if not e['known']]
+    print(f'{out}: {len(E)} basins, {len(sub)} below {k} ({len(new)} not in the known 48); best {min(e["s"] for e in E):.10f}')
+    by = collections.Counter(tuple(e['roles']) for e in sub)
+    print('  sub-k role groups (L, B, axis, other):', dict(by.most_common()))
+    print('  sub-k descriptor cells:', dict(collections.Counter(tuple(e['desc']) for e in sub).most_common()))
+    print('  new sub-k basins by kind:', dict(collections.Counter(e['kind'] for e in new)))
+    for e in sorted(new, key=lambda e: e['s'])[:12]:
+        print(f'    {e["s"]:.10f} roles {tuple(e["roles"])} desc {tuple(e["desc"])} from b{e["parent"]} by {e["kind"]} at {e["t"]}s')
+
+
+if __name__ == '__main__':
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--n', type=int, default=110); ap.add_argument('--starts', nargs='+')
+    ap.add_argument('--minutes', type=float, default=60); ap.add_argument('--procs', type=int, default=15)
+    ap.add_argument('--smax', type=float, default=None, help='stepping-stone ceiling (default k + 0.05)')
+    ap.add_argument('--same', type=float, default=1e-6, help='screened side within this of a known basin = return')
+    ap.add_argument('--star', action='store_true', help='control: always expand the first start (cen7-style sampling)')
+    ap.add_argument('--out'); ap.add_argument('--report'); ap.add_argument('--seed', type=int, default=1)
+    a = ap.parse_args()
+    if a.report:
+        report(a.report); raise SystemExit
+    os.makedirs(a.out, exist_ok=True)
+    k = math.ceil(math.sqrt(a.n) - 1e-12)
+    known = json.load(open(f'{HERE}/runs/known{a.n}.json')) if os.path.exists(f'{HERE}/runs/known{a.n}.json') else []
+    ar = Archive(a.out, a.n, k, a.smax or k + 0.05, known)
+    rng = random.Random(a.seed)
+    tmp = tempfile.mkdtemp()
+    t0 = time.time()
+    hop.EXTRA[:] = ['--loosen', '1.0']
+    for p in a.starts:                       # starts are polished in place (no ALM, no loosen: keep their basins)
+        s, sq = mcmin.load_deg(p)
+        r = hop.quench(s, sq, tmp, extra=('--no-alm',))
+        if r:
+            e, _ = ar.add(r[0], r[1], -1, 'start:' + os.path.basename(p), 0)
+            print('start', p, f'{r[0]:.10f}', e['desc'], e['roles'], flush=True)
+    kinds, wts = zip(*WEIGHTS.items())
+    stats = collections.Counter()
+    pend = {}
+    with ProcessPoolExecutor(a.procs) as ex:
+        def submit():
+            par = ar.E[0] if a.star else ar.pick(rng)
+            par['expanded'] += 1
+            s, sq = mcmin.load_deg(par['path'])
+            kind = rng.choices(kinds, weights=wts)[0]
+            f = ex.submit(work, (s, sq, kind, rng.randrange(1 << 30), k, [e['s'] for e in ar.E], a.same))
+            pend[f] = par
+        for _ in range(a.procs):
+            submit()
+        last = 0
+        while pend:
+            done, _ = wait(pend, return_when=FIRST_COMPLETED)
+            for f in done:
+                par = pend.pop(f)
+                try:
+                    r = f.result()
+                except Exception as exn:
+                    stats['error'] += 1; r = None
+                if r:
+                    stats[r['status']] += 1
+                    if r['status'] == 'return':
+                        e = ar.find(r['s'], tol=1e-9)
+                        if e: e['visits'] += 1
+                    elif r['status'] == 'new?':
+                        if r['lines'] or r['s'] >= ar.smax:
+                            stats['discard'] += 1
+                        else:
+                            e, isnew = ar.add(r['s'], r['sq'], par['i'], r['kind'], time.time() - t0)
+                            stats['new' if isnew else 'dup'] += 1
+                            if isnew:
+                                par['children'] += 1
+                if time.time() - t0 < 60 * a.minutes:
+                    submit()
+            if time.time() - last > 120:
+                last = time.time()
+                sub = [e for e in ar.E if e['s'] < k]
+                print(f'{time.time() - t0:7.0f}s basins {len(ar.E)} sub-k {len(sub)} (new vs known {sum(not e["known"] for e in sub)}) '
+                      f'best {min(e["s"] for e in ar.E):.10f} cells {len({tuple(e["desc"]) for e in ar.E})} | {dict(stats)}', flush=True)
+    report(a.out)
