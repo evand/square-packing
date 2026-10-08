@@ -249,3 +249,9 @@ import Sqpack
 #print axioms UnitSquarePacking.Conjectures.packs_tile
 #print axioms UnitSquarePacking.Conjectures.tilingBound
 #print axioms UnitSquarePacking.Conjectures.cStarStepsOfTwo
+#print axioms UnitSquarePacking.Conjectures.minSide_mono
+#print axioms UnitSquarePacking.Conjectures.NoNonIntegerPlateau.finitelyMany
+#print axioms UnitSquarePacking.Conjectures.FinitelyManyPlateaus.perFract
+#print axioms UnitSquarePacking.Conjectures.FinitelyManyPerFract.plateaus
+#print axioms UnitSquarePacking.Conjectures.FinitelyManyPlateausPerFract.finitelyMany
+#print axioms UnitSquarePacking.Conjectures.FinitelyManyPlateaus.bounded

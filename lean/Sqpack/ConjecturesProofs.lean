@@ -10,6 +10,10 @@ import Sqpack.Conjectures
 
 Both are built from one tool: packings in a region (`PacksIn`), which can be enlarged, shifted and
 glued along rectangles whose interiors are disjoint.
+
+Then the implications between the plateau statements (`NoNonIntegerPlateau.finitelyMany`,
+`FinitelyManyPlateaus.bounded`, `.perFract`, `FinitelyManyPerFract.plateaus`,
+`FinitelyManyPlateausPerFract.finitelyMany`), using `minSide_mono`.
 -/
 
 namespace UnitSquarePacking.Conjectures
@@ -150,16 +154,27 @@ lemma nonneg_of_packs' {n : ℕ} {s : ℝ} (hn : 1 ≤ n) (h : Packs n s) : 0 �
   obtain ⟨⟨h1, h2⟩, -⟩ := hin _ hc
   linarith
 
+/-- `n` squares fit in side `n` (a row). -/
+lemma packs_self {n : ℕ} (hn : 1 ≤ n) : Packs n n := by
+  refine packs_iff_packsIn.2 ?_
+  have := packsIn_unit.row zero_le_one n
+  rw [mul_one, mul_one] at this
+  exact this.mono (rect_mono le_rfl (by exact_mod_cast hn))
+
+lemma minSide_nonneg {n : ℕ} (hn : 1 ≤ n) : 0 ≤ minSide n :=
+  le_csInf ⟨n, packs_self hn⟩ fun _ hs => nonneg_of_packs' hn hs
+
+/-- `s` is monotone. -/
+lemma minSide_mono {m m' : ℕ} (hm : 1 ≤ m) (h : m ≤ m') : minSide m ≤ minSide m' :=
+  csInf_le_csInf ⟨0, fun _ hs => nonneg_of_packs' hm hs⟩ ⟨m', packs_self (hm.trans h)⟩
+    fun _ hs => packs_of_le hs h
+
 /-- **`s(k²n) ≤ k·s(n)`.**  (No attainment needed: tile every packing of `n`, then take `sInf`.) -/
 theorem tilingBound : TilingBound := by
   intro n k hn hk
   have hk' : (0 : ℝ) < k := by exact_mod_cast hk
   have hpos : 1 ≤ k ^ 2 * n := Nat.mul_pos (pow_pos hk 2) hn
-  have hne : ({s | Packs n s} : Set ℝ).Nonempty := by
-    refine ⟨n, packs_iff_packsIn.2 ?_⟩
-    have := packsIn_unit.row zero_le_one n
-    rw [mul_one, mul_one] at this
-    exact this.mono (rect_mono le_rfl (by exact_mod_cast hn))
+  have hne : ({s | Packs n s} : Set ℝ).Nonempty := ⟨n, packs_self hn⟩
   have hbdd : BddBelow ({s | Packs (k ^ 2 * n) s} : Set ℝ) :=
     ⟨0, fun _ hs => nonneg_of_packs' hpos hs⟩
   have h : minSide (k ^ 2 * n) / k ≤ minSide n := by
@@ -198,5 +213,51 @@ theorem cStarStepsOfTwo : CStarStepsOfTwo := by
   have := h2 (t + 1) (packs_of_le (packs_iff_packsIn.2 hC) hle)
   push_cast at this
   linarith
+
+/-! ## How the plateau statements relate -/
+
+theorem NoNonIntegerPlateau.finitelyMany (h : NoNonIntegerPlateau) : FinitelyManyPlateaus :=
+  Set.finite_empty.subset fun n hn => h n hn
+
+theorem FinitelyManyPlateaus.perFract (h : FinitelyManyPlateaus) :
+    FinitelyManyPlateausPerFract :=
+  fun _ => h.subset fun _ hn => hn.1
+
+/-- An integer value of `s` is a natural number. -/
+lemma not_nonIntegral_of_fract_eq_zero {n : ℕ} (hn : 1 ≤ n) (h : Int.fract (minSide n) = 0) :
+    ¬ NonIntegral n := by
+  intro hni
+  obtain ⟨z, hz⟩ := Int.fract_eq_zero_iff.1 h
+  have hz0 : (0 : ℤ) ≤ z := by exact_mod_cast hz ▸ minSide_nonneg hn
+  apply hni z.toNat
+  rw [← hz]
+  exact_mod_cast (Int.toNat_of_nonneg hz0).symm
+
+theorem FinitelyManyPerFract.plateaus (h : FinitelyManyPerFract) :
+    FinitelyManyPlateausPerFract := by
+  intro β
+  rcases le_or_gt β 0 with hβ | hβ
+  · refine Set.finite_empty.subset fun n ⟨hp, hf⟩ => ?_
+    have h0 : Int.fract (minSide n) = 0 := le_antisymm (hf ▸ hβ) (Int.fract_nonneg _)
+    exact not_nonIntegral_of_fract_eq_zero hp.1 h0 hp.2.2
+  · exact (h β hβ).subset fun n hn => ⟨hn.1.1, hn.2⟩
+
+theorem FinitelyManyPlateausPerFract.finitelyMany (h : FinitelyManyPlateausPerFract)
+    (hf : PlateauFractsFinite) : FinitelyManyPlateaus := by
+  refine (hf.biUnion fun β _ => h β).subset fun n hn => ?_
+  simp only [Set.mem_iUnion, Set.mem_image, Set.mem_ofPred_eq, exists_prop]
+  exact ⟨_, ⟨n, hn, rfl⟩, hn, rfl⟩
+
+theorem FinitelyManyPlateaus.bounded (h : FinitelyManyPlateaus) : PlateausBounded := by
+  obtain ⟨M, hM⟩ := h.bddAbove
+  refine ⟨M + 1, fun n hn hni => lt_of_le_of_ne (minSide_mono hn (by omega)) fun heq => ?_⟩
+  have hlo : minSide n ≤ minSide (n + M) := minSide_mono hn (by omega)
+  have hhi : minSide (n + M) ≤ minSide (n + M + 1) := minSide_mono (by omega) (by omega)
+  have hval : minSide (n + M) = minSide n := le_antisymm (by rw [heq, ← add_assoc] at *; linarith)
+    hlo
+  have hp : NonIntPlateau (n + M) :=
+    ⟨by omega, by rw [hval, heq, add_assoc], fun m hm => hni m (hval ▸ hm)⟩
+  have := hM hp
+  omega
 
 end UnitSquarePacking.Conjectures

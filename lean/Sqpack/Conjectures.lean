@@ -83,17 +83,51 @@ def ThreeFifthsWaste : Prop :=
 
 /-! ## §3 Plateaus and families -/
 
-/-- **A non-integer plateau** (question; conjecturally first at `n = 147`):
+/-- `n` is a **non-integer plateau**: `s(n) = s(n+1)` and `s(n)` is not an integer. -/
+def NonIntPlateau (n : ℕ) : Prop := 1 ≤ n ∧ minSide n = minSide (n + 1) ∧ NonIntegral n
+
+/-! The plateau statements, strongest first.  The implications between them are proved in
+`Sqpack/ConjecturesProofs.lean`:
+
+* `NoNonIntegerPlateau → FinitelyManyPlateaus → PlateausBounded` and
+  `FinitelyManyPlateaus → FinitelyManyPlateausPerFract`;
+* `FinitelyManyPerFract → FinitelyManyPlateausPerFract` (a different strengthening, about all `n`);
+* `FinitelyManyPlateausPerFract ∧ PlateauFractsFinite → FinitelyManyPlateaus`: the per-fractional-part
+  form plus finitely many fractional parts at plateaus gives the finite form back.
+
+So each weaker form is a step toward the stronger ones, and a fallback if they fail. -/
+
+/-- **A non-integer plateau** (question; in the best-known table, first at `n = 147`):
 some `n` has `s(n) = s(n+1) ∉ ℤ`. -/
-def NonIntegerPlateauExists : Prop :=
-  ∃ n : ℕ, 1 ≤ n ∧ minSide n = minSide (n + 1) ∧ NonIntegral n
+def NonIntegerPlateauExists : Prop := ∃ n : ℕ, NonIntPlateau n
+
+/-- **No non-integer plateau** (the negative answer to `NonIntegerPlateauExists`): the strongest
+form.  Every best-known candidate (`n = 147, 232, 264, 290, 295`) would have to be beaten. -/
+def NoNonIntegerPlateau : Prop := ∀ n : ℕ, ¬ NonIntPlateau n
 
 /-- **Finitely many non-integer plateaus** (conjecture; stated here). -/
-def FinitelyManyPlateaus : Prop :=
-  {n : ℕ | 1 ≤ n ∧ minSide n = minSide (n + 1) ∧ NonIntegral n}.Finite
+def FinitelyManyPlateaus : Prop := {n : ℕ | NonIntPlateau n}.Finite
 
-/-- **Each fractional part finitely often** (conjecture; stated here; implies
-`FinitelyManyPlateaus`). -/
+/-- **Plateaus are eventually short** (conjecture; stated here; follows from
+`FinitelyManyPlateaus`): some `L` bounds the length of every non-integer plateau, i.e.
+`s(n) < s(n + L)` whenever `s(n) ∉ ℤ`.  (Every best-known candidate has length 2.) -/
+def PlateausBounded : Prop :=
+  ∃ L : ℕ, ∀ n : ℕ, 1 ≤ n → NonIntegral n → minSide n < minSide (n + L)
+
+/-- **Finitely many plateaus at each fractional part** (conjecture; stated here).  This is what
+the fixed-shape-family evidence supports directly: a family keeps one fractional part, wastes
+area linearly in `k`, and so is optimal only finitely often. -/
+def FinitelyManyPlateausPerFract : Prop :=
+  ∀ β : ℝ, {n : ℕ | NonIntPlateau n ∧ Int.fract (minSide n) = β}.Finite
+
+/-- **Finitely many fractional parts at plateaus** (question; stated here): the missing half of
+`FinitelyManyPlateaus` given `FinitelyManyPlateausPerFract`. -/
+def PlateauFractsFinite : Prop :=
+  ((fun n => Int.fract (minSide n)) '' {n : ℕ | NonIntPlateau n}).Finite
+
+/-- **Each fractional part finitely often** (conjecture; stated here), for all `n`, not just
+plateaus.  It implies `FinitelyManyPlateausPerFract` but **not** `FinitelyManyPlateaus`:
+infinitely many plateaus could each have their own fractional part. -/
 def FinitelyManyPerFract : Prop :=
   ∀ β : ℝ, 0 < β → {n : ℕ | 1 ≤ n ∧ Int.fract (minSide n) = β}.Finite
 
