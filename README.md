@@ -27,6 +27,7 @@ Status, caveats and independent checks are in each bundle's README; nothing here
 | s(11) ≥ 3040/797 (superseded: s(11) = 3.877… is now proved) | [`certificates/`](certificates/) `s11_lower_3.8143.txt` | `./verify.sh` | [/s12/](https://evand.github.io/square-packing/s12/) | `s11_ge_3040_797`, no hypothesis (opt-in build) |
 | **Exact forms** of the record packings, n ≤ 324 (S* as an algebraic number; Lean `Packs n S*`; local minimality) | [`search/exact/`](search/exact/) | `search/exact/batch/verify_all.sh` | [`EXACT_FORMS.md`](search/exact/EXACT_FORMS.md) | `lean/Sqpack/Exact/` |
 | New record packings: s(266), s(270), s(272) upper bounds | [`search/exact/results/sw2/`](search/exact/results/sw2/) | `search/exact/verify_cert.py` | — | — |
+| Packings beating the 2×2 doublings of the s(241), s(273), s(307) records: s(964) ≤ 31.8595, s(1092) ≤ 33.8406, s(1228) ≤ 35.8474 (evidence for "tilings are never optimal") | [`search/tilings/`](search/tilings/) | `search/exact/verify_cert.py`, `verify_cert2.py` | [`search/TILINGS.md`](search/TILINGS.md) | conjecture stated: `Conjectures.TilingsNeverOptimal` |
 
 The certificate format is [`certificates/FORMAT.md`](certificates/FORMAT.md); [`VERIFICATION.md`](VERIFICATION.md) logs
 what has been verified, when, and how.  [`RESEARCH.md`](RESEARCH.md) is the long account of the s(11)/s(12)/s(13)

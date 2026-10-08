@@ -288,3 +288,10 @@ should fail, and watching it not fail.
   roots and `--ref` on 2 reproduce the shipped censuses; three D4-symmetric mutated covers refused.
   Should-fix, not affecting this certificate: an int64 guard on `sum(W·weight)` in `zeromargin.py`, and
   `zm_d4_sweep.py summary` gating on runner sha and settings.
+
+## Tiling upper bounds s(964), s(1092), s(1228) (2026-10-08)
+`search/tilings/n{964,1092,1228}.cert` (rational centres and tan(θ/2), from f64 packings via `search/packer/mkcert.py`):
+`search/exact/verify_cert.py` VALID (min pair separation 1.000e-6 / 1.009e-6 / 1.000e-6; 2236 / 2524 / 2819 close pairs
+by separating axes) and `search/exact/verify_cert2.py` VALID (polygon intersection), each a few seconds.  Gives
+s(964) ≤ 31.859493881559810546, s(1092) ≤ 33.840529687178261042, s(1228) ≤ 35.847313543154434967.  `SHA256SUMS` in the
+directory.  Upper bounds only (the packings are not local minima); context in `search/TILINGS.md`.
