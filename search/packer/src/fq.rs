@@ -26,6 +26,7 @@ use std::sync::OnceLock;
 static DUMP_LP: OnceLock<String> = OnceLock::new();
 static LP_TAG: AtomicU8 = AtomicU8::new(0); // 0 step, 1 second-order correction, 2 flip search, 3 final force network
 static LP_IT: AtomicUsize = AtomicUsize::new(0);
+static IDENT_FPS: std::sync::Mutex<Vec<u64>> = std::sync::Mutex::new(Vec::new()); // --ident: load-network fingerprint per accepted step
 
 const H: f64 = 0.5;
 const SQRT2: f64 = std::f64::consts::SQRT_2;
@@ -780,6 +781,7 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
                 let b: std::collections::HashSet<_> = prev_act.iter().collect();
                 let nd = a.symmetric_difference(&b).count();
                 let na = lk.len();
+                IDENT_FPS.lock().unwrap().push(fingerprint(&lk));
                 prev_act = lk;
                 (dm, sl, na, nd)
             } else { (0.0, 0.0, 0, 0) };
@@ -1126,8 +1128,8 @@ fn main() {
             let sr = repair(sq, &mut xq, 1e-13);
             let (mg, mw) = check(sr, &xq);
             if let Some(out) = sarg(&a, "--out") { write_cfg(&out, sr, &xq); }
-            println!("{{\"s\": {:.15}, \"s_alm\": {:.15}, \"viol\": {:.2e}, \"evals\": {}, \"outer\": {}, \"slp_it\": {}, \"slp_r\": {:.1e}, \"flips\": {}, \"min_gap\": {:.2e}, \"min_wall\": {:.2e}, \"sec\": {:.3}, \"s_coarse\": {:.15}, \"t_alm\": {:.3}, \"s_alm0\": {:.15}, \"trace\": [{}], \"fp\": \"{:016x}\", \"ncontacts\": {}}}",
-                     sr, sq, viol, nev, outer, pit, pr, flips, mg, mw, t0.elapsed().as_secs_f64(), s_coarse, t_alm, s_alm0, trace.iter().map(|q| format!("[{},{:.4},{:.15},{},{:.3e},{:.3e},{},{}]", q.0, q.1, q.2, q.3, q.4, q.5, q.6, q.7)).collect::<Vec<_>>().join(","), fp, ncont);
+            println!("{{\"s\": {:.15}, \"s_alm\": {:.15}, \"viol\": {:.2e}, \"evals\": {}, \"outer\": {}, \"slp_it\": {}, \"slp_r\": {:.1e}, \"flips\": {}, \"min_gap\": {:.2e}, \"min_wall\": {:.2e}, \"sec\": {:.3}, \"s_coarse\": {:.15}, \"t_alm\": {:.3}, \"s_alm0\": {:.15}, \"trace\": [{}], \"fp\": \"{:016x}\", \"ncontacts\": {}{}}}",
+                     sr, sq, viol, nev, outer, pit, pr, flips, mg, mw, t0.elapsed().as_secs_f64(), s_coarse, t_alm, s_alm0, trace.iter().map(|q| format!("[{},{:.4},{:.15},{},{:.3e},{:.3e},{},{}]", q.0, q.1, q.2, q.3, q.4, q.5, q.6, q.7)).collect::<Vec<_>>().join(","), fp, ncont, if a.iter().any(|t| t == "--ident") { format!(", \"fps\": [{}]", IDENT_FPS.lock().unwrap().iter().map(|h| format!("\"{:016x}\"", h)).collect::<Vec<_>>().join(",")) } else { String::new() });
         }
         "gradcheck" => {
             // random kick so many constraints are active, then compare analytic vs central differences

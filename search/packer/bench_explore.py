@@ -10,7 +10,8 @@ Task = (start packing, target side).  Two sources, both frozen under bench/:
     106 1/38, 177 4/40, 236 3/40, 130 0/40 (0.73), 263 (0.97), 307 (0.54), 237 (0.43), 210 (0.29), 271 (0.21),
     131, 180, 305 (~0: far pairs).
 Replicate = one `explore.py` run (P procs x T min, its own seed), all variants interleaved so they share machine load.
-Score per replicate: frac = (start - best) / (start - target) at checkpoints (fractions of T), hit = best <= target + 1e-7.
+Score per replicate: frac = (start - best) / (start - target) clipped to [0, 1] at checkpoints (fractions of T); score = mean
+of the checkpoint fracs (area under the curve: speed counts); hit = best <= target + 1e-7.
 Summary: per task median frac per variant; paired difference (B - A) per task, mean over tasks with a bootstrap CI over
 replicates.  Tiers: quick (8 tasks), full (16 tasks).
 
@@ -117,7 +118,7 @@ def load(out):
                 if c is None:
                     continue
                 m = man[t]; gap = m['start'] - m['target']
-                R.setdefault(v, {}).setdefault(t, {})[r] = ([(m['start'] - b) / gap for b in c[0]],
+                R.setdefault(v, {}).setdefault(t, {})[r] = ([min(1.0, max(0.0, (m['start'] - b) / gap)) for b in c[0]],
                                                             c[0][-1] <= m['target'] + 1e-7, c[1], c[0][-1])
     return meta, R
 
@@ -146,7 +147,7 @@ def summary(outs, ref=None):
             if ds is None:
                 continue
             m, lo, hi, nt = ds
-            print(f'  {v} - {rf}: mean over {nt} tasks of (median frac at T) difference {m:+.3f}  [95% bootstrap {lo:+.3f}, {hi:+.3f}]')
+            print(f'  {v} - {rf}: mean over {nt} tasks of (median score) difference, score = mean clipped frac over checkpoints, {m:+.3f}  [95% bootstrap {lo:+.3f}, {hi:+.3f}]')
 
 
 def paired(A, B, nboot=4000):
@@ -156,8 +157,9 @@ def paired(A, B, nboot=4000):
     rng = random.Random(0)
     def stat(pick):
         return st.mean(st.median(pick(B[t])) - st.median(pick(A[t])) for t in ts)
-    m = stat(lambda X: [x[0][-1] for x in X.values()])
-    bs = sorted(stat(lambda X: [rng.choice(list(X.values()))[0][-1] for _ in X]) for _ in range(nboot))
+    auc = lambda x: st.mean(x[0])                         # mean clipped frac over the checkpoints: rewards speed too
+    m = stat(lambda X: [auc(x) for x in X.values()])
+    bs = sorted(stat(lambda X: [auc(rng.choice(list(X.values()))) for _ in X]) for _ in range(nboot))
     return m, bs[int(0.025 * nboot)], bs[int(0.975 * nboot)], len(ts)
 
 

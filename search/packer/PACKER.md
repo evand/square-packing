@@ -704,3 +704,31 @@ four tx237n archive states kicked / local-kicked, rec110 kicked 0.01 / 0.05): 14
   cmake + C++ (cmake not on PATH; nix-shell), ~1 day, same gain.  Probably larger and cheaper: the step-acceptance / stop
   dynamics (rejection rate, R never growing, crawl tail), e.g. a stop on gain per LP relative to s, or a filter /
   nonmonotone acceptance; measure against the benchmark first.
+
+## Explorer benchmark pilot (10-08; `bench_explore.py`, `runs/be_pilot`)
+16 frozen tasks (`bench/tasks/`: SQUISH seeds s108 s179 r126 r237 + 12 rd1 pairs, mirror packing fq-polished -> register
+side), replicate = explorer 2 procs x T min, paired seeds across variants, score = mean clipped gap fraction over checkpoints.
+* Pilot (quick tier 8 tasks, base = adapt + elite 0.3 vs elite0, 3 reps x 8 min, 12 procs, 65 min): elite0 - base = -0.15,
+  95 % bootstrap [-0.20, +0.11]: not separable.  Tasks are mostly binary at this budget: rd106/rd130/rd177 saturate (hit in
+  most reps), rd210 never moves, rd236 hit-or-nothing (2/3 vs 1/3); graded: s108 (0.23-0.52 spread), s179, rd263.  Next:
+  quick tier = graded tasks only, more reps (>= 5).
+* rd130 base r0 reached 11.9104141 (from the 09-30 mirror in 7 min on 2 procs): below Couzo's register 11.9111877 but above
+  SQUISH's registered 11.904483 (10-06).  No claim; the rd targets are "a known better answer", not the current record.
+
+## Polish-length census (10-08; `polish_trace.py`, `polish_trace_report.py`, `runs/pt_110.jsonl`, `pt_237.jsonl`)
+Evan: polish until the contact graph is identified, dedupe on graphs, finish later?  Replayed the explorer pipeline
+(move -> screen -> full polish, `fq --ident` with a per-accepted-step load-network fingerprint `fps`) on parents from
+`runs/ex10` (110, 500 proposals -> 286 polished) and `runs/tx237n` (237, 150 -> 101).
+* **Iterations are not short:** full polish median 20 (110) / 75 (237); p90 114 / 300; cap 300 hit by 3 % / 16 %.
+  Polishes >= 80 iterations = 17 % / 48 % of polishes but **59 % / 87 % of polish time**; cap-hitters alone 21 % / 42 %.
+* **Network settles early, the side settles with it:** final load network reached and stable from median iteration 8 / 38
+  (p90 69 / 188); side error at that point median 2e-10 / 1e-9 (p90 7e-7 / 1.4e-6); **53 % / 32 % of polish time comes
+  after settling**.  Summed max-corner displacement after settling median 6e-4 / 8e-4, p90 1.4e-2 / 2.4e-2.
+* **Long polishes = crawls, mostly on a fixed network:** of the >= 150-iteration polishes, after iteration 100 most gain
+  1e-8 ... 3e-5 total with 1-8 distinct networks over ~150 steps; a minority swap ~1 contact per step (13.8 at most).
+* **Exact fingerprints never repeat across proposals:** 3019 / 2903 distinct fps, 0 shared between trajectories; 282 / 100
+  distinct final basins from 286 / 101 polishes; 40 / 19 final networks differ from the last step's.  A transition table on
+  exact graphs has nothing to match; it needs a coarser key.
+* **Duplication vs the archive (by side, 2e-9):** polished proposals ending in an archived basin 28 % (110) / 12 % (237);
+  and the explorer's screen-return rule (screened side within 1e-6 of an archive side -> no polish) is wrong 26 % (36/137)
+  / 3 of 9 times (a new basin skipped).
