@@ -545,3 +545,11 @@ Evan: more explore, less exploit; the sub-11 set at 110 was 48 certified minima 
   minima by move: lkick 48, kick 47, bigkick 41, aswap 41, kicksym 32, crot 16, band 9.  ~20 % of sub-11 archive entries are
   not minima (screen + polish lets saddles/unjammed through): certification stays in the loop.  Not resumed (no record;
   Evan: resume only on a record).
+* **ex1 = ex0 + screen-stage discards (screened side > k + 0.05 + 1e-3 or grid-obstructed → no full polish), 8 procs ×
+  30 min (240 proc-min):** 10.9k proposals (2.7× ex0's per proc-min; 2174 screen-grid, 1311 screen-discard), 218 sub-11
+  basins → 156 certified distinct (ex0 at equal proc-min: ~112): **~1.4× certified discoveries per CPU**.  **Union of
+  certified sub-11 minima (known + smoke + ex0 + ex1): 275** (`runs/known110_all.json`).  No record.
+* **Shrink-hopping descent (`fq --shrink`, fixed-side overlap-only relaxation, grow to feasible then shrink by d, halving on
+  failure; then polish):** on 40 explorer proposals from ex0 basins, vs the ALM quench: same basin 20/40; where they differ
+  ALM lower 14, shrink lower 6; new vs ex0 archive: ALM 6, shrink 5; shrink 1.6× slower.  A different map (keeps as a
+  diversity arm) but not more efficient per CPU; not the SQUISH secret by itself.

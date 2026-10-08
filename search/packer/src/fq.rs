@@ -117,6 +117,7 @@ struct Prob {
     pairs: Vec<Pair>,
     wlam: Vec<f64>, // 16 per square: corner k, wall w (x>=0, x<=s, y>=0, y<=s)
     mu: f64,
+    fix_s: bool, // fixed side: pure overlap penalty, no s objective, d/ds = 0
 }
 
 #[inline]
@@ -144,8 +145,8 @@ impl Prob {
         let mu = self.mu;
         for q in g.iter_mut() { *q = 0.0; }
         let s = v[3 * n];
-        let mut f = s;
-        g[3 * n] = 1.0;
+        let mut f = if self.fix_s { 0.0 } else { s };
+        g[3 * n] = if self.fix_s { 0.0 } else { 1.0 };
         let mut cs = vec![(0.0, 0.0); n];
         for i in 0..n { let t = v[3 * i + 2]; cs[i] = (t.cos(), t.sin()); }
         // walls
@@ -216,6 +217,7 @@ impl Prob {
             g[o + 2 * pk] += gphi;
             g[o + 2 * pk + 1] += gd;
         }
+        if self.fix_s { g[3 * n] = 0.0; }
         f
     }
 
@@ -751,9 +753,76 @@ fn dot(a: &[f64], b: &[f64]) -> f64 { a.iter().zip(b).map(|(x, y)| x * y).sum() 
 struct QOpt { mu0: f64, mu_max: f64, tol: f64, skin: f64, max_outer: usize, verbose: bool }
 
 /// Returns (s, x, total evaluations, outer iterations, final violation before repair).
+/// Minimise the pure overlap penalty at fixed side s (separators free, multipliers 0).  Returns (x, max violation, evals).
+fn relax_fixed(p: &mut Prob, s: f64, x0: &[f64], skin: f64) -> (Vec<f64>, f64, usize) {
+    let n = p.n;
+    let cut = SQRT2 + skin;
+    let mut x = x0.to_vec();
+    p.fix_s = true;
+    p.mu = 1.0;
+    for l in p.wlam.iter_mut() { *l = 0.0; }
+    p.rebuild(&x, cut);
+    for pr in p.pairs.iter_mut() { pr.lam = [0.0; 8]; }
+    let mut nev = 0;
+    let mut viol = f64::INFINITY;
+    for _round in 0..20 {
+        let xref = x.clone();
+        let mut v = p.pack(&x, s);
+        let (_, ne, _) = { let pr = &*p; lbfgs(&mut |vv: &[f64], gg: &mut [f64]| pr.eval(vv, gg), &mut v, 4000, 1e-13, 0.05) };
+        nev += ne;
+        p.unpack(&v);
+        x.copy_from_slice(&v[..3 * n]);
+        viol = p.viol_update(&v, false);
+        let mut dmax: f64 = 0.0;
+        for i in 0..n { dmax = dmax.max((x[3 * i] - xref[3 * i]).hypot(x[3 * i + 1] - xref[3 * i + 1])); }
+        if dmax > 0.5 * skin { p.rebuild(&x, cut); continue; }
+        break;
+    }
+    p.fix_s = false;
+    (x, viol, nev)
+}
+
+/// Shrink-hopping descent: grow until the fixed-side overlap problem is solved, then shrink by d (positions scaled about
+/// the centre) while it stays solvable, halving d on failure (back to the last feasible state) down to dmin.
+/// Returns (s, x) of the last feasible state, total evals, shrink steps.
+fn shrink(s0: f64, x0: &[f64], d0: f64, dmin: f64, vtol: f64, verbose: bool) -> (f64, Vec<f64>, usize, usize) {
+    let n = x0.len() / 3;
+    let mut p = Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: true };
+    let scale = |x: &[f64], s: f64, f: f64| -> Vec<f64> {
+        let mut y = x.to_vec();
+        for i in 0..n { y[3 * i] = s * f / 2.0 + (x[3 * i] - s / 2.0) * f; y[3 * i + 1] = s * f / 2.0 + (x[3 * i + 1] - s / 2.0) * f; }
+        y
+    };
+    let mut s = s0;
+    let mut x = x0.to_vec();
+    let mut nev = 0;
+    // grow to feasibility
+    let mut feas: Option<(f64, Vec<f64>)> = None;
+    for _ in 0..40 {
+        let (xr, vi, ne) = relax_fixed(&mut p, s, &x, 0.3);
+        nev += ne;
+        if vi < vtol { feas = Some((s, xr)); break; }
+        x = scale(&xr, s, 1.0 + d0);
+        s *= 1.0 + d0;
+    }
+    let Some((mut sf, mut xf)) = feas else { return (f64::INFINITY, x, nev, 0); };
+    let mut d = d0;
+    let mut steps = 0;
+    while d >= dmin && steps < 400 {
+        steps += 1;
+        let st = sf * (1.0 - d);
+        let xt = scale(&xf, sf, 1.0 - d);
+        let (xr, vi, ne) = relax_fixed(&mut p, st, &xt, 0.3);
+        nev += ne;
+        if vi < vtol { sf = st; xf = xr; if verbose { eprintln!("  shrink ok s {sf:.10} d {d:.1e}"); } }
+        else { d /= 2.0; }
+    }
+    (sf, xf, nev, steps)
+}
+
 fn quench(s0: f64, x0: &[f64], o: &QOpt) -> (f64, Vec<f64>, usize, usize, f64, Prob) {
     let n = x0.len() / 3;
-    let mut p = Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: o.mu0 };
+    let mut p = Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: o.mu0, fix_s: false };
     let cut = SQRT2 + o.skin;
     let mut x = x0.to_vec();
     let mut s = s0;
@@ -900,7 +969,11 @@ fn main() {
             };
             let (mut sq, mut xq, nev, outer, viol, mut prob) = if a.iter().any(|t| t == "--no-alm") {
                 // already (nearly) feasible: polish directly
-                (s1, x.clone(), 0, 0, 0.0, Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0 })
+                (s1, x.clone(), 0, 0, 0.0, Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: false })
+            } else if a.iter().any(|t| t == "--shrink") {
+                let (ss, xs, ne, st) = shrink(s1, &x, arg(&a, "--d0", 2e-3), arg(&a, "--dmin", 1e-6), arg(&a, "--vtol", 1e-10), o.verbose);
+                if o.verbose { eprintln!("shrink: s {ss:.10} evals {ne} steps {st}"); }
+                (ss, xs, ne, st, 0.0, Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: false })
             } else { quench(s1, &x, &o) };
             let t_alm = t0.elapsed().as_secs_f64();
             let mut xc = xq.clone();
@@ -928,7 +1001,7 @@ fn main() {
             let n = x.len() / 3;
             let mut r = Rng::new(7);
             for q in x.iter_mut() { *q += 0.05 * r.gauss(); }
-            let mut p = Prob { n, pairs: Vec::new(), wlam: (0..16 * n).map(|_| r.f()).collect(), mu: 37.0 };
+            let mut p = Prob { n, pairs: Vec::new(), wlam: (0..16 * n).map(|_| r.f()).collect(), mu: 37.0, fix_s: false };
             p.rebuild(&x, SQRT2 + 0.4);
             for pr in p.pairs.iter_mut() { for l in pr.lam.iter_mut() { *l = r.f(); } pr.phi += 0.1 * r.gauss(); pr.d += 0.05 * r.gauss(); }
             let v = p.pack(&x, s * 0.97);

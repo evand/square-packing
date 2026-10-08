@@ -57,7 +57,7 @@ def descriptor(s, sq, k):
 
 def work(job):
     """One proposal: move, screen, (maybe) full polish, grid check.  Runs in a worker process."""
-    s, sq, kind, seed, k, known_sides, same = job
+    s, sq, kind, seed, k, known_sides, same, smax = job
     from layout import full_lines
     rng = random.Random(seed)
     prop, desc = MOVES[kind](s, sq, rng, A)
@@ -70,6 +70,11 @@ def work(job):
     if r is None:
         return dict(out, status='fail', sec=time.time() - t0)
     s1, sq1, _ = r
+    if s1 > smax + 1e-3:                     # clearly above the stepping-stone ceiling: no polish
+        return dict(out, status='screen-discard', s_screen=s1, sec=time.time() - t0)
+    p1 = os.path.join(tmp, 's1.txt'); mcmin.write_deg(p1, s1, sq1)
+    if full_lines(p1, k):                    # grid-obstructed already after the screen
+        return dict(out, status='screen-grid', s_screen=s1, sec=time.time() - t0)
     near = [x for x in known_sides if abs(x - s1) < same]
     if near:
         return dict(out, status='return', s=min(near, key=lambda x: abs(x - s1)), s_screen=s1, sec=time.time() - t0)
@@ -189,7 +194,7 @@ if __name__ == '__main__':
             par['expanded'] += 1
             s, sq = mcmin.load_deg(par['path'])
             kind = rng.choices(kinds, weights=wts)[0]
-            f = ex.submit(work, (s, sq, kind, rng.randrange(1 << 30), k, [e['s'] for e in ar.E], a.same))
+            f = ex.submit(work, (s, sq, kind, rng.randrange(1 << 30), k, [e['s'] for e in ar.E], a.same, ar.smax))
             pend[f] = par
         for _ in range(a.procs):
             submit()
