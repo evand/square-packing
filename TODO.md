@@ -64,6 +64,7 @@ done enough: sub-11 funnel small and well sampled, plateau above 11 rough; the n
 - [ ] Case study `search/packer/s110-landscape.md`: rewrite the census section from cen7 + rev1 + minima PT.
 - [ ] Side bet: rectangle containers in slp2; Arslanov 26-in-(4−δ)×8 control, then jlevy H-049 (20 in (4−δ)×6).  Refresh clone first.
 - [ ] Later targets for the same instrument: s(183/242/274/308), 299, 234, s(147) (`search/WISHLIST.md` §P).
+- [ ] Tiling starts (Evan, 10-07; WISHLIST N17/P6, problems.html §4 "Tilings are never optimal"): seed the packer with 2×2 tilings of the s(241), s(273), s(307) records (964, 1092, 1228 squares at 31.98161, 33.97641, 35.96544; neither Ellsworth nor jlevy lists these n).  Variants: plain copies; mirrored/rotated copies (seams meet differently); and the other construction, scaling ×2 and splitting each square into 2×2 (tilted blocks).  Also k = 2 of smaller non-integer records as controls (e.g. 4·65 = 260, where the record already beats doubling by 0.414).  Packer not tuned for n ≈ 1000 (slp2 quench 40–110 s at n ≈ 270): small budget first; wait until the other session's compute is done.
 
 ## Outreach / hygiene
 - [ ] Site: draw every packing we have numbers for (Couzo's 49, itsnaka's 23 SQUISH (local copies + pins: `tasks/site-all-packings/README.md`), de Winter's 211, ours 266/270/272, n > 324; replaces the `NEWER` stopgap in viewer.js); coords with credit, no code/text. `tasks/site-all-packings/`

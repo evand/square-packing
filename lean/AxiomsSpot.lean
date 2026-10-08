@@ -21,3 +21,4 @@ import Sqpack.ConjecturesProofs
 #print axioms UnitSquarePacking.Chain.N8.localMin
 #print axioms UnitSquarePacking.Conjectures.tilingBound
 #print axioms UnitSquarePacking.Conjectures.cStarStepsOfTwo
+#print axioms UnitSquarePacking.Conjectures.tilingsEventuallyNotOptimal_of

@@ -255,3 +255,4 @@ import Sqpack
 #print axioms UnitSquarePacking.Conjectures.FinitelyManyPerFract.plateaus
 #print axioms UnitSquarePacking.Conjectures.FinitelyManyPlateausPerFract.finitelyMany
 #print axioms UnitSquarePacking.Conjectures.FinitelyManyPlateaus.bounded
+#print axioms UnitSquarePacking.Conjectures.tilingsEventuallyNotOptimal_of

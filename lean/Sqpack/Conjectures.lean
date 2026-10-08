@@ -173,9 +173,14 @@ def TilingsNeverOptimal : Prop :=
   ∀ n k : ℕ, 1 ≤ n → 2 ≤ k → NonIntegral n → minSide (k ^ 2 * n) < k * minSide n
 
 /-- The large-`k` case of `TilingsNeverOptimal` (known on paper: the tiling wastes `≍ k²`, optimal
-packings `O(k^{7/11})` by Erdős–Graham).  Not in Lean. -/
+packings `O(k^{7/11})` by Erdős–Graham).  In Lean conditionally: `ThreeFifthsWaste` and
+`AreaStrict` imply it (`tilingsEventuallyNotOptimal_of`, `Sqpack/ConjecturesProofs.lean`). -/
 def TilingsEventuallyNotOptimal : Prop :=
   ∀ n : ℕ, 1 ≤ n → NonIntegral n → ∃ K : ℕ, ∀ k ≥ K, minSide (k ^ 2 * n) < k * minSide n
+
+/-- **Positive waste at non-integer sides** (known: area gives `n ≤ s(n)²`, and a square of
+non-integer side cannot be tiled exactly by unit squares).  Not in Lean. -/
+def AreaStrict : Prop := ∀ n : ℕ, 1 ≤ n → NonIntegral n → (n : ℝ) < minSide n ^ 2
 
 /-- The tiling bound `s(k²n) ≤ k·s(n)` (known, elementary; proved: `tilingBound` in
 `Sqpack/ConjecturesProofs.lean`). -/

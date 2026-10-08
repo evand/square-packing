@@ -260,4 +260,50 @@ theorem FinitelyManyPlateaus.bounded (h : FinitelyManyPlateaus) : PlateausBounde
   have := hM hp
   omega
 
+/-! ## The large-`k` case of "tilings are never optimal", from the waste bound -/
+
+/-- **Waste `O(s^{3/5})` and positive waste at non-integer sides give the large-`k` case of
+`TilingsNeverOptimal`.**  With `s = s(n)` and `u = (s + n/s)/2` (so `√n < u < s`), the waste bound
+at side `k·u` packs at least `k²u² − C·k·u ≥ k²n` squares once `k·(u² − n) ≥ |C|·u`. -/
+theorem tilingsEventuallyNotOptimal_of (hw : ThreeFifthsWaste) (ha : AreaStrict) :
+    TilingsEventuallyNotOptimal := by
+  intro n hn hni
+  obtain ⟨C, hC⟩ := hw
+  have hn1 : (1 : ℝ) ≤ n := by exact_mod_cast hn
+  have hδ := ha n hn hni
+  set s := minSide n with hs
+  have hs0 : 0 ≤ s := minSide_nonneg hn
+  have hs1 : 1 < s := by nlinarith
+  set u := (s + n / s) / 2 with hu
+  have hns : (n : ℝ) / s < s := by rw [div_lt_iff₀ (by linarith)]; nlinarith
+  have hus : u < s := by rw [hu]; linarith
+  have hnpos : (0 : ℝ) < n / s := by positivity
+  have hγ : 0 < u ^ 2 - n := by
+    have h1 : u ^ 2 - n = ((s - n / s) / 2) ^ 2 := by
+      rw [hu]; field_simp; ring
+    rw [h1]; have : 0 < s - n / s := by linarith
+    positivity
+  have hu1 : 1 ≤ u := by nlinarith
+  obtain ⟨K, hK⟩ := exists_nat_ge (|C| * u / (u ^ 2 - n))
+  refine ⟨max K 1, fun k hk => ?_⟩
+  have hk1 : (1 : ℝ) ≤ k := by exact_mod_cast (le_max_right K 1).trans hk
+  have hkK : |C| * u / (u ^ 2 - n) ≤ k := hK.trans (by exact_mod_cast (le_max_left K 1).trans hk)
+  have hkγ : |C| * u ≤ k * (u ^ 2 - n) := by rwa [div_le_iff₀ hγ] at hkK
+  have hx1 : 1 ≤ (k : ℝ) * u := by nlinarith
+  obtain ⟨N, hN, hP⟩ := hC (k * u) hx1
+  have hrp : ((k : ℝ) * u) ^ (3 / 5 : ℝ) ≤ k * u := by
+    calc ((k : ℝ) * u) ^ (3 / 5 : ℝ) ≤ ((k : ℝ) * u) ^ (1 : ℝ) :=
+          Real.rpow_le_rpow_of_exponent_le hx1 (by norm_num)
+      _ = k * u := Real.rpow_one _
+  have hCx : C * ((k : ℝ) * u) ^ (3 / 5 : ℝ) ≤ |C| * (k * u) :=
+    (mul_le_mul_of_nonneg_right (le_abs_self C) (by positivity)).trans
+      (mul_le_mul_of_nonneg_left hrp (abs_nonneg C))
+  have hcount : ((k ^ 2 * n : ℕ) : ℝ) ≤ N := by
+    push_cast
+    nlinarith
+  have hpk : Packs (k ^ 2 * n) (k * u) := packs_of_le hP (by exact_mod_cast hcount)
+  have hpos : 1 ≤ k ^ 2 * n := Nat.mul_pos (pow_pos (by exact_mod_cast hk1) 2) hn
+  calc minSide (k ^ 2 * n) ≤ k * u := csInf_le ⟨0, fun _ h => nonneg_of_packs' hpos h⟩ hpk
+    _ < k * s := by nlinarith
+
 end UnitSquarePacking.Conjectures
