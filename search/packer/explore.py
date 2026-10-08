@@ -136,7 +136,7 @@ def descriptor(s, sq, k):
 
 def work(job):
     """One proposal: move, screen, (maybe) full polish, grid check.  Runs in a worker process."""
-    s, sq, kind, seed, k, known_sides, same, smax = job
+    s, sq, kind, seed, k, known_sides, same, smax, pol_above = job
     from layout import full_lines
     rng = random.Random(seed)
     prop, desc = MOVES[kind](s, sq, rng, A)
@@ -157,6 +157,8 @@ def work(job):
     near = [x for x in known_sides if abs(x - s1) < same]
     if near:
         return dict(out, status='return', s=min(near, key=lambda x: abs(x - s1)), s_screen=s1, sec=time.time() - t0)
+    if s1 > pol_above:                       # far from the best: keep the screened state, no full polish
+        return dict(out, status='new?', s=s1, sq=sq1, lines=False, s_screen=s1, unpolished=True, sec=time.time() - t0)
     hop.EXTRA[:] = ['--loosen', '1.0']
     r2 = hop.quench(s1, sq1, tmp, extra=('--no-alm',))
     if r2 is None:
@@ -298,6 +300,7 @@ if __name__ == '__main__':
     ap.add_argument('--frontier-share', type=float, default=0.5, help='share of parent picks from frontier lineages')
     ap.add_argument('--elite-share', type=float, default=0.0, help='share of parent picks from the global top-K basins (exploit)')
     ap.add_argument('--elite-k', type=int, default=20)
+    ap.add_argument('--polish-margin', type=float, default=0.0, help='full polish only if screened side < best + margin (0 = always)')
     ap.add_argument('--novel-ref', help='json list of sides: bandit rewards only basins not within 2e-9 of these (global novelty)')
     ap.add_argument('--adapt', action='store_true', help='Thompson sampling over move kinds (reward: new below-k basin)')
     ap.add_argument('--resume', action='store_true', help='continue from <out>/state.json (time offset carried over)')
@@ -349,7 +352,8 @@ if __name__ == '__main__':
             par['expanded'] += 1
             s, sq = mcmin.load_deg(par['path'])
             kind = bandit.choose(rng) if bandit else rng.choices(kinds, weights=wts)[0]
-            f = ex.submit(work, (s, sq, kind, rng.randrange(1 << 30), k, [e['s'] for e in ar.E], a.same, ar.smax))
+            f = ex.submit(work, (s, sq, kind, rng.randrange(1 << 30), k, [e['s'] for e in ar.E], a.same, ar.smax,
+                                       (min(e['s'] for e in ar.E) + a.polish_margin) if a.polish_margin else float('inf')))
             pend[f] = par
         for _ in range(a.procs):
             submit()

@@ -383,7 +383,7 @@ impl Prob {
 
 /// One LP: min w_s + kappa tau  s.t.  grad g . w - tau <= -g/R (near constraints), |w| <= 1, tau >= 0.
 /// Only columns that occur in some row (and s) are LP variables; the rest of w is 0.  Returns (w, tau, row duals).
-fn slp_lp(nv: usize, si: usize, cons: &[Con], r: f64, kappa: f64) -> Option<(Vec<f64>, f64, Vec<f64>)> {
+fn slp_lp(nv: usize, si: usize, cons: &[Con], r: f64, kappa: f64, hq: &[(usize, usize, f64)]) -> Option<(Vec<f64>, f64, Vec<f64>)> {
     use clarabel::algebra::*;
     use clarabel::solver::*;
     let mut col = vec![usize::MAX; nv];
@@ -391,6 +391,7 @@ fn slp_lp(nv: usize, si: usize, cons: &[Con], r: f64, kappa: f64) -> Option<(Vec
     let mut take = |k: usize, col: &mut Vec<usize>| { if col[k] == usize::MAX { col[k] = used.len(); used.push(k); } };
     take(si, &mut col);
     for c in cons { for &(k, _) in &c.nz { take(k, &mut col); } }
+    for &(a, b, _) in hq { take(a, &mut col); take(b, &mut col); }
     let nu = used.len();
     let nx = nu + 1; // + tau
     let (mut ii, mut jj, mut vv) = (Vec::new(), Vec::new(), Vec::new());
@@ -408,7 +409,15 @@ fn slp_lp(nv: usize, si: usize, cons: &[Con], r: f64, kappa: f64) -> Option<(Vec
     }
     ii.push(row); jj.push(nu); vv.push(-1.0); b.push(0.0); row += 1;
     let a = CscMatrix::new_from_triplets(row, nx, ii, jj, vv);
-    let p = CscMatrix::<f64>::zeros((nx, nx));
+    let p = if hq.is_empty() { CscMatrix::<f64>::zeros((nx, nx)) } else {
+        // SQP: objective + (r/2) w^T H w in the scaled variables (H convexified by the caller), upper triangle
+        let (mut pi, mut pj, mut pv) = (Vec::new(), Vec::new(), Vec::new());
+        for &(a, b, val) in hq {
+            let (ca, cb) = (col[a].min(col[b]), col[a].max(col[b]));
+            pi.push(ca); pj.push(cb); pv.push(r * val);
+        }
+        CscMatrix::new_from_triplets(nx, nx, pi, pj, pv)
+    };
     let mut q = vec![0.0; nx];
     q[col[si]] = 1.0;
     q[nu] = kappa;
@@ -505,7 +514,71 @@ fn ident(p: &Prob, v0: &[f64], v1: &[f64], prev: &mut Vec<(u32, u32, u8, u8)>, t
     (dm, slack, na, diff)
 }
 
-struct POpt { rmax: f64, r0: f64, rmin: f64, maxit: usize, cc_tol: f64, flip_top: usize, ident: bool, verbose: bool, stag_w: usize, stag_tol: f64 }
+/// Hessian of sum_k z_k g_k at v (rows from `cons`, multipliers `z`), with face-tied separators (phi -> owner theta),
+/// convexified by diagonal dominance (H_aa >= sum_b |H_ab|).  Returns the upper triangle (a <= b) in original indices.
+fn hess_lagr(p: &Prob, v: &[f64], cons: &[Con], z: &[f64]) -> Vec<(usize, usize, f64)> {
+    use std::collections::HashMap;
+    let n = p.n;
+    let o = 3 * n + 1;
+    let zm = z.iter().cloned().fold(0.0, f64::max);
+    let mut h: HashMap<(usize, usize), f64> = HashMap::new();
+    let mut add = |a: usize, b: usize, val: f64, h: &mut HashMap<(usize, usize), f64>| {
+        if a == b { *h.entry((a, a)).or_insert(0.0) += val; }
+        else { *h.entry((a, b)).or_insert(0.0) += val; *h.entry((b, a)).or_insert(0.0) += val; }
+    };
+    for (c, &zk) in cons.iter().zip(z) {
+        if !(zk > 1e-9 * zm) { continue; }
+        match c.sp {
+            Spec::Wall(i, k, w) => {
+                let th = v[3 * i + 2];
+                let (ox, oy) = corner_off(th.cos(), th.sin(), k);
+                let d2 = [ox, -ox, oy, -oy][w];
+                add(3 * i + 2, 3 * i + 2, zk * d2, &mut h);
+            }
+            Spec::PI(pk, k) | Spec::PJ(pk, k) => {
+                let pr = &p.pairs[pk];
+                let (i, j) = (pr.i, pr.j);
+                let own = match pr.face { 0 | 1 => i, _ => j };
+                let phc = 3 * own + 2;
+                let map = |a: usize| if a == usize::MAX { phc } else { a };
+                const PHI: usize = usize::MAX;
+                let phi = v[o + 2 * pk];
+                let (ux, uy) = (phi.cos(), phi.sin());
+                let (dx, dy) = (-uy, ux); // u'
+                let (hx, hy) = ((v[3 * i] - v[3 * j]) / 2.0, (v[3 * i + 1] - v[3 * j + 1]) / 2.0);
+                let mut e: Vec<(usize, usize, f64)> = Vec::new();
+                let isi = matches!(c.sp, Spec::PI(..));
+                let (sq_i, sgn) = if isi { (i, 1.0) } else { (j, -1.0) };
+                let th = v[3 * sq_i + 2];
+                let (ox, oy) = corner_off(th.cos(), th.sin(), k);
+                let (rx, ry) = if isi { (hx + ox, hy + oy) } else { (-hx + ox, -hy + oy) };
+                let ts = 3 * sq_i + 2;
+                e.push((ts, ts, -sgn * (ux * ox + uy * oy)));            // theta theta
+                e.push((PHI, PHI, -sgn * (ux * rx + uy * ry)));          // phi phi
+                e.push((PHI, ts, sgn * (dx * (-oy) + dy * ox)));         // phi theta
+                for (col, val) in [(3 * i, dx / 2.0), (3 * i + 1, dy / 2.0), (3 * j, -dx / 2.0), (3 * j + 1, -dy / 2.0)] {
+                    e.push((PHI, col, val));
+                }
+                for (a, b, val) in e {
+                    let (ma, mb) = (map(a), map(b));
+                    if a != b && ma == mb { add(ma, ma, 2.0 * zk * val, &mut h); } else { add(ma, mb, zk * val, &mut h); }
+                }
+            }
+        }
+    }
+    // convexify: diagonal dominance
+    let mut off: HashMap<usize, f64> = HashMap::new();
+    for (&(a, b), &val) in &h { if a != b { *off.entry(a).or_insert(0.0) += val.abs(); } }
+    let mut out = Vec::new();
+    let mut diag: HashMap<usize, f64> = HashMap::new();
+    for (&(a, b), &val) in &h { if a == b { diag.insert(a, val); } }
+    for (&a, &s) in &off { let d = diag.entry(a).or_insert(0.0); if *d < s { *d = s; } }
+    for (&a, &d) in &diag { if d > 0.0 { out.push((a, a, d)); } }
+    for (&(a, b), &val) in &h { if a < b && val != 0.0 { out.push((a, b, val)); } }
+    out
+}
+
+struct POpt { sqp: bool, rmax: f64, r0: f64, rmin: f64, maxit: usize, cc_tol: f64, flip_top: usize, ident: bool, verbose: bool, stag_w: usize, stag_tol: f64 }
 
 /// Snap each pair's separator to a face branch: `choice[pk]` = Some(face) forces that face while it stays ambiguous,
 /// None = the face with the largest gap.  Returns the ambiguous pairs (>= 2 faces within cc_tol of contact and of the
@@ -562,15 +635,16 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
     let mut xref = x.clone();
     let merit = |p: &mut Prob, v: &[f64]| -> f64 { v[3 * p.n] + kappa * p.viol_update(v, false).max(0.0) };
     // LP at the current point with the current branch choice: (pred, w, tau, ncons)
-    let try_lp = |p: &mut Prob, x: &[f64], s: f64, choice: &mut [Option<usize>], r: f64| -> Option<(f64, Vec<f64>, Vec<Con>, f64, Vec<f64>)> {
+    let try_lp = |p: &mut Prob, x: &[f64], s: f64, choice: &mut [Option<usize>], r: f64, hq: &[(usize, usize, f64)]| -> Option<(f64, Vec<f64>, Vec<Con>, f64, Vec<f64>)> {
         snap(p, x, choice, o.cc_tol);
         let v0 = p.pack(x, s);
         let m0 = merit(p, &v0);
         let cons = p.near(&v0, 5.0 * r + 1e-9);
-        let (w, tau, z) = slp_lp(v0.len(), 3 * p.n, &cons, r, kappa)?;
+        let (w, tau, z) = slp_lp(v0.len(), 3 * p.n, &cons, r, kappa, hq)?;
         Some((m0 - (s + r * w[3 * p.n] + kappa * r * tau), w, cons, m0, z))
     };
     let mut stalls = 0;
+    let mut hq: Vec<(usize, usize, f64)> = Vec::new();
     let mut hist: Vec<f64> = Vec::new();
     while it < o.maxit {
         it += 1;
@@ -584,9 +658,10 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
             p.rebuild(&x, SQRT2 + 0.1);
             keys = p.pairs.iter().map(|q| (q.i, q.j)).collect();
             choice = keys.iter().map(|k| *old.get(k).unwrap_or(&None)).collect();
+            hq.clear();
             xref = x.clone();
         }
-        let Some((pred, w, mut cons, m0, zd)) = try_lp(p, &x, s, &mut choice, r) else { r /= 4.0; if r < o.rmin { break; } continue; };
+        let Some((pred, w, mut cons, m0, zd)) = try_lp(p, &x, s, &mut choice, r, &hq) else { r /= 4.0; if r < o.rmin { break; } continue; };
         let small = pred < 1e-14 * s.max(1.0) || r < o.rmin;
         if small {
             // branch search: flip one ambiguous pair at a time, keep the best predicted decrease
@@ -609,7 +684,7 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
                     if Some(c) == cur { continue; }
                     let mut ch = choice.clone();
                     ch[pk] = Some(c);
-                    if let Some((pr2, ..)) = try_lp(p, &x, s, &mut ch, rt) {
+                    if let Some((pr2, ..)) = try_lp(p, &x, s, &mut ch, rt, &hq) {
                         if pr2 > 1e-12 * s && best.map_or(true, |b| pr2 > b.0) { best = Some((pr2, pk, c)); }
                     }
                     if best.is_some() { break; }
@@ -634,7 +709,7 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
                 let lin: f64 = c.nz.iter().map(|&(k, a)| a * r * w[k]).sum();
                 c.g = p.g_at(&v1, c.sp) - lin;
             }
-            if let Some((w2, _, _)) = slp_lp(nv, 3 * n, &cons, r, kappa) {
+            if let Some((w2, _, _)) = slp_lp(nv, 3 * n, &cons, r, kappa, &hq) {
                 let mut v2: Vec<f64> = (0..nv).map(|k| v0[k] + r * w2[k]).collect();
                 p.tie(&v0, &mut v2);
                 let m2 = merit(p, &v2);
@@ -645,6 +720,7 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
         if rho >= 0.1 {
             x.copy_from_slice(&v1[..3 * n]);
             s = v1[3 * n];
+            if o.sqp { hq = hess_lagr(p, &v1, &cons, &zd); }
             let (dm, sl, na, nd) = if o.ident {
                 let (dm, sl, _, _) = ident(p, &v0, &v1, &mut Vec::new(), 1e-8);
                 let lk = load_keys(p, &v0, &cons, &zd);
@@ -664,7 +740,7 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
     // leave separators consistent with x for the caller
     snap(p, &x, &mut choice, o.cc_tol);
     // final force network: one LP at small R at the final point
-    if let Some((_, _, cons, _, z)) = try_lp(p, &x, s, &mut choice, r.max(1e-9).min(1e-6)) {
+    if let Some((_, _, cons, _, z)) = try_lp(p, &x, s, &mut choice, r.max(1e-9).min(1e-6), &[]) {
         let v = p.pack(&x, s);
         *p_load = load_keys(p, &v, &cons, &z);
     }
@@ -988,7 +1064,7 @@ fn main() {
             let mut trace: Vec<(usize, f64, f64, usize, f64, f64, usize, usize)> = Vec::new();
             let mut load: Vec<(u32, u32, u8, u8)> = Vec::new();
             if !a.iter().any(|t| t == "--no-polish") {
-                let po = POpt { rmax: arg(&a, "--rmax", 4e-3), r0: arg(&a, "--r0", 1e-3), rmin: arg(&a, "--rmin", 1e-10), maxit: arg(&a, "--pit", 300), cc_tol: arg(&a, "--cc-tol", 1e-7), flip_top: arg(&a, "--flip-top", 8), ident: a.iter().any(|t| t == "--ident"), stag_w: arg(&a, "--stag-w", 15), stag_tol: arg(&a, "--stag-tol", 2e-9), verbose: o.verbose };
+                let po = POpt { sqp: a.iter().any(|t| t == "--sqp"), rmax: arg(&a, "--rmax", 4e-3), r0: arg(&a, "--r0", 1e-3), rmin: arg(&a, "--rmin", 1e-10), maxit: arg(&a, "--pit", 300), cc_tol: arg(&a, "--cc-tol", 1e-7), flip_top: arg(&a, "--flip-top", 8), ident: a.iter().any(|t| t == "--ident"), stag_w: arg(&a, "--stag-w", 15), stag_tol: arg(&a, "--stag-tol", 2e-9), verbose: o.verbose };
                 let (s2, x2, it, rr, fl) = polish(&mut prob, sq, &xq, &po, &mut trace, &mut load);
                 sq = s2; xq = x2; pit = it; pr = rr; flips = fl;
             }

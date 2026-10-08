@@ -660,3 +660,16 @@ Evan: more explore, less exploit; the sub-11 set at 110 was 48 certified minima 
   record-beating needs other seeds (neighbours ± k worked partly at 237: 15.9306 → 15.9211 in 30 min, still descending);
   (3) the sub-11 census at 110 lives in one two-channel funnel (all 2 outside entries landed on its rim); a different
   funnel, if it exists, needs a different constructor.
+* **SQP polish (`--sqp`): no gain.**  QP subproblem with the Lagrangian Hessian (rotation curvature of active rows, previous
+  LP duals, phi tied to owner theta, convexified by diagonal dominance): 30 proposals at 237, median 52 vs 56 iterations,
+  same time, slightly worse outliers.  A typical trace converges in ~22 iterations (s settled by ~8); the cost is per LP
+  (~0.07 s at 237) × ~2 per iteration + flip-search LPs, not curvature.  Kept off by default.
+* **Policy fix instead: `--polish-margin M`.**  At n = 237 the stepping-stone ceiling (k + 0.05 = 16.05) admits every
+  proposal (~15.92), so every one paid the full polish.  Now only screened sides < best + M are polished; the rest enter
+  the archive at the screened value (flag `unpolished`).  Test: `runs/tx237m` (tx237n settings + M = 3e-3).
+* **tx237m (polish margin 3e-3):** 10.3k proposals (3.3× tx237s) but best 15.929641 / 15.929609 / 15.929609 / 15.926733 at
+  4 / 10 / 20 / 30 min: no better than tx237n (15.921655) or tx237s (15.924719).  Likely: unpolished entries (sides off by
+  up to ~1e-3) flood the archive as parents, so selection and acceptance get noisier; at large n per-proposal quality
+  seems to matter more than count.  Single runs; tx237n vs tx237s already differ by 3e-3, so inconclusive.  Left off by
+  default.  Next for large n: replicates before more policy changes; cheaper LPs (warm-started active-set / dual simplex
+  instead of interior point) are the remaining throughput lever.
