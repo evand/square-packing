@@ -611,3 +611,9 @@ Evan: more explore, less exploit; the sub-11 set at 110 was 48 certified minima 
 * Transfer tests (record hunting on the SQUISH benchmark seeds with the explorer: --adapt, elite 0.3, 8 procs × 30 min):
   `runs/tx179` (s179 = Couzo 180 − 1, 13.923576; SQUISH 13.883795), `runs/tx108` (s108 = 110 − 2, 10.995103; SQUISH
   10.909940).  Hop variants this morning: median gains ≤ 8e-3 (s179) / 7e-3 (s108) per 8 single-proc minutes.
+* **Transfer: the explorer as a record hunter (`runs/tx108`, `tx179`; adaptive, elite 0.3, 8 procs × 30 min).**  Best vs
+  wall time (1 / 4 / 10 / 20 / 30 min): s108 10.98398 / 10.95506 / 10.91677 / **10.912010** / same (98 % of SQUISH's gap; below
+  the 10-05 register 10.925919 and SQUISH's registered 10.920659, 2.1e-3 above their pending #422 10.909940: no claim);
+  s179 13.91715 / 13.91651 / 13.90948 / 13.90856 / **13.908471** (38 %).  At equal CPU (first minute ≈ one 8-min hop
+  replicate) similar to the hop variants; afterwards the explorer keeps making large gains (4e-2 – 8e-2) where hop chains
+  plateaued.  Both flatten after 10–20 min (elite converged).  Next: record starts r126, r237 (`runs/tx126`, `tx237`).
