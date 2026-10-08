@@ -583,3 +583,16 @@ Evan: more explore, less exploit; the sub-11 set at 110 was 48 certified minima 
 * Certified union of sub-11 minima at 110 (known + all explorer runs through ex4): **372** (`runs/known110_all.json`).
 * ex5 (adaptive kinds, global-novelty reward vs `runs/ref110_ex5.json` = 528 sub-11 sides, certified + archive-level) and ex6
   (fixed weights, same ref, concurrent control): 8 procs × 30 min each.
+* **ex5 (adaptive kinds, global-novelty reward) vs ex6 (fixed weights), concurrent, same ref (528 sides):** certified
+  distinct sub-11 166 vs 107; **new vs ref 30 vs 13 (~2.3× per CPU)**.  Bandit mass (decayed): bigkick, aswap, band,
+  kicksym; reinsert, mirror, rowslide starved.  Control rate 13 new / 4 CPU-h (ex2: 52): the current move set is saturating
+  its reachable region (diminishing returns): time for a category step.  Census (certified union): **414**.
+* **Crop seeds (`cropseed.py`, fq instead of slp2):** 600 crops of records 129–132 (one unit row + column strip removed,
+  count fixed, loosen 1.02/1.05): 517 grid, 0 below 11, **34 distinct stepping stones 11.002–11.047 with new structures**:
+  (18,23,69,0), (12,28,70,0), (14,34,61,1), (9,5,70,26), (18,11,81,0), (8,24,68,10), (4,27,75,4), (13,15,70,12), …
+  (`seeds110c/`).
+* **Frontier budget (`--frontier PREFIX --frontier-share f`):** archive entries carry a lineage root; with probability f the
+  parent comes from a frontier lineage (uniform over live roots, then the usual cell pick inside it), else the normal pick.
+  Cell-uniform selection gave new families ~1 % each (ex4); a cell bandit would starve them further.
+* ex7: standard starts + 34 crop seeds, --adapt (global novelty vs `runs/ref110_ex7.json`), frontier share 0.5, 16 procs ×
+  40 min.

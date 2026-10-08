@@ -233,7 +233,8 @@ class Archive:
         i = len(self.E)
         path = f'{self.out}/b{i:05d}.txt'
         mcmin.write_deg(path, s, sq)
-        e = dict(i=i, s=s, path=path, desc=descriptor(s, sq, self.k), roles=roles(sq), parent=parent, kind=kind,
+        root = i if parent < 0 else self.E[parent].get('root', parent)
+        e = dict(i=i, s=s, path=path, desc=descriptor(s, sq, self.k), roles=roles(sq), parent=parent, kind=kind, root=root,
                  visits=1, expanded=0, children=0, t=round(t, 1),
                  known=any(abs(s - x) < 2e-9 for x in self.known))
         self.E.append(e)
@@ -254,9 +255,16 @@ class Archive:
         self.E = d['E']
         return d.get('t', 0.0), collections.Counter(d.get('stats', {}))
 
-    def pick(self, rng, topk=8, cb=None):
+    def pick(self, rng, topk=8, cb=None, roots=None):
         cells = collections.defaultdict(list)
-        for e in self.E:
+        pool = self.E
+        if roots:                            # exploration budget: one frontier lineage, uniform over roots
+            live = [r for r in roots if any(e.get('root') == r and e['s'] < self.smax for e in self.E)]
+            if live:
+                r = rng.choice(live)
+                pool = [e for e in self.E if e.get('root') == r]
+                cb = None
+        for e in pool:
             if e['s'] < self.smax:
                 cells[tuple(e['desc'])].append(e)
         cell = cb.choose(list(cells), rng) if cb else rng.choice(list(cells))
@@ -286,6 +294,8 @@ if __name__ == '__main__':
     ap.add_argument('--same', type=float, default=1e-6, help='screened side within this of a known basin = return')
     ap.add_argument('--star', action='store_true', help='control: always expand the first start (cen7-style sampling)')
     ap.add_argument('--adapt-cells', action='store_true', help='Thompson sampling over descriptor cells for parents')
+    ap.add_argument('--frontier', help='start-path prefix marking frontier lineages (e.g. seeds110c/)')
+    ap.add_argument('--frontier-share', type=float, default=0.5, help='share of parent picks from frontier lineages')
     ap.add_argument('--novel-ref', help='json list of sides: bandit rewards only basins not within 2e-9 of these (global novelty)')
     ap.add_argument('--adapt', action='store_true', help='Thompson sampling over move kinds (reward: new below-k basin)')
     ap.add_argument('--resume', action='store_true', help='continue from <out>/state.json (time offset carried over)')
@@ -312,6 +322,7 @@ if __name__ == '__main__':
         r = hop.quench(s, sq, tmp, extra=('--no-alm',))
         if r:
             e, _ = ar.add(r[0], r[1], -1, 'start:' + os.path.basename(p), 0)
+            e['src'] = p
             print('start', p, f'{r[0]:.10f}', e['desc'], e['roles'], flush=True)
     kinds, wts = zip(*WEIGHTS.items())
     bandit = KindBandit([kk for kk, w in WEIGHTS.items() if w > 0]) if a.adapt else None
@@ -325,7 +336,10 @@ if __name__ == '__main__':
     t_start = time.time()
     with ProcessPoolExecutor(a.procs) as ex:
         def submit():
-            par = ar.E[0] if a.star else ar.pick(rng, cb=cellb)
+            fr = None
+            if a.frontier and rng.random() < a.frontier_share:
+                fr = [e['i'] for e in ar.E if e['parent'] < 0 and e['kind'].startswith('start:') and e.get('src', '').startswith(a.frontier)]
+            par = ar.E[0] if a.star else ar.pick(rng, cb=cellb, roots=fr)
             par['expanded'] += 1
             s, sq = mcmin.load_deg(par['path'])
             kind = bandit.choose(rng) if bandit else rng.choices(kinds, weights=wts)[0]
