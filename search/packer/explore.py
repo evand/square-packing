@@ -296,6 +296,8 @@ if __name__ == '__main__':
     ap.add_argument('--adapt-cells', action='store_true', help='Thompson sampling over descriptor cells for parents')
     ap.add_argument('--frontier', help='start-path prefix marking frontier lineages (e.g. seeds110c/)')
     ap.add_argument('--frontier-share', type=float, default=0.5, help='share of parent picks from frontier lineages')
+    ap.add_argument('--elite-share', type=float, default=0.0, help='share of parent picks from the global top-K basins (exploit)')
+    ap.add_argument('--elite-k', type=int, default=20)
     ap.add_argument('--novel-ref', help='json list of sides: bandit rewards only basins not within 2e-9 of these (global novelty)')
     ap.add_argument('--adapt', action='store_true', help='Thompson sampling over move kinds (reward: new below-k basin)')
     ap.add_argument('--resume', action='store_true', help='continue from <out>/state.json (time offset carried over)')
@@ -339,7 +341,11 @@ if __name__ == '__main__':
             fr = None
             if a.frontier and rng.random() < a.frontier_share:
                 fr = [e['i'] for e in ar.E if e['parent'] < 0 and e['kind'].startswith('start:') and e.get('src', '').startswith(a.frontier)]
-            par = ar.E[0] if a.star else ar.pick(rng, cb=cellb, roots=fr)
+            if not fr and a.elite_share and rng.random() < a.elite_share:
+                el = sorted((e for e in ar.E if e['s'] < k), key=lambda e: e['s'])[:a.elite_k]
+                par = rng.choices(el, weights=[1.0 / (1 + e['expanded']) for e in el])[0] if el else ar.pick(rng, cb=cellb)
+            else:
+                par = ar.E[0] if a.star else ar.pick(rng, cb=cellb, roots=fr)
             par['expanded'] += 1
             s, sq = mcmin.load_deg(par['path'])
             kind = bandit.choose(rng) if bandit else rng.choices(kinds, weights=wts)[0]

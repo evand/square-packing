@@ -596,3 +596,12 @@ Evan: more explore, less exploit; the sub-11 set at 110 was 48 certified minima 
   Cell-uniform selection gave new families ~1 % each (ex4); a cell bandit would starve them further.
 * ex7: standard starts + 34 crop seeds, --adapt (global novelty vs `runs/ref110_ex7.json`), frontier share 0.5, 16 procs ×
   40 min.
+* **ex7 (crop-seed frontier, 50 % budget, 16 procs × 40 min, 10.6 CPU-h):** 2 of 34 crop lineages entered below 11:
+  c132_74 (seed 11.031 → 6 sub-11 basins, best 10.998351; groups (21,24,65), (21,23,66), (20,24,66), (23,22,65)) and c132_14
+  (11.019 → 10.999359, (18,24,68)); the other 32 stalled at 11.0001–11.012.  All 7 certified; **5 already in the census**:
+  both outside entries land on the upper rim of the same two-channel funnel (as the 10-05 crop pass test).  Either that
+  funnel is the dominant sub-11 structure at 110 or our quench/moves funnel everything into it; not separable yet.
+  Whole run: 113 certified distinct sub-11, 13 new vs ref 599 (low per CPU: half the budget on lineages that stall).
+  Census: **429**.
+* ex8 (adaptive + elite share 0.3: parent from the global top-20 sub-11 basins, weight 1/(1+expanded)) vs ex9 (adaptive),
+  concurrent, ref 620; metric adds deep novelty (new certified < 10.9975).
