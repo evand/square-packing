@@ -253,11 +253,151 @@ fn run(a: &[String]) {
              sys.s, r_end, grow, n as f64 / (sys.s * sys.s), shape_fail, t_start.elapsed().as_secs_f64());
 }
 
+// ---------------------------------------------------------------- regional melt (10-08)
+fn verts_h(x: f64, y: f64, t: f64, h: f64) -> [(f64, f64); 4] { verts(x, y, t, h) }
+
+/// SAT gap of two squares with half-sides hi, hj.
+fn sat_gap2(xi: f64, yi: f64, ti: f64, hi: f64, xj: f64, yj: f64, tj: f64, hj: f64) -> f64 {
+    let mut best = f64::NEG_INFINITY;
+    let (dx, dy) = (xj - xi, yj - yi);
+    for &t in &[ti, ti + FRAC_PI_2, tj, tj + FRAC_PI_2] {
+        let (ax, ay) = (t.cos(), t.sin());
+        let dc = (dx * ax + dy * ay).abs();
+        let ri = hi * ((ti - t).cos().abs() + (ti - t).sin().abs());
+        let rj = hj * ((tj - t).cos().abs() + (tj - t).sin().abs());
+        best = best.max(dc - ri - rj);
+    }
+    best
+}
+
+fn sq_dist2(xi: f64, yi: f64, ti: f64, hi: f64, xj: f64, yj: f64, tj: f64, hj: f64) -> f64 {
+    if sat_gap2(xi, yi, ti, hi, xj, yj, tj, hj) <= 0.0 { return 0.0; }
+    let (a, b) = (verts_h(xi, yi, ti, hi), verts_h(xj, yj, tj, hj));
+    let mut d = f64::INFINITY;
+    for k in 0..4 { for e in 0..4 {
+        d = d.min(pt_seg(a[k].0, a[k].1, b[e], b[(e + 1) % 4]));
+        d = d.min(pt_seg(b[k].0, b[k].1, a[e], a[(e + 1) % 4]));
+    } }
+    d
+}
+
+/// Rounded squares with per-particle radius rr[i] (inner half-side 0.5 - rr[i]).
+struct Sys2 { n: usize, x: Vec<f64>, s: f64, rr: Vec<f64> }
+impl Sys2 {
+    fn ov(&self, x: f64, y: f64, t: f64, ri: f64, j: usize) -> bool {
+        let (xj, yj, tj, rj) = (self.x[3 * j], self.x[3 * j + 1], self.x[3 * j + 2], self.rr[j]);
+        let d2 = (x - xj).powi(2) + (y - yj).powi(2);
+        if d2 < 1.0 - 1e-12 { return true; }
+        let (hi, hj) = (0.5 - ri, 0.5 - rj);
+        let rc = hi * SQRT_2 + ri + hj * SQRT_2 + rj;
+        if d2 >= rc * rc { return false; }
+        let g = sat_gap2(x, y, t, hi, xj, yj, tj, hj);
+        if ri + rj <= 0.0 { return g < 0.0; }
+        if g >= ri + rj { return false; }
+        if g <= 0.0 { return true; }
+        sq_dist2(x, y, t, hi, xj, yj, tj, hj) < ri + rj
+    }
+    fn wall(&self, x: f64, y: f64, t: f64, ri: f64, s: f64) -> bool {
+        let w = (0.5 - ri) * (t.cos().abs() + t.sin().abs()) + ri;
+        x >= w && x <= s - w && y >= w && y <= s - w
+    }
+    fn ok(&self, i: usize, x: f64, y: f64, t: f64, ri: f64) -> bool {
+        self.wall(x, y, t, ri, self.s) && (0..self.n).all(|j| j == i || !self.ov(x, y, t, ri, j))
+    }
+    fn all_ok(&self, xs: &[f64], s: f64) -> bool {
+        let tmp = Sys2 { n: self.n, x: xs.to_vec(), s, rr: self.rr.clone() };
+        (0..self.n).all(|i| { let (x, y, t) = (xs[3 * i], xs[3 * i + 1], xs[3 * i + 2]);
+            tmp.wall(x, y, t, tmp.rr[i], s) && (i + 1..self.n).all(|j| !tmp.ov(x, y, t, tmp.rr[i], j)) })
+    }
+}
+
+/// anneal melt --in F --out G --cx X --cy Y --rad R --rmax 0.1 --sweeps 4000 --bp 2000 --seed K
+/// Squares within R of (cx, cy) get corner radius rmax (1 - d/R) (ramp up over t in [0, .25], hold to .55, down to 0 by
+/// .85, then square); only squares within R + 1.5 move; NPT box moves at pressure bp.  Residual rounding at the end is
+/// removed by the smallest uniform box growth.  Output packer format + JSON summary.
+fn melt(a: &[String]) {
+    let inp: String = arg(a, "--in", String::new());
+    let out: String = arg(a, "--out", String::from("melt.txt"));
+    let (cx, cy, rad): (f64, f64, f64) = (arg(a, "--cx", 0.0), arg(a, "--cy", 0.0), arg(a, "--rad", 2.5));
+    let rmax: f64 = arg(a, "--rmax", 0.1);
+    let sweeps: usize = arg(a, "--sweeps", 4000);
+    let bp: f64 = arg(a, "--bp", 2000.0);
+    let mut rng = Rng::new(arg(a, "--seed", 1u64));
+    let txt = std::fs::read_to_string(&inp).expect("read --in");
+    let mut it = txt.split_whitespace().map(|w| w.parse::<f64>().unwrap());
+    let n = it.next().unwrap() as usize;
+    let s0 = it.next().unwrap();
+    let mut x = Vec::with_capacity(3 * n);
+    for _ in 0..n { let (a1, b1, c1) = (it.next().unwrap(), it.next().unwrap(), it.next().unwrap()); x.extend_from_slice(&[a1, b1, c1.to_radians()]); }
+    let w: Vec<f64> = (0..n).map(|i| (1.0 - (x[3 * i] - cx).hypot(x[3 * i + 1] - cy) / rad).max(0.0)).collect();
+    let mobile: Vec<usize> = (0..n).filter(|&i| (x[3 * i] - cx).hypot(x[3 * i + 1] - cy) < rad + 1.5).collect();
+    let mut sys = Sys2 { n, x, s: s0, rr: vec![0.0; n] };
+    let prof = |t: f64| -> f64 { if t < 0.25 { t / 0.25 } else if t < 0.55 { 1.0 } else if t < 0.85 { 1.0 - (t - 0.55) / 0.3 } else { 0.0 } };
+    let (mut dt, mut dr, mut dv) = (0.02f64, 0.02f64, 1e-3f64);
+    let (mut at, mut nt, mut av, mut nv) = (0usize, 0usize, 0usize, 0usize);
+    let t0 = std::time::Instant::now();
+    for sw in 0..sweeps {
+        let tt = sw as f64 / sweeps as f64;
+        // shape: each particle toward its scheduled radius (growing the shape only where it fits)
+        for &i in &mobile {
+            let target = rmax * w[i] * prof(tt);
+            if (target - sys.rr[i]).abs() < 1e-15 { continue; }
+            let (xi, yi, ti) = (sys.x[3 * i], sys.x[3 * i + 1], sys.x[3 * i + 2]);
+            if target > sys.rr[i] || sys.ok(i, xi, yi, ti, target) { sys.rr[i] = target; }
+        }
+        for _ in 0..mobile.len() {
+            let i = mobile[rng.idx(mobile.len())];
+            let (xi, yi, ti) = (sys.x[3 * i], sys.x[3 * i + 1], sys.x[3 * i + 2]);
+            let (nx, ny, nth) = if rng.f() < 0.5 { (xi + dt * rng.u(), yi + dt * rng.u(), ti) } else { (xi, yi, ti + dr * rng.u()) };
+            nt += 1;
+            if sys.ok(i, nx, ny, nth, sys.rr[i]) { sys.x[3 * i] = nx; sys.x[3 * i + 1] = ny; sys.x[3 * i + 2] = nth; at += 1; }
+        }
+        if sw % 4 == 0 {
+            let dl = dv * rng.u();
+            let f = (0.5 * dl).exp();
+            let s1 = sys.s * f;
+            let lacc = -bp * (s1 * s1 - sys.s * sys.s) + (n as f64 + 1.0) * dl;
+            nv += 1;
+            if lacc >= 0.0 || rng.f() < lacc.exp() {
+                let xf: Vec<f64> = sys.x.iter().enumerate().map(|(k, &v)| if k % 3 == 2 { v } else { v * f }).collect();
+                if f >= 1.0 || sys.all_ok(&xf, s1) { sys.x = xf; sys.s = s1; av += 1; }
+            }
+        }
+        if sw % 50 == 49 {
+            let ra = at as f64 / nt.max(1) as f64;
+            let fa = if ra > 0.45 { 1.1 } else if ra < 0.35 { 0.9 } else { 1.0 };
+            dt = (dt * fa).clamp(1e-7, 0.3); dr = (dr * fa).clamp(1e-7, 0.3);
+            let rv = av as f64 / nv.max(1) as f64;
+            dv = (dv * if rv > 0.45 { 1.1 } else if rv < 0.35 { 0.9 } else { 1.0 }).clamp(1e-9, 0.05);
+            at = 0; nt = 0; av = 0; nv = 0;
+        }
+    }
+    let left = sys.rr.iter().filter(|&&r| r > 0.0).count();
+    let mut grow = 1.0;
+    if left > 0 {
+        sys.rr = vec![0.0; n];
+        let xs = sys.x.clone();
+        let mut f = 1.0;
+        loop {
+            let xf: Vec<f64> = xs.iter().enumerate().map(|(k, &v)| if k % 3 == 2 { v } else { v * f }).collect();
+            if sys.all_ok(&xf, sys.s * f) { sys.x = xf; sys.s *= f; grow = f; break; }
+            f *= 1.001;
+            if f > 1.5 { break; }
+        }
+    }
+    let mut txt = format!("{} {:?}\n", n, sys.s);
+    for i in 0..n { txt += &format!("{:?} {:?} {:?}\n", sys.x[3 * i], sys.x[3 * i + 1], (sys.x[3 * i + 2].to_degrees()).rem_euclid(90.0)); }
+    std::fs::write(&out, txt).unwrap();
+    println!("{{\"s\": {:.12}, \"s0\": {:.12}, \"mobile\": {}, \"rounded_left\": {}, \"grow\": {:.5}, \"sec\": {:.2}}}",
+             sys.s, s0, mobile.len(), left, grow, t0.elapsed().as_secs_f64());
+}
+
 fn main() {
     let a: Vec<String> = std::env::args().collect();
     match a.get(1).map(|s| s.as_str()) {
         Some("test") => test(),
         Some("run") => run(&a),
+        Some("melt") => melt(&a),
         _ => eprintln!("usage: anneal test | anneal run --n N --seed K --sweeps S --bp0 --bp1 --t0 --t1 --p --out F"),
     }
 }

@@ -80,9 +80,13 @@ def main(a):
             os.makedirs(rd)
             seeds = [(S['n'][str(n + k)]['path'], k, n, f'{rd}/seed_k{k}.txt', S['round'] * 10 + k) for k in (1, 2)]
             res = run_jobs(seed_job, seeds, procs=2, timeout=1800)
-            starts = [v['path']] + [sd[3] for sd, r in zip(seeds, res) if isinstance(r, float)]
+            carried = []
+            for q, cp in enumerate(v.get('carry', [])):         # lineage carry from the previous round(s)
+                dst = f'{rd}/seed_c{q}.txt'; shutil.copy(cp, dst); carried.append(dst)
+            starts = [v['path']] + carried + [sd[3] for sd, r in zip(seeds, res) if isinstance(r, float)]
             cmd = [sys.executable, os.path.join(HERE, 'explore.py'), '--n', str(n), '--starts', *starts, '--procs', str(a.procs_per),
-                   '--minutes', str(a.minutes), '--seed', str(S['round']), '--out', rd, '--adapt', '--elite-share', '0.3']
+                   '--minutes', str(a.minutes), '--seed', str(S['round']), '--out', rd, '--adapt', '--elite-share', '0.3',
+                   '--frontier', f'{rd}/seed', '--frontier-share', str(a.frontier_share)]
             p = subprocess.Popen(cmd, stdout=open(f'{rd}/out', 'w'), stderr=subprocess.STDOUT, start_new_session=True)
             live[p] = n
             S['log'].append(dict(t=round(time.time() - S['t0']), ev='start', n=n, round=S['round'], seeds=[r for r in res]))
@@ -104,10 +108,27 @@ def main(a):
                     if str(m) in S['n'] and m >= a.lo:
                         S['n'][str(m)]['dirty'] = True
                         S['n'][str(m)]['dirtied'] = time.time()
+            # carry: best 3 distinct basins of the non-record lineages (roots = seed / carried starts), below the ceiling
+            E = [json.loads(l) for l in open(f'{rd}/archive.jsonl')] if os.path.exists(f'{rd}/archive.jsonl') else []
+            roots = {e['i'] for e in E if e['parent'] < 0 and e['kind'].startswith('start:seed')}
+            k_n = math.ceil(math.sqrt(n) - 1e-12)
+            lin = sorted((e for e in E if e.get('root', e['i']) in roots and e['s'] < k_n + 0.05), key=lambda e: e['s'])
+            car, seen = [], []
+            for e in lin:
+                if all(abs(e['s'] - x) > 1e-7 for x in seen):
+                    seen.append(e['s']); dst = f'{a.out}/carry_{n}_{len(car)}.txt'; shutil.copy(e['path'], dst + '.tmp'); car.append(dst)
+                if len(car) == 3:
+                    break
+            for c in car: os.replace(c + '.tmp', c)
+            v['carry'] = car
+            lb = seen[0] if seen else None
+            lgain = (v.get('lin_best', float('inf')) - lb) if lb is not None and v.get('lin_best') is not None else 0.0
+            if lb is not None and (v.get('lin_best') is None or lb < v['lin_best']): v['lin_best'] = lb
+            gain = gain + max(0.0, lgain) * 0.1        # scheduling credit for lineage progress too (record gains dominate)
             v['gains'].append(gain)
             S['log'].append(dict(t=round(time.time() - S['t0']), ev='done', n=n, best=v['best'], gain=gain,
                                  vs_reg=v['best'] - v['reg'], vs_squish=(v['best'] - v['squish']) if v['squish'] else None))
-            print(f'{time.time() - S["t0"]:7.0f}s n={n} best {v["best"]:.10f} gain {gain:.2e} vs reg {v["best"] - v["reg"]:+.2e}'
+            print(f'{time.time() - S["t0"]:7.0f}s n={n} lineage {v.get("lin_best") or 0:.10f} best {v["best"]:.10f} gain {gain:.2e} vs reg {v["best"] - v["reg"]:+.2e}'
                   + (f' vs SQUISH {v["best"] - v["squish"]:+.2e}' if v['squish'] else ''), flush=True)
             json.dump(S, open(stp + '.tmp', 'w')); os.replace(stp + '.tmp', stp)
     json.dump(S, open(stp + '.tmp', 'w')); os.replace(stp + '.tmp', stp)
@@ -117,19 +138,19 @@ def main(a):
 def report(out):
     S = json.load(open(f'{out}/state.json'))
     print(f'== {out}: {S["round"]} rounds')
-    print(f'  {"n":>4} {"rounds":>6} {"register":>15} {"best":>15} {"gain":>9} {"SQUISH":>15} {"frac of SQUISH gain":>19}')
+    print(f'  {"n":>4} {"rounds":>6} {"register":>15} {"best":>15} {"gain":>9} {"SQUISH":>15} {"frac of SQUISH gain":>19} {"lineage best":>15}')
     for n, v in sorted(S['n'].items(), key=lambda q: int(q[0])):
         sq = v['squish']
         fr = (v['reg'] - v['best']) / (v['reg'] - sq) if sq and v['reg'] - sq > 1e-12 else None
         print(f'  {n:>4} {v["rounds"]:6d} {v["reg"]:15.10f} {v["best"]:15.10f} {v["reg"] - v["best"]:9.2e} '
-              f'{(f"{sq:15.10f}") if sq else " " * 15} {(f"{fr:19.2f}") if fr is not None else ""}')
+              f'{(f"{sq:15.10f}") if sq else " " * 15} {(f"{fr:19.2f}") if fr is not None else " " * 19} {v.get("lin_best") or 0:15.10f}')
 
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument('--lo', type=int); ap.add_argument('--hi', type=int); ap.add_argument('--minutes', type=float, default=4)
     ap.add_argument('--procs-per', type=int, default=2); ap.add_argument('--slots', type=int, default=8)
-    ap.add_argument('--hours', type=float, default=1); ap.add_argument('--out'); ap.add_argument('--report')
+    ap.add_argument('--hours', type=float, default=1); ap.add_argument('--frontier-share', type=float, default=0.7); ap.add_argument('--out'); ap.add_argument('--report')
     a = ap.parse_args()
     if a.report:
         report(a.report)
