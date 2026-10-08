@@ -819,3 +819,7 @@ smallest box growth <= 5 %.  Finish: `fq quench` (loosen 1.02) + grid test.  ~3 
   but at these budgets 0.04-0.1 above records except at small n (37 hit).  Not competitive at n = 110 or as explorer seeds
   yet.  Untried: much longer anneals / replica exchange in bP at fixed r schedule, r tied to packing fraction instead of
   progress, anneal from a record's neighbourhood (partial melt: r up to ~0.1 locally, then re-cool) as a large-move proposal.
+* **Explorer test (`runs/be_cross`, graded tier, base vs base + `--cross 2`, 5 paired reps x 1 proc x 5 min):** -0.038, 95 %
+  [-0.067, +0.135]; s108 / s179 worse (s179 basins per run 24 vs 47: the per-proposal alignment, 30 candidates x 8
+  symmetries x Hungarian in Python, costs seconds at n = 179), rd263 / rd237 unchanged.  Parked as an available move (cheap
+  fix if revisited: cache alignments per archive entry, fewer candidates).
