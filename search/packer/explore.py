@@ -110,6 +110,7 @@ def mv_mirror(s, sq, rng, a):
 
 
 MOVES = dict(mcmin.MOVES, bigkick=mv_bigkick, rowslide=mv_rowslide, chainshift=mv_chainshift, mirror=mv_mirror)
+CROSS_P, CROSS_K, CROSS_CANDS = 5, 3, 30
 WEIGHTS = dict(kick=2, kicksym=1, lkick=2, bigkick=2, crot=1, aswap=2, band=1, reinsert=0.5, rowslide=2, chainshift=2, mirror=2)
 
 
@@ -140,7 +141,20 @@ def work(job):
     pextra = tuple(job[9]) if len(job) > 9 else ()
     from layout import full_lines
     rng = random.Random(seed)
-    prop, desc = MOVES[kind](s, sq, rng, A)
+    if kind == 'cross':                     # recombination (cross.py): best-fit K of P same-type archive parents
+        import cross
+        cands = job[10] if len(job) > 10 else []
+        al = []
+        for pth in cands:
+            sQ, Q = mcmin.load_deg(pth)
+            d, Qa = cross.align(sq, s, Q, sQ)
+            al.append((d, Qa))
+        al.sort(key=lambda c: c[0])
+        parents = [sq] + [c[1] for c in al[:CROSS_P - 1]]
+        prop = cross.recombine(f'bestfit:{CROSS_K}', s, parents, rng) if len(parents) > 1 else MOVES['kick'](s, sq, rng, A)[0]
+        desc = f'cross P{len(parents)} K{CROSS_K} d{al[0][0] if al else 0:.3f}'
+    else:
+        prop, desc = MOVES[kind](s, sq, rng, A)
     tmp = tempfile.mkdtemp()
     loosen = rng.choice(('1.0', '1.02', '1.05'))
     t0 = time.time()
@@ -305,6 +319,7 @@ if __name__ == '__main__':
     ap.add_argument('--novel-ref', help='json list of sides: bandit rewards only basins not within 2e-9 of these (global novelty)')
     ap.add_argument('--polish-extra', default='', help='extra fq args for the stage-2 polish (e.g. "--stag-tol 1e-7": search precision)')
     ap.add_argument('--final-polish', type=int, default=0, help='at the end, full default polish of the K best archive entries')
+    ap.add_argument('--cross', type=float, default=0, help='weight of the recombination move (cross.py bestfit 3 of 5); 0 = off')
     ap.add_argument('--adapt', action='store_true', help='Thompson sampling over move kinds (reward: new below-k basin)')
     ap.add_argument('--resume', action='store_true', help='continue from <out>/state.json (time offset carried over)')
     ap.add_argument('--out'); ap.add_argument('--report'); ap.add_argument('--seed', type=int, default=1)
@@ -332,6 +347,8 @@ if __name__ == '__main__':
             e, _ = ar.add(r[0], r[1], -1, 'start:' + os.path.basename(p), 0)
             e['src'] = p
             print('start', p, f'{r[0]:.10f}', e['desc'], e['roles'], flush=True)
+    if a.cross:
+        WEIGHTS['cross'] = a.cross
     kinds, wts = zip(*WEIGHTS.items())
     bandit = KindBandit([kk for kk, w in WEIGHTS.items() if w > 0]) if a.adapt else None
     cellb = CellBandit() if a.adapt_cells else None
@@ -356,7 +373,8 @@ if __name__ == '__main__':
             s, sq = mcmin.load_deg(par['path'])
             kind = bandit.choose(rng) if bandit else rng.choices(kinds, weights=wts)[0]
             f = ex.submit(work, (s, sq, kind, rng.randrange(1 << 30), k, [e['s'] for e in ar.E], a.same, ar.smax,
-                                       (min(e['s'] for e in ar.E) + a.polish_margin) if a.polish_margin else float('inf'), a.polish_extra.split()))
+                                       (min(e['s'] for e in ar.E) + a.polish_margin) if a.polish_margin else float('inf'), a.polish_extra.split(),
+                                       rng.sample(xp, min(CROSS_CANDS, len(xp))) if kind == 'cross' and (xp := [e['path'] for e in ar.E if e['s'] < ar.smax and e['i'] != par['i']]) else []))
             pend[f] = par
         for _ in range(a.procs):
             submit()

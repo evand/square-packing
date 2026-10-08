@@ -777,3 +777,20 @@ Evan: polish only until the contact graph is identified, finish exactly, no fixe
   -0.004, 95 % [-0.15, +0.17]: no measurable search gain.  More quenches per CPU do not convert into better packings at this
   budget: the limit is the proposals, not polish throughput.  Benchmark note: scores are quantised by basins (rd237 sits at
   0.43 = one basin in 9/10 reps); the graded tier still needs harder / finer tasks.
+
+## Recombination of same-type basins (10-08, Evan; `cross.py`, `runs/cx1`, `cx2`, `cx3_P*`)
+Parents = P nearest (matching distance, best of 8 symmetries, Hungarian) of 30 sampled sub-11 basins of `runs/ex10`, aligned
+to a random reference's square IDs; start pose per ID from one parent; explorer screen + polish; novelty vs every side seen
+before (certified census + all explorer archives, ~40k sides).  Variants: uniform, bestfit:K (Evan: random ID order, K of P
+parents sampled per ID, least overlap with placed squares), field / softfield (smooth random plane-wave field per parent:
+hard / soft patches), half (cut-and-splice control), kick control.  Paired trials (same reference + candidates).
+* **Not destructive:** 0 grid, 0 discards in 3300 proposals; 87-98 % land below 11; fewer parent returns than kicks
+  (26-49 vs 67 of 300).  Half-plane cuts return to a parent most (59/150).
+* **Novelty ~ kicks:** distinct new sub-11 per 300 trials: kick 16; P = 5: K2 16, K3 28, K5 26; P = 10: uniform 18, K2 26,
+  K3 14, K5 21, K8 22; P = 20: K3 20, K5 30, K8 21 (Poisson +-5).  No K / P trend; best cells ~1.7x kicks at the noise
+  edge; deep (< 10.9975) new 0-1 per cell, kicks included.  The 110 funnel is saturated for every move (census 496,
+  ~1 new per 10-20 proposals), so it cannot separate moves.  Literature for the K / P choice: gene-pool / multi-parent
+  recombination (Muehlenbein & Voigt 1996; Eiben et al. 1994), tournament size (Goldberg & Deb 1991), greedy crossover
+  (Grefenstette 1985, TSP), parameterized uniform crossover (Syswerda 1989; Spears & De Jong 1991), cut-and-splice (Deaven
+  & Ho 1995).
+* Explorer move `--cross W` (bestfit 3 of 5 nearest of 30 sampled archive basins); test on the graded benchmark: `runs/be_cross`.

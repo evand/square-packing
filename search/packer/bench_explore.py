@@ -40,6 +40,7 @@ VARIANTS = {
     'fixed': ['--elite-share', '0.3'],
     'pm3': ['--adapt', '--elite-share', '0.3', '--polish-margin', '3e-3'],
     'st7': ['--adapt', '--elite-share', '0.3', '--polish-extra=--stag-tol 1e-7', '--final-polish', '5'],
+    'cross': ['--adapt', '--elite-share', '0.3', '--cross', '2'],
     'base_fp': ['--adapt', '--elite-share', '0.3', '--final-polish', '5'],
 }
 
