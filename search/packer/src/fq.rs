@@ -468,7 +468,8 @@ fn snap(p: &mut Prob, x: &[f64], choice: &mut [Option<usize>], cc_tol: f64) -> V
 /// Trust-region SLP on the lifted problem with face-branch separators (snapped each iteration), and a greedy branch
 /// search over ambiguous (corner-corner-like) pairs when the step stalls.
 /// Returns (s, x, iterations, final R, flips accepted).
-fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt) -> (f64, Vec<f64>, usize, f64, usize) {
+fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f64, f64, usize)>) -> (f64, Vec<f64>, usize, f64, usize) {
+    let tp = Instant::now();
     let n = p.n;
     let mut x = x0.to_vec();
     let mut s = s0;
@@ -562,6 +563,7 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt) -> (f64, Vec<f64>, usize,
         if rho >= 0.1 {
             x.copy_from_slice(&v1[..3 * n]);
             s = v1[3 * n];
+            trace.push((it, tp.elapsed().as_secs_f64(), m1, flips));
             if rho > 0.5 && wmax > 0.5 { r = (2.0 * r).min(o.r0 * 4.0); }
         } else {
             r /= 4.0;
@@ -805,19 +807,24 @@ fn main() {
                 skin: arg(&a, "--skin", 0.3), max_outer: arg(&a, "--outer", 60), verbose: a.iter().any(|t| t == "--v"),
             };
             let (mut sq, mut xq, nev, outer, viol, mut prob) = quench(s1, &x, &o);
+            let t_alm = t0.elapsed().as_secs_f64();
+            let mut xc = xq.clone();
+            let s_coarse = repair(sq, &mut xc, 1e-13);
+            let s_alm0 = sq;
             let mut pit = 0;
             let mut pr = 0.0;
             let mut flips = 0;
+            let mut trace: Vec<(usize, f64, f64, usize)> = Vec::new();
             if !a.iter().any(|t| t == "--no-polish") {
                 let po = POpt { r0: arg(&a, "--r0", 1e-3), rmin: arg(&a, "--rmin", 1e-10), maxit: arg(&a, "--pit", 300), cc_tol: arg(&a, "--cc-tol", 1e-7), flip_top: arg(&a, "--flip-top", 8), verbose: o.verbose };
-                let (s2, x2, it, rr, fl) = polish(&mut prob, sq, &xq, &po);
+                let (s2, x2, it, rr, fl) = polish(&mut prob, sq, &xq, &po, &mut trace);
                 sq = s2; xq = x2; pit = it; pr = rr; flips = fl;
             }
             let sr = repair(sq, &mut xq, 1e-13);
             let (mg, mw) = check(sr, &xq);
             if let Some(out) = sarg(&a, "--out") { write_cfg(&out, sr, &xq); }
-            println!("{{\"s\": {:.15}, \"s_alm\": {:.15}, \"viol\": {:.2e}, \"evals\": {}, \"outer\": {}, \"slp_it\": {}, \"slp_r\": {:.1e}, \"flips\": {}, \"min_gap\": {:.2e}, \"min_wall\": {:.2e}, \"sec\": {:.3}}}",
-                     sr, sq, viol, nev, outer, pit, pr, flips, mg, mw, t0.elapsed().as_secs_f64());
+            println!("{{\"s\": {:.15}, \"s_alm\": {:.15}, \"viol\": {:.2e}, \"evals\": {}, \"outer\": {}, \"slp_it\": {}, \"slp_r\": {:.1e}, \"flips\": {}, \"min_gap\": {:.2e}, \"min_wall\": {:.2e}, \"sec\": {:.3}, \"s_coarse\": {:.15}, \"t_alm\": {:.3}, \"s_alm0\": {:.15}, \"trace\": [{}]}}",
+                     sr, sq, viol, nev, outer, pit, pr, flips, mg, mw, t0.elapsed().as_secs_f64(), s_coarse, t_alm, s_alm0, trace.iter().map(|q| format!("[{},{:.4},{:.15},{}]", q.0, q.1, q.2, q.3)).collect::<Vec<_>>().join(","));
         }
         "gradcheck" => {
             // random kick so many constraints are active, then compare analytic vs central differences

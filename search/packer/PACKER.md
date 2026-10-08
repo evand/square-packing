@@ -470,3 +470,18 @@ basin hopping + polish); our quench (soft squeeze + slp2) costs 4–8 s at n = 1
   At 110 the result is independent of mu cap / skin (same 6 minima for every setting).
 * Next: hopping driver on the SQUISH set (benchmark: from each pre-SQUISH register packing, CPU budget per n, reach their
   side?); speed (ALM evals dominate at mu <= 1e2 only for big kicks; LPs ~40 ms each).
+
+## SQUISH benchmark v0, and how much polish per step (10-07; `hop.py`, `polish_value.py`, `runs/hop0`, `runs/pv0`, `runs/pv1`)
+* **hop0:** fq basin hopping (global kicks 0.003–0.03 / local kicks r 1.5–3.5, sigma 0.05–0.2; Metropolis T 1e-5; reset to
+  best after 40) from each pre-SQUISH register packing (batch inputs, 10-05), 10 min per n, 23 n of SQUISH's table: **nothing**
+  except n = 126 (−1.9e-4, 13 % of SQUISH's gain).  Matches SQUISH's lineage (their big gains are new seeds: (n+k) − k from
+  neighbours, grafts of small-n records, carving), not local search from the record.  Median quench 0.3 s (108) … 28 s (263,
+  303).  Loosen 1.02 throws some records out of their basin before the first step (154: +1.0e-3, 238: +6e-5).
+* **Polish value (Evan: are we over-polishing?).**  Per hop proposal: ALM-only side, side after k accepted SLP iterations,
+  full; 240 proposals at n = 108–263.  Polish = 88–99 % of quench time.  |s_k − s_final| median 7e-5 (k = 0), 2e-6 (4),
+  1e-8 (8), 5e-11 (12); 90 % tail ~1e-5 until the flip search (up to 3e-2 in rare cases).  Cost k = 4: 0.28, k = 8: 0.40.
+  Decision discrepancy D(k, T) = mean |a_T(s_k) − a_T(s_final)| over same-n pairs: T = 1e-3: k = 3 → 0.02; T = 1e-4: k = 8 →
+  0.015; T <= 1e-5: floor 0.03–0.06 until the full polish.  Lens (Evan): polish depth = energy-evaluation fidelity, so effort
+  should scale with T; for greedy/cold chains use delayed acceptance (Christen & Fox 2005): screen at k ~ 4–8, full polish
+  only within a few × the k-error of the current state.  A lazy rule on the ALM-only side alone saves ~2× but misses a
+  quarter of the good basins (130: 17/24 at margin 1e-4).
