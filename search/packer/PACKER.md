@@ -761,3 +761,19 @@ Evan: polish only until the contact graph is identified, finish exactly, no fixe
   are meaningless (max 157, 339 / 1057 negative: separator rows are massively redundant), so H_L is garbage; QDLDL also
   needs an augmented-Lagrangian top-left (H + rho J^T J) to stay quasi-definite.  A real finish needs the unlifted
   corner-on-side contacts (exactsolve's form) in Rust.  Not pursued: the prototype bounds its value at ~12 % at 110.
+
+## Cheap polish changes: trust-region rule, precision stop, search test (10-08; `fq --tr-grow/--tr-shrink`, `runs/be_st7`)
+* **Crawl anatomy (`FQ_TR=1` per-iteration trace, p0004 at 110):** a 4-step trust-region cycle (R doubles at rho > 0.5,
+  the larger step is rejected, R / 4), accepted steps gain ~half their 1e-9 prediction, slope pred/R ~ 1e-5 persists for
+  hundreds of iterations: a long, gently sloped curved valley.
+* **Replay (`bench/polish110`, `polish237`, vs the default polish):**
+  - TR rule grow at rho > 0.75, shrink /2: 0.94x time at both n; at 237 22 lower / 11 higher (up to 5.6e-4): a different
+    path, not systematically better.  Dropped.
+  - Precision stop `--stag-tol 1e-7` (s gain < 1e-7 over 15 iterations; default 2e-9): 110 0.79x time (19/200 higher, p90
+    4.5e-10); **237 0.63x time** (32/80 higher; p90 1e-6, max 3.5e-5; cap-hitters 12 -> 2).  Hard cap 60 (reference): 0.39x,
+    max error 8.7e-3.
+* **Search test (explorer `--polish-extra=--stag-tol 1e-7 --final-polish 5` vs base; graded tier s108 s179 rd263 rd237,
+  5 paired reps x 1 proc x 5 min):** +30-50 % basins per run (s108 median 103 vs 77, rd263 28 vs 18), score difference
+  -0.004, 95 % [-0.15, +0.17]: no measurable search gain.  More quenches per CPU do not convert into better packings at this
+  budget: the limit is the proposals, not polish throughput.  Benchmark note: scores are quantised by basins (rd237 sits at
+  0.43 = one basin in 9/10 reps); the graded tier still needs harder / finer tasks.

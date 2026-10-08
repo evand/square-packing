@@ -29,6 +29,7 @@ RD_N = (106, 177, 236, 130, 263, 307, 237, 210, 271, 131, 180, 305)
 SQUISH = {'s108': (108, 10.909940073445), 's179': (179, 13.883795490512), 'r126': (126, 11.773303606607),
           'r237': (237, 15.903676235191)}
 TIERS = {'quick': ['s108', 's179', 'rd106', 'rd130', 'rd177', 'rd210', 'rd236', 'rd263'],
+         'graded': ['s108', 's179', 'rd263', 'rd237'],
          'full': ['s108', 's179', 'r126', 'r237'] + [f'rd{n}' for n in RD_N]}
 CHECK = (0.125, 0.25, 0.5, 1.0)
 
@@ -38,6 +39,8 @@ VARIANTS = {
     'elite0': ['--adapt'],
     'fixed': ['--elite-share', '0.3'],
     'pm3': ['--adapt', '--elite-share', '0.3', '--polish-margin', '3e-3'],
+    'st7': ['--adapt', '--elite-share', '0.3', '--polish-extra=--stag-tol 1e-7', '--final-polish', '5'],
+    'base_fp': ['--adapt', '--elite-share', '0.3', '--final-polish', '5'],
 }
 
 

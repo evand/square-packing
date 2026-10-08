@@ -136,7 +136,8 @@ def descriptor(s, sq, k):
 
 def work(job):
     """One proposal: move, screen, (maybe) full polish, grid check.  Runs in a worker process."""
-    s, sq, kind, seed, k, known_sides, same, smax, pol_above = job
+    s, sq, kind, seed, k, known_sides, same, smax, pol_above = job[:9]
+    pextra = tuple(job[9]) if len(job) > 9 else ()
     from layout import full_lines
     rng = random.Random(seed)
     prop, desc = MOVES[kind](s, sq, rng, A)
@@ -160,7 +161,7 @@ def work(job):
     if s1 > pol_above:                       # far from the best: keep the screened state, no full polish
         return dict(out, status='new?', s=s1, sq=sq1, lines=False, s_screen=s1, unpolished=True, sec=time.time() - t0)
     hop.EXTRA[:] = ['--loosen', '1.0']
-    r2 = hop.quench(s1, sq1, tmp, extra=('--no-alm',))
+    r2 = hop.quench(s1, sq1, tmp, extra=('--no-alm',) + pextra)
     if r2 is None:
         return dict(out, status='fail', sec=time.time() - t0)
     s2, sq2, _ = r2
@@ -302,6 +303,8 @@ if __name__ == '__main__':
     ap.add_argument('--elite-k', type=int, default=20)
     ap.add_argument('--polish-margin', type=float, default=0.0, help='full polish only if screened side < best + margin (0 = always)')
     ap.add_argument('--novel-ref', help='json list of sides: bandit rewards only basins not within 2e-9 of these (global novelty)')
+    ap.add_argument('--polish-extra', default='', help='extra fq args for the stage-2 polish (e.g. "--stag-tol 1e-7": search precision)')
+    ap.add_argument('--final-polish', type=int, default=0, help='at the end, full default polish of the K best archive entries')
     ap.add_argument('--adapt', action='store_true', help='Thompson sampling over move kinds (reward: new below-k basin)')
     ap.add_argument('--resume', action='store_true', help='continue from <out>/state.json (time offset carried over)')
     ap.add_argument('--out'); ap.add_argument('--report'); ap.add_argument('--seed', type=int, default=1)
@@ -353,7 +356,7 @@ if __name__ == '__main__':
             s, sq = mcmin.load_deg(par['path'])
             kind = bandit.choose(rng) if bandit else rng.choices(kinds, weights=wts)[0]
             f = ex.submit(work, (s, sq, kind, rng.randrange(1 << 30), k, [e['s'] for e in ar.E], a.same, ar.smax,
-                                       (min(e['s'] for e in ar.E) + a.polish_margin) if a.polish_margin else float('inf')))
+                                       (min(e['s'] for e in ar.E) + a.polish_margin) if a.polish_margin else float('inf'), a.polish_extra.split()))
             pend[f] = par
         for _ in range(a.procs):
             submit()
@@ -397,5 +400,13 @@ if __name__ == '__main__':
                 if bandit: print('  bandit', bandit.summary(), flush=True)
                 print(f'{time.time() - t0:7.0f}s basins {len(ar.E)} sub-k {len(sub)} (new vs known {sum(not e["known"] for e in sub)}) '
                       f'best {min(e["s"] for e in ar.E):.10f} cells {len({tuple(e["desc"]) for e in ar.E})} | {dict(stats)}', flush=True)
+    if a.final_polish:                        # census step: finish the best entries at full precision
+        hop.EXTRA[:] = ['--loosen', '1.0']
+        for e in sorted((e for e in ar.E if e['s'] < ar.smax), key=lambda e: e['s'])[:a.final_polish]:
+            s0, sq0 = mcmin.load_deg(e['path'])
+            r = hop.quench(s0, sq0, tmp, extra=('--no-alm',))
+            if r and r[0] < e['s'] - 1e-12:
+                e2, isnew = ar.add(r[0], r[1], e['i'], 'refine', time.time() - t0)
+                print(f'refine b{e["i"]} {e["s"]:.12f} -> {r[0]:.12f}', flush=True)
     ar.dump(stats, time.time() - t0)
     report(a.out)

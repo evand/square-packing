@@ -24,6 +24,7 @@ use std::sync::OnceLock;
 
 // --dump-lp DIR: append every polish LP (rows, columns with stable keys, Clarabel time) to DIR/lp-<pid>.jsonl
 static DUMP_LP: OnceLock<String> = OnceLock::new();
+static TRACE_TR: OnceLock<bool> = OnceLock::new();
 static LP_TAG: AtomicU8 = AtomicU8::new(0); // 0 step, 1 second-order correction, 2 flip search, 3 final force network
 static LP_IT: AtomicUsize = AtomicUsize::new(0);
 static IDENT_FPS: std::sync::Mutex<Vec<u64>> = std::sync::Mutex::new(Vec::new()); // --ident: load-network fingerprint per accepted step
@@ -595,7 +596,7 @@ fn hess_lagr2(p: &Prob, v: &[f64], cons: &[Con], z: &[f64], convex: bool) -> Vec
     out
 }
 
-struct POpt { sqp: bool, rmax: f64, r0: f64, rmin: f64, maxit: usize, cc_tol: f64, flip_top: usize, ident: bool, verbose: bool, stag_w: usize, stag_tol: f64, finish: bool }
+struct POpt { sqp: bool, rmax: f64, r0: f64, rmin: f64, maxit: usize, cc_tol: f64, flip_top: usize, ident: bool, verbose: bool, stag_w: usize, stag_tol: f64, finish: bool, tr_grow: f64, tr_shrink: f64 }
 
 /// Snap each pair's separator to a face branch: `choice[pk]` = Some(face) forces that face while it stays ambiguous,
 /// None = the face with the largest gap.  Returns the ambiguous pairs (>= 2 faces within cc_tol of contact and of the
@@ -979,6 +980,7 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
         p.tie(&v0, &mut v1);
         let mut m1 = merit(p, &v1);
         let mut rho = (m0 - m1) / pred;
+        let rho_pre = rho;
         let wmax = w.iter().fold(0.0f64, |a, &b| a.max(b.abs()));
         if rho < 0.75 {
             // second-order correction: shift each row by its curvature error at the trial point
@@ -994,6 +996,7 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
                 if m2 < m1 { m1 = m2; v1 = v2; rho = (m0 - m1) / pred; }
             }
         }
+        if TRACE_TR.get_or_init(|| std::env::var("FQ_TR").is_ok()).clone() { eprintln!("tr {it} R {r:.2e} pred {pred:.2e} rho0 {rho_pre:.2e} rho {rho:.3} wmax {wmax:.2} s {:.13} acc {}", s, rho >= 0.1); }
         if o.verbose && (it < 20 || it % 10 == 0) { eprintln!("  slp {it}: R {r:.1e} s {:.13} pred {pred:.2e} rho {rho:.2}", s); }
         if rho >= 0.1 {
             x.copy_from_slice(&v1[..3 * n]);
@@ -1043,9 +1046,9 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
                 }
                 fin_prev = fpk;
             }
-            if rho > 0.5 && wmax > 0.5 { r = (2.0 * r).min(o.rmax); }
+            if rho > o.tr_grow && wmax > 0.5 { r = (2.0 * r).min(o.rmax); }
         } else {
-            r /= 4.0;
+            r /= o.tr_shrink;
         }
     }
     // leave separators consistent with x for the caller
@@ -1377,7 +1380,7 @@ fn main() {
             let mut trace: Vec<(usize, f64, f64, usize, f64, f64, usize, usize)> = Vec::new();
             let mut load: Vec<(u32, u32, u8, u8)> = Vec::new();
             if !a.iter().any(|t| t == "--no-polish") {
-                let po = POpt { sqp: a.iter().any(|t| t == "--sqp"), rmax: arg(&a, "--rmax", 4e-3), r0: arg(&a, "--r0", 1e-3), rmin: arg(&a, "--rmin", 1e-10), maxit: arg(&a, "--pit", 300), cc_tol: arg(&a, "--cc-tol", 1e-7), flip_top: arg(&a, "--flip-top", 8), ident: a.iter().any(|t| t == "--ident"), stag_w: arg(&a, "--stag-w", 15), stag_tol: arg(&a, "--stag-tol", 2e-9), finish: a.iter().any(|t| t == "--finish"), verbose: o.verbose };
+                let po = POpt { sqp: a.iter().any(|t| t == "--sqp"), rmax: arg(&a, "--rmax", 4e-3), r0: arg(&a, "--r0", 1e-3), rmin: arg(&a, "--rmin", 1e-10), maxit: arg(&a, "--pit", 300), cc_tol: arg(&a, "--cc-tol", 1e-7), flip_top: arg(&a, "--flip-top", 8), ident: a.iter().any(|t| t == "--ident"), stag_w: arg(&a, "--stag-w", 15), stag_tol: arg(&a, "--stag-tol", 2e-9), finish: a.iter().any(|t| t == "--finish"), tr_grow: arg(&a, "--tr-grow", 0.5), tr_shrink: arg(&a, "--tr-shrink", 4.0), verbose: o.verbose };
                 let (s2, x2, it, rr, fl) = polish(&mut prob, sq, &xq, &po, &mut trace, &mut load);
                 sq = s2; xq = x2; pit = it; pr = rr; flips = fl;
             }
