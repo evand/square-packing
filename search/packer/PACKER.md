@@ -617,3 +617,8 @@ Evan: more explore, less exploit; the sub-11 set at 110 was 48 certified minima 
   s179 13.91715 / 13.91651 / 13.90948 / 13.90856 / **13.908471** (38 %).  At equal CPU (first minute ≈ one 8-min hop
   replicate) similar to the hop variants; afterwards the explorer keeps making large gains (4e-2 – 8e-2) where hop chains
   plateaued.  Both flatten after 10–20 min (elite converged).  Next: record starts r126, r237 (`runs/tx126`, `tx237`).
+* **Record starts (`runs/tx126`, `tx237`):** r126 → 11.774546701 at 4 min (13 %; the same basin hop0 found), then
+  nothing; r237: 759 basins, **all ≥ the record**.  Exploration around a record stays in the record's region, whose bottom
+  the record is; SQUISH's record-beaters come from other seeds (their lineage notes).  Test of the recipe (neighbour seeds +
+  explorer): `runs/tx237n` from 238 − 1 / 239 − 2 seeds (15.9306–15.9498; record 15.911192, SQUISH 15.903676), 16 procs ×
+  30 min.
