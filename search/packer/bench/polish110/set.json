@@ -1,0 +1,1406 @@
+{
+"n": 110,
+"archive": "runs/ex10",
+"items": [
+{
+"i": 0,
+"parent": "runs/ex10/b03701.txt",
+"kind": "aswap",
+"loosen": "1.05",
+"s_screen": 11.023442306351653
+},
+{
+"i": 1,
+"parent": "runs/ex10/b00742.txt",
+"kind": "aswap",
+"loosen": "1.02",
+"s_screen": 11.004653430970599
+},
+{
+"i": 2,
+"parent": "runs/ex10/b04877.txt",
+"kind": "mirror",
+"loosen": "1.0",
+"s_screen": 11.017101141836545
+},
+{
+"i": 3,
+"parent": "runs/ex10/b01558.txt",
+"kind": "chainshift",
+"loosen": "1.05",
+"s_screen": 11.044073915301583
+},
+{
+"i": 4,
+"parent": "runs/ex10/b04094.txt",
+"kind": "kick",
+"loosen": "1.0",
+"s_screen": 11.02821669775049
+},
+{
+"i": 5,
+"parent": "runs/ex10/b02080.txt",
+"kind": "bigkick",
+"loosen": "1.05",
+"s_screen": 11.02540353944571
+},
+{
+"i": 6,
+"parent": "runs/ex10/b04613.txt",
+"kind": "rowslide",
+"loosen": "1.05",
+"s_screen": 10.997679927163682
+},
+{
+"i": 7,
+"parent": "runs/ex10/b03438.txt",
+"kind": "kick",
+"loosen": "1.0",
+"s_screen": 11.03254868869566
+},
+{
+"i": 8,
+"parent": "runs/ex10/b02724.txt",
+"kind": "kick",
+"loosen": "1.02",
+"s_screen": 11.019364256891786
+},
+{
+"i": 9,
+"parent": "runs/ex10/b00089.txt",
+"kind": "kick",
+"loosen": "1.0",
+"s_screen": 11.019274665594878
+},
+{
+"i": 10,
+"parent": "runs/ex10/b03665.txt",
+"kind": "aswap",
+"loosen": "1.02",
+"s_screen": 11.02068121985767
+},
+{
+"i": 11,
+"parent": "runs/ex10/b03234.txt",
+"kind": "crot",
+"loosen": "1.02",
+"s_screen": 11.047760543967605
+},
+{
+"i": 12,
+"parent": "runs/ex10/b00003.txt",
+"kind": "lkick",
+"loosen": "1.05",
+"s_screen": 10.998566493397584
+},
+{
+"i": 13,
+"parent": "runs/ex10/b00160.txt",
+"kind": "lkick",
+"loosen": "1.0",
+"s_screen": 10.997893398015387
+},
+{
+"i": 14,
+"parent": "runs/ex10/b00738.txt",
+"kind": "lkick",
+"loosen": "1.0",
+"s_screen": 11.025509504993781
+},
+{
+"i": 15,
+"parent": "runs/ex10/b00127.txt",
+"kind": "band",
+"loosen": "1.05",
+"s_screen": 11.042846807936073
+},
+{
+"i": 16,
+"parent": "runs/ex10/b04706.txt",
+"kind": "kicksym",
+"loosen": "1.0",
+"s_screen": 11.03763850809257
+},
+{
+"i": 17,
+"parent": "runs/ex10/b01497.txt",
+"kind": "band",
+"loosen": "1.05",
+"s_screen": 11.021110258750152
+},
+{
+"i": 18,
+"parent": "runs/ex10/b03180.txt",
+"kind": "chainshift",
+"loosen": "1.05",
+"s_screen": 10.99993970343189
+},
+{
+"i": 19,
+"parent": "runs/ex10/b03452.txt",
+"kind": "kick",
+"loosen": "1.0",
+"s_screen": 11.029544774465947
+},
+{
+"i": 20,
+"parent": "runs/ex10/b00317.txt",
+"kind": "aswap",
+"loosen": "1.02",
+"s_screen": 10.997640481811029
+},
+{
+"i": 21,
+"parent": "runs/ex10/b01953.txt",
+"kind": "rowslide",
+"loosen": "1.02",
+"s_screen": 11.00321364723333
+},
+{
+"i": 22,
+"parent": "runs/ex10/b02295.txt",
+"kind": "lkick",
+"loosen": "1.02",
+"s_screen": 11.017350539541317
+},
+{
+"i": 23,
+"parent": "runs/ex10/b00135.txt",
+"kind": "kick",
+"loosen": "1.02",
+"s_screen": 10.998412640568036
+},
+{
+"i": 24,
+"parent": "runs/ex10/b03651.txt",
+"kind": "lkick",
+"loosen": "1.02",
+"s_screen": 11.034838833489514
+},
+{
+"i": 25,
+"parent": "runs/ex10/b01443.txt",
+"kind": "lkick",
+"loosen": "1.05",
+"s_screen": 11.00894288893823
+},
+{
+"i": 26,
+"parent": "runs/ex10/b00755.txt",
+"kind": "bigkick",
+"loosen": "1.02",
+"s_screen": 11.030558780511438
+},
+{
+"i": 27,
+"parent": "runs/ex10/b04832.txt",
+"kind": "kick",
+"loosen": "1.0",
+"s_screen": 11.012957506203488
+},
+{
+"i": 28,
+"parent": "runs/ex10/b03889.txt",
+"kind": "mirror",
+"loosen": "1.02",
+"s_screen": 11.038119389377936
+},
+{
+"i": 29,
+"parent": "runs/ex10/b00274.txt",
+"kind": "kick",
+"loosen": "1.0",
+"s_screen": 11.046538332221644
+},
+{
+"i": 30,
+"parent": "runs/ex10/b03950.txt",
+"kind": "kick",
+"loosen": "1.0",
+"s_screen": 11.047678754612296
+},
+{
+"i": 31,
+"parent": "runs/ex10/b02612.txt",
+"kind": "kicksym",
+"loosen": "1.05",
+"s_screen": 11.027560861205902
+},
+{
+"i": 32,
+"parent": "runs/ex10/b00364.txt",
+"kind": "mirror",
+"loosen": "1.05",
+"s_screen": 11.025918723105242
+},
+{
+"i": 33,
+"parent": "runs/ex10/b05119.txt",
+"kind": "rowslide",
+"loosen": "1.02",
+"s_screen": 11.017003105085628
+},
+{
+"i": 34,
+"parent": "runs/ex10/b04773.txt",
+"kind": "kick",
+"loosen": "1.05",
+"s_screen": 11.036717847178721
+},
+{
+"i": 35,
+"parent": "runs/ex10/b00657.txt",
+"kind": "kick",
+"loosen": "1.02",
+"s_screen": 11.046115660822167
+},
+{
+"i": 36,
+"parent": "runs/ex10/b02107.txt",
+"kind": "chainshift",
+"loosen": "1.02",
+"s_screen": 11.047568164124739
+},
+{
+"i": 37,
+"parent": "runs/ex10/b04249.txt",
+"kind": "rowslide",
+"loosen": "1.05",
+"s_screen": 11.013088596567611
+},
+{
+"i": 38,
+"parent": "runs/ex10/b04246.txt",
+"kind": "kicksym",
+"loosen": "1.02",
+"s_screen": 11.019066975927403
+},
+{
+"i": 39,
+"parent": "runs/ex10/b01719.txt",
+"kind": "kicksym",
+"loosen": "1.0",
+"s_screen": 10.998639749820661
+},
+{
+"i": 40,
+"parent": "runs/ex10/b00525.txt",
+"kind": "mirror",
+"loosen": "1.05",
+"s_screen": 11.000456289715943
+},
+{
+"i": 41,
+"parent": "runs/ex10/b01385.txt",
+"kind": "kick",
+"loosen": "1.0",
+"s_screen": 11.046389803553229
+},
+{
+"i": 42,
+"parent": "runs/ex10/b02583.txt",
+"kind": "rowslide",
+"loosen": "1.02",
+"s_screen": 11.011639720165267
+},
+{
+"i": 43,
+"parent": "runs/ex10/b02624.txt",
+"kind": "kick",
+"loosen": "1.02",
+"s_screen": 11.011368212788149
+},
+{
+"i": 44,
+"parent": "runs/ex10/b02278.txt",
+"kind": "chainshift",
+"loosen": "1.05",
+"s_screen": 11.044777432900892
+},
+{
+"i": 45,
+"parent": "runs/ex10/b02302.txt",
+"kind": "aswap",
+"loosen": "1.02",
+"s_screen": 10.999751885392156
+},
+{
+"i": 46,
+"parent": "runs/ex10/b04620.txt",
+"kind": "kick",
+"loosen": "1.05",
+"s_screen": 11.00036173770482
+},
+{
+"i": 47,
+"parent": "runs/ex10/b02182.txt",
+"kind": "lkick",
+"loosen": "1.0",
+"s_screen": 11.03072036029413
+},
+{
+"i": 48,
+"parent": "runs/ex10/b03892.txt",
+"kind": "lkick",
+"loosen": "1.05",
+"s_screen": 11.038531026240657
+},
+{
+"i": 49,
+"parent": "runs/ex10/b03868.txt",
+"kind": "aswap",
+"loosen": "1.02",
+"s_screen": 11.037924286672004
+},
+{
+"i": 50,
+"parent": "runs/ex10/b01467.txt",
+"kind": "lkick",
+"loosen": "1.02",
+"s_screen": 11.041185949736597
+},
+{
+"i": 51,
+"parent": "runs/ex10/b04421.txt",
+"kind": "rowslide",
+"loosen": "1.0",
+"s_screen": 11.010614798487213
+},
+{
+"i": 52,
+"parent": "runs/ex10/b03223.txt",
+"kind": "chainshift",
+"loosen": "1.02",
+"s_screen": 11.040459059473054
+},
+{
+"i": 53,
+"parent": "runs/ex10/b00714.txt",
+"kind": "crot",
+"loosen": "1.05",
+"s_screen": 11.03257128160838
+},
+{
+"i": 54,
+"parent": "runs/ex10/b01064.txt",
+"kind": "crot",
+"loosen": "1.0",
+"s_screen": 11.004039071860047
+},
+{
+"i": 55,
+"parent": "runs/ex10/b03086.txt",
+"kind": "aswap",
+"loosen": "1.05",
+"s_screen": 11.027006401223867
+},
+{
+"i": 56,
+"parent": "runs/ex10/b00810.txt",
+"kind": "rowslide",
+"loosen": "1.0",
+"s_screen": 11.048682141451815
+},
+{
+"i": 57,
+"parent": "runs/ex10/b01747.txt",
+"kind": "lkick",
+"loosen": "1.05",
+"s_screen": 11.028097689427984
+},
+{
+"i": 58,
+"parent": "runs/ex10/b02854.txt",
+"kind": "aswap",
+"loosen": "1.05",
+"s_screen": 11.021976063672264
+},
+{
+"i": 59,
+"parent": "runs/ex10/b03611.txt",
+"kind": "bigkick",
+"loosen": "1.05",
+"s_screen": 11.043630430258348
+},
+{
+"i": 60,
+"parent": "runs/ex10/b02254.txt",
+"kind": "aswap",
+"loosen": "1.05",
+"s_screen": 11.04617981215925
+},
+{
+"i": 61,
+"parent": "runs/ex10/b01788.txt",
+"kind": "chainshift",
+"loosen": "1.02",
+"s_screen": 10.998650184540745
+},
+{
+"i": 62,
+"parent": "runs/ex10/b03513.txt",
+"kind": "chainshift",
+"loosen": "1.0",
+"s_screen": 11.014304522294676
+},
+{
+"i": 63,
+"parent": "runs/ex10/b03854.txt",
+"kind": "kicksym",
+"loosen": "1.0",
+"s_screen": 11.012950413353733
+},
+{
+"i": 64,
+"parent": "runs/ex10/b02553.txt",
+"kind": "rowslide",
+"loosen": "1.0",
+"s_screen": 11.031309970360887
+},
+{
+"i": 65,
+"parent": "runs/ex10/b04693.txt",
+"kind": "aswap",
+"loosen": "1.0",
+"s_screen": 10.998303834404089
+},
+{
+"i": 66,
+"parent": "runs/ex10/b04390.txt",
+"kind": "kick",
+"loosen": "1.02",
+"s_screen": 11.026865455836727
+},
+{
+"i": 67,
+"parent": "runs/ex10/b04022.txt",
+"kind": "kick",
+"loosen": "1.0",
+"s_screen": 11.029456957343951
+},
+{
+"i": 68,
+"parent": "runs/ex10/b02205.txt",
+"kind": "lkick",
+"loosen": "1.02",
+"s_screen": 11.02293994023672
+},
+{
+"i": 69,
+"parent": "runs/ex10/b01060.txt",
+"kind": "rowslide",
+"loosen": "1.0",
+"s_screen": 11.018472615055302
+},
+{
+"i": 70,
+"parent": "runs/ex10/b00291.txt",
+"kind": "lkick",
+"loosen": "1.0",
+"s_screen": 11.010682884820827
+},
+{
+"i": 71,
+"parent": "runs/ex10/b00096.txt",
+"kind": "rowslide",
+"loosen": "1.05",
+"s_screen": 11.044385622206102
+},
+{
+"i": 72,
+"parent": "runs/ex10/b02911.txt",
+"kind": "lkick",
+"loosen": "1.05",
+"s_screen": 11.04071941794041
+},
+{
+"i": 73,
+"parent": "runs/ex10/b00859.txt",
+"kind": "aswap",
+"loosen": "1.0",
+"s_screen": 11.04967422413704
+},
+{
+"i": 74,
+"parent": "runs/ex10/b04181.txt",
+"kind": "band",
+"loosen": "1.02",
+"s_screen": 11.012180389492146
+},
+{
+"i": 75,
+"parent": "runs/ex10/b04344.txt",
+"kind": "chainshift",
+"loosen": "1.02",
+"s_screen": 11.045006685140647
+},
+{
+"i": 76,
+"parent": "runs/ex10/b04408.txt",
+"kind": "lkick",
+"loosen": "1.05",
+"s_screen": 11.001646733573967
+},
+{
+"i": 77,
+"parent": "runs/ex10/b04338.txt",
+"kind": "lkick",
+"loosen": "1.05",
+"s_screen": 11.03414103656638
+},
+{
+"i": 78,
+"parent": "runs/ex10/b01905.txt",
+"kind": "mirror",
+"loosen": "1.0",
+"s_screen": 11.044414792088606
+},
+{
+"i": 79,
+"parent": "runs/ex10/b01483.txt",
+"kind": "bigkick",
+"loosen": "1.05",
+"s_screen": 11.013959840476408
+},
+{
+"i": 80,
+"parent": "runs/ex10/b01594.txt",
+"kind": "lkick",
+"loosen": "1.02",
+"s_screen": 11.02092494237037
+},
+{
+"i": 81,
+"parent": "runs/ex10/b00793.txt",
+"kind": "kicksym",
+"loosen": "1.0",
+"s_screen": 11.000795999327558
+},
+{
+"i": 82,
+"parent": "runs/ex10/b01085.txt",
+"kind": "rowslide",
+"loosen": "1.0",
+"s_screen": 11.018131066313904
+},
+{
+"i": 83,
+"parent": "runs/ex10/b03177.txt",
+"kind": "kick",
+"loosen": "1.0",
+"s_screen": 11.01761758164633
+},
+{
+"i": 84,
+"parent": "runs/ex10/b01643.txt",
+"kind": "crot",
+"loosen": "1.05",
+"s_screen": 11.038958166005202
+},
+{
+"i": 85,
+"parent": "runs/ex10/b00786.txt",
+"kind": "lkick",
+"loosen": "1.05",
+"s_screen": 11.026114755555778
+},
+{
+"i": 86,
+"parent": "runs/ex10/b02959.txt",
+"kind": "kicksym",
+"loosen": "1.02",
+"s_screen": 10.99994401056438
+},
+{
+"i": 87,
+"parent": "runs/ex10/b00577.txt",
+"kind": "aswap",
+"loosen": "1.02",
+"s_screen": 11.045848893247523
+},
+{
+"i": 88,
+"parent": "runs/ex10/b00306.txt",
+"kind": "rowslide",
+"loosen": "1.02",
+"s_screen": 10.998785202095497
+},
+{
+"i": 89,
+"parent": "runs/ex10/b01200.txt",
+"kind": "lkick",
+"loosen": "1.02",
+"s_screen": 11.019828328144108
+},
+{
+"i": 90,
+"parent": "runs/ex10/b01670.txt",
+"kind": "lkick",
+"loosen": "1.0",
+"s_screen": 11.021341989751159
+},
+{
+"i": 91,
+"parent": "runs/ex10/b02319.txt",
+"kind": "mirror",
+"loosen": "1.02",
+"s_screen": 11.020244383402764
+},
+{
+"i": 92,
+"parent": "runs/ex10/b04749.txt",
+"kind": "kick",
+"loosen": "1.05",
+"s_screen": 11.006899398738758
+},
+{
+"i": 93,
+"parent": "runs/ex10/b00635.txt",
+"kind": "rowslide",
+"loosen": "1.0",
+"s_screen": 11.04430342733626
+},
+{
+"i": 94,
+"parent": "runs/ex10/b03523.txt",
+"kind": "lkick",
+"loosen": "1.02",
+"s_screen": 11.021154730305836
+},
+{
+"i": 95,
+"parent": "runs/ex10/b01640.txt",
+"kind": "lkick",
+"loosen": "1.0",
+"s_screen": 11.027950115993312
+},
+{
+"i": 96,
+"parent": "runs/ex10/b02945.txt",
+"kind": "rowslide",
+"loosen": "1.0",
+"s_screen": 11.005593166533036
+},
+{
+"i": 97,
+"parent": "runs/ex10/b00694.txt",
+"kind": "chainshift",
+"loosen": "1.02",
+"s_screen": 11.039015579065751
+},
+{
+"i": 98,
+"parent": "runs/ex10/b04666.txt",
+"kind": "band",
+"loosen": "1.0",
+"s_screen": 11.019673725063235
+},
+{
+"i": 99,
+"parent": "runs/ex10/b02115.txt",
+"kind": "lkick",
+"loosen": "1.0",
+"s_screen": 11.009376247783514
+},
+{
+"i": 100,
+"parent": "runs/ex10/b03536.txt",
+"kind": "rowslide",
+"loosen": "1.02",
+"s_screen": 11.019933027895739
+},
+{
+"i": 101,
+"parent": "runs/ex10/b01694.txt",
+"kind": "rowslide",
+"loosen": "1.02",
+"s_screen": 11.025158746933682
+},
+{
+"i": 102,
+"parent": "runs/ex10/b02799.txt",
+"kind": "bigkick",
+"loosen": "1.0",
+"s_screen": 10.999485244273552
+},
+{
+"i": 103,
+"parent": "runs/ex10/b01901.txt",
+"kind": "lkick",
+"loosen": "1.0",
+"s_screen": 10.999001026500995
+},
+{
+"i": 104,
+"parent": "runs/ex10/b04665.txt",
+"kind": "lkick",
+"loosen": "1.05",
+"s_screen": 11.004732675732386
+},
+{
+"i": 105,
+"parent": "runs/ex10/b01746.txt",
+"kind": "rowslide",
+"loosen": "1.05",
+"s_screen": 11.018436194786046
+},
+{
+"i": 106,
+"parent": "runs/ex10/b04709.txt",
+"kind": "kick",
+"loosen": "1.05",
+"s_screen": 11.013093649554223
+},
+{
+"i": 107,
+"parent": "runs/ex10/b01941.txt",
+"kind": "lkick",
+"loosen": "1.0",
+"s_screen": 11.002589797826987
+},
+{
+"i": 108,
+"parent": "runs/ex10/b04135.txt",
+"kind": "kick",
+"loosen": "1.02",
+"s_screen": 11.022095380474978
+},
+{
+"i": 109,
+"parent": "runs/ex10/b03077.txt",
+"kind": "kick",
+"loosen": "1.05",
+"s_screen": 11.044455675710326
+},
+{
+"i": 110,
+"parent": "runs/ex10/b02055.txt",
+"kind": "lkick",
+"loosen": "1.05",
+"s_screen": 11.044883409793385
+},
+{
+"i": 111,
+"parent": "runs/ex10/b04265.txt",
+"kind": "aswap",
+"loosen": "1.0",
+"s_screen": 11.023560490483852
+},
+{
+"i": 112,
+"parent": "runs/ex10/b04500.txt",
+"kind": "band",
+"loosen": "1.02",
+"s_screen": 11.02303644649196
+},
+{
+"i": 113,
+"parent": "runs/ex10/b03161.txt",
+"kind": "aswap",
+"loosen": "1.0",
+"s_screen": 11.014527827605392
+},
+{
+"i": 114,
+"parent": "runs/ex10/b04059.txt",
+"kind": "aswap",
+"loosen": "1.05",
+"s_screen": 11.022611322117305
+},
+{
+"i": 115,
+"parent": "runs/ex10/b02330.txt",
+"kind": "aswap",
+"loosen": "1.0",
+"s_screen": 11.036819537114418
+},
+{
+"i": 116,
+"parent": "runs/ex10/b02209.txt",
+"kind": "aswap",
+"loosen": "1.0",
+"s_screen": 11.018040157322224
+},
+{
+"i": 117,
+"parent": "runs/ex10/b02425.txt",
+"kind": "kick",
+"loosen": "1.02",
+"s_screen": 10.998843172097814
+},
+{
+"i": 118,
+"parent": "runs/ex10/b04798.txt",
+"kind": "kick",
+"loosen": "1.02",
+"s_screen": 11.013064574303439
+},
+{
+"i": 119,
+"parent": "runs/ex10/b03348.txt",
+"kind": "rowslide",
+"loosen": "1.0",
+"s_screen": 11.00110155543084
+},
+{
+"i": 120,
+"parent": "runs/ex10/b00432.txt",
+"kind": "mirror",
+"loosen": "1.05",
+"s_screen": 11.017759412549882
+},
+{
+"i": 121,
+"parent": "runs/ex10/b00602.txt",
+"kind": "chainshift",
+"loosen": "1.05",
+"s_screen": 11.001207127003951
+},
+{
+"i": 122,
+"parent": "runs/ex10/b03518.txt",
+"kind": "rowslide",
+"loosen": "1.05",
+"s_screen": 11.00560746493633
+},
+{
+"i": 123,
+"parent": "runs/ex10/b01996.txt",
+"kind": "kick",
+"loosen": "1.02",
+"s_screen": 11.019888680112906
+},
+{
+"i": 124,
+"parent": "runs/ex10/b04944.txt",
+"kind": "rowslide",
+"loosen": "1.02",
+"s_screen": 11.023358321992573
+},
+{
+"i": 125,
+"parent": "runs/ex10/b05113.txt",
+"kind": "crot",
+"loosen": "1.0",
+"s_screen": 11.047826492432113
+},
+{
+"i": 126,
+"parent": "runs/ex10/b03627.txt",
+"kind": "kicksym",
+"loosen": "1.02",
+"s_screen": 11.041912074116228
+},
+{
+"i": 127,
+"parent": "runs/ex10/b03731.txt",
+"kind": "band",
+"loosen": "1.05",
+"s_screen": 11.04089667474138
+},
+{
+"i": 128,
+"parent": "runs/ex10/b02376.txt",
+"kind": "rowslide",
+"loosen": "1.02",
+"s_screen": 11.02313365738486
+},
+{
+"i": 129,
+"parent": "runs/ex10/b04156.txt",
+"kind": "band",
+"loosen": "1.0",
+"s_screen": 11.02201233415487
+},
+{
+"i": 130,
+"parent": "runs/ex10/b05186.txt",
+"kind": "lkick",
+"loosen": "1.02",
+"s_screen": 11.014992681066412
+},
+{
+"i": 131,
+"parent": "runs/ex10/b05106.txt",
+"kind": "kick",
+"loosen": "1.02",
+"s_screen": 11.028718540237485
+},
+{
+"i": 132,
+"parent": "runs/ex10/b04437.txt",
+"kind": "lkick",
+"loosen": "1.02",
+"s_screen": 11.015719902230556
+},
+{
+"i": 133,
+"parent": "runs/ex10/b01317.txt",
+"kind": "aswap",
+"loosen": "1.0",
+"s_screen": 11.030730498363738
+},
+{
+"i": 134,
+"parent": "runs/ex10/b03965.txt",
+"kind": "aswap",
+"loosen": "1.0",
+"s_screen": 11.034795248164752
+},
+{
+"i": 135,
+"parent": "runs/ex10/b00609.txt",
+"kind": "chainshift",
+"loosen": "1.0",
+"s_screen": 11.050376058170885
+},
+{
+"i": 136,
+"parent": "runs/ex10/b05109.txt",
+"kind": "chainshift",
+"loosen": "1.0",
+"s_screen": 11.017190770609059
+},
+{
+"i": 137,
+"parent": "runs/ex10/b03195.txt",
+"kind": "chainshift",
+"loosen": "1.05",
+"s_screen": 11.038471970335324
+},
+{
+"i": 138,
+"parent": "runs/ex10/b02382.txt",
+"kind": "aswap",
+"loosen": "1.0",
+"s_screen": 10.998213562528393
+},
+{
+"i": 139,
+"parent": "runs/ex10/b04453.txt",
+"kind": "kick",
+"loosen": "1.02",
+"s_screen": 11.016841760234183
+},
+{
+"i": 140,
+"parent": "runs/ex10/b02488.txt",
+"kind": "aswap",
+"loosen": "1.02",
+"s_screen": 11.042311342859959
+},
+{
+"i": 141,
+"parent": "runs/ex10/b02931.txt",
+"kind": "rowslide",
+"loosen": "1.05",
+"s_screen": 11.017474540753533
+},
+{
+"i": 142,
+"parent": "runs/ex10/b04228.txt",
+"kind": "lkick",
+"loosen": "1.05",
+"s_screen": 11.048162309064185
+},
+{
+"i": 143,
+"parent": "runs/ex10/b02994.txt",
+"kind": "kick",
+"loosen": "1.0",
+"s_screen": 11.038049082098983
+},
+{
+"i": 144,
+"parent": "runs/ex10/b04790.txt",
+"kind": "bigkick",
+"loosen": "1.02",
+"s_screen": 10.999765628702935
+},
+{
+"i": 145,
+"parent": "runs/ex10/b04224.txt",
+"kind": "kick",
+"loosen": "1.05",
+"s_screen": 11.020591491192528
+},
+{
+"i": 146,
+"parent": "runs/ex10/b03463.txt",
+"kind": "kick",
+"loosen": "1.0",
+"s_screen": 11.018454331167046
+},
+{
+"i": 147,
+"parent": "runs/ex10/b04468.txt",
+"kind": "kick",
+"loosen": "1.02",
+"s_screen": 11.013138046493685
+},
+{
+"i": 148,
+"parent": "runs/ex10/b00693.txt",
+"kind": "kick",
+"loosen": "1.02",
+"s_screen": 11.030201063477138
+},
+{
+"i": 149,
+"parent": "runs/ex10/b02010.txt",
+"kind": "rowslide",
+"loosen": "1.02",
+"s_screen": 11.040469872915311
+},
+{
+"i": 150,
+"parent": "runs/ex10/b04272.txt",
+"kind": "bigkick",
+"loosen": "1.05",
+"s_screen": 11.012988718381644
+},
+{
+"i": 151,
+"parent": "runs/ex10/b01119.txt",
+"kind": "aswap",
+"loosen": "1.05",
+"s_screen": 11.001235312891101
+},
+{
+"i": 152,
+"parent": "runs/ex10/b01197.txt",
+"kind": "lkick",
+"loosen": "1.05",
+"s_screen": 11.036691917914776
+},
+{
+"i": 153,
+"parent": "runs/ex10/b05203.txt",
+"kind": "bigkick",
+"loosen": "1.02",
+"s_screen": 11.012972180382361
+},
+{
+"i": 154,
+"parent": "runs/ex10/b04334.txt",
+"kind": "bigkick",
+"loosen": "1.0",
+"s_screen": 11.046429248836644
+},
+{
+"i": 155,
+"parent": "runs/ex10/b03862.txt",
+"kind": "bigkick",
+"loosen": "1.0",
+"s_screen": 11.000297260796902
+},
+{
+"i": 156,
+"parent": "runs/ex10/b00510.txt",
+"kind": "rowslide",
+"loosen": "1.02",
+"s_screen": 11.023076527744317
+},
+{
+"i": 157,
+"parent": "runs/ex10/b04784.txt",
+"kind": "aswap",
+"loosen": "1.05",
+"s_screen": 11.00397733794629
+},
+{
+"i": 158,
+"parent": "runs/ex10/b02560.txt",
+"kind": "kick",
+"loosen": "1.0",
+"s_screen": 11.03369278682724
+},
+{
+"i": 159,
+"parent": "runs/ex10/b02943.txt",
+"kind": "lkick",
+"loosen": "1.02",
+"s_screen": 11.043376841267131
+},
+{
+"i": 160,
+"parent": "runs/ex10/b04915.txt",
+"kind": "rowslide",
+"loosen": "1.02",
+"s_screen": 11.029070792722834
+},
+{
+"i": 161,
+"parent": "runs/ex10/b03297.txt",
+"kind": "lkick",
+"loosen": "1.0",
+"s_screen": 11.041443808617565
+},
+{
+"i": 162,
+"parent": "runs/ex10/b05134.txt",
+"kind": "aswap",
+"loosen": "1.05",
+"s_screen": 11.034783105011346
+},
+{
+"i": 163,
+"parent": "runs/ex10/b02133.txt",
+"kind": "aswap",
+"loosen": "1.0",
+"s_screen": 11.019077551601233
+},
+{
+"i": 164,
+"parent": "runs/ex10/b02802.txt",
+"kind": "rowslide",
+"loosen": "1.05",
+"s_screen": 11.04775600736499
+},
+{
+"i": 165,
+"parent": "runs/ex10/b00407.txt",
+"kind": "lkick",
+"loosen": "1.0",
+"s_screen": 11.002728012987033
+},
+{
+"i": 166,
+"parent": "runs/ex10/b03153.txt",
+"kind": "mirror",
+"loosen": "1.02",
+"s_screen": 11.01082428665462
+},
+{
+"i": 167,
+"parent": "runs/ex10/b00474.txt",
+"kind": "rowslide",
+"loosen": "1.02",
+"s_screen": 11.02759144696814
+},
+{
+"i": 168,
+"parent": "runs/ex10/b00089.txt",
+"kind": "chainshift",
+"loosen": "1.02",
+"s_screen": 11.002285835532568
+},
+{
+"i": 169,
+"parent": "runs/ex10/b03686.txt",
+"kind": "chainshift",
+"loosen": "1.05",
+"s_screen": 11.045924502482022
+},
+{
+"i": 170,
+"parent": "runs/ex10/b04964.txt",
+"kind": "chainshift",
+"loosen": "1.02",
+"s_screen": 11.038620443738981
+},
+{
+"i": 171,
+"parent": "runs/ex10/b01285.txt",
+"kind": "chainshift",
+"loosen": "1.05",
+"s_screen": 11.019603655261571
+},
+{
+"i": 172,
+"parent": "runs/ex10/b05218.txt",
+"kind": "rowslide",
+"loosen": "1.05",
+"s_screen": 11.041775420203521
+},
+{
+"i": 173,
+"parent": "runs/ex10/b04684.txt",
+"kind": "rowslide",
+"loosen": "1.02",
+"s_screen": 11.021636880194698
+},
+{
+"i": 174,
+"parent": "runs/ex10/b01051.txt",
+"kind": "kick",
+"loosen": "1.05",
+"s_screen": 11.036915509697778
+},
+{
+"i": 175,
+"parent": "runs/ex10/b03932.txt",
+"kind": "rowslide",
+"loosen": "1.02",
+"s_screen": 11.007664536963834
+},
+{
+"i": 176,
+"parent": "runs/ex10/b04805.txt",
+"kind": "aswap",
+"loosen": "1.05",
+"s_screen": 11.01537854474669
+},
+{
+"i": 177,
+"parent": "runs/ex10/b04306.txt",
+"kind": "aswap",
+"loosen": "1.02",
+"s_screen": 11.001772040044157
+},
+{
+"i": 178,
+"parent": "runs/ex10/b04557.txt",
+"kind": "bigkick",
+"loosen": "1.05",
+"s_screen": 11.01340354993115
+},
+{
+"i": 179,
+"parent": "runs/ex10/b03089.txt",
+"kind": "rowslide",
+"loosen": "1.05",
+"s_screen": 11.016353275821638
+},
+{
+"i": 180,
+"parent": "runs/ex10/b03752.txt",
+"kind": "chainshift",
+"loosen": "1.05",
+"s_screen": 11.033669026538846
+},
+{
+"i": 181,
+"parent": "runs/ex10/b05046.txt",
+"kind": "kicksym",
+"loosen": "1.0",
+"s_screen": 11.022822357504854
+},
+{
+"i": 182,
+"parent": "runs/ex10/b04421.txt",
+"kind": "rowslide",
+"loosen": "1.02",
+"s_screen": 11.010516295883953
+},
+{
+"i": 183,
+"parent": "runs/ex10/b02100.txt",
+"kind": "lkick",
+"loosen": "1.05",
+"s_screen": 11.02262662968634
+},
+{
+"i": 184,
+"parent": "runs/ex10/b00897.txt",
+"kind": "bigkick",
+"loosen": "1.02",
+"s_screen": 10.998342336990648
+},
+{
+"i": 185,
+"parent": "runs/ex10/b04610.txt",
+"kind": "aswap",
+"loosen": "1.05",
+"s_screen": 11.020967812672694
+},
+{
+"i": 186,
+"parent": "runs/ex10/b00834.txt",
+"kind": "kicksym",
+"loosen": "1.05",
+"s_screen": 11.029779081781017
+},
+{
+"i": 187,
+"parent": "runs/ex10/b01076.txt",
+"kind": "rowslide",
+"loosen": "1.0",
+"s_screen": 11.029946274166553
+},
+{
+"i": 188,
+"parent": "runs/ex10/b01473.txt",
+"kind": "lkick",
+"loosen": "1.0",
+"s_screen": 11.002897173318873
+},
+{
+"i": 189,
+"parent": "runs/ex10/b03794.txt",
+"kind": "band",
+"loosen": "1.0",
+"s_screen": 11.048883005188632
+},
+{
+"i": 190,
+"parent": "runs/ex10/b00822.txt",
+"kind": "lkick",
+"loosen": "1.02",
+"s_screen": 11.00101193911395
+},
+{
+"i": 191,
+"parent": "runs/ex10/b01016.txt",
+"kind": "crot",
+"loosen": "1.02",
+"s_screen": 11.002518797757476
+},
+{
+"i": 192,
+"parent": "runs/ex10/b01212.txt",
+"kind": "chainshift",
+"loosen": "1.0",
+"s_screen": 11.040553238580486
+},
+{
+"i": 193,
+"parent": "runs/ex10/b05022.txt",
+"kind": "rowslide",
+"loosen": "1.05",
+"s_screen": 11.00488713991475
+},
+{
+"i": 194,
+"parent": "runs/ex10/b04985.txt",
+"kind": "aswap",
+"loosen": "1.0",
+"s_screen": 10.998393206170181
+},
+{
+"i": 195,
+"parent": "runs/ex10/b03614.txt",
+"kind": "kick",
+"loosen": "1.02",
+"s_screen": 11.041590227614744
+},
+{
+"i": 196,
+"parent": "runs/ex10/b01678.txt",
+"kind": "aswap",
+"loosen": "1.05",
+"s_screen": 11.011192854141742
+},
+{
+"i": 197,
+"parent": "runs/ex10/b04703.txt",
+"kind": "rowslide",
+"loosen": "1.02",
+"s_screen": 11.041680088889109
+},
+{
+"i": 198,
+"parent": "runs/ex10/b04647.txt",
+"kind": "mirror",
+"loosen": "1.0",
+"s_screen": 11.015309558157437
+},
+{
+"i": 199,
+"parent": "runs/ex10/b00681.txt",
+"kind": "kicksym",
+"loosen": "1.02",
+"s_screen": 11.001413327868164
+}
+]
+}

@@ -291,7 +291,7 @@ impl Prob {
 
 
 // ---------------------------------------------------------------- SLP polish (trust region, lifted formulation)
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 enum Spec { Wall(usize, usize, usize), PI(usize, usize), PJ(usize, usize) }
 struct Con { g: f64, nz: Vec<(usize, f64)>, sp: Spec }
 
@@ -526,7 +526,11 @@ fn ident(p: &Prob, v0: &[f64], v1: &[f64], prev: &mut Vec<(u32, u32, u8, u8)>, t
 
 /// Hessian of sum_k z_k g_k at v (rows from `cons`, multipliers `z`), with face-tied separators (phi -> owner theta),
 /// convexified by diagonal dominance (H_aa >= sum_b |H_ab|).  Returns the upper triangle (a <= b) in original indices.
-fn hess_lagr(p: &Prob, v: &[f64], cons: &[Con], z: &[f64]) -> Vec<(usize, usize, f64)> {
+fn hess_lagr(p: &Prob, v: &[f64], cons: &[Con], z: &[f64]) -> Vec<(usize, usize, f64)> { hess_lagr2(p, v, cons, z, true) }
+
+/// Lagrangian Hessian sum_k z_k grad^2 g_k (face tie applied); `convex`: diagonally dominant convexification (SQP),
+/// else the raw upper triangle (Newton finish).
+fn hess_lagr2(p: &Prob, v: &[f64], cons: &[Con], z: &[f64], convex: bool) -> Vec<(usize, usize, f64)> {
     use std::collections::HashMap;
     let n = p.n;
     let o = 3 * n + 1;
@@ -537,7 +541,7 @@ fn hess_lagr(p: &Prob, v: &[f64], cons: &[Con], z: &[f64]) -> Vec<(usize, usize,
         else { *h.entry((a, b)).or_insert(0.0) += val; *h.entry((b, a)).or_insert(0.0) += val; }
     };
     for (c, &zk) in cons.iter().zip(z) {
-        if !(zk > 1e-9 * zm) { continue; }
+        if !(zk > 1e-9 * zm) || (!convex && zk <= 0.0) { continue; }
         match c.sp {
             Spec::Wall(i, k, w) => {
                 let th = v[3 * i + 2];
@@ -576,6 +580,9 @@ fn hess_lagr(p: &Prob, v: &[f64], cons: &[Con], z: &[f64]) -> Vec<(usize, usize,
             }
         }
     }
+    if !convex {
+        return h.iter().filter(|(&(a, b), &val)| a <= b && val != 0.0).map(|(&(a, b), &val)| (a, b, val)).collect();
+    }
     // convexify: diagonal dominance
     let mut off: HashMap<usize, f64> = HashMap::new();
     for (&(a, b), &val) in &h { if a != b { *off.entry(a).or_insert(0.0) += val.abs(); } }
@@ -588,7 +595,7 @@ fn hess_lagr(p: &Prob, v: &[f64], cons: &[Con], z: &[f64]) -> Vec<(usize, usize,
     out
 }
 
-struct POpt { sqp: bool, rmax: f64, r0: f64, rmin: f64, maxit: usize, cc_tol: f64, flip_top: usize, ident: bool, verbose: bool, stag_w: usize, stag_tol: f64 }
+struct POpt { sqp: bool, rmax: f64, r0: f64, rmin: f64, maxit: usize, cc_tol: f64, flip_top: usize, ident: bool, verbose: bool, stag_w: usize, stag_tol: f64, finish: bool }
 
 /// Snap each pair's separator to a face branch: `choice[pk]` = Some(face) forces that face while it stays ambiguous,
 /// None = the face with the largest gap.  Returns the ambiguous pairs (>= 2 faces within cc_tol of contact and of the
@@ -666,6 +673,223 @@ fn snap(p: &mut Prob, x: &[f64], choice: &mut [Option<usize>], cc_tol: f64) -> V
     amb
 }
 
+
+// ---------------------------------------------------------------- Newton finish (10-08)
+static FIN_LOG: std::sync::Mutex<Vec<String>> = std::sync::Mutex::new(Vec::new());
+
+/// Minimum-norm least-squares step for the rows (g, nz): solves [I J^T; J -dI][w; y] = [b1; b2] with QDLDL (sparse,
+/// quasi-definite).  Returns (w over all nv columns, y).
+fn kkt_solve(nv: usize, rows: &[(f64, Vec<(usize, f64)>)], b1: &[f64], b2: &[f64]) -> Option<(Vec<f64>, Vec<f64>)> { kkt_solve_h(nv, rows, None, b1, b2) }
+
+/// As kkt_solve with top-left block H + 1e-10 I (H: upper-triangle triplets over the rows' columns) instead of I.
+fn kkt_solve_h(nv: usize, rows: &[(f64, Vec<(usize, f64)>)], hh: Option<&[(usize, usize, f64)]>, b1: &[f64], b2: &[f64]) -> Option<(Vec<f64>, Vec<f64>)> {
+    use clarabel::algebra::CscMatrix;
+    use clarabel::qdldl::*;
+    let mut col = vec![usize::MAX; nv];
+    let mut used = Vec::new();
+    for (_, nz) in rows { for &(k, _) in nz { if col[k] == usize::MAX { col[k] = used.len(); used.push(k); } } }
+    let (nc, m) = (used.len(), rows.len());
+    let dim = nc + m;
+    let (mut cp, mut ri, mut vx) = (vec![0usize], Vec::new(), Vec::new());
+    let mut aug = vec![0.0; nc];
+    match hh {
+        None => for j in 0..nc { ri.push(j); vx.push(1.0); cp.push(ri.len()); },
+        Some(h) => {
+            // augmented Lagrangian form: H + rho J^T J (positive definite when the reduced Hessian is), rhs + rho J^T b2
+            const RHO: f64 = 1.0;
+            let mut cols: Vec<Vec<(usize, f64)>> = vec![Vec::new(); nc];
+            for &(a, b, val) in h {
+                if col[a] == usize::MAX || col[b] == usize::MAX { continue; }
+                let (ca, cb) = (col[a].min(col[b]), col[a].max(col[b]));
+                cols[cb].push((ca, val));
+            }
+            for (r, (_, nz)) in rows.iter().enumerate() {
+                let mut e: Vec<(usize, f64)> = nz.iter().map(|&(k, a)| (col[k], a)).collect();
+                e.sort_by_key(|q| q.0);
+                let mut acc: Vec<(usize, f64)> = Vec::new();
+                for (c, a) in e { if let Some(l) = acc.last_mut() { if l.0 == c { l.1 += a; continue; } } acc.push((c, a)); }
+                for x in 0..acc.len() { for y in x..acc.len() { cols[acc[y].0].push((acc[x].0, RHO * acc[x].1 * acc[y].1)); } }
+                for &(c, a) in &acc { aug[c] += RHO * a * b2[r]; }
+            }
+            for j in 0..nc {
+                let mut e = std::mem::take(&mut cols[j]);
+                e.push((j, 1e-8));
+                e.sort_by_key(|q| q.0);
+                let mut acc: Vec<(usize, f64)> = Vec::new();
+                for (c, a) in e { if let Some(l) = acc.last_mut() { if l.0 == c { l.1 += a; continue; } } acc.push((c, a)); }
+                for (c, a) in acc { ri.push(c); vx.push(a); }
+                cp.push(ri.len());
+            }
+        }
+    }
+    for (r, (_, nz)) in rows.iter().enumerate() {
+        let mut e: Vec<(usize, f64)> = nz.iter().map(|&(k, a)| (col[k], a)).collect();
+        e.sort_by_key(|q| q.0);
+        let mut acc: Vec<(usize, f64)> = Vec::new();
+        for (c, a) in e { if let Some(l) = acc.last_mut() { if l.0 == c { l.1 += a; continue; } } acc.push((c, a)); }
+        for (c, a) in acc { ri.push(c); vx.push(a); }
+        ri.push(nc + r); vx.push(-1e-12);
+        cp.push(ri.len());
+    }
+    let k = CscMatrix { m: dim, n: dim, colptr: cp, rowval: ri, nzval: vx };
+    let signs: Vec<i8> = (0..dim).map(|q| if q < nc { 1 } else { -1 }).collect();
+    let opts = QDLDLSettingsBuilder::default().Dsigns(signs).build().ok()?;
+    let mut f = match QDLDLFactorisation::new(&k, Some(opts)) { Ok(f) => f, Err(e) => { if std::env::var("FQ_FIN").is_ok() { eprintln!("  qdldl: {e:?}"); } return None; } };
+    let mut rhs: Vec<f64> = used.iter().enumerate().map(|(q, &c)| b1[c] + aug[q]).chain(b2.iter().cloned()).collect();
+    f.solve(&mut rhs);
+    if rhs.iter().any(|q| !q.is_finite()) { if std::env::var("FQ_FIN").is_ok() { eprintln!("  qdldl: non-finite solution (reg {})", f.regularize_count()); } return None; }
+    let mut w = vec![0.0; nv];
+    for (q, &c) in used.iter().enumerate() { w[c] = rhs[q]; }
+    Some((w, rhs[nc..].to_vec()))
+}
+
+
+/// Equilibrium LP: t* = min t s.t. |J^T lam + e_s|_inf <= t, lam >= 0 (over the columns the rows touch).  t* ~ 0 iff the
+/// rows can hold the side (first-order jammed on this set).
+fn eq_lp(nv: usize, si: usize, rows: &[(f64, Vec<(usize, f64)>)]) -> Option<f64> {
+    use clarabel::algebra::*;
+    use clarabel::solver::*;
+    let mut col = vec![usize::MAX; nv];
+    let mut used = Vec::new();
+    for (_, nz) in rows { for &(k, _) in nz { if col[k] == usize::MAX { col[k] = used.len(); used.push(k); } } }
+    let (nc, m) = (used.len(), rows.len());
+    let nx = m + 1;
+    let (mut ii, mut jj, mut vv, mut b) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+    // rows 0..nc: (J^T lam)_c - t <= -e_s[c];  rows nc..2nc: -(J^T lam)_c - t <= e_s[c];  then -lam <= 0
+    for (r, (_, nz)) in rows.iter().enumerate() {
+        for &(k, a) in nz { ii.push(col[k]); jj.push(r); vv.push(a); ii.push(nc + col[k]); jj.push(r); vv.push(-a); }
+    }
+    for c in 0..nc {
+        let es = if used[c] == si { 1.0 } else { 0.0 };
+        ii.push(c); jj.push(m); vv.push(-1.0); b.push(-es);
+    }
+    for c in 0..nc {
+        let es = if used[c] == si { 1.0 } else { 0.0 };
+        ii.push(nc + c); jj.push(m); vv.push(-1.0); b.push(es);
+    }
+    for r in 0..m { ii.push(2 * nc + r); jj.push(r); vv.push(-1.0); b.push(0.0); }
+    let a = CscMatrix::new_from_triplets(2 * nc + m, nx, ii, jj, vv);
+    let p = CscMatrix::<f64>::zeros((nx, nx));
+    let mut q = vec![0.0; nx]; q[m] = 1.0;
+    let cones = [NonnegativeConeT(2 * nc + m)];
+    let settings = DefaultSettingsBuilder::default().verbose(false).max_iter(200).tol_gap_abs(1e-12).tol_gap_rel(1e-12).tol_feas(1e-12).build().unwrap();
+    let mut solver = DefaultSolver::new(&p, &q, &a, &b, &cones, settings).ok()?;
+    solver.solve();
+    match solver.solution.status {
+        SolverStatus::Solved | SolverStatus::AlmostSolved => Some(solver.solution.x[m]),
+        _ => None,
+    }
+}
+
+/// Newton finish: minimum-norm Gauss-Newton projection onto {g_A = 0} for the load-bearing rows A (LP dual support),
+/// then checks, all at the f64 floor: converged; every nearby constraint feasible (violators join A, a few rounds);
+/// equilibrium J_A^T lam = -e_s with lam >= 0 (min-norm lam); side not above the start.  If the network supports an
+/// equilibrium, s is constant to first order on {g_A = 0}, so the projection is the basin's minimum for this branch.
+/// Returns Ok((s, x, GN steps)) or Err(reason).
+fn newton_finish(p: &Prob, v1: &[f64], a0: &[Spec]) -> Result<(f64, Vec<f64>, usize), String> {
+    let n = p.n;
+    let si = 3 * n;
+    let mut v = v1.to_vec();
+    let s0 = v[si];
+    let nv = v.len();
+    let mut aset: Vec<Spec> = a0.to_vec();
+    let mut steps = 0;
+    let tol_g = 1e-14 * s0.max(1.0);
+    for round in 0..4 {
+        let mut last = f64::INFINITY;
+        let mut conv = false;
+        for _ in 0..30 {
+            let near = p.near(&v, 1e-2);
+            let idx: std::collections::HashMap<Spec, usize> = near.iter().enumerate().map(|(q, c)| (c.sp, q)).collect();
+            let mut rows: Vec<(f64, Vec<(usize, f64)>)> = Vec::with_capacity(aset.len());
+            for sp in &aset {
+                match idx.get(sp) { Some(&q) => rows.push((near[q].g, near[q].nz.clone())), None => return Err("row-far".into()) }
+            }
+            let r = rows.iter().map(|c| c.0.abs()).fold(0.0, f64::max);
+            if std::env::var("FQ_FIN").is_ok() { eprintln!("  gn round {round} |A| {} r {r:.3e} s {:.13}", rows.len(), v[si]); }
+            if r < tol_g { conv = true; break; }
+            if r > 0.5 * last { conv = r < 1e-11 * s0.max(1.0); break; }
+            last = r;
+            let b2: Vec<f64> = rows.iter().map(|c| -c.0).collect();
+            let Some((w, _)) = kkt_solve(nv, &rows, &vec![0.0; nv], &b2) else { return Err("solve".into()) };
+            steps += 1;
+            let v0 = v.clone();
+            for q in 0..nv { v[q] += w[q]; }
+            p.tie(&v0, &mut v);
+        }
+        if !conv { return Err(format!("gn-noconv")); }
+        let viol: Vec<Spec> = p.near(&v, 1e-6).iter().filter(|c| c.g > 1e-12 * s0.max(1.0) && !aset.contains(&c.sp)).map(|c| c.sp).collect();
+        if viol.is_empty() { break; }
+        if round == 3 { return Err("viol".into()); }
+        aset.extend(viol);
+    }
+    // KKT Newton on the closed set: [H J^T; J -dI][w; lam] = [-e_s; -g], H = sum lam grad^2 g (lam from the previous
+    // solve, clamped >= 0; first lam = min-norm equilibrium).  Converged when |g_A| and the stationarity residual reach
+    // the f64 floor; a few violators may join the set on the way.
+    let mut lam: Vec<f64> = Vec::new();
+    let mut best = f64::INFINITY; let mut bad = 0;
+    for _ in 0..40 {
+        let near = p.near(&v, 1e-2);
+        let idx: std::collections::HashMap<Spec, usize> = near.iter().enumerate().map(|(q, c)| (c.sp, q)).collect();
+        let mut cs: Vec<Con> = Vec::new();
+        for sp in &aset { match idx.get(sp) { Some(&q) => cs.push(Con { g: near[q].g, nz: near[q].nz.clone(), sp: *sp }), None => return Err("row-far2".into()) } }
+        let rows: Vec<(f64, Vec<(usize, f64)>)> = cs.iter().map(|c| (c.g, c.nz.clone())).collect();
+        let mut b1 = vec![0.0; nv]; b1[si] = -1.0;
+        if lam.len() != rows.len() {
+            let Some((_, l)) = kkt_solve(nv, &rows, &b1, &vec![0.0; rows.len()]) else { return Err("solve-l0".into()) };
+            lam = l;
+        }
+        // residuals at v with the current lam
+        let mut st = vec![0.0; nv]; st[si] = 1.0;
+        for (c, &l) in cs.iter().zip(&lam) { for &(k, a) in &c.nz { st[k] += l * a; } }
+        let sres = st.iter().fold(0.0f64, |a, &b| a.max(b.abs()));
+        let gres = rows.iter().fold(0.0f64, |a, c| a.max(c.0.abs()));
+        if std::env::var("FQ_FIN").is_ok() { eprintln!("  kkt |A| {} gres {gres:.2e} sres {sres:.2e} s {:.13}", rows.len(), v[si]); }
+        if gres < 1e-13 * s0.max(1.0) && sres < 1e-11 { break; }
+        let merit = gres + sres;
+        if merit < 0.5 * best { best = merit; bad = 0; } else { bad += 1; if bad >= 4 { return Err(format!("kkt-noconv g {gres:.1e} st {sres:.1e}")); } }
+        let lc: Vec<f64> = lam.iter().map(|&l| l.max(0.0)).collect();
+        let h = hess_lagr2(p, &v, &cs, &lc, false);
+        if std::env::var("FQ_FIN").is_ok() {
+            let lm = lam.iter().fold(0.0f64, |a, &b| a.max(b.abs())); let ln = lam.iter().filter(|&&l| l < 0.0).count();
+            let hm = h.iter().fold(0.0f64, |a, q| a.max(q.2.abs())); let hn = h.iter().any(|q| !q.2.is_finite());
+            eprintln!("    lam max {lm:.2e} neg {ln}; H nnz {} max {hm:.2e} nonfinite {hn}", h.len());
+        }
+        let b2: Vec<f64> = rows.iter().map(|c| -c.0).collect();
+        let Some((mut w, l2)) = kkt_solve_h(nv, &rows, Some(&h), &b1, &b2) else { return Err("solve-kkt".into()) };
+        let wm = w.iter().fold(0.0f64, |a, &b| a.max(b.abs()));
+        if wm > 1e-2 { for q in w.iter_mut() { *q *= 1e-2 / wm; } }
+        let v0 = v.clone();
+        for q in 0..nv { v[q] += w[q]; }
+        p.tie(&v0, &mut v);
+        lam = l2;
+        steps += 1;
+        let viol: Vec<Spec> = p.near(&v, 1e-6).iter().filter(|c| c.g > 1e-12 * s0.max(1.0) && !aset.contains(&c.sp)).map(|c| c.sp).collect();
+        if !viol.is_empty() { if aset.len() > a0.len() + 200 { return Err("viol2".into()); } aset.extend(viol); lam.clear(); best = f64::INFINITY; }
+    }
+    // equilibrium at the projected point: [I J^T; J -dI][r; lam] = [-e_s; 0]  =>  lam = argmin |J^T lam + e_s|
+    let near = p.near(&v, 1e-2);
+    let idx: std::collections::HashMap<Spec, usize> = near.iter().enumerate().map(|(q, c)| (c.sp, q)).collect();
+    let rows: Vec<(f64, Vec<(usize, f64)>)> = aset.iter().map(|sp| (near[idx[sp]].g, near[idx[sp]].nz.clone())).collect();
+    if !rows.iter().any(|c| c.1.iter().any(|&(k, _)| k == si)) { return Err("no-s".into()); }
+    let mut b1 = vec![0.0; nv]; b1[si] = -1.0;
+    let Some((res, lam)) = kkt_solve(nv, &rows, &b1, &vec![0.0; rows.len()]) else { return Err("solve-eq".into()) };
+    let eres = res.iter().fold(0.0f64, |a, &b| a.max(b.abs()));
+    let lmax = lam.iter().cloned().fold(0.0, f64::max);
+    let lmin = lam.iter().cloned().fold(f64::INFINITY, f64::min);
+    if eres > 1e-8 || lmin < -1e-8 * lmax.max(1e-300) {
+        // min-norm lam is not unique with redundant rows: decide with the LP
+        match eq_lp(nv, si, &rows) {
+            Some(tt) if tt < 1e-9 => {}
+            Some(tt) => return Err(format!("eq-lp {tt:.1e} (mn res {eres:.1e} lmin {:.1e})", lmin / lmax)),
+            None => return Err("eq-lp-fail".into()),
+        }
+    }
+    let s1 = v[si];
+    if s1 > s0 + 1e-9 * s0.max(1.0) { return Err(format!("higher {:.1e}", s1 - s0)); }
+    Ok((s1, v[..3 * n].to_vec(), steps))
+}
+
 /// Trust-region SLP on the lifted problem with face-branch separators (snapped each iteration), and a greedy branch
 /// search over ambiguous (corner-corner-like) pairs when the step stalls.
 /// Returns (s, x, iterations, final R, flips accepted).
@@ -694,6 +918,7 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
         Some((m0 - (s + r * w[3 * p.n] + kappa * r * tau), w, cons, m0, z))
     };
     let mut stalls = 0;
+    let (mut fin_prev, mut fin_tried): (u64, std::collections::HashSet<u64>) = (0, std::collections::HashSet::new());
     let mut hq: Vec<(usize, usize, f64)> = Vec::new();
     let mut hist: Vec<f64> = Vec::new();
     while it < o.maxit {
@@ -786,6 +1011,38 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
                 (dm, sl, na, nd)
             } else { (0.0, 0.0, 0, 0) };
             trace.push((it, tp.elapsed().as_secs_f64(), m1, flips, dm, sl, na, nd));
+            if o.finish {
+                // row-level load set of this LP (dual support); stable over two consecutive LPs and untried -> finish
+                let zm = zd.iter().cloned().fold(0.0, f64::max);
+                let mut a: Vec<(Spec, (u32, u32, u8, u8))> = cons.iter().zip(&zd).filter(|(_, &z)| z > 1e-6 * zm).map(|(c, _)| (c.sp, row_key(p, &v0, c))).collect();
+                let sup: std::collections::HashSet<Spec> = a.iter().map(|q| q.0).collect();
+                a.sort_by_key(|q| q.1);
+                let fpk = fingerprint(&a.iter().map(|q| q.1).collect::<Vec<_>>());
+                if std::env::var("FQ_FIN").is_ok() {
+                    let mut h = [[0usize; 8]; 2];
+                    for (c, &z) in cons.iter().zip(&zd) {
+                        let gb = if c.g >= -1e-9 { 0 } else { ((-c.g).log10() + 9.0).ceil().clamp(1.0, 7.0) as usize };
+                        h[(z > 1e-6 * zm) as usize][gb] += 1;
+                    }
+                    eprintln!("it {it}: rows by gap decade (<=1e-9, 1e-8.., ..>1e-3): off-support {:?} support {:?}", h[0], h[1]);
+                }
+                if fpk == fin_prev && !fin_tried.contains(&fpk) {
+                    fin_tried.insert(fpk);
+                    // plus every row the next step could close (gap below the trust radius at the new point)
+                    let mut specs: Vec<Spec> = a.iter().map(|q| q.0).collect();
+                    for c in p.near(&v1, r) { if !sup.contains(&c.sp) { specs.push(c.sp); } }
+                    match newton_finish(p, &v1, &specs) {
+                        Ok((s2, x2, gn)) => {
+                            FIN_LOG.lock().unwrap().push(format!("ok it {it} gn {gn} ds {:.2e}", s2 - s));
+                            x = x2; s = s2;
+                            trace.push((it, tp.elapsed().as_secs_f64(), s, flips, 0.0, 0.0, specs.len(), 999));
+                            break;
+                        }
+                        Err(e) => FIN_LOG.lock().unwrap().push(format!("fail it {it}: {e}")),
+                    }
+                }
+                fin_prev = fpk;
+            }
             if rho > 0.5 && wmax > 0.5 { r = (2.0 * r).min(o.rmax); }
         } else {
             r /= 4.0;
@@ -1120,7 +1377,7 @@ fn main() {
             let mut trace: Vec<(usize, f64, f64, usize, f64, f64, usize, usize)> = Vec::new();
             let mut load: Vec<(u32, u32, u8, u8)> = Vec::new();
             if !a.iter().any(|t| t == "--no-polish") {
-                let po = POpt { sqp: a.iter().any(|t| t == "--sqp"), rmax: arg(&a, "--rmax", 4e-3), r0: arg(&a, "--r0", 1e-3), rmin: arg(&a, "--rmin", 1e-10), maxit: arg(&a, "--pit", 300), cc_tol: arg(&a, "--cc-tol", 1e-7), flip_top: arg(&a, "--flip-top", 8), ident: a.iter().any(|t| t == "--ident"), stag_w: arg(&a, "--stag-w", 15), stag_tol: arg(&a, "--stag-tol", 2e-9), verbose: o.verbose };
+                let po = POpt { sqp: a.iter().any(|t| t == "--sqp"), rmax: arg(&a, "--rmax", 4e-3), r0: arg(&a, "--r0", 1e-3), rmin: arg(&a, "--rmin", 1e-10), maxit: arg(&a, "--pit", 300), cc_tol: arg(&a, "--cc-tol", 1e-7), flip_top: arg(&a, "--flip-top", 8), ident: a.iter().any(|t| t == "--ident"), stag_w: arg(&a, "--stag-w", 15), stag_tol: arg(&a, "--stag-tol", 2e-9), finish: a.iter().any(|t| t == "--finish"), verbose: o.verbose };
                 let (s2, x2, it, rr, fl) = polish(&mut prob, sq, &xq, &po, &mut trace, &mut load);
                 sq = s2; xq = x2; pit = it; pr = rr; flips = fl;
             }
@@ -1129,7 +1386,7 @@ fn main() {
             let (mg, mw) = check(sr, &xq);
             if let Some(out) = sarg(&a, "--out") { write_cfg(&out, sr, &xq); }
             println!("{{\"s\": {:.15}, \"s_alm\": {:.15}, \"viol\": {:.2e}, \"evals\": {}, \"outer\": {}, \"slp_it\": {}, \"slp_r\": {:.1e}, \"flips\": {}, \"min_gap\": {:.2e}, \"min_wall\": {:.2e}, \"sec\": {:.3}, \"s_coarse\": {:.15}, \"t_alm\": {:.3}, \"s_alm0\": {:.15}, \"trace\": [{}], \"fp\": \"{:016x}\", \"ncontacts\": {}{}}}",
-                     sr, sq, viol, nev, outer, pit, pr, flips, mg, mw, t0.elapsed().as_secs_f64(), s_coarse, t_alm, s_alm0, trace.iter().map(|q| format!("[{},{:.4},{:.15},{},{:.3e},{:.3e},{},{}]", q.0, q.1, q.2, q.3, q.4, q.5, q.6, q.7)).collect::<Vec<_>>().join(","), fp, ncont, if a.iter().any(|t| t == "--ident") { format!(", \"fps\": [{}]", IDENT_FPS.lock().unwrap().iter().map(|h| format!("\"{:016x}\"", h)).collect::<Vec<_>>().join(",")) } else { String::new() });
+                     sr, sq, viol, nev, outer, pit, pr, flips, mg, mw, t0.elapsed().as_secs_f64(), s_coarse, t_alm, s_alm0, trace.iter().map(|q| format!("[{},{:.4},{:.15},{},{:.3e},{:.3e},{},{}]", q.0, q.1, q.2, q.3, q.4, q.5, q.6, q.7)).collect::<Vec<_>>().join(","), fp, ncont, format!(", \"fin\": [{}]", FIN_LOG.lock().unwrap().iter().map(|q| format!("\"{q}\"")).collect::<Vec<_>>().join(",")) + &if a.iter().any(|t| t == "--ident") { format!(", \"fps\": [{}]", IDENT_FPS.lock().unwrap().iter().map(|h| format!("\"{:016x}\"", h)).collect::<Vec<_>>().join(",")) } else { String::new() });
         }
         "gradcheck" => {
             // random kick so many constraints are active, then compare analytic vs central differences

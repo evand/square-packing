@@ -36,3 +36,6 @@ site/data/*.stdout
 # local Pages assembly
 _site/
 search/packer/target-dev/
+search/packer/bench/polish*/out_*/*
+!search/packer/bench/polish*/out_base/
+!search/packer/bench/polish*/out_base/res.json

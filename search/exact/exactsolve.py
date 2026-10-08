@@ -33,6 +33,7 @@ from geom import eval_contact, tangential, sat_gap, wall_gaps, describe, offset
 import verify_cert
 
 SQ2 = math.sqrt(2)
+FORCE_KKT = False                                    # --force-kkt (prototype only; see run())
 
 
 def log(*a):
@@ -779,6 +780,9 @@ def run(path, dps=80, eps='1e-20', outdir=None, algdeg=0, tol=0, quiet=False, fo
     for thr in (1e-8, 1e-7):
         for tol, atol in ladder:
             cands, vv = find_contacts(P, tol)
+            if not cands:                                # nothing within tol (far from jammed): next rung
+                eta = float('inf')
+                continue
             J, g = jacobian(P, cands)
             lam, supp, eta = max_support(J)
             if eta < thr:
@@ -786,7 +790,29 @@ def run(path, dps=80, eps='1e-20', outdir=None, algdeg=0, tol=0, quiet=False, fo
         if eta < thr:
             break
     rep['jam_threshold'] = thr
-    if eta >= 1e-7:
+    forced_kkt = False
+    if FORCE_KKT and eta >= 1e-7:
+        # --force-kkt (packer finish prototype, 10-08): skip the f64 jam test; take the max-support set of the rung with
+        # the smallest equilibrium residual (contact tolerance up to 1e-3) and let Newton + the checks below decide.
+        best = None
+        for t2 in (1e-6, 1e-5, 1e-4, 1e-3):
+            c2, vv2 = find_contacts(P, t2)
+            if not c2:
+                continue
+            J2, g2 = jacobian(P, c2)
+            l2, s2, e2 = max_support(J2)
+            if best is None or e2 < best[0]:
+                best = (e2, t2, c2, vv2, J2, g2, l2, s2)
+            if e2 < 1e-8:
+                break
+        if best is not None:
+            eta, tol, cands, vv, J, g, lam, supp = best
+            atol = 0.0
+            forced_kkt = True
+            rep['forced_kkt'] = dict(tol=tol, eta=float(eta))
+    if forced_kkt:
+        use_vv = False
+    elif eta >= 1e-7:
         log_(f'  !! no contact tolerance in the ladder gives an equilibrium with smooth contacts (residual {eta:.1e})')
         c0, vv0 = find_contacts(P, 1e-6)
         dS, nvv, _ = vv_branch_test(P, c0, vv0, 1e-6)
@@ -1033,5 +1059,7 @@ if __name__ == '__main__':
     ap.add_argument('--algdeg', type=int, default=0)
     ap.add_argument('--tol', type=float, default=0, help='contact tolerance (default: automatic ladder)')
     ap.add_argument('-q', action='store_true')
+    ap.add_argument('--force-kkt', action='store_true', help='prototype: skip the f64 jam test, go straight to the KKT solve')
     a = ap.parse_args()
+    FORCE_KKT = a.force_kkt
     run(a.input, a.dps, a.eps, a.out, a.algdeg, a.tol, a.q)

@@ -732,3 +732,32 @@ Evan: polish until the contact graph is identified, dedupe on graphs, finish lat
 * **Duplication vs the archive (by side, 2e-9):** polished proposals ending in an archived basin 28 % (110) / 12 % (237);
   and the explorer's screen-return rule (screened side within 1e-6 of an archive side -> no polish) is wrong 26 % (36/137)
   / 3 of 9 times (a new basin skipped).
+
+## Newton finish: prototype and first Rust attempt (10-08; `polish_replay.py`, `polish_finish_report.py`, `bench/polish110`, `polish237`)
+Evan: polish only until the contact graph is identified, finish exactly, no fixed thresholds.  Tier-0 harness: 200 (110) / 80
+(237) frozen screened states (explorer proposals from ex10 / tx237n), replayed through polish variants; deterministic
+(base vs base: 200/200 identical sides, wall time +-4 %).
+* **Prototype = stop the polish at k iterations (`--pit k`), then `exactsolve` (unlifted KKT Newton + all its checks).**
+  Default exactsolve (with its f64 jam test first): success 30 / 48 / 72 % at k = 8 / 16 / 64, and **every success equals
+  the full polish's side (143/143)**.  Failures: "not jammed" + empty-contact-set crashes (fixed: a rung with no contacts
+  now counts as not jammed).
+* **`exactsolve --force-kkt`** (new, opt-in: skip the jam test, Newton on the max-support set of the best rung, tol up to
+  1e-3): same side 81 / 105 / 145 of 200 at k = 8 / 16 / 64, but also "higher" certified points 10 / 10 / 5 (+3e-6 ...
+  +1.9e-2).  The full check set rejects every higher one: corner-corner branch MILP finds a descent (vv_milp_dS < 0) or the
+  second-order test finds negative curvature (saddle).  So the finish is self-checking once branch + second-order tests are
+  in the acceptance rule.
+* **But the savings are small: ideal policy (try at 8/16/32/64, fall back to the full polish) = 0.88x polish time at 110**
+  (exactsolve's own Python cost excluded).  The long polishes, where the time is, are not near any stationary point until
+  late: at k = 16 the 300-iteration state p0004 has no equilibrium on any contact set up to tol 1e-3 (residual 1.3e-4).
+  The 10-08 census's "network settles at iteration 8, 53 % of time after" was contact-level stability, not convergence:
+  the point keeps moving along {g_A = 0} with a first-order descent of 1e-6 ... 1e-4 left.
+* **What the crawl is (fq Newton-finish debugging, `fq --finish`, opt-in, experimental):** on a fixed network the
+  remaining descent is along a curved valley (rotations): a linear step of size R gains ~3e-4 R but costs ~R^2
+  curvature error, so rho < 0.1, R shrinks to ~1e-4, ~3e-8 per step: the observed crawl.  Rows close one at a time
+  (support 1062 -> 1073 rows over 40 iterations).
+* **Rust finish in the lifted formulation does not work:** Gauss-Newton projection onto the dual-support rows converges
+  (after a fix: use the post-step vector incl. separators), but equilibrium fails (residual 1e-6 ... 1e-4: the point is not
+  stationary, as above); the KKT step with curvature needs multipliers, and in the lifted model the min-norm multipliers
+  are meaningless (max 157, 339 / 1057 negative: separator rows are massively redundant), so H_L is garbage; QDLDL also
+  needs an augmented-Lagrangian top-left (H + rho J^T J) to stay quasi-definite.  A real finish needs the unlifted
+  corner-on-side contacts (exactsolve's form) in Rust.  Not pursued: the prototype bounds its value at ~12 % at 110.
