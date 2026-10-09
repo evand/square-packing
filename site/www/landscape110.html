@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The s(110) landscape · Square Packing Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
+<style>
+/* Layout: one reading column (~68ch) with figures that widen to 980px; site tokens (Square Packing Atlas). */
+:root{ --serif:Spectral,Georgia,"Times New Roman",serif; --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace; }
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration-thickness:.08em;text-underline-offset:.18em}
+.wrap{max-width:980px;margin:0 auto;padding-inline:20px;padding-block:28px 64px;display:flex;flex-direction:column;gap:44px}
+.col{max-width:68ch}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:2.1rem;line-height:1.15;font-weight:600;margin:6px 0 14px;text-wrap:balance;letter-spacing:-.01em}
+h2{font-size:1.3rem;line-height:1.25;font-weight:600;margin:0 0 10px;text-wrap:balance}
+p{margin:0 0 .8em}
+.lede{font-size:1.12rem}
+.mono{font-family:var(--mono)}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.9em}
+section{display:flex;flex-direction:column;gap:14px}
+.facts{display:flex;flex-wrap:wrap;gap:8px 28px;margin-top:6px;font-family:var(--mono);font-size:.8rem;color:var(--muted)}
+.facts b{display:block;font-size:1.15rem;color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
+.fig{background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.figrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:760px){.figrow{grid-template-columns:1fr}}
+canvas{display:block;width:100%;max-width:100%;height:auto;touch-action:manipulation}
+.sqview{aspect-ratio:1/1}
+.cap{font-family:var(--mono);font-size:.76rem;color:var(--muted);line-height:1.45}
+.cap b{color:var(--ink);font-weight:500}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;font-family:var(--mono);font-size:.78rem}
+.controls label{display:inline-flex;align-items:center;gap:6px;color:var(--muted)}
+button{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--rule);border-radius:3px;padding:4px 10px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible,canvas:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.readout{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.86rem;display:flex;flex-wrap:wrap;gap:4px 18px}
+.readout span{color:var(--muted)}
+.readout b{color:var(--ink);font-weight:500}
+.lgnd{display:flex;flex-wrap:wrap;gap:6px 16px;font-family:var(--mono);font-size:.72rem;color:var(--muted);align-items:center}
+.sw{display:inline-block;width:11px;height:11px;border:1px solid var(--sq-stroke);vertical-align:-1px;margin-right:5px}
+ul.notes{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px}
+.err{color:var(--red);font-family:var(--mono);font-size:.8rem}
+@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto}}
+
+html,body{height:auto}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="brand">Square Packing Atlas</span>
+  <nav><a href="index.html">Overview</a><a href="explore.html">Explore</a><a href="compare.html">Compare</a><a href="bounds.html">Bounds</a><a href="proofs.html">Proofs &amp; results</a><a href="problems.html">Open problems</a><a href="sources.html">Sources</a></nav>
+</div>
+<main class="wrap">
+  <header class="col">
+    <div class="eyebrow">Square Packing Atlas · n = 110</div>
+    <h1>The s(110) landscape</h1>
+    <p class="lede">We know <b id="f-count">497</b> different ways to pack 110 unit squares into a square of side less than 11. Each one is a local minimum: no small motion of the squares lets the box shrink. They differ in side by at most <span class="num" id="f-spread">0.0033</span>, and they all share one layout. This page shows what that means for anyone hunting for a better packing.</p>
+    <div class="facts">
+      <div><b id="f-best">10.996783</b>best known side</div>
+      <div><b>330</b>coordinates to vary</div>
+      <div><b id="f-n">497</b>certified minima below 11</div>
+      <div><b id="f-bar">—</b>typical expansion to switch</div>
+    </div>
+    <p id="loaderr" class="err" hidden></p>
+  </header>
+
+  <section>
+    <div class="col">
+      <div class="eyebrow">1 · The census</div>
+      <h2>Hundreds of floors in one narrow funnel</h2>
+      <p>Each dot is one certified local minimum, placed by its side length. Below 11 there is a single structure: a band of squares tilted about 28° along the left wall, a band tilted about 62° along the bottom, and about 66 squares parallel to the walls filling the rest. The minima differ in how many squares each band holds and in how the two bands meet. Hover or tap a dot to see the packing.</p>
+    </div>
+    <div class="fig">
+      <canvas id="strip" height="170" aria-label="Side lengths of all certified minima below 11" tabindex="0"></canvas>
+      <div class="lgnd" id="striplegend"></div>
+      <div class="figrow">
+        <canvas id="cview" class="sqview" width="600" height="600" aria-label="Selected packing"></canvas>
+        <div class="cap" id="cinfo"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="col">
+      <div class="eyebrow">2 · Why each one is stuck</div>
+      <h2>Every contact pushes, and the pushes balance</h2>
+      <p>To shrink the box, the walls must move in. A packing is stuck when the contacts can carry that inward push: there are positive contact forces, one for each touching pair or square-and-wall, that exactly balance a unit inward force on the walls. Then any small motion that keeps the squares apart costs side length, to first order or (where the first-order test is flat) to second order. The exact solver checks this at an 80-digit point and also writes an exact rational certificate for the side.</p>
+      <p>Stuck does not mean frozen. Some squares carry no force (rattlers), and in most minima some groups of squares can slide together without changing the side. Those are the <i>flat motions</i>; the best known packing has <span id="f-flat">17</span> squares involved in them. They never lead anywhere lower.</p>
+    </div>
+    <div class="fig">
+      <div class="controls">
+        <label for="fsel">packing</label><select id="fsel"></select>
+        <button id="fforce" class="on" aria-pressed="true">contact forces</button>
+        <button id="fflat" aria-pressed="false">squares that can slide</button>
+      </div>
+      <div class="figrow">
+        <canvas id="fview" class="sqview" width="600" height="600" aria-label="Contact forces"></canvas>
+        <div class="cap" id="finfo"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="col">
+      <div class="eyebrow">3 · Moving between minima</div>
+      <h2>To get from one minimum to the next, the box has to grow</h2>
+      <p>Pick two minima. Match each square in one to a square in the other, so the total corner movement is as small as possible. Then look for the smallest box in which the squares can move from the first arrangement to the second without ever overlapping. That box size, minus the larger of the two sides, is the expansion the transition needs.</p>
+      <p>The animation runs a tour through <span id="nreps">24</span> representative minima, chosen to keep the expansions small. In each step the packing first spreads out to fill the larger box, then rearranges, then settles into the next minimum. The chart below the packing plots the side along the way: each dip is a local minimum, and each hump is the expansion needed to reach the next one.</p>
+    </div>
+    <div class="fig">
+      <div class="controls">
+        <button id="tplay" aria-pressed="false">Pause</button>
+        <button id="tprev" aria-label="previous step">‹ step</button>
+        <button id="tnext" aria-label="next step">step ›</button>
+        <label for="tspeed">speed <input id="tspeed" type="range" min="1" max="9" value="5"></label><span id="tspeedv" class="num"></span>
+      </div>
+      <div class="figrow">
+        <canvas id="tview" class="sqview" width="600" height="600" aria-label="Transition animation"></canvas>
+        <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+          <div class="readout" id="tread"></div>
+          <div class="cap" id="tinfo"></div>
+        </div>
+      </div>
+      <canvas id="tprof" height="190" aria-label="Side length along the tour"></canvas>
+      <div class="cap">Side along the tour. Dots: the minima. Dashed line: side 11. The top of each hump is our upper bound on the box that step needs; a cleverer path might need less. Click the chart to jump to a step.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="col">
+      <div class="eyebrow">4 · Settling</div>
+      <h2>A small shake finds its way back; a slightly bigger one does not</h2>
+      <p>Both runs start from the packing with side 10.996793 (the record before September 27). The box is loosened by 3 %, every square is nudged by a random amount, and a local optimizer squeezes the box down again while keeping the squares apart. On the left the nudges have standard deviation 0.01 in position and 0.2° in angle; on the right 0.03 and 0.6°.</p>
+      <p>In two of our four small-shake runs, including the one on the left, the squeeze lands in a <i>better</i> minimum than the start: Couzo's packing, side 10.996783. The other two jam just above 11. With three times the shake, all four runs end at 11 or above; two end at exactly 11, which is what a full row of 11 squares parallel to the walls forces.</p>
+    </div>
+    <div class="fig">
+      <div class="controls">
+        <button id="splay" aria-pressed="false">Play both</button>
+        <button id="sreset">Restart</button>
+      </div>
+      <div class="figrow">
+        <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+          <canvas id="sk" class="sqview" width="600" height="600" aria-label="Settling after a small shake"></canvas>
+          <div class="readout" id="skread"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+          <canvas id="sr" class="sqview" width="600" height="600" aria-label="Settling after a larger shake"></canvas>
+          <div class="readout" id="srread"></div>
+        </div>
+      </div>
+      <div class="cap" id="sinfo"></div>
+    </div>
+  </section>
+
+  <section class="col">
+    <div class="eyebrow">How this was computed</div>
+    <ul class="notes" id="notes">
+      <li><b>Census.</b> Basin-exploration runs of our packer, started from the known record funnel; every candidate below 11 is solved exactly. A minimum counts when it has a valid rational certificate and the solver's first- and second-order tests pass. On 2026-10-08 the solver got a fix for nearly parallel touching squares, and three earlier entries turned out not to be minima; the whole census was re-checked.</li>
+      <li><b>Distinct.</b> Two minima are different when their exact sides differ. Sides that agree to nine digits still belong to visibly different packings here.</li>
+      <li><b>Expansion.</b> For each pair: spread the first packing to fill a box of side s, follow the straight-line morph to the second with small feasible steps (linear programs that keep every pair of squares apart), and bisect on s. The result is an upper bound on the expansion needed, for this family of paths.</li>
+      <li><b>Not covered.</b> The census only covers what our search reaches from the known funnel, so a different structure below 11, or a better minimum with a very small basin, is not ruled out.</li>
+      <li>Code: <a href="https://github.com/evand/square-packing/tree/main/search/packer/landscape"><span class="mono">search/packer/landscape/</span></a> and <a href="https://github.com/evand/square-packing/blob/main/search/exact/exactsolve.py"><span class="mono">search/exact/exactsolve.py</span></a>.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const css = () => { const s = getComputedStyle(document.documentElement); const g = n => s.getPropertyValue(n).trim();
+  return {paper:g('--paper'), surface:g('--surface'), ink:g('--ink'), muted:g('--muted'), rule:g('--rule'), accent:g('--accent'),
+    gold:g('--gold'), red:g('--red'), green:g('--green'), a:g('--chart-a'), b:g('--chart-b'), fill:g('--sq-fill'), stroke:g('--sq-stroke'), wall:g('--wall')}; };
+let C = css();
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function hexrgb(h){ h = h.replace('#',''); if (h.length===3) h=h.split('').map(c=>c+c).join(''); return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16)); }
+function mix(h1,h2,t){ const a=hexrgb(h1), b=hexrgb(h2); return `rgb(${a.map((v,i)=>Math.round(v+(b[i]-v)*t)).join(',')})`; }
+// tilt colour: axis-parallel = neutral fill; tilted: chart-a (~28 deg) to chart-b (~62 deg), 45 deg in between
+function tiltColor(deg){ let a = ((deg % 90) + 90) % 90; if (a < 1.5 || a > 88.5) return C.fill;
+  const t = Math.min(1, Math.max(0, (a - 20) / 50)); return mix(C.a, C.b, t); }
+
+function dec(arr){ const out=[]; for (let i=0;i<arr.length;i+=3) out.push([arr[i]/1e4, arr[i+1]/1e4, arr[i+2]/100]); return out; }
+
+function fitCanvas(cv){ const r = cv.getBoundingClientRect(); const dpr = Math.min(2, window.devicePixelRatio||1);
+  const w = Math.max(200, Math.round(r.width*dpr)); const h = Math.round(w * (cv.classList.contains('sqview') ? 1 : (+cv.getAttribute('height'))/Math.max(1,(+cv.dataset.w||r.width))));
+  return {w, dpr}; }
+
+function drawPacking(cv, sq, side, opt={}){
+  const dpr = Math.min(2, window.devicePixelRatio||1);
+  const W = Math.round(cv.getBoundingClientRect().width*dpr) || 600;
+  if (cv.width !== W){ cv.width = W; cv.height = W; }
+  const ctx = cv.getContext('2d');
+  const view = opt.view || side;              // world units shown (keeps the scale fixed in animations)
+  const pad = 10*dpr, sc = (W - 2*pad) / view;
+  ctx.setTransform(1,0,0,1,0,0); ctx.fillStyle = C.surface; ctx.fillRect(0,0,W,W);
+  ctx.setTransform(sc,0,0,-sc,pad, W - pad);   // y up
+  // box
+  ctx.fillStyle = C.paper; ctx.fillRect(0,0,side,side);
+  ctx.lineWidth = 1.5*dpr/sc; ctx.strokeStyle = C.wall; ctx.strokeRect(0,0,side,side);
+  // reference outline at 11
+  if (opt.ref){ ctx.setLineDash([4*dpr/sc, 4*dpr/sc]); ctx.strokeStyle = C.muted; ctx.lineWidth = 1*dpr/sc; ctx.strokeRect(0,0,opt.ref,opt.ref); ctx.setLineDash([]); }
+  const hl = opt.highlight || null, dim = opt.dim || null;
+  for (let i=0;i<sq.length;i++){
+    const [x,y,t] = sq[i]; const r = t*Math.PI/180, c = Math.cos(r)*0.5, s = Math.sin(r)*0.5;
+    ctx.beginPath(); ctx.moveTo(x+c-s, y+s+c); ctx.lineTo(x-c-s, y-s+c); ctx.lineTo(x-c+s, y-s-c); ctx.lineTo(x+c+s, y+s-c); ctx.closePath();
+    let f = tiltColor(t);
+    if (dim && !dim.has(i)) f = mix(hexrgb(C.fill).length?C.fill:C.fill, C.surface, 0.0);
+    if (hl && hl.has(i)) f = C.gold;
+    ctx.fillStyle = f; ctx.globalAlpha = (opt.fade && opt.fade.has(i)) ? 0.35 : 1; ctx.fill(); ctx.globalAlpha = 1;
+    ctx.lineWidth = 0.8*dpr/sc; ctx.strokeStyle = C.stroke; ctx.stroke();
+  }
+  if (opt.overlap){ ctx.fillStyle = C.red; for (const [x,y,m] of opt.overlap){ ctx.beginPath(); ctx.arc(x,y,Math.min(0.25,0.05+m*6),0,7); ctx.globalAlpha=.55; ctx.fill(); ctx.globalAlpha=1; } }
+  if (opt.contacts){
+    const lmax = opt.lmax || 0.2;
+    for (const c of opt.contacts){ const px=c[3]/1e4, py=c[4]/1e4, l=c[5]; if (l <= 1e-9) continue;
+      const rr = 0.035 + 0.16*Math.sqrt(l/lmax); ctx.beginPath(); ctx.arc(px,py,rr,0,7);
+      ctx.fillStyle = c[0]==='W' ? C.ink : C.red; ctx.globalAlpha = .8; ctx.fill(); ctx.globalAlpha = 1; }
+  }
+  ctx.setTransform(1,0,0,1,0,0);
+}
+
+// ---------------------------------------------------------------------------------------------------- data
+let D = null;
+fetch('data/landscape110.json').then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(d => { D = d; init(); })
+  .catch(e => { const el = $('loaderr'); el.hidden = false; el.textContent = 'The data file did not load (' + e.message + '). Reload the page to try again.'; });
+
+function lerpF(F, x){ const i = Math.max(0, Math.min(F.length-1, Math.floor(x))), j = Math.min(F.length-1, i+1), t = Math.min(1, Math.max(0, x - i));
+  if (t === 0 || i === j) return F[i]; const a = F[i], b = F[j];
+  return Object.assign({}, a, {s: a.s + (b.s - a.s)*t, sq: a.sq.map((q,k) => [q[0]+(b.sq[k][0]-q[0])*t, q[1]+(b.sq[k][1]-q[1])*t, q[2]+(b.sq[k][2]-q[2])*t])}); }
+function fmt(x, k=6){ return (+x).toFixed(k); }
+
+function init(){
+  const cen = D.census; const S = cen.map(r => +r.S);
+  $('f-count').textContent = cen.length; $('f-n').textContent = cen.length;
+  $('f-spread').textContent = (Math.max(...S) - Math.min(...S)).toFixed(4);
+  $('f-best').textContent = Math.min(...S).toFixed(6);
+  $('nreps').textContent = D.reps.length;
+  const ex = D.legs.filter(l => l.ok).map(l => l.s - Math.max(+D.reps[l.i].S, +D.reps[l.j].S)).sort((a,b)=>a-b);
+  if (ex.length) $('f-bar').textContent = '+' + ex[Math.floor(ex.length/2)].toFixed(3);
+  $('f-flat').textContent = D.reps[0].flat.length;
+  initStrip(); initForces(); initTour(); initSettle();
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { C = css(); redrawAll(); });
+  new MutationObserver(() => { C = css(); redrawAll(); }).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+  let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(redrawAll, 120); });
+}
+const redraws = []; function redrawAll(){ for (const f of redraws) f(); }
+
+// ---------------------------------------------------------------------------------------------------- 1 census strip
+function initStrip(){
+  const cv = $('strip'), cen = D.census;
+  const S = cen.map(r => +r.S), lo = 10.9966, hi = 11.0;
+  const keyOf = r => r.roles ? r.roles[0] : null;          // left-band count
+  const keys = [...new Set(cen.map(keyOf).filter(k => k !== null))].sort((a,b)=>a-b);
+  let sel = 0, pts = [];
+  // legend
+  const lg = $('striplegend'); lg.innerHTML = '<span>colour: squares in the left band</span>';
+  function colK(k){ if (k===null) return C.muted; const t = keys.length>1 ? (k-keys[0])/(keys[keys.length-1]-keys[0]) : .5; return mix(C.a, C.b, t); }
+  function legend(){ lg.innerHTML = '<span>colour: squares in the left band</span>' + keys.map(k => `<span><i class="sw" style="background:${colK(k)}"></i>${k}</span>`).join('') + '<span><i class="sw" style="background:'+C.muted+'"></i>not recorded</span>'; }
+  function draw(){
+    legend();
+    const dpr = Math.min(2, devicePixelRatio||1); const W = Math.round(cv.getBoundingClientRect().width*dpr); const H = Math.round(170*dpr);
+    cv.width = W; cv.height = H; const ctx = cv.getContext('2d');
+    ctx.fillStyle = C.surface; ctx.fillRect(0,0,W,H);
+    const L = 32*dpr, R = W - 32*dpr, top = 12*dpr, bot = H - 30*dpr;
+    const X = s => L + (s - lo)/(hi - lo)*(R - L);
+    // ticks
+    ctx.strokeStyle = C.rule; ctx.fillStyle = C.muted; ctx.font = `${11*dpr}px ${getComputedStyle(document.body).getPropertyValue('--mono')||'monospace'}`; ctx.textAlign='center';
+    for (let s = 10.9966; s <= 11.00001; s += 0.0006){ const x = X(s); ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bot); ctx.stroke(); ctx.fillText(s.toFixed(4), x, bot + 16*dpr); }
+    ctx.textAlign='left';
+    // jitter: deterministic by index and group
+    pts = cen.map((r,i) => { const k = keyOf(r); const g = k===null ? 0.5 : (keys.indexOf(k)+0.5)/keys.length;
+      const j = (((i*2654435761)>>>0) % 1000)/1000; return [X(+r.S), top + (bot-top)*(0.08 + 0.84*(0.7*g + 0.3*j)), k]; });
+    pts.forEach(([x,y,k]) => { ctx.beginPath(); ctx.arc(x,y,2.6*dpr,0,7); ctx.fillStyle = colK(k); ctx.fill(); });
+    const [sx,sy] = pts[sel]; ctx.beginPath(); ctx.arc(sx,sy,6*dpr,0,7); ctx.lineWidth = 2*dpr; ctx.strokeStyle = C.ink; ctx.stroke();
+    show();
+  }
+  function show(){
+    const r = cen[sel]; drawPacking($('cview'), dec(r.sq), +r.S);
+    const rank = sel + 1;
+    $('cinfo').innerHTML = `<b>side ${(+r.S).toFixed(12)}</b><br>rank ${rank} of ${cen.length} by side<br>` +
+      (r.roles ? `left band ${r.roles[0]}, bottom band ${r.roles[1]}, parallel to the walls ${r.roles[2]}, other ${r.roles[3]}<br>` : '') +
+      `flat motions: ${r.flat}<br><br>Colour shows tilt: <span style="color:${C.a}">■</span> about 28°, <span style="color:${C.b}">■</span> about 62°, grey parallel to the walls.`;
+  }
+  function pick(ev){ const r = cv.getBoundingClientRect(), dpr = cv.width / r.width; const x = (ev.clientX - r.left)*dpr, y = (ev.clientY - r.top)*dpr;
+    let b = 0, bd = 1e18; pts.forEach(([px,py],i) => { const d = (px-x)**2 + (py-y)**2; if (d < bd){ bd = d; b = i; } }); if (b !== sel){ sel = b; draw(); } }
+  cv.addEventListener('pointermove', pick); cv.addEventListener('pointerdown', pick);
+  cv.addEventListener('keydown', e => { if (e.key==='ArrowRight'){ sel = Math.min(cen.length-1, sel+1); draw(); e.preventDefault(); } if (e.key==='ArrowLeft'){ sel = Math.max(0, sel-1); draw(); e.preventDefault(); } });
+  redraws.push(draw); draw();
+}
+
+// ---------------------------------------------------------------------------------------------------- 2 forces
+function initForces(){
+  const sel = $('fsel'); let mode = {force:true, flat:false};
+  D.reps.forEach((r,i) => { const o = document.createElement('option'); o.value = i; o.textContent = (+r.S).toFixed(9) + (i===0 ? ' (best known)' : ''); sel.appendChild(o); });
+  function draw(){
+    const r = D.reps[+sel.value], sq = dec(r.sq);
+    const lmax = Math.max(...r.contacts.map(c => c[5]));
+    const flat = new Set(r.flat), free = new Set(r.free);
+    drawPacking($('fview'), sq, +r.S, {contacts: mode.force ? r.contacts : null, lmax, highlight: mode.flat ? flat : null, fade: free});
+    const nC = r.contacts.filter(c => c[0]==='C').length, nW = r.contacts.length - nC;
+    $('finfo').innerHTML = `<b>side ${(+r.S).toFixed(12)}</b><br>${nC} square-square and ${nW} square-wall contacts carry force<br>` +
+      `rattlers (no force, drawn faint): ${r.free.length ? r.free.length : 'none'}<br>squares in flat motions: ${r.flat.length}<br><br>` +
+      (mode.force ? `Dot area is proportional to the contact force; <span style="color:${C.red}">red</span> between squares, <span style="color:${C.ink}">dark</span> at the walls. The largest force is ${lmax.toFixed(3)} in units of the inward push on the walls.` : '') +
+      (mode.flat ? `<br><br><span style="color:${C.gold}">Gold</span>: squares that take part in a flat motion.` : '');
+  }
+  $('fforce').onclick = e => { mode.force = !mode.force; e.currentTarget.classList.toggle('on', mode.force); e.currentTarget.setAttribute('aria-pressed', mode.force); draw(); };
+  $('fflat').onclick = e => { mode.flat = !mode.flat; e.currentTarget.classList.toggle('on', mode.flat); e.currentTarget.setAttribute('aria-pressed', mode.flat); draw(); };
+  sel.onchange = draw; redraws.push(draw); draw();
+}
+
+// ---------------------------------------------------------------------------------------------------- 3 tour
+function initTour(){
+  const legs = D.legs.filter(l => l.ok && l.frames.length);
+  // flatten into one timeline; frame = [side, sq(decoded), legIndex, frac]
+  const T = []; legs.forEach((l,k) => l.frames.forEach((f,q) => T.push({s:f[0], sq:dec(f[1]), leg:k, q, n:l.frames.length})));
+  const view = Math.max(...T.map(f => f.s)) * 1.0;
+  let pos = 0, playing = false, last = 0;
+  const speed = () => +$('tspeed').value;
+  function overlaps(){ return null; }
+  function draw(){
+    const f0 = T[Math.floor(pos)]; const l = legs[f0.leg];
+    const nx = T[Math.min(T.length-1, Math.floor(pos)+1)];
+    const f = (nx.leg === f0.leg) ? lerpF(T, pos) : f0;
+    drawPacking($('tview'), f.sq, f.s, {view, ref: 11});
+    const a = D.reps[l.i], b = D.reps[l.j];
+    const exc = l.s - Math.max(+a.S, +b.S);
+    $('tread').innerHTML = `<div><span>side </span><b>${f.s.toFixed(5)}</b></div><div><span>step </span><b>${f.leg+1} / ${legs.length}</b></div>`;
+    $('tinfo').innerHTML = `from <b>${(+a.S).toFixed(9)}</b><br>to&nbsp;&nbsp; <b>${(+b.S).toFixed(9)}</b><br>box needed: <b>${l.s.toFixed(4)}</b> (expansion <b>+${exc.toFixed(4)}</b>)<br><br>` +
+      `For scale: the two sides differ by ${Math.abs(+a.S - +b.S).toFixed(5)}. Dashed outline: side 11.`;
+    drawProfile();
+  }
+  function drawProfile(){
+    const cv = $('tprof'); const dpr = Math.min(2, devicePixelRatio||1); const W = Math.round(cv.getBoundingClientRect().width*dpr), H = Math.round(190*dpr);
+    cv.width = W; cv.height = H; const ctx = cv.getContext('2d'); ctx.fillStyle = C.surface; ctx.fillRect(0,0,W,H);
+    const L = 54*dpr, R = W - 10*dpr, top = 10*dpr, bot = H - 22*dpr;
+    const smin = Math.min(...T.map(f=>f.s)), smax = Math.max(...T.map(f=>f.s));
+    const lo = smin - 0.002, hi = smax + 0.002;
+    const X = i => L + i/(T.length-1)*(R-L), Y = s => bot - (s-lo)/(hi-lo)*(bot-top);
+    ctx.font = `${10.5*dpr}px "IBM Plex Mono", monospace`; ctx.fillStyle = C.muted; ctx.strokeStyle = C.rule; ctx.textAlign = 'right';
+    const step = [0.005, 0.01, 0.02, 0.05, 0.1, 0.2].find(st => (hi-lo)/st <= 6) || 0.5;
+    for (let s = Math.ceil(lo/step)*step; s <= hi; s += step){ const y = Y(s); ctx.beginPath(); ctx.moveTo(L,y); ctx.lineTo(R,y); ctx.stroke(); ctx.fillText(s.toFixed(step < 0.01 ? 3 : 2), L-6*dpr, y+3.5*dpr); }
+    // y = 11 line
+    ctx.strokeStyle = C.muted; ctx.setLineDash([4*dpr,4*dpr]); ctx.beginPath(); ctx.moveTo(L,Y(11)); ctx.lineTo(R,Y(11)); ctx.stroke(); ctx.setLineDash([]);
+    // area + line
+    ctx.beginPath(); T.forEach((f,i) => i ? ctx.lineTo(X(i),Y(f.s)) : ctx.moveTo(X(i),Y(f.s)));
+    ctx.lineTo(X(T.length-1), bot); ctx.lineTo(X(0), bot); ctx.closePath(); ctx.fillStyle = C.accent; ctx.globalAlpha = .12; ctx.fill(); ctx.globalAlpha = 1;
+    ctx.beginPath(); T.forEach((f,i) => i ? ctx.lineTo(X(i),Y(f.s)) : ctx.moveTo(X(i),Y(f.s))); ctx.strokeStyle = C.accent; ctx.lineWidth = 1.5*dpr; ctx.stroke();
+    // minima ticks
+    ctx.fillStyle = C.ink; T.forEach((f,i) => { if (f.q === 0){ ctx.beginPath(); ctx.arc(X(i), Y(f.s), 2.6*dpr, 0, 7); ctx.fill(); } });
+    // cursor
+    const i = Math.floor(pos); ctx.strokeStyle = C.gold; ctx.lineWidth = 1.5*dpr; ctx.beginPath(); ctx.moveTo(X(i), top); ctx.lineTo(X(i), bot); ctx.stroke();
+    ctx.textAlign = 'left'; ctx.fillStyle = C.muted; ctx.fillText('11', R - 18*dpr, Y(11) - 4*dpr);
+  }
+  // speed: notch 5 = one packing (one step of the tour) per second; each notch is a factor sqrt 2
+  const perSec = () => Math.pow(2, (speed() - 5) / 2);
+  const showSpeed = () => { const v = perSec(); $('tspeedv').textContent = (v >= 1 ? v.toFixed(v < 2 ? 1 : 0) : v.toFixed(2)) + ' / s'; };
+  $('tspeed').addEventListener('input', showSpeed); showSpeed();
+  let visible = true;
+  new IntersectionObserver(es => { visible = es[0].isIntersecting; }).observe($('tview'));
+  // each step: hold on the minimum for HOLD of its time, then the transition with ease-in/out
+  const HOLD = 0.4, start = []; T.forEach((f,i) => { if (f.q === 0) start[f.leg] = i; });
+  let step = 0, phase = 0;
+  const ease = x => x < .5 ? 2*x*x : 1 - 2*(1-x)*(1-x);
+  const place = () => { const n = legs[step].frames.length; const u = phase < HOLD ? 0 : ease((phase - HOLD) / (1 - HOLD));
+    pos = start[step] + u * (n - 1) - 1e-9 * (u === 1); if (pos < start[step]) pos = start[step]; };
+  function tick(t){ if (!playing) return; const dt = Math.min(100, t - (last||t)); last = t;
+    phase += dt/1000 * perSec();
+    while (phase >= 1){ phase -= 1; step = (step + 1) % legs.length; }
+    place();
+    if (visible) draw();
+    requestAnimationFrame(tick); }
+  const setPlay = on => { playing = on; const b = $('tplay'); b.textContent = on ? 'Pause' : 'Play'; b.setAttribute('aria-pressed', on); b.classList.toggle('on', on); last = 0; if (on) requestAnimationFrame(tick); };
+  $('tplay').onclick = () => setPlay(!playing);
+  const jump = d => { step = (T[Math.floor(pos)].leg + d + legs.length) % legs.length; phase = 0; place(); draw(); };
+  $('tprev').onclick = () => jump(-1); $('tnext').onclick = () => jump(1);
+  $('tprof').addEventListener('pointerdown', ev => { const r = ev.currentTarget.getBoundingClientRect(); const fr = (ev.clientX - r.left - 54*(r.width/r.width)) / (r.width - 64); pos = Math.max(0, Math.min(T.length-1, Math.round(fr*(T.length-1)))); step = T[pos].leg; phase = HOLD + (1 - HOLD) * (T[pos].q / Math.max(1, T[pos].n - 1)); draw(); });
+  redraws.push(draw); draw();
+  setPlay(!reduce);                                   // plays on load unless the viewer asked for reduced motion
+}
+
+// ---------------------------------------------------------------------------------------------------- 4 settle
+function initSettle(){
+  const K = D.settle.filter(s => s.sigma === 0.01), Rr = D.settle.filter(s => s.sigma === 0.03), Big = D.settle.filter(s => s.sigma === 0.1);
+  // each panel: the run of its shake size that ended lowest
+  const k = K.slice().sort((a,b)=>a.s_final-b.s_final)[0], r = Rr.slice().sort((a,b)=>a.s_final-b.s_final)[0];
+  const runs = [[k, $('sk'), $('skread')], [r, $('sr'), $('srread')]].filter(x => x[0]);
+  const fr = runs.map(([d]) => d.frames.map(f => ({s:f[0], sq:dec(f[1])})));
+  const view = Math.max(...fr.map(F => F[0].s));
+  let p = 0, playing = false, last = 0;
+  function draw(){
+    runs.forEach(([d,cv,rd], i) => { const F = fr[i]; const f = lerpF(F, p * (F.length-1));
+      drawPacking(cv, f.sq, f.s, {view, ref: 11});
+      rd.innerHTML = `<div><span>shake ${d.sigma} · side </span><b>${f.s.toFixed(6)}</b></div>`; });
+    const list = A => A.map(d => d.s_final).sort((a,b)=>a-b).map(x => x.toFixed(6)).join(', ');
+    $('sinfo').innerHTML = `Final sides, shake 0.01: ${list(K)}.<br>Final sides, shake 0.03: ${list(Rr)}.<br>` +
+      (Big.length ? `Shake 0.1 (not shown): ${Big.filter(d => d.s_final < 12).map(d=>d.s_final.toFixed(3)).sort().join(', ')}${Big.some(d => d.s_final >= 12) ? ', and one run that did not compress' : ''}.<br>` : '') +
+      `Each panel shows the run of its shake size that ended lowest. Dashed outline: side 11. This simple squeeze is less forgiving than the one in our census runs, where a 0.03 shake still returned below 11 in most trials.`;
+  }
+  function tick(t){ if (!playing) return; const dt = Math.min(100, t - (last||t)); last = t; p += dt/9000; if (p >= 1){ p = 1; playing = false; $('splay').textContent = 'Play both'; $('splay').classList.remove('on'); } draw(); if (playing) requestAnimationFrame(tick); }
+  $('splay').onclick = e => { playing = !playing; if (p >= 1) p = 0; e.currentTarget.textContent = playing ? 'Pause' : 'Play both'; e.currentTarget.classList.toggle('on', playing); e.currentTarget.setAttribute('aria-pressed', playing); last = 0; if (playing) requestAnimationFrame(tick); };
+  $('sreset').onclick = () => { p = 0; draw(); };
+  p = 1; redraws.push(draw); draw();
+}
+})();
+</script>
+</body>
+</html>
