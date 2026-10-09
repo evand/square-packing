@@ -49,6 +49,7 @@ import Sqpack.ExactPack
 import Sqpack.ShadowCheck
 import Sqpack.Exact.N5
 import Sqpack.ExactCheck
+import Sqpack.ExactQuad
 import Sqpack.Exact.N5c
 import Sqpack.Exact.N11c
 import Sqpack.LocalMin

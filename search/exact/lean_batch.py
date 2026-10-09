@@ -15,6 +15,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 LEAN = os.path.normpath(os.path.join(HERE, '..', '..', 'lean'))
 OUTD = os.path.join(HERE, 'lean_batch')
 TSV = os.path.join(OUTD, 'results.tsv')
+CLOSED = os.path.join(OUTD, 'closed.tsv')   # n, closed form of S* (quadratic S*): packs_closed, minSide_le_closed
 STD_AXIOMS = '[propext, Classical.choice, Quot.sound]'
 
 
@@ -66,10 +67,17 @@ def one(n, deg, A):
                 status = 'glue failed'
             else:
                 ax = os.path.join(OUTD, 'logs', f'ax-{n}.lean')
-                open(ax, 'w').write(f'import {base}\n#print axioms UnitSquarePacking.EC.{mod}.packs\n')
+                src = open(out).read()
+                m = re.search(r'theorem minSide_le_closed : minSide \d+ ≤ (.*) :=', src)
+                thms = ['packs'] + (['packs_closed', 'minSide_le_closed'] if m else [])
+                open(ax, 'w').write(f'import {base}\n' + ''.join(f'#print axioms UnitSquarePacking.EC.{mod}.{t}\n'
+                                                                  for t in thms))
                 r = subprocess.run(['lake', 'env', 'lean', ax], cwd=LEAN, capture_output=True, text=True)
-                if STD_AXIOMS not in r.stdout:
+                if r.returncode != 0 or r.stdout.count(STD_AXIOMS) != len(thms):
                     status = 'AXIOMS: ' + r.stdout.strip().replace('\n', ' ')[:200]
+                elif m:
+                    with open(CLOSED, 'a') as f:
+                        f.write(f'{n}\t{m.group(1)}\n')
     ttot = time.time() - t0
     line = f'{n}\t{deg}\t{chunks}\t{tgen:.0f}\t{ttot:.0f}\t{status}\n'
     with open(TSV, 'a') as f:

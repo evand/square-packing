@@ -258,3 +258,12 @@
 146	16	15	17	262	ok
 129	20	13	31	329	glue failed
 129	20	13	31	105	ok
+5	2	1	0	5	data failed
+10	2	1	0	33	glue failed
+18	2	1	0	37	glue failed
+18	2	1	0	20	ok
+10	2	1	0	20	ok
+5	2	1	0	28	ok
+10	2	1	0	14	ok
+18	2	1	0	14	ok
+5	2	1	0	14	ok
