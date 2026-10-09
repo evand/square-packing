@@ -861,3 +861,6 @@ lineages; 8 slots, 1 h (16 cores), 112 rounds, 11-14 per n.
   verify_cert2).  Roles (L, B, axis, other) (18, 23, 91, 0).  First round at 132 (2 procs x 4 min), from the record itself:
   bigkick -> aswap -> kick -> aswap (12.0368, above k) -> crot -> chainshift -> kick -> aswap -> kick -> aswap, 227 s: an
   uphill excursion through stepping stones above 12 into another funnel.  `candidates/hunt1_n132.*`.
+* **s(155) ≤ 12.95249894401400738196585056694** (cert S'), register 12.9525032026045129 (SQUISH 10-06; raw n-155.md
+  re-fetched 10-08): **−4.26e-6**.  Strict local min modulo 2 flat motions, jammed in every branch (146 corner-corner
+  touches); VALID under both verifiers.  `candidates/hunt1_n155.*`.
