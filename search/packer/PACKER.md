@@ -864,3 +864,9 @@ lineages; 8 slots, 1 h (16 cores), 112 rounds, 11-14 per n.
 * **s(155) ≤ 12.95249894401400738196585056694** (cert S'), register 12.9525032026045129 (SQUISH 10-06; raw n-155.md
   re-fetched 10-08): **−4.26e-6**.  Strict local min modulo 2 flat motions, jammed in every branch (146 corner-corner
   touches); VALID under both verifiers.  `candidates/hunt1_n155.*`.
+* **hunt1 final (3.5 h, 16 cores; 241 rounds; + hunt1b n = 87-90, 4 cores, 100 rounds):** records 132 (−4.23e-3) and 155
+  (−4.26e-6), nothing else below the live register.  Closest seed lineages: 299 (+7.6e-9), 204 (+1.6e-7).  87-90 none;
+  90 non-grid lineage 10.0095668 -> 10.0090596 (> 10).  CPU by kind (bandit): bigkick 25 %, aswap 18 %, chainshift 8 %,
+  kicksym / kick / lkick / crot / band / mirror / rowslide 5-7 %, melt 4.5 %, reinsert 4 %.
+* Scheduling flaw: after the first pass, the lineage-gain credit concentrated follow-ups (rounds per n: 94 n x 1, a few
+  n x 11-17).  Next: a full second pass before any third, then priority.
