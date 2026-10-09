@@ -15,6 +15,8 @@ import Sqpack.ConjecturesProofs
 #print axioms SquarePacking.lemmaA
 #print axioms UnitSquarePacking.setOf_packs_eq
 #print axioms UnitSquarePacking.EC.N5c.packs
+#print axioms UnitSquarePacking.EC.N5c.packs_closed
+#print axioms UnitSquarePacking.EC.N5c.minSide_le_closed
 #print axioms UnitSquarePacking.EC.N11c.packs
 #print axioms UnitSquarePacking.LMC.isLocalMin_of_lcert
 #print axioms UnitSquarePacking.isLocalMin_of_band

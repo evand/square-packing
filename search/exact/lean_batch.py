@@ -3,7 +3,8 @@
 For each n: lean_cert.py --split (certificate module + chunk modules + glue), then `lake build` of the data module,
 the chunks (in parallel, each under a systemd memory cap), the glue, and an axiom check.  Generated Lean files go to
 lean/Sqpack/Exact/Batch/ (gitignored: reproducible from minpoly/solve/ with this script).  Results are appended to
-lean_batch/results.tsv; `--summary` writes lean_batch/results.md.
+lean_batch/results.tsv (and, for quadratic S*, the closed form to lean_batch/closed.tsv: theorems `packs_closed`,
+`minSide_le_closed`); `--summary` writes lean_batch/results.md.
 
   ./env.sh python3 lean_batch.py --maxdeg 20 --maxn 324 [--jobs 3] [--chunk-jobs 2] [--mem 14G] [--only 5,11,294]
   ./env.sh python3 lean_batch.py --summary
@@ -96,6 +97,17 @@ def summary():
          '| n | field deg | chunks | gen s | total s | status |', '|---|---|---|---|---|---|']
     for n in sorted(rows):
         L.append('| ' + ' | '.join([str(n)] + list(rows[n])) + ' |')
+    if os.path.exists(CLOSED):
+        cl = {}
+        for line in open(CLOSED):
+            n, e = line.rstrip('\n').split('\t')
+            cl[int(n)] = e                                # latest run wins
+        cl = {n: e for n, e in cl.items() if n in rows and rows[n][4] == 'ok'}
+        L += ['', '## Closed forms (quadratic `S*`)', '',
+              f'**{len(cl)}** records with `UnitSquarePacking.EC.N<n>.packs_closed : Packs n (S*)` and '
+              '`minSide_le_closed : minSide n ≤ S*`, `S*` written as `a + b √d` (`Sqpack/ExactQuad.lean`).', '',
+              '| n | S* |', '|---|---|']
+        L += [f'| {n} | `{cl[n]}` |' for n in sorted(cl)]
     open(os.path.join(OUTD, 'results.md'), 'w').write('\n'.join(L) + '\n')
     print(f'{len(ok)} ok of {len(rows)}')
 

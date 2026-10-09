@@ -233,6 +233,8 @@ import Sqpack
 #print axioms UnitSquarePacking.N5.packs_five
 #print axioms UnitSquarePacking.EC.packs_exact
 #print axioms UnitSquarePacking.EC.N5c.packs
+#print axioms UnitSquarePacking.EC.N5c.packs_closed
+#print axioms UnitSquarePacking.EC.N5c.minSide_le_closed
 #print axioms UnitSquarePacking.EC.N11c.packs
 #print axioms UnitSquarePacking.LM.isLocalMin_of_rows
 #print axioms UnitSquarePacking.LMC.isLocalMin_of_lcert

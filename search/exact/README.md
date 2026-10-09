@@ -31,6 +31,7 @@ optimum of the same packing).  See `batch/README.md`.
 | `minpoly/data/n-N.minpoly.json.gz` | the committed exact forms (only VALID ones); `minpoly/verify_data.sh` replays `verify_exact.py` on all |
 | `EXACT_FORMS.md`, `exact_forms.json` | the table: S*, p, isolating interval, field, checks per n (`minpoly/table.py`) |
 | `lean_batch.py` | Lean `Packs n S*` for every exact form (`lean_cert.py --split`: data + chunk modules); results in `lean_batch/results.{tsv,md}`, generated Lean gitignored |
+| (quadratic `S*`) | `lean_cert.py` also emits `packs_closed : Packs n (a + b * √d)` and `minSide_le_closed : minSide n ≤ a + b * √d` (generic lemma `lean/Sqpack/ExactQuad.lean`: rational check that the root of `pS` in `[Sa, Sb]` is `a + b√d`); list in `lean_batch/results.md` § Closed forms; committed example `Exact/N5c.lean` |
 | `chain_lean.py` | band-lemma local-minimum certificates for the integer-side records (`lean/Sqpack/Exact/ChainUpTo82.lean`, `Exact/Chain/N*.lean`) |
 
 ## Method
