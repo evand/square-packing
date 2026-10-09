@@ -75,6 +75,10 @@ def main(a):
             s, _ = mcmin.load_deg(p)
             S['n'][str(n)] = dict(best=s, reg=reg, start=s, squish=None if a.src else T.get(n), path=p, rounds=0,
                                   dirty=(n in ns), gains=[], dirtied=0.0, active=(n in ns))
+        for x in (a.carry or []):                   # extra lineage starts (e.g. our best non-grid packing above a grid bound)
+            n, pth = x.split(':')
+            dst = f'{a.out}/carry_{n}_x.txt'; shutil.copy(pth, dst)
+            S['n'][n]['carry'] = [dst]
     live = {}
     t_end = time.time() + 3600 * a.hours
     def pick():
@@ -176,7 +180,7 @@ if __name__ == '__main__':
     ap.add_argument('--procs-per', type=int, default=2); ap.add_argument('--slots', type=int, default=8)
     ap.add_argument('--hours', type=float, default=1); ap.add_argument('--frontier-share', type=float, default=0.7);
     ap.add_argument('--explore-extra', default='', help='extra explore.py args (e.g. "--melt 2")'); ap.add_argument('--first-pass', action='store_true', help='every n once before any repeat'); ap.add_argument('--ns-file', help='json list of n to work on (instead of --lo/--hi)'); ap.add_argument('--src', help='start packings dir (n-<n>.txt), e.g. ../exact/batch/inputs_live')
-    ap.add_argument('--ours', nargs='*', help='n:path of our own better packings (used as start if better than src)'); ap.add_argument('--out'); ap.add_argument('--report')
+    ap.add_argument('--carry', nargs='*', help='n:path extra lineage start for n (carried like a seed lineage)'); ap.add_argument('--ours', nargs='*', help='n:path of our own better packings (used as start if better than src)'); ap.add_argument('--out'); ap.add_argument('--report')
     a = ap.parse_args()
     if a.report:
         report(a.report)

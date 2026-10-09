@@ -853,3 +853,11 @@ lineages; 8 slots, 1 h (16 cores), 112 rounds, 11-14 per n.
 * **Live register** (jlevy/squares main tarball 10-08 -> `../exact/batch/regnow/`, `inputs_live/`, both gitignored; table
   `runs/register_live_2026-10-08.json`): 247 open (102 trivial-grid bounds), 54 changed since 10-05 (Couzo 31, SQUISH 23);
   our 266 / 270 / 272 still below it and unregistered.
+
+## Record hunt hunt1 (10-08; `chain.py` live mode, 112 open non-trivial n in 100-324, live register, `runs/hunt1`)
+* **s(132) ≤ 11.987099332245063227179742877435** (cert S'; KKT 11.98709933224506322705987…), register 11.991327887691501
+  (Couzo 09-27; re-fetched raw n-132.md 10-08, no pending PR / issue with a 132 packing): **−4.23e-3**.  Strict local min
+  modulo 33 flat motions, jammed in every branch (92 corner-corner touches); certificate VALID (exactsolve exact check +
+  verify_cert2).  Roles (L, B, axis, other) (18, 23, 91, 0).  First round at 132 (2 procs x 4 min), from the record itself:
+  bigkick -> aswap -> kick -> aswap (12.0368, above k) -> crot -> chainshift -> kick -> aswap -> kick -> aswap, 227 s: an
+  uphill excursion through stepping stones above 12 into another funnel.  `candidates/hunt1_n132.*`.
