@@ -870,3 +870,23 @@ lineages; 8 slots, 1 h (16 cores), 112 rounds, 11-14 per n.
   kicksym / kick / lkick / crot / band / mirror / rowslide 5-7 %, melt 4.5 %, reinsert 4 %.
 * Scheduling flaw: after the first pass, the lineage-gain credit concentrated follow-ups (rounds per n: 94 n x 1, a few
   n x 11-17).  Next: a full second pass before any third, then priority.
+
+## s(110) census re-check: slack-separated pairs (10-08)
+* Found while explaining the census: two "distinct" certified minima, 10.99756849434 (`runs/ex0/b00567`) and
+  10.99756849478 (`runs/ex1/b00454`), are 7.6e-7 apart in total corner movement.  Same touching pairs; at squares
+  104/105 (37/38 in b00454; 0.011° apart, nearly parallel) the higher one rests a corner of 105 on 104's side, while
+  105's side also clears every corner of 104 by 1.6e-8.  Non-overlap is a disjunction over separating lines, so that
+  incidence is not a constraint there.  exactsolve fixed one line per pair and certified a branch artifact.
+* Fix (`search/exact/exactsolve.py`, `slack_separated`; README "Limitations"): such pairs are released before the
+  multiplier, second-order and MILP analyses.  The verdict is now also NOT a local minimum when the equilibrium
+  residual is > 1e-8 or the corner-corner MILP finds a descent.  Before, `census_exact.classify` read only
+  `second_order.status`, so two census entries with MILP dS < 0 were counted.  Regression input `inputs/s110_slackpair`.
+* Re-certified every census minimum (493 with files, plus the 7 older jx1/rev1 ones; ~4 min on 15 procs):
+  **3 not minima** (10.99756849478 → slp2 lands on …434; 10.99884293949 → 10.99884139849, known; 10.99957319574,
+  MILP descent), 1 a minimum after release (10.99986693230, 2 pairs released), the rest unchanged.
+  `runs/known110_all.json` 496 → **493** (9-digit sides; **497 distinct exact minima**, since 4 pairs of genuinely
+  different packings agree to 9 digits: corner distance 0.017–13).  Run caches (`runs/*/exact.json`) reclassified.
+* Exact register batch (`search/exact/minpoly/solve`, 323 n): same scan, only n = 150 has slack pairs (4, clearance
+  2–3e-4); re-solved, still a local minimum (released pairs carry no load).  Certificates (upper bounds) are unaffected
+  throughout.  Lean `IsLocalMinPacking` proofs (N11L, N28L) are sound: `RowOK` requires the other three side values at
+  each contact point ≤ 1/2 − μ (`lean/Sqpack/LocalMinRows.lean`), which excludes this case.

@@ -154,6 +154,34 @@ def find_contacts(P, tol=1e-8, etol=1e-7, atol=0.0, use_vv=False, reach=1e-4):
     return cands, vv
 
 
+def slack_separated(P, Eq, thr):
+    """Pairs whose contacts in Eq are not binding: some side line NOT carrying one of the pair's incidences in Eq
+    separates the pair with clearance > thr (every corner of the other square strictly outside).  Non-overlap is a
+    disjunction over separating lines, so near such a point the pair imposes no constraint at all, and treating its
+    incidences as constraints (as the KKT system does) can certify a point that is not a local minimum.  Typical case:
+    two nearly parallel squares, corner of j on side k of i, while side k' of j clears every corner of i by ~1e-8.
+    Returns {(i, j): (clearance, (own, k))} with i < j, evaluated in mp at P."""
+    C, Sn = P.trig()
+    H = mpf(1) / 2
+    used = collections.defaultdict(set)
+    for c in Eq:
+        if c[0] == 'C':
+            used[tuple(sorted((c[1], c[3])))].add((c[3], c[4]))
+    out = {}
+    for (i, j), lines in used.items():
+        best = None
+        for own, oth in ((i, j), (j, i)):
+            for k in range(4):
+                if (own, k) in lines:
+                    continue
+                g = min(eval_contact(('C', oth, a, own, k), P.X, P.Y, C, Sn, P.S, H, order=1)[0] for a in range(4))
+                if best is None or g > best[0]:
+                    best = (g, (own, k))
+        if best is not None and best[0] > thr:
+            out[(i, j)] = best
+    return out
+
+
 def jacobian(P, cts, flt=None):
     X, Y, C, Sn, S = flt or P.flt()
     rows, cols, vals, g = [], [], [], []
@@ -941,6 +969,22 @@ def run(path, dps=80, eps='1e-20', outdir=None, algdeg=0, tol=0, quiet=False, fo
         Eq = Eq + newc
     vv = sorted(set(map(tuple, vv)) | set(map(tuple, vv2)))
     rep['n_new_contacts_exact'] = len(newc)
+    # pairs separated with positive clearance by a side line other than the one their incidences use: the incidences
+    # are not constraints of the true (disjunctive) problem here.  Release them from every analysis below; if the rest
+    # cannot hold the load, the point is not a local minimum (10-08: four "certified" s(110) census minima were such
+    # branch artifacts, e.g. a corner on side 1 of square i while side 3 of square j cleared i by 1.6e-8).
+    rel = slack_separated(P, Eq, mpf(10) ** (-(dps - 15)))
+    rep['released_pairs'] = [[i, j, float(g), list(ln)] for (i, j), (g, ln) in sorted(rel.items())]
+    if rel:
+        log_(f'  {len(rel)} touching pair(s) also separated with positive clearance by another side line: '
+             f'{[(p, mpmath.nstr(g, 3)) for p, (g, _) in sorted(rel.items())]}; their incidences are not binding '
+             f'constraints here and are released')
+        relp = set(rel)
+        notrel = lambda c: c[0] != 'C' or tuple(sorted((c[1], c[3]))) not in relp
+        Eq = [c for c in Eq if notrel(c)]
+        c2 = [c for c in c2 if notrel(c)]
+        vv2 = [p for p in vv2 if tuple(sorted(p)) not in relp]
+        vv = [p for p in vv if tuple(sorted(p)) not in relp]
     # multipliers: re-identify the load-bearing set at the exact point (max support over all closed contacts)
     Jq, _ = jacobian(P, Eq)
     lamq, suppq, etaq = max_support(Jq)
@@ -989,6 +1033,16 @@ def run(path, dps=80, eps='1e-20', outdir=None, algdeg=0, tol=0, quiet=False, fo
     rep['n_vv_exact'] = nvv
     log_(f'  corner-corner branches ({nvv} touches as disjunctions, MILP): min first-order dS = {dS:.2e} '
          f'=> {"jammed in every branch" if dS is not None and dS > -1e-9 else "DESCENT in some branch: not a local minimum"}')
+    # the verdict must reflect both first-order tests (census_exact.classify reads only so['status'])
+    why = []
+    if etaq > 1e-8:                     # (full_lambda_lp's maxmin LP fails on some healthy points; the residual is the test)
+        why.append(f'no multiplier lambda >= 0 balances the load at the exact point (residual {etaq:.1e})')
+    if dS is not None and dS < -1e-9:
+        why.append(f'first-order descent in the corner-corner branch MILP (dS = {dS:.2e})')
+    if why:
+        so['status_before_first_order'] = so.get('status')
+        so['status'] = 'NOT a local minimum: ' + '; '.join(why) + (' (after releasing slack-separated pairs)' if rel else '')
+        log_(f'    => {so["status"]}')
     cl = clearances(P, A, vv)
     small = mpf(10) ** (-(dps - 15))
     def mn(lst):

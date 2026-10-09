@@ -120,7 +120,14 @@ touches as disjunctions.  Inputs: site JSON (n = 5, 10, 11, 17, 71), the s(110) 
 | **rec110** | 110 | 10.996793274019572 | **10.99679327395374924222302219937** | 10.99679327395374924233299013211 | [67, 77] | 5.80e-05 | PSD, 10 exact flat modes | jammed |
 | **couzo110** | 110 | 10.996783403149346 | **10.99678339663159163950277843399** | **10.99678339663159163961274626795** | [77] | 1.08e-04 | PSD, 17 exact flat modes | jammed |
 
-All 7 certificates check VALID with `verify_cert.py`.  Known values reproduced: s(5) = 2 + 1/√2 (`--algdeg` finds
+| s110_slackpair | 110 | 10.997568494782334 | 10.99756849478006559054312740838 | (valid; an upper bound only) | [] | — | **NOT a local minimum** (no λ ≥ 0 after release) | dS = −4.5e-2 |
+
+`s110_slackpair` (10-08 regression input; census packing `runs/ex1/b00454` at n = 110) must come out NOT a local
+minimum.  Squares 37 and 38 are nearly parallel (0.011° apart): a corner of 38 rests on side 1 of 37, while side 3 of
+38 also clears every corner of 37 by 1.6e-8.  Before the fix it was certified as a strict local minimum; it descends to
+10.99756849434 (`runs/ex0/b00567`), 7.6e-7 away (total corner movement).
+
+All 7 certificates of the minima check VALID with `verify_cert.py`.  Known values reproduced: s(5) = 2 + 1/√2 (`--algdeg` finds
 2x² − 8x + 7), s(10) = 3 + 1/√2 (2x² − 12x + 17), s(11), s(17), s(71) to all 28–30 digits given on the site.  At 300
 digits `--algdeg 16` finds for s(11) the irreducible octic
 **x⁸ − 20x⁷ + 178x⁶ − 842x⁵ + 1923x⁴ − 496x³ − 6754x² + 12420x − 6865**.  No polynomial of degree ≤ 16 with
@@ -135,6 +142,15 @@ small coefficients was found for s(17), s(71), rec110 or couzo110 (150–200 dig
   by more than 3e-3 rad, are not recognised.  A wrong guess is caught (no λ ≥ 0, inconsistent equations, SAT
   violations, MILP descent) rather than silently accepted, but then no exact KKT point is produced.  In the batch this
   happened at n = 292 (n = 105, 130 resolved 10-05 evening, below).
+* Slack-separated pairs (10-08): non-overlap of a pair is a disjunction over separating side lines.  If a touching
+  pair whose incidences are equations is also separated with positive clearance by another side line, those incidences
+  are not constraints near the point: `slack_separated` finds such pairs at the exact point and releases them before
+  the multiplier, second-order and MILP analyses.  Before this, the KKT system fixed one line per pair, and four
+  s(110) census "minima" were branch artifacts; 3 were not minima, and 1 is a minimum once its pairs are released.
+  The verdict is now also NOT a local minimum when the equilibrium residual is > 1e-8 or the corner-corner MILP finds
+  a descent: `census_exact.classify` reads only `second_order.status`, so two census packings with MILP dS < 0 had
+  been counted as certified.  Lean `IsLocalMinPacking` proofs are unaffected: `RowOK` requires the other three side
+  values at each contact point to be ≤ 1/2 − μ, which rules this case out (`lean/Sqpack/LocalMinRows.lean`).
 * Jammed only with corner–corner touches (MILP: jammed in every branch, no smooth equilibrium): every branch is then
   jammed and has an equilibrium, so exactsolve takes one branch (each touch on its best separating line) as equations
   before trying near side–side incidences.  Second-order and KKT statements are for that branch.  (Added 10-05; n = 105.)
