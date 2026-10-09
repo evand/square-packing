@@ -44,6 +44,36 @@ Runs: `packer/runs/tile0` (gitignored); table `tilings/summary.txt`; certificate
   hopping (25–150 proposals, 10 min) reaches 16.901 (S) / 17.03–17.04 (T, M, R).  At this budget the search rediscovers
   nothing near the record, as expected from the explorer work at 110.
 
+## Split rigidity: when is the S start itself jammed? (10-08, later)
+Question (Evan): can "splitting relieves shear" become a proof?  Template: if s(4n) = 2s(n), the split S(P) of every
+optimal P is optimal, hence jammed in every corner-corner branch.  So **one optimal P whose split is not jammed gives
+s(4n) < 2s(n)**; T, M, R and mixtures give further necessary conditions (M is generically jammed: seams match wall to
+mirrored wall).  Jammed split ⇔ P has a stress that survives splitting: (a) no shear resultant across either midline
+of a loaded square, no tension in a cut (frictionless dry joints); (b) no loaded contact of a differently oriented
+square at an edge midpoint (it becomes a vertex-vertex hinge).  Lemma (easy): all loaded squares axis-parallel ⇒ s ∈ ℤ
+(a horizontal force path crosses flush unit widths).
+
+Test: split every non-integer register record n ≤ 100 (`tile_hop.py` variant S), `fq quench`, then `exactsolve` on
+the splits that did not move (scratch, not kept; ~1 CPU-h):
+* **s(5), s(10): not jammed** (s(5) split: dS = −0.47 per unit motion; quench goes to 5.0, all axis-parallel).  Mechanism
+  (b): with the 4 centre quarters' rotations locked the MILP finds no descent; the quarters pinwheel-rotate, their
+  vertices slide off the corner points.  The s(5) stress itself has no midline shear (a) — the naive check passes.
+* **Jammed (local minimum modulo exact flat motions, jammed in every branch):** splits of 27, 40, 52, 65, 67, 82, 89
+  (all 0°/45°), 84 (0°/45°, first pass only: re-solve after tiny overlaps timed out) and **86** (18 squares at 24.3°,
+  S = (17+√7)/2, first pass only).  86 is a 2-wide staggered band, steps (1, ½) in the square frame, flush the whole
+  length: split, it is a strip of the tilted unit lattice (steps (2, 1)), no new hinges.
+* Not jammed: 11, 17–19, 26, 28, 37–39, 50, 51, 53, 55, 68, 83, 87 (quench drop), 29, 41, 54, 69–71, 88 (MILP descent).
+  Inconclusive: 66 (KKT diverged), 85.
+* **None of the jammed splits is competitive**: 2s(n) > ⌈2√n⌉ for all of them.
+* 126 ph14 staircase band (`trio126/`): split not jammed, dS = −0.22; still −0.084 with all rotations locked
+  (pure slip = mechanism (a)); locking all tilted quarters, or all axis quarters, kills it: the slip moves band and grid
+  together.  `fq quench` on that split goes *up* to 24 (it cannot switch corner-corner branches).
+
+Consequences.  "Non-grid P ⇒ split not jammed" is false, so a local proof must use competitiveness.  k = 2 is
+nontrivial only for n ∈ [k² − k + 1, k² − 3] with s(n) < k (register n ≤ 324: 211, 241, 273, 307 only; 211 untested).
+Those records carry many generic angles; flush same-orientation bands (86) are the structure such a proof must exclude.
+Also: if the k-tiling is optimal so is every divisor tiling, so prime k suffice.
+
 ## Status
 Paused (Evan, 10-08): the numerical evidence is in, and it fits the seam picture; optimising these packings waits for
 the optimizer work in `packer/`.  Open: k = 3 (2169, 2457, 2763 squares) is out of reach of the current quench; a seam
