@@ -345,7 +345,10 @@ if __name__ == '__main__':
     ap.add_argument('--melt', type=float, default=0, help='weight of the regional melt move (anneal melt); 0 = off')
     ap.add_argument('--cross', type=float, default=0, help='weight of the recombination move (cross.py bestfit 3 of 5); 0 = off')
     ap.add_argument('--adapt', action='store_true', help='Thompson sampling over move kinds (reward: new below-k basin)')
-    ap.add_argument('--reward-above', type=float, default=0.0, help='bandit reward for a new non-grid basin above k (0..1)')
+    ap.add_argument('--reward', default='legacy', choices=['legacy', 'value'],
+                    help='bandit reward: legacy (1 for a new sub-k basin) or value (gap-graded x parent robustness)')
+    ap.add_argument('--reward-g0', type=float, default=1e-3); ap.add_argument('--reward-alpha', type=float, default=1.0)
+    ap.add_argument('--frontier-s', type=float, default=None, help='best known side (default: best start)')
     ap.add_argument('--resume', action='store_true', help='continue from <out>/state.json (time offset carried over)')
     ap.add_argument('--out'); ap.add_argument('--report'); ap.add_argument('--seed', type=int, default=1)
     a = ap.parse_args()
@@ -389,6 +392,8 @@ if __name__ == '__main__':
         i = bisect.bisect_left(nref, s - 2e-9)
         return not (i < len(nref) and abs(nref[i] - s) < 2e-9)
     pend = {}
+    ar_best = [min(e['s'] for e in ar.E)] if getattr(ar, 'E', None) else [math.inf]
+    frontier_s = a.frontier_s if a.frontier_s is not None else ar_best[0]
     t_start = time.time()
     with ProcessPoolExecutor(a.procs) as ex:
         def submit():
@@ -433,11 +438,25 @@ if __name__ == '__main__':
                             if isnew:
                                 par['children'] += 1
                                 newi = e['i']
-                    # reward: 1 for a new (globally novel) sub-k basin wherever it is; --reward-above for a new non-grid
-                    # stepping stone above k (pool expansion away from the frontier; 10-09 Evan: some credit, not equal)
+                    # bandit reward for a new (globally novel) basin.  legacy: 1 below k, else 0.  value: graded by the
+                    # gap to the frontier, w = min(1, (g0 / gap)^alpha) (10-09 lineage calibration: subtree success
+                    # falls ~1 decade per decade of gap, g0 ~ 1e-3), times the parent's robustness (posterior mean of
+                    # its children's non-grid rate; above-grid states that keep collapsing earn little).  No special
+                    # case for above k: it is just a larger gap.
                     rew = 0.0
+                    if r['status'] != 'fail':
+                        par['nkids'] = par.get('nkids', 0) + 1
+                        par['ngrid'] = par.get('ngrid', 0) + (r['status'] == 'screen-grid' or bool(r.get('lines')))
                     if newi is not None and novel(r['s']):
-                        rew = 1.0 if r['s'] < k else a.reward_above
+                        if a.reward == 'legacy':
+                            rew = 1.0 if r['s'] < k else 0.0
+                        else:
+                            front = min(frontier_s, ar_best[0])
+                            gap = max(r['s'] - front, 1e-12)
+                            robust = (1 + par.get('nkids', 0) - par.get('ngrid', 0)) / (2 + par.get('nkids', 0))
+                            rew = min(1.0, (a.reward_g0 / gap) ** a.reward_alpha) * robust
+                    if r.get('s') is not None and r['status'] == 'new?' and not r.get('lines'):
+                        ar_best[0] = min(ar_best[0], r['s'])
                     if cellb:
                         cellb.update(tuple(par['desc']), r.get('sec', 0.0), rew)
                     if bandit:

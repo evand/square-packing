@@ -1041,3 +1041,11 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   proposals): record hit once (rowslide), 9 withheld basins rediscovered, **all from parents at 0.02-0.05; none from
   0.05-0.1 (1,144 proposals) or beyond**.  Single-step reach ~0.05 for every arm incl. the shallow anneal (0 withheld).
   Reaching further needs lineages (multi-step), the next test.
+* **Value-graded bandit reward** (`explore.py --reward value --reward-g0 1e-3 --reward-alpha 1`; Evan 10-09: novelty is
+  novelty, grade it by distance from the frontier, no above-grid special case).  reward = novelty x min(1, (g0 / gap)^alpha)
+  x parent robustness (posterior mean of its children's non-grid rate).  Calibration from lineages (c110_h2/h3, hunt1,
+  hunt2; expanded states by gap at creation): P(subtree finds a new basin within 1e-3 of the start's best) 0.4-0.9 at gap
+  < 1e-3, 0.01-0.07 at 1e-3..1e-2, <= 0.007 at 1e-2..3e-2, ~0 beyond; near-best finds per 100 descendants 2-35, 0.1-2.3,
+  <= 0.25, ~0.  About one decade of value per decade of gap.  Learned under a policy that rarely chains far states
+  (subtrees 5-15 descendants): likely understates far value; alpha is the knob, the lineage test measures it.
+  `--reward legacy` (default) reproduces the old reward; `--reward-above` removed.
