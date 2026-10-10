@@ -977,3 +977,14 @@ lineages; 8 slots, 1 h (16 cores), 112 rounds, 11-14 per n.
 Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); exact refinements of Couzo's 270 (1.3e-7) and
 375 (superseded); s(110) census 493 → 523 (30 new certified minima, none within 4.2e-4 of the record).  Draft post list:
 `outreach/draft-results-2026-10-09.md` (not posted).  What the program needs: `NEEDS.md`.
+
+## Frontier refresh (10-09 evening; jlevy main 657cc48 = #478 merge of our #465)
+* Register sync: 37 n changed since 10-08 (mostly ry-xu #432 and SQUISH/SidG2k1 refinements imported; our 266/270/272 in).
+* Pending (open issues): itsnaka **#481** 15 new packings 131-307 at 1.7e-4 … 1.1e-2 below the register (131, 153, 207,
+  209, 232, 236, 259, 263, 269, 270, 292, 302, 303, 305, 307; + 154, 237), certs itsnaka/squish-certs `d45669b`; Couzo
+  **#476** (132, 237, 263, 267, 270, 303; exact optima via our exactsolve, certs `02f9690`); Mishapolk #470 (28 n, 84-306,
+  certs `dd3da5c`); Couzo #451; SidG2k1 #438; ry-xu #432.
+* Ours: **132 beaten** (Mishapolk 11.986956, Couzo 11.986954 from it, vs ours 11.987099); **270 beaten** (itsnaka
+  16.929780, new structure); 155 ties Couzo #451 (same basin); 266, 272 still best.  **375**: Couzo's repo `02f9690` now
+  has 19.906981767294 = our big1 basin (ours 4e-12 lower, exact optimum): nothing to post.  10-09 draft superseded.
+* Implication (NEEDS.md policy): ~25 fresh single-source sub-grid packings (#481, #470, #476) = the best perturbation targets now.
