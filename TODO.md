@@ -20,7 +20,7 @@ First deliverable: a table of exact forms of S + a handful of Lean local-optimal
 - [ ] Explainer: local optimality of the n ≤ 324 records (for the s(11) explainer to cite). `notes/local-optimality-explainer-draft.md`.
 
 ## Display regularization (10-09; `search/regularize/REGULARIZE.md`)
-- [ ] Round 3 (`--style coincide`, gallery `runs/regularize/index.html`): orientation fitted to jlevy (= source drawings); coincident faces MILP.  Open: n = 70-type symmetry-vs-coincidence calls, 23 records where the coincidence re-placement falls back; then exact angle-group levels 1/3, site export.
+- [ ] **Next (handoff):** update the site viewer to show the best-choice packings and orientations (`search/regularize/lists/best.json`, certs in `lists/certs/`); re-run the site analysis only for packings whose arrangement changed; add the variants page + a short write-up with 3-5 example cases (rotation 268, slide 38, straightening 301, kept 0.8 deg column 175, coincident faces 26 / alternates 267, 302).  Then: offer the lists to jlevy for the poster (draft in `outreach/`, ask Evan).  Open: should a level-3 alternate ever be the best choice; 261 still on its old input (store packing does not certify); novelty check of our 5 alternates against publications.
 
 ## Major: exact results
 - [ ] k²−5 for all large k: R = w = 5 κ = 0.02 D ≈ 1.30, conditional GO, margin ≈ 0.05 (`K2M4_MARGIN.md`); box 13 pitch 0.1. Make it cheaper first: cert golf (`tasks/cert-slack/`), finer-pitch D at w = 4 (insertable shortcut dead: price ≈ 1.8, `S2_INSERTABLE.md`).
