@@ -217,14 +217,22 @@ public unfixed — see the Publishing section for why each one is on that list.
   the closed-convention aside now say the conclusion covers every smaller box.
 * ✓ Links point at the new repository; the fetch User-Agent no longer carries a personal address.
 
+## Done 2026-10-10 (records from our lists)
+
+* ✓ **Every record packing n ≤ 324 is drawn** from `search/regularize/lists` (certified, regularized):
+  `tools/import_lists.py` (`build.sh lists`) adds `best-N`, our level-3 alternates `alt-N` and the 2026
+  history steps for n ≤ 100 (`step-N-K`, from the packing store) to `index.json` / `timeline.json`.
+  Records newer than the catalogue (70 n; 261 drawn as posted, `rec-261`, since the lists could not certify it; its certificate at the posted side is the register witness converted exactly, `search/regularize/register_cert.py`) are credited to their first posting (`tools/provenance.py` →
+  `data/records2026.json`; register status shown).  The `NEWER` stopgap is gone.  Explore opens the record
+  drawing by default and lists alternates, earlier records and catalogue drawings (with their relation to
+  the record); Compare adds our drawings; Bounds' packing dots open Explore and unregistered records are
+  tagged; Overview defaults to the right-justified triangle and has an "other packings at the record side"
+  colouring.  Sources §1/§5, Problems (s(308) < 18 fell; plateaus 232, 295 broken; family tables) updated.
+* Left: records above 324 (343, 344, 964, …) are not drawn; `provenance.py` dates registered packings by
+  finder (Couzo 09-27 / 10-03, itsnaka #401, ry-xu #432), not per packing.
+
 ## Open (2026-10-07)
 
-* **Draw every record packing** (`../tasks/site-all-packings/`): Explore, Compare, Overview and Bounds
-  still draw only Ellsworth's catalogue.  57 counts n ≤ 307 have smaller packings outside it: Couzo's
-  (re-pull at HEAD `6042c56b`), de Winter's n = 211, itsnaka's SQUISH packings (18 counts in jlevy#401,
-  more being added), and ours at 266, 270, 272 (jlevy#399).  Until then a stopgap notes them:
-  `NEWER` in `js/viewer.js` (Explore), a line on Overview, a paragraph in Sources §1.  `NEWER` is
-  hand-built from the register on 10-07 and goes stale; delete it with the redraw.
 * **Explore: show the exact form and local-minimum status** from `search/exact/exact_forms.json`
   (S* as an algebraic number, Lean `Packs n S*`, Lean local minimum) for each record.
 * **Lean explainer** (`../notes/lean-explainer-draft.html`) and **local-optimality explainer**

@@ -8,11 +8,12 @@ const trivial = n => Math.ceil(Math.sqrt(n));
 const who = d => { const e = (d.events || []).find(x => x.who); return e ? e.who : ''; };
 
 function upper(n) {   // {s, file, date, who}
-  const L = (TL[String(n)] || []).filter(d => d.s);
+  const L = (TL[String(n)] || []).filter(d => d.s && !(IDX.files[d.file] && (IDX.files[d.file].start || (IDX.files[d.file].errors || []).some(e => !e.startsWith('warn:')))));
   const rec = L.find(d => d.is_record) || (L.length ? L.reduce((b, d) => d.s < b.s ? d : b) : null);
   const t = trivial(n);
   if (!rec || rec.s >= t - 1e-9) return { s: t, trivial: true, who: '', date: null };
-  return { s: rec.s, trivial: false, who: who(rec), date: rec.date, file: rec.file };
+  const R = IDX.records[String(n)], pending = !!(R && R.credit && !R.credit.registered && rec.origin);
+  return { s: rec.s, trivial: false, who: who(rec), date: rec.date, file: rec.file, pending };
 }
 function lower(n) {
   const b = LB && LB[String(n)] && LB[String(n)].best;
@@ -80,7 +81,9 @@ function chart2() {
   // upper-bound steps: dated packings, best-so-far
   // An undated record goes at the left edge (and says so) rather than being dropped: n = 5's record
   // is undated, and dropping it had this chart calling a proved value open while the table said settled.
-  const packs = (TL[String(n)] || []).filter(d => d.s && (d.date || d.is_record)).map(d => ({ y: d.date ? d.date[0] + ((d.date[1] || 6) - 0.5) / 12 : 1979, undated: !d.date, s: d.s, who: who(d), file: d.file, d })).sort((a, b) => a.y - b.y);
+  // Not packings: optimiser starts and files with real errors (51_r2__invalid overlaps), as on Overview.
+  const usable = d => { const f = IDX.files[d.file]; return !f || !(f.start || (f.errors || []).some(e => !e.startsWith('warn:'))); };
+  const packs = (TL[String(n)] || []).filter(d => d.s && (d.date || d.is_record) && usable(d)).map(d => ({ y: d.date ? d.date[0] + ((d.date[1] || 6) - 0.5) / 12 : 1979, undated: !d.date, s: d.s, who: who(d), file: d.file, d })).sort((a, b) => a.y - b.y);
   const up = [{ y: 1979, s: t, who: 'grid', label: 'plain grid' }]; let best = t;
   for (const p of packs) if (p.s < best - 1e-9) { best = p.s; up.push(p); }
   // lower-bound steps
@@ -110,9 +113,12 @@ function chart2() {
   el('path', { d: stepPath(up, 's'), fill: 'none', stroke: 'var(--chart-a)', 'stroke-width': 2 }, svg);
   el('path', { d: stepPath(lo, 'v'), fill: 'none', stroke: 'var(--chart-b)', 'stroke-width': 2 }, svg);
   const tt = box.querySelector('.tt');
-  const dot = (x, y, col, text) => { const c = el('circle', { cx: x, cy: y, r: 5, fill: col, stroke: 'var(--surface)', 'stroke-width': 1.5, style: 'cursor:pointer' }, svg); el('circle', { cx: x, cy: y, r: 12, fill: 'transparent', style: 'cursor:pointer' }, svg).onmouseenter = c.onmouseenter = () => { tt.textContent = text; tt.style.display = 'block'; tt.style.left = Math.min(x / W * box.clientWidth + 12, box.clientWidth - 240) + 'px'; tt.style.top = (y / H * box.clientWidth * H / W - 10) + 'px'; }; c.onmouseleave = () => { tt.style.display = 'none'; }; };
+  // An upper-bound dot is a packing: clicking it opens that packing in Explore.
+  const dot = (x, y, col, text, href) => { const c = el('circle', { cx: x, cy: y, r: 5, fill: col, stroke: 'var(--surface)', 'stroke-width': 1.5, style: 'cursor:pointer' }, svg); const hit = el('circle', { cx: x, cy: y, r: 12, fill: 'transparent', style: 'cursor:pointer' }, svg); hit.onmouseenter = c.onmouseenter = () => { tt.textContent = text + (href ? '\nclick to open it in Explore' : ''); tt.style.display = 'block'; tt.style.left = Math.min(x / W * box.clientWidth + 12, box.clientWidth - 240) + 'px'; tt.style.top = (y / H * box.clientWidth * H / W - 10) + 'px'; }; hit.onmouseleave = c.onmouseleave = () => { tt.style.display = 'none'; }; if (href) hit.onclick = c.onclick = () => { location.href = href; }; };
+  const R = IDX.records[String(n)] || {};
+  const packHref = p => p.file ? (p.file === R.best ? `explore.html?n=${n}` : `explore.html?p=${encodeURIComponent(p.file)}`) : p.label === 'plain grid' && R.best_s != null && Math.abs(+R.best_s - t) < 1e-9 ? `explore.html?n=${n}` : null;   // the grid is drawn only where it is the record
   const shown = p => p.y >= y0;
-  up.filter(shown).forEach(p => dot(xs(p.y), ys(p.s), 'var(--chart-a)', `${p.s.toFixed(6)}\n${p.label || p.who || ''} ${p.undated ? '(date not recorded)' : Math.floor(p.y)}`));
+  up.filter(shown).forEach(p => dot(xs(p.y), ys(p.s), 'var(--chart-a)', `${p.s.toFixed(6)}\n${p.label || p.who || ''} ${p.undated ? '(date not recorded)' : p.d && p.d.origin ? p.d.events[0].date.text : Math.floor(p.y)}${p.d && p.d.origin && R.credit && !R.credit.registered && p.file === R.best ? '\nnot yet on the register' : ''}`, packHref(p)));
   lo.filter(shown).forEach(p => dot(xs(p.y), ys(p.v), 'var(--chart-b)', `≥ ${p.v.toFixed(6)}\n${p.src || ''}${p.when && !String(p.src || '').includes(p.when) ? ' · ' + p.when : ''}${p.status === 'preprint' ? '\n(unrefereed)' : ''}`));
   // direct labels at the right end
   const lu = el('text', { x: W - mr - 4, y: ys(up[up.length - 1].s) - 7, 'text-anchor': 'end', style: 'font-size:11px;fill:var(--muted)' }, svg); lu.textContent = `best ${up[up.length - 1].s.toFixed(5)}`;
@@ -156,7 +162,7 @@ function table() {
   for (let n = 1; n <= 100; n++) {
     const u = upper(n), l = lower(n), settled = isSettled(u, l);
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td class="num"><a href="explore.html?n=${n}" title="explore n = ${n}">${n}</a></td><td class="num">${u.s.toFixed(6)}${u.trivial ? ' (grid)' : ''}</td><td>${u.who}${u.date ? ' ' + u.date[0] : ''}</td><td class="num">${l.value.toFixed(6)}</td><td>${srcLabel(l)}${l.status === 'preprint' ? ' <span class="tag open">unrefereed</span>' : ''}</td><td class="num">${settled ? '—' : (u.s - l.value).toFixed(4)}</td><td>${settled ? '<span class="tag ok">settled</span>' : '<span class="tag open">open</span>'}</td>`;
+    tr.innerHTML = `<td class="num"><a href="explore.html?n=${n}" title="explore n = ${n}">${n}</a></td><td class="num">${u.s.toFixed(6)}${u.trivial ? ' (grid)' : ''}</td><td>${u.who}${u.date ? ' ' + u.date[0] : ''}${u.pending ? ' <span class="tag open" title="posted as a registration request on jlevy/squares; checked by our two exact certificate checkers">not yet registered</span>' : ''}</td><td class="num">${l.value.toFixed(6)}</td><td>${srcLabel(l)}${l.status === 'preprint' ? ' <span class="tag open">unrefereed</span>' : ''}</td><td class="num">${settled ? '—' : (u.s - l.value).toFixed(4)}</td><td>${settled ? '<span class="tag ok">settled</span>' : '<span class="tag open">open</span>'}</td>`;
     tb.appendChild(tr);
   }
 }

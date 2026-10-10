@@ -222,6 +222,18 @@ Caveat for the write-up: the path test samples the path (0.01 deg steps), it is 
 for our 5 alternates), atlas images `lists/atlas-result.png` (colour by angle) and `lists/atlas-result-groups.png`
 (colour by exact rotation group).  Next session: the site viewer (see TODO.md).
 
+## Refresh for the site (10-10 afternoon)
+The store had newer records than the lists at 7 n (Couzo #488: 175, 209, 237, 270; ours #489: 132, 308; ry-xu's 261,
+registered).  `refresh.py` + `atlas.py compute --ns ... --policy conservative|fewest` for those: 6 certified (VALID under
+verify_cert and verify_cert2, 80-digit verified), lists regenerated (`lists.py` now rewrites a cert .gz only when its
+content changed, deterministically; it ignores the site's own index entries).  270's level-3 alternate is gone (its record
+moved).  **261 still does not certify**: exactsolve's certificate fails at −4.5e-14 among redundant contacts on ry-xu's
+packing (`runs/regularize/exact/n-261/input.json`), and the slp2 polish then fails to solve; the lists keep the old 261
+and the site draws ry-xu's packing as posted (`site/tools/provenance.py` 'raw').  Its certificate at the posted side comes from the register:
+`register_cert.py 261` converts the register's rational witness exactly (bases are exact Pythagorean rotations, t = s/(1+c))
+into `lists/certs/raw/n-261.cert.gz`, side 83393899377083393899377/5e21 ≈ 16.67877987541668; VALID under verify_cert and
+verify_cert2 (min separation 1e-12: a dilated copy, ~7e-11 above exactsolve's optimum 16.6787798753429).
+
 ## Next
 - Round-1 feedback → rules; then levels 1/3 of the angle plan (exact field equality for determined angles; merges
   backed by a certificate) and the flat rotational modes `minpoly.py` pins at an arbitrary rational t.

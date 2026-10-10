@@ -2,7 +2,7 @@
 (() => {
 const $ = id => document.getElementById(id);
 const NMAX = 324;
-let IDX, TL, state = { mode: 'cat', year: 2026, layout: 'grid' };
+let IDX, TL, state = { mode: 'cat', year: 2026, layout: 'deficit' };
 const K = Math.round(Math.sqrt(NMAX));   // 18: rows of the triangle, one per side k = ceil(sqrt n)
 // Where tile n goes.  'grid': 18 per row.  'tri': one row per k, holding n = (k-1)^2+1 .. k^2,
 // centred (Ellsworth's triangular table).  'deficit': the same rows right-aligned, so each column
@@ -66,23 +66,30 @@ function tileInfo(n) {
   const rec = recordAsOf(n, state.year);
   const triv = trivialS(n);
   const file = rec && rec.s < triv - 1e-9 ? rec.file : null;
-  const f = file ? IDX.files[file] : null;
+  // Today: the record as drawn from our lists (the same packing, certified, regularized), whose
+  // analysis is the one Explore opens; earlier years: the drawing that was the record then.
+  const R = IDX.records[String(n)], bestF = R && R.best && IDX.files[R.best];
+  const f = state.year === 2026 && file && bestF ? bestF : file ? IDX.files[file] : null;
   const sum = f && f.summary;
   let cat = 'trivial';
   if (sum) cat = sum.category === 'trivial' ? 'trivial' : sum.category === 'diagonal' ? 'diagonal' : (sum.n_angles <= 2 ? 'one' : 'many');
-  return { n, rec, file, sum, cat, s: file ? rec.s : triv, year: rec && rec.date ? rec.date[0] : null };
+  return { n, rec, file, sum, cat, s: file ? rec.s : triv, year: rec && rec.date ? rec.date[0] : null, alts: altCount(n) };
 }
 
 // Something Explore can actually show for this n: either a packing file of its own, or a catalogue
 // record under exactly this n (which Explore resolves and annotates itself).
+// Packings at the record side that are truly different from the record (lists/alternates): ours, and
+// catalogue drawings whose tilt structure differs.  "Same tilts placed differently" is not counted.
+const altCount = n => Object.values(IDX.files).filter(f => f.n === n && (f.origin === 'alt' || (f.alt_relation || '').startsWith('distinct'))).length;
 const ownDrawing = n => Object.values(IDX.files).some(f => f.n === n && f.n_parsed && !f.start && !(f.errors || []).some(e => !e.startsWith('warn:')));
-const openable = t => !!(t.file || IDX.records[String(t.n)] || ownDrawing(t.n));   // 12, 20, 30, ...: grid drawings outside the table
+const openable = t => !!(t.file || IDX.records[String(t.n)] || ownDrawing(t.n));   // every n <= 324 has a record drawing now   // 12, 20, 30, ...: grid drawings outside the table
 
 function colour(t) {
   if (state.mode === 'cat') return CATS[t.cat][1];
   if (state.mode === 'sym') { if (!t.file) return SYMS['D4 (four mirror axes)'][1]; return t.sum ? SYMS[t.sum.symmetry][1] : '#ccc'; }
   if (state.mode === 'free') { if (!t.file) return 'var(--sq-fill)'; if (!t.sum) return '#ccc'; if (t.sum.rigid) return '#2A6E4F'; const k = t.sum.free; return k === 0 ? '#DFEDE5' : k <= 2 ? '#F5EBDA' : k <= 6 ? '#EFC77A' : '#C9862B'; }
   if (state.mode === 'year') { if (!t.file || !t.year) return 'var(--sq-fill)'; const u = (t.year - 1979) / (2026 - 1979); return `hsl(${200 - 160 * u} 60% ${72 - 22 * u}%)`; }
+  if (state.mode === 'alt') { if (!t.file) return 'var(--sq-fill)'; return t.alts === 0 ? '#DCE6EE' : t.alts === 1 ? '#8FB8DE' : '#2F6FA8'; }
   if (state.mode === 'waste') { const w = t.s * t.s - t.n, frac = w / (t.s * t.s); const u = Math.min(1, frac / 0.16); return `hsl(${120 - 120 * u} 50% ${80 - 25 * u}%)`; }
   return '#ccc';
 }
@@ -93,6 +100,7 @@ function legend() {
   else if (state.mode === 'sym') items = Object.values(SYMS);
   else if (state.mode === 'free') items = [['rigid', '#2A6E4F'], ['no free squares (but some move together)', '#DFEDE5'], ['1–2 free', '#F5EBDA'], ['3–6 free', '#EFC77A'], ['7+ free', '#C9862B'], ['grid only', 'var(--sq-fill)']];
   else if (state.mode === 'year') items = [[1979, colour({ file: 1, year: 1979 })], [1990, colour({ file: 1, year: 1990 })], [2005, colour({ file: 1, year: 2005 })], [2020, colour({ file: 1, year: 2020 })], [2026, colour({ file: 1, year: 2026 })]];
+  else if (state.mode === 'alt') items = [['no other packing at the record side', '#DCE6EE'], ['one alternate', '#8FB8DE'], ['two or more', '#2F6FA8'], ['grid only', 'var(--sq-fill)']];
   else if (state.mode === 'waste') items = [['0%', colour({ s: 1, n: 1 })], ['4%', colour({ s: 1, n: .96 })], ['8%', colour({ s: 1, n: .92 })], ['16%+', colour({ s: 1, n: .84 })]];
   for (const [name, col] of items) { const sp = document.createElement('span'); sp.innerHTML = `<i style="background:${col}"></i>${name}`; L.appendChild(sp); }
 }
@@ -115,7 +123,7 @@ function draw() {
     const a = document.createElement(openable(t) ? 'a' : 'span');
     a.className = 'tile' + (Number.isInteger(Math.sqrt(n)) ? ' sq' : '') + (proved.has(n) ? ' proved' : accepted.has(n) ? ' accepted' : '') + (openable(t) ? '' : ' nolink');
     a.style.background = colour(t); a.textContent = n;
-    if (openable(t)) a.href = t.file && IDX.files[t.file] && IDX.files[t.file].n === n ? `explore.html?p=${encodeURIComponent(t.file)}` : `explore.html?n=${n}`;   // shared entry: ?n= so Explore says so
+    if (openable(t)) a.href = state.year < 2026 && t.file && IDX.files[t.file] && IDX.files[t.file].n === n ? `explore.html?p=${encodeURIComponent(t.file)}` : `explore.html?n=${n}`;   // past years: that year's record; today: Explore's record for n
     a.onmouseenter = e => tip(e, t); a.onmousemove = e => move(e); a.onmouseleave = () => { $('tip').style.display = 'none'; };
     const p = place(n); if (p) { a.style.gridRow = p.row; a.style.gridColumn = p.col; }
     G.appendChild(a); inkFor(a);
@@ -130,6 +138,9 @@ function tip(e, t) {
     if (ev.length) lines.push(ev.slice(0, 2).join('; '));
     if (proved.has(t.n)) lines.push('proved optimal'); else if (accepted.has(t.n)) lines.push('proved optimal in 2026 (unrefereed; verified on jlevy/squares)');
     if (t.sum) lines.push(`${CATS[t.cat][0]} · ${t.sum.n_angles - 1} tilt angle${t.sum.n_angles === 2 ? '' : 's'} · ${t.sum.symmetry}`, t.sum.rigid ? 'rigid' : `${t.sum.free} free square${t.sum.free === 1 ? '' : 's'}`);
+    if (t.alts) lines.push(`${t.alts} other packing${t.alts === 1 ? '' : 's'} at the record side`);
+    const R = IDX.records[String(t.n)];
+    if (state.year === 2026 && R && R.credit && !R.credit.registered) lines.push(`posted ${R.credit.date} (${R.credit.label}), not yet on the register`);
   } else if (proved.has(t.n)) lines.push('grid packing, proved optimal');
   else if (accepted.has(t.n)) lines.push('grid packing, proved optimal in 2026 (unrefereed; verified on jlevy/squares)');
   else lines.push('no better packing than the grid is known');
@@ -149,7 +160,7 @@ async function main() {
   for (let n = 101; n <= NMAX; n++) if (!proved.has(n) && familyAccepted(n)) accepted.add(n);
   $('mode').onchange = () => { state.mode = $('mode').value; draw(); };
   const q = new URLSearchParams(location.search).get('layout'); if (['grid', 'tri', 'deficit'].includes(q)) { state.layout = q; $('layout').value = q; }
-  $('layout').onchange = () => { state.layout = $('layout').value; history.replaceState(null, '', state.layout === 'grid' ? location.pathname : `?layout=${state.layout}`); draw(); };
+  $('layout').onchange = () => { state.layout = $('layout').value; history.replaceState(null, '', state.layout === 'deficit' ? location.pathname : `?layout=${state.layout}`); draw(); };
   $('year').oninput = () => { state.year = +$('year').value; $('yearv').textContent = state.year === 2026 ? 'today' : state.year; draw(); };
   draw();
 }

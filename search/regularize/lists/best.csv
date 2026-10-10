@@ -130,7 +130,7 @@ n,side,finder,variant,level,level_text,groups,orientation,shape,symmetry,input,c
 129,11.8720298490811799736,David Ellsworth,fewest,2,same packing (traversable without expansion),31 -> 4,as source,strip,[],store best (refreshed),search/regularize/lists/certs/n-129.cert.gz
 130,11.9044830325157864399,Francisco Couzo,conservative,2,same packing (traversable without expansion),10 -> 10,as source,arc,[],store best (refreshed),search/regularize/lists/certs/n-130.cert.gz
 131,11.9496595880358603966,Francisco Couzo,conservative,2,same packing (traversable without expansion),14 -> 13,rotated 90° clockwise,arc,[],store best (refreshed),search/regularize/lists/certs/n-131.cert.gz
-132,11.9869541936403927413,Francisco Couzo,conservative,2,same packing (traversable without expansion),19 -> 14,as source,arc,[],store best (refreshed),search/regularize/lists/certs/n-132.cert.gz
+132,11.9856801988458088114,Francisco Couzo,conservative,2,same packing (traversable without expansion),18 -> 12,as source,arc,[],store best (refreshed),search/regularize/lists/certs/n-132.cert.gz
 133,12.0,-,conservative,0,identical,1 -> 1,as source,none,[],exact batch (register witness),search/regularize/lists/certs/n-133.cert.gz
 134,12.0,-,conservative,0,identical,1 -> 1,as source,none,[],exact batch (register witness),search/regularize/lists/certs/n-134.cert.gz
 135,12.0,-,conservative,0,identical,1 -> 1,as source,none,[],exact batch (register witness),search/regularize/lists/certs/n-135.cert.gz
@@ -173,7 +173,7 @@ n,side,finder,variant,level,level_text,groups,orientation,shape,symmetry,input,c
 172,13.6189889568993984288,Francisco Couzo,fewest,2,same packing (traversable without expansion),23 -> 6,as source,strip,[],exact batch (register witness),search/regularize/lists/certs/n-172.cert.gz
 173,13.6568542494923801952,-,conservative,2,same packing (traversable without expansion),2 -> 2,rotated 180°,strip,[5],exact batch (register witness),search/regularize/lists/certs/n-173.cert.gz
 174,13.7071067811865475244,-,conservative,1,rattlers only,3 -> 2,as source,strip,"[2, 5, 7]",exact batch (register witness),search/regularize/lists/certs/n-174.cert.gz
-175,13.7671551635425491099,David Ellsworth,conservative,2,same packing (traversable without expansion),27 -> 15,rotated 180°,arc,[],store best (refreshed),search/regularize/lists/certs/n-175.cert.gz
+175,13.7671207246923132171,David Ellsworth,conservative,2,same packing (traversable without expansion),21 -> 15,rotated 90° clockwise,arc,[],store best (refreshed),search/regularize/lists/certs/n-175.cert.gz
 176,13.8228756555322952952,-,conservative,2,same packing (traversable without expansion),5 -> 2,as source,strip,[],exact batch (register witness),search/regularize/lists/certs/n-176.cert.gz
 177,13.8229797341694486000,Francisco Couzo,conservative,2,same packing (traversable without expansion),12 -> 4,as source,strip,[],store best (refreshed),search/regularize/lists/certs/n-177.cert.gz
 178,13.8466671928434897829,-,conservative,2,same packing (traversable without expansion),2 -> 2,as source,strip,[2],exact batch (register witness),search/regularize/lists/certs/n-178.cert.gz
@@ -207,7 +207,7 @@ n,side,finder,variant,level,level_text,groups,orientation,shape,symmetry,input,c
 206,14.8601586633919032366,Francisco Couzo,conservative,2,same packing (traversable without expansion),45 -> 4,as source,strip,[],exact batch (register witness),search/regularize/lists/certs/n-206.cert.gz
 207,14.8855063088416776824,Francisco Couzo,conservative,2,same packing (traversable without expansion),20 -> 6,rotated 90° clockwise,arc,[],store best (refreshed),search/regularize/lists/certs/n-207.cert.gz
 208,14.9245187720293558859,Francisco Couzo,conservative,2,same packing (traversable without expansion),22 -> 19,as source,arc,[],store best (refreshed),search/regularize/lists/certs/n-208.cert.gz
-209,14.9462236544879194062,Francisco Couzo,conservative,2,same packing (traversable without expansion),25 -> 21,rotated 90° clockwise,arc,[],store best (refreshed),search/regularize/lists/certs/n-209.cert.gz
+209,14.9462232264464510551,Francisco Couzo,conservative,2,same packing (traversable without expansion),28 -> 22,as source,arc,[],store best (refreshed),search/regularize/lists/certs/n-209.cert.gz
 210,14.9730011165876257418,Francisco Couzo,conservative,2,same packing (traversable without expansion),29 -> 27,as source,arc,[],exact batch (register witness),search/regularize/lists/certs/n-210.cert.gz
 211,14.9979607049673615650,Joost de Winter,conservative,2,same packing (traversable without expansion),21 -> 20,rotated 90° clockwise,arc,[],store best (refreshed),search/regularize/lists/certs/n-211.cert.gz
 212,15.0,-,conservative,0,identical,1 -> 1,as source,none,[],exact batch (register witness),search/regularize/lists/certs/n-212.cert.gz
@@ -235,7 +235,7 @@ n,side,finder,variant,level,level_text,groups,orientation,shape,symmetry,input,c
 234,15.8228756555322952952,David Ellsworth,conservative,2,same packing (traversable without expansion),3 -> 2,as source,strip,[],exact batch (register witness),search/regularize/lists/certs/n-234.cert.gz
 235,15.8266056334285680695,"David Ellsworth, David W. Cantrell",conservative,2,same packing (traversable without expansion),6 -> 4,as source,strip,[],exact batch (register witness),search/regularize/lists/certs/n-235.cert.gz
 236,15.8639557471592674224,Francisco Couzo,fewest,2,same packing (traversable without expansion),20 -> 6,as source,gray,[],store best (refreshed),search/regularize/lists/certs/n-236.cert.gz
-237,15.9029892208749655777,Francisco Couzo,conservative,2,same packing (traversable without expansion),16 -> 12,as source,arc,[],store best (refreshed),search/regularize/lists/certs/n-237.cert.gz
+237,15.9029496076778316895,Francisco Couzo,fewest,2,same packing (traversable without expansion),31 -> 11,rotated 90° anticlockwise,arc,[],store best (refreshed),search/regularize/lists/certs/n-237.cert.gz
 238,15.9261468570109783464,Francisco Couzo,conservative,2,same packing (traversable without expansion),21 -> 19,as source,arc,[],store best (refreshed),search/regularize/lists/certs/n-238.cert.gz
 239,15.9493131697276961581,Francisco Couzo,conservative,2,same packing (traversable without expansion),22 -> 20,as source,arc,[],store best (refreshed),search/regularize/lists/certs/n-239.cert.gz
 240,15.9696853375307803358,Francisco Couzo,conservative,2,same packing (traversable without expansion),22 -> 19,as source,arc,[],exact batch (register witness),search/regularize/lists/certs/n-240.cert.gz
@@ -268,7 +268,7 @@ n,side,finder,variant,level,level_text,groups,orientation,shape,symmetry,input,c
 267,16.8388152699482622602,-,conservative,2,same packing (traversable without expansion),126 -> 11,reflected in the anti-diagonal,strip,[],store best (refreshed),search/regularize/lists/certs/n-267.cert.gz
 268,16.8788148210067647245,Francisco Couzo,conservative,2,same packing (traversable without expansion),20 -> 4,as source,strip,[2],exact batch (register witness),search/regularize/lists/certs/n-268.cert.gz
 269,16.9015135821891321983,Francisco Couzo,fewest,2,same packing (traversable without expansion),25 -> 12,rotated 90° clockwise,arc,[],store best (refreshed),search/regularize/lists/certs/n-269.cert.gz
-270,16.9297801262411716977,Francisco Couzo,conservative,2,same packing (traversable without expansion),23 -> 22,rotated 90° clockwise,arc,[],store best (refreshed),search/regularize/lists/certs/n-270.cert.gz
+270,16.9297753535413595821,Francisco Couzo,conservative,2,same packing (traversable without expansion),25 -> 23,as source,arc,[],store best (refreshed),search/regularize/lists/certs/n-270.cert.gz
 271,16.9508207926249587862,Francisco Couzo,fewest,2,same packing (traversable without expansion),29 -> 24,as source,arc,[],exact batch (register witness),search/regularize/lists/certs/n-271.cert.gz
 272,16.9681101457696005048,Francisco Couzo,conservative,2,same packing (traversable without expansion),34 -> 32,as source,arc,[],store best (refreshed),search/regularize/lists/certs/n-272.cert.gz
 273,16.9839259626504043159,Francisco Couzo,conservative,2,same packing (traversable without expansion),30 -> 22,as source,arc,[],exact batch (register witness),search/regularize/lists/certs/n-273.cert.gz
@@ -306,7 +306,7 @@ n,side,finder,variant,level,level_text,groups,orientation,shape,symmetry,input,c
 305,17.9511397722069975457,Francisco Couzo,conservative,2,same packing (traversable without expansion),24 -> 21,rotated 90° clockwise,arc,[],store best (refreshed),search/regularize/lists/certs/n-305.cert.gz
 306,17.9634337174914257394,Francisco Couzo,conservative,2,same packing (traversable without expansion),31 -> 30,as source,arc,[],store best (refreshed),search/regularize/lists/certs/n-306.cert.gz
 307,17.9808627840546910639,Francisco Couzo,conservative,2,same packing (traversable without expansion),27 -> 26,rotated 90° clockwise,arc,[],store best (refreshed),search/regularize/lists/certs/n-307.cert.gz
-308,18.0,-,conservative,0,identical,1 -> 1,as source,none,[],exact batch (register witness),search/regularize/lists/certs/n-308.cert.gz
+308,17.9982698795262558752,-,conservative,2,same packing (traversable without expansion),33 -> 32,as source,arc,[],store best (refreshed),search/regularize/lists/certs/n-308.cert.gz
 309,18.0,-,conservative,0,identical,1 -> 1,as source,none,[],exact batch (register witness),search/regularize/lists/certs/n-309.cert.gz
 310,18.0,-,conservative,0,identical,1 -> 1,as source,none,[],exact batch (register witness),search/regularize/lists/certs/n-310.cert.gz
 311,18.0,-,conservative,0,identical,1 -> 1,as source,none,[],exact batch (register witness),search/regularize/lists/certs/n-311.cert.gz

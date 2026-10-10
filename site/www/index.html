@@ -49,8 +49,8 @@
   <div class="intro">
     <div class="eyebrow">an open problem you can hold in your hands</div>
     <h1>How small a square can hold <i>n</i> unit squares?</h1>
-    <p class="lede">Call the answer <span class="mono">s(n)</span>. For a perfect square number of squares it is obvious; for most other <i>n</i> nobody knows. There is only the best packing anyone has found and a proven floor beneath it. This atlas draws every record packing from Erich Friedman's and David Ellsworth's catalogue, lets you take them apart and shows how the exact results are proved. It also has computer-checked results of our own: proofs that 21, 32, 45 and 60 squares need sides 5, 6, 7 and 8, that <i>k</i>² − 3 squares need side <i>k</i> for every <i>k</i> ≥ 6, a better floor for 12 squares, and a proof for 13 with no case analysis. All are unrefereed.</p>
-    <p class="hint">Not drawn yet: since mid-September smaller packings than the catalogue's have been found at 58 counts up to <i>n</i> = 307, by Francisco Couzo, Joost de Winter, Nate Chaoweeraprasit (itsnaka) and us. Those tiles still show the catalogue's packing; <a href="sources.html#catalogue">Sources §1</a> lists the newer ones, and Explore gives the newer bound for each.</p>
+    <p class="lede">Call the answer <span class="mono">s(n)</span>. For a perfect square number of squares it is obvious; for most other <i>n</i> nobody knows. There is only the best packing anyone has found and a proven floor beneath it. This atlas draws every record packing up to <i>n</i> = 324, from Erich Friedman's and David Ellsworth's catalogue and the newer ones posted since, lets you take them apart and shows how the exact results are proved. It also has computer-checked results of our own: proofs that 21, 32, 45 and 60 squares need sides 5, 6, 7 and 8, that <i>k</i>² − 3 squares need side <i>k</i> for every <i>k</i> ≥ 6, a better floor for 12 squares, and a proof for 13 with no case analysis. All are unrefereed.</p>
+    <p class="hint">Up to date as of 2026-10-10. Since mid-September smaller packings than the catalogue's have been posted for 70 counts up to <i>n</i> = 308, by Francisco Couzo, Nate Chaoweeraprasit (itsnaka), ry-xu, Mishapolk, Joost de Winter and us. They are drawn here with credit to whoever posted each first; the ones not yet accepted on <a href="https://jlevy.github.io/squares/">jlevy/squares</a>' register say so. Every record is drawn from a certified copy, regularized for display (<a href="sources.html#catalogue">Sources §1</a>).</p>
   </div>
 
   <div class="controls">
@@ -61,15 +61,16 @@
         <option value="free">free squares</option>
         <option value="year">year of record</option>
         <option value="waste">wasted area</option>
+        <option value="alt">other packings at the record side</option>
       </select></label>
     <label>layout
       <select id="layout">
-        <option value="grid">grid, 18 per row</option>
-        <option value="tri">triangle: one row per side ⌈√n⌉</option>
         <option value="deficit">triangle, columns = k² − n</option>
+        <option value="tri">triangle, centred rows</option>
+        <option value="grid">grid, 18 per row</option>
       </select></label>
     <label>records as of <span class="mono" id="yearv">today</span> <input id="year" type="range" min="1979" max="2026" value="2026"></label>
-    <span class="hint">hover a tile · click one to explore, where the catalogue has an entry · ● proved optimal · ○ proved in 2026, unrefereed, verified on <a href="https://jlevy.github.io/squares/">jlevy/squares</a></span>
+    <span class="hint">hover a tile · click one to explore its packing · ● proved optimal · ○ proved in 2026, unrefereed, verified on <a href="https://jlevy.github.io/squares/">jlevy/squares</a></span>
   </div>
   <div class="legend" id="legend"></div>
   <div class="grid" id="grid"></div>

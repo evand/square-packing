@@ -4,10 +4,13 @@ A static site about the problem *how small a square can hold n unit squares?* (`
 packings, what can be said about them (angles, contacts, free squares, gaps, symmetry), how the
 records changed over time, the proven lower bounds, and how the few exact results are proved.
 
-Everything geometric is parsed from David Ellsworth's SVG catalogue, at the precision each file gives (exact
-constants for most; decimals for the ~60 numerically optimised packings, flagged as numeric contacts)
-(https://kingbird.myphotos.cc/packing/squares_in_squares.html, continuing Erich Friedman's survey).
-Attributions and dates are quoted from his wording. See `www/sources.html`.
+The record packings for n ≤ 324 are drawn from our certified, display-regularized copies
+(`../search/regularize/lists/`, REGULARIZE.md): one per n, the best known packing at its side.  Everything else
+(older records, alternatives, n > 324) is parsed from David Ellsworth's SVG catalogue, at the precision each file gives
+(exact constants for most; decimals for the ~60 numerically optimised packings, flagged as numeric contacts)
+(https://kingbird.myphotos.cc/packing/squares_in_squares.html, continuing Erich Friedman's survey); attributions and
+dates for those are quoted from his wording.  Records newer than the catalogue are credited to their first public
+posting (`data/records2026.json`, `tools/provenance.py`).  See `www/sources.html` §1.
 
 ## Layout
 
@@ -17,13 +20,16 @@ Attributions and dates are quoted from his wording. See `www/sources.html`.
 | `tools/parse_svg.py` | independent parser for Ellsworth's SVG dialect → exact squares (mpmath, 50 digits) |
 | `tools/analysis.py` | contacts (exact-checked), first-order rigidity LP + nonlinear verification, sampled free regions, symmetry, angle groups |
 | `tools/parse_all.py`, `tools/export.py`, `tools/timeline.py`, `tools/scrape_pages.py` | the pipeline, see `build.sh` |
-| `data/` | `lower_bounds.json` (curated, cited).  The fetched pages/SVGs and intermediate JSON are not committed; `build.sh` regenerates them |
+| `tools/import_lists.py` | the record drawings from `search/regularize/lists` (+ alternates, 2026 history steps): `www/data/p/{best,alt,step}-*.json`, adds them to `index.json` / `timeline.json` |
+| `tools/provenance.py` | who posted each record newer than the catalogue, and when (packing store + register clone) → `data/records2026.json` |
+| `data/` | `lower_bounds.json` (curated, cited), `records2026.json` (generated, committed: needs the local packing store).  The fetched pages/SVGs and intermediate JSON are not committed; `build.sh` regenerates them |
 | `notes/` | research notes: prior work, lower-bound sourcing |
 
 ## Build
 
 ```sh
-./build.sh all        # fetch (polite, ~5 min), scrape, parse (~20 min), export (analysis), timeline, bounds
+./build.sh all        # fetch (polite, ~5 min), scrape, parse (~20 min), export (analysis), timeline, bounds, lists
+./build.sh provenance # after `pk.py sync-register` / `sync-pending` and a new lists/best.json; then ./build.sh lists
 python3 -m http.server -d www 8765
 ```
 

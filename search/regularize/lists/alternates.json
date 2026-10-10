@@ -630,15 +630,6 @@
   "cert": "search/regularize/lists/certs/alt/n-267.cert.gz"
  },
  {
-  "n": 270,
-  "source": "ours (fewest rotation groups variant)",
-  "side": "16.9297801262411716977",
-  "relation": "alternate packing at the record side: not shown connected to the source (path blocked at s = 0.00)",
-  "groups": "23 -> 20",
-  "parent": "Francisco Couzo",
-  "cert": "search/regularize/lists/certs/alt/n-270.cert.gz"
- },
- {
   "n": 296,
   "source": "Ellsworth catalogue square-296.svg",
   "side": "17.707106781187",

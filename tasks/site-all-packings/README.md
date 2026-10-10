@@ -1,6 +1,6 @@
 # Site: draw every packing we have numbers for
 
-Status 2026-10-04: not started.  Raised in the 10-04 site session.
+Status 2026-10-10: done for n ≤ 324 (records drawn from `search/regularize/lists`, see `site/TODO.md` "Done 2026-10-10"); n > 324 not drawn.  Raised in the 10-04 site session.
 
 ## Goal
 

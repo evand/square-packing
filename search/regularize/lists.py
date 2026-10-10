@@ -60,6 +60,8 @@ def catalogue_alternates():
     F = json.load(open(os.path.join(D, 'index.json')))['files']
     byn = {}
     for k, v in F.items():
+        if v.get('origin'):                # the site's own entries (our lists, history steps): not the catalogue
+            continue
         try:
             s = float(v['s'])
         except Exception:
@@ -128,25 +130,35 @@ def write(rows, stem, cols, title, intro):
             fh.write('| ' + ' | '.join(str(r.get(c, '')) for c in cols) + ' |\n')
 
 
+def _gz(src, dst):
+    """gzip src to dst, deterministically (mtime 0), and only if the content changed: rewriting identical certificates
+    would change every .gz in git through the timestamp gzip embeds."""
+    import gzip
+    data = open(src, 'rb').read()
+    if os.path.exists(dst):
+        try:
+            if gzip.decompress(open(dst, 'rb').read()) == data:
+                return
+        except OSError:
+            pass
+    with open(dst, 'wb') as fo, gzip.GzipFile(filename='', mode='wb', compresslevel=9, fileobj=fo, mtime=0) as gz:
+        gz.write(data)
+
+
 def package(B, A):
     """Copy the chosen packings (certificate + 50-digit JSON, gzipped) into lists/certs/ and point the lists there."""
-    import gzip, shutil
     cdir = os.path.join(OUT, 'certs'); adir = os.path.join(cdir, 'alt')
     os.makedirs(adir, exist_ok=True)
     for r in B:
         src = os.path.join(ROOT, r['cert'])
         for ext in ('.cert', '.json'):
-            dst = os.path.join(cdir, f"n-{r['n']:03d}{ext}.gz")
-            with open(src.replace('.cert', ext), 'rb') as fi, gzip.open(dst, 'wb', 9) as fo:
-                shutil.copyfileobj(fi, fo)
+            _gz(src.replace('.cert', ext), os.path.join(cdir, f"n-{r['n']:03d}{ext}.gz"))
         r['cert'] = os.path.relpath(os.path.join(cdir, f"n-{r['n']:03d}.cert.gz"), ROOT)
     for r in A:
         if r.get('cert') and r['source'].startswith('ours'):
             src = os.path.join(ROOT, r['cert'])
             for ext in ('.cert', '.json'):
-                dst = os.path.join(adir, f"n-{r['n']:03d}{ext}.gz")
-                with open(src.replace('.cert', ext), 'rb') as fi, gzip.open(dst, 'wb', 9) as fo:
-                    shutil.copyfileobj(fi, fo)
+                _gz(src.replace('.cert', ext), os.path.join(adir, f"n-{r['n']:03d}{ext}.gz"))
             r['cert'] = os.path.relpath(os.path.join(adir, f"n-{r['n']:03d}.cert.gz"), ROOT)
 
 

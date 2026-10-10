@@ -515,47 +515,42 @@ function missingNote(n, shown) {
   const head = `No packing of exactly ${n} squares is on record here. `;
   const fam = familyFloor(n);
   if (fam) return head + `None is needed: s(${n}) = ${k} is proved (${fam.who}, unrefereed), so the plain grid, side ${k}, is optimal. Showing the nearest n that has a drawing, n = ${shown}.`;
-  if (n <= TABLE_MAX && NEWER[n]) return head + `Ellsworth's table does not list n = ${n}, but a packing smaller than the grid has been found since: s(${n}) ≤ ${NEWER[n][0]}, by ${NEWER_WHO[NEWER[n][1]]}. Showing the nearest n that has a drawing, n = ${shown}.`;
   if (n <= TABLE_MAX) return head + `Ellsworth's table lists every n up to ${TABLE_MAX} that beats the plain grid, and n = ${n} is not among them, so the best packing known is the grid: side ⌈√${n}⌉ = ${k}. Showing the nearest n that has a drawing, n = ${shown}.`;
   const u = upperFor(n);
   const g = generalFloor(n);
   return head + `Past n = ${TABLE_MAX} the catalogue draws only selected n. Showing the nearest one it draws, n = ${shown}. Best bounds on record: s(${n}) ≤ ${u.from ? `${u.s.toFixed(6)}, from the n = ${u.from} packing with ${u.from - n} square${u.from - n > 1 ? 's' : ''} removed` : `${k}, the plain grid`}; s(${n}) ≥ ${g.v.toFixed(4)} (${g.who.split(';')[0]}).`;
 }
-// Stopgap until every record is redrawn (tasks/site-all-packings/): n where a smaller packing than the
-// catalogue's is on record (checked 2026-10-07 against jlevy/squares' register, #399 and #401).  Sides are
-// rounded up at 10 decimals, so each is still an upper bound.  Who: C Francisco Couzo, N Nate Chaoweeraprasit
-// (itsnaka, SQUISH), W Joost de Winter, E this project.  Where: r the register's case page, i jlevy/squares#401
-// (not all registered yet), e jlevy/squares#399 (ours, not yet registered).
-const NEWER = {88:['9.8824510305','N','i'], 68:['8.7987952373','C','r'], 102:['10.6071746802','C','r'], 103:['10.7035167556','C','r'], 105:['10.8060778656','C','r'], 106:['10.8229080442','C','r'],
-  108:['10.9206589395','N','i'], 110:['10.9967833967','C','r'], 123:['11.6009077786','N','i'], 126:['11.7733036067','N','i'], 129:['11.8793752068','N','i'],
-  130:['11.9044830326','N','r'], 131:['11.9549168303','C','r'], 132:['11.9913278877','C','r'], 152:['12.8307188010','C','r'], 153:['12.8796793734','N','i'],
-  154:['12.9265622459','N','i'], 155:['12.9525032027','N','i'], 156:['12.9820826986','C','r'], 172:['13.6189889569','C','r'], 177:['13.8229797342','C','r'],
-  179:['13.8913125658','N','i'], 180:['13.9236350043','N','i'], 181:['13.9537488220','C','r'], 182:['13.9740907132','C','r'], 199:['14.6175721736','N','i'],
-  206:['14.8601586634','C','r'], 207:['14.8879922584','N','i'], 208:['14.9245187721','N','i'], 209:['14.9496179523','N','i'], 210:['14.9730011166','C','r'],
-  211:['14.9979607050','W','r'], 228:['15.6046024546','C','r'], 236:['15.8678008395','N','i'], 237:['15.9036762352','N','i'], 238:['15.9261468571','N','i'],
-  239:['15.9493131698','N','i'], 240:['15.9696853376','C','r'], 241:['15.9881324396','C','r'], 258:['16.5634480022','N','i'], 259:['16.6025684905','C','r'],
-  263:['16.7404464801','N','i'], 266:['16.8230287508','E','e'], 268:['16.8788148211','C','r'], 269:['16.9059670586','C','r'], 270:['16.9378072285','E','e'],
-  271:['16.9508207927','C','r'], 272:['16.9681101458','E','e'], 273:['16.9839259627','C','r'], 292:['17.5972493912','C','r'], 297:['17.7404172876','C','r'],
-  301:['17.8466671929','C','r'], 302:['17.8813062181','N','i'], 303:['17.9203123730','N','i'], 304:['17.9346500184','C','r'], 305:['17.9529594591','C','r'],
-  306:['17.9634381398','C','r'], 307:['17.9810305487','C','r']};
-const NEWER_WHO = { C: 'Francisco Couzo', N: 'Nate Chaoweeraprasit (itsnaka, SQUISH)', W: 'Joost de Winter', E: 'us' };
-function newerLink(n) {
-  const [, , l] = NEWER[n];
-  return l === 'r' ? `<a href="https://jlevy.github.io/squares/cases/${n}.html" target="_blank" rel="noopener">register case page</a>`
-    : `<a href="https://github.com/jlevy/squares/issues/${l === 'i' ? 401 : 399}" target="_blank" rel="noopener">jlevy/squares#${l === 'i' ? 401 : 399}</a>`;
+// Records newer than the catalogue (site/tools/provenance.py -> records[n].credit): who posted the
+// packing first, where, and whether jlevy/squares' register has accepted it yet.
+const REPO = 'https://github.com/evand/square-packing/blob/main/';
+const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const lnk = (url, text) => `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(text)}</a>`;
+function creditHTML(n, c) {
+  let h = `Found by ${esc(c.who)}, posted ${c.date} (${lnk(c.url, c.label)}).`;
+  if (c.also && c.also.length) h += ` Also posted by ${c.also.map(x => `${esc(x.who)} (${lnk(x.url, x.label)}, ${x.date})`).join(', ')}.`;
+  h += c.registered ? ` Accepted on jlevy/squares' register (${lnk(c.register_url, `case ${n}`)}).`
+                    : ` Not yet on jlevy/squares' register: a registration request is open, and the packing passes our own two exact certificate checkers.`;
+  if (c.refined_by && c.refined_by.length) h += ` Exact form refined by ${c.refined_by.map(esc).join(', ')}.`;
+  return h;
 }
-function newerNote(n) {
-  if (!NEWER[n]) return '';
-  const [s, w] = NEWER[n];
-  return ` A smaller packing of ${n} is on record, not drawn here yet: s(${n}) ≤ ${s}, by ${NEWER_WHO[w]} (${newerLink(n)}).`;
-}
+const isCat = f => !(S.idx.files[f] || {}).origin;   // an SVG from Ellsworth's catalogue
 const TABLE_MAX = 324;   // Ellsworth's main table: every n up to here with a packing better than the grid
 function renderSide() {
   const r = S.rec, a = r.analysis, meta = S.idx.files[S.file] || {}, recMeta = S.idx.records[S.n] || {};
-  const isRecord = recMeta.svg === S.file, inTable = !!S.idx.records[S.n];
+  const bestS = recMeta.best_s != null ? +recMeta.best_s : null;
+  const atRecord = bestS != null && Math.abs(+r.s - bestS) < 1e-9;     // same side as the record
+  const catSame = recMeta.s_dec != null && Math.abs(+r.s - +recMeta.s_dec) < 1e-9;   // the catalogue's record side (its closed form applies)
+  const isRecord = recMeta.best ? S.file === recMeta.best : recMeta.svg === S.file, inTable = !!S.idx.records[S.n];
   const snapped = S.asked != null && S.asked !== S.n;
-  const isGrid = !inTable && Math.abs(+r.s - Math.ceil(Math.sqrt(S.n))) < 1e-9;   // nothing beats the plain grid
-  document.querySelector('.side .eyebrow').textContent = snapped ? `not n = ${S.asked}: nearest packing on record` : isRecord ? 'best known packing' : isGrid ? 'best known packing: the plain grid' : inTable ? 'alternative / older packing' : 'catalogued packing (not in the main table)';
+  const isGrid = Math.abs(+r.s - Math.ceil(Math.sqrt(S.n))) < 1e-9 && a.n_rotated === 0;   // nothing beats the plain grid
+  document.querySelector('.side .eyebrow').textContent = snapped ? `not n = ${S.asked}: nearest packing on record` :
+    isRecord ? (isGrid ? 'best known packing: the plain grid' : 'best known packing') :
+    meta.origin === 'alt' ? 'alternate packing at the record side (ours)' :
+    meta.origin === 'best' ? 'the earlier record, regularized (ours)' :
+    meta.origin === 'step' ? 'an earlier 2026 record' :
+    S.file === recMeta.svg && atRecord ? "the catalogue's drawing of the record" :
+    atRecord ? 'catalogue drawing at the record side' :
+    inTable ? 'older packing (catalogue)' : 'catalogued packing (not in the main table)';
   $('title').textContent = `${r.n} squares`;
   // Two different mismatches, and conflating them misreports both: the catalogue may cover two n
   // with one entry (s equal for both, so the picture holds the other count), or the n asked for may
@@ -569,8 +564,8 @@ function renderSide() {
   const sShown = (+r.s).toFixed(12).replace(/0+$/, '').replace(/\.$/, '');
   $('sval').textContent = 's = ' + sShown + (+sShown === +r.s ? '' : '…');   // no ellipsis on an exact 2, 3, …
   // exact form.  The record's closed form and prose describe the record: never lend them to an alternative.
-  const tex = meta.s_tex || (isRecord ? recMeta.s_tex : '') || '';
-  const polys = meta.polys && meta.polys.length ? meta.polys : isRecord ? recMeta.polys : null;
+  const tex = meta.s_tex || ((isRecord || meta.origin === 'alt' || S.file === recMeta.svg) && catSame ? recMeta.s_tex : '') || '';
+  const polys = meta.polys && meta.polys.length ? meta.polys : (isRecord || meta.origin === 'alt') && catSame ? recMeta.polys : null;
   let closed = tex.replace(/\\Nn\{[^}]*\}/, '').replace(/\\(begin|end)\{aligned\}/g, '').replace(/\\\\\s*&?=\s*$/, '').replace(/&/g, '').replace(/=\s*$/, '').trim();
   const lock = closed.match(/\{\}\^\{(\d+)\}🔒/);
   const sf = $('sform'); sf.innerHTML = '';
@@ -593,10 +588,36 @@ function renderSide() {
   const inexact = a.contacts.filter(c => c.exact === false).length;
   if (inexact) tags.push(`<span class="tag warn" title="some contacts are only numerically closed (packing not analytically optimised)">${inexact} numeric contacts</span>`);
   $('tags').innerHTML = tags.join(' ');
-  const prose = (meta.prose || (isRecord ? recMeta.prose : '') || '').replace(/\n/g, ' ');
-  $('prose').innerHTML = prose ? prose.replace(/\$([^$]+)\$/g, (m, t) => { try { return katex.renderToString(t, { throwOnError: false }); } catch (e) { return m; } }) : '';
-  // Not encoded: seven names hold a literal %27, which Ellsworth's own links use as-is.
-  $('srcline').innerHTML = `Geometry from <a href="https://kingbird.myphotos.cc/packing/${S.file}" target="_blank" rel="noopener">${S.file}</a> on David Ellsworth's <a href="https://kingbird.myphotos.cc/packing/squares_in_squares.html" target="_blank" rel="noopener">Squares in Squares</a> (after Erich Friedman).` + (isRecord && r.n === S.n ? newerNote(S.n) : '');
+  const tex2html = t => t.replace(/\$([^$]+)\$/g, (m, x) => { try { return katex.renderToString(x, { throwOnError: false }); } catch (e) { return m; } });
+  if (isRecord && recMeta.credit) $('prose').innerHTML = creditHTML(S.n, recMeta.credit);
+  else if (meta.origin === 'step') $('prose').innerHTML = `Found by ${esc(meta.credit.who)}, posted ${meta.credit.date} (${lnk(meta.credit.url, meta.credit.label)}); since improved: the record is now ${(+recMeta.best_s).toFixed(10)}.`;
+  else if (meta.origin === 'alt') $('prose').innerHTML = `A different packing of ${S.n} squares in the record's box: ${esc(meta.relation)}. Made by merging rotation groups of the record (${esc(meta.groups)} groups)${meta.parent ? `, found by ${esc(meta.parent)}` : ''}; a display choice, not a new bound.`;
+  else {
+    const prose = (meta.prose || ((isRecord || S.file === recMeta.svg) && catSame ? recMeta.prose : '') || '').replace(/\n/g, ' ');
+    $('prose').innerHTML = prose ? tex2html(prose) : '';
+  }
+  const certLink = c => c ? lnk(REPO + c, 'certificate') : '';
+  if (meta.origin === 'raw') {
+    $('srcline').innerHTML = `Drawn as posted, in double precision, so contacts are only numerically closed. ` +
+      (meta.cert ? `The posted packing is certified at this side (${certLink(meta.cert)}: the register's rational witness, converted exactly and accepted by our two exact checkers)` : `Not certified here`) +
+      `, but our exact solver could not certify it at its exact optimum (slightly smaller), so unlike the other records it has no regularized copy.`;
+  } else if (meta.origin === 'best' && !isRecord) {
+    $('srcline').innerHTML = `Our certified, regularized copy (${certLink(meta.cert)}) of the catalogue's record, which has since been beaten: <a href="explore.html?n=${S.n}">the record</a>.`;
+  } else if (meta.origin === 'best') {
+    const cat = recMeta.svg && S.idx.files[recMeta.svg] && catSame ? recMeta.svg : null;
+    $('srcline').innerHTML = `Drawn from our copy of the record, certified at this side (${certLink(meta.cert)}, checked by two exact checkers) and regularized for display: ${esc(meta.level_text)}` +
+      (meta.orientation && meta.orientation !== 'as source' ? `, ${esc(meta.orientation)} from the source drawing` : '') + '. ' +
+      (cat ? `The catalogue's own drawing: <a href="explore.html?p=${encodeURIComponent(cat)}">${esc(cat)}</a> (David Ellsworth's <a href="https://kingbird.myphotos.cc/packing/squares_in_squares.html" target="_blank" rel="noopener">Squares in Squares</a>, after Erich Friedman).` : '');
+  } else if (meta.origin === 'alt') {
+    $('srcline').innerHTML = `Ours, certified at the record side (${certLink(meta.cert)}). See <a href="sources.html#catalogue">Sources §1</a> for what "alternate" means here.`;
+  } else if (meta.origin === 'step') {
+    $('srcline').innerHTML = `Coordinates as posted, in double precision, so contacts are only numerically closed.`;
+  } else {
+    // Not encoded: seven names hold a literal %27, which Ellsworth's own links use as-is.
+    $('srcline').innerHTML = `Geometry from <a href="https://kingbird.myphotos.cc/packing/${S.file}" target="_blank" rel="noopener">${S.file}</a> on David Ellsworth's <a href="https://kingbird.myphotos.cc/packing/squares_in_squares.html" target="_blank" rel="noopener">Squares in Squares</a> (after Erich Friedman).` +
+      (meta.alt_relation && !meta.alt_relation.startsWith('same as') ? ` At the record side: ${esc(meta.alt_relation)}.` : '') +
+      (S.file === recMeta.svg && recMeta.best && !catSame ? ` A smaller packing has been found since: s(${S.n}) ≤ ${(+recMeta.best_s).toFixed(10)} (<a href="explore.html?n=${S.n}">the record</a>).` : '');
+  }
   // where to go next for this n
   const nv = variantsFor(S.n).length, xl = [];
   if (nv > 1) xl.push(`<a href="compare.html?n=${S.n}">compare all ${nv} packings of ${S.n}</a>`);
@@ -646,12 +667,25 @@ function renderSide() {
 // ---------- navigation ----------
 // Other packings of the same n worth offering. Optimiser start configurations (f.start) are real
 // packings but never competitive, so they are not listed -- a ?p= link to one still loads.
+// Order: the record (our drawing), our alternates, earlier 2026 records, the catalogue's record
+// drawing, the rest of the catalogue by name.
 function variantsFor(n, keep) {
   const files = Object.values(S.idx.files).filter(f => f.n === n && f.n_parsed && !f.start && !(f.errors && f.errors.length)).map(f => f.svg);
   if (keep && !files.includes(keep)) files.push(keep);
-  const rec = S.idx.records[n] && S.idx.records[n].svg;
-  files.sort((a, b) => (a === rec ? -1 : b === rec ? 1 : a.localeCompare(b)));
+  const R = S.idx.records[n] || {};
+  const rank = f => { const m = S.idx.files[f] || {}; return f === R.best ? 0 : m.origin === 'alt' ? 1 : m.origin === 'step' ? 2 : f === R.svg ? 3 : 4; };
+  files.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
   return files;
+}
+function variantLabel(f, n) {
+  const m = S.idx.files[f] || {}, R = S.idx.records[n] || {}, sh = x => (+x).toFixed(6);
+  if (f === R.best) return `record, s = ${sh(m.s)}`;
+  if (m.origin === 'alt') return `alternate at the record side (ours)`;
+  if (m.origin === 'best') return `earlier record, regularized (ours): s = ${sh(m.s)}`;
+  if (m.origin === 'step') return `${m.credit.who.split(' (')[0]}, ${m.credit.date}: s = ${sh(m.s)}`;
+  const name = f.replace('square-', '').replace('.svg', '');
+  const rel = m.alt_relation ? (m.alt_relation.startsWith('distinct') ? ' · alternate at the record side' : m.alt_relation.startsWith('same tilts') ? ' · record side, squares placed differently' : ' · record side') : '';
+  return `catalogue ${name}${f === R.svg ? ' (its record)' : ''}: s = ${sh(m.s)}${rel}`;
 }
 function recordNs() { return Object.keys(S.idx.records).map(Number).sort((a, b) => a - b); }
 // Every n there is something to draw for: the main table plus n drawn only on the catalogue's
@@ -680,11 +714,11 @@ async function load(file, n) {
   const vs = $('variant'); vs.innerHTML = '';
   for (const f of variantsFor(n, file)) {
     const o = document.createElement('option'); o.value = f;
-    o.textContent = f === (S.idx.records[n] || {}).svg ? `record (${f})` : f.replace('square-', '').replace('.svg', '');
+    o.textContent = variantLabel(f, n);
     vs.appendChild(o);
   }
   vs.value = file; vs.style.display = vs.options.length > 1 ? '' : 'none';
-  history.replaceState(null, '', `?p=${encodeURIComponent(file)}`);
+  history.replaceState(null, '', file === (S.idx.records[n] || {}).best ? `?n=${n}` : `?p=${encodeURIComponent(file)}`);
   S.groups = mergedGroups(S.tol);
   render();
   // A throw here used to leave the panel half-built with no sign of why -- say so instead.
@@ -709,7 +743,7 @@ function gotoN(n) {
   }
   const rec = S.idx.records[n] || {};
   const drawable = f => f && S.idx.files[f] && S.idx.files[f].n_parsed;
-  const file = drawable(rec.svg) ? rec.svg : variantsFor(n).sort((a, b) => +S.idx.files[a].s - +S.idx.files[b].s)[0];
+  const file = drawable(rec.best) ? rec.best : drawable(rec.svg) ? rec.svg : variantsFor(n).sort((a, b) => +S.idx.files[a].s - +S.idx.files[b].s)[0];
   if (file) load(file, n);
   else { S.rec = null; $('title').textContent = `no packing data for n = ${n}`; $('sval').textContent = '—';
          setText('shownfor', S.asked !== n ? `There is no catalogue entry for n = ${S.asked} either; the nearest is n = ${n}, and it has no drawing.` : ''); }

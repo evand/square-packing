@@ -6,7 +6,11 @@
 #   4. export   analysis -> www/data/p/*.json + www/data/index.json  (angles, contacts, rigidity, free regions)
 #   5. timeline prose dates -> www/data/timeline.json
 #   6. bounds   data/lower_bounds.json -> www/data (hand-curated with citations; see notes/lower-bounds-notes.md)
-# Usage: ./build.sh [fetch|scrape|parse|export|timeline|bounds|all]   (default: all but fetch)
+#   7. lists    the record packings n <= 324 from search/regularize/lists (certified, regularized) + records posted since
+#               the catalogue (data/records2026.json) -> www/data/p/{best,alt,step}-*.json, index.json, timeline.json
+#   provenance  (not in `all`: needs the packing store and register clone under search/packer/runs/) who posted each
+#               record newer than the catalogue, and when -> data/records2026.json (committed)
+# Usage: ./build.sh [fetch|scrape|parse|export|timeline|bounds|lists|provenance|all]   (default: all but fetch)
 set -euo pipefail
 cd "$(dirname "$0")"
 step=${1:-site}
@@ -18,6 +22,8 @@ case "$step" in
   export)   run export python3 tools/export.py "${@:2}" ;;
   timeline) run timeline python3 tools/timeline.py && cp data/timeline.json www/data/ ;;
   bounds)   run bounds cp data/lower_bounds.json www/data/ ;;
-  site|all) [ "$step" = all ] && "$0" fetch; "$0" scrape; "$0" parse; "$0" export; "$0" timeline; "$0" bounds ;;
+  lists)    run lists python3 tools/import_lists.py "${@:2}" ;;
+  provenance) run provenance python3 tools/provenance.py ;;
+  site|all) [ "$step" = all ] && "$0" fetch; "$0" scrape; "$0" parse; "$0" export; "$0" timeline; "$0" bounds; "$0" lists ;;
   *) echo "unknown step $step"; exit 2 ;;
 esac

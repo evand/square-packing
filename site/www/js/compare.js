@@ -49,7 +49,13 @@ async function loadN(nn, asked = nn) {
     const r = IDX.records[String(n)];
     if (r && drawable(r.svg)) { borrowed = r.svg; L = [entryFor(r.svg) || { file: r.svg, s: +IDX.files[r.svg].s, date: null, events: [] }]; }
   }
-  L.sort((a, b) => ((a.date || [0, 0])[0] - (b.date || [0, 0])[0]) || ((a.date || [0, 0])[1] - (b.date || [0, 0])[1]) || (b.s - a.s));
+  // Our drawings at the record side, undated and after the history: the record as regularized (where
+  // the dated record is a catalogue drawing) and our alternates.
+  const R = IDX.records[String(n)] || {};
+  for (const f of Object.values(IDX.files))
+    if (f.n === n && (f.origin === 'alt' || f.svg === R.best) && drawable(f.svg) && !L.some(d => d.file === f.svg))
+      L.push({ file: f.svg, s: +f.s, date: null, events: [], extra: f.origin === 'alt' ? 'alternate at the record side (ours)' : 'the record, regularized (ours)' });
+  L.sort((a, b) => (!!a.extra - !!b.extra) || ((a.date || [0, 0])[0] - (b.date || [0, 0])[0]) || ((a.date || [0, 0])[1] - (b.date || [0, 0])[1]) || (b.s - a.s));
   history.replaceState(null, '', `?n=${n}`);
   if (!L.length) {
     // "0 packings on record" was untrue as well as blank: the record exists, the drawing does not.
@@ -90,7 +96,7 @@ async function loadN(nn, asked = nn) {
     // `t.innerHTML +=` here serialised the SVG just appended back to markup and reparsed it -- at
     // n = 9465 that is two 9465-rect round trips per thumbnail, and it froze the tab for ~45 s.
     const cap = document.createElement('div');
-    cap.innerHTML = `<div class="s">${rec.s.toFixed(6)}${d.is_record ? ' <span class="rec">record</span>' : ''}</div><div class="d">${dateStr(d)}${who(d) ? ' · ' + who(d) : ''}</div>`;
+    cap.innerHTML = `<div class="s">${rec.s.toFixed(6)}${d.is_record ? ' <span class="rec">record</span>' : ''}</div><div class="d">${d.extra || dateStr(d)}${who(d) ? ' · ' + who(d) : ''}</div>`;
     while (cap.firstChild) t.appendChild(cap.firstChild);
     t.onclick = e => { if (e.shiftKey) B = d; else A = d; if (A === B) B = null; setup(); };
     strip.appendChild(t);
@@ -127,8 +133,8 @@ function setup() {
   if (!A || !A.rec) return;
   if (B && !B.rec) B = null;
   const ra = A.rec, rb = B && B.rec;
-  $('infoA').innerHTML = `<div class="s">${ra.s.toFixed(8)}</div>${dateStr(A)}${who(A) ? '<br>' + who(A) : ''}<br><a href="explore.html?p=${encodeURIComponent(A.file)}">explore →</a>`;
-  $('infoB').innerHTML = rb ? `<div class="s">${rb.s.toFixed(8)}</div>${dateStr(B)}${who(B) ? '<br>' + who(B) : ''}<br><a href="explore.html?p=${encodeURIComponent(B.file)}">explore →</a>` : '<span class="note">shift-click a packing to compare</span>';
+  $('infoA').innerHTML = `<div class="s">${ra.s.toFixed(8)}</div>${A.extra || dateStr(A)}${who(A) ? '<br>' + who(A) : ''}<br><a href="explore.html?p=${encodeURIComponent(A.file)}">explore →</a>`;
+  $('infoB').innerHTML = rb ? `<div class="s">${rb.s.toFixed(8)}</div>${B.extra || dateStr(B)}${who(B) ? '<br>' + who(B) : ''}<br><a href="explore.html?p=${encodeURIComponent(B.file)}">explore →</a>` : '<span class="note">shift-click a packing to compare</span>';
   match = null; let why = '';
   // The correspondence costs an N x N matrix and an assignment, solved once per symmetry of the
   // square. Measured on the shipped data: n = 1037 takes 0.7 s for all eight, n = 2135 7.7 s, and
