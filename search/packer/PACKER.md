@@ -1072,3 +1072,49 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   160 new certified sub-11 minima from the 10-09 evening bench / battery / crossing runs (every proposal fully polished,
   every distinct sub-11 side certified), deduplicated at 5e-9.  Closest to the record: 10.997517877 (+7.3e-4), then
   1.1-1.3e-3 above.  None within 1e-4.
+
+## Night session 10-10 (lineage reach; explorer port; Hunt 3)
+* **Explorer port** (`39dde93`, `e79fa6e`): `cross2` (two-parent crossover, variant drawn from field / softfield / half /
+  bestfit2; random sub-k mate for sub-k parents, nearest of 8 for above-k parents) and `ashallow` (shallow whole-box anneal),
+  weight 2 each by default (`--cross2 0 --ashallow 0` = old mix); mates recorded in the archive (`mate`) and proposal log.
+  Battery split by crossover variant: no variant resolvable (1-11 new certified per cell); `bestfit2` lowest bench yield in all
+  three crossover arms (4 / 2 / 2), suggestive only.  The mate rule, not the variant, carries the effect.
+* **Per-move landing spread** (`move_spread.py`, battery trials, bench + reach suites; d = child -> parent matching distance of
+  polished sub-k non-grid children): single moves land close (median 0.003-0.009, q90 0.012-0.044, <= 6 % beyond 0.05) and
+  23-69 % return to the parent's own basin; big pushes are pulled back or lost (bigkick: 60 % lost, survivors median 0.009;
+  band / crot 60 %, mirror 78 % lost).  Crossover is the only move that lands far while staying sub-grid: cross2 median 0.041,
+  34 % beyond 0.05, 14 % lost; crossP5far median 0.051.  So "single-move reach 0.05" = the tail of small steps.
+* **Rattler check** (exactsolve free squares, distance recomputed on pairs where neither square is free): for most packings free
+  pairs carry <= 7 % of d^2, but some starts are inflated: b70455 0.056 -> **0.046** (38 % of d^2 from free squares), b59218
+  0.075 -> 0.068, b61927 0.071 -> 0.068; group candidates b54624 0.055 -> 0.044, b59788 0.073 -> 0.065, b74548 0.072 -> 0.062.
+  Band edges near 0.05 need the masked distance.  Same basin re-found reads d ~ 0.001-0.002 (noise floor).
+* **L1 lineage test** (`lineage_reach.py`, `runs/lineage/L1`; 12 certified starts at d 0.050-0.083 from the s(110) record,
+  closer basins unknown to the run (novelty ref = basins >= 0.05); new vs old mix, 4 procs x 60 min each, concurrent; hunt
+  recipe `--adapt --elite-share 0.3 --reward value`): both reach the record.  new: < 0.02 at 3.5 min, record 4.0 min (from
+  b70455, depth 7, chain starts with cross2), 108 basins < 0.05 / 26 < 0.02.  old: < 0.02 at 6.9 min, record **24.4 min from
+  b5457 (masked d 0.063, the d ~ 0.062 family 1.4e-4 above the record in side), depth 14, local moves only** (kicks, bigkick,
+  band, rowslide, aswap): a lineage crossing that cannot have borrowed.  new also reached the record's neighbourhood from b5457
+  (11.2 min, depth 14, 4 cross2 steps; mates unrecorded in L1).  Caveats: b70455 is inside single-move reach once rattlers are
+  masked; the elite share / value reward concentrate parents on the lowest-side starts (b5457 175-235 sub-11 descendants;
+  most far-in-side starts 1-56), so far starts were barely tested; one replicate, wall-clock under ~22 busy processes.
+* Census side note: the 15 lowest basins >= 0.05 from the record all sit at d 0.062-0.064 (gap 1.0e-4 ... 4.2e-4): a second
+  structural family nearly as good as the record (lowest: 40601 = 10.9968870, the often-revisited census minimum; Ellsworth's
+  10.99679327 is not in it); the 0.02-0.05 ring has nothing below 1.1e-3.
+* **L2 lineage test** (`runs/lineage/L2`; one explorer per start group x recipe, 2 procs x 60 min each, 6 concurrent, so no
+  cross-group starving or borrowing; 4 starts per group, all vetted by rattler-masked d; mates recorded):
+  | group (masked d of starts; gap above record) | new: t(< 0.02) / t(record) | old: t(< 0.02) / t(record) |
+  | far2 (0.071-0.082; 1.8-3.2e-3) | 3.2 / 4.4 min | 1.5 / 1.5 min |
+  | far1 (0.051-0.065; 2.6-3.1e-3) | 6.0 / 6.7 min | 0.9 / 1.8 min |
+  | near (0.063-0.064, the second family; 1.4-4.2e-4) | 4.6 / 24.6 min | 14.8 / 54.3 min |
+  Every run reaches the record.  From the far-in-side starts it takes ~7 steps and minutes even with local moves only
+  (far2_old0: b62620, d 0.071, 7 moves, 1.5 min).  Crossing from the second family is slower (25-54 min, depth 7-16).
+  New vs old: old faster on far groups, new faster on the near group; one replicate, so no recipe verdict.  Borrowed mates
+  appear in new-recipe chains (far1_new0 record chain: 2 of 2 cross2 steps borrowed from another start's lineage).
+* **Reading (L1 + L2):** single-move reach (~0.05) is not the limit for lineages: within the s(110) sub-11 region chains
+  cover 0.08 in minutes.  Nearly every certified sub-11 basin is within 0.1 of the record (2 of 537 beyond), and lineages
+  from all three groups find it, so the whole sub-11 region at 110 behaves as one funnel with the record at its floor; the
+  second family (d ~ 0.062, 1e-4 above) is a side valley, slower to leave.  L1's far starts failed only because the elite
+  share / value reward starved them (1-56 descendants).  Consequences: (a) the hard step at 110 is entering the sub-grid
+  region (0 grid crossings), not moving within it; (b) parent allocation matters more than the move mix once below k: a
+  picker that starves high-side starts loses whole lineages; per-start (or per-cluster) budgets fix it; (c) the reach
+  question for hunting is whether other n have several sub-k funnels; if so, per-start explorers are the way to sample them.
