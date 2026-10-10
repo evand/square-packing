@@ -1006,3 +1006,16 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   (quenched snapshots) already by t = 0.9; from scratch the line occupancy reaches k at t ~ 0.8-0.85 (corner radius ~0.1).
   Caveats: from-start anneals begin at bp1/10 (no expansion phase), so grid starts never melt; the occupancy proxy counts
   squares within 1 degree of axis (near-axis squares in sub-11 records trip it).
+* **Rate vs depth (rate110, depth110; 30 trials per cell):** anneal length 30-30,000 sweeps changes nothing; melt depth
+  (corner-radius amplitude) decides.  Positive control (sub-11 pushed to 11.01) crosses back at rmax 0.03-0.1: 28-29/30
+  (record 10.9967834 reached several times), 0.15: 23/30, 0.2: 16-17/30 (same at 30 and 100 sweeps), 0.3: 4/30, 0.5: 0/30.
+  Above-grid starts end in the grid 6/30 (0.03), 8 (0.1), 14 (0.15), 16-19 (0.2), 27 (0.3), 30 (0.5), at every length.
+  From scratch: grid at every depth and length.  So "too much annealing" = too deep, not too slow: once shapes are round
+  enough (r ~0.2+) the orientational structure is lost and squaring up re-forms rows.  Shallow global anneals (rmax <= 0.1)
+  are a candidate explorer move (bench them).
+* statarb review (research agent, `~/predictions/statarb`): their two-basin problem had the same signature (nested branches:
+  heating connects continuously to the high-entropy basin; no temperature rung helps, `tasks/level1_exact_flip_oracle/
+  findings_20260710.md`); fixed by block independence proposals with Metropolis correction, not by tempering.  Suggested
+  here: measure F(q; P) by umbrella sampling in q = full-line count / line occupancy; bias ladder in q; wholesale region
+  re-packing with sub-grid motifs + quench.  Code pointers: `scripts/respace_ladder.py`, `tasks/level1_exact_flip_oracle/
+  barrier_profile.py`, `statarb/utils/excursions.py` (N_eff = N / (1 + CV^2)).
