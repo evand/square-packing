@@ -53,7 +53,8 @@ def PacksWithAngles (n : ℕ) (s : ℝ) (m : ℕ) : Prop :=
 `s(k² − c) = k` then `s((k+1)² − c) = k + 1`.  Proved on paper for `c ≤ 4`. -/
 def FriedmanMonotone : Prop := ∀ k c : ℕ, 1 ≤ k → GridOptimal k c → GridOptimal (k + 1) c
 
-/-- **Unbounded** (question; stated here; we expect yes): `c*(k) → ∞`, i.e. for every `c`,
+/-- **Unbounded** (question; claimed 2026 by Ryu's preprint `squarepacker/k2-minus-c`, unrefereed,
+`c*(k) ≥ 0.0353 log k − 1`; not formalized): `c*(k) → ∞`, i.e. for every `c`,
 `s(k² − c) = k` for all large `k`.  Proved on paper for `c ≤ 4`. -/
 def CStarUnbounded : Prop := ∀ c : ℕ, ∃ K : ℕ, ∀ k ≥ K, GridOptimal k c
 

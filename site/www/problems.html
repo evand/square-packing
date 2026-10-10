@@ -64,9 +64,9 @@ section{display:flex;flex-direction:column;gap:14px}
       <p><span class="mono">c*(k+1) ≥ c*(k)</span>: if removing <i>c</i> squares from the <i>k</i> × <i>k</i> grid never allows a smaller box, the same holds for every larger grid.</p>
       <p class="st">Erich Friedman's Conjecture 1 (Dynamic Survey DS7, 1998), "true of all the best known packings". It still is: the "best packings" row above never decreases, through <i>k</i> = 18. (The "proved" row can dip, as at <i>k</i> = 9, because it records what has been proved, not c* itself.) Proved for each <i>c</i> ≤ 4. Nagamochi (2005) covered <i>c</i> ≤ 2, but Karakuş found a gap in his proof in 2026. The 2026 results for <i>c</i> = 3 and 4 (unrefereed) imply the cases <i>c</i> ≤ 2 anyway.</p></div>
 
-    <div class="item q"><div class="hd"><b>Unbounded</b><span class="tag open">question</span><span class="eyebrow">large n</span></div>
+    <div class="item q"><div class="hd"><b>Unbounded</b><span class="tag neutral">claimed</span><span class="eyebrow">large n</span></div>
       <p>Does <span class="mono">c*(k) → ∞</span>? Equivalently: for every <i>c</i>, is <span class="mono">s(k² − c) = k</span> for all large enough <i>k</i>?</p>
-      <p class="st">Stated here; we found no attack on it in print. Proved for <i>c</i> ≤ 4. We expect yes. It does not follow from the monotone conjecture (a monotone c* could stall), and it is probably the more tractable of the two.</p></div>
+      <p class="st">Claimed in 2026: a preprint by Ryu Sungjoon (<a href="https://github.com/squarepacker/k2-minus-c">squarepacker/k2-minus-c</a>, <a href="https://doi.org/10.5281/zenodo.23164302">DOI</a>; unrefereed) proves <span class="mono">c*(k) ≥ 0.0353 log k − 1</span> for every <i>k</i> ≥ 2, partly by computer. It gives no usable thresholds for specific <i>c</i>. We have read parts of it and found no gap, but have not checked all of it. Before that we had found no attack on the question in print. Proved with explicit thresholds for <i>c</i> ≤ 4. It does not follow from the monotone conjecture (a monotone c* could stall), and it is probably the more tractable of the two.</p></div>
 
     <div class="item q"><div class="hd"><b>Unit steps</b><span class="tag open">question</span><span class="eyebrow">all k</span></div>
       <p>Is <span class="mono">c*(k+1) ≤ c*(k) + 1</span>?</p>

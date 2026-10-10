@@ -1,7 +1,7 @@
 # Friedman's Conjecture 1: proof shapes, lemmas, experiments (2026-09-30)
 
 Friedman, DS7 (1998–2009), Conjecture 1: **if `s(n²−c) = n` then `s((n+1)²−c) = n+1`.**  Evidence offered there: "true of
-all the best known packings".  Literature: `tasks/friedman-lit/REPORT.md` (nothing attacks it; no result gives `c*(k) → ∞`).
+all the best known packings".  Literature: `tasks/friedman-lit/REPORT.md` (nothing attacks it; no result gives `c*(k) → ∞`).  **Update 2026-10-10:** a preprint claims `A`: Ryu (squarepacker), https://github.com/squarepacker/k2-minus-c, DOI 10.5281/zenodo.23164302, unrefereed (v1.2: `k² − M(k) ≥ 0.0353 log k`, so `c*(k) ≥ 0.0353 log k − 1`; evand/square-packing#3).  Our first read (`tasks/issue3-k2-minus-c/review-2026-10-10.md`) found no gap in Prop 4.5 or Lemmas 4.9/4.10, but it is not a full check; we treat `A` as **claimed**, not settled.
 Code: `search/friedman_slide.py`.  Runs: `runs/friedman_slide_v2.txt` (records), `runs/friedman_slide_all.txt` (all atlas
 packings), `runs/quad_band_w{4,5,6}/` (band LP, pending).  Labels **[proved] [measured] [heuristic]**.
 
@@ -14,7 +14,7 @@ packings), `runs/quad_band_w{4,5,6}/` (band LP, pending).  Labels **[proved] [me
   What is true: `F_c` plus one base case `s(k²−c) = k` gives `A_c`.  Base cases are known only for `c ≤ 4`.
 * **Roth–Vaughan does not give `A`** [proved, given the bound as secondhand sources state it].  The bound is
   `W(α) ≥ 10⁻¹⁰⁰√(α‖α‖)`, which vanishes as the side approaches an integer from below.  QUADRANT.md §7(iii) was wrong.
-  `A` is open, and so is `c*(k) → ∞`.  Known: `3 ≤ c*(k)` for `k ≥ 3`; `c*(k) ≤ k−1` for `k ≥ 12` (Arslanov et al. 2021);
+  `A` (equivalently `c*(k) → ∞`) is **claimed** by Ryu 2026 (preprint, unrefereed; see the update above), and otherwise open.  Known: `3 ≤ c*(k)` for `k ≥ 3`; `c*(k) ≤ k−1` for `k ≥ 12` (Arslanov et al. 2021);
   `c*(k) = O(k^{0.6})` (waste bounds).
 * **Status by c.**  `F_1`, `F_2`: Nagamochi.  `F_3`: **now a theorem** (KS `k=3`, Bentz `4..7`, ours `k ≥ 6`).
   `F_4` ⇔ `s(k²−4) = k` ∀k ≥ 5, **independent of `s(12)`**: **now holds** (2026-10-03, `certificates/k2m4/`): the k²−4 family (R = w = 3, `k ≥ 8`, resting on `ValidTilt9`, one implementation) plus our k = 5..8.
@@ -145,7 +145,7 @@ discarded.
    * `F_5`: needs `D > 5/4` (w ≥ 4?) and certificates from the threshold on.  `k₁(5) ∈ {5, 6, ...}` is open (s(20)).
      A sufficient target is `s(k²−5) = k` ∀k ≥ 6, whatever s(20) is.  The shipped s(32) cover saves 4.29 at k = 6 (LP value not
      recorded), below 5.  So k = 6 is doubtful, and `F_5` may hinge on a threshold we cannot certify.
-3. **`A` (`c*(k) → ∞`)** is open in the literature and not given by Roth–Vaughan.  Route: fixed-profile families with
+3. **`A` (`c*(k) → ∞`)**: claimed by Ryu 2026 (preprint, unrefereed, `c*(k) ≥ 0.0353 log k − 1`); not given by Roth–Vaughan.  The families route below still matters for explicit thresholds and growth rates.  Route: fixed-profile families with
    `D(w) → ∞`.  First check whether the band bound `m_v^band(w)` grows (runs pending).  This is the most valuable
    "general" statement within conceivable reach.
 4. Small, done here: the ascent `c*(k+1) ≤ c*(k)+2`; the insertion lemma; the logical map; the Roth–Vaughan correction.
@@ -197,7 +197,7 @@ show.  `L(k) > c ⇒ s(k²−c) = k`, and `L(k) ≤ c*(k) + 1`.  `S_ins(k)` := b
 | C4 | Insertable class is asymptotically complete: `L(k) − S_ins(k) → 0` (or stays bounded) | open; `lim S_ins = 4 sup D ≤ 4 M(∞)` | compare LPs |
 | C5 | **Seam capacity**: is `M(∞) < ∞`?  If yes, every fixed-profile/insertable family has `D ≤ M(∞)`, so the dual route caps at `c < 4M(∞)` (≈ 10–12 if M(∞) ≈ 2.5–3) | open; `M(1) = ¾` (SEAM_W1); measured **lower bounds** `M` ≥ 1.43, ≈1.76, 1.97, 2.12, 2.23 (w = 2..6, pitch-0.1 columns; not caps, SEAM_W1 §4.1); §8, §9 | analytic dual (§8) |
 | C6 | `A_c` with explicit threshold: `s(k²−c) = k` ∀k ≥ k₀(c) (no base case at the true threshold k₁(c) needed) | c ≤ 4 proved (c = 4: R = w = 3, k₀ = 8, `certificates/k2m4/`, 2026-10-03); c = 5 open | `S_ins(8 or 9) > 5` would give c = 5 from one box |
-| C7 | `c*(k) → ∞` (A) | open in the literature | `L(k) → ∞` suffices; via C4+C5 only if `M(∞) = ∞` |
+| C7 | `c*(k) → ∞` (A) | **claimed** (Ryu 2026 preprint, unrefereed; issue #3) | `L(k) → ∞` suffices; via C4+C5 only if `M(∞) = ∞` |
 | C8 | Rectangle Friedman: `c*(a,b) := max{c : ab − c unit squares need an a×b box}` is nondecreasing in each of a, b separately | open; half-step of C1; each step is one insertion (one periodic slab) | as C1–C3, one direction at a time |
 
 Finer ladder between these (rate conjectures R1–R3, structure conjectures S1–S5, thresholds by certificate class): §9.
