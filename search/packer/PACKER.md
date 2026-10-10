@@ -1146,8 +1146,15 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
     d 0.018 from itsnaka's.
   - 209: chain's 14.9462232264 is itsnaka's raw file converged (−4.3e-7, exact form computed, `runs/hunt3/exact/c209`); not
     claimed.  132, 344 unchanged.  The other 16 n: no improvement in 5.6 h.
-  - Reading: on the fresh-from-others n the gains came from (a) converging unconverged files, (b) short lineages from them;
-    the dedicated per-n explorer beat the chain's shared rounds on 343 and 308 (2 h of 4 procs vs 6-min slices).
+  - Reading (corrected 10-10 morning, Evan asked whether it was compute-corrected: it was not).  Proc-hours: chain gave 343
+    2.4 (12 rounds: 18.9912 -> 18.9801, the two biggest jumps from removal seeds of best(344)), the dedicated x343 8 (-1.9e-3)
+    + x343b 3.75 (-7.7e-6); chain gave 308 1.2 (-5.6e-6), x308 7.7, but its whole gain (-1.9e-4) came at 9 min (0.6
+    proc-h).  Follow-up dedicated runs (343 / 344 / 305 / 132, 4 procs x 65 min, ~17 proc-h): zero gain.  So no evidence that
+    dedicated runs beat the chain per proc-hour; on 343 the chain was better.  Candidate mechanism (untested): archive memory.
+    x308's winning lineage is 7 steps in 9 min (~3 chain rounds of compute) entirely through basins *above* its start
+    (17.9997 .. 17.9990 vs 17.99846); x343's is 12 steps over 92 min with a 32-min wait on one parent; chain rounds reach
+    lineage depth median 5 / p90 8 and keep only best + 3 carries + 3 library entries.  Test: same starts and proc-hours,
+    resetting 6-min rounds vs continuous vs rounds with the archive carried over, several seeds and n.
   Files `candidates/hunt3_n*`.  **Posted 10-10 ~08:55 as jlevy/squares#489** (132, 308, 343, 344; pinned c013f43).  305
   dropped: Couzo's #488 (08:08, before our push) has the identical exact optimum (same 31-digit rational side; both from
   itsnaka's packing via fq), so it is his.  #488 added to `pk/pending.yaml`.
