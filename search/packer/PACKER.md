@@ -1118,3 +1118,18 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   region (0 grid crossings), not moving within it; (b) parent allocation matters more than the move mix once below k: a
   picker that starves high-side starts loses whole lineages; per-start (or per-cluster) budgets fix it; (c) the reach
   question for hunting is whether other n have several sub-k funnels; if so, per-start explorers are the way to sample them.
+* **Hunt 3** (`runs/hunt3`; 22 n whose best known packing is pending and unperturbed by us: itsnaka #481, Couzo 132 / 267,
+  TheSnakeFang #484 (308 / 343 / 344, new 10-10); `chain.py --first-pass`, 8 slots x 2 procs x 6 min, new recipe +
+  `--reward value`; started 02:06).  First hour (41 rounds), certified (exactsolve exact optimum + verify_cert + verify_cert2):
+  - **s(132) ≤ 11.98568019884580881140…** (strict local min mod 31 flat motions, MILP dS 0): **−1.27e-3** below Couzo's
+    pending 11.986954193641.  New basin: depth 8 from a library seed (11.98736) via bigkick, rowslide, lkick, kicksym x2,
+    cross2, kick.
+  - **s(305) ≤ 17.95118356772045354314…** (mod 47): −1.26e-5 below itsnaka's 17.951196144147 (converged); one rowslide.
+  - **s(308) ≤ 17.99846539275931059669…** (mod 52): −8.44e-4 below Kevin Fang's 17.999309855163 (register: the 18-grid).
+    His file polished in place (fq --no-alm): his construction was unconverged; ours is its exact optimum.
+  - **s(344) ≤ 18.99445051427740152092…** (mod 71): −1.04e-3 below Kevin Fang's 18.995489275431.  The chain's best was not
+    jammed (MILP dS −3.1e-4); fq `--flip-top 128 --pit 600` did not move it; `exact/descend.py` (MILP kick + slp2) did.
+  - **s(343) ≤ 18.989552952452492** (dilation certificate, new `dilate_cert.py`: centres and box x (1 + 1e-12), rational
+    rounding; VALID both checkers): −5.35e-3 below Kevin Fang's 18.994903529220, but not a local minimum (MILP dS −2.0e-4;
+    descend.py's kick fails at every size tried).  Better 343 nearby.
+  Files `candidates/hunt3_n*`; draft post `outreach/draft-hunt3-2026-10-10.md` (not posted).
