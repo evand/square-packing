@@ -133,7 +133,7 @@ EMPTY).  Before it, the Rust checker `zmx2` (first-order lemmas only) certified 
   [`valid7-independent-check`](https://github.com/wand125/valid7-independent-check/tree/c561dbb3fcea9178599db017f51f56b42ad9f91f) commit `c561dbb3`, records in release `records-tilt9-v1` (2026-10-06): centres
   `[0, 9/2]²`, `u ∈ [0, 7/16]`, no symmetry used, 28,350 roots, none uncertified.  jlevy/squares'
   [review](https://github.com/jlevy/squares/blob/main/docs/project/reviews/review-2026-10-06-wand125-validtilt9-independent-check.md) found that its region contains `ValidTilt9`'s and no defect, and records it as reported evidence on
-  T-081, which stays V0/C1 (not register-verified).  We have not re-run its record check here.  (`zmx2` leaves 4,844
+  T-081, which stays V0/C1 (not register-verified).  We re-ran its record check here on 2026-10-10 (tag `records-tilt9-v1`, no-network sandbox, fresh seed 20261010): `RECORD OK` over all 28,350 roots (`tasks/validtilt9-wand125-check/`).  (`zmx2` leaves 4,844
   tiny-tilt boxes open.)
 * Kernel-checked in Lean since 2026-10-03 (`lean/Sqpack/ValidSplit*.lean`, `notes/lean-valid-split.md`): the D4 reduction (`valid9_of_tilt_axis`: the box cover is D4-invariant, and the tilted region the run covers — centres in `[0, m/2]²`, `0 < u`, `u² + 2u ≤ 1`, i.e. `0 < θ ≤ 45°` — plus the axis face gives every pose) and Lemma Z itself (`validAxis9`: every axis-parallel unit square in the box, by exact corner limits over the whole box).  So the only unformalised step is the tilted run (`ValidTilt9`).  Lean: `bentz4_of_validTilt9 : ValidTilt9 → ∀ k ≥ 8, minSide (k² − 4) = k`.
 * Floats in the checker only choose which exact test to try, with the one exception noted for `k² − 3`
