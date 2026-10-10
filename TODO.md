@@ -51,6 +51,11 @@ First deliverable: a table of exact forms of S + a handful of Lean local-optimal
 - [ ] s(17) exact via the s(11) method: on hold (CPU). `tasks/s17-core-isolation/`
 
 ## Packings (active, 10-08)
+**10-09 session (Evan): spend compute where a findable record is plausible (perturbation near sub-grid packings); organise
+what the program needs.  Read `search/packer/NEEDS.md` first** (what works: perturbation; what does not: seeds from
+scratch; needs in priority order: generator benchmark, fill / completion that can express new-style records, chain
+throughput).  Runs 10-09: h2r1 (8 hard targets, nothing), hunt2 (second pass, 118 n, sub-grid library), big1 (n 327-379),
+c110_h2 (s(110) census continuation); results in `search/packer/PACKER.md` § Targeted hunt h2.
 Engine `search/packer/`: `fq` (Rust quench: lifted-separator ALM + face-branch SLP polish) + `explore.py` (quality-diversity basin
 explorer, Thompson move selection with global-novelty reward, elite / frontier budgets) + `explore_exact.py` / `arm_yield.py` /
 `lineage.py`.  Log + night summary: `search/packer/PACKER.md` (end).  s(110) census: 493 certified sub-11 minima at 9 digits, 497 exact (`runs/known110_all.json`; 3 removed 10-08, slack-separated pairs, PACKER.md end).
@@ -64,7 +69,7 @@ Order (Evan, 10-08): (1) benchmark, (2) LP throughput, (3) new proposals / start
 - [ ] Recombination (`search/packer/cross.py`, explorer `--cross`), parked 10-08: ≈ kicks at the saturated 110 funnel, no gain (slightly worse: alignment cost) on the graded benchmark.  Cheap fix if revisited: cached alignments.
 - [ ] Multi-size campaign (merges SQUISH gap / wide sweep / chaining): neighbour seeds (n ± 1, ± 2) + explorer at 1–2 procs × ~10 min per n, budget reallocated to the n that move; each new best seeds its neighbours; kick older packings too (mirror, register histories; 272 came that way).  Needs: live register fetch, auto exactsolve + register check + submission list.  Watch default loosen 1.02 at large n (kicked the s(292) record out of its basin).
 - [ ] Record hunt 2 (after hunt1 10-08: records 132, 155; `search/packer/PACKER.md` end): second pass for every n before any third (hunt1 concentrated follow-ups), new generators (126 trio) benchmarked first, more weight on interesting n (trivial-bound 90, 183, 242, 274, 308).  Live register import: `search/exact/batch/regnow/` + `inputs_live/` (refresh per hunt).  Census at 132 from `runs/hunt1` (`census_collect.py`) when cheap.
-- [ ] s(110) write-up (census 493, funnel structure, discovery curves, per-arm yields) = rewrite of `search/packer/s110-landscape.md`'s census section.  Cleanup: delete untracked `search/packer/seeds110/` (rm was blocked).
+- [ ] s(110) write-up (census 493, funnel structure, discovery curves, per-arm yields) = rewrite of `search/packer/s110-landscape.md`'s census section.
 - [ ] exactsolve should snap near-axis corner-loaded squares itself (the n = 292 failure, `search/packer/s292.md`); 12/866 cen7 outputs unresolved.
 - [ ] Research, parked: barrier type (entropic? → multicanonical / gap-spanning moves); nested sampling log X(s) at 110 (`lit-statmech.md` A2); s(90) needle estimate (best 10.0095668).
 - [ ] Side bet: rectangle containers in slp2; Arslanov 26-in-(4−δ)×8 control, then jlevy H-049 (20 in (4−δ)×6).  Refresh clone first.

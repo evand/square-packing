@@ -890,3 +890,90 @@ lineages; 8 slots, 1 h (16 cores), 112 rounds, 11-14 per n.
   2–3e-4); re-solved, still a local minimum (released pairs carry no load).  Certificates (upper bounds) are unaffected
   throughout.  Lean `IsLocalMinPacking` proofs (N11L, N28L) are sound: `RowOK` requires the other three side values at
   each contact point ≤ 1/2 − μ (`lean/Sqpack/LocalMinRows.lean`), which excludes this case.
+
+## Targeted hunt h2 (10-09; 88, 89, 90, 109, 147, 148, 290, 291; `runs/h2r1`, `runs/seeds1009`)
+* **Register refresh** (`../exact/batch/regsync.py PACKING_DIR`: tarball → `regnow/` (old kept as `regnow_<date>`),
+  `inputs_live/`, `runs/register_live_<date>.json`, diff): 6 changed since 10-08 (68, 105, 292 Couzo/refinements; our
+  266 / 270 / 272 registered); none at the targets.  Pending (open issues/PRs): ry-xu #432 s(146) ≤ 12.583782 (register
+  12.600908), Mishapolk #470 (84, 86, 105, 108, ...), Gupta #438 refinements; nothing pending at a target n.
+* **Seed pool** (`import_ext.py scan/best`: Ellsworth text, Couzo text, Witness/v2 yaml, ours; f64 SAT check): register,
+  register git history (jlevy `known-best` per-n commits), Ellsworth mirror incl. `_r*` revisions, ry-xu, Mishapolk,
+  Couzo, SQUISH, our hunt archives: ~15k packings over n in 84-93, 104-113, 142-152, 284-296 (`runs/seeds1009/pool`,
+  per-n best in `best/`).  Structure of the targets: 89, 109, 147, 290 are pure 45-degree constructions (89 = 7 x 7
+  diamond, 49 tilted); the new 88 (SQUISH) and 146 (ry-xu) use ~31-37 squares at 41-50 degrees.
+* **chain.py**: `--seed-ks` (k < 0 = insertion into best(n + k) at pose holes after a small dilation), `--seed-tries`,
+  multiple `--carry` per n (was: last one won).  Insertion seeds mostly quench to the grid (10.0, 11.0, 13.0): inserting
+  into a jammed record pushes a whole row out.  Removal from the regular 89 / 148 / 291 records = copies (rejected).
+* **Gadget transplant** (`transplant.py`: tilted set of a source at n + 1, exact axis fill, scan s): 146 → 147, 88 → 89,
+  108 → 109 never gain the extra square below the target (the gadget itself has to change).
+* **Strips** (`strips.py`: K parallel strips at theta, offsets, per-strip shifts, exact fill; `--cut` = no unit band free
+  of tilted squares, `--deficit` = add missing squares at holes): at 110 the best fill is 104-105 at s = 10.999; quenches
+  land at 11.0 (grid) or 11.00-11.03; **explorer from 19 such stepping stones (2 procs, 10 min): 2662 / 2900 proposals
+  screen-grid, nothing below 11 (Evan's test: strips do not reach the 110 funnel).**  Stopped early.
+* **Blocks** (`blockgen.py`: a x b lattice rectangle at theta, optional staircase rows (length, shift), placement as
+  fractions of the free range or centre + quarter-lattice offset `c+dx,dy`, exact fill, fq): reproduces 89 (7 x 7, 45,
+  9.949747468), 65 (5 x 5), 66 (8 x 3 at c + (1/4, -1/4)), 150 (11 x 6 at c + (-1/4, 1/4)) to 1e-9.  Not 69 (two angles,
+  Cantrell-type) or ry-xu 126 (staircase diamond: rows of different lengths and shifts).
+* **Round 1 (h2r1, 8 targets x 2 procs, 100 rounds, 1 h 25 min): nothing.**  No target moved; lineages: 290 17.5809 →
+  17.5628, 291 17.5906 → 17.5869, others unchanged.  Stopped early (Evan: retarget compute to things with a reasonable
+  chance; add features that open new targets).
+* **Block sweep** (`runs/bgsw`, 600 + 600 evals per n, 45-degree rectangles with quarter-lattice centres, then 38-45 degree
+  staircases): just below each record side the fill is 1-4 squares short at 147, 148, 89, 109, 90 (89 of 90 at
+  9.9999), 290, 291; near-45 angles always lose more than they gain to the exact fill.
+* **Staircase positive control (126):** seeds built from Xu's measured column shifts (+ fill + 1 square at a hole,
+  quenched: 11.900, 11.923) → explorer 2 procs: **11.7426406871 = 15/2 + 3 sqrt 2 (Xu) in < 4 min**.  So arrangement-level
+  seeds well above the record work.  Blind (`stairgen.py`, CEM over placement and column offsets): fills top out at
+  123/126 at 11.76; the exact fill cannot express Xu (with Xu's exact tilted set and only the 36 45-degree squares it
+  gives 125; the other axis squares sit in pockets against the block and against near-axis rotated squares; residue-class
+  candidates: 171k, still 61/90 covered).  stairgen now scores by the fq-quenched side of a complete n-square packing
+  (Evan: always n squares, score by side; deficit-insertion was a hack).  Bug fixed on the way: numpy-2 `repr` of
+  np.float64 wrote `np.float64(...)` into seed files.
+* **Sub-grid library** (`chain.py --lib-init J --lib-k K`; Evan 10-09: sub-grid packings are good seeds because they are by
+  definition not grid-jammed): per n, every distinct (1e-9) sub-k basin the explorer finds is kept (`<out>/lib/n<n>/`,
+  300 best); each round starts K random library entries as frontier lineages.  Pre-loaded for hunt2 from hunt1 / hunt1b /
+  h2r1 round archives + seed pools: ~63k files over 118 n.
+* **hunt2** (`runs/hunt2`): second pass over the 118 open non-trivial n in 84-324 (`--first-pass`), starts = best of
+  register + pending (ry-xu, Mishapolk, Couzo, SQUISH) + ours (22 n start below the register), removal seeds k = 1, 2,
+  library K = 3, 6 slots x 2 procs x 4 min, 2.5 h.
+* **110 from-scratch test** (`runs/t110_ex1`; Evan: can we find sub-11 packings without any sub-11 seed?): 40 line-free
+  seeds 11.0000067-11.05 from the 10-04 layout `hyb` / `ftmc` runs (hand-made two-channel genomes, no sub-11 input) →
+  explorer 4 procs x 30 min, novelty vs the 493-minimum census.
+* **hunt2 n = 270 "candidate" = refinement, not a new basin.**  Start = Couzo's pending 270 (16.936723155037; jlevy#469
+  T-130, also in Mishapolk's repo): exactsolve says *not jammed* (residual 1.6e-5); `fq quench --loosen 1.0` on his file
+  alone gives 16.9367230228797, = the chain's best (lineage: the start entry).  Exact: **s(270) ≤
+  16.936723022876183407…** (cert S', VALID under verify_cert + verify_cert2; strict local min modulo 25 flat motions, MILP
+  dS 0), 1.32e-7 below his reported side.  Construction Couzo's; ours is the exact optimum (`candidates/hunt2_n270.*`).
+  Lesson: polish every imported start once before searching (pending packings may be unconverged); chain counts a
+  polished start as a candidate.
+* **Start-polish survey** (every start in `seeds1009/best2` + `best3`, 288 packings, `fq quench --loosen 1.0 --stag-tol
+  1e-12`): everything registered or pending in 84-324 (SQUISH, ry-xu, Gupta, Mishapolk, register) is converged except
+  Couzo's 270 (above).  n > 324: Couzo's 375 19.907024692 → 19.907024297, but exactsolve: not jammed, corner-corner MILP
+  descent −4.9e-6; `--no-alm --flip-top 128 --pit 600` → **s(375) ≤ 19.907024202136836…** (cert S', VALID both
+  verifiers, strict local min modulo 67 flat motions, MILP dS 0; `candidates/polish_n375.*`), 4.9e-7 below Couzo's file
+  (`2d32a6e`).  Not in the register (n > 324).  So fq's default flip search (top 8) stops early at large n.
+  (Mishapolk 343-360 drop by up to 0.2 but stay at / above the 19-grid.)
+* **s(110) census continuation** (`runs/c110_h2`: record + Ellsworth + 20 random census minima, 4 procs x 85 min, elite
+  0.3, global novelty): 283 sub-11 archive entries, 249 "new" at screening; exact: 203 certified (202 distinct), 77 not
+  minima, 3 unresolved; **13 new certified minima, all 4.2e-4 … 3.2e-3 above the record** → `known110_all.json` 493 →
+  **506** (old list kept as `known110_all.2026-10-08.json`).  The three screening "new" basins within 1e-4 of the record
+  (10.9968326, .9968339, .9968812) were *not jammed* (exactsolve) and fq `--no-alm --flip-top 128` did not move them;
+  `--kick 1e-4` + quench (6 seeds) sends every such state into a known minimum (record x3, Ellsworth's, 10.9968870 x4,
+  10.9971899).  **Polish stall:** fq can stop at non-jammed states; the screening "new" count overstates (here 249 vs 13).
+* **big1 (n 327-379, 22 n with sub-grid packings: Couzo `2d32a6e` + mirror; 2 slots x 2 procs x 6 min):
+  s(375) ≤ 19.906981767290601595…** (cert S', VALID under verify_cert + verify_cert2; strict local min modulo 64 flat
+  motions, MILP dS 0; `candidates/big1_n375.*`): **4.29e-5 below Couzo's 375** (19.907024692, his repo `2d32a6e`,
+  unchanged since 10-08) and 4.24e-5 below our exact polish of it.  One `kicksym` from the polished start (round 25),
+  i.e. a different basin next to his.  n > 324 is outside jlevy's register; no other 375 packing found.
+* **c110_h3** (8 procs x 60 min from 13 near-record screening states + records + 10 census minima): 314 sub-11 entries,
+  225 certified distinct, 85 not minima; **17 new certified, all ≥ 6.3e-4 above the record** → census **523**.  Both
+  runs together (~12 CPU-h): 30 new certified minima, closest 4.2e-4 above the record, none within 1e-4 (consistent
+  with the ~5 % / 40 CPU-h estimate in NEEDS.md; the funnel keeps producing minima away from its floor).
+* **big1 final** (43 rounds, 2.9 h x 4 procs): only 375.  **big2** (from big1's bests, 4 slots x 3 procs x 8 min, 38
+  rounds): nothing; closest seed lineages 335 (+3e-5), 372 (+1.4e-4), 332 (+5.8e-4): start there next time.
+* **hunt2 final** (123 rounds = one pass over 118 n + a few): only the 270 refinement; lineages tie the record at 176
+  and 299, 263 within 1e-6.  A second pass over 84-324 finds much less than hunt1's first (132, 155).
+
+### Session summary (10-09)
+Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); exact refinements of Couzo's 270 (1.3e-7) and
+375 (superseded); s(110) census 493 → 523 (30 new certified minima, none within 4.2e-4 of the record).  Draft post list:
+`outreach/draft-results-2026-10-09.md` (not posted).  What the program needs: `NEEDS.md`.
