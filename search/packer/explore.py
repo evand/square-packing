@@ -345,6 +345,7 @@ if __name__ == '__main__':
     ap.add_argument('--melt', type=float, default=0, help='weight of the regional melt move (anneal melt); 0 = off')
     ap.add_argument('--cross', type=float, default=0, help='weight of the recombination move (cross.py bestfit 3 of 5); 0 = off')
     ap.add_argument('--adapt', action='store_true', help='Thompson sampling over move kinds (reward: new below-k basin)')
+    ap.add_argument('--reward-above', type=float, default=0.0, help='bandit reward for a new non-grid basin above k (0..1)')
     ap.add_argument('--resume', action='store_true', help='continue from <out>/state.json (time offset carried over)')
     ap.add_argument('--out'); ap.add_argument('--report'); ap.add_argument('--seed', type=int, default=1)
     a = ap.parse_args()
@@ -432,7 +433,11 @@ if __name__ == '__main__':
                             if isnew:
                                 par['children'] += 1
                                 newi = e['i']
-                    rew = 1.0 if (newi is not None and r['s'] < k and novel(r['s'])) else 0.0
+                    # reward: 1 for a new (globally novel) sub-k basin wherever it is; --reward-above for a new non-grid
+                    # stepping stone above k (pool expansion away from the frontier; 10-09 Evan: some credit, not equal)
+                    rew = 0.0
+                    if newi is not None and novel(r['s']):
+                        rew = 1.0 if r['s'] < k else a.reward_above
                     if cellb:
                         cellb.update(tuple(par['desc']), r.get('sec', 0.0), rew)
                     if bandit:
