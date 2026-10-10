@@ -46,7 +46,8 @@ def move(name, **space):
             prm = {k: (fixed[k] if k in fixed else draw(v, rng)) for k, v in space.items()}
             prm.update({k: v for k, v in fixed.items() if k not in space})
             sq, info = f(p, rng, **prm)
-            info = dict(info or {}); info['params'] = {k: (round(v, 6) if isinstance(v, float) else v) for k, v in prm.items()}
+            info = dict(info or {}); info['params'] = {k: (round(v, 6) if isinstance(v, float) else v) for k, v in prm.items()
+                                                       if isinstance(v, (int, float, str, type(None)))}
             return np.asarray(sq, float), info
         run.space, run.name, run.__doc__ = space, name, f.__doc__
         MOVES[name] = run
@@ -155,6 +156,20 @@ def anneal_move(p, rng, rmax, sweeps, bp0, bp1):
     return fin.sq, dict(s_new=fin.s, q4=info.get('q4'))
 
 
+@move('cross', variant=('choice', ['field', 'softfield', 'half', 'bestfit:2']), mate=None)
+def cross_move(p, rng, variant, mate):
+    """Two-parent recombination (cross.py): the mate is aligned to p's square IDs (best of 8 symmetries, Hungarian on the
+    corner metric) and scaled to p's side; each ID takes its pose from one parent (field / softfield: smooth random
+    patches; half: a random cut; bestfit:2: least overlap with squares already placed).  mate: a Packing, passed by the
+    caller (battery: another parent of the same suite)."""
+    import cross
+    if mate is None:
+        return p.sq.copy(), dict(failed='no mate')
+    d, Qa = cross.align(p.tuples(), p.s, mate.tuples(), mate.s)
+    sq = cross.recombine(variant, p.s, [p.tuples(), Qa], rng)
+    return np.asarray(sq, float), dict(mate_dist=round(float(d), 4))
+
+
 # ---------- arms ----------
 # 10-08 explorer kinds as presets (weights = explore.WEIGHTS; melt off by default there)
 ARMS = {
@@ -164,6 +179,7 @@ ARMS = {
     'crot': ('crot', {}), 'aswap': ('aswap', {}), 'band': ('band', {}), 'reinsert': ('reinsert', {}),
     'rowslide': ('rowslide', {}), 'chainshift': ('chainshift', {}), 'mirror': ('mirror', {}), 'melt': ('melt', {}),
     'ashallow': ('anneal', {}),
+    'cross': ('cross', {}),
 }
 WEIGHTS = dict(kick=2, kicksym=1, lkick=2, bigkick=2, crot=1, aswap=2, band=1, reinsert=0, rowslide=2, chainshift=0,
                mirror=2)
