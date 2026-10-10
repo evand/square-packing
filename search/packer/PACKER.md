@@ -1133,4 +1133,19 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
     rounding; VALID both checkers): −5.35e-3 below Kevin Fang's 18.994903529220, but not a local minimum (MILP dS −2.0e-4;
     descend.py's kick fails at every size tried).  Lineage: removal seed from best(344) (one square out) -> cross2, crot,
     ashallow; his 343 polished in place gives only 18.99117.  Round 43 already has 18.98650673 (re-certify at the end).
+  Morning (Hunt 3 ended 07:43; dedicated explorers x343 4 procs 120 min, x343b 3 procs 75 min, x308 4 procs 115 min, all
+  hunt recipe; store 169392-169394; candidate files replaced, superseded values stay in git):
+  - **s(343) ≤ 18.97823252363561127954…** (exactsolve exact optimum, strict mod 19 flat motions, jammed in every branch;
+    VALID both checkers): **−1.667e-2** below Kevin Fang's.  x343 (from the chain's 18.98009) reached 18.97824020 (not a
+    local min, MILP dS −1.8e-6; descend.py moved it only 8e-10 then stalled at dS −2.9e-8); x343b from that reached a
+    jammed 18.97823252.  Matching distance 0.24 from Kevin's 343, 0.11 from our first 343: a different basin, reached via
+    his 344 minus one square.  Chain alone ended at 18.98009.
+  - **s(308) ≤ 17.99826987952625587520…** (mod 52, jammed): −1.040e-3 below Kevin Fang's (the polish was −8.44e-4).  x308,
+    7 steps from the chain best: cross2 <- cross2 <- aswap <- kick <- rowslide <- band <- cross2; d 0.033 from his file.
+  - **s(305) ≤ 17.95113977220699754576…** (mod 44, jammed): −5.64e-5 below itsnaka's (first-hour value −1.26e-5); chain,
+    d 0.018 from itsnaka's.
+  - 209: chain's 14.9462232264 is itsnaka's raw file converged (−4.3e-7, exact form computed, `runs/hunt3/exact/c209`); not
+    claimed.  132, 344 unchanged.  The other 16 n: no improvement in 5.6 h.
+  - Reading: on the fresh-from-others n the gains came from (a) converging unconverged files, (b) short lineages from them;
+    the dedicated per-n explorer beat the chain's shared rounds on 343 and 308 (2 h of 4 procs vs 6-min slices).
   Files `candidates/hunt3_n*`; draft post `outreach/draft-hunt3-2026-10-10.md` (not posted).
