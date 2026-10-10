@@ -1168,3 +1168,22 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   overstate distinct local minima by up to ~10x at 110, and the archive's parents are mostly unconverged points.  Open:
   where do the not-min points go when descended properly (new minima, or known ones)?  Same-basin is a contact-graph
   question; only the 456 newly solved keys have kept contacts so far.
+* **Descending the n=110 census's not-min points** (10-10 afternoon, new `descend_census.py`: exact/descend.py's
+  descend() with thr 1e-9, then exactsolve; random order; `runs/census/n110/descend.jsonl`, deduplicated
+  `descend_dedup.json`).  912 points (all not-min sides below 11 with a stored packing): **605 land on a known certified
+  minimum, 62 on a new one (40 distinct), 168 still not jammed, 77 unresolved (mostly 900 s timeouts)**.  Side drop median
+  3.4e-7, p90 5e-5, max 8.5e-4; 184 s per point median.  Census now **754 distinct certified minima** below 11; new
+  minima are all >= 10.99692 (two at 1.4e-4 above the record, the rest above 10.997).
+  - Duplication: the 667 certified landings hit only 155 minima (93 once); clusters of 127, 51, 43, 36, 34 points; the top
+    5 minima take 44% of landings.  A copy can sit up to 8.5e-4 above its minimum, so 1e-9 side keys (basin table, chain
+    library, explorer archive) do not dedupe them.
+  - Bias in starts (L1 / L2 lineage archives, every sub-11 entry mapped to its minimum): parent picks spread over ~85-120
+    effective entries but only ~23-62 effective minima.  Minima with >= 3 archive copies (2-7% of minima) take 20-36% of
+    picks.  The most-picked minimum in 7 of 8 runs is 10.9968870 (1.0e-4 above the record; 4-13 copies per archive,
+    6-18% of picks); the record gets 3-5%.  Elite top-20 holds only 7-15 distinct minima.  Mechanism: elite weights and
+    cell top-8 windows are per entry, so a minimum's weight scales with its copy count.
+  - Matching distance does not separate copies from distinct minima: copies median 0.004, p90 0.020, max 0.046;
+    side-adjacent distinct minima min 0.0001, p10 0.0018.  A 0.01 threshold catches 78% of copies but merges 35% of distinct
+    pairs.  "Same minimum" needs the descent (or the contact graph); rattler masking may tighten the copy distances.
+  - Not measured: whether the bias hurts.  At 110 every L2 run still reached the record, and 10.9968870 is a near-record
+    basin, so part of the concentration is useful exploitation.
