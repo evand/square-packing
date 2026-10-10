@@ -142,6 +142,19 @@ def melt(p, rng, rad, rmax, sweeps, bp):
     return q.sq, dict(s_new=q.s)
 
 
+@move('anneal', rmax=('log', 0.03, 0.15), sweeps=('int', 300, 2000), bp0=300.0, bp1=3000.0)
+def anneal_move(p, rng, rmax, sweeps, bp0, bp1):
+    """Shallow whole-box anneal (anneal sched, diagonal path): corners rounded to rmax at once and squared up linearly by
+    t = 0.8 while pressure ramps bp0 -> bp1 (log); final uniform growth if shapes lag (arrangement-preserving).  10-09
+    crossing tests: from sub-11 packings pushed to 11.01 this returns below 11 in 28-29 / 30 at rmax <= 0.1."""
+    from .anneal import Schedule, run, curve
+    sch = Schedule.from_path('diagonal', sweeps=int(sweeps), rmax=rmax).but(bp=curve([(0, bp0), (1, bp1)]))
+    fin, info, _ = run(sch, start=p, seed=rng.randrange(1 << 30))
+    if fin is None:
+        return p.sq.copy(), dict(failed=True)
+    return fin.sq, dict(s_new=fin.s, q4=info.get('q4'))
+
+
 # ---------- arms ----------
 # 10-08 explorer kinds as presets (weights = explore.WEIGHTS; melt off by default there)
 ARMS = {
@@ -150,6 +163,7 @@ ARMS = {
     'bigkick': ('kick', dict(sigma=('log', 0.05, 0.2))),
     'crot': ('crot', {}), 'aswap': ('aswap', {}), 'band': ('band', {}), 'reinsert': ('reinsert', {}),
     'rowslide': ('rowslide', {}), 'chainshift': ('chainshift', {}), 'mirror': ('mirror', {}), 'melt': ('melt', {}),
+    'ashallow': ('anneal', {}),
 }
 WEIGHTS = dict(kick=2, kicksym=1, lkick=2, bigkick=2, crot=1, aswap=2, band=1, reinsert=0, rowslide=2, chainshift=0,
                mirror=2)

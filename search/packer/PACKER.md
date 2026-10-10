@@ -1032,3 +1032,12 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   23 / 30 with the final uniform growth, which preserves the arrangement), so it is off by default.
   Reading: Q4 can keep packings off the grid but the sub-11 funnel is a needle inside the Q4 = 0.47 slice; Q4 is not the
   order parameter that separates the funnel.
+* **Shallow-anneal arm + reduced-start rediscovery** (`ashallow` = anneal sched diagonal, rmax 0.03-0.15, 300-2000
+  sweeps; `pk/rediscovery.py`).  c110b (40 certified parents x 11 arms x 8, 3,520 proposals, 4 min): new certified basins
+  per arm: kicksym 11, ashallow 6, rowslide 6, melt 5, aswap 5, kick 4, lkick 4, mirror 4, band 3, bigkick 1, crot 0.
+  Per-arm counts are Poisson-small; ranks moved between c110a and c110b (aswap 9 -> 5, kicksym 6 -> 11), so only
+  differences >= 2-3x are real: crot, bigkick, band weak; ashallow in the top group (59 / CPU-h).
+  c110r (record + 31 basins within matching distance 0.02 withheld; 28 parents at 0.02-0.05, 0.05-0.1, >= 0.1; 2,464
+  proposals): record hit once (rowslide), 9 withheld basins rediscovered, **all from parents at 0.02-0.05; none from
+  0.05-0.1 (1,144 proposals) or beyond**.  Single-step reach ~0.05 for every arm incl. the shallow anneal (0 withheld).
+  Reaching further needs lineages (multi-step), the next test.
