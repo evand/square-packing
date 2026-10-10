@@ -156,18 +156,22 @@ def anneal_move(p, rng, rmax, sweeps, bp0, bp1):
     return fin.sq, dict(s_new=fin.s, q4=info.get('q4'))
 
 
-@move('cross', variant=('choice', ['field', 'softfield', 'half', 'bestfit:2']), mate=None)
-def cross_move(p, rng, variant, mate):
-    """Two-parent recombination (cross.py): the mate is aligned to p's square IDs (best of 8 symmetries, Hungarian on the
-    corner metric) and scaled to p's side; each ID takes its pose from one parent (field / softfield: smooth random
-    patches; half: a random cut; bestfit:2: least overlap with squares already placed).  mate: a Packing, passed by the
-    caller (battery: another parent of the same suite)."""
+@move('cross', variant=('choice', ['field', 'softfield', 'half', 'bestfit2']), P=2, pick='random')
+def cross_move(p, rng, variant, P, pick, mates=None, **_):
+    """Recombination (cross.py) of p with mates (P - 1 Packings chosen by the caller: battery picks them nearest or at
+    random within the suite).  Each mate is aligned to p's square IDs (best of 8 symmetries, Hungarian on the corner
+    metric) and scaled to p's side; each ID takes its pose from one parent: field / softfield (smooth random patches),
+    half (a random cut; uses the first mate), bestfitK (K parents sampled per ID, least overlap with placed squares)."""
     import cross
-    if mate is None:
-        return p.sq.copy(), dict(failed='no mate')
-    d, Qa = cross.align(p.tuples(), p.s, mate.tuples(), mate.s)
-    sq = cross.recombine(variant, p.s, [p.tuples(), Qa], rng)
-    return np.asarray(sq, float), dict(mate_dist=round(float(d), 4))
+    if not mates:
+        return p.sq.copy(), dict(failed='no mates')
+    al = [cross.align(p.tuples(), p.s, m.tuples(), m.s) for m in mates]
+    v = {'bestfit2': 'bestfit:2', 'bestfit3': 'bestfit:3', 'bestfit5': 'bestfit:5'}.get(variant, variant)
+    parents = [p.tuples()] + [q for _, q in al]
+    if v == 'half':
+        parents = parents[:2]
+    sq = cross.recombine(v, p.s, parents, rng)
+    return np.asarray(sq, float), dict(mate_dist=round(float(np.mean([d for d, _ in al])), 4), nparents=len(parents))
 
 
 # ---------- arms ----------

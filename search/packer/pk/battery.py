@@ -78,7 +78,9 @@ def _init(suite_path):
     S = json.load(open(suite_path))
     st = Store()
     P = {i: st.get(i) for i in set(S['bench'] + S['reach'] + S['above'] + S['pos'] + [S['record']])}
-    _C.update(S=S, P=P, rec=P[S['record']], known=Known(S['known']))
+    pd = os.path.join(os.path.dirname(suite_path), f'pairdist_{S["n"]}.json')
+    _C.update(S=S, P=P, rec=P[S['record']], known=Known(S['known']),
+              pairdist=json.load(open(pd)) if os.path.exists(pd) else {})
 
 
 def _arm(spec, rng):
@@ -101,10 +103,18 @@ def _job(j):
     arm = _arm(spec, rng)
     t0 = time.time()
     extra = {}
-    if arm.split(':')[0] == 'cross':                    # mate: another parent of the same suite
+    if arm.split(':')[0] == 'cross':                    # mates: other parents of the same suite, nearest or random
+        _, prm = moves.parse_arm(arm)
+        npar, pick = int(prm.get('P', 2)), prm.get('pick', 'random')
         pool = {'bench': S['bench'], 'reach': S['reach'], 'cross': S['above'], 'pos': S['pos']}[suite]
-        mid = rng.choice([i for i in pool if i != pid])
-        extra['mate'] = P[mid]
+        others = [i for i in pool if i != pid]
+        if pick == 'near':
+            D = _C['pairdist']
+            others.sort(key=lambda i: D.get(f'{min(i, pid)},{max(i, pid)}', 9.0))
+            mids = others[:npar - 1]
+        else:
+            mids = rng.sample(others, npar - 1)
+        extra['mates'] = [P[i] for i in mids]
     try:
         q, info = moves.apply(p, arm, rng.randrange(1 << 30), **extra)
     except Exception as e:
@@ -113,7 +123,7 @@ def _job(j):
     fin = r.pop('p', None)
     out = dict(suite=suite, pid=pid, arm=arm, st=r['st'], s=r.get('s'), sec=time.time() - t0, params=info.get('params'))
     if 'mate_dist' in info:
-        out['mate'] = extra['mate'].meta.get('id'); out['mate_dist'] = info['mate_dist']
+        out['mates'] = [m.meta.get('id') for m in extra['mates']]; out['mate_dist'] = info['mate_dist']
     if fin is not None:
         out['lines'] = bool(fin.grid_lines(k))
         if suite == 'reach' and r['st'] == 'new?':
@@ -124,9 +134,30 @@ def _job(j):
     return out
 
 
+def _pd(args):
+    i, j = args
+    from pk.crossing import match_distance
+    st = Store()
+    return f'{min(i, j)},{max(i, j)}', match_distance(st.get(i), st.get(j))
+
+
+def pairdist(S, procs=16):
+    """Matching distances within each suite's parent pool (cached; used for nearest-mate selection)."""
+    path = f'{ROOT}/pairdist_{S["n"]}.json'
+    if os.path.exists(path):
+        return
+    pairs = {(min(i, j), max(i, j)) for pool in (S['bench'], S['reach'], S['above'], S['pos']) for i in pool for j in pool if i != j}
+    with ProcessPoolExecutor(procs) as ex:
+        D = dict(ex.map(_pd, sorted(pairs), chunksize=16))
+    json.dump(D, open(path, 'w'))
+    print(f'pair distances: {len(D)}', flush=True)
+
+
 def run(a):
     sp = f'{ROOT}/suite_{a.n}.json'
     S = json.load(open(sp))
+    if a.arm.startswith('cross'):
+        pairdist(S, a.procs)
     d = f'{ROOT}/{a.name}'; os.makedirs(d, exist_ok=True)
     json.dump(dict(arm=a.arm, n=a.n, minutes=a.minutes), open(f'{d}/meta.json', 'w'))
     rng = random.Random(hash(a.name) & 0xffffffff)
