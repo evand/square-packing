@@ -1329,9 +1329,115 @@ fn arg<T: std::str::FromStr>(a: &[String], k: &str, def: T) -> T {
 }
 fn sarg(a: &[String], k: &str) -> Option<String> { a.iter().rposition(|x| x == k).and_then(|i| a.get(i + 1)).cloned() }
 
+/// One quench (ALM screen + SLP polish, options as CLI args) on (s, x); x angles in radians.  Returns (json, s, x).
+fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) {
+    FIN_LOG.lock().unwrap().clear();
+    IDENT_FPS.lock().unwrap().clear();
+        let t0 = Instant::now();
+        let n = x.len() / 3;
+        let sig: f64 = arg(&a, "--kick", 0.0);
+        if sig > 0.0 {
+            let mut r = Rng::new(arg(&a, "--seed", 1u64));
+            for i in 0..n {
+                x[3 * i] += sig * r.gauss();
+                x[3 * i + 1] += sig * r.gauss();
+                x[3 * i + 2] += (20.0 * sig * r.gauss()).to_radians();
+            }
+        }
+        let lo: f64 = arg(&a, "--loosen", 1.02);
+        let s1 = s * lo;
+        for i in 0..n {
+            x[3 * i] = (x[3 * i] * lo).clamp(H, s1 - H);
+            x[3 * i + 1] = (x[3 * i + 1] * lo).clamp(H, s1 - H);
+        }
+        let o = QOpt {
+            mu0: arg(&a, "--mu0", 10.0), mu_max: arg(&a, "--mu-max", 1e2), tol: arg(&a, "--tol", 1e-7),
+            skin: arg(&a, "--skin", 0.3), max_outer: arg(&a, "--outer", 60), verbose: a.iter().any(|t| t == "--v"),
+        };
+        let (mut sq, mut xq, nev, outer, viol, mut prob) = if a.iter().any(|t| t == "--no-alm") {
+            // already (nearly) feasible: polish directly
+            (s1, x.clone(), 0, 0, 0.0, Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: false })
+        } else if a.iter().any(|t| t == "--shrink") {
+            let (ss, xs, ne, st) = shrink(s1, &x, arg(&a, "--d0", 2e-3), arg(&a, "--dmin", 1e-6), arg(&a, "--vtol", 1e-10), o.verbose);
+            if o.verbose { eprintln!("shrink: s {ss:.10} evals {ne} steps {st}"); }
+            (ss, xs, ne, st, 0.0, Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: false })
+        } else { quench(s1, &x, &o) };
+        let t_alm = t0.elapsed().as_secs_f64();
+        let mut xc = xq.clone();
+        let s_coarse = repair(sq, &mut xc, 1e-13);
+        let s_alm0 = sq;
+        let mut pit = 0;
+        let mut pr = 0.0;
+        let mut flips = 0;
+        let mut trace: Vec<(usize, f64, f64, usize, f64, f64, usize, usize)> = Vec::new();
+        let mut load: Vec<(u32, u32, u8, u8)> = Vec::new();
+        if !a.iter().any(|t| t == "--no-polish") {
+            let po = POpt { sqp: a.iter().any(|t| t == "--sqp"), rmax: arg(&a, "--rmax", 4e-3), r0: arg(&a, "--r0", 1e-3), rmin: arg(&a, "--rmin", 1e-10), maxit: arg(&a, "--pit", 300), cc_tol: arg(&a, "--cc-tol", 1e-7), flip_top: arg(&a, "--flip-top", 8), ident: a.iter().any(|t| t == "--ident"), stag_w: arg(&a, "--stag-w", 15), stag_tol: arg(&a, "--stag-tol", 2e-9), finish: a.iter().any(|t| t == "--finish"), tr_grow: arg(&a, "--tr-grow", 0.5), tr_shrink: arg(&a, "--tr-shrink", 4.0), verbose: o.verbose };
+            let (s2, x2, it, rr, fl) = polish(&mut prob, sq, &xq, &po, &mut trace, &mut load);
+            sq = s2; xq = x2; pit = it; pr = rr; flips = fl;
+        }
+        let (fp, ncont) = (fingerprint(&load), load.len());
+        let sr = repair(sq, &mut xq, 1e-13);
+        let (mg, mw) = check(sr, &xq);
+        let json = format!("{{\"s\": {:.15}, \"s_alm\": {:.15}, \"viol\": {:.2e}, \"evals\": {}, \"outer\": {}, \"slp_it\": {}, \"slp_r\": {:.1e}, \"flips\": {}, \"min_gap\": {:.2e}, \"min_wall\": {:.2e}, \"sec\": {:.3}, \"s_coarse\": {:.15}, \"t_alm\": {:.3}, \"s_alm0\": {:.15}, \"trace\": [{}], \"fp\": \"{:016x}\", \"ncontacts\": {}{}}}",
+                 sr, sq, viol, nev, outer, pit, pr, flips, mg, mw, t0.elapsed().as_secs_f64(), s_coarse, t_alm, s_alm0, trace.iter().map(|q| format!("[{},{:.4},{:.15},{},{:.3e},{:.3e},{},{}]", q.0, q.1, q.2, q.3, q.4, q.5, q.6, q.7)).collect::<Vec<_>>().join(","), fp, ncont, format!(", \"fin\": [{}]", FIN_LOG.lock().unwrap().iter().map(|q| format!("\"{q}\"")).collect::<Vec<_>>().join(",")) + &if a.iter().any(|t| t == "--ident") { format!(", \"fps\": [{}]", IDENT_FPS.lock().unwrap().iter().map(|h| format!("\"{:016x}\"", h)).collect::<Vec<_>>().join(",")) } else { String::new() });
+        (json, sr, xq)
+}
+
+/// Persistent worker: requests on stdin, one per packing, until EOF.
+///   request:  `quench ARGS...` line, `n s` line, n lines `x y deg`
+///   response: the quench JSON line, then `n s` and n lines `x y deg` (same as --out), then `END`
+/// Errors (bad input) -> `{"error": ...}` + `END`.  A panic inside the solver aborts the process (caller restarts).
+fn serve() {
+    use std::io::{BufRead, Write};
+    let stdin = std::io::stdin();
+    let mut it = stdin.lock().lines();
+    let out = std::io::stdout();
+    while let Some(Ok(head)) = it.next() {
+        let head = head.trim().to_string();
+        if head.is_empty() { continue; }
+        let mut args: Vec<String> = vec!["fq".into()];
+        args.extend(head.split_whitespace().map(|t| t.to_string()));
+        let parse = |it: &mut std::io::Lines<std::io::StdinLock>| -> Result<(f64, Vec<f64>), String> {
+            let l = it.next().ok_or("eof")?.map_err(|e| e.to_string())?;
+            let h: Vec<&str> = l.split_whitespace().collect();
+            if h.len() < 2 { return Err(format!("bad header {l}")); }
+            let n: usize = h[0].parse().map_err(|_| "n")?; let s: f64 = h[1].parse().map_err(|_| "s")?;
+            let mut v = Vec::with_capacity(3 * n);
+            for _ in 0..n {
+                let l = it.next().ok_or("eof")?.map_err(|e| e.to_string())?;
+                let t: Vec<f64> = l.split_whitespace().take(3).map(|q| q.parse().unwrap_or(f64::NAN)).collect();
+                if t.len() < 3 || t.iter().any(|q| !q.is_finite()) { return Err(format!("bad row {l}")); }
+                v.push(t[0]); v.push(t[1]); v.push(t[2].to_radians());
+            }
+            Ok((s, v))
+        };
+        let res = parse(&mut it);
+        let mut o = out.lock();
+        match (args.get(1).map(|s| s.as_str()), res) {
+            (Some("quench"), Ok((s, x))) => {
+                let (json, sr, xq) = run_quench(&args, s, x);
+                let n = xq.len() / 3;
+                let mut buf = format!("{json}\n{} {:.17}\n", n, sr);
+                for i in 0..n {
+                    buf += &format!("{:.17} {:.17} {:.15}\n", xq[3 * i], xq[3 * i + 1], xq[3 * i + 2].to_degrees().rem_euclid(90.0));
+                }
+                buf += "END\n";
+                o.write_all(buf.as_bytes()).unwrap();
+            }
+            (cmd, r) => {
+                let e = match r { Err(e) => e, Ok(_) => format!("unknown command {cmd:?}") };
+                writeln!(o, "{{\"error\": \"{}\"}}\nEND", e.replace('"', "'")).unwrap();
+            }
+        }
+        o.flush().unwrap();
+    }
+}
+
 fn main() {
     let a: Vec<String> = std::env::args().collect();
     let cmd = a.get(1).map(|s| s.as_str()).unwrap_or("");
+    if cmd == "serve" { serve(); return; }
     let inp = sarg(&a, "--in").expect("--in");
     if let Some(d) = sarg(&a, "--dump-lp") { fs::create_dir_all(&d).expect("--dump-lp dir"); DUMP_LP.set(d).ok(); }
     let (s, mut x) = read_cfg(&inp);
@@ -1341,55 +1447,9 @@ fn main() {
             println!("{} min_gap {:.3e} min_wall {:.3e}", s, mg, mw);
         }
         "quench" => {
-            let t0 = Instant::now();
-            let n = x.len() / 3;
-            let sig: f64 = arg(&a, "--kick", 0.0);
-            if sig > 0.0 {
-                let mut r = Rng::new(arg(&a, "--seed", 1u64));
-                for i in 0..n {
-                    x[3 * i] += sig * r.gauss();
-                    x[3 * i + 1] += sig * r.gauss();
-                    x[3 * i + 2] += (20.0 * sig * r.gauss()).to_radians();
-                }
-            }
-            let lo: f64 = arg(&a, "--loosen", 1.02);
-            let s1 = s * lo;
-            for i in 0..n {
-                x[3 * i] = (x[3 * i] * lo).clamp(H, s1 - H);
-                x[3 * i + 1] = (x[3 * i + 1] * lo).clamp(H, s1 - H);
-            }
-            let o = QOpt {
-                mu0: arg(&a, "--mu0", 10.0), mu_max: arg(&a, "--mu-max", 1e2), tol: arg(&a, "--tol", 1e-7),
-                skin: arg(&a, "--skin", 0.3), max_outer: arg(&a, "--outer", 60), verbose: a.iter().any(|t| t == "--v"),
-            };
-            let (mut sq, mut xq, nev, outer, viol, mut prob) = if a.iter().any(|t| t == "--no-alm") {
-                // already (nearly) feasible: polish directly
-                (s1, x.clone(), 0, 0, 0.0, Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: false })
-            } else if a.iter().any(|t| t == "--shrink") {
-                let (ss, xs, ne, st) = shrink(s1, &x, arg(&a, "--d0", 2e-3), arg(&a, "--dmin", 1e-6), arg(&a, "--vtol", 1e-10), o.verbose);
-                if o.verbose { eprintln!("shrink: s {ss:.10} evals {ne} steps {st}"); }
-                (ss, xs, ne, st, 0.0, Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: false })
-            } else { quench(s1, &x, &o) };
-            let t_alm = t0.elapsed().as_secs_f64();
-            let mut xc = xq.clone();
-            let s_coarse = repair(sq, &mut xc, 1e-13);
-            let s_alm0 = sq;
-            let mut pit = 0;
-            let mut pr = 0.0;
-            let mut flips = 0;
-            let mut trace: Vec<(usize, f64, f64, usize, f64, f64, usize, usize)> = Vec::new();
-            let mut load: Vec<(u32, u32, u8, u8)> = Vec::new();
-            if !a.iter().any(|t| t == "--no-polish") {
-                let po = POpt { sqp: a.iter().any(|t| t == "--sqp"), rmax: arg(&a, "--rmax", 4e-3), r0: arg(&a, "--r0", 1e-3), rmin: arg(&a, "--rmin", 1e-10), maxit: arg(&a, "--pit", 300), cc_tol: arg(&a, "--cc-tol", 1e-7), flip_top: arg(&a, "--flip-top", 8), ident: a.iter().any(|t| t == "--ident"), stag_w: arg(&a, "--stag-w", 15), stag_tol: arg(&a, "--stag-tol", 2e-9), finish: a.iter().any(|t| t == "--finish"), tr_grow: arg(&a, "--tr-grow", 0.5), tr_shrink: arg(&a, "--tr-shrink", 4.0), verbose: o.verbose };
-                let (s2, x2, it, rr, fl) = polish(&mut prob, sq, &xq, &po, &mut trace, &mut load);
-                sq = s2; xq = x2; pit = it; pr = rr; flips = fl;
-            }
-            let (fp, ncont) = (fingerprint(&load), load.len());
-            let sr = repair(sq, &mut xq, 1e-13);
-            let (mg, mw) = check(sr, &xq);
+            let (json, sr, xq) = run_quench(&a, s, x);
             if let Some(out) = sarg(&a, "--out") { write_cfg(&out, sr, &xq); }
-            println!("{{\"s\": {:.15}, \"s_alm\": {:.15}, \"viol\": {:.2e}, \"evals\": {}, \"outer\": {}, \"slp_it\": {}, \"slp_r\": {:.1e}, \"flips\": {}, \"min_gap\": {:.2e}, \"min_wall\": {:.2e}, \"sec\": {:.3}, \"s_coarse\": {:.15}, \"t_alm\": {:.3}, \"s_alm0\": {:.15}, \"trace\": [{}], \"fp\": \"{:016x}\", \"ncontacts\": {}{}}}",
-                     sr, sq, viol, nev, outer, pit, pr, flips, mg, mw, t0.elapsed().as_secs_f64(), s_coarse, t_alm, s_alm0, trace.iter().map(|q| format!("[{},{:.4},{:.15},{},{:.3e},{:.3e},{},{}]", q.0, q.1, q.2, q.3, q.4, q.5, q.6, q.7)).collect::<Vec<_>>().join(","), fp, ncont, format!(", \"fin\": [{}]", FIN_LOG.lock().unwrap().iter().map(|q| format!("\"{q}\"")).collect::<Vec<_>>().join(",")) + &if a.iter().any(|t| t == "--ident") { format!(", \"fps\": [{}]", IDENT_FPS.lock().unwrap().iter().map(|h| format!("\"{:016x}\"", h)).collect::<Vec<_>>().join(",")) } else { String::new() });
+            println!("{json}");
         }
         "gradcheck" => {
             // random kick so many constraints are active, then compare analytic vs central differences

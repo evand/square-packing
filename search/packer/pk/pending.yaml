@@ -1,0 +1,9 @@
+# Pending registration requests on jlevy/squares (+ other people's repos without an issue: issue: null).
+# pk.py sync-pending fetches each repo at the pinned commit (tarball, untrusted dir, data only), imports every packing
+# file under `paths`, and records the issue table's claims as pending frontier rows.  Add a line per new issue / update.
+# Refinement-only issues (exact re-roundings of registered packings: SidG2k1 #438, lollipoll #425 #428) are left out.
+- {issue: 481, finder: itsnaka (SQUISH), repo: itsnaka/squish-certs, commit: d45669b48cc97ad3aa17a6c847a8d06630f66eac, paths: ['squish-submission-2026-10-09/**/*.cert.json']}
+- {issue: 476, finder: Francisco Couzo, repo: franciscouzo/square-packing, commit: 02f969075f79d5e13fa21e09e381a44e8647b452, paths: ['certificates']}
+- {issue: 470, finder: Mishapolk, repo: Mishapolk/square-packing-records, commit: dd3da5c, paths: ['certificates']}
+- {issue: 451, finder: Francisco Couzo, repo: franciscouzo/square-packing, commit: ffd900dfff6d2674ad995359208c2f0714915c82, paths: ['certificates']}
+- {issue: 432, finder: ry-xu, repo: ry-xu/square_packing, commit: 8dc415296f697f5140caea27c7a0193d52deb4e6, paths: ['certificates']}
