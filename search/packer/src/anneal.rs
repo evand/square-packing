@@ -439,6 +439,17 @@ fn sched(a: &[String]) {
     let prc = Curve::parse(&arg(a, "--prot", String::from("0.5")), false);
     let box_every: usize = arg(a, "--box-every", 1usize).max(1);
     let nsnap: usize = arg(a, "--snaps", 0usize);
+    // orientational bias on Q4 = mean cos(4 theta) (1: all axis-aligned, -1: all at 45 deg), in units of kT:
+    //   lin:  U = lam(t) n Q4                    (lam > 0 penalises axis alignment)
+    //   harm: U = lam(t) n (Q4 - q0(t))^2 / 2    (umbrella window)
+    let lamc = Curve::parse(&arg(a, "--bias-lam", String::from("0")), false);
+    let q0c = Curve::parse(&arg(a, "--bias-q0", String::from("0")), false);
+    let harm = arg(a, "--bias", String::from("lin")) == "harm";
+    let log_every: usize = arg(a, "--log-every", 0usize);
+    let lag_tol: f64 = arg(a, "--lag-tol", 1e9);       // default off (old behaviour); e.g. 0.002
+    let lag_grow: f64 = arg(a, "--lag-grow", 0.001);
+    let mut n_grow = 0usize;
+    let log_from: f64 = arg(a, "--log-from", 0.0);
     let inp: String = arg(a, "--in", String::new());
     // start: file, or random sequential placement of rounded squares at packing fraction phi0
     let (n, s0, x) = if !inp.is_empty() {
@@ -476,9 +487,15 @@ fn sched(a: &[String]) {
     let mut traj = String::new();
     let mut s_min = f64::INFINITY;
     let mut lag_max = 0.0f64;
+    let mut c4: f64 = (0..n).map(|i| (4.0 * sys.x[3 * i + 2]).cos()).sum();
+    let mut logtxt = String::new();
+    let mut q_sum = 0.0f64; let mut q_cnt = 0usize;
     for sw in 0..sweeps {
         let tt = sw as f64 / sweeps as f64;
         let bp = bpc.at(tt);
+        let lam = lamc.at(tt);
+        let q0 = q0c.at(tt);
+        let ubias = |q: f64| -> f64 { if harm { 0.5 * lam * n as f64 * (q - q0).powi(2) } else { lam * n as f64 * q } };
         let ramp = rc.at(tt).clamp(0.0, 0.5);
         let prot = prc.at(tt).clamp(0.0, 1.0);
         let mut lag = 0.0f64;
@@ -490,16 +507,35 @@ fn sched(a: &[String]) {
             lag = lag.max(sys.rr[i] - target);
         }
         lag_max = lag_max.max(if tt > 0.9 { lag } else { 0.0 });
+        // keep shapes on schedule: while some particle lags its target radius by > lag_tol, expand the box a little
+        // (uniform rescale, always feasible); pressure recompresses afterwards.  Heuristic, as the shape steps.
+        if lag > lag_tol {
+            let f = 1.0 + lag_grow;
+            for k in 0..3 * n { if k % 3 != 2 { sys.x[k] *= f; } }
+            sys.s *= f;
+            n_grow += 1;
+        }
         for _ in 0..mobile.len() {
             let i = mobile[rng.idx(mobile.len())];
             let (xi, yi, ti) = (sys.x[3 * i], sys.x[3 * i + 1], sys.x[3 * i + 2]);
             let rot = rng.f() < prot;
             let (nx, ny, nth) = if !rot { (xi + dt * rng.u(), yi + dt * rng.u(), ti) } else { (xi, yi, ti + dr * rng.u()) };
             if rot { nr += 1 } else { nt += 1 }
+            if rot && lam != 0.0 {
+                let c4n = c4 - (4.0 * ti).cos() + (4.0 * nth).cos();
+                let du = ubias(c4n / n as f64) - ubias(c4 / n as f64);
+                if du > 0.0 && rng.f() >= (-du).exp() { continue; }
+            }
             if sys.ok(i, nx, ny, nth, sys.rr[i]) {
+                if rot { c4 += (4.0 * nth).cos() - (4.0 * ti).cos(); }
                 sys.x[3 * i] = nx; sys.x[3 * i + 1] = ny; sys.x[3 * i + 2] = nth;
                 if rot { ar += 1 } else { at += 1 }
             }
+        }
+        if log_every > 0 && sw % log_every == 0 && tt >= log_from {
+            c4 = (0..n).map(|i| (4.0 * sys.x[3 * i + 2]).cos()).sum();      // resync (rounding drift)
+            logtxt += &format!("{:.5} {:.10} {:.6}\n", tt, sys.s, c4 / n as f64);
+            q_sum += c4 / n as f64; q_cnt += 1;
         }
         if sw % box_every == 0 {
             let dl = dv * rng.u();
@@ -542,8 +578,10 @@ fn sched(a: &[String]) {
     for i in 0..n { txt += &format!("{:?} {:?} {:?}\n", sys.x[3 * i], sys.x[3 * i + 1], (sys.x[3 * i + 2].to_degrees()).rem_euclid(90.0)); }
     std::fs::write(&out, txt).unwrap();
     if nsnap > 0 { std::fs::write(format!("{out}.traj"), traj).unwrap(); }
-    println!("{{\"s\": {:.12}, \"s0\": {:.12}, \"s_round\": {:.12}, \"s_min\": {:.12}, \"mobile\": {}, \"rounded_left\": {}, \"grow\": {:.5}, \"lag_late\": {:.4}, \"sec\": {:.2}}}",
-             sys.s, s0, s_round, s_min, mobile.len(), left, grow, lag_max, t_start.elapsed().as_secs_f64());
+    if log_every > 0 { std::fs::write(format!("{out}.log"), logtxt).unwrap(); }
+    let q4: f64 = (0..n).map(|i| (4.0 * sys.x[3 * i + 2]).cos()).sum::<f64>() / n as f64;
+    println!("{{\"s\": {:.12}, \"s0\": {:.12}, \"s_round\": {:.12}, \"s_min\": {:.12}, \"mobile\": {}, \"rounded_left\": {}, \"grow\": {:.5}, \"lag_late\": {:.4}, \"q4\": {:.5}, \"q4_mean\": {:.5}, \"lag_grows\": {}, \"sec\": {:.2}}}",
+             sys.s, s0, s_round, s_min, mobile.len(), left, grow, lag_max, q4, if q_cnt > 0 { q_sum / q_cnt as f64 } else { f64::NAN }, n_grow, t_start.elapsed().as_secs_f64());
 }
 
 fn main() {

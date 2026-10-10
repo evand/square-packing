@@ -98,11 +98,18 @@ def method_apply(spec, start, n, rng, snaps):
         sq[:, 2] += np.array([rng.gauss(0, 20 * sig) for _ in range(start.n)])
         return Packing(start.s, sq), dict(sigma=sig), []
     if kind == 'anneal':
+        # anneal:PATH:RMAX:SWEEPS[:BP1][:k=v,...]  extras: bias=lin|harm, lam=, q0=, release= (bias held to `release`,
+        # off by release + 0.05), bp0= (from a packing: starting pressure; default bp1 / 10 = no expansion)
         path, rmax, sweeps = parts[1], float(parts[2]), int(parts[3])
-        bp1 = float(parts[4]) if len(parts) > 4 else 3000.0
+        bp1 = float(parts[4]) if len(parts) > 4 and '=' not in parts[4] else 3000.0
+        kv = dict(x.split('=') for p_ in parts[4:] if '=' in p_ for x in p_.split(','))
         sch = AN.Schedule.from_path(path, sweeps=sweeps, rmax=rmax, bp1=bp1)
-        if start is not None:                                  # from a packing: pressure starts high (no expansion)
-            sch = sch.but(bp=AN.curve([(0, bp1 / 10), (1, bp1)]))
+        if start is not None:
+            sch = sch.but(bp=AN.curve([(0, float(kv.get('bp0', bp1 / 10))), (1, bp1)]))
+        if 'bias' in kv:
+            rel = float(kv.get('release', 0.9)); lam = float(kv['lam'])
+            sch = sch.but(bias=kv['bias'], bias_lam=AN.curve([(0, lam), (rel, lam), (min(1, rel + 0.05), 0), (1, 0)]),
+                          bias_q0=kv.get('q0', '0'))
         fin, info, traj = AN.run(sch, start=start, n=n, seed=rng.randrange(1 << 30), snaps=snaps)
         return fin, info, traj
     if kind == 'melt':

@@ -32,6 +32,11 @@ class Schedule:
     box_every: int = 1
     phi0: float = 0.25
     region: tuple | None = None          # (cx, cy, rad)
+    lag_tol: float = 1e9                  # expand the box while shapes lag their radius by > this (off by default: the final uniform
+    #                                       growth preserves the arrangement; 0.002 = shapes on schedule, bench lag110)
+    bias: str = 'lin'                     # Q4 bias: lin (U = lam n Q4) or harm (U = lam n (Q4 - q0)^2 / 2)
+    bias_lam: str = '0'                   # curve
+    bias_q0: str = '0'                    # curve
     name: str = ''
 
     def but(self, **kw):
@@ -39,7 +44,9 @@ class Schedule:
 
     def args(self):
         a = ['--bp', self.bp, '--r', self.r, '--prot', self.prot, '--sweeps', str(self.sweeps),
-             '--box-every', str(self.box_every), '--phi0', repr(self.phi0)]
+             '--box-every', str(self.box_every), '--phi0', repr(self.phi0), '--lag-tol', repr(self.lag_tol)]
+        if self.bias_lam != '0':
+            a += ['--bias', self.bias, '--bias-lam', self.bias_lam, '--bias-q0', self.bias_q0]
         if self.region:
             a += ['--cx', repr(float(self.region[0])), '--cy', repr(float(self.region[1])), '--rad', repr(float(self.region[2]))]
         return a
@@ -116,3 +123,28 @@ def line_occupancy(p: Packing, axis_tol=1.0):
                 j += 1
             best = max(best, i - j + 1)
     return int(best)
+
+
+def line_load(p: Packing, step=0.005):
+    """Exact obstruction diagnostic: max over horizontal and vertical lines of the summed chord lengths of the squares
+    the line crosses (chords are disjoint, so load <= s; a line with load = s is a grid lock; load >= k forces s >= k).
+    Evaluated on a grid of line positions (step), so it slightly underestimates the max."""
+    th = np.radians(p.sq[:, 2])
+    c, s_ = np.cos(th), np.sin(th)
+    off = np.array([[.5, .5], [-.5, .5], [-.5, -.5], [.5, -.5]])
+    V = p.sq[:, None, :2] + np.stack([off[:, 0] * c[:, None] - off[:, 1] * s_[:, None],
+                                      off[:, 0] * s_[:, None] + off[:, 1] * c[:, None]], -1)       # (n, 4, 2)
+    best = 0.0
+    for ax in (1, 0):                      # ax = coordinate held fixed by the line (1: horizontal lines y = y0)
+        o = 1 - ax
+        A, B = V, np.roll(V, -1, axis=1)   # edges A -> B
+        ys = np.arange(step / 2, p.s, step)
+        a, b = A[..., ax][None], B[..., ax][None]                  # (1, n, 4)
+        y0 = ys[:, None, None]
+        cross = (np.minimum(a, b) <= y0) & (np.maximum(a, b) > y0)
+        u = np.where(cross, (y0 - a) / np.where(b - a == 0, 1, b - a), np.nan)
+        xo = A[..., o][None] + u * (B[..., o] - A[..., o])[None]   # intersection coordinate along the line
+        chord = np.nanmax(xo, axis=2) - np.nanmin(xo, axis=2)       # (ny, n), nan if not crossed
+        load = np.nansum(chord, axis=1)
+        best = max(best, float(load.max()))
+    return best

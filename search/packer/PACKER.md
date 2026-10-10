@@ -1019,3 +1019,16 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   here: measure F(q; P) by umbrella sampling in q = full-line count / line occupancy; bias ladder in q; wholesale region
   re-packing with sub-grid motifs + quench.  Code pointers: `scripts/respace_ladder.py`, `tasks/level1_exact_flip_oracle/
   barrier_profile.py`, `statarb/utils/excursions.py` (N_eff = N / (1 + CV^2)).
+* **Q4 order parameter** (Q4 = mean cos 4 theta; the 110 record and all certified sub-11 minima: 0.472).  `anneal sched
+  --bias lin|harm --bias-lam CURVE --bias-q0 CURVE`, `--log-every`; `pk/umbrella.py` (windows + WHAM).  u110a (P = 30,
+  100, 300, 1000; 20 windows x 2 seeds): P = 30 is fluid (window sd 0.02-0.03), F rises ~1 kT per 0.01 of Q4, F(0.47) -
+  F(1) ~ 55 kT, and the aligned states are also denser (<s> 11.38 vs 11.5-11.8): no entropy-vs-density trade in the
+  fluid, the grid wins both.  P >= 100 is jammed (sd 0.003-0.006, seeds disagree): profiles non-equilibrium.
+* **Biased-anneal crossing** (bias110, lag110; 30 trials per cell): 0 crossings.  Artifact found: from-start anneals that
+  melt deep end with a forced uniform box growth of 19-30 % (shapes cannot square up in place at high pressure), and the
+  quench from s ~ 13 lands on the grid.  `--lag-tol` (expand while shapes lag) removes it; grid share at full melt 30 ->
+  25 / 30, and the Q4 harmonic bias at rmax 0.3 lowers it further (21 -> 6 / 30 above-grid), but the results are tilted
+  glass at median 11.02, not sub-11.  The lag expansion hurts the positive control (rmax 0.15: 7 / 30 back below 11 vs
+  23 / 30 with the final uniform growth, which preserves the arrangement), so it is off by default.
+  Reading: Q4 can keep packings off the grid but the sub-11 funnel is a needle inside the Q4 = 0.47 slice; Q4 is not the
+  order parameter that separates the funnel.
