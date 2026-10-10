@@ -6,3 +6,4 @@ resolve.list
 summarize.out
 register_now.json
 __pycache__/
+regnow_*/

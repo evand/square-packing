@@ -19,17 +19,35 @@ TRIES, SEED_FIRST = 12, False                # removal tries per seed; v2 (10-08
 
 
 def seed_job(j):
+    """k > 0: best of TRIES random k-removals from best(n + k); k < 0: insert |k| squares into best(n + k) at pose holes
+    after scaling the packing up by a random gap.  fq-quenched; a removal that does not shrink is a copy and is rejected."""
     src, k, n, out, seed = j
     s1, sq1 = mcmin.load_deg(src)
     rng = random.Random(seed)
     tmp = tempfile.mkdtemp()
     hop.EXTRA[:] = ['--loosen', '1.0']
     best = None
-    for _ in range(TRIES):
-        drop = set(rng.sample(range(len(sq1)), k))
-        r = hop.quench(s1, [q for i, q in enumerate(sq1) if i not in drop], tmp)
-        if not r or r[0] > s1 - 1e-7:          # did not shrink (removed a rattler / polished back): a copy, not a seed
-            continue
+    for t in range(TRIES):
+        if k > 0:
+            drop = set(rng.sample(range(len(sq1)), k))
+            r = hop.quench(s1, [q for i, q in enumerate(sq1) if i not in drop], tmp)
+            if not r or r[0] > s1 - 1e-7:      # did not shrink (removed a rattler / polished back): a copy, not a seed
+                continue
+        else:
+            f = 1 + rng.uniform(0.002, 0.012) * math.sqrt(-k)
+            s2 = s1 * f
+            sq2 = [(x * f, y * f, d) for x, y, d in sq1]
+            for _ in range(-k):
+                H = mcmin.pose_holes(s2, sq2)
+                if not H:
+                    break
+                e, x, y, d = H[rng.randrange(min(len(H), 12))]                # any of the 12 best holes (the best is often a jam)
+                sq2.append((x, y, d))
+            if len(sq2) != n:
+                continue
+            r = hop.quench(s2, sq2, tmp)
+            if not r:
+                continue
         if best is None or r[0] < best[0]:
             best = (r[0], r[1])
         if SEED_FIRST and best:
@@ -38,6 +56,34 @@ def seed_job(j):
         mcmin.write_deg(out, *best)
         return best[0]
     return None
+
+
+LIB_CAP = 300
+
+
+def lib_load(out, n):
+    """per-n library of distinct sub-k packings: [(s, path)] from <out>/lib/n<n>/index.json"""
+    f = f'{out}/lib/n{n}/index.json'
+    return [tuple(e) for e in json.load(open(f))] if os.path.exists(f) else []
+
+
+def lib_add(out, n, items):
+    """add (s, path) packings (copied) to n's library; distinct = side differs by > 1e-9; keeps the LIB_CAP best"""
+    d = f'{out}/lib/n{n}'; os.makedirs(d, exist_ok=True)
+    L = lib_load(out, n)
+    sides = sorted(x for x, _ in L)
+    import bisect
+    for s, p in sorted(items):
+        i = bisect.bisect_left(sides, s - 1e-9)
+        if i < len(sides) and abs(sides[i] - s) <= 1e-9 or not os.path.exists(p):
+            continue
+        dst = f'{d}/{s:.12f}.txt'; shutil.copy(p, dst); L.append((s, dst)); bisect.insort(sides, s)
+    L.sort()
+    for s, p in L[LIB_CAP:]:
+        if os.path.exists(p): os.remove(p)
+    L = L[:LIB_CAP]
+    json.dump(L, open(f'{d}/index.json.tmp', 'w')); os.replace(f'{d}/index.json.tmp', f'{d}/index.json')
+    return len(L)
 
 
 def archive_best(d):
@@ -61,7 +107,7 @@ def main(a):
         src = a.src or hop.BATCH
         ns = json.load(open(a.ns_file)) if a.ns_file else list(range(a.lo, a.hi + 1))
         ours = dict(x.split(':') for x in (a.ours or []))
-        for n in sorted(set(ns) | {m + k for m in ns for k in (1, 2)}):
+        for n in sorted(set(ns) | {m + k for m in ns for k in a.seed_ks}):
             p = f'{a.out}/best_{n}.txt'
             sp = f'{src}/n-{n}.txt' if os.path.exists(f'{src}/n-{n}.txt') else f'{hop.BATCH}/n-{n}.txt'
             if not os.path.exists(sp):
@@ -75,10 +121,20 @@ def main(a):
             s, _ = mcmin.load_deg(p)
             S['n'][str(n)] = dict(best=s, reg=reg, start=s, squish=None if a.src else T.get(n), path=p, rounds=0,
                                   dirty=(n in ns), gains=[], dirtied=0.0, active=(n in ns))
-        for x in (a.carry or []):                   # extra lineage starts (e.g. our best non-grid packing above a grid bound)
+        if a.lib_init:
+            for n_, ps in json.load(open(a.lib_init)).items():
+                k_ = math.ceil(math.sqrt(int(n_)) - 1e-12)
+                its = []
+                for p in ps:
+                    try:
+                        its.append((mcmin.load_deg(p)[0], p))
+                    except Exception:
+                        pass
+                lib_add(a.out, int(n_), [(s_, p) for s_, p in its if s_ < k_ - 1e-9])
+        for q, x in enumerate(a.carry or []):       # extra lineage starts (e.g. our best non-grid packing above a grid bound)
             n, pth = x.split(':')
-            dst = f'{a.out}/carry_{n}_x.txt'; shutil.copy(pth, dst)
-            S['n'][n]['carry'] = [dst]
+            dst = f'{a.out}/carry_{n}_x{q}.txt'; shutil.copy(pth, dst)
+            S['n'][n].setdefault('carry', []).append(dst)
     live = {}
     t_end = time.time() + 3600 * a.hours
     def pick():
@@ -101,12 +157,16 @@ def main(a):
             S['round'] += 1
             rd = f'{a.out}/r{S["round"]:04d}_n{n}'
             os.makedirs(rd)
-            seeds = [(S['n'][str(n + k)]['path'], k, n, f'{rd}/seed_k{k}.txt', S['round'] * 10 + k) for k in (1, 2) if str(n + k) in S['n']]
-            res = run_jobs(seed_job, seeds, procs=2, timeout=1800)
+            seeds = [(S['n'][str(n + k)]['path'], k, n, f'{rd}/seed_k{k}.txt', S['round'] * 10 + k) for k in a.seed_ks if str(n + k) in S['n']]
+            res = run_jobs(seed_job, seeds, procs=a.procs_per, timeout=1800)
             carried = []
             for q, cp in enumerate(v.get('carry', [])):         # lineage carry from the previous round(s)
                 dst = f'{rd}/seed_c{q}.txt'; shutil.copy(cp, dst); carried.append(dst)
-            starts = [v['path']] + carried + [sd[3] for sd, r in zip(seeds, res) if isinstance(r, float)]
+            libs = []                                            # sub-grid library: random distinct sub-k basins (Evan 10-09)
+            L = [e for e in lib_load(a.out, n) if e[0] > v['best'] + 1e-9]
+            for q, (ls, lp) in enumerate(random.Random(S['round']).sample(L, min(a.lib_k, len(L)))):
+                dst = f'{rd}/seed_l{q}.txt'; shutil.copy(lp, dst); libs.append(dst)
+            starts = [v['path']] + carried + libs + [sd[3] for sd, r in zip(seeds, res) if isinstance(r, float)]
             cmd = [sys.executable, os.path.join(HERE, 'explore.py'), '--n', str(n), '--starts', *starts, '--procs', str(a.procs_per),
                    '--minutes', str(a.minutes), '--seed', str(S['round']), '--out', rd, '--adapt', '--elite-share', '0.3',
                    '--frontier', f'{rd}/seed', '--frontier-share', str(a.frontier_share), '--bandit-state', f'{a.out}/bandit_{n}.json'] + (a.explore_extra.split() if a.explore_extra else [])
@@ -130,7 +190,7 @@ def main(a):
                 if b[0] < min(v['reg'], v.get('start', v['reg'])) - 1e-9:      # beyond the live register and our own start
                     cp = f'{a.out}/cand_{n}_{b[0]:.10f}.txt'; shutil.copy(b[1], cp)
                     print(f'CANDIDATE n={n} {b[0]:.12f} (register {v["reg"]:.12f}, start {v.get("start", v["reg"]):.12f}) -> {cp}', flush=True)
-                for m in (n - 1, n - 2):
+                for m in {n - k for k in a.seed_ks}:
                     if str(m) in S['n'] and S['n'][str(m)].get('active', m >= (a.lo or 0)):
                         S['n'][str(m)]['dirty'] = True
                         S['n'][str(m)]['dirtied'] = time.time()
@@ -147,6 +207,7 @@ def main(a):
                     break
             for c in car: os.replace(c + '.tmp', c)
             v['carry'] = car
+            lib_add(a.out, n, [(e['s'], e['path']) for e in E if e['s'] < k_n - 1e-9 and not e.get('unpolished')])
             lb = seen[0] if seen else None
             lgain = (v.get('lin_best', float('inf')) - lb) if lb is not None and v.get('lin_best') is not None else 0.0
             if lb is not None and (v.get('lin_best') is None or lb < v['lin_best']): v['lin_best'] = lb
@@ -180,8 +241,13 @@ if __name__ == '__main__':
     ap.add_argument('--procs-per', type=int, default=2); ap.add_argument('--slots', type=int, default=8)
     ap.add_argument('--hours', type=float, default=1); ap.add_argument('--frontier-share', type=float, default=0.7);
     ap.add_argument('--explore-extra', default='', help='extra explore.py args (e.g. "--melt 2")'); ap.add_argument('--first-pass', action='store_true', help='every n once before any repeat'); ap.add_argument('--ns-file', help='json list of n to work on (instead of --lo/--hi)'); ap.add_argument('--src', help='start packings dir (n-<n>.txt), e.g. ../exact/batch/inputs_live')
+    ap.add_argument('--seed-ks', type=lambda x: [int(v) for v in x.split(',')], default=[1, 2], help='seed offsets k: removal from best(n + k) (k > 0), insertion into it (k < 0)')
     ap.add_argument('--carry', nargs='*', help='n:path extra lineage start for n (carried like a seed lineage)'); ap.add_argument('--ours', nargs='*', help='n:path of our own better packings (used as start if better than src)'); ap.add_argument('--out'); ap.add_argument('--report')
+    ap.add_argument('--lib-k', type=int, default=3, help='library entries (random distinct sub-k packings) per round as starts')
+    ap.add_argument('--lib-init', help='json {n: [paths]}: sub-k packings to pre-load into the library')
+    ap.add_argument('--seed-tries', type=int, default=TRIES, help='quench tries per seed job')
     a = ap.parse_args()
+    TRIES = a.seed_tries
     if a.report:
         report(a.report)
     else:
