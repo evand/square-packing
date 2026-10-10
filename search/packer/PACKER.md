@@ -1049,3 +1049,22 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   <= 0.25, ~0.  About one decade of value per decade of gap.  Learned under a policy that rarely chains far states
   (subtrees 5-15 descendants): likely understates far value; alpha is the knob, the lineage test measures it.
   `--reward legacy` (default) reproduces the old reward; `--reward-above` removed.
+* **Idea battery** (`pk/battery.py`: frozen suite at 110 = 40 bench parents, 30 reach parents with the record's 0.02
+  neighbourhood (31 basins) withheld, 60 clean above-grid starts, 20 positive controls; Gamma / Beta posteriors;
+  P(candidate > baseline)).  Baseline = explorer arm mix, 15 min (7,920 proposals); candidates 10 min each.
+  | metric | baseline | ashallow | cross2 | crossP5near | crossP5far |
+  | new certified / CPU-h (bench) | 27 | 34 | 35 | 19 | 22 |
+  | withheld rediscovered (distinct) | 2 | 3 | 11 | 7 | 9 |
+  | children moving toward the record | 0.07 | 0.16 | 0.34 | 0.29 | 0.41 |
+  | above-grid starts -> grid | 0.42 | 0.23 | 0.71 | 0.33 | 0.86 |
+  | positive control returns below 11 | 0.62 | 0.92 | 0.82 | 0.93 | 0.81 |
+  | CPU s / proposal | 1.9 | 1.7 | 1.2 | 1.5 | 1.4 |
+  Reach caveat: every withheld hit, for every arm, involved a participant (parent or mate) within 0.05 of the record (the
+  six nearest reach parents, 0.040-0.049).  Per proposal involving such a participant: baseline 0.002, ashallow 0.039,
+  cross2 0.074, crossP5near 0.028, crossP5far 0.022 (hits / proposals).  So recombination does not extend reach beyond
+  its nearest participant; two-parent crossover is the most efficient use of near pool members (~2x the shallow anneal,
+  ~35x the arm mix); more parents dilute.  Bridging (`pk/bridging.py`): two-parent children with mates 0.05-0.1 apart land
+  ~midway (median 0.047 from both); five-near children collapse onto the nearest mate.
+  One long jump into the funnel: crossP5near child of an above-grid start (11.0085) + 4 above-grid mates -> certified
+  10.998018 (known basin), 0.108 from its parent; but the parent is 0.069 from the nearest sub-11 basin (the suite's clean
+  filter compared against the 30 best sub-11 references only: tighten to all basins at the next freeze).
