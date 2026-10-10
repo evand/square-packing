@@ -1127,9 +1127,10 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   - **s(305) ≤ 17.95118356772045354314…** (mod 47): −1.26e-5 below itsnaka's 17.951196144147 (converged); one rowslide.
   - **s(308) ≤ 17.99846539275931059669…** (mod 52): −8.44e-4 below Kevin Fang's 17.999309855163 (register: the 18-grid).
     His file polished in place (fq --no-alm): his construction was unconverged; ours is its exact optimum.
-  - **s(344) ≤ 18.99445051427740152092…** (mod 71): −1.04e-3 below Kevin Fang's 18.995489275431.  The chain's best was not
-    jammed (MILP dS −3.1e-4); fq `--flip-top 128 --pit 600` did not move it; `exact/descend.py` (MILP kick + slp2) did.
+  - **s(344) ≤ 18.99445051427740152092…** (mod 71): −1.04e-3 below Kevin Fang's 18.995489275431.  His file polished in
+    place gives 18.9944595 (unconverged, like 308); that was not jammed (MILP dS −3.1e-4); fq `--flip-top 128 --pit 600` did not move it; `exact/descend.py` (MILP kick + slp2) did.
   - **s(343) ≤ 18.989552952452492** (dilation certificate, new `dilate_cert.py`: centres and box x (1 + 1e-12), rational
     rounding; VALID both checkers): −5.35e-3 below Kevin Fang's 18.994903529220, but not a local minimum (MILP dS −2.0e-4;
-    descend.py's kick fails at every size tried).  Better 343 nearby.
+    descend.py's kick fails at every size tried).  Lineage: removal seed from best(344) (one square out) -> cross2, crot,
+    ashallow; his 343 polished in place gives only 18.99117.  Round 43 already has 18.98650673 (re-certify at the end).
   Files `candidates/hunt3_n*`; draft post `outreach/draft-hunt3-2026-10-10.md` (not posted).
