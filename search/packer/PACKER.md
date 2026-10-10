@@ -1158,3 +1158,13 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   Files `candidates/hunt3_n*`.  **Posted 10-10 ~08:55 as jlevy/squares#489** (132, 308, 343, 344; pinned c013f43).  305
   dropped: Couzo's #488 (08:08, before our push) has the identical exact optimum (same 31-digit rational side; both from
   itsnaka's packing via fq), so it is his.  #488 added to `pk/pending.yaml`.
+* **n=110 census brought up to date** (10-10 morning, new `census_certify.py`: solves every side below k with packing rows
+  but no `basin` row, keeps exactsolve output incl. contacts in `runs/census/n110/<key>/`).  453 solved (+7 certified rows
+  that had no stored S): `basin` now 2183 side keys below 11 = 775 certified (**718 distinct exact sides**), 1399 not-min,
+  9 unresolved.  Distinct certified within 1e-6 / 1e-5 / 1e-4 / 1e-3 / 3e-3 of the record: 1 / 3 / 9 / 59 / 622.  The
+  "second side" 10.996783403 (6.5e-9 above) solves to the record's exact S: an unconverged copy, not a second basin.
+  **Caveat:** of the 437 sides first seen in tonight's lineage runs, 394 (90%) are *not jammed* (corner-corner MILP finds a
+  first-order descent; fq's fixed-axis linearisation stalls there) and only 41 certified.  So explorer "new basin" counts
+  overstate distinct local minima by up to ~10x at 110, and the archive's parents are mostly unconverged points.  Open:
+  where do the not-min points go when descended properly (new minima, or known ones)?  Same-basin is a contact-graph
+  question; only the 456 newly solved keys have kept contacts so far.
