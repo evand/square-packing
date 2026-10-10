@@ -7,3 +7,4 @@
 - {issue: 470, finder: Mishapolk, repo: Mishapolk/square-packing-records, commit: dd3da5c, paths: ['certificates']}
 - {issue: 451, finder: Francisco Couzo, repo: franciscouzo/square-packing, commit: ffd900dfff6d2674ad995359208c2f0714915c82, paths: ['certificates']}
 - {issue: 432, finder: ry-xu, repo: ry-xu/square_packing, commit: 8dc415296f697f5140caea27c7a0193d52deb4e6, paths: ['certificates']}
+- {issue: 484, finder: Kevin Fang (TheSnakeFang), repo: TheSnakeFang/squarepack-certs, commit: c75bebd87933416d3e1c7aba35ec733ea8ac7da0, paths: ['n0308/*.cert', 'n0343/*.cert', 'n0344/*.cert']}
