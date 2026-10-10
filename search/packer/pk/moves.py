@@ -151,7 +151,7 @@ ARMS = {
     'crot': ('crot', {}), 'aswap': ('aswap', {}), 'band': ('band', {}), 'reinsert': ('reinsert', {}),
     'rowslide': ('rowslide', {}), 'chainshift': ('chainshift', {}), 'mirror': ('mirror', {}), 'melt': ('melt', {}),
 }
-WEIGHTS = dict(kick=2, kicksym=1, lkick=2, bigkick=2, crot=1, aswap=2, band=1, reinsert=0.5, rowslide=2, chainshift=2,
+WEIGHTS = dict(kick=2, kicksym=1, lkick=2, bigkick=2, crot=1, aswap=2, band=1, reinsert=0, rowslide=2, chainshift=0,
                mirror=2)
 
 

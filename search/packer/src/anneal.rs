@@ -392,12 +392,167 @@ fn melt(a: &[String]) {
              sys.s, s0, mobile.len(), left, grow, t0.elapsed().as_secs_f64());
 }
 
+// ---------------------------------------------------------------- schedule-driven anneal (10-09)
+/// Piecewise curve over progress t in [0, 1]: "t0:v0,t1:v1,..." (or a single constant).  log = interpolate ln v.
+struct Curve { k: Vec<(f64, f64)>, log: bool }
+impl Curve {
+    fn parse(s: &str, log: bool) -> Curve {
+        let mut k: Vec<(f64, f64)> = Vec::new();
+        for part in s.split(',').filter(|p| !p.is_empty()) {
+            let mut it = part.split(':');
+            let a: f64 = it.next().unwrap().parse().expect("curve knot");
+            match it.next() { Some(b) => k.push((a, b.parse().expect("curve value"))), None => k.push((0.0, a)) }
+        }
+        if k.len() == 1 { k.push((1.0, k[0].1)); }
+        k.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        Curve { k, log }
+    }
+    fn at(&self, t: f64) -> f64 {
+        let k = &self.k;
+        if t <= k[0].0 { return k[0].1; }
+        for w in k.windows(2) {
+            if t <= w[1].0 {
+                let u = if w[1].0 > w[0].0 { (t - w[0].0) / (w[1].0 - w[0].0) } else { 1.0 };
+                return if self.log { (w[0].1.ln() * (1.0 - u) + w[1].1.ln() * u).exp() } else { w[0].1 * (1.0 - u) + w[1].1 * u };
+            }
+        }
+        k[k.len() - 1].1
+    }
+}
+
+/// anneal sched [--in F | --n N --phi0 0.25] --sweeps S --seed K --out G
+///   --bp CURVE     pressure bP(t), log-interpolated (default "0:1,1:3000")
+///   --r CURVE      corner-radius amplitude r(t) in [0, 0.5] (0.5 = disk, 0 = square; default "0:0.5,0.2:0.5,0.8:0,1:0")
+///   --prot CURVE   probability that a particle move is a rotation (default 0.5)
+///   --cx X --cy Y --rad R   radial region: weight w_i = max(0, 1 - d_i / R), particle radius = r(t) w_i; only squares within
+///                  R + 1.5 move (default: no region, w = 1, all move)
+///   --box-every K  box move every K sweeps (default 1)
+///   --snaps M      write M evenly spaced snapshots (t, s, coords, radii) to G.traj
+/// Shape steps per particle toward its target radius (growth of the shape only where it fits: a heuristic, not detailed
+/// balance); the residual rounding at the end is removed by the smallest uniform box growth.  JSON summary on stdout.
+fn sched(a: &[String]) {
+    let out: String = arg(a, "--out", String::from("sched.txt"));
+    let sweeps: usize = arg(a, "--sweeps", 4000);
+    let mut rng = Rng::new(arg(a, "--seed", 1u64));
+    let bpc = Curve::parse(&arg(a, "--bp", String::from("0:1,1:3000")), true);
+    let rc = Curve::parse(&arg(a, "--r", String::from("0:0.5,0.2:0.5,0.8:0,1:0")), false);
+    let prc = Curve::parse(&arg(a, "--prot", String::from("0.5")), false);
+    let box_every: usize = arg(a, "--box-every", 1usize).max(1);
+    let nsnap: usize = arg(a, "--snaps", 0usize);
+    let inp: String = arg(a, "--in", String::new());
+    // start: file, or random sequential placement of rounded squares at packing fraction phi0
+    let (n, s0, x) = if !inp.is_empty() {
+        let txt = std::fs::read_to_string(&inp).expect("read --in");
+        let mut it = txt.split_whitespace().map(|w| w.parse::<f64>().unwrap());
+        let n = it.next().unwrap() as usize;
+        let s0 = it.next().unwrap();
+        let mut x = Vec::with_capacity(3 * n);
+        for _ in 0..n { let (a1, b1, c1) = (it.next().unwrap(), it.next().unwrap(), it.next().unwrap()); x.extend_from_slice(&[a1, b1, c1.to_radians()]); }
+        (n, s0, x)
+    } else {
+        let n: usize = arg(a, "--n", 110);
+        let phi0: f64 = arg(a, "--phi0", 0.25);
+        let r0 = rc.at(0.0);
+        let s0 = (n as f64 * area(r0) / phi0).sqrt();
+        let mut sys = Sys2 { n: 0, x: Vec::new(), s: s0, rr: Vec::new() };
+        let mut tries = 0usize;
+        while sys.n < n {
+            tries += 1; assert!(tries < 10_000_000, "placement failed");
+            let (x, y, t) = (rng.f() * s0, rng.f() * s0, rng.f() * FRAC_PI_2);
+            if sys.ok(usize::MAX, x, y, t, r0) { sys.x.extend_from_slice(&[x, y, t]); sys.rr.push(r0); sys.n += 1; }
+        }
+        (n, s0, sys.x)
+    };
+    let region = a.iter().any(|q| q == "--rad");
+    let (cx, cy, rad): (f64, f64, f64) = (arg(a, "--cx", 0.0), arg(a, "--cy", 0.0), arg(a, "--rad", 1e9));
+    let w: Vec<f64> = (0..n).map(|i| if region { (1.0 - (x[3 * i] - cx).hypot(x[3 * i + 1] - cy) / rad).max(0.0) } else { 1.0 }).collect();
+    let mobile: Vec<usize> = (0..n).filter(|&i| !region || (x[3 * i] - cx).hypot(x[3 * i + 1] - cy) < rad + 1.5).collect();
+    // initial radii: from a file the shapes start square (r = 0) and grow rounding as scheduled; from scratch: r(0) w
+    let r_init: Vec<f64> = if inp.is_empty() { (0..n).map(|i| rc.at(0.0) * w[i]).collect() } else { vec![0.0; n] };
+    let mut sys = Sys2 { n, x, s: s0, rr: r_init };
+    let (mut dt, mut dr, mut dv) = (0.05f64, 0.05f64, 1e-3f64);
+    let (mut at, mut nt, mut ar, mut nr, mut av, mut nv) = (0usize, 0usize, 0usize, 0usize, 0usize, 0usize);
+    let t_start = std::time::Instant::now();
+    let mut traj = String::new();
+    let mut s_min = f64::INFINITY;
+    let mut lag_max = 0.0f64;
+    for sw in 0..sweeps {
+        let tt = sw as f64 / sweeps as f64;
+        let bp = bpc.at(tt);
+        let ramp = rc.at(tt).clamp(0.0, 0.5);
+        let prot = prc.at(tt).clamp(0.0, 1.0);
+        let mut lag = 0.0f64;
+        for &i in &mobile {
+            let target = ramp * w[i];
+            if (target - sys.rr[i]).abs() < 1e-15 { continue; }
+            let (xi, yi, ti) = (sys.x[3 * i], sys.x[3 * i + 1], sys.x[3 * i + 2]);
+            if target > sys.rr[i] || sys.ok(i, xi, yi, ti, target) { sys.rr[i] = target; }
+            lag = lag.max(sys.rr[i] - target);
+        }
+        lag_max = lag_max.max(if tt > 0.9 { lag } else { 0.0 });
+        for _ in 0..mobile.len() {
+            let i = mobile[rng.idx(mobile.len())];
+            let (xi, yi, ti) = (sys.x[3 * i], sys.x[3 * i + 1], sys.x[3 * i + 2]);
+            let rot = rng.f() < prot;
+            let (nx, ny, nth) = if !rot { (xi + dt * rng.u(), yi + dt * rng.u(), ti) } else { (xi, yi, ti + dr * rng.u()) };
+            if rot { nr += 1 } else { nt += 1 }
+            if sys.ok(i, nx, ny, nth, sys.rr[i]) {
+                sys.x[3 * i] = nx; sys.x[3 * i + 1] = ny; sys.x[3 * i + 2] = nth;
+                if rot { ar += 1 } else { at += 1 }
+            }
+        }
+        if sw % box_every == 0 {
+            let dl = dv * rng.u();
+            let f = (0.5 * dl).exp();
+            let s1 = sys.s * f;
+            let lacc = -bp * (s1 * s1 - sys.s * sys.s) + (n as f64 + 1.0) * dl;
+            nv += 1;
+            if lacc >= 0.0 || rng.f() < lacc.exp() {
+                let xf: Vec<f64> = sys.x.iter().enumerate().map(|(k, &v)| if k % 3 == 2 { v } else { v * f }).collect();
+                if f >= 1.0 || sys.all_ok(&xf, s1) { sys.x = xf; sys.s = s1; av += 1; }
+            }
+        }
+        if sw % 50 == 49 {
+            let adj = |acc: usize, tot: usize| if tot == 0 { 1.0 } else { let r = acc as f64 / tot as f64; if r > 0.45 { 1.1 } else if r < 0.35 { 0.9 } else { 1.0 } };
+            dt = (dt * adj(at, nt)).clamp(1e-8, 0.5); dr = (dr * adj(ar, nr)).clamp(1e-8, 0.5);
+            dv = (dv * adj(av, nv)).clamp(1e-10, 0.05);
+            at = 0; nt = 0; ar = 0; nr = 0; av = 0; nv = 0;
+        }
+        s_min = s_min.min(sys.s);
+        if nsnap > 0 && (sw + 1) % (sweeps / nsnap).max(1) == 0 {
+            traj += &format!("# t {:.4} s {:.12} bp {:.4e} r {:.4}\n{} {:?}\n", (sw + 1) as f64 / sweeps as f64, sys.s, bp, ramp, n, sys.s);
+            for i in 0..n { traj += &format!("{:?} {:?} {:?} {:?}\n", sys.x[3 * i], sys.x[3 * i + 1], (sys.x[3 * i + 2].to_degrees()).rem_euclid(90.0), sys.rr[i]); }
+        }
+    }
+    let s_round = sys.s;
+    let left = sys.rr.iter().filter(|&&r| r > 0.0).count();
+    let mut grow = 1.0;
+    if left > 0 {
+        sys.rr = vec![0.0; n];
+        let xs = sys.x.clone();
+        let mut f = 1.0;
+        loop {
+            let xf: Vec<f64> = xs.iter().enumerate().map(|(k, &v)| if k % 3 == 2 { v } else { v * f }).collect();
+            if sys.all_ok(&xf, sys.s * f) { sys.x = xf; sys.s *= f; grow = f; break; }
+            f *= 1.001;
+            if f > 2.0 { break; }
+        }
+    }
+    let mut txt = format!("{} {:?}\n", n, sys.s);
+    for i in 0..n { txt += &format!("{:?} {:?} {:?}\n", sys.x[3 * i], sys.x[3 * i + 1], (sys.x[3 * i + 2].to_degrees()).rem_euclid(90.0)); }
+    std::fs::write(&out, txt).unwrap();
+    if nsnap > 0 { std::fs::write(format!("{out}.traj"), traj).unwrap(); }
+    println!("{{\"s\": {:.12}, \"s0\": {:.12}, \"s_round\": {:.12}, \"s_min\": {:.12}, \"mobile\": {}, \"rounded_left\": {}, \"grow\": {:.5}, \"lag_late\": {:.4}, \"sec\": {:.2}}}",
+             sys.s, s0, s_round, s_min, mobile.len(), left, grow, lag_max, t_start.elapsed().as_secs_f64());
+}
+
 fn main() {
     let a: Vec<String> = std::env::args().collect();
     match a.get(1).map(|s| s.as_str()) {
         Some("test") => test(),
         Some("run") => run(&a),
         Some("melt") => melt(&a),
+        Some("sched") => sched(&a),
         _ => eprintln!("usage: anneal test | anneal run --n N --seed K --sweeps S --bp0 --bp1 --t0 --t1 --p --out F"),
     }
 }

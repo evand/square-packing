@@ -130,7 +130,9 @@ def mv_mirror(s, sq, rng, a):
 
 MOVES = dict(mcmin.MOVES, melt=mv_melt, bigkick=mv_bigkick, rowslide=mv_rowslide, chainshift=mv_chainshift, mirror=mv_mirror)
 CROSS_P, CROSS_K, CROSS_CANDS = 5, 3, 30
-WEIGHTS = dict(kick=2, kicksym=1, lkick=2, bigkick=2, crot=1, aswap=2, band=1, reinsert=0.5, rowslide=2, chainshift=2, mirror=2)
+# 10-09 bench c110a (new certified basins per CPU-h): aswap 177, kick 157, kicksym 137, lkick 134, rowslide 131, bigkick 101,
+# mirror 52, crot 49, band 48, chainshift 0, reinsert 0 -> the last two off
+WEIGHTS = dict(kick=2, kicksym=1, lkick=2, bigkick=2, crot=1, aswap=2, band=1, reinsert=0, rowslide=2, chainshift=0, mirror=2)
 
 
 def tilt_classes(sq, thr=1.0, gap=3.0):
@@ -327,7 +329,8 @@ if __name__ == '__main__':
     ap.add_argument('--n', type=int, default=110); ap.add_argument('--starts', nargs='+')
     ap.add_argument('--minutes', type=float, default=60); ap.add_argument('--procs', type=int, default=15)
     ap.add_argument('--smax', type=float, default=None, help='stepping-stone ceiling (default k + 0.05)')
-    ap.add_argument('--same', type=float, default=1e-6, help='screened side within this of a known basin = return')
+    ap.add_argument('--same', type=float, default=0.0, help='screened side within this of a known basin = return, no polish '
+                    '(10-09 bench c110a: 1e-6 lost half the new certified basins; default 0 = polish everything)')
     ap.add_argument('--star', action='store_true', help='control: always expand the first start (cen7-style sampling)')
     ap.add_argument('--adapt-cells', action='store_true', help='Thompson sampling over descriptor cells for parents')
     ap.add_argument('--frontier', help='start-path prefix marking frontier lineages (e.g. seeds110c/)')
