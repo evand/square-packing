@@ -2,7 +2,8 @@
 
 For each n: lean_cert.py --split (certificate module + chunk modules + glue), then `lake build` of the data module,
 the chunks (in parallel, each under a systemd memory cap), the glue, and an axiom check.  Generated Lean files go to
-lean/Sqpack/Exact/Batch/ (gitignored: reproducible from minpoly/solve/ with this script).  Results are appended to
+lean/Sqpack/Exact/Packs/ (committed since 2026-10-10, so each theorem can be cited at a commit; not in the default
+build: `lake build Sqpack.Exact.Packs.N<n>`).  Input: the committed exact forms minpoly/data/n-N.minpoly.json.gz.  Results are appended to
 lean_batch/results.tsv (and, for quadratic S*, the closed form to lean_batch/closed.tsv: theorems `packs_closed`,
 `minSide_le_closed`); `--summary` writes lean_batch/results.md.
 
@@ -46,16 +47,16 @@ def one(n, deg, A):
     log = os.path.join(OUTD, 'logs', f'n-{n}.log')
     open(log, 'w').close()
     mod = f'N{n}'
-    out = os.path.join(LEAN, 'Sqpack', 'Exact', 'Batch', f'{mod}.lean')
+    out = os.path.join(LEAN, 'Sqpack', 'Exact', 'Packs', f'{mod}.lean')
     status, chunks = 'ok', 0
-    rc = run([sys.executable, os.path.join(HERE, 'lean_cert.py'), os.path.join(HERE, 'minpoly', 'solve', f'n-{n}.minpoly.json'),
+    rc = run([sys.executable, os.path.join(HERE, 'lean_cert.py'), os.path.join(HERE, 'minpoly', 'data', f'n-{n}.minpoly.json.gz'),
               out, '--split', str(A.chunk)], '12G', 3000, HERE, log)
     tgen = time.time() - t0
     if rc != 0:
         status = f'gen failed ({rc})'
     else:
         chunks = len([f for f in os.listdir(out[:-5]) if re.fullmatch(r'C\d+\.lean', f)])
-        base = f'Sqpack.Exact.Batch.{mod}'
+        base = f'Sqpack.Exact.Packs.{mod}'
         if run(['lake', 'build', f'{base}.Data'], A.mem, 3600, LEAN, log) != 0:
             status = 'data failed'
         else:
