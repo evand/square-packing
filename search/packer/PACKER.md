@@ -988,3 +988,21 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   16.929780, new structure); 155 ties Couzo #451 (same basin); 266, 272 still best.  **375**: Couzo's repo `02f9690` now
   has 19.906981767294 = our big1 basin (ours 4e-12 lower, exact optimum): nothing to post.  10-09 draft superseded.
 * Implication (NEEDS.md policy): ~25 fresh single-source sub-grid packings (#481, #470, #476) = the best perturbation targets now.
+
+## Tooling session (10-09 evening, branch `tooling`; DESIGN.md, pk/README.md)
+* `pk/` toolkit: store (`runs/store.sqlite`: register, pending issues, 1,001 run archives, seed pools; 169k packings),
+  `fq serve`, move registry with explicit parameters, pipeline, replay bench (`pk/corpus.py`).
+* **Bench c110a** (1,760 frozen proposals, 40 certified parents x 11 arms x 4): polish-everything finds 30 new certified
+  basins (66 / CPU-h) vs 16 (48 / CPU-h) for the 10-08 recipe; its screen-return test (1e-6) misassigns 292 / 710 returns,
+  24 of which polish to new certified basins.  Staged polish worse.  Per arm: aswap 177 / CPU-h, kick 157, kicksym 137,
+  lkick 134, rowslide 131, bigkick 101, mirror 52, crot 49, band 48, chainshift 0, reinsert 0.  -> explore.py: `--same`
+  default 0, chainshift / reinsert weight 0.
+* `anneal sched` (curves for pressure, corner radius, rotation share; region; snapshots) + `pk/crossing.py`.
+* **Crossing x110a** (n = 110; 1,120 trials + controls; 9.5 min x 16): **0 crossings in every cell** (95 % upper bound
+  8.8 % per 40-trial cell).  Controls: pos (sub-11 packing dilated to 11.01 + kick 0.01) crosses back under quench 10/10,
+  melt 9/10, partial global anneal (rmax 0.2) 4/10, full global anneal (rmax 0.5) 0/10; neg (n = 117) never below 11.
+  Global anneals send above-grid starts to the grid 38-40/40 (local quench / melt / small kick keep them non-grid, at
+  11.015-11.02).  So the hard-square NPT anneal is a grid-maker: it destroys sub-grid structure it is given.  Lock-in
+  (quenched snapshots) already by t = 0.9; from scratch the line occupancy reaches k at t ~ 0.8-0.85 (corner radius ~0.1).
+  Caveats: from-start anneals begin at bp1/10 (no expansion phase), so grid starts never melt; the occupancy proxy counts
+  squares within 1 degree of axis (near-axis squares in sub-11 records trip it).
