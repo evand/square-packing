@@ -1148,4 +1148,6 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
     claimed.  132, 344 unchanged.  The other 16 n: no improvement in 5.6 h.
   - Reading: on the fresh-from-others n the gains came from (a) converging unconverged files, (b) short lineages from them;
     the dedicated per-n explorer beat the chain's shared rounds on 343 and 308 (2 h of 4 procs vs 6-min slices).
-  Files `candidates/hunt3_n*`; draft post `outreach/draft-hunt3-2026-10-10.md` (not posted).
+  Files `candidates/hunt3_n*`.  **Posted 10-10 ~08:55 as jlevy/squares#489** (132, 308, 343, 344; pinned c013f43).  305
+  dropped: Couzo's #488 (08:08, before our push) has the identical exact optimum (same 31-digit rational side; both from
+  itsnaka's packing via fq), so it is his.  #488 added to `pk/pending.yaml`.
