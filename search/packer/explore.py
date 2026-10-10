@@ -185,10 +185,14 @@ def work(job):
             # mate: random for sub-k parents; for above-k parents the nearest of the candidates (battery: random
             # mates sent above-grid starts to the grid 71 % vs 33 % for near mates, 42 % for the arm mix)
             if s < k:
-                pth = cands[0]; sQ, Q = mcmin.load_deg(pth); d, Qa = cross.align(sq, s, Q, sQ)
+                mate = cands[0]; sQ, Q = mcmin.load_deg(mate); d, Qa = cross.align(sq, s, Q, sQ)
             else:
-                d, Qa = min((cross.align(sq, s, Q, sQ) for sQ, Q in map(mcmin.load_deg, cands[:CROSS2_NEAR])),
-                            key=lambda c: c[0])
+                best = None
+                for pth in cands[:CROSS2_NEAR]:
+                    sQ, Q = mcmin.load_deg(pth); c = cross.align(sq, s, Q, sQ)
+                    if best is None or c[0] < best[0][0]:
+                        best = (c, pth)
+                (d, Qa), mate = best
             v = rng.choice(CROSS2_VARIANTS)
             prop = cross.recombine(v, s, [sq, Qa], rng)
             desc = f'cross2 {v} {"rand" if s < k else "near"} d{d:.3f}'
@@ -209,6 +213,8 @@ def work(job):
     hop.EXTRA[:] = ['--loosen', loosen]
     r = hop.quench(s, prop, tmp, extra=('--pit', '8', '--flip-top', '0'))
     out = dict(kind=kind, desc=desc, loosen=loosen)
+    if kind == 'cross2' and cands:
+        out['mate'] = mate                   # archive path of the mate (lineage analysis: own lineage or borrowed?)
     if r is None:
         return dict(out, status='fail', sec=time.time() - t0)
     s1, sq1, _ = r
@@ -290,7 +296,7 @@ class Archive:
                 return e
         return None
 
-    def add(self, s, sq, parent, kind, t):
+    def add(self, s, sq, parent, kind, t, mate=None):
         e = self.find(s)
         if e:
             e['visits'] += 1
@@ -302,6 +308,8 @@ class Archive:
         e = dict(i=i, s=s, path=path, desc=descriptor(s, sq, self.k), roles=roles(sq), parent=parent, kind=kind, root=root,
                  visits=1, expanded=0, children=0, t=round(t, 1),
                  known=any(abs(s - x) < 2e-9 for x in self.known))
+        if mate:
+            e['mate'] = mate                 # crossover mate's archive path (own lineage or borrowed: compare roots)
         self.E.append(e)
         self.log.write(json.dumps({k: v for k, v in e.items()}) + '\n'); self.log.flush()
         return e, True
@@ -474,7 +482,7 @@ if __name__ == '__main__':
                         if r['lines'] or r['s'] >= ar.smax:
                             stats['discard'] += 1
                         else:
-                            e, isnew = ar.add(r['s'], r['sq'], par['i'], r['kind'], time.time() - t0)
+                            e, isnew = ar.add(r['s'], r['sq'], par['i'], r['kind'], time.time() - t0, mate=r.get('mate'))
                             stats['new' if isnew else 'dup'] += 1
                             if isnew:
                                 par['children'] += 1
@@ -503,7 +511,8 @@ if __name__ == '__main__':
                     if bandit:
                         bandit.update(r['kind'], r.get('sec', 0.0), rew)
                     ar.plog.write(json.dumps(dict(t=round(time.time() - t0, 1), kind=r['kind'], st=r['status'],
-                                                  sec=round(r.get('sec', 0), 2), s=r.get('s'), new=newi, par=par['i'])) + '\n')
+                                                  sec=round(r.get('sec', 0), 2), s=r.get('s'), new=newi, par=par['i'],
+                                                  **({'mate': r['mate']} if r.get('mate') else {}))) + '\n')
                 if time.time() - t_start < 60 * a.minutes:
                     submit()
             if time.time() - last > 120:

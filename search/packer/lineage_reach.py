@@ -45,18 +45,46 @@ def freeze(a):
     print(f'{len(picked)} starts, d = {picked[0][0]:.3f} .. {picked[-1][0]:.3f}; novelty ref {len(ref)} sides')
 
 
+GROUPS = {                                    # (gap = s - s_record range, d range); 10-10 after L1 (Evan: near / far in side)
+    'near': ((0, 5e-4), (0.05, 0.07)),       # the d ~ 0.062 family, almost as good as the record
+    'far1': ((1.5e-3, 1), (0.05, 0.07)),
+    'far2': ((1.5e-3, 1), (0.07, 0.10)),
+}
+
+
+def freeze_groups(a):
+    from pk.store import Store
+    S = json.load(open(f'{HERE}/runs/battery/suite_110.json'))
+    st = Store(); rec_s = st.get(REC).s
+    D = sorted((d, int(i), st.get(int(i)).s - rec_s) for i, d in S['reach_d'].items())
+    meta = {}
+    for g, ((glo, ghi), (dlo, dhi)) in GROUPS.items():
+        pool = [(d, i, gap) for d, i, gap in D if glo <= gap < ghi and dlo <= d < dhi]
+        step = max(1, len(pool) // a.per_group)
+        pick = pool[::step][:a.per_group]
+        os.makedirs(f'{ROOT}/groups/{g}', exist_ok=True)
+        for d, i, gap in pick:
+            st.get(i).write(f'{ROOT}/groups/{g}/b{i}.txt')
+        meta[g] = [dict(id=i, d=round(d, 4), gap=gap) for d, i, gap in pick]
+        print(f'{g}: pool {len(pool)}, picked {len(pick)}: d {pick[0][0]:.3f}..{pick[-1][0]:.3f}, '
+              f'gap {min(x[2] for x in pick):.1e}..{max(x[2] for x in pick):.1e}')
+    json.dump(dict(groups=meta, frozen=time.strftime('%F %T')), open(f'{ROOT}/groups/meta.json', 'w'), indent=1)
+
+
 def run(a):
-    starts = sorted(f'{ROOT}/starts/{f}' for f in os.listdir(f'{ROOT}/starts'))
+    sets = {g: sorted(f'{ROOT}/groups/{g}/{f}' for f in os.listdir(f'{ROOT}/groups/{g}') if f.endswith('.txt'))
+            for g in a.groups} if a.groups else {'': sorted(f'{ROOT}/starts/{f}' for f in os.listdir(f'{ROOT}/starts'))}
     P = []
     for rep in range(a.reps):
+      for g, starts in sets.items():
         for v, extra in VARIANTS.items():
-            out = f'{ROOT}/{a.name}/{v}{a.seed_base + rep}'
+            out = f'{ROOT}/{a.name}/{g + "_" if g else ""}{v}{a.seed_base + rep}'
             os.makedirs(out, exist_ok=True)
             cmd = [sys.executable, f'{HERE}/explore.py', '--n', '110', '--starts', *starts, '--minutes', str(a.minutes),
                    '--procs', str(a.procs), '--seed', str(100 + a.seed_base + rep), '--novel-ref', f'{ROOT}/novel_ref.json',
                    '--out', out] + RECIPE + extra
             P.append(subprocess.Popen(cmd, stdout=open(f'{out}/log', 'w'), stderr=subprocess.STDOUT, cwd=HERE))
-    json.dump(dict(minutes=a.minutes, procs=a.procs, reps=a.reps, seed_base=a.seed_base, variants=VARIANTS, recipe=RECIPE,
+    json.dump(dict(minutes=a.minutes, procs=a.procs, reps=a.reps, seed_base=a.seed_base, groups=a.groups, variants=VARIANTS, recipe=RECIPE,
                    started=time.strftime('%F %T')), open(f'{ROOT}/{a.name}/meta{a.seed_base}.json', 'w'), indent=1)
     for p in P:
         p.wait()
@@ -114,9 +142,16 @@ def report(a):
     for r, e, d in sorted(hits, key=lambda h: h[2])[:a.show]:
         idx = {x['i']: x for x in E[r]}
         depth, x, kinds = 0, e, []
+        bypath = {y['path']: y for y in E[r]}
+        root = e.get('root')
         while x['parent'] >= 0:
-            kinds.append(x['kind']); x = idx[x['parent']]; depth += 1
-        print(f'  {r} s={e["s"]:.10f} d={d:.4f} t={e["t"] / 60:.1f}m depth {depth} from {x["kind"]}: {" <- ".join(kinds[:8])}')
+            kd = x['kind']
+            if x.get('mate') in bypath:            # crossover mate: same root (own lineage) or another start's lineage
+                m = bypath[x['mate']]
+                kd += f'[{"own" if m.get("root") == root else "borrow:" + idx[m["root"]]["kind"].split(":")[-1]}' \
+                      f'{"," + format(cache[m["path"]], ".3f") if m["path"] in cache else ""}]'
+            kinds.append(kd); x = idx[x['parent']]; depth += 1
+        print(f'  {r} s={e["s"]:.10f} d={d:.4f} t={e["t"] / 60:.1f}m depth {depth} from {x["kind"]}: {" <- ".join(kinds[:a.chain])}')
     if a.certify and hits:
         import census_exact, tempfile
         from pk.packing import read
@@ -132,11 +167,13 @@ if __name__ == '__main__':
     sp = ap.add_subparsers(dest='cmd', required=True)
     f = sp.add_parser('freeze'); f.add_argument('--dlo', type=float, default=0.05); f.add_argument('--dhi', type=float, default=0.10)
     f.add_argument('--per-band', type=int, default=6)
+    fg = sp.add_parser('freeze-groups'); fg.add_argument('--per-group', type=int, default=4)
     r = sp.add_parser('run'); r.add_argument('--name', required=True); r.add_argument('--minutes', type=float, default=60)
     r.add_argument('--procs', type=int, default=4); r.add_argument('--reps', type=int, default=2)
+    r.add_argument('--groups', nargs='*', help='start groups (runs/lineage/groups/<g>), one explorer per group x variant')
     r.add_argument('--seed-base', type=int, default=0, help='replicate offset (a later batch into the same --name)')
     p = sp.add_parser('report'); p.add_argument('--name', required=True); p.add_argument('--procs', type=int, default=8)
     p.add_argument('--certify', action='store_true'); p.add_argument('--trace', action='store_true')
-    p.add_argument('--show', type=int, default=10)
+    p.add_argument('--show', type=int, default=10); p.add_argument('--chain', type=int, default=16)
     a = ap.parse_args()
-    dict(freeze=freeze, run=run, report=report)[a.cmd](a)
+    {'freeze': freeze, 'freeze-groups': freeze_groups, 'run': run, 'report': report}[a.cmd](a)
