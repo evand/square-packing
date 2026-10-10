@@ -130,6 +130,8 @@ def mv_mirror(s, sq, rng, a):
 
 MOVES = dict(mcmin.MOVES, melt=mv_melt, bigkick=mv_bigkick, rowslide=mv_rowslide, chainshift=mv_chainshift, mirror=mv_mirror)
 CROSS_P, CROSS_K, CROSS_CANDS = 5, 3, 30
+CROSS2_VARIANTS = ('field', 'softfield', 'half', 'bestfit:2')   # battery mix; per-variant counts too small to pick one
+CROSS2_NEAR = 8                              # above-k parents: nearest of this many candidate mates
 # 10-09 bench c110a (new certified basins per CPU-h): aswap 177, kick 157, kicksym 137, lkick 134, rowslide 131, bigkick 101,
 # mirror 52, crot 49, band 48, chainshift 0, reinsert 0 -> the last two off
 WEIGHTS = dict(kick=2, kicksym=1, lkick=2, bigkick=2, crot=1, aswap=2, band=1, reinsert=0, rowslide=2, chainshift=0, mirror=2)
@@ -174,6 +176,31 @@ def work(job):
         parents = [sq] + [c[1] for c in al[:CROSS_P - 1]]
         prop = cross.recombine(f'bestfit:{CROSS_K}', s, parents, rng) if len(parents) > 1 else MOVES['kick'](s, sq, rng, A)[0]
         desc = f'cross P{len(parents)} K{CROSS_K} d{al[0][0] if al else 0:.3f}'
+    elif kind == 'cross2':                  # two-parent recombination (battery 10-09 winner: cross:P=2,pick=random)
+        import cross
+        cands = job[10] if len(job) > 10 else []
+        if not cands:
+            prop, desc = MOVES['kick'](s, sq, rng, A); desc = 'cross2 no-mate ' + desc
+        else:
+            # mate: random for sub-k parents; for above-k parents the nearest of the candidates (battery: random
+            # mates sent above-grid starts to the grid 71 % vs 33 % for near mates, 42 % for the arm mix)
+            if s < k:
+                pth = cands[0]; sQ, Q = mcmin.load_deg(pth); d, Qa = cross.align(sq, s, Q, sQ)
+            else:
+                d, Qa = min((cross.align(sq, s, Q, sQ) for sQ, Q in map(mcmin.load_deg, cands[:CROSS2_NEAR])),
+                            key=lambda c: c[0])
+            v = rng.choice(CROSS2_VARIANTS)
+            prop = cross.recombine(v, s, [sq, Qa], rng)
+            desc = f'cross2 {v} {"rand" if s < k else "near"} d{d:.3f}'
+    elif kind == 'ashallow':                # shallow whole-box anneal (pk.moves 'anneal' arm, rmax 0.03-0.15)
+        from pk import moves as pkm
+        from pk.packing import Packing
+        import numpy as np
+        q, info = pkm.apply(Packing(s, np.array(sq, float)), 'ashallow', rng.randrange(1 << 30))
+        if info.get('failed'):
+            prop, desc = MOVES['kick'](s, sq, rng, A); desc = 'ashallow failed ' + desc
+        else:
+            s = float(q.s); prop = q.tuples(); desc = f'ashallow s{s:.5f}'
     else:
         prop, desc = MOVES[kind](s, sq, rng, A)
     tmp = tempfile.mkdtemp()
@@ -344,6 +371,9 @@ if __name__ == '__main__':
     ap.add_argument('--bandit-state', help='json file: load (discounted x0.5) and save the move-kind bandit statistics')
     ap.add_argument('--melt', type=float, default=0, help='weight of the regional melt move (anneal melt); 0 = off')
     ap.add_argument('--cross', type=float, default=0, help='weight of the recombination move (cross.py bestfit 3 of 5); 0 = off')
+    ap.add_argument('--cross2', type=float, default=2, help='weight of two-parent crossover (random sub-k mate; nearest '
+                    'mate for above-k parents; battery 10-09 best reach move); 0 = off')
+    ap.add_argument('--ashallow', type=float, default=2, help='weight of the shallow whole-box anneal (battery 10-09); 0 = off')
     ap.add_argument('--adapt', action='store_true', help='Thompson sampling over move kinds (reward: new below-k basin)')
     ap.add_argument('--reward', default='legacy', choices=['legacy', 'value'],
                     help='bandit reward: legacy (1 for a new sub-k basin) or value (gap-graded x parent robustness)')
@@ -379,6 +409,8 @@ if __name__ == '__main__':
         WEIGHTS['cross'] = a.cross
     if a.melt:
         WEIGHTS['melt'] = a.melt
+    WEIGHTS['cross2'] = a.cross2
+    WEIGHTS['ashallow'] = a.ashallow
     kinds, wts = zip(*WEIGHTS.items())
     bandit = KindBandit([kk for kk, w in WEIGHTS.items() if w > 0]) if a.adapt else None
     if bandit and a.bandit_state and os.path.exists(a.bandit_state):   # carried per-size move statistics (chain rounds), discounted
@@ -395,6 +427,15 @@ if __name__ == '__main__':
     ar_best = [min(e['s'] for e in ar.E)] if getattr(ar, 'E', None) else [math.inf]
     frontier_s = a.frontier_s if a.frontier_s is not None else ar_best[0]
     t_start = time.time()
+    def mates(kind, par):
+        if kind == 'cross':
+            xp = [e['path'] for e in ar.E if e['s'] < ar.smax and e['i'] != par['i']]
+            return rng.sample(xp, min(CROSS_CANDS, len(xp)))
+        if kind == 'cross2':                 # sub-k mates when there are any (battery mates were sub-k suite members)
+            xp = [e['path'] for e in ar.E if e['s'] < k and e['i'] != par['i']] or \
+                 [e['path'] for e in ar.E if e['s'] < ar.smax and e['i'] != par['i']]
+            return rng.sample(xp, min(CROSS2_NEAR, len(xp)))
+        return []
     with ProcessPoolExecutor(a.procs) as ex:
         def submit():
             fr = None
@@ -410,7 +451,7 @@ if __name__ == '__main__':
             kind = bandit.choose(rng) if bandit else rng.choices(kinds, weights=wts)[0]
             f = ex.submit(work, (s, sq, kind, rng.randrange(1 << 30), k, [e['s'] for e in ar.E], a.same, ar.smax,
                                        (min(e['s'] for e in ar.E) + a.polish_margin) if a.polish_margin else float('inf'), a.polish_extra.split(),
-                                       rng.sample(xp, min(CROSS_CANDS, len(xp))) if kind == 'cross' and (xp := [e['path'] for e in ar.E if e['s'] < ar.smax and e['i'] != par['i']]) else []))
+                                       mates(kind, par)))
             pend[f] = par
         for _ in range(a.procs):
             submit()
