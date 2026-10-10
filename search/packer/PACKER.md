@@ -1068,3 +1068,7 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   One long jump into the funnel: crossP5near child of an above-grid start (11.0085) + 4 above-grid mates -> certified
   10.998018 (known basin), 0.108 from its parent; but the parent is 0.069 from the nearest sub-11 basin (the suite's clean
   filter compared against the 30 best sub-11 references only: tighten to all basins at the next freeze).
+* **s(110) census 523 -> 683** (`runs/known110_all.json`; old list `known110_all.2026-10-09.json`, gitignored copy):
+  160 new certified sub-11 minima from the 10-09 evening bench / battery / crossing runs (every proposal fully polished,
+  every distinct sub-11 side certified), deduplicated at 5e-9.  Closest to the record: 10.997517877 (+7.3e-4), then
+  1.1-1.3e-3 above.  None within 1e-4.
