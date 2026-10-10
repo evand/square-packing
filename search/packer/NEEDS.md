@@ -1,4 +1,22 @@
-# What the packing program needs (2026-10-09)
+# What the packing program needs (2026-10-09; evening update first)
+
+## 10-09 evening update (tooling session; numbers in `PACKER.md` § Tooling session, design in `DESIGN.md`)
+* **Framing (Evan):** compute-efficient new basins come from new *ideas* (starts, proposals, schedules); compute-efficient
+  evaluation matters mostly because it speeds up grading ideas.  Small-n statistics can't resolve tuning-sized (< 2x)
+  effects; don't spend effort there.
+* **Tools now:** store + `pk.py` (no hand-copied coordinates), `fq serve`, move registry with explicit parameters,
+  replay bench (`pk/corpus.py`), idea battery (`pk/battery.py`: one command, P(candidate > baseline)), `anneal sched`
+  (pressure / corner-radius / rotation / Q4-bias curves), crossing harness, umbrella / WHAM.
+* **Learned:** (a) the screen-return shortcut lost half the new basins: polish everything; (b) single-move reach is
+  ~0.05 matching distance for every move incl. anneals; recombination reaches no further than its nearest parent but uses
+  near pool members ~35x better than the arm mix (two parents, random mate, is best) -> progress = pool expansion toward
+  targets + recombination; (c) shallow whole-box anneal preserves sub-grid structure (positive control 92 % vs 62 %);
+  (d) deep / global anneals and Q4 bias go to the grid; at P = 30 axis alignment wins both entropy and density; 0 grid
+  crossings at 110 in ~3,000 trials (one long jump from a start 0.069 outside the funnel); (e) census 110: 683.
+* **Needs now:** port crossover + ashallow into the explorer; lineage test (chained pool expansion); battery: tighter
+  leakage filter, second n, throughput; crossing: region re-packing (block moves), line-load bias.  The older needs list
+  below still stands (generator benchmark = the battery; fill / completion; chain throughput; polish at large n).
+
 
 Written at the end of the 10-09 session (targeted hunt h2, generator tests, hunt2) for whoever picks this up next.
 Log with numbers: `PACKER.md` § "Targeted hunt h2".  Tools: `README.md`.

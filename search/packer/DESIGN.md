@@ -38,3 +38,11 @@ Parent gap above the run's starting best vs child outcome.  CPU mostly goes to f
 gap >= 1e-2); parents >= 5e-2 above gave 0 new basins within 1e-3 of the best in ~41k proposals; parents within 1e-3
 give 35-175 per CPU-h.  Big single-step drops are rare with our (mostly local) moves; lineages and big-move arms are
 untested, and the corpus bench is the place to test them.
+
+## Status (end of 10-09 session)
+Done: 1 (store + importers + `pk.py`), 2 (`fq serve`; staged polish tried and dropped: worse), 3 (moves incl. `anneal`,
+`cross`), 4 (`pk/corpus.py`) and the battery (`pk/battery.py`) as the idea-grading front end; plus `anneal sched`,
+`pk/crossing.py`, `pk/umbrella.py`, `pk/rediscovery.py`, `pk/bridging.py`.  Not done: 5 (explorer v2 on pk: the explorer
+still has its own moves / pipeline; recipe fixes were applied to `explore.py` directly), 6 (library tags / grid-collapse
+robustness per packing).  Store size ~0.8 GB (gitignored); rebuild: `pk.py sync-register`, `sync-pending`,
+`import-run runs`, seed pools (see PACKER.md).

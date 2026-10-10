@@ -19,6 +19,9 @@ First deliverable: a table of exact forms of S + a handful of Lean local-optimal
 - [ ] Coverage, 55 open by cost: flat rotation (10), multi-direction force balance (11), block-triangular elimination (26 + msolve-hard 9), field 108/206.  msolve-hard: 29, 68, 71, 126, 228 are k multivariate equations in k class angles (n = 29: 5 eqs, degrees 12–26; field degree likely > 120), not a factor-choice problem (that fix landed 10-07).  Needs better elimination (block-triangular / triangular decomposition / other solver).  55: force-balance determinant deg 85, 5.7M terms; try multipliers as msolve variables.  Numerics question: task doc §Numerics.
 - [ ] Explainer: local optimality of the n ≤ 324 records (for the s(11) explainer to cite). `notes/local-optimality-explainer-draft.md`.
 
+## Display regularization (10-09; `search/regularize/REGULARIZE.md`)
+- [ ] Round 3 (`--style coincide`, gallery `runs/regularize/index.html`): orientation fitted to jlevy (= source drawings); coincident faces MILP.  Open: n = 70-type symmetry-vs-coincidence calls, 23 records where the coincidence re-placement falls back; then exact angle-group levels 1/3, site export.
+
 ## Major: exact results
 - [ ] k²−5 for all large k: R = w = 5 κ = 0.02 D ≈ 1.30, conditional GO, margin ≈ 0.05 (`K2M4_MARGIN.md`); box 13 pitch 0.1. Make it cheaper first: cert golf (`tasks/cert-slack/`), finer-pitch D at w = 4 (insertable shortcut dead: price ≈ 1.8, `S2_INSERTABLE.md`).
 - [ ] Seam capacity `M(∞)` (C5/R2; FRIEDMAN §8–9, `SEAM_W1.md`, `SEAM_1D.md`): `M(w) → ∞` ⇒ families give s(k²−c) = k for every c. Next: dual-side band LP w = 2, 3 (rigorous caps); wall-row + slow-variation lemmas.
@@ -50,25 +53,31 @@ First deliverable: a table of exact forms of S + a handful of Lean local-optimal
 - [ ] Techniques from jlevy/Kleddamag/Guzhou (`notes/jlevy-s17-techniques.md` §2): rule atoms as LP columns, near-tight cells as exact LP rows gmpy2 in exact checkers.  s(17) exact: their PR #307 is far ahead and wand125 built its independent check (jlevy PR #410): not ours to do.
 - [ ] s(17) exact via the s(11) method: on hold (CPU). `tasks/s17-core-isolation/`
 
-## Packings (active, 10-08)
-**10-09 session (Evan): spend compute where a findable record is plausible (perturbation near sub-grid packings); organise
-what the program needs.  Read `search/packer/NEEDS.md` first** (what works: perturbation; what does not: seeds from
-scratch; needs in priority order: generator benchmark, fill / completion that can express new-style records, chain
-throughput).  Runs 10-09: h2r1 (8 hard targets, nothing), hunt2 (second pass, 118 n, sub-grid library), big1 (n 327-379),
-c110_h2 (s(110) census continuation); results in `search/packer/PACKER.md` § Targeted hunt h2.
+## Packings (active, 10-09)
+**10-09 evening (tooling session, Evan): new ideas give progress; evaluation exists to grade ideas fast.  Read
+`search/packer/NEEDS.md` (top section) and `search/packer/DESIGN.md` first.**  Built (`search/packer/pk/`, CLI `pk.py`):
+packing store (`runs/store.sqlite`: register, pending issues, all run archives, seed pools; `pk.py frontier / ls / get`),
+`fq serve`, move registry, replay bench (`pk/corpus.py`), idea battery (`pk/battery.py`), schedule-driven annealer
+(`anneal sched`, `pk/anneal.py`), grid-crossing harness (`pk/crossing.py`), umbrella / WHAM (`pk/umbrella.py`).  Findings:
+polish everything (the return shortcut lost half the new basins); single-move reach ~0.05 matching distance; two-parent
+crossover ~35x the arm mix per proposal near a target but no further than its nearest parent; shallow anneal keeps
+sub-grid structure; global anneals / Q4 bias go to the grid; 0 grid crossings at 110.  Census 110: 683.
 Engine `search/packer/`: `fq` (Rust quench: lifted-separator ALM + face-branch SLP polish) + `explore.py` (quality-diversity basin
 explorer, Thompson move selection with global-novelty reward, elite / frontier budgets) + `explore_exact.py` / `arm_yield.py` /
-`lineage.py`.  Log + night summary: `search/packer/PACKER.md` (end).  s(110) census: 493 certified sub-11 minima at 9 digits, 497 exact (`runs/known110_all.json`; 3 removed 10-08, slack-separated pairs, PACKER.md end).
+`lineage.py`.  Log + night summary: `search/packer/PACKER.md` (end).  s(110) census: 683 certified sub-11 minima (`runs/known110_all.json`, 10-09 evening; PACKER.md end).
 Decisions (10-08): compute serves testing (catalogue gains incidental); every comparison gets a concurrent control and a frozen novelty ref; certify before counting (~20–25 % of polished sub-k candidates are not minima); bandit reward = global novelty; elite share on for record hunting, off for census; resume a census run only on a new record.
+Decisions (10-09): new ideas (moves, starts, schedules) are where progress comes from; tuning (arm weights, rewards) is secondary and small-n statistics can't resolve it; every idea goes through the battery vs the frozen baseline; polish everything; reward novelty graded by gap to the frontier (`explore.py --reward value`), no above-grid special case.
 Order (Evan, 10-08): (1) benchmark, (2) LP throughput, (3) new proposals / start generation, then the multi-size campaign (big compute: discuss the spend first).
-- [ ] (1) Benchmarks: search `bench_explore.py` (16 frozen tasks; paired reps) + polish replay `polish_replay.py` (frozen screened states 110/237, deterministic, minutes).  Search tier still coarse (scores quantised by basins): add finer/harder graded tasks before relying on small effects.
+- [ ] (1) Evaluation: idea battery `pk/battery.py` (frozen suite at 110; baseline = arm mix; candidate 10 min; P(better)) + replay bench `pk/corpus.py`.  Next: tighten the suite's clean-above filter (all sub-k basins, not the best 30), add a second n, battery throughput (more proposals per verdict).
 - [ ] (2) Polish (10-08, PACKER.md end): diminishing returns, park.  Measured: warm LPs ≤ 1.5x, Newton finish ≤ 1.1x (self-checking but late; unlifted Rust port needed), precision stop `--stag-tol 1e-7` 1.6x at 237 but no search gain.  The crawl is a curved valley; revisit only if proposals get cheap enough that polish dominates again.
 - [ ] (3) Start generation (each new method so far ~doubled the reachable set): grafts of small-n records into patches of large ones, `layout.py` channel constructions at other angles finished with fq, crops of other non-grid records, fixed-side shrink from random starts.  Judge on the benchmark + new certified groups per CPU vs a frozen ref.
 - [ ] Generators from the 126 trio (Evan, 10-08; image `~/math/square-packing/126.jpg`, reconstructed as exact local minima in `search/trio126/` (`packer/img2packing.py`): Ryan Xu 11.742641 = 45° lattice diamond, SQUISH ph10 11.773304 = ~30° lattice block, ph14 11.763736 = diagonal staircase band): rotated a×b lattice block at θ + `gen.mis_fill2` exact axis fill → fq/explorer; staircase band as a `layout.py` variant.  Note: Ryan Xu 126 is far below the register (pending PR #442?): check open PRs before any claim.
-- [ ] Shape anneal (disk → square compression MC, `search/packer/src/anneal.rs`, PACKER.md 10-08): **on hold (Evan, 10-08)** as a standalone constructor (avoids the grid just above k², lands 0.04–0.1 above records; 110 all grid).  Candidate explorer move: regional melt (round squares to r ≈ 0.1 in one region of a good packing, re-cool).
-- [ ] Recombination (`search/packer/cross.py`, explorer `--cross`), parked 10-08: ≈ kicks at the saturated 110 funnel, no gain (slightly worse: alignment cost) on the graded benchmark.  Cheap fix if revisited: cached alignments.
+- [ ] Annealing (`anneal sched`, `pk/anneal.py`, PACKER.md 10-09 evening): melt depth decides, not rate; global / deep anneals and Q4 bias end on the grid.  Shallow whole-box anneal (`ashallow`, rmax <= 0.15) = structure-preserving move with 2x reach: add to the explorer.  Next micro-test: bias on line load (`pk/anneal.line_load`) instead of Q4.
+- [ ] Recombination: two-parent crossover with random mates (`pk/moves` `cross:P=2,pick=random`) is the best reach move (battery 10-09); port into the explorer (explore v1 has only bestfit 3-of-5-nearest, the weaker variant), keep it off above-grid parents unless mates are near.
+- [ ] Lineage test: explorer chains (with crossover + ashallow, `--reward value`) from rediscovery parents at 0.05-0.1, record neighbourhood withheld: time to the first withheld basin.  Tests pool expansion directly.
+- [ ] Crossing capability (0 crossings at 110 so far, `pk/crossing.py`): region re-packing with sub-grid motifs (block moves, statarb's fix), line-load bias; rerun at a large n.
 - [ ] Multi-size campaign (merges SQUISH gap / wide sweep / chaining): neighbour seeds (n ± 1, ± 2) + explorer at 1–2 procs × ~10 min per n, budget reallocated to the n that move; each new best seeds its neighbours; kick older packings too (mirror, register histories; 272 came that way).  Needs: live register fetch, auto exactsolve + register check + submission list.  Watch default loosen 1.02 at large n (kicked the s(292) record out of its basin).
-- [ ] Hunt 3 target list (10-09 eve frontier refresh, PACKER.md end): ~25 fresh pending packings (itsnaka #481, Mishapolk #470, Couzo #476); our 132 / 270 beaten.
+- [ ] Hunt 3: ~25 fresh pending packings (itsnaka #481, Mishapolk #470, Couzo #476; `pk.py frontier --pending-only`, `pk.py export`), with the 10-09 recipe (explore `--same 0` default, crossover + ashallow once ported).  Our 132 / 270 beaten.
 - [ ] Record hunt 2 (after hunt1 10-08: records 132, 155; `search/packer/PACKER.md` end): second pass for every n before any third (hunt1 concentrated follow-ups), new generators (126 trio) benchmarked first, more weight on interesting n (trivial-bound 90, 183, 242, 274, 308).  Live register import: `search/exact/batch/regnow/` + `inputs_live/` (refresh per hunt).  Census at 132 from `runs/hunt1` (`census_collect.py`) when cheap.
 - [ ] s(110) write-up (census 493, funnel structure, discovery curves, per-arm yields) = rewrite of `search/packer/s110-landscape.md`'s census section.
 - [ ] exactsolve should snap near-axis corner-loaded squares itself (the n = 292 failure, `search/packer/s292.md`); 12/866 cen7 outputs unresolved.
