@@ -55,7 +55,7 @@ First deliverable: a table of exact forms of S + a handful of Lean local-optimal
 - [ ] Lean explainer (`notes/lean-explainer-draft.html`, artifact FJPhwWoQLhdkcerwh4VBwY): Evan reviews → site page.
 
 ## s(17)
-- [ ] Wall-chain elimination (10-10, `search/WALLCHAIN.md`): width-1 ring DP misses m851903's obstruction (float). Post the negative (`outreach/draft-jlevy-n17-wallchain-negative-2026-10-10.md`, needs OK + push); width-2 band DP unpriced.
+- [ ] Wall-chain elimination (10-10, `search/WALLCHAIN.md`): width-1 ring DP misses m851903's obstruction (float). Negative posted as jlevy#494; width-2 band DP unpriced.
 - [ ] Idea B (10-10, unstarted): stationarity / monotonicity-test pruning as the "non-margin argument" for n17 capture (X-052 §2.8 soft directions); theory + cheap pilot.
 - [ ] s(17): pure closed covers are at their limit (exact ceiling ν_f(4.660) ≥ 17.0447, `CEILINGS_17_20.md`); further lower-bound gains need rule atoms (WISHLIST N15).
 - [ ] Techniques from jlevy/Kleddamag/Guzhou (`notes/jlevy-s17-techniques.md` §2): rule atoms as LP columns, near-tight cells as exact LP rows gmpy2 in exact checkers.  s(17) exact: their PR #307 is far ahead and wand125 built its independent check (jlevy PR #410): not ours to do.
