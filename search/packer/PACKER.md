@@ -1366,3 +1366,30 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   of the control's per-replicate range; otherwise "no difference resolved".
   Not this test (Evan 10-11): "can you find the other funnels" (a holdout by funnel / kind; date holdouts may need to go
   back to ~40 known points); other n (X16).
+
+* **Census v2, result** (10-11, 17:51; evaluated against the pre-registration above, unchanged).  8 runs x 1.00 measured
+  CPU-h, all `ok`.  `census_v2.py certify`: 7,779 new entries, 183 unlabelled sub-11 sides (24 certified, 156 not-min, 3
+  unresolved; 50 s, no descend).  `census_v2.py report` (`runs/census_v2/report.json`):
+
+  | arm | withheld / CPU-h | ratio vs control (95 % CI) | per rep | within 1e-3 of the record | record found (s) | new | not-min share of sides |
+  |---|---|---|---|---|---|---|---|
+  | control | 110 | — | 96, 124 | 12, 14 | 81, 542 | 0, 2 | 14 %, 14 % |
+  | melt | 101 | 0.91 (0.75-1.11) | 107, 94 | 16, 10 | 253, 425 | 2, 3 | 19 %, 15 % |
+  | finish | 84 | 0.76 (0.62-0.93) | 70, 97 | 11, 11 | 3360, 592 | 0, 2 | 4 %, 10 % |
+  | far | 82 | 0.75 (0.61-0.92) | 88, 76 | 3, 2 | no, no (best 10.99679327 = best visible; 10.99688984) | 8, 6 | 27 %, 14 % |
+
+  Against the rule: **control** 110 / CPU-h, inside the predicted 40-120 (top end).  **melt**: no difference resolved
+  (prediction 0.8-1.25 held).  **finish**: CI excludes 1 but replicate 97 lies inside control's 96-124, so no difference
+  resolved; leaning lower, as predicted (0.7-1.1).  Not-min share lower (4-10 % vs 14 %), as predicted.  It also archived
+  fewer distinct sides (146, 230 vs 248, 319).  Not adopted: it cleans up output but finds no more minima.  **far**:
+  resolved lower (CI excludes 1; both replicates below 96).  The "one funnel" prediction **failed**: no replicate reached the
+  withheld record in 1 h, and of the 34 withheld minima within 1e-3 of the record far re-found 3 and 2 vs control's 12 and 14.  The
+  alternative prediction held: 14 genuinely new minima vs control's 2.  But all 14 sit at 10.9994-10.99999, the shallow
+  edge just under 11.  These are new shallow minima, not a new deep family.
+  Coverage: control r0 / r1 overlap 70 → Lincoln-Petersen ~170 withheld minima reachable from random visible starts.
+  All 8 runs together found 224 / 370, and far found 31 that none of the 6 other runs found.  So catchability depends on
+  the start region: the population is heterogeneous and that estimate is too low.  146 withheld minima were never re-found
+  in 8 CPU-h.  New certified minima: control 1 / CPU-h (C08 confirmed in measured units).  The explorer re-finds withheld
+  minima ~100x faster than it finds new ones, so the low live rate (X02) is mostly saturation of what these starts reach,
+  not slowness.  Next ideas (not run): starts drawn from under-covered regions (far-type parents, Evan's distance rule) for
+  new minima; "can you find the other funnels" holdout.
