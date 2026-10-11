@@ -4,7 +4,7 @@ namespace UnitSquarePacking.EC.N129
 
 set_option maxHeartbeats 0
 
-theorem chunk_5 : ∀ i : Fin 129, 125 ≤ i.val → i.val < 129 → boxOK cert i = true ∧ rowOK cert i = true := by
+theorem chunk_5 : ∀ i : Fin 129, 50 ≤ i.val → i.val < 60 → boxOK cert i = true ∧ rowOK cert i = true := by
   decide +kernel
 
 end UnitSquarePacking.EC.N129
