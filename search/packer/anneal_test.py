@@ -12,7 +12,7 @@ from jobpool import run_jobs
 import mcmin
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-AN = os.path.join(HERE, 'target-dev/release/anneal')
+AN = os.path.join(HERE, 'target/release/anneal')
 FQ = os.path.join(HERE, 'target/release/fq')
 
 # variant -> anneal args (schedule over progress t: bP = bp0 (bp1/bp0)^t; r = 0.5 (1 - clamp((t-t0)/(t1-t0)))^p)

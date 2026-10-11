@@ -16,9 +16,7 @@ from .packing import Packing
 
 H = 0.5
 HERE = os.path.dirname(os.path.abspath(__file__))
-ANNEAL = os.path.join(HERE, '..', 'target-dev', 'release', 'anneal')
-if not os.path.exists(ANNEAL):
-    ANNEAL = os.path.join(HERE, '..', 'target', 'release', 'anneal')
+ANNEAL = os.path.join(HERE, '..', 'target', 'release', 'anneal')   # current src (10-11; target-dev was a 10-08 build)
 
 
 def draw(spec, rng):

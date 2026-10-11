@@ -10,7 +10,7 @@ that grades a change in minutes on frozen proposals.  Modularity is the means; c
 copying, one name per packing) is the payoff.
 
 ## Pieces (`search/packer/pk/`, CLI `pk.py`)
-1. **Store** (`pk/store.py`, sqlite at `runs/store.sqlite`, gitignored).  One row per packing: n, s, coords (f64 blob),
+1. **Store** (`pk/store.py`, sqlite at `search/packer/runs/store.sqlite`, gitignored).  One row per packing: n, s, coords (f64 blob),
    source / finder / ref (commit, issue, run path), parent, status (raw < screened < polished < certified | not-min |
    infeasible), S_exact, fp, D4-canonical hash (dedupe), tags.  A `frontier` table: best known per n (register + pending
    issues + ours).  Importers: any file format (`import_ext.read_any`), register witnesses, pending-issue cert repos,

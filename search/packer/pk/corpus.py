@@ -24,21 +24,24 @@ from pk.store import Store
 from pk.packing import Packing
 from pk import moves
 from pk.engine import QOpt, SCREEN, POLISH
+from dataclasses import replace
 from pk.pipeline import Policy, Known, evaluate
 
 ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'runs', 'corpus')
 
+R1008 = Policy(same=1e-6)    # explore.py 10-08 recipe (screen-return test); every variant below except 'full' is relative to it
+
 VARIANTS = {
-    'base': Policy(),                                             # explore.py 10-08 recipe
-    'staged20': Policy(stage_pit=20),                             # chunked polish with late-return
-    'staged50': Policy(stage_pit=50),
-    'same1e5': Policy(same=1e-5),                                 # looser screen-return test
-    'nolines': Policy(grid_check=False),
-    'loosen1': Policy(loosen=(1.0,)), 'loosen102': Policy(loosen=(1.02,)), 'loosen105': Policy(loosen=(1.05,)),
-    'loosen110': Policy(loosen=(1.10,)),
-    'mu1': Policy(screen=SCREEN.but(mu0=1.0)), 'mu100': Policy(screen=SCREEN.but(mu0=100.0)),
-    'pit0': Policy(screen=SCREEN.but(pit=0)), 'pit30': Policy(screen=SCREEN.but(pit=30)),
-    'full': Policy(same=0.0),                                     # polish everything (reference for recall)
+    'base': R1008,
+    'staged20': replace(R1008, stage_pit=20),                     # chunked polish with late-return
+    'staged50': replace(R1008, stage_pit=50),
+    'same1e5': replace(R1008, same=1e-5),                         # looser screen-return test
+    'nolines': replace(R1008, grid_check=False),
+    'loosen1': replace(R1008, loosen=(1.0,)), 'loosen102': replace(R1008, loosen=(1.02,)),
+    'loosen105': replace(R1008, loosen=(1.05,)), 'loosen110': replace(R1008, loosen=(1.10,)),
+    'mu1': replace(R1008, screen=SCREEN.but(mu0=1.0)), 'mu100': replace(R1008, screen=SCREEN.but(mu0=100.0)),
+    'pit0': replace(R1008, screen=SCREEN.but(pit=0)), 'pit30': replace(R1008, screen=SCREEN.but(pit=30)),
+    'full': Policy(same=0.0),                                     # polish everything (reference for recall; = Policy())
 }
 
 

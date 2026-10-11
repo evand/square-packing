@@ -16,7 +16,8 @@ class Policy:
     screen: QOpt = SCREEN
     polish: QOpt = POLISH
     smax_above_k: float = 0.05               # stepping-stone ceiling: k + this
-    same: float = 1e-6                       # screened side within this of a known basin = return (no polish)
+    same: float = 0.0                        # screened side within this of a known basin = return (no polish); 0 = polish
+                                             # everything (10-09 bench c110a: the 10-08 value 1e-6 lost ~half the new basins)
     pol_above: float | None = None           # polish only if screened side < best + this (None: always)
     stage_pit: int = 0                       # > 0: polish in chunks of this many SLP iterations, checking known basins
     late_same: float = 1e-7                  # staged polish: within this of a known basin (and stalled) = late-return

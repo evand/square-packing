@@ -30,23 +30,32 @@ def mv_bigkick(s, sq, rng, a):
     return [(x + rng.gauss(0, sig), y + rng.gauss(0, sig), t + rng.gauss(0, 20 * sig)) for x, y, t in sq], f'bigkick {sig:.3f}'
 
 
-ANNEAL = os.path.join(HERE, 'target-dev/release/anneal')
+ANNEAL = os.path.join(HERE, 'target/release/anneal')   # current src (10-11; was target-dev, a 10-08 build)
+
+
+def melt_side(s, sq, rng, a):
+    """Regional melt (anneal melt): squares within R of a random square get rounded corners (up to rmax), hard-particle MC
+    at high pressure around them, then squared up again; large but local, non-destructive rearrangement.
+    Returns (side, squares, desc): the NPT box changes size, so the side matters (falls back to bigkick on failure)."""
+    i = rng.randrange(len(sq))
+    rad, rmax = rng.uniform(1.5, 3.5), rng.uniform(0.05, 0.2)
+    with tempfile.TemporaryDirectory() as tmp:
+        mcmin.write_deg(f'{tmp}/in.txt', s, sq)
+        r = subprocess.run([ANNEAL, 'melt', '--in', f'{tmp}/in.txt', '--out', f'{tmp}/out.txt', '--cx', str(sq[i][0]), '--cy', str(sq[i][1]),
+                            '--rad', f'{rad:.3f}', '--rmax', f'{rmax:.3f}', '--sweeps', '3000', '--bp', '2000',
+                            '--seed', str(rng.randrange(1 << 30))], capture_output=True, text=True, timeout=300)
+        if r.returncode != 0 or not os.path.exists(f'{tmp}/out.txt'):
+            sq2, desc = mv_bigkick(s, sq, rng, a)
+            return s, sq2, 'melt failed ' + desc
+        s2, sq2 = mcmin.load_deg(f'{tmp}/out.txt')
+    return s2, sq2, f'melt R{rad:.2f} r{rmax:.2f} s{s2:.5f}'
 
 
 def mv_melt(s, sq, rng, a):
-    """Regional melt (anneal melt): squares within R of a random square get rounded corners (up to rmax), hard-particle MC
-    at high pressure around them, then squared up again; large but local, non-destructive rearrangement."""
-    tmp = tempfile.mkdtemp()
-    i = rng.randrange(len(sq))
-    rad, rmax = rng.uniform(1.5, 3.5), rng.uniform(0.05, 0.2)
-    mcmin.write_deg(f'{tmp}/in.txt', s, sq)
-    r = subprocess.run([ANNEAL, 'melt', '--in', f'{tmp}/in.txt', '--out', f'{tmp}/out.txt', '--cx', str(sq[i][0]), '--cy', str(sq[i][1]),
-                        '--rad', f'{rad:.3f}', '--rmax', f'{rmax:.3f}', '--sweeps', '3000', '--bp', '2000',
-                        '--seed', str(rng.randrange(1 << 30))], capture_output=True, text=True, timeout=300)
-    if r.returncode != 0 or not os.path.exists(f'{tmp}/out.txt'):
-        return mv_bigkick(s, sq, rng, a)
-    s2, sq2 = mcmin.load_deg(f'{tmp}/out.txt')
-    return sq2, f'melt R{rad:.2f} r{rmax:.2f}'
+    """melt_side without the side (2-tuple move interface for polish_replay / polish_trace / mcmin-style callers).
+    Lossy: the anneal's box size is dropped.  explore.work uses melt_side."""
+    _, sq2, desc = melt_side(s, sq, rng, a)
+    return sq2, desc
 
 
 def _axis(t, tol=3.0):
@@ -205,15 +214,24 @@ def work(job):
             prop, desc = MOVES['kick'](s, sq, rng, A); desc = 'ashallow failed ' + desc
         else:
             s = float(q.s); prop = q.tuples(); desc = f'ashallow s{s:.5f}'
+    elif kind == 'melt':                    # regional NPT melt: the box changes size, keep the anneal's side
+        s, prop, desc = melt_side(s, sq, rng, A)
     else:
         prop, desc = MOVES[kind](s, sq, rng, A)
-    tmp = tempfile.mkdtemp()
+    with tempfile.TemporaryDirectory() as tmp:
+        return _screen_polish(s, prop, kind, desc, rng, k, known_sides, same, smax, pol_above, pextra, tmp,
+                              mate if kind == 'cross2' and cands else None)
+
+
+def _screen_polish(s, prop, kind, desc, rng, k, known_sides, same, smax, pol_above, pextra, tmp, mate):
+    """Screen, classify, (maybe) full polish, grid check, in the scratch dir `tmp` (removed by the caller)."""
+    from layout import full_lines
     loosen = rng.choice(('1.0', '1.02', '1.05'))
     t0 = time.time()
     hop.EXTRA[:] = ['--loosen', loosen]
     r = hop.quench(s, prop, tmp, extra=('--pit', '8', '--flip-top', '0'))
     out = dict(kind=kind, desc=desc, loosen=loosen)
-    if kind == 'cross2' and cands:
+    if mate is not None:
         out['mate'] = mate                   # archive path of the mate (lineage analysis: own lineage or borrowed?)
     if r is None:
         return dict(out, status='fail', sec=time.time() - t0)
@@ -347,10 +365,13 @@ class Archive:
 
 def report(out):
     E = [json.loads(l) for l in open(f'{out}/archive.jsonl')]
-    k = math.ceil(math.sqrt(110))
+    with open(os.path.join(out, os.path.basename(E[0]['path']))) as f:    # n from the first archive entry (was 110 hard-coded)
+        n = int(f.readline().split()[0])
+    k = math.ceil(math.sqrt(n))
     sub = [e for e in E if e['s'] < k]
     new = [e for e in sub if not e['known']]
-    print(f'{out}: {len(E)} basins, {len(sub)} below {k} ({len(new)} not in the known 48); best {min(e["s"] for e in E):.10f}')
+    print(f'{out}: n = {n}, {len(E)} basins, {len(sub)} below {k} ({len(new)} not in the --known / --novel-ref set); '
+          f'best {min(e["s"] for e in E):.10f}')
     by = collections.Counter(tuple(e['roles']) for e in sub)
     print('  sub-k role groups (L, B, axis, other):', dict(by.most_common()))
     print('  sub-k descriptor cells:', dict(collections.Counter(tuple(e['desc']) for e in sub).most_common()))
@@ -392,6 +413,8 @@ if __name__ == '__main__':
     a = ap.parse_args()
     if a.report:
         report(a.report); raise SystemExit
+    import scratch
+    scratch.scope('explore')                 # all temp dirs of this run (workers, fq / anneal files) under one dir, removed at exit
     os.makedirs(a.out, exist_ok=True)
     k = math.ceil(math.sqrt(a.n) - 1e-12)
     known = json.load(open(f'{HERE}/runs/known{a.n}.json')) if os.path.exists(f'{HERE}/runs/known{a.n}.json') else []

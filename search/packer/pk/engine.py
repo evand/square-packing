@@ -12,7 +12,7 @@ Knobs (all in QOpt; None = fq default):
   kick, seed   gaussian kick inside fq (x, y: sigma; angle: 20 sigma degrees)
 """
 from __future__ import annotations
-import atexit, json, math, os, subprocess, time
+import atexit, threading, json, math, os, subprocess, time
 from dataclasses import dataclass, field, asdict, replace
 import numpy as np
 from .packing import Packing
@@ -102,10 +102,16 @@ class FQ:
                 self.proc.kill()
             self.proc = None
 
-    def quench(self, p: Packing, opt: QOpt = QOpt(), timeout=None) -> QResult:
+    def quench(self, p: Packing, opt: QOpt = QOpt(), timeout: float | None = 3600.0) -> QResult:
+        """One quench.  `timeout` (s, None = none) kills a hung fq child (it is restarted on the next call); the result is
+        then an error QResult with error='timeout'.  The 1 h default is a hang guard, not a budget."""
         if self.proc is None or self.proc.poll() is not None:
             self._start()
         t0 = time.time()
+        proc = self.proc
+        timer = threading.Timer(timeout, proc.kill) if timeout else None
+        if timer:
+            timer.daemon = True; timer.start()
         req = ['quench ' + ' '.join(opt.args()), f'{p.n} {float(p.s)!r}']
         req += [f'{float(x)!r} {float(y)!r} {float(a)!r}' for x, y, a in p.sq]
         try:
@@ -122,8 +128,13 @@ class FQ:
             end = self.proc.stdout.readline().strip()
             assert end == 'END', end
         except (EOFError, BrokenPipeError, json.JSONDecodeError, AssertionError, ValueError) as e:
+            timed_out = timer is not None and not timer.is_alive() and proc.poll() is not None
             self.close()
-            return QResult(None, dict(error=repr(e)[:200]), time.time() - t0)
+            err = f'timeout ({timeout:g} s)' if timed_out else repr(e)[:200]
+            return QResult(None, dict(error=err), time.time() - t0)
+        finally:
+            if timer:
+                timer.cancel()
         self.calls += 1
         q = Packing(float(s), np.array(rows, float), meta=dict(parent=p.meta.get('id')))
         return QResult(q, stats, time.time() - t0)

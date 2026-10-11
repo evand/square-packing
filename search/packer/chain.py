@@ -251,4 +251,6 @@ if __name__ == '__main__':
     if a.report:
         report(a.report)
     else:
+        import scratch
+        scratch.scope('chain')               # seed-job temp dirs under one run dir, removed at exit (explore.py scopes its own)
         main(a)

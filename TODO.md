@@ -65,7 +65,7 @@ First deliverable: a table of exact forms of S + a handful of Lean local-optimal
 ## Packings (active, 10-09)
 **10-09 evening (tooling session, Evan): new ideas give progress; evaluation exists to grade ideas fast.  Read
 `search/packer/NEEDS.md` (top section) and `search/packer/DESIGN.md` first.**  Built (`search/packer/pk/`, CLI `pk.py`):
-packing store (`runs/store.sqlite`: register, pending issues, all run archives, seed pools; `pk.py frontier / ls / get`),
+packing store (`search/packer/runs/store.sqlite`: register, pending issues, all run archives, seed pools; `pk.py frontier / ls / get`),
 `fq serve`, move registry, replay bench (`pk/corpus.py`), idea battery (`pk/battery.py`), schedule-driven annealer
 (`anneal sched`, `pk/anneal.py`), grid-crossing harness (`pk/crossing.py`), umbrella / WHAM (`pk/umbrella.py`).  Findings:
 polish everything (the return shortcut lost half the new basins); single-move reach ~0.05 matching distance; two-parent
@@ -94,7 +94,7 @@ Order (Evan, 10-08): (1) benchmark, (2) LP throughput, (3) new proposals / start
 - [ ] Duplicate-aware parent picks: weight per minimum, not per entry (copy-rich minima: 2-7 % of minima, 20-36 % of picks at 110); distance cannot tell copies apart.
 - [ ] Chain vs dedicated runs, compute-matched: resetting 6-min rounds vs continuous vs archive carried over (hypothesis: archive memory; PACKER.md Hunt 3 reading).
 - [ ] 110 census contact graphs: re-solve the ~730 older certified minima keeping contacts (~2 min); compare near-twins (e.g. 10.9968869876 / ...869).
-- [ ] (medium-low) Store backup (Evan: later; now also the Mondrian atlas source): dated sqlite `.backup` outside the repo, a few rotated copies. `runs/store.sqlite` (0.8 GB) + `runs/battery` are gitignored, no backup; runs should auto-import into the store.
+- [ ] Store backup: first one 10-11 (`sqlite .backup` + zstd, 450 MB, `~/store-backups/store-2026-10-11.sqlite.zst`, Evan copied it to Google Drive); automate (`pk.py backup` + rclone) if repeated often.  Store: `search/packer/runs/store.sqlite` (1.0 GB; a 0-byte decoy at the root `runs/` was removed 10-11).
 - [ ] Record hunt 2 (after hunt1 10-08: records 132, 155; `search/packer/PACKER.md` end): second pass for every n before any third (hunt1 concentrated follow-ups), new generators (126 trio) benchmarked first, more weight on interesting n (trivial-bound 90, 183, 242, 274, 308).  Live register import: `search/exact/batch/regnow/` + `inputs_live/` (refresh per hunt).  Census at 132 from `runs/hunt1` (`census_collect.py`) when cheap.
 - [ ] s(110) write-up (census 754, funnel structure, discovery curves, per-arm yields) = rewrite of `search/packer/s110-landscape.md`'s census section.
 - [ ] exactsolve should snap near-axis corner-loaded squares itself (the n = 292 failure, `search/packer/s292.md`); 12/866 cen7 outputs unresolved.

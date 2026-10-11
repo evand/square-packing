@@ -1209,3 +1209,19 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
     is 1.0 new / proc-h, not 5.7: the census is close to saturated for this explorer (or the 30-min novelty runs differ).
     Donors 0 in 3 proc-h vs baseline 1.0 / proc-h: below the baseline, but small counts (P(0 | rate 1) ~ 0.05).  Counter-
     example to "every new technique adds a pile of sub-11 packings" at 110, at this scale.
+
+## Review + first fixes (10-11; `REVIEW-2026-10-11.md`)
+* Review (architecture, methods ledger, claims audit, external scan) saved as `REVIEW-2026-10-11.md`; its section 5 is the
+  pre-run fix list.  Store backed up (TODO).
+* **Melt arm was broken in the explorer since 10-08**: `anneal melt` is NPT and returns a new box side (e.g. 10.997 -> 11.100
+  in a smoke test), `explore.mv_melt` dropped it and the screen quenched the melted coordinates in the parent's box.  Every
+  explorer `melt` result before 10-11 (be_melt +0.055, hunt recipes with `--melt`) measured that version; `pk.moves.melt`
+  (battery / corpus) was right.  Fixed: `explore.melt_side` keeps the side; `mv_melt` stays as the lossy 2-tuple wrapper.
+* `pk.pipeline.Policy.same` default 1e-6 -> 0 (polish everything, as explore.py since 10-09); `pk/corpus.py` variants pinned
+  to an explicit `R1008 = Policy(same=1e-6)` so old bench names keep their meaning.
+* Anneal binary: explorer and `pk/moves.py` used `target-dev/release/anneal` (10-08 working-tree build; it does have `melt`);
+  now `target/release/anneal` (current src).
+* Temp dirs: explore.py / chain.py now run under `scratch.scope()` (TMPDIR = one `/tmp/pk-<name>-*` dir, removed at exit and on
+  SIGTERM / SIGHUP); `explore.work` uses a TemporaryDirectory.  Cleared 769k day-old leftover `tmp*` dirs from /tmp (+24 GB free).
+* `pk.engine.FQ.quench(timeout=)` now enforced (watchdog kills the child; error 'timeout'; default 1 h hang guard).
+* `explore.py --report` reads n from the archive (was 110 hard-coded).  0-byte decoy `runs/store.sqlite` at the repo root removed.
