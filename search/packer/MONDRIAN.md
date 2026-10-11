@@ -91,8 +91,11 @@ uprights: no interlocking.  #481's pieces are mostly OFF the atlas frontier (259
 not raw excess.  The atlas's Pareto prune would even drop their 259 s(50)_r5 piece (a same-m strictly smaller crop
 exists).  Next: diversity atlas, rank by squeeze gain, blind test (TODO).
 
-## s(126) record reads as a corner-overlap composition (10-11, Evan's reading; counts and side consistent, construction route unknown)
-ry-xu's s(126) = 7.5 + 3 sqrt 2 = Kingbird s(85b) + 2.  s(85b) is a 6x6 diamond at 45 deg in uprights; T1 with an L of
-2 rows + 2 columns gives 85 + 22 + 18 = 125.  The record's 126th comes from a 2-square tilted corner piece at UR
-(53.3 / 64.9 deg) whose rectangle overlaps the upright-only corner of the s(85b) box; its diamond has the top diagonal
-row slid by one lattice step.  Our pair screen requires a guillotine cut, so it cannot generate this (TODO).
+## s(126) record = s(85b) + s(5), corner overlap, grid fill (10-11, Evan's reading: confirmed by rebuild)
+ry-xu's s(126) = 7.5 + 3 sqrt 2 = Kingbird s(85b) + 2.  Rebuild: tilted squares of s(85b) (36 at 45 deg) at LL and of
+s(5) (1) at UR in the box 7.5 + 3 sqrt 2, all uprights re-filled by the MILP -> 126, feasible as composed (pen 2e-9),
+fq -> 11.7426406871 = the record.  Same with s(85c) (34 tilted), in 4 of the 8 orientations; the other 4 give 125.  The
+piece boxes overlap by 0.7071 x 0.7071 at the corner (widths 9.7426 + 2.7071 = 12.4497 > S): the overlap holds only
+s(85b) uprights, which the fill re-places.  The record's 53 / 65 deg corner squares and slid diamond row are a
+non-rigid drift of the same side.  Our piece model and fill handle it already; only the pair screen (guillotine:
+a_w + b_w <= S) excludes it.
