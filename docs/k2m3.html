@@ -126,11 +126,11 @@ section>*{min-width:0}
   that one check to every <span class="mono">k</span>.</p>
   <p class="status"><b>Status.</b> Working in public: an exact certificate checked by two separately written exact
   checkers (ours and wand125's, below), adversarially reviewed by six independent agents with no errors found;
-  jlevy/squares replayed both checkers in full and lists the theorem as confirmed (<a href="https://jlevy.github.io/squares/all-results.html#t-064">T-064</a>); in Lean everything except the tilted squares of the 7 × 7 box (<span class="mono">ValidTilt7</span>) is kernel-checked. Independently
-  re-checked over the whole pose space by <a href="https://github.com/wand125/valid7-independent-check">wand125's separately written checker</a> (2 Oct 2026; its record check rerun and its method read here). Not yet externally reviewed or fully formalised.</p>
+  jlevy/squares replayed both checkers in full and lists the theorem as confirmed (<a href="https://jlevy.github.io/squares/all-results.html#t-064">T-064</a>); in Lean the whole theorem is now kernel-checked with no hypothesis: our reductions, plus wand125's kernel checker for the tilted squares of the 7 × 7 box (<span class="mono">ValidTilt7</span>; merged 10 Oct 2026; its 9,800 generated root modules were built by wand125 and not rebuilt here). Independently
+  re-checked over the whole pose space by <a href="https://github.com/wand125/valid7-independent-check">wand125's separately written checker</a> (2 Oct 2026; its record check rerun and its method read here). Not yet externally reviewed.</p>
   <div class="tags">
     <span class="tag ok">two exact checkers</span>
-    <span class="tag ok">reduction to the tilted run kernel-checked in Lean</span>
+    <span class="tag ok">kernel-checked in Lean, no hypothesis (with wand125)</span>
     <span class="tag ok">independently re-checked (wand125)</span>
     <span class="tag open">not peer reviewed</span>
     <a class="tag neutral" href="https://github.com/evand/square-packing/tree/main/certificates/k2m3">Certificate &amp; checker on GitHub →</a>
