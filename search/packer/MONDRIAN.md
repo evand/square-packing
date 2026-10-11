@@ -99,3 +99,18 @@ piece boxes overlap by 0.7071 x 0.7071 at the corner (widths 9.7426 + 2.7071 = 1
 s(85b) uprights, which the fill re-places.  The record's 53 / 65 deg corner squares and slid diamond row are a
 non-rigid drift of the same side.  Our piece model and fill handle it already; only the pair screen (guillotine:
 a_w + b_w <= S) excludes it.
+
+## Corner-overlap sweep (`mondrian.py overlap`, 10-11)
+Best feasible non-grid store packing s(m), m = 5..320 (150 pieces; the other m have only grids), at LL in 8
+orientations; small s(k), k in {5, 10, 11, 17-19, 26-29, 37-41}, at UR; sides s(m) + d and s(k) + d, d = 1..3, only
+where the boxes overlap, S <= 18.2.  Screen: exact rigid count (A's squares not hit by B, plus B, plus the
+2 floor(S - s_m) floor(S - s_k) uprights) >= n - 2; then MILP fill, fq + polish near the frontier.  2 procs, 2.5 h:
+**43,388 fills, 879 candidates, 0 wins, 164 ties** (10, 38, 39, 41, 51, 67, 104, 125, 126, 151, 174, 201, 204, 231,
+234, 262, 299: records of this form, many reached several ways).  The closest non-ties are the same sides to 1e-9 ..
+1e-5 (fq not fully converged).  So the frontier is closed under this construction with store pieces.
+MILP minus rigid count: mostly 0, +1 common (the outer row/column of A has room to slide past the overlap), +2 rare,
+negative where the rigid count assumes a layout the fill cannot keep.
+Sides-only screen (no fill): with gain 0 it gives 0 wins / 1 tie; with gain +1, 7 "wins" (18, 85, 175, 176, 202, 232,
+263), none of which materialised.  For s(5) at d = 2 the gain tracks A's free length in the outer row/column at the
+overlap corner (s(85b): 0.743 >= w = 0.707 -> +1; s(52), s(126), s(149), s(202): ~0 -> 0); not yet tested as a
+predictor for other k / d.

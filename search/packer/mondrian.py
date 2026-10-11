@@ -903,6 +903,128 @@ def cmd_selftest(a):
     sys.exit(0 if ok else 1)
 
 
+def _overlap_job(args):
+    """One big piece (frontier s(m), tilted squares at LL, 8 orientations) x every small piece (s(k), tilted at UR) x
+    sides S where the two boxes overlap at the corner (s_m + s_k > S): drop tilted conflicts (both orders), greedy
+    proxy screen, exact MILP fill, fq + polish when the count's frontier is within reach."""
+    m, big, smalls, F, a = args
+    from pk.engine import FQ, QOpt, POLISH
+    from pk.packing import Packing
+    sq, s = big
+    out, eng, nmilp, done, gains = [], None, 0, set(), []
+    Fn = sorted(F)
+    A_all, seen = [], set()
+    for o in range(8):
+        q = orient(sq, s, o)
+        key = q[is_tilted(q[:, 2])].round(6).tobytes()
+        if key not in seen:
+            seen.add(key); A_all.append((o, q))
+    for k, (sk, ssk) in smalls.items():
+        B_all, seenB = [], set()
+        for ob in range(8):
+            q = orient(sk, ssk, ob)
+            kb = q[is_tilted(q[:, 2])].round(6).tobytes()
+            if kb not in seenB:
+                seenB.add(kb); B_all.append((ob, q))
+        sides = set()
+        for d in range(1, a.kmax + 1):
+            for base in (s, ssk):
+                S = base + d
+                if S > max(s, ssk) + 1e-9 and s + ssk > S + 1e-9 and S <= a.smax:
+                    sides.add(round(S + 1e-9, 12))
+        for S in sorted(sides):
+            # smallest n whose frontier is above S - margin: the count we must reach to matter
+            need = next((n for n in Fn if F[n][0] > S - a.margin), None)
+            if need is None:
+                continue
+            for o, qa in A_all:
+                TA = qa[is_tilted(qa[:, 2])]
+                for ob, qb in B_all:
+                    QB = qb.copy(); QB[:, :2] += S - ssk
+                    TB = QB[is_tilted(QB[:, 2])]
+                    # screen: the rigid composition, exactly counted: both pieces whole (A's squares hit by B
+                    # dropped) + the two L arms of uprights, floor(S - s_m) x floor(S - s_k) each.  s(126): 125, the
+                    # MILP re-fill around the tilted squares adds the rest (hence the slack)
+                    rigid = len(_drop_conflicts(QB, qa)) + len(QB) + 2 * int(fl(S - s) * fl(S - ssk))
+                    if rigid < need - a.slack:
+                        continue
+                    for order in ('A', 'B'):
+                        T = np.r_[TA, _drop_conflicts(TA, TB)] if order == 'A' else np.r_[_drop_conflicts(TB, TA), TB]
+                        nmilp += 1
+                        L = exact_fill(T, S, time_limit=10)
+                        c = len(L)
+                        gains.append(c - rigid)
+                        if c < need or c not in F:
+                            continue
+                        lk = (round(S, 9), np.round(L[np.lexsort((L[:, 1], L[:, 0]))], 6).tobytes())
+                        if lk in done:          # same layout from another orientation / drop order
+                            continue
+                        done.add(lk)
+                        rec = dict(m=m, k=k, S=S, o=o, ob=ob, order=order, count=c, frontier=F[c][0])
+                        if eng is None:
+                            eng = FQ()
+                        p = Packing(S, L)
+                        r = eng.quench(p, QOpt(), timeout=60)
+                        r2 = eng.quench(r.p, POLISH, timeout=60) if r.ok else r
+                        rec['fq'] = r2.s if r2.ok else (r.s if r.ok else math.inf)
+                        rec['pen'] = p.max_pen()
+                        if r2.ok and rec['fq'] < F[c][0] - 1e-9:
+                            rec['sq'] = np.asarray(r2.p.sq).tolist()
+                        out.append(rec)
+    if gains:
+        print(f'  m={m}: MILP - rigid gain histogram {dict(zip(*np.unique(gains, return_counts=True)))}', flush=True)
+    return m, out, nmilp
+
+
+def cmd_overlap(a):
+    """Corner-overlap sweep (10-11, after s(126) = s(85b) + s(5)): frontier s(m) at LL + small s(k) at UR."""
+    from pk.store import Store
+    st = Store()
+    F = {n: v for n, v in frontier_best().items() if n <= a.nmax + 40}
+
+    def best_feasible(n):
+        for r in st.query(n=n, nongrid=True, limit=5):
+            p = st.get(r['id'])
+            if p.max_pen() <= 1e-9:
+                return np.array(p.sq), float(p.s)
+        return None
+    smalls = {}
+    for k in a.small:
+        b = best_feasible(k)
+        if b is not None and is_tilted(b[0][:, 2]).any():
+            smalls[k] = b
+    print(f'small pieces: {sorted(smalls)}', flush=True)
+    jobs = []
+    for m in range(a.mmin, a.mmax + 1):
+        b = best_feasible(m)
+        if b is None or not is_tilted(b[0][:, 2]).any():
+            continue
+        jobs.append((m, b, smalls, F, a))
+    print(f'{len(jobs)} big pieces m = {a.mmin}..{a.mmax}', flush=True)
+    t0, allrec, tot = time.time(), [], 0
+    os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
+    with ProcessPoolExecutor(a.procs) as ex:
+        for m, recs, nm in ex.map(_overlap_job, jobs):
+            tot += nm
+            allrec += recs
+            for r in recs:
+                tag = 'WIN' if r['fq'] < r['frontier'] - 1e-9 else ('tie' if r['fq'] < r['frontier'] + 1e-9 else '')
+                if tag or r['fq'] < r['frontier'] + a.margin:
+                    print(f"  m={m} k={r['k']} S={r['S']:.6f} o={r['o']}/{r['ob']} {r['order']}: count {r['count']} "
+                          f"-> fq {r['fq']:.10f} vs frontier {r['frontier']:.10f} ({r['fq'] - r['frontier']:+.2e}) {tag}",
+                          flush=True)
+            print(f'm={m}: {nm} fills, {len(recs)} reach a count of interest ({time.time() - t0:.0f} s)', flush=True)
+            json.dump(allrec, open(a.out, 'w'))
+    wins = [r for r in allrec if r['fq'] < r['frontier'] - 1e-9]
+    ties = [r for r in allrec if abs(r['fq'] - r['frontier']) <= 1e-9]
+    print(f'summary: {tot} fills, {len(allrec)} candidates, {len(ties)} ties, {len(wins)} wins '
+          f'({time.time() - t0:.0f} s)')
+    for r in sorted(wins, key=lambda r: r['fq'] - r['frontier']):
+        print(f"  WIN n={r['count']}: {r['fq']:.10f} vs {r['frontier']:.10f}  (s({r['m']}) + s({r['k']}), S {r['S']:.6f})")
+    seen = sorted({(r['count'], r['m'], r['k']) for r in ties})
+    print('  ties (n, m, k):', seen)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest='cmd', required=True)
@@ -950,8 +1072,20 @@ def main():
     p = sub.add_parser('selftest', help='positive control: rebuild #481 n = 259 (PASS/FAIL, exit status)')
     p.add_argument('--procs', type=int, default=2)
     p.add_argument('--budget', type=float, default=120)
+    p = sub.add_parser('overlap', help='corner-overlap sweep: frontier s(m) at LL + small s(k) at UR, boxes overlapping')
+    p.add_argument('--mmin', type=int, default=5)
+    p.add_argument('--mmax', type=int, default=320)
+    p.add_argument('--nmax', type=int, default=324)
+    p.add_argument('--small', type=int, nargs='*', default=[5, 10, 11, 17, 18, 19, 26, 27, 28, 29, 37, 38, 39, 40, 41])
+    p.add_argument('--kmax', type=int, default=3, help='sides s_m + d and s_k + d, d = 1..kmax')
+    p.add_argument('--smax', type=float, default=18.2)
+    p.add_argument('--margin', type=float, default=0.02, help='counts whose frontier is above S - margin are of interest')
+    p.add_argument('--slack', type=int, default=2, help='the rigid count may undercount the MILP by this much (observed 0-2)')
+    p.add_argument('--procs', type=int, default=2)
+    p.add_argument('--out', default=os.path.join(HERE, 'runs/mondrian/overlap.json'))
     a = ap.parse_args()
-    {'selftest': cmd_selftest, 'atlas': cmd_atlas, 't1': cmd_t1, 'compose': cmd_compose, 'replicate': cmd_replicate}[a.cmd](a)
+    {'selftest': cmd_selftest, 'atlas': cmd_atlas, 't1': cmd_t1, 'compose': cmd_compose, 'replicate': cmd_replicate,
+     'overlap': cmd_overlap}[a.cmd](a)
 
 
 if __name__ == '__main__':
