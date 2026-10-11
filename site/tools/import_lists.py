@@ -80,6 +80,40 @@ def summary(a):
             'min_gap': a['near_misses'][0]['gap'] if a['near_misses'] else None}
 
 
+SAME_TOL = 1e-6
+
+
+def same_drawing(A, B):
+    """True when two exported packings are the same drawing: equal side (to SAME_TOL) and, under one of the 8
+    symmetries of the container, every square of A has a square of B within SAME_TOL in centre and in angle mod 90."""
+    s = float(A['s'])
+    if abs(s - float(B['s'])) > SAME_TOL or len(A['squares']) != len(B['squares']):
+        return False
+    from scipy.spatial import cKDTree
+    PA = [(float(x), float(y), float(t) % 90) for x, y, t in A['squares']]
+    c = s / 2
+    for g in range(8):
+        PB = []
+        for x, y, t in B['squares']:
+            x, y, t = float(x) - c, float(y) - c, float(t)
+            for _ in range(g % 4):
+                x, y, t = -y, x, t + 90
+            if g >= 4:
+                x, t = -x, -t
+            PB.append((x + c, y + c, t % 90))
+        tree = cKDTree([(x, y) for x, y, _ in PB])
+        ok = True
+        for x, y, t in PA:
+            d, j = tree.query((x, y))
+            da = abs(t - PB[j][2]); da = min(da, 90 - da)
+            if d > SAME_TOL or da > SAME_TOL:
+                ok = False
+                break
+        if ok:
+            return True
+    return False
+
+
 def ev_date(e):
     y, m, d = map(int, e['date'].split('-'))
     return {'year': y, 'month': m, 'day': d, 'approx': False, 'text': f'{MONTHS[m]} {d}, {y}'}
@@ -104,6 +138,7 @@ def main():
     idx['files'] = {k: v for k, v in idx['files'].items() if not v.get('origin')}
     for v in idx['files'].values():
         v.pop('alt_relation', None)
+        v.pop('dup_of', None)
     for n, r in list(idx['records'].items()):
         if r.get('origin'):
             del idx['records'][n]
@@ -115,6 +150,8 @@ def main():
         for d in TL[n]:
             if 'was_record' in d:
                 d['is_record'] = d.pop('was_record')
+            if 'catalogue_file' in d:
+                d['file'] = d.pop('catalogue_file')
 
     # ---- the packings ----
     jobs, files = [], {}
@@ -283,6 +320,46 @@ def main():
                       'events': [{'verb': verb, 'who': who, 'date': dt, 'text': text}], 'prose': text, 's_tex': None,
                       'rigid': False, 'date': [dt['year'], dt['month']], 'is_record': bool(step['current']),
                       'origin': 'lists', 'url': ev['url'], 'label': ev['label']})
+
+    # ---- one packing, one entry: where our record drawing is the catalogue's record drawing ----
+    # (all squares within SAME_TOL in position and angle mod 90, under the best of the 8 container symmetries), the
+    # catalogue's dated timeline entry points at our certified file and the catalogue SVG is marked dup_of (Explore
+    # and Compare skip it; a ?p= link still opens it).  The regularization level is relative to the lists' input
+    # (the exact batch), not to the drawing a reader sees, so it can say "rattlers only" for an identical drawing.
+    ndup = 0
+    for n in range(1, NMAX + 1):
+        r = idx['records'].get(str(n)) or {}
+        key = r.get('best')
+        if not key or not key.startswith('best-'):
+            continue
+        # the catalogue's record entry first, then any other catalogue drawing of n at the record side (the plain
+        # grids, e.g. square-12.svg, are linked from Ellsworth's pages without an entry)
+        side = float(idx['files'][key]['s'])
+        cands = [r['svg']] if r.get('svg') in idx['files'] else []
+        cands += sorted(k for k, f in idx['files'].items() if not f.get('origin') and f.get('n_parsed') == n
+                        and k not in cands and f.get('s') and abs(float(f['s']) - side) < SAME_TOL)
+        cat = None
+        for c in cands:
+            if idx['files'][c].get('n_parsed') != n:
+                continue
+            try:
+                A = json.load(open(os.path.join(W, 'p', c.replace('.svg', '.json'))))
+                B = json.load(open(os.path.join(W, 'p', key)))
+            except (OSError, ValueError):
+                continue
+            if same_drawing(A, B):
+                cat = c
+                break
+        if not cat:
+            continue
+        idx['files'][cat]['dup_of'] = key
+        idx['files'][key]['same_as'] = cat
+        for d in TL.get(str(n), []):
+            if d['file'] == cat:
+                d['catalogue_file'] = cat
+                d['file'] = key
+        ndup += 1
+    print(f'{ndup} record drawings identical to the catalogue drawing: listed once')
 
     json.dump(idx, open(os.path.join(W, 'index.json'), 'w'), separators=(',', ':'), ensure_ascii=False)
     json.dump(TL, open(os.path.join(W, 'timeline.json'), 'w'), separators=(',', ':'), ensure_ascii=False)

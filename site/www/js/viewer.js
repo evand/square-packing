@@ -601,13 +601,14 @@ function renderSide() {
   const certLink = c => c ? lnk(REPO + c, 'certificate') : '';
   if (meta.origin === 'raw') {
     $('srcline').innerHTML = `Drawn as posted, in double precision, so contacts are only numerically closed. ` +
-      (meta.cert ? `The posted packing is certified at this side (${certLink(meta.cert)}: the register's rational witness, converted exactly and accepted by our two exact checkers)` : `Not certified here`) +
-      `, but our exact solver could not certify it at its exact optimum (slightly smaller), so unlike the other records it has no regularized copy.`;
+      (meta.cert ? `The posted packing is certified at this side (${certLink(meta.cert)}: the poster's exact certificate, converted without rounding and accepted by our two exact checkers)` : `Not certified here`) +
+      `. It was posted after our regularized lists were made, so unlike most records it has no regularized copy yet.`;
   } else if (meta.origin === 'best' && !isRecord) {
     $('srcline').innerHTML = `Our certified, regularized copy (${certLink(meta.cert)}) of the catalogue's record, which has since been beaten: <a href="explore.html?n=${S.n}">the record</a>.`;
   } else if (meta.origin === 'best') {
     const cat = recMeta.svg && S.idx.files[recMeta.svg] && catSame ? recMeta.svg : null;
-    $('srcline').innerHTML = `Drawn from our copy of the record, certified at this side (${certLink(meta.cert)}, checked by two exact checkers) and regularized for display: ${esc(meta.level_text)}` +
+    if (meta.same_as) $('srcline').innerHTML = `Drawn from our copy of the record, certified at this side (${certLink(meta.cert)}, checked by two exact checkers). ${meta.same_as === recMeta.svg ? "It is the catalogue's own drawing of the record" : 'The catalogue draws the same packing'}, every square within 1e-6: <a href="explore.html?p=${encodeURIComponent(meta.same_as)}">${esc(meta.same_as)}</a> (David Ellsworth's <a href="https://kingbird.myphotos.cc/packing/squares_in_squares.html" target="_blank" rel="noopener">Squares in Squares</a>, after Erich Friedman).`;
+    else $('srcline').innerHTML = `Drawn from our copy of the record, certified at this side (${certLink(meta.cert)}, checked by two exact checkers) and regularized for display: ${esc(meta.level_text)}` +
       (meta.orientation && meta.orientation !== 'as source' ? `, ${esc(meta.orientation)} from the source drawing` : '') + '. ' +
       (cat ? `The catalogue's own drawing: <a href="explore.html?p=${encodeURIComponent(cat)}">${esc(cat)}</a> (David Ellsworth's <a href="https://kingbird.myphotos.cc/packing/squares_in_squares.html" target="_blank" rel="noopener">Squares in Squares</a>, after Erich Friedman).` : '');
   } else if (meta.origin === 'alt') {
@@ -672,7 +673,7 @@ function renderSide() {
 // Order: the record (our drawing), our alternates, earlier 2026 records, the catalogue's record
 // drawing, the rest of the catalogue by name.
 function variantsFor(n, keep) {
-  const files = Object.values(S.idx.files).filter(okFile).filter(f => f.n === n).map(f => f.svg);   // same rule as Compare's drawable
+  const files = Object.values(S.idx.files).filter(okFile).filter(f => f.n === n && !f.dup_of).map(f => f.svg);   // same rule as Compare's; dup_of: the catalogue drawing our record copy reproduces
   if (keep && !files.includes(keep)) files.push(keep);
   const R = S.idx.records[n] || {};
   const rank = f => { const m = S.idx.files[f] || {}; return f === R.best ? 0 : m.origin === 'alt' ? 1 : m.origin === 'step' ? 2 : f === R.svg ? 3 : 4; };

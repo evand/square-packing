@@ -256,6 +256,14 @@ public unfixed — see the Publishing section for why each one is on that list.
   picture (another n's drawing, e.g. 148 squares for n = 147) is used only when nothing of n is drawable.  Three
   index entries had `n: null` (Göbel strips page: 202_r1, 202_r2, 1867): `export.py` falls back to the parsed count.
   Checked: the two lists agree for all 387 n (simulation), and on the live pages for 12 n.
+* ✓ **One packing, one entry.**  For 114 n our record drawing *is* a catalogue drawing (every square within 1e-6, best
+  of the 8 container symmetries; `import_lists.py` `same_drawing`): 72 the catalogue's record entry (s(17): Explore
+  and Compare showed it twice, "regularized: rattlers only"), 42 a linked-only drawing (grids such as square-12.svg).
+  The catalogue file is marked `dup_of` and skipped; the record's dated timeline entry points at our certified file;
+  Explore says "It is the catalogue's own drawing", not the regularization level.  That level (`best.json`) is
+  measured against the lists' input, the exact batch, whose certificates nudge rattlers (n = 17: square 5 off by
+  1e-4 and 0.0057°), so it can say "rattlers only" for a drawing identical to the catalogue's.  30 n keep both
+  (the drawing really differs).  Explore's "drawn as posted" line no longer describes only the old n = 261 case.
 * Longer term (Evan, 10-11): unify Compare with the Bounds history and extend that history to n ≤ 324; which extra
   packings to include is then an aesthetic call.
 

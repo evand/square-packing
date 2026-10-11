@@ -53,7 +53,7 @@ async function loadN(nn, asked = nn) {
   // Catalogue drawings with no entry of their own (revisions and grids only linked from Ellsworth's pages): not in
   // timeline.json, so undated; listed after the dated history, as on Explore.
   for (const f of Object.values(IDX.files))
-    if (f.n === n && !f.origin && drawable(f.svg) && !L.some(d => d.file === f.svg))
+    if (f.n === n && !f.origin && !f.dup_of && drawable(f.svg) && !L.some(d => d.file === f.svg))
       L.push({ file: f.svg, s: +f.s, date: null, events: [], extra: 'catalogue drawing, undated (linked from Ellsworth\'s pages)' });
   // Nothing of this n is drawable, ours included (every n <= 324 has our drawing, so only larger n get here). The catalogue may still picture this n inside another
   // n's entry (n = 3), or record an s with no drawing at all (n = 585 and seven more, where
