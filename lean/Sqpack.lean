@@ -3,6 +3,9 @@ import Sqpack.Chord
 import Sqpack.ChordLine
 import Sqpack.ZeroMargin
 import Sqpack.D4
+import Sqpack.StripRect
+import Sqpack.Strip117
+import Sqpack.StripLeaf
 import Sqpack.Cover
 import Sqpack.S32Data
 import Sqpack.S32

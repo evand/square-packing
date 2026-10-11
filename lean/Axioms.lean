@@ -3,6 +3,18 @@ import Sqpack
 #print axioms SquarePacking.wall_strip_le_three_of_packing
 #print axioms SquarePacking.wall_strip_le_three_line
 #print axioms SquarePacking.wall_strip_le_three_line_of_packing
+-- strip-lemma rectangle/slab corollaries, parameterised by the strip height (Sqpack/StripRect.lean)
+#print axioms SquarePacking.wallStripBound_line
+#print axioms SquarePacking.WallStripBound.card_le_three
+#print axioms SquarePacking.slab_R4
+#print axioms SquarePacking.slab_R7
+#print axioms SquarePacking.guillotine_false
+#print axioms SquarePacking.line_sweep
+#print axioms SquarePacking.line_sweep_line
+-- wall-strip lemma at h = 117/100 by a chain certificate (Sqpack/StripChain, StripCheck, Strip117)
+#print axioms SquarePacking.Strip117.wallStripBound_117
+#print axioms SquarePacking.guillotine_false_117
+#print axioms SquarePacking.strip_leaf
 #print axioms SquarePacking.packing_le_weight_regions_choice
 #print axioms SquarePacking.sum_assign_eq_sum_counts
 -- zero-margin checker primitives (Sqpack/ZeroMargin.lean, search/RUNG2.md)

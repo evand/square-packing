@@ -26,6 +26,7 @@ First deliverable: a table of exact forms of S + a handful of Lean local-optimal
 - [ ] **Next (handoff):** site viewer done 10-10 (Explore/Compare/Overview/Bounds draw `lists/best.json`; `site/TODO.md`).  Still to do: the variants page + a short write-up with 3-5 example cases (rotation 268, slide 38, straightening 301, kept 0.8 deg column 175, coincident faces 26 / alternates 267, 302).  Then: offer the lists to jlevy for the poster (draft in `outreach/`, ask Evan).  Open: should a level-3 alternate ever be the best choice; 261 still on its old input (ry-xu's registered packing does not certify: exactsolve −4.5e-14 among redundant contacts; the site draws it as posted); novelty check of our 5 alternates against publications.
 
 ## Major: exact results
+- [ ] **s(12) strip leaf (10-11, depth-first)**: class-A 4-strip of width <= 1.90 + seam at x = 1.02 ⇒ no 12-packing; margin ~0.02.  Lean: guillotine + stitch done; now: exact region cert. `tasks/strip-leaf/`
 - [ ] k²−5 for all large k: R = w = 5 κ = 0.02 D ≈ 1.30, conditional GO, margin ≈ 0.05 (`K2M4_MARGIN.md`); box 13 pitch 0.1. Make it cheaper first: cert golf (`tasks/cert-slack/`), finer-pitch D at w = 4 (insertable shortcut dead: price ≈ 1.8, `S2_INSERTABLE.md`).
 - [ ] Seam capacity `M(∞)` (C5/R2; FRIEDMAN §8–9, `SEAM_W1.md`, `SEAM_1D.md`): `M(w) → ∞` ⇒ families give s(k²−c) = k for every c. Next: dual-side band LP w = 2, 3 (rigorous caps); wall-row + slow-variation lemmas.
 - [ ] Corner coupling (R3): does D(w) ≥ κ M(w)? Start with the corner dual at w = 1 (D = ½, corner cost ¼?).
