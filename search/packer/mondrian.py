@@ -37,23 +37,24 @@ def fl(x):
 # ---------------------------------------------------------------- sources
 
 def kingbird_sources():
-    """Ellsworth's catalogue as mirrored 09-30 (current records then + every `_r*` revision), parsed by the site."""
-    d = json.load(open(KINGBIRD))
+    """Ellsworth's catalogue: every packing sighted from source 'kingbird' (all snapshots, revisions included;
+    pk.py sync-kingbird).  Falls back to the 09-30 site mirror if the store has no catalogue rows."""
+    from pk.store import Store
+    st = Store()
+    rows = st.db.execute("SELECT p.id, min(g.ref) AS ref FROM packing p JOIN sighting g ON g.packing = p.id "
+                         "WHERE g.source = 'kingbird' AND p.status != 'infeasible' GROUP BY p.id").fetchall()
     out = []
+    for r in rows:
+        p = st.get(r['id'])
+        out.append(dict(label='kingbird:' + r['ref'].replace('.svg', ''), n=p.n, s=float(p.s), sq=np.array(p.sq)))
+    if out:
+        return out
+    d = json.load(open(KINGBIRD))
     for name, v in d.items():
         if v['errors'] or len(v['squares']) != int(v['n']):
             continue
         sq = np.array([[float(a) for a in r] for r in v['squares']])
         out.append(dict(label='kingbird:' + name.replace('.svg', ''), n=int(v['n']), s=float(v['s']), sq=sq))
-    import glob
-    for f in sorted(glob.glob(os.path.join(KB_SVG, 'new_*.svg'))):
-        name = os.path.basename(f)[4:-4]
-        if name + '.svg' in d and os.path.exists(os.path.join(KB_SVG, name + '.svg')):
-            import filecmp
-            if filecmp.cmp(f, os.path.join(KB_SVG, name + '.svg'), shallow=False):
-                continue
-        sq, s = kingbird_svg(name)
-        out.append(dict(label='kingbird:' + name + '@10-10', n=len(sq), s=s, sq=sq))
     return out
 
 
@@ -71,7 +72,9 @@ def store_sources(top_runs=30, exclude=()):
         srcs = (r['src'] or '').split(',')
         if any(s.startswith(e) for s in srcs for e in exclude):
             continue
-        ext = any(not s.startswith('run:') for s in srcs)
+        if srcs and all(s == 'kingbird' for s in srcs):
+            continue                                  # catalogue-only rows come in via kingbird_sources()
+        ext = any(not s.startswith('run:') and s != 'kingbird' for s in srcs)
         if ext or r['status'] == 'certified':
             keep[r['id']] = ','.join(sorted(set(s for s in srcs if not s.startswith('run:')))[:3]) or r['status']
         else:
@@ -404,6 +407,10 @@ def load_src(spec):
     """kingbird:<name> | store:<id> | file:<path>  ->  (sq, s)."""
     kind, _, ref = spec.partition(':')
     if kind == 'kingbird':
+        from pk import kingbird as KB
+        got = KB.latest(ref)                      # newest catalogue snapshot in the store (pk.py sync-kingbird)
+        if got is not None:
+            return got
         if os.path.exists(os.path.join(KB_SVG, 'new_' + ref + '.svg')):
             return kingbird_svg(ref)
         v = json.load(open(KINGBIRD))[ref if ref.endswith('.svg') else ref + '.svg']

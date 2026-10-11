@@ -3,6 +3,9 @@
 copying coordinates.  Store: runs/store.sqlite (env PK_STORE overrides).
 
   pk.py sync-register                      fetch jlevy register (sparse clone in runs/jlevy), import witnesses + frontier
+  pk.py sync-kingbird [--date D] [--all]   crawl Ellsworth's catalogue (all pages, incl. revisions), dated snapshot in
+                                           runs/kingbird/<date>/, parse, import with provenance (pk/kingbird.py)
+  pk.py sync-kingbird --snapshot DIR       parse + import an existing snapshot dir (no network)
   pk.py sync-pending [--issue 481 ...]     pending issues + repos from pk/pending.yaml
   pk.py import PATH... --source S [--finder F] [--ref R] [--status raw|polished|certified]
   pk.py import-run RUNDIR... [--below K]   explorer archives (parent links kept)
@@ -41,6 +44,8 @@ def main():
     ap.add_argument('--store', default=None)
     sp = ap.add_subparsers(dest='cmd', required=True)
     sp.add_parser('sync-register')
+    p = sp.add_parser('sync-kingbird'); p.add_argument('--date'); p.add_argument('--all', action='store_true')
+    p.add_argument('--snapshot'); p.add_argument('--procs', type=int, default=4)
     p = sp.add_parser('sync-pending'); p.add_argument('--issue', type=int, nargs='*')
     p = sp.add_parser('import'); p.add_argument('paths', nargs='+'); p.add_argument('--source', required=True)
     p.add_argument('--finder'); p.add_argument('--ref'); p.add_argument('--status', default='raw')
@@ -68,6 +73,13 @@ def main():
         c = sources.import_register(st, f'{d}/packing', sha[:7])
         print(f'register {sha[:7]}: {c["rows"]} frontier rows, {c["witnesses"]} witnesses ({c["new"]} new packings); '
               f'failed {c["failed"][:5]}')
+    elif a.cmd == 'sync-kingbird':
+        from pk import kingbird
+        if a.snapshot:
+            recs = kingbird.parse_snapshot(a.snapshot, a.procs)
+            kingbird.import_snapshot(st, a.snapshot, recs)
+        else:
+            kingbird.sync(st, a.date, a.all, a.procs)
     elif a.cmd == 'sync-pending':
         sources.import_pending(st, only=a.issue)
     elif a.cmd == 'import':

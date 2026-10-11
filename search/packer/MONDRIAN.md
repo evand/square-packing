@@ -57,3 +57,13 @@ Job convention (after three self-kills via `pgrep -f` / `pkill -f` matching the 
 a `setsid` fork that made `$!` wrong, and output lost behind `| tail` pipes): use `pk/jobs.py start NAME -- CMD` /
 `status` / `stop NAME` (process-group kill, pid recorded at launch, always a log file).  Never pattern-match command lines.
 Positive control: `mondrian.py selftest` (rebuilds #481 n = 259, PASS in ~20 s).
+
+## Kingbird catalogue in the store (10-10 night, Evan)
+`pk.py sync-kingbird` (`pk/kingbird.py`).  The catalogue links 862 SVGs from 10 pages (we had only crawled 8; most
+revisions are linked only from `compared2` / `compared3`).  Snapshots: `runs/kingbird/2026-09-30/` (the old site
+mirror, 549 files, imported as history) and `runs/kingbird/2026-10-10/` (636 fetched, 189 revisions reused, 37 dead
+links): 825 parsed, 640 new store rows in total.  Flags kept in the manifest: 13 labelled variants overlap
+(`__invalid`, `_approx`, `_start`, `_asymmetric`; stored infeasible); `square-103_r0` overlaps 0.017 (old revision,
+inexact as published?); `square-108_r0` fails in the site parser (`missing ref #sideA`).  Store backed up first
+(`runs/store_backup_2026-10-10_pre-kingbird.sqlite`).  Atlas v2 from the catalogue: 23,240 sources, 82,954 pieces.
+`mondrian.load_src('kingbird:NAME')` reads the newest snapshot.
