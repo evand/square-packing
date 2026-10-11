@@ -1317,3 +1317,23 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   tries, same accuracy) -> not adopted as written; adoption with a revised cost bound is Evan's call.  The ALM stage was
   what hopped out of genuine minima in the first check.  descend.py: ~184 s median, so kick + polish is ~25x cheaper at
   ~60-85 % of its effect.  `kick_retry(alm=False)` available; explorer flag still uses alm=True (default off anyway).
+* **Finisher on the backlog, pre-registered** (written before launch; `finish_backlog.py`, `runs/census/n110/finish_backlog`;
+  4 procs, ~1.1 CPU-h).  Question (Evan 10-11): is kick + polish-only (4 tries) + exactsolve a better use of CPU than more
+  explorer time?  Break-even framing: new certified minima per measured CPU-h; explorer marginal at 110 ~1 / worker-h;
+  descend + solve on 1,012 points: 40 distinct new / 56 CPU-h (0.7 / CPU-h).  Points: the 312 not-min / unresolved census
+  side keys descend never settled (168 still not-min after descend, from its output; 78 descend unresolved; 59 never
+  descended; 7 unresolved).  Prediction: 2-8 new certified minima per CPU-h (lower than the ~6 estimated from the random
+  kr_eval sample, since these are descend's leftovers).  Reading: >= 2 / CPU-h = finisher beats explorer time at 110 (adopt as
+  the finisher for novelty / parents, cost scoped to archive-new sub-k candidates); < 1 / CPU-h = no.  (Smoke: 2 points,
+  both still not-min.)
+* **Out of scope for now (Evan 10-11), recorded to return to:** whether finisher settings, the break-even and the
+  measured rates transfer to other n and to other packing families (45-degree diamonds, strips, large n); everything
+  above is n = 110.
+  **Result** (8.7 min wall, 2,010 s measured CPU = 0.56 CPU-h, median 3.2 s / point): **0 new certified minima -> below
+  the pre-registered 1 / CPU-h: not adopted.**  310 points: 57 certified-known + 1 weak-known, 245 still not-min (225 'not
+  jammed'), 7 unresolved; by group: still-not-min-after-descend 25+1 / 141 / 1, descend-unresolved 5 / 69 / 2, never-
+  descended 25 / 34 / 0, unresolved 2 / 1 / 4.  Expected new at the random-sample rates: ~58 conversions x P(new) ~0.04 =
+  ~2.3, P(0) ~0.1.  Caveat (mine, after the fact): the population is descend's hard tail (19 % convert vs 83 % in the
+  random kr_eval sample), so this settles "mine the backlog" (no, at 110) and not "finish fresh explorer output inline";
+  that goes to census v2 as an arm (finisher on / off, end to end, certified minima per CPU-h).  Open confusion: 225
+  points stay 'not jammed' (exactsolve MILP dS < -1e-6) after both descend.py and the finisher: tolerance-degenerate?
