@@ -234,7 +234,7 @@ def _work(job):
                               mate if kind == 'cross2' and cands else None, kr)
 
 
-def kick_retry(s, sq, rng, tmp, k, tries, sigma=1e-4, pextra=()):
+def kick_retry(s, sq, rng, tmp, k, tries, sigma=1e-4, pextra=(), alm=True):
     """fq's polish can stall at points that are not jammed (10-10: ~90 % of lineage-run sub-11 outputs; a corner-corner
     MILP finds a descent).  A tiny kick + full re-quench breaks the stall (10-08: every such state near the 110 record went
     to a known minimum).  Up to `tries` kicked re-quenches from the current best; a strictly lower (by SAME_SIDE),
@@ -244,7 +244,8 @@ def kick_retry(s, sq, rng, tmp, k, tries, sigma=1e-4, pextra=()):
     info = dict(tries=0, drops=0, drop=0.0)
     s0 = s
     for _ in range(tries):
-        r = hop.quench(s, sq, tmp, extra=('--kick', f'{sigma:g}', '--seed', str(rng.randrange(1 << 30))) + tuple(pextra))
+        r = hop.quench(s, sq, tmp, extra=('--kick', f'{sigma:g}', '--seed', str(rng.randrange(1 << 30)))
+                       + (() if alm else ('--no-alm',)) + tuple(pextra))   # no-alm: kick, uniform repair, SLP polish only
         info['tries'] += 1
         info.setdefault('raw', []).append(r[0] if r else None)
         if r is None or r[0] >= s - ID.SAME_SIDE:

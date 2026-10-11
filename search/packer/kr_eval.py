@@ -14,7 +14,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 
 
 def job(j):
-    pid, kind, S_dest, tries, sigma, seed = j
+    pid, kind, S_dest, tries, sigma, seed, alm = j
     import explore
     from pk.store import Store
     from pk.manifest import cpu_seconds
@@ -22,7 +22,8 @@ def job(j):
     sq = [tuple(map(float, r)) for r in p.sq]
     c0 = cpu_seconds()
     with tempfile.TemporaryDirectory() as tmp:
-        s, _, info = explore.kick_retry(float(p.s), sq, random.Random(seed), tmp, math.ceil(math.sqrt(p.n) - 1e-12), tries, sigma)
+        s, _, info = explore.kick_retry(float(p.s), sq, random.Random(seed), tmp, math.ceil(math.sqrt(p.n) - 1e-12), tries, sigma,
+                                        alm=alm)
     return dict(pid=pid, kind=kind, s_in=float(p.s), S_dest=S_dest, s_out=s, traj=info.get('traj', []), raw=info.get('raw', []),
                 drops=info['drops'], cpu=round(cpu_seconds() - c0, 2))
 
@@ -32,6 +33,7 @@ def main():
     ap.add_argument('--out', default='runs/kr_eval'); ap.add_argument('--per', type=int, default=60)
     ap.add_argument('--tries', type=int, default=4); ap.add_argument('--sigma', type=float, default=1e-4)
     ap.add_argument('--procs', type=int, default=4); ap.add_argument('--seed', type=int, default=1011)
+    ap.add_argument('--no-alm', action='store_true', help='kick + polish only (no ALM repair stage)')
     ap.add_argument('--report')
     a = ap.parse_args()
     if a.report:
@@ -48,8 +50,8 @@ def main():
     ctrl_ids = [r['id'] for r in st.query(n=110, source='descend:census', status='certified', limit=None)]
     ctrl = rng.sample(ctrl_ids, min(a.per, len(ctrl_ids)))
     S_of = {r['pid_out']: r['S'] for r in D if r.get('pid_out')}
-    jobs = [(d['pid'], 'notmin', d['S'], a.tries, a.sigma, rng.randrange(1 << 30)) for d in notmin]
-    jobs += [(pid, 'control', S_of.get(pid), a.tries, a.sigma, rng.randrange(1 << 30)) for pid in ctrl]
+    jobs = [(d['pid'], 'notmin', d['S'], a.tries, a.sigma, rng.randrange(1 << 30), not a.no_alm) for d in notmin]
+    jobs += [(pid, 'control', S_of.get(pid), a.tries, a.sigma, rng.randrange(1 << 30), not a.no_alm) for pid in ctrl]
     rng.shuffle(jobs)
     with open(f'{a.out}/trials.jsonl', 'w') as f, ProcessPoolExecutor(a.procs) as ex:
         for r in ex.map(job, jobs):

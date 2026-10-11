@@ -1311,3 +1311,9 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   c110a re-reported today: polish everything (`full`) 33 new minima vs 20 for `base` (side keys 37 vs 21); the 10-09 log
   said 30 vs 16: the reports read the live basin table, which has grown since (report drift, review §3): the direction
   holds, the ratio moved 1.9x -> 1.65x.  To do: snapshot the reference tables per report.
+  **Result** (2.6 min wall, 565 s CPU): not-min: destination after 1 / 2 / 3 / 4 tries 14 / 29 / 35 / 35 of 60 (none below
+  it), on any known minimum 27 / 43 / 51 / 49; CPU median 7.4 s (4 tries).  Controls: 1 / 60 moved (by 1.5e-6); CPU 1.4 s.
+  Against the pre-registered rule: safety (b) passes, accuracy (a) passes (58 %), cost (a) fails (7.4 s > 5 s; ~5.5 s at 3
+  tries, same accuracy) -> not adopted as written; adoption with a revised cost bound is Evan's call.  The ALM stage was
+  what hopped out of genuine minima in the first check.  descend.py: ~184 s median, so kick + polish is ~25x cheaper at
+  ~60-85 % of its effect.  `kick_retry(alm=False)` available; explorer flag still uses alm=True (default off anyway).
