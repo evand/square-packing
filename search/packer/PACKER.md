@@ -1283,3 +1283,8 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   `--kick-retry` stays, default off.  Next: kick + polish only (`--no-alm`) as a finisher candidate (same points); the hop
   as an explorer move (judged as a move); census: many shallow minima, so a "minima at kick resolution" count would be
   much smaller than the strict 760 (definition question, Evan 10-11).
+* **Decisions (Evan 10-11).**  Census success metric = strict: certified exact local minima (exactsolve: no first- or
+  second-order descent direction, to its precision) = table `minimum` cls certified (110: 720; the 40 weak reported beside,
+  not counted).  Open (Evan's guess: no): are partially descended (not-min) states useful parents?  Reconstructing them may
+  be the job of higher-temperature / annealing proposers.  Candidate rule to test: sub-grid packings farther than some d
+  from every packing on record are worth keeping as parents, minimum or not.
