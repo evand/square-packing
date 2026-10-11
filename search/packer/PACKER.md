@@ -1288,3 +1288,14 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   not counted).  Open (Evan's guess: no): are partially descended (not-min) states useful parents?  Reconstructing them may
   be the job of higher-temperature / annealing proposers.  Candidate rule to test: sub-grid packings farther than some d
   from every packing on record are worth keeping as parents, minimum or not.
+* **Not-min states as parents, retrospective** (`parent_retro.py`, `runs/parent_retro.json`; 14 logged runs at 110:
+  L1, L2, insert110; ~76.8k proposals; parent verdict by side key, minimum via the copy table; observational, parents were
+  chosen by elite / value rules).  Per 1000 proposals, certified children / children on a different minimum than the
+  parent's / within-run discoveries: certified parents 635 / 490 / 78; not-min 574 / 478 / 34; above 11: 49 / - / 9.
+  Matched (308 pairs: a not-min copy and its own certified minimum, both expanded in one run): 572 vs 607 / 493 vs 493 /
+  29 vs 45; but the minimum was expanded first in 236 / 308 pairs and discovery credit goes to the first reach, so the
+  discovery gap is mostly order; the order-free rates are equal.  Reading: a not-min copy is about its minimum as a parent
+  (no special value, no loss), so duplicate-aware (per-minimum) parent picks look safe.  Hint for Evan's distance rule:
+  never-descended not-min parents (no known minimum; 985 proposals) have ~2x the discovery rate of other not-min parents
+  (153 vs 77-79 per 1000): small, selected (timeouts, late additions).  Census v2: a controlled arm "keep sub-grid states
+  farther than d from every known minimum as parents" with random parent choice inside the arm.
