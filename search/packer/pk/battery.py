@@ -160,6 +160,9 @@ def run(a):
         pairdist(S, a.procs)
     d = f'{ROOT}/{a.name}'; os.makedirs(d, exist_ok=True)
     json.dump(dict(arm=a.arm, n=a.n, minutes=a.minutes), open(f'{d}/meta.json', 'w'))
+    from pk import manifest                  # 10-11: commit, binaries, suite hash, measured CPU (meta.json kept for old readers)
+    man = manifest.start(d, 'battery', seed=hash(a.name) & 0xffffffff, args=vars(a), procs=a.procs,
+                         extra=dict(suite=sp, suite_sha256=manifest.file_sha256(sp)))
     rng = random.Random(hash(a.name) & 0xffffffff)
     t_end = time.time() + 60 * a.minutes
     rnd = 0
@@ -182,6 +185,7 @@ def run(a):
             if rnd >= 3 and a.vs and decisive(a.name, a.vs):
                 print(f'round {rnd}: decisive, stopping'); break
             print(f'round {rnd} done', flush=True)
+    man.finish(summary=dict(rounds=rnd))
     report(argparse.Namespace(name=a.name, vs=a.vs, n=a.n))
 
 

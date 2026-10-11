@@ -123,6 +123,10 @@ def replay(a):
     items = [json.loads(l) for l in open(f'{d}/items.jsonl')]
     if a.limit:
         items = items[:a.limit]
+    tag = a.variant + ('' if a.known == 'ref' else f'_{a.known}')
+    from pk import manifest
+    man = manifest.start(d, 'corpus-replay', args=vars(a), procs=a.procs, fname=f'manifest_out_{tag}.json',
+                         extra=dict(items_sha256=manifest.file_sha256(f'{d}/items.jsonl')))
     t0 = time.time()
     out = {}
     finals = {}
@@ -131,13 +135,14 @@ def replay(a):
             out[i] = r
             if fin is not None and r['st'] == 'new?':
                 finals[str(i)] = np.concatenate([[fin[0], 0, 0], fin[1].ravel()])
-    tag = a.variant + ('' if a.known == 'ref' else f'_{a.known}')
     with open(f'{d}/out_{tag}.jsonl', 'w') as f:
         for i in sorted(out):
             f.write(json.dumps(dict(i=i, **out[i])) + '\n')
     np.savez_compressed(f'{d}/fin_{tag}.npz', **finals)
-    cpu = sum(r['sec'] for r in out.values())
-    print(f'{a.name}/{tag}: {len(out)} proposals, wall {time.time() - t0:.0f}s, CPU {cpu:.0f}s; '
+    wsec = sum(r['sec'] for r in out.values())         # summed per-item wall in workers (what older logs call "CPU")
+    man.finish(summary=dict(proposals=len(out), item_wall_s=round(wsec, 1)))
+    print(f'{a.name}/{tag}: {len(out)} proposals, wall {time.time() - t0:.0f}s, item wall {wsec:.0f}s, '
+          f'measured CPU {man.d["cpu_s"]:.0f}s; '
           + ' '.join(f'{k}={v}' for k, v in collections.Counter(r['st'] for r in out.values()).most_common()))
 
 

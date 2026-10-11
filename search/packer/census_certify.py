@@ -57,6 +57,9 @@ def certify(a):
     T = todo(st, a.n, k)[:a.limit or None]
     root = f'{HERE}/runs/census/n{a.n}'
     print(f'n={a.n}: {len(T)} sides below {k} without a basin row; solving on {a.procs} procs', flush=True)
+    from pk import manifest
+    man = manifest.start(root, 'census_certify', args=vars(a), procs=a.procs,
+                         fname=f'manifest_certify_{time.strftime("%Y%m%dT%H%M%S")}.json', extra=dict(todo=len(T)))
     t0 = time.time()
     res = run_jobs(job, [(key, pid, a.n, root) for key, pid in T], procs=a.procs, timeout=a.timeout)
     C = collections.Counter()
@@ -67,6 +70,7 @@ def certify(a):
         if RANK.get(cls, 0) > RANK.get(st.db.execute('SELECT status FROM packing WHERE id=?', (pid,)).fetchone()[0], 0):
             st.set(pid, status=cls)
         C[cls] += 1
+    man.finish(summary=dict(C))
     print(f'  done in {time.time() - t0:.0f}s: {dict(C)}')
 
 

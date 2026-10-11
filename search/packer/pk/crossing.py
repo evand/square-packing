@@ -171,6 +171,8 @@ def trial(job):
 def run(a):
     st = Store()
     d = os.path.join(ROOT, a.name); os.makedirs(d, exist_ok=True)
+    from pk import manifest
+    man = manifest.start(d, 'crossing', seed=a.seed, args=vars(a), procs=a.procs)
     rng = random.Random(a.seed)
     tasks = []
     for n in a.n:
@@ -215,6 +217,7 @@ def run(a):
             if r is not None:
                 f.write(json.dumps(r) + '\n'); f.flush()
     print(f'done in {time.time() - t0:.0f}s', flush=True)
+    man.finish()
     report(a)
 
 

@@ -77,6 +77,9 @@ def run(a):
     import random; random.Random(a.seed).shuffle(T)        # random order: a partial run is a fair sample
     T = T[:a.limit or None]
     print(f'n={a.n}: {len(T)} not-min points to descend ({len(done)} done before); {len(known)} certified exact sides known', flush=True)
+    from pk import manifest
+    man = manifest.start(f'{HERE}/runs/census/n{a.n}', 'descend_census', seed=a.seed, args=vars(a), procs=a.procs,
+                         fname=f'manifest_descend_{time.strftime("%Y%m%dT%H%M%S")}.json', extra=dict(todo=len(T)))
     t0 = time.time()
     res = run_jobs(job, [(key, pid, a.n, root, a.kick, a.rounds, a.thr) for key, pid in T], procs=a.procs, timeout=a.timeout)
     C = collections.Counter()
@@ -96,6 +99,7 @@ def run(a):
                 r['outcome'] = r['cls']
             C[r['outcome']] += 1
             fo.write(json.dumps(r) + '\n')
+    man.finish(summary=dict(C))
     print(f'  done in {time.time() - t0:.0f}s: {dict(C)}')
 
 

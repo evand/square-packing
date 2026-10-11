@@ -1245,3 +1245,12 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   never measured CPU; at load > 16 a worker-hour < a core-hour, so cross-run rate comparisons at different load are biased
   (concurrent controls are fine).  Fix with the run-manifest item (getrusage incl. children, load at start / end).
   Open: be_melt s130 / s179 cell with the fixed explorer (~50 worker-min) decides melt on by default in hunt recipes.
+* **Run manifests + explorer provenance** (`pk/manifest.py`): every run dir of explore / chain / battery / corpus replay /
+  crossing / melt_ab gets `manifest.json` (census_certify / descend_census: `manifest_<kind>_<time>.json` in
+  `runs/census/n<n>/`): argv, args, git commit + dirty files, fq / anneal / packer sha256, load at start and end, wall,
+  measured CPU incl. children (`cpu_s`), wall x procs (`worker_wall_s`), status ok / incomplete; battery adds the suite
+  sha256, corpus the items sha256.  Explorer `proposals.jsonl` adds `seed`, `desc` (move + params), `loosen`, `s_screen`,
+  `hit` (archive entry landed on: new, dup or return), `cpu` (measured, per proposal).  `explore.py --replay OUT:LINE`
+  re-runs one proposal from parent + seed + mate: 16/16 reproduced exactly (one per kind x status, 1-min test run).
+  Test run: cpu_s 120.0 vs worker_wall_s 121.9 at load ~9.6.  Not covered yet: mondrian.py, lineage_reach.py,
+  insert110.py top level (their explore.py children have manifests), fq-internal knobs beyond the binary hash.

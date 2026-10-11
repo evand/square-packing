@@ -168,7 +168,16 @@ def descriptor(s, sq, k):
 
 
 def work(job):
-    """One proposal: move, screen, (maybe) full polish, grid check.  Runs in a worker process."""
+    """One proposal: move, screen, (maybe) full polish, grid check.  Runs in a worker process.  Adds 'cpu' = measured CPU
+    seconds of the worker + its waited-for children (fq, anneal) for this proposal."""
+    from pk.manifest import cpu_seconds
+    c0 = cpu_seconds()
+    r = _work(job)
+    r['cpu'] = round(cpu_seconds() - c0, 3)
+    return r
+
+
+def _work(job):
     s, sq, kind, seed, k, known_sides, same, smax, pol_above = job[:9]
     pextra = tuple(job[9]) if len(job) > 9 else ()
     from layout import full_lines
@@ -380,6 +389,32 @@ def report(out):
         print(f'    {e["s"]:.10f} roles {tuple(e["roles"])} desc {tuple(e["desc"])} from b{e["parent"]} by {e["kind"]} at {e["t"]}s')
 
 
+def replay(out, line):
+    """Re-run proposal `line` (0-based) of <out>/proposals.jsonl through work() from the archive parent + logged seed / mate
+    and compare with the log (10-11 provenance check; needs a run with manifest.json and seeded proposal records)."""
+    man = json.load(open(f'{out}/manifest.json'))['args']
+    P = [json.loads(l) for l in open(f'{out}/proposals.jsonl')]
+    E = {e['i']: e for e in (json.loads(l) for l in open(f'{out}/archive.jsonl'))}
+    p = P[line]
+    if 'seed' not in p:
+        raise SystemExit('proposal record has no seed (run predates 10-11 provenance)')
+    if man.get('polish_margin'):
+        print('warning: --polish-margin run: pol_above depended on the archive best at the time (not logged)')
+    par = E[p['par']]
+    s, sq = mcmin.load_deg(os.path.join(out, os.path.basename(par['path'])))
+    n = len(sq); k = math.ceil(math.sqrt(n) - 1e-12)
+    smax = man.get('smax') or k + 0.05
+    mate = [os.path.join(out, os.path.basename(p['mate']))] if p.get('mate') else []
+    import scratch
+    scratch.scope('replay')
+    r = work((s, sq, p['kind'], p['seed'], k, [], man.get('same', 0.0), smax, float('inf'),
+              (man.get('polish_extra') or '').split(), mate))
+    same = (r.get('s') == p.get('s')) or (r.get('s') is not None and p.get('s') is not None and abs(r['s'] - p['s']) < 1e-12)
+    print(json.dumps(dict(logged=dict(st=p['st'], s=p.get('s'), desc=p.get('desc')),
+                          replay=dict(st=r['status'], s=r.get('s'), desc=r.get('desc')), reproduced=same and r['status'] == p['st'])))
+    return same
+
+
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument('--n', type=int, default=110); ap.add_argument('--starts', nargs='+')
@@ -410,12 +445,17 @@ if __name__ == '__main__':
     ap.add_argument('--frontier-s', type=float, default=None, help='best known side (default: best start)')
     ap.add_argument('--resume', action='store_true', help='continue from <out>/state.json (time offset carried over)')
     ap.add_argument('--out'); ap.add_argument('--report'); ap.add_argument('--seed', type=int, default=1)
+    ap.add_argument('--replay', help='OUT:LINE: re-run proposal LINE of OUT/proposals.jsonl and compare with the log')
     a = ap.parse_args()
     if a.report:
         report(a.report); raise SystemExit
+    if a.replay:
+        out_, line_ = a.replay.rsplit(':', 1)
+        raise SystemExit(0 if replay(out_, int(line_)) else 1)
     import scratch
     scratch.scope('explore')                 # all temp dirs of this run (workers, fq / anneal files) under one dir, removed at exit
-    os.makedirs(a.out, exist_ok=True)
+    from pk import manifest
+    man = manifest.start(a.out, 'explore', seed=a.seed, args=vars(a), procs=a.procs)
     k = math.ceil(math.sqrt(a.n) - 1e-12)
     known = json.load(open(f'{HERE}/runs/known{a.n}.json')) if os.path.exists(f'{HERE}/runs/known{a.n}.json') else []
     ar = Archive(a.out, a.n, k, a.smax or k + 0.05, known)
@@ -480,33 +520,35 @@ if __name__ == '__main__':
             par['expanded'] += 1
             s, sq = mcmin.load_deg(par['path'])
             kind = bandit.choose(rng) if bandit else rng.choices(kinds, weights=wts)[0]
-            f = ex.submit(work, (s, sq, kind, rng.randrange(1 << 30), k, [e['s'] for e in ar.E], a.same, ar.smax,
+            sd = rng.randrange(1 << 30)
+            f = ex.submit(work, (s, sq, kind, sd, k, [e['s'] for e in ar.E], a.same, ar.smax,
                                        (min(e['s'] for e in ar.E) + a.polish_margin) if a.polish_margin else float('inf'), a.polish_extra.split(),
                                        mates(kind, par)))
-            pend[f] = par
+            pend[f] = (par, sd)
         for _ in range(a.procs):
             submit()
         last = 0
         while pend:
             done, _ = wait(pend, return_when=FIRST_COMPLETED)
             for f in done:
-                par = pend.pop(f)
+                par, sd = pend.pop(f)
                 try:
                     r = f.result()
                 except Exception as exn:
                     stats['error'] += 1; r = None
                 if r:
                     stats[r['status']] += 1
-                    newi = None
+                    newi = hit = None
                     if r['status'] == 'return':
                         e = ar.find(r['s'], tol=1e-9)
-                        if e: e['visits'] += 1
+                        if e: e['visits'] += 1; hit = e['i']
                     elif r['status'] == 'new?':
                         if r['lines'] or r['s'] >= ar.smax:
                             stats['discard'] += 1
                         else:
                             e, isnew = ar.add(r['s'], r['sq'], par['i'], r['kind'], time.time() - t0, mate=r.get('mate'))
                             stats['new' if isnew else 'dup'] += 1
+                            hit = e['i']
                             if isnew:
                                 par['children'] += 1
                                 newi = e['i']
@@ -533,8 +575,12 @@ if __name__ == '__main__':
                         cellb.update(tuple(par['desc']), r.get('sec', 0.0), rew)
                     if bandit:
                         bandit.update(r['kind'], r.get('sec', 0.0), rew)
+                    # proposal log (10-11: + seed / desc / loosen / s_screen / hit / cpu): par + seed + mate replay the
+                    # proposal through work(); hit = archive entry it landed on (new, dup or return); new = hit if created
                     ar.plog.write(json.dumps(dict(t=round(time.time() - t0, 1), kind=r['kind'], st=r['status'],
-                                                  sec=round(r.get('sec', 0), 2), s=r.get('s'), new=newi, par=par['i'],
+                                                  sec=round(r.get('sec', 0), 2), cpu=r.get('cpu'), s=r.get('s'),
+                                                  s_screen=r.get('s_screen'), new=newi, hit=hit, par=par['i'], seed=sd,
+                                                  desc=r.get('desc'), loosen=r.get('loosen'),
                                                   **({'mate': r['mate']} if r.get('mate') else {}))) + '\n')
                 if time.time() - t_start < 60 * a.minutes:
                     submit()
@@ -558,3 +604,5 @@ if __name__ == '__main__':
         bandit.decay()
         json.dump(dict(r=bandit.r, c=bandit.c), open(a.bandit_state, 'w'))
     report(a.out)
+    man.finish(summary=dict(stats=dict(stats), basins=len(ar.E), sub_k=sum(e['s'] < k for e in ar.E),
+                            best=min(e['s'] for e in ar.E) if ar.E else None))

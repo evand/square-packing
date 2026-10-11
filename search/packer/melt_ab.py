@@ -69,6 +69,8 @@ def run(a):
     rng.shuffle(tasks)                                       # pairs stay together; partial runs stay balanced
     flat = [t for pair in tasks for t in pair]
     json.dump(dict(argv=sys.argv, pools=POOLS, tasks=len(flat)), open(f'{a.out}/meta.json', 'w'), indent=1)
+    from pk import manifest
+    man = manifest.start(a.out, 'melt_ab', seed=a.seed, args=vars(a), procs=a.procs, extra=dict(pools=POOLS))
     t_end = time.time() + 60 * a.minutes
     log = open(f'{a.out}/trials.jsonl', 'a')
     it = iter(flat); pend = set()
@@ -85,6 +87,7 @@ def run(a):
                     log.write(json.dumps(f.result()) + '\n'); log.flush()
                 except Exception as e:
                     log.write(json.dumps(dict(error=repr(e)[:200])) + '\n'); log.flush()
+    man.finish()
     report(a.out)
 
 

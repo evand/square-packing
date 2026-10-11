@@ -11,6 +11,7 @@ Start at `TODO.md` (open items; conventions in `~/math/TODO.md`), then `README.m
 - `lean/`: Lean 4 + Mathlib (`cd lean && lake build`; `lake env lean Axioms.lean` must show no `sorryAx`).  Big generated data dirs are gitignored (`lean/scripts/gen_data.sh`).
 - `search/`: research code + one `UPPERCASE.md` log per investigation.  `search/packer/` (packing search; `PACKER.md`, `README.md`, `NEEDS.md`, `DESIGN.md`), `search/exact/` (exact forms; `EXACT_FORMS.md`).
 - Packings: use the store (`search/packer/pk.py`: `frontier`, `ls N`, `get best:N --fmt ...`, `sync-register`, `sync-pending`; `pk/README.md`), never copy coordinates by hand.  Grade new search ideas with `pk/battery.py` against the frozen baseline.
+- New packer launchers: call `pk.manifest.start(out, name, ...)` / `finish()` (provenance + measured CPU) and `scratch.scope(name)` (temp dirs); report compute as measured CPU (`cpu_s`), not wall x procs.  Review + pre-run fix list: `search/packer/REVIEW-2026-10-11.md`.
 - `docs/`: HTML write-ups (Pages serves them at /s12/, /s13/, /s21/, ... via `.github/workflows/pages.yml`); `site/`: the Atlas (`site/www/` is the site root).
 - `notes/`, `tasks/<task>/`: working notes and per-task material (history; dated files are not rewritten).
 - `runs/`: big local outputs, gitignored.  `outreach` and `notes/publish-inventory.md` are symlinks into `../private/` (gitignored; never commit them).

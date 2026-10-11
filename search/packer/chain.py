@@ -98,6 +98,8 @@ def archive_best(d):
 
 def main(a):
     os.makedirs(a.out, exist_ok=True)
+    from pk import manifest                  # explore.py rounds write their own manifests in their round dirs
+    man = manifest.start(a.out, 'chain', args=vars(a), procs=a.slots * a.procs_per)
     stp = f'{a.out}/state.json'
     T = hop.squish_targets()
     if os.path.exists(stp):
@@ -220,6 +222,7 @@ def main(a):
             json.dump(S, open(stp + '.tmp', 'w')); os.replace(stp + '.tmp', stp)
     json.dump(S, open(stp + '.tmp', 'w')); os.replace(stp + '.tmp', stp)
     report(a.out)
+    man.finish()
 
 
 def report(out):
