@@ -1299,3 +1299,15 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   never-descended not-min parents (no known minimum; 985 proposals) have ~2x the discovery rate of other not-min parents
   (153 vs 77-79 per 1000): small, selected (timeouts, late additions).  Census v2: a controlled arm "keep sub-grid states
   farther than d from every known minimum as parents" with random parent choice inside the arm.
+* **Kick + polish only, pre-registered** (written before launch; `kr_eval.py --no-alm`, `runs/kr_eval_noalm`; same seed =
+  same 120 points and kick seeds as kr_eval): kick sigma 1e-4, uniform repair, SLP polish, no ALM stage.  Adopt as the
+  finisher (before counting / parenting) if (a) >= 50 % of not-min points reach their descend destination or a lower known
+  minimum within 4 tries at <= 5 s CPU median and (b) <= 2 / 60 controls move by more than 2e-9.  Else: no cheap finisher at
+  this sigma; descend.py stays the reference.
+* **Reports count minima** (`Store.side_minima`: side key -> minimum via the copy table): battery `new_cert`,
+  `near_new`, `reach.withheld`; corpus report `cert` / `newcert` / `recall` / `<1e-3`; rediscovery.py all counts = distinct
+  certified minima (weak excluded); the old side-key counts are printed beside (`*_sidekeys`, `keys` / `newkeys`).
+  Battery cross2 vs baseline: bench new 33 vs 32 minima (35 vs 35 side keys), reach withheld 11 vs 2 (unchanged).
+  c110a re-reported today: polish everything (`full`) 33 new minima vs 20 for `base` (side keys 37 vs 21); the 10-09 log
+  said 30 vs 16: the reports read the live basin table, which has grown since (report drift, review §3): the direction
+  holds, the ratio moved 1.9x -> 1.65x.  To do: snapshot the reference tables per report.

@@ -161,6 +161,16 @@ class Store:
         if commit:
             self.db.commit()
 
+    def side_minima(self, n):
+        """{side_key: (min_key, cls, S float)} via the copy table (a side key linked to two minima, a 1e-9 collision, maps
+        to the lower one).  Reports count distinct minima through this instead of side keys (10-11)."""
+        M = {r['key']: (r['cls'], float(r['S'][:20])) for r in self.db.execute('SELECT key, cls, S FROM minimum WHERE n=?', (n,))}
+        out = {}
+        for sk, mk in self.db.execute('SELECT side_key, min_key FROM copy WHERE n=?', (n,)):
+            if mk in M and (sk not in out or M[mk][1] < out[sk][2]):
+                out[sk] = (mk, M[mk][0], M[mk][1])
+        return out
+
     def minima(self, n, cls=None):
         q, a = 'SELECT * FROM minimum WHERE n=?', [n]
         if cls:

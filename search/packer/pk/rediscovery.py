@@ -24,6 +24,9 @@ withheld = {key(x['s']) for x in D['basins'] if x['d'] < a.withhold}
 pdist = {x['id']: x['d'] for x in D['basins']}
 st = Store()
 B = {r['key']: r['cls'] for r in st.db.execute('SELECT key, cls FROM basin WHERE n=?', (n,))}
+SM = st.side_minima(n)                     # count distinct certified minima, not side keys (10-11)
+mn = lambda kk: SM[kk][0] if kk in SM else kk
+known_m = {mn(x) for x in known}; withheld_m = {mn(x) for x in withheld}; rec_m = mn(rec_key)
 items = {it['i']: it for it in map(json.loads, open(f'{d}/items.jsonl'))}
 R = [json.loads(l) for l in open(f'{d}/out_{a.variant}.jsonl')]
 G = collections.defaultdict(list)
@@ -35,7 +38,8 @@ for r in R:
         dd = pdist.get(it['parent'], -1)
         g = '<0.05' if dd < 0.05 else '<0.1' if dd < 0.1 else '>=0.1'
     G[g].append(r)
-print(f'{a.corpus}/{a.variant}: {len(R)} proposals; withheld basins (d < {a.withhold}): {len(withheld)}; record {rec_key}')
+print(f'{a.corpus}/{a.variant}: {len(R)} proposals; withheld (d < {a.withhold}): {len(withheld)} side keys = '
+      f'{len(withheld_m)} minima; record {rec_key}; counts below are distinct certified minima')
 print(f'{"group":10s} {"N":>5s} {"CPU s":>6s} {"cert":>5s} {"new":>4s} {"rec hits":>8s} {"withheld":>8s} {"new/CPUh":>8s} {"wh/CPUh":>7s}')
 for g, rs in sorted(G.items()):
     cpu = sum(r['sec'] for r in rs)
@@ -44,10 +48,11 @@ for g, rs in sorted(G.items()):
         if r['st'] != 'new?' or r.get('unpolished') or r['s'] >= k:
             continue
         kk = key(r['s'])
-        if B.get(kk) != 'certified':
+        if B.get(kk) != 'certified' or (kk in SM and SM[kk][1] != 'certified'):
             continue
-        cert.add(kk)
-        if kk not in known: new.add(kk)
-        if kk in withheld: wh.add(kk)
-        if kk == rec_key: rh += 1
+        m = mn(kk)
+        cert.add(m)
+        if m not in known_m: new.add(m)
+        if m in withheld_m: wh.add(m)
+        if m == rec_m: rh += 1
     print(f'{g:10s} {len(rs):5d} {cpu:6.0f} {len(cert):5d} {len(new):4d} {rh:8d} {len(wh):8d} {len(new) / cpu * 3600:8.1f} {len(wh) / cpu * 3600:7.1f}')

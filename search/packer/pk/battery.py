@@ -224,20 +224,27 @@ def metrics(name, n=110):
     S = json.load(open(f'{ROOT}/suite_{n}.json'))
     st = Store()
     B = {r['key']: r['cls'] for r in st.db.execute('SELECT key, cls FROM basin WHERE n=?', (S['n'],))}
+    SM = st.side_minima(S['n'])                       # side key -> (minimum key, cls, S): count minima, not side keys (10-11)
+    mins = lambda keys: {SM[x][0] for x in keys if x in SM}
     known = {key(s) for s in S['known']}; wh = set(S['withheld']); k = S['k']; best = S['best']
+    known_m, wh_m = mins(known), mins(wh)
+    Sof = {v[0]: v[2] for v in SM.values()}
     R = [json.loads(l) for l in open(f'{ROOT}/{name}/trials.jsonl')]
     M = {}
     for suite in ('bench', 'reach'):
         rs = [r for r in R if r['suite'] == suite]
         cpu = sum(r['sec'] for r in rs) / 3600
         cert = {key(r['s']) for r in rs if 'fin' in r and B.get(key(r['s'])) == 'certified'}
+        certm = {SM[x][0] for x in cert if x in SM and SM[x][1] == 'certified'}      # distinct certified minima
         scr = {key(r['s']) for r in rs if 'fin' in r}
         M[f'{suite}.cpu_h'] = cpu
-        M[f'{suite}.new_cert'] = ('rate', len(cert - known - wh), cpu)
-        M[f'{suite}.near_new'] = ('rate', len({x for x in cert - known - wh if float(x) < best + 1e-3}), cpu)
+        M[f'{suite}.new_cert'] = ('rate', len(certm - known_m - wh_m), cpu)
+        M[f'{suite}.near_new'] = ('rate', len({x for x in certm - known_m - wh_m if Sof[x] < best + 1e-3}), cpu)
+        M[f'{suite}.new_cert_sidekeys'] = ('rate', len(cert - known - wh), cpu)   # pre-10-11 definition, for comparison
         M[f'{suite}.sub_k_sides'] = ('rate', len(scr), cpu)
         if suite == 'reach':
-            M['reach.withheld'] = ('rate', len(cert & wh), cpu)
+            M['reach.withheld'] = ('rate', len(certm & wh_m), cpu)
+            M['reach.withheld_sidekeys'] = ('rate', len(cert & wh), cpu)
             dd = [r['dd'] for r in rs if 'dd' in r]
             M['reach.toward'] = ('prop', sum(x < -0.005 for x in dd), len(dd))
     rs = [r for r in R if r['suite'] == 'cross']

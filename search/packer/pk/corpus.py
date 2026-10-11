@@ -201,6 +201,10 @@ def report(a):
     items = {it['i']: it for it in map(json.loads, open(f'{d}/items.jsonl'))}
     variants = a.variants or sorted(f[4:-6] for f in os.listdir(d) if f.startswith('out_'))
     B = {r['key']: dict(r) for r in st.db.execute('SELECT * FROM basin WHERE n=?', (n,))}
+    SM = st.side_minima(n)                            # count distinct certified minima (10-11), side keys shown for comparison
+    known_m = {SM[x][0] for x in known if x in SM}
+    tomin = lambda keys: {SM[x][0] for x in keys if x in SM and SM[x][1] == 'certified'}
+    SM_S = {v[0]: v[2] for v in SM.values()}
     rows = []
     union = set()
     per = {}
@@ -210,9 +214,10 @@ def report(a):
         for r in R:
             if r['st'] == 'new?' and not r.get('unpolished') and r['s'] < k and B.get(basin_key(r['s']), {}).get('cls') == 'certified':
                 union.add(basin_key(r['s']))
-    print(f'{a.name}: n={n} k={k} best={best:.10f}; {len(items)} proposals; certified basins found by any variant: '
-          f'{len(union)} ({len(union - known)} not in the frozen known set)')
-    hdr = f'{"variant":12s} {"CPU s":>7s} {"/prop":>6s} {"screen":>6s} {"polish":>6s} {"grid":>5s} {"disc":>5s} {"ret":>5s} {"late":>5s} {"new?":>5s} {"cert":>5s} {"newcert":>7s} {"recall":>6s} {"<1e-3":>5s} {"notmin":>6s}'
+    print(f'{a.name}: n={n} k={k} best={best:.10f}; {len(items)} proposals; certified minima found by any variant: '
+          f'{len(tomin(union))} ({len(tomin(union) - known_m)} not in the frozen known set); side keys {len(union)} '
+          f'({len(union - known)} new)')
+    hdr = f'{"variant":12s} {"CPU s":>7s} {"/prop":>6s} {"screen":>6s} {"polish":>6s} {"grid":>5s} {"disc":>5s} {"ret":>5s} {"late":>5s} {"new?":>5s} {"cert":>5s} {"newcert":>7s} {"recall":>6s} {"<1e-3":>5s} {"notmin":>6s} {"keys":>5s} {"newkeys":>7s}'
     print(hdr)
     for v in variants:
         R = per[v]
@@ -227,10 +232,11 @@ def report(a):
                     found.add(basin_key(r['s']))
                 elif b and b['cls'] == 'not-min':
                     notmin += 1
-        near = {x for x in found if float(x) < best + 1e-3}
+        fm = tomin(found)
+        near = {x for x in fm if SM_S.get(x, 99) < best + 1e-3}
         print(f'{v:12s} {cpu:7.0f} {cpu / len(R):6.2f} {ts:6.0f} {tp:6.0f} {c["screen-grid"]:5d} {c["screen-discard"]:5d} '
-              f'{c["return"]:5d} {c["late-return"]:5d} {c["new?"]:5d} {len(found):5d} {len(found - known):7d} '
-              f'{len(found) / max(1, len(union)):6.2f} {len(near):5d} {notmin:6d}')
+              f'{c["return"]:5d} {c["late-return"]:5d} {c["new?"]:5d} {len(fm):5d} {len(fm - known_m):7d} '
+              f'{len(fm) / max(1, len(tomin(union))):6.2f} {len(near):5d} {notmin:6d} {len(found):5d} {len(found - known):7d}')
     if a.by:
         v = variants[0]
         print(f'\nby {a.by} ({v}): proposals, CPU s, grid share, certified distinct, new certified, per CPU-h')
