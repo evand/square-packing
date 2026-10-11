@@ -1225,3 +1225,23 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   SIGTERM / SIGHUP); `explore.work` uses a TemporaryDirectory.  Cleared 769k day-old leftover `tmp*` dirs from /tmp (+24 GB free).
 * `pk.engine.FQ.quench(timeout=)` now enforced (watchdog kills the child; error 'timeout'; default 1 h hang guard).
 * `explore.py --report` reads n from the archive (was 110 hard-coded).  0-byte decoy `runs/store.sqlite` at the repo root removed.
+* **Melt fix A/B** (`melt_ab.py`, `runs/melt_ab`, job record `runs/jobs/melt_ab`; 4 procs, 6.9 min wall = 27.6 worker-min, ~4.2
+  cores measured).  Paired: same parent + seed = identical melt, arms differ only in the screen side (old = parent's box,
+  the bug; new = anneal's side); explorer screen + polish.  20 parents per n (110: L2 lineage archive entries; 130: be_melt
+  base s130 entries) x 8 seeds.  Metrics fixed in the script before launch (no written hypothesis / threshold: do that next time).
+  | n | arm | screen-grid | kept non-grid | parent-side return | other side (below parent) | d median (q90) |
+  | 110 | old | 64/160 | 96 | 21 | 75 (44) | 0.0057 (0.0095) |
+  | 110 | new | 0/160 | 160 | 31 | 129 (71) | 0.0054 (0.0086) |
+  | 130 | old | 35/160 | 125 | 43 | 82 (57) | 0.022 (0.061) |
+  | 130 | new | 1/160 | 158 | 53 | 105 (79) | 0.021 (0.064) |
+  Reading: the bug was a pure loss (22-40 % of melt proposals to the grid), no extra reach (same d; both-kept pairs mostly end
+  on the same side).  Fixed melt: 1 grid loss in 320, the most grid-safe move measured so far (10-10 landing spread: others
+  lose 23-78 %).  Cheap: the anneal is ~0.1 s at these n (screen + polish sums 26.4 of the 27.6 worker-min), so the 10-08
+  "3.3 s per proposal" was the whole proposal.  "Other side" is side-level, not certified: at 110, d ~0.005 is in the copy
+  range (10-10 census), so many are the parent's minimum again; at 130 d ~0.02 is real movement.  Census tail (not the
+  test's purpose): 110 finals 206 on certified basins, 46 on known not-min sides, 4 unseen sides (~2 distinct, 10.998342 /
+  10.998392, +1.6e-3), uncertified; ~9-10 worker-min at 110 (expect ~0.15 new at the live 1 / proc-h).
+  Compute units: "CPU-h" / "proc-h" in this log = worker wall-clock (wall x procs, or summed per-item wall in workers),
+  never measured CPU; at load > 16 a worker-hour < a core-hour, so cross-run rate comparisons at different load are biased
+  (concurrent controls are fine).  Fix with the run-manifest item (getrusage incl. children, load at start / end).
+  Open: be_melt s130 / s179 cell with the fixed explorer (~50 worker-min) decides melt on by default in hunt recipes.
