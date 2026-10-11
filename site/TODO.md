@@ -231,6 +231,23 @@ public unfixed — see the Publishing section for why each one is on that list.
 * Left: records above 324 (343, 344, 964, …) are not drawn; `provenance.py` dates registered packings by
   finder (Couzo 09-27 / 10-03, itsnaka #401, ry-xu #432), not per packing.
 
+## Done 2026-10-11 (correctness review: records and bounds history)
+
+* ✓ **16 records posted since the 10-10 sync were missing** (jlevy#500 SQUISH Mondrian, #501 dostashev, #503/#504
+  PingYou, #505 Barnett: 146, 153, 155, 156, 176, 181, 207, 211, 238, 239, 261, 270, 271, 272, 304, 305): added to
+  `pk/pending.yaml` (`claims:` for issues without a table), synced, and drawn as posted (`raw`) until they are
+  regularized; each poster's certificate passes both our exact checkers (SQUISH's after a 1e-30 dilation: their box is
+  the exact extent), `search/regularize/posted_cert.py` → `lists/certs/raw/`.  n = 261 now draws #505's certified
+  refinement of Ryan Xu's packing instead of the uncertifiable posting.
+* ✓ **Credit follows the posters' own lineage** (`provenance.py` LINEAGE): refinements credit the construction they
+  started from (#451, #465, #476, #488, #489 → 308 is Kevin Fang's construction, #505); Explore says "Found by A;
+  improved by B".  "Exact form refined by" (the register's `improved_by`) is shown only when the drawn packing is the
+  registered one: it had been attached to other people's later packings (e.g. 153, 209, 237, 305).
+* ✓ **Lower bounds**: 56 duplicate history rows removed (54 exact copies from the 10-04 "best always in history"
+  edit, 2 stale "reported" copies of bounds later verified, n = 50, 67); s(40) floor 6.7 → 1340000/199529 ≈ 6.71582
+  (Guzhou0806, replayed on the register; 6.70854 and the reported 6.718 in the history, Sources §5 entry); wand125's
+  reported fine-net bounds (#446: 19, 20, 26–29, 31; 10-10 follow-ups 28, 29, 30) added as "reported, not replayed".
+
 ## Open (2026-10-07)
 
 * **Explore: show the exact form and local-minimum status** from `search/exact/exact_forms.json`

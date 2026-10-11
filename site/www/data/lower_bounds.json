@@ -630,16 +630,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 3.9686155403695267,
-    "exact_form": "15680/3951",
-    "source": "EvanDaniel2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/evand/square-packing/tree/main",
-    "note": "2026-08-26; our 1736-point weighted certificate, kernel-checked in Lean (s12_ge_15680_3951); jlevy/squares replayed it by a second method. Its points carry the later floors: jlevy's exact re-solve (15680000/3949423) and squarepacker's re-weighting (7943/2000)",
-    "date": "2026-08-26"
-   },
-   {
     "value": 3.970200203928523,
     "exact_form": "15680000/3949423",
     "source": "jlevy2026",
@@ -1169,16 +1159,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 4.679,
-    "exact_form": "4679/1000",
-    "source": "jlevy2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/jlevy/squares",
-    "note": "T-030: weighted fractional certificate, 957 atoms, mass 17.8934 < 18; replayed there (V4/C4); T-027..T-029 (4.67, 4.675, 4.6775, 2026-09-18/19) are the steps to it",
-    "date": "2026-09-19"
-   },
-   {
     "value": 4.695,
     "exact_form": "939/200",
     "source": "wand125_2026",
@@ -1270,16 +1250,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 4.8,
-    "exact_form": "24/5",
-    "source": "jlevy2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/jlevy/squares",
-    "note": "T-020: weighted fractional certificate, 2,260 atoms, mass 18.9226 < 19, so it holds for n = 19, 20, 21 (V4/C4)",
-    "date": "2026-09-04"
-   },
-   {
     "value": 4.8175,
     "exact_form": "1927/400",
     "source": "wand125_2026",
@@ -1298,6 +1268,17 @@
     "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds), T-103; jlevy/squares verified 193/40 (evidence E-n019-wand125-mixed-4825-sqverify-fast-replay). Exceeds (7 + √7)/2 = 4.82288, the side of Hämäläinen's s(18) packing, so s(18) < s(19)",
     "date": "2026-10-06"
+   },
+   {
+    "value": 4.8275,
+    "exact_form": "1931/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/mixed_n19_L48275",
+    "note": "fine-net measure certificate (2,073 / 832 net directions), jlevy/squares#446; reported, not independently replayed (register evidence E-wand125-fine-net-lower-bounds-446-report)",
+    "date": "2026-10-08",
+    "reported": true
    }
   ]
  },
@@ -1381,16 +1362,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 4.85,
-    "exact_form": "97/20",
-    "source": "jlevy2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/jlevy/squares",
-    "note": "T-021: weighted fractional certificate, 1,680 atoms, mass 19.8487 < 20 (V4/C4)",
-    "date": "2026-09-05"
-   },
-   {
     "value": 4.8975,
     "exact_form": "1959/400",
     "source": "wand125_2026",
@@ -1409,6 +1380,17 @@
     "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds), T-104; jlevy/squares verified 981/200 (evidence E-n020-wand125-mixed-4905-sqverify-fast-replay). Exceeds Wainwright's s(19) packing 3+4√2/3, so s(19) < s(20)",
     "date": "2026-10-06"
+   },
+   {
+    "value": 4.9125,
+    "exact_form": "393/80",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/mixed_n20_L49125",
+    "note": "fine-net measure certificate (2,073 / 832 net directions), jlevy/squares#446; reported, not independently replayed (register evidence E-wand125-fine-net-lower-bounds-446-report)",
+    "date": "2026-10-08",
+    "reported": true
    }
   ]
  },
@@ -1805,16 +1787,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 5.508,
-    "exact_form": "1377/250",
-    "source": "tokoharu2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/tokoharu/square-packing-density-bounds/tree/main/certificates/cert_n26_L5508",
-    "note": "rectangle-density certificate; replayed by jlevy/squares (T-047, V4/C3)",
-    "date": "2026-09-21"
-   },
-   {
     "value": 5.5325,
     "exact_form": "2213/400",
     "source": "wand125_2026",
@@ -1833,6 +1805,17 @@
     "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds), T-105; jlevy/squares verified 1109/200 (evidence E-n026-wand125-mixed-5545-sqverify-fast-replay)",
     "date": "2026-10-06"
+   },
+   {
+    "value": 5.555,
+    "exact_form": "1111/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/mixed_n26_L5555",
+    "note": "fine-net measure certificate (2,073 / 832 net directions), jlevy/squares#446; reported, not independently replayed (register evidence E-wand125-fine-net-lower-bounds-446-report)",
+    "date": "2026-10-08",
+    "reported": true
    }
   ]
  },
@@ -1905,16 +1888,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 5.6,
-    "exact_form": "28/5",
-    "source": "wand125_2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n27_L56",
-    "note": "rectangle-density certificate in tokoharu's format; replayed by jlevy/squares (T-045, V4/C3)",
-    "date": "2026-09-26"
-   },
-   {
     "value": 5.635,
     "exact_form": "1127/200",
     "source": "wand125_2026",
@@ -1933,6 +1906,17 @@
     "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds), T-106; jlevy/squares verified 11287/2000 (evidence E-n027-wand125-mixed-56435-sqverify-fast-replay)",
     "date": "2026-10-06"
+   },
+   {
+    "value": 5.6525,
+    "exact_form": "2261/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/mixed_n27_L56525",
+    "note": "fine-net measure certificate (2,073 / 832 net directions), jlevy/squares#446; reported, not independently replayed (register evidence E-wand125-fine-net-lower-bounds-446-report)",
+    "date": "2026-10-08",
+    "reported": true
    }
   ]
  },
@@ -2016,16 +2000,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 5.6,
-    "exact_form": "28/5",
-    "source": "wand125_2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n27_L56",
-    "note": "the n = 27 rectangle-density certificate, whose mass is below 27; replayed by jlevy/squares (T-045, V4/C3)",
-    "date": "2026-09-26"
-   },
-   {
     "value": 5.7225,
     "exact_form": "2289/400",
     "source": "wand125_2026",
@@ -2044,6 +2018,28 @@
     "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds), T-107; jlevy/squares verified 1147/200 (evidence E-n028-wand125-mixed-5735-sqverify-fast-replay)",
     "date": "2026-10-06"
+   },
+   {
+    "value": 5.74,
+    "exact_form": "287/50",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/mixed_n28_L574",
+    "note": "fine-net measure certificate (2,073 / 832 net directions), jlevy/squares#446; reported, not independently replayed (register evidence E-wand125-fine-net-lower-bounds-446-report)",
+    "date": "2026-10-08",
+    "reported": true
+   },
+   {
+    "value": 5.7425,
+    "exact_form": "2297/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing/tree/36b85b9f37efa7cc5d4464805cfb0f2d21576267/problems/square-lower-bounds/certificates/mixed_n28_L57425",
+    "note": "fine-net measure certificate (2,073 net directions), follow-up to #446; reported, not independently replayed (register evidence E-wand125-fine-net-n28-57425-report)",
+    "date": "2026-10-10",
+    "reported": true
    }
   ]
  },
@@ -2117,16 +2113,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 5.71,
-    "exact_form": "571/100",
-    "source": "tokoharu2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/tokoharu/square-packing-density-bounds/tree/main/certificates/cert_n29_L571",
-    "note": "rectangle-density certificate; replayed by jlevy/squares (T-047, V4/C3)",
-    "date": "2026-09-21"
-   },
-   {
     "value": 5.7975,
     "exact_form": "2319/400",
     "source": "wand125_2026",
@@ -2145,6 +2131,28 @@
     "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds), T-108; jlevy/squares verified 581/100 (evidence E-n029-wand125-mixed-581-sqverify-fast-replay)",
     "date": "2026-10-06"
+   },
+   {
+    "value": 5.815,
+    "exact_form": "1163/200",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/mixed_n29_L5815",
+    "note": "fine-net measure certificate (2,073 / 832 net directions), jlevy/squares#446; reported, not independently replayed (register evidence E-wand125-fine-net-lower-bounds-446-report)",
+    "date": "2026-10-08",
+    "reported": true
+   },
+   {
+    "value": 5.82,
+    "exact_form": "291/50",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing/tree/22a23c8a99aa4e9616d596bc2f28555bacbee3dd/problems/square-lower-bounds/certificates/mixed_n29_L582",
+    "note": "fine-net measure certificate (2,073 net directions), follow-up superseding #446's 1163/200; reported, not independently replayed (register evidence E-wand125-fine-net-n29-582-followup-report)",
+    "date": "2026-10-10",
+    "reported": true
    }
   ]
  },
@@ -2218,16 +2226,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 5.71,
-    "exact_form": "571/100",
-    "source": "tokoharu2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/tokoharu/square-packing-density-bounds/tree/main/certificates/cert_n29_L571",
-    "note": "the n = 29 rectangle-density certificate, whose mass is below 29; replayed by jlevy/squares (T-047, V4/C3)",
-    "date": "2026-09-21"
-   },
-   {
     "value": 5.875,
     "exact_form": "47/8",
     "source": "wand125_2026",
@@ -2246,6 +2244,17 @@
     "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds), T-109; jlevy/squares verified 11767/2000 (evidence E-n030-wand125-mixed-58835-sqverify-fast-replay)",
     "date": "2026-10-06"
+   },
+   {
+    "value": 5.8925,
+    "exact_form": "2357/400",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing/tree/ff9f2692afe7d1e65a51bb079b61b3710b97fc82/problems/square-lower-bounds/certificates/mixed_n30_L58925",
+    "note": "fine-net measure certificate (2,073 net directions); reported, not independently replayed (register evidence E-wand125-fine-net-n30-58925-report)",
+    "date": "2026-10-10",
+    "reported": true
    }
   ]
  },
@@ -2329,16 +2338,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 5.92,
-    "exact_form": "148/25",
-    "source": "wand125_2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n31_L592",
-    "note": "rectangle-density certificate in tokoharu's format; replayed by jlevy/squares (T-045, V4/C3)",
-    "date": "2026-09-27"
-   },
-   {
     "value": 5.9525,
     "exact_form": "2381/400",
     "source": "wand125_2026",
@@ -2347,6 +2346,17 @@
     "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 2381/400 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 5.97,
+    "exact_form": "597/100",
+    "source": "wand125_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/mixed_n31_L597",
+    "note": "fine-net measure certificate (2,073 / 832 net directions), jlevy/squares#446; reported, not independently replayed (register evidence E-wand125-fine-net-lower-bounds-446-report)",
+    "date": "2026-10-08",
+    "reported": true
    }
   ]
  },
@@ -2662,16 +2672,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 6.0901699437494745,
-    "exact_form": "1/2 + sqrt(37 - 6 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
-   },
-   {
     "value": 6.44,
     "exact_form": "161/25",
     "source": "wand125_2026",
@@ -2731,16 +2731,6 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
-   },
-   {
-    "value": 6.178908345800274,
-    "exact_form": "1/2 + sqrt(38 - 6 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
     "value": 6.178908345800274,
@@ -2834,16 +2824,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 6.5,
-    "exact_form": "13/2",
-    "source": "wand125_2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n39_L650.json.ASSET.json",
-    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
-    "date": "2026-09-14"
-   },
-   {
     "value": 6.635,
     "exact_form": "1327/200",
     "source": "wand125_2026",
@@ -2867,14 +2847,14 @@
  },
  "40": {
   "best": {
-   "value": 6.7,
-   "exact_form": "67/10",
-   "source": "wand125_2026",
+   "value": 6.715815746082023,
+   "exact_form": "1340000/199529",
+   "source": "Guzhou0806_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
-   "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 67/10 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
-   "date": "2026-10-01"
+   "url": "https://github.com/Guzhou0806/n40-square-packing/tree/71c97d07553d7d5ff5c5c82f0c9d1c75a150a4e3",
+   "note": "continuous-pose interval kernel on wand125's rect_n40_L67 density, strict bound (jlevy/squares#485 follow-up); jlevy/squares replayed both kernels and audited the finite steps exactly (E-n040-guzhou-continuous-pose-kernel-replay). The source says the work came from AI-assisted research",
+   "date": "2026-10-10"
   },
   "history": [
    {
@@ -2935,16 +2915,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 6.5,
-    "exact_form": "13/2",
-    "source": "wand125_2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n40_L650.json.ASSET.json",
-    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
-    "date": "2026-09-14"
-   },
-   {
     "value": 6.7,
     "exact_form": "67/10",
     "source": "wand125_2026",
@@ -2953,6 +2923,37 @@
     "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
     "note": "rectangle-density certificate (wand125/square-packing-bounds); jlevy/squares verified 67/10 (evidence E-wand125-rectangle-2026-10-01-source-replay)",
     "date": "2026-10-01"
+   },
+   {
+    "value": 6.70854,
+    "exact_form": "335427/50000",
+    "source": "Guzhou0806_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/Guzhou0806/n40-square-packing/tree/e5abeb4d078a5c5b35df6204dd9b93378e5a7880",
+    "note": "clipped-corner transfer on wand125's rect_n40_L67 density (jlevy/squares#485); jlevy/squares replayed it (sqverify-fast + exact audit of the finite steps, E-n040-guzhou-clipped-corner-sqverify-fast-replay). The source says the work came from AI-assisted research",
+    "date": "2026-10-10"
+   },
+   {
+    "value": 6.715815746082023,
+    "exact_form": "1340000/199529",
+    "source": "Guzhou0806_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/Guzhou0806/n40-square-packing/tree/71c97d07553d7d5ff5c5c82f0c9d1c75a150a4e3",
+    "note": "continuous-pose interval kernel on wand125's rect_n40_L67 density, strict bound (jlevy/squares#485 follow-up); jlevy/squares replayed both kernels and audited the finite steps exactly (E-n040-guzhou-continuous-pose-kernel-replay). The source says the work came from AI-assisted research",
+    "date": "2026-10-10"
+   },
+   {
+    "value": 6.718,
+    "exact_form": "3359/500",
+    "source": "Guzhou0806_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/Guzhou0806/n40-square-packing/tree/6a65957e6c5c51cdf267917d882dab7f5b4928dd",
+    "note": "new rectangle supports, strict bound (jlevy/squares#485, 11 October update); reported, not independently replayed",
+    "date": "2026-10-11",
+    "reported": true
    }
   ]
  },
@@ -3026,16 +3027,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 6.5,
-    "exact_form": "13/2",
-    "source": "wand125_2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n39_L650.json.ASSET.json",
-    "note": "the n = 39 certificate, carried to n = 41 by monotonicity (s(41) >= s(39)) as jlevy/squares does; replayed by jlevy/squares (T-044, V4/C3)",
-    "date": "2026-09-14"
-   },
-   {
     "value": 6.76,
     "exact_form": "169/25",
     "source": "wand125_2026",
@@ -3096,16 +3087,6 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
-   },
-   {
-    "value": 6.520797289396148,
-    "exact_form": "1/2 + sqrt(42 - 6 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
     "value": 6.520797289396148,
@@ -3190,16 +3171,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 6.603277807866851,
-    "exact_form": "1/2 + sqrt(43 - 6 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
-   },
-   {
     "value": 6.8875,
     "exact_form": "551/80",
     "source": "wand125_2026",
@@ -3260,16 +3231,6 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
-   },
-   {
-    "value": 6.68465843842649,
-    "exact_form": "1/2 + sqrt(44 - 6 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
     "value": 6.68465843842649,
@@ -3609,27 +3570,6 @@
     "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
    },
    {
-    "value": 7.4,
-    "exact_form": "37/5",
-    "source": "wand125_2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds",
-    "note": "mixed point-and-segment certificate, commit 75dd095; reported, not independently replayed (jlevy/squares T-048, V0/C0)",
-    "date": "2026-09-28",
-    "reported": true
-   },
-   {
-    "value": 7.076473218982953,
-    "exact_form": "1/2 + sqrt(50 - 7 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
-   },
-   {
     "value": 7.076473218982953,
     "exact_form": "1/2 + sqrt(50 - 7 + 1/4)",
     "source": "Karakus2026",
@@ -3699,16 +3639,6 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
-   },
-   {
-    "value": 7.152067347825035,
-    "exact_form": "1/2 + sqrt(51 - 7 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
     "value": 7.152067347825035,
@@ -3812,16 +3742,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 7.38,
-    "exact_form": "369/50",
-    "source": "wand125_2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n53_L738.json.ASSET.json",
-    "note": "the n = 53 certificate, whose exact mass 51.483 is below 52; replayed by jlevy/squares (T-044, V4/C3)",
-    "date": "2026-09-21"
-   },
-   {
     "value": 7.535,
     "exact_form": "1507/200",
     "source": "wand125_2026",
@@ -3913,16 +3833,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 7.38,
-    "exact_form": "369/50",
-    "source": "wand125_2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n53_L738.json.ASSET.json",
-    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
-    "date": "2026-09-21"
-   },
-   {
     "value": 7.6075,
     "exact_form": "3043/400",
     "source": "wand125_2026",
@@ -3983,16 +3893,6 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
-   },
-   {
-    "value": 7.37386354243376,
-    "exact_form": "1/2 + sqrt(54 - 7 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
     "value": 7.37386354243376,
@@ -4087,16 +3987,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 7.54,
-    "exact_form": "377/50",
-    "source": "wand125_2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n55_L754.json.ASSET.json",
-    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
-    "date": "2026-09-17"
-   },
-   {
     "value": 7.7125,
     "exact_form": "617/80",
     "source": "wand125_2026",
@@ -4179,16 +4069,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 7.62,
-    "exact_form": "381/50",
-    "source": "wand125_2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n56_L762.json.ASSET.json",
-    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
-    "date": "2026-09-17"
-   },
-   {
     "value": 7.7825,
     "exact_form": "3113/400",
     "source": "wand125_2026",
@@ -4249,16 +4129,6 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
-   },
-   {
-    "value": 7.588723439378913,
-    "exact_form": "1/2 + sqrt(57 - 7 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
     "value": 7.588723439378913,
@@ -4343,16 +4213,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 7.658910531638177,
-    "exact_form": "1/2 + sqrt(58 - 7 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
-   },
-   {
     "value": 7.7825,
     "exact_form": "3113/400",
     "source": "wand125_2026",
@@ -4414,16 +4274,6 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
-   },
-   {
-    "value": 7.72841614740048,
-    "exact_form": "1/2 + sqrt(59 - 7 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
     "value": 7.72841614740048,
@@ -4774,16 +4624,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 8.06637297521078,
-    "exact_form": "1/2 + sqrt(65 - 8 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
-   },
-   {
     "value": 8.35,
     "exact_form": "167/20",
     "source": "wand125_2026",
@@ -4855,16 +4695,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 8.132168761236873,
-    "exact_form": "1/2 + sqrt(66 - 8 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
-   },
-   {
     "value": 8.42,
     "exact_form": "421/50",
     "source": "wand125_2026",
@@ -4923,27 +4753,6 @@
     "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
-   },
-   {
-    "value": 8.455,
-    "exact_form": "1691/200",
-    "source": "wand125_2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/wand125/square-packing/tree/main/problems/square-lower-bounds/certificates/rect_n67_L8455",
-    "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
-    "date": "2026-09-28",
-    "reported": true
-   },
-   {
-    "value": 8.197402159170327,
-    "exact_form": "1/2 + sqrt(67 - 8 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
     "value": 8.197402159170327,
@@ -5047,16 +4856,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 8.41,
-    "exact_form": "841/100",
-    "source": "wand125_2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n69_L841.json.ASSET.json",
-    "note": "the n = 69 certificate, whose exact mass is below 68; replayed by jlevy/squares (T-044, V4/C3)",
-    "date": "2026-09-21"
-   },
-   {
     "value": 8.51,
     "exact_form": "851/100",
     "source": "wand125_2026",
@@ -5127,16 +4926,6 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
-   },
-   {
-    "value": 8.41,
-    "exact_form": "841/100",
-    "source": "wand125_2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n69_L841.json.ASSET.json",
-    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
-    "date": "2026-09-21"
    },
    {
     "value": 8.585,
@@ -5221,16 +5010,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 8.55,
-    "exact_form": "171/20",
-    "source": "wand125_2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n70_L855.json.ASSET.json",
-    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
-    "date": "2026-09-17"
-   },
-   {
     "value": 8.625,
     "exact_form": "69/8",
     "source": "wand125_2026",
@@ -5311,16 +5090,6 @@
     "url": "https://arxiv.org/abs/2609.37410",
     "date": "2026-09-29",
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
-   },
-   {
-    "value": 8.55,
-    "exact_form": "171/20",
-    "source": "wand125_2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n70_L855.json.ASSET.json",
-    "note": "the n = 70 certificate, carried to n = 71 by monotonicity (s(71) >= s(70)) as jlevy/squares does; replayed by jlevy/squares (T-044, V4/C3)",
-    "date": "2026-09-17"
    },
    {
     "value": 8.685,
@@ -5405,16 +5174,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 8.61,
-    "exact_form": "861/100",
-    "source": "wand125_2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://github.com/wand125/square-packing/blob/main/problems/square-lower-bounds/certificates/cert_n72_L861.json.ASSET.json",
-    "note": "weighted point certificate; replayed by jlevy/squares (T-044, V4/C3)",
-    "date": "2026-09-17"
-   },
-   {
     "value": 8.685,
     "exact_form": "1737/200",
     "source": "wand125_2026",
@@ -5475,16 +5234,6 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
-   },
-   {
-    "value": 8.577747210701755,
-    "exact_form": "1/2 + sqrt(73 - 8 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
     "value": 8.577747210701755,
@@ -5569,16 +5318,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 8.639410298049853,
-    "exact_form": "1/2 + sqrt(74 - 8 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
-   },
-   {
     "value": 8.8475,
     "exact_form": "3539/400",
     "source": "wand125_2026",
@@ -5651,16 +5390,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 8.700609733428363,
-    "exact_form": "1/2 + sqrt(75 - 8 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
-   },
-   {
     "value": 8.9,
     "exact_form": "89/10",
     "source": "wand125_2026",
@@ -5721,16 +5450,6 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-27",
     "reported": true
-   },
-   {
-    "value": 8.761355820929152,
-    "exact_form": "1/2 + sqrt(76 - 8 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
     "value": 8.761355820929152,
@@ -6062,16 +5781,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 9.058621384311845,
-    "exact_form": "1/2 + sqrt(82 - 9 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
-   },
-   {
     "value": 9.32,
     "exact_form": "233/25",
     "source": "wand125_2026",
@@ -6132,16 +5841,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 9.116843969807043,
-    "exact_form": "1/2 + sqrt(83 - 9 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
-   },
-   {
     "value": 9.37,
     "exact_form": "937/100",
     "source": "wand125_2026",
@@ -6190,16 +5889,6 @@
     "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
-   },
-   {
-    "value": 9.174675786448736,
-    "exact_form": "1/2 + sqrt(84 - 9 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
     "value": 9.174675786448736,
@@ -6282,16 +5971,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 9.23212459828649,
-    "exact_form": "1/2 + sqrt(85 - 9 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
-   },
-   {
     "value": 9.46,
     "exact_form": "473/50",
     "source": "wand125_2026",
@@ -6354,16 +6033,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 9.289197915623474,
-    "exact_form": "1/2 + sqrt(86 - 9 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
-   },
-   {
     "value": 9.46,
     "exact_form": "473/50",
     "source": "wand125_2026",
@@ -6413,16 +6082,6 @@
     "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
-   },
-   {
-    "value": 9.345903006477066,
-    "exact_form": "1/2 + sqrt(87 - 9 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
     "value": 9.345903006477066,
@@ -6507,16 +6166,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 9.402246907382429,
-    "exact_form": "1/2 + sqrt(88 - 9 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
-   },
-   {
     "value": 9.48,
     "exact_form": "237/25",
     "source": "wand125_2026",
@@ -6577,16 +6226,6 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
-   },
-   {
-    "value": 9.458236433584458,
-    "exact_form": "1/2 + sqrt(89 - 9 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
     "value": 9.458236433584458,
@@ -6671,16 +6310,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 9.513878188659973,
-    "exact_form": "1/2 + sqrt(90 - 9 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
-   },
-   {
     "value": 9.6,
     "exact_form": "48/5",
     "source": "wand125_2026",
@@ -6741,16 +6370,6 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
-   },
-   {
-    "value": 9.569178573608527,
-    "exact_form": "1/2 + sqrt(91 - 9 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
     "value": 9.569178573608527,
@@ -6824,16 +6443,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 9.62414379544733,
-    "exact_form": "1/2 + sqrt(92 - 9 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
-   },
-   {
     "value": 9.75,
     "exact_form": "39/4",
     "source": "wand125_2026",
@@ -6883,16 +6492,6 @@
     "status": "gap",
     "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/view/v12i1r37",
     "note": "general lower bound, Theorem 2(ii); published proof incomplete: it rests on Nagamochi's Lemma 1, which is false (chelokot 2026, Lean-checked counterexample; Karakus 2026, arXiv:2609.37410). Not disproved; kept for the record, never best"
-   },
-   {
-    "value": 9.67877987534291,
-    "exact_form": "1/2 + sqrt(93 - 9 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
     "value": 9.67877987534291,
@@ -6977,16 +6576,6 @@
     "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
-    "value": 9.733092656309694,
-    "exact_form": "1/2 + sqrt(94 - 9 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
-   },
-   {
     "value": 9.805,
     "exact_form": "1961/200",
     "source": "wand125_2026",
@@ -7047,16 +6636,6 @@
     "note": "rectangle-density certificate in tokoharu's format; reported, not independently replayed (jlevy/squares T-046, V0/C0)",
     "date": "2026-09-28",
     "reported": true
-   },
-   {
-    "value": 9.787087810503355,
-    "exact_form": "1/2 + sqrt(95 - 9 + 1/4)",
-    "source": "Karakus2026",
-    "year": 2026,
-    "status": "preprint",
-    "url": "https://arxiv.org/abs/2609.37410",
-    "date": "2026-09-29",
-    "note": "general lower bound, Corollary 6.2: s(N) >= 1/2 + sqrt(N - floor(sqrt N) + 1/4) for nonsquare N >= 8 (weaker than Nagamochi's stated bound, but with a complete proof); unrefereed"
    },
    {
     "value": 9.787087810503355,

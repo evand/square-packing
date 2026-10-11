@@ -153,6 +153,7 @@ def import_pending(st: Store, cfg_path=os.path.join(HERE, 'pending.yaml'), only=
         if only and e['issue'] not in only:
             continue
         author, state, claims = issue_claims(e['issue'])
+        claims.update({int(n): float(s) for n, s in (e.get('claims') or {}).items()})   # claims stated outside a table
         src = f"pending:#{e['issue']}"
         ref = f"{e['repo']}@{e['commit'][:7]}"
         d = fetch_repo(e['repo'], e['commit'])

@@ -526,7 +526,9 @@ const REPO = 'https://github.com/evand/square-packing/blob/main/';
 const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const lnk = (url, text) => `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(text)}</a>`;
 function creditHTML(n, c) {
-  let h = `Found by ${esc(c.who)}, posted ${c.date} (${lnk(c.url, c.label)}).`;
+  // A posting that started from someone else's packing credits that construction (provenance.py LINEAGE).
+  let h = c.found_by ? `Found by ${esc(c.found_by.who)} (${lnk(c.found_by.url, c.found_by.label)}, ${c.found_by.date}); improved by ${c.improved.map(x => `${esc(x.who)} (${lnk(x.url, x.label)}, ${x.date})`).join('; ')}.`
+                     : `Found by ${esc(c.who)}, posted ${c.date} (${lnk(c.url, c.label)}).`;
   if (c.also && c.also.length) h += ` Also posted by ${c.also.map(x => `${esc(x.who)} (${lnk(x.url, x.label)}, ${x.date})`).join(', ')}.`;
   h += c.registered ? ` Accepted on jlevy/squares' register (${lnk(c.register_url, `case ${n}`)}).`
                     : ` Not yet on jlevy/squares' register: a registration request is open, and the packing passes our own two exact certificate checkers.`;

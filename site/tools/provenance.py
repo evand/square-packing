@@ -14,7 +14,10 @@ the rest (found since mid-September 2026) this script reads who posted it first:
 
 A packing counts as "the same" as a posting if the sides agree to SAME_TOL (exact re-solves of one arrangement move the
 side by < 1e-9).  The credited finder is the earliest posting of the record packing; later postings of the same
-packing are listed as `also`.  For n <= 100 (the Bounds page's range) every posting that improved on the best before
+packing are listed as `also`.  Where a posting says it started from someone else's packing (LINEAGE, from its own
+lineage section), the root of that chain is credited as the finder and the later postings as improvements.  A record
+the lists could not certify, or posted after them, is drawn as posted (`raw`): those are the n that still need
+regularizing (search/regularize/REGULARIZE.md).  For n <= 100 (the Bounds page's range) every posting that improved on the best before
 it is kept as a history step.
 
   provenance.py            write site/data/records2026.json
@@ -33,7 +36,7 @@ SAME_TOL = 1e-8
 HISTORY_MAX = 100
 
 ISSUE = 'https://github.com/jlevy/squares/issues/'
-# Dated public postings.  Issue dates: GitHub createdAt (UTC), fetched 2026-10-10.
+# Dated public postings.  Issue dates: GitHub createdAt (UTC), fetched 2026-10-10 / 2026-10-11.
 EVENTS = {
     'dewinter': dict(who='Joost de Winter', date='2026-09-16', label='JoostdeWinter/square-packing-211',
                      url='https://github.com/JoostdeWinter/square-packing-211'),
@@ -54,10 +57,27 @@ EVENTS = {
     '#484': dict(who='Kevin Fang (TheSnakeFang)', date='2026-10-10', label='jlevy/squares#484', url=ISSUE + '484'),
     '#488': dict(who='Francisco Couzo', date='2026-10-10', label='jlevy/squares#488', url=ISSUE + '488'),
     '#489': dict(who='Evan Daniel (this project)', date='2026-10-10', label='jlevy/squares#489', url=ISSUE + '489'),
+    '#422': dict(who='Nate Chaoweeraprasit (itsnaka, SQUISH)', date='2026-10-07', label='jlevy/squares#422', url=ISSUE + '422'),
+    '#500': dict(who='Nate Chaoweeraprasit (itsnaka, SQUISH)', date='2026-10-11', label='jlevy/squares#500', url=ISSUE + '500'),
+    '#501': dict(who='Daniil Ostashev (dostashev)', date='2026-10-11', label='jlevy/squares#501', url=ISSUE + '501'),
+    '#503': dict(who='PingYou Ltd (BuddenPing)', date='2026-10-11', label='jlevy/squares#503', url=ISSUE + '503'),
+    '#504': dict(who='PingYou Ltd (BuddenPing)', date='2026-10-11', label='jlevy/squares#504', url=ISSUE + '504'),
+    '#505': dict(who='Robert Barnett (RobertBarnettProjects)', date='2026-10-11', label='jlevy/squares#505', url=ISSUE + '505'),
 }
 # Same-day order (issue creation times), so that "earliest" is well defined.
-ORDER = ['dewinter', 'casson', 'couzo0927', 'couzo1003', '#399', '#401', '#432', '#451', '#465', '#470', '#476', '#481',
-         '#484', '#488', '#489']
+ORDER = ['dewinter', 'casson', 'couzo0927', 'couzo1003', '#399', '#401', '#422', '#432', '#451', '#465', '#470', '#476',
+         '#481', '#484', '#488', '#489', '#500', '#501', '#503', '#504', '#505']
+# Lineage, from each posting's own "lineage and credit" section: posting -> {n: the posting whose packing it started
+# from}.  The poster asked that the construction be credited to where it started, so the site credits the root of the
+# chain as the finder and lists the later postings as improvements (fetched 2026-10-11).
+LINEAGE = {
+    '#451': {105: '#432', 108: '#432', 127: '#432', 131: '#432', 155: '#422', 180: '#422'},
+    '#465': {155: '#422'},                                              # "a nearby minimum of SQUISH's packing"
+    '#476': {132: '#470', 237: '#422', 263: '#422', 303: '#422', 267: '#432', 270: '#399'},
+    '#488': {209: '#481', 237: '#481', 270: '#481', 305: '#481', 132: '#470', 175: '#432'},
+    '#489': {308: '#484', 343: '#484', 344: '#484'},                    # "please credit the construction to him"
+    '#505': {146: '#432', 261: '#432'},                                 # "both original layouts are by Ryan Xu"
+}
 # Our own posts are not in the store's pending table (pk/pending.yaml lists other people's): sides from the issue titles.
 OURS = {'#465': {132: 11.98709933224506, 155: 12.95249894401401},
         '#489': {132: 11.985680198846, 308: 17.998269879526}}
@@ -127,9 +147,11 @@ def build():
         posts = sorted(set(posts), key=lambda p: ORDER.index(p[1]))
         # A posting below the list's packing: the list could not certify it (exactsolve fails; REGULARIZE.md, n = 261).
         # The site then draws that posting as posted ('raw') instead of a regularized copy.
+        # The smallest posting is drawn (n = 261: #505's refinement certifies, #432's posting does not); the credit
+        # still goes to the earliest posting of that arrangement (`first`, within SAME_TOL) and its lineage.
         raw = None
         if posts and min(p[0] for p in posts) < list_s - SAME_TOL:
-            raw = min(posts, key=lambda p: (round(p[0], 8), ORDER.index(p[1])))
+            raw = min(posts, key=lambda p: (p[0], ORDER.index(p[1])))
             s = raw[0]
             print(f'n={n}: posted {s:.12f} ({raw[1]}) is below the list packing {list_s:.12f}: drawn as posted',
                   file=sys.stderr)
@@ -139,12 +161,23 @@ def build():
         if not same:
             print(f'n={n}: no posting matches the list side {s} (posts {posts})', file=sys.stderr)
         first = same[0][1] if same else None
+        drawn = raw[1] if raw else first          # the posting whose packing the site draws
+        # lineage: from the drawn posting back to the construction it started from
+        chain, ev = [], drawn
+        while ev and n in LINEAGE.get(ev, {}) and ev not in chain:
+            chain.append(ev)
+            ev = LINEAGE[ev][n]
+        found = ev if chain else None             # the root posting, credited as the finder
+        registered = reg_s is not None and abs(reg_s - s) < SAME_TOL
         e = {'s': best[n]['side'] if raw is None else repr(raw[0]), 'catalogue_s': cat, 'first': first, 'raw': raw is not None,
-             'also': [p[1] for p in same[1:] if EVENTS[p[1]]['who'] != EVENTS[first]['who']] if first else [],
-             'registered': reg_s is not None and abs(reg_s - s) < SAME_TOL,
+             'drawn': drawn, 'found_by': found, 'improved_in': chain if found else [],
+             'also': [p[1] for p in same[1:] if EVENTS[p[1]]['who'] != EVENTS[first]['who'] and p[1] not in chain]
+                     if first else [],
+             'registered': registered,
              'register_s': ru.get('value'), 'register_verified': bool(reg_verified.get('value')) and
              reg_s is not None and abs(side(reg_verified['value']) - reg_s) < 1e-12,
-             'refined_by': ru.get('improved_by') or []}
+             # the register's improved_by describes the register's packing: only when that is the one drawn
+             'refined_by': (ru.get('improved_by') or []) if registered else []}
         if n <= HISTORY_MAX:
             steps, cur = [], ref
             for ps, ev in posts:               # in posting order: keep each that beats everything before it
@@ -164,7 +197,8 @@ def main():
     for n, e in out['n'].items():
         ev = EVENTS.get(e['first'], {})
         print(f"{n:>4} {float(e['s']):.10f} {ev.get('who', '?'):<40} {ev.get('date', ''):<11} {e['first'] or '?':<10}"
-              f" also={e['also']} reg={'yes' if e['registered'] else 'no'}{'(verified)' if e['register_verified'] else ''}"
+              + (f" drawn={e['drawn']}(raw)" if e['raw'] else '') + (f" found_by={e['found_by']} via {e['improved_in']}" if e['found_by'] else '')
+              + f" also={e['also']} reg={'yes' if e['registered'] else 'no'}{'(verified)' if e['register_verified'] else ''}"
               + (f" steps={[(round(x['s'], 9), x['event']) for x in e['steps']]}" if 'steps' in e else ''))
     if not a.show:
         p = os.path.join(SITE, 'data', 'records2026.json')

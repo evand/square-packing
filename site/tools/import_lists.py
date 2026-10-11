@@ -162,17 +162,18 @@ def main():
         if not e.get('raw'):
             continue
         n = int(ns)
-        row = stored(n, e['first'], float(e['s']))
+        drawn = e.get('drawn') or e['first']
+        row = stored(n, drawn, float(e['s']))
         if not row or row[0] is None:
-            print(f'n={n}: no stored packing for the raw record {e["first"]}', file=sys.stderr)
+            print(f'n={n}: no stored packing for the raw record {drawn}', file=sys.stderr)
             continue
         p = st.get(row[0])
         key = raw_key[n] = f'rec-{n}.json'
         cert = os.path.join(LISTS, 'certs', 'raw', f'n-{n:03d}.cert.gz')     # search/regularize/register_cert.py
         files[key] = dict(n=n, s=dec(row[1]), sq=[[repr(float(x)), repr(float(y)), repr(float(t))] for x, y, t in p.sq],
-                          origin='raw', event=e['first'], store_id=row[0],
+                          origin='raw', event=drawn, store_id=row[0],
                           cert=os.path.relpath(cert, ROOT) if os.path.exists(cert) else None,
-                          credit={k: EV[e['first']][k] for k in ('who', 'date', 'label', 'url')})
+                          credit={k: EV[drawn][k] for k in ('who', 'date', 'label', 'url')})
     for ns, e in prov['n'].items():
         n = int(ns)
         for k, step in enumerate(e.get('steps', [])):
@@ -240,9 +241,14 @@ def main():
         r['best'] = raw_key.get(n, key)
         r['best_s'] = e['s'] if n in raw_key else best[n]['side']
         if e:
-            ev = EV[e['first']]
+            ev = EV[e.get('drawn') or e['first']] if n in raw_key else EV[e['first']]
             r['newer'] = True
             r['credit'] = {'who': ev['who'], 'date': ev['date'], 'label': ev['label'], 'url': ev['url'],
+                           # lineage (provenance.py LINEAGE): the construction it started from, and the improvements
+                           'found_by': ({k: EV[e['found_by']][k] for k in ('who', 'date', 'label', 'url')}
+                                        if e.get('found_by') else None),
+                           'improved': [{k: EV[x][k] for k in ('who', 'date', 'label', 'url')}
+                                        for x in reversed(e.get('improved_in') or [])],
                            'also': [dict(who=EV[x]['who'], date=EV[x]['date'], label=EV[x]['label'], url=EV[x]['url'])
                                     for x in e['also']],
                            'registered': e['registered'], 'refined_by': e['refined_by'],
@@ -256,9 +262,10 @@ def main():
             if d.get('is_record'):
                 d['was_record'] = True
                 d['is_record'] = False
-        steps = e.get('steps') or [{'s': float(e['s']), 'event': e['first'], 'current': True}]
+        posted = (e.get('drawn') or e['first']) if e.get('raw') else e['first']
+        steps = e.get('steps') or [{'s': float(e['s']), 'event': posted, 'current': True}]
         for k, step in enumerate(steps):
-            ev = EV[step['event']]
+            ev = EV[posted if step['current'] else step['event']]
             key = (raw_key.get(n) or f'best-{n}.json') if step['current'] else step.get('file')
             if not key or key not in idx['files']:
                 continue
@@ -266,6 +273,12 @@ def main():
             who = ev['who']
             verb = 'Found'
             text = f"{verb} by {who}, posted {dt['text']} ({ev['label']})."
+            if step['current'] and e.get('found_by'):     # credit the construction it started from (LINEAGE)
+                root = EV[e['found_by']]
+                who = root['who']
+                text = (f"Found by {who} ({root['label']}, {ev_date(root)['text']}); improved by "
+                        + '; '.join(f"{EV[x]['who']} ({EV[x]['label']}, {ev_date(EV[x])['text']})"
+                                    for x in reversed(e['improved_in'])) + '.')
             L.append({'file': key, 'n': n, 's': float(idx['files'][key]['s']) if not step['current'] else float(e['s']),
                       'events': [{'verb': verb, 'who': who, 'date': dt, 'text': text}], 'prose': text, 's_tex': None,
                       'rigid': False, 'date': [dt['year'], dt['month']], 'is_record': bool(step['current']),
