@@ -228,12 +228,39 @@ def _work(job):
         s, prop, desc = melt_side(s, sq, rng, A)
     else:
         prop, desc = MOVES[kind](s, sq, rng, A)
+    kr = tuple(job[11]) if len(job) > 11 and job[11] else (0, 1e-4)
     with tempfile.TemporaryDirectory() as tmp:
         return _screen_polish(s, prop, kind, desc, rng, k, known_sides, same, smax, pol_above, pextra, tmp,
-                              mate if kind == 'cross2' and cands else None)
+                              mate if kind == 'cross2' and cands else None, kr)
 
 
-def _screen_polish(s, prop, kind, desc, rng, k, known_sides, same, smax, pol_above, pextra, tmp, mate):
+def kick_retry(s, sq, rng, tmp, k, tries, sigma=1e-4, pextra=()):
+    """fq's polish can stall at points that are not jammed (10-10: ~90 % of lineage-run sub-11 outputs; a corner-corner
+    MILP finds a descent).  A tiny kick + full re-quench breaks the stall (10-08: every such state near the 110 record went
+    to a known minimum).  Up to `tries` kicked re-quenches from the current best; a strictly lower (by SAME_SIDE),
+    line-free result replaces it.  Returns (s, sq, info)."""
+    from layout import full_lines
+    hop.EXTRA[:] = ['--loosen', '1.0']
+    info = dict(tries=0, drops=0, drop=0.0)
+    s0 = s
+    for _ in range(tries):
+        r = hop.quench(s, sq, tmp, extra=('--kick', f'{sigma:g}', '--seed', str(rng.randrange(1 << 30))) + tuple(pextra))
+        info['tries'] += 1
+        info.setdefault('raw', []).append(r[0] if r else None)
+        if r is None or r[0] >= s - ID.SAME_SIDE:
+            info.setdefault('traj', []).append(s)
+            continue
+        p = os.path.join(tmp, 'kr.txt'); mcmin.write_deg(p, r[0], r[1])
+        if full_lines(p, k):
+            continue
+        s, sq = r[0], r[1]
+        info['drops'] += 1
+        info.setdefault('traj', []).append(s)
+    info['drop'] = s0 - s
+    return s, sq, info
+
+
+def _screen_polish(s, prop, kind, desc, rng, k, known_sides, same, smax, pol_above, pextra, tmp, mate, kr=(0, 1e-4)):
     """Screen, classify, (maybe) full polish, grid check, in the scratch dir `tmp` (removed by the caller)."""
     from layout import full_lines
     loosen = rng.choice(('1.0', '1.02', '1.05'))
@@ -263,6 +290,10 @@ def _screen_polish(s, prop, kind, desc, rng, k, known_sides, same, smax, pol_abo
     s2, sq2, _ = r2
     p = os.path.join(tmp, 'q.txt'); mcmin.write_deg(p, s2, sq2)
     lines = bool(full_lines(p, k))
+    if kr[0] > 0 and not lines and s2 < smax:          # --kick-retry: break polish stalls before the result counts
+        s_pol = s2
+        s2, sq2, info = kick_retry(s2, sq2, rng, tmp, k, kr[0], kr[1], pextra)
+        out.update(kr_drop=info['drop'], kr_drops=info['drops'], s_polish=s_pol)
     return dict(out, status='new?', s=s2, sq=sq2, lines=lines, s_screen=s1, sec=time.time() - t0)
 
 
@@ -409,7 +440,7 @@ def replay(out, line):
     import scratch
     scratch.scope('replay')
     r = work((s, sq, p['kind'], p['seed'], k, [], man.get('same', 0.0), smax, float('inf'),
-              (man.get('polish_extra') or '').split(), mate))
+              (man.get('polish_extra') or '').split(), mate, (man.get('kick_retry') or 0, man.get('kick_sigma') or 1e-4)))
     same = (r.get('s') == p.get('s')) or (r.get('s') is not None and p.get('s') is not None and abs(r['s'] - p['s']) < 1e-12)
     print(json.dumps(dict(logged=dict(st=p['st'], s=p.get('s'), desc=p.get('desc')),
                           replay=dict(st=r['status'], s=r.get('s'), desc=r.get('desc')), reproduced=same and r['status'] == p['st'])))
@@ -446,6 +477,9 @@ if __name__ == '__main__':
     ap.add_argument('--frontier-s', type=float, default=None, help='best known side (default: best start)')
     ap.add_argument('--resume', action='store_true', help='continue from <out>/state.json (time offset carried over)')
     ap.add_argument('--out'); ap.add_argument('--report'); ap.add_argument('--seed', type=int, default=1)
+    ap.add_argument('--kick-retry', type=int, default=0, help='after the full polish, up to N kicked re-quenches (sigma '
+                    '--kick-sigma); a strictly lower line-free result replaces the polished one (breaks fq polish stalls; 0 = off)')
+    ap.add_argument('--kick-sigma', type=float, default=1e-4)
     ap.add_argument('--replay', help='OUT:LINE: re-run proposal LINE of OUT/proposals.jsonl and compare with the log')
     a = ap.parse_args()
     if a.report:
@@ -524,7 +558,7 @@ if __name__ == '__main__':
             sd = rng.randrange(1 << 30)
             f = ex.submit(work, (s, sq, kind, sd, k, [e['s'] for e in ar.E], a.same, ar.smax,
                                        (min(e['s'] for e in ar.E) + a.polish_margin) if a.polish_margin else float('inf'), a.polish_extra.split(),
-                                       mates(kind, par)))
+                                       mates(kind, par), (a.kick_retry, a.kick_sigma)))
             pend[f] = (par, sd)
         for _ in range(a.procs):
             submit()
@@ -582,6 +616,7 @@ if __name__ == '__main__':
                                                   sec=round(r.get('sec', 0), 2), cpu=r.get('cpu'), s=r.get('s'),
                                                   s_screen=r.get('s_screen'), new=newi, hit=hit, par=par['i'], seed=sd,
                                                   desc=r.get('desc'), loosen=r.get('loosen'),
+                                                  **({'kr_drop': r['kr_drop'], 'kr_drops': r['kr_drops']} if 'kr_drop' in r else {}),
                                                   **({'mate': r['mate']} if r.get('mate') else {}))) + '\n')
                 if time.time() - t_start < 60 * a.minutes:
                     submit()

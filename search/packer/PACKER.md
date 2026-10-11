@@ -1268,3 +1268,18 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   shared side keys); certified within 1e-4 / 1e-3 of the record: 9 / 57; 1,457 side keys linked as copies to the 760 minima
   (most-copied: 128, 52, 44, 37, 35).  Not yet switched: battery / corpus / rediscovery "new certified" metrics still
   count basin side keys (next: count minima), insert110 (historical).
+* **Kick-retry, pre-registered check** (written before launch; `kr_eval.py`, `runs/kr_eval`; 4 procs, expected < 10 min):
+  60 not-min census points with a known descend destination + 60 certified minimum points (controls), 4 kicked
+  (sigma 1e-4) re-quenches each.  Hypothesis: kick-retry is a cheap substitute for descend before counting / parenting.
+  Adopt as the census-v2 arm if (a) >= 50 % of not-min points reach their descend destination (or a lower known minimum)
+  within 4 tries at <= 5 s CPU median, and (b) <= 2 / 60 controls move by more than 2e-9.  Otherwise report what the tries
+  do and keep descend as the reference.
+  **Result** (4.3 min wall, 953 s measured CPU): **fails both criteria; not adopted.**  not-min: after 1 / 2 / 4 tries
+  12 / 15 / 20 of 60 at their descend destination, 15 below it after 4, 26 on a known minimum (43 %), 53 moved (median drop
+  1.3e-6, max 8.5e-4); CPU median 8.4 s for 4 tries.  Controls (certified minima): **18 / 60 moved, all to lower sides**
+  (all on the first try; drop up to 6.0e-4), 54 / 60 end on a known minimum.  Reading: kick + full re-quench (ALM repair
+  stage included) is a short-range basin hop, not a finisher: ~30 % of certified 110 minima sit one sigma-1e-4 hop above a
+  lower minimum.  As pipeline policy it would erase shallow genuine minima before certification (census undercount).
+  `--kick-retry` stays, default off.  Next: kick + polish only (`--no-alm`) as a finisher candidate (same points); the hop
+  as an explorer move (judged as a move); census: many shallow minima, so a "minima at kick resolution" count would be
+  much smaller than the strict 760 (definition question, Evan 10-11).
