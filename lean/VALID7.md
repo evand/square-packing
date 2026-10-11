@@ -30,7 +30,7 @@ file. The certificates are Python pickles: load them only after checking the sum
 
 From `lean/`, with the certificates unpacked into `v7cert/`:
 
-1. `lake build Sqpack.V7.Bridge` and `python3 scripts/gen_face.py Sqpack/V7/Face.lean && lake build Sqpack.V7.Face`.
+1. `lake build Sqpack.V7.Bridge Sqpack.ExTreeTilt`.
 2. Root modules: `python3 scripts/emit_v7.py --cert DIR --chunk 40 --nproc N`. The checked build
    emitted the roots listed in `scripts/v7_xroots.txt` with `V7_X=1` (EXACT leaves through
    `LemmaELeafX`, which avoids enumerating the segment alternatives) and the other roots without it;
@@ -41,5 +41,12 @@ From `lean/`, with the certificates unpacked into `v7cert/`:
    then `#print axioms` on `SquarePacking.LemmaELeaf.valid7`, `.bentz` and `.validTilt7`.
 
 Measured on 64-core, 512 GB machines (at most 55 `lean` processes each): all 9,800 roots passed;
-`Face` 9 min (47 GB), `Bridge` 7 min (24 GB), `Main` 2 min 17 s (58 GB). The root checks are the bulk
-of the cost (roughly 10^4 CPU-hours in total).
+`Bridge` 7 min (24 GB), `Main` 1 to 2 min (53 GB) with the root `.olean` files in the page cache.
+
+`Main` gets `validTilt7` from the glued tree (`validTilt_of_tree`, `ExTreeTilt.lean`, through
+`LebMassBridge.lean`) and `valid7` from it by main's Lemma Z (`Bentz.valid7_of_tilt`), so no generated
+face `θ = 0` is needed (the first build used `cover_of_tree` with a generated `V7/Face.lean`, 9 min, 47 GB).
+
+Cost.  Rebuilding the kernel checks from the release certificates: about 6,650 CPU-hours (measured:
+the complete second run of the root checks).  Everything spent, including generating the certificates
+and reruns: about 10,700 CPU-hours (about 400 of them estimated, where logs were overwritten).

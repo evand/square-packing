@@ -123,7 +123,7 @@ import Sqpack
 -- #print axioms SquarePacking.s13_ge_4
 -- #print axioms SquarePacking.s13_eq_4
 -- opt-in (PR #6, wand125; lean/VALID7.md): `lake build Sqpack.Valid7Checker` (checker + Bridge, ~19 GB); the generated
--- V7/Main.lean (from the release data/valid7-lean-certs-v1, ~7,000 process-hours; not rebuilt here) then gives
+-- V7/Main.lean (from the release data/valid7-lean-certs-v1, about 6,650 CPU-hours; not rebuilt here) then gives
 -- #print axioms SquarePacking.LemmaELeaf.valid7
 -- #print axioms SquarePacking.LemmaELeaf.bentz
 -- mixed covers: CovM, piece leaves (Lemma S, Lemma T pair form, Lemma P), the mixed tree

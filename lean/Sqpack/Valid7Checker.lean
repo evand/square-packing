@@ -1,21 +1,24 @@
 /-
 Opt-in entry point (not in the default target) for the ValidTilt7 / Valid7 kernel checker of PR #6 (wand125, merged
 2026-10-10; `lean/VALID7.md`).  `lake build Sqpack.Valid7Checker` builds the checker and `V7.Bridge` (Bridge peaks at
-~19 GB).  The 9,800 generated root modules, `V7/Face.lean` and `V7/Main.lean` (`valid7 : Bentz.Valid7`,
+~19 GB) and `ExTreeTilt` (`ValidTilt` from a pose tree, through `LebMassBridge`).  The 9,800 generated
+root modules and `V7/Main.lean` (`valid7 : Bentz.Valid7`,
 `bentz : ∀ k ≥ 6, minSide (k^2 - 3) = k`) are not in the repository: `lean/VALID7.md` regenerates them from the
-release `data/valid7-lean-certs-v1` (~7,000 process-hours).
+release `data/valid7-lean-certs-v1` (about 6,650 CPU-hours).
 -/
 import Sqpack.BernsteinZ
 import Sqpack.CapK
 import Sqpack.ChordE
 import Sqpack.CovMP
 import Sqpack.ExTree
+import Sqpack.ExTreeTilt
 import Sqpack.ExTreeX
 import Sqpack.KArith
 import Sqpack.KBern
 import Sqpack.LebCorner
 import Sqpack.LebCredit
 import Sqpack.LebE
+import Sqpack.LebMassBridge
 import Sqpack.LebTan
 import Sqpack.LemmaE
 import Sqpack.LemmaEDec
