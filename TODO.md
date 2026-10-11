@@ -30,9 +30,11 @@ First deliverable: a table of exact forms of S + a handful of Lean local-optimal
 - [ ] Corner coupling (R3): does D(w) ≥ κ M(w)? Start with the corner dual at w = 1 (D = ½, corner cost ¼?).
 
 ## s(12)
+- [ ] Exact elimination along wall-to-wall chains (RANK8 chains of four) with small exact QE pieces: the s(12) home for the wallchain idea (10-10, `search/WALLCHAIN.md` reading).
 - [ ] Group-chat lemmas (10-05, low priority, `tasks/n12-chat-lemmas/` lists them): replay their evidence tarball with our checkers; Lean strip demo h = 1.13 and the corner–edge lemma `U+V ≥ 3.91c − 1.91`.
 
 ## Correctness / review
+- [ ] Nagamochi Lemma 1 with positions free (10-10, `search/NAGQE.md`): hand LP says irreparable for e>0 (margin ~2e); make exact. Whole-problem CAD (z3/cvc5) timed out.
 - [ ] Owed on jlevy (drafts: `outreach/draft-jlevy-replies-2026-10-07.md`; #238, #375, #256 posted 10-07): #279 s(59) exact replay **paused 10-07** (Evan: poor RoI on CPU for now; resume when cores are idle): one `zm_mixed` sweep at depth 34 over the whole D4 region (wand125 needed two runs whose joint coverage jlevy couldn't check); 33,725/102,400 roots done, ~127 CPU-h total, the rest is the expensive part.  Resume: `python3 search/zm_mixed.py cert runs/s59_wand125/n59_mixed_cover_8.txt --d4 --cert-mode --disj --chain-from 0 --depth 34 --pitch 1/20 --ubins 16 --nproc 15 --progress 5000 --resume runs/s59_wand125/zm_mixed_d4_depth34.jsonl --manifest runs/s59_wand125/zm_mixed_d4_depth34_manifest.json`; then reply (draft (D)).  Posting needs Evan's OK.
 - [ ] jlevy#419 Lean custody + closed forms (draft `outreach/draft-jlevy-419-lean-custody-2026-10-10.md`, replaces the 10-08 closed-forms draft): 10-10 rebuild of all 258 `Packs` proofs into the committed `lean/Sqpack/Exact/Packs/` (`lean_batch/run-2026-10-10.out`, one process, ~10 h); then SHA256SUMS, commit, fill PIN, re-check register (as of af17208c: 41 rational → exact, 15 already exact, 6 superseded: 84, 86, 127, 175, 258, 295; 232 has a pending SQUISH below it), post with Evan's OK.
 - [ ] (perf, scales) `lean/Sqpack/Bentz.lean` peaks at 23.5 GB / 126 s alone (next: S32 11.8 GB, ValidSplit9 9.8 GB, rest ≤ 7 GB): find the heavy term/tactic before the families grow.
@@ -53,6 +55,8 @@ First deliverable: a table of exact forms of S + a handful of Lean local-optimal
 - [ ] Lean explainer (`notes/lean-explainer-draft.html`, artifact FJPhwWoQLhdkcerwh4VBwY): Evan reviews → site page.
 
 ## s(17)
+- [ ] Wall-chain elimination (10-10, `search/WALLCHAIN.md`): width-1 ring DP misses m851903's obstruction (float). Post the negative (`outreach/draft-jlevy-n17-wallchain-negative-2026-10-10.md`, needs OK + push); width-2 band DP unpriced.
+- [ ] Idea B (10-10, unstarted): stationarity / monotonicity-test pruning as the "non-margin argument" for n17 capture (X-052 §2.8 soft directions); theory + cheap pilot.
 - [ ] s(17): pure closed covers are at their limit (exact ceiling ν_f(4.660) ≥ 17.0447, `CEILINGS_17_20.md`); further lower-bound gains need rule atoms (WISHLIST N15).
 - [ ] Techniques from jlevy/Kleddamag/Guzhou (`notes/jlevy-s17-techniques.md` §2): rule atoms as LP columns, near-tight cells as exact LP rows gmpy2 in exact checkers.  s(17) exact: their PR #307 is far ahead and wand125 built its independent check (jlevy PR #410): not ours to do.
 - [ ] s(17) exact via the s(11) method: on hold (CPU). `tasks/s17-core-isolation/`
