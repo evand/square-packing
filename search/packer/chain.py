@@ -68,14 +68,16 @@ def lib_load(out, n):
 
 
 def lib_add(out, n, items):
-    """add (s, path) packings (copied) to n's library; distinct = side differs by > 1e-9; keeps the LIB_CAP best"""
+    """add (s, path) packings (copied) to n's library; distinct = side differs by >= identity.SAME_SIDE (2e-9; 10-11, was
+    > 1e-9); keeps the LIB_CAP best"""
     d = f'{out}/lib/n{n}'; os.makedirs(d, exist_ok=True)
     L = lib_load(out, n)
     sides = sorted(x for x, _ in L)
     import bisect
     for s, p in sorted(items):
-        i = bisect.bisect_left(sides, s - 1e-9)
-        if i < len(sides) and abs(sides[i] - s) <= 1e-9 or not os.path.exists(p):
+        from pk.identity import SAME_SIDE
+        i = bisect.bisect_left(sides, s - SAME_SIDE)
+        if i < len(sides) and abs(sides[i] - s) < SAME_SIDE or not os.path.exists(p):
             continue
         dst = f'{d}/{s:.12f}.txt'; shutil.copy(p, dst); L.append((s, dst)); bisect.insort(sides, s)
     L.sort()

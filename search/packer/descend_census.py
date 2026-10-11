@@ -3,8 +3,9 @@
 
 For every `basin` row of class not-min (side below k) that still has a packing in the store: exact/descend.py's
 descend() (corner-corner MILP kick + slp2, until the MILP first-order dS >= -thr), then exactsolve (census_exact.solve)
-on the result.  Outcome per point: known (lands on an exact side already certified in `basin` before this run), new
-(certified, side not certified before), not-min (still not a local minimum), unresolved / failed.  Results are appended
+on the result.  Outcome per point: known (lands on a minimum already in the store's `minimum` table, incl. earlier in
+this run; 10-11), new (certified or weak minimum not there before), not-min (still not a local minimum), unresolved /
+failed.  Results are appended
 to runs/census/n<n>/descend.jsonl (re-runs skip keys already there); landed minima go into `basin` and the store
 (source descend:census).  The point -> minimum map also measures duplication: how many census points collapse onto one
 minimum.
@@ -72,7 +73,7 @@ def run(a):
     done = set(json.loads(l)['key'] for l in open(outp)) if os.path.exists(outp) else set()
     if a.skip_started:                                      # concurrent workers: skip keys another run has started
         done |= set(os.listdir(root))
-    known = set((S or '')[:23] for (S,) in st.db.execute("SELECT S FROM basin WHERE n=? AND cls='certified'", (a.n,)) if S)
+    known = st.minima(a.n)                                  # table `minimum` (pk/identity.py; 10-11)
     T = todo(st, a.n, k, done)
     import random; random.Random(a.seed).shuffle(T)        # random order: a partial run is a fair sample
     T = T[:a.limit or None]
@@ -86,15 +87,17 @@ def run(a):
     with open(outp, 'a') as fo:
         for (key, pid), r in zip(T, res):
             r = r or dict(key=key, pid=pid, cls='unresolved', status='timeout')
-            if r['cls'] == 'certified':
-                r['outcome'] = 'known' if r['S'][:23] in known else 'new'
-                k2 = f"{float(r['S'][:20]):.9f}"
-                if not st.basin(a.n, k2) or st.basin(a.n, k2)['cls'] != 'certified':
-                    st.set_basin(a.n, k2, 'certified', r['S'], r['status'])
+            if r['cls'] in ('certified', 'weak'):
+                # the descended point is a minimum: record it (minimum table, merged within 1e-17) and the copy link from
+                # the not-min input side key.  (Before 10-11: a basin row keyed by float(S) to 1e-9, which could
+                # overwrite another side's row; the outcome test used S[:23] of the basin table.)
+                r['outcome'] = 'known' if st.find_minimum(a.n, r['S']) is not None else 'new'
                 from pk.packing import read
                 pid2, _ = st.add(read(f"{root}/{key}/in.txt"), source='descend:census', finder='ours', ref=f'from {pid}',
-                                 status='certified')
-                r['pid_out'] = pid2
+                                 status=r['cls'])
+                mk, _ = st.add_minimum(a.n, r['S'], r['cls'], r.get('status'), src='descend:census', pid=pid2)
+                st.add_copy(a.n, key, mk, via='descend')
+                r['pid_out'] = pid2; r['min_key'] = mk
             else:
                 r['outcome'] = r['cls']
             C[r['outcome']] += 1

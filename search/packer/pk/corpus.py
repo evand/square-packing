@@ -183,7 +183,7 @@ def certify(a):
     t0 = time.time()
     with ProcessPoolExecutor(a.procs) as ex:
         for key, r in ex.map(_solve, todo.values()):
-            st.set_basin(n, key, r.get('cls', 'unresolved'), r.get('S'), r.get('status'))
+            st.record_verdict(n, key, r, via=f'corpus:{a.name}')
     print(f'  done in {time.time() - t0:.0f}s')
 
 

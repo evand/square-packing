@@ -3,11 +3,13 @@
 
   census_exact.py runs/X/rec.json runs/X/cand.json [--procs 14] [--k 11]
 
-For every trial output below k without full lines: exactsolve (../exact) -> class
-  certified   KKT point with a valid certificate and a local-minimum second-order status; key = S_exact to 1e-20
-              (also: second order inconclusive, flagged 'inconclusive' in census_exact.json)
+For every trial output below k without full lines: exactsolve (../exact) -> class (pk/identity.py, 10-11)
+  certified   KKT point with a valid certificate and a proved second order (PD / rigid / strict mod flat motions);
+              key = identity.min_key(S) (1e-17)
+  weak        valid certificate, second order not proved ('inconclusive ...', 'PSD with N zero modes'); counted as
+              certified before 10-11, now its own class (flag 'inconclusive' kept for old readers)
   not-min     exactsolve says not a local minimum (not jammed in the corner-corner MILP, or a second-order descent)
-  unresolved  anything else (refused, inconclusive, solve failed, killed)
+  unresolved  anything else (refused, solve failed, killed)
 Trials at or above k (or with a full line) are keyed in f64: side to 1e-7 + tilted-count fingerprint.
 Per reference and sigma, and pooled: N, hits per class, distinct D, singletons f1, doubletons f2,
 Good-Turing unseen mass f1/N (P(next trial lands in an unseen class)), Chao1 = D + f1^2/(2 f2).
@@ -19,7 +21,8 @@ EXACT = os.path.join(HERE, '..', 'exact')
 sys.path.insert(0, EXACT)
 from jobpool import run_jobs
 
-MIN_OK = ('PD', 'local minimum', 'PSD', 'rigid')
+sys.path.insert(0, HERE)
+from pk import identity as ID
 
 
 def solve(args):
@@ -33,14 +36,15 @@ def solve(args):
 def classify(rep):
     so = rep.get('second_order') or {}
     st = so.get('status', '') if isinstance(so, dict) else ''
-    if rep.get('S_exact') and rep.get('cert_valid') and st.startswith(MIN_OK):
-        return dict(cls='certified', key=rep['S_exact'][:23], S=rep['S_exact'][:32], status=st[:40])
-    if rep.get('S_exact') and rep.get('cert_valid') and st.startswith('inconclusive'):
-        # certified KKT point, second-order test blocked by weakly active contacts: keyed by S, flagged
-        return dict(cls='certified', key=rep['S_exact'][:23], S=rep['S_exact'][:32], status=st[:40], inconclusive=True)
-    if rep.get('status') == 'not jammed' or st.startswith('NOT'):
-        return dict(cls='not-min', status=(rep.get('status') or st)[:60])
-    return dict(cls='unresolved', status=(rep.get('status') or st or 'no status')[:60])
+    cls = ID.classify(rep)
+    if cls in (ID.CERTIFIED, ID.WEAK):
+        out = dict(cls=cls, key=ID.min_key(rep['S_exact']), S=rep['S_exact'][:40], status=st[:120])
+        if st.startswith('inconclusive'):
+            out['inconclusive'] = True
+        return out
+    if cls == ID.NOT_MIN:
+        return dict(cls='not-min', status=(rep.get('status') or st)[:120])
+    return dict(cls='unresolved', status=(rep.get('status') or st or 'no status')[:120])
 
 
 def load_run(p):

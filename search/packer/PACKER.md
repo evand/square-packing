@@ -1254,3 +1254,17 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   re-runs one proposal from parent + seed + mate: 16/16 reproduced exactly (one per kind x status, 1-min test run).
   Test run: cpu_s 120.0 vs worker_wall_s 121.9 at load ~9.6.  Not covered yet: mondrian.py, lineage_reach.py,
   insert110.py top level (their explore.py children have manifests), fq-internal knobs beyond the binary hash.
+* **Identity / verdicts unified** (`pk/identity.py`, store tables `minimum` + `copy`, `identity_backfill.py`; tests
+  `pk/tests/test_identity.py`).  A minimum = exact S to 1e-17 (neighbour keys merged); verdicts certified / **weak**
+  (PSD zero modes or inconclusive second order: counted as certified before) / not-min / unresolved; the f64 1e-9 side key
+  stays as the `basin` lookup cache.  All certifiers (corpus, battery, census_certify, descend_census) write through
+  `Store.record_verdict` / `add_minimum`; descend_census no longer writes basin rows keyed by float(S) (could overwrite
+  another side's row); explorer / chain same-side tolerance = `identity.SAME_SIDE` (2e-9; chain library was 1e-9);
+  battery suite `best` precedence bug fixed (ignored the certified known set when a frontier row existed; frozen suites
+  unaffected at 110, best = the register record).  Backfill (store snapshot first:
+  `~/store-backups/store-2026-10-11b-pre-identity.sqlite`): every certified basin row's second-order status recovered from
+  saved verdict files (519 rows had status 'import'); 42 basin rows relabelled weak.  **n = 110 census: 760 distinct minima
+  below 11 = 720 certified + 40 weak** (the "754" of 10-10 counted weak as certified and merged 4 distinct minima under
+  shared side keys); certified within 1e-4 / 1e-3 of the record: 9 / 57; 1,457 side keys linked as copies to the 760 minima
+  (most-copied: 128, 52, 44, 37, 35).  Not yet switched: battery / corpus / rediscovery "new certified" metrics still
+  count basin side keys (next: count minima), insert110 (historical).

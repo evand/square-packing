@@ -62,7 +62,7 @@ def freeze(a):
     pos = [allb[i][1] for i in np.linspace(0, len(allb) - 1, 20).round().astype(int)]
     known = sorted(float(r['key']) for r in st.db.execute("SELECT key FROM basin WHERE n=? AND cls='certified'", (n,)))
     fr = st.frontier().get(n)
-    suite = dict(n=n, k=k, best=min([fr['s']] if fr else [] + known[:1]), record=rec_id, rec_s=rec.s, withheld=withheld,
+    suite = dict(n=n, k=k, best=min(([fr['s']] if fr else []) + known[:1]), record=rec_id, rec_s=rec.s, withheld=withheld,
                  known=[s for s in known if key(s) not in set(withheld)], bench=bench, reach=reach,
                  reach_d={str(x['id']): x['d'] for x in D}, above=above, pos=pos, frozen=time.strftime('%F %T'))
     os.makedirs(ROOT, exist_ok=True)
@@ -216,7 +216,7 @@ def certify(d, S, procs=16):
     if todo:
         with ProcessPoolExecutor(procs) as ex:
             for kk, r in ex.map(_cert1, todo.values()):
-                st.set_basin(S['n'], kk, r.get('cls', 'unresolved'), r.get('S'), r.get('status'))
+                st.record_verdict(S['n'], kk, r, via=f'battery:{os.path.basename(d)}')
 
 
 # ---------- metrics ----------

@@ -66,7 +66,7 @@ def certify(a):
     for (key, pid), r in zip(T, res):
         r = r[2] if r else dict(cls='unresolved', status='timeout')
         cls = r.get('cls', 'unresolved')
-        st.set_basin(a.n, key, cls, r.get('S'), r.get('status'))
+        st.record_verdict(a.n, key, r, via='census_certify', pid=pid)     # basin cache + minimum + copy (pk/identity.py)
         if RANK.get(cls, 0) > RANK.get(st.db.execute('SELECT status FROM packing WHERE id=?', (pid,)).fetchone()[0], 0):
             st.set(pid, status=cls)
         C[cls] += 1
@@ -97,6 +97,18 @@ def report(a):
     print(f'  exact sides reached under more than one 1e-9 side key: {len(multi)} (largest {max(map(len, multi)) if multi else 0})')
     kept = sum(os.path.exists(f'{HERE}/runs/census/n{a.n}/{b[0]}/class.json') for b in sub)
     print(f'  with kept exactsolve output (contacts): {kept}')
+    # the census proper: one row per exact minimum (pk/identity.py; 10-11)
+    M = [m for m in st.minima(a.n) if float(m['S'][:20]) < k]
+    mc = collections.Counter(m['cls'] for m in M)
+    cps = collections.Counter(c[0] for c in st.db.execute('SELECT min_key FROM copy WHERE n=?', (a.n,)))
+    print(f'MINIMA (table `minimum`, exact S to 1e-17): {len(M)} below {k}: {dict(mc)}')
+    Sx = sorted(float(m['S'][:20]) for m in M if m['cls'] == 'certified')
+    if Sx:
+        print('  certified within ' + ', '.join(f'{g:g}: {sum(x - Sx[0] <= g for x in Sx)}' for g in (1e-6, 1e-5, 1e-4, 1e-3, 3e-3, 1e-2))
+              + f' of the best ({Sx[0]:.10f})')
+    if cps:
+        v = sorted(cps.values(), reverse=True)
+        print(f'  copy links: {sum(v)} side keys -> {len(v)} minima; most-copied {v[:5]}')
 
 
 if __name__ == '__main__':

@@ -5,6 +5,11 @@ Tables
   packing(id, hash UNIQUE, n, s, s_str, coords BLOB f64 (n,3), status, s_exact, fp, ntilted, grid, pen, parent, tags, added)
   sighting(packing, source, finder, ref, kind, added)   -- where a packing was seen (many per packing)
   frontier(n, s, s_str, finder, source, ref, pending, updated)  -- best known per n, one row per (n, source)
+  basin(n, key, cls, S, status, added)  -- exactsolve verdict per screened f64 side key (f'{s:.9f}'): a lookup cache,
+                                           not a minimum (pk/identity.py)
+  minimum(n, key, S, cls, status, src, pid, added, updated)  -- one row per exact minimum (10-11): key = identity.min_key(S)
+                                           (1e-17), cls certified | weak; census / "new minimum" counts read this table
+  copy(n, side_key, min_key, via, added)  -- a screened side that descends / solves to a minimum (copies of one minimum)
 
 status: raw (imported, f64-feasible within tol) < screened < polished < certified; or not-min / infeasible / unresolved.
 """
@@ -15,7 +20,7 @@ from .packing import Packing
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT = os.environ.get('PK_STORE', os.path.join(HERE, '..', 'runs', 'store.sqlite'))
-RANK = dict(infeasible=-1, raw=0, screened=1, polished=2, unresolved=2, **{'not-min': 3}, certified=4)
+RANK = dict(infeasible=-1, raw=0, screened=1, polished=2, unresolved=2, **{'not-min': 3}, weak=4, certified=5)
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS packing (
@@ -29,6 +34,11 @@ CREATE TABLE IF NOT EXISTS sighting (
 CREATE INDEX IF NOT EXISTS sighting_src ON sighting(source);
 CREATE TABLE IF NOT EXISTS basin (
   n INTEGER NOT NULL, key TEXT NOT NULL, cls TEXT NOT NULL, S TEXT, status TEXT, added TEXT, UNIQUE(n, key));
+CREATE TABLE IF NOT EXISTS minimum (
+  n INTEGER NOT NULL, key TEXT NOT NULL, S TEXT NOT NULL, cls TEXT NOT NULL, status TEXT, src TEXT, pid INTEGER,
+  added TEXT, updated TEXT, UNIQUE(n, key));
+CREATE TABLE IF NOT EXISTS copy (
+  n INTEGER NOT NULL, side_key TEXT NOT NULL, min_key TEXT NOT NULL, via TEXT, added TEXT, UNIQUE(n, side_key, min_key));
 CREATE TABLE IF NOT EXISTS frontier (
   n INTEGER NOT NULL, s REAL NOT NULL, s_str TEXT, finder TEXT, source TEXT NOT NULL, ref TEXT, pending INTEGER NOT NULL,
   packing INTEGER, updated TEXT, UNIQUE(n, source));
@@ -104,6 +114,59 @@ class Store:
 
     def basin(self, n, key):
         return self.db.execute('SELECT * FROM basin WHERE n=? AND key=?', (n, key)).fetchone()
+
+    # ---------- minima (pk/identity.py) ----------
+    def find_minimum(self, n, S):
+        """The minimum row whose key is S's key or a neighbour (1e-17), or None."""
+        from .identity import same_min_keys
+        ks = same_min_keys(S)
+        return self.db.execute(f'SELECT * FROM minimum WHERE n=? AND key IN (?,?,?)', (n, *ks)).fetchone()
+
+    def add_minimum(self, n, S, cls, status=None, src=None, pid=None, commit=True):
+        """Record an exact minimum (cls certified | weak).  Merges with an existing row within 1e-17: keeps the longer S
+        string, upgrades weak -> certified (never down).  Returns (key, is_new)."""
+        from .identity import min_key, RANK as IR, CERTIFIED, WEAK
+        assert cls in (CERTIFIED, WEAK), cls
+        r = self.find_minimum(n, S)
+        t = now()
+        if r is None:
+            k = min_key(S)
+            self.db.execute('INSERT INTO minimum VALUES (?,?,?,?,?,?,?,?,?)', (n, k, str(S), cls, status, src, pid, t, t))
+            out = (k, True)
+        else:
+            S2 = str(S) if len(str(S)) > len(r['S']) else r['S']
+            up = IR[cls] > IR[r['cls']]
+            self.db.execute('UPDATE minimum SET S=?, cls=?, status=?, src=?, updated=? WHERE n=? AND key=?',
+                            (S2, cls if up else r['cls'], status if up else r['status'], src if up else r['src'], t, n, r['key']))
+            out = (r['key'], False)
+        if commit:
+            self.db.commit()
+        return out
+
+    def record_verdict(self, n, side_key, r, via, pid=None):
+        """One exactsolve verdict r (census_exact.classify dict) for a screened side: basin cache row (side key) and,
+        for certified / weak, the minimum row + the copy link side_key -> minimum.  Returns the minimum key or None."""
+        from .identity import CERTIFIED, WEAK
+        cls = r.get('cls', 'unresolved')
+        self.db.execute('INSERT OR REPLACE INTO basin VALUES (?,?,?,?,?,?)', (n, side_key, cls, r.get('S'), r.get('status'), now()))
+        mk = None
+        if cls in (CERTIFIED, WEAK) and r.get('S'):
+            mk, _ = self.add_minimum(n, r['S'], cls, r.get('status'), src=via, pid=pid, commit=False)
+            self.add_copy(n, side_key, mk, via, commit=False)
+        self.db.commit()
+        return mk
+
+    def add_copy(self, n, side_key, mkey, via=None, commit=True):
+        self.db.execute('INSERT OR IGNORE INTO copy VALUES (?,?,?,?,?)', (n, side_key, mkey, via, now()))
+        if commit:
+            self.db.commit()
+
+    def minima(self, n, cls=None):
+        q, a = 'SELECT * FROM minimum WHERE n=?', [n]
+        if cls:
+            cl = [cls] if isinstance(cls, str) else list(cls)
+            q += f' AND cls IN ({",".join("?" * len(cl))})'; a += cl
+        return self.db.execute(q + ' ORDER BY key', a).fetchall()
 
     # ---------- read ----------
     def get(self, pid) -> Packing:

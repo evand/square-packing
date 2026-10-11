@@ -174,7 +174,7 @@ def import_pending(st: Store, cfg_path=os.path.join(HERE, 'pending.yaml'), only=
 
 
 # ---------- our explorer runs ----------
-EXACT_STATUS = {'certified': 'certified', 'not-min': 'not-min', 'unresolved': 'unresolved'}
+EXACT_STATUS = {'certified': 'certified', 'weak': 'weak', 'not-min': 'not-min', 'unresolved': 'unresolved'}
 
 
 def _prep_run(args):

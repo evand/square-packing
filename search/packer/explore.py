@@ -16,6 +16,7 @@ counts (L, B, axis, other) as in census_roles, and novelty against runs/known110
 """
 import argparse, collections, json, math, os, random, subprocess, tempfile, time
 from concurrent.futures import ProcessPoolExecutor, FIRST_COMPLETED, wait
+from pk import identity as ID           # SAME_SIDE: one f64 same-side tolerance (10-11)
 import mcmin, hop
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -317,7 +318,7 @@ class Archive:
         self.log = open(f'{out}/archive.jsonl', 'a')
         self.plog = open(f'{out}/proposals.jsonl', 'a')
 
-    def find(self, s, tol=2e-9):
+    def find(self, s, tol=ID.SAME_SIDE):
         for e in self.E:
             if abs(e['s'] - s) < tol:
                 return e
@@ -334,7 +335,7 @@ class Archive:
         root = i if parent < 0 else self.E[parent].get('root', parent)
         e = dict(i=i, s=s, path=path, desc=descriptor(s, sq, self.k), roles=roles(sq), parent=parent, kind=kind, root=root,
                  visits=1, expanded=0, children=0, t=round(t, 1),
-                 known=any(abs(s - x) < 2e-9 for x in self.known))
+                 known=any(abs(s - x) < ID.SAME_SIDE for x in self.known))
         if mate:
             e['mate'] = mate                 # crossover mate's archive path (own lineage or borrowed: compare roots)
         self.E.append(e)
@@ -492,8 +493,8 @@ if __name__ == '__main__':
     import bisect
     nref = sorted(json.load(open(a.novel_ref))) if a.novel_ref else []
     def novel(s):
-        i = bisect.bisect_left(nref, s - 2e-9)
-        return not (i < len(nref) and abs(nref[i] - s) < 2e-9)
+        i = bisect.bisect_left(nref, s - ID.SAME_SIDE)
+        return not (i < len(nref) and abs(nref[i] - s) < ID.SAME_SIDE)
     pend = {}
     ar_best = [min(e['s'] for e in ar.E)] if getattr(ar, 'E', None) else [math.inf]
     frontier_s = a.frontier_s if a.frontier_s is not None else ar_best[0]
@@ -540,7 +541,7 @@ if __name__ == '__main__':
                     stats[r['status']] += 1
                     newi = hit = None
                     if r['status'] == 'return':
-                        e = ar.find(r['s'], tol=1e-9)
+                        e = ar.find(r['s'])
                         if e: e['visits'] += 1; hit = e['i']
                     elif r['status'] == 'new?':
                         if r['lines'] or r['s'] >= ar.smax:
