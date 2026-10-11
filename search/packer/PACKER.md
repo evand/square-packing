@@ -1187,3 +1187,25 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
     pairs.  "Same minimum" needs the descent (or the contact graph); rattler masking may tighten the copy distances.
   - Not measured: whether the bias hurts.  At 110 every L2 run still reached the record, and 10.9968870 is a near-record
     basin, so part of the concentration is useful exploitation.
+* **Insertion test at 110** (10-10 evening, Evan; `insert110.py`, `runs/insert110`; 12 threads, ~1 h).  Question: does
+  inserting one square into non-regular sub-11 109 packings add a pile of new sub-11 110 minima, beyond the old technique's
+  rate, and any outside the record's family (census: all certified minima within d 0.104 of the record)?
+  - Baseline expectation, fixed before the runs: L1 / L2 (old technique, explorer from census starts, 20 proc-h) reached
+    113 certified minima nothing else has = **5.7 new minima per proc-h** (9% of their points unmapped, so a bit more;
+    expected lower now, since the census grew).  Live baseline arm = same explorer flags from the control's 17 source minima.
+  - Seeds (171 in 164 s, 4 hole tries each): control (17 census minima, one square out, back in) 19 / 51 quench below 11
+    directly (best 10.99787); donors (40 distinct sub-11 109 packings, not best(109) = 6 + 7/sqrt 2, stratified by side and
+    tilted count 29-69) 4 / 120 below 11, 36 in 11-11.02, 27 to the grid.
+  - Explorers (6 runs x 2 procs x 30 min, novelty reward vs every known sub-11 side, no elite share, starts below 11.02),
+    then certify every new side and descend a random 15 not-min points per arm; new = exact S not in the frozen 758:
+    | arm | proc-h | sub-11 sides | certified | new | not-min sampled -> new / known / still | new per proc-h |
+    | baseline | 2 | 286 | 207 | 2 (d 0.044, 0.060) | 15 -> 0 / 8 / 7 | 1.0 |
+    | control | 1 | 155 | 115 | 0 | 15 -> 0 / 9 / 6 | 0 |
+    | donor | 3 | 186 | 136 | 0 | 15 -> 0 / 7 / 8 | 0 |
+  - Which donors reached below 11: record-like ones (45-49 tilted: three of them back to the record itself, 10.996783) and
+    two low-tilt ones (31, 33 tilted); every sub-11 descendant of the low-tilt donors had rearranged into the record family
+    (42-46 tilted, d 0.03-0.063).  The other 35 donors' lineages stayed above 11 (best 11.0004-11.019).
+  - Reading: no new family; insertion lands back in the record's funnel and rediscovers known minima.  The live baseline
+    is 1.0 new / proc-h, not 5.7: the census is close to saturated for this explorer (or the 30-min novelty runs differ).
+    Donors 0 in 3 proc-h vs baseline 1.0 / proc-h: below the baseline, but small counts (P(0 | rate 1) ~ 0.05).  Counter-
+    example to "every new technique adds a pile of sub-11 packings" at 110, at this scale.
