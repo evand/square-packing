@@ -1,0 +1,10 @@
+import Sqpack.Exact.Packs.N112.Data
+
+namespace UnitSquarePacking.EC.N112
+
+set_option maxHeartbeats 0
+
+theorem chunk_4 : ∀ i : Fin 112, 100 ≤ i.val → i.val < 112 → boxOK cert i = true ∧ rowOK cert i = true := by
+  decide +kernel
+
+end UnitSquarePacking.EC.N112

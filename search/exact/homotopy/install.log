@@ -1,0 +1,466 @@
+  Installing known registries into `~/math/square-packing/public/search/exact/homotopy/.julia`
+       Added `General` registry to ~/math/square-packing/public/search/exact/homotopy/.julia/registries
+   Resolving package versions...
+   Installed Rmath_jll ──────────────────────── v0.5.2+0
+   Installed CommonWorldInvalidations ───────── v1.2.2
+   Installed CommonSolve ────────────────────── v0.2.14
+   Installed DataStructures ─────────────────── v0.19.6
+   Installed MacroTools ─────────────────────── v0.5.16
+   Installed SymEngine_jll ──────────────────── v0.12.0+0
+   Installed CompositionsBase ───────────────── v0.1.2
+   Installed Multisets ──────────────────────── v0.4.6
+   Installed FillArrays ─────────────────────── v1.18.0
+   Installed LightXML ───────────────────────── v0.9.3
+   Installed ManualMemory ───────────────────── v0.1.8
+   Installed Adapt ──────────────────────────── v4.7.4
+   Installed HypergeometricFunctions ────────── v0.3.30
+   Installed DelimitedFiles ─────────────────── v1.9.1
+   Installed ConstructionBase ───────────────── v1.6.0
+   Installed VectorizationBase ──────────────── v0.21.74
+   Installed StatsBase ──────────────────────── v0.34.13
+   Installed SLEEFPirates ───────────────────── v0.6.46
+   Installed Optim ──────────────────────────── v2.3.2
+   Installed SIMDTypes ──────────────────────── v0.1.0
+   Installed AliasTables ────────────────────── v1.1.3
+   Installed BitTwiddlingConvenienceFunctions ─ v0.1.6
+   Installed RingLists ──────────────────────── v0.2.9
+   Installed LinearAlgebraX ─────────────────── v0.2.11
+   Installed ArrayInterface ─────────────────── v7.30.2
+   Installed LoopVectorization ──────────────── v0.12.174
+   Installed DynamicPolynomials ─────────────── v0.6.8
+   Installed HashArrayMappedTries ───────────── v0.2.0
+   Installed Combinatorics ──────────────────── v1.1.0
+   Installed Compat ─────────────────────────── v4.18.1
+   Installed OrderedCollections ─────────────── v2.0.2
+   Installed IteratorInterfaceExtensions ────── v1.0.0
+   Installed HostCPUFeatures ────────────────── v0.1.18
+   Installed DataAPI ────────────────────────── v1.16.0
+   Installed Statistics ─────────────────────── v1.11.5
+   Installed PositiveFactorizations ─────────── v0.2.4
+   Installed StructArrays ───────────────────── v0.7.3
+   Installed StatsAPI ───────────────────────── v1.8.0
+   Installed PrecompileTools ────────────────── v1.3.4
+   Installed CpuId ──────────────────────────── v0.3.3
+   Installed AbstractLattices ───────────────── v0.3.1
+   Installed MixedSubdivisions ──────────────── v1.2.0
+   Installed StaticArrays ───────────────────── v1.9.23
+   Installed DataValueInterfaces ────────────── v1.0.0
+   Installed ElasticArrays ──────────────────── v1.2.12
+   Installed ProgressMeter ──────────────────── v1.11.0
+   Installed OffsetArrays ───────────────────── v1.17.0
+   Installed StaticArraysCore ───────────────── v1.4.4
+   Installed LayoutPointers ─────────────────── v0.1.17
+   Installed Mods ───────────────────────────── v2.2.6
+   Installed FLINT_jll ──────────────────────── v301.600.0+0
+   Installed MultivariatePolynomials ────────── v0.5.20
+   Installed IrrationalConstants ────────────── v0.2.6
+   Installed QuadGK ─────────────────────────── v2.11.3
+   Installed StaticArrayInterface ───────────── v1.10.0
+   Installed StringManipulation ─────────────── v0.6.1
+   Installed SimplePartitions ───────────────── v0.3.3
+   Installed IntegerMathUtils ───────────────── v0.1.4
+   Installed NaNMath ────────────────────────── v1.1.4
+   Installed CPUSummary ─────────────────────── v0.2.7
+   Installed SciMLPublic ────────────────────── v1.3.0
+   Installed OpenSpecFun_jll ────────────────── v0.5.6+0
+   Installed LogExpFunctions ────────────────── v1.0.2
+   Installed PrettyTables ───────────────────── v3.5.0
+   Installed Distributions ──────────────────── v0.25.131
+   Installed OpenBLAS32_jll ─────────────────── v0.3.34+0
+   Installed Roots ──────────────────────────── v3.0.11
+   Installed SimplePolynomials ──────────────── v0.2.18
+   Installed TreeViews ──────────────────────── v0.3.0
+   Installed Gamma ──────────────────────────── v1.2.0
+   Installed StarAlgebras ───────────────────── v0.3.0
+   Installed FiniteDiff ─────────────────────── v2.33.0
+   Installed Parameters ─────────────────────── v0.13.1
+   Installed Rmath ──────────────────────────── v0.9.0
+   Installed ScopedValues ───────────────────── v1.6.2
+   Installed ProjectiveVectors ──────────────── v1.1.4
+   Installed StatsFuns ──────────────────────── v2.2.1
+   Installed MPC_jll ────────────────────────── v1.4.1+0
+   Installed Tables ─────────────────────────── v1.14.0
+   Installed CloseOpenIntervals ─────────────── v0.1.13
+   Installed PtrArrays ──────────────────────── v1.4.0
+   Installed IfElse ─────────────────────────── v0.1.1
+   Installed EnumX ──────────────────────────── v1.0.7
+   Installed XML2_jll ───────────────────────── v2.15.4+0
+   Installed NLSolversBase ──────────────────── v8.0.1
+   Installed SpecialFunctions ───────────────── v2.9.0
+   Installed InverseFunctions ───────────────── v0.1.17
+   Installed Reexport ───────────────────────── v1.2.2
+   Installed Preferences ────────────────────── v1.6.0
+   Installed Setfield ───────────────────────── v1.1.2
+   Installed MutableArithmetics ─────────────── v1.8.1
+   Installed Missings ───────────────────────── v1.2.0
+   Installed Static ─────────────────────────── v1.4.6
+   Installed Arblib ─────────────────────────── v1.8.1
+   Installed Permutations ───────────────────── v0.4.23
+   Installed Polynomials ────────────────────── v4.1.3
+   Installed JLLWrappers ────────────────────── v1.8.0
+   Installed TableTraits ────────────────────── v1.0.1
+   Installed Libiconv_jll ───────────────────── v1.18.0+0
+   Installed SortingAlgorithms ──────────────── v1.2.3
+   Installed LaTeXStrings ───────────────────── v1.4.1
+   Installed SemialgebraicSets ──────────────── v0.3.5
+   Installed LRUCache ───────────────────────── v1.6.2
+   Installed LineSearches ───────────────────── v7.8.2
+   Installed Primes ─────────────────────────── v0.5.7
+   Installed Crayons ────────────────────────── v4.2.0
+   Installed PDMats ─────────────────────────── v0.11.41
+   Installed SimpleRandom ───────────────────── v0.3.2
+   Installed HomotopyContinuation ───────────── v2.22.4
+   Installed IterTools ──────────────────────── v1.10.0
+   Installed ThreadingUtilities ─────────────── v0.5.6
+   Installed ADTypes ────────────────────────── v1.24.0
+   Installed PolyesterWeave ─────────────────── v0.2.2
+   Installed UnPack ─────────────────────────── v1.0.2
+   Installed DocStringExtensions ────────────── v0.9.5
+   Installed DifferentiationInterface ───────── v0.7.21
+   Installed SimpleGraphs ───────────────────── v0.8.10
+   Installed IntervalTrees ──────────────────── v1.1.0
+   Installed Accessors ──────────────────────── v0.1.45
+  Installing 8 artifacts
+   Installed artifact OpenSpecFun 105.4 KiB
+   Installed artifact Rmath       111.3 KiB
+   Installed artifact SymEngine   1.4 MiB
+   Installed artifact MPC         193.5 KiB
+   Installed artifact Libiconv    1022.9 KiB
+   Installed artifact XML2        1.7 MiB
+   Installed artifact OpenBLAS32  5.0 MiB
+   Installed artifact FLINT       19.3 MiB
+    Updating `~/math/square-packing/public/search/exact/homotopy/Project.toml`
+  [f213a82b] + HomotopyContinuation v2.22.4
+    Updating `~/math/square-packing/public/search/exact/homotopy/Manifest.toml`
+  [47edcb42] + ADTypes v1.24.0
+  [398f06c4] + AbstractLattices v0.3.1
+  [7d9f7c33] + Accessors v0.1.45
+  [79e6a3ab] + Adapt v4.7.4
+  [66dad0bd] + AliasTables v1.1.3
+  [fb37089c] + Arblib v1.8.1
+  [4fba245c] + ArrayInterface v7.30.2
+  [62783981] + BitTwiddlingConvenienceFunctions v0.1.6
+  [2a0fbf3d] + CPUSummary v0.2.7
+  [fb6a15b2] + CloseOpenIntervals v0.1.13
+  [861a8166] + Combinatorics v1.1.0
+  [38540f10] + CommonSolve v0.2.14
+  [f70d9fcc] + CommonWorldInvalidations v1.2.2
+  [34da2185] + Compat v4.18.1
+  [a33af91c] + CompositionsBase v0.1.2
+  [187b0558] + ConstructionBase v1.6.0
+  [adafc99b] + CpuId v0.3.3
+  [a8cc5b0e] + Crayons v4.2.0
+  [9a962f9c] + DataAPI v1.16.0
+  [864edb3b] + DataStructures v0.19.6
+  [e2d170a0] + DataValueInterfaces v1.0.0
+  [8bb1440f] + DelimitedFiles v1.9.1
+  [a0c0ee7d] + DifferentiationInterface v0.7.21
+  [31c24e10] + Distributions v0.25.131
+  [ffbed154] + DocStringExtensions v0.9.5
+  [7c1d4256] + DynamicPolynomials v0.6.8
+  [fdbdab4c] + ElasticArrays v1.2.12
+  [4e289a0a] + EnumX v1.0.7
+  [1a297f60] + FillArrays v1.18.0
+  [6a86dc24] + FiniteDiff v2.33.0
+  [a0844989] + Gamma v1.2.0
+  [076d061b] + HashArrayMappedTries v0.2.0
+  [f213a82b] + HomotopyContinuation v2.22.4
+  [3e5b6fbb] + HostCPUFeatures v0.1.18
+  [34004b35] + HypergeometricFunctions v0.3.30
+  [615f187c] + IfElse v0.1.1
+  [18e54dd8] + IntegerMathUtils v0.1.4
+  [524e6230] + IntervalTrees v1.1.0
+  [3587e190] + InverseFunctions v0.1.17
+  [92d709cd] + IrrationalConstants v0.2.6
+  [c8e1da08] + IterTools v1.10.0
+  [82899510] + IteratorInterfaceExtensions v1.0.0
+  [692b3bcd] + JLLWrappers v1.8.0
+  [8ac3fa9e] + LRUCache v1.6.2
+  [b964fa9f] + LaTeXStrings v1.4.1
+  [10f19ff3] + LayoutPointers v0.1.17
+  [9c8b4983] + LightXML v0.9.3
+  [d3d80556] + LineSearches v7.8.2
+  [9b3f67b0] + LinearAlgebraX v0.2.11
+  [2ab3a3ac] + LogExpFunctions v1.0.2
+  [bdcacae8] + LoopVectorization v0.12.174
+  [1914dd2f] + MacroTools v0.5.16
+  [d125e4d3] + ManualMemory v0.1.8
+  [e1d29d7a] + Missings v1.2.0
+  [291d046c] + MixedSubdivisions v1.2.0
+  [7475f97c] + Mods v2.2.6
+  [3b2b4ff1] + Multisets v0.4.6
+  [102ac46a] + MultivariatePolynomials v0.5.20
+  [d8a4904e] + MutableArithmetics v1.8.1
+  [d41bc354] + NLSolversBase v8.0.1
+  [77ba4419] + NaNMath v1.1.4
+  [6fe1bfb0] + OffsetArrays v1.17.0
+  [429524aa] + Optim v2.3.2
+  [bac558e1] + OrderedCollections v2.0.2
+  [90014a1f] + PDMats v0.11.41
+  [d96e819e] + Parameters v0.13.1
+  [2ae35dd2] + Permutations v0.4.23
+  [1d0040c9] + PolyesterWeave v0.2.2
+  [f27b6e38] + Polynomials v4.1.3
+  [85a6dd25] + PositiveFactorizations v0.2.4
+  [aea7be01] + PrecompileTools v1.3.4
+  [21216c6a] + Preferences v1.6.0
+  [08abe8d2] + PrettyTables v3.5.0
+  [27ebfcd6] + Primes v0.5.7
+  [92933f4c] + ProgressMeter v1.11.0
+  [01f381cc] + ProjectiveVectors v1.1.4
+  [43287f4e] + PtrArrays v1.4.0
+  [1fd47b50] + QuadGK v2.11.3
+  [189a3867] + Reexport v1.2.2
+  [286e9d63] + RingLists v0.2.9
+  [79098fc4] + Rmath v0.9.0
+  [f2b01f46] + Roots v3.0.11
+  [94e857df] + SIMDTypes v0.1.0
+  [476501e8] + SLEEFPirates v0.6.46
+  [431bcebd] + SciMLPublic v1.3.0
+  [7e506255] + ScopedValues v1.6.2
+  [8e049039] + SemialgebraicSets v0.3.5
+  [efcf1570] + Setfield v1.1.2
+  [55797a34] + SimpleGraphs v0.8.10
+  [ec83eff0] + SimplePartitions v0.3.3
+  [cc47b68c] + SimplePolynomials v0.2.18
+  [a6525b86] + SimpleRandom v0.3.2
+  [a2af1166] + SortingAlgorithms v1.2.3
+  [276daf66] + SpecialFunctions v2.9.0
+  [0c0c59c1] + StarAlgebras v0.3.0
+  [aedffcd0] + Static v1.4.6
+  [0d7ed370] + StaticArrayInterface v1.10.0
+  [90137ffa] + StaticArrays v1.9.23
+  [1e83bf80] + StaticArraysCore v1.4.4
+  [10745b16] + Statistics v1.11.5
+  [82ae8749] + StatsAPI v1.8.0
+  [2913bbd2] + StatsBase v0.34.13
+  [4c63d2b9] + StatsFuns v2.2.1
+  [892a3eda] + StringManipulation v0.6.1
+  [09ab397b] + StructArrays v0.7.3
+  [3783bdb8] + TableTraits v1.0.1
+  [bd369af6] + Tables v1.14.0
+  [8290d209] + ThreadingUtilities v0.5.6
+  [a2a6695c] + TreeViews v0.3.0
+  [3a884ed6] + UnPack v1.0.2
+  [3d5dd08c] + VectorizationBase v0.21.74
+  [e134572f] + FLINT_jll v301.600.0+0
+  [94ce4f54] + Libiconv_jll v1.18.0+0
+  [2ce0c516] + MPC_jll v1.4.1+0
+  [656ef2d0] + OpenBLAS32_jll v0.3.34+0
+  [efe28fd5] + OpenSpecFun_jll v0.5.6+0
+  [f50d1b31] + Rmath_jll v0.5.2+0
+  [3428059b] + SymEngine_jll v0.12.0+0
+  [02c8fc9c] + XML2_jll v2.15.4+0
+  [56f22d72] + Artifacts v1.11.0
+  [2a0f44e3] + Base64 v1.11.0
+  [ade2ca70] + Dates v1.11.0
+  [8ba89e20] + Distributed v1.11.0
+  [7b1f6079] + FileWatching v1.11.0
+  [9fa8497b] + Future v1.11.0
+  [b77e0a4c] + InteractiveUtils v1.11.0
+  [ac6e5ff7] + JuliaSyntaxHighlighting v1.12.0
+  [8f399da3] + Libdl v1.11.0
+  [37e2e46d] + LinearAlgebra v1.13.0
+  [56ddb016] + Logging v1.11.0
+  [d6f4376e] + Markdown v1.11.0
+  [a63ad114] + Mmap v1.11.0
+  [de0858da] + Printf v1.11.0
+  [3fa0cd96] + REPL v1.11.0
+  [9a3f8284] + Random v1.11.0
+  [ea8e919c] + SHA v1.0.0
+  [9e88b42a] + Serialization v1.11.0
+  [6462fe0b] + Sockets v1.11.0
+  [2f01184e] + SparseArrays v1.13.0
+  [f489334b] + StyledStrings v1.11.0
+  [4607b0f0] + SuiteSparse
+  [fa267f1f] + TOML v1.0.3
+  [8dfed614] + Test v1.11.0
+  [cf7118a7] + UUIDs v1.11.0
+  [4ec0a83e] + Unicode v1.11.0
+  [e66e0078] + CompilerSupportLibraries_jll v1.5.5+2
+  [781609d7] + GMP_jll v6.3.0+2
+  [3a97d323] + MPFR_jll v4.2.2+0
+  [4536629a] + OpenBLAS_jll v0.3.30+0
+  [05823500] + OpenLibm_jll v0.8.7+0
+  [bea87d4a] + SuiteSparse_jll v7.10.1+0
+  [83775a58] + Zlib_jll v1.3.1+2
+  [8e850b90] + libblastrampoline_jll v5.15.0+0
+Precompiling packages...
+   0.3 s  ✓ Reexport
+   0.3 s  ✓ AbstractLattices
+   0.3 s  ✓ DataValueInterfaces
+   0.3 s  ✓ IfElse
+   0.4 s  ✓ LaTeXStrings
+   0.4 s  ✓ StatsAPI
+   0.4 s  ✓ RingLists
+   0.4 s  ✓ Unicode
+   0.4 s  ✓ StaticArraysCore
+   0.5 s  ✓ Mods
+   0.5 s  ✓ ConstructionBase
+   0.5 s  ✓ IterTools
+   0.6 s  ✓ Statistics
+   0.3 s  ✓ PtrArrays
+   0.4 s  ✓ ManualMemory
+   0.4 s  ✓ Mmap
+   0.4 s  ✓ LRUCache
+   0.4 s  ✓ Adapt
+   0.4 s  ✓ PositiveFactorizations
+   0.4 s  ✓ DataAPI
+   0.8 s  ✓ Combinatorics
+   0.4 s  ✓ Future
+   0.5 s  ✓ CompilerSupportLibraries_jll
+   0.4 s  ✓ Multisets
+   0.4 s  ✓ CompositionsBase
+   0.5 s  ✓ InverseFunctions
+   0.4 s  ✓ EnumX
+   0.3 s  ✓ UnPack
+   0.4 s  ✓ IntegerMathUtils
+   0.4 s  ✓ HashArrayMappedTries
+   0.3 s  ✓ IteratorInterfaceExtensions
+   0.4 s  ✓ SIMDTypes
+   0.6 s  ✓ OrderedCollections
+   0.5 s  ✓ DocStringExtensions
+   0.6 s  ✓ Serialization
+   0.3 s  ✓ ConstructionBase → ConstructionBaseLinearAlgebraExt
+   0.5 s  ✓ IntervalTrees
+   0.5 s  ✓ Compat
+   0.4 s  ✓ AliasTables
+   1.5 s  ✓ IrrationalConstants
+   0.7 s  ✓ Preferences
+   0.4 s  ✓ ElasticArrays
+   0.5 s  ✓ DelimitedFiles
+   1.1 s  ✓ FillArrays
+   0.4 s  ✓ Missings
+   0.9 s  ✓ OffsetArrays
+   0.3 s  ✓ GMP_jll
+   0.4 s  ✓ SuiteSparse_jll
+   0.5 s  ✓ ArrayInterface
+   0.5 s  ✓ Permutations
+   0.4 s  ✓ OpenLibm_jll
+   2.0 s  ✓ MacroTools
+   0.3 s  ✓ CompositionsBase → CompositionsBaseInverseFunctionsExt
+   0.4 s  ✓ InverseFunctions → InverseFunctionsDatesExt
+   0.4 s  ✓ ScopedValues
+   0.3 s  ✓ LRUCache → SerializationExt
+   0.4 s  ✓ TableTraits
+   0.4 s  ✓ OffsetArrays → OffsetArraysAdaptExt
+   0.3 s  ✓ Compat → CompatLinearAlgebraExt
+   0.5 s  ✓ Primes
+   1.0 s  ✓ ThreadingUtilities
+   0.5 s  ✓ Parameters
+   1.3 s  ✓ InteractiveUtils
+   1.4 s  ✓ Crayons
+   0.4 s  ✓ FillArrays → FillArraysStatisticsExt
+   0.6 s  ✓ LogExpFunctions
+   0.4 s  ✓ MPFR_jll
+   0.3 s  ✓ ArrayInterface → ArrayInterfaceStaticArraysCoreExt
+   0.4 s  ✓ ArrayInterface → ArrayInterfaceFillArraysExt
+   0.7 s  ✓ PrecompileTools
+   0.4 s  ✓ NaNMath
+   0.3 s  ✓ LogExpFunctions → LogExpFunctionsInverseFunctionsExt
+   0.9 s  ✓ JLLWrappers
+   0.8 s  ✓ Gamma
+   0.7 s  ✓ CommonSolve
+   1.0 s  ✓ Setfield
+   0.7 s  ✓ SciMLPublic
+   0.8 s  ✓ CommonWorldInvalidations
+   1.2 s  ✓ Tables
+   2.0 s  ✓ DataStructures
+   1.8 s  ✓ Distributed
+   1.2 s  ✓ ADTypes
+   1.2 s  ✓ CpuId
+   0.9 s  ✓ Rmath_jll
+   0.9 s  ✓ OpenBLAS32_jll
+   0.9 s  ✓ OpenSpecFun_jll
+   2.1 s  ✓ Accessors
+   1.1 s  ✓ Libiconv_jll
+   1.0 s  ✓ MPC_jll
+   0.8 s  ✓ FiniteDiff
+   1.1 s  ✓ HypergeometricFunctions
+   0.6 s  ✓ SortingAlgorithms
+   0.8 s  ✓ StructArrays
+   0.5 s  ✓ SimplePartitions
+   0.4 s  ✓ ADTypes → ADTypesConstructionBaseExt
+   0.8 s  ✓ ProgressMeter
+   1.0 s  ✓ QuadGK
+   0.5 s  ✓ Accessors → LinearAlgebraExt
+   0.4 s  ✓ StructArrays → StructArraysLinearAlgebraExt
+   0.9 s  ✓ Rmath
+   0.4 s  ✓ StructArrays → StructArraysAdaptExt
+   1.1 s  ✓ DifferentiationInterface
+   0.9 s  ✓ SymEngine_jll
+   0.9 s  ✓ XML2_jll
+   0.6 s  ✓ Accessors → StructArraysExt
+   1.2 s  ✓ FLINT_jll
+   0.8 s  ✓ DifferentiationInterface → DifferentiationInterfaceFiniteDiffExt
+   0.8 s  ✓ LightXML
+   4.3 s  ✓ Test
+   4.0 s  ✓ StringManipulation
+   4.5 s  ✓ SparseArrays
+   0.3 s  ✓ TreeViews
+   0.7 s  ✓ NLSolversBase
+   0.5 s  ✓ InverseFunctions → InverseFunctionsTestExt
+   0.6 s  ✓ Accessors → TestExt
+   0.6 s  ✓ Statistics → SparseArraysExt
+   0.6 s  ✓ Adapt → AdaptSparseArraysExt
+   0.6 s  ✓ ArrayInterface → ArrayInterfaceSparseArraysExt
+   0.6 s  ✓ SuiteSparse
+   0.7 s  ✓ FillArrays → FillArraysSparseArraysExt
+   2.8 s  ✓ SpecialFunctions
+   0.7 s  ✓ FiniteDiff → FiniteDiffSparseArraysExt
+   0.7 s  ✓ StructArrays → StructArraysSparseArraysExt
+   0.7 s  ✓ DifferentiationInterface → DifferentiationInterfaceSparseArraysExt
+   2.9 s  ✓ Roots
+   0.9 s  ✓ LineSearches
+   0.9 s  ✓ PDMats
+   1.0 s  ✓ StatsFuns
+   0.6 s  ✓ FillArrays → FillArraysPDMatsExt
+   0.5 s  ✓ StatsFuns → StatsFunsInverseFunctionsExt
+   2.1 s  ✓ StatsBase
+   7.2 s  ✓ StaticArrays
+   0.9 s  ✓ PDMats → StatsBaseExt
+   0.7 s  ✓ StructArrays → StructArraysStaticArraysExt
+   0.8 s  ✓ FiniteDiff → FiniteDiffStaticArraysExt
+   0.8 s  ✓ Accessors → StaticArraysExt
+   0.9 s  ✓ FillArrays → FillArraysStaticArraysExt
+   1.0 s  ✓ StaticArrays → StaticArraysStatisticsExt
+   1.0 s  ✓ Adapt → AdaptStaticArraysExt
+   1.2 s  ✓ ConstructionBase → ConstructionBaseStaticArraysExt
+   1.2 s  ✓ DifferentiationInterface → DifferentiationInterfaceStaticArraysExt
+   1.4 s  ✓ ProjectiveVectors
+   7.4 s  ✓ Static
+   3.2 s  ✓ Optim
+   0.5 s  ✓ BitTwiddlingConvenienceFunctions
+   1.0 s  ✓ CPUSummary
+   5.9 s  ✓ MutableArithmetics
+   0.7 s  ✓ PolyesterWeave
+   1.2 s  ✓ HostCPUFeatures
+   2.1 s  ✓ StaticArrayInterface
+   1.2 s  ✓ StarAlgebras
+   0.5 s  ✓ StaticArrayInterface → StaticArrayInterfaceOffsetArraysExt
+   0.5 s  ✓ CloseOpenIntervals
+   0.6 s  ✓ LayoutPointers
+   0.6 s  ✓ StaticArrayInterface → StaticArrayInterfaceStaticArraysExt
+   4.6 s  ✓ Distributions
+   1.8 s  ✓ MultivariatePolynomials
+   1.0 s  ✓ SimpleRandom
+   1.2 s  ✓ Distributions → DistributionsTestExt
+   1.2 s  ✓ MixedSubdivisions
+   1.4 s  ✓ SemialgebraicSets
+   1.6 s  ✓ DynamicPolynomials
+  11.0 s  ✓ Arblib
+   6.6 s  ✓ VectorizationBase
+  14.1 s  ✓ Polynomials
+   1.1 s  ✓ SLEEFPirates
+   0.9 s  ✓ Polynomials → PolynomialsMutableArithmeticsExt
+   1.0 s  ✓ SimplePolynomials
+   0.8 s  ✓ LinearAlgebraX
+   2.0 s  ✓ SimpleGraphs
+  26.6 s  ✓ REPL
+  13.4 s  ✓ LoopVectorization
+   0.6 s  ✓ LoopVectorization → SpecialFunctionsExt
+  16.1 s  ✓ PrettyTables
+   8.8 s  ✓ HomotopyContinuation
+  175 dependencies successfully precompiled in 54 seconds. 10 already precompiled.
+ok 2.22.4
+exit 0

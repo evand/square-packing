@@ -8,7 +8,7 @@ Proved (kernel-checked, standard axioms): **258** of 258 attempted.
 | 2 | 1 | 1 | 0 | 21 | ok |
 | 3 | 1 | 1 | 0 | 21 | ok |
 | 4 | 1 | 1 | 0 | 22 | ok |
-| 5 | 2 | 1 | 0 | 14 | ok |
+| 5 | 2 | 1 | 0 | 22 | ok |
 | 6 | 1 | 1 | 0 | 22 | ok |
 | 7 | 1 | 1 | 0 | 23 | ok |
 | 8 | 1 | 1 | 0 | 24 | ok |
