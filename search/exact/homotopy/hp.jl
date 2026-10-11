@@ -27,7 +27,7 @@ struct HPoly
     maxd::Int
 end
 function hpoly(f, vars)
-    E, C = exponents_coefficients(f, vars)
+    E, C = exponents_coefficients(Expression(f), vars)
     Cq = [Rational{BigInt}(to_number(Expression(c))) for c in C]
     HPoly(build(E, Cq, 1, length(vars)), length(vars), maximum(E))
 end
@@ -75,6 +75,27 @@ function newton_hp(H, G, x0, bits, maxd)
     end
     step(bits)
     setprecision(BigFloat, bits) do
+        P = powers(x, maxd)
+        x, maximum(abs(val(h, P)) for h in H)
+    end
+end
+
+# Newton from a point already accurate to ~bits_have bits, doubling to bits_target (J at the previous level).
+function newton_up(H, G, x::Vector{CB}, bits_have, bits_target, maxd)
+    n = length(x); b = bits_have
+    while b < bits_target
+        nb = min(2b, bits_target)
+        J = setprecision(BigFloat, b) do
+            P = powers(CB.(x), maxd)
+            [val(G[i][j], P) for i in 1:n, j in 1:n]
+        end
+        x = setprecision(BigFloat, nb) do
+            xx = CB.(x); P = powers(xx, maxd)
+            xx .- CB.(J) \ [val(h, P) for h in H]
+        end
+        b = nb
+    end
+    setprecision(BigFloat, bits_target) do
         P = powers(x, maxd)
         x, maximum(abs(val(h, P)) for h in H)
     end

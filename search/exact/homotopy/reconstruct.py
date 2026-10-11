@@ -7,6 +7,7 @@ by continued fractions (the common denominator is the leading coefficient); then
 margin far below the working precision.  Irreducibility: degree patterns of the factorisation mod small primes.
 """
 import json, math, sys, time
+sys.set_int_max_str_digits(0)
 from fractions import Fraction
 import flint
 from flint import acb, arb, acb_poly, fmpz_poly, nmod_poly
@@ -14,15 +15,16 @@ from flint import acb, arb, acb_poly, fmpz_poly, nmod_poly
 bits = int(sys.argv[1]); out = sys.argv[2]; files = sys.argv[3:]
 flint.ctx.prec = bits + 64
 digits = int(bits * math.log10(2))
-roots, nreal, worst = [], 0, 0.0
+roots, nreal, worst = [], 0, -1e9
 for fn in files:
     for l in open(fn):
         f = l.split()
         worst = max(worst, float(f[1]))
-        s = acb(arb(f[2]), arb(f[3]))
+        col = int(__import__('os').environ.get('COL', '0'))     # 0: S; i >= 1: t_i
+        s = acb(arb(f[2 + 2 * col]), arb(f[3 + 2 * col]))
         ts_im = [float(x) for x in f[5::2]]
         if max(abs(x) for x in ts_im) < 1e-30:
-            roots.append(acb(arb(f[2]))); nreal += 1
+            roots.append(acb(s.real)); nreal += 1
         else:
             roots += [s, s.conjugate()]
 print(f'{len(roots)} roots ({nreal} real); worst log10 residual {worst:.0f}; working digits {digits}', flush=True)
@@ -49,7 +51,35 @@ def exact(a):                       # midpoint of an arb as a Fraction
 
 
 E = [exact(c.real) for c in co]     # monic: E[n] = 1
-D = 1
+
+
+def lll_denominator(vals, digits, m=8):
+    """Common denominator D of the top m monic coefficients by simultaneous approximation (LLL): works for
+    log10 D < about (digits - size) m / (m + 1), against digits / 2 for continued fractions on one coefficient."""
+    from flint import fmpz_mat
+    size = max(max(0.0, flog10(v)) if v else 0.0 for v in vals)
+    C = 10 ** int(digits - size - 20)
+    rows = [[1] + [round(v * C) for v in vals]]
+    for i in range(len(vals)):
+        rows.append([0] * (i + 1) + [C] + [0] * (len(vals) - i - 1))
+    B = fmpz_mat(rows).lll()
+    best = None
+    for i in range(B.nrows()):
+        d = abs(int(B[i, 0]))
+        if d == 0:
+            continue
+        e = max(flog10(v * d - round(v * d)) if v * d != round(v * d) else -1e9 for v in vals)
+        if best is None or e < best[1]:
+            best = (d, e)
+    return best
+
+
+t0 = time.time()
+D, e0 = lll_denominator([E[k] for k in range(n - 1, n - 9, -1)], digits)
+print(f'LLL common denominator of the top 8 coefficients: {len(str(D))} digits, max distance to integers 1e{e0:.0f} '
+      f'({time.time() - t0:.0f} s)', flush=True)
+if e0 > -40:
+    D = 1
 for k in range(n - 1, -1, -1):
     y = E[k] * D
     size = max(0.0, flog10(y)) if y else 0.0

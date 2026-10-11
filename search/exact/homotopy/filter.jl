@@ -39,6 +39,10 @@ open(out, "w") do io
         v = parse.(Float64, f[3:end])
         t = ComplexF64[complex(v[2i-1], v[2i]) for i in 1:k]
         A, b, Sf, minden = AbS(t)
+        if !(all(isfinite, A) && all(isfinite, b))
+            @printf(io, "x %s nonfinite S=NaN Sz=NaN t=%s\n", f[1], join(string.(t), " "))
+            continue
+        end
         sc = maximum(abs, A); sb = maximum(abs, b)
         sv = svdvals(A)
         z = A \ (-b)

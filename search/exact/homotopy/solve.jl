@@ -4,7 +4,7 @@ using HomotopyContinuation, LinearAlgebra
 include(ARGS[1])
 out = ARGS[2]
 sys_ = System(F; variables = tvars)
-@time res = solve(sys_; threading = true, show_progress = true, seed = 0x29292929)
+@time res = solve(sys_; threading = true, show_progress = true, seed = length(ARGS) >= 3 ? parse(UInt32, ARGS[3]) : 0x29292929)
 println(res)
 ts = ComplexF64.(tstar)
 open(out, "w") do io
