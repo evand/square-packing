@@ -11,8 +11,9 @@ const who = d => { const e = (d.events || []).find(x => x.who); return e ? e.who
 
 async function get(file) { if (!cache[file]) cache[file] = fetch(`data/p/${encodeURIComponent(file.replace('.svg', '.json'))}`).then(r => r.ok ? r.json() : null).then(r => { if (r) r.s = +r.s; return r; }); return cache[file]; }
 
-// A file we can actually draw: parsed, no hard errors, so data/p/<file>.json exists.
-const drawable = f => !!(f && IDX.files[f] && IDX.files[f].n_parsed && !(IDX.files[f].errors || []).some(e => !e.startsWith('warn')));
+// A file we can actually draw: parsed, not an optimiser start, no hard errors (warnings are numeric contacts and stay),
+// so data/p/<file>.json exists.  The same rule as Explore's okFile: both pages list the same packings of n.
+const drawable = f => !!(f && IDX.files[f] && IDX.files[f].n_parsed && !IDX.files[f].start && !(IDX.files[f].errors || []).some(e => !e.startsWith('warn:')));
 // The timeline entry carrying a given file, wherever it is filed. Ellsworth's "2, 3" box links
 // square-2.svg but embeds square-3.svg, which does not exist, so n = 3's only drawable packing is
 // filed under n = 2 and the dates that go with it have to be fetched from there.
@@ -41,7 +42,20 @@ async function loadN(nn, asked = nn) {
   const snap = asked !== n ? `Nothing is catalogued for n = ${asked}; showing the nearest n that is, n = ${n}. ` : '';
   const all = TL[String(n)] || [];
   let L = all.filter(d => d.s && drawable(d.file));
-  // Nothing filed under this n is drawable. The catalogue may still picture this n inside another
+  // Our drawings at the record side, undated and after the history: the record as regularized (where
+  // the dated record is a catalogue drawing) and our alternates.
+  const R = IDX.records[String(n)] || {};
+  for (const f of Object.values(IDX.files))
+    if (f.n === n && (f.origin === 'alt' || f.origin === 'best' || f.svg === R.best) && drawable(f.svg) && !L.some(d => d.file === f.svg))
+      L.push({ file: f.svg, s: +f.s, date: null, events: [], extra: f.origin === 'alt' ? 'alternate at the record side (ours)'
+        : f.svg === R.best ? (f.origin === 'raw' ? 'the record, as posted' : 'the record, regularized (ours)')
+        : 'earlier record, regularized (ours)' });
+  // Catalogue drawings with no entry of their own (revisions and grids only linked from Ellsworth's pages): not in
+  // timeline.json, so undated; listed after the dated history, as on Explore.
+  for (const f of Object.values(IDX.files))
+    if (f.n === n && !f.origin && drawable(f.svg) && !L.some(d => d.file === f.svg))
+      L.push({ file: f.svg, s: +f.s, date: null, events: [], extra: 'catalogue drawing, undated (linked from Ellsworth\'s pages)' });
+  // Nothing of this n is drawable, ours included (every n <= 324 has our drawing, so only larger n get here). The catalogue may still picture this n inside another
   // n's entry (n = 3), or record an s with no drawing at all (n = 585 and seven more, where
   // Ellsworth's prose says the SVG has not been made) -- the two cases must not look the same.
   let borrowed = null;
@@ -49,12 +63,6 @@ async function loadN(nn, asked = nn) {
     const r = IDX.records[String(n)];
     if (r && drawable(r.svg)) { borrowed = r.svg; L = [entryFor(r.svg) || { file: r.svg, s: +IDX.files[r.svg].s, date: null, events: [] }]; }
   }
-  // Our drawings at the record side, undated and after the history: the record as regularized (where
-  // the dated record is a catalogue drawing) and our alternates.
-  const R = IDX.records[String(n)] || {};
-  for (const f of Object.values(IDX.files))
-    if (f.n === n && (f.origin === 'alt' || f.svg === R.best) && drawable(f.svg) && !L.some(d => d.file === f.svg))
-      L.push({ file: f.svg, s: +f.s, date: null, events: [], extra: f.origin === 'alt' ? 'alternate at the record side (ours)' : 'the record, regularized (ours)' });
   L.sort((a, b) => (!!a.extra - !!b.extra) || ((a.date || [0, 0])[0] - (b.date || [0, 0])[0]) || ((a.date || [0, 0])[1] - (b.date || [0, 0])[1]) || (b.s - a.s));
   history.replaceState(null, '', `?n=${n}`);
   if (!L.length) {

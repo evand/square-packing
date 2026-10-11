@@ -248,6 +248,17 @@ public unfixed — see the Publishing section for why each one is on that list.
   (Guzhou0806, replayed on the register; 6.70854 and the reported 6.718 in the history, Sources §5 entry); wand125's
   reported fine-net bounds (#446: 19, 20, 26–29, 31; 10-10 follow-ups 28, 29, 30) added as "reported, not replayed".
 
+* ✓ **Explore and Compare listed different packings of n** (78 of 386 n; s(175): "compare all 4", Compare showed 2).
+  Compare read only `timeline.json` (catalogue entries with prose), so 88 drawings only linked from Ellsworth's pages
+  (revisions such as 175_r2, grids) never reached it; Explore hid the two warning-only files (41_r4, 55_r2a: numeric
+  contacts), which Compare and Overview show.  One rule now (`okFile` / `drawable`: parsed, not an optimiser start, no
+  hard errors); Compare adds the linked-only drawings undated and our earlier regularized records; its borrowed
+  picture (another n's drawing, e.g. 148 squares for n = 147) is used only when nothing of n is drawable.  Three
+  index entries had `n: null` (Göbel strips page: 202_r1, 202_r2, 1867): `export.py` falls back to the parsed count.
+  Checked: the two lists agree for all 387 n (simulation), and on the live pages for 12 n.
+* Longer term (Evan, 10-11): unify Compare with the Bounds history and extend that history to n ≤ 324; which extra
+  packings to include is then an aesthetic call.
+
 ## Open (2026-10-07)
 
 * **Explore: show the exact form and local-minimum status** from `search/exact/exact_forms.json`

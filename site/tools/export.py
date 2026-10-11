@@ -112,6 +112,7 @@ def build_index(P):
         outp = W + 'p/' + f.replace('.svg', '.json')
         d = idx['files'].setdefault(f, {'svg': f, 'pages': [], 'n': p['n']})
         d['n_parsed'] = p['n']; d['s'] = p['s']; d['errors'] = p['errors']
+        if not d.get('n'): d['n'] = p['n']   # entries without an n label (Göbel strips page: 202_r1, 202_r2, 1867)
         if is_start(f): d['start'] = True
         if os.path.exists(outp):
             a = json.load(open(outp))['analysis']

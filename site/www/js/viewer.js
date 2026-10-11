@@ -672,7 +672,7 @@ function renderSide() {
 // Order: the record (our drawing), our alternates, earlier 2026 records, the catalogue's record
 // drawing, the rest of the catalogue by name.
 function variantsFor(n, keep) {
-  const files = Object.values(S.idx.files).filter(f => f.n === n && f.n_parsed && !f.start && !(f.errors && f.errors.length)).map(f => f.svg);
+  const files = Object.values(S.idx.files).filter(okFile).filter(f => f.n === n).map(f => f.svg);   // same rule as Compare's drawable
   if (keep && !files.includes(keep)) files.push(keep);
   const R = S.idx.records[n] || {};
   const rank = f => { const m = S.idx.files[f] || {}; return f === R.best ? 0 : m.origin === 'alt' ? 1 : m.origin === 'step' ? 2 : f === R.svg ? 3 : 4; };
