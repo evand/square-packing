@@ -229,6 +229,7 @@ def _work(job):
     else:
         prop, desc = MOVES[kind](s, sq, rng, A)
     kr = tuple(job[11]) if len(job) > 11 and job[11] else (0, 1e-4)
+    kr = kr + (True, False)[len(kr) - 2:]       # (tries, sigma, alm, only_new); old 2-tuples = --kick-retry semantics
     with tempfile.TemporaryDirectory() as tmp:
         return _screen_polish(s, prop, kind, desc, rng, k, known_sides, same, smax, pol_above, pextra, tmp,
                               mate if kind == 'cross2' and cands else None, kr)
@@ -261,7 +262,7 @@ def kick_retry(s, sq, rng, tmp, k, tries, sigma=1e-4, pextra=(), alm=True):
     return s, sq, info
 
 
-def _screen_polish(s, prop, kind, desc, rng, k, known_sides, same, smax, pol_above, pextra, tmp, mate, kr=(0, 1e-4)):
+def _screen_polish(s, prop, kind, desc, rng, k, known_sides, same, smax, pol_above, pextra, tmp, mate, kr=(0, 1e-4, True, False)):
     """Screen, classify, (maybe) full polish, grid check, in the scratch dir `tmp` (removed by the caller)."""
     from layout import full_lines
     loosen = rng.choice(('1.0', '1.02', '1.05'))
@@ -291,9 +292,11 @@ def _screen_polish(s, prop, kind, desc, rng, k, known_sides, same, smax, pol_abo
     s2, sq2, _ = r2
     p = os.path.join(tmp, 'q.txt'); mcmin.write_deg(p, s2, sq2)
     lines = bool(full_lines(p, k))
-    if kr[0] > 0 and not lines and s2 < smax:          # --kick-retry: break polish stalls before the result counts
+    tries, sigma, alm, only_new = kr
+    if tries > 0 and not lines and s2 < smax and not (only_new and (s2 >= k or any(abs(x - s2) < ID.SAME_SIDE for x in known_sides))):
+        # --kick-retry (alm, every result below smax) / --finish (kick + polish only, archive-new sub-k results only)
         s_pol = s2
-        s2, sq2, info = kick_retry(s2, sq2, rng, tmp, k, kr[0], kr[1], pextra)
+        s2, sq2, info = kick_retry(s2, sq2, rng, tmp, k, tries, sigma, pextra, alm=alm)
         out.update(kr_drop=info['drop'], kr_drops=info['drops'], s_polish=s_pol)
     return dict(out, status='new?', s=s2, sq=sq2, lines=lines, s_screen=s1, sec=time.time() - t0)
 
@@ -441,7 +444,9 @@ def replay(out, line):
     import scratch
     scratch.scope('replay')
     r = work((s, sq, p['kind'], p['seed'], k, [], man.get('same', 0.0), smax, float('inf'),
-              (man.get('polish_extra') or '').split(), mate, (man.get('kick_retry') or 0, man.get('kick_sigma') or 1e-4)))
+              (man.get('polish_extra') or '').split(), mate,
+              (man['finish'], man.get('kick_sigma') or 1e-4, False, True) if man.get('finish') else
+              (man.get('kick_retry') or 0, man.get('kick_sigma') or 1e-4, True, False)))
     same = (r.get('s') == p.get('s')) or (r.get('s') is not None and p.get('s') is not None and abs(r['s'] - p['s']) < 1e-12)
     print(json.dumps(dict(logged=dict(st=p['st'], s=p.get('s'), desc=p.get('desc')),
                           replay=dict(st=r['status'], s=r.get('s'), desc=r.get('desc')), reproduced=same and r['status'] == p['st'])))
@@ -481,6 +486,8 @@ if __name__ == '__main__':
     ap.add_argument('--kick-retry', type=int, default=0, help='after the full polish, up to N kicked re-quenches (sigma '
                     '--kick-sigma); a strictly lower line-free result replaces the polished one (breaks fq polish stalls; 0 = off)')
     ap.add_argument('--kick-sigma', type=float, default=1e-4)
+    ap.add_argument('--finish', type=int, default=0, help='inline finisher: up to N kick (--kick-sigma) + polish-only tries on '
+                    'archive-new sub-k results (kr_eval_noalm 10-11: 1/60 certified minima moved); 0 = off')
     ap.add_argument('--replay', help='OUT:LINE: re-run proposal LINE of OUT/proposals.jsonl and compare with the log')
     a = ap.parse_args()
     if a.report:
@@ -559,7 +566,7 @@ if __name__ == '__main__':
             sd = rng.randrange(1 << 30)
             f = ex.submit(work, (s, sq, kind, sd, k, [e['s'] for e in ar.E], a.same, ar.smax,
                                        (min(e['s'] for e in ar.E) + a.polish_margin) if a.polish_margin else float('inf'), a.polish_extra.split(),
-                                       mates(kind, par), (a.kick_retry, a.kick_sigma)))
+                                       mates(kind, par), (a.finish, a.kick_sigma, False, True) if a.finish else (a.kick_retry, a.kick_sigma, True, False)))
             pend[f] = (par, sd)
         for _ in range(a.procs):
             submit()

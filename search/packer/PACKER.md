@@ -1345,3 +1345,24 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   `h110_near1e3` (side band: the 62 minima within 1e-3 of the record withheld, record included), `h110_asof1008` (visible =
   minima matched by the 10-08 census list: 509 / 251; record visible).  `refset.py score` checked on old lineage runs
   (L2 far1+far2 new: 172 / 370 withheld of h110_rand50 "rediscovered", 0 new, as expected for runs inside the snapshot).
+* **Census v2, pre-registered** (written before launch; `census_v2.py`, `runs/census_v2`; Evan 10-11: random-half holdout,
+  8 cores).  Holdout `refsets/h110_rand50` (snapshot census110_1011 sha db691fdafece; 390 visible / 370 withheld minima,
+  record withheld).  Census recipe (insert110): `--adapt --reward legacy`, novelty vs the visible minima only, no elite
+  share, 1 proc per run.  Arms x 2 replicates, all 8 runs concurrent, 60 min each (8 worker-h): control (40 random visible
+  starts); melt (+ `--melt 2`, C10); finish (+ `--finish 3`: kick + polish-only on archive-new sub-k results, C11 / C14);
+  far (control recipe; starts = the 40 visible minima farthest from the best visible minimum, matching distance 0.078-0.104,
+  C05 / X13).  Then import + certify every new sub-11 side; score against the frozen holdout (`pk/refset.py score`).
+  Primary metric: withheld minima rediscovered (certified) per measured CPU-h, pooled over replicates; rate ratio vs control
+  with a 95 % CI (conditional binomial).  Secondary: genuinely new certified minima (not in the snapshot); not-min share of
+  the runs' sub-11 sides; whether / when the withheld record is rediscovered.  Smoke test (1 min x 8): all arms run,
+  minute-one rates ~200-600 / CPU-h (meaningless, saturating).
+  Predictions: control 40-120 withheld per CPU-h (L2 runs re-scored against this holdout: ~43 / worker-h).  melt ratio
+  0.8-1.25 (safe, but one arm of ~12, mid-pack in c110b).  finish ratio 0.7-1.1 (fewer proposals per CPU-h; fewer not-min
+  copies) and a lower not-min share of sides than control.  far: if "one funnel" (C05), ratio 0.7-1.3 and the record
+  rediscovered in both replicates (C04: lineages cross 0.08 in minutes); if far starts sit in other funnels, more
+  genuinely new minima and fewer near-record withheld ones.  New minima: ~1 / worker-h (C08) -> ~2 per arm, too few to
+  compare arms (reported, not decided on).
+  Decision rule: an arm differs from control if its ratio's 95 % CI excludes 1 and both replicates fall on the same side
+  of the control's per-replicate range; otherwise "no difference resolved".
+  Not this test (Evan 10-11): "can you find the other funnels" (a holdout by funnel / kind; date holdouts may need to go
+  back to ~40 known points); other n (X16).
