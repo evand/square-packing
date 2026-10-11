@@ -1337,3 +1337,11 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   random kr_eval sample), so this settles "mine the backlog" (no, at 110) and not "finish fresh explorer output inline";
   that goes to census v2 as an arm (finisher on / off, end to end, certified minima per CPU-h).  Open confusion: 225
   points stay 'not jammed' (exactsolve MILP dS < -1e-6) after both descend.py and the finisher: tolerance-degenerate?
+* **Frozen references + holdouts** (`pk/refset.py`, tracked dir `refsets/`).  Finals first: `pk.py import-finals --n 110`
+  put 18,000 battery / corpus final packings with a certified / weak verdict into the packing table (13,463 + 4,537 new;
+  they never reached the store before), so every one of the 760 minima has a representative packing (102 had none).
+  Snapshot `census110_1011` (760 minima: 720 certified + 40 weak; sha db691fdafece).  Holdouts (40 explorer starts each,
+  novel_ref = visible minima + their copies): `h110_rand50` (random half: 390 visible / 370 withheld, record withheld),
+  `h110_near1e3` (side band: the 62 minima within 1e-3 of the record withheld, record included), `h110_asof1008` (visible =
+  minima matched by the 10-08 census list: 509 / 251; record visible).  `refset.py score` checked on old lineage runs
+  (L2 far1+far2 new: 172 / 370 withheld of h110_rand50 "rediscovered", 0 new, as expected for runs inside the snapshot).

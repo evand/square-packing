@@ -53,6 +53,7 @@ def main():
     p = sp.add_parser('import-run'); p.add_argument('runs', nargs='+'); p.add_argument('--below', type=float)
     p.add_argument('--below-k', action='store_true', help='only entries below ceil(sqrt n)')
     p.add_argument('--procs', type=int, default=12)
+    p = sp.add_parser('import-finals', help='battery / corpus finals with a certified / weak verdict -> packing table'); p.add_argument('--n', type=int, default=110)
     p = sp.add_parser('frontier'); p.add_argument('ns', nargs='*', type=int); p.add_argument('--lo', type=int, default=1)
     p.add_argument('--hi', type=int, default=10000); p.add_argument('--pending-only', action='store_true')
     p = sp.add_parser('ls'); p.add_argument('n', type=int); p.add_argument('--below', type=float)
@@ -90,6 +91,8 @@ def main():
                         glob.glob(f'{r}/**/archive.jsonl', recursive=True))})
         print(f'{len(runs)} archives')
         print(sources.import_runs(st, runs, below=a.below, procs=a.procs, below_k=a.below_k))
+    elif a.cmd == 'import-finals':
+        print(sources.import_finals(st, a.n))
     elif a.cmd == 'frontier':
         F = st.frontier(); R = st.frontier(pending=False)
         ns = a.ns or sorted(n for n in F if a.lo <= n <= a.hi)

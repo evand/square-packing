@@ -6,7 +6,7 @@ files and dirs made read-only; runs/ext/PROVENANCE.txt line appended), following
 (that tree itself stays read-only).
 """
 from __future__ import annotations
-import glob, json, math, os, re, subprocess, tarfile, tempfile
+import collections, glob, json, math, os, re, subprocess, tarfile, tempfile
 import yaml
 from .packing import Packing, read, side_val
 from .store import Store
@@ -230,3 +230,41 @@ def import_runs(st: Store, runs, below=None, procs=12, below_k=False):
 
 def import_run(st: Store, run, below=None):
     return import_runs(st, [run], below=below, procs=1)
+
+
+def import_finals(st: Store, n, only_verdict=('certified', 'weak')):
+    """Battery / corpus final packings (runs/battery/*/trials.jsonl 'fin', runs/corpus/*/fin_*.npz) never reached the
+    `packing` table (review 10-11).  Import those whose side key has an exactsolve verdict in `basin` (default certified /
+    weak: the representatives of minima), status = the verdict, source battery:<name> / corpus:<name>/<tag>."""
+    import numpy as np
+    from .identity import side_key
+    B = dict(st.db.execute('SELECT key, cls FROM basin WHERE n=?', (n,)).fetchall())
+    root = os.path.join(HERE, '..', 'runs')
+    c = collections.Counter()
+    for f in sorted(glob.glob(f'{root}/battery/*/trials.jsonl')):
+        name = os.path.basename(os.path.dirname(f))
+        for i, l in enumerate(open(f)):
+            r = json.loads(l)
+            if not r.get('fin') or r.get('s') is None or len(r['fin']) != n:
+                continue
+            cls = B.get(side_key(r['s']))
+            if cls not in only_verdict:
+                continue
+            _, new = st.add(Packing(r['s'], np.array(r['fin'], float)), source=f'battery:{name}', finder='ours',
+                            ref=f'{os.path.relpath(f, root)}:{i}', status=cls, commit=False)
+            c['battery new' if new else 'battery seen'] += 1
+    for f in sorted(glob.glob(f'{root}/corpus/*/fin_*.npz')):
+        name = os.path.basename(os.path.dirname(f)); tag = os.path.basename(f)[4:-4]
+        z = np.load(f)
+        for i in z.files:
+            x = z[i]
+            if (len(x) - 3) // 3 != n:
+                continue
+            s = float(x[0]); cls = B.get(side_key(s))
+            if cls not in only_verdict:
+                continue
+            _, new = st.add(Packing(s, x[3:].reshape(-1, 3)), source=f'corpus:{name}/{tag}', finder='ours',
+                            ref=f'{os.path.relpath(f, root)}:{i}', status=cls, commit=False)
+            c['corpus new' if new else 'corpus seen'] += 1
+    st.db.commit()
+    return dict(c)
