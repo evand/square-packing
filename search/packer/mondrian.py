@@ -519,9 +519,42 @@ def greedy_proxy(T, S):
     return len(T) + int(taken.sum())
 
 
-def exact_fill(T, S, tol=1e-6, time_limit=30):
+HUNG = os.path.join(HERE, 'runs', 'mondrian', 'hung')
+
+
+def _fill_child(w, T, S, tol, time_limit):
     import gen
-    F = gen.mis_fill2(S, [tuple(r) for r in T], tol=tol, time_limit=time_limit)
+    w.send(gen.mis_fill2(S, [tuple(r) for r in T], tol=tol, time_limit=time_limit))
+    w.close()
+
+
+def exact_fill(T, S, tol=1e-6, time_limit=30, hard=None):
+    """Tilted squares T + the exact MILP upright fill (gen.mis_fill2).  The MILP runs in a forked child under a hard
+    wall-clock limit (10-11: HiGHS overran its own time_limit on some fills and wedged a replicate pass for 10 h).  On
+    overrun the child is killed, the input saved under runs/mondrian/hung/, and T is returned unfilled (a safe
+    undercount)."""
+    import multiprocessing as mp
+    hard = hard or 3 * time_limit + 30
+    ctx = mp.get_context('fork')
+    r, w = ctx.Pipe(False)
+    p = ctx.Process(target=_fill_child, args=(w, T, S, tol, time_limit))
+    p.start(); w.close()
+    F = None
+    try:
+        if r.poll(hard):
+            F = r.recv()
+    except EOFError:                 # child died without sending
+        pass
+    if p.is_alive():
+        p.kill()
+    p.join()
+    r.close()
+    if F is None:
+        os.makedirs(HUNG, exist_ok=True)
+        f = os.path.join(HUNG, f'fill_{os.getpid()}_{time.time():.0f}.npz')
+        np.savez(f, T=np.asarray(T), S=S, tol=tol, time_limit=time_limit)
+        print(f'    [exact_fill: no result in {hard:.0f} s (exit {p.exitcode}); input saved to {f}]', flush=True)
+        return np.asarray(T, float).reshape(-1, 3)
     return np.r_[T, np.array(F, float).reshape(-1, 3)]
 
 

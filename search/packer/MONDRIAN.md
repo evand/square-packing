@@ -67,3 +67,32 @@ links): 825 parsed, 640 new store rows in total.  Flags kept in the manifest: 13
 inexact as published?); `square-108_r0` fails in the site parser (`missing ref #sideA`).  Store backed up first
 (`runs/store_backup_2026-10-10_pre-kingbird.sqlite`).  Atlas v2 from the catalogue: 23,240 sources, 82,954 pieces.
 `mondrian.load_src('kingbird:NAME')` reads the newest snapshot.
+
+## Trimmed replication pass (10-11)
+First attempt (10-10 night) wedged 10 h: a scipy/HiGHS `milp` in the joint fills ignored its `time_limit`; 12 workers
+at 100% CPU, no output (my watcher only waited for the summary line).  `exact_fill` now runs every MILP in a forked
+child under a hard wall-clock limit (3 x time_limit + 30 s; overrun -> killed, input saved to `runs/mondrian/hung/`,
+tilted squares returned unfilled = safe undercount); jobs relaunched under `pk/jobs.py` (trim1..3, ~45 min, no overrun).
+Settings: `--procs 4 --top 150 --window 0.1 --extra 2 --fq-top 4 --relax --insert-max 4 --tries 2 --explore-min 10`.
+
+| tier | n |
+|---|---|
+| REPLICATED | 259, 263, 292 |
+| BEAT-ANTE | 232 (15.7687164 vs ante 15.7781746; theirs 15.7674283) |
+| no | 131, 153, 207, 209, 236, 269, 270, 302, 303, 305, 307 |
+
+Forensics (rigid match of each source's tilted squares onto their final packing, 8 orientations; tight = 0.05 / 1 deg):
+the three REPLICATED n are exactly those with both pieces rigid in the final (259 / 292: s(123) 33/33 at UR shifted 3
+columns, s(50)_r5 16/16 at LL; 263: s(202)_r3 78/78, one row dropped).  232 and 302 have one rigid piece (one row
+dropped); 131, 209, 307 partly rigid; 153, 207, 236, 269, 270, 303, 305 not recoverable (relaxed descendants).
+Wherever both pieces are visible they sit in opposite corners separated by an axis cut with a 1-2 unit band of
+uprights: no interlocking.  #481's pieces are mostly OFF the atlas frontier (259: +1 / +2 pieces in cells whose best is
++5 / +9; 292 +1 vs +6; 263 +6 vs +14) and from former records: fit (fractional sides vs S) and relaxability matter,
+not raw excess.  The atlas's Pareto prune would even drop their 259 s(50)_r5 piece (a same-m strictly smaller crop
+exists).  Next: diversity atlas, rank by squeeze gain, blind test (TODO).
+
+## s(126) record reads as a corner-overlap composition (10-11, Evan's reading; counts and side consistent, construction route unknown)
+ry-xu's s(126) = 7.5 + 3 sqrt 2 = Kingbird s(85b) + 2.  s(85b) is a 6x6 diamond at 45 deg in uprights; T1 with an L of
+2 rows + 2 columns gives 85 + 22 + 18 = 125.  The record's 126th comes from a 2-square tilted corner piece at UR
+(53.3 / 64.9 deg) whose rectangle overlaps the upright-only corner of the s(85b) box; its diamond has the top diagonal
+row slid by one lattice step.  Our pair screen requires a guillotine cut, so it cannot generate this (TODO).
