@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>s(110) map — mock-up</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--paper:#F2F4F1;--surface:#FBFCFA;--ink:#131A1E;--muted:#5F6B70;--rule:#D6DCD7;--accent:#0E7490;--gold:#9C6410;--red:#B4322A;
+  --chart-a:#0B7A9B;--chart-b:#B98A3C;--sq-fill:#E6E9E5;--sq-stroke:#3A4448;--wall:#131A1E;--mono:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Spectral,Georgia,serif}
+.wrap{max-width:1500px;margin:0 auto;padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+h1{font-size:1.4rem;margin:0}
+.controls{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-family:var(--mono);font-size:.8rem;color:var(--muted)}
+select,button{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:3px 8px}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:14px;align-items:start}
+.fig{background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:10px;display:flex;flex-direction:column;gap:8px}
+canvas{display:block;width:100%;aspect-ratio:1/1}
+#map{cursor:crosshair}
+.readout{font-family:var(--mono);font-size:.85rem;display:flex;flex-direction:column;gap:3px;min-height:4.6em}
+.readout span{color:var(--muted)}
+.cap{font-family:var(--mono);font-size:.74rem;color:var(--muted);line-height:1.45}
+.bar{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+.bar canvas{aspect-ratio:auto;height:12px;width:260px;border:1px solid var(--rule)}
+</style></head><body><div class="wrap">
+<h1>s(110): map of the certified local minima (mock-up)</h1>
+<div class="controls">
+  <label>layout <select id="lay"></select></label>
+  <label><input type="checkbox" id="lab" checked> island labels</label>
+  <span>hover: preview · click: hold / release · Esc: release</span>
+</div>
+<div class="grid">
+  <div class="fig"><canvas id="map"></canvas>
+    <div class="bar"><span id="b0"></span><canvas id="cbar" width="260" height="12"></canvas><span id="b1"></span><span>side (dot colour)</span></div>
+    <div class="cap">Each dot is a certified local minimum below 11. Nearby dots have similar layouts (fingerprint distance of the square
+    centres, UMAP); positions between islands are only roughly meaningful. Labels: tilted counts in the two bands / axis-parallel /
+    junction squares. Star: the record. Rings: thin = same count family as the hovered or held minimum; thick = hovered;
+    red = held.</div></div>
+  <div class="fig"><canvas id="pk"></canvas>
+    <div class="readout" id="ro"><span>Hover a dot.</span></div></div>
+</div></div>
+<script>
+const D = /*DATA*/null;
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const C = (() => { const s = getComputedStyle(document.documentElement), g = n => s.getPropertyValue(n).trim();
+  return {surface:g('--surface'), paper:g('--paper'), ink:g('--ink'), muted:g('--muted'), rule:g('--rule'), gold:g('--gold'),
+          red:g('--red'), a:g('--chart-a'), b:g('--chart-b'), fill:g('--sq-fill'), stroke:g('--sq-stroke'), wall:g('--wall')}; })();
+const VIR = ['#fde725','#b5de2b','#6ece58','#35b779','#1f9e89','#26828e','#31688e','#3e4989','#482878','#440154'];
+function hexrgb(h){ h=h.replace('#',''); return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16)); }
+function mix(h1,h2,t){ const a=hexrgb(h1), b=hexrgb(h2); return `rgb(${a.map((v,i)=>Math.round(v+(b[i]-v)*t)).join(',')})`; }
+function vir(t){ t=Math.min(1,Math.max(0,t))*(VIR.length-1); const i=Math.min(VIR.length-2,Math.floor(t)); return mix(VIR[i],VIR[i+1],t-i); }
+const S = D.minima.map(m => +m.S), sideT = s => (s - D.rec) / (D.top - D.rec);
+const best = S.indexOf(Math.min(...S));
+function tiltColor(deg){ let a=((deg%90)+90)%90; if (a<1.5||a>88.5) return C.fill; return mix(C.a, C.b, Math.min(1,Math.max(0,(a-20)/50))); }
+// ---- colour bar
+(() => { const cv=$('cbar'), x=cv.getContext('2d'); for (let i=0;i<cv.width;i++){ x.fillStyle=vir(i/(cv.width-1)); x.fillRect(i,0,1,cv.height); }
+  $('b0').textContent=D.rec.toFixed(7); $('b1').textContent=D.top.toFixed(7); })();
+// ---- state
+let L = 0, hover = -1, pin = -1, P = [];
+D.layouts.forEach((l,i) => { const o=document.createElement('option'); o.value=i; o.textContent=l.name; $('lay').appendChild(o); });
+function dpr(){ return Math.min(2, window.devicePixelRatio||1); }
+function size(cv){ const W=Math.round(cv.getBoundingClientRect().width*dpr()); if (cv.width!==W){ cv.width=W; cv.height=W; } return W; }
+function drawMap(){
+  const cv=$('map'), W=size(cv), x=cv.getContext('2d'), pad=18*dpr(), sc=W-2*pad, xy=D.layouts[L].xy;
+  P = S.map((_,i) => [pad + xy[2*i]*sc, pad + (1-xy[2*i+1])*sc]);
+  x.fillStyle=C.surface; x.fillRect(0,0,W,W);
+  const act = pin>=0 ? pin : hover, fam = act>=0 ? D.minima[act].fam : null;
+  const order = S.map((_,i)=>i).sort((a,b)=>S[b]-S[a]);             // low sides on top
+  const r = 3.2*dpr();
+  for (const i of order){ x.beginPath(); x.arc(P[i][0],P[i][1],r,0,7); x.fillStyle=vir(sideT(S[i])); x.fill();
+    x.lineWidth=.6*dpr(); x.strokeStyle='rgba(0,0,0,.35)'; x.stroke();
+    if (fam && D.minima[i].fam===fam){ x.lineWidth=1.2*dpr(); x.strokeStyle=C.ink; x.beginPath(); x.arc(P[i][0],P[i][1],r+2*dpr(),0,7); x.stroke(); } }
+  // record star
+  star(x, P[best][0], P[best][1], 9*dpr());
+  if ($('lab').checked){ x.font=`${10*dpr()}px ${getComputedStyle(document.body).getPropertyValue('--mono')||'monospace'}`; x.textAlign='center';
+    for (const [lx,ly,t] of D.layouts[L].labels){ const px=pad+lx*sc, py=pad+(1-ly)*sc-7*dpr(); const w=x.measureText(t).width;
+      x.fillStyle='rgba(251,252,250,.75)'; x.fillRect(px-w/2-2,py-10*dpr(),w+4,12*dpr()); x.fillStyle=C.muted; x.fillText(t,px,py); } }
+  for (const [i,col] of [[hover,C.ink],[pin,C.red]]) if (i>=0){ x.lineWidth=2*dpr(); x.strokeStyle=col; x.beginPath(); x.arc(P[i][0],P[i][1],r+5*dpr(),0,7); x.stroke(); }
+}
+function star(x,cx,cy,R){ x.beginPath(); for (let k=0;k<10;k++){ const a=-Math.PI/2+k*Math.PI/5, rr=k%2?R*.45:R; x.lineTo(cx+rr*Math.cos(a), cy+rr*Math.sin(a)); }
+  x.closePath(); x.fillStyle=C.red; x.fill(); x.lineWidth=dpr(); x.strokeStyle=C.ink; x.stroke(); }
+function drawPacking(i){
+  const cv=$('pk'), W=size(cv), x=cv.getContext('2d'); x.setTransform(1,0,0,1,0,0); x.fillStyle=C.surface; x.fillRect(0,0,W,W);
+  if (i<0) return;
+  const m=D.minima[i], side=S[i], pad=10*dpr(), sc=(W-2*pad)/11.0;     // fixed scale: the dashed outline is side 11
+  x.setTransform(sc,0,0,-sc,pad,W-pad);
+  x.fillStyle=C.paper; x.fillRect(0,0,side,side);
+  x.setLineDash([4*dpr()/sc,4*dpr()/sc]); x.lineWidth=dpr()/sc; x.strokeStyle=C.muted; x.strokeRect(0,0,11,11); x.setLineDash([]);
+  x.lineWidth=1.5*dpr()/sc; x.strokeStyle=C.wall; x.strokeRect(0,0,side,side);
+  const q=m.sq;
+  for (let k=0;k<q.length;k+=3){ const cx=q[k]/1e4, cy=q[k+1]/1e4, t=q[k+2]/100, r=t*Math.PI/180, c=Math.cos(r)*.5, s=Math.sin(r)*.5;
+    x.beginPath(); x.moveTo(cx+c-s,cy+s+c); x.lineTo(cx-c-s,cy-s+c); x.lineTo(cx-c+s,cy-s-c); x.lineTo(cx+c+s,cy+s-c); x.closePath();
+    x.fillStyle=tiltColor(t); x.fill(); x.lineWidth=.8*dpr()/sc; x.strokeStyle=C.stroke; x.stroke(); }
+  x.setTransform(1,0,0,1,0,0);
+}
+function readout(i){
+  if (i<0){ $('ro').innerHTML='<span>Hover a dot.</span>'; return; }
+  const m=D.minima[i], rank=S.filter(v=>v<S[i]).length+1, nf=D.minima.filter(o=>o.fam===m.fam).length;
+  $('ro').innerHTML = `<div><span>side</span> <b>${m.S}</b> ${i===best?'(record)':''}</div>`+
+    `<div><span>above the record</span> ${i===best?'0':(S[i]-D.rec).toExponential(3)} · <span>rank</span> ${rank} of ${S.length}</div>`+
+    `<div><span>family</span> ${m.fam} (${nf} minima)</div>`+
+    `<div><span>${pin>=0?'held — click it again or press Esc to release':'click to hold'}</span></div>`;
+}
+function show(){ const i = pin>=0 ? pin : hover; drawMap(); drawPacking(i); readout(i); }
+function nearest(ev){ const cv=$('map'), b=cv.getBoundingClientRect(), mx=(ev.clientX-b.left)*dpr(), my=(ev.clientY-b.top)*dpr();
+  let bi=-1, bd=(14*dpr())**2; for (let i=0;i<P.length;i++){ const d=(P[i][0]-mx)**2+(P[i][1]-my)**2; if (d<bd){ bd=d; bi=i; } } return bi; }
+$('map').addEventListener('mousemove', ev => { const i=nearest(ev); if (i!==hover){ hover=i; show(); } });
+$('map').addEventListener('mouseleave', () => { hover=-1; show(); });
+$('map').addEventListener('click', ev => { const i=nearest(ev); pin = (i<0||i===pin) ? -1 : i; show(); });
+document.addEventListener('keydown', ev => { if (ev.key==='Escape'){ pin=-1; show(); } });
+$('lay').addEventListener('change', () => { L=+$('lay').value; show(); });
+$('lab').addEventListener('change', show);
+window.addEventListener('resize', show);
+drawMap(); drawPacking(best); readout(best); $('ro').lastElementChild.innerHTML = '<span>showing the record; hover a dot to explore</span>';
+})();
+</script></body></html>

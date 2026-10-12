@@ -27,7 +27,8 @@ section{display:flex;flex-direction:column;gap:14px}
 .facts b{display:block;font-size:1.15rem;color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
 .fig{background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:14px;display:flex;flex-direction:column;gap:10px}
 .figrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
-@media (max-width:760px){.figrow{grid-template-columns:1fr}}
+.figrow.wide{grid-template-columns:minmax(0,3fr) minmax(0,2fr)}
+@media (max-width:760px){.figrow,.figrow.wide{grid-template-columns:1fr}}
 canvas{display:block;width:100%;max-width:100%;height:auto;touch-action:manipulation}
 .sqview{aspect-ratio:1/1}
 .cap{font-family:var(--mono);font-size:.76rem;color:var(--muted);line-height:1.45}
@@ -59,11 +60,11 @@ html,body{height:auto}
   <header class="col">
     <div class="eyebrow">Square Packing Atlas · n = 110</div>
     <h1>The s(110) landscape</h1>
-    <p class="lede">We know <b id="f-count">497</b> different ways to pack 110 unit squares into a square of side less than 11. Each one is a local minimum: no small motion of the squares lets the box shrink. They differ in side by at most <span class="num" id="f-spread">0.0033</span>, and they all share one layout. This page shows what that means for anyone hunting for a better packing.</p>
+    <p class="lede">We know <b id="f-count">—</b> different ways to pack 110 unit squares into a square of side less than 11. Each one is a local minimum: no small motion of the squares lets the box shrink. They differ in side by at most <span class="num" id="f-spread">—</span>, they share one structure, and the deepest of them sit in two pockets. This page shows what that means for anyone hunting for a better packing.</p>
     <div class="facts">
-      <div><b id="f-best">10.996783</b>best known side</div>
+      <div><b id="f-best">—</b>best known side</div>
       <div><b>330</b>coordinates to vary</div>
-      <div><b id="f-n">497</b>certified minima below 11</div>
+      <div><b id="f-n">—</b>certified minima below 11</div>
       <div><b id="f-bar">—</b>typical expansion to switch</div>
     </div>
     <p id="loaderr" class="err" hidden></p>
@@ -72,36 +73,41 @@ html,body{height:auto}
   <section>
     <div class="col">
       <div class="eyebrow">1 · The census</div>
-      <h2>Hundreds of floors in one narrow funnel</h2>
-      <p>Each dot is one certified local minimum, placed by its side length. Below 11 there is a single structure: a band of squares tilted about 28° along the left wall, a band tilted about 62° along the bottom, and about 66 squares parallel to the walls filling the rest. The minima differ in how many squares each band holds and in how the two bands meet. Hover or tap a dot to see the packing.</p>
+      <h2>Hundreds of floors, two deep pockets</h2>
+      <p>Each dot is one certified local minimum, placed by its side length. Below 11 there is a single structure: a band of squares tilted about 28° along the left wall, a band tilted about 62° along the bottom, and 64 to 70 squares parallel to the walls filling the rest. The rows sort the minima by how many squares are tilted. That one number is the clearest dividing line in the census: 42 and 43 tilted squares hold the deepest minima, and every step away from them costs depth.</p>
+      <p>Hover or tap a dot to see its packing in the panel below; click to hold it.</p>
     </div>
     <div class="fig">
-      <canvas id="strip" height="170" aria-label="Side lengths of all certified minima below 11" tabindex="0"></canvas>
-      <div class="lgnd" id="striplegend"></div>
-      <div class="figrow">
-        <canvas id="cview" class="sqview" width="600" height="600" aria-label="Selected packing"></canvas>
-        <div class="cap" id="cinfo"></div>
-      </div>
+      <canvas id="strip" height="250" aria-label="Side lengths of all certified minima below 11, one row per tilted count" tabindex="0"></canvas>
+      <div class="cap">One row per number of tilted squares (row labels at left). Dots further left are better. Within a row the vertical spread only keeps dots apart.</div>
     </div>
   </section>
 
   <section>
     <div class="col">
-      <div class="eyebrow">2 · Why each one is stuck</div>
-      <h2>Every contact pushes, and the pushes balance</h2>
-      <p>To shrink the box, the walls must move in. A packing is stuck when the contacts can carry that inward push: there are positive contact forces, one for each touching pair or square-and-wall, that exactly balance a unit inward force on the walls. Then any small motion that keeps the squares apart costs side length, to first order or (where the first-order test is flat) to second order. The exact solver checks this at an 80-digit point and also writes an exact rational certificate for the side.</p>
-      <p>Stuck does not mean frozen. Some squares carry no force (rattlers), and in most minima some groups of squares can slide together without changing the side. Those are the <i>flat motions</i>; the best known packing has <span id="f-flat">17</span> squares involved in them. They never lead anywhere lower.</p>
+      <div class="eyebrow">2 · A map of the minima</div>
+      <h2>Islands of similar layouts</h2>
+      <p>Here the same minima are placed so that similar layouts sit close together. Similarity compares where the axis-parallel and the tilted squares sit, ignoring which square is which and the eight symmetries of the box. Positions within an island are meaningful; distances between islands only roughly so.</p>
+      <p>The minima form islands. An island usually keeps one count of axis-parallel squares, while the split between the two bands and the corner where they meet varies inside it: moving one square between the grid and a band is a small change. Hover a dot to ring every minimum with the same tilt counts; they are often spread over several islands. The two deep pockets are the record's island (43 tilted) and a second island with 42 tilted.</p>
     </div>
     <div class="fig">
       <div class="controls">
-        <label for="fsel">packing</label><select id="fsel"></select>
-        <button id="fforce" class="on" aria-pressed="true">contact forces</button>
-        <button id="fflat" aria-pressed="false">squares that can slide</button>
+        <span>dot colour</span>
+        <button id="mside" class="on" aria-pressed="true">side</button>
+        <button id="mtilt" aria-pressed="false">tilted count</button>
+        <span>hover: preview · click: hold or release · Esc: release</span>
       </div>
-      <div class="figrow">
-        <canvas id="fview" class="sqview" width="600" height="600" aria-label="Contact forces"></canvas>
-        <div class="cap" id="finfo"></div>
+      <div class="figrow wide">
+        <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+          <canvas id="map" class="sqview" width="600" height="600" aria-label="Map of the minima: nearby dots have similar layouts" tabindex="0"></canvas>
+          <div class="lgnd" id="maplegend"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+          <canvas id="cview" class="sqview" width="600" height="600" aria-label="Selected packing"></canvas>
+          <div class="cap" id="cinfo"></div>
+        </div>
       </div>
+      <div class="cap">Star: the record. Rings: thin = same tilt counts as the selected minimum; thick = under the pointer; red = held. Packings are drawn in the orientation that best matches their neighbours on the map, starting from the record.</div>
     </div>
   </section>
 
@@ -110,7 +116,7 @@ html,body{height:auto}
       <div class="eyebrow">3 · Moving between minima</div>
       <h2>To get from one minimum to the next, the box has to grow</h2>
       <p>Pick two minima. Match each square in one to a square in the other, so the total corner movement is as small as possible. Then look for the smallest box in which the squares can move from the first arrangement to the second without ever overlapping. That box size, minus the larger of the two sides, is the expansion the transition needs.</p>
-      <p>The animation runs a tour through <span id="nreps">24</span> representative minima, chosen to keep the expansions small. In each step the packing first spreads out to fill the larger box, then rearranges, then settles into the next minimum. The chart below the packing plots the side along the way: each dip is a local minimum, and each hump is the expansion needed to reach the next one.</p>
+      <p>The animation runs a tour through <span id="nreps">—</span> representative minima, from most of the larger islands and several from each deep pocket, chosen to keep the expansions small. In each step the packing first spreads out to fill the larger box, then rearranges, then settles into the next minimum. The chart below the packing plots the side along the way: each dip is a local minimum, and each hump is the expansion needed to reach the next one.</p>
     </div>
     <div class="fig">
       <div class="controls">
@@ -126,8 +132,8 @@ html,body{height:auto}
           <div class="cap" id="tinfo"></div>
         </div>
       </div>
-      <canvas id="tprof" height="190" aria-label="Side length along the tour"></canvas>
-      <div class="cap">Side along the tour. Dots: the minima. Dashed line: side 11. The top of each hump is our upper bound on the box that step needs; a cleverer path might need less. Click the chart to jump to a step.</div>
+      <canvas id="tprof" height="210" aria-label="Side length along the tour"></canvas>
+      <div class="cap">Side along the tour, on a square-root scale above the record so the depths of the minima show. Dots: the minima. Dashed line: side 11. The top of each hump is our upper bound on the box that step needs; a cleverer path might need less. Click the chart to jump to a step.</div>
     </div>
   </section>
 
@@ -157,13 +163,34 @@ html,body{height:auto}
     </div>
   </section>
 
+  <section>
+    <div class="col">
+      <div class="eyebrow">5 · Why each one is stuck</div>
+      <h2>Every contact pushes, and the pushes balance</h2>
+      <p>To shrink the box, the walls must move in. A packing is stuck when the contacts can carry that inward push: there are positive contact forces, one for each touching pair or square-and-wall, that exactly balance a unit inward force on the walls. Then any small motion that keeps the squares apart costs side length, to first order or (where the first-order test is flat) to second order. The exact solver checks this at an 80-digit point and also writes an exact rational certificate for the side.</p>
+      <p>Stuck does not mean frozen. Some squares carry no force (rattlers), and in most minima some groups of squares can slide together without changing the side. Those are the <i>flat motions</i>; the record has <span id="f-flat">—</span> squares involved in them. They never lead anywhere lower.</p>
+    </div>
+    <div class="fig">
+      <div class="controls">
+        <label for="fsel">packing</label><select id="fsel"></select>
+        <button id="fforce" class="on" aria-pressed="true">contact forces</button>
+        <button id="fflat" aria-pressed="false">squares that can slide</button>
+      </div>
+      <div class="figrow">
+        <canvas id="fview" class="sqview" width="600" height="600" aria-label="Contact forces"></canvas>
+        <div class="cap" id="finfo"></div>
+      </div>
+    </div>
+  </section>
+
   <section class="col">
     <div class="eyebrow">How this was computed</div>
     <ul class="notes" id="notes">
-      <li><b>Census.</b> Basin-exploration runs of our packer, started from the known record funnel; every candidate below 11 is solved exactly. A minimum counts when it has a valid rational certificate and the solver's first- and second-order tests pass. On 2026-10-08 the solver got a fix for nearly parallel touching squares, and three earlier entries turned out not to be minima; the whole census was re-checked.</li>
+      <li><b>Census.</b> Basin-exploration runs of our packer, started from the known record funnel and, in the latest round, from minima far from the best ones; every candidate below 11 is solved exactly. A minimum counts when it has a valid rational certificate and the solver's first- and second-order tests pass. A further 44 minima pass the first-order test but the solver could not settle the second order; they are left out until it can. Snapshot: <span id="snap" class="mono">—</span>.</li>
       <li><b>Distinct.</b> Two minima are different when their exact sides differ. Sides that agree to nine digits still belong to visibly different packings here.</li>
-      <li><b>Expansion.</b> For each pair: spread the first packing to fill a box of side s, follow the straight-line morph to the second with small feasible steps (linear programs that keep every pair of squares apart), and bisect on s. The result is an upper bound on the expansion needed, for this family of paths.</li>
-      <li><b>Not covered.</b> The census only covers what our search reaches from the known funnel, so a different structure below 11, or a better minimum with a very small basin, is not ruled out.</li>
+      <li><b>Map.</b> Each packing becomes two blurred 24 × 24 images of square centres (axis-parallel and tilted), compared by the summed absolute difference, minimised over the 8 symmetries of the box. This agrees closely with the corner-movement distance (rank correlation 0.93 on 11,175 pairs) at a fraction of the cost. The map is a UMAP layout of that distance (raised to the power 0.5; 250 neighbours, min_dist 1, spread 2). Islands: groups linked by distances below 0.02.</li>
+      <li><b>Expansion.</b> For each pair: spread the first packing to fill a box of side s, follow the straight-line morph to the second with small feasible steps (linear programs that keep every pair of squares apart), and bisect on s. Our walk is not mirror-symmetric, so tour steps were also tried with both packings reflected in the diagonal, keeping the smaller box. The result is an upper bound on the expansion needed, for this family of paths. Six candidate stops that no walk reached cheaply were left out of the tour.</li>
+      <li><b>Not covered.</b> The census only covers what our search reaches. Searches started far from the record found their way back to it within an hour, which points to a single funnel, but a different structure below 11, or a better minimum with a very small basin, is not ruled out.</li>
       <li>Code: <a href="https://github.com/evand/square-packing/tree/main/search/packer/landscape"><span class="mono">search/packer/landscape/</span></a> and <a href="https://github.com/evand/square-packing/blob/main/search/exact/exactsolve.py"><span class="mono">search/exact/exactsolve.py</span></a>.</li>
     </ul>
   </section>
@@ -227,7 +254,7 @@ function drawPacking(cv, sq, side, opt={}){
 
 // ---------------------------------------------------------------------------------------------------- data
 let D = null;
-fetch('data/landscape110.json').then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(d => { D = d; init(); })
+fetch('data/landscape110.json?v=2026-10-11').then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(d => { D = d; init(); })
   .catch(e => { const el = $('loaderr'); el.hidden = false; el.textContent = 'The data file did not load (' + e.message + '). Reload the page to try again.'; });
 
 function lerpF(F, x){ const i = Math.max(0, Math.min(F.length-1, Math.floor(x))), j = Math.min(F.length-1, i+1), t = Math.min(1, Math.max(0, x - i));
@@ -235,135 +262,194 @@ function lerpF(F, x){ const i = Math.max(0, Math.min(F.length-1, Math.floor(x)))
   return Object.assign({}, a, {s: a.s + (b.s - a.s)*t, sq: a.sq.map((q,k) => [q[0]+(b.sq[k][0]-q[0])*t, q[1]+(b.sq[k][1]-q[1])*t, q[2]+(b.sq[k][2]-q[2])*t])}); }
 function fmt(x, k=6){ return (+x).toFixed(k); }
 
+// ---------------------------------------------------------------------------------------------------- colour ramps
+// Validated (dataviz validate_palette.js --ordinal, site surfaces #FBFCFA / #151C20): single hue, monotone lightness,
+// adjacent steps >= 0.06 in L, light end >= 2:1 against the surface.
+const GOLD_LIGHT = ['#CDA261','#B88742','#A3722E','#8E5F21','#784E16','#633E0E','#4E2F08'];   // 40 .. 46 tilted
+const GOLD_DARK  = ['#805816','#976A22','#AE7F33','#C3964B','#D6AE68','#E6C68A','#F3DCAE'];   // 40 .. 46 tilted
+const TEAL_LIGHT = ['#0A4F63','#12627A','#257790','#3E8EA6','#5EA6B9','#7FBCCB'];             // record .. 11
+const TEAL_DARK  = ['#A6E3EF','#7FCFE0','#5CB8CD','#3FA0B8','#2A88A1','#1C718A'];             // record .. 11
+const isDark = () => { const [r,g,b] = hexrgb(C.paper); return (r + g + b) / 3 < 128; };
+function ramp(stops, t){ t = Math.min(1, Math.max(0, t)) * (stops.length - 1); const i = Math.min(stops.length - 2, Math.floor(t)); return mix(stops[i], stops[i+1], t - i); }
+let REC = 0;
+const sideCol = s => ramp(isDark() ? TEAL_DARK : TEAL_LIGHT, (s - REC) / (11 - REC));
+const tiltCol = c => { const g = isDark() ? GOLD_DARK : GOLD_LIGHT; return g[Math.max(0, Math.min(g.length - 1, c - 40))]; };
+const monoFont = px => `${px}px "IBM Plex Mono", ui-monospace, monospace`;
+const dprOf = () => Math.min(2, window.devicePixelRatio || 1);
+
+// ---------------------------------------------------------------------------------------------------- shared selection
+// The census strip and the map share one packing panel: hover previews, click holds (click again or Esc releases).
+const SEL = {hover: -1, held: -1, fns: []};
+let BEST = 0;
+const selActive = () => SEL.held >= 0 ? SEL.held : (SEL.hover >= 0 ? SEL.hover : BEST);
+const selChanged = () => { for (const f of SEL.fns) f(); };
+const setHover = i => { if (i !== SEL.hover){ SEL.hover = i; selChanged(); } };
+const toggleHold = i => { SEL.held = (i < 0 || i === SEL.held) ? -1 : i; selChanged(); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && SEL.held >= 0){ SEL.held = -1; selChanged(); } });
+
 function init(){
   const cen = D.census; const S = cen.map(r => +r.S);
+  REC = Math.min(...S); BEST = S.indexOf(REC);
   $('f-count').textContent = cen.length; $('f-n').textContent = cen.length;
-  $('f-spread').textContent = (Math.max(...S) - Math.min(...S)).toFixed(4);
-  $('f-best').textContent = Math.min(...S).toFixed(6);
-  $('nreps').textContent = D.reps.length;
-  const ex = D.legs.filter(l => l.ok).map(l => l.s - Math.max(+D.reps[l.i].S, +D.reps[l.j].S)).sort((a,b)=>a-b);
+  $('f-spread').textContent = (Math.max(...S) - REC).toFixed(4);
+  $('f-best').textContent = REC.toFixed(6);
+  const legs = D.legs.filter(l => l.ok);
+  $('nreps').textContent = new Set(legs.map(l => l.i)).size;
+  const ex = legs.map(l => l.s - Math.max(+D.stops[l.i].S, +D.stops[l.j].S)).sort((a,b) => a - b);
   if (ex.length) $('f-bar').textContent = '+' + ex[Math.floor(ex.length/2)].toFixed(3);
-  $('f-flat').textContent = D.reps[0].flat.length;
-  initStrip(); initForces(); initTour(); initSettle();
+  if (D.forces.length) $('f-flat').textContent = D.forces[0].flat.length;
+  $('snap').textContent = `${D.snapshot.minima} certified minima, store ${D.snapshot.store_sha}`;
+  initStrip(); initMap(); initPanel(); initTour(); initSettle(); initForces();
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { C = css(); redrawAll(); });
   new MutationObserver(() => { C = css(); redrawAll(); }).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
   let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(redrawAll, 120); });
 }
 const redraws = []; function redrawAll(){ for (const f of redraws) f(); }
 
+function nearest(pts, cv, ev, maxPx){
+  const r = cv.getBoundingClientRect(), k = cv.width / r.width, x = (ev.clientX - r.left) * k, y = (ev.clientY - r.top) * k;
+  let b = -1, bd = (maxPx * k) ** 2; pts.forEach(([px,py], i) => { const d = (px - x) ** 2 + (py - y) ** 2; if (d < bd){ bd = d; b = i; } });
+  return b;
+}
+function ring(ctx, x, y, r, col, w){ ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.lineWidth = w; ctx.strokeStyle = col; ctx.stroke(); }
+function star(ctx, cx, cy, R){ ctx.beginPath(); for (let k = 0; k < 10; k++){ const a = -Math.PI/2 + k*Math.PI/5, rr = k % 2 ? R*.45 : R; ctx.lineTo(cx + rr*Math.cos(a), cy + rr*Math.sin(a)); }
+  ctx.closePath(); ctx.fillStyle = C.red; ctx.fill(); ctx.lineWidth = dprOf(); ctx.strokeStyle = C.ink; ctx.stroke(); }
+
 // ---------------------------------------------------------------------------------------------------- 1 census strip
 function initStrip(){
-  const cv = $('strip'), cen = D.census;
-  const S = cen.map(r => +r.S), lo = 10.9966, hi = 11.0;
-  const keyOf = r => r.roles ? r.roles[0] : null;          // left-band count
-  const keys = [...new Set(cen.map(keyOf).filter(k => k !== null))].sort((a,b)=>a-b);
-  let sel = 0, pts = [];
-  // legend
-  const lg = $('striplegend'); lg.innerHTML = '<span>colour: squares in the left band</span>';
-  function colK(k){ if (k===null) return C.muted; const t = keys.length>1 ? (k-keys[0])/(keys[keys.length-1]-keys[0]) : .5; return mix(C.a, C.b, t); }
-  function legend(){ lg.innerHTML = '<span>colour: squares in the left band</span>' + keys.map(k => `<span><i class="sw" style="background:${colK(k)}"></i>${k}</span>`).join('') + '<span><i class="sw" style="background:'+C.muted+'"></i>not recorded</span>'; }
+  const cv = $('strip'), cen = D.census, S = cen.map(r => +r.S);
+  const counts = [...new Set(cen.map(r => r.tilted))].sort((a,b) => a - b);
+  let pts = [];
   function draw(){
-    legend();
-    const dpr = Math.min(2, devicePixelRatio||1); const W = Math.round(cv.getBoundingClientRect().width*dpr); const H = Math.round(170*dpr);
+    const dpr = dprOf(), W = Math.round(cv.getBoundingClientRect().width * dpr), H = Math.round(250 * dpr);
     cv.width = W; cv.height = H; const ctx = cv.getContext('2d');
-    ctx.fillStyle = C.surface; ctx.fillRect(0,0,W,H);
-    const L = 32*dpr, R = W - 32*dpr, top = 12*dpr, bot = H - 30*dpr;
-    const X = s => L + (s - lo)/(hi - lo)*(R - L);
-    // ticks
-    ctx.strokeStyle = C.rule; ctx.fillStyle = C.muted; ctx.font = `${11*dpr}px ${getComputedStyle(document.body).getPropertyValue('--mono')||'monospace'}`; ctx.textAlign='center';
-    for (let s = 10.9966; s <= 11.00001; s += 0.0006){ const x = X(s); ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bot); ctx.stroke(); ctx.fillText(s.toFixed(4), x, bot + 16*dpr); }
-    ctx.textAlign='left';
-    // jitter: deterministic by index and group
-    pts = cen.map((r,i) => { const k = keyOf(r); const g = k===null ? 0.5 : (keys.indexOf(k)+0.5)/keys.length;
-      const j = (((i*2654435761)>>>0) % 1000)/1000; return [X(+r.S), top + (bot-top)*(0.08 + 0.84*(0.7*g + 0.3*j)), k]; });
-    pts.forEach(([x,y,k]) => { ctx.beginPath(); ctx.arc(x,y,2.6*dpr,0,7); ctx.fillStyle = colK(k); ctx.fill(); });
-    const [sx,sy] = pts[sel]; ctx.beginPath(); ctx.arc(sx,sy,6*dpr,0,7); ctx.lineWidth = 2*dpr; ctx.strokeStyle = C.ink; ctx.stroke();
-    show();
+    ctx.fillStyle = C.surface; ctx.fillRect(0, 0, W, H);
+    const L = 74*dpr, R = W - 16*dpr, top = 8*dpr, bot = H - 30*dpr, rowH = (bot - top) / counts.length;
+    const lo = REC - 0.00015, hi = 11.0, X = s => L + (s - lo) / (hi - lo) * (R - L);
+    ctx.font = monoFont(11*dpr); ctx.strokeStyle = C.rule; ctx.fillStyle = C.muted; ctx.textAlign = 'center';
+    for (let s = 10.997; s <= 11.00001; s += 0.0005){ const x = X(s); ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bot); ctx.stroke(); ctx.fillText(s.toFixed(4), x, bot + 17*dpr); }
+    ctx.textAlign = 'right';
+    counts.forEach((c, k) => { const y = top + (k + .5) * rowH; ctx.fillStyle = C.muted; ctx.fillText(`${c} tilted`, L - 10*dpr, y + 4*dpr);
+      ctx.strokeStyle = C.rule; ctx.beginPath(); ctx.moveTo(L, top + (k + 1) * rowH); ctx.lineTo(R, top + (k + 1) * rowH); ctx.stroke(); });
+    pts = cen.map((r, i) => { const k = counts.indexOf(r.tilted), j = (((i * 2654435761) >>> 0) % 1000) / 1000;
+      return [X(+r.S), top + (k + 0.15 + 0.7 * j) * rowH]; });
+    const order = S.map((_, i) => i).sort((a, b) => S[b] - S[a]);
+    for (const i of order){ const [x, y] = pts[i]; ctx.beginPath(); ctx.arc(x, y, 3*dpr, 0, 7); ctx.fillStyle = tiltCol(cen[i].tilted); ctx.fill();
+      ctx.lineWidth = .6*dpr; ctx.strokeStyle = C.surface; ctx.stroke(); }
+    star(ctx, pts[BEST][0], pts[BEST][1], 8*dpr);
+    if (SEL.hover >= 0) ring(ctx, ...pts[SEL.hover], 7*dpr, C.ink, 1.6*dpr);
+    if (SEL.held >= 0) ring(ctx, ...pts[SEL.held], 8*dpr, C.red, 2*dpr);
   }
-  function show(){
-    const r = cen[sel]; drawPacking($('cview'), dec(r.sq), +r.S);
-    const rank = sel + 1;
-    $('cinfo').innerHTML = `<b>side ${(+r.S).toFixed(12)}</b><br>rank ${rank} of ${cen.length} by side<br>` +
-      (r.roles ? `left band ${r.roles[0]}, bottom band ${r.roles[1]}, parallel to the walls ${r.roles[2]}, other ${r.roles[3]}<br>` : '') +
-      `flat motions: ${r.flat}<br><br>Colour shows tilt: <span style="color:${C.a}">■</span> about 28°, <span style="color:${C.b}">■</span> about 62°, grey parallel to the walls.`;
-  }
-  function pick(ev){ const r = cv.getBoundingClientRect(), dpr = cv.width / r.width; const x = (ev.clientX - r.left)*dpr, y = (ev.clientY - r.top)*dpr;
-    let b = 0, bd = 1e18; pts.forEach(([px,py],i) => { const d = (px-x)**2 + (py-y)**2; if (d < bd){ bd = d; b = i; } }); if (b !== sel){ sel = b; draw(); } }
-  cv.addEventListener('pointermove', pick); cv.addEventListener('pointerdown', pick);
-  cv.addEventListener('keydown', e => { if (e.key==='ArrowRight'){ sel = Math.min(cen.length-1, sel+1); draw(); e.preventDefault(); } if (e.key==='ArrowLeft'){ sel = Math.max(0, sel-1); draw(); e.preventDefault(); } });
-  redraws.push(draw); draw();
+  cv.addEventListener('pointermove', ev => setHover(nearest(pts, cv, ev, 10)));
+  cv.addEventListener('pointerleave', () => setHover(-1));
+  cv.addEventListener('click', ev => toggleHold(nearest(pts, cv, ev, 10)));
+  const byS = S.map((_, i) => i).sort((a, b) => S[a] - S[b]);
+  cv.addEventListener('keydown', e => { const cur = byS.indexOf(selActive()); if (e.key === 'ArrowRight' || e.key === 'ArrowLeft'){
+    const nx = byS[Math.max(0, Math.min(byS.length - 1, cur + (e.key === 'ArrowRight' ? 1 : -1)))]; SEL.held = nx; selChanged(); e.preventDefault(); } });
+  SEL.fns.push(draw); redraws.push(draw); draw();
 }
 
-// ---------------------------------------------------------------------------------------------------- 2 forces
-function initForces(){
-  const sel = $('fsel'); let mode = {force:true, flat:false};
-  D.reps.forEach((r,i) => { const o = document.createElement('option'); o.value = i; o.textContent = (+r.S).toFixed(9) + (i===0 ? ' (best known)' : ''); sel.appendChild(o); });
-  function draw(){
-    const r = D.reps[+sel.value], sq = dec(r.sq);
-    const lmax = Math.max(...r.contacts.map(c => c[5]));
-    const flat = new Set(r.flat), free = new Set(r.free);
-    drawPacking($('fview'), sq, +r.S, {contacts: mode.force ? r.contacts : null, lmax, highlight: mode.flat ? flat : null, fade: free});
-    const nC = r.contacts.filter(c => c[0]==='C').length, nW = r.contacts.length - nC;
-    $('finfo').innerHTML = `<b>side ${(+r.S).toFixed(12)}</b><br>${nC} square-square and ${nW} square-wall contacts carry force<br>` +
-      `rattlers (no force, drawn faint): ${r.free.length ? r.free.length : 'none'}<br>squares in flat motions: ${r.flat.length}<br><br>` +
-      (mode.force ? `Dot area is proportional to the contact force; <span style="color:${C.red}">red</span> between squares, <span style="color:${C.ink}">dark</span> at the walls. The largest force is ${lmax.toFixed(3)} in units of the inward push on the walls.` : '') +
-      (mode.flat ? `<br><br><span style="color:${C.gold}">Gold</span>: squares that take part in a flat motion.` : '');
+// ---------------------------------------------------------------------------------------------------- 2 map
+let MAPMODE = 'side';
+function initMap(){
+  const cv = $('map'), cen = D.census, S = cen.map(r => +r.S), key = r => r.counts.join('/');
+  let pts = [];
+  function legend(){
+    const lg = $('maplegend');
+    if (MAPMODE === 'side'){
+      const stops = (isDark() ? TEAL_DARK : TEAL_LIGHT);
+      lg.innerHTML = `<span>side</span><span class="num">${REC.toFixed(7)}</span><i style="display:inline-block;width:160px;height:11px;border:1px solid ${C.rule};background:linear-gradient(90deg,${stops.join(',')})"></i><span class="num">11.0000000</span>`;
+    } else {
+      const cs = [...new Set(cen.map(r => r.tilted))].sort((a,b) => a - b);
+      lg.innerHTML = '<span>tilted squares</span>' + cs.map(c => `<span><i class="sw" style="background:${tiltCol(c)}"></i>${c}</span>`).join('');
+    }
   }
-  $('fforce').onclick = e => { mode.force = !mode.force; e.currentTarget.classList.toggle('on', mode.force); e.currentTarget.setAttribute('aria-pressed', mode.force); draw(); };
-  $('fflat').onclick = e => { mode.flat = !mode.flat; e.currentTarget.classList.toggle('on', mode.flat); e.currentTarget.setAttribute('aria-pressed', mode.flat); draw(); };
-  sel.onchange = draw; redraws.push(draw); draw();
+  function draw(){
+    const dpr = dprOf(), W = Math.round(cv.getBoundingClientRect().width * dpr);
+    if (cv.width !== W){ cv.width = W; cv.height = W; }
+    const ctx = cv.getContext('2d'), pad = 14*dpr, sc = W - 2*pad;
+    ctx.fillStyle = C.surface; ctx.fillRect(0, 0, W, W);
+    pts = cen.map(r => [pad + r.xy[0] * sc, pad + (1 - r.xy[1]) * sc]);
+    const act = selActive(), fam = act >= 0 ? key(cen[act]) : null, r0 = 3.2*dpr;
+    const order = S.map((_, i) => i).sort((a, b) => S[b] - S[a]);
+    for (const i of order){ const [x, y] = pts[i]; ctx.beginPath(); ctx.arc(x, y, r0, 0, 7);
+      ctx.fillStyle = MAPMODE === 'side' ? sideCol(S[i]) : tiltCol(cen[i].tilted); ctx.fill();
+      ctx.lineWidth = .6*dpr; ctx.strokeStyle = C.surface; ctx.stroke(); }
+    if (fam) for (let i = 0; i < cen.length; i++) if (key(cen[i]) === fam) ring(ctx, ...pts[i], r0 + 2.2*dpr, C.ink, 1*dpr);
+    star(ctx, pts[BEST][0], pts[BEST][1], 9*dpr);
+    if (SEL.hover >= 0) ring(ctx, ...pts[SEL.hover], r0 + 5*dpr, C.ink, 2*dpr);
+    if (SEL.held >= 0) ring(ctx, ...pts[SEL.held], r0 + 6*dpr, C.red, 2.2*dpr);
+    legend();
+  }
+  cv.addEventListener('pointermove', ev => setHover(nearest(pts, cv, ev, 14)));
+  cv.addEventListener('pointerleave', () => setHover(-1));
+  cv.addEventListener('click', ev => toggleHold(nearest(pts, cv, ev, 14)));
+  const setMode = m => { MAPMODE = m; for (const [id, v] of [['mside','side'],['mtilt','tilt']]){ const b = $(id); b.classList.toggle('on', m === v); b.setAttribute('aria-pressed', m === v); } draw(); };
+  $('mside').onclick = () => setMode('side'); $('mtilt').onclick = () => setMode('tilt');
+  SEL.fns.push(draw); redraws.push(draw); draw();
+}
+
+// ---------------------------------------------------------------------------------------------------- shared packing panel
+function initPanel(){
+  const cen = D.census, S = cen.map(r => +r.S), rankOf = S.map(s => S.filter(v => v < s).length + 1);
+  const stopSet = new Set(D.stops.map(s => s.census_index)), famN = {};
+  cen.forEach(r => { const k = r.counts.join('/'); famN[k] = (famN[k] || 0) + 1; });
+  function show(){
+    const i = selActive(), r = cen[i]; drawPacking($('cview'), dec(r.sq), S[i]);
+    const [b1, b2, ax, j, o] = r.counts;
+    const state = SEL.held >= 0 ? 'held: click it again or press Esc to release' : (SEL.hover >= 0 ? 'click to hold' : 'showing the record; hover a dot');
+    $('cinfo').innerHTML = `<b>side ${r.S}</b>${i === BEST ? ' (the record)' : ''}<br>` +
+      `${i === BEST ? '' : `${(S[i] - REC).toExponential(2)} above the record · `}rank ${rankOf[i]} of ${cen.length}<br><br>` +
+      `<b>${r.tilted} tilted</b>: ${b1} and ${b2} in the two bands, ${j} near the corner where they meet${o ? `, ${o} other` : ''}; ${ax} parallel to the walls. ` +
+      `${famN[r.counts.join('/')] - 1} other minima share these counts (ringed on the map).<br>` +
+      `flat motions: ${r.flat}${stopSet.has(i) ? ' · a stop on the tour below' : ''}<br><br>` +
+      `Colour shows tilt: <span style="color:${C.a}">■</span> about 28°, <span style="color:${C.b}">■</span> about 62°, grey parallel to the walls.<br><i>${state}</i>`;
+  }
+  SEL.fns.push(show); redraws.push(show); show();
 }
 
 // ---------------------------------------------------------------------------------------------------- 3 tour
 function initTour(){
-  const legs = D.legs.filter(l => l.ok && l.frames.length);
-  // flatten into one timeline; frame = [side, sq(decoded), legIndex, frac]
+  const legs = D.legs.filter(l => l.ok && l.frames.length), ST = D.stops;
   const T = []; legs.forEach((l,k) => l.frames.forEach((f,q) => T.push({s:f[0], sq:dec(f[1]), leg:k, q, n:l.frames.length})));
-  const view = Math.max(...T.map(f => f.s)) * 1.0;
+  const view = Math.max(...T.map(f => f.s));
   let pos = 0, playing = false, last = 0;
   const speed = () => +$('tspeed').value;
-  function overlaps(){ return null; }
   function draw(){
     const f0 = T[Math.floor(pos)]; const l = legs[f0.leg];
     const nx = T[Math.min(T.length-1, Math.floor(pos)+1)];
     const f = (nx.leg === f0.leg) ? lerpF(T, pos) : f0;
     drawPacking($('tview'), f.sq, f.s, {view, ref: 11});
-    const a = D.reps[l.i], b = D.reps[l.j];
-    const exc = l.s - Math.max(+a.S, +b.S);
+    const a = ST[l.i], b = ST[l.j], exc = l.s - Math.max(+a.S, +b.S);
     $('tread').innerHTML = `<div><span>side </span><b>${f.s.toFixed(5)}</b></div><div><span>step </span><b>${f.leg+1} / ${legs.length}</b></div>`;
-    $('tinfo').innerHTML = `from <b>${(+a.S).toFixed(9)}</b><br>to&nbsp;&nbsp; <b>${(+b.S).toFixed(9)}</b><br>box needed: <b>${l.s.toFixed(4)}</b> (expansion <b>+${exc.toFixed(4)}</b>)<br><br>` +
-      `For scale: the two sides differ by ${Math.abs(+a.S - +b.S).toFixed(5)}. Dashed outline: side 11.`;
+    $('tinfo').innerHTML = `from <b>${(+a.S).toFixed(9)}</b> (${a.tilted} tilted)<br>to&nbsp;&nbsp; <b>${(+b.S).toFixed(9)}</b> (${b.tilted} tilted)<br>` +
+      `box needed: <b>${l.s.toFixed(4)}</b> (expansion <b>+${exc.toFixed(4)}</b>)<br><br>For scale: the two sides differ by ${Math.abs(+a.S - +b.S).toFixed(5)}. Dashed outline: side 11.`;
     drawProfile();
   }
   function drawProfile(){
-    const cv = $('tprof'); const dpr = Math.min(2, devicePixelRatio||1); const W = Math.round(cv.getBoundingClientRect().width*dpr), H = Math.round(190*dpr);
+    const cv = $('tprof'), dpr = dprOf(), W = Math.round(cv.getBoundingClientRect().width*dpr), H = Math.round(210*dpr);
     cv.width = W; cv.height = H; const ctx = cv.getContext('2d'); ctx.fillStyle = C.surface; ctx.fillRect(0,0,W,H);
-    const L = 54*dpr, R = W - 10*dpr, top = 10*dpr, bot = H - 22*dpr;
-    const smin = Math.min(...T.map(f=>f.s)), smax = Math.max(...T.map(f=>f.s));
-    const lo = smin - 0.002, hi = smax + 0.002;
-    const X = i => L + i/(T.length-1)*(R-L), Y = s => bot - (s-lo)/(hi-lo)*(bot-top);
-    ctx.font = `${10.5*dpr}px "IBM Plex Mono", monospace`; ctx.fillStyle = C.muted; ctx.strokeStyle = C.rule; ctx.textAlign = 'right';
-    const step = [0.005, 0.01, 0.02, 0.05, 0.1, 0.2].find(st => (hi-lo)/st <= 6) || 0.5;
-    for (let s = Math.ceil(lo/step)*step; s <= hi; s += step){ const y = Y(s); ctx.beginPath(); ctx.moveTo(L,y); ctx.lineTo(R,y); ctx.stroke(); ctx.fillText(s.toFixed(step < 0.01 ? 3 : 2), L-6*dpr, y+3.5*dpr); }
-    // y = 11 line
+    const L = 84*dpr, R = W - 10*dpr, top = 10*dpr, bot = H - 14*dpr;
+    const hi = Math.max(...T.map(f => f.s)) + 0.002, lo = REC;
+    const X = i => L + i/(T.length-1)*(R-L), Y = s => bot - Math.sqrt(Math.max(0, s - lo) / (hi - lo)) * (bot - top);
+    ctx.font = monoFont(10.5*dpr); ctx.fillStyle = C.muted; ctx.strokeStyle = C.rule; ctx.textAlign = 'right';
+    let lastY = Infinity;
+    for (const s of [REC, 10.998, 10.999, 11.0, 11.005, 11.01, 11.02, 11.03, 11.05, 11.07, 11.1, 11.15, 11.2].filter(v => v <= hi)){
+      const y = Y(s); if (lastY - y < 12*dpr) continue; lastY = y;
+      ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(R, y); ctx.stroke();
+      ctx.fillText(s === REC ? REC.toFixed(7) : s < 11 ? s.toFixed(3) : s.toFixed(3).replace(/0+$/, '').replace(/\.$/, '.0'), L - 6*dpr, y + 3.5*dpr); }
     ctx.strokeStyle = C.muted; ctx.setLineDash([4*dpr,4*dpr]); ctx.beginPath(); ctx.moveTo(L,Y(11)); ctx.lineTo(R,Y(11)); ctx.stroke(); ctx.setLineDash([]);
-    // area + line
     ctx.beginPath(); T.forEach((f,i) => i ? ctx.lineTo(X(i),Y(f.s)) : ctx.moveTo(X(i),Y(f.s)));
     ctx.lineTo(X(T.length-1), bot); ctx.lineTo(X(0), bot); ctx.closePath(); ctx.fillStyle = C.accent; ctx.globalAlpha = .12; ctx.fill(); ctx.globalAlpha = 1;
     ctx.beginPath(); T.forEach((f,i) => i ? ctx.lineTo(X(i),Y(f.s)) : ctx.moveTo(X(i),Y(f.s))); ctx.strokeStyle = C.accent; ctx.lineWidth = 1.5*dpr; ctx.stroke();
-    // minima ticks
     ctx.fillStyle = C.ink; T.forEach((f,i) => { if (f.q === 0){ ctx.beginPath(); ctx.arc(X(i), Y(f.s), 2.6*dpr, 0, 7); ctx.fill(); } });
-    // cursor
     const i = Math.floor(pos); ctx.strokeStyle = C.gold; ctx.lineWidth = 1.5*dpr; ctx.beginPath(); ctx.moveTo(X(i), top); ctx.lineTo(X(i), bot); ctx.stroke();
-    ctx.textAlign = 'left'; ctx.fillStyle = C.muted; ctx.fillText('11', R - 18*dpr, Y(11) - 4*dpr);
   }
-  // speed: notch 5 = one packing (one step of the tour) per second; each notch is a factor sqrt 2
   const perSec = () => Math.pow(2, (speed() - 5) / 2);
   const showSpeed = () => { const v = perSec(); $('tspeedv').textContent = (v >= 1 ? v.toFixed(v < 2 ? 1 : 0) : v.toFixed(2)) + ' / s'; };
   $('tspeed').addEventListener('input', showSpeed); showSpeed();
   let visible = true;
   new IntersectionObserver(es => { visible = es[0].isIntersecting; }).observe($('tview'));
-  // each step: hold on the minimum for HOLD of its time, then the transition with ease-in/out
   const HOLD = 0.4, start = []; T.forEach((f,i) => { if (f.q === 0) start[f.leg] = i; });
   let step = 0, phase = 0;
   const ease = x => x < .5 ? 2*x*x : 1 - 2*(1-x)*(1-x);
@@ -372,22 +458,20 @@ function initTour(){
   function tick(t){ if (!playing) return; const dt = Math.min(100, t - (last||t)); last = t;
     phase += dt/1000 * perSec();
     while (phase >= 1){ phase -= 1; step = (step + 1) % legs.length; }
-    place();
-    if (visible) draw();
-    requestAnimationFrame(tick); }
+    place(); if (visible) draw(); requestAnimationFrame(tick); }
   const setPlay = on => { playing = on; const b = $('tplay'); b.textContent = on ? 'Pause' : 'Play'; b.setAttribute('aria-pressed', on); b.classList.toggle('on', on); last = 0; if (on) requestAnimationFrame(tick); };
   $('tplay').onclick = () => setPlay(!playing);
   const jump = d => { step = (T[Math.floor(pos)].leg + d + legs.length) % legs.length; phase = 0; place(); draw(); };
   $('tprev').onclick = () => jump(-1); $('tnext').onclick = () => jump(1);
-  $('tprof').addEventListener('pointerdown', ev => { const r = ev.currentTarget.getBoundingClientRect(); const fr = (ev.clientX - r.left - 54*(r.width/r.width)) / (r.width - 64); pos = Math.max(0, Math.min(T.length-1, Math.round(fr*(T.length-1)))); step = T[pos].leg; phase = HOLD + (1 - HOLD) * (T[pos].q / Math.max(1, T[pos].n - 1)); draw(); });
+  $('tprof').addEventListener('pointerdown', ev => { const r = ev.currentTarget.getBoundingClientRect(); const fr = (ev.clientX - r.left - 84) / (r.width - 94);
+    pos = Math.max(0, Math.min(T.length-1, Math.round(fr*(T.length-1)))); step = T[pos].leg; phase = HOLD + (1 - HOLD) * (T[pos].q / Math.max(1, T[pos].n - 1)); draw(); });
   redraws.push(draw); draw();
-  setPlay(!reduce);                                   // plays on load unless the viewer asked for reduced motion
+  setPlay(!reduce);
 }
 
 // ---------------------------------------------------------------------------------------------------- 4 settle
 function initSettle(){
   const K = D.settle.filter(s => s.sigma === 0.01), Rr = D.settle.filter(s => s.sigma === 0.03), Big = D.settle.filter(s => s.sigma === 0.1);
-  // each panel: the run of its shake size that ended lowest
   const k = K.slice().sort((a,b)=>a.s_final-b.s_final)[0], r = Rr.slice().sort((a,b)=>a.s_final-b.s_final)[0];
   const runs = [[k, $('sk'), $('skread')], [r, $('sr'), $('srread')]].filter(x => x[0]);
   const fr = runs.map(([d]) => d.frames.map(f => ({s:f[0], sq:dec(f[1])})));
@@ -406,6 +490,28 @@ function initSettle(){
   $('splay').onclick = e => { playing = !playing; if (p >= 1) p = 0; e.currentTarget.textContent = playing ? 'Pause' : 'Play both'; e.currentTarget.classList.toggle('on', playing); e.currentTarget.setAttribute('aria-pressed', playing); last = 0; if (playing) requestAnimationFrame(tick); };
   $('sreset').onclick = () => { p = 0; draw(); };
   p = 1; redraws.push(draw); draw();
+}
+
+// ---------------------------------------------------------------------------------------------------- 5 forces
+function initForces(){
+  const sel = $('fsel'); let mode = {force:true, flat:false};
+  D.forces.forEach((r,i) => { const o = document.createElement('option'); o.value = i; o.textContent = (+r.S).toFixed(9) + (i===0 ? ' (the record)' : ''); sel.appendChild(o); });
+  function draw(){
+    if (!D.forces.length) return;
+    const r = D.forces[+sel.value], sq = dec(r.sq);
+    const lmax = Math.max(...r.contacts.map(c => c[5]));
+    const flat = new Set(r.flat), free = new Set(r.free);
+    drawPacking($('fview'), sq, +r.S, {contacts: mode.force ? r.contacts : null, lmax, highlight: mode.flat ? flat : null, fade: free});
+    const nC = r.contacts.filter(c => c[0]==='C').length, nW = r.contacts.length - nC;
+    $('finfo').innerHTML = `<b>side ${(+r.S).toFixed(12)}</b><br>${nC} square-square and ${nW} square-wall contacts carry force<br>` +
+      `rattlers (no force, drawn faint): ${r.free.length ? r.free.length : 'none'}<br>squares in flat motions: ${r.flat.length}<br><br>` +
+      (mode.force ? `Dot area is proportional to the contact force; <span style="color:${C.red}">red</span> between squares, <span style="color:${C.ink}">dark</span> at the walls. The largest force is ${lmax.toFixed(3)} in units of the inward push on the walls.` : '') +
+      (mode.flat ? `<br><br><span style="color:${C.gold}">Gold</span>: squares that take part in a flat motion.` : '') +
+      `<br><br>The packings offered here are the tour stops for which the solver's full contact report is at hand.`;
+  }
+  $('fforce').onclick = e => { mode.force = !mode.force; e.currentTarget.classList.toggle('on', mode.force); e.currentTarget.setAttribute('aria-pressed', mode.force); draw(); };
+  $('fflat').onclick = e => { mode.flat = !mode.flat; e.currentTarget.classList.toggle('on', mode.flat); e.currentTarget.setAttribute('aria-pressed', mode.flat); draw(); };
+  sel.onchange = draw; redraws.push(draw); draw();
 }
 })();
 </script>

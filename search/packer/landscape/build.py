@@ -54,9 +54,19 @@ def cmd_reps(a):
     print(len(reps), 'reps:', [M[i]['S'][:12] for i in reps])
 
 
+def tframe(P):
+    """diagonal transpose of a (s, sq radians) packing: a box symmetry (and an involution).  walk_carrot is not
+    transpose-symmetric (10-11: same pair connects in one frame and fails in the other), so a pair can be walked in the
+    transposed frame and the path mapped back; both give valid upper bounds."""
+    return P[0], [(y, x, math.pi / 2 - t) for x, y, t in P[1]]
+
+
 def _barrier(job):
-    i, j, pa, pb = job
+    i, j, pa, pb, *fr = job
+    frame = fr[0] if fr else 0
     A, B = morph.load(pa), morph.load(pb)
+    if frame:
+        A, B = tframe(A), tframe(B)
     perm = morph.match2(A, B)
     base = max(A[0], B[0])
     lo, hi, h = base, None, 0.01
@@ -65,19 +75,19 @@ def _barrier(job):
             hi = base + h; break
         lo = base + h; h *= 2
     if hi is None:
-        return dict(i=i, j=j, s=None)
+        return dict(i=i, j=j, s=None, frame=frame)
     while hi - lo > 2e-4:
         mid = (lo + hi) / 2
         if morph.walk_carrot(mid, A, B, perm)[0]:
             hi = mid
         else:
             lo = mid
-    return dict(i=i, j=j, s=hi, lo=lo, base=base)
+    return dict(i=i, j=j, s=hi, lo=lo, base=base, frame=frame)
 
 
 def _barrier_rev(job):
-    i, j, pa, pb = job                                 # walk j -> i; reported under (i, j) with rev = True
-    r = _barrier((j, i, pb, pa))
+    i, j, pa, pb, *fr = job                            # walk j -> i; reported under (i, j) with rev = True
+    r = _barrier((j, i, pb, pa, *fr))
     return dict(r, i=i, j=j, rev=True)
 
 
@@ -86,10 +96,10 @@ def cmd_barrier_rev(a):
     R = json.load(open(f'{a.out}/reps.json'))
     B = json.load(open(f'{a.out}/barriers.json'))
     fail = [b for b in B if b['s'] is None and not b.get('rev_tried')]
-    res = run_jobs(_barrier_rev, [(b['i'], b['j'], R[b['i']]['path'], R[b['j']]['path']) for b in fail], procs=a.procs,
+    res = run_jobs(_barrier_rev, [(b['i'], b['j'], R[b['i']]['path'], R[b['j']]['path'], b.get('frame', 0)) for b in fail], procs=a.procs,
                    timeout=3600, on_timeout=lambda j: None, on_error=lambda j, x: None)
-    got = {(r['i'], r['j']): dict(r, S_i=R[r['i']]['S'], S_j=R[r['j']]['S']) for r in res if r and r['s'] is not None}
-    B = [got.get((b['i'], b['j']), dict(b, rev_tried=True) if b['s'] is None else b) for b in B]
+    got = {(r['i'], r['j'], r.get('frame', 0)): dict(r, S_i=R[r['i']]['S'], S_j=R[r['j']]['S']) for r in res if r and r['s'] is not None}
+    B = [got.get((b['i'], b['j'], b.get('frame', 0)), dict(b, rev_tried=True) if b['s'] is None else b) for b in B]
     json.dump(B, open(f'{a.out}/barriers.json', 'w'), indent=0)
     print(f'{len(got)} of {len(fail)} failed pairs connect the other way')
 
@@ -97,7 +107,9 @@ def cmd_barrier_rev(a):
 def cmd_barrier(a):
     R = json.load(open(f'{a.out}/reps.json'))
     pairs = [(i, j) for i in range(len(R)) for j in range(i + 1, len(R))]
-    if a.near:                                       # only each rep's `near` nearest reps by corner movement
+    if a.pairs:                                      # explicit pair list (JSON [[i, j], ...]), e.g. the tour legs
+        pairs = [tuple(sorted(p)) for p in json.load(open(a.pairs))]
+    elif a.near:                                     # only each rep's `near` nearest reps by corner movement
         D = np.load(a.dist)
         ci = [r['census_index'] for r in R]
         nb = {i: set(np.argsort([D[ci[i], ci[j]] if j != i else 1e9 for j in range(len(R))])[:a.near].tolist()) for i in range(len(R))}
@@ -105,9 +117,9 @@ def cmd_barrier(a):
     old = {}
     if os.path.exists(f'{a.out}/barriers.json'):
         for b in json.load(open(f'{a.out}/barriers.json')):
-            old[(b['S_i'], b['S_j'])] = b
-    key = lambda i, j: (R[i]['S'], R[j]['S'])
-    jobs = [(i, j, R[i]['path'], R[j]['path']) for i, j in pairs if key(i, j) not in old]
+            old[(b['S_i'], b['S_j'], b.get('frame', 0))] = b
+    key = lambda i, j: (R[i]['S'], R[j]['S'], a.frame)
+    jobs = [(i, j, R[i]['path'], R[j]['path'], a.frame) for i, j in pairs if key(i, j) not in old]
     print(f'{len(pairs)} pairs, {len(pairs) - len(jobs)} already computed, {len(jobs)} to run', flush=True)
     t0 = time.time()
     res = run_jobs(_barrier, jobs, procs=a.procs, timeout=3600, on_timeout=lambda j: None, on_error=lambda j, x: None)
@@ -155,11 +167,14 @@ def thin(path, k):
 
 
 def _leg(job):
-    pa, pb, s, flip = job
+    pa, pb, s, flip, *fr = job
+    frame = fr[0] if fr else 0
     if flip:
-        r = _leg((pb, pa, s, False))
+        r = _leg((pb, pa, s, False, frame))
         return r and dict(r, frames=r['frames'][::-1], reversed=True)
     A, B = morph.load(pa), morph.load(pb)
+    if frame:
+        A, B = tframe(A), tframe(B)
     perm = morph.match2(A, B)
     ok, d, path = morph.walk_carrot(s, A, B, perm)
     if not ok:                                         # bisection's last success was at this s; retry slightly above
@@ -173,7 +188,9 @@ def _leg(job):
     tg = morph.target(A, B, perm)
     for f in np.linspace(fb, 1, 6)[1:]:                # shrink to B (angles continuous with the walk)
         frames.append((B[0] * f, [(x * f, y * f, t) for x, y, t in tg]))
-    return dict(ok=bool(ok), s=float(s), perm=[int(p) for p in perm], frames=frames)
+    if frame:                                          # map the path back to the display frame
+        frames = [(sf, tframe((sf, q))[1]) for sf, q in frames]
+    return dict(ok=bool(ok), s=float(s), perm=[int(p) for p in perm], frames=frames, frame=frame)
 
 
 def cmd_cycle(a):
@@ -183,23 +200,31 @@ def cmd_cycle(a):
     W = np.full((n, n), 10.0)
     Sb = np.full((n, n), np.nan)
     fwd = {}                                           # (a, b) -> True if the walk that worked goes a -> b
+    frm = {}                                           # (i, j) -> frame of the best walk
     for r in json.load(open(f'{a.out}/barriers.json')):
         if r['s'] is not None:
             i, j = r['i'], r['j']
+            if not np.isnan(Sb[i, j]) and Sb[i, j] <= r['s']:
+                continue                               # keep the best frame / direction
             Sb[i, j] = Sb[j, i] = r['s']
             W[i, j] = W[j, i] = r['s'] - max(S[i], S[j])
             a_, b_ = (j, i) if r.get('rev') else (i, j)
-            fwd[(a_, b_)] = True
+            fwd.pop((i, j), None); fwd.pop((j, i), None); fwd[(a_, b_)] = True
+            frm[(i, j)] = frm[(j, i)] = r.get('frame', 0)
     np.fill_diagonal(W, 0)
     deg = (W < 10).sum(1) - 1
-    keep = [i for i in range(n) if deg[i] >= 2]
+    drop = set(json.loads(a.drop)) if a.drop else set()
+    keep = [i for i in range(n) if deg[i] >= 2 and i not in drop]
     if len(keep) < n:
-        print('left out of the tour (fewer than 2 connections):', [i for i in range(n) if i not in keep])
+        print('left out of the tour (dropped, or fewer than 2 connections):', [i for i in range(n) if i not in keep])
     t = [keep[k] for k in tour(W[np.ix_(keep, keep)])]
     n = len(t)
     legs = [(t[k], t[(k + 1) % n]) for k in range(n)]
     print('tour', t, 'excess per leg', [round(float(W[i, j]), 4) for i, j in legs])
-    res = run_jobs(_leg, [(R[i]['path'], R[j]['path'], float(Sb[i, j]), (i, j) not in fwd) for i, j in legs], procs=a.procs, timeout=1800,
+    json.dump(dict(tour=t, legs=[[int(i), int(j)] for i, j in legs]), open(f'{a.out}/tour_order.json', 'w'))
+    if a.no_frames:
+        return
+    res = run_jobs(_leg, [(R[i]['path'], R[j]['path'], float(Sb[i, j]), (i, j) not in fwd, frm[(i, j)]) for i, j in legs], procs=a.procs, timeout=1800,
                    on_timeout=lambda j: None, on_error=lambda j, x: None)
     out = []
     for (i, j), r in zip(legs, res):
@@ -214,5 +239,9 @@ if __name__ == '__main__':
     ap.add_argument('--minima'); ap.add_argument('--dist'); ap.add_argument('--ok'); ap.add_argument('--k', type=int, default=24)
     ap.add_argument('--procs', type=int, default=15)
     ap.add_argument('--keep'); ap.add_argument('--near', type=int, default=0)
+    ap.add_argument('--frame', type=int, default=0, help='0: walk as stored; 1: walk in the transposed frame')
+    ap.add_argument('--pairs', help='JSON [[i, j], ...]: compute exactly these pairs')
+    ap.add_argument('--no-frames', action='store_true', help='cycle: order only (tour_order.json), no leg frames')
+    ap.add_argument('--drop', help='cycle: JSON list of rep indices to leave out of the tour')
     a = ap.parse_args()
     {'reps': cmd_reps, 'barrier': cmd_barrier, 'barrier-rev': cmd_barrier_rev, 'cycle': cmd_cycle}[a.cmd](a)
