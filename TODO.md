@@ -101,6 +101,7 @@ Order (Evan, 10-08): (1) benchmark, (2) LP throughput, (3) new proposals / start
 - [ ] Registration issue body from `candidate.py`'s summary.json (facts → template sections; prose stays by hand): after the next submission shows which parts repeat.
 - [ ] `search/regularize/reg.py`: an explicit input path option (`candidate.py` patches `reg.REFRESH` / `atlas.RUNS` in a subprocess meanwhile); for the regularize owner.
 - [ ] Watch jlevy#489 (Hunt 3, posted 10-10: s(132) 11.9856802, s(308) 17.9982699, s(343) 18.9782325, s(344) 18.9944505; 305 dropped, = Couzo #488).
+- [ ] Shallow-valley descender (X01, 10-12; Evan: write it eventually): follow the corner-corner MILP's first-order direction with exact contacts (active-set line search, re-solve contacts each step) until jammed; test on the 225 stuck n = 110 points (do they drain into the known minimum 0.001-0.02 away?).  PACKER "X01 investigated".
 - [ ] Descent quality first: `exact/descend.py` leaves 18 % of not-min points unjammed (stalls on 343 at dS -2.9e-8); then a finishing step for promising explorer entries.
 - [ ] Duplicate-aware parent picks: weight per minimum, not per entry (copy-rich minima: 2-7 % of minima, 20-36 % of picks at 110); distance cannot tell copies apart.
 - [ ] Chain vs dedicated runs, compute-matched: resetting 6-min rounds vs continuous vs archive carried over (hypothesis: archive memory; PACKER.md Hunt 3 reading).

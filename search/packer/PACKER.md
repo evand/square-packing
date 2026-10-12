@@ -1612,3 +1612,11 @@ measured CPU, seeds_src) suffice to compare against a later dedicated arm.
   gentle real slopes our step-based descenders give up on.  For census counting they are near-copies (the finisher found
   0 new among them).  What they drain into (a known minimum or an uncertified one in the dense band) needs a descender
   that follows shallow MILP directions with exact contacts (active-set line search); not worth building for the count.
+* **H3, s(109) from the 110 family** (10-12 10:00; Evan: the diamond 6 + 7/√2 looks out of place, and the non-diamond
+  109 packings are real and close: use them as seeds, certification not a priority).  The store holds 2,871 distinct
+  non-diamond sub-10.99 sides at 109 (29-45 tilted squares; roles L / B / axis ≈ 22 / 14 / 73: the s(110) two-band
+  structure with a shorter second band; best 10.9518715, +2.1e-3 over the diamond; visual: claude.ai artifact
+  TsFtMvxHD3bsy3PY2b811g).  `chain.py --ns-file [109] --seed-ks 1,-1 --src runs/live1012 --carry` the 3 best
+  non-diamond packings, `--lib-init` 60 more (best 40 + 20 spread), 1 slot × 2 procs × 6-min rounds, 6 h (more slots
+  when cores free).  Not a test.  Success: a certified 109 below 10.949747468.  Prediction: 20 % in 6 h (12 CPU-h);
+  the family's best is 2.1e-3 away and at 110 the record sat ~1e-3 below most of the family's mass.
