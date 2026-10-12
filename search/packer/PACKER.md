@@ -1630,3 +1630,19 @@ measured CPU, seeds_src) suffice to compare against a later dedicated arm.
   certified one), 10.0090720, 10.0092177, 10.0092301; the best side 10.0090456 descends to 10.0089808, still not
   jammed (dS −2.3e-7, an X01-type slow valley).  Nothing collapses toward the grid: rigid non-grid minima sit 0.009
   above it.  Scratch: runs in the session scratchpad (n90/).  Many rattlers (up to 8) in the best ones.
+* **H1 / H2 result** (10-12 10:38, 2 h each, by the pre-registration).  **H1 failed**: insertion into 307 brought the
+  308 lineage to 18.0005167 in 13 rounds (18.0027 after one), never below 18; plain insertion gets within 5e-4, the
+  crossing needs a targeted operator (Fang's wedge cut).  **H2: no candidate.**  Closest border lineages: 274
+  17.0084153, 242 16.0133959, 133 12.0164375; none at 90, 157, 183 (2-3 rounds each).  Diamonds: 89 lineage
+  9.9522574, 109 10.9518715 (the stored family best; not improved).
+* **16 cores from 10:40** (the other session finished).  Pre-registered before launch:
+  - **H3 restarted** (state kept): 1 slot × 6 procs per round, `--explore-extra "--sparse-share 0.5"`, 6 h.  (A
+    single-n chain runs one round at a time, so more slots do not help.)  Prediction unchanged (20 % for s(109)).
+  - **H4, s(90)**: `--ns-file [90] --seed-ks 1,-1`, carry the three best (10.0089808 descended / not jammed, 10.0090596
+    and 10.0090720 certified), library = 12 more rigid or descended n = 90 packings from the near-grid check, 1 slot
+    × 4 procs × 6-min rounds, 6 h.  Success: any 90 < 10.  Prediction 2 %.  Secondary (descriptive): the best non-grid
+    side reached (now 10.0089808).
+  - **H5, count sweep**: the 107 non-grid neighbours (n ± 1, 2) of the 56 n improved since 10-05 (`runs/h5_ns.json`),
+    excluding 89 / 90 / 109; live frontier, `--seed-ks 1,2,-1 --first-pass`, 3 slots × 2 procs × 4-min rounds, 8 h.
+    Success = new packings below the live frontier (certified via candidate.py).  Prediction: 1-4 (time-travel: 1 full
+    + 6 partial recoveries in 29 n at ~1.1 CPU-h each; here ~0.45 CPU-h per n, but the seeds are fresh).
