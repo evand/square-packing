@@ -18,6 +18,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 TRIES, SEED_FIRST = 12, False                # removal tries per seed; v2 (10-08): non-shrinking removals rejected
 
 
+# a CANDIDATE must beat the register by more than re-polishing the same packing can (10-12: n=207 re-polished
+# BuddenPing's #503 by 1.5e-9 at matching distance 0)
+CAND_TOL = 1e-8
+
 def seed_job(j):
     """k > 0: best of TRIES random k-removals from best(n + k); k < 0: insert |k| squares into best(n + k) at pose holes
     after scaling the packing up by a random gap.  fq-quenched; a removal that does not shrink is a copy and is rejected."""
@@ -160,6 +164,8 @@ def main(a):
             v['dirty'] = False
             S['round'] += 1
             rd = f'{a.out}/r{S["round"]:04d}_n{n}'
+            if os.path.exists(rd):      # left by a run killed mid-round: set it aside (lineage ignores *.partial*)
+                os.rename(rd, f'{rd}.partial{int(time.time())}')
             os.makedirs(rd)
             seeds = [(S['n'][str(n + k)]['path'], k, n, f'{rd}/seed_k{k}.txt', S['round'] * 10 + k) for k in a.seed_ks if str(n + k) in S['n']]
             res = run_jobs(seed_job, seeds, procs=a.procs_per, timeout=1800)
@@ -192,7 +198,7 @@ def main(a):
                 gain = v['best'] - b[0]
                 shutil.copy(b[1], v['path'])
                 v['best'] = b[0]
-                if b[0] < min(v['reg'], v.get('start', v['reg'])) - 1e-9:      # beyond the live register and our own start
+                if b[0] < min(v['reg'], v.get('start', v['reg'])) - CAND_TOL:   # beyond the live register and our own start
                     cp = f'{a.out}/cand_{n}_{b[0]:.10f}.txt'; shutil.copy(b[1], cp)
                     print(f'CANDIDATE n={n} {b[0]:.12f} (register {v["reg"]:.12f}, start {v.get("start", v["reg"]):.12f}) -> {cp}', flush=True)
                 for m in {n - k for k in a.seed_ks}:
@@ -231,7 +237,7 @@ def main(a):
 def report(out):
     S = json.load(open(f'{out}/state.json'))
     print(f'== {out}: {S["round"]} rounds')
-    cands = [(n, v) for n, v in S['n'].items() if v['best'] < min(v['reg'], v.get('start', v['reg'])) - 1e-9]
+    cands = [(n, v) for n, v in S['n'].items() if v['best'] < min(v['reg'], v.get('start', v['reg'])) - CAND_TOL]
     print(f'  candidates below register and start: {[(n, round(v["best"], 10), round(v["reg"] - v["best"], 10)) for n, v in cands]}')
     print(f'  {"n":>4} {"rounds":>6} {"register":>15} {"best":>15} {"gain":>9} {"SQUISH":>15} {"frac of SQUISH gain":>19} {"lineage best":>15}')
     for n, v in sorted(S['n'].items(), key=lambda q: int(q[0])):

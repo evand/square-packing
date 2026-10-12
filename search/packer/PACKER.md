@@ -1646,3 +1646,11 @@ measured CPU, seeds_src) suffice to compare against a later dedicated arm.
     excluding 89 / 90 / 109; live frontier, `--seed-ks 1,2,-1 --first-pass`, 3 slots × 2 procs × 4-min rounds, 8 h.
     Success = new packings below the live frontier (certified via candidate.py).  Prediction: 1-4 (time-travel: 1 full
     + 6 partial recoveries in 29 n at ~1.1 CPU-h each; here ~0.45 CPU-h per n, but the seeds are fresh).
+* **12:15 notes.**  (a) **H3b crashed at launch** (10:39): the stopped H3 had left a half-written `r0007_n109`, and
+  the resumed chain's `os.makedirs` failed on it, so ~1.5 h of 6 procs sat idle.  chain.py now renames such a dir to
+  `*.partial<t>` (lineage skips it).  Relaunched 12:14 for 4.5 h (ends ~16:45, same as H4); prediction unchanged.
+  (b) **First H5 "candidate" was a false positive**: n = 207 at 14.880960371559 vs register 14.880960373044 is
+  BuddenPing's #503 packing re-polished (candidate.py: both checkers VALID at S* = 14.8809603715556, matching distance
+  0.000 to the store best, case page shows 14.88096037).  Not a new packing; not imported (the store keeps #503).
+  chain.py's CANDIDATE flag now needs a gain over `CAND_TOL = 1e-8` (it was 1e-9, inside polish noise); the
+  running H5 still uses the old rule, so the watcher filters to > 1e-8.
