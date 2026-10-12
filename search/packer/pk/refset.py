@@ -91,6 +91,38 @@ def holdout(ref, rule, name, frac=0.5, seed=1, lo=0.0, hi=1e-3, sides=None, nsta
                     return True
             return False
         wh = {m['key'] for m in M if not hit(m)}
+    elif rule == 'groups':
+        # role-count groups (explore.roles_j of the representative; L / B mirror pairs merged: transpose swaps them).
+        #   sides = 'J0': withhold every group with J == 0;  'A<=65' etc.: axis-count condition;
+        #   'random': random groups (seeded) until >= frac of the minima are withheld;
+        #   'near:<key>': the group containing minimum <key> (or 'record') + groups within 1 in every count
+        import explore
+        st0 = Store()
+        def gkey(m):
+            r = explore.roles_j([tuple(map(float, q)) for q in st0.get(m['rep']).sq])
+            return (min(r[0], r[1]), max(r[0], r[1])) + tuple(r[2:])
+        G = {m['key']: gkey(m) for m in M if m['rep']}
+        spec = sides or 'J0'
+        if spec == 'J0':
+            wg = {g for g in G.values() if g[3] == 0}
+        elif spec.startswith('A'):
+            v = int(spec.lstrip('A<>='))           # 'A<=65' / 'A>=69'
+            wg = {g for g in G.values() if (g[2] <= v if '<' in spec else g[2] >= v)}
+        elif spec == 'random':
+            rng = random.Random(seed); gs = sorted(set(G.values())); rng.shuffle(gs)
+            sz = {g: sum(1 for x in G.values() if x == g) for g in gs}; wg = set(); tot = 0
+            for g in gs:
+                if tot >= frac * len(M): break
+                wg.add(g); tot += sz[g]
+        elif spec.startswith('near:'):
+            k0 = spec[5:]
+            m0 = min(M, key=lambda m: float(m['S'][:20])) if k0 == 'record' else next(m for m in M if m['key'] == k0)
+            g0 = G[m0['key']]
+            wg = {g for g in G.values() if all(abs(a - b) <= 1 for a, b in zip(g, g0))}
+        else:
+            raise SystemExit(f'groups spec {spec}?')
+        wh = {k for k, g in G.items() if g in wg}
+        print(f'groups {spec}: {len(wg)} of {len(set(G.values()))} groups withheld: {sorted(wg)[:12]}{" ..." if len(wg) > 12 else ""}')
     else:
         raise SystemExit(f'rule {rule}?')
     vis = [m for m in M if m['key'] not in wh]
@@ -160,7 +192,7 @@ def main():
     sp = ap.add_subparsers(dest='cmd', required=True)
     p = sp.add_parser('snapshot'); p.add_argument('--n', type=int, required=True); p.add_argument('--name', required=True)
     p = sp.add_parser('holdout'); p.add_argument('--ref', required=True); p.add_argument('--name', required=True)
-    p.add_argument('--rule', choices=['random', 'side', 'list'], required=True); p.add_argument('--frac', type=float, default=0.5)
+    p.add_argument('--rule', choices=['random', 'side', 'list', 'groups'], required=True); p.add_argument('--frac', type=float, default=0.5)
     p.add_argument('--seed', type=int, default=1); p.add_argument('--lo', type=float, default=0.0); p.add_argument('--hi', type=float, default=1e-3)
     p.add_argument('--sides'); p.add_argument('--starts', type=int)
     p = sp.add_parser('score'); p.add_argument('--holdout', required=True); p.add_argument('runs', nargs='+')

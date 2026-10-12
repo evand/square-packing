@@ -1469,3 +1469,32 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   Rates are lower than v2's (withheld 5-9 / CPU-h vs 110) because the withheld set is 62 hard near-record minima, not a
   random half: not comparable.
   Decision: adopt `--sparse-share 0.5` in the census recipe.  Next: region-count holdout ("find an unseen family").
+
+* **Night plan 10-11 (Evan: "the whole cpu is yours for the night"), pre-registered before launch.**  16 cores, ~9 h.
+  **Census v4, region-count holdouts** (`census_v4.py`, `runs/census_v4`; 8 procs).  `refset.holdout --rule groups`
+  (groups = explore.roles_j counts, L / B mirror pairs merged; 46 groups over census110_1011b's 780 minima):
+  `h110_J0` withholds every group with no ~45° junction squares (18 groups, 186 minima, record included).  `h110_grand`
+  withholds random groups (seed 3) to ≥ 24 % (16 groups, 217 minima, record visible).  `h110_recnb` (record's group +
+  every group within 1 in each count: 9 groups, 156 minima) is batch b, after batch a.  Recipe: census v3 + distance rule
+  (`--sparse-share 0.5`, bank = visible minima), 40 random visible starts, 1 proc per run; batch a = J0 × 4 reps + grand
+  × 4 reps, 240 min each (32 CPU-h).
+  Metric: fraction of the withheld minima re-found per measured CPU-h (Poisson rate per withheld minimum), J0 vs grand,
+  rate ratio with 95 % CI.  Secondary: J0 record re-found (time), time to the first withheld minimum, new minima.
+  Predictions: grand re-finds 25-50 % of its withheld minima per 4-h replicate.  J0 is harder, ratio J0 / grand 0.3-0.8
+  (count changes are common: 20 % of sub-11 transitions in v2, but J 4 → 0 needs four junction squares re-assigned).  The
+  record is re-found in ≥ 2 of 4 J0 replicates (one funnel, C05).
+  Decision rule: J0 harder if the CI excludes 1 and all 4 J0 replicate fractions are below grand's lowest; easier
+  symmetric; otherwise no difference resolved.  A J0 ratio near 1 means count groups are no barrier for the census search
+  (unseen families are found as easily as hidden ones).  A J0 with no record and ratio < 0.3 means families are real
+  barriers at this budget.
+  **Time-travel record test** (`chain.py`, `runs/timetravel/{plain,sparse}`; 8 procs).  29 n in 84-211 whose best improved
+  after the frozen 10-05 register (`../exact/batch/inputs`), gaps 1.3e-3 .. 3.2e-2.  Frozen truth
+  `runs/timetravel/truth.json` (10-05 side, today's store best).  Chain from the 10-05 packings (seeds from 10-05
+  neighbours), `--first-pass`, 2 slots × 2 procs × 4-min rounds, 9 h, two arms: plain (chain recipe as hunt1) and sparse
+  (+ `--explore-extra "--sparse-share 0.5"`; no bank: distance to the round's own archive only; in chain rounds the
+  sparse pick also overrides half of the frontier-lineage picks).  Expect ~9 rounds (~1.2 CPU-h) per n per arm.
+  Metric per n: recovered gap fraction (s1005 − best) / (s1005 − s_now), capped at 1; full recovery = best ≤ s_now + 1e-9.
+  Predictions (ch2: 126 reached 80 % in 11-14 rounds; bench: most n stuck at 5 min): median fraction 0.1-0.3 per arm,
+  full recovery in 0-3 of 29 n.  Sparse vs plain paired by n: no resolvable difference expected (median ratio 0.8-1.5).
+  Decision: the distance rule transfers to record hunting if the Wilcoxon signed-rank p < 0.05 and the median paired
+  difference > 0.  Anything below s_now is checked against the live register before any word "record".
