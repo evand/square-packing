@@ -5,3 +5,8 @@ Results and reading: `notes/strip-split.md`; task list: `tasks/strip-leaf/README
 their inputs (`cfg_n8_H3.99.npy`, `census4*_H*.json`, ...) in the working directory, produced by `wbisect.py` and
 `census4*.py`.  Core: `rectpack.py` (penalty + separating-axis gap), `census4*.py` (strip classes), `seam*.py`
 (seam reach and region tests), `notch*.py` (notched region), `mkpage.py` (the shape-class page).
+
+Copies of the inputs and logs (`cfg_*.npy`, `census4*_H*.json`, `*.log`) are kept in `runs/strip_float/`
+(gitignored); run from there.  `region_lp.py` (primal closed point-cover LP for the region beside the strip) and
+`region_dual.py` (the fractional-packing lower bound) are from the 10-11 region-LP run.  Outputs are in
+`runs/strip_region/`, and the result is in `notes/strip-split.md` §4e.

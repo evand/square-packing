@@ -17,7 +17,8 @@ strip lemma covers both (`notes/chord-lemma.md` §0).
 1. **The guillotine cases are dead with existing tools** (§2) [proved, modulo Lean].  Suppose two
    vertical lines meet no square interior and split 12 squares into pieces of `k`, 4 and `8-k`.  Then
    the strip lemma at any `h >= 7/6` kills every `k`.  Exact certificates exist at `h = 1.17` and `1.19`
-   (`tasks/n12-chat-lemmas/strip-demo/`); Lean has only `h = (3√2-2)/2 = 1.1213`, which is not enough.
+   (`tasks/n12-chat-lemmas/strip-demo/`).  Now in Lean (10-11, 7e3176f): `wallStripBound_117`,
+   `guillotine_false_117`, unconditional (`lean/Sqpack/Strip117.lean`).
 2. **`a` is not small.**  For any `b > 0`, 4 squares in a `w x (4-b)` rectangle need `w > h + 1/2`.
    That is `> 1.69` proved, about `1.9` in fact (Stromquist: 4 fit in `1.9 x 3.9475`) [proved / pub].  The
    width-1 column exists only at `b = 0`, and closed semantics kills it there too.
@@ -34,6 +35,11 @@ strip lemma covers both (`notes/chord-lemma.md` §0).
    It also needs the case split itself to be exhaustive, which is the real gap (§3).
 5. **Exhaustive version: sweep a line** (§3).  For `x0` in `[4 - b - 2h, h + 1/2]`, at least 3 squares
    cross the line `x = x0` [proved, same lemma].  This is tight at the permutation-hole tilings.
+6. **Status at the 10-11 pause.**  The class-A leaf is pinned down (strip width `<= 1.90`, seam
+   `x0 = 51/50`, margin about 0.02, §4d) and the stitch is in Lean (`StripLeaf.lean`).  The region half
+   is not provable by a point cover: the fractional packing lower bound is about 7.97 at best and above 8
+   at nearby settings (§4e).  The blocking solution is the sliding near-tiling again, so this route
+   most likely settles the side branches and hands the near-tiling core back.
 
 ## 1. Rectangle capacities from the strip lemma
 
@@ -219,6 +225,22 @@ B and F belong with A, as far as this search can tell.  The leaf split is {A, B,
   about 0.04 and not obviously bounded away from 0 as `b → 0`.  Open: whether `m(θ0)` plateaus at
   `H → 4`, and whether the region lemma holds with a profiled seam of that size.
 
+### 4e. Region lemma by point cover: no (10-11) [measured, float]
+
+`search/strip/region_lp.py` is the primal closed-cover LP.  `search/strip/region_dual.py` gives the fractional
+packing lower bound; outputs are in `runs/strip_region/`.  T = 4, notch top at yn = 3.02.
+
+| seam x0 | notch to | fractional packing (lower bound on any cover) |
+|---|---|---|
+| 1.00 | 1.85 | 8.136 (converged) |
+| 1.02 | 1.62 | 8.03 |
+| 1.02 | 1.87 (class A) | about 7.97 and rising with pose pricing |
+
+So the cover gains no usable margin (at most 0.03).  The obstruction is a smeared near-tiling, the same shape as the
+float 8-packings: flat squares in the free corners (0.7-1.0 each), 0.9 in the top slot next to the notch, about 2.7
+in flat squares sliding along the outer columns, and about 1.5 in a tilted middle block.  Extra structure must buy about
+0.2: corner and notch-slot branching, and wall-band count rows from the strip lemma.
+
 ## 5. What a (0,8) leaf proof would need
 
 Evan's reading (10-11): the near-optimal 8-packings at heights near 4 put an axis-parallel square in
@@ -235,7 +257,8 @@ composition fails.  Making that a proof needs:
 3. **No good-enough alternative 8-packing**: no 8-packing of the right-hand region, whose left boundary
    is the strip profile from 1, exists.  This is the joint part.  It replaces "8 in a rectangle" by "8 in
    a rectangle with a profile on one side", which is the boundary-condition statement `search/RANK8.md`
-   §2.3 said a split would need.
+   §2.3 said a split would need.  A plain point cover cannot prove it (§4e); it needs branching on
+   the corners plus count rows.
 4. **A branch that routes configurations into this leaf** (§3).
 
 ## 6. Rectangle results on hand
