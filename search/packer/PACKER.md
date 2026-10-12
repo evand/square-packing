@@ -1555,3 +1555,4 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   REFRESH dir so the shared `runs/regularize/exact/n-154` was not touched): same S*, rotation groups 24 → 16, level 2
   (same packing, angle moves path-checked), 80-digit verified; certificate VALID under both checkers.
   Files: `candidates/tt_n154{.cert,.exact.txt,.input.txt,.json}`, `candidates/tt_n154_regularized.{cert,json}`.
+  **Posted 10-12 ~08:10 as jlevy/squares#552** (certificate pinned at 597e660).
