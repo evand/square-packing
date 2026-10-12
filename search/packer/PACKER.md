@@ -1566,3 +1566,8 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   and 156" (correct but loose; comment drafted).  Other traces: plain 108 from 110's start (two squares removed), sparse
   155 and plain 155 from 156, sparse 180 from 181.  `chain.py` now logs each seed's source side (`seeds_src`).
   Store import of 154 not done (shared-store write blocked; TODO decision).
+* **154 in the store** (10-12).  Evan: packings are verifiable, so add them without anyone's approval; provenance is
+  best effort; there is no separate records session (the "owned by the records session" notes above were wrong).
+  Imported: the winning round `r0192_n154` (archive, parent links) and the certified exact point (id 291398,
+  `candidate:tt_n154`, ref #552); `pk/pending.yaml` has #552 (pinned 597e660, claim 12.922566401934060), and
+  `sync-pending --issue 552` deduplicated the posted certificate onto it.  Frontier 154: ours (pending #552).

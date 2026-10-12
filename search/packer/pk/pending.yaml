@@ -3,6 +3,7 @@
 # file under `paths`, and records the issue table's claims as pending frontier rows.  Add a line per new issue / update.
 # Issues stating their claims outside a markdown table carry them as `claims: {n: side}` (the issue's rounded-up side).
 # Refinement-only issues (exact re-roundings of registered packings: SidG2k1 #438, lollipoll #425 #428) are left out.
+- {issue: 552, finder: Evan Daniel (evand), repo: evand/square-packing, commit: 597e660c9a078a552991ab893cda3ab693cb5ac8, paths: ['search/packer/candidates/tt_n154.cert'], claims: {154: 12.922566401934060}}  # ours (time-travel chain); claim stated in prose; the issue's S' rounded up
 - {issue: 505, finder: Robert Barnett (RobertBarnettProjects), repo: RobertBarnettProjects/square-packing-research, commit: 2573ff51c4b160c952bbb2d1c399e7430d9f9ae2, paths: ['certificates/n146.cert', 'certificates/n261.cert']}
 - {issue: 504, finder: BuddenPing, repo: BuddenPing/square-packing-certificates, commit: bc328a7d727aedd0eabebd6ea80285f572b65d2d, paths: ['n153.cert.json'], claims: {153: 12.870013850408}}
 - {issue: 503, finder: BuddenPing, repo: BuddenPing/square-packing-certificates, commit: 9dc93b6ac2f8fefe038062a74c9a75bf05afdba6, paths: ['n207.cert.json'], claims: {207: 14.880960373044}}

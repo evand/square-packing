@@ -14,8 +14,8 @@ Steps (work dir runs/candidates/NAME/, summary.json + a facts block for the issu
   5. local-optimality facts from exactsolve's report (min lambda, flat motions, corner-corner jams, rattlers)
   6. --chain RUNDIR: lineage through a chain.py run (chain_lineage.py), for the credit paragraph
   7. regularized view (search/regularize, coincide style, conservative policy) at the same S*, both checkers on its
-     certificate.  The input goes through a private REFRESH dir in the work dir, so runs/regularize/exact (shared,
-     the records session's) is untouched
+     certificate.  The input goes through a private REFRESH dir in the work dir, so runs/regularize/exact (the
+     shared refresh inputs) is untouched
   8. --stage: copy to candidates/NAME{.cert,.exact.txt,.input.txt,.json} (+ NAME_regularized.{cert,json}) for a
      commit to pin.  --import: add to the store (source candidate:NAME, finder ours, status certified, --ref e.g. "jlevy/squares#552")
 Nothing is posted: the issue text is drafted in outreach/ and posted per Evan's OK (CLAUDE.md).
