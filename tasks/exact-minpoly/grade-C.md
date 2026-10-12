@@ -126,9 +126,13 @@ min-norm multipliers are rational in `φ`).  The dual object is polynomial:
 `search/exact/gradec_runs/_status.txt`, logs gitignored, certificates `minpoly/solve/n-N.gradec.json` gitignored).
 **231 VALID**, including n = 66, 127, 150, 175, whose coordinates carry 1e-16 to 1e-7 offsets: the side-end/interior/
 beyond classification is exact in K, so tiny margins are harmless.  Not VALID:
-* n = 230, 261: no strictly positive multipliers (max-min λ ≤ 1e-9 over the row set: some load-bearing row is forced
-  to zero force at z*).  So hypothesis 2 fails as stated; it needs either a smaller row set (drop the zero-force rows and
-  recheck the flat family) or a degenerate-KKT version of Theorem C.  Not yet investigated.
+* n = 230, 261: no strictly positive multipliers with the full row set: 24 rows (wall rows and interior incidences,
+  the same substructure in both records) carry zero force in every multiplier vector.  `GRADEC_DROPZERO=1` drops them
+  (numerical LP for the forced-zero set; a side-end pair goes as a whole).  Dropping constraints only relaxes the
+  problem, so a certificate for the smaller row set covers the record.  With them dropped, 12 squares stop being
+  load-bearing, null L0 = F (W = 0), and both are **VALID** (λ_min 0.0034; flat families of dim 110 and 122; ~1 min
+  each).  Logs `gradec_runs/n-{230,261}.dropzero.log`.  The mutation tests are still rejected with the option on.
+  So **233 of the 250 are VALID**.
 * 17 timeouts (n = 174, 201, 204, 231, 234, 257, 262, 274, 275, 295, 296, 299, 308–312).  10 of them reached exact
   λ* > 0 and timed out in the Hessian step; 7 (dim F 210–274) timed out in the null-vector elimination.  Pure cost:
   exact sparse elimination with hundreds of flat directions.

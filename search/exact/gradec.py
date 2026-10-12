@@ -256,6 +256,37 @@ def build(base, quiet=False):
         return [(ti, ti, -(nx * dx + ny * dy)), (ti, xi, -npx), (ti, yi, -npy), (ti, xj, npx), (ti, yj, npy),
                 (ti, tj, npx * ppx + npy * ppy), (tj, tj, -(nx * ox + ny * oy))]
 
+    if __import__('os').environ.get('GRADEC_DROPZERO'):
+        # Drop rows that carry zero force in every multiplier vector (numerical LP: maximise the number of rows with
+        # lambda >= t, 0 <= t <= 1, in the cone L^T lambda = c e_S).  Dropping constraints only relaxes the problem,
+        # so a certificate for the smaller row set is one for the record.  A side-end pair is dropped as a whole.
+        from scipy.optimize import linprog
+        Ln = np.zeros((m, N))
+        for a, r in enumerate(rows):
+            for c, v in lin(r).items():
+                Ln[a, c] = float(num(v))
+        es = np.zeros(N); es[sv_] = 1
+        res = linprog(np.r_[np.zeros(m), -np.ones(m), 0], A_eq=np.c_[Ln.T, np.zeros((N, m)), -es], b_eq=np.zeros(N),
+                      A_ub=np.c_[-np.eye(m), np.eye(m), np.zeros(m)], b_ub=np.zeros(m),
+                      bounds=[(0, None)] * m + [(0, 1)] * m + [(0, None)], method='highs')
+        assert res.status == 0 and res.x[-1] > 0, 'e_S is not in the cone of the rows'
+        zero = {rows[a] for a in range(m) if res.x[m + a] < 1e-7}
+        for key, inc in ends.items():
+            if any(r in zero for r in inc):
+                zero |= set(inc)
+        rows = [r for r in rows if r not in zero]
+        end_rows = [r for r in end_rows if r not in zero]
+        lb = sorted({r[1] for r in rows} | {r[3] for r in rows if r[0] == 'C'})
+        var.clear()
+        for i in lb:
+            for c in range(3):
+                var[3 * i + c] = len(var)
+        var[3 * n] = len(var)
+        N, m = len(var), len(rows)
+        sv_ = N - 1
+        log(f'  dropped {len(zero)} zero-force rows: {sorted(zero, key=str)}; now {m} rows, {len(lb)} load-bearing '
+            f'squares, {N} variables')
+
     # (0) every row tight at z*, exactly
     for r in rows:
         assert value(r).is_zero(), f'row {r} not tight at the record'
