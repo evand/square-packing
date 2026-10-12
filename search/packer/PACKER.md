@@ -1509,3 +1509,7 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   Reading: for the census search, a whole unseen count family (no junction squares, incl. the record) is a ~20 % slower
   find than random hidden families, not a barrier.  It is entered within minutes from junction-family starts.  Count
   groups separate configurations (count_sep) but the moves cross between them freely.
+* **Census v4 batch b, predictions** (written 02:55, after launch at 02:44 and before any results were read: `recnb`,
+  record's group + count neighbours withheld, 156 minima; 8 reps × 240 min, recipe as batch a).  The record is re-found
+  in ≥ 6 of 8 replicates.  Per-replicate re-found fraction 30-50 %.  Comparison with batch a's grand is descriptive only
+  (not concurrent: different load, and the time-travel chains run alongside both).
