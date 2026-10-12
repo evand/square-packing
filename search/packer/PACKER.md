@@ -1556,3 +1556,13 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   (same packing, angle moves path-checked), 80-digit verified; certificate VALID under both checkers.
   Files: `candidates/tt_n154{.cert,.exact.txt,.input.txt,.json}`, `candidates/tt_n154_regularized.{cert,json}`.
   **Posted 10-12 ~08:10 as jlevy/squares#552** (certificate pinned at 597e660).
+* **Submission tooling** (10-12, after #552 was assembled by hand).  `candidate.py FILE --name N [--vs ..] [--chain RUNDIR]
+  [--stage] [--import --ref ..]`: exactsolve, both checkers, read-only live check (register witness + case page, issues
+  naming n with their nearby decimals and authors, Ellsworth's catalogue, store frontier), matching distances, optimality
+  facts, chain lineage, regularized view (private REFRESH dir), staging into `candidates/`.  Regression: it reproduces
+  every number of #552 in one command (`runs/candidates/test_n154/`; the live check lists #552 itself as the only tie).
+  `chain_lineage.py RUNDIR N`: lineage through chain rounds.  **154 descends from Couzo's 10-05 155** (12.9556195921,
+  one square removed at r0141), then 17 productive rounds / 36 moves at 154; #552's credit paragraph said "154, 155
+  and 156" (correct but loose; comment drafted).  Other traces: plain 108 from 110's start (two squares removed), sparse
+  155 and plain 155 from 156, sparse 180 from 181.  `chain.py` now logs each seed's source side (`seeds_src`).
+  Store import of 154 not done (shared-store write blocked; TODO decision).

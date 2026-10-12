@@ -176,7 +176,8 @@ def main(a):
                    '--frontier', f'{rd}/seed', '--frontier-share', str(a.frontier_share), '--bandit-state', f'{a.out}/bandit_{n}.json'] + (a.explore_extra.split() if a.explore_extra else [])
             p = subprocess.Popen(cmd, stdout=open(f'{rd}/out', 'w'), stderr=subprocess.STDOUT, start_new_session=True)
             live[p] = n
-            S['log'].append(dict(t=round(time.time() - S['t0']), ev='start', n=n, round=S['round'], seeds=[r for r in res]))
+            S['log'].append(dict(t=round(time.time() - S['t0']), ev='start', n=n, round=S['round'], seeds=[r for r in res],
+                                 seeds_src={str(sd[1]): S['n'][str(n + sd[1])]['best'] for sd in seeds}))   # lineage (chain_lineage.py)
         time.sleep(3)
         for p, n in list(live.items()):
             if p.poll() is None:
