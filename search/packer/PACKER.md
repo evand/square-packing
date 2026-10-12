@@ -1654,3 +1654,10 @@ measured CPU, seeds_src) suffice to compare against a later dedicated arm.
   0.000 to the store best, case page shows 14.88096037).  Not a new packing; not imported (the store keeps #503).
   chain.py's CANDIDATE flag now needs a gain over `CAND_TOL = 1e-8` (it was 1e-9, inside polish noise); the
   running H5 still uses the old rule, so the watcher filters to > 1e-8.
+* **H3b / H4 result** (17:15).  **H3b (s(109), 48 rounds): no candidate**; the lineage stayed at 10.9518715 (the
+  stored family best, 2.1e-3 above the diamond), so nothing moved in 4.5 h.  Prediction was 20 %: a miss.  **H4 (s(90),
+  59 rounds): no candidate** (prediction 2 %).  Secondary: the best non-grid side went 10.0089808 -> **10.0024260487**
+  (`runs/hunt1012/h4/carry_90_0.txt`).  candidate.py (`runs/candidates/h4_n90_nongrid`): both checkers VALID,
+  exactsolve says a strict local minimum modulo 7 flat motions (min lambda 8e-7, small), matching distance 0.684 to
+  the grid.  So rigid non-grid 90s exist 0.0024 above the grid, 4x closer than the 10.009 seen this morning.  Live-check
+  bug: the register value for n = 90 is the string "'10'" and fails to parse; fix in candidate.py.
