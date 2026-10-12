@@ -56,8 +56,9 @@ def report(a):
     from pk import refset
     rows = {}
     for d in sorted(glob.glob(f'{OUT}/*_r*')):
-        if not os.path.exists(f'{d}/archive.jsonl'):
-            continue
+        mf = f'{d}/manifest.json'
+        if not os.path.exists(f'{d}/archive.jsonl') or not os.path.exists(mf) or json.load(open(mf)).get('status') != 'ok':
+            continue                         # unfinished runs (no measured CPU yet)
         arm = os.path.basename(d).rsplit('_r', 1)[0]
         H = json.load(open(f'{refset.ROOT}/{HOLDS[arm]}/holdout.json')); R = refset.load(H['ref'])
         o = refset.score(HOLDS[arm], [d])

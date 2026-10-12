@@ -1498,3 +1498,14 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   full recovery in 0-3 of 29 n.  Sparse vs plain paired by n: no resolvable difference expected (median ratio 0.8-1.5).
   Decision: the distance rule transfers to record hunting if the Wilcoxon signed-rank p < 0.05 and the median paired
   difference > 0.  Anything below s_now is checked against the live register before any word "record".
+
+* **Census v4 batch a, result** (10-12 02:50; against the pre-registration, unchanged).  8 runs × 3.99 measured CPU-h,
+  all `ok`.  Certify: 787 unlabelled sub-11 sides (76 certified, 3 weak, 703 not-min, 5 unresolved; 210 s).
+  J0 (186 withheld, record included): re-found 89, 90, 82, 59 = 48, 48, 44, 32 %.  First withheld minimum at 32-541 s.
+  **Record re-found 4 / 4, at 833-1235 s.**  grand (217 withheld): 107, 126, 112, 125 = 49, 58, 52, 58 %.
+  Rate per withheld minimum per CPU-h: J0 / grand = **0.79 (95 % CI 0.69-0.92)**, and all 4 J0 replicates are below
+  grand's lowest.  By the rule, **J0 is resolved harder, but mildly**: at the top of the predicted 0.3-0.8.  The record
+  prediction (≥ 2 of 4) held, 4 / 4.  New minima: J0 61, grand 74, all shallow (≥ 10.99790).
+  Reading: for the census search, a whole unseen count family (no junction squares, incl. the record) is a ~20 % slower
+  find than random hidden families, not a barrier.  It is entered within minutes from junction-family starts.  Count
+  groups separate configurations (count_sep) but the moves cross between them freely.
