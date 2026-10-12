@@ -1513,3 +1513,36 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   record's group + count neighbours withheld, 156 minima; 8 reps × 240 min, recipe as batch a).  The record is re-found
   in ≥ 6 of 8 replicates.  Per-replicate re-found fraction 30-50 %.  Comparison with batch a's grand is descriptive only
   (not concurrent: different load, and the time-travel chains run alongside both).
+* **Census v4 batch b, result** (10-12 06:50).  8 runs × 3.99 measured CPU-h, all `ok`.  Certify (all 16 v4 runs, the
+  new sides are batch b's): 441 unlabelled sub-11 sides (46 certified, 4 weak, 387 not-min, 4 unresolved; 96 s).
+  recnb (156 withheld, the record's group + count neighbours): re-found 83, 81, 77, 81, 63, 53, 72, 71 = 53, 52, 49, 52,
+  40, 34, 46, 46 % (mean 47 %).  First withheld minimum at 61-889 s.  **Record re-found 8 / 8, at 286-3689 s.**
+  Against the predictions: record ≥ 6 / 8 held (8 / 8).  Fraction 30-50 %: 7 of 8 replicates inside, r0 just above
+  (53 %), the mean inside.  Descriptive only: per withheld minimum per CPU-h, recnb 0.117 vs batch a's grand 0.136 and
+  J0 0.108.  152 new minima.
+  Reading: withholding the record's own count family and every adjacent family does not hide the record.  It is
+  reached in every replicate from starts that differ from it by ≥ 2 in some count.  Together with batch a: at n = 110 count families are
+  no barrier to the census search; the cost of an unseen family is ≤ ~20 %.
+* **Time-travel interim: n = 154 below the best known** (10-12 06:50; tt_plain, round 26 of the chain from the 10-05
+  register).  `runs/timetravel/plain/best_154.txt` side 12.9225664019, which `exactsolve.py` takes to an exact KKT
+  point.  Certificate `runs/timetravel/cert154/n154_tt.cert`: **s(154) ≤ 12.922566401934059503377…**, VALID under both
+  `verify_cert.py` (separating axes) and `verify_cert2.py` (polygon intersection).  Best known before it: itsnaka
+  (SQUISH) 12.9230702023011 (#481, registered as T-136 on main; the witness file still shows the older
+  12.9265622459).  Δ = 5.04e-4.  Checked live 06:45: jlevy/squares main @0d6010ff, open issues mentioning 154 (#481,
+  #470, #500), Couzo #506 (no 154).  Not imported into the store and not posted (Evan's call; the records session
+  owns ingestion).  Note: the chain started from the 10-05 packings and never saw itsnaka's packing, so this is an
+  independent route that ends below it.
+* **Time-travel record test, result** (10-12 07:47; against the pre-registration, unchanged).  Both arms `done` after
+  9 h (543.9 min); plain 218 rounds, sparse 213 (measured CPU 33.4 / 33.2 h, ~1.1 CPU-h per n per arm; the chain's scheduler
+  spends rounds unevenly: 153 / 154 took 28-30 in plain, 12 n got ≤ 2).
+  Recovered gap fraction: plain median **0.00** (mean 0.076), sparse median **0.00** (mean 0.064); 22 / 29 n not moved
+  at all in either arm.  Moved: 108 (plain 0.66, sparse 0.12), 126 (0.04, 0.17), 130 (0.05, 0.12), 154 (1.00, 0.43),
+  155 (0.46, 0.61), 180 (0, 0.39), 208 (0, 0.01).  Full recovery: plain 1 / 29 (154, below s_now: see the interim
+  entry: certified s(154) ≤ 12.9225664019341, 5.0e-4 below the best known), sparse 0 / 29.
+  Against the predictions: median 0.1-0.3, **failed** (0.00: most n do not move from their 10-05 packing at this budget,
+  as the bench's "most n stuck at 5 min" suggested more strongly than ch2's 126).  Full recovery 0-3 of 29, held (1).
+  Sparse vs plain: better in 5, worse in 2, tied 22; median difference 0, Wilcoxon p = 0.94: **no difference
+  resolved**, as predicted.  The distance rule (C13) does not transfer to record hunting at this budget (X16).
+  Reading: 9 h of chaining from a 6-day-old register recovers about 7 % of the later community gains, concentrated in
+  a few n (108, 154, 155), and once overshoots (154).  A per-n budget of ~1-2 CPU-h does not reproduce what other
+  groups found in the following week; where it moves, it moves a lot.
