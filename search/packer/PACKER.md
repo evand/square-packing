@@ -1620,3 +1620,13 @@ measured CPU, seeds_src) suffice to compare against a later dedicated arm.
   non-diamond packings, `--lib-init` 60 more (best 40 + 20 spread), 1 slot × 2 procs × 6-min rounds, 6 h (more slots
   when cores free).  Not a test.  Success: a certified 109 below 10.949747468.  Prediction: 20 % in 6 h (12 CPU-h);
   the family's best is 2.1e-3 away and at 110 the record sat ~1e-3 below most of the family's mass.
+* **s(90) near the grid** (10-12; Evan: are there rigid non-grid packings just above 10, in the two-band family, or do
+  they collapse to the grid?).  Store: 4,216 distinct non-grid sides in [10, 10.05), all uncertified polish output;
+  none in (10, 10.005), 68 in [10.005, 10.01), 1,131 in [10.01, 10.02).  Best classes (roles_j L / B / axis / J / O):
+  one dominant band (B 17-20) plus 0-10 L and 2-6 J, e.g. (4, 20, 64, 2, 0) at 10.0090456; the balanced two-band class
+  (10, 18, 62, 0, 0) at 10.0095668.  exactsolve on the best of the 15 best classes: 10 certified local minima
+  (10.0090596 … 10.0101264, strict modulo 20-36 flat motions, 1-8 rattlers), 5 not jammed with real descents (dS
+  −0.0015 … −0.018).  descend.py + exactsolve on those 5: 4 land on certified minima at 10.0090596 (same S* as the best
+  certified one), 10.0090720, 10.0092177, 10.0092301; the best side 10.0090456 descends to 10.0089808, still not
+  jammed (dS −2.3e-7, an X01-type slow valley).  Nothing collapses toward the grid: rigid non-grid minima sit 0.009
+  above it.  Scratch: runs in the session scratchpad (n90/).  Many rattlers (up to 8) in the best ones.
