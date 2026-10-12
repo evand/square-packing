@@ -81,3 +81,13 @@ Sections: census rows by tilted count (gold ramp) -> map (side teal ramp / tilte
 tour (square-root side scale above the record) -> settling -> why stuck.  Ramps validated (dataviz validator, ordinal,
 light + dark).  Tour stops are drawn from the tour's own file everywhere (copies of a minimum differ by flat motions /
 slack up to ~0.56).  Checked: headless Firefox render, light mode; hover / click / dark mode not checked headless.
+Weak / unresolved re-solve (10-11, `search/packer/resolve110.py`, `resolve110_sign.py`; outputs runs/resolve110/; store
+backup ~/store-backups/store-2026-10-11c-pre-resolve110.sqlite): 61 targets (44 weak minima, 17 unresolved sides) in 112 s
+on 15 procs.  Recorded (record_verdict, via resolve110): 2 weak -> certified, 1 unresolved -> certified, 1 unresolved ->
+not-min; store now 778 certified / 42 weak below 11 (page still on the 775 snapshot).  15 unresolved: "contact equations
+inconsistent" (projection stalls; likely unfinished near-misses, not exact configurations).  36 PSD-weak: the zero modes
+are not flat (|dS| 1e-9..1e-7 at t = 1e-3 vs < 1e-30 for flat).  Signed dS (probe patched): 12 grow both ways on every
+mode (higher-order minimum likely, unproved); 24 shrink somewhere, but only 3 clearly (dS < -1e-9), 3 in between, 18 tiny
+(> -1e-15; the projection lets S float, so the sign may be the projection's choice).  Next: for dS < 0 cases, check
+feasibility of the projected point and descend from it (a lower minimum = not-min); the 6 "negative curvature blocked"
+cases need the contact-sign case split.
