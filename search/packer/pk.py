@@ -14,7 +14,7 @@ copying coordinates.  Store: runs/store.sqlite (env PK_STORE overrides).
   pk.py get ID|best:N [--fmt ours|couzo|ellsworth|json] [-o FILE]    print / write a packing
   pk.py info ID                            row + sightings + parent chain
   pk.py tag ID TAG... [--rm]
-  pk.py export N... --dir D [--source PAT] [--best]   n-<n>.txt per n (inputs for legacy tools)
+  pk.py export N... --dir D [--source PAT]   best packing per n -> n-<n>.txt (inputs for legacy tools)
 """
 import argparse, glob, json, math, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

@@ -18,6 +18,7 @@ Moves (all in degrees; content-agnostic unless noted):
 
   mcmin.py start.txt [start2 ...] --n 110 --k 11 --out runs/pt1 --replicas 12 --tmin 3e-5 --tmax 1e-2 --hours 2
 """
+from fractions import Fraction
 import argparse, collections, json, math, os, random, shutil, subprocess, sys, tempfile, time
 import numpy as np
 from jobpool import run_jobs
@@ -31,8 +32,9 @@ SLP_BUDGET = 60
 # ---------- io (file angles in degrees) ----------
 def load_deg(path):
     L = [l.split() for l in open(path) if l.strip() and not l.startswith('#')]
-    n, s = int(L[0][0]), float(L[0][1])
-    return s, [(float(a), float(b), float(c)) for a, b, c, *_ in L[1:n + 1]]
+    f = lambda v: float(Fraction(v)) if '/' in v else float(v)        # exact exports write n/d sides (pk.py export)
+    n, s = int(L[0][0]), f(L[0][1])
+    return s, [(f(a), f(b), f(c)) for a, b, c, *_ in L[1:n + 1]]
 
 
 def write_deg(path, s, sq):

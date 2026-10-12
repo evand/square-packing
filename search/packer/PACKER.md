@@ -1571,3 +1571,26 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   Imported: the winning round `r0192_n154` (archive, parent links) and the certified exact point (id 291398,
   `candidate:tt_n154`, ref #552); `pk/pending.yaml` has #552 (pinned 597e660, claim 12.922566401934060), and
   `sync-pending --issue 552` deduplicated the posted certificate onto it.  Frontier 154: ours (pending #552).
+
+## Grid-border and diamond hunt (10-12; Evan: goal = number of new packings n ≤ 324; most interesting: the grid border, where a new packing is the first of its kind, and the diamonds 89 / 109)
+Store refreshed first: #506 (Couzo, 15 new packings) via pending.yaml; register @25de5a4 (no new witnesses; n = 51
+witness fails to parse: a list-valued field, look later).  Live starts: `pk.py export 2..326 --dir runs/live1012`
+(`mcmin.load_deg` now reads n/d sides).
+Border targets = the first "= k" entry of each column c of the margin table k − s(k² − c) (WISHLIST P1/P2; columns
+shrink with k, so a later k in the same column is harder: 309 behind 274, 111 behind 90, 212 behind 183):
+**90 (c = 10), 133 (11), 157 (12), 183 (13), 242 (14), 274 (15)**; 308 (c = 16) fell 10-10.  Extrapolating each
+column one step: 183 ≈ −0.004, 274 ≈ −0.006, 242 ≈ −0.015, 157 ≈ −0.03, 133 ≈ −0.04: all long shots.  Route:
+Fang's 308 grew the 307 two-wedge packing by one square; the chain's insertion seed (seed_k −1: scale up 0.2-1.2 %,
+add a square at a pose hole, quench) is the closest operator we have.
+* **H1, positive control: does the chain's insertion find 308 < 18 from the 10-05 register?**  `chain.py --ns-file
+  [307, 308] --seed-ks 1,-1`, 10-05 inputs (308 = grid, 307 = 17.98103), 2 slots × 2 procs × 4-min rounds, 2 h
+  (~8 CPU-h).  Success: any 308 below 18 (certified).  Prediction: 30 % (insertion must pull a 307 + 1 packing from
+  above 18 to below in one quench; Fang's wedge cut is a targeted operator).  If it fails: the border needs a
+  wedge-cut / stack-cut operator (new machinery) before more border compute.
+* **H2, border + diamonds, live frontier**: `chain.py --ns-file [89, 90, 109, 133, 157, 183, 242, 274] --seed-ks
+  -1,1,2 --src runs/live1012`, 2 slots × 2 procs × 6-min rounds, 2 h now (8 cores while another session runs),
+  extended when cores free up.  Not a test: a hunt.  Success = any certified packing below the live frontier.
+  Prediction: border 0 of 6 in this budget; diamonds 89 / 109 (sources 88 at 9.8825 and 108 at 10.9048 leave 0.067 /
+  0.045 of slack for one inserted square): 25 % for at least one.
+Chain vs dedicated (X15 / C23) is not run now; the chain logs (state.json events with t, per-round manifests with
+measured CPU, seeds_src) suffice to compare against a later dedicated arm.
