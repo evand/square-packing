@@ -1393,3 +1393,54 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   minima ~100x faster than it finds new ones, so the low live rate (X02) is mostly saturation of what these starts reach,
   not slowness.  Next ideas (not run): starts drawn from under-covered regions (far-type parents, Evan's distance rule) for
   new minima; "can you find the other funnels" holdout.
+
+* **Role transitions in census v2 (10-11, analysis only).**  Sub-11 parent → sub-11 result over all 8 runs (5,388
+  proposals): 58 % keep the role counts.  20 % change the axis count, so squares move between the tilted bands and the
+  axis region (mostly ±1-2, up to ±5).  22 % keep the axis count but change the L/B split.  Crossover changes the axis
+  count in 50 % of its outcomes, `band` (movegen add / del / transfer, already an explorer move: 4.4 % of proposals,
+  110 new sub-11 / CPU-h, a weak move) 16 %, `aswap` 11 %, kicks / melt / rowslide / mirror 0-3.5 %.  The junction
+  family (4 squares at ~45°, (19,19,68,4) in the 10-05 beam keys; 10.99688699 / ...705 / ...984) is reached in all 8 runs,
+  control included.  55 % of sub-11 entries have ≥ 3 squares at 40-50°.  **Classifier artifact:** explore.roles cuts at
+  45°, so those junction squares split at random into L or B ((19,23,68,0) vs (23,19,68,0) for one structure).  Much of the
+  "split change" share is this artifact, and role counts can't see the family.  Junction class needed before any
+  region-count holdout.  X13 now leans "side valley": every run enters it, and far_r0 passed through it on its way down
+  (10.996887 at 15 min → 10.9967933 at 60 min).
+
+* **Count separation + fingerprint distance (10-11, analysis; `count_sep.py`, `pk/fingerprint.py`).**  Junction-aware
+  roles (`explore.roles_j`: L 10-40°, B 50-80°, axis < 3° off, J 40-50°, other).  150 random certified minima of
+  census110_1011, all 11,175 exact matching distances (`runs/count_sep/k150.json`, 0.5 measured CPU-h).  Groups by
+  (L, B, axis, J, other): within-group distance median 0.017 (p10 0.004, p90 0.066), between groups 0.068.  The nearest
+  neighbour is in the same group 66 % of the time (chance 4 %); by axis count alone 95 % (chance 21 %), by J count 90 %
+  (25 %).  **Counts separate configurations well**, so a region-count holdout is a real "unseen family" test.  Top
+  groups: (19,19,68,4,0) 17 / 150, (19,21,67,3,0) 12, (19,20,67,4,0) 9, (24,22,64,0,0) 8.
+  Fingerprint (2-channel smoothed 24×24 centre images, axis / tilted, min over 8 symmetries, L1 / n; ~30 µs per pair vs
+  0.2 s exact): Spearman 0.93 vs exact on all pairs.  On per-minimum nearest-neighbour distance: Spearman 0.90, same
+  nearest neighbour 77 %, top-quartile overlap 89 %.  Good enough to rank "far from everything known" inside the explorer.
+* **External refresh (10-11).**  jlevy#506 (Couzo, franciscouzo@337078ca): beats the store at 175, 304, 305, 338, 339,
+  340, 344, 375, 378, 379, plus 380 and 381 (below 20, none in the store).  Not yet verified or ingested; ingestion is
+  owned by the records session (TODO "drawn as posted").  Ostashev (dostashev/square-packing@c3d17ab0, new source; clone
+  in `_untrusted-third-party/dostashev-square-packing`): files only for 155 / 156 / 211, all already in the store
+  (pending:#501).  Its other claims have no files, and its page says equal-or-better packings were already public.
+  Method: explicit V-shaped band + integer program for the corner blocks, GPU soft-to-rigid, LP polish, exact KKT.
+  Kingbird pages unchanged since 10-10.  Register frontier unchanged.  Full report:
+  `notes/refresh-2026-10-11.md`.
+
+* **Census v3, pre-registered** (written before launch; `census_v3.py`, `runs/census_v3`; Evan 10-11: near-record
+  holdout, longer far runs, distance-rule parents; 8 cores).  Snapshot census110_1011b (780 minima, sha 5467fe3c04b4),
+  holdout `refsets/h110_near_b`: the 62 minima within 1e-3 of the record withheld (record included), 718 visible (best
+  visible 10.9978387).  Census recipe as v2, 1 proc per run, 8 runs concurrent, **180 min each** (24 CPU-h).  2 × 2 arms
+  × 2 reps: starts far (the 40 visible minima farthest from the best visible, matching distance 0.076-0.096) or rand (40
+  random visible) × parent rule plain or sparse (`--sparse-share 0.5`: half the picks weighted by (fingerprint distance
+  to the nearest known configuration / median)² / (1 + expanded); bank = the 718 visible minima + the run's archive).
+  Questions and predictions:
+  (1) Is 110 below 11 one funnel (C05, X13)?  Record = the withheld 10.9967833966.  rand: re-found in both replicates,
+  within 30 min (smoke: 10.996793 in < 2 min from 4 random starts).  far: if one funnel with slow mixing, re-found in
+  ≥ 1 of 2 far replicates within 3 h (v2 far_r0 was 1e-5 away at 60 min).  Neither far replicate in 3 h (nor far_sparse)
+  = evidence of a real barrier at this scale.
+  (2) Does the distance rule find more new minima (C13: ~2× hint)?  Primary for sparse: genuinely new certified minima
+  (not in census110_1011b) per measured CPU-h, sparse arms vs plain arms (pooled over start type), rate ratio with 95 % CI;
+  prediction 1.0-2.0.  Secondary: withheld rediscovered (ratio 0.7-1.2), median nnd of sub-11 archive entries higher.
+  Decision rule as v2: CI excludes 1 and, for both start types, both sparse replicates on the same side of the plain
+  replicates' range; otherwise "no difference resolved".
+  Not this test: the region-count holdout (withhold whole count groups: count separation above says it is meaningful);
+  next after this.

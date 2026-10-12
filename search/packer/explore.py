@@ -18,6 +18,7 @@ import argparse, collections, json, math, os, random, subprocess, tempfile, time
 from concurrent.futures import ProcessPoolExecutor, FIRST_COMPLETED, wait
 from pk import identity as ID           # SAME_SIDE: one f64 same-side tolerance (10-11)
 import mcmin, hop
+from pk import fingerprint as FP
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -161,6 +162,16 @@ def roles(sq):
         a = t % 90; d = min(a, 90 - a)
         c['A' if d < 3 else 'L' if 10 < a < 45 else 'B' if 45 <= a < 80 else 'O'] += 1
     return (c['L'], c['B'], c['A'], c['O'])
+
+
+def roles_j(sq):
+    """Role counts with a junction class (10-11): (L 10-40, B 50-80, axis < 3 off, J 40-50 deg mod 90, other).  roles()
+    cuts at 45 deg, so the ~45 deg junction squares (the 10-05 (19,19,68,4) family) split at random into L or B."""
+    c = collections.Counter()
+    for _, _, t in sq:
+        a = t % 90; d = min(a, 90 - a)
+        c['A' if d < 3 else 'L' if 10 < a < 40 else 'J' if 40 <= a <= 50 else 'B' if 50 < a < 80 else 'O'] += 1
+    return (c['L'], c['B'], c['A'], c['J'], c['O'])
 
 
 def descriptor(s, sq, k):
@@ -350,6 +361,7 @@ class Archive:
     def __init__(self, out, n, k, smax, known):
         self.out, self.n, self.k, self.smax, self.known = out, n, k, smax, known
         self.E = []                          # entries
+        self.fp = None                       # sparse-parent rule (--sparse-share): fingerprint images, aligned with E
         self.log = open(f'{out}/archive.jsonl', 'a')
         self.plog = open(f'{out}/proposals.jsonl', 'a')
 
@@ -373,9 +385,42 @@ class Archive:
                  known=any(abs(s - x) < ID.SAME_SIDE for x in self.known))
         if mate:
             e['mate'] = mate                 # crossover mate's archive path (own lineage or borrowed: compare roots)
+        if self.fp is not None:
+            self.fp_add(e, s, sq)
         self.E.append(e)
         self.log.write(json.dumps({k: v for k, v in e.items()}) + '\n'); self.log.flush()
         return e, True
+
+    def fp_init(self, bank_path):
+        """Sparse-parent rule: nnd = fingerprint distance (pk/fingerprint.py) to the nearest other known configuration
+        (bank = e.g. the holdout's visible minima, plus this archive)."""
+        import numpy as np
+        self.fp = []
+        self.bank = np.load(bank_path)['images'] if bank_path else np.zeros((0, 2, FP.G, FP.G))
+        for e in self.E:                     # resume: rebuild from the archive files
+            s, sq = mcmin.load_deg(e['path']); self.fp_add(e, s, sq, own=True)
+
+    def fp_add(self, e, s, sq, own=False):
+        import numpy as np
+        im = FP.image(s, sq)
+        d = [FP.nearest(im, self.bank, self.n).min()] if len(self.bank) else []
+        if self.fp:
+            da = FP.nearest(im, np.stack(self.fp), self.n)
+            d.append(da.min())
+            if not own:
+                for j, x in enumerate(da):
+                    self.E[j]['nnd'] = min(self.E[j].get('nnd', math.inf), float(x))
+        e['nnd'] = float(min(d)) if d else math.inf
+        self.fp.append(im)
+
+    def pick_sparse(self, rng, k):
+        """Evan's distance rule (10-11): sub-k entries far from every other known configuration, minima or not.
+        Weight (nnd / median nnd)^2 / (1 + expanded)."""
+        sub = [e for e in self.E if e['s'] < k and math.isfinite(e.get('nnd', math.inf))]
+        if not sub:
+            return None
+        med = sorted(e['nnd'] for e in sub)[len(sub) // 2] or 1e-9
+        return rng.choices(sub, weights=[1e-6 + (e['nnd'] / med) ** 2 / (1 + e['expanded']) for e in sub])[0]
 
     def dump(self, stats, t):
         tmp = f'{self.out}/state.json.tmp'
@@ -488,6 +533,9 @@ if __name__ == '__main__':
     ap.add_argument('--kick-sigma', type=float, default=1e-4)
     ap.add_argument('--finish', type=int, default=0, help='inline finisher: up to N kick (--kick-sigma) + polish-only tries on '
                     'archive-new sub-k results (kr_eval_noalm 10-11: 1/60 certified minima moved); 0 = off')
+    ap.add_argument('--sparse-share', type=float, default=0.0, help='share of parent picks by the distance rule: sub-k '
+                    'entries weighted by (fingerprint distance to the nearest known configuration)^2 (Archive.pick_sparse); 0 = off')
+    ap.add_argument('--fp-bank', help='npz of fingerprint images of known configurations (fingerprint.py bank), for --sparse-share')
     ap.add_argument('--replay', help='OUT:LINE: re-run proposal LINE of OUT/proposals.jsonl and compare with the log')
     a = ap.parse_args()
     if a.report:
@@ -506,8 +554,12 @@ if __name__ == '__main__':
     tmp = tempfile.mkdtemp()
     t0 = time.time()
     stats = collections.Counter()
+    if a.sparse_share and not a.resume:
+        ar.fp_init(a.fp_bank)
     if a.resume:
         toff, stats = ar.load(f'{a.out}/state.json')
+        if a.sparse_share:
+            ar.fp_init(a.fp_bank)
         t0 -= toff
         a.starts = []
         print(f'resumed {len(ar.E)} basins at t = {toff:.0f}s', flush=True)
@@ -558,6 +610,8 @@ if __name__ == '__main__':
             if not fr and a.elite_share and rng.random() < a.elite_share:
                 el = sorted((e for e in ar.E if e['s'] < k), key=lambda e: e['s'])[:a.elite_k]
                 par = rng.choices(el, weights=[1.0 / (1 + e['expanded']) for e in el])[0] if el else ar.pick(rng, cb=cellb)
+            elif a.sparse_share and rng.random() < a.sparse_share and (par := ar.pick_sparse(rng, k)) is not None:
+                pass
             else:
                 par = ar.E[0] if a.star else ar.pick(rng, cb=cellb, roots=fr)
             par['expanded'] += 1
