@@ -1546,3 +1546,12 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   Reading: 9 h of chaining from a 6-day-old register recovers about 7 % of the later community gains, concentrated in
   a few n (108, 154, 155), and once overshoots (154).  A per-n budget of ~1-2 CPU-h does not reproduce what other
   groups found in the following week; where it moves, it moves a lot.
+* **n = 154 submission prep** (10-12 08:00).  Re-checked before posting: jlevy/squares main @4a491052 (witness and case
+  page 12.9265622459; #481's 12.9230702023 registered as T-136), issues through #550, Ellsworth's catalogue
+  (12.9316671296): nothing at or below 12.92256640.  Matching distance from itsnaka's 12.92307 packing 0.319, from the
+  10-05 start (Couzo) 0.396: a different local minimum.  Exactsolve: KKT point, min λ 1.5e-4, reduced Hessian PSD
+  modulo 45 exact flat motions (realised), 98 corner-corner touches jammed (MILP dS 0), 8 rattlers.
+  Regularized (`search/regularize`, coincide style, conservative and fewest policies: identical; input via a scratch
+  REFRESH dir so the shared `runs/regularize/exact/n-154` was not touched): same S*, rotation groups 24 → 16, level 2
+  (same packing, angle moves path-checked), 80-digit verified; certificate VALID under both checkers.
+  Files: `candidates/tt_n154{.cert,.exact.txt,.input.txt,.json}`, `candidates/tt_n154_regularized.{cert,json}`.
