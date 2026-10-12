@@ -1444,3 +1444,28 @@ Results: s(375) ≤ 19.906981767290601… (new basin, 4.29e-5 below Couzo's); ex
   replicates' range; otherwise "no difference resolved".
   Not this test: the region-count holdout (withhold whole count groups: count separation above says it is meaningful);
   next after this.
+
+* **Census v3, result** (10-11, 21:20; against the pre-registration above, unchanged).  8 runs × 2.99 measured CPU-h, all
+  `ok`.  Certify: 664 unlabelled sub-11 sides (36 certified, 4 weak, 618 not-min, 6 unresolved; 127 s).
+  `census_v3.py report` (`runs/census_v3/report.json`):
+
+  | arm | withheld re-found (of 62) per rep | per CPU-h | record found at (s) | new minima per rep |
+  |---|---|---|---|---|
+  | far | 14, 17 | 5.2 | 1952, 2634 | 4, 8 |
+  | far_sparse | 22, 29 | 8.5 (1.64×, CI 1.03-2.66) | 3341, 1354 | 11, 9 |
+  | rand | 24, 30 | 9.0 | 108, 739 | 3, 2 |
+  | rand_sparse | 29, 27 | 9.4 (1.04×, CI 0.70-1.53) | 382, 239 | 6, 8 |
+
+  (1) **Funnel: the far prediction held.**  All 4 far-start runs reached the withheld record, in 23-56 min, vs 2-12 min
+  from random starts.  So the configurations 0.076-0.096 out are in the same funnel, slower to drain.  C05 now has
+  direct support at this scale, and X13 (second family) is a side valley that every run passes through.  v2's far runs
+  missing it in 60 min was the tail of this 23-56 min spread.
+  (2) **Distance rule: resolved, 2.0× new minima** (34 vs 17 in 12.0 CPU-h each, 95 % CI 1.09-3.81).  Both sparse
+  replicates lie above the plain range for both start types: far 11, 9 vs 4, 8; rand 6, 8 vs 2, 3.  This is at the top
+  of the predicted 1.0-2.0 and matches C13's 2× hint.  Secondary: withheld re-found far_sparse 1.64× (both replicates
+  above, resolved), rand_sparse 1.04× (no difference).  The nnd comparison is not available: plain arms do not compute
+  fingerprints.  To do post hoc if needed.  All 51 new minima are shallow (10.9979-10.9997): the distance rule fills in
+  the upper rim, no new deep family.
+  Rates are lower than v2's (withheld 5-9 / CPU-h vs 110) because the withheld set is 62 hard near-record minima, not a
+  random half: not comparable.
+  Decision: adopt `--sparse-share 0.5` in the census recipe.  Next: region-count holdout ("find an unseen family").
