@@ -1594,3 +1594,21 @@ add a square at a pose hole, quench) is the closest operator we have.
   0.045 of slack for one inserted square): 25 % for at least one.
 Chain vs dedicated (X15 / C23) is not run now; the chain logs (state.json events with t, per-round manifests with
 measured CPU, seeds_src) suffice to compare against a later dedicated arm.
+* **X01 investigated** (10-12; the 225 n = 110 points 'not jammed' after descend.py and the finisher;
+  `runs/census/n110/finish_backlog/results.jsonl`; scratch analysis, 30-point sample of the 103 with a store packing).
+  - Where: 144 / 225 in one side band 10.998342-10.998343 (1e-6 linkage), the rest in ~26 smaller clusters.  All 225
+    have certified minima within ±1e-5 in side (median 12; median 9 around a certified minimum: the region is dense
+    everywhere, no special comb).  Matching distance to the closest of the ~16 side-nearest certified minima
+    (census110_1011b reps): 0.001-0.024 (single-move reach ~0.05; within-count-group median 0.017).  Side above that
+    minimum: −2.7e-6 … +2.3e-5, mostly +1e-7 … +9e-7 (8 / 30 below it).
+  - Not a near-contact artefact: the corner-corner MILP dS is unchanged when contacts up to 1e-3 (not 1e-6) enter the
+    model (exactsolve find_contacts + vv_branch_test at 1e-6 / 1e-5 / 1e-4 / 1e-3).  Real first-order descents, but
+    shallow: dS −4e-7 … −2.3e-5, equilibrium residual 1e-7 … 6e-6 ("almost KKT").
+  - Realisable gain is tiny: |dS| × distance to the nearby minimum 3e-9 … 2e-7, the finisher's moves ~1e-8 (median),
+    43 / 225 not moved at all.
+  - `exactsolve --force-kkt` (contact set up to 1e-3, Newton decides): 22 / 30 solve failed; 8 converged to KKT points
+    1e-7 … 5e-6 from every known minimum side, uncertified (saddles / degenerate, not checked).
+  Reading: slow valleys, not tolerance.  The points sit 1e-7 … 1e-6 above, and 0.001-0.02 away from, known minima, on
+  gentle real slopes our step-based descenders give up on.  For census counting they are near-copies (the finisher found
+  0 new among them).  What they drain into (a known minimum or an uncertified one in the dense band) needs a descender
+  that follows shallow MILP directions with exact contacts (active-set line search); not worth building for the count.
