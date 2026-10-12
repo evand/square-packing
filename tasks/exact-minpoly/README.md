@@ -54,9 +54,13 @@ packing in a smaller square.
   certificate (`localmin.py`) has exact λ ∈ K with Σλ L = e_S, λ > 0, a rational G with ‖GL − I‖ ≤ 1/2, and margins.
   It is valid for n = 11 and 28.
 * **B** (1): n = 5, strict only at second order.
-* **C** (295): strict modulo flat motions.  The paper proof is in `grade-C.md`.  Numerical checks pass for n = 10, 17,
-  19, 37, 38, 50, 66 (`proto/flatkkt.py`).  The exact certificate is not implemented (plan in `grade-C.md`).
-* Out of scope: 177, 211, 230, 261, 263 (no strictly positive forces), 272 (not a local min), 292.
+* **C** (295): strict modulo flat motions.  The paper proof is in `grade-C.md`.  Exact certificate `gradec.py`
+  (10-11; exact in K, signs by intervals; hypothesis 2 via affine null vectors, `grade-C.md` §Hypothesis 2): VALID for
+  233 of the 250 records with field degree ≤ 4; the other 17 timed out at 30 min (large flat families).  Field degree
+  > 4 and n = 29 (degree 7213): not yet (n = 29 plan in `search/exact/homotopy/N29.md` §Pickup).
+* No strictly positive forces: 177, 211, 230, 261, 263.  230 and 261 are VALID once their zero-force rows are dropped
+  (`GRADEC_DROPZERO=1`, a relaxation); 177, 211, 263 not tried (field degree > 4).  Out of scope: 272 (not a local
+  min), 292.
 * The definition fails on broad plateaus with a far downhill exit (s(7)'s L arrangements); accepted for now.
 
 ### Lean (`lean/Sqpack/`, no `native_decide`)
@@ -94,7 +98,7 @@ packing in a smaller square.
    (derived / derived + cross-checked / cited).  Cover the 265, plus cited polynomials where we have them.  A site page
    and/or jlevy (#375 thread); ask Evan before posting.
 2. **Lean local minima, a handful**: n = 11 and 28 (grade A) done.  Next grade B (n = 5, a second-order lemma), then
-   one grade C (n = 10 or 19, field degree 2) once the grade-C certificate exists.
+   one grade C (n = 10 or 19, field degree 2): the exact certificate exists now (`gradec.py`, 10-11).
    Packing-only Lean certificates for the field-degree ≤ 8 records (254) are now cheap enough to batch.
 3. Coverage, by cost: flat-rotation rest (6), multi-direction force balance (11), then block-triangular elimination
    (26 + most of the msolve-hard ones).  n = 83 only if it falls out.
