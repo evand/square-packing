@@ -178,13 +178,22 @@ def build():
              reg_s is not None and abs(side(reg_verified['value']) - reg_s) < 1e-12,
              # the register's improved_by describes the register's packing: only when that is the one drawn
              'refined_by': (ru.get('improved_by') or []) if registered else []}
+        steps, cur = [], ref
+        for ps, ev in posts:                   # in posting order: keep each that beats everything before it
+            if ps < cur - 1e-9 and not (abs(ps - s) < SAME_TOL and ev != first):
+                steps.append({'s': ps, 'event': ev, 'current': abs(ps - s) < SAME_TOL})
+                cur = ps
+        for st in steps:                       # each step's own lineage root (credits.py credits the root)
+            r, seen = st['event'], []
+            while n in LINEAGE.get(r, {}) and r not in seen:
+                seen.append(r)
+                r = LINEAGE[r][n]
+            if seen:
+                st['root'] = r
         if n <= HISTORY_MAX:
-            steps, cur = [], ref
-            for ps, ev in posts:               # in posting order: keep each that beats everything before it
-                if ps < cur - 1e-9 and not (abs(ps - s) < SAME_TOL and ev != first):
-                    steps.append({'s': ps, 'event': ev, 'current': abs(ps - s) < SAME_TOL})
-                    cur = ps
-            e['steps'] = steps
+            e['steps'] = steps                 # the Bounds page draws these (import_lists.py fetches their packings)
+        elif len(steps) > 1:
+            e['history'] = steps               # every n: the leaderboard's credit chain (site/tools/credits.py)
         out['n'][str(n)] = e
     return out
 

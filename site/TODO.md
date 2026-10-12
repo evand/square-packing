@@ -5,6 +5,26 @@ Living list.  Items marked ✓ are done.  Findings from an audit on 2026-09-09; 
 of the code and should be re-checked before they are fixed.  **(ship)** marks what should not go
 public unfixed — see the Publishing section for why each one is on that list.
 
+## Leaderboard (2026-10-12)
+
+* ✓ Attributions: `tools/credits.py` (`./build.sh credits`) → `data/credits.json`: per n the chain of record holders
+  (from → until), refinements / alternatives / constructions kept apart, lower-bound chain (n ≤ 100); names through
+  `data/people.yaml`.  All 324 current holders match `index.json`; 0 parser problems.  Read-through file:
+  `notes/credits-review.md`.  Fixes go in `data/credit_overrides.yaml` (keyed by catalogue file; none yet).
+* ✓ Policy (Evan, 10-12): constructions counted as "built on", 2026 lineage roots keep the record, refinements don't
+  change the holder, lower-bound ties go to the earlier floor; floors counted as on Bounds (no Nagamochi gap / Green claims).
+* ✓ Page `www/leaderboard.html` (+ `js/leaderboard.js`, nav link on every page and docs/): age map of n ≤ 324, per-n credit
+  chain, hall of fame, longest-standing / newest records, "how credit is counted".  `provenance.py` now also writes
+  `history` (earlier 2026 records with lineage roots) for n > 100; `steps` unchanged (n ≤ 100).
+* ✓ Round 2 (Evan, 10-12): right-aligned triangle (columns = k² − n) by default, as on the Overview (also centred / 18-per-row); Bounds and Compare links beside
+  Explore; packings drawn for every holder: an evolution strip, a large stepper with play, and a thumbnail on each
+  chain row (deliberately verbose, duplicating displays: evaluate, then make it concise).  Drawings:
+  `tools/history_packings.py` (`./build.sh history`, needs the store) → `www/data/hist.json` + 75 `p/hist-*.json`
+  (superseded 2026 records; catalogue revisions for holders improved in place).  Holders with no surviving drawing
+  show the next one, labelled.  Known oddity: n = 155 lists Ellsworth twice (2024-12 improved, 2026-01 found) from
+  the main and compared pages; check in credits.py.
+* Later: extended version beyond n = 324 (Evan: base on n ≤ 324 for now); Overview card linking the page; floors for n > 100.
+
 ## Done 2026-09-22 (site review, `private/site/notes/site-review-2026-09-22.md`)
 
 * Nav gains **s(12)**, on every page including `/s12/`, which now wears the Atlas topbar; the nav wraps

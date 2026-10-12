@@ -1,0 +1,72 @@
+# Canonical names for everyone credited on the site (upper-bound packings, lower-bound proofs, 2026 postings).
+# id: {name, aliases: [spellings found in the catalogue prose / register / lower_bounds.json sources], handle, url}
+# Read by tools/credits.py.  Add a person here when credits.py reports an unknown name.
+# Order matters for matching only through length: credits.py tries longer aliases first.
+
+# --- packings, Ellsworth's catalogue (and Friedman's before it) ---
+gobel:       {name: Frits Göbel, aliases: [Frits Göbel, Frits Gobel, Göbel], sources: [Gobel1979]}
+trump:       {name: Walter Trump, aliases: [Walter Trump]}
+stromquist:  {name: Walter Stromquist, aliases: [Walter R. Stromquist, Walter Stromquist], sources: [Stromquist2003]}
+cottingham:  {name: Charles F. Cottingham, aliases: [Charles F. Cottingham]}
+gardner:     {name: Martin Gardner, aliases: [Martin Gardner]}
+stenlund:    {name: Evert Stenlund, aliases: [Evert Stenlund]}
+hamalainen:  {name: Pertti Hämäläinen, aliases: [Pertti Hämäläinen]}
+gustafsson:  {name: Mats Gustafsson, aliases: [Mats Gustafsson]}
+friedman:    {name: Erich Friedman, aliases: [Erich Friedman], sources: [Friedman1998, FriedmanDS7]}
+cleemann:    {name: Lars Cleemann, aliases: [Lars Cleemann]}
+wainwright:  {name: Robert Wainwright, aliases: [Robert Wainwright]}
+bidwell:     {name: John Bidwell, aliases: [John Bidwell]}
+cantrell:    {name: David W. Cantrell, aliases: [David W. Cantrell, David Cantrell]}
+morandi:     {name: Maurizio Morandi, aliases: [Maurizio Morandi]}
+gensane:     {name: Thierry Gensane, aliases: [Thierry Gensane]}
+ryckelynck:  {name: Philippe Ryckelynck, aliases: [Philippe Ryckelynck]}
+devincentis: {name: Joe DeVincentis, aliases: [Joe DeVincentis]}
+kearney:     {name: Michael Kearney, aliases: [Michael J. Kearney, Michael Kearney], sources: [KearneyShiu2002]}
+shiu:        {name: Peter Shiu, aliases: [Peter Shiu], sources: [KearneyShiu2002]}
+nagamochi:   {name: Hiroshi Nagamochi, aliases: [Hiroshi Nagamochi], sources: [Nagamochi2005]}
+bentz:       {name: Wolfram Bentz, aliases: [Wolfram Bentz], sources: [Bentz2010, Bentz2016]}
+arslanov:    {name: M. Z. Arslanov, aliases: [M.Z. Arslanov, M. Z. Arslanov]}
+mustafin:    {name: S. A. Mustafin, aliases: [S.A. Mustafin, S. A. Mustafin]}
+shangitbayev: {name: Z. K. Shangitbayev, aliases: [Z.K. Shangitbayev, Z. K. Shangitbayev]}
+brendberg:   {name: Sigvart Brendberg, aliases: [Sigvart Brendberg]}
+hajba:       {name: Károly Hajba, aliases: [Károly Hajba]}
+ellsworth:   {name: David Ellsworth, aliases: [David Ellsworth]}
+chang:       {name: Allen Chang, aliases: [Allen Chang]}
+dyachkov:    {name: Grigoriy Dyachkov, aliases: [Grigoriy Dyachkov]}
+schadt:      {name: Thomas Schadt, aliases: [Thomas Schadt]}
+stead:       {name: Tej Stead, aliases: [Tej Stead]}
+loyd:        {name: Jake Loyd, aliases: [Jake Loyd]}
+wang:        {name: Ruilin Wang, aliases: [Ruilin Wang]}
+hmbelvedere: {name: hmbelvedere, aliases: [hmbelvedere.com, hmbelvedere]}
+dewinter:    {name: Joost de Winter, aliases: [Joost de Winter]}
+
+# --- 2026 postings (tools/provenance.py EVENTS) ---
+casson:      {name: Griff Casson, handle: griffcass, aliases: [Griff Casson (griffcass), Griff Casson]}
+couzo:       {name: Francisco Couzo, handle: franciscouzo, aliases: [Francisco Couzo]}
+evand:       {name: Evan Daniel, handle: evand, aliases: [Evan Daniel (this project), Evan Daniel], sources: [EvanDaniel2026]}
+itsnaka:     {name: Nate Chaoweeraprasit, handle: itsnaka, note: SQUISH, aliases: ['Nate Chaoweeraprasit (itsnaka, SQUISH)', Nate Chaoweeraprasit]}
+ryxu:        {name: Ryan Xu, handle: ry-xu, aliases: [ry-xu, Ryan Xu]}
+mishapolk:   {name: Mishapolk, handle: Mishapolk, aliases: [Mishapolk]}
+fang:        {name: Kevin Fang, handle: TheSnakeFang, aliases: [Kevin Fang (TheSnakeFang), Kevin Fang]}
+ostashev:    {name: Daniil Ostashev, handle: dostashev, aliases: [Daniil Ostashev (dostashev), Daniil Ostashev]}
+pingyou:     {name: PingYou Ltd, handle: BuddenPing, aliases: [PingYou Ltd (BuddenPing), PingYou Ltd]}
+barnett:     {name: Robert Barnett, handle: RobertBarnettProjects, aliases: [Robert Barnett (RobertBarnettProjects), Robert Barnett]}
+# --- register refiners (jlevy/squares register `improved_by`) ---
+rehwaldt:    {name: Seth Rehwaldt, aliases: [Seth Rehwaldt]}
+gupta:       {name: Siddharth Gupta, aliases: [Siddharth Gupta]}
+# --- lower bounds only (data/lower_bounds.json `sources`; `sources:` lists the keys each person is credited for) ---
+elmoumni:    {name: S. El Moumni, aliases: [S. El Moumni], sources: [ElMoumni1999]}
+green:       {name: T. Green, aliases: [T. Green], sources: [Green2000]}
+burns:       {name: Sam Burns, aliases: [Sam Burns], sources: [Burns2026]}
+fort:        {name: Stanislav Fort, aliases: [Stanislav Fort], sources: [Fort2026]}
+miraacc:     {name: Mira-acc, handle: Mira-acc, aliases: [Mira-acc], sources: [MiraAcc2026]}
+massaccesi:  {name: Gustavo Massaccesi, aliases: [Gustavo Massaccesi], sources: [Massaccesi2026]}
+wand125:     {name: wand125, handle: wand125, aliases: [wand125], sources: [wand125_2026]}
+jlevy:       {name: Joshua Levy, handle: jlevy, note: the Squares Project, aliases: [Joshua Levy, jlevy], sources: [jlevy2026]}
+kleddamag:   {name: Kleddamag, handle: Kleddamag, aliases: [Kleddamag], sources: [Kleddamag2026]}
+guzhou:      {name: Guzhou0806, handle: Guzhou0806, note: N17 project, aliases: [Guzhou0806], sources: [Guzhou0806_2026]}
+tokoharu:    {name: tokoharu, handle: tokoharu, aliases: [tokoharu], sources: [tokoharu2026]}
+chelokot:    {name: chelokot, handle: chelokot, aliases: [chelokot], sources: [chelokot2026]}
+queuingtheory: {name: Queuingtheorydotcom, handle: Queuingtheorydotcom, aliases: [Queuingtheorydotcom], sources: [Queuingtheorydotcom2026]}
+karakus:     {name: Hakan Karakuş, aliases: [Hakan Karakuş, H. Karakus], sources: [Karakus2026]}
+squarepacker: {name: Ryu Sungjoon, handle: squarepacker, aliases: [Ryu Sungjoon, squarepacker], sources: [squarepacker2026]}

@@ -8,9 +8,13 @@
 #   6. bounds   data/lower_bounds.json -> www/data (hand-curated with citations; see notes/lower-bounds-notes.md)
 #   7. lists    the record packings n <= 324 from search/regularize/lists (certified, regularized) + records posted since
 #               the catalogue (data/records2026.json) -> www/data/p/{best,alt,step}-*.json, index.json, timeline.json
+#   8. credits  who holds and held every bound (catalogue prose + records2026 + lower_bounds sources, names via
+#               data/people.yaml) -> data/credits.json, www/data/credits.json, notes/credits-review.md (the leaderboard's data)
+#   history  (not in `all`: needs the packing store) a drawing for every holder in credits.json: catalogue drawings,
+#               or superseded 2026 records exported from the store -> www/data/hist.json, www/data/p/hist-*.json (committed)
 #   provenance  (not in `all`: needs the packing store and register clone under search/packer/runs/) who posted each
 #               record newer than the catalogue, and when -> data/records2026.json (committed)
-# Usage: ./build.sh [fetch|scrape|parse|export|timeline|bounds|lists|provenance|all]   (default: all but fetch)
+# Usage: ./build.sh [fetch|scrape|parse|export|timeline|bounds|lists|credits|history|provenance|all]   (default: all but fetch)
 set -euo pipefail
 cd "$(dirname "$0")"
 step=${1:-site}
@@ -23,7 +27,9 @@ case "$step" in
   timeline) run timeline python3 tools/timeline.py && cp data/timeline.json www/data/ ;;
   bounds)   run bounds cp data/lower_bounds.json www/data/ ;;
   lists)    run lists python3 tools/import_lists.py "${@:2}" ;;
+  credits)  run credits bash -c 'python3 tools/credits.py --review && cp data/credits.json www/data/' ;;
+  history)  run history python3 tools/history_packings.py ;;
   provenance) run provenance python3 tools/provenance.py ;;
-  site|all) [ "$step" = all ] && "$0" fetch; "$0" scrape; "$0" parse; "$0" export; "$0" timeline; "$0" bounds; "$0" lists ;;
+  site|all) [ "$step" = all ] && "$0" fetch; "$0" scrape; "$0" parse; "$0" export; "$0" timeline; "$0" bounds; "$0" lists; "$0" credits ;;
   *) echo "unknown step $step"; exit 2 ;;
 esac

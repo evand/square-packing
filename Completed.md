@@ -2,6 +2,7 @@
 
 Moved from `TODO.md`; one line each, newest first.  Details in the linked `search/*.md` / `notes/*.md`.
 
+- 2026-10-12 **Leaderboard** (`site/www/leaderboard.html`, `site/tools/credits.py`, `site/tools/history_packings.py`, `site/TODO.md`): who found / held every record and floor for n <= 324 (credit policy per Evan), age map in the right-aligned triangle, per-n history with every holder's packing (evolution strip, stepper), hall of fame with record-years, longest-standing / newest records; nav link on every page.
 - 2026-10-11 **s(110) explainer v2** (`site/www/landscape110.html`, `search/packer/landscape/`): census snapshot after v3 (775 certified minima), census rows by tilted count, new map section (UMAP on fingerprint distance, shared packing panel, tilt-count rings), tour v2 (50 stops, display orientation, legs <= 0.065, both diagonal frames), forces section demoted; findings: islands vs tilt counts, axis count = 1-D separator, two deep pockets (67 / 68 axis), walk_carrot not transpose-symmetric.
 - 2026-10-10 **Insertion test at 110** (`search/packer/insert110.py`, PACKER.md): one square into 40 non-regular sub-11 109 packings: 0 new minima in 3 proc-h vs live baseline 1.0 / proc-h; sub-11 descendants rearrange into the record family.
 - 2026-10-10 **s(110) census up to date** (`census_certify.py`, `descend_census.py`): 754 distinct certified minima; 912 not-min points descended (605 known, 40 new); duplicate copies bias explorer parent picks.

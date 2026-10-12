@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leaderboard · Square Packing Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
+<style>
+.wrap{max-width:1100px;margin:0 auto;padding:28px 20px 80px;display:flex;flex-direction:column;gap:30px}
+.wrap h1{font-size:2rem}
+.wrap h2{font-size:1.3rem}
+.wrap p{max-width:68ch}
+section{display:flex;flex-direction:column;gap:12px}
+.lede{font-size:1.08rem;color:var(--muted)}
+.ctl{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:.9rem}
+.ctl label{display:inline-flex;align-items:center;gap:6px}
+.panel{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:14px;position:relative}
+.tt{position:absolute;pointer-events:none;background:var(--ink);color:var(--paper);font-family:"IBM Plex Mono",monospace;font-size:.76rem;padding:6px 9px;border-radius:3px;white-space:pre;display:none;line-height:1.45;z-index:3;max-width:340px;white-space:pre-wrap}
+/* map */
+.mapgrid{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(18,minmax(0,1fr));gap:2px}
+.mapgrid.tri{max-width:1040px;grid-template-columns:repeat(35,minmax(0,1fr))}
+.cell{aspect-ratio:1;border-radius:2px;position:relative;cursor:pointer;font-family:"IBM Plex Mono",monospace;font-size:clamp(7px,.95vw,11px);display:flex;align-items:center;justify-content:center;color:transparent;user-select:none;border:none;padding:0}
+.cell.lab{color:var(--seq-text)}
+.cell.dark.lab{color:var(--seq-text-on-dark)}
+.cell.grid{background:transparent;box-shadow:inset 0 0 0 1px var(--rule)}
+.cell.grid.lab{color:var(--muted)}
+.cell.dim{opacity:.18}
+.cell.mine{box-shadow:0 0 0 2px var(--ink);z-index:1}
+.cell.sel{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent);z-index:2}
+.cell:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.scale{display:flex;flex-wrap:wrap;gap:14px;font-family:"IBM Plex Mono",monospace;font-size:.8rem;align-items:center}
+.scale span{display:inline-flex;align-items:center;gap:6px}
+.scale i{width:16px;height:12px;border-radius:2px;display:inline-block}
+:root{--seq0:#C9E5EC;--seq1:#8DC6D6;--seq2:#4E9FB8;--seq3:#21718F;--seq4:#0D4459;--seq-text:#131A1E;--seq-text-on-dark:#F2F4F1}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--seq0:#1E4652;--seq1:#2A6A7D;--seq2:#3E92A9;--seq3:#72BACD;--seq4:#B4E0EA;--seq-text:#E4EBEA;--seq-text-on-dark:#0E1316}}
+:root[data-theme="dark"]{--seq0:#1E4652;--seq1:#2A6A7D;--seq2:#3E92A9;--seq3:#72BACD;--seq4:#B4E0EA;--seq-text:#E4EBEA;--seq-text-on-dark:#0E1316}
+/* tables */
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;white-space:nowrap}
+th.sort{cursor:pointer}
+th.sort:hover,th.on{color:var(--accent)}
+td.num,th.num{text-align:right;font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.person{cursor:pointer}
+tr.person:hover td{background:var(--accent-soft)}
+tr.person.on td{background:var(--accent-soft)}
+tr.detail td{background:var(--surface);font-size:.84rem;color:var(--muted)}
+.tablewrap{overflow-x:auto;max-height:520px;overflow-y:auto;border:1px solid var(--rule);border-radius:3px}
+.handle{color:var(--muted);font-family:"IBM Plex Mono",monospace;font-size:.78rem}
+.nlist a{font-family:"IBM Plex Mono",monospace;margin-right:6px}
+.cols2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px}
+/* chain */
+.chain{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0}
+.chain li{display:grid;grid-template-columns:96px 1fr auto;gap:12px;padding:8px 0;border-bottom:1px solid var(--rule)}
+.chain li:last-child{border-bottom:none}
+.chain .when{font-family:"IBM Plex Mono",monospace;font-size:.8rem;color:var(--muted)}
+.chain .who{font-weight:600}
+.chain .src{font-size:.84rem;color:var(--muted)}
+.chain .sv{font-family:"IBM Plex Mono",monospace;font-size:.8rem}
+.chain .credits{font-size:.84rem;margin-top:3px}
+.chain li.now .when{color:var(--accent)}
+.chain .th{width:76px;height:76px;cursor:pointer}
+.chain .th svg,.evo svg,.stage svg{display:block;width:100%;height:100%}
+/* evolution */
+.evo{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px}
+.evo figure{margin:0;flex:none;width:128px;cursor:pointer;border:1px solid var(--rule);border-radius:3px;padding:6px;background:var(--surface);display:flex;flex-direction:column;gap:4px}
+.evo figure.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.evo .pic{width:114px;height:114px}
+.evo figcaption{font-size:.74rem;line-height:1.35;color:var(--muted)}
+.evo figcaption b{color:var(--ink);font-weight:600}
+.evo .arrow{align-self:center;color:var(--muted);flex:none}
+.stage{display:grid;grid-template-columns:minmax(0,440px) 1fr;gap:20px;align-items:start}
+@media (max-width:760px){.stage{grid-template-columns:1fr}}
+.stage .big{aspect-ratio:1;width:100%;max-width:440px}
+.stage .cap{display:flex;flex-direction:column;gap:8px;font-size:.92rem}
+.stage .btns{display:flex;gap:8px;flex-wrap:wrap}
+.stage button{font-family:"IBM Plex Mono",monospace;font-size:.84rem;padding:4px 10px;border:1px solid var(--accent);border-radius:3px;background:none;color:var(--accent);cursor:pointer}
+.stage button:hover{background:var(--accent);color:var(--paper)}
+.delta{font-family:"IBM Plex Mono",monospace;font-size:.78rem;color:var(--accent)}
+.note{font-size:.88rem;color:var(--muted)}
+details{font-size:.92rem}
+summary{cursor:pointer;color:var(--accent)}
+details ul{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-width:72ch}
+.xbtn{font-family:"IBM Plex Mono",monospace;font-size:.84rem;padding:4px 10px;border:1px solid var(--accent);border-radius:3px;text-decoration:none;color:var(--accent)}
+.xbtn:hover{background:var(--accent);color:var(--paper)}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="brand">Square Packing Atlas</span>
+  <nav><a href="index.html">Overview</a><a href="explore.html">Explore</a><a href="compare.html">Compare</a><a href="bounds.html">Bounds</a><a href="leaderboard.html" class="here">Leaderboard</a><a href="proofs.html">Proofs &amp; results</a><a href="problems.html">Open problems</a><a href="sources.html">Sources</a></nav>
+</div>
+<div class="wrap">
+  <section>
+    <div class="eyebrow">who found what</div>
+    <h1>The leaderboard</h1>
+    <p class="lede">Every record packing for <i>n</i> ≤ 324 was found by someone, usually by building on someone else's.  This page credits them: who holds each record now, who held it before, how long each record stood, and who proved the floors underneath.  Some records from 1979 still stand; others have changed hands three times this autumn.</p>
+  </section>
+
+  <section>
+    <h2>Every record, by age</h2>
+    <div class="ctl">
+      <label>layout <select id="layout"><option value="deficit">triangle, columns = k² − n</option><option value="tri">triangle, centred rows</option><option value="grid">grid, 18 per row</option></select></label>
+      <label>highlight <select id="who"><option value="">nobody</option></select></label>
+      <label><input type="checkbox" id="labels"> show <i>n</i> in every cell</label>
+    </div>
+    <div class="scale" id="scale"></div>
+    <div class="panel" id="map"><div class="tt"></div><div class="mapgrid" id="grid" role="grid" aria-label="records for n = 1 to 324"></div></div>
+    <p class="note"><span id="layoutnote"></span> Darker means the current record is older.  Outlined cells are the plain grid packing (side ⌈√<i>n</i>⌉), which no one has beaten, or for perfect squares can't.  Click a cell for its full history below.</p>
+  </section>
+
+  <section id="chainsec">
+    <h2>The history of <i>n</i> = <span id="cn">11</span></h2>
+    <div class="ctl"><label><i>n</i> = <input id="npick" type="number" min="1" max="324" value="11" style="width:70px"></label><a id="cexplore" class="xbtn" href="explore.html?n=11">the record in Explore →</a><a id="cbounds" class="xbtn" href="bounds.html?n=11">upper and lower bounds over time →</a><a id="ccompare" class="xbtn" href="compare.html?n=11">compare its packings →</a></div>
+    <h3 style="margin:6px 0 0">How the packing evolved</h3>
+    <div class="evo" id="evo"></div>
+    <div class="stage"><div class="big panel" id="big"></div><div class="cap" id="bigcap"></div></div>
+    <div class="cols2">
+      <div><h3 style="margin-bottom:6px">Best packing (upper bound)</h3><ul class="chain" id="chainU"></ul></div>
+      <div><h3 style="margin-bottom:6px">Proven floor (lower bound)</h3><ul class="chain" id="chainL"></ul></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Hall of fame</h2>
+    <p class="note">Click a column to sort, a name to see their <i>n</i> and outline them on the map.  <b>Records</b>: <i>n</i> where they found the current record; <b>ever</b>: where they held it at some point; <b>record-years</b>: how long their records stood, added up (split between co-finders); <b>built on</b>: current records constructed from their packings by others or by the catalogue (Göbel's "L" additions, mostly); <b>floors</b>: <i>n</i> ≤ 100 where they proved the best lower bound now known, and <b>ever</b>.</p>
+    <div class="tablewrap"><table id="hof"><thead><tr>
+      <th>who</th><th class="num sort" data-k="now">records</th><th class="num sort" data-k="ever">ever</th><th class="num sort" data-k="years">record-years</th><th class="num sort" data-k="first">since</th><th class="num sort" data-k="built">built on</th><th class="num sort" data-k="lbNow">floors</th><th class="num sort" data-k="lbEver">ever</th>
+    </tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section class="cols2">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <h2>Longest-standing records</h2>
+      <p class="note">Open <i>n</i> whose record is oldest: beat one of these and you have beaten a classic.</p>
+      <div class="tablewrap" style="max-height:440px"><table id="oldest"><thead><tr><th class="num">n</th><th>held by</th><th class="num">since</th><th class="num">years</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <h2>Newest records</h2>
+      <p class="note">The latest records, with the packing each one built on where its finder said so.</p>
+      <div class="tablewrap" style="max-height:440px"><table id="newest"><thead><tr><th class="num">n</th><th>found by</th><th class="num">date</th><th>before</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+
+  <section>
+    <details><summary>How credit is counted</summary>
+      <ul>
+        <li><b>Records change hands</b> when someone finds or improves the best packing.  Refining an existing packing (re-optimizing it, fixing it, computing its side exactly) is credited on that <i>n</i> but leaves the record with its finder.</li>
+        <li><b>Constructions.</b> Many records extend a smaller one, usually by adding "L"-shaped strips to a packing of Frits Göbel's from 1979.  Where the catalogue names no finder for the extension, the record is shown as built on the original packing and counted in its author's <i>built on</i> column, not as a find.</li>
+        <li><b>Lineage since September 2026.</b> When a poster says their packing starts from someone else's and asks that the construction be credited there, the record stays with the original finder and the improvement is credited alongside.</li>
+        <li><b>Floors</b> count the lower bounds the <a href="bounds.html">Bounds</a> page uses: published proofs and the 2026 computer-checked certificates (unrefereed).  Nagamochi's 2005 theorem, whose published proof has a gap, and floors reported without a certificate are listed but not counted.  When two floors are equal, the earlier one holds.</li>
+        <li><b>Sources.</b> Credits up to mid-September 2026 are read from David Ellsworth's catalogue (which carries Erich Friedman's earlier history); later ones from the posts themselves, mostly on jlevy/squares.  "First" is as best we know it.  If you see a credit that's wrong or missing, please <a href="https://github.com/evand/square-packing/issues">open an issue</a>.</li>
+        <li><b>Want to get on the board?</b>  The open <i>n</i> above are all fair game; new records are registered at <a href="https://github.com/jlevy/squares">jlevy/squares</a>, and this page picks them up from there.</li>
+      </ul>
+    </details>
+  </section>
+</div>
+<script src="js/leaderboard.js"></script>
+</body>
+</html>
