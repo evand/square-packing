@@ -99,3 +99,36 @@ would have a descent direction, giving packings near `z*` with `S < S*`), so thi
 
 Lean: the same layering as grade A (`rigidity` → a second-order lemma; `isLocalMin_of_rows` → a family version);
 the projection onto `M` is elementary (an affine subspace of centre coordinates).
+
+## Hypothesis 2 by null vectors (10-11; `search/exact/gradec.py`)
+
+KKT along `M` is an equality condition on a whole family, so it needs an exact certificate.  Polynomial multipliers
+`λ(φ)` do not exist in general (n = 19: no `λ(φ)` of degree ≤ 3 satisfies `L(φ)ᵀλ(φ) = e_S` identically; the
+min-norm multipliers are rational in `φ`).  The dual object is polynomial:
+
+* `L(φ) = L₀ + Σ φ_k A_k` is affine in `φ` (moving centres only changes the lever arms in the torque columns).
+* Certificate: affine vectors `w_j(φ) = w_j0 + Σ φ_k w_jk` with `L(φ) w_j(φ) ≡ 0` (identities `L₀w_j0 = 0`,
+  `L₀w_jk + A_k w_j0 = 0`, `A_k w_jl + A_l w_jk = 0`, exact in `K`), S-components 0, whose `w_j0` extend a basis of
+  `F` to a basis of `null L₀`.
+* Lemma.  Then for `φ` near 0, `null L(φ) = span(F, w_j(φ))` (rank `L(φ) ≥ rank L₀` near 0, and these are
+  `dim null L₀` independent null vectors), `e_S ⊥ null L(φ)`, so `e_S ∈ range L(φ)ᵀ` with constant rank, and
+  `λ(φ) = λ* + L(φ)ᵀ⁺(e_S − L(φ)ᵀλ*)` is continuous with `λ(0) = λ* > 0`: hypothesis 2.
+* The same identities give `λ*ᵀ A_k w_j0 = −(w_jk)_S = 0`: the `F × W` block of `∇²ℒ` vanishes (and `F × F` does
+  since rows are affine in the centres), so hypothesis 3 may be checked on `span(w_j0)`, any complement of `F` in
+  `null L₀`.
+* Degree 1 suffices in every case tried (n = 10, 19, 37).  When `null L₀ = F` (W = 0; n = 29), no `w_j` are needed:
+  hypothesis 2 is the open condition `rank L₀ = N − dim F` and hypothesis 3 is vacuous.
+
+`gradec.py` results (exact in K, signs by intervals): n = 10 VALID (36 rows, dim F 2, dim W 2, λ_min 0.0625, minors
+0.088, 0.0078); n = 19 VALID (54 rows, dim F 6, dim W 2, λ_min 0.0393, minors 0.079, 0.0062).
+
+**Batch (10-11)**: all 250 records with field degree ≤ 4 (8 parallel jobs, 30 min cap each; per-n status in
+`search/exact/gradec_runs/_status.txt`, logs gitignored, certificates `minpoly/solve/n-N.gradec.json` gitignored).
+**231 VALID**, including n = 66, 127, 150, 175, whose coordinates carry 1e-16 to 1e-7 offsets: the side-end/interior/
+beyond classification is exact in K, so tiny margins are harmless.  Not VALID:
+* n = 230, 261: no strictly positive multipliers (max-min λ ≤ 1e-9 over the row set: some load-bearing row is forced
+  to zero force at z*).  So hypothesis 2 fails as stated; it needs either a smaller row set (drop the zero-force rows and
+  recheck the flat family) or a degenerate-KKT version of Theorem C.  Not yet investigated.
+* 17 timeouts (n = 174, 201, 204, 231, 234, 257, 262, 274, 275, 295, 296, 299, 308–312).  10 of them reached exact
+  λ* > 0 and timed out in the Hessian step; 7 (dim F 210–274) timed out in the null-vector elimination.  Pure cost:
+  exact sparse elimination with hundreds of flat directions.
