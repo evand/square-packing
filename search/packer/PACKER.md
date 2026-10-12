@@ -1661,3 +1661,9 @@ measured CPU, seeds_src) suffice to compare against a later dedicated arm.
   exactsolve says a strict local minimum modulo 7 flat motions (min lambda 8e-7, small), matching distance 0.684 to
   the grid.  So rigid non-grid 90s exist 0.0024 above the grid, 4x closer than the 10.009 seen this morning.  Live-check
   bug: the register value for n = 90 is the string "'10'" and fails to parse; fix in candidate.py.
+* **H5b pre-registration** (17:21; Evan: give the idle cores to the sweep, wrap up at 18:40).  H5 cannot change slots
+  live, so a second chain, `runs/hunt1012/h5b`: the 90 H5 targets that have had only their first-pass round
+  (`runs/h5b_ns.json`; H5 keeps working the ones with active lineages, 52 / 83 / 206-208 / 68 / 53 / 84-87), same
+  settings (live frontier, `--seed-ks 1,2,-1`, 4-min rounds) with 5 slots × 2 procs, 1.2 h so it drains by ~18:40.
+  Success: a candidate with gain > 1e-8 that candidate.py certifies as a new packing.  Prediction: 0-1 (about one
+  more round per n, ~0.13 CPU-h each).  Evaluated together with H5 at 18:40.
