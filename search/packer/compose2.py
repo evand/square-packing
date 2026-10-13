@@ -68,16 +68,21 @@ def variants(q):
     return out
 
 
+NONE = dict(m=0, W=0.0, H=0.0, sq=np.zeros((0, 3)), cell=(0, 0), label='-', gap=0.0)
+
+
 def place(A, B, v, S):
     """Tilted squares of A (variant v // 4) at LL and B (variant v % 4, turned 180 degrees) at UR of the S-box; None if
     they overlap."""
     import mondrian
+    if max(A['W'], A['H'], B['W'], B['H']) > S + 1e-12:   # a box sticking out of the S-box (fill does not check walls)
+        return None
     RA = variants(A)[v // 4][0]
     RB = variants(B)[v % 4][0]
     TA = RA[mondrian.is_tilted(RA[:, 2])]
     TB = RB.copy(); TB[:, 0] = S - TB[:, 0]; TB[:, 1] = S - TB[:, 1]
     TB = TB[mondrian.is_tilted(TB[:, 2])]
-    return None if mondrian._sat_overlap(TA, TB) else np.r_[TA, TB]
+    return None if len(TB) and mondrian._sat_overlap(TA, TB) else np.r_[TA, TB]
 
 
 def tight(D, S, tol):
@@ -96,11 +101,12 @@ def job(args):
         cell.setdefault(q['cell'], []).append(i)
     # A cell is in if any of its pieces is tight; then every piece of it that fits is tried (a better piece leaves
     # more slack than a tight worse one, which only makes the screen non-monotone, not the piece useless).
-    cand = [i for c, I in cell.items() if any(tight(P[i]['W'], S, tol) or tight(P[i]['H'], S, tol) for i in I)
-            for i in I if max(P[i]['W'], P[i]['H']) <= S + 1e-9]
+    cand = [i for c, I in cell.items() if any(tight(P[i]['W'], S, tol + probe) or tight(P[i]['H'], S, tol + probe) for i in I)
+            for i in I if max(P[i]['W'], P[i]['H']) <= S + 1e-9 and P[i]['m'] < n]
+    P = P + [NONE]                                      # B = NONE: one piece + uprights (e.g. s(327) = s(123) + 7)
     pairs, w = [], []
     for ia in cand:
-        for ib in cand:
+        for ib in cand + [len(P) - 1]:
             A, B = P[ia], P[ib]
             sl = A['m'] + B['m'] + math.floor(S * S - A['W'] * A['H'] - B['W'] * B['H'] + 1e-9) - n
             if sl >= 0:
@@ -117,7 +123,7 @@ def job(args):
     groups = {}
     for k, (ia, ib, sl) in enumerate(pairs):
         groups.setdefault((P[ia]['cell'], P[ib]['cell']), []).append(k)
-    left = {k: list(range(16)) for k in range(len(pairs))}      # untried (A variant, B variant) per pair
+    left = {k: list(range(16)) if P[pairs[k][1]]['m'] else [0, 4, 8, 12] for k in range(len(pairs))}  # untried variants
     bandit = CellBandit(b0=5.0)                                   # fills take ~0.1-10 s, not explorer minutes
     best, tried, fills, t0 = None, 0, [], time.time()
     while groups and time.time() - t0 < budget and tried < max_fills:
@@ -139,7 +145,7 @@ def job(args):
         L = mondrian.exact_fill(T, S, time_limit=tl)
         c = len(L)
         bandit.update((A['cell'], B['cell']), time.time() - t1, 2.0 ** -(n - c) if c < n else 1.0)
-        rec = dict(n=n, A=A['label'], B=B['label'], v=v, sl=sl, gA=A['gap'], gB=B['gap'], c=c,
+        rec = dict(n=n, A=A['label'], B=B['label'], cA=A['cell'], cB=B['cell'], hA=A['H'], hB=B['H'], v=v, sl=sl, gA=A['gap'], gB=B['gap'], c=c,
                    sec=round(time.time() - t1, 2))
         if probe and c >= n:                    # near-miss probe: smallest side at which this arm still fits n
             lo, hi, Lh = S - 2 * probe, S, L        # bisect over [frontier - probe, frontier + probe]
@@ -164,7 +170,7 @@ def job(args):
     if best is None:
         return base
     c, la, ta, lb, tb, L = best
-    if probe and near and near[0]['need'] < 0:          # an arm fits below the frontier: a hit; polish its layout
+    if probe and near and near[0]['need'] < -1e-9:          # an arm fits below the frontier: a hit; polish its layout
         x = near[0]
         return dict(base, count=n, A=x['A'], B=x['B'], v=x['v'], S=x['S_min'], sq=x['sq'])
     return dict(base, count=c, A=la, ta=ta, B=lb, tb=tb, sq=L.tolist() if c >= n and not probe else None)
@@ -224,6 +230,35 @@ def run(a):
     man.finish(summary=dict(targets=len(tasks)))
 
 
+def rank(a):
+    """Probe output -> cells worth searching.  For each n keep its best arms (need = smallest side above the frontier
+    target at which the arm fits n); a cell's score = sum over n of exp(-need / tau), tau = the h improvement a ~1 CPU-h
+    search plausibly buys (TAU x h; the (38, 2) control went 5.7996 -> 5.7642, 0.6 %, from 3 min to 1 CPU-h).  Both
+    cells of an arm are credited (improving either piece closes the gap only partly: a coarse proxy)."""
+    R = [json.loads(l) for d in a.dirs for l in open(os.path.join(d, 'near.jsonl'))]
+    best = {}
+    for r in R:                                         # per (n, cell pair): smallest need
+        k = (r['n'], tuple(r['cA']), tuple(r['cB']))
+        if k not in best or r['need'] < best[k]['need']:
+            best[k] = r
+    score, ns = {}, {}
+    for (n, cA, cB), r in best.items():
+        for c, h in ((cA, r['hA']), (cB, r['hB'])):
+            w = math.exp(-max(r['need'], 0) / (a.tau * h))
+            score[c] = score.get(c, 0) + w
+            ns.setdefault(c, {})
+            ns[c][n] = min(ns[c].get(n, 9), r['need'])
+    hits = sorted({n for (n, *_), r in best.items() if r['need'] < -1e-9})
+    print(f'{len(R)} near arms, {len(best)} (n, cell pair); n with need < 0 (hits): {hits}')
+    out = []
+    for c, sc in sorted(score.items(), key=lambda x: -x[1])[:a.top]:
+        nn = sorted(ns[c].items(), key=lambda x: x[1])[:6]
+        print(f'  cell m={c[0]:3d} d={c[1]:g}  score {sc:6.2f}  n:need ' + ' '.join(f'{n}:{v:.1e}' for n, v in nn))
+        out.append(dict(m=c[0], d=c[1], score=sc, ns=nn))
+    if a.out:
+        json.dump(out, open(a.out, 'w'), indent=1)
+
+
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     sp = ap.add_subparsers(dest='cmd', required=True)
@@ -239,5 +274,7 @@ if __name__ == '__main__':
                    help='near-miss probe: fill at frontier + PROBE, bisect fitting arms to their smallest side (near.jsonl)')
     r.add_argument('--probe-steps', type=int, default=10)
     r.add_argument('--per-cell', type=int, default=10 ** 9, help='pieces per (m, d) cell, best h first (seam diversity)')
+    k = sp.add_parser('rank'); k.add_argument('dirs', nargs='+'); k.add_argument('--tau', type=float, default=0.003)
+    k.add_argument('--top', type=int, default=40); k.add_argument('--out')
     a = ap.parse_args()
-    run(a)
+    run(a) if a.cmd == 'run' else rank(a)

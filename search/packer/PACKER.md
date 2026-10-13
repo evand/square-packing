@@ -1851,3 +1851,16 @@ the leverage is in which cells get searched and in reusing every good piece.
   its h meets the requirement, then compose at once).  Graded on hits per CPU-h and the fraction of cells whose
   requirement was met.
 * **P5 (contingent)** removal from several near-best n + 1 parents (the 179 miss), budget 3 CPU-h.
+* **c2live stopped (00:50)** at 113 / 159 n (20..262), 0 hits, ~25 CPU-h measured-ish (14 cores x 115 min): the
+  exhaustive pair order stalled on n = 263 for 40 min.  Superseded by the bandit composer.
+* **P1 result**: store synced (#528-#575; only #570's s(154) file missing, never pushed).  New frontier beyond the
+  events table: 304 (Ostashev 10-13, 17.9294277581), 207 (Mishapolk #573, 1.5e-9).  frontier_now now includes the
+  store envelope; our s(327) <= 18.5913781455 is in the store (certified, ours:candidates).  Crops of the 50 new
+  packings re-optimised (`runs/rectlib/lib3`, 1,007 re-optimisations, 3.3 min x 14 procs ~ 0.8 CPU-h of 2 budgeted):
+  **290 beat the cell's best piece, 96 new cells**; the big gains are at d = 6..8 (e.g. (50, 8) by 1.74, (28, 6) by
+  1.44), cells our sweep (d <= 4) never covered.  Lesson: the library had a hole at large d.
+* **P2 + P3 combined, pre-registered (00:55)**: compose2 `--probe 0.02 --budget 150`, n 20..340 sub-grid, 14 procs,
+  all store pieces (`runs/compose2/probe1`).  Hits (need < 0) are polished and go to candidate.py.  Budget 7 CPU-h.
+  Prediction: 0-2 hits (new pieces at d 6-8 make 1-2 a bit likelier than before); the near list feeds P4.
+  *Restarted 01:05* after 5 min: + one-piece arms (B = none) and 104 frontier packings (n 10..250) as d = 0 pieces
+  (control: 327 = s(123) + piece found on the first fill at the pre-ours frontier).  Same budget and prediction.

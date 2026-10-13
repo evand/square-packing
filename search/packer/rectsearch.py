@@ -54,7 +54,8 @@ def random_start(m, d, rng, loose):
 
 
 def worker(args):
-    m, d, seconds, seed, out, loose, start_frac, a_soft, adaptive = args
+    m, d, seconds, seed, out, loose, start_frac, a_soft, adaptive, *rest = args
+    elite = [(h, np.array(sq, float)) for h, sq in (rest[0] if rest else [])]   # continue from these (bandit episodes)
     sig_ad, h_par = 0.05, math.inf
     from pk.engine import FQ, QOpt
     from pk.packing import Packing
@@ -62,7 +63,6 @@ def worker(args):
     fq = FQ()
     Q = QOpt(loosen=1.0, rect_dx=float(d), flip_top=16)
     t0 = time.time()
-    elite = []                                    # (h, sq)
     log = open(os.path.join(out, f'log_{seed}.jsonl'), 'w')
     mins, seen = open(os.path.join(out, f'minima_{seed}.jsonl'), 'w'), set()   # every distinct local minimum
     nq = 0
@@ -97,7 +97,7 @@ def worker(args):
             elite.append((h, s2))
         elite.sort(key=lambda e: e[0]); del elite[12:]
     log.close(); mins.close()
-    return dict(seed=seed, nq=nq, best=[(e[0], e[1].tolist()) for e in elite[:3]])
+    return dict(seed=seed, nq=nq, best=[(e[0], e[1].tolist()) for e in elite[:12]])
 
 
 def signature(h, sq):
@@ -141,6 +141,75 @@ def run(a):
     man.finish(summary=summ)
 
 
+def bandit(a):
+    """Cells chosen by Thompson sampling (pk.bandit.CellBandit), one short episode at a time (PLAN P4, 10-13).
+
+    Cells file: JSON list of {m, d, target} (target = the h at which the cell's piece gives a record somewhere; from
+    `compose2.py rank` / the probe), or [m, d].  Each cell's elite (12) persists across episodes and is seeded from the
+    store's best pieces in that cell (crops and earlier searches: mixed seeds).  Reward of an episode = progress of the
+    cell's best h toward its target, (h_before - h_after) / (target gap at the start), capped at 1; cost = CPU seconds.
+    A cell that reaches its target retires (and is printed: compose at once).  Stops at --cpu-hours."""
+    from pk import manifest
+    from pk.bandit import CellBandit
+    from pk.store import Store
+    import random, scratch
+    os.makedirs(a.out, exist_ok=True)
+    man = manifest.start(a.out, 'rectsearch-bandit', args=vars(a), procs=a.procs)
+    scratch.scope('rectsearch')
+    C = {}
+    S = Store()
+    for c in json.load(open(a.cells_file)):
+        m, d, tgt = (c['m'], int(c['d']), c.get('target', 0.0)) if isinstance(c, dict) else (c[0], int(c[1]), 0.0)
+        el = [(p.s, p.sq.tolist()) for p in S.pieces(m=m, d=float(d))[:a.seed_pieces]]
+        od = os.path.join(a.out, f'm{m}_d{d}'); os.makedirs(od, exist_ok=True)
+        C[(m, d)] = dict(m=m, d=d, target=tgt, elite=el, h0=el[0][0] if el else math.inf, eps=0, od=od)
+    B = CellBandit(half=1e9, uniform=0.15, b0=a.episode)
+    rng = random.Random(a.seed)
+    budget, used, k = a.cpu_hours * 3600, 0.0, 0
+    active = lambda: [c for c, v in C.items() if not (v['elite'] and v['elite'][0][0] <= v['target'] + 1e-9)]
+    log = open(os.path.join(a.out, 'episodes.jsonl'), 'a')
+    from concurrent.futures import FIRST_COMPLETED, wait
+    with ProcessPoolExecutor(a.procs) as ex:
+        fut = {}
+        def submit():
+            nonlocal k
+            cells = active()
+            if not cells or used + len(fut) * a.episode >= budget:
+                return False
+            c = B.choose(sorted(cells), rng); v = C[c]; k += 1
+            fut[ex.submit(worker, (v['m'], v['d'], a.episode, a.seed * 100000 + k, v['od'], a.loose,
+                                   0.1 if v['elite'] else 0.4, a.soft, True, v['elite']))] = (c, time.time())
+            return True
+        for _ in range(a.procs):
+            submit()
+        while fut:
+            done, _ = wait(fut, return_when=FIRST_COMPLETED)
+            for f in done:
+                c, t1 = fut.pop(f); v = C[c]; r = f.result(); sec = time.time() - t1; used += sec
+                hb = v['elite'][0][0] if v['elite'] else math.inf
+                pool = {round(h, 9): (h, sq) for h, sq in v['elite'] + [tuple(e) for e in r['best']]}
+                v['elite'] = sorted(pool.values(), key=lambda e: e[0])[:12]; v['eps'] += 1
+                ha = v['elite'][0][0] if v['elite'] else math.inf
+                gap0 = max(v['h0'] - v['target'], 1e-6) if math.isfinite(v['h0']) else 1.0
+                rew = min(1.0, max(0.0, (hb - ha) / gap0)) if math.isfinite(hb) else (1.0 if math.isfinite(ha) else 0.0)
+                B.update(c, sec, rew)
+                met = ha <= v['target'] + 1e-9
+                log.write(json.dumps(dict(cell=c, ep=v['eps'], h_before=hb, h_after=ha, target=v['target'], rew=rew,
+                                          sec=round(sec, 1), nq=r['nq'], met=met)) + '\n'); log.flush()
+                print(f"  ({c[0]},{c[1]}) ep {v['eps']:3d} h {ha:.9f} target {v['target']:.9f}"
+                      f"{'  MET' if met else ''}  used {used / 3600:.2f} CPU-h", flush=True)
+                if ha < hb - 1e-12:
+                    with open(os.path.join(v['od'], 'best.txt'), 'w') as g:
+                        g.write(f"{v['m']} {ha!r}\n" + ''.join(f'{x!r} {y!r} {t!r}\n' for x, y, t in v['elite'][0][1]))
+                submit()
+    from pk.pieces import import_paths
+    seen, new = import_paths([a.out])
+    summ = {f'{c[0]}:{c[1]}': dict(h0=v['h0'], h=v['elite'][0][0] if v['elite'] else None, target=v['target'],
+                                     eps=v['eps']) for c, v in C.items()}
+    json.dump(summ, open(os.path.join(a.out, 'summary.json'), 'w'), indent=1)
+    man.finish(summary=dict(cells=len(C), store_new=new, met=[k for k, v in summ.items() if v['h'] and v['h'] <= v['target']]))
+
+
 def export(a):
     """Every distinct minimum of a run -> <dir>/pieces.jsonl (rectlib's format, for `rectlib.py atlas`).  The store
     already has them (run() imports them); this is only for the file-based tools."""
@@ -164,6 +233,11 @@ if __name__ == '__main__':
     r.add_argument('--soft', type=float, default=0.5, help='share of fresh starts that go through soft-to-rigid')
     r.add_argument('--adaptive', action='store_true', help='adaptive kick size (x2 on success, /2 on failure)')
     r.add_argument('--start-frac', type=float, default=0.4, help='share of the time spent on fresh starts only')
+    b = sp.add_parser('bandit'); b.add_argument('--cells-file', required=True); b.add_argument('--out', required=True)
+    b.add_argument('--episode', type=float, default=120); b.add_argument('--cpu-hours', type=float, default=1.0)
+    b.add_argument('--procs', type=int, default=14); b.add_argument('--seed', type=int, default=1)
+    b.add_argument('--loose', type=float, default=1.25); b.add_argument('--soft', type=float, default=0.5)
+    b.add_argument('--seed-pieces', type=int, default=6, help='store pieces per cell seeding the elite')
     e = sp.add_parser('export'); e.add_argument('dir')
     a = ap.parse_args()
-    run(a) if a.cmd == 'run' else export(a)
+    {'run': run, 'bandit': bandit, 'export': export}[a.cmd](a)
