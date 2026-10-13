@@ -1667,3 +1667,12 @@ measured CPU, seeds_src) suffice to compare against a later dedicated arm.
   settings (live frontier, `--seed-ks 1,2,-1`, 4-min rounds) with 5 slots × 2 procs, 1.2 h so it drains by ~18:40.
   Success: a candidate with gain > 1e-8 that candidate.py certifies as a new packing.  Prediction: 0-1 (about one
   more round per n, ~0.13 CPU-h each).  Evaluated together with H5 at 18:40.
+* **H5 / H5b result** (18:44).  **No new packings** (prediction H5 1-4: a miss; H5b 0-1).  H5: all 107 targets, 279
+  rounds, 43.4 CPU-h measured; H5b: 62 of its 90 targets, 62 rounds, 10.0 CPU-h.  The only flag was the n = 207
+  polish false positive.  Closest lineages to the register (lineage best, not the register packing): 71 +1.9e-12
+  (re-found the record, presumably the same packing), 53 +7.3e-7, 208 +1.7e-6, 68 +1.2e-5, 211 +7.3e-5, 110 / 151
+  +1.0e-4, 234 +1.6e-4.  Reading: neighbours of freshly improved n are already near their own basin floors; seeds
+  from n ± 1, 2 re-find the records, they don't beat them.  The day's compute (H3/H3b 26.8, H4 23.6, H5 43.4, H5b
+  10.0 CPU-h; plus H1/H2) gave 0 new packings.  The useful by-products are the rigid non-grid s(90) minimum at
+  10.0024260 and the 109 family picture.  More plain chain compute on these targets looks unproductive.  The next lever
+  is new machinery (the wedge-cut insertion operator for the border, the shallow-valley descender).
