@@ -104,11 +104,30 @@ def split_arms(sq):
     return [T]
 
 
+def arms_of(pid, p):
+    """Library entries (all 8 symmetries x arms) of store packing pid (a Packing)."""
+    S, out = float(p.s), []
+    for k in range(8):
+        X = sym(p.sq, S, k)
+        for ai, A in enumerate(split_arms(X)):
+            c = A[:, :2].mean(0) / S
+            corner = min(CORNERS, key=lambda q: (c[0] - q[0]) ** 2 + (c[1] - q[1]) ** 2)
+            rel = A.copy(); rel[:, 0] -= corner[0] * S; rel[:, 1] -= corner[1] * S
+            out.append(dict(src=int(pid), n=p.n, S=S, sym=k, arm=ai, corner=corner, sq=rel, m=len(A)))
+    return out
+
+
 def build_lib(a):
     from pk.store import Store
     from pk.bands import bands
     st = Store()
     lib = []
+    if getattr(a, 'ids', None):
+        for i in json.load(open(a.ids)):
+            lib += arms_of(i, st.get(int(i)))
+        pickle.dump(lib, open(a.out, 'wb'))
+        print(f'{len(lib)} arms from {len({x["src"] for x in lib})} packings -> {a.out}')
+        return
     for n in range(a.nmin, a.nmax + 1):
         rows = st.query(n=n, limit=40)
         seen, took = [], 0
@@ -122,14 +141,7 @@ def build_lib(a):
             if not b or sum(b) < MIN_BAND:
                 continue
             seen.append(r['s']); took += 1
-            S = float(p.s)
-            for k in range(8):
-                X = sym(p.sq, S, k)
-                for ai, A in enumerate(split_arms(X)):
-                    c = A[:, :2].mean(0) / S
-                    corner = min(CORNERS, key=lambda q: (c[0] - q[0]) ** 2 + (c[1] - q[1]) ** 2)
-                    rel = A.copy(); rel[:, 0] -= corner[0] * S; rel[:, 1] -= corner[1] * S
-                    lib.append(dict(src=int(r['id']), n=n, S=S, sym=k, arm=ai, corner=corner, sq=rel, m=len(A)))
+            lib += arms_of(r['id'], p)
         print(f'{n}: {took} packings, lib {len(lib)}', flush=True)
     pickle.dump(lib, open(a.out, 'wb'))
     print(f'{len(lib)} arms from {len({x["src"] for x in lib})} packings -> {a.out}')
@@ -233,16 +245,19 @@ def _init(path):
 
 def job(t):
     """One target n: random arm pairs x random variations within the budget.  Returns the best few layouts."""
-    n, f, budget, seed, a_dn, a_ds, exclude_n, max_ops, tl = t
+    n, f, budget, seed, a_dn, a_ds, exclude_n, max_ops, tl = t[:9]
+    target = t[9] if len(t) > 9 else None              # holdout: s_h; a hit = a layout that polishes to s_h (1e-8)
     rng = np.random.default_rng(seed)
     lo, hi = f - 0.03, f + 0.03
+    if target is not None:          # fits at lo = a lower minimum (not this one); above hi = too loose to polish onto it
+        lo, hi = target - 2e-8, target + 1e-3
     pool = [x for x in LIB if abs(x['n'] - n) <= a_dn and abs(x['S'] - f) <= a_ds and not (exclude_n and x['n'] == n)]
     if not pool:
         return dict(n=n, f=f, tried=0, best=[])
     by_src = {}
     for i, x in enumerate(pool):
         by_src.setdefault((x['src'], x['sym']), []).append(i)
-    t0, tried, best, evals = time.time(), 0, [], []
+    t0, tried, best, evals, t_hit = time.time(), 0, [], [], None
     while time.time() - t0 < budget:
         i = int(rng.integers(len(pool)))
         A = pool[i]
@@ -277,7 +292,15 @@ def job(t):
             best.append(dict(rec, L=np.asarray(L).tolist()))
             best.sort(key=lambda z: z['S_min'])
             best = best[:6]
-    return dict(n=n, f=f, tried=tried, pool=len(pool), best=best, evals=evals)
+            if target is not None and s > lo + 1e-12:
+                import vband
+                side, _ = vband.finish(n, s, L, os.path.join(os.environ.get('TMPDIR', '/tmp'), f'h{seed}_{tried}'), ops=('polish',))
+                rec['polished'] = side
+                if abs(side - target) < 1e-8:
+                    t_hit = time.time() - t0
+                    best = [dict(rec, L=np.asarray(L).tolist(), side=side)]
+                    break
+    return dict(n=n, f=f, tried=tried, pool=len(pool), best=best, evals=evals, t_hit=t_hit)
 
 
 def run(a):
@@ -327,6 +350,65 @@ def run(a):
     man.finish(summary=dict(ns=len(res), below=sum(o['gain'] > 1e-9 for o in out)))
 
 
+def holdout(a):
+    """Generative-coverage yardstick (10-13, Evan): at one n, hold out K distinct minima (one per side, 1e-9), build the
+    arm library from the rest, and try to rebuild each held-out side within --budget seconds on one core.  Rebuilt =
+    a layout whose smallest fitting side is in (s_h - 2e-8, s_h + 1e-3] and whose fq polish lands on s_h (1e-8).  A
+    layout fitting at or below s_h - 2e-8 is a lower minimum (the training set holds the best ones), not a rebuild.
+    Population: certified exact minima (minimum table), not store rows or f64 sides.
+    Reports the rebuilt fraction vs time and the ops used."""
+    from pk import manifest
+    from pk.store import Store
+    from pk.crossing import match_distance
+    from pk.packing import read
+    import scratch, vband
+    os.makedirs(a.out, exist_ok=True)
+    man = manifest.start(a.out, 'arms-holdout', args=vars(a), procs=a.procs)
+    scratch.scope('arms')
+    st = Store()
+    # population = the certified exact local minima (minimum table; Evan 10-13: not store rows, not f64 sides, which
+    # count unconverged copies and non-minima), each represented by its nearest store packing (all within 1e-8)
+    M = st.db.execute("SELECT CAST(S AS REAL) AS S FROM minimum WHERE n=? AND cls='certified' ORDER BY S", (a.n,)).fetchall()
+    reps = []
+    for m in M:
+        r = st.db.execute("SELECT id, s FROM packing WHERE n=? AND status != 'infeasible' AND s BETWEEN ? AND ? "
+                          "ORDER BY abs(s - ?) LIMIT 1", (a.n, m['S'] - 1e-8, m['S'] + 1e-8, m['S'])).fetchone()
+        if r:
+            reps.append((r['id'], float(m['S'])))
+    rng = np.random.default_rng(a.seed)
+    idx = rng.permutation(len(reps))
+    hold = [reps[i] for i in sorted(idx[:a.k])]
+    train = [reps[i][0] for i in idx[a.k:]]
+    json.dump(train, open(os.path.join(a.out, 'train.json'), 'w'))
+    json.dump(hold, open(os.path.join(a.out, 'holdout.json'), 'w'))
+    lib_path = os.path.join(a.out, 'lib.pkl')
+    build_lib(argparse.Namespace(ids=os.path.join(a.out, 'train.json'), out=lib_path))
+    print(f'{len(reps)} certified minima: {len(train)} train, {len(hold)} held out', flush=True)
+    tasks = [(a.n, s, a.budget, a.seed + k, 10 ** 6, 10.0, False, a.max_ops, a.tl, s) for k, (i, s) in enumerate(hold)]
+    out = []
+    with ProcessPoolExecutor(a.procs, initializer=_init, initargs=(lib_path,)) as ex:
+        for (pid, s_h), r in zip(hold, ex.map(job, tasks)):
+            b = r['best'][0] if r['best'] else None
+            rec = dict(id=pid, s_h=s_h, tried=r['tried'], t_hit=r['t_hit'], S_min=b['S_min'] if b else None,
+                       ops=b['ops'] if b else None, A=b['A'] if b else None, B=b['B'] if b else None)
+            if r['t_hit'] is not None:
+                rec['side'] = b['side']
+            rec['polishes'] = sum(1 for e in r['evals'] if 'polished' in e)
+            out.append(rec)
+            print(f"{pid:7d} s_h {s_h:.10f}  hit {'%.0fs' % r['t_hit'] if r['t_hit'] is not None else '-':>5}  "
+                  f"S_min {rec['S_min'] if rec['S_min'] else '-'}  side {rec.get('side', '-')}  polishes {rec['polishes']}"
+                  f"  ops {rec['ops']}", flush=True)
+    json.dump(out, open(os.path.join(a.out, 'holdout_results.json'), 'w'), indent=1)
+    hit = [r for r in out if r['t_hit'] is not None]
+    for T in (5, 15, 30, 60, a.budget):
+        print(f'rebuilt within {T:4.0f} s: {sum(r["t_hit"] <= T for r in hit)} / {len(out)}')
+    print(f'rebuilt (polished to s_h within 1e-8): {len(hit)} / {len(out)}; of those with operators: '
+          f'{sum(1 for r in hit if r["ops"])}; candidates polished: {sum(r["polishes"] for r in out)}')
+    man.finish(summary=dict(k=len(out), rebuilt=len(hit)))
+
+
+TOLS = 1e-6
+
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     sp = ap.add_subparsers(dest='cmd', required=True)
@@ -343,5 +425,10 @@ if __name__ == '__main__':
     r.add_argument('--max-ops', type=int, default=3); r.add_argument('--tl', type=float, default=20)
     r.add_argument('--finish', type=int, default=3); r.add_argument('--explore', type=float, default=0.0)
     r.add_argument('--target', default='now'); r.add_argument('--exclude-src', nargs='*', default=[])
+    h = sp.add_parser('holdout'); h.add_argument('--n', type=int, default=110); h.add_argument('--k', type=int, default=160)
+    h.add_argument('--budget', type=float, default=60); h.add_argument('--procs', type=int, default=16)
+    h.add_argument('--seed', type=int, default=0); h.add_argument('--max-ops', type=int, default=3)
+    h.add_argument('--tl', type=float, default=20); h.add_argument('--out', required=True)
+    l.add_argument('--ids', help='JSON list of store packing ids (instead of the n range)')
     a = ap.parse_args()
-    build_lib(a) if a.cmd == 'lib' else run(a)
+    {'lib': build_lib, 'run': run, 'holdout': holdout}[a.cmd](a)

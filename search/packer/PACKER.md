@@ -2017,6 +2017,7 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
 | G1 grid-boundary screen | 0.8 | 1.08 | 0 / 9 below the grid (composition can't reach the border) |
 | A1 arm composer, cross-n control | 1.5 | 1.61 | miss: nothing below the grid side (anchoring bug + hard control) |
 | A2 arm operators, +1 square from n-3..n+3 | 1.1 | 1.31 | miss: best count n - 1 in 4,780 evals |
+| H1 holdout rebuild, n = 110 (160 of 890 certified minima) | 2.7 | 3.4 (+0.1 aborted first launch) | 0 / 160 rebuilt |
 | V-band fit / rebuild checks (interactive) | - | ~0.1 | ceiling test: own tilted set + fill = n at 6 / 6 band records; idealised arms 17-23 short |
 
 * **F0 fresh-pass control, pre-registered (09:45)**.  `fresh.py run --ids 291615 291590 291569` (Ostashev's s(304)
@@ -2105,3 +2106,21 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
   improve them.  Parked with the V-band constructor until a continuous re-hardening step exists (Evan 10-13: a
   dedicated performance session, GPU-style soft-to-rigid at scale, is planned; no CPU brute force now).
 * **Day tally (12:35)**: ~10.7 CPU-h measured (F0 3.4, B0 0.4, W2 2.7, G1 1.1, A1 1.6, A2 1.3, interactive ~0.2), est. 10.9.
+* **Population check (Evan 10-13: is 44,000 the right baseline?)**: no.  At n = 110 the store has 43,807 sub-11 rows
+  (copies), 3,610 distinct f64 sides (unconverged copies spread up to ~1e-3 above their minimum, and not-minima), and
+  **890 certified exact local minima** (+ 49 weak, 3,277 screened sides shown not-min).  The coverage yardstick uses the
+  890; each has a store packing within 1e-8 of its exact side.
+* **H1 holdout rebuild, pre-registered (12:55)**.  `arms.py holdout --n 110 --k 160 --budget 60` (`runs/arms/h1`): hold out
+  160 of the 890 certified minima, arm library from the other 730 (8 symmetries), 60 s per held-out minimum on one core
+  (pairs + 0-3 operators + exact fill, stop at the first layout holding 110 at side <= s_h + 1e-6, then fq polish).
+  Metrics: rebuilt fraction vs time; same minimum (polished side within 1e-8 of s_h) vs a different one at or below s_h.
+  Purpose: a reusable generative-coverage yardstick (arms now; explorer / GPU soft-to-rigid later on the same split).
+  Prediction: rebuilt 30 % (wide: 10-70 %), mostly different minima at or below s_h rather than the same one.
+  Estimate 2.7 CPU-h.  (First launch stopped after ~2 min: its "rebuilt" counted lower training minima; now a hit =
+  a layout fitting in (s_h - 2e-8, s_h + 1e-3] whose polish lands on s_h within 1e-8.)
+* **H1 result (13:20)**: **0 / 160** held-out certified minima rebuilt (prediction 30 %: miss).  1,693 candidates fitted
+  within (s_h - 2e-8, s_h + 1e-3] and were polished; every one landed on a different minimum (the 890 minima sit ~3.6e-6
+  apart on average in [10.9968, 11]).  Recombining real arms from other minima + exact fill + polish reaches minima
+  already in the training set, not specific new ones.  As a yardstick "rebuild this exact minimum" is very strict; the
+  record-relevant version is "hold out the best K, train on the rest, does the mechanism find anything below the best
+  training side" (not run; to Evan).  Day tally ~14.2 CPU-h.
