@@ -1745,3 +1745,28 @@ measured CPU, seeds_src) suffice to compare against a later dedicated arm.
   README: "soften slightly, hold the box at its side while they re-harden, then release and compress"): no compression,
   hold 1.0, r0 {0.05, 0.1, 0.2} x steps {10, 40} x kick {0.03, 0.05, 0.1} x 10 seeds, 241 + 211 (`runs/round_ctl/r2`):
   success as r1; prediction: still 0 (if so, park the move; it is not reproducible from the description).
+* **Results 20:45.**  r179_ex (explorer 15 min x 4 procs from the 4 best removals): best 13.9102726, not below
+  13.8953411 (prediction 25 %: miss).  Soft-to-rigid g2 (Ostashev's wording, larger kicks): **0 / 180 at 241, 0 / 180
+  at 211**.  Soft-to-rigid as implemented is parked; #575's move is not reproducible from its description with our tools.
+  Composer on the 10-10 crop atlas, every layout constructed + polished (`rectlib.py construct`), scored with
+  eventbench (now with the monotone envelope: s(n) <= s(m), m > n; candidate.py's live check too): benchmark successes
+  at cutoff 10-11 05:51 = 129 (Ostashev #562's value exactly), 375, 380 (s(m) + k layouts below Couzo's later posts);
+  live = 327 (certified: S* = s(123) + 7 = 18.5913781454977, both checkers VALID, strict local min mod 188 flat motions,
+  83 rattlers, 5.9e-3 below Couzo; not posted), 364 (= 327 + 1 row/col), 417-420 (our frontier above 400 is thin:
+  unverified).  The library adds nothing at n <= 324 at the formula level except 129.
+* **Squeeze test, pre-registered (20:46)**: the 15 merged-atlas compositions within 5e-3 above frontier(10-11 05:51)
+  (53, 86, 110, 151, 175, 199, 204, 211, 227, 234, 261, 266, 295, 299, 308), constructed + polished, then explorer
+  10 min x 2 procs each (~5 CPU-h; `runs/rectlib/lib1/squeeze`).  This is the step SQUISH / Ostashev run after
+  composing.  Success = below frontier(T) (benchmark) / frontier_now (live).  Prediction: 1-2 of 15.
+* **Squeeze test, result (21:06)**: 15 runs x 1 proc x 20 min in parallel (Evan: use the idle cores).  **0 / 15 below
+  frontier(T)** (prediction 1-2: miss).  11 / 15 did not move at all: several starts sit at integer sides (110 at 11,
+  211 at 15, 308 at 18: grid-jammed L layouts); movers 151 (to the frontier, +2.6e-12), 175 (+3.6e-4), 204 (+3.3e-5).
+* **Where the composition gap is: piece quality.**  Library best for Ostashev's decisive cell, 38 squares in
+  (h + 2) x h: ours 5.8712 (re-optimised crop), his 5.7642 from random starts in the rectangle (his best crop 5.8203).
+  Our pieces are crops (+ relaxation); his winning pieces were searched from scratch in their own rectangle.
+* **Session tally (10-12 evening, ~19 measured CPU-h of the 32 budget).**  Benchmark successes: 129 (= #562), 375, 380
+  (n > 324, s(m) + k).  Live: s(327) <= 18.5913781454977 certified (not posted).  Negatives: soft-to-rigid (0 / 1,464
+  runs), removal 180 -> 179 (best 13.9103 vs 13.8953), formula composer with the library at n <= 324 (only 129), squeeze
+  of 15 near compositions (0 / 15).  Lessons: polish every composition (129 was a tie in composer v0); the frontier
+  needs the monotone envelope; the explorer cannot leave integer-side L layouts; next lever = from-scratch search in
+  the rectangle for small (m, d) pieces (fq rect mode exists; the explorer needs rect plumbing).
