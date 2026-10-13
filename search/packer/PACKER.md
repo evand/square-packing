@@ -1676,3 +1676,8 @@ measured CPU, seeds_src) suffice to compare against a later dedicated arm.
   10.0 CPU-h; plus H1/H2) gave 0 new packings.  The useful by-products are the rigid non-grid s(90) minimum at
   10.0024260 and the 109 family picture.  More plain chain compute on these targets looks unproductive.  The next lever
   is new machinery (the wedge-cut insertion operator for the border, the shallow-valley descender).
+* **s(110) census brought up to date** (19:00).  Today's hunts ran three n = 110 rounds (H5 r0021 / r0270, H5b
+  r0008).  `pk.py import-run --below 11`: 155 sub-11 entries, 150 new packing rows, but only 1 new 1e-9 side key,
+  and that one is not-min.  So the census is unchanged: 4,312 side keys (958 certified / 3,277 not-min / 51 weak / 26
+  unresolved, 0 unsolved), 890 certified + 49 weak distinct minima below 11; best 10.9967833966 (the record), 9 within
+  1e-4 of it.  Every other chain run today was at n != 110.
