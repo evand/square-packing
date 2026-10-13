@@ -29,6 +29,7 @@ log (what was tried, in order, with numbers); this file is the map.  Everything 
 | `bench110.py` | n = 110 basin-entry benchmark (`refsets/h110_basinA`): `race` (pk/benchkit) and `report`; baseline C34. |
 | `landscape_depth.py` | Is depth regional?  kNN / variogram / concentration over certified minima + parent -> child heritability (C32, C33). |
 | `pk/benchkit.py` | Race benchmarks: replicates restart on event, rates per CPU, rate ratios, sequential rule (reusable for any n / event). |
+| `fqreplay.py` | fq replay equivalence benchmark (10-13): record real explorer fq calls, replay under arms (binary / env / 1e-13 jitter null), compare class frequencies + speed, certify; Q0, C37. |
 | `pk/bands.py`, `pk/effort.py` | Tilted bands / angle families of a packing; CPU per n from run manifests vs record events. |
 | `chain_lineage.py` | Lineage of a `chain.py` result through its rounds (carries, library picks, `seed_k` seeds from n + k) back to a chain start, for credit.  Matches starts by their seed files' header sides. |
 | `slp2.py` | **The local minimiser.**  Trust-region SLP on min s s.t. linearised separation, incidence contact model (`inc.py`), second-order correction, repair by uniform scaling; final jam test exhaustive over corner–corner branches (MILP).  20–50 iterations, ~3–5 s per descent at n = 110; outputs go straight into `../exact/exactsolve.py`.  `budget=` wall cap. |

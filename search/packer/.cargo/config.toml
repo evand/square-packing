@@ -1,0 +1,5 @@
+# Perf session 10-13 (PACKER "Performance session 10-13"): AVX-512 build for this machine.  Bit-identical outputs to the
+# generic build (fq: 2000 / 2000 replayed calls; anneal melt, packer relax spot checks), ~6 % faster.  The binaries are
+# not portable to CPUs without AVX-512; delete this file to build generic ones.
+[build]
+rustflags = ["-C", "target-cpu=native"]

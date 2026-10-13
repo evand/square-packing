@@ -489,7 +489,11 @@ fn slp_lp(nv: usize, si: usize, cons: &[Con], r: f64, kappa: f64, hq: &[(usize, 
     q[col[si]] = 1.0;
     q[nu] = kappa;
     let cones = [NonnegativeConeT(row)];
-    let settings = DefaultSettingsBuilder::default().verbose(false).max_iter(200).build().unwrap();
+    let mut settings = DefaultSettingsBuilder::default().verbose(false).max_iter(200).build().unwrap();
+    // Clarabel iterative refinement: off by default since 10-13 (PACKER "Q0": polish ~1.55x, screen ~1.15-1.2x; not
+    // bit-identical, outputs equivalent to a 1e-13 input re-roll at n = 110 and 237).  FQ_LP_IR=1 restores the old LPs.
+    static LP_IR: OnceLock<bool> = OnceLock::new();
+    settings.iterative_refinement_enable = *LP_IR.get_or_init(|| std::env::var("FQ_LP_IR").map(|v| v == "1").unwrap_or(false));
     let t0 = Instant::now();
     let mut solver = DefaultSolver::new(&p, &q, &a, &b, &cones, settings).ok()?;
     solver.solve();

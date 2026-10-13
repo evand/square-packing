@@ -2200,3 +2200,45 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
   (2) the budget ignored running replicates (16 -> 18.6 CPU-h): it now counts them.  Day tally ~49 CPU-h.
 * **Session closed (14:30, Evan: pause, write up, performance session next)**: summary and next steps in
   `HANDOFF-2026-10-13.md`; claims C25-C36 in `CLAIMS.md`; TODO "Packings" points at the handoff.  Nothing running.
+
+## Performance session 10-13 (Evan: bit-perfect speedups, then minor-output-effect ones; no algorithm changes)
+* **Profile (n = 110, bench110 recipe, 16 x 6 min, 4,499 proposals, ~1.34 CPU-s each):** fq ~89 % of CPU (Clarabel LPs
+  ~60 % of the total, ALM screen ~13 %, other fq ~8 %), Python + per-call fq spawn + parent ~11 %.  `perf stat`: IPC ~4.0,
+  L1d miss 5 %, nearly no misses beyond L2: fq is compute-bound at 110 (the KKT system fits in L2), not memory-bound.
+* **target-cpu=native**: 2000 / 2000 replayed calls bit-identical, ~1.06x.  **Clarabel iterative refinement off**: polish
+  1.64x, screen 1.29x on the same 2000 calls, not bit-identical (97 % of polished sides within 1e-9, symmetric tails
+  +-1e-4).  exactsolve n = 237: 45 % in probe_flat's per-step dense lstsq; gmpy2 backend 1.11x only (and changes digits
+  near 1e-73).
+* **Q0, pre-registered (fq replay equivalence; a cheaper acceptance test than the 16 CPU-h race for fq-local changes):**
+  Corpus C110 = the 8,892 fq calls (screen + polish, inputs + args) logged from the 16 x 6 min explorer run above
+  (`runs/fqcorpus/c110`); fixed seeded sample of 4,000.  Arms replayed on the same calls, interleaved in one 16-proc
+  pool: `base` (current source, native build), `j1`, `j2` (base with input jitter x, y +-1e-13, theta +-1e-11 deg, two
+  seeds: the null = "same search, re-rolled"), `noir` (iterative refinement off).  Per call: side s, feasibility, child
+  CPU (rusage), class (screen: discard s > k + 0.051, grid = full_lines, else kept; polish: grid / sub-k / below
+  BEST_VISIBLE 10.9968869868).  Second corpus C237 (16 x 5 min explorer from n = 237 store packings, 400 calls; arms
+  base, j1, noir) because polish dominates there.  Certification: 60 sub-k line-free polish outputs per arm (same calls)
+  through exactsolve; certified fraction and |S_exact - s_fq|.
+  Metrics vs base: (M1) divergence = fraction |ds| > SAME_SIDE (2e-9); (M2) bias = sign test on diverging calls + class
+  frequencies with 95 % intervals; (M3) failures; (M4) certified fraction, precision; (M5) CPU ratio per stage.
+  **Rule: adopt noir without a race if** M2 shows no class frequency shift > 1 pp (95 % CI inside +-1 pp for sub-k and
+  below-best; sign test p > 0.01), M3 failures <= base + 0.2 pp, M4 certified fraction within 10 pp and median precision
+  not 10x worse, M5 >= 1.3x fq CPU; any failure -> investigate, then the race.  Divergence alone (M1 > jitter's) is not a
+  failure as long as it is unbiased.  Predictions: j1 diverges from base on ~30 % of screens, ~3 % of polishes; noir
+  similar or larger, unbiased; speed polish ~1.5x, screen ~1.25x (C237: polish ~1.6x).  Budget ~6 CPU-h.
+* **Q0 result (16:05):** ~5 CPU-h total (corpora + replays + certification).  **Adopted: refinement off is the fq default
+  (`FQ_LP_IR=1` restores it); native build via `.cargo/config.toml`.**  All rule conditions hold on both corpora:
+  | corpus / stage | diverge (j1 / j2 / noir) | class shifts (noir) | noir lower / higher (sign p) | noir speed |
+  |---|---|---|---|---|
+  | C110 screen (2010) | 0.76 / 0.76 / 0.29 | 0 of 2010 calls | 302 / 287 (0.56) | 1.21x |
+  | C110 polish (1990) | 0.032 / 0.030 / 0.030 | 0 | 28 / 32 (0.70) | 1.54x |
+  | C237 screen (234) | 0.82 / - / 0.51 | 0 | 67 / 53 (0.24) | 1.14x |
+  | C237 polish (166) | 0.120 / - / 0.114 | 0 | 11 / 8 (0.65) | 1.55x |
+  Failures 0 in every arm.  noir's |ds| quantiles are below jitter's everywhere (C110 polish q99 2.4e-8 vs 6e-8).
+  Certification (M4, C110, 60 sub-k polish outputs, 45 of them diverging): 19 / 60 both arms (paired: 17 both, 39
+  neither, 2 / 2 discordant); |S_exact - s_fq| median 2.4e-12 both.  Deployed binary checked: refinement-off default ==
+  the tested noir arm, `FQ_LP_IR=1` == base, 300 / 300 calls exact (side + fingerprint).  Predictions: speed right
+  (polish 1.5x / screen 1.25x predicted); noir diverged less than jitter on screens (predicted "similar or larger").
+  Expected explorer gain: ~1.35x per proposal at 110 (fq ~89 % of CPU), ~1.45x at 237 (polish-dominated).  Side
+  observation (CONFUSIONS X18): a 1e-13 jitter lands polishes lower more often than higher (C110 42 / 21, p = 0.011).
+  Benchmark for future fq-local changes: `fqreplay.py` (record / run / compare / certify), corpora `runs/fqcorpus/c110`,
+  `c237` (gitignored), ~2 CPU-h per arm set; the 16 CPU-h race stays for search-level changes.
