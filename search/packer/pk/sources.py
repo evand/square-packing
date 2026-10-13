@@ -144,7 +144,7 @@ def issue_claims(number, repo='jlevy/squares'):
 
 
 def import_pending(st: Store, cfg_path=os.path.join(HERE, 'pending.yaml'), only=None):
-    """pending.yaml: list of {issue, finder, repo, commit, paths: [globs], ns: optional}.  For each: claims from the issue
+    """pending.yaml: list of {issue, finder, repo, commit, paths: [globs], ns: optional}; repo: null = claims only.  For each: claims from the issue
     table -> frontier rows (pending=1, source 'pending:#<issue>'); packings from the repo -> store; report each claim's
     best stored packing (claim not matched by a feasible file is flagged)."""
     cfg = yaml.safe_load(open(cfg_path))
@@ -155,10 +155,13 @@ def import_pending(st: Store, cfg_path=os.path.join(HERE, 'pending.yaml'), only=
         author, state, claims = issue_claims(e['issue'])
         claims.update({int(n): float(s) for n, s in (e.get('claims') or {}).items()})   # claims stated outside a table
         src = f"pending:#{e['issue']}"
-        ref = f"{e['repo']}@{e['commit'][:7]}"
-        d = fetch_repo(e['repo'], e['commit'])
-        paths = [p for g in e.get('paths', ['.']) for p in glob.glob(os.path.join(d, g), recursive=True)]
-        c = import_paths(st, paths, src, e.get('finder', author), ref, 'pending', quiet=True)
+        if e.get('repo'):
+            ref = f"{e['repo']}@{e['commit'][:7]}"
+            d = fetch_repo(e['repo'], e['commit'])
+            paths = [p for g in e.get('paths', ['.']) for p in glob.glob(os.path.join(d, g), recursive=True)]
+            c = import_paths(st, paths, src, e.get('finder', author), ref, 'pending', quiet=True)
+        else:                            # claims only (files not fetchable yet): frontier rows, no packing
+            ref, c = f"issue #{e['issue']}", 'none (claims only)'
         for n, s in sorted(claims.items()):
             row = st.query(n=n, source=src, limit=1)
             pid = row[0]['id'] if row else None
