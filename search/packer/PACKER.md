@@ -2013,6 +2013,8 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
 |---|---|---|---|
 | F0 fresh-pass control | 3 | ~3.4 (crops 0.56, compose 2.53, certify ~0.3 serial; 444 still certifying) | 3 / 3 recovered (pass) |
 | B0 band-merge relax control | 2 | 0.39 | 0 / 144 runs moved (drop; duplicate of 10-12 g2) |
+| W2 what-if 2 % + shrink | 2.5 | 2.71 | 0 cells (stop rectangle search at n <= 324) |
+| G1 grid-boundary screen | 0.8 | 1.08 | 0 / 9 below the grid (composition can't reach the border) |
 | V-band fit / rebuild checks (interactive) | - | ~0.1 | ceiling test: own tilted set + fill = n at 6 / 6 band records; idealised arms 17-23 short |
 
 * **F0 fresh-pass control, pre-registered (09:45)**.  `fresh.py run --ids 291615 291590 291569` (Ostashev's s(304)
@@ -2051,3 +2053,27 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
     the fill then gets 218-224 of 241 at S + 0.01..0.1 (239 at S + 0.6): small deviations in the band boundary cost
     whole upright rows.  Same failure as layout.py (10-04) and stairgen (10-09).  Ostashev bridges it with GPU
     soft-to-rigid, which we cannot reproduce (3 negatives).
+* **W2 what-if: 2 % better pieces + shrink tail, pre-registered (10:50)**.  `compose2.py run --cf-eps 0.02 --probe 0.03
+  --budget 60 --ns 20-324 --procs 16` (`runs/compose2/cf2`; every rectangle piece's h scaled by 0.98, d = 0 pieces
+  unchanged).  A cell "matters" if some arm with it has need < shrink allowance = 7e-4 x S (p90 of the measured
+  post-construction shrink, 10-13 table).  Hypothesis (from cf1 at 0.5 %: 0): a short list of cells, mostly small m.
+  Rule: empty list -> stop rectangle search at n <= 324; non-empty -> those cells (and only those) get the cell bandit
+  (<= 10 CPU-h, separately pre-registered).  Estimate 2.5 CPU-h.
+* **G1 grid-boundary screen, pre-registered (10:50)**.  `compose2.py run --grid --only 90,111,133,157,183,212,242,274,309
+  --probe 0.05 --budget 300` (`runs/compose2/g1`): the first grid-best n per k.  Hypothesis: area-infeasible
+  everywhere (no arm fits n even at k + 0.05).  Metric: best need per n.  Rule: all misses > 0.02 = composition is the
+  wrong tool at the border (band construction only); any need < 0.005 = look at it.  Estimate 0.8 CPU-h.
+* **Estimator check (logs, 0 CPU)**: 40 composer arm pairs at the same n differing only in one piece's h: dS_min / dh is
+  1 (25 %: that piece binds) or 0 (75 %: the fill / other piece sets the side), nothing between.  A piece improvement
+  moves the side one-for-one only where it binds, so all-pieces what-ifs are upper bounds; credit binding cells only.
+* **W2 result (11:15)**: with every rectangle piece 2 % smaller, 36 arms come within the shrink allowance (7e-4 S) at 7 n
+  (38, 67, 82, 101, 125, 211, 308): **all of them are whole square frontier packings + uprights** (s(m) + k ties, d = 0,
+  not scaled); 0 cells with a binding rectangle piece.  Prediction (short list): miss.  Rule: **stop rectangle-piece
+  search at n <= 324**.  The cell bandit is not run.  2.71 CPU-h of 2.5.
+* **G1 result (11:25)**: at 90, 111, 133, 157, 183, 212, 242, 274, 309 (5 min each, 112-162 arms filled per n) the
+  smallest fitting side is exactly the grid's k (S_min = k - 1e-9, the fill tolerance): every arm that holds n needs the
+  whole box; none fits below.  Prediction (composition is area-infeasible below the grid at the border): held.  The
+  border needs band construction (or nothing reaches it).  1.08 CPU-h of 0.8.
+* **Day tally so far (11:25)**: F0 3.4 + B0 0.4 + W2 2.7 + G1 1.1 + interactive ~0.2 = **~7.8 CPU-h measured** (est.
+  8.3).  Adopted: fresh pass.  Closed: band-merge relax with our operators (3rd negative), rectangle-piece search at
+  n <= 324 (W2), composition at the grid border (G1).  Open: V-band constructor finisher (see V-band notes above).
