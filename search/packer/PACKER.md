@@ -1690,3 +1690,18 @@ measured CPU, seeds_src) suffice to compare against a later dedicated arm.
   +4.46e-5 / +4.58e-5 were reached by 1 / 2 runs.  So deep-and-rare exists.  Detection bound: a better minimum missed
   by all 32 runs has per-run detection p < 0.09 (95 %), i.e. rarer than 7 of the 9 minima within 1e-4.  No richness
   estimator speaks to the extreme member; that needs a tail model (side distribution of the low-incidence class), not done.
+* **Baseline: compute per new record** (10-12 evening, ledger from this log; pre-10-11 figures are wall × procs, see
+  line 1244, some estimated from logged settings; H3 / H4 / H5 / tt are measured manifests).  Record events n ≤ 324
+  (below the live frontier when found): 8 (266, 270, 272 on 10-06; 132, 155 on 10-08; 132, 308 on 10-10; 154 on 10-12);
+  155 was a tie with Couzo #451, 270 and the first 132 were later beaten.  Record-hunting compute ~540 h in all.
+  | window | compute (h) | events n ≤ 324 | h per event (95 % Poisson CI) |
+  |---|---|---|---|
+  | 10-06 sweeps / kick censuses (lightly polished large n) | ~76 | 3 | ~25 (9-120) |
+  | 10-08 hunt1 + hunt1b | ~69 | 2 (1 tie) | ~35 (10-300) |
+  | 10-09 h2r1, hunt2 (+ big1/2, n > 324 only) | ~53 | 0 | – |
+  | 10-10 Hunt 3 + dedicated (+ 343, 344 above 324) | ~126 | 2 | ~63 (17-520) |
+  | 10-11 / 10-12 time travel, H2-H5 | ~178 | 1 | ~180 (32-7,000) |
+  | all | ~540 | 8 | ~68 (34-157) |
+  Falling with time (25 → 35 → 63 → 180 h per event) while the frontier is also moving under other people's work.  A
+  single-rate Poisson fit is optimistic for the next one; the 10-11/12 window, the only one on current methods and
+  frontier, says ~1 per 100-200 h at best, with a CI that cannot exclude ~1 per several thousand.
