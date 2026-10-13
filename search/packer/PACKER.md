@@ -2126,8 +2126,11 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
   training side" (not run; to Evan).  Day tally ~14.2 CPU-h.
 * **Is depth regional? (Evan 10-13; `landscape_depth.py`, analysis only, ~0 CPU)**.  n = 110, 890 certified minima,
   fingerprint distance.  (1) Landscape: Spearman(side, mean side of the k nearest minima) = 0.975 / 0.956 / 0.847 at
-  k = 1 / 5 / 20 (shuffled ~0, 97.5 % < 0.09).  The top 50 minima are one tight cluster: mean pair distance 0.022 vs
-  0.061 for random 50 (p < 0.002), and every top-50 minimum's nearest neighbour is top-50 (random: 6 %).  (2) Chain
+  k = 1 / 5 / 20 (shuffled ~0, 97.5 % < 0.09).  The top 50 minima are concentrated: mean pair distance 0.022 vs
+  0.061 for random 50 (p < 0.002), and every top-50 minimum's nearest neighbour is top-50 (random: 6 %).  **Corrected
+  (Evan, from the t-SNE map): they are two separate basins**, A = 11 minima 10.9967834-10.9971977 (record) and B = 39
+  minima 10.9968870-10.9975201, closest pair 0.049 apart (25th percentile of all pairs; nearest neighbours inside a basin
+  ~0.002); the split is stable for linkage radius 0.01-0.03.  (2) Chain
   (220,664 census v2-v4 proposals with parent links): Spearman(parent side, child side) = 0.80.  First-in-run reaches
   of top-10 / top-50 minima per 1000 proposals by parent depth decile: deepest 11.3 / 44.0; deciles 2-8 0-1.1 /
   0.2-2.0; shallowest decile 1.9 / 6.7 (U-shape: far / near-grid parents are the second-best source, as C13).  Revisits
@@ -2137,3 +2140,7 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
   Reading: draws are not random; deep minima sit in one region and depth is inherited along the chain.  Re-finding
   "the best 10" is easy whenever their neighbours are visible; the hard step is entering the deep region (C05 far starts:
   record not reached in 2 x 1 CPU-h; s110-landscape: "the hard part is choosing the funnel").
+* **Basin holdout sizes (for a region benchmark)**: minima within r of basin A: 11 / 31 / 69 / 160 at r = 0.01 / 0.02 /
+  0.03 / 0.04, none of them in B; around B: 40 / 89 / 160 / 279, none in A.  Withholding A + its r = 0.03 neighbourhood
+  leaves B's 10.9968870 as the best visible: "find anything below the best visible" = find a new basin (the record-hunt
+  analog at a fixed, well-mapped n).
