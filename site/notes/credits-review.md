@@ -721,7 +721,6 @@ file) or the parser.
 ## 96
 - **grid** ? → now, s = 10.000000000: grid. _grid packing_
   - lower 9.840771 (2026, preprint): Hakan Karakuş
-  - lower 10.000000 (2026, preprint): Evan Daniel
 
 ## 97
 - **grid** ? → now, s = 10.000000000: grid. _grid packing_

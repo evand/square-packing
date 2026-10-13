@@ -350,7 +350,9 @@ def upper_chain(n, files, rec2026, events, OV, problems):
 
 def lower_chain(n, LB, problems):
     """The floors the Bounds page counts (status proved / preprint, not `reported`), each one that beats the last; the
-    rest (Nagamochi 2005's gap, Green's claims, reported-only figures) as `uncounted` credits."""
+    rest (Nagamochi 2005's gap, Green's claims, reported-only figures) as `uncounted` credits.  Entries marked
+    `awaiting` are held to the stricter bar Evan set for our own s(k^2-4) family (10-12): listed, not counted, until
+    jlevy/squares verifies them."""
     e = LB.get(str(n))
     if not e or 'history' not in e:
         return [], []
@@ -358,12 +360,13 @@ def lower_chain(n, LB, problems):
     def item(h):
         src = S.get(h['source'], {})
         return {'source': h['source'], 'who': SOURCE_PEOPLE.get(h['source'], []), 'authors': src.get('authors'),
-                'year': h.get('year'), 'value': h['value'], 'status': h.get('status'), 'url': h.get('url') or src.get('url')}
+                'year': h.get('year'), 'value': h['value'], 'status': 'awaiting' if h.get('awaiting') else h.get('status'),
+                'url': h.get('url') or src.get('url')}
     hist = [h for h in e['history'] if h['source'] != 'area-bound']
     hist.sort(key=lambda h: (h.get('year') or 0, h['value']))
     out, other, best = [], [], -1
     for h in hist:
-        if h.get('status') not in ('proved', 'preprint') or h.get('reported'):
+        if h.get('status') not in ('proved', 'preprint') or h.get('reported') or h.get('awaiting'):
             other.append(item(h))
             continue
         if h['value'] <= best + 1e-12:
@@ -372,7 +375,7 @@ def lower_chain(n, LB, problems):
         out.append(item(h))
     for a, b in zip(out, out[1:]):
         a['until'] = b['year']
-    if out and abs(out[-1]['value'] - e['best']['value']) > 1e-12:
+    if out and abs(out[-1]['value'] - e['best']['value']) > 1e-12 and not e['best'].get('awaiting'):
         problems.append((n, None, 'lower chain', 'ends at %r, Bounds page floor %r' % (out[-1]['value'], e['best']['value'])))
     return out, other
 
