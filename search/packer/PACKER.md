@@ -1988,3 +1988,12 @@ the leverage is in which cells get searched and in reusing every good piece.
   Lessons: (1) the frontier must include every cheap closure we know (L-step, envelope, s(m) + k is the composer's
   one-piece case) before calling anything a record; (2) the probe2 / cert spend above 340 (~13 CPU-h) was mostly on
   n the L-step already covered; (3) the earlier "s(325) / s(326) certified record" claims in this log are withdrawn.
+* **Depth test result** (deep1, 25 min x ~9 cores ~ 3.8 CPU-h of 4.5): 10x the arms (e.g. 106: 3,172 vs 207 fills)
+  improved the closest miss at 1 / 10 n (151: 2.2e-3 -> 3.9e-5), and that one is a crop of Ellsworth's own s(151)
+  refilled to the same side (polish and 2 rounds of soft relax: tie within 3e-12).  No hit.  Prediction held.
+  **Decision: two-piece composition (our pieces, + 0.5 %, 10x sampling) is done at n <= 324.**
+* **Night tally (10-12 22:25 .. 10-13 ~04:30)**: measured ~29 CPU-h with manifests + c2live ~25 (stopped) +
+  certification ~10 => ~64 CPU-h.  Records: s(339), s(364), s(375), s(414) (n > 324; certified, in the store, not
+  posted).  None at n <= 324.  Built: bandit composer (shared pk/bandit.py), pieces in the store, probe / rank /
+  polish / counterfactual / three-piece modes, relax.py (soft relax works on compositions: 304 control), refill
+  test, rectsearch bandit over cells (built, not run: no targets survived), frontier closed under the L-step.
