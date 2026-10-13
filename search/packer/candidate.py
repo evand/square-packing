@@ -177,6 +177,8 @@ def main():
     from pk.crossing import match_distance
     P = read(a.file); n = P.n
     work = os.path.join(HERE, 'runs', 'candidates', a.name); os.makedirs(work, exist_ok=True)
+    from pk import manifest
+    man = manifest.start(work, 'candidate', args=dict(vars(a), n=n), procs=1)     # measured CPU for pk.effort
     shutil.copy(a.file, os.path.join(work, 'cand.txt'))
     out = dict(name=a.name, n=n, input=os.path.abspath(a.file), s_input=P.s)
 
@@ -240,14 +242,15 @@ def main():
             if os.path.exists(os.path.join(work, src)):
                 shutil.copy(os.path.join(work, src), dst + ext)
         print(f'[8] staged candidates/{a.name}.*')
+    json.dump(out, open(os.path.join(work, 'summary.json'), 'w'), indent=1, default=str)
+    man.finish(summary=dict(n=n, S_cert=out.get('S_cert'), beaten=bool(out['live']['beaten'])))
+    print(f'summary: {os.path.relpath(os.path.join(work, "summary.json"), HERE)}')
     if a.imp:
         if out['live']['beaten']:
             sys.exit('not importing as a record candidate: beaten / tied (see the live check)')
         r = sh([sys.executable, os.path.join(HERE, 'pk.py'), 'import', os.path.join(work, 'cand.exact.txt'), '--source', f'candidate:{a.name}',
                 '--finder', 'ours', '--status', 'certified', '--kind', 'record-candidate'] + (['--ref', a.ref] if a.ref else []), cwd=HERE)
         print('[8] store import: ' + (r.stdout.strip() or r.stderr.strip())[-300:])
-    json.dump(out, open(os.path.join(work, 'summary.json'), 'w'), indent=1, default=str)
-    print(f'summary: {os.path.relpath(os.path.join(work, "summary.json"), HERE)}')
 
 
 if __name__ == '__main__':

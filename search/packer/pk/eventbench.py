@@ -124,11 +124,34 @@ def store_match(n, s, tol=MATCH):
     return Packing(r['s'], np.frombuffer(r['coords'], '<f8').reshape(-1, 3), r['s_str'], meta=dict(id=r['id']))
 
 
+PUBLIC = False      # set_public(True): only what others can see (posted packings / claims); ours unposted left out
+_PUB_SRC = "(g.source LIKE 'register%' OR g.source LIKE 'pending:%' OR g.source LIKE 'kingbird%' OR g.source LIKE 'pool:%')"
+
+
+EXCLUDE = ()        # sighting sources left out in public mode (e.g. 'pending:#584' to replay a pass before we posted)
+
+
+def set_public(on=True, exclude=()):
+    """Public frontier mode: store rows count only with a public sighting, frontier rows only if not ours, events
+    only if posted.  For live checks and for replaying a pass as if our unposted results did not exist."""
+    global PUBLIC, EXCLUDE
+    PUBLIC, EXCLUDE = on, tuple(exclude)
+    _LC.clear(); _BASE.clear()
+
+
 def store_frontier(n):
     """min of the frontier table and every feasible store packing at n (catalogue rows such as Goebel's s(331) are not
     in the frontier table).  Not as-of-T: rows added after T can only make success harder."""
-    r = db().execute('SELECT min(s) FROM frontier WHERE n=?', (n,)).fetchone()
-    q = db().execute("SELECT min(s) FROM packing WHERE n=? AND status!='infeasible' AND (pen IS NULL OR pen<=1e-9)", (n,)).fetchone()
+    if PUBLIC:
+        ex = ''.join(f" AND source != '{e}'" for e in EXCLUDE)
+        gx = ''.join(f" AND g.source != '{e}'" for e in EXCLUDE)
+        r = db().execute(f"SELECT min(s) FROM frontier WHERE n=? AND source NOT LIKE 'ours%'{ex}", (n,)).fetchone()
+        q = db().execute("SELECT min(p.s) FROM packing p WHERE p.n=? AND p.status!='infeasible' AND (p.pen IS NULL OR "
+                         f"p.pen<=1e-9) AND EXISTS (SELECT 1 FROM sighting g WHERE g.packing=p.id AND {_PUB_SRC}{gx})",
+                         (n,)).fetchone()
+    else:
+        r = db().execute('SELECT min(s) FROM frontier WHERE n=?', (n,)).fetchone()
+        q = db().execute("SELECT min(s) FROM packing WHERE n=? AND status!='infeasible' AND (pen IS NULL OR pen<=1e-9)", (n,)).fetchone()
     v = [x for x in (r[0], q[0]) if x is not None]
     return min(v) if v else None
 
@@ -156,7 +179,8 @@ ENVELOPE = 80        # s(n) <= s(m) for m > n (drop squares): the frontier is th
 
 def _point_at(n, T):
     t = cutoff(T) if isinstance(T, str) else T
-    return min([base(n)[0]] + [e['new'] for e in events() if e['n'] == n and (t is None or e['t'] < t)])
+    return min([base(n)[0]] + [e['new'] for e in events() if e['n'] == n and (t is None or e['t'] < t)
+                               and not (PUBLIC and e.get('unposted'))])
 
 
 def frontier_at(n, T):

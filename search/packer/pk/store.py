@@ -156,7 +156,8 @@ class Store:
         out = []
         for r in self.db.execute(q, a):
             out.append(Packing(r['h'], np.frombuffer(r['coords'], '<f8').reshape(-1, 3), dx=r['d'],
-                               meta=dict(id=r['id'], source=r['source'], ref=r['ref'], tags=json.loads(r['tags']))))
+                               meta=dict(id=r['id'], source=r['source'], ref=r['ref'], tags=json.loads(r['tags']),
+                                         added=r['added'])))
         return out
 
     # ---------- minima (pk/identity.py) ----------

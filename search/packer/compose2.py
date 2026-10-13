@@ -26,29 +26,43 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 FQ = os.path.join(HERE, 'target', 'release', 'fq')
 PIECES = None
+REQUIRE = False                # compose2 run --new-from: arms must use a piece cut from one of those packings
 PRIOR = (1.0, 0.01)          # weight = (1 + area slack)^PRIOR[0] * exp(-(gap_A + gap_B) / PRIOR[1])
 
 
-def load_pieces(mmin, per_cell=10 ** 9, source=None, cf_eps=0.0):
+def piece_parent(meta):
+    """Store packing id a piece was cut from (source 'store:<id>:...' or ref 'packing:<id>'), else None."""
+    src, ref = meta['source'], meta.get('ref') or ''
+    if src.startswith('store:'):
+        return int(src.split(':')[1])
+    return int(ref.split(':')[1]) if ref.startswith('packing:') else None
+
+
+def load_pieces(mmin, per_cell=10 ** 9, source=None, cf_eps=0.0, new_from=None):
     """Pieces from the store (pk.pieces): those that beat the grid in their own box, one per (cell, h to 1e-7) (copies
     and rattler moves of one minimum), up to per_cell per (m, d), best h first; gap = h / best h in the cell - 1."""
     from pk.store import Store
-    keep, seen, cnt = [], set(), {}
+    keep, seen, cnt = [], {}, {}
     for p in Store().pieces(mmin=mmin, source=source):
         m, d, H = p.n, p.dx, p.s
         W = H + d
         if m <= math.floor(W + 1e-9) * math.floor(H + 1e-9):
             continue                                    # does not beat the grid in its own box
         k = (m, d, round(H, 7))
-        cnt_k = cnt.get((m, d), 0)
-        if k in seen or cnt_k >= per_cell:
+        isnew = bool(new_from) and piece_parent(p.meta) in new_from
+        if k in seen:                                   # the same minimum from another source: it counts as new too
+            keep[seen[k]]['new'] |= isnew
             continue
-        seen.add(k); cnt[(m, d)] = cnt_k + 1
+        cnt_k = cnt.get((m, d), 0)
+        if cnt_k >= per_cell:
+            continue
+        seen[k] = len(keep); cnt[(m, d)] = cnt_k + 1
         sq = p.sq.copy()
         if cf_eps and d > 0:                            # counterfactual: the same piece with h smaller by eps h
             #                                             (rectangle pieces only: a better square piece = a better s(m))
             sq[:, :2] *= 1 - cf_eps; W *= 1 - cf_eps; H *= 1 - cf_eps
-        keep.append(dict(m=m, W=W, H=H, sq=sq, cell=(m, d), label=f"{p.meta['source']}:{m}:{d:g}#{p.meta['id']}"))
+        keep.append(dict(m=m, W=W, H=H, sq=sq, cell=(m, d), label=f"{p.meta['source']}:{m}:{d:g}#{p.meta['id']}",
+                         new=isnew))
     hb = {}
     for q in keep:
         hb[q['cell']] = min(hb.get(q['cell'], math.inf), q['H'])
@@ -108,10 +122,13 @@ def job(args):
     cand = [i for c, I in cell.items() if any(tight(P[i]['W'], S, tol + probe) or tight(P[i]['H'], S, tol + probe) for i in I)
             for i in I if max(P[i]['W'], P[i]['H']) <= S + 1e-9 and P[i]['m'] < n]
     P = P + [NONE]                                      # B = NONE: one piece + uprights (e.g. s(327) = s(123) + 7)
+    req = REQUIRE                                         # --new-from: every arm uses at least one new piece
     pairs, w = [], []
     for ia in cand:
         for ib in cand + [len(P) - 1]:
             A, B = P[ia], P[ib]
+            if req and not (A.get('new') or B.get('new')):
+                continue
             sl = A['m'] + B['m'] + math.floor(S * S - A['W'] * A['H'] - B['W'] * B['H'] + 1e-9) - n
             if sl >= 0:
                 pairs.append((ia, ib, sl))
@@ -299,9 +316,10 @@ def job3(args):
     return dict(base, count=best[0] if best else None)
 
 
-def init(mmin, per_cell, source, cf_eps=0.0):
-    global PIECES
-    PIECES = load_pieces(mmin, per_cell, source, cf_eps)
+def init(mmin, per_cell, source, cf_eps=0.0, new_from=None):
+    global PIECES, REQUIRE
+    REQUIRE = bool(new_from)
+    PIECES = load_pieces(mmin, per_cell, source, cf_eps, new_from)
 
 
 def run(a):
@@ -316,16 +334,19 @@ def run(a):
     for n in range(lo, hi + 1):
         if only and n not in only:
             continue
-        if a.target == 'now':
+        if a.target in ('now', 'public'):
+            E.set_public(a.target == 'public', a.exclude_src)   # public: as if our unposted packings did not exist
             f = E.frontier_now(n)
         else:
             f = E.frontier_at(n, a.target.split(':', 1)[1])
         if f >= math.ceil(math.sqrt(n) - 1e-12) - 1e-9 and not a.grid:
             continue
         tasks.append((n, f - a.below, a.tight, a.time_limit, a.budget, a.max_fills, a.seed + n, a.probe, a.probe_steps))
-    print(f'{len(tasks)} targets, {len(load_pieces(a.mmin, a.per_cell, a.source))} pieces', flush=True)
+    new_from = set(json.load(open(a.new_from))) if a.new_from else None
+    P0 = load_pieces(a.mmin, a.per_cell, a.source, new_from=new_from)
+    print(f'{len(tasks)} targets, {len(P0)} pieces' + (f", {sum(q['new'] for q in P0)} from --new-from" if new_from else ''), flush=True)
     res = []
-    with ProcessPoolExecutor(a.procs, initializer=init, initargs=(a.mmin, a.per_cell, a.source, a.cf_eps)) as ex, \
+    with ProcessPoolExecutor(a.procs, initializer=init, initargs=(a.mmin, a.per_cell, a.source, a.cf_eps, new_from)) as ex, \
             open(os.path.join(a.out, 'results.jsonl'), 'w') as f, open(os.path.join(a.out, 'fills.jsonl'), 'w') as fl:
         for r in ex.map(job3 if a.three else job, tasks):
             sq = r.pop('sq', None)
@@ -383,7 +404,9 @@ if __name__ == '__main__':
     sp = ap.add_subparsers(dest='cmd', required=True)
     r = sp.add_parser('run')
     r.add_argument('--source', help='store piece source filter (SQL LIKE), default all'); r.add_argument('--ns', default='100-324')
-    r.add_argument('--out', required=True); r.add_argument('--target', default='now')
+    r.add_argument('--out', required=True)
+    r.add_argument('--target', default='now', help='now | public (ours unposted left out) | cutoff:ISO')
+    r.add_argument('--exclude-src', nargs='*', default=[], help="with --target public: sighting sources to leave out ('pending:#584')")
     r.add_argument('--below', type=float, default=1e-9); r.add_argument('--tight', type=float, default=0.03)
     r.add_argument('--mmin', type=int, default=10); r.add_argument('--time-limit', type=float, default=10)
     r.add_argument('--procs', type=int, default=14); r.add_argument('--grid', action='store_true')
@@ -394,6 +417,7 @@ if __name__ == '__main__':
     r.add_argument('--probe-steps', type=int, default=10)
     r.add_argument('--three', action='store_true', help='three-piece arms (LL, UR, UL corners)')
     r.add_argument('--only', help='comma list of n (within --ns)')
+    r.add_argument('--new-from', help='JSON list of store packing ids: only arms using a piece cut from one (fresh.py)')
     r.add_argument('--cf-eps', type=float, default=0.0,
                    help='counterfactual: every piece scaled to h (1 - eps); hits say which cells are worth searching')
     r.add_argument('--per-cell', type=int, default=10 ** 9, help='pieces per (m, d) cell, best h first (seam diversity)')

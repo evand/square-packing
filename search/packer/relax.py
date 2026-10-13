@@ -6,6 +6,7 @@ Inputs: compose2 near.jsonl rows (n, S_min, sq: a layout at its smallest fitting
 operator x seed -> fq quench; the result side vs the input's frontier target.
 
   python3 relax.py run --near runs/relax/comp304.jsonl --target 17.929565946849 --out runs/relax/r304 [--ops ...]
+  python3 relax.py run --ids 347 --out runs/relax/bm241 [--rounds R]        (store packings, e.g. two-band records)
 """
 from __future__ import annotations
 import argparse, itertools, json, math, os, subprocess, sys
@@ -45,7 +46,14 @@ def run(a):
     scratch.scope('relax')
     from pk import eventbench as E
     rows, per = [], {}
-    for r in sorted((json.loads(l) for l in open(a.near)), key=lambda r: r['need']):
+    near = [json.loads(l) for l in open(a.near)] if a.near else []
+    if a.ids:                                       # store packings as inputs (band-merge relax of published packings)
+        from pk.store import Store
+        st = Store()
+        for i in a.ids:
+            p = st.get(i)
+            near.append(dict(n=p.n, S_min=float(p.s), sq=np.asarray(p.sq).tolist(), need=0.0, A=f'store:{i}', B='-'))
+    for r in sorted(near, key=lambda r: r['need']):
         if not (a.nmin <= r['n'] <= a.nmax and a.min_need < r['need'] < a.max_need) or \
                 (a.ns and r['n'] not in {int(x) for x in a.ns.split(',')}):
             continue
@@ -100,7 +108,8 @@ def report(a):
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     sp = ap.add_subparsers(dest='cmd', required=True)
-    r = sp.add_parser('run'); r.add_argument('--near', required=True); r.add_argument('--out', required=True)
+    r = sp.add_parser('run'); r.add_argument('--near')
+    r.add_argument('--ids', type=int, nargs='*', help='store packing ids as inputs (instead of / besides --near)'); r.add_argument('--out', required=True)
     r.add_argument('--target', type=float, default=0.0, help='default: frontier_now(n) per input')
     r.add_argument('--ops', default=','.join(OPS))
     r.add_argument('--nmin', type=int, default=0); r.add_argument('--nmax', type=int, default=10 ** 6)

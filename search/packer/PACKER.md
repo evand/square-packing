@@ -2004,3 +2004,50 @@ the leverage is in which cells get searched and in reusing every good piece.
   `candidates/comp2_n{339,364,375}.*`); posted as jlevy/squares#584 (Evan OK, 10-13).
   364 = s(146) [BuddenPing #566] + 7; 375 = s(88) [SQUISH] + 10 (crops of s(88), s(129) [Xu]); 339 = two crops of
   Ostashev's s(304).  `pk/sources.py`: pending.yaml entries with `repo: null` are claims only.
+
+## Day plan 10-13 (Evan: "run it in order"; track CPU estimate vs actual per run)
+Order: (1) fresh-packing pass, (2) band-merge relax control on 241, (3) V-band constructor (plan to Evan before the
+sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + shrink what-if, border-n screen.
+
+| run | estimate CPU-h | actual CPU-h | result |
+|---|---|---|---|
+| F0 fresh-pass control | 3 | ~3.4 (crops 0.56, compose 2.53, certify ~0.3 serial; 444 still certifying) | 3 / 3 recovered (pass) |
+| B0 band-merge relax control | 2 | 0.39 | 0 / 144 runs moved (drop; duplicate of 10-12 g2) |
+| V-band fit / rebuild checks (interactive) | - | ~0.1 | ceiling test: own tilted set + fill = n at 6 / 6 band records; idealised arms 17-23 short |
+
+* **F0 fresh-pass control, pre-registered (09:45)**.  `fresh.py run --ids 291615 291590 291569` (Ostashev's s(304)
+  #575, BuddenPing's s(146) #566, Xu's s(129) on the register: the packings 339 / 364 / 375 used) `--target public
+  --exclude-src pending:#584` (as if we had not posted), budget 30 s per n (last night 150 s), 16 procs, n 20..480.
+  Hypothesis: the pass finds what the broad sweep found, from the new packings alone.  Metric: certified hits below
+  the public frontier at 339, 364, 375.  Rule: >= 2 of 3 = adopt as the standing post-sync step; <= 1 = look at why
+  (budget, piece selection) before using it.  Estimate 3 CPU-h (crops ~0.2, composer ~2.5, certify ~0.3).
+* **B0 band-merge relax control, pre-registered (09:45)**.  `relax.py run --ids 347 94` = the pre-#575 s(241)
+  (15.9881324395, Couzo / our exact optimum; `pk.bands`: bands 48 + 32) and de Winter's s(211) (14.9979607050; one
+  connected group of 74, two angle families by eye: 18-20 and 24-29 deg), ops shrink, kshrink, soft05, soft15, soft15c,
+  loose; 6 seeds, 2 rounds (MBH from the best), 16 procs.  Ostashev (README, GPU soft-to-rigid): 241 -> 15.987134
+  (one V of 85), 211 -> 14.993694 (one V of 76).  Hypothesis: our fq soft/shrink operators on CPU do the same merge.
+  Metric: best side per input.  Rule: 241 <= 15.9876 (half his gain) or 211 <= 14.9959 = the operator works ->
+  sweep every frontier packing at n <= 324 with >= 2 bands / families (estimate first); neither moves > 2e-4 = drop
+  (our soft relax is not his soft-to-rigid; note what differs).  Estimate 2 CPU-h (144 fq runs x ~50 s).
+  (`pk/bands.py` new: bands = connected tilted groups (link 1.6), families = folded-angle clusters; it does not
+  separate de Winter's 211, whose bands touch.)
+* **F0 result (10:40)**: 3 / 3 recovered from the three new packings alone (prediction >= 2: pass; adopt).  Hits below
+  the public-minus-#584 frontier: 339 18.9268989004 (= ours), 364 19.5837822733 (polish 2.7e-8 above our certified
+  S*; exactsolve found no certificate from it, a re-polish moves only to 2.6e-8: finishing gap), 375 19.8857007500 (a
+  different arm than ours, 3.2e-3 above our 19.8824510305, still 8.2e-3 below the public frontier), plus 403 / 444 (L-step
+  corollaries reached by composition).  Certified: 339, 375, 403 (live check: tied / beaten by our own #584, as
+  expected).  CPU ~3.4 of 3 estimated, wall 15 min + serial certification (fixed: candidate.py runs in parallel now;
+  summary written before the import check; exactsolve failure -> re-polish + retry once).
+* **B0 result (10:20)**: 0 / 144 relax runs moved 241 or 211 by more than 1e-9 (soft15c / soft05 only got worse).
+  Rule: drop.  **This repeated 10-12 round_ctl g2 (0 / 180 at each)** -- I had not checked PACKER before
+  pre-registering; 0.4 CPU-h wasted.  Three tests now: our fq rounding soft-to-rigid does not do #575's band merge.
+* **V-band constructor, first build (`vband.py`, `pk/bands.py`)**.  Findings so far (no search run yet):
+  - Record arms (241 pre-/post-#575) are staircase blocks: 5-7 parallel tilted columns of 7-10 squares along the arm,
+    column starts sheared (taper).  The two arms are separate bands at 241 old (48 + 32) and one connected band after the
+    merge (85); de Winter's 211 is one connected group already (its bands touch).
+  - **Fill ceiling**: the record's own tilted squares + `mondrian.exact_fill` give exactly n at 241 (x2), 211 (x2),
+    156, 176.  The fill is expressive for this family (unlike Xu's 126).
+  - **Idealised arms lose ~20 squares**: fitted arms (unit spacing, one angle per arm) keep 72-76 of 80-85 tilted and
+    the fill then gets 218-224 of 241 at S + 0.01..0.1 (239 at S + 0.6): small deviations in the band boundary cost
+    whole upright rows.  Same failure as layout.py (10-04) and stairgen (10-09).  Ostashev bridges it with GPU
+    soft-to-rigid, which we cannot reproduce (3 negatives).
