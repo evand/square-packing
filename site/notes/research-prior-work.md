@@ -86,7 +86,7 @@ Research notes compiled 2026-09-08. Format: author, year, title, URL, one-line n
 
 ### Small n (exact values / specific bounds)
 - Göbel 1979: s(2)=s(3)=2, s(5)=2+1/√2 (per DS7 figs 23–24; Friedman's DS7 restates as Theorems 1–2).
-- Stromquist 1984 memos (unpublished): s(6)=3, s(10)=3+1/√2; claimed s(14)=s(15)=4, s(24)=5.
+- Stromquist 1984 memos (unpublished): s(6)=3, s(10)=3+1/√2; claimed s(14)=s(15)=4, s(24)=5. *[Corrected 2026-10-12 after reading the memos: memo I also gives s(7)=s(8)=s(9)=3. Memo III proves the 0°/45° theorem for n=11 (p.7) and sketches s(11) ≥ 2+4/√5 (p.10). For 14, 15 and 24 it says only "fairly easy to settle by elementary means", with no proof. See `literature/waste-bounds-2026-10-12.md`.]*
 - Friedman 1998 (DS7 v1): unavoidable-set proofs of s(8)=3, s(15)=4, s(24)=5, s(35)=6; almost-unavoidable-set proofs of s(7)=3, s(14)=4; s(13)≥3.8437; s(19–20)≥6√2−4≈4.4852; s(21)≥4.7438.
 - El Moumni, S. 1999. "Optimal packings of unit squares in a square," Studia Sci. Math. Hungar. 35(3–4), 281–290 — independent proofs of s(7)=s(8)=3, s(15)=4.
 - Green, T. 2000 (private comm.): s(17)=s(18)≥(40√2+19)/17≈4.4452; s(22)≥2√2+2; s(26–27)≥2√2+(27+2√10)/13≈5.3918; s(28–30)≥2√2+6/√5≈5.5117; general Theorems 9–10 for n²+1 and n²+⌊n/2⌋+1.
@@ -134,5 +134,5 @@ Research notes compiled 2026-09-08. Format: author, year, title, URL, one-line n
 2. Whether Bentz's 22/33 paper was ever journal-published.
 3. Provenance of Mira-acc/17squares and the roles of Fort/"Mira"/Joshua Levy; date of the 4.6130 certificate.
 4. Which n Brendberg's June 2023 packing (s≈8.8035) is, and the exact n=110 conjecture statement on Ellsworth's page.
-5. Contents of Stromquist's three 1984 memoranda PDFs (exist at walterstromquist.com/papers/squares{1,2,3}.pdf; not read).
+5. Contents of Stromquist's three 1984 memoranda PDFs (exist at walterstromquist.com/papers/squares{1,2,3}.pdf; not read). *[Done 2026-10-12: read; see `literature/waste-bounds-2026-10-12.md` §2.]*
 6. Whether Trump's 1979 packing reached Gardner directly or via the March 1980 addendum (Ellsworth's compared page implies the latter via "11 independent rediscoverers before March 1980").
