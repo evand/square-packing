@@ -1,0 +1,160 @@
+#!/usr/bin/env python3
+"""From-scratch search for m unit squares in an (h + d) x h rectangle (PLAN-2026-10-12 item 2; 10-12 night).
+
+Why: the composition gap is piece quality.  Ostashev's decisive piece (38 squares, (h + 2) x h, h = 5.76417431748659,
+#528) came from random starts in the rectangle; our best re-optimised crop for that cell is 5.8712 (his best crop
+5.8203).  This is a multistart + monotonic basin hopping search with fq's rectangle mode (`--rect-dx d`).
+
+Starts: positions uniform in a loose box (area ~ m x loose), angles: half the squares upright, the rest from a tilt
+alphabet (45 deg, atan 1/2, atan 1/3, atan 2/3, 24.4, 36.87, 28.07 deg; one angle per start, +- mirror) or all random.
+Each start: fq ALM quench + polish in the rectangle.  Then MBH on the elite: gaussian kick (sigma drawn from
+{0.02, 0.05, 0.15}) + quench, accept if lower.  Per-cell results: runs/rectsearch/<tag>/m<m>_d<d>/best.txt + log.jsonl.
+
+  python3 rectsearch.py run --cells 38:2 --minutes 10 --procs 8 --out runs/rectsearch/t1
+  python3 rectsearch.py run --cells-file cells.json ...       (list of [m, d])
+  python3 rectsearch.py report runs/rectsearch/t1
+"""
+from __future__ import annotations
+import argparse, json, math, os, sys, time
+from concurrent.futures import ProcessPoolExecutor
+
+for _v in ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS'):
+    os.environ.setdefault(_v, '1')
+import numpy as np
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+ALPHABET = [45.0, math.degrees(math.atan(0.5)), math.degrees(math.atan(1 / 3)), math.degrees(math.atan(2 / 3)),
+            24.4, 36.87, 28.07]
+KICKS = (0.02, 0.05, 0.15)
+
+
+def h_guess(m, d, loose):
+    """h with (h + d) h = m * loose."""
+    return (-d + math.sqrt(d * d + 4 * m * loose)) / 2
+
+
+def random_start(m, d, rng, loose):
+    h = h_guess(m, d, loose)
+    W = h + d
+    x = rng.uniform(0.5, W - 0.5, m); y = rng.uniform(0.5, h - 0.5, m)
+    mode = rng.integers(3)
+    if mode == 0:
+        a = rng.uniform(0, 90, m)
+    else:
+        t = ALPHABET[rng.integers(len(ALPHABET))]
+        t = t if rng.random() < 0.5 else 90 - t
+        a = np.where(rng.random(m) < 0.5, 0.0, t)
+        if mode == 2:                       # tilted squares in a diagonal band, uprights elsewhere
+            c = rng.uniform(-0.3, 0.3) * W
+            band = np.abs((x - W / 2) - (y - h / 2) * W / h - c) < rng.uniform(0.15, 0.4) * W
+            a = np.where(band, t, 0.0)
+    return h, np.c_[x, y, a]
+
+
+def worker(args):
+    m, d, seconds, seed, out, loose, start_frac, a_soft, adaptive = args
+    sig_ad, h_par = 0.05, math.inf
+    from pk.engine import FQ, QOpt
+    from pk.packing import Packing
+    rng = np.random.default_rng(seed)
+    fq = FQ()
+    Q = QOpt(loosen=1.0, rect_dx=float(d), flip_top=16)
+    t0 = time.time()
+    elite = []                                    # (h, sq)
+    log = open(os.path.join(out, f'log_{seed}.jsonl'), 'w')
+    nq = 0
+    while time.time() - t0 < seconds:
+        if not elite or (time.time() - t0) < start_frac * seconds or rng.random() < 0.2:
+            h0, sq = random_start(m, d, rng, loose)
+            kind = 'start'
+        else:
+            k = min(len(elite) - 1, int(rng.exponential(1.5)))
+            h0, sq = elite[k]
+            h_par = h0                               # the parent's side, before the dilation below
+            sig = sig_ad if adaptive else KICKS[rng.integers(len(KICKS))]
+            sq = sq.copy(); sq[:, :2] += rng.normal(0, sig, (m, 2)); sq[:, 2] += rng.normal(0, 20 * sig, m)
+            h0 = h0 * (1 + sig / 10)
+            kind = f'kick{sig:.3g}'
+        q = Q
+        if kind == 'start' and rng.random() < a_soft:
+            q = Q.but(round_r0=float(rng.choice([0.1, 0.2, 0.3, 0.45])), round_compress=True, round_steps=20)
+            kind = 'soft'
+        r = fq.quench(Packing(float(h0), sq), q, timeout=300)
+        nq += 1
+        if not r.ok:
+            continue
+        h, s2 = r.s, np.array(r.p.sq, float)
+        log.write(json.dumps(dict(t=round(time.time() - t0, 2), kind=kind, h=h)) + '\n')
+        if adaptive and kind.startswith('kick'):      # Gensane-Ryckelynck: double on success, halve on failure
+            sig_ad = min(0.5, sig_ad * 2) if h < h_par - 1e-9 else max(0.003, sig_ad * 0.5)
+        if all(abs(h - e[0]) > 1e-9 for e in elite):
+            elite.append((h, s2))
+        elite.sort(key=lambda e: e[0]); del elite[12:]
+    log.close()
+    return dict(seed=seed, nq=nq, best=[(e[0], e[1].tolist()) for e in elite[:3]])
+
+
+def run(a):
+    from pk import manifest
+    import scratch
+    os.makedirs(a.out, exist_ok=True)
+    man = manifest.start(a.out, 'rectsearch', args=vars(a), procs=a.procs)
+    scratch.scope('rectsearch')
+    cells = [tuple(map(int, c.split(':'))) for c in a.cells.split(',')] if a.cells else \
+        [tuple(c) for c in json.load(open(a.cells_file))]
+    per = max(1, a.procs // len(cells)) if len(cells) <= a.procs else 1
+    tasks = []
+    for m, d in cells:
+        od = os.path.join(a.out, f'm{m}_d{d}'); os.makedirs(od, exist_ok=True)
+        for k in range(per):
+            tasks.append((m, d, a.minutes * 60, 1000 * m + 10 * d + k + a.seed, od, a.loose, a.start_frac, a.soft,
+                          a.adaptive))
+    with ProcessPoolExecutor(a.procs) as ex:
+        res = list(ex.map(worker, tasks))
+    summ = {}
+    for (m, d, *_), r in zip(tasks, res):
+        key = f'{m}:{d}'
+        b = summ.setdefault(key, dict(m=m, d=d, nq=0, h=math.inf))
+        b['nq'] += r['nq']
+        if r['best'] and r['best'][0][0] < b['h']:
+            b['h'] = r['best'][0][0]
+            sq = r['best'][0][1]
+            with open(os.path.join(a.out, f'm{m}_d{d}', 'best.txt'), 'w') as f:
+                f.write(f'{m} {b["h"]!r}\n' + ''.join(f'{x!r} {y!r} {t!r}\n' for x, y, t in sq))
+    json.dump(summ, open(os.path.join(a.out, 'summary.json'), 'w'), indent=1)
+    for v in summ.values():
+        print(f"m={v['m']} d={v['d']}: best h {v['h']:.10f}  ({v['nq']} quenches)")
+    man.finish(summary=summ)
+
+
+def export(a):
+    """Search results (every <dir>/m*_d*/best.txt) -> <dir>/pieces.jsonl in rectlib's format, so
+    `rectlib.py atlas <dir> --out X --with-crops ATLAS` and `mondrian.py compose` take them unchanged."""
+    import glob
+    n = 0
+    with open(os.path.join(a.dir, 'pieces.jsonl'), 'w') as f:
+        for b in sorted(glob.glob(os.path.join(a.dir, '**', 'm*_d*', 'best.txt'), recursive=True)):
+            L = [l.split() for l in open(b) if l.strip()]
+            m, h = int(L[0][0]), float(L[0][1])
+            d = int(os.path.basename(os.path.dirname(b)).split('_d')[1])
+            sq = [[float(t) for t in r[:3]] for r in L[1:1 + m]]
+            f.write(json.dumps(dict(key=dict(src=f'rs:{m}:{d}', piece=0, src_n=0), m=m, d=d, W0=h + d, H0=h, s0=h,
+                                    h=h, ok=True, how='search', sq=sq)) + '\n')
+            n += 1
+    print(f'{n} pieces -> {a.dir}/pieces.jsonl')
+
+
+if __name__ == '__main__':
+    ap = argparse.ArgumentParser()
+    sp = ap.add_subparsers(dest='cmd', required=True)
+    r = sp.add_parser('run')
+    r.add_argument('--cells'); r.add_argument('--cells-file'); r.add_argument('--out', required=True)
+    r.add_argument('--minutes', type=float, default=10); r.add_argument('--procs', type=int, default=8)
+    r.add_argument('--seed', type=int, default=0); r.add_argument('--loose', type=float, default=1.25)
+    r.add_argument('--soft', type=float, default=0.5, help='share of fresh starts that go through soft-to-rigid')
+    r.add_argument('--adaptive', action='store_true', help='adaptive kick size (x2 on success, /2 on failure)')
+    r.add_argument('--start-frac', type=float, default=0.4, help='share of the time spent on fresh starts only')
+    e = sp.add_parser('export'); e.add_argument('dir')
+    a = ap.parse_args()
+    run(a) if a.cmd == 'run' else export(a)

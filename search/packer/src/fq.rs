@@ -45,6 +45,18 @@ static RND: AtomicU64 = AtomicU64::new(0);
 #[inline] fn rdy() -> f64 { f64::from_bits(RDY.load(Ordering::Relaxed)) }
 #[inline] fn rnd() -> f64 { f64::from_bits(RND.load(Ordering::Relaxed)) }
 fn set_rnd(r: f64) { RND.store(r.to_bits(), Ordering::Relaxed); }
+static SOFT: AtomicU64 = AtomicU64::new(0);   // soft squares: max |log aspect| eps (pre-stage only)
+#[inline] fn soft_eps() -> f64 { f64::from_bits(SOFT.load(Ordering::Relaxed)) }
+fn set_soft(e: f64) { SOFT.store(e.to_bits(), Ordering::Relaxed); }
+/// Corner k of a w x h rectangle (area w h = 1 when soft), rotated by (c, s), with its derivative in the log aspect a
+/// (w = e^{a/2}, h = e^{-a/2}).  With w = h = 1 this is corner_off.
+#[inline]
+fn corner_wh(c: f64, s: f64, k: usize, w: f64, h: f64) -> (f64, f64, f64, f64) {
+    let (sx, sy) = CS[k];
+    let hh = H - rnd();
+    (hh * (c * sx * w - s * sy * h), hh * (s * sx * w + c * sy * h),
+     hh * (c * sx * w + s * sy * h) * 0.5, hh * (s * sx * w - c * sy * h) * 0.5)
+}
 fn set_rect(dx: f64, dy: f64) { RDX.store(dx.to_bits(), Ordering::Relaxed); RDY.store(dy.to_bits(), Ordering::Relaxed); }
 const SQRT2: f64 = std::f64::consts::SQRT_2;
 const CS: [(f64, f64); 4] = [(1.0, 1.0), (-1.0, 1.0), (-1.0, -1.0), (1.0, -1.0)];
@@ -145,6 +157,7 @@ struct Prob {
     wlam: Vec<f64>, // 16 per square: corner k, wall w (x>=0, x<=s, y>=0, y<=s)
     mu: f64,
     fix_s: bool, // fixed side: pure overlap penalty, no s objective, d/ds = 0
+    b: Vec<f64>, // soft squares (pre-stage): per-square shape variable, a_i = eps tanh(b_i); empty = rigid
 }
 
 #[inline]
@@ -159,11 +172,23 @@ impl Prob {
         let mut v = x.to_vec();
         v.push(s);
         for p in &self.pairs { v.push(p.phi); v.push(p.d); }
+        v.extend_from_slice(&self.b);
         v
     }
     fn unpack(&mut self, v: &[f64]) {
         let o = 3 * self.n + 1;
         for (k, p) in self.pairs.iter_mut().enumerate() { p.phi = v[o + 2 * k]; p.d = v[o + 2 * k + 1]; }
+        let ob = o + 2 * self.pairs.len();
+        let nb = self.b.len();
+        self.b.copy_from_slice(&v[ob..ob + nb]);
+    }
+    /// Per-square (w, h, da/db, index of b in v or usize::MAX).
+    fn shapes(&self, v: &[f64]) -> Vec<(f64, f64, f64, usize)> {
+        let n = self.n;
+        let e = soft_eps();
+        if self.b.len() != n || e == 0.0 { return vec![(1.0, 1.0, 0.0, usize::MAX); n]; }
+        let ob = 3 * n + 1 + 2 * self.pairs.len();
+        (0..n).map(|i| { let t = v[ob + i].tanh(); let a = e * t; ((0.5 * a).exp(), (-0.5 * a).exp(), e * (1.0 - t * t), ob + i) }).collect()
     }
 
     /// Augmented Lagrangian value and gradient.
@@ -176,12 +201,14 @@ impl Prob {
         g[3 * n] = if self.fix_s { 0.0 } else { 1.0 };
         let mut cs = vec![(0.0, 0.0); n];
         for i in 0..n { let t = v[3 * i + 2]; cs[i] = (t.cos(), t.sin()); }
+        let sh = self.shapes(v);
         // walls
         for i in 0..n {
             let (c, sn) = cs[i];
             let (x, y) = (v[3 * i], v[3 * i + 1]);
+            let (wi, hi, dab, bi) = sh[i];
             for k in 0..4 {
-                let (ox, oy) = corner_off(c, sn, k);
+                let (ox, oy, oxa, oya) = corner_wh(c, sn, k, wi, hi);
                 let (px, py) = (x + ox, y + oy);
                 let (r, wx, wy) = (rnd(), s + rdx(), s + rdy());
                 let gs = [-px + r, px - wx + r, -py + r, py - wy + r];
@@ -195,6 +222,10 @@ impl Prob {
                             1 => { g[3 * i] += dg; g[3 * i + 2] -= dg * oy; g[3 * n] -= dg; }
                             2 => { g[3 * i + 1] -= dg; g[3 * i + 2] -= dg * ox; }
                             _ => { g[3 * i + 1] += dg; g[3 * i + 2] += dg * ox; g[3 * n] -= dg; }
+                        }
+                        if bi != usize::MAX {
+                            let gp = [-oxa, oxa, -oya, oya][w];
+                            g[bi] += dg * gp * dab;
                         }
                     }
                 }
@@ -212,9 +243,11 @@ impl Prob {
             let (mut gx, mut gti, mut gtj, mut gphi, mut gd) = (0.0, 0.0, 0.0, 0.0, 0.0);
             let (ci, si) = cs[i];
             let (cj, sj) = cs[j];
+            let (wi, hi, dai, bi) = sh[i];
+            let (wj, hj, daj, bj) = sh[j];
             for k in 0..4 {
                 // corner of i: r = h + o_i;  g = u.r - d
-                let (ox, oy) = corner_off(ci, si, k);
+                let (ox, oy, oxa, oya) = corner_wh(ci, si, k, wi, hi);
                 let (rx, ry) = (hx + ox, hy + oy);
                 let (fv, dg) = term(ux * rx + uy * ry - d + rr, p.lam[k], mu);
                 f += fv;
@@ -223,9 +256,10 @@ impl Prob {
                     gti += dg * (-ux * oy + uy * ox);
                     gphi += dg * (-uy * rx + ux * ry);
                     gd -= dg;
+                    if bi != usize::MAX { g[bi] += dg * (ux * oxa + uy * oya) * dai; }
                 }
                 // corner of j: r' = -h + o_j;  g = d - u.r'
-                let (ox, oy) = corner_off(cj, sj, k);
+                let (ox, oy, oxa, oya) = corner_wh(cj, sj, k, wj, hj);
                 let (rx, ry) = (-hx + ox, -hy + oy);
                 let (fv, dg2) = term(d - (ux * rx + uy * ry) + rr, p.lam[4 + k], mu);
                 f += fv;
@@ -234,6 +268,7 @@ impl Prob {
                     gtj -= dg2 * (-ux * oy + uy * ox);
                     gphi -= dg2 * (-uy * rx + ux * ry);
                     gd += dg2;
+                    if bj != usize::MAX { g[bj] -= dg2 * (ux * oxa + uy * oya) * daj; }
                 }
             }
             // both corner kinds: dg/dXi = u/2, dg/dXj = -u/2 (gx holds the summed dg)
@@ -256,11 +291,12 @@ impl Prob {
         let mu = self.mu;
         let s = v[3 * n];
         let mut mv: f64 = 0.0;
+        let sh = self.shapes(v);
         for i in 0..n {
             let t = v[3 * i + 2];
             let (c, sn) = (t.cos(), t.sin());
             for k in 0..4 {
-                let (ox, oy) = corner_off(c, sn, k);
+                let (ox, oy, _, _) = corner_wh(c, sn, k, sh[i].0, sh[i].1);
                 let (px, py) = (v[3 * i] + ox, v[3 * i + 1] + oy);
                 let (r, wx, wy) = (rnd(), s + rdx(), s + rdy());
                 let gs = [-px + r, px - wx + r, -py + r, py - wy + r];
@@ -279,9 +315,9 @@ impl Prob {
             let (hx, hy) = ((v[3 * i] - v[3 * j]) / 2.0, (v[3 * i + 1] - v[3 * j + 1]) / 2.0);
             let (ti, tj) = (v[3 * i + 2], v[3 * j + 2]);
             for k in 0..4 {
-                let (ox, oy) = corner_off(ti.cos(), ti.sin(), k);
+                let (ox, oy, _, _) = corner_wh(ti.cos(), ti.sin(), k, sh[i].0, sh[i].1);
                 let gi = ux * (hx + ox) + uy * (hy + oy) - d + rr;
-                let (ox, oy) = corner_off(tj.cos(), tj.sin(), k);
+                let (ox, oy, _, _) = corner_wh(tj.cos(), tj.sin(), k, sh[j].0, sh[j].1);
                 let gj = d - (ux * (-hx + ox) + uy * (-hy + oy)) + rr;
                 mv = mv.max(gi).max(gj);
                 if update {
@@ -1202,7 +1238,7 @@ fn relax_fixed(p: &mut Prob, s: f64, x0: &[f64], skin: f64) -> (Vec<f64>, f64, u
 /// Returns (s, x) of the last feasible state, total evals, shrink steps.
 fn shrink(s0: f64, x0: &[f64], d0: f64, dmin: f64, vtol: f64, verbose: bool) -> (f64, Vec<f64>, usize, usize) {
     let n = x0.len() / 3;
-    let mut p = Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: true };
+    let mut p = Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: true, b: Vec::new() };
     let scale = |x: &[f64], s: f64, f: f64| -> Vec<f64> {
         let mut y = x.to_vec();
         for i in 0..n { y[3 * i] = s * f / 2.0 + (x[3 * i] - s / 2.0) * f; y[3 * i + 1] = s * f / 2.0 + (x[3 * i + 1] - s / 2.0) * f; }
@@ -1237,7 +1273,8 @@ fn shrink(s0: f64, x0: &[f64], d0: f64, dmin: f64, vtol: f64, verbose: bool) -> 
 
 fn quench(s0: f64, x0: &[f64], o: &QOpt) -> (f64, Vec<f64>, usize, usize, f64, Prob) {
     let n = x0.len() / 3;
-    let mut p = Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: o.mu0, fix_s: false };
+    let mut p = Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: o.mu0, fix_s: false,
+                       b: if soft_eps() > 0.0 { vec![0.0; n] } else { Vec::new() } };
     let cut = SQRT2 + o.skin;
     let mut x = x0.to_vec();
     let mut s = s0;
@@ -1360,6 +1397,7 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
         let n = x.len() / 3;
         set_rect(arg(&a, "--rect-dx", 0.0), arg(&a, "--rect-dy", 0.0));
         set_rnd(0.0);
+        set_soft(0.0);
         let sig: f64 = arg(&a, "--kick", 0.0);
         if sig > 0.0 {
             let mut r = Rng::new(arg(&a, "--seed", 1u64));
@@ -1389,7 +1427,7 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
             } else { s };
             let sh = sa * arg(&a, "--hold-f", 1.0);
             for i in 0..n { x[3 * i] *= sh / sa; x[3 * i + 1] *= sh / sa; }
-            let mut p = Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: true };
+            let mut p = Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: true, b: Vec::new() };
             let mut vlast = 0.0;
             for k in 1..=ksteps {
                 let r = r0 * (1.0 - k as f64 / ksteps as f64).max(0.0).powf(pw);
@@ -1403,6 +1441,42 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
             s = sh;
             round_info = format!(", \"round\": {{\"r0\": {r0}, \"s_soft\": {sa:.12}, \"s_hold\": {sh:.12}, \"viol_hard\": {vlast:.3e}}}");
         }
+        // Soft squares (literature/soft-squares-2026-10-12.md section 2): per-square log aspect a_i = eps tanh(b_i), area 1.
+        // (A) optional compress with eps0 (side free); (B) hold the box at hold-f x that side; (C) eps -> 0 in K steps of
+        // fixed-side overlap relaxation over (x, y, theta, b, separators), optional kick per step; then the rigid finish.
+        let e0: f64 = arg(&a, "--soft-a0", 0.0);
+        let mut soft_info = String::new();
+        if e0 > 0.0 {
+            let ksteps: usize = arg(&a, "--soft-steps", 20);
+            let pw: f64 = arg(&a, "--soft-p", 1.0);
+            let sk: f64 = arg(&a, "--soft-kick", 0.0);
+            let mut rng = Rng::new(arg(&a, "--seed", 1u64) ^ 0x50f7);
+            set_soft(e0);
+            let oq = QOpt { mu0: arg(&a, "--mu0", 10.0), mu_max: arg(&a, "--mu-max", 1e2), tol: arg(&a, "--tol", 1e-7),
+                            skin: arg(&a, "--skin", 0.3), max_outer: arg(&a, "--outer", 60), verbose: a.iter().any(|t| t == "--v") };
+            let mut b = vec![0.0; n];
+            let sa = if a.iter().any(|t| t == "--soft-compress") {
+                let (sq, xq, _, _, _, pq) = quench(s, &x, &oq);
+                x = xq; b = pq.b.clone(); sq
+            } else { s };
+            let amax0 = b.iter().map(|q| (e0 * q.tanh()).abs()).fold(0.0, f64::max);
+            let sh = sa * arg(&a, "--hold-f", 1.0);
+            for i in 0..n { x[3 * i] *= sh / sa; x[3 * i + 1] *= sh / sa; }
+            let mut p = Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: true, b };
+            let mut vlast = 0.0;
+            for k in 1..=ksteps {
+                let e = e0 * (1.0 - k as f64 / ksteps as f64).max(0.0).powf(pw);
+                set_soft(e);
+                if sk > 0.0 { for i in 0..n { x[3 * i] += sk * rng.gauss(); x[3 * i + 1] += sk * rng.gauss(); x[3 * i + 2] += 2.0 * sk * rng.gauss(); } }
+                if e == 0.0 { p.b.clear(); }
+                let (xr, vi, _) = relax_fixed(&mut p, sh, &x, oq.skin);
+                x = xr; vlast = vi;
+                if oq.verbose { eprintln!("  soft eps {e:.4} hold {sh:.8} viol {vi:.2e}"); }
+            }
+            set_soft(0.0);
+            s = sh;
+            soft_info = format!(", \"soft\": {{\"a0\": {e0}, \"s_soft\": {sa:.12}, \"s_hold\": {sh:.12}, \"amax\": {amax0:.4}, \"viol_hard\": {vlast:.3e}}}");
+        }
         let lo: f64 = arg(&a, "--loosen", 1.02);
         let s1 = s * lo;
         for i in 0..n {
@@ -1415,11 +1489,11 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
         };
         let (mut sq, mut xq, nev, outer, viol, mut prob) = if a.iter().any(|t| t == "--no-alm") {
             // already (nearly) feasible: polish directly
-            (s1, x.clone(), 0, 0, 0.0, Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: false })
+            (s1, x.clone(), 0, 0, 0.0, Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: false, b: Vec::new() })
         } else if a.iter().any(|t| t == "--shrink") {
             let (ss, xs, ne, st) = shrink(s1, &x, arg(&a, "--d0", 2e-3), arg(&a, "--dmin", 1e-6), arg(&a, "--vtol", 1e-10), o.verbose);
             if o.verbose { eprintln!("shrink: s {ss:.10} evals {ne} steps {st}"); }
-            (ss, xs, ne, st, 0.0, Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: false })
+            (ss, xs, ne, st, 0.0, Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: false, b: Vec::new() })
         } else { quench(s1, &x, &o) };
         let t_alm = t0.elapsed().as_secs_f64();
         let mut xc = xq.clone();
@@ -1439,7 +1513,7 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
         let sr = repair(sq, &mut xq, 1e-13);
         let (mg, mw) = check(sr, &xq);
         let json = format!("{{\"s\": {:.15}, \"s_alm\": {:.15}, \"viol\": {:.2e}, \"evals\": {}, \"outer\": {}, \"slp_it\": {}, \"slp_r\": {:.1e}, \"flips\": {}, \"min_gap\": {:.2e}, \"min_wall\": {:.2e}, \"sec\": {:.3}, \"s_coarse\": {:.15}, \"t_alm\": {:.3}, \"s_alm0\": {:.15}, \"trace\": [{}], \"fp\": \"{:016x}\", \"ncontacts\": {}{}{}}}",
-                 sr, sq, viol, nev, outer, pit, pr, flips, mg, mw, t0.elapsed().as_secs_f64(), s_coarse, t_alm, s_alm0, trace.iter().map(|q| format!("[{},{:.4},{:.15},{},{:.3e},{:.3e},{},{}]", q.0, q.1, q.2, q.3, q.4, q.5, q.6, q.7)).collect::<Vec<_>>().join(","), fp, ncont, format!(", \"fin\": [{}]", FIN_LOG.lock().unwrap().iter().map(|q| format!("\"{q}\"")).collect::<Vec<_>>().join(",")) + &if a.iter().any(|t| t == "--ident") { format!(", \"fps\": [{}]", IDENT_FPS.lock().unwrap().iter().map(|h| format!("\"{:016x}\"", h)).collect::<Vec<_>>().join(",")) } else { String::new() }, round_info);
+                 sr, sq, viol, nev, outer, pit, pr, flips, mg, mw, t0.elapsed().as_secs_f64(), s_coarse, t_alm, s_alm0, trace.iter().map(|q| format!("[{},{:.4},{:.15},{},{:.3e},{:.3e},{},{}]", q.0, q.1, q.2, q.3, q.4, q.5, q.6, q.7)).collect::<Vec<_>>().join(","), fp, ncont, format!(", \"fin\": [{}]", FIN_LOG.lock().unwrap().iter().map(|q| format!("\"{q}\"")).collect::<Vec<_>>().join(",")) + &if a.iter().any(|t| t == "--ident") { format!(", \"fps\": [{}]", IDENT_FPS.lock().unwrap().iter().map(|h| format!("\"{:016x}\"", h)).collect::<Vec<_>>().join(",")) } else { String::new() }, round_info + &soft_info);
         (json, sr, xq)
 }
 
@@ -1518,7 +1592,10 @@ fn main() {
             for q in x.iter_mut() { *q += 0.05 * r.gauss(); }
             set_rect(arg(&a, "--rect-dx", 0.0), arg(&a, "--rect-dy", 0.0));
             set_rnd(arg(&a, "--round-r0", 0.0));
-            let mut p = Prob { n, pairs: Vec::new(), wlam: (0..16 * n).map(|_| r.f()).collect(), mu: 37.0, fix_s: false };
+            let se: f64 = arg(&a, "--soft-a0", 0.0);
+            set_soft(se);
+            let mut p = Prob { n, pairs: Vec::new(), wlam: (0..16 * n).map(|_| r.f()).collect(), mu: 37.0, fix_s: false,
+                               b: if se > 0.0 { (0..n).map(|_| r.gauss()).collect() } else { Vec::new() } };
             p.rebuild(&x, SQRT2 + 0.4);
             for pr in p.pairs.iter_mut() { for l in pr.lam.iter_mut() { *l = r.f(); } pr.phi += 0.1 * r.gauss(); pr.d += 0.05 * r.gauss(); }
             let v = p.pack(&x, s * 0.97);

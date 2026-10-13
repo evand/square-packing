@@ -1770,3 +1770,56 @@ measured CPU, seeds_src) suffice to compare against a later dedicated arm.
   of 15 near compositions (0 / 15).  Lessons: polish every composition (129 was a tie in composer v0); the frontier
   needs the monotone envelope; the explorer cannot leave integer-side L layouts; next lever = from-scratch search in
   the rectangle for small (m, d) pieces (fq rect mode exists; the explorer needs rect plumbing).
+
+## Rectangle pieces from scratch (10-12 night; `rectsearch.py`)
+Multistart + MBH in the (h + d) x h box via `fq serve` (QOpt rect_dx, round_r0 / round_compress added to pk.engine).
+Smoke (38 squares, d = 2, 2 proc-min each): hard random starts best 6.0 (grid), soft-to-rigid starts (r0 0.1-0.45,
+compress) 5.8211, + kicks 5.7996.  ~0.09-0.2 s per quench.
+* **Positive control, pre-registered**: cell (38, 2), 14 procs x 10 min (2.3 CPU-h), soft share 0.8.  Success = h <=
+  5.76417431749 (Ostashev #528, from random starts on a GPU).  Prediction 30 %.  If it fails: report the best and the
+  start-mode / kick yields, then decide between more budget and a better start model.
+* **Control result (21:19)**: **passed.**  5.7641743175 (= #528's piece, to 1e-9) first reached at 264 s in one of 14
+  workers (~1 CPU-h of search at the first hit), 769 hits in all; every hit came through MBH kicks from soft-to-rigid
+  starts (soft starts alone 5.7888, hard random starts 5.8717).  So our CPU stack reproduces the GPU piece search.
+* **Cell sweep, pre-registered (21:20)**: m = 10..60 x d = 1..4 (204 cells), 1 proc x 3 min each (~10 CPU-h,
+  `runs/rectsearch/sw1`), soft share 0.8; then export -> merged atlas (crops + lib1 + sweep) -> composer + construct +
+  polish -> eventbench at cutoff 10-11 05:51 and now.  Metrics: cells where the search beats the best crop piece;
+  composer results below frontier_now at n <= 324.  Predictions: search beats crops in > 70 % of the cells both cover;
+  composer wins at n <= 324: 0-3.
+
+## Soft squares (log-aspect homotopy; 10-12 night; design `literature/soft-squares-2026-10-12.md` §2, Evan: pursue at
+modest odds)
+* fq `--soft-a0 E [--soft-compress] [--hold-f F] [--soft-steps K] [--soft-p P] [--soft-kick SIG]`: per-square
+  b_i, a_i = E tanh(b_i), w = e^{a/2}, h = e^{-a/2} (area 1) as extra ALM variables in a pre-stage only (polish
+  untouched); gradcheck 2.2e-8 .. 3.0e-8 with soft on (also with rect + rounding); 110 record polish unchanged.
+  pk.engine QOpt soft_* fields; pk/crossing.py methods `soft:EPS:HOLD:STEPS:KICK` (EPS 1e-9 = matched rigid
+  control) and `rectwalk:DX:J` (rigid squares in an (s + DX) x s box, DX walked back to 0 in J quenches).
+* Pilot n = 54 grid starts, 6 trials per arm: 0 crossings in every arm; soft compress reaches 7.86-7.98 (< k = 8),
+  hardening at the held box leaves overlap 0.003-0.027, the rigid finish returns to the 8.0 grid: the failure mode
+  §2.4 predicts (reversible deformation, no topology change at kick 0.02).  The `above` class is empty at 54.
+* **Test, pre-registered (22:00; runs after the cell sweep)**: n = 54, 71 (grid + above where available), 100 trials
+  per arm: quench; soft:1e-9:1.0:20:0.1 (control); soft:{0.05, 0.2}:1.0:20:{0.02, 0.1}; soft:0.2:0.98:20:0.1 (box
+  held 2 % tighter); rectwalk:1:10, rectwalk:2:10 (`runs/crossing/soft1`).  Metric: crossed (side < k, no full line).
+  Kill rule (the literature session's): 0 crossings in all soft arms at 400 trials and line count unchanged in
+  >= 90 %; at 100 trials, 0 crossings in every arm = stop here unless the trajectories show topology changes.
+  Prediction: 0-2 crossings in total (the design's own estimate is 10 % at 54 / 71, mine is lower after the pilot).
+* **Soft-square test, result (22:35)** (`runs/crossing/soft1`, 1,800 trials, ~2 CPU-h): **grid starts, n = 54 and 71:
+  0 crossings in every arm** (incl. rectwalk 1 and 2); 99-100 / 100 end on the grid in every arm, so the line count
+  did not change.  `above` class at 71 is degenerate (plain quench takes 100 / 100 below 9, to 8.9632675): there the
+  soft arms are *worse* than the matched rigid control with the same kicks (rigid 72 / 100 below 9; soft 0.05: 64,
+  0.2: 46, 0.2 held 2 % tighter: 36).  Against the rule: kill (0 crossings, lines unchanged).  Prediction (0-2) held.
+  Soft squares parked; the container-axis variant (literature session) was conditional on line changes, which did
+  not occur.
+
+## Rectangle pieces: sweep and #528 rebuilt (10-12 night)
+* **Cell sweep result** (`runs/rectsearch/sw1`, 204 cells x 3 proc-min, 36.6 k CPU-s): the search beats the best
+  re-optimised crop in 90 / 136 cells both cover, ties 23, loses 23 (66 %; prediction > 70 %: just missed).
+  3 min per cell is not enough for quality: (38, 2) reached 5.7996 here vs 5.7642 with ~1 CPU-h in the control.
+  Formula composer on crops + lib1 + sweep: nothing new (129, 327 again).
+* **#528's s(175) rebuilt.**  Two copies of our searched 38-square piece (control, h = 5.76417431749) in opposite
+  corners (B transposed) + the exact MILP upright fill (`mondrian.exact_fill`) give **175 squares at S = h + 8 =
+  13.7641743175 = Ostashev's s(175)** (#528, 10-12 07:26; frontier at the 10-11 05:51 cutoff 13.7671190: a benchmark
+  success).  The formula composer cannot see it (guillotine columns: 170 by hand).  So the #528 method is reproduced
+  end to end on our side; the weak link was the composer, not the pieces.
+* Bug fixed in rectsearch.py (elite sorted only on some events; no effect on any best.txt: all equal their log minima);
+  adaptive kick (`--adaptive`, Gensane-Ryckelynck) added, untested.

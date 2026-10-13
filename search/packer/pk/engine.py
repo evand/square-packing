@@ -42,6 +42,16 @@ class QOpt:
     no_alm: bool = False
     no_polish: bool = False
     shrink: bool = False
+    rect_dx: float | None = None     # container [0, s + dx] x [0, s + dy] (10-12)
+    rect_dy: float | None = None
+    round_r0: float | None = None    # soft-to-rigid pre-stage (fq --round-*)
+    round_compress: bool = False
+    round_steps: int | None = None
+    soft_a0: float | None = None     # soft squares (log aspect) pre-stage (fq --soft-*; 10-12)
+    soft_compress: bool = False
+    soft_steps: int | None = None
+    soft_kick: float | None = None
+    hold_f: float | None = None
 
     def args(self):
         out = []

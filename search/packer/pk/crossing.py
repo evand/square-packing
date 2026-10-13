@@ -120,6 +120,28 @@ def method_apply(spec, start, n, rng, snaps):
             r=AN.curve([(0, 0), (0.25, rmax), (0.55, rmax), (0.85, 0), (1, 0)]))
         fin, info, traj = AN.run(sch, start=start, seed=rng.randrange(1 << 30), snaps=snaps)
         return fin, info, traj
+    if kind == 'soft':
+        # soft:EPS:HOLD:STEPS:KICK  soft-square homotopy in fq (literature/soft-squares-2026-10-12.md): compress with
+        # |log aspect| <= EPS, hold the box at HOLD x that side, harden in STEPS with KICK per step.  EPS ~ 0 = the
+        # matched rigid control (same schedule).
+        from pk.engine import fq as _fq, QOpt
+        eps, hold, steps, kick = float(parts[1]), float(parts[2]), int(parts[3]), float(parts[4])
+        q = QOpt(loosen=1.0, soft_a0=max(eps, 1e-12), soft_compress=True, hold_f=hold, soft_steps=steps,
+                 soft_kick=kick, seed=rng.randrange(1 << 30), no_polish=True)
+        r = _fq().quench(start, q, timeout=900)
+        return (r.p if r.p is not None else None), dict(r.stats.get('soft', {}), error=r.stats.get('error')), []
+    if kind == 'rectwalk':
+        # rectwalk:DX:J  squeeze rigid squares into an (s + DX) x s box, then walk DX back to 0 in J quenches
+        from pk.engine import fq as _fq, QOpt
+        dx, J = float(parts[1]), int(parts[2])
+        cur = start
+        for j in range(J + 1):
+            d = dx * (1 - j / J)
+            r = _fq().quench(cur, QOpt(loosen=1.0, rect_dx=d, flip_top=0, pit=8), timeout=900)
+            if r.p is None:
+                return None, dict(error=r.stats.get('error')), []
+            cur = r.p
+        return cur, dict(dx=dx, J=J), []
     raise ValueError(spec)
 
 
