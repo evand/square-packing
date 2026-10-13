@@ -1966,3 +1966,25 @@ the leverage is in which cells get searched and in reusing every good piece.
   417 418 419 443 444 446 454 456 457 459 460** (+ 413 442 450-453 455 458 in exactsolve).  In the store.  Many are
   s(m) + k arithmetic in untouched territory (443 = s(123) + 10; 409 / 411 / 413 = s(129) + 9 with Ostashev's piece).
   Before any claim: literature general constructions above 340 (Friedman DS7, Göbel) must be checked n by n.
+* **Caveat on "saturated"**: probe1 tried a median 340 of ~14,000 arms per n (2.4 %), cf1 fewer.  At frontier + 0.02
+  the best sampled count is n - 1 or n at every n <= 324, so the claim rests on sampling.
+* **Depth test, pre-registered**: compose2 probe 0.02 at 10x the budget (1,500 s per n, 1 proc each) at 53 86 106
+  129 151 205 227 234 299 308 (closest positive needs / most arms).  Success: a hit (need < -1e-9) -> candidate.py.
+  Secondary (the decision this buys): min positive need improves > 2x at >= 3 of the 10 n => sampling depth matters
+  and deep composition sampling deserves real compute; otherwise two-piece composition is done at n <= 324.
+  Budget 4.5 CPU-h.  Prediction: no hit; improvement at <= 2 n.
+* **Literature check above 324 (agent; Ellsworth's pages, Friedman DS7, AMS 2021): the L-step closure kills most
+  of the n > 324 "records".**  Friedman's L-step (n squares in side s, s not an integer -> n + 2 floor(s) + 1 in
+  s + 1) applied to the published n <= 324 values beats or ties 26 of 36: e.g. s(290) + L = 18.5355 at 325 / 326 (vs
+  our 130/7), s(298) + 2L at 370.  Our frontier never applied it, and the composer missed it because frontier
+  pieces stopped at n = 250.  **Fixed: `eventbench.frontier_now` = events + store, closed under the L-step, then the
+  monotone envelope** (`_l_closure`, n <= 1200).  Re-checked against it (our own candidates excluded):
+  **records standing: s(339) <= 18.9268989004 (2.5e-3), s(364) <= 19.5837822040 (7.6e-3), s(375) <=
+  19.8824510305 (1.7e-2 vs Göbel s(376)), s(414) <= 20.8984034740 (1.1e-3).**  Not records: 325, 326, 362, 363,
+  365-370, 401-404, 409-413, 417-419, 442-444, 450-460; 446 ties s(294) + 4L.  **Our 10-12 s(327) 18.5913781455 is now
+  a tie**: s(292) = 17.5913781455 was posted since (synced tonight), and s(292) + L = s(327) exactly.
+  P6 graded against the corrected frontier: 4 records, not 25+; prediction (3-10) held only by luck.  cert2 / cert3
+  stopped (the remaining n are not records).
+  Lessons: (1) the frontier must include every cheap closure we know (L-step, envelope, s(m) + k is the composer's
+  one-piece case) before calling anything a record; (2) the probe2 / cert spend above 340 (~13 CPU-h) was mostly on
+  n the L-step already covered; (3) the earlier "s(325) / s(326) certified record" claims in this log are withdrawn.

@@ -164,14 +164,32 @@ def frontier_at(n, T):
     return min(_point_at(m, T) for m in range(n, n + ENVELOPE + 1))
 
 
-_SF = {}
+_LC = {}
+def _l_closure(nmax=1200):
+    """Known values closed under Friedman's L-step (DS7 sec. 2): n squares in side s (s not an integer) ->
+    n + 2 floor(s) + 1 squares in side s + 1 (a 1-wide L along two edges).  Missing it made 26 of 36 of our 10-13
+    n > 324 "records" stale (s(290) + L = 18.5355 at 325 beat our 130/7).  Inputs: events envelope + store."""
+    if not _LC:
+        v = {}
+        for n in range(2, nmax + 1):
+            x = [frontier_at(n, None) if n <= nmax - ENVELOPE else math.inf, store_frontier(n) or math.inf]
+            v[n] = min(x + [float(math.ceil(math.sqrt(n) - 1e-12))])
+        for n in range(2, nmax + 1):                     # ascending: chains propagate
+            s = v[n]
+            if abs(s - round(s)) > 1e-12:
+                m = n + 2 * math.floor(s) + 1
+                if m <= nmax and s + 1 < v[m]:
+                    v[m] = s + 1
+        for n in range(nmax - 1, 1, -1):                 # monotone envelope s(n) <= s(n + 1)
+            v[n] = min(v[n], v[n + 1])
+        _LC.update(v)
+    return _LC
+
+
 def frontier_now(n):
-    """Live frontier: the events envelope, and the store's (frontier table incl. pending claims, every feasible packing)
-    envelope, which holds posts newer than the events table (10-13: Ostashev's s(304) update, Mishapolk's s(207))."""
-    for m in range(n, n + ENVELOPE + 1):
-        if m not in _SF:
-            _SF[m] = store_frontier(m) or math.inf
-    return min(frontier_at(n, None), min(_SF[m] for m in range(n, n + ENVELOPE + 1)))
+    """Live frontier: events + store (frontier table incl. pending claims, every feasible packing, posts newer than
+    the events table), monotone envelope, closed under the L-step."""
+    return _l_closure()[n]
 
 
 def moved_ns(t0, t1=None):

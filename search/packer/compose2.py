@@ -312,7 +312,10 @@ def run(a):
     scratch.scope('compose2')
     lo, hi = map(int, a.ns.split('-'))
     tasks = []
+    only = {int(x) for x in a.only.split(',')} if a.only else None
     for n in range(lo, hi + 1):
+        if only and n not in only:
+            continue
         if a.target == 'now':
             f = E.frontier_now(n)
         else:
@@ -390,6 +393,7 @@ if __name__ == '__main__':
                    help='near-miss probe: fill at frontier + PROBE, bisect fitting arms to their smallest side (near.jsonl)')
     r.add_argument('--probe-steps', type=int, default=10)
     r.add_argument('--three', action='store_true', help='three-piece arms (LL, UR, UL corners)')
+    r.add_argument('--only', help='comma list of n (within --ns)')
     r.add_argument('--cf-eps', type=float, default=0.0,
                    help='counterfactual: every piece scaled to h (1 - eps); hits say which cells are worth searching')
     r.add_argument('--per-cell', type=int, default=10 ** 9, help='pieces per (m, d) cell, best h first (seam diversity)')
