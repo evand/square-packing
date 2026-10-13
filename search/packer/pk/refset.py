@@ -6,6 +6,8 @@
   holdout   split a snapshot into visible / withheld minima:
               random  --frac F --seed K           withhold a random fraction
               side    --lo A --hi B               withhold minima with S - best in [A, B) (e.g. 0 .. 1e-3: the near-record set)
+              region  --sides record|S --link L --radius R --top K   one deep basin (single-linkage at L among the top K)
+                                                  + every minimum within R of it (fingerprint distance)
               list    --sides FILE                visible = minima matched by a json list of sides (e.g. a dated census list,
                                                   runs/known110_all.2026-10-08.json); the rest withheld
             and materialise it: <dir>/starts/*.txt (representatives of a visible sample or all), <dir>/novel_ref.json
@@ -24,6 +26,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 from pk.store import Store
 from pk import identity as ID
+import numpy as np
 
 ROOT = os.path.join(HERE, '..', 'refsets')     # tracked in git (frozen references are part of the experiment record)
 
@@ -72,7 +75,7 @@ def load(name):
     return json.load(open(name if name.endswith('.json') else f'{ROOT}/{name}.json'))
 
 
-def holdout(ref, rule, name, frac=0.5, seed=1, lo=0.0, hi=1e-3, sides=None, nstarts=None):
+def holdout(ref, rule, name, frac=0.5, seed=1, lo=0.0, hi=1e-3, sides=None, nstarts=None, link=0.02, radius=0.03, top=50):
     R = load(ref)
     M = R['minima']
     best = min(float(m['S'][:20]) for m in M)
@@ -123,11 +126,33 @@ def holdout(ref, rule, name, frac=0.5, seed=1, lo=0.0, hi=1e-3, sides=None, nsta
             raise SystemExit(f'groups spec {spec}?')
         wh = {k for k, g in G.items() if g in wg}
         print(f'groups {spec}: {len(wg)} of {len(set(G.values()))} groups withheld: {sorted(wg)[:12]}{" ..." if len(wg) > 12 else ""}')
+    elif rule == 'region':
+        # one deep basin + its neighbourhood (10-13, Evan: "withhold one whole basin and the adjacent region", not a side
+        # cutoff: the deep 110 minima are two basins 0.049 apart).  Basin = the single-linkage cluster (fingerprint
+        # distance <= link) among the `top` deepest minima that contains the minimum nearest side `sides` ('record' =
+        # the best); withheld = every minimum within `radius` of the basin.
+        from pk import fingerprint as F
+        st0 = Store()
+        R2 = [m for m in M if m['rep']]
+        ims = np.stack([F.image(float(st0.get(m['rep']).s), st0.get(m['rep']).sq) for m in R2])
+        D = np.stack([F.nearest(im, ims, R['n']) for im in ims]); D = np.minimum(D, D.T)
+        Sv = np.array([float(m['S'][:20]) for m in R2]); order = np.argsort(Sv)[:top]
+        i0 = int(order[0]) if (sides or 'record') == 'record' else int(np.argmin(np.abs(Sv - float(sides))))
+        core, todo = {i0}, [i0]
+        while todo:
+            x = todo.pop()
+            for y in order:
+                if y not in core and D[x, y] <= link:
+                    core.add(int(y)); todo.append(int(y))
+        dmin = D[:, sorted(core)].min(1)
+        wh = {R2[i]['key'] for i in np.nonzero(dmin <= radius)[0]}
+        print(f'region: basin of {len(core)} minima ({Sv[sorted(core)].min():.10f} .. {Sv[sorted(core)].max():.10f}); '
+              f'{len(wh)} withheld within {radius}; best visible {min(Sv[i] for i in range(len(R2)) if R2[i]["key"] not in wh):.10f}')
     else:
         raise SystemExit(f'rule {rule}?')
     vis = [m for m in M if m['key'] not in wh]
     d = dict(name=name, ref=R['name'], ref_sha256=R['sha256'], n=R['n'], k=R['k'], rule=rule,
-             params=dict(frac=frac, seed=seed, lo=lo, hi=hi, sides=sides), visible=sorted(m['key'] for m in vis),
+             params=dict(frac=frac, seed=seed, lo=lo, hi=hi, sides=sides, link=link, radius=radius, top=top), visible=sorted(m['key'] for m in vis),
              withheld=sorted(wh), made=time.strftime('%Y-%m-%dT%H:%M:%S'))
     out = f'{ROOT}/{name}'
     os.makedirs(f'{out}/starts', exist_ok=True)
@@ -192,16 +217,17 @@ def main():
     sp = ap.add_subparsers(dest='cmd', required=True)
     p = sp.add_parser('snapshot'); p.add_argument('--n', type=int, required=True); p.add_argument('--name', required=True)
     p = sp.add_parser('holdout'); p.add_argument('--ref', required=True); p.add_argument('--name', required=True)
-    p.add_argument('--rule', choices=['random', 'side', 'list', 'groups'], required=True); p.add_argument('--frac', type=float, default=0.5)
+    p.add_argument('--rule', choices=['random', 'side', 'list', 'groups', 'region'], required=True); p.add_argument('--frac', type=float, default=0.5)
     p.add_argument('--seed', type=int, default=1); p.add_argument('--lo', type=float, default=0.0); p.add_argument('--hi', type=float, default=1e-3)
     p.add_argument('--sides'); p.add_argument('--starts', type=int)
+    p.add_argument('--link', type=float, default=0.02); p.add_argument('--radius', type=float, default=0.03); p.add_argument('--top', type=int, default=50)
     p = sp.add_parser('score'); p.add_argument('--holdout', required=True); p.add_argument('runs', nargs='+')
     p.add_argument('--json')
     a = ap.parse_args()
     if a.cmd == 'snapshot':
         snapshot(a.n, a.name)
     elif a.cmd == 'holdout':
-        holdout(a.ref, a.rule, a.name, a.frac, a.seed, a.lo, a.hi, a.sides, a.starts)
+        holdout(a.ref, a.rule, a.name, a.frac, a.seed, a.lo, a.hi, a.sides, a.starts, a.link, a.radius, a.top)
     else:
         out = score(a.holdout, a.runs)
         if a.json:

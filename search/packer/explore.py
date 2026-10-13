@@ -477,6 +477,7 @@ if __name__ == '__main__':
     ap.add_argument('--cross2', type=float, default=2, help='weight of two-parent crossover (random sub-k mate; nearest '
                     'mate for above-k parents; battery 10-09 best reach move); 0 = off')
     ap.add_argument('--ashallow', type=float, default=2, help='weight of the shallow whole-box anneal (battery 10-09); 0 = off')
+    ap.add_argument('--weights', help='move weight overrides, e.g. "mirror=0,kicksym=3" (0 removes a kind; ablations)')
     ap.add_argument('--adapt', action='store_true', help='Thompson sampling over move kinds (reward: new below-k basin)')
     ap.add_argument('--reward', default='legacy', choices=['legacy', 'value'],
                     help='bandit reward: legacy (1 for a new sub-k basin) or value (gap-graded x parent robustness)')
@@ -533,6 +534,11 @@ if __name__ == '__main__':
         WEIGHTS['melt'] = a.melt
     WEIGHTS['cross2'] = a.cross2
     WEIGHTS['ashallow'] = a.ashallow
+    for kv in (a.weights.split(',') if a.weights else []):    # ablations (bench110): kind=weight, 0 drops a kind
+        k_, v_ = kv.split('=')
+        WEIGHTS[k_.strip()] = float(v_)
+    for k_ in [k_ for k_, v_ in WEIGHTS.items() if v_ == 0]:
+        del WEIGHTS[k_]
     kinds, wts = zip(*WEIGHTS.items())
     bandit = KindBandit([kk for kk, w in WEIGHTS.items() if w > 0]) if a.adapt else None
     if bandit and a.bandit_state and os.path.exists(a.bandit_state):   # carried per-size move statistics (chain rounds), discounted

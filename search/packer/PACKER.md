@@ -2018,6 +2018,7 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
 | A1 arm composer, cross-n control | 1.5 | 1.61 | miss: nothing below the grid side (anchoring bug + hard control) |
 | A2 arm operators, +1 square from n-3..n+3 | 1.1 | 1.31 | miss: best count n - 1 in 4,780 evals |
 | H1 holdout rebuild, n = 110 (160 of 890 certified minima) | 2.7 | 3.4 (+0.1 aborted first launch) | 0 / 160 rebuilt |
+| E0 basin-entry baseline (rand + above, 8 + 8 x 60 min) | 16 | 16.04 | 16 / 16 entered; median ~11 CPU-min |
 | V-band fit / rebuild checks (interactive) | - | ~0.1 | ceiling test: own tilted set + fill = n at 6 / 6 band records; idealised arms 17-23 short |
 
 * **F0 fresh-pass control, pre-registered (09:45)**.  `fresh.py run --ids 291615 291590 291569` (Ostashev's s(304)
@@ -2144,3 +2145,33 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
   0.03 / 0.04, none of them in B; around B: 40 / 89 / 160 / 279, none in A.  Withholding A + its r = 0.03 neighbourhood
   leaves B's 10.9968870 as the best visible: "find anything below the best visible" = find a new basin (the record-hunt
   analog at a fixed, well-mapped n).
+* F0 leftover stopped (11:50): the n = 444 certification (a composition equal to our posted 364 + L) ran 98 min on one
+  core without finishing; not needed.  (Stopping it with `pgrep -f` also killed my own shell: the pattern matched the
+  shell's command line, the failure pk/jobs.py was written to avoid.  Use pk/jobs.py stop / explicit pids.)
+* **E0 basin-entry benchmark, pre-registered (11:55)**.  `bench110.py run --arms rand,above --reps 8 --minutes 60`
+  (`runs/bench110/e0`).  Holdout `refsets/h110_basinA` (snapshot census110_1013: 939 minima; withheld = basin A, the
+  record's single-linkage cluster at 0.02 among the top 50, + every minimum within fingerprint distance 0.03: 78;
+  visible 861, best visible = basin B's 10.9968869868).  Recipe = census v4's explorer (adapt, legacy reward,
+  sparse-share 0.5, fp bank = visible, novel-ref = visible), 1 proc per replicate, 16 concurrent.  Arms: rand = 40
+  random visible minima; above = 40 random n = 110 packings with 11 < s < 11.05 (grid crossing).
+  Metric: entry = first proposal with a sub-11 side below 10.9968869868 (the new-basin event); CPU to entry, entering
+  proposal kind; secondary: per-kind sub-11 / new-minimum rates.  Predictions: rand enters in 4 / 8 within 60 min
+  (median ~30 CPU-min among entries; basin B visible may hold the chain); above enters in 1 / 8.  Baseline only: no
+  adoption rule; it calibrates the benchmark (rand 8 / 8 in < 10 min = too easy -> widen the radius to 0.04; 0 / 8 =
+  lengthen).  Estimate 16 CPU-h.
+* **Proposal kinds, observational (census v2-v4 logs, 220 k proposals; 0 CPU)**: first-in-run reaches of top-50 minima
+  per proposal CPU-h: kicksym 10.8, bigkick 9.5, cross2 9.4, kick 9.2, ashallow 6.6, band 5.8, aswap 5.8, lkick 5.4,
+  rowslide 5.0, crot 4.4, mirror 1.0 (melt 17.5 on only 306).  New minima per CPU-h 380 (mirror) to 1,220 (cross2).
+  Confounded by the adaptive kind choice (bandit per parent); ablations on the E-benchmark decide.
+* **E0 result (12:57)**: **16 / 16 replicates entered basin A** (predictions 4 / 8 rand, 1 / 8 above: both missed, the
+  benchmark is easier than I thought).  CPU s to entry: rand 11, 114, 541, 588, 695, 699, 1375, 1443 (median 640);
+  above 108, 113, 508, 700, 707, 713, 1267, 1925 (median 704).  Every replicate also reached the record itself
+  (10.9967833966) within its hour.  Entries per CPU-h 1.01 in both arms: starting above the grid costs nothing at 110.
+  Entering kinds spread over 8 of 11 (cross2 3, kicksym 3, bigkick 3, rowslide 2, aswap / kick / lkick / ashallow /
+  band 1 each; crot, mirror 0).  Per-kind new minima per CPU-h in E0 match the census table (mirror lowest, 382).
+  Calibration (rule: 8 / 8 in < 10 min = too easy): not all < 10 min (max 24-32 CPU-min), so radius 0.03 is usable:
+  time-to-entry spreads over 2 orders of magnitude, a mechanism comparison resolves rate ratios of ~1.5-2x with 16
+  replicates per arm.  Reading: at 110 the explorer's distribution reaches a withheld deep basin from random visible
+  minima or from above the grid in ~10 CPU-min; no single proposal kind carries it.  It does not test other families
+  (Evan: overfitting to the double-band V family, not to s(110), is the hope; a test set from another family is next).
+  Day tally ~30.2 CPU-h.
