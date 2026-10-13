@@ -2019,6 +2019,7 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
 | A2 arm operators, +1 square from n-3..n+3 | 1.1 | 1.31 | miss: best count n - 1 in 4,780 evals |
 | H1 holdout rebuild, n = 110 (160 of 890 certified minima) | 2.7 | 3.4 (+0.1 aborted first launch) | 0 / 160 rebuilt |
 | E0 basin-entry baseline (rand + above, 8 + 8 x 60 min) | 16 | 16.04 | 16 / 16 entered; median ~11 CPU-min |
+| R1 race: control / finish3 / nomirror / notop3 | 16 | 18.6 (overshoot: budget ignored running replicates; fixed) | all open; notop3 0.53 [0.25, 1.16] |
 | V-band fit / rebuild checks (interactive) | - | ~0.1 | ceiling test: own tilted set + fill = n at 6 / 6 band records; idealised arms 17-23 short |
 
 * **F0 fresh-pass control, pre-registered (09:45)**.  `fresh.py run --ids 291615 291590 291569` (Ostashev's s(304)
@@ -2175,3 +2176,25 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
   minima or from above the grid in ~10 CPU-min; no single proposal kind carries it.  It does not test other families
   (Evan: overfitting to the double-band V family, not to s(110), is the hope; a test set from another family is next).
   Day tally ~30.2 CPU-h.
+* **Race benchmarks (`pk/benchkit.py`, reusable; `bench110.py race`)**: slots run replicates back to back; a replicate
+  ends at its first event (entry below the best visible) or a 30 CPU-min cap and a fresh one (new seed, new random 40
+  starts) takes the slot.  Rate = events / CPU (exponential, censored); arm vs control = rate ratio, 95 % interval from
+  sqrt(1/e1 + 1/e0) (+0.5 each); sequential rule: at every check (each arm another --check CPU-h) stop when every arm's
+  interval excludes 1 (faster / slower) or lies inside [1/1.5, 1.5] (same); else at the budget.  CPU per replicate from
+  /proc (process group: utime + stime + reaped children).  Smoke (0.1 CPU-h) clean.
+* **R1, pre-registered (13:35)**: `bench110.py race --arms control:rand nomirror:rand:--weights=mirror=0
+  notop3:rand:--weights=cross2=0,kicksym=0,bigkick=0 finish3:rand:--finish=3 --budget 16 --check 1 --cap-min 30`
+  (`runs/bench110/r1`; holdout h110_basinA; E0's recipe).  Questions: (1) is mirror (the lowest new-per-CPU kind)
+  dead weight; (2) do the three kinds that entered most in E0 carry entry; (3) does the inline kick + polish-only finish
+  (C11: cleaner, not more productive in census v2) change the entry rate.  Predictions: nomirror same (ratio 1.0-1.3);
+  notop3 slower (~0.6); finish3 same.  Each arm ~4 CPU-h -> ~20 events: resolves ~2x.  Rule: as the sequential rule;
+  an arm resolved "faster" is adopted into the census / hunt recipe only after a second race confirms it.
+* **R1 result (14:05)**: 18.6 CPU-h, 97 replicates, 72 entries.  Rates (entries / CPU-h): control 3.88 (19 / 22 reps),
+  finish3 5.13 (24 / 27), nomirror 4.41 (20 / 25), notop3 2.01 (9 / 23).  Ratios vs control: finish3 1.32 [0.73, 2.39],
+  nomirror 1.14 [0.61, 2.11], notop3 0.53 [0.25, 1.16]: **all open** (predictions: nomirror same, notop3 ~0.6 slower,
+  finish3 same: consistent, unresolved).  Entering kinds spread over 8-10 kinds per arm; with cross2 / kicksym / bigkick
+  removed, rowslide / ashallow / aswap take over.  Reading: no single kind is necessary or dead weight at a 2x resolution;
+  the top-3 drop probably slows entry (~0.5x) but did not resolve; the inline polish-only finish is not worse.
+  **Two flaws found and fixed in benchkit**: (1) interim checks at 95 % gave false "faster" (finish3 3.47x, nomirror 3.27x
+  at 1 CPU-h, both ~1.2x at the end): interim checks now use 99.5 %; the run continued only because notop3 was open;
+  (2) the budget ignored running replicates (16 -> 18.6 CPU-h): it now counts them.  Day tally ~49 CPU-h.
