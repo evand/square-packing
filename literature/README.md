@@ -17,6 +17,7 @@ Labels used in the scans: **[verified]** / [P] means we read the source or its b
 | [`tasks/friedman-lit/REPORT.md`](../tasks/friedman-lit/REPORT.md) | 09-30 | Roth–Vaughan and the Friedman survey (Roth–Vaughan itself not reached). |
 | [`notes/wishlist-literature-2026-10-03.md`](../notes/wishlist-literature-2026-10-03.md) | 10-03 | What is known for each WISHLIST item. |
 | [`notes/conjectures-literature-2026-10-04.md`](../notes/conjectures-literature-2026-10-04.md) | 10-04 | Double-check for the conjectures page: Chung–Graham prizes, Erdős #106, Ellsworth's {s(n²+1)} ≥ ½. |
+| [`waste-bounds-2026-10-12.md`](waste-bounds-2026-10-12.md) | 10-12 | Primary-source read of Erdős–Graham 1975, Roth–Vaughan 1978 (exact theorem, c₀ = 10⁻¹⁰⁰), Stromquist's 1984 memoranda I–III, Bui 2504.09489, Bašić–Slivková 2018 (s(61) ≥ 7.8906, superseded); claim-by-claim check of our files. |
 
 ## Packing search: records, optimizers, methods
 
@@ -29,5 +30,12 @@ Labels used in the scans: **[verified]** / [P] means we read the source or its b
 | [`group-chat-2026-10-12.md`](group-chat-2026-10-12.md) | 10-12 | Reading list from the group chat (irregular/polygon packing, phi-functions, MINLP); read in the next row. |
 | [`irregular-packing-2026-10-12.md`](irregular-packing-2026-10-12.md) | 10-12 | The group-chat list read against our packer: separating-line / phi-function NLPs, sentinels, MIQCP, soft polygons.  Verdict: nothing beyond `fq`; one speculative idea (soft-square aspect homotopy for k-row jams). |
 | [`soft-squares-2026-10-12.md`](soft-squares-2026-10-12.md) | 10-12 | Full read of Melashenko 2025 and Bennell 2024 (soft rectangles / stretched polygons: no hardening, no rigid baseline, no equal squares); design for log-aspect soft squares in `fq`; why in-place relief absorbs k-row jams; pre-registrable crossing test at 54 / 71 / 110 with a rigid-schedule control. |
+| [`gensane-ryckelynck-2026-10-12.md`](gensane-ryckelynck-2026-10-12.md) | 10-12 | Full read of Gensane–Ryckelynck 2005 (DCG 34), the method that Schadt's SA reimplemented: hard-constraint maximin inflation ω, a feasible-only random walk, and deflate/re-inflate MBH with 1/1 step adaptation.  They report the same one-angle jam and fix it only with restarts.  Status of 11/17/18/29/37 (none a record now; their s(37) was already beaten by Cantrell's 2002 packing); comparison table; 4 ranked ideas (none targets the k-row jam); citing papers. |
+
+## Method: computer-assisted proofs
+
+| File | Date | What |
+|---|---|---|
+| [`computer-assisted-proofs-2026-10-12.md`](computer-assisted-proofs-2026-10-12.md) | 10-12 | Closest prior work on method: interval B&B for circles in a square (Markót–Csendes n = 28–30, Markót n = 31–33), Montanher et al. (3 squares in a circle), Fekete et al. (squares into a disk), Flyspeck, Hales–Kusner pentagons, Tammes 13/14, the 2026 s(11) proof (Lean with `native_decide`), the hand-proof lineage of unavoidable sets; comparison table, positioning, techniques worth borrowing (Flyspeck's sharp-corner lemma, face reduction, minimal-precision kernel replay), paywalled DOIs. |
 
 Private (in `../private/`, not linked): `s12/notes/lit-statarb.md`, lessons from Evan's statarb sampler for `mcmin.py`.

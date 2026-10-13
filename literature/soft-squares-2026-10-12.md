@@ -1,5 +1,7 @@
 # Soft-square homotopy: the two soft-rectangle papers, and a design for `fq` (2026-10-12)
 
+**Update:** see the [addendum on Melashenko & Romanova 2025 (Ukrainian, soft polyhedra)](#addendum-2026-10-12-melashenko--romanova-ukrainian-paper) at the end.  It changes no part of the test in §3.
+
 Follow-up to [`irregular-packing-2026-10-12.md`](irregular-packing-2026-10-12.md) §4, §5, §12(c) and its "Ranked" item 1.
 Both papers were read in full this time (user-supplied PDFs in `../private/literature/`, converted with `pdftotext
 -layout` in the session scratchpad; not copied here).  This note corrects §4 and §12(c) of the earlier note, which only
@@ -321,3 +323,97 @@ likely to cross as A1 (no specific reason to expect softness to beat the uniform
    position and angle kicks never take.  Cheap once 2.1 exists.
 5. **Don't rank by soft side.**  In-place relief rewards grids most (§2.4), so the soft s is anti-informative about
    sub-k structure.
+
+---
+
+## Addendum 2026-10-12: Melashenko & Romanova (Ukrainian paper)
+
+User-supplied PDF in `../private/literature/Melashenko_Romanova.pdf`, read in full (`pdftotext -layout` in the session
+scratchpad, plus a render of the cuboid figure page; not copied here).  Labels as at the top of this note.
+
+**Record [verified, Crossref].**  О.П. Мелащенко, Т.Є. Романова, «Компонування м'яких багатогранників у опуклому
+контейнері мінімального об'єму» (English title as printed: "Layout of soft polyhedra in a minimum-volume convex
+container").  *Проблеми керування та інформатики* / *Problems of Control and Informatics* 70(1) (2025) 5–21,
+doi:10.34229/1028-0979-2025-1-1 (ISSN 2786-6491; received 23.12.2024).  **It is about 3D polyhedra, not polygons.**
+Related items that turned up in the search but were not read: Melashchenko, Romanova, Shekhovtsov, "Packing soft
+polygons in a minimum height rectangular target domain", *Cybernetics and Computer Technologies* 2024(1) 5–17,
+doi:10.34229/2707-451x.24.1.1 (probably the 2D "soft polygons" paper), and "Layout of compressible objects", LNNS
+(Smart Technologies in Urban Engineering), doi:10.1007/978-3-032-06829-3_29.
+
+### What it does [read]
+
+- **Two formulations.**
+  - **LSP1, free vertices.**  The variables are the vertex coordinates X_i^k themselves (no pose).  Elasticity is an
+    edge-length band (1 − ε) d_i ≤ ‖X_i^{k+1} − X_i^k‖ ≤ (1 + ε) d_i, eq. (1)/(9), with cyclic vertex indexing and one
+    reference length d_i per item; ε ∈ {0.3, 0.5, 0.6} or "–" (band dropped).  Volume is held by an equality on the
+    6 × det formula for a pyramid, eq. (4)/(8).  "Convexity preservation" is listed as a condition, but no
+    constraint enforces it in (5)–(9); for a 4-vertex pyramid it is automatic [inference].  Model (5)–(9), with
+    3Σm_i + 3n(n−1)/2 + |L| variables.
+  - **LSP2, pose plus stretch.**  P_i(u_i, μ_i) = {v_i + A(μ_i) M(θ_i) p⁰}, with A = diag(μ^x, μ^y, μ^z) and M a
+    3-angle rotation.  **The stretch is applied after the rotation, along the container axes** (vertex formula
+    eq. (10)), unlike the body-frame A(θ)M(μ) order of the *Mathematics* paper (§1a).  Volume and convexity are kept by
+    μ^x μ^y μ^z = 1, eq. (14) (stated, as in §1a's Prop. 1).  Bounds μ^− ≤ μ ≤ μ^+, eq. (15).  **In every experiment
+    μ^x = μ_i, μ^y = 1/μ_i, μ^z = 1**: the 2D stretch of §1a, embedded in 3D.  Model (11)–(15),
+    (3n² + 15n)/2 + |L| variables.
+- **Non-overlap.**  A separating plane per pair.  LSP1 uses (s_ij, γ_ij) with ‖s_ij‖ = 1, eq. (2)/(6), which they
+  call a generalised quasi phi-function.  LSP2 parametrises the unit normal by two angles (θ_ij^x, θ_ij^y), so the
+  norm constraint disappears; the quasi phi-function is the min of the two vertex-side minima (text after eq. (10),
+  constraint (12)).  This is the same separator as §1a and `fq`.  Containment: vertices in the cuboid, sphere or
+  cylinder (after (9) and after (15)).
+- **Objective.**  Container volume: abc, r, or r²h (after (9)).  The container is not a fixed shape: a cuboid has
+  three free sides.
+- **Solver.**  Multistart with **three starts per example** (LSP2 section).  3D-FSPA (Alg. 1, (16)–(19)): random
+  centres, circumscribed spheres grown homothetically by IPOPT, rescale by 1/λ, random angles, separating planes
+  from the sphere pairs.  3D-SDA (Alg. 2, (20)–(25)): per-item cube neighbourhoods of side 2(r_i + ε) (the ε formula
+  is garbled in extraction; it looks like §1a's eq. (14)), far pairs dropped, IPOPT, stop when the objective change is
+  ≤ δ (step 7).  Python 3.12 on an i5-12500.
+- **Instances and results.**  Tables 1–3 (LSP1, pyramids) and 4–9 (LSP2, pyramids and cuboids) in a cuboid, sphere
+  or cylinder, n = 10–40, times of 1–985 s.  Fill: pyramids 0.39–0.89; cuboids in a sphere or cylinder 0.43–0.72;
+  cuboids in a cuboid (Table 7) 1.0000 at n = 10 (5 × 4 × 4), then 0.983 (n = 20), 0.852 (n = 23, a 6 × 6 × 6 box)
+  and 0.849 (n = 30).  Bound ranges change from row to row, and include **[1.5, 2.5], which excludes μ = 1**: the
+  original shape is then infeasible (Table 4, n = 30).
+- **Hardening / continuation / schedule back to rigid:** none.  **Rigid baseline:** none, not even the single one of
+  Bennell 2024.  **Squares:** none (in 2D or as cube faces), apart from the cuboids below.
+
+### Equal objects: implied by the tables, not stated [inference]
+
+- f* · V* = Σ V_i gives exactly **8n for every cuboid row** (Tables 7–9) and **13.856 n ≈ 8√3 n for every pyramid
+  row** (Tables 1–6, e.g. 166.0213 × 0.8346 = 138.56 at n = 10).  Fig. 10 shows equal-height layers (c = 4 is two
+  layers, with μ^z = 1).  So the items are very likely identical; the most likely reading is 2 × 2 × 2 cubes.
+- **If so, Table 7 is worse than a trivial rigid packing.**  n identical bricks stacked in a row fill an n·p × q × r
+  box exactly (f = 1).  μ = 1 is inside every Table 7 range, so that packing is feasible for their problem, yet they
+  report f = 0.983, 0.852 and 0.849 at n = 20, 23 and 30.  For 2-cubes, their n = 23 answer, 6 × 6 × 6, is exactly the
+  rigid 3 × 3 × 3 lattice box with four holes.  Fig. 10б shows axis-parallel bricks in layers.  Their solver (three
+  starts, local IPOPT) stalls in a lattice-like state, with no rigid comparison to expose it.
+
+### What it adds beyond §1a and §1b
+
+1. 3D, and a second elasticity model (free vertices with an edge-length band) next to the affine stretch.
+2. Container-frame stretch (eq. (10)) instead of body-frame.
+3. Probably identical items, in a container whose shape is free.
+4. Nothing on hardening, continuation, rigid baselines or 2D squares.  The "where the evidence is thin" list in §1
+   stands, and is strengthened.  Their only box-in-box instances look like lattice stalls that a rigid packing beats.
+
+### Effect on the design and the test (§2–§3) [inference]
+
+- **The test in §3 does not change.**  No arm, metric, instance or rule needs revision.  The paper reinforces three
+  points already there: the concurrent rigid control A0 is essential (the paper has none, and its soft results lose
+  to rigid ones), soft items stall on axis lattices (§2.4, failure (c)), and soft side should not be used for ranking
+  (§4 item 5).
+- **Frame of the stretch: record as an optional variant in §2.5, not as a change.**  Container-frame stretch,
+  o_k = diag(w_i, h_i) · H R(θ_i) s_k, instead of §2.1's body-frame H R(θ_i) diag(w_i, h_i) s_k:
+  - For axis squares the two are the same, so §2.4's row and Gordan argument is unchanged.
+  - For tilted squares, a container-frame stretch makes a parallelogram.  It shortens the square's x- (or y-) extent
+    directly, whatever its tilt.  So a tilted square on a near-full line can give relief at first order; in the body
+    frame it gives less relief, and none at 45°, where w|cos θ| + h|sin θ| is even in a.  This bears only on failure
+    mode (b) (jams held by the tilted part).
+  - It also removes the a ↔ −a, θ + 90° redundancy, and the corners stay linear in (w, h), so separators and walls
+    stay smooth.  `sat_gap` and `check` would need the parallelogram projection max_k t · o_k rather than the
+    rectangle formula in §2.2.
+  - Worth one extra arm (A1 with the container frame) only if the pilot shows A1 changing lines in the tilted part
+    and not crossing.
+- **Free vertices (LSP1 model): not adopted.**  For squares it means 8 coordinates per item and shear modes, and in 2D
+  it needs an explicit convexity constraint (not automatic as for a tetrahedron).  This is a larger and less
+  structured search space than ε tanh(b), with no evidence in favour.
+- **Forced softness** (a bound range excluding μ = 1, Table 4) is the paper's analogue of the "signed / anti-soft"
+  variant in §2.5.  They give no comparison, so it adds no evidence either way.

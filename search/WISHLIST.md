@@ -83,8 +83,8 @@ nondecreasing, so Friedman's C1 (A1) points at no specific n today; it would if 
   octic (constructibility not decided: Galois group not computed).  s(28) (best known, Ellsworth 2025, rigid) uses one
   tilt angle (59.709°); its polynomial is an irreducible sextic with Galois group **S6** (sympy), so the best-known
   s(28) is not expressible in radicals.
-* Packings with ≥ 5 rotation groups sit mostly at fractional parts ≳ 0.87, just below k², where the Erdős–Graham
-  small-tilt packings live.  Exceptions: n = 68, 103, 123, 297.  Packings with ≤ 3 groups hold about half of each
+* Packings with ≥ 5 rotation groups sit mostly at fractional parts ≳ 0.87, just below k², where small-tilt
+  packings live.  Exceptions: n = 68, 103, 123, 297.  Packings with ≤ 3 groups hold about half of each
   k-interval through k = 17 (9 of 18 at k = 17), with no visible decline.
 
 **Questions these targets bear on** (object-order; not yet stated elsewhere in this list):
@@ -125,7 +125,7 @@ nondecreasing, so Friedman's C1 (A1) points at no specific n today; it would if 
 | A10 | **S4:** bounded family delay, `k_fam(c) ≤ 2 k_LP(c)`. | open.  Measured delay ≈ 2, 1.6, 1.3–1.7 for c = 3, 4, 5 [heuristic].  False if M saturates. | quantitative bridge from isolated certificates to families | FRIEDMAN §9.3, §9.4 |
 | A11 | **S5:** Friedman up to bounded loss, `c*(k′) ≥ c*(k) − O(1)` for k′ ≥ k. | open.  Needs control of the integrality gap, so LP tools alone cannot reach it. | weak C1 | FRIEDMAN §9.4 |
 | A12 | **C8 (rectangle Friedman):** `c*(a,b)` is nondecreasing in a and in b separately. | open.  It is the half-step of C1; each step is one periodic-slab insertion. | C1 one direction at a time | FRIEDMAN §7 C8 |
-| A13 | **Literature checks behind the "≳ c^{5/3}" floor:** the exact form of Roth–Vaughan Thm 1 (primary source), and whether the O(x^0.6) waste constant is effective. | secondhand only.  The claim that no threshold is linear in c rests on the second check. | soundness of FRIEDMAN §0 and §9.0 as published | FRIEDMAN §6, §9.0 |
+| A13 | **Literature checks behind the "≳ c^{5/3}" floor:** the exact form of Roth–Vaughan Thm 1 (primary source), and whether the O(x^0.6) waste constant is effective. | first half done 10-12 (`literature/waste-bounds-2026-10-12.md`): RV Thm 1 (p.170) is W ≫ √(α‖α‖) when α(α − ⌊α⌋) > 1/6, explicit c₀ = 10⁻¹⁰⁰ (pp.173, 186).  The effectiveness of the O(x^0.6) constant is still secondhand.  The claim that no threshold is linear in c rests on the second check. | soundness of FRIEDMAN §0 and §9.0 as published | FRIEDMAN §6, §9.0 |
 
 Proved here and reusable (not wishlist items, listed so they are not re-proved): the ascent `c*(k+1) ≤ c*(k)+2`
 (§1.2); the insertion lemma (§2.1); C3 (`S_ins` is nondecreasing); the averaging lemma (§9.1.1, in Lean); the
