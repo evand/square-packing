@@ -23,6 +23,9 @@ public unfixed — see the Publishing section for why each one is on that list.
   (superseded 2026 records; catalogue revisions for holders improved in place).  Holders with no surviving drawing
   show the next one, labelled.  Known oddity: n = 155 lists Ellsworth twice (2024-12 improved, 2026-01 found) from
   the main and compared pages; check in credits.py.
+* When jlevy/squares verifies s(k^2-4) = k (T-081): drop `awaiting` from the k2m4 entries in `data/lower_bounds.json`
+  (n = 60, 77, 96), `./build.sh bounds credits`.  Strict bar for our k^2-4 floors (Evan, 10-12); the Overview's c = 4
+  rings wait on the same event.
 * Later: extended version beyond n = 324 (Evan: base on n ≤ 324 for now); Overview card linking the page; floors for n > 100.
 
 ## Done 2026-09-22 (site review, `private/site/notes/site-review-2026-09-22.md`)
