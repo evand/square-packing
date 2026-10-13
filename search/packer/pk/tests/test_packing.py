@@ -37,3 +37,14 @@ def test_roundtrip_formats():
 
 if __name__ == '__main__':
     test_hash_invariant(); test_roundtrip_formats(); print('ok')
+
+
+def test_rect_container_pen_and_hash():
+    from pk.packing import Packing
+    two = [[0.5, 0.5, 0], [1.5, 0.5, 0]]
+    assert Packing(1.0, two, dx=1.0).max_pen() == 0.0          # 2 x 1 box holds both
+    assert Packing(1.0, two).max_pen() > 0.9                    # 1 x 1 box does not
+    a = Packing(1.0, two, dx=1.0)
+    b = Packing(1.0, [[1.5, 0.5, 0], [0.5, 0.5, 0]], dx=1.0)   # relabelled
+    assert a.canon_hash() == b.canon_hash()
+    assert a.canon_hash() != Packing(1.0, two, dx=1.5).canon_hash()

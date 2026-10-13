@@ -1823,3 +1823,31 @@ modest odds)
   end to end on our side; the weak link was the composer, not the pieces.
 * Bug fixed in rectsearch.py (elite sorted only on some events; no effect on any best.txt: all equal their log minima);
   adaptive kick (`--adaptive`, Gensane-Ryckelynck) added, untested.
+* **Composer v2** (`compose2.py`: two pieces in opposite corners + exact MILP upright fill at a target side; pieces
+  tight for S: S - dim within 0.03 of an integer; area bound; tilted-overlap check).  Positive control at the 10-11
+  05:51 cutoff: **175 HIT** (37 tight pieces, 35 fills, polished 13.764174317490 = #528).
+* **Live run, pre-registered (22:45)**: pieces = lib1 + sw1 + c38 (1,044), every sub-grid n in 20..340, S =
+  frontier_now(n) - 1e-9 (eventbench, envelope), 14 procs (`runs/compose2/live1`).  Success = count >= n, then
+  candidate.py (both checkers + live check).  Prediction: 0-2 hits (the frontier at n <= 324 has had this method
+  applied by Ostashev / SQUISH with their libraries; ours differs mainly in the re-optimised crop pieces).
+
+## Night plan 10-13 (budgets; each run evaluated against its budget afterwards)
+Principle (Evan 10-12): new progress comes from new technique, more compute only loosely; measurement only to steer
+compute; every run has a CPU budget and is graded on what it got within it.  Calibration from EVENTS: Ostashev's few
+searched pieces were each reused for several records (38-sq (h+2)xh: 175, 232, 264; 44-sq, 62-sq: 176, 204, 303), so
+the leverage is in which cells get searched and in reusing every good piece.
+* **Code (no CPU)**: compose2 pulls arms within a time budget per n through `pk/bandit.py` (KindBandit / CellBandit
+  moved from explore.py, now shared), every fill logged; pieces live in the store (`piece` table, `Packing.dx`,
+  `pk/pieces.py`; 1,762 imported) and rectsearch keeps every distinct local minimum (h to 1e-7) there; compose2
+  `--probe D`: fill at frontier + D and bisect each fitting arm to its smallest side (near-miss = how much piece
+  improvement a record needs).  Control: 175 at the pre-#528 frontier found in 2-24 s (3 seeds) vs 89 s exhaustive.
+* **P1 store sync** (agent; ~0 CPU) + crops of the 14 new frontier packings -> pieces (budget 2 CPU-h).  Graded on:
+  new pieces that beat the cell's best.
+* **P2 bandit composer live**, n 20..340 sub-grid, 120 s per n (budget 6 CPU-h).  Success = hit -> candidate.py.
+  Prediction 0-2 hits.  Kills the old exhaustive c2live when it starts (P2 supersedes it; its 113 n are logged).
+* **P3 probe scan** at frontier + 0.02 (budget 6 CPU-h): near-miss list per n.  Its only value is choosing P4's cells
+  and finding polish candidates (need < 2e-3: fq polish the composition; success = below frontier after candidate.py).
+* **P4 targeted piece search** on the cells P3 ranks (budget 15 CPU-h, <= 1.5 CPU-h per cell; a cell stops early once
+  its h meets the requirement, then compose at once).  Graded on hits per CPU-h and the fraction of cells whose
+  requirement was met.
+* **P5 (contingent)** removal from several near-best n + 1 parents (the 179 miss), budget 3 CPU-h.

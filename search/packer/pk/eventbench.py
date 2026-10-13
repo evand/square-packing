@@ -164,8 +164,14 @@ def frontier_at(n, T):
     return min(_point_at(m, T) for m in range(n, n + ENVELOPE + 1))
 
 
+_SF = {}
 def frontier_now(n):
-    return frontier_at(n, None)
+    """Live frontier: the events envelope, and the store's (frontier table incl. pending claims, every feasible packing)
+    envelope, which holds posts newer than the events table (10-13: Ostashev's s(304) update, Mishapolk's s(207))."""
+    for m in range(n, n + ENVELOPE + 1):
+        if m not in _SF:
+            _SF[m] = store_frontier(m) or math.inf
+    return min(frontier_at(n, None), min(_SF[m] for m in range(n, n + ENVELOPE + 1)))
 
 
 def moved_ns(t0, t1=None):

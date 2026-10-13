@@ -7,7 +7,8 @@ Why: the composition gap is piece quality.  Ostashev's decisive piece (38 square
 
 Starts: positions uniform in a loose box (area ~ m x loose), angles: half the squares upright, the rest from a tilt
 alphabet (45 deg, atan 1/2, atan 1/3, atan 2/3, 24.4, 36.87, 28.07 deg; one angle per start, +- mirror) or all random.
-Each start: fq ALM quench + polish in the rectangle.  Then MBH on the elite: gaussian kick (sigma drawn from
+Each start: fq ALM quench + polish in the rectangle.  Every distinct minimum (h to 1e-7) is logged to minima_<seed>.jsonl
+and imported into the store's piece table at the end (pk.pieces; compose2 reads from there).  Then MBH on the elite: gaussian kick (sigma drawn from
 {0.02, 0.05, 0.15}) + quench, accept if lower.  Per-cell results: runs/rectsearch/<tag>/m<m>_d<d>/best.txt + log.jsonl.
 
   python3 rectsearch.py run --cells 38:2 --minutes 10 --procs 8 --out runs/rectsearch/t1
@@ -63,6 +64,7 @@ def worker(args):
     t0 = time.time()
     elite = []                                    # (h, sq)
     log = open(os.path.join(out, f'log_{seed}.jsonl'), 'w')
+    mins, seen = open(os.path.join(out, f'minima_{seed}.jsonl'), 'w'), set()   # every distinct local minimum
     nq = 0
     while time.time() - t0 < seconds:
         if not elite or (time.time() - t0) < start_frac * seconds or rng.random() < 0.2:
@@ -86,13 +88,23 @@ def worker(args):
             continue
         h, s2 = r.s, np.array(r.p.sq, float)
         log.write(json.dumps(dict(t=round(time.time() - t0, 2), kind=kind, h=h)) + '\n')
+        sig = signature(h, s2)
+        if sig not in seen:
+            seen.add(sig); mins.write(json.dumps(dict(h=h, sq=s2.tolist())) + '\n'); mins.flush()
         if adaptive and kind.startswith('kick'):      # Gensane-Ryckelynck: double on success, halve on failure
             sig_ad = min(0.5, sig_ad * 2) if h < h_par - 1e-9 else max(0.003, sig_ad * 0.5)
         if all(abs(h - e[0]) > 1e-9 for e in elite):
             elite.append((h, s2))
         elite.sort(key=lambda e: e[0]); del elite[12:]
-    log.close()
+    log.close(); mins.close()
     return dict(seed=seed, nq=nq, best=[(e[0], e[1].tolist()) for e in elite[:3]])
+
+
+def signature(h, sq):
+    """Identity of a local minimum for de-duplication: h to 1e-7.  Mirror / transposed copies and rattler moves share
+    it; angle multisets don't work as a key (free rattlers take arbitrary angles: 241 "distinct" minima at m = 20 were
+    ~25 values of h).  Distinct minima at the same h to 1e-7 are rare enough to lose."""
+    return round(h, 7)
 
 
 def run(a):
@@ -119,28 +131,25 @@ def run(a):
         b['nq'] += r['nq']
         if r['best'] and r['best'][0][0] < b['h']:
             b['h'] = r['best'][0][0]
-            sq = r['best'][0][1]
             with open(os.path.join(a.out, f'm{m}_d{d}', 'best.txt'), 'w') as f:
-                f.write(f'{m} {b["h"]!r}\n' + ''.join(f'{x!r} {y!r} {t!r}\n' for x, y, t in sq))
+                f.write(f'{m} {b["h"]!r}\n' + ''.join(f'{x!r} {y!r} {t!r}\n' for x, y, t in r['best'][0][1]))
+    from pk.pieces import import_paths                  # every distinct minimum -> the store's piece table
+    summ['_store'] = dict(zip(('seen', 'new'), import_paths([a.out])))
     json.dump(summ, open(os.path.join(a.out, 'summary.json'), 'w'), indent=1)
-    for v in summ.values():
+    for v in (v for k, v in summ.items() if not k.startswith('_')):
         print(f"m={v['m']} d={v['d']}: best h {v['h']:.10f}  ({v['nq']} quenches)")
     man.finish(summary=summ)
 
 
 def export(a):
-    """Search results (every <dir>/m*_d*/best.txt) -> <dir>/pieces.jsonl in rectlib's format, so
-    `rectlib.py atlas <dir> --out X --with-crops ATLAS` and `mondrian.py compose` take them unchanged."""
-    import glob
+    """Every distinct minimum of a run -> <dir>/pieces.jsonl (rectlib's format, for `rectlib.py atlas`).  The store
+    already has them (run() imports them); this is only for the file-based tools."""
+    from pk.pieces import from_rectsearch
     n = 0
     with open(os.path.join(a.dir, 'pieces.jsonl'), 'w') as f:
-        for b in sorted(glob.glob(os.path.join(a.dir, '**', 'm*_d*', 'best.txt'), recursive=True)):
-            L = [l.split() for l in open(b) if l.strip()]
-            m, h = int(L[0][0]), float(L[0][1])
-            d = int(os.path.basename(os.path.dirname(b)).split('_d')[1])
-            sq = [[float(t) for t in r[:3]] for r in L[1:1 + m]]
-            f.write(json.dumps(dict(key=dict(src=f'rs:{m}:{d}', piece=0, src_n=0), m=m, d=d, W0=h + d, H0=h, s0=h,
-                                    h=h, ok=True, how='search', sq=sq)) + '\n')
+        for i, (p, src, ref) in enumerate(from_rectsearch(a.dir)):
+            f.write(json.dumps(dict(key=dict(src=f'rs:{p.n}:{p.dx:g}', piece=i, src_n=0), m=p.n, d=p.dx, W0=p.s + p.dx,
+                                    H0=p.s, s0=p.s, h=p.s, ok=True, how='search', sq=p.sq.tolist())) + '\n')
             n += 1
     print(f'{n} pieces -> {a.dir}/pieces.jsonl')
 

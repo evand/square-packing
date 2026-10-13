@@ -39,6 +39,11 @@ CREATE TABLE IF NOT EXISTS minimum (
   added TEXT, updated TEXT, UNIQUE(n, key));
 CREATE TABLE IF NOT EXISTS copy (
   n INTEGER NOT NULL, side_key TEXT NOT NULL, min_key TEXT NOT NULL, via TEXT, added TEXT, UNIQUE(n, side_key, min_key));
+CREATE TABLE IF NOT EXISTS piece (
+  id INTEGER PRIMARY KEY, hash TEXT UNIQUE NOT NULL, m INTEGER NOT NULL, d REAL NOT NULL, h REAL NOT NULL,
+  coords BLOB NOT NULL, status TEXT NOT NULL DEFAULT 'raw', pen REAL, source TEXT NOT NULL, ref TEXT,
+  tags TEXT NOT NULL DEFAULT '[]', added TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS piece_mdh ON piece(m, d, h);
 CREATE TABLE IF NOT EXISTS frontier (
   n INTEGER NOT NULL, s REAL NOT NULL, s_str TEXT, finder TEXT, source TEXT NOT NULL, ref TEXT, pending INTEGER NOT NULL,
   packing INTEGER, updated TEXT, UNIQUE(n, source));
@@ -114,6 +119,45 @@ class Store:
 
     def basin(self, n, key):
         return self.db.execute('SELECT * FROM basin WHERE n=? AND key=?', (n, key)).fetchone()
+
+    # ---------- rectangle pieces: m squares in (h + d) x h (Packing with dx = d), for composition ----------
+    def add_piece(self, p: Packing, source: str, ref=None, tags=(), tol=1e-9, commit=True):
+        """Insert (or find) a piece; infeasible ones are stored as such.  Every distinct local minimum is worth keeping
+        (seams differ; Evan 10-12).  Returns (id, created)."""
+        h = p.canon_hash()
+        row = self.db.execute('SELECT id, tags FROM piece WHERE hash=?', (h,)).fetchone()
+        if row:
+            if tags:
+                t = sorted(set(json.loads(row['tags'])) | set(tags))
+                self.db.execute('UPDATE piece SET tags=? WHERE id=?', (json.dumps(t), row['id']))
+            if commit:
+                self.db.commit()
+            return row['id'], False
+        pen = p.max_pen()
+        cur = self.db.execute('INSERT INTO piece(hash,m,d,h,coords,status,pen,source,ref,tags,added) '
+                              'VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+                              (h, p.n, float(p.dx), float(p.s), p.sq.astype('<f8').tobytes(),
+                               'infeasible' if pen > tol else 'raw', pen, source, ref, json.dumps(sorted(set(tags))), now()))
+        if commit:
+            self.db.commit()
+        return cur.lastrowid, True
+
+    def pieces(self, m=None, d=None, mmin=None, source=None, feasible=True):
+        """Pieces as Packings (s = h, dx = d; meta: id, source, tags), ordered by (m, d, h)."""
+        w, a = [], []
+        for col, op, v in (('m', '=', m), ('d', '=', d), ('m', '>=', mmin)):
+            if v is not None:
+                w.append(f'{col}{op}?'); a.append(v)
+        if source:
+            w.append('source LIKE ?'); a.append(source)
+        if feasible:
+            w.append("status!='infeasible'")
+        q = 'SELECT * FROM piece' + (' WHERE ' + ' AND '.join(w) if w else '') + ' ORDER BY m, d, h'
+        out = []
+        for r in self.db.execute(q, a):
+            out.append(Packing(r['h'], np.frombuffer(r['coords'], '<f8').reshape(-1, 3), dx=r['d'],
+                               meta=dict(id=r['id'], source=r['source'], ref=r['ref'], tags=json.loads(r['tags']))))
+        return out
 
     # ---------- minima (pk/identity.py) ----------
     def find_minimum(self, n, S):

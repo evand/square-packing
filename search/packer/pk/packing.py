@@ -1,4 +1,4 @@
-"""Packing: n unit squares in [0, s]^2, centres (x, y) lower-left origin, angle in degrees mod 90.
+"""Packing: n unit squares in [0, s + dx] x [0, s] (dx = 0: the square box; dx > 0: rectangle pieces), centres (x, y) lower-left origin, angle in degrees mod 90.
 
 One type for the whole toolchain; readers for every format we meet, writers for ours and the common third-party ones,
 an f64 feasibility check, a grid test (full lines / staggered axis chains), and a D4-canonical hash for dedupe.
@@ -21,6 +21,7 @@ class Packing:
     sq: np.ndarray                      # (n, 3): x, y, deg (mod 90)
     s_str: str | None = None            # side exactly as reported by the source (decimal or n/d)
     meta: dict = field(default_factory=dict)
+    dx: float = 0.0                     # container [0, s + dx] x [0, s] (rectangle pieces, fq --rect-dx)
 
     def __post_init__(self):
         self.sq = np.asarray(self.sq, float).reshape(-1, 3).copy()
@@ -45,7 +46,7 @@ class Packing:
         off = np.array([[.5, .5], [-.5, .5], [-.5, -.5], [.5, -.5]])
         C = P[:, None, :2] + np.stack([off[:, 0] * c[:, None] - off[:, 1] * si[:, None],
                                        off[:, 0] * si[:, None] + off[:, 1] * c[:, None]], -1)
-        worst = max(0.0, -C.min(), C.max() - self.s)
+        worst = max(0.0, -C.min(), C[..., 0].max() - self.s - self.dx, C[..., 1].max() - self.s)
         d = np.linalg.norm(P[:, None, :2] - P[None, :, :2], axis=-1)
         I, J = np.nonzero(np.triu(d < math.sqrt(2) + 1e-9, 1))
         for i, j in zip(I, J):
@@ -75,26 +76,29 @@ class Packing:
 
     # ---------- identity ----------
     def canon_hash(self, pos=1e-6, ang=1e-4, sd=1e-9) -> str:
-        """Hash invariant under the 8 symmetries of the box and square relabelling (rounded coordinates)."""
+        """Hash invariant under the symmetries of the box (8 for a square, 4 for a rectangle) and square relabelling
+        (rounded coordinates).  dx = 0 hashes exactly as before rectangles existed."""
         s = self.s; X, Y, A = self.sq[:, 0], self.sq[:, 1], self.sq[:, 2]
         best = None
-        for sw in (False, True):
+        for sw in ((False, True) if self.dx == 0 else (False,)):
             for fx in (False, True):
                 for fy in (False, True):
                     x, y = (Y, X) if sw else (X, Y)
                     a = (90 - A) if sw else A        # swap = reflection: angle -> -angle
-                    if fx: x = s - x; a = 90 - a
+                    if fx: x = s + self.dx - x; a = 90 - a
                     if fy: y = s - y; a = 90 - a
                     a = np.round(a / ang) * ang % 90
                     a = np.where(np.abs(a - 90) < ang / 2, 0.0, a)
                     rows = sorted(zip(np.round(x / pos).astype(np.int64), np.round(y / pos).astype(np.int64),
                                       np.round(a / ang).astype(np.int64)))
-                    h = hashlib.sha1(json.dumps([self.n, round(s / sd)] + rows, default=int).encode()).hexdigest()[:20]
+                    h = hashlib.sha1(json.dumps([self.n, round(s / sd)] + ([['dx', round(self.dx / sd)]] if self.dx else []) + rows, default=int).encode()).hexdigest()[:20]
                     best = h if best is None or h < best else best
         return best
 
     # ---------- writers ----------
     def text(self, fmt='ours') -> str:
+        if self.dx and fmt not in ('ours', 'json'):
+            raise ValueError(f'{fmt}: square boxes only (dx = {self.dx})')
         s_out = self.s_str if self.s_str and fmt == 'ours' else repr(float(self.s))
         if fmt == 'ours':
             return f'{self.n} {s_out}\n' + ''.join(f'{float(x)!r} {float(y)!r} {float(a)!r}\n' for x, y, a in self.sq)
@@ -107,7 +111,7 @@ class Packing:
                 f'Square {i + 1}: x={float(x) - h!r}, y={float(y) - h!r}, deg={float(a)!r}\n'
                 for i, (x, y, a) in enumerate(self.tuples()))
         if fmt == 'json':
-            return json.dumps(dict(n=self.n, s=float(self.s), squares=self.sq.tolist()))
+            return json.dumps(dict(n=self.n, s=float(self.s), squares=self.sq.tolist(), **({'dx': self.dx} if self.dx else {})))
         raise ValueError(fmt)
 
     def write(self, path, fmt='ours'):
@@ -134,7 +138,7 @@ def parse(txt: str) -> Packing | None:
                 sq.append((float(x), float(y), math.degrees(2 * math.atan(float(t)))))
             return Packing(side_val(d['s_exact']), sq, str(d['s_exact']))
         if 'squares' in d and 's' in d:
-            return Packing(float(d['s']), d['squares'])
+            return Packing(float(d['s']), d['squares'], dx=float(d.get('dx', 0.0)))
         return None
     if 'Square 1:' in txt and re.search(r'^(?:Final )?s:\s', txt, re.M):
         s_str = re.search(r'^(?:Final )?s:\s*([0-9.eE+-]+)', txt, re.M).group(1); s = float(s_str)
