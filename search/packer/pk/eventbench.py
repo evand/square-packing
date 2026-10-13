@@ -128,7 +128,7 @@ def store_frontier(n):
     """min of the frontier table and every feasible store packing at n (catalogue rows such as Goebel's s(331) are not
     in the frontier table).  Not as-of-T: rows added after T can only make success harder."""
     r = db().execute('SELECT min(s) FROM frontier WHERE n=?', (n,)).fetchone()
-    q = db().execute("SELECT min(s) FROM packing WHERE n=? AND status!='infeasible' AND pen<=1e-9", (n,)).fetchone()
+    q = db().execute("SELECT min(s) FROM packing WHERE n=? AND status!='infeasible' AND (pen IS NULL OR pen<=1e-9)", (n,)).fetchone()
     v = [x for x in (r[0], q[0]) if x is not None]
     return min(v) if v else None
 

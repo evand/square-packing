@@ -1900,3 +1900,69 @@ the leverage is in which cells get searched and in reusing every good piece.
   pairs per n (95 inputs, 45 n), ops soft05 / soft15 / soft15c / loose x 6 seeds (`runs/relax/relax1`).  Success:
   s < frontier_now(n) - 1e-9 -> candidate.py.  Budget 7 CPU-h.  Prediction: 1-3 successes (the drop distribution
   reaches 1e-2; needs below 5e-3 exist at ~15 n, e.g. 53, 106, 227, 299 at 3.5e-4 .. 7e-4).
+* **relax1 result**: 0 successes (prediction 1-3: miss).  74 of 95 inputs did not move under any soft op (jammed
+  against grid-like upright blocks); the drops that exist are rare (104: +1.3e-2 relaxed to an exact frontier tie;
+  205 5.6e-3 -> 1.6e-3; 53 7.0e-4 -> 3.5e-4).  Closest positive: 299 (2.8e-4), 106 (3.2e-4), 53, 227 (3.6e-4).
+* **relax2, pre-registered (02:50)**: soft-relax the probe's exact ties at n <= 324 (need <= 1e-6: compositions that
+  rebuild the frontier side from other pieces; 28 n: 38 67 82 101 104 122 125 145 147 149 170 171 173-175 197 198
+  200 201 226 229 231 257 260 262 290 291 296), up to 3 pairs per n, same 4 ops x 6 seeds.  A tie starts at the
+  record, so any soft drop > 1e-9 is a success -> candidate.py.  Budget 4 CPU-h.  Prediction: 0-1 (most of these
+  frontier packings are themselves rigid compositions, s(m) + k type; relax1 showed 78 % of inputs don't move).
+* **relax1 cost** 11.4 min x ~14 cores ~ 2.7 CPU-h (of 7).  **relax2 result** (8.6 min, ~2 CPU-h of 4): 1,656 runs,
+  **no tie moved by even 1e-9** under any soft op.  0 successes (prediction 0-1 held).  The tie compositions (and so
+  the frontier packings they rebuild) are rigid: s(m) + k / grid-row constructions with no slack for softening.
+* **Flat frontier steps**: only 2 n <= 324 have s(n) = s(n + 1): 147 (12.6568542495) and 290 (17.5355339059).
+  **Removal 148 -> 147, pre-registered (03:05)**: every single-square removal of s(148) (store id 59) x {shrink,
+  soft05, soft15c, loose}, seed 1 (`runs/removal_ctl/r147`).  Success: < 12.656854249 - 1e-9.  Budget 0.5 CPU-h.
+  Prediction: 0 (a classical construction; Couzo's and our chains have done removal at most n).
+* **relax3, pre-registered (03:15)**: iterated soft relax (`--rounds 4`: each input restarts from its best result;
+  monotonic basin hopping with soft kicks) on the only n <= 324 whose compositions moved in relax1 and still sit
+  near: 53, 106, 151, 205, 227, 299 (up to 2 pairs each), ops soft05 / soft15 / soft15c / loose x 6 seeds per round.
+  Success: < frontier_now - 1e-9 -> candidate.py.  Budget 3 CPU-h.  Prediction: 0-1 (closest gaps 2.8e-4 .. 3.6e-4
+  after one round; drops shrink as a composition settles).
+* **Removal 148 -> 147 result**: 592 runs, all exactly 12.6568542495; 0 (prediction held).  326: exactsolve failed
+  (SVD did not converge) on the probe's layout; the seam-polish copies (same side) are being certified instead.
+* **P6 probe above 340, pre-registered (03:25)**: compose2 `--probe 0.02 --budget 150 --grid`, n 341..480 (48 below
+  grid, 92 at the grid: beating the grid is a record too), all pieces (`runs/compose2/probe2`), then seam polish of
+  hits.  Success = candidate.py-certified packing below frontier_now.  Budget 6 CPU-h.  Prediction: 3-10 certified
+  (325-340 gave 3 / 16 targets; the grid n add easy ones near (k - 1)^2).  Runs after relax3 (cores).
+* **relax3 result** (4 rounds, 1,056 runs, ~1.5 CPU-h): 0 (prediction 0-1 held); 299 relaxed to an exact frontier tie
+  (+6e-10), the rest stalled at their round-1 values.  Soft relax at n <= 324 is done for this library.
+* **s(326) <= 130/7 certified** (`runs/candidates/comp2_n326_1`, the seam-polish copy; the probe's own layout failed
+  exactsolve).  In the store.
+* **P6 result** (probe2, 26.6 min x ~15 cores ~ 6.6 CPU-h of 6): 140 targets, **37 hits** (n 362-446; gains 3e-4 to
+  8.6e-2 against frontier_now, which above 340 is mostly the grid or generic constructions).  Prediction 3-10:
+  exceeded.  All 37 going through candidate.py (`cert2`).  Caveat before any claim: frontier_now above 340 knows only
+  the store (issues, catalogue, register); general constructions in the literature (Göbel-type formulas, Friedman's
+  survey) may beat some of these and must be checked n by n.
+  (Times in this section after 01:00 are approximate; the machine clock read 02:19 at the cert2 check.)
+* **cert2**: 17 / 37 certified on the probe's own layouts; 20 failed exactsolve ("no valid certificate") or are slow.
+  Seam-polish copies (`runs/compose2/polish2`, 100 below the frontier) are being certified for those 20 (`cert3`).
+* **Counterfactual probe, pre-registered**: compose2 `--cf-eps E` scales every rectangle piece (d > 0) to h (1 - E)
+  (square frontier pieces untouched: a better square piece is a better s(m)), then asks the exact fill whether n fits
+  below the frontier.  A cf hit names the cells whose improvement by E would give a record at n <= 324: the targets
+  P4 lacked.  Run: n 20..324, E = 0.005 (what ~1 CPU-h of search bought at (38, 2) over 3 min), 60 s per n.
+  Budget 3 CPU-h.  Then rectsearch bandit on the named cells (budget <= 8 CPU-h, targets = the cell's h (1 - E)
+  or the bisected requirement).  Success (of the pair) = a certified record at n <= 324.  Prediction: cf names
+  5-20 cells; the pair yields 0-1 records.
+* **cf1 result** (22 min x 6 procs ~ 2.2 CPU-h of 3): **no counterfactual hit at n <= 324** (two tie artifacts with
+  square frontier pieces, 200 = s(148) + 2 and 229 = s(147) + 2, within the fill's 1e-6 tolerance).  Every rectangle
+  piece 0.5 % better still composes no record below 325.  So targeted piece search (P4) stays off: two-piece
+  composition at n <= 324 is saturated for pieces at our quality + 0.5 %.  Prediction (5-20 cells): miss.
+* **Refill test, pre-registered**: for each n in 20..340, the store's best packing's tilted squares + `exact_fill` of
+  the uprights at the same side.  count > n at side f(n) with f(n + k) > f(n) = a record at n + k (insertion by
+  refilling).  Budget 0.3 CPU-h.  Prediction: 0 (finders' upright blocks are normally maximal).
+* **Refill test result** (1.1 min x 10): 321 n; count > n at 151 n but only where s(n + k) already equals s(n); 0
+  records (prediction held).  Frontier upright blocks are maximal.
+* **Three-piece compositions (built, not run)**: `compose2 --three` (LL, UR, UL corners).  Area screen kills it at
+  n <= 324: the waste budget at the frontier is f^2 - n (~15 at n = 175) and each tilted piece wastes ~6-7 against its
+  box (38 in 7.76 x 5.76), so 0 / 20,000 random triples pass at 175.  A composition below 325 carries at most ~2
+  tilted blocks; this is also why two-piece composition is saturated there.
+* **Bug: store_frontier dropped catalogue rows with pen NULL** (`pen<=1e-9` is false for NULL): Ellsworth's s(368) =
+  19.7071067812 was missing from the envelope.  Fixed (`pen IS NULL OR`).  Consequence: **365, 366, 367 are ties
+  with s(368), 368 is worse; not records.**  Every other hit re-checked against the fixed envelope (excluding our own
+  new candidates): gains unchanged.
+* **P6 certified so far: 29 / 37; records (excl. 365-368): 362 363 364 370 375 401 402 403 404 409 410 411 412 414
+  417 418 419 443 444 446 454 456 457 459 460** (+ 413 442 450-453 455 458 in exactsolve).  In the store.  Many are
+  s(m) + k arithmetic in untouched territory (443 = s(123) + 10; 409 / 411 / 413 = s(129) + 9 with Ostashev's piece).
+  Before any claim: literature general constructions above 340 (Friedman DS7, Göbel) must be checked n by n.

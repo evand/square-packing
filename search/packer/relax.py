@@ -46,13 +46,14 @@ def run(a):
     from pk import eventbench as E
     rows, per = [], {}
     for r in sorted((json.loads(l) for l in open(a.near)), key=lambda r: r['need']):
-        if not (a.nmin <= r['n'] <= a.nmax and a.min_need < r['need'] < a.max_need):
+        if not (a.nmin <= r['n'] <= a.nmax and a.min_need < r['need'] < a.max_need) or \
+                (a.ns and r['n'] not in {int(x) for x in a.ns.split(',')}):
             continue
         L = per.setdefault(r['n'], [])
         if len(L) < a.per_n and all((r['A'], r['B']) != x for x in L):
             L.append((r['A'], r['B'])); rows.append(r)
     print(f'{len(rows)} inputs over {len(per)} n', flush=True)
-    tasks, meta = [], {}
+    meta, cur = {}, {}
     for i, r in enumerate(rows):
         X = mondrian.trim(np.array(r['sq'], float), r['n'])
         inp = os.path.join(a.out, f'in{i:03d}.txt')
@@ -60,13 +61,22 @@ def run(a):
             f.write(f"{r['n']} {float(r['S_min'])!r}\n" + ''.join(f'{float(x)!r} {float(y)!r} {float(t)!r}\n' for x, y, t in X))
         meta[i] = dict(n=r['n'], S0=r['S_min'], A=r.get('A'), B=r.get('B'),
                        target=a.target if a.target else E.frontier_now(r['n']))
-        for op, seed in itertools.product(a.ops.split(','), range(1, a.seeds + 1)):
-            if op == 'polish' and seed > 1:
-                continue
-            tasks.append((inp, os.path.join(a.out, f'out{i:03d}_{op}_{seed}.txt'), op, seed, i))
+        cur[i] = (inp, float(r['S_min']))
+    # rounds: monotonic basin hopping with soft kicks; each input restarts from its best result so far
+    tasks = []
     with ProcessPoolExecutor(a.procs) as ex, open(os.path.join(a.out, 'results.jsonl'), 'w') as f:
-        for t, r in zip(tasks, ex.map(job, [t[:4] for t in tasks])):
-            r.update(meta[t[4]], i=t[4]); f.write(json.dumps(r) + '\n'); f.flush()
+        for rd in range(a.rounds):
+            T = [(cur[i][0], os.path.join(a.out, f'out{i:03d}_r{rd}_{op}_{seed}.txt'), op, seed + 1000 * rd, i)
+                 for i in cur for op, seed in itertools.product(a.ops.split(','), range(1, a.seeds + 1))
+                 if not (op == 'polish' and seed > 1)]
+            tasks += T
+            for t, r in zip(T, ex.map(job, [t[:4] for t in T])):
+                r.update(meta[t[4]], i=t[4], round=rd, s_in=cur[t[4]][1]); f.write(json.dumps(r) + '\n'); f.flush()
+                if r.get('ok') and r['s'] < cur[t[4]][1] - 1e-12:
+                    cur[t[4]] = (r['out'], r['s'])
+            if a.rounds > 1:
+                print(f'round {rd}: ' + ' '.join(f"{meta[i]['n']}:{cur[i][1] - meta[i]['target']:+.2e}" for i in cur),
+                      flush=True)
     man.finish(summary=dict(tasks=len(tasks)))
     report(a)
 
@@ -95,7 +105,8 @@ if __name__ == '__main__':
     r.add_argument('--ops', default=','.join(OPS))
     r.add_argument('--nmin', type=int, default=0); r.add_argument('--nmax', type=int, default=10 ** 6)
     r.add_argument('--min-need', type=float, default=-1.0); r.add_argument('--max-need', type=float, default=1.0)
-    r.add_argument('--per-n', type=int, default=10 ** 6)
+    r.add_argument('--per-n', type=int, default=10 ** 6); r.add_argument('--rounds', type=int, default=1)
+    r.add_argument('--ns', help='comma list: only these n')
     r.add_argument('--seeds', type=int, default=4); r.add_argument('--procs', type=int, default=14)
     q = sp.add_parser('report'); q.add_argument('--out', required=True); q.add_argument('--target', type=float, default=0.0)
     q.add_argument('--ops', default=','.join(OPS))

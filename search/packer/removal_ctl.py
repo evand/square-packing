@@ -20,9 +20,9 @@ from concurrent.futures import ProcessPoolExecutor
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 FQ = os.path.join(HERE, 'target', 'release', 'fq')
-MODES = {'plain': ['--loosen', '1.0'], 'shrink': ['--loosen', '1.0', '--shrink'],
-         'soft': ['--loosen', '1.0', '--round-r0', '0.15', '--round-compress'],
-         'kick': ['--loosen', '1.01', '--kick', '0.02']}
+from relax import OPS                    # one operator table (10-13)
+MODES = dict(OPS, plain=['--loosen', '1.0'], soft=['--loosen', '1.0', '--round-r0', '0.15', '--round-compress'],
+             kick=['--loosen', '1.01', '--kick', '0.02'])
 
 
 def read(path):

@@ -29,7 +29,7 @@ PIECES = None
 PRIOR = (1.0, 0.01)          # weight = (1 + area slack)^PRIOR[0] * exp(-(gap_A + gap_B) / PRIOR[1])
 
 
-def load_pieces(mmin, per_cell=10 ** 9, source=None):
+def load_pieces(mmin, per_cell=10 ** 9, source=None, cf_eps=0.0):
     """Pieces from the store (pk.pieces): those that beat the grid in their own box, one per (cell, h to 1e-7) (copies
     and rattler moves of one minimum), up to per_cell per (m, d), best h first; gap = h / best h in the cell - 1."""
     from pk.store import Store
@@ -44,7 +44,11 @@ def load_pieces(mmin, per_cell=10 ** 9, source=None):
         if k in seen or cnt_k >= per_cell:
             continue
         seen.add(k); cnt[(m, d)] = cnt_k + 1
-        keep.append(dict(m=m, W=W, H=H, sq=p.sq, cell=(m, d), label=f"{p.meta['source']}:{m}:{d:g}#{p.meta['id']}"))
+        sq = p.sq.copy()
+        if cf_eps and d > 0:                            # counterfactual: the same piece with h smaller by eps h
+            #                                             (rectangle pieces only: a better square piece = a better s(m))
+            sq[:, :2] *= 1 - cf_eps; W *= 1 - cf_eps; H *= 1 - cf_eps
+        keep.append(dict(m=m, W=W, H=H, sq=sq, cell=(m, d), label=f"{p.meta['source']}:{m}:{d:g}#{p.meta['id']}"))
     hb = {}
     for q in keep:
         hb[q['cell']] = min(hb.get(q['cell'], math.inf), q['H'])
@@ -219,9 +223,85 @@ def polish_near(a):
                   f" gain {gain:.2e}{'  BELOW' if gain > 1e-9 else ''}", flush=True)
 
 
-def init(mmin, per_cell, source):
+def place3(A, B, C, va, vb, vc, S):
+    """Three corners: A at LL (variant va), B at UR (vb, turned 180 degrees), C at UL (vc, mirrored in y).  Tilted squares
+    only; None if any box sticks out or two pieces' tilted squares overlap."""
+    import mondrian
+    if max(q[k] for q in (A, B, C) for k in ('W', 'H')) > S + 1e-12:
+        return None
+    RA, RB, RC = variants(A)[va][0], variants(B)[vb][0], variants(C)[vc][0]
+    TA = RA[mondrian.is_tilted(RA[:, 2])]
+    TB = RB.copy(); TB[:, 0] = S - TB[:, 0]; TB[:, 1] = S - TB[:, 1]; TB = TB[mondrian.is_tilted(TB[:, 2])]
+    TC = RC.copy(); TC[:, 1] = S - TC[:, 1]; TC[:, 2] = (-TC[:, 2]) % 90.0; TC = TC[mondrian.is_tilted(TC[:, 2])]
+    for X, Y in ((TA, TB), (TA, TC), (TB, TC)):
+        if len(X) and len(Y) and mondrian._sat_overlap(X, Y):
+            return None
+    return np.r_[TA, TB, TC]
+
+
+def job3(args):
+    """Three-piece arms, weighted random sampling within the budget (cand^3 is too many to enumerate): A, B, C drawn by
+    prior weight among tight pieces (C may also be none), area screen, overlap check, exact fill.  Probe as in job."""
+    n, S, tol, tl, budget, max_fills, seed, probe, probe_steps = args
+    import mondrian
+    S = S + probe
+    P = PIECES
+    cell = {}
+    for i, q in enumerate(P):
+        cell.setdefault(q['cell'], []).append(i)
+    cand = [i for c, I in cell.items() if any(tight(P[i]['W'], S, tol + probe) or tight(P[i]['H'], S, tol + probe) for i in I)
+            for i in I if max(P[i]['W'], P[i]['H']) <= S + 1e-9 and P[i]['m'] < n]
+    rng = np.random.default_rng(seed)
+    if not cand:
+        return dict(n=n, S=S - probe, cand=0, pairs=0, arms=0, tried=0, sec=0.0, fills=[], near=[])
+    wc = np.array([math.exp(-P[i]['gap'] / PRIOR[1]) for i in cand]); wc /= wc.sum()
+    best, tried, fills, near, seen, t0, draws = None, 0, [], [], set(), time.time(), 0
+    while time.time() - t0 < budget and tried < max_fills and draws < 200000:
+        draws += 1
+        ia, ib, ic = (int(x) for x in rng.choice(cand, 3, p=wc))
+        A, B, C = P[ia], P[ib], P[ic]
+        if A['m'] + B['m'] + C['m'] + math.floor(S * S - A['W'] * A['H'] - B['W'] * B['H'] - C['W'] * C['H'] + 1e-9) < n:
+            continue
+        va, vb, vc = (int(x) for x in rng.integers(4, size=3))
+        key = (ia, ib, ic, va, vb, vc)
+        if key in seen:
+            continue
+        seen.add(key)
+        T = place3(A, B, C, va, vb, vc, S)
+        if T is None:
+            continue
+        tried += 1
+        t1 = time.time()
+        L = mondrian.exact_fill(T, S, time_limit=tl)
+        c = len(L)
+        rec = dict(n=n, A=A['label'], B=B['label'], C=C['label'], v=[va, vb, vc], c=c, sec=round(time.time() - t1, 2))
+        if probe and c >= n:
+            lo, hi, Lh = S - 2 * probe, S, L
+            for _ in range(probe_steps):
+                mid = (lo + hi) / 2
+                Tm = place3(A, B, C, va, vb, vc, mid)
+                Lm = mondrian.exact_fill(Tm, mid, time_limit=tl) if Tm is not None else []
+                if len(Lm) >= n:
+                    hi, Lh = mid, Lm
+                else:
+                    lo = mid
+            rec.update(S_min=hi, need=hi - (S - probe))
+            near.append(dict(rec, sq=np.asarray(Lh).tolist()))
+        fills.append(rec)
+        if best is None or c > best[0]:
+            best = (c, L)
+    near.sort(key=lambda r: r['S_min'])
+    base = dict(n=n, S=S - probe, near=near[:20], cand=len(cand), pairs=draws, arms=len(seen), tried=tried,
+                sec=round(time.time() - t0, 1), fills=fills)
+    if near and near[0]['need'] < -1e-9:
+        x = near[0]
+        return dict(base, count=n, A=x['A'], B=x['B'], S=x['S_min'], sq=x['sq'])
+    return dict(base, count=best[0] if best else None)
+
+
+def init(mmin, per_cell, source, cf_eps=0.0):
     global PIECES
-    PIECES = load_pieces(mmin, per_cell, source)
+    PIECES = load_pieces(mmin, per_cell, source, cf_eps)
 
 
 def run(a):
@@ -242,9 +322,9 @@ def run(a):
         tasks.append((n, f - a.below, a.tight, a.time_limit, a.budget, a.max_fills, a.seed + n, a.probe, a.probe_steps))
     print(f'{len(tasks)} targets, {len(load_pieces(a.mmin, a.per_cell, a.source))} pieces', flush=True)
     res = []
-    with ProcessPoolExecutor(a.procs, initializer=init, initargs=(a.mmin, a.per_cell, a.source)) as ex, \
+    with ProcessPoolExecutor(a.procs, initializer=init, initargs=(a.mmin, a.per_cell, a.source, a.cf_eps)) as ex, \
             open(os.path.join(a.out, 'results.jsonl'), 'w') as f, open(os.path.join(a.out, 'fills.jsonl'), 'w') as fl:
-        for r in ex.map(job, tasks):
+        for r in ex.map(job3 if a.three else job, tasks):
             sq = r.pop('sq', None)
             fl.write(''.join(json.dumps(x) + '\n' for x in r.pop('fills', []))); fl.flush()
             near = r.pop('near', [])
@@ -252,7 +332,7 @@ def run(a):
                 with open(os.path.join(a.out, 'near.jsonl'), 'a') as g:
                     g.write(''.join(json.dumps(x) + '\n' for x in near))
                 r['need'] = near[0]['need']
-            if sq is not None:
+            if sq is not None and not a.cf_eps:          # counterfactual layouts are not packings
                 r.update(polish(r['n'], r['S'], sq, a.out))
             f.write(json.dumps(r) + '\n'); f.flush()
             print(f"{r['n']:4d} S {r['S']:.10f} cand {r['cand']:4d} arms {r['arms']:7d} tried {r['tried']:5d} {r['sec']:6.0f}s best count {r.get('count')}"
@@ -309,6 +389,9 @@ if __name__ == '__main__':
     r.add_argument('--probe', type=float, default=0.0,
                    help='near-miss probe: fill at frontier + PROBE, bisect fitting arms to their smallest side (near.jsonl)')
     r.add_argument('--probe-steps', type=int, default=10)
+    r.add_argument('--three', action='store_true', help='three-piece arms (LL, UR, UL corners)')
+    r.add_argument('--cf-eps', type=float, default=0.0,
+                   help='counterfactual: every piece scaled to h (1 - eps); hits say which cells are worth searching')
     r.add_argument('--per-cell', type=int, default=10 ** 9, help='pieces per (m, d) cell, best h first (seam diversity)')
     k = sp.add_parser('rank'); k.add_argument('dirs', nargs='+'); k.add_argument('--tau', type=float, default=0.003)
     k.add_argument('--top', type=int, default=40); k.add_argument('--out')
