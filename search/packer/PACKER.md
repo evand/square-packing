@@ -1997,3 +1997,10 @@ the leverage is in which cells get searched and in reusing every good piece.
   posted).  None at n <= 324.  Built: bandit composer (shared pk/bandit.py), pieces in the store, probe / rank /
   polish / counterfactual / three-piece modes, relax.py (soft relax works on compositions: 304 control), refill
   test, rectsearch bandit over cells (built, not run: no targets survived), frontier closed under the L-step.
+* **Pre-post live check (10-13 08:20 MDT)**: synced #582 (Miles Gray s(381), claims only) and #583 (Couzo; pin 4596670
+  pushed ~14:00Z: 154 211 241 302 339 379-382) + Couzo HEAD's unannounced n375 19.8939065342.  Public-only L-closed
+  frontier vs ours: 339 +4.85e-4 (vs #583 18.9273836385), 364 +7.60e-3, 375 +1.15e-2 (vs Couzo HEAD), **414 now beaten**
+  (Couzo 375 + L = 20.8939 < our 20.8984; our 375 + L = 20.8825 is the corollary).  Certificates committed (231d41d,
+  `candidates/comp2_n{339,364,375}.*`); draft `outreach/draft-jlevy-n339-364-375-2026-10-13.md` (not posted).
+  364 = s(146) [BuddenPing #566] + 7; 375 = s(88) [SQUISH] + 10 (crops of s(88), s(129) [Xu]); 339 = two crops of
+  Ostashev's s(304).  `pk/sources.py`: pending.yaml entries with `repo: null` are claims only.
