@@ -497,7 +497,7 @@ fn slp_lp(nv: usize, si: usize, cons: &[Con], r: f64, kappa: f64, hq: &[(usize, 
     let t0 = Instant::now();
     let mut solver = DefaultSolver::new(&p, &q, &a, &b, &cones, settings).ok()?;
     solver.solve();
-    if std::env::var("FQ_LPT").is_ok() { eprintln!("lp rows {row} cols {nx} iters {} sec {:.3}", solver.info.iterations, t0.elapsed().as_secs_f64()); }
+    if std::env::var("FQ_LPT").is_ok() { eprintln!("lp rows {row} cols {nx} iters {} sec {:.4} tag {}", solver.info.iterations, t0.elapsed().as_secs_f64(), LP_TAG.load(Ordering::Relaxed)); }
     if let Some(dir) = DUMP_LP.get() { dump_lp(dir, kp, &used, cons, &b, kappa, r, row, nx, &solver, t0.elapsed().as_secs_f64()); }
     match solver.solution.status {
         SolverStatus::Solved | SolverStatus::AlmostSolved => {
@@ -508,6 +508,64 @@ fn slp_lp(nv: usize, si: usize, cons: &[Con], r: f64, kappa: f64, hq: &[(usize, 
         }
         _ => None,
     }
+}
+
+static SOC_STATS: [AtomicUsize; 2] = [AtomicUsize::new(0), AtomicUsize::new(0)]; // [active-set used, fell back]
+
+/// Second-order correction on the step LP's active set (PACKER "Q2").  The step LP (scaled: grad g . w - tau <= -g / R,
+/// |w| <= 1, tau >= 0) was solved at (w, tau); `cons` now carry the shifted g, `g_old` the step LP's.  Rows with slack
+/// < 1e-7 stay tight at the new rhs, box-active columns (|w| > 1 - 1e-7) and tau (if 0) stay fixed; the min-norm change
+/// of the remaining columns comes from one quasidefinite solve [I A^T; A -delta I].  None if the result violates any row
+/// or bound (the caller then solves the SOC LP).
+fn soc_active(nv: usize, _si: usize, cons: &[Con], g_old: &[f64], r: f64, w: &[f64], tau: f64) -> Option<Vec<f64>> {
+    use clarabel::algebra::CscMatrix;
+    use clarabel::qdldl::{QDLDLFactorisation, QDLDLSettingsBuilder};
+    let dbg = std::env::var("FQ_SOC_DBG").is_ok();
+    let fail = |s: &str| { SOC_STATS[1].fetch_add(1, Ordering::Relaxed); if dbg { eprintln!("soc_as fallback: {s}"); } None };
+    let tau_free = tau > 1e-9;
+    let lhs = |c: &Con, w: &[f64], t: f64| -> f64 { c.nz.iter().map(|&(k, a)| a * w[k]).sum::<f64>() - t };
+    let mut in_act = vec![false; cons.len()];
+    for i in 0..cons.len() { in_act[i] = -g_old[i] / r - lhs(&cons[i], w, tau) < 1e-7; }
+    let mut fixed = vec![false; nv];          // columns held at their step value (box-active) or clamped to a bound
+    let mut wb = w.to_vec();                  // base point: step w with clamped columns moved to their bound
+    for k in 0..nv { if w[k].abs() >= 1.0 - 1e-7 { fixed[k] = true; } }
+    for round in 0..4 {
+        let act: Vec<usize> = (0..cons.len()).filter(|&i| in_act[i]).collect();
+        if act.is_empty() { return fail("no active rows"); }
+        let mut col = vec![usize::MAX; nv];
+        let mut free: Vec<usize> = Vec::new();
+        for &i in &act { for &(k, _) in &cons[i].nz { if col[k] == usize::MAX && !fixed[k] { col[k] = free.len(); free.push(k); } } }
+        let nf = free.len() + tau_free as usize;
+        let m = act.len();
+        let (mut ii, mut jj, mut vv) = (Vec::new(), Vec::new(), Vec::new());
+        for c in 0..nf { ii.push(c); jj.push(c); vv.push(1.0); }
+        let mut rhs = vec![0.0; nf + m];
+        for (q, &i) in act.iter().enumerate() {
+            let cc = nf + q;
+            let mut ent: Vec<(usize, f64)> = Vec::new();
+            for &(k, a) in &cons[i].nz {
+                if col[k] != usize::MAX { if let Some(e) = ent.iter_mut().find(|e| e.0 == col[k]) { e.1 += a; } else { ent.push((col[k], a)); } }
+            }
+            if tau_free { ent.push((nf - 1, -1.0)); }
+            for (c, a) in ent { ii.push(c); jj.push(cc); vv.push(a); }
+            ii.push(cc); jj.push(cc); vv.push(-1e-10);
+            rhs[cc] = -cons[i].g / r - lhs(&cons[i], &wb, tau);
+        }
+        let kkt = CscMatrix::new_from_triplets(nf + m, nf + m, ii, jj, vv);
+        let mut signs = vec![1i8; nf]; signs.extend(std::iter::repeat(-1i8).take(m));
+        let opts = QDLDLSettingsBuilder::default().Dsigns(signs).build().ok()?;
+        let mut f = match QDLDLFactorisation::new(&kkt, Some(opts)) { Ok(f) => f, Err(_) => return fail("factor") };
+        f.solve(&mut rhs);
+        let mut w2 = wb.clone();
+        for (c, &k) in free.iter().enumerate() { w2[k] += rhs[c]; }
+        let tau2 = if tau_free { tau + rhs[nf - 1] } else { tau };
+        if !w2.iter().all(|x| x.is_finite()) || tau2 < -1e-12 { return fail("nan / tau"); }
+        let mut ok = true;
+        for k in 0..nv { if w2[k].abs() > 1.0 + 1e-9 { ok = false; fixed[k] = true; wb[k] = w2[k].signum(); } }
+        for (i, c) in cons.iter().enumerate() { if lhs(c, &w2, tau2) > -c.g / r + 1e-8 { ok = false; in_act[i] = true; } }
+        if ok { SOC_STATS[0].fetch_add(1, Ordering::Relaxed); if dbg { eprintln!("soc_as ok round {round}"); } return Some(w2); }
+    }
+    fail("rounds")
 }
 
 fn row_key(p: &Prob, v: &[f64], c: &Con) -> (u32, u32, u8, u8) {
@@ -971,13 +1029,13 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
     let mut xref = x.clone();
     let merit = |p: &mut Prob, v: &[f64]| -> f64 { v[3 * p.n] + kappa * p.viol_update(v, false).max(0.0) };
     // LP at the current point with the current branch choice: (pred, w, tau, ncons)
-    let try_lp = |p: &mut Prob, x: &[f64], s: f64, choice: &mut [Option<usize>], r: f64, hq: &[(usize, usize, f64)]| -> Option<(f64, Vec<f64>, Vec<Con>, f64, Vec<f64>)> {
+    let try_lp = |p: &mut Prob, x: &[f64], s: f64, choice: &mut [Option<usize>], r: f64, hq: &[(usize, usize, f64)]| -> Option<(f64, Vec<f64>, Vec<Con>, f64, Vec<f64>, f64)> {
         snap(p, x, choice, o.cc_tol);
         let v0 = p.pack(x, s);
         let m0 = merit(p, &v0);
         let cons = p.near(&v0, 5.0 * r + 1e-9);
         let (w, tau, z) = slp_lp(v0.len(), 3 * p.n, &cons, r, kappa, hq, p)?;
-        Some((m0 - (s + r * w[3 * p.n] + kappa * r * tau), w, cons, m0, z))
+        Some((m0 - (s + r * w[3 * p.n] + kappa * r * tau), w, cons, m0, z, tau))
     };
     let mut stalls = 0;
     let (mut fin_prev, mut fin_tried): (u64, std::collections::HashSet<u64>) = (0, std::collections::HashSet::new());
@@ -999,7 +1057,7 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
             xref = x.clone();
         }
         LP_IT.store(it, Ordering::Relaxed); LP_TAG.store(0, Ordering::Relaxed);
-        let Some((pred, w, mut cons, m0, zd)) = try_lp(p, &x, s, &mut choice, r, &hq) else { r /= 4.0; if r < o.rmin { break; } continue; };
+        let Some((pred, w, mut cons, m0, zd, tau0)) = try_lp(p, &x, s, &mut choice, r, &hq) else { r /= 4.0; if r < o.rmin { break; } continue; };
         let small = pred < 1e-14 * s.max(1.0) || r < o.rmin;
         if small {
             // branch search: flip one ambiguous pair at a time, keep the best predicted decrease
@@ -1045,12 +1103,18 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
         let wmax = w.iter().fold(0.0f64, |a, &b| a.max(b.abs()));
         if rho < 0.75 {
             // second-order correction: shift each row by its curvature error at the trial point
+            let g_old: Vec<f64> = cons.iter().map(|c| c.g).collect();
             for c in cons.iter_mut() {
                 let lin: f64 = c.nz.iter().map(|&(k, a)| a * r * w[k]).sum();
                 c.g = p.g_at(&v1, c.sp) - lin;
             }
             LP_TAG.store(1, Ordering::Relaxed);
-            if let Some((w2, _, _)) = slp_lp(nv, 3 * n, &cons, r, kappa, &hq, p) {
+            // FQ_SOC_AS=1 (perf 10-13, PACKER "Q2"): min-norm correction on the step LP's active set, LP as fallback
+            static SOC_AS: OnceLock<bool> = OnceLock::new();
+            let as_w = if *SOC_AS.get_or_init(|| std::env::var("FQ_SOC_AS").map(|v| v == "1").unwrap_or(false)) && hq.is_empty() {
+                soc_active(nv, 3 * n, &cons, &g_old, r, &w, tau0)
+            } else { None };
+            if let Some((w2, _, _)) = as_w.map(|w2| (w2, 0.0, Vec::new())).or_else(|| slp_lp(nv, 3 * n, &cons, r, kappa, &hq, p)) {
                 let mut v2: Vec<f64> = (0..nv).map(|k| v0[k] + r * w2[k]).collect();
                 p.tie(&v0, &mut v2);
                 let m2 = merit(p, &v2);
@@ -1116,7 +1180,7 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
     snap(p, &x, &mut choice, o.cc_tol);
     // final force network: one LP at small R at the final point
     LP_TAG.store(3, Ordering::Relaxed);
-    if let Some((_, _, cons, _, z)) = try_lp(p, &x, s, &mut choice, r.max(1e-9).min(1e-6), &[]) {
+    if let Some((_, _, cons, _, z, _)) = try_lp(p, &x, s, &mut choice, r.max(1e-9).min(1e-6), &[]) {
         let v = p.pack(&x, s);
         *p_load = load_keys(p, &v, &cons, &z);
     }
@@ -1202,7 +1266,22 @@ fn lbfgs(f: &mut dyn FnMut(&[f64], &mut [f64]) -> f64, v: &mut [f64], maxit: usi
 }
 
 #[inline]
-fn dot(a: &[f64], b: &[f64]) -> f64 { a.iter().zip(b).map(|(x, y)| x * y).sum() }
+fn dot(a: &[f64], b: &[f64]) -> f64 {
+    // FQ_FASTDOT=1 (perf 10-13, PACKER "Q3"): 8 independent accumulators (vectorises; different rounding)
+    static FAST: OnceLock<bool> = OnceLock::new();
+    if *FAST.get_or_init(|| std::env::var("FQ_FASTDOT").map(|v| v == "1").unwrap_or(false)) {
+        let n = a.len().min(b.len());
+        let (a, b) = (&a[..n], &b[..n]);
+        let mut acc = [0.0f64; 8];
+        let (ca, cb) = (a.chunks_exact(8), b.chunks_exact(8));
+        let (ra, rb) = (ca.remainder(), cb.remainder());
+        for (x, y) in ca.zip(cb) { for l in 0..8 { acc[l] += x[l] * y[l]; } }
+        let mut t = ((acc[0] + acc[4]) + (acc[1] + acc[5])) + ((acc[2] + acc[6]) + (acc[3] + acc[7]));
+        for (x, y) in ra.iter().zip(rb) { t += x * y; }
+        return t;
+    }
+    a.iter().zip(b).map(|(x, y)| x * y).sum()
+}
 
 // ---------------------------------------------------------------- quench
 struct QOpt { mu0: f64, mu_max: f64, tol: f64, skin: f64, max_outer: usize, verbose: bool }

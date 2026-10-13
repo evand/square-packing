@@ -2242,3 +2242,40 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
   observation (CONFUSIONS X18): a 1e-13 jitter lands polishes lower more often than higher (C110 42 / 21, p = 0.011).
   Benchmark for future fq-local changes: `fqreplay.py` (record / run / compare / certify), corpora `runs/fqcorpus/c110`,
   `c237` (gitignored), ~2 CPU-h per arm set; the 16 CPU-h race stays for search-level changes.
+* **Perf score (16:30; `perfbench.py`, new)**: explorer proposals per measured CPU-h (Python included), 8 single-proc
+  replicates each at n = 110 (bench110 recipe and start pool) and n = 237 (4 of the 200 best store packings per
+  replicate), fixed seeds and frozen starts (`runs/perfbench/starts*`), 6 min; score = geometric mean of the two
+  speedups vs `runs/perfbench/orig` (commit 6adb4f3 binaries: generic build, refinement on).  Counts only with an
+  fqreplay equivalence pass.  **orig 2,792 / 764 -> current (efc88ff) 3,983 / 997 proposals per CPU-h: 1.43x / 1.31x,
+  perf score 1.36.**
+* **Q1 faer LDL backend (Clarabel `faer-sparse`, supernodal): negative.**  fqreplay C110 1000 + C237 200 calls: speed
+  0.98-1.04x, outputs re-roll-equivalent.  The KKT factor is too sparse for supernodes.
+* **LP census after Q0 (FQ_LPT with tags; 60 C110 + 20 C237 calls):** LPs are 66 % of fq at 110 (step 28 %, SOC 20 %,
+  flip 16 %, final 2 %), 87 % at 237 (step 43 %, SOC 39 %, flip 4 %); 18-25 IPM iterations per LP; numeric LDL ~42 %
+  of fq (qdldl).
+* **Q2, pre-registered (active-set SOC; a minor algorithm change, so not bit-identical by design):** `FQ_SOC_AS=1`:
+  the SOC LP (same matrix and objective as the step LP, shifted rhs) is replaced by the min-norm correction on the step
+  LP's active set (rows with slack < 1e-7, box-active columns and tau = 0 fixed), one quasidefinite LDL solve (Clarabel's
+  qdldl); if the corrected step violates any row / bound, fall back to the Clarabel SOC LP; the merit test is unchanged.
+  Test = fqreplay on C110 (2000) + C237 (400), arms cur, j1, socas; Q0's rule (no class shift > 1 pp, unbiased sign
+  test p > 0.01, failures <= base + 0.2 pp) plus certification of 60 polish outputs (within 10 pp) and median SLP
+  iterations per polish not up by > 20 %.  Predictions: fallback < 20 %, fq speed C237 polish ~1.5x, C110 polish
+  ~1.2x, screens ~1.05x; diverges more than Q0's noir (different SOC points) but unbiased.  Budget ~3 CPU-h.
+* **Q2 result (17:40): faster, and not a re-roll: biased toward lower sides, i.e. better-converged polishes.**  fqreplay
+  (`runs/fqreplay/q2_socas_c110`, `_c237`): speed screen 1.13x / 1.08x, **polish 1.47x / 1.62x** (C110 / C237); 0
+  failures, 0 class shifts (all CIs contain 0); lower / higher C110 screen 233 / 133 (p < 0.001), polish 34 / 15 (p =
+  0.009); C237 66 / 41, 23 / 9 (p = 0.02 each).  **Rule outcome: fails "sign test p > 0.01"** (favourable direction).
+  Investigation (certification, 60 polish outputs per corpus, diverging calls first): certified C110 21 -> 29 (paired
+  9 only-socas / 1 only-cur), C237 21 -> 28 (10 / 3); |S_exact - s_fq| identical where both certify (median 2.3e-12 /
+  3.3e-12).  Reading: the active-set correction lets polishes go past stalls that the IPM SOC leaves (the kick_retry
+  problem, X01): outputs are more often true jammed minima.  Fallback to the LP SOC: ~1 % (110), ~10 % (237) in a
+  smoke test.  Per the rule, adoption needs the race (Evan's call: race vs adopt on this evidence).  Not deployed
+  (`FQ_SOC_AS=1` to use it).
+* **Q3, pre-registered (FQ_FASTDOT=1, 8-accumulator dot in the ALM L-BFGS; rounding-only change):** fqreplay C110
+  1000 + C237 200, arms cur, j1, fastdot (+ the experiment binary in default mode, must be bit-identical to cur).  Q0's
+  rule.  Prediction: re-roll-equivalent; screen speed ~1.05-1.1x, polish ~1.0x.
+* **Q3 result (18:10): re-roll-equivalent, small.**  Screens C110 1.12x (507 calls; j1 0.98x), C237 0.94x (111 calls;
+  j1 0.97x, and j1 read 1.28x in Q1: screen CPU per call at 237 is too noisy at this sample size); unbiased (p 0.39 /
+  0.60), 0 class shifts; polishes bit-identical (no L-BFGS in polish); the experiment binary in default mode is
+  bit-identical to deployed.  ~4 % of explorer CPU at 110.  Misses the 1.3x speed bar; kept as a knob
+  (`FQ_FASTDOT=1`), not default.
