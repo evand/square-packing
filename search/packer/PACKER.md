@@ -1681,3 +1681,12 @@ measured CPU, seeds_src) suffice to compare against a later dedicated arm.
   and that one is not-min.  So the census is unchanged: 4,312 side keys (958 certified / 3,277 not-min / 51 weak / 26
   unresolved, 0 unsolved), 890 certified + 49 weak distinct minima below 11; best 10.9967833966 (the record), 9 within
   1e-4 of it.  Every other chain run today was at n != 110.
+* **Richness / "does a better s(110) exist", incidence statistics** (10-12 evening, analysis only; `census_incidence.py`).
+  32 census replicates (v2-v4, 1-4 CPU-h each) as sampling units; a minimum's incidence = runs that reached it (starts
+  excluded).  827 of the 890 certified minima reached.  Chao2 976, ICE 928 overall (lower bounds under heterogeneity),
+  so ~40-90 unseen, mostly in the 2e-3 … 1e-2 band (Chao2 by band: <1e-5 3 = known, <1e-4 9 = known, 1e-4 … 1e-3 52
+  vs 48 known, 1e-3 … 3e-3 766 vs 697, 3e-3 … 1e-2 153 vs 136).  Sample coverage 98.5 % (unseen minima ~1.5 % of
+  incidences).  Incidence falls with depth band (median 22 / 13 / 16 / 6 / 4 of 32), but not strictly: two minima at
+  +4.46e-5 / +4.58e-5 were reached by 1 / 2 runs.  So deep-and-rare exists.  Detection bound: a better minimum missed
+  by all 32 runs has per-run detection p < 0.09 (95 %), i.e. rarer than 7 of the 9 minima within 1e-4.  No richness
+  estimator speaks to the extreme member; that needs a tail model (side distribution of the low-incidence class), not done.
