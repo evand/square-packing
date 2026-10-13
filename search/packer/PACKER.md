@@ -1864,3 +1864,39 @@ the leverage is in which cells get searched and in reusing every good piece.
   Prediction: 0-2 hits (new pieces at d 6-8 make 1-2 a bit likelier than before); the near list feeds P4.
   *Restarted 01:05* after 5 min: + one-piece arms (B = none) and 104 frontier packings (n 10..250) as d = 0 pieces
   (control: 327 = s(123) + piece found on the first fill at the pre-ours frontier).  Same budget and prediction.
+* **P2 + P3 result (probe1, 25.8 min x ~14 cores ~ 6 CPU-h of 7)**: 159 n.  3 hits, all n > 324: **325, 326 ->
+  18.5714285714 (frontier = envelope of our s(327) 18.5913781455; nothing posted at 325 / 326 in the store), 339 ->
+  18.9268989004 (frontier 18.9294338838, gain 2.5e-3)**; candidate.py running.  At n <= 324 no hit; near arms are
+  mostly exact ties (need 0: the composer rebuilds how the frontier at 125, 149, 171, 174, ... was made); strictly
+  positive needs >= 3e-3, mostly small well-searched cells.  Prediction 0-2: 3 (all above 324).
+* **Seam polish of tight arms, pre-registered (01:50)**: `compose2.py polish runs/compose2/probe1 --max-need 2e-3
+  --per-n 3` (fq polish, all squares free).  Hypothesis: a tie built from other pieces than the frontier's is a
+  different packing and may relax lower.  Success: s_pol < frontier_now - 1e-9 -> candidate.py.  Budget 1 CPU-h.
+  Prediction: 0-1 (the squeeze of 15 near compositions on 10-12 gave 0).
+* **Certified (candidate.py, both checkers VALID, live check clean, in the store as ours:candidates)**:
+  - **s(325) <= 130/7 = 18.571428571428571...** (exact; `runs/candidates/comp2_n325`): s(50) (53/7, frontier piece) at
+    one corner + a searched (36, 2) piece (sw1, 3 min) at the other + exact upright fill (side = s(50) + 11).
+    Nothing posted at 325 (register stops at 324; no issue through #575); previous bound = envelope of our s(327)
+    18.5913781455 (gain 2.0e-2).  Local min, 54 rattlers.  326 (same side, (41, 3) piece) in exactsolve.
+  - **s(339) <= 18.926898900356742** (`runs/candidates/comp2_n339`), Couzo #506 18.9294338838: gain 2.53e-3.  Two
+    (h + 7) x h crops of Ostashev's 10-13 s(304) update (lib3, the crops made 40 min earlier) in opposite corners.
+  Not posted (Evan's call; drafts later).
+* **Seam polish result** (5.1 min x 12 procs ~ 1 CPU-h): 71 polishes; below the frontier only at 325, 326, 339 (the
+  probe hits again); every tie stayed a tie (gains within +-1e-10).  Prediction 0-1 new: 0.  Ties don't relax.
+* **P4 not run as designed**: the probe's positive needs at n <= 324 sit on rigid structural sides (227 at 109/7 vs
+  15.5711, 308 at exactly 18): shrinking a piece would not move them, so the targeted piece search has no target.
+* **Relax-a-composition control, pre-registered (02:20)** (`relax.py`).  Ostashev's README: the composer's 304 layout
+  (17.939518) relaxed to 17.929428 "as its aligned blocks shifted" when every square was softened.  Our 304
+  compositions, generated without pieces from #575's s(304) (crops of the answer), start at 17.947-17.959 (5 arms).
+  Operators: rigid polish, fq shrink (SQUISH-style), kick + shrink, rounded soft r0 0.05 / 0.15 with the box held,
+  soft + compress, loosen + kick; 4 seeds.  Success: any result < 17.929566 (pre-#575 frontier).  Secondary: drop
+  > 5e-3 from the start (the mechanism exists in our tools).  Budget 1 CPU-h.  Prediction: no success (our starts
+  are 1e-2 worse than his), secondary 30 %.
+* **Relax control result (r304, 125 runs, 0.48 CPU-h)**: no success (best 17.94156 vs 17.929566; prediction held).
+  **Secondary met**: soft operators drop compositions by up to 9.9e-3 (soft15c; soft05 8.6e-3, soft15 8.4e-3, loose
+  6.7e-3; 18 / 80 soft runs > 5e-3), rigid polish / shrink by 3e-5.  Ostashev's 304 drop was 1.0e-2.  So the B-family
+  step exists in our tools; our 10-12 control applied it to frontier packings, not to compositions.
+* **relax1, pre-registered (02:30)**: every probe1 near arm at n <= 324 with 1e-6 < need < 0.015, up to 3 distinct
+  pairs per n (95 inputs, 45 n), ops soft05 / soft15 / soft15c / loose x 6 seeds (`runs/relax/relax1`).  Success:
+  s < frontier_now(n) - 1e-9 -> candidate.py.  Budget 7 CPU-h.  Prediction: 1-3 successes (the drop distribution
+  reaches 1e-2; needs below 5e-3 exist at ~15 n, e.g. 53, 106, 227, 299 at 3.5e-4 .. 7e-4).

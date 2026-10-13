@@ -176,6 +176,49 @@ def job(args):
     return dict(base, count=c, A=la, ta=ta, B=lb, tb=tb, sq=L.tolist() if c >= n and not probe else None)
 
 
+def polish(n, S, sq, out, tag=''):
+    """Composition layout -> trimmed to n at side S -> fq polish (all squares free: the seam relaxes).  {s_pol | err}."""
+    import mondrian
+    X = mondrian.trim(np.array(sq, float), n)
+    raw = os.path.join(out, f'raw-{n}{tag}.txt'); outp = os.path.join(out, f'n-{n}{tag}.txt')
+    with open(raw, 'w') as g:
+        g.write(f'{n} {float(S)!r}\n' + ''.join(f'{float(x)!r} {float(y)!r} {float(t)!r}\n' for x, y, t in X))
+    q = subprocess.run([FQ, 'quench', '--in', raw, '--out', outp, '--loosen', '1.0', '--no-alm',
+                        '--flip-top', '64', '--pit', '600'], capture_output=True, text=True)
+    try:
+        return dict(s_pol=json.loads(q.stdout.strip().splitlines()[-1])['s'], out=outp)
+    except Exception:
+        return dict(err=q.stderr[-200:])
+
+
+def _polish_job(t):
+    return t[0], t[1], polish(*t[2:])
+
+
+def polish_near(a):
+    """Seam polish of the probe's tightest arms (need <= MAX_NEED: ties within the fill tolerance, or near misses):
+    the same side as the frontier from different pieces is a different packing, and freeing every square may go lower.
+    Success = s_pol < frontier_now - 1e-9, then candidate.py."""
+    from pk import eventbench as E
+    R = [json.loads(l) for d in a.dirs for l in open(os.path.join(d, 'near.jsonl'))]
+    by = {}
+    for r in sorted(R, key=lambda r: r['need']):
+        if r['need'] <= a.max_need:
+            L = by.setdefault(r['n'], [])
+            if len(L) < a.per_n and all((r['A'], r['B']) != (x['A'], x['B']) for x in L):
+                L.append(r)
+    os.makedirs(a.out, exist_ok=True)
+    tasks = [(n, r, n, r['S_min'], r['sq'], a.out, f'_{i}') for n, L in sorted(by.items()) for i, r in enumerate(L)]
+    print(f'{len(tasks)} polishes over {len(by)} n', flush=True)
+    with ProcessPoolExecutor(a.procs) as ex, open(os.path.join(a.out, 'polish.jsonl'), 'w') as f:
+        for n, r, res in ex.map(_polish_job, tasks):
+            fr = E.frontier_now(n)
+            gain = fr - res.get('s_pol', math.inf)
+            f.write(json.dumps(dict(n=n, A=r['A'], B=r['B'], need=r['need'], frontier=fr, gain=gain, **res)) + '\n')
+            print(f"{n:4d} {r['A'][:28]:28s} {r['B'][:28]:28s} need {r['need']:.1e} s_pol {res.get('s_pol', math.nan):.10f}"
+                  f" gain {gain:.2e}{'  BELOW' if gain > 1e-9 else ''}", flush=True)
+
+
 def init(mmin, per_cell, source):
     global PIECES
     PIECES = load_pieces(mmin, per_cell, source)
@@ -210,19 +253,7 @@ def run(a):
                     g.write(''.join(json.dumps(x) + '\n' for x in near))
                 r['need'] = near[0]['need']
             if sq is not None:
-                n = r['n']
-                X = np.array(sq)
-                import mondrian
-                X = mondrian.trim(X, n)
-                raw = os.path.join(a.out, f'raw-{n}.txt'); outp = os.path.join(a.out, f'n-{n}.txt')
-                with open(raw, 'w') as g:
-                    g.write(f'{n} {float(r["S"])!r}\n' + ''.join(f'{float(x)!r} {float(y)!r} {float(t)!r}\n' for x, y, t in X))
-                q = subprocess.run([FQ, 'quench', '--in', raw, '--out', outp, '--loosen', '1.0', '--no-alm',
-                                    '--flip-top', '64', '--pit', '600'], capture_output=True, text=True)
-                try:
-                    r['s_pol'] = json.loads(q.stdout.strip().splitlines()[-1])['s']
-                except Exception:
-                    r['err'] = q.stderr[-200:]
+                r.update(polish(r['n'], r['S'], sq, a.out))
             f.write(json.dumps(r) + '\n'); f.flush()
             print(f"{r['n']:4d} S {r['S']:.10f} cand {r['cand']:4d} arms {r['arms']:7d} tried {r['tried']:5d} {r['sec']:6.0f}s best count {r.get('count')}"
                   f"{'  need %.2e' % r['need'] if 'need' in r else ''}"
@@ -241,9 +272,13 @@ def rank(a):
         k = (r['n'], tuple(r['cA']), tuple(r['cB']))
         if k not in best or r['need'] < best[k]['need']:
             best[k] = r
-    score, ns = {}, {}
+    score, ns, tgt = {}, {}, {}
     for (n, cA, cB), r in best.items():
         for c, h in ((cA, r['hA']), (cB, r['hB'])):
+            if c[0] == 0:                               # B = none (one-piece arm)
+                continue
+            if r['need'] > 0:                           # this cell's piece shrunk by need closes n (proxy): target h
+                tgt[c] = max(tgt.get(c, 0.0), h - r['need'])
             w = math.exp(-max(r['need'], 0) / (a.tau * h))
             score[c] = score.get(c, 0) + w
             ns.setdefault(c, {})
@@ -253,8 +288,9 @@ def rank(a):
     out = []
     for c, sc in sorted(score.items(), key=lambda x: -x[1])[:a.top]:
         nn = sorted(ns[c].items(), key=lambda x: x[1])[:6]
-        print(f'  cell m={c[0]:3d} d={c[1]:g}  score {sc:6.2f}  n:need ' + ' '.join(f'{n}:{v:.1e}' for n, v in nn))
-        out.append(dict(m=c[0], d=c[1], score=sc, ns=nn))
+        print(f'  cell m={c[0]:3d} d={c[1]:g}  score {sc:6.2f}  target h {tgt.get(c, 0):.6f}  n:need '
+              + ' '.join(f'{n}:{v:.1e}' for n, v in nn))
+        out.append(dict(m=c[0], d=c[1], score=sc, ns=nn, target=tgt.get(c, 0.0)))
     if a.out:
         json.dump(out, open(a.out, 'w'), indent=1)
 
@@ -276,5 +312,8 @@ if __name__ == '__main__':
     r.add_argument('--per-cell', type=int, default=10 ** 9, help='pieces per (m, d) cell, best h first (seam diversity)')
     k = sp.add_parser('rank'); k.add_argument('dirs', nargs='+'); k.add_argument('--tau', type=float, default=0.003)
     k.add_argument('--top', type=int, default=40); k.add_argument('--out')
+    q = sp.add_parser('polish'); q.add_argument('dirs', nargs='+'); q.add_argument('--out', required=True)
+    q.add_argument('--max-need', type=float, default=2e-3); q.add_argument('--per-n', type=int, default=3)
+    q.add_argument('--procs', type=int, default=14)
     a = ap.parse_args()
-    run(a) if a.cmd == 'run' else rank(a)
+    {'run': run, 'rank': rank, 'polish': polish_near}[a.cmd](a)
