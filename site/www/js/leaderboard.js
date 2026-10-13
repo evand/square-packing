@@ -152,14 +152,14 @@ function chain() {
   $('chainU').innerHTML = li.join('');
   evolution(n);
   const lc = C.n[n].lower || [], lo = C.n[n].lower_other || [];
-  const tag = s => s === 'proved' ? '<span class="tag ok">proved</span>' : '<span class="tag open">certificate, unrefereed</span>';
+  const tag = s => s === 'proved' ? '<span class="tag ok">proved</span>' : '<span class="tag open">unrefereed</span>';
   let L = lc.slice().map((l, i) => {
     const last = i === lc.length - 1;
     const who = l.who.length ? names(l.who) : esc(l.authors || l.source);
     const link = l.url ? ` · <a href="${esc(l.url)}">source</a>` : '';
     return `<li class="${last ? 'now' : ''}"><div class="when">${l.year || ''}${last ? ' – now' : ''}</div><div><div><span class="who">${who}</span> ${tag(l.status)}</div><div class="src"><span class="sv">s ≥ ${l.value.toFixed(6)}</span>${link}</div></div></li>`;
   });
-  if (!lc.length) L = [`<li><div class="when"></div><div class="src">${n > 100 ? 'Floors are collected for n ≤ 100 so far; here only the area bound √n is on record.' : 'Only the area bound √n.'}</div></li>`];
+  if (!lc.length) L = [`<li><div class="when"></div><div class="src">Only the area bound √n.</div></li>`];
   if (lo.length) L.push(`<li><div class="when"></div><div class="src">also on record, not counted: ${lo.map(l => `${l.who.length ? l.who.map(name).join(', ') : esc(l.authors || l.source)} ${l.year || ''} (s ≥ ${l.value.toFixed(4)}, ${l.status === 'gap' ? 'proof has a gap' : l.status === 'claimed' ? 'claimed without proof' : l.status === 'awaiting' ? 'awaiting verification on jlevy/squares' : 'reported'})`).join('; ')}</div></li>`);
   $('chainL').innerHTML = L.join('');
   for (const a of $('chainU').querySelectorAll('a[data-n]')) a.onclick = e => { e.preventDefault(); pick(+a.dataset.n, true); };

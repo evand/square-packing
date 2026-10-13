@@ -32,7 +32,7 @@ const SYMS = {
 };
 const proved = new Set();   // n known to be optimal, from Ellsworth's "Proved by" wording; refined by bounds data if present
 // Proved in 2026, unrefereed, and verified on jlevy/squares' register: the same bar for our results
-// as for anyone's.  n <= 100 come from lower_bounds.json (`register: 'verified'`); past the table,
+// as for anyone's.  n <= 324 come from lower_bounds.json (`register: 'verified'`); past the table,
 // the families s(k^2 - c) = k, with the k from which the register verifies them (2026-10-04).
 // c = 4 (T-081) is registered as reported while its full replay runs: add {4: 5} when it is verified.
 const accepted = new Set();

@@ -478,14 +478,14 @@ function recolorOnly() {
   document.querySelectorAll('#squares .sq').forEach(g => { const i = +g.dataset.i; g.firstChild.setAttribute('opacity', S.hiGroup == null || S.hiGroup.includes(i) ? 1 : 0.25); });
 }
 
-// Proven floor for n from lower_bounds.json (n <= 100), else the area bound.
+// Proven floor for n from lower_bounds.json (n <= 324), else the families / general bound.
 function floorOf(n) {
   const b = S.lb && S.lb[String(n)] && S.lb[String(n)].best;
   if (b) { const src = S.lb.sources && S.lb.sources[b.source]; return { v: b.value, who: src ? `${src.authors.split(' (')[0]} ${src.year || ''}`.trim() : b.source, pre: b.status === 'preprint' }; }
   return familyFloor(n) || generalFloor(n);
 }
-// Past the table (n > 100): the proved families s(k²−c) = k, else the best general bound.
-// Same sources as lower_bounds.json meta.families and the n <= 100 entries.
+// Past the table (n > 324): the proved families s(k²−c) = k, else the best general bound.
+// Same sources as lower_bounds.json meta.families and its entries.
 function familyFloor(n) {
   const k = Math.ceil(Math.sqrt(n)), c = k * k - n;
   const F = { 0: [1, 'area: the k × k grid'], 1: [3, 'Karakuş 2026, s(k²−1) = k'], 2: [2, 'chelokot 2026, s(k²−2) = k, Lean'], 3: [6, 'evand 2026, s(k²−3) = k'], 4: [5, 'evand 2026, s(k²−4) = k'] }[c];
@@ -493,7 +493,7 @@ function familyFloor(n) {
 }
 function generalFloor(n) {   // Karakuş 2026 Cor. 6.2 (nonsquare n >= 8), else area
   const a = Math.sqrt(n), r = Number.isInteger(a) || n < 8 ? 0 : 0.5 + Math.sqrt(n - Math.floor(a) + 0.25);
-  return r > a ? { v: r, who: 'Karakuş 2026 general bound, unrefereed; floors are collected only for n ≤ 100', pre: false } : { v: a, who: 'area bound √n only; floors are collected for n ≤ 100', pre: false };
+  return r > a ? { v: r, who: 'Karakuş 2026 general bound, unrefereed; floors are collected only for n ≤ 324', pre: false } : { v: a, who: 'area bound √n only; floors are collected for n ≤ 324', pre: false };
 }
 function floorLine(n, s) {
   if (!S.lb) return '';
@@ -624,7 +624,7 @@ function renderSide() {
   // where to go next for this n
   const nv = variantsFor(S.n).length, xl = [];
   if (nv > 1) xl.push(`<a href="compare.html?n=${S.n}">compare all ${nv} packings of ${S.n}</a>`);
-  if (S.n <= 100) xl.push(`<a href="bounds.html?n=${S.n}">floor and history for n = ${S.n}</a>`);
+  if (S.n <= 324) xl.push(`<a href="bounds.html?n=${S.n}">floor and history for n = ${S.n}</a>`);
   if (S.n === 12) xl.push(`<a href="s12/">our s(12) certificate (≥ 3.9686; squarepacker's re-weighting of its points gives the 3.9715 floor)</a>`);
   if (S.n === 13) xl.push(`<a href="proofs.html#bentz-proof">how s(13) = 4 is proved</a>`);
   $('xlinks').innerHTML = xl.join(' · ');

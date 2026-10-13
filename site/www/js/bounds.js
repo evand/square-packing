@@ -27,7 +27,7 @@ const srcLabel = h => { if (!h || !h.source) return ''; if (SHORT[h.source]) ret
 // ---------- chart 1: gap per n ----------
 function chart1() {
   const box = $('c1'); box.querySelectorAll('svg').forEach(s => s.remove());
-  const nmax = Math.max(10, Math.min(100, +$('nmax').value || 60)), rel = $('rel').checked, drop = $('dropTrivial').checked;
+  const nmax = Math.max(10, Math.min(324, +$('nmax').value || 60)), rel = $('rel').checked, drop = $('dropTrivial').checked;
   const rows = [];
   for (let n = 2; n <= nmax; n++) {
     const u = upper(n), l = lower(n);
@@ -76,7 +76,7 @@ function tip(r) {
 
 // ---------- chart 2: one n over time ----------
 function chart2() {
-  const n = Math.max(2, Math.min(100, +$('npick').value || 17)); const box = $('c2'); box.querySelectorAll('svg').forEach(s => s.remove());
+  const n = Math.max(2, Math.min(324, +$('npick').value || 17)); const box = $('c2'); box.querySelectorAll('svg').forEach(s => s.remove());
   const t = trivial(n);
   // upper-bound steps: dated packings, best-so-far
   // An undated record goes at the left edge (and says so) rather than being dropped: n = 5's record
@@ -159,7 +159,7 @@ function niceStep(x) { const p = Math.pow(10, Math.floor(Math.log10(x))); const 
 // ---------- table ----------
 function table() {
   const tb = $('tbl').querySelector('tbody'); tb.innerHTML = '';
-  for (let n = 1; n <= 100; n++) {
+  for (let n = 1; n <= 324; n++) {
     const u = upper(n), l = lower(n), settled = isSettled(u, l);
     const tr = document.createElement('tr');
     tr.innerHTML = `<td class="num"><a href="explore.html?n=${n}" title="explore n = ${n}">${n}</a></td><td class="num">${u.s.toFixed(6)}${u.trivial ? ' (grid)' : ''}</td><td>${u.who}${u.date ? ' ' + u.date[0] : ''}${u.pending ? ' <span class="tag open" title="posted as a registration request on jlevy/squares; checked by our two exact certificate checkers">not yet registered</span>' : ''}</td><td class="num">${l.value.toFixed(6)}</td><td>${srcLabel(l)}${l.status === 'preprint' ? ' <span class="tag open">unrefereed</span>' : ''}</td><td class="num">${settled ? '—' : (u.s - l.value).toFixed(4)}</td><td>${settled ? '<span class="tag ok">settled</span>' : '<span class="tag open">open</span>'}</td>`;
