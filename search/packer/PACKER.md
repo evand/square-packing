@@ -2015,6 +2015,8 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
 | B0 band-merge relax control | 2 | 0.39 | 0 / 144 runs moved (drop; duplicate of 10-12 g2) |
 | W2 what-if 2 % + shrink | 2.5 | 2.71 | 0 cells (stop rectangle search at n <= 324) |
 | G1 grid-boundary screen | 0.8 | 1.08 | 0 / 9 below the grid (composition can't reach the border) |
+| A1 arm composer, cross-n control | 1.5 | 1.61 | miss: nothing below the grid side (anchoring bug + hard control) |
+| A2 arm operators, +1 square from n-3..n+3 | 1.1 | 1.31 | miss: best count n - 1 in 4,780 evals |
 | V-band fit / rebuild checks (interactive) | - | ~0.1 | ceiling test: own tilted set + fill = n at 6 / 6 band records; idealised arms 17-23 short |
 
 * **F0 fresh-pass control, pre-registered (09:45)**.  `fresh.py run --ids 291615 291590 291569` (Ostashev's s(304)
@@ -2077,3 +2079,29 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
 * **Day tally so far (11:25)**: F0 3.4 + B0 0.4 + W2 2.7 + G1 1.1 + interactive ~0.2 = **~7.8 CPU-h measured** (est.
   8.3).  Adopted: fresh pass.  Closed: band-merge relax with our operators (3rd negative), rectangle-piece search at
   n <= 324 (W2), composition at the grid border (G1).  Open: V-band constructor finisher (see V-band notes above).
+* **Arm composer (`arms.py`, 10-13 after Evan: "real arms and variations of them")**.  Library `runs/arms/lib.pkl`:
+  6,760 arms (8 symmetries) from 479 band packings, n 80..324, <= 4 distinct per n.  Operators on real squares: column
+  end extend / trim, edge column add / drop, arm shift; ends near the other arm or a wall weighted 4x.  Own-arm rebuilds
+  (no operators) give exactly n at the packing's side for 241 (x3), 211, 156, 176 (layout tolerance 1e-6, as exact_fill).
+* **A1 cross-n control, pre-registered (12:05)**.  `arms.py run --only 241,211 --exclude-n` (no arm from a packing of the
+  target n), dn 25, ds 0.6, max-ops 3, 8 reps x 300 s per n, 16 procs, finish = fq polish of the best 3 per n
+  (`runs/arms/a1`).  Hypothesis: arms from neighbouring n, varied locally, rebuild a record-quality packing.  Metric:
+  best finished side.  Rule: <= the pre-#575 record (241: 15.9881324395; 211: 14.9979607050) at either n = pass ->
+  sweep the k(k+1) clusters (plan to Evan first); both above by > 2e-3 = look at what the operators miss before more
+  compute.  Prediction: pass at one of the two (50 %); below today's frontier at neither (90 %).  Estimate 1.5 CPU-h.
+* **A1 result (12:15)**: miss.  0 layouts below the grid at either n: the best that holds n needs side 16.0000077 (241) /
+  15.0000042 (211), i.e. the fill gives up the band.  1.61 CPU-h of 1.5.  Diagnosis (0 CPU): (1) corner anchoring
+  breaks the elbow junction when the side changes: 240's own arms in 241's box give 239, 239's in 240's give 238, 210's
+  in 211's give 209; (2) consecutive records are not +-1 edits (240 -> 241: same 85 tilted, columns redistributed
+  between the arms; 155 -> 156: 46 -> 67 tilted).  Fix: an arm pair from one packing is placed in its source frame
+  (box grows at the top / right walls only): 240 -> 241's box keeps 240 in 8 / 8 symmetries, 210 -> 211's box 210 in 8 / 8.
+* **A2, pre-registered (12:20)**: can the operators add the one square?  `--only 241,211 --exclude-n --dn 3` (sources
+  n - 3 .. n + 3 minus n), max-ops 3, 16 reps x 120 s per n (`runs/arms/a2`).  Pass = any layout holding n below the
+  grid side k (need < k - f); stronger = finished side <= the pre-#575 record.  Prediction: pass 25 %.  Estimate 1.1 CPU-h.
+* **A2 result (12:30)**: miss (prediction pass 25 %).  2,541 evals at 211 and 2,239 at 241 from n - 3 .. n + 3 arms with
+  the fixed-frame fix and 0-3 local operators: the best count at f + 0.03 is n - 1 (210: 196 times, 240: 173), never n.
+  Local +-1 edits of real arms do not find the extra square; consecutive records differ by collective rearrangement
+  (columns redistributed between arms), which is a continuous move.  Arms + exact fill reproduce records but do not
+  improve them.  Parked with the V-band constructor until a continuous re-hardening step exists (Evan 10-13: a
+  dedicated performance session, GPU-style soft-to-rigid at scale, is planned; no CPU brute force now).
+* **Day tally (12:35)**: ~10.7 CPU-h measured (F0 3.4, B0 0.4, W2 2.7, G1 1.1, A1 1.6, A2 1.3, interactive ~0.2), est. 10.9.
