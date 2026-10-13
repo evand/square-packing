@@ -2198,3 +2198,5 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
   **Two flaws found and fixed in benchkit**: (1) interim checks at 95 % gave false "faster" (finish3 3.47x, nomirror 3.27x
   at 1 CPU-h, both ~1.2x at the end): interim checks now use 99.5 %; the run continued only because notop3 was open;
   (2) the budget ignored running replicates (16 -> 18.6 CPU-h): it now counts them.  Day tally ~49 CPU-h.
+* **Session closed (14:30, Evan: pause, write up, performance session next)**: summary and next steps in
+  `HANDOFF-2026-10-13.md`; claims C25-C36 in `CLAIMS.md`; TODO "Packings" points at the handoff.  Nothing running.

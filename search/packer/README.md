@@ -21,6 +21,15 @@ log (what was tried, in order, with numbers); this file is the map.  Everything 
 |---|---|
 | `src/main.rs` (`packer`) | Rust engine.  `relax [--squeeze \| --squeeze-pen]`: L-BFGS on SAT overlap energy at fixed side; bisection squeeze; penalty-continuation squeeze over (config, s) (μ0 = stiffness: low = soft/exploring, high = precise).  `hop`: basin hopping, descending target.  `hhop`: hard-square basin hopping with event chains (slide until contact, pass remainder on), `--forbid-lines k`, `--soft p` (soften/re-harden). |
 | `candidate.py` | **Record candidate → registration packet** (10-12).  exactsolve, both exact checkers, read-only live check (register witness + case page, issues naming n, Ellsworth's catalogue, store frontier), matching distance, optimality facts, `--chain` lineage, regularized view (private REFRESH dir), `--stage` into `candidates/`, `--import`.  `candidate.py --live N [S]`: just the live check.  The issue text is still drafted by hand in `outreach/`. |
+| `fresh.py` | **Fresh-packing pass** (10-13): new public packings -> corner crops (rectlib) + whole pieces -> `compose2 --new-from` -> polish -> `candidate.py`.  Run after every sync. |
+| `compose2.py` | Two-piece composer: store pieces in opposite corners + exact upright fill, bandit arms per n, probe / rank / polish / what-if (`--cf-eps`) / three-piece; `--new-from`, `--target public`. |
+| `relax.py` | fq soft / shrink relax ops on composer layouts or store packings (`--ids`), iterated MBH (`--rounds`). |
+| `vband.py` | V-band constructor (staircase arms + exact fill) and `fit` of arms from a packing; idealised arms lose ~20 squares (PACKER 10-13). |
+| `arms.py` | Real-arm library (6,760 arms), local operators, arm-pair composer, `holdout` yardstick (C31, C36). |
+| `bench110.py` | n = 110 basin-entry benchmark (`refsets/h110_basinA`): `race` (pk/benchkit) and `report`; baseline C34. |
+| `landscape_depth.py` | Is depth regional?  kNN / variogram / concentration over certified minima + parent -> child heritability (C32, C33). |
+| `pk/benchkit.py` | Race benchmarks: replicates restart on event, rates per CPU, rate ratios, sequential rule (reusable for any n / event). |
+| `pk/bands.py`, `pk/effort.py` | Tilted bands / angle families of a packing; CPU per n from run manifests vs record events. |
 | `chain_lineage.py` | Lineage of a `chain.py` result through its rounds (carries, library picks, `seed_k` seeds from n + k) back to a chain start, for credit.  Matches starts by their seed files' header sides. |
 | `slp2.py` | **The local minimiser.**  Trust-region SLP on min s s.t. linearised separation, incidence contact model (`inc.py`), second-order correction, repair by uniform scaling; final jam test exhaustive over corner–corner branches (MILP).  20–50 iterations, ~3–5 s per descent at n = 110; outputs go straight into `../exact/exactsolve.py`.  `budget=` wall cap. |
 | `inc.py` | Incidence contact model (f64 twin of `../exact/find_contacts`): corner-on-side rows; corner–corner pairs as disjunctions (relax-and-round LP; `shrink_milp` exhaustive). |

@@ -66,6 +66,15 @@ First deliverable: a table of exact forms of S + a handful of Lean local-optimal
 - [ ] s(17) exact via the s(11) method: on hold (CPU). `tasks/s17-core-isolation/`
 
 ## Packings (active, 10-09)
+**10-13 handoff: read `search/packer/HANDOFF-2026-10-13.md` first** (records #584; measured negatives; benchmarks
+`bench110.py race` + `pk/benchkit.py`; claims C25-C36).
+- [ ] **Next (Evan 10-13): dedicated performance session.**  Profile the explorer step and fq; batched soft-to-rigid on the
+  Radeon 8060S iGPU (ROCm / Vulkan) or AVX-512; acceptance = entries per CPU-h on `bench110.py race` (control 3.88), the
+  241 / 211 band-merge control, arms + finisher (HANDOFF "Next session").
+- [ ] Strip-family test set at n = 88 (Evan 10-13: is the explorer overfit to the double-band V family?): certify 88's
+  ~7,500 stored sides, `landscape_depth.py --n 88`, `refset --rule region` holdout, baseline race (~16 CPU-h).  Then a
+  strip-family hunt (129, 153, 207, 236 active; 172, 199, 228, 293 quiet).
+- [ ] Run `fresh.py` after every register / pending sync (cheap; produced the 10-13 records); fix its finishing gap (364).
 **10-09 evening (tooling session, Evan): new ideas give progress; evaluation exists to grade ideas fast.  Read
 `search/packer/NEEDS.md` (top section) and `search/packer/DESIGN.md` first.**  Built (`search/packer/pk/`, CLI `pk.py`):
 packing store (`search/packer/runs/store.sqlite`: register, pending issues, all run archives, seed pools; `pk.py frontier / ls / get`),
@@ -98,7 +107,7 @@ Order (Evan, 10-08): (1) benchmark, (2) LP throughput, (3) new proposals / start
   Claims / confusions: `search/packer/CLAIMS.md`, `CONFUSIONS.md` (the "Decisions 10-08/10-09" numbers above: C09 stale, C15 weak, C01 re-reported 10-11).
   Second holdout test (Evan 10-11): "find the other funnels" (withhold by funnel / kind, not at random) vs census v2's "fill in the funnels"; needs a clean funnel split (a dated holdout may need to go back to ~40 known points).
 - [ ] Multi-size campaign (merges SQUISH gap / wide sweep / chaining): neighbour seeds (n ± 1, ± 2) + explorer at 1–2 procs × ~10 min per n, budget reallocated to the n that move; each new best seeds its neighbours; kick older packings too (mirror, register histories; 272 came that way).  Needs: live register fetch, auto exactsolve + register check + submission list.  Watch default loosen 1.02 at large n (kicked the s(292) record out of its basin).
-- [ ] Watch jlevy#552 (s(154) ≤ 12.9225664019, posted 10-12).  Lineage comment posted 10-12 (`outreach/posted-jlevy-552-lineage-2026-10-12.md`): `chain_lineage.py` shows it descends from Couzo's 10-05 **155** with one square removed, not his 154.
+- [ ] Watch jlevy#584 (s(339), s(364), s(375), posted 10-13) and #552 (s(154) ≤ 12.9225664019, posted 10-12; improved by Couzo #583 from our packing).  Lineage comment posted 10-12 (`outreach/posted-jlevy-552-lineage-2026-10-12.md`): `chain_lineage.py` shows it descends from Couzo's 10-05 **155** with one square removed, not his 154.
 - [ ] Registration issue body from `candidate.py`'s summary.json (facts → template sections; prose stays by hand): after the next submission shows which parts repeat.
 - [ ] `search/regularize/reg.py`: an explicit input path option (`candidate.py` patches `reg.REFRESH` / `atlas.RUNS` in a subprocess meanwhile); for the regularize owner.
 - [ ] Watch jlevy#489 (Hunt 3, posted 10-10: s(132) 11.9856802, s(308) 17.9982699, s(343) 18.9782325, s(344) 18.9944505; 305 dropped, = Couzo #488).
