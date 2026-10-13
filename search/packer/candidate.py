@@ -111,6 +111,12 @@ def live(n, S):
         b = st.best(n)
         if b:
             L['sources']['store best'] = b.s
+        # monotone envelope (10-12): s(n) <= s(m) for m > n by dropping squares; any feasible store packing with more
+        # squares at or below S already beats the candidate
+        r = st.db.execute("SELECT n, s FROM packing WHERE n > ? AND n <= ? AND status != 'infeasible' AND pen <= 1e-9 "
+                          "ORDER BY s LIMIT 1", (n, n + 80)).fetchone()
+        if r and r['s'] <= S + 0.05:
+            L['sources'][f'store s({r["n"]}) (envelope)'] = r['s']
     except Exception as e:
         L['errors'].append(f'store: {e}')
     L['best_other'] = min(L['sources'].values()) if L['sources'] else None

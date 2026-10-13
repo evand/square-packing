@@ -1705,3 +1705,43 @@ measured CPU, seeds_src) suffice to compare against a later dedicated arm.
   Falling with time (25 → 35 → 63 → 180 h per event) while the frontier is also moving under other people's work.  A
   single-rate Poisson fit is optimistic for the next one; the 10-11/12 window, the only one on current methods and
   frontier, says ~1 per 100-200 h at best, with a CI that cannot exclude ~1 per several thousand.
+
+## Plan 10-12 evening (PLAN-2026-10-12.md; Evan: preliminary evaluations in ~32 core-hours)
+* **fq: rectangle container + rounded squares** (`--rect-dx/--rect-dy`: container [0, s+dx] x [0, s+dy], s minimised;
+  `--round-r0 R [--round-compress] [--hold-f F] [--round-steps K] [--round-p P] [--round-kick SIG]`: soft-to-rigid
+  pre-stage = inner half-side 0.5 - r with margin r on every separator / wall (still smooth in the lifted variables),
+  optional compression at r0 with the side free, then the box held at F x that side while r goes to 0 through K
+  fixed-side overlap relaxations, then the usual quench + polish).  Checks: gradcheck 1.8e-8..4.6e-8 (square, r 0.2,
+  rect dx 1.5 + r 0.1); s(110) record --no-alm polish unchanged (10.99678339663382); 110 in an (s+1) x s box 10.7058488
+  (both walls checked); `repair` grows s so both rectangle walls scale (it diverged for dx > half-width).
+* **Soft-to-rigid positive control, pre-registered** (`round_ctl.py`, `runs/round_ctl/r1`; written before launch).
+  Seeds = #575's: 241 Couzo 15.98813244 (store 347; #575 -> 15.987134249), 211 de Winter 14.99796070 (store 94; #575 ->
+  14.993694187).  Grid 552 runs per n: r0 {0.03 .. 0.3} x compress {y, n} x hold {1, 0.999, 0.997} x steps {10, 40}
+  x p {1, 2} x kick {0, 0.01 x 3 seeds}; ~9 s each, ~2.8 CPU-h total.  Success (per n): any output > 1e-8 below the
+  seed side.  Secondary: below the #575 value; which knobs.  Prediction: 241 yes (30-60 %: their move started from this
+  exact packing), 211 yes (40 %), below #575 in neither.  If neither n moves: our rounding stage is not their move
+  (look at their description again: "every square soft, box held") before any wider use.
+* **Event bench harness** (`pk/eventbench.py`, `bench/events.json`; PLAN item 0): frontier_at(n, T), as-of-T start sets
+  for chain.py `--src`, `score` with `--certify`.  Validation on the 10-05 time-travel runs reproduces PACKER's numbers
+  except where later events moved the truth (Couzo #570 now leads 154 by building on our #552: plain 154 = 0.99).
+  Diagnosis from the same runs: **179 had 1 round of 218** (153 / 154 got 28-30); its 180 - 1 removal seed quenched to
+  13.9224 vs the cutoff frontier 13.8953.  Budget allocation, not (yet) an operator verdict.
+* **Removal positive control, pre-registered** (`removal_ctl.py`, `runs/removal_ctl/r179`; before launch).  Every single
+  removal from the 10-05 register's s(180) (Couzo 13.9278881) x completion modes plain / shrink (`fq --shrink`, our
+  guess at SQUISH's shrink-hopping, never tested on its motivating case) / soft (round-r0 0.15 compress) / kick 0.02:
+  720 fq runs, ~2 CPU-h.  Success: any 179 below the cutoff frontier 13.8953410700 by > 1e-8 (SQUISH #401 got
+  13.8913127 this way).  Prediction: no mode alone gets below (one probe: plain 13.9199, shrink 13.9195, soft 13.9142);
+  soft best of the modes.  Follow-up if the best removals are within ~0.02: explorer 15 min x 2 procs from the best 4.
+* **Results 20:05 (controls, against the pre-registrations above).**  Soft-to-rigid r1 (17.8 k CPU-s): **0 / 552 below
+  the seed at 241, 0 / 552 at 211** (best = the seed itself / +1.8e-4): our rounding pre-stage is not #575's move, as
+  written.  Removal r179 (5.8 k CPU-s): no mode below 13.8953411; best soft 13.9142096, kick / shrink 13.9194628, plain
+  13.9199427 (prediction held: soft best, none below).  Rectangle library lib1 (4.0 k CPU-s): 1,559 crops re-optimised,
+  median gain over the crop's start side 0.05, 955 pieces beat the grid in their own box after Pareto pruning.
+  **Found on the way:** composing the 10-10 crop atlas (formula composer) and *polishing the ties* gives s(129) =
+  11.8700138504, Ostashev's #562 value (posted 10-12): composer v0 counted it as a tie with the 11.8720298 frontier
+  and never polished it.
+* **Follow-ups, pre-registered (20:08).**  (a) Explorer 15 min x 4 procs from the 4 best distinct removal outputs
+  (`runs/removal_ctl/r179_ex`): success = 179 below 13.8953411; prediction 25 %.  (b) Soft-to-rigid grid g2 (Ostashev's
+  README: "soften slightly, hold the box at its side while they re-harden, then release and compress"): no compression,
+  hold 1.0, r0 {0.05, 0.1, 0.2} x steps {10, 40} x kick {0.03, 0.05, 0.1} x 10 seeds, 241 + 211 (`runs/round_ctl/r2`):
+  success as r1; prediction: still 0 (if so, park the move; it is not reproducible from the description).
