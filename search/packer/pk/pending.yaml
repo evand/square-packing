@@ -3,6 +3,7 @@
 # file under `paths`, and records the issue table's claims as pending frontier rows.  Add a line per new issue / update.
 # Issues stating their claims outside a markdown table carry them as `claims: {n: side}` (the issue's rounded-up side).
 # Refinement-only issues (exact re-roundings of registered packings: SidG2k1 #438, lollipoll #425 #428) are left out.
+- {issue: 584, finder: Evan Daniel (evand), repo: evand/square-packing, commit: 231d41df7a03fccd89aa6e9ef5a540348a8214cc, paths: ['search/packer/candidates/comp2_n339.cert', 'search/packer/candidates/comp2_n364.cert', 'search/packer/candidates/comp2_n375.cert']}  # ours (compositions)
 - {issue: 583, finder: Francisco Couzo, repo: franciscouzo/square-packing, commit: 45966700cf15d3f42e064fd6da51fcb9a5def2be, paths: ['certificates']}  # pin pushed ~14:00 2026-10-13; whole dir: HEAD also has n375 19.8939065342 (in no issue)
 - {issue: 582, finder: Miles Gray (mstrmg), repo: null, claims: {381: 19.985624661052}}  # certificate is an issue attachment (not fetched); 381 is also in #583 (lower)
 - {issue: 575, finder: Daniil Ostashev (dostashev), repo: dostashev/square-packing, commit: b909e1b74cda50906e12b4373e010ddee39e47e4, paths: ['records/*'], claims: {176: 13.795872318437, 211: 14.993694186584, 241: 15.987134249051, 304: 17.929427758076}}  # .sqcert converted exactly to runs/ext-converted/dostashev-b909e1b/ and imported by hand (as #501)

@@ -2001,6 +2001,6 @@ the leverage is in which cells get searched and in reusing every good piece.
   pushed ~14:00Z: 154 211 241 302 339 379-382) + Couzo HEAD's unannounced n375 19.8939065342.  Public-only L-closed
   frontier vs ours: 339 +4.85e-4 (vs #583 18.9273836385), 364 +7.60e-3, 375 +1.15e-2 (vs Couzo HEAD), **414 now beaten**
   (Couzo 375 + L = 20.8939 < our 20.8984; our 375 + L = 20.8825 is the corollary).  Certificates committed (231d41d,
-  `candidates/comp2_n{339,364,375}.*`); draft `outreach/draft-jlevy-n339-364-375-2026-10-13.md` (not posted).
+  `candidates/comp2_n{339,364,375}.*`); posted as jlevy/squares#584 (Evan OK, 10-13).
   364 = s(146) [BuddenPing #566] + 7; 375 = s(88) [SQUISH] + 10 (crops of s(88), s(129) [Xu]); 339 = two crops of
   Ostashev's s(304).  `pk/sources.py`: pending.yaml entries with `repo: null` are claims only.
