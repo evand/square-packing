@@ -2735,3 +2735,25 @@ Review, findings, triage: `../../tasks/packer-arch-2026-10-14/`.  Built today (c
   https://claude.ai/artifact/T675THXVLJSM48o7o9ptP2.  No closed form: 4 coupled angle classes, factors of degree 15-32.
 * Lesson: 2 of 9 raw successes were not jammed and needed the corner-slip descent before certification (one of them is
   the record).  Candidate: run `descend.py` inside `candidate.py` / the finisher whenever exactsolve says not jammed.
+
+### TT2 census analysis (pre-registered secondary; `analysis/tt2_census.py`, `runs/tt2/census.json`, `census_cert.json`)
+Measured CPU-h S 57.6, C 57.5; reference = as-of store rows (sub-k, grid-free); 139 n.
+| metric | S | C | S / C per CPU-h | prediction |
+|---|---:|---:|---:|---|
+| (1) distinct new sub-k minima | 67231 | 57036 | 1.18 | ~1.2 |
+| (2) new regions (own leader ball) | 46502 | 39337 | 1.18 | >= 1.5 |
+| (3) new minima within 1e-3 of frontier_at(T) | 901 | 604 | 1.49 | ~1.3 |
+* (1) and (2) are driven by small n, where the as-of reference is nearly empty (one minimum at 37 and 39; 20 n with
+  < 20 reference keys): S / C by band 37-71 1.49 / 1.46, 72-150 1.07 / 1.08, 151-240 0.88 / 0.85, 241-308 0.85 / 0.81.
+  Per n, S > C at 60 n, S < C at 79 (sign test p = 0.13; regions p = 0.31).  No consistent diversity gain from S.
+* (3) is consistent: S > C at 47 n, S < C at 20, 72 ties (p = 0.001); every band S / C 1.35-2.14; 304 alone gives 223 vs
+  66, without it 678 vs 538 (1.26).
+* (4) overlap: 2891 new side keys in both arms; 850 / 849 new regions inside the other arm's new regions (~2 % of each).
+* Certification sample (40 per arm, within 1e-2): S 25 certified, 3 weak, 11 not-min, 1 unresolved; C 27 / 1 / 11 / 1.
+  Same false-new rate (28 %, mostly 'not jammed'), so the count ratios stand as they are.
+* **Reading (Evan's rule: record metrics first, diversity a hint):** records slightly favour C (inside noise); diversity
+  favours S only near the frontier, and that part is consistent across n.  Keep S's settings (pre-registered rule); hint
+  in S's favour for near-frontier exploration (plausibly the banded parents + value reward: bundle, no per-component
+  credit).  Predictions: (3) held, (1) held only through small n, (2) failed.
+* Ops note: the first certification launch ran in-process exactsolve without thread caps (~47 threads per worker, load
+  ~300); `pk/jobs.py` now caps math-library threads at 1 by default (`5e9f662`).
