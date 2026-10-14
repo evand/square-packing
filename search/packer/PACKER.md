@@ -2451,3 +2451,16 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
 * **Policy clarification:** rounding-only changes (Q3/Q9 fast dot, Q11 sincos) are pure re-rolls by construction: replay
   only.  Changes to the algorithm's path (Q2, Q7, Q12) get the ~5 CPU-h guard race from the Q2 analysis -- Q7 did not
   get one (it was adopted before that policy); the cumulative guard race below covers it.
+* **G1, pre-registered (cumulative guard race for this session's fq changes):** `bench110.py race --arms
+  pre:rand:+FQ_LP_IPM=0;+FQ_SOC_AS=0;+FQ_FASTDOT=0;+FQ_FASTSC=0;+FQ_LP_IR=1 cur:rand --budget 5 --check 1 --slots 16
+  --out runs/bench110/g1` (bench110 recipe; entry events below BEST_VISIBLE; "pre" = the session's fq math switched off
+  -- Clarabel LPs with refinement, SOC LP, sequential dot, libm sincos; native build and the bit-identical changes stay).
+  Two questions: (1) guard: does any search-level loss offset the speed (power: ~5 CPU-h catches a true ratio <= ~0.5
+  relative to the speed gain); (2) does the ~3x proposal throughput convert into ~3x entries per CPU-h?  **Rule:** if cur
+  resolves slower than pre, investigate and consider reverting Q2 / Q7; otherwise the adoptions stand.  Prediction:
+  ratio 2.5-3.5x (CI roughly x/1.6).
+* **G1 result (22:55): cur / pre = 3.04 [1.45, 6.35] entries per CPU-h ("faster"); the adoptions stand.**  5 CPU-h:
+  pre 9 entries / 2.56 CPU-h (3.5 per CPU-h), cur 27 / 2.44 (11.1).  (1) Guard: no search-level loss; (2) the ~3x
+  proposal throughput converts to ~3x entries per CPU-h (prediction 2.5-3.5x: right).  Event rates were ~3x below my
+  planning guess, so the interval is wide (x/2.1), still far from "slower".  Cross-check: the cur arm uses the same
+  seeds and start draws per replicate index as the Q2 race's socas arm; median CPU to an entry 91 s vs 180 s there.
