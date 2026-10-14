@@ -5,7 +5,14 @@ shell's own command line, `setsid` forked away from `$!`, and output vanished be
 Every job runs in its own session / process group (the group id is the job's pid, recorded at launch), always logs to a
 file, and is stopped by killing that group.  Nothing here ever matches command lines.
 
-  python3 pk/jobs.py start NAME [--cwd DIR] -- CMD ARGS...   launch (refuses if NAME is still running)
+  python3 pk/jobs.py start NAME [--cwd DIR] [--procs N] [--threads T] [--strict] -- CMD ARGS...
+                                                             launch (refuses if NAME is still running).  Math-library
+                                                             threads (OMP / OpenBLAS / MKL / numexpr) default to 1 per
+                                                             process (our jobs are process-parallel; 10-14: in-process
+                                                             exactsolve x 12 workers ran ~47 threads each, load ~300).
+                                                             --procs N = the job's declared processes: warns when the
+                                                             running threads + N exceed the target (--strict: refuse)
+  python3 pk/jobs.py free                                    suggested --procs now (target - running threads, >= 1)
   python3 pk/jobs.py status [NAME]                           alive, elapsed, processes / CPU in the group, last log line,
                                                              machine load vs the ~16-process target
   python3 pk/jobs.py stop NAME [--grace 10]                  SIGTERM the group, SIGKILL after the grace period
@@ -20,6 +27,28 @@ import argparse, json, os, signal, subprocess, sys, time
 HERE = os.path.dirname(os.path.abspath(__file__))
 JOBS = os.path.abspath(os.environ.get('PK_JOBS', os.path.join(HERE, '..', 'runs', 'jobs')))
 TARGET = 16          # busy processes the machine is meant to carry (~/math/CLAUDE.md)
+SLACK = 1.25         # warn above TARGET x SLACK ("somewhat above 16 is fine")
+THREAD_VARS = ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS', 'NUMEXPR_NUM_THREADS',
+               'VECLIB_MAXIMUM_THREADS')
+
+
+def running_threads(pgid=None, samples=3, dt=0.3):
+    """threads in state R (on a CPU or runnable), machine-wide or in one process group; averaged over a few samples
+    (instantaneous, unlike the load average, which lags by minutes)"""
+    tot = 0
+    for i in range(samples):
+        out = subprocess.run(['ps', '-L', '-eo', 'pgid=,stat='], capture_output=True, text=True).stdout
+        for line in out.splitlines():
+            f = line.split()
+            if len(f) == 2 and f[1].startswith('R') and (pgid is None or int(f[0]) == pgid):
+                tot += 1
+        if i + 1 < samples:
+            time.sleep(dt)
+    return tot / samples - (1 if pgid is None else 0)        # minus the ps itself
+
+
+def free():
+    return max(1, int(TARGET - running_threads()))
 
 
 def _dir(name):
@@ -57,19 +86,29 @@ def alive(name):
     return bool(m) and bool(_group(m['pid']))
 
 
-def start(name, cmd, cwd=None):
+def start(name, cmd, cwd=None, procs=None, threads=1, strict=False):
     if alive(name):
         sys.exit(f'job {name} is still running (pid {_meta(name)["pid"]}); stop it or pick another name')
+    run = running_threads()
+    if procs and run + procs * threads > TARGET * SLACK:
+        msg = (f'{name}: {run:.0f} threads already running + {procs} x {threads} declared > {TARGET} target '
+               f'(x{SLACK}); suggested --procs {max(1, int(TARGET - run))}')
+        if strict:
+            sys.exit('refused: ' + msg)
+        print('warning: ' + msg)
     cwd = os.path.abspath(cwd or os.getcwd())
     d = _dir(name)
     os.makedirs(d, exist_ok=True)
     log = open(os.path.join(d, 'log'), 'w')
     env = dict(os.environ, PYTHONUNBUFFERED='1')
+    for v in THREAD_VARS:                            # the caller's explicit setting wins
+        env.setdefault(v, str(threads))
     # start_new_session: setsid() in the child before exec, no extra fork, so p.pid is the job and its group id
     p = subprocess.Popen(cmd, cwd=cwd, stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
                          start_new_session=True, env=env)
     meta = dict(name=name, pid=p.pid, cmd=cmd, cwd=cwd, start=time.strftime('%Y-%m-%dT%H:%M:%S'), t0=time.time(),
-                git=_git(cwd), load=os.getloadavg()[0])
+                git=_git(cwd), load=os.getloadavg()[0], running_at_start=run, procs=procs,
+                threads={v: env[v] for v in THREAD_VARS})
     json.dump(meta, open(os.path.join(d, 'meta.json'), 'w'), indent=1)
     print(f'started {name}: pid/pgid {p.pid}, log {os.path.join(d, "log")}')
     return p.pid
@@ -111,30 +150,46 @@ def status(name=None):
         g = _group(m['pid'])
         cpu = sum(c for _, c, _ in g)
         el = time.time() - m.get('t0', time.time())
-        state = f'RUNNING {len(g)} procs, ~{cpu / 100:.1f} cores' if g else 'done'
+        rt = running_threads(m['pid'], samples=2) if g else 0
+        state = f'RUNNING {len(g)} procs, {rt:.0f} running threads' if g else 'done'
+        flag = ''
         if g:
-            busy += cpu / 100
+            busy += rt
+            cap = max(len(g), m.get('procs') or 0)
+            if rt > 1.5 * cap + 1:
+                flag = f'  OVERSUBSCRIBED ({rt:.0f} running threads for {cap} processes: math-library threads?)'
         if g or name:
-            print(f'{nm:24s} {state:32s} {el / 60:7.1f} min  pid {m["pid"]}  git {m.get("git")}')
+            print(f'{nm:24s} {state:36s} {el / 60:7.1f} min  pid {m["pid"]}  git {m.get("git")}{flag}')
             print(f'{"":24s} | {_last_line(nm)[:150]}')
     l1, l5, _ = os.getloadavg()
-    print(f'load {l1:.1f} (5 min {l5:.1f}) vs target ~{TARGET}; these jobs ~{busy:.1f} cores; '
-          f'headroom ~{TARGET - l1:+.1f}')
+    run = running_threads()
+    warn = '  OVER TARGET' if run > TARGET * SLACK else ''
+    print(f'running threads now {run:.0f} vs target ~{TARGET} (these jobs {busy:.0f}); free ~{max(0, int(TARGET - run))}; '
+          f'load {l1:.1f} (5 min {l5:.1f}, lags){warn}')
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest='cmd', required=True)
-    p = sub.add_parser('start'); p.add_argument('name'); p.add_argument('--cwd'); p.add_argument('argv', nargs=argparse.REMAINDER)
+    p = sub.add_parser('start'); p.add_argument('name'); p.add_argument('--cwd')
+    p.add_argument('--procs', type=int, help='processes this job will run (checked against the target)')
+    p.add_argument('--threads', type=int, default=1, help='math-library threads per process (default 1)')
+    p.add_argument('--strict', action='store_true', help='refuse instead of warning when over the target')
+    p.add_argument('argv', nargs='*')
+    sub.add_parser('free')
     p = sub.add_parser('stop'); p.add_argument('name'); p.add_argument('--grace', type=float, default=10.0)
     p = sub.add_parser('status'); p.add_argument('name', nargs='?')
     p = sub.add_parser('log'); p.add_argument('name'); p.add_argument('-n', type=int, default=20)
-    a = ap.parse_args()
+    raw = sys.argv[1:]
+    cut = raw.index('--') if '--' in raw else len(raw)          # options before `--`, the command after it
+    a = ap.parse_args(raw[:cut])
     if a.cmd == 'start':
-        argv = a.argv[1:] if a.argv[:1] == ['--'] else a.argv
+        argv = raw[cut + 1:] or a.argv
         if not argv:
             sys.exit('usage: jobs.py start NAME -- CMD ARGS...')
-        start(a.name, argv, a.cwd)
+        start(a.name, argv, a.cwd, a.procs, a.threads, a.strict)
+    elif a.cmd == 'free':
+        print(free())
     elif a.cmd == 'stop':
         stop(a.name, a.grace)
     elif a.cmd == 'status':
