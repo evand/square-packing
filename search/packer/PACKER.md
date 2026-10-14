@@ -2716,3 +2716,22 @@ Review, findings, triage: `../../tasks/packer-arch-2026-10-14/`.  Built today (c
 * **How the TT2 metrics combine (Evan 10-14):** the record metrics are the strongest evidence (actual later records
   recovered, recovered fraction of later gains, certified new records).  If the arms look similar there and one is
   clearly better on new-basin diversity ((1)-(3)), read that as a hint in its favour, not a decision.  No fixed blend.
+
+### TT2 results, record metrics (scored 10-14 ~15:00; census analysis still to run)
+* Both arms ran to completion (~57.5 measured CPU-h each).  Scoring fix first: chain imports every round into the store,
+  so `frontier_now` scored an arm against its own rounds (n = 146) and f64 re-import noise (~1e-14 .. 2e-10) counted as
+  "later events" (118 n instead of 28).  `eventbench score` now leaves out the scored dirs (`--runs-out`, give both arms)
+  and needs a later gain > 1e-9 (`EV_THR`).  Corrected: 28 event n, as pre-registered.
+* Primary (certified success, beat frontier_at(T) by >= 1e-8): **S 3 (146, 305, 308), C 5 (132, 209, 270, 305, 308)**
+  (C's 146 failed exactsolve as raw output; after `exact/descend.py` it lands exactly on #505, a rediscovery).
+  Secondary (sum of recovered fractions over the 28 event n): **S 1.91, C 2.84**; C rediscovered #573's 209 exactly.
+  Rule: the primary difference is far inside Poisson noise (open), so S's settings stay; point estimates favour C, and
+  my prediction (P(S > C) 0.55, secondary S ~1.3x C) did not hold.
+* **New record from S: s(146) <= 12.583782190152, posted as jlevy/squares#606** (Evan: "Let's submit it."), 1.38e-8 below
+  Barnett's #505.  From Xu's #432: two bigkicks at round 180 -> 12.5837821905 (not jammed: corner-corner MILP dS -1.3e-5)
+  -> `exact/descend.py` -> certified strict local minimum mod 59 flat motions.  #505 also certified (mod 61); regularized,
+  the two agree to 1e-7 except a 10-square cluster near 42 deg (moves <= 0.056; no shared angle); contacts 556 vs 577,
+  corner-corner 69 vs 63.  Comparison `candidates/tt2_n146_vs505.json`, page
+  https://claude.ai/artifact/T675THXVLJSM48o7o9ptP2.  No closed form: 4 coupled angle classes, factors of degree 15-32.
+* Lesson: 2 of 9 raw successes were not jammed and needed the corner-slip descent before certification (one of them is
+  the record).  Candidate: run `descend.py` inside `candidate.py` / the finisher whenever exactsolve says not jammed.
