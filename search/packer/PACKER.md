@@ -2464,3 +2464,14 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
   proposal throughput converts to ~3x entries per CPU-h (prediction 2.5-3.5x: right).  Event rates were ~3x below my
   planning guess, so the interval is wide (x/2.1), still far from "slower".  Cross-check: the cur arm uses the same
   seeds and start draws per replicate index as the Q2 race's socas arm; median CPU to an entry 91 s vs 180 s there.
+* **perfbench noise, and the Q11 "regression" at 237 (23:15):** after Q11 the perf score read 3.16 / 3.22 (two runs) vs
+  3.38 before; n = 237 fell 2,740 -> 2,431 / 2,528 while `FQ_FASTSC=0` on the same binary reproduced 2,720.  Paired by
+  replicate (same starts): 0.895 [0.82, 0.98] and 0.927 [0.84, 1.03] (the two "on" runs share trajectories, so they are
+  not independent); n = 110: 0.99.  Per-status CPU: screens cheaper, polished proposals ~20 % dearer.  **Chain replay**
+  (`chain.py`: screen with arm X, then polish its output with deployed defaults; C237c screens, + jitter null):
+  1,200 chains: polish CPU on / off 1.017 [0.96, 1.08], jitter / off 1.050 [0.99, 1.11]; whole chain (screen + polish)
+  on - off -0.9 % [-6.5, +4.8], jitter +5.3 % [-0.6, +11].  **No chain effect: any re-roll moves the following polish's
+  cost by ~+-5 % (heavy-tailed per chain); Q11's expected ~+4-5 % at 237 is below that floor and below perfbench's
+  resolution.**  Q11 stands.  Lessons: (1) perfbench resolves ~+-10 % at 237 per pair of runs (replicate SE 3-9 % per
+  run, and a re-roll redraws all 8 trajectories at once); quote perf scores as ~3.2-3.4x, not to 0.01; (2) stage speed
+  should come from paired replays, end-to-end gains below ~10 % from chain replays with >= 1,000 chains.
