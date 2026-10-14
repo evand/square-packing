@@ -2724,7 +2724,7 @@ Review, findings, triage: `../../tasks/packer-arch-2026-10-14/`.  Built today (c
   and needs a later gain > 1e-9 (`EV_THR`).  Corrected: 28 event n, as pre-registered.
 * Primary (certified success, beat frontier_at(T) by >= 1e-8): **S 3 (146, 305, 308), C 5 (132, 209, 270, 305, 308)**
   (C's 146 failed exactsolve as raw output; after `exact/descend.py` it lands exactly on #505, a rediscovery).
-  Secondary (sum of recovered fractions over the 28 event n): **S 1.91, C 2.84**; C rediscovered #573's 209 exactly.
+  Secondary (sum of recovered fractions over the 28 event n): **S 1.91, C 2.84**; C rediscovered the later 209 record (Couzo, #488 / #506) exactly.
   Rule: the primary difference is far inside Poisson noise (open), so S's settings stay; point estimates favour C, and
   my prediction (P(S > C) 0.55, secondary S ~1.3x C) did not hold.
 * **New record from S: s(146) <= 12.583782190152, posted as jlevy/squares#606** (Evan: "Let's submit it."), 1.38e-8 below
