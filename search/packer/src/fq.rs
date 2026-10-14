@@ -163,6 +163,9 @@ struct Prob {
 
 #[inline]
 fn term(g: f64, lam: f64, mu: f64) -> (f64, f64) {
+    // lam == 0 (inactive constraints, the common case): the general formulas without the two divisions, bit-identical
+    // (t = g + 0.0 compares and squares like g; x - 0.0 = x; the inactive value is (-0.0 * 0.0) / (2 mu) = -0.0)
+    if lam == 0.0 { return if g > 0.0 { (0.5 * mu * g * g, mu * g) } else { (-0.0, 0.0) }; }
     let t = g + lam / mu;
     if t > 0.0 { (0.5 * mu * t * t - lam * lam / (2.0 * mu), mu * t) } else { (-lam * lam / (2.0 * mu), 0.0) }
 }
@@ -1258,24 +1261,51 @@ fn lbfgs(f: &mut dyn FnMut(&[f64], &mut [f64]) -> f64, v: &mut [f64], maxit: usi
         if ginf(&g) < gtol { break; }
         for k in 0..dim { d[k] = -g[k]; }
         let h = ss.len();
-        for k in (0..h).rev() {
-            let a = rho[k] * dot(&ss[k], &d);
-            alpha[k] = a;
-            for q in 0..dim { d[q] -= a * ys[k][q]; }
-        }
-        if h > 0 {
-            let gam = dot(&ss[h - 1], &ys[h - 1]) / dot(&ys[h - 1], &ys[h - 1]);
-            for q in 0..dim { d[q] *= gam; }
+        let mut gd;
+        if fast_dot() {
+            // fused two-loop (perf 10-13): each update of d is followed in the same pass by the next dot product,
+            // accumulated in fast dot's 8-lane pattern -- the same operations in the same order (bit-identical)
+            if h > 0 {
+                let mut t = dot(&ss[h - 1], &d);
+                for k in (0..h).rev() {
+                    let a = rho[k] * t;
+                    alpha[k] = a;
+                    if k > 0 { t = upd_dot::<true>(&mut d, &ys[k], a, &ss[k - 1]); } else { for q in 0..dim { d[q] -= a * ys[k][q]; } }
+                }
+                let gam = dot(&ss[h - 1], &ys[h - 1]) / dot(&ys[h - 1], &ys[h - 1]);
+                for q in 0..dim { d[q] *= gam; }
+                let mut t = dot(&ys[0], &d);
+                gd = 0.0;
+                for k in 0..h {
+                    let c = alpha[k] - rho[k] * t;
+                    if k + 1 < h { t = upd_dot::<false>(&mut d, &ss[k], c, &ys[k + 1]); } else { gd = upd_dot::<false>(&mut d, &ss[k], c, &g); }
+                }
+            } else {
+                let gm = ginf(&g);
+                let sc = if gm > 0.0 { (1e-3 / gm).min(1.0) } else { 1.0 };
+                for q in 0..dim { d[q] *= sc; }
+                gd = dot(&g, &d);
+            }
         } else {
-            let gm = ginf(&g);
-            let sc = if gm > 0.0 { (1e-3 / gm).min(1.0) } else { 1.0 };
-            for q in 0..dim { d[q] *= sc; }
+            for k in (0..h).rev() {
+                let a = rho[k] * dot(&ss[k], &d);
+                alpha[k] = a;
+                for q in 0..dim { d[q] -= a * ys[k][q]; }
+            }
+            if h > 0 {
+                let gam = dot(&ss[h - 1], &ys[h - 1]) / dot(&ys[h - 1], &ys[h - 1]);
+                for q in 0..dim { d[q] *= gam; }
+            } else {
+                let gm = ginf(&g);
+                let sc = if gm > 0.0 { (1e-3 / gm).min(1.0) } else { 1.0 };
+                for q in 0..dim { d[q] *= sc; }
+            }
+            for k in 0..h {
+                let b = rho[k] * dot(&ys[k], &d);
+                for q in 0..dim { d[q] += ss[k][q] * (alpha[k] - b); }
+            }
+            gd = dot(&g, &d);
         }
-        for k in 0..h {
-            let b = rho[k] * dot(&ys[k], &d);
-            for q in 0..dim { d[q] += ss[k][q] * (alpha[k] - b); }
-        }
-        let mut gd = dot(&g, &d);
         if !(gd < 0.0) {
             ss.clear(); ys.clear(); rho.clear();
             let gm = ginf(&g);
@@ -1315,6 +1345,35 @@ fn lbfgs(f: &mut dyn FnMut(&[f64], &mut [f64]) -> f64, v: &mut [f64], maxit: usi
         if stall > 10 { break; }
     }
     (e, nev, ginf(&g))
+}
+
+#[inline]
+fn fast_dot() -> bool {
+    static FAST: OnceLock<bool> = OnceLock::new();
+    *FAST.get_or_init(|| std::env::var("FQ_FASTDOT").map(|v| v != "0").unwrap_or(true))
+}
+
+/// d <- d - c u (sub) or d <- d + u c, then the fast dot of w with the updated d, in one pass (bit-identical to the
+/// update loop followed by dot(w, d) in fast mode)
+#[inline]
+fn upd_dot<const SUB: bool>(d: &mut [f64], u: &[f64], c: f64, w: &[f64]) -> f64 {
+    let n = d.len();
+    let (u, w) = (&u[..n], &w[..n]);
+    let full = n / 8 * 8;
+    let mut acc = [0.0f64; 8];
+    let mut base = 0;
+    while base < full {
+        for l in 0..8 {
+            let q = base + l;
+            d[q] = if SUB { d[q] - c * u[q] } else { d[q] + u[q] * c };
+            acc[l] += w[q] * d[q];
+        }
+        base += 8;
+    }
+    for q in full..n { d[q] = if SUB { d[q] - c * u[q] } else { d[q] + u[q] * c }; }
+    let mut t = ((acc[0] + acc[4]) + (acc[1] + acc[5])) + ((acc[2] + acc[6]) + (acc[3] + acc[7]));
+    for q in full..n { t += w[q] * d[q]; }
+    t
 }
 
 #[inline]
@@ -1719,6 +1778,7 @@ fn main() {
             let (json, sr, xq) = run_quench(&a, s, x);
             if let Some(out) = sarg(&a, "--out") { write_cfg(&out, sr, &xq); }
             println!("{json}");
+            lpipm::prof_report();
         }
         "gradcheck" => {
             // random kick so many constraints are active, then compare analytic vs central differences

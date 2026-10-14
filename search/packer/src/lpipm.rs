@@ -10,6 +10,12 @@
 use clarabel::algebra::CscMatrix;
 use clarabel::qdldl::{QDLDLFactorisation, QDLDLSettingsBuilder};
 
+thread_local! { static PROFT: std::cell::Cell<[f64; 10]> = const { std::cell::Cell::new([0.0; 10]) }; }
+static PROF: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+#[inline] fn prof_on() -> bool { *PROF.get_or_init(|| std::env::var("FQ_IPM_PROF").is_ok()) }
+#[inline] fn padd(i: usize, t: &mut std::time::Instant) { if prof_on() { let mut a = PROFT.get(); a[i] += t.elapsed().as_secs_f64(); PROFT.set(a); *t = std::time::Instant::now(); } }
+pub fn prof_report() { if prof_on() { let a = PROFT.get(); eprintln!("ipmprof setup {:.3} resid {:.3} form {:.3} factor {:.3} aty {:.3} solve {:.3} ax {:.3} nloops {:.3} steps {:.3} update {:.3}", a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8] - a[4] - a[5] - a[6] - a[7], a[9]); } }
+
 fn why(s: &str) { if std::env::var("FQ_IPM_DBG").is_ok() { eprintln!("ipm fail: {s}"); } }
 
 pub struct Sol {
@@ -86,8 +92,8 @@ pub fn solve(n: usize, rows: &[Vec<(usize, f64)>], b: &[f64], c: &[f64], lo: &[f
     let setup_s = t_setup.elapsed().as_secs_f64();
     let res: Option<Sol> = 'ipm: {
     let trace = std::env::var("FQ_IPM_TRACE").is_ok();
-    let mut tsec = [0.0f64; 5]; let mut tk = std::time::Instant::now();
-    macro_rules! lap { ($i:expr) => { if trace { tsec[$i] += tk.elapsed().as_secs_f64(); tk = std::time::Instant::now(); } } }
+    let mut pt = std::time::Instant::now();
+    { let mut a = PROFT.get(); a[0] += setup_s; PROFT.set(a); }
     static REG: std::sync::OnceLock<f64> = std::sync::OnceLock::new();
     static DREG: std::sync::OnceLock<f64> = std::sync::OnceLock::new();
     let dreg = *DREG.get_or_init(|| std::env::var("FQ_IPM_DREG").ok().and_then(|v| v.parse().ok()).unwrap_or(1e-8));
@@ -141,17 +147,16 @@ pub fn solve(n: usize, rows: &[Vec<(usize, f64)>], b: &[f64], c: &[f64], lo: &[f
         if !(mu.is_finite() && rdn.is_finite()) { why(&format!("nan it {it}")); break 'ipm None; }
         if trace { eprintln!("  ipm it {it} comp {comp:.2e} rd {rdn:.2e} rp {rpn:.2e}"); }
         if comp <= tol_gap && rdn <= tol_feas * (1.0 + cn) && rpn <= tol_feas * (1.0 + bn) {
-            if trace { eprintln!("ipm sections resid {:.3} form {:.3} factor {:.3} newton+steps {:.3} update {:.3} ms/iter", tsec[0]/it as f64*1e3, tsec[1]/it as f64*1e3, tsec[2]/it as f64*1e3, tsec[3]/it as f64*1e3, tsec[4]/it as f64*1e3); }
             break 'ipm Some(Sol { x, y, iters: it });
         }
         // fallback acceptance when the normal equations break down at the end (cancellation once y / s spans ~1e+-20):
         // the current iterate, if within 10x of the tolerances (Clarabel's AlmostSolved is looser: gap 5e-5, feas 1e-4)
         let almost = comp <= 10.0 * tol_gap && rdn <= 10.0 * tol_feas * (1.0 + cn) && rpn <= 10.0 * tol_feas * (1.0 + bn);
-        lap!(0);
+        padd(1, &mut pt);
         // normal matrix
-        nz.fill(0.0);
         // dual regularisation, the normal-equation form of Clarabel's static KKT shift: 1 / (s / y + delta)
         for r in 0..m { dd[r] = y[r] / (s[r] + dreg * y[r]); iy[r] = 1.0 / y[r]; }
+        nz.fill(0.0);
         for r in 0..m { let d = dd[r]; for k in roff[r]..roff[r + 1] { nz[pidx[k] as usize] += d * pcoef[k]; } }
         for j in 0..n {
             // reciprocal bound slacks (0 where there is no bound), reused by both Newton solves
@@ -161,24 +166,31 @@ pub fn solve(n: usize, rows: &[Vec<(usize, f64)>], b: &[f64], c: &[f64], lo: &[f
             nz[diag[j]] += zl[j] * ixl[j] + zu[j] * ixu[j] + reg;
         }
         fac.update_values(&all, &nz);
-        lap!(1);
+        padd(2, &mut pt);
         if fac.refactor().is_err() { why("factor"); break 'ipm if almost { Some(Sol { x, y, iters: it }) } else { None }; }
-        lap!(2);
+        padd(3, &mut pt);
         // one Newton solve for given complementarity right-hand sides rs, rl, ru
         let mut newton = |rs: &[f64], rl: &[f64], ru: &[f64], dx: &mut [f64], ds: &mut [f64], dy: &mut [f64], dzl: &mut [f64], dzu: &mut [f64],
                           t_m: &mut [f64], t_n: &mut [f64]| {
+            let mut nt = std::time::Instant::now();
             for r in 0..m { t_m[r] = dd[r] * (rs[r] * iy[r] - rp[r]); }
+            padd(7, &mut nt);
             aty(t_m, t_n);
+            padd(4, &mut nt);
             for j in 0..n { dx[j] = -rd[j] - t_n[j] + rl[j] * ixl[j] - ru[j] * ixu[j]; }
+            padd(7, &mut nt);
             fac.solve(dx);
+            padd(5, &mut nt);
             if trace { let bad = dx.iter().filter(|v| !v.is_finite()).count(); let mx = dx.iter().fold(0.0f64, |a, v| a.max(v.abs())); eprintln!("    solve: nonfinite {bad} max|dx| {mx:.2e} reg {}", fac.regularize_count()); }
             ax(dx, t_m);
+            padd(6, &mut nt);
             // consistent with the regularised system: dy = d~ (A dx - rp + rs / y), ds from complementarity
             for r in 0..m { dy[r] = dd[r] * (t_m[r] - rp[r] + rs[r] * iy[r]); ds[r] = (rs[r] - s[r] * dy[r]) * iy[r]; }
             for j in 0..n {
                 dzl[j] = (rl[j] - zl[j] * dx[j]) * ixl[j];
                 dzu[j] = (ru[j] + zu[j] * dx[j]) * ixu[j];
             }
+            padd(7, &mut nt);
         };
         let step = |dx: &[f64], ds: &[f64], dy: &[f64], dzl: &[f64], dzu: &[f64], xl: &[f64], xu: &[f64], s: &[f64], y: &[f64], zl: &[f64], zu: &[f64]| -> (f64, f64) {
             let (mut ap, mut ad) = (1.0f64, 1.0f64);
@@ -238,7 +250,7 @@ pub fn solve(n: usize, rows: &[Vec<(usize, f64)>], b: &[f64], c: &[f64], lo: &[f
         }
         if !fin(&dx, &dy) || !fin(&dzl, &dzu) { why(&format!("nonfinite it {it} almost {almost}")); break 'ipm if almost { Some(Sol { x, y, iters: it }) } else { None }; }
         let (ap, ad) = ((0.995 * ap).min(1.0), (0.995 * ad).min(1.0));
-        lap!(3);
+        padd(8, &mut pt);
         for j in 0..n { x[j] += ap * dx[j]; }
         for r in 0..m { s[r] += ap * ds[r]; y[r] += ad * dy[r]; }
         for j in 0..n {
@@ -247,7 +259,7 @@ pub fn solve(n: usize, rows: &[Vec<(usize, f64)>], b: &[f64], c: &[f64], lo: &[f
             if hu[j] { xu[j] -= ap * dx[j]; zu[j] += ad * dzu[j]; }
             if !(xl[j] > 0.0 && xu[j] > 0.0) { why(&format!("bound it {it}")); break 'ipm None; }
         }
-        lap!(4);
+        padd(9, &mut pt);
     }
     why("maxit");
     None

@@ -2396,3 +2396,16 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
   "above-k -2.6 pp" was noise at 153 screens, as the power calculation said.
 * **Perf score after Q9: 2.92x** (`runs/perfbench/q2q7q9`): 7,896 / 2,298 proposals per CPU-h at 110 / 237 (2.83x /
   3.01x).  Fast dot added 1.07x / 1.03x (predicted ~1.06-1.08 at 110).
+* **Next-round profile (21:00, deployed Q2 + Q7 + Q9):** n = 110: qdldl factor 19 %, eval 18 %, L-BFGS 17 %, rest of
+  the IPM ~22 %, sincos 9 %; n = 237: IPM ~80 % (factor 36 %).  Factor: 0.6-0.9 M multiply-adds in 0.21-0.29 ms
+  (~3 GFlop/s; L ~27 k, column counts 5-70); faer simplicial / supernodal (relaxed amalgamation up to 256) is never
+  faster than qdldl on a quiet machine (0.23-0.26 vs 0.21 ms) -- supernodes too small; a custom block (3x3 per square)
+  factor is the remaining big lever, deferred.  IPM sections (FQ_IPM_PROF=1, 237): factor 47 %, setup 10 %, assembly
+  10 %, step lengths 7 %, solves 7 %, residuals 5 %, A'y 5 %, Ax 4 %.
+* **Dev negatives (no test needed):** gather-form A'y and A'DA assembly (bit-identical, 0.99-1.00x: reverted); IPM
+  start mu0 0.1 - 1e-4 (iterations 20 -> 21-37: reverted); faer relaxed supernodal (above).
+* **Bit-identical ALM speedups (deployed; 800 / 800 calls identical vs the previous deploy, both corpora, both stages):**
+  (1) `term()` skips its two divisions when lam = 0 (inactive constraints; the general formula reduces exactly,
+  signed zeros included); (2) the L-BFGS two-loop fuses each update of d with the next fast dot (same 8-lane order).
+  Screens 1.17x (110) / 1.22x (237), polishes 1.00x.  **Perf score 3.06x** (`runs/perfbench/bitid1`: 8,377 / 2,384
+  proposals per CPU-h; load ~7 from another session at the start, so possibly a little low).
