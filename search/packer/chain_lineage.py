@@ -14,6 +14,7 @@ not match is reported and the walk stops there.
 
   chain_lineage.py RUNDIR N [--side S] [--json]
 """
+from fractions import Fraction
 import argparse, glob, json, os, re, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -80,7 +81,7 @@ def trace(out, n, side=None, tol=1e-8):
             n, side, before = n + k, src, rn
         else:       # the start file as copied in (header side, before explore's start polish), else the polished side
             f = os.path.join(R[rn]['dir'], kind)
-            side = float(open(f).readline().split()[1]) if os.path.exists(f) else root['s']
+            side = float(Fraction(open(f).readline().split()[1])) if os.path.exists(f) else root['s']   # exact starts: p/q
             before = rn
 
 

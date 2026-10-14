@@ -129,6 +129,19 @@ _PUB_SRC = "(g.source LIKE 'register%' OR g.source LIKE 'pending:%' OR g.source 
 
 
 EXCLUDE = ()        # sighting sources left out in public mode (e.g. 'pending:#584' to replay a pass before we posted)
+RUNS_OUT = ()       # run dirs whose own imported rounds are not "later events" (score(): the scored dirs; chain imports
+                    # every round, so without this an arm is scored against itself: TT2 n = 146, 10-14)
+EV_THR = 1e-9       # a later event must lower the frontier by more than this (f64 re-import noise is up to ~2e-10)
+
+
+def _runs_sql(col):
+    return ''.join(f" AND {col} NOT LIKE 'run:{d}%'" for d in RUNS_OUT)
+
+
+def set_runs_out(dirs):
+    global RUNS_OUT
+    RUNS_OUT = tuple(os.path.relpath(os.path.abspath(d), PK).rstrip('/') + '/' for d in dirs)
+    _LC.clear()
 
 
 def set_public(on=True, exclude=()):
@@ -151,7 +164,9 @@ def store_frontier(n):
                          (n,)).fetchone()
     else:
         r = db().execute('SELECT min(s) FROM frontier WHERE n=?', (n,)).fetchone()
-        q = db().execute("SELECT min(s) FROM packing WHERE n=? AND status!='infeasible' AND (pen IS NULL OR pen<=1e-9)", (n,)).fetchone()
+        q = db().execute("SELECT min(p.s) FROM packing p WHERE p.n=? AND p.status!='infeasible' AND (p.pen IS NULL OR p.pen<=1e-9)"
+                         + (f" AND EXISTS (SELECT 1 FROM sighting g WHERE g.packing=p.id{_runs_sql('g.source')})" if RUNS_OUT else ''),
+                         (n,)).fetchone()
     v = [x for x in (r[0], q[0]) if x is not None]
     return min(v) if v else None
 
@@ -306,15 +321,16 @@ def certify(n, path, tag):
     return v
 
 
-def score(T, dirs, all_n=False, do_cert=False, tag=None):
+def score(T, dirs, all_n=False, do_cert=False, tag=None, runs_out=None):
     t = cutoff(T)
+    set_runs_out(dirs if runs_out is None else runs_out)
     B = our_best(dirs)
     rows = []
     for n in sorted(B):
         s, p = B[n]
         fT, fN = frontier_at(n, t), frontier_now(n)
         g = fT - s
-        live = fN >= fT - 1e-15
+        live = fN >= fT - EV_THR
         later = fT - fN
         r = dict(n=n, frontier_T=fT, ours=s, gain=g, success=g >= THR, live=live, later_gain=later,
                  recovered=None if live else min(1.0, max(0.0, g / later)),
@@ -370,6 +386,8 @@ def main():
     p.add_argument('--certify', action='store_true', help='candidate.py on each success (exactsolve + checkers + live check)')
     p.add_argument('--tag', help='candidate work-dir tag (runs/candidates/eventbench_<tag>_n<n>)')
     p.add_argument('--json')
+    p.add_argument('--runs-out', nargs='*', help='run dirs whose imported rounds are not later events (default: the scored dirs; '
+                   'give every arm of a concurrent comparison)')
     a = ap.parse_args()
     if a.cmd == 'build-events':
         D = build_events(a.md, a.out)
@@ -393,7 +411,7 @@ def main():
         if bad:
             print(f'start above frontier_at(T) by > {MATCH:g}: {bad}')
     elif a.cmd == 'score':
-        rows = score(a.cutoff, a.dirs, a.all, a.certify, a.tag)
+        rows = score(a.cutoff, a.dirs, a.all, a.certify, a.tag, a.runs_out)
         print_score(rows, a.cutoff)
         if a.json:
             json.dump(rows, open(a.json, 'w'), indent=1)
