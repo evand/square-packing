@@ -2672,3 +2672,36 @@ Store + 87 chain-round archives at 109.  Sub-11 distinct sides ~31,700 (1e-8; 3,
 saturate (4,600 / 5,000 at 1e-5).  Role groups (L/B/axis/J, L-B swap merged) by best side: < 11 716 (123 before 10-09),
 < 10.98 445 (88), < 10.96 112 (23), < 10.955 27 (10).  New groups at every depth since 10-09 (H3's 48 rounds the bulk):
 broad, not saturated; best non-diamond 10.9518715 unchanged since 10-12.  No exactsolve census at 109.
+
+## Architecture review + TT2 (10-14 day; Evan: "TT2 should be our best guess at the strongest collection of settings")
+Review, findings, triage: `../../tasks/packer-arch-2026-10-14/`.  Built today (classes: functional / additive):
+* chain (functional): `--reward value` + store-wide novelty ref (`--novel store`), store library starts via `pk/parents.py`
+  (`--lib store --lib-policy banded`), pooled move-kind bandit per n band with no decay and full carry (`--bandit band`;
+  A1 `analysis/bandit_timescale.md`: no drift at round scale, per-n learning not viable, current setting keeps 60-95 %
+  of the kind information), `--as-of` time travel, no silent 10-05 fallback, imports each round, ledger rows.
+  Pre-10-14 behaviour = `--reward legacy --novel run --lib run --bandit n`.
+* store (additive): `expansion` ledger, `packing.cluster` column, explorer `cfp` (fq contact fp; A2: not an identity key).
+* `pk/cluster.py`: leader balls in matching distance, r = 0.42 / sqrt n, deepest first, image prefilter (A2
+  `analysis/similarity110.md`: at 110 40 clusters, A / B apart, 72 % of explorer steps inside a cluster vs 6 % null);
+  same-packing key = side at 2e-9.  At other n clusters are mostly 1-3 minima, so `pk/parents` draws a gap decade
+  first (`banded`), then a cluster, then a minimum.
+* `pk/watch.py` (A3): jlevy issues + 10 watched repos -> pending entries + every parseable file; first run +163 packings.
+* Store import of NH / NB / H5 (+436k rows; nothing since 10-12 18:46 had been imported).
+
+### TT2 pre-registration (time travel, cutoff 2026-10-10T06:00Z = 10-10 00:00 local)
+* Why this cutoff: store `added` = import time, store built 10-09 20:15 local, so earlier as-of pools are empty;
+  43 later events over 28 n at n <= 324, all inside the n set.
+* n set: NH's 139 non-grid n in 37..308 (`runs/night1014_ns.json`, familymap; fixed before looking at events).
+  Starts: `eventbench starts --cutoff 2026-10-10T06:00` (`runs/tt2/starts`).  Seeds 1, 2, -1; `--first-pass`.
+* Arms, concurrent, compute-matched: 4 slots x 2 procs x 4-min rounds each, ~4 h wall (~2 x 32 CPU-h).
+  - S (strong, today's defaults): `--reward value --novel store --lib store --lib-policy banded --bandit band --as-of T`.
+  - C (control, pre-10-14 chain): `--reward legacy --novel run --lib run --bandit n` (same starts / n / seeds / budget).
+  As-of filters keep both arms' own imported rounds out of S's library, novelty ref and ledger weights.
+* Metrics (`eventbench score --cutoff T`): primary = n where the arm's best beats frontier_at(n, T) by >= 1e-8 (a
+  record at T), per measured CPU-h; secondary = sum of recovered fractions of later public gains over the 28 event n;
+  tertiary = certified (candidate.py) successes.
+* Rule: keep S's settings as chain defaults unless S < C on both primary and secondary; a primary difference counts only
+  with a Poisson rate-ratio interval excluding 1, else report as open.  Either way the per-component credit is unknown
+  (bundle test).
+* Prediction: primary 0-3 per arm (the 10-12 time-travel pair, 2 x 33 CPU-h, found 1: s(154)); P(S > C on primary) 0.55;
+  secondary S ~1.3x C.  Not tested here: the composer / fresh ingestion (not chain settings).

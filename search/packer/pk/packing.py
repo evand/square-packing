@@ -126,11 +126,92 @@ def _open(p):
     return gzip.open(p, 'rt') if str(p).endswith('.gz') else open(p)
 
 
-def parse(txt: str) -> Packing | None:
-    """Any known format -> Packing, or None if not recognised."""
+MAX_N = 20000                 # sanity bound on n for strict parsing (untrusted input)
+MAX_READ = 64 << 20           # read(): refuse files (decompressed) larger than this
+MAX_TOKEN = 4000              # longest number token accepted by the strict parsers (digits of an exact rational)
+_RAT = re.compile(r'[+-]?\d+(?:/\d+)?')
+_DEC = re.compile(r'[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?')
+
+
+def _num(tok: str, exact: bool) -> Fraction:
+    """One token of an untrusted file -> Fraction.  exact: integer or p/q only; else also a plain decimal.  Raises."""
+    if len(tok) > MAX_TOKEN:
+        raise ValueError(f'number token too long ({len(tok)} chars)')
+    if _RAT.fullmatch(tok):
+        f = Fraction(tok)                                     # ZeroDivisionError on q = 0
+    elif not exact and _DEC.fullmatch(tok):
+        f = Fraction(tok)
+    else:
+        raise ValueError(f'not a {"rational" if exact else "number"}: {tok[:40]!r}')
+    return f
+
+
+def parse_sq(txt: str) -> Packing | None:
+    """dostashev's formats (github.com/dostashev/square-packing README, 'File formats'), parsed strictly:
+      .sqcert  '# sqcert v1' header comments, then `n <n>`, `s <p/q>`, then exactly n lines `x y t` (exact rationals:
+               centre (x, y), t = tan(theta/2)).
+      .sqpk    '# sqpk v1' ..., `n <n>`, `s <decimal>`, n lines `cx cy theta_deg` (decimals).
+    Anything else in the file (extra rows, short rows, junk tokens, missing header) raises ValueError.  The side is kept
+    exactly in s_str (the rational for .sqcert)."""
+    lines = [l.strip() for l in txt.splitlines()]
+    body = [l for l in lines if l and not l.startswith('#')]
+    head = next((l for l in lines if l), '')
+    exact = head.startswith('# sqcert')
+    if not (exact or head.startswith('# sqpk')):
+        return None
+    if len(body) < 2 or not re.fullmatch(r'n\s+\d{1,6}', body[0]) or not re.fullmatch(r's\s+\S+', body[1]):
+        raise ValueError('sqcert/sqpk: expected `n <n>` then `s <side>`')
+    n = int(body[0].split()[1]); s_str = body[1].split()[1]
+    if not 1 <= n <= MAX_N:
+        raise ValueError(f'sqcert/sqpk: n = {n} out of range')
+    rows = body[2:]
+    if len(rows) != n:
+        raise ValueError(f'sqcert/sqpk: {len(rows)} square lines, header says n = {n}')
+    S = _num(s_str, exact)
+    sq = []
+    for r in rows:
+        tok = r.split()
+        if len(tok) != 3:
+            raise ValueError(f'sqcert/sqpk: square line with {len(tok)} fields')
+        x, y, a = (_num(v, exact) for v in tok)
+        sq.append((float(x), float(y), math.degrees(2 * math.atan(float(a))) if exact else float(a)))
+    return Packing(float(S), sq, s_str)
+
+
+def validate(p: Packing, strict=True) -> Packing:
+    """Sanity checks for packings read from untrusted files; raises ValueError.  Always: 1 <= n, every number finite,
+    s > 0.  strict: n <= MAX_N, s >= sqrt(n) (area) - 1e-9 and s <= n + 1, every centre within one unit of the box
+    (a mis-read format, not a near-feasible packing).  Overlap is not checked here (the store does that: max_pen)."""
+    if p.n < 1 or not np.all(np.isfinite(p.sq)) or not math.isfinite(p.s) or p.s <= 0 or not math.isfinite(p.dx):
+        raise ValueError(f'invalid packing (n={p.n}, s={p.s})')
+    if strict:
+        if p.n > MAX_N:
+            raise ValueError(f'n = {p.n} > {MAX_N}')
+        if not math.sqrt(p.n) - 1e-9 <= p.s <= p.n + 1:
+            raise ValueError(f'side {p.s} impossible for n = {p.n}')
+        X, Y = p.sq[:, 0], p.sq[:, 1]
+        if X.min() < -1 or Y.min() < -1 or X.max() > p.s + p.dx + 1 or Y.max() > p.s + 1:
+            raise ValueError('centres far outside the box')
+    return p
+
+
+def parse(txt: str, strict=False) -> Packing | None:
+    """Any known format -> Packing, or None if not recognised.  strict (untrusted input): validate() the result, and
+    raise on a recognised but malformed file instead of silently truncating."""
+    p = _parse(txt, strict)
+    return None if p is None else validate(p, strict) if strict else p
+
+
+def _parse(txt: str, strict=False) -> Packing | None:
     t0 = txt.lstrip()
+    if t0.startswith('# sqcert') or t0.startswith('# sqpk'):
+        return parse_sq(txt)
     if t0.startswith('{'):
         d = json.loads(txt)
+        if not isinstance(d, dict):
+            return None
+        if strict and len(d.get('squares') or ()) > MAX_N:
+            raise ValueError('too many squares')
         if 's_exact' in d and 'squares' in d:                   # SQUISH cert.json: rational x, y, t = tan(theta/2)
             sq = []
             for q in d['squares']:
@@ -152,6 +233,8 @@ def parse(txt: str) -> Packing | None:
     if 'witness:' in txt and 'representation' in txt:
         import yaml
         w = yaml.safe_load(txt)['witness']
+        if strict and len(w.get('squares') or ()) > MAX_N:
+            raise ValueError('too many squares')
         if w['coordinates'].get('origin') != 'lower-left':
             return None
         if w.get('representation') == 'center-basis':           # basis = direction (cos, sin), unnormalised
@@ -176,6 +259,9 @@ def parse(txt: str) -> Packing | None:
     first = lines[0].split()
     if len(first) == 2 and first[0].isdigit():
         n = int(first[0]); rows = [l.split() for l in lines[1:n + 1]]
+        if strict and (len(lines) != n + 1 or n > MAX_N or any(len(r) != 3 for r in rows)
+                       or any(len(v) > MAX_TOKEN for r in rows for v in r)):
+            raise ValueError(f'"n s" format: header n = {n}, {len(lines) - 1} rows (or a row without 3 fields)')
         if len(rows) == n and all(len(r) >= 3 for r in rows):
             if any('/' in v for r in rows for v in r[:3]):       # exact cert: rational x y t, t = tan(theta/2)
                 sq = [(float(Fraction(a)), float(Fraction(b)), math.degrees(2 * math.atan(float(Fraction(t)))))
@@ -186,9 +272,13 @@ def parse(txt: str) -> Packing | None:
     return None
 
 
-def read(path) -> Packing | None:
+def read(path, strict=False, max_bytes=MAX_READ) -> Packing | None:
+    """parse() a file (.gz transparently); a file larger than max_bytes (after decompression) raises ValueError."""
     with _open(path) as f:
-        p = parse(f.read())
+        txt = f.read(max_bytes + 1)
+    if len(txt) > max_bytes:
+        raise ValueError(f'{path}: larger than {max_bytes} bytes')
+    p = parse(txt, strict)
     if p is not None:
         p.meta.setdefault('path', str(path))
     return p

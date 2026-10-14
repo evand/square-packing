@@ -10,7 +10,7 @@ window (n_hi + 1, n_hi + 2) stays at its register record (seed source only).
   chain.py --lo 123 --hi 131 --minutes 4 --procs-per 2 --slots 8 --hours 1 --out runs/ch1
   chain.py --report runs/ch1
 """
-import argparse, json, math, os, random, shutil, signal, subprocess, sys, tempfile, time
+import argparse, glob, json, math, os, random, shutil, signal, subprocess, sys, tempfile, time
 from jobpool import run_jobs
 import mcmin, hop
 
@@ -21,6 +21,94 @@ TRIES, SEED_FIRST = 12, False                # removal tries per seed; v2 (10-08
 # a CANDIDATE must beat the register by more than re-polishing the same packing can (10-12: n=207 re-polished
 # BuddenPing's #503 by 1.5e-9 at matching distance 0)
 CAND_TOL = 1e-8
+
+
+def asof_local(T):
+    """UTC cutoff (eventbench name or ISO) -> the store's 'added' format (local wall time, no zone; TODO note: store
+    times are local, not UTC)."""
+    from pk import eventbench as EB
+    return EB.cutoff(T).astimezone().strftime('%Y-%m-%dT%H:%M:%S')
+
+
+_STORE_SIDES = {}
+def store_sides(n, asof=None):
+    """Sides of every feasible store packing at n (added before `asof`, store-local ISO): the global-novelty reference
+    (10-08 decision: the bandit reward must be global novelty; ex3 showed run-local novelty piles onto kicksym)."""
+    if n not in _STORE_SIDES:
+        import sqlite3
+        from pk.store import DEFAULT as DB
+        db = sqlite3.connect(f'file:{DB}?mode=ro', uri=True)
+        q, args = "SELECT s FROM packing WHERE n=? AND status != 'infeasible'", [n]
+        if asof:
+            q += ' AND added < ?'; args.append(asof)
+        _STORE_SIDES[n] = [r[0] for r in db.execute(q, args)]
+        db.close()
+    return _STORE_SIDES[n]
+
+
+def novel_ref(out, n, asof, path):
+    """store sides at n + every archive side of this chain's earlier rounds at n -> sorted json list for --novel-ref"""
+    ref = set(store_sides(n, asof))
+    for f in glob.glob(f'{out}/r*_n{n}/archive.jsonl'):
+        for l in open(f):
+            try:
+                ref.add(json.loads(l)['s'])
+            except Exception:
+                pass
+    json.dump(sorted(ref), open(path, 'w'))
+    return len(ref)
+
+
+def ledger_round(rd, n, E, params, fr):
+    """Expansion ledger (10-14): one store row per lineage root of this round: CPU spent on its descendants' proposals,
+    proposal count, best side reached.  Roots are added to the store (dedup by hash) so the ledger keys on store ids."""
+    from pk.store import Store
+    from pk.packing import read
+    if not E or not os.path.exists(f'{rd}/proposals.jsonl'):
+        return 0
+    root = {e['i']: e.get('root', e['i']) for e in E}
+    agg = {}
+    for l in open(f'{rd}/proposals.jsonl'):
+        q = json.loads(l)
+        r = root.get(q.get('par'))
+        if r is None:
+            continue
+        c = q.get('cpu') if q.get('cpu') is not None else q.get('sec', 0.0)
+        a = agg.setdefault(r, [0.0, 0]); a[0] += c or 0.0; a[1] += 1
+    best = {}
+    for e in E:
+        r = root[e['i']]
+        best[r] = min(best.get(r, math.inf), e['s'])
+    st = Store()
+    try:
+        for e in E:
+            if e['parent'] >= 0 or e['i'] not in agg:
+                continue
+            p = read(os.path.join(rd, os.path.basename(e['path'])))
+            pid = st.find_hash(p) or st.add(p, source=f'run:{os.path.relpath(rd, HERE)}', kind=e['kind'], status='polished',
+                                            commit=False)[0]
+            cpu, k = agg[e['i']]
+            st.record_expansion(pid, n, 'chain', cpu, params=dict(params, start=e['kind']), run=os.path.relpath(rd, HERE),
+                                nprop=k, best_s=best.get(e['i']), frontier_s=fr, commit=False)
+        st.db.commit()
+    finally:
+        st.close()
+    return len(agg)
+
+
+BANDS = (70, 130, 200)        # n bands for pooled move-kind statistics (analysis/bandit_timescale.md: kind effects vary mildly with n)
+
+
+def bandit_file(a, n):
+    if a.bandit == 'band':
+        return f'{a.out}/bandit_band{sum(n >= b for b in BANDS)}.json'
+    return f'{a.out}/bandit_{n}.json'
+
+
+def frontier_s(n, asof_T):
+    """best known side for the value reward: eventbench frontier (as of T for time travel, else live)"""
+    from pk import eventbench as EB
+    return EB.frontier_at(n, asof_T) if asof_T else EB.frontier_now(n)
 
 def seed_job(j):
     """k > 0: best of TRIES random k-removals from best(n + k); k < 0: insert |k| squares into best(n + k) at pose holes
@@ -115,10 +203,15 @@ def main(a):
         src = a.src or hop.BATCH
         ns = json.load(open(a.ns_file)) if a.ns_file else list(range(a.lo, a.hi + 1))
         ours = dict(x.split(':') for x in (a.ours or []))
-        for n in sorted(set(ns) | {m + k for m in ns for k in a.seed_ks}):
+        want = sorted(set(ns) | {m + k for m in ns for k in a.seed_ks})
+        miss = [n for n in want if not os.path.exists(f'{src}/n-{n}.txt')]
+        if a.src and miss and not a.allow_missing:     # 10-14: no silent fallback to the frozen 10-05 register
+            sys.exit(f'--src {a.src} lacks n = {miss} (pk.py export them, or --allow-missing to skip those n)')
+        for n in want:
             p = f'{a.out}/best_{n}.txt'
-            sp = f'{src}/n-{n}.txt' if os.path.exists(f'{src}/n-{n}.txt') else f'{hop.BATCH}/n-{n}.txt'
+            sp = f'{src}/n-{n}.txt'
             if not os.path.exists(sp):
+                print(f'skip n={n}: not in {src}', flush=True)
                 continue
             shutil.copy(sp, p)
             reg, _ = mcmin.load_deg(p)
@@ -172,14 +265,30 @@ def main(a):
             carried = []
             for q, cp in enumerate(v.get('carry', [])):         # lineage carry from the previous round(s)
                 dst = f'{rd}/seed_c{q}.txt'; shutil.copy(cp, dst); carried.append(dst)
-            libs = []                                            # sub-grid library: random distinct sub-k basins (Evan 10-09)
-            L = [e for e in lib_load(a.out, n) if e[0] > v['best'] + 1e-9]
-            for q, (ls, lp) in enumerate(random.Random(S['round']).sample(L, min(a.lib_k, len(L)))):
-                dst = f'{rd}/seed_l{q}.txt'; shutil.copy(lp, dst); libs.append(dst)
+            libs = []
+            if a.lib == 'store':                                 # 10-14: store-wide, uniform over clusters, ledger-weighted
+                try:
+                    from pk import parents
+                    got = parents.starts(n, a.lib_k, rd, policy=a.lib_policy, asof=a.as_of, seed=S['round'], prefix='seed_l')
+                    libs = [g[0] for g in got]
+                    S['log'].append(dict(ev='lib', n=n, round=S['round'], picks=[[g[1], g[2], g[3]] for g in got]))
+                except Exception as ex:
+                    print(f'lib n={n}: {ex!r}', flush=True)
+            else:                                                # run-local sub-grid library (Evan 10-09)
+                L = [e for e in lib_load(a.out, n) if e[0] > v['best'] + 1e-9]
+                for q, (ls, lp) in enumerate(random.Random(S['round']).sample(L, min(a.lib_k, len(L)))):
+                    dst = f'{rd}/seed_l{q}.txt'; shutil.copy(lp, dst); libs.append(dst)
             starts = [v['path']] + carried + libs + [sd[3] for sd, r in zip(seeds, res) if isinstance(r, float)]
             cmd = [sys.executable, os.path.join(HERE, 'explore.py'), '--n', str(n), '--starts', *starts, '--procs', str(a.procs_per),
                    '--minutes', str(a.minutes), '--seed', str(S['round']), '--out', rd, '--adapt', '--elite-share', '0.3',
-                   '--frontier', f'{rd}/seed', '--frontier-share', str(a.frontier_share), '--bandit-state', f'{a.out}/bandit_{n}.json'] + (a.explore_extra.split() if a.explore_extra else [])
+                   '--frontier', f'{rd}/seed', '--frontier-share', str(a.frontier_share), '--bandit-state', bandit_file(a, n),
+                   '--reward', a.reward] + (['--bandit-half', 'inf', '--bandit-carry', '1'] if a.bandit == 'band' else [])
+            if a.novel == 'store':
+                novel_ref(a.out, n, asof_local(a.as_of) if a.as_of else None, f'{rd}/novel_ref.json')
+                cmd += ['--novel-ref', f'{rd}/novel_ref.json']
+            if a.reward == 'value':
+                cmd += ['--frontier-s', repr(frontier_s(n, a.as_of))]
+            cmd += a.explore_extra.split() if a.explore_extra else []
             p = subprocess.Popen(cmd, stdout=open(f'{rd}/out', 'w'), stderr=subprocess.STDOUT, start_new_session=True)
             live[p] = n
             S['log'].append(dict(t=round(time.time() - S['t0']), ev='start', n=n, round=S['round'], seeds=[r for r in res],
@@ -219,6 +328,17 @@ def main(a):
             for c in car: os.replace(c + '.tmp', c)
             v['carry'] = car
             lib_add(a.out, n, [(e['s'], e['path']) for e in E if e['s'] < k_n - 1e-9 and not e.get('unpolished')])
+            try:                                     # 10-14: every round goes into the store (novelty ref, parents)
+                from pk.store import Store
+                from pk import sources
+                _st = Store(); sources.import_run(_st, rd); _st.close()
+            except Exception as ex:
+                print(f'import n={n}: {ex!r}', flush=True)
+            try:
+                ledger_round(rd, n, E, dict(reward=a.reward, novel=a.novel, as_of=a.as_of, minutes=a.minutes, procs=a.procs_per),
+                             frontier_s(n, a.as_of))
+            except Exception as ex:                  # the ledger must never stop a hunt
+                print(f'ledger n={n}: {ex!r}', flush=True)
             lb = seen[0] if seen else None
             lgain = (v.get('lin_best', float('inf')) - lb) if lb is not None and v.get('lin_best') is not None else 0.0
             if lb is not None and (v.get('lin_best') is None or lb < v['lin_best']): v['lin_best'] = lb
@@ -258,6 +378,18 @@ if __name__ == '__main__':
     ap.add_argument('--lib-k', type=int, default=3, help='library entries (random distinct sub-k packings) per round as starts')
     ap.add_argument('--lib-init', help='json {n: [paths]}: sub-k packings to pre-load into the library')
     ap.add_argument('--seed-tries', type=int, default=TRIES, help='quench tries per seed job')
+    ap.add_argument('--reward', default='value', choices=['legacy', 'value'],
+                    help='explore bandit reward (10-14 default value: novelty graded by gap to the frontier; legacy = pre-10-14 chain)')
+    ap.add_argument('--novel', default='store', choices=['store', 'run'],
+                    help='novelty reference: store (+ this chain\'s earlier rounds; default) or run (pre-10-14: run-local)')
+    ap.add_argument('--as-of', help='time travel: eventbench cutoff name or UTC ISO; novelty ref = store rows added before it, '
+                    'value-reward frontier = frontier_at(n, T).  Starts come from --src (eventbench starts(T)).')
+    ap.add_argument('--lib', default='store', choices=['store', 'run'],
+                    help='library starts: store (pk/parents, default 10-14) or run (pre-10-14 run-local sub-k library)')
+    ap.add_argument('--lib-policy', default='banded', help='pk/parents policy for --lib store (banded | cluster | spread | best)')
+    ap.add_argument('--bandit', default='band', choices=['band', 'n'],
+                    help='move-kind statistics: pooled per n band, no decay, full carry (default 10-14, A1) or per n (pre-10-14: 600 s wall half-life, x0.5 carry)')
+    ap.add_argument('--allow-missing', action='store_true', help='skip n missing from --src instead of failing')
     a = ap.parse_args()
     TRIES = a.seed_tries
     if a.report:

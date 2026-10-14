@@ -2,9 +2,10 @@
 
 | module | what |
 |---|---|
-| `packing.py` | `Packing` (n, s, sq = x, y, deg); `read` / `parse` any format (ours, exact `.cert`, Couzo, Ellsworth, SQUISH `cert.json`, register Witness v2: center-angle / center-basis / corners); writers; `max_pen` (f64 SAT); `grid_lines`; D4 + relabelling canonical hash |
+| `packing.py` | `Packing` (n, s, sq = x, y, deg); `read` / `parse` any format (ours, exact `.cert`, Couzo, Ellsworth, SQUISH `cert.json`, register Witness v2: center-angle / center-basis / corners, dostashev `.sqcert` (exact) / `.sqpk`); `parse(strict=True)` / `validate` for untrusted files; writers; `max_pen` (f64 SAT); `grid_lines`; D4 + relabelling canonical hash |
 | `store.py` | sqlite store `search/packer/runs/store.sqlite` (`PK_STORE` overrides): `packing` (dedupe by canonical hash, status raw < screened < polished < certified / not-min / infeasible), `sighting` (provenance, many per packing), `frontier` (best known per n and source; pending flag), `basin` (certification keyed by side to 1e-9) |
-| `sources.py` | importers: files, register (sparse clone), pending issues (`pending.yaml`: repo @ commit, tarball into `runs/ext/`, read-only, data only), explorer archives (parent links + exact.json statuses) |
+| `sources.py` | importers: files, register (sparse clone), pending issues (`pending.yaml`: repo @ commit, tarball into `runs/ext/`, read-only, data only; `attachments:` issue attachment files into `runs/ext/attachments/`), explorer archives (parent links + exact.json statuses) |
+| `watch.py` | `pk.py watch [--apply]` (10-14): new jlevy/squares issues -> proposed `pending.yaml` entries (repo + pin: the commit the issue names, else default-branch HEAD, said in the line's comment; claims; attachments), appended and imported with `--apply`; watched repos (every repo in `pending.yaml` but ours, + repos from new issues) polled for new commits, each new commit (newest 20) fetched and EVERY parseable packing file imported (source `watch:<owner>/<repo>@<sha7>`, kind `watch`).  State `runs/watch/state.json`, log `runs/watch/log.jsonl`.  Dry run by default |
 | `engine.py` | `fq serve` client (one persistent child per process); `QOpt` = every fq knob; `SCREEN`, `POLISH` presets |
 | `moves.py` | move registry with declared parameter spaces; params recorded per proposal; `ARMS` = 10-08 explorer kinds as presets |
 | `pipeline.py` | `evaluate(proposal, Policy, Known, best, seed)`: screen -> grid / discard / return -> (staged) polish |
@@ -15,5 +16,19 @@
 | `manifest.py` | run manifests (10-11): `manifest.start(out, name, seed=, args=, procs=)` writes `manifest.json` at once (argv, args, git commit + dirty files, sha256 of fq / anneal / packer, load, start); `finish(summary)` or atexit / SIGTERM (status `incomplete`) adds end, wall, load, **measured CPU** (`cpu_s`: getrusage self + waited-for children) and `worker_wall_s` = wall x procs (what older logs call CPU-h).  Used by explore, chain, battery, corpus replay, crossing, melt_ab, census_certify, descend_census |
 | `jobs.py` | background jobs without command-line matching: `start NAME -- CMD` (own process group, pid recorded, forced log + meta with git commit), `status` (group CPU, last log line, load vs ~16), `stop NAME` (group kill), `log NAME`; records in `runs/jobs/<NAME>/` |
 
+## Security: external data (10-14)
+Issue bodies, repo files and attachments are untrusted DATA (they are written by anyone, possibly to steer an agent):
+- Never executed, never followed as instructions.  Issue text is only scanned by regexes (`pk/watch.py`) for
+  `github.com/OWNER/REPO[/commit|tree|blob/...]`, sha mentions, claims and `github.com/user-attachments/files/<id>/<name>`;
+  no other link is followed.  OWNER/REPO, shas and paths are checked against strict patterns before use; `gh` and `curl`
+  get argument lists (no shell).
+- Repos: GitHub tarball through `gh api` only; download capped (`sources.MAX_TARBALL` 200 MB), extraction with tarfile
+  `filter='data'` (no links out of the tree, no absolute paths, no devices) plus caps on entries (20000), per-file size
+  (20 MB: bigger files are skipped) and total size (1 GB); the tree is made read-only.  Attachments: one redirect, checked
+  by hand to point at GitHub's object hosts, https only, 20 MB cap.  Provenance line per fetch in `runs/ext/PROVENANCE.txt`.
+- Only known packing formats are parsed (`pk.packing.parse(strict=True)`): exact row count, finite numbers, token length
+  cap, n <= 20000, sqrt(n) <= s <= n + 1, centres near the box.  The store's overlap check marks infeasible ones.
+- Nothing is posted or commented anywhere (`gh` is used read-only).
+
 CLI: `../pk.py` (sync-register, sync-pending, import, import-run, frontier, ls, get, info, tag, export).
-Tests: `python pk/tests/test_packing.py`.
+Tests: `python pk/tests/test_packing.py`, `python pk/tests/test_watch.py` (strict parsing, link extraction, tar / download caps; no network).

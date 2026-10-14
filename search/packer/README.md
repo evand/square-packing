@@ -4,22 +4,24 @@ Started 2026-10-04.  Goal: better packings of n unit squares in a square, first 
 a general solver (any n), since all known approaches fail in ways we now partly understand.  `PACKER.md` is the chronological lab
 log (what was tried, in order, with numbers); this file is the map.  Everything here is **screening** (f64) unless stated.
 
-## Status (10-06; 10-04 text below kept for the numbers)
-* 10-06: s(110) calibration answered "where is the needle" (entering the funnel); s(90) first campaign 10.0095668 (no sub-10); now samplers that accept uphill steps (`mcmin.py`) and a neighbour record sweep (`sweep.py`).  Plan below.
-* **Pass test not passed.**  Gate before spending compute on s(90): reproduce an s(110) < 11 packing without s(110)-specific
-  hints.  Best from family structure alone: 11.00765 (jammed, no full lines).  The record's funnel was never entered from outside.
-* **s(110) record = Couzo's 2026-09-27 packing (`couzo110`; older notes and run labels call it "cand" / "candidate"), which we rediscovered on 10-04** (jlevy register: 10.996783396634359).  Exact optimum of the
-  basin certified at 10.996783396631591639612746267957 (`../exact/results/couzo110.cert`; `../exact/verify_cert.py`, `verify_cert2.py`),
-  2.8e-12 below Couzo's printed bound.  Not a new record.
-* **Clean census (10-05, `runs/cen7`, 1000 trials, exact dedupe):** 19 distinct sub-11 minima, top four hold 91 %, best =
-  Couzo's (2nd most common); unseen mass ≈ 0.005 pooled, ≈ 0.09 at σ = 0.1; σ50 ≈ 0.11.  Entering the funnel is the hard part.
-* **Landscape near s(110) (10-04, partly superseded by cen7):** many near-degenerate jammed minima (≥ 10 junction classes, ~2e-3 spread), separated by small ridges
-  (Ellsworth's → Couzo's ≤ 6.7e-4 on one path); escape σ50 ≈ 0.1–0.15 under soft-squeeze + LP finish.
+## Status (10-14)
+* Current state and next steps: `HANDOFF-2026-10-14.md`, then `../../TODO.md` "Packings" and `../../tasks/packer-arch-2026-10-14/`
+  (architecture review, TT2 plan).  Strategy numbers: `CLAIMS.md`; open anomalies: `CONFUSIONS.md`; full log: `PACKER.md`.
+* Records so far from this engine: s(266), s(270), s(272) (sweep, 10-06), hunts 1-3 (132, 155, 308, 343, 344, ...),
+  time travel 154 (#552), compositions 339 / 364 / 375 (#584) and 365 / 370 / 460 (#596).  None at n <= 324 since 10-12.
+* Production paths: `chain.py` -> `explore.py` (local search over 139 non-grid n), `fresh.py` -> `compose2.py` (new public
+  packings -> pieces -> two-piece compositions), `harden.py` (opt-in soft-to-rigid).  All finish in `fq`; records go
+  through `candidate.py`.  The store (`pk/`, `runs/store.sqlite`) holds every packing; `expansion` is the ledger of
+  CPU spent per expanded packing (10-14).
+* The s(110) material below (10-04 .. 10-06) is the calibration history; `s110-landscape.md`, `landscape/`.
 
 ## Tools
 | file | what |
 |---|---|
 | `src/main.rs` (`packer`) | Rust engine.  `relax [--squeeze \| --squeeze-pen]`: L-BFGS on SAT overlap energy at fixed side; bisection squeeze; penalty-continuation squeeze over (config, s) (μ0 = stiffness: low = soft/exploring, high = precise).  `hop`: basin hopping, descending target.  `hhop`: hard-square basin hopping with event chains (slide until contact, pass remainder on), `--forbid-lines k`, `--soft p` (soften/re-harden). |
+| `chain.py` | **Production record hunter.**  Rounds of `explore.py` per n (start = best(n) from `--src`, n + k removal / insertion seeds, carries, library); dirty-first scheduling; 10-14 defaults: value reward with store-wide novelty (`--reward legacy --novel run` = pre-10-14), `--as-of` for time travel, ledger rows per round. |
+| `explore.py` | Quality-diversity basin explorer: archive of polished minima, cell-uniform parents (+ elite / frontier / sparse shares), 11 live move kinds with a Thompson bandit (`pk/bandit.py`), fq screen -> polish per proposal. |
+| `harden.py`, `src/harden.rs` | Nakajima soft-to-rigid momentum dynamics + fq polish (10-14; opt-in). |
 | `candidate.py` | **Record candidate → registration packet** (10-12).  exactsolve, both exact checkers, read-only live check (register witness + case page, issues naming n, Ellsworth's catalogue, store frontier), matching distance, optimality facts, `--chain` lineage, regularized view (private REFRESH dir), `--stage` into `candidates/`, `--import`.  `candidate.py --live N [S]`: just the live check.  The issue text is still drafted by hand in `outreach/`. |
 | `fresh.py` | **Fresh-packing pass** (10-13): new public packings -> corner crops (rectlib) + whole pieces -> `compose2 --new-from` -> polish -> `candidate.py`.  Run after every sync. |
 | `compose2.py` | Two-piece composer: store pieces in opposite corners + exact upright fill, bandit arms per n, probe / rank / polish / what-if (`--cf-eps`) / three-piece; `--new-from`, `--target public`. |
@@ -79,28 +81,6 @@ Formats: text `n s` + `x y deg` per line (centres).  `site2txt.py` / `txt2site.p
 9. **(10-06)** Kick + good descent is short-range: reliable to matching distance ~0.02, rare beyond 0.05 (rediscovery, 51 record
    pairs).  It still finds records: s(266), s(270), s(272) (jlevy#399).  Kicking *older* packings finds basins the current
    record's kicks don't (272).  At n ≈ 270 give slp2 ≥ 180 s (60 s left 13 % unconverged, and that changed detection).
-
-## Plan (10-06, with Evan)
-State: the s(110) calibration answered its main question (PACKER.md cen7, rev1, jx1, crop pass test): below 11 a smooth funnel
-(≥ ~47 exact minima, best basins common, descent to the bottom easy once inside); above 11 a rough plateau of small, densely
-connected basins with a few gateways.  Per-coordinate kicks can't move squares between bands; the greedy beam can't go uphill (s(90)
-stalled at 10.0096, the 132 → 110 crop reached the rim only).  The 10-05 steps 1–2 are done; 3 is replaced by the items below; 4
-(needle estimate for s(90)) stays as the success criterion for the samplers; 5 (case study) waits for the sampler results.
-
-1. **Minima PT** (`mcmin.py`): Metropolis over quenched minima + replica exchange; content-agnostic moves (kicks, hole-weighted
-   reinsert, cluster rotation, angle swap) beside band moves; 1 + Poisson(λ) moves per proposal.  Pre-registered calibration at 110
-   (PACKER "Minima PT"): A rim → bottom, B 11.0076 funnel → sub-11.  Then: score move kinds by where they lead (not acceptance),
-   re-space the ladder offline from per-pair acceptance, excursion N_eff = N / (1 + CV²).
-2. **Barrier type.**  If the plateau → funnel transition is entropic (first-order), no temperature ladder opens it (a lesson from an earlier
-   MH/PT project): bias in side (multicanonical / Wang–Landau), or gap-spanning proposals (constructors as independence proposals).
-3. **Record attempt** (`sweep.py`): every open non-integer n, record(n+1) minus a square and kicks of record(n), quenched; then
-   minima PT on whatever n looks soft.  Register check before any claim.
-4. **Landscape measure** (content-agnostic): nested sampling / multilevel splitting on side from random starts, log X(s) at 110;
-   comparable across n ("how hard is this n"), unlike Good–Turing, which is protocol-relative and can't see narrow deep basins.
-5. **s(90)** after 1–2 give a detection rate.  Constructors for k = 10 other than cropping.
-
-**Side bet: rectangle containers** (unchanged): slp2 with an (a−δ) × b container; Arslanov's 26 in (4−δ) × 8 control, then
-jlevy H-049 (20 in (4−δ) × 6).  **Hygiene:** slp2 speed (contact-model pair loop ~1/3 of a descent); register before claims.
 
 ## Open threads (see also `../../TODO.md`)
 * Exact solver (`../exact/`, done): KKT Newton + rational certificates; known gap: corner–corner contacts first-order only.

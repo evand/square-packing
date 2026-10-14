@@ -10,6 +10,10 @@ Tables
   minimum(n, key, S, cls, status, src, pid, added, updated)  -- one row per exact minimum (10-11): key = identity.min_key(S)
                                            (1e-17), cls certified | weak; census / "new minimum" counts read this table
   copy(n, side_key, min_key, via, added)  -- a screened side that descends / solves to a minimum (copies of one minimum)
+  expansion(packing, n, mechanism, params, run, cpu_s, nprop, best_s, frontier_s, added)  -- ledger (10-14): CPU spent
+                                           expanding a store packing (one row per lineage root x run) and the best side its
+                                           descendants reached; every driver writes it, parent pickers read it
+  packing.cluster  -- region label for parent sampling (10-14; definition from analysis/similarity110.md), NULL = unset
 
 status: raw (imported, f64-feasible within tol) < screened < polished < certified; or not-min / infeasible / unresolved.
 """
@@ -44,6 +48,11 @@ CREATE TABLE IF NOT EXISTS piece (
   coords BLOB NOT NULL, status TEXT NOT NULL DEFAULT 'raw', pen REAL, source TEXT NOT NULL, ref TEXT,
   tags TEXT NOT NULL DEFAULT '[]', added TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS piece_mdh ON piece(m, d, h);
+CREATE TABLE IF NOT EXISTS expansion (
+  id INTEGER PRIMARY KEY, packing INTEGER NOT NULL REFERENCES packing(id), n INTEGER NOT NULL, mechanism TEXT NOT NULL,
+  params TEXT, run TEXT, cpu_s REAL NOT NULL, nprop INTEGER, best_s REAL, frontier_s REAL, added TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS expansion_pk ON expansion(packing);
+CREATE INDEX IF NOT EXISTS expansion_n ON expansion(n);
 CREATE TABLE IF NOT EXISTS frontier (
   n INTEGER NOT NULL, s REAL NOT NULL, s_str TEXT, finder TEXT, source TEXT NOT NULL, ref TEXT, pending INTEGER NOT NULL,
   packing INTEGER, updated TEXT, UNIQUE(n, source));
@@ -61,6 +70,9 @@ class Store:
         self.db.row_factory = sqlite3.Row
         self.db.execute('PRAGMA journal_mode=WAL')
         self.db.executescript(SCHEMA)
+        if 'cluster' not in {r[1] for r in self.db.execute('PRAGMA table_info(packing)')}:   # 10-14 migration
+            self.db.execute('ALTER TABLE packing ADD COLUMN cluster TEXT')
+            self.db.commit()
 
     def close(self):
         self.db.commit(); self.db.close()
@@ -278,6 +290,31 @@ class Store:
             if (n is None or r['n'] == n) and (r['n'] not in out or r['s'] < out[r['n']]['s']):
                 out[r['n']] = r
         return out
+
+    def find_hash(self, p: Packing):
+        """store id of a packing equal to p up to box symmetry (canonical hash), else None"""
+        r = self.db.execute('SELECT id FROM packing WHERE hash=?', (p.canon_hash(),)).fetchone()
+        return r['id'] if r else None
+
+    def record_expansion(self, pid, n, mechanism, cpu_s, params=None, run=None, nprop=None, best_s=None, frontier_s=None,
+                         commit=True):
+        """ledger row: `cpu_s` measured CPU spent expanding store packing `pid` (its lineage in one run) by `mechanism`"""
+        self.db.execute('INSERT INTO expansion(packing,n,mechanism,params,run,cpu_s,nprop,best_s,frontier_s,added) '
+                        'VALUES (?,?,?,?,?,?,?,?,?,?)', (pid, n, mechanism, json.dumps(params) if params is not None else None,
+                                                         run, float(cpu_s), nprop, best_s, frontier_s, now()))
+        if commit:
+            self.db.commit()
+
+    def expansions(self, n=None, pid=None):
+        """{packing id: (total cpu_s, rows, best_s)} from the ledger"""
+        q, a = 'SELECT packing, sum(cpu_s) c, count(*) k, min(best_s) b FROM expansion', []
+        w = []
+        if n is not None:
+            w.append('n=?'); a.append(n)
+        if pid is not None:
+            w.append('packing=?'); a.append(pid)
+        q += (' WHERE ' + ' AND '.join(w) if w else '') + ' GROUP BY packing'
+        return {r['packing']: (r['c'], r['k'], r['b']) for r in self.db.execute(q, a)}
 
     def sightings(self, pid):
         return self.db.execute('SELECT * FROM sighting WHERE packing=? ORDER BY added', (pid,)).fetchall()

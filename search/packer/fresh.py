@@ -31,7 +31,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-PUBLIC = ('register', 'pending:', 'kingbird', 'pool:')
+PUBLIC = ('register', 'pending:', 'kingbird', 'pool:', 'watch:')   # watch: = pk/watch.py repo polls (10-14)
 
 
 def new_packings(since=None, ids=None, nmin=10):

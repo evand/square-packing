@@ -7,6 +7,8 @@ copying coordinates.  Store: runs/store.sqlite (env PK_STORE overrides).
                                            runs/kingbird/<date>/, parse, import with provenance (pk/kingbird.py)
   pk.py sync-kingbird --snapshot DIR       parse + import an existing snapshot dir (no network)
   pk.py sync-pending [--issue 481 ...]     pending issues + repos from pk/pending.yaml
+  pk.py watch [--apply] [--recent 7]       new jlevy/squares issues -> pending.yaml entries; new commits in watched
+                                           repos -> every packing file imported (pk/watch.py; dry run without --apply)
   pk.py import PATH... --source S [--finder F] [--ref R] [--status raw|polished|certified]
   pk.py import-run RUNDIR... [--below K]   explorer archives (parent links kept)
   pk.py frontier [N...] [--lo A --hi B] [--changed]   best known (register / pending / ours) per n
@@ -47,6 +49,8 @@ def main():
     p = sp.add_parser('sync-kingbird'); p.add_argument('--date'); p.add_argument('--all', action='store_true')
     p.add_argument('--snapshot'); p.add_argument('--procs', type=int, default=4)
     p = sp.add_parser('sync-pending'); p.add_argument('--issue', type=int, nargs='*')
+    p = sp.add_parser('watch'); p.add_argument('--apply', action='store_true'); p.add_argument('--recent', type=int, default=7)
+    p.add_argument('--max-commits', type=int, default=20)
     p = sp.add_parser('import'); p.add_argument('paths', nargs='+'); p.add_argument('--source', required=True)
     p.add_argument('--finder'); p.add_argument('--ref'); p.add_argument('--status', default='raw')
     p.add_argument('--kind'); p.add_argument('--tol', type=float, default=1e-9)
@@ -83,6 +87,9 @@ def main():
             kingbird.sync(st, a.date, a.all, a.procs)
     elif a.cmd == 'sync-pending':
         sources.import_pending(st, only=a.issue)
+    elif a.cmd == 'watch':
+        from pk import watch
+        watch.run(st, apply=a.apply, recent_days=a.recent, max_commits=a.max_commits)
     elif a.cmd == 'import':
         print(sources.import_paths(st, a.paths, a.source, a.finder, a.ref, a.kind, a.status, tol=a.tol))
     elif a.cmd == 'import-run':

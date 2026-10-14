@@ -325,7 +325,9 @@ def _screen_polish(s, prop, kind, desc, rng, k, known_sides, same, smax, pol_abo
     r2 = hop.quench(s1, sq1, tmp, extra=('--no-alm',) + pextra)
     if r2 is None:
         return dict(out, status='fail', sec=time.time() - t0)
-    s2, sq2, _ = r2
+    s2, sq2, d2 = r2
+    if d2.get('fp'):
+        out['fp'] = d2['fp']                 # fq's load-bearing contact fingerprint (10-14: kept, a second identity key)
     p = os.path.join(tmp, 'q.txt'); mcmin.write_deg(p, s2, sq2)
     lines = bool(full_lines(p, k))
     tries, sigma, alm, only_new = kr
@@ -334,6 +336,7 @@ def _screen_polish(s, prop, kind, desc, rng, k, known_sides, same, smax, pol_abo
         s_pol = s2
         s2, sq2, info = kick_retry(s2, sq2, rng, tmp, k, tries, sigma, pextra, alm=alm)
         out.update(kr_drop=info['drop'], kr_drops=info['drops'], s_polish=s_pol)
+        out.pop('fp', None)                  # the fingerprint was of the pre-retry state
     return dict(out, status='new?', s=s2, sq=sq2, lines=lines, s_screen=s1, sec=time.time() - t0)
 
 
@@ -351,7 +354,7 @@ class Archive:
                 return e
         return None
 
-    def add(self, s, sq, parent, kind, t, mate=None):
+    def add(self, s, sq, parent, kind, t, mate=None, fp=None):
         e = self.find(s)
         if e:
             e['visits'] += 1
@@ -365,6 +368,8 @@ class Archive:
                  known=any(abs(s - x) < ID.SAME_SIDE for x in self.known))
         if mate:
             e['mate'] = mate                 # crossover mate's archive path (own lineage or borrowed: compare roots)
+        if fp:
+            e['cfp'] = fp                    # fq contact fingerprint (self.fp is the sparse rule's image list)
         if self.fp is not None:
             self.fp_add(e, s, sq)
         self.E.append(e)
@@ -495,7 +500,10 @@ if __name__ == '__main__':
     ap.add_argument('--novel-ref', help='json list of sides: bandit rewards only basins not within 2e-9 of these (global novelty)')
     ap.add_argument('--polish-extra', default='', help='extra fq args for the stage-2 polish (e.g. "--stag-tol 1e-7": search precision)')
     ap.add_argument('--final-polish', type=int, default=0, help='at the end, full default polish of the K best archive entries')
-    ap.add_argument('--bandit-state', help='json file: load (discounted x0.5) and save the move-kind bandit statistics')
+    ap.add_argument('--bandit-state', help='json file: load (x --bandit-carry) and save the move-kind bandit statistics')
+    ap.add_argument('--bandit-half', type=float, default=600.0,
+                    help='bandit count half-life, s (inf = no decay; analysis/bandit_timescale.md: no drift at round scale)')
+    ap.add_argument('--bandit-carry', type=float, default=0.5, help='factor on carried bandit statistics (1 + half inf = pooled, merged on save)')
     ap.add_argument('--melt', type=float, default=0, help='weight of the regional melt move (anneal melt); 0 = off')
     ap.add_argument('--cross', type=float, default=0, help='weight of the recombination move (cross.py bestfit 3 of 5); 0 = off')
     ap.add_argument('--cross2', type=float, default=2, help='weight of two-parent crossover (random sub-k mate; nearest '
@@ -549,7 +557,7 @@ if __name__ == '__main__':
         s, sq = mcmin.load_deg(p)
         r = hop.quench(s, sq, tmp, extra=('--no-alm',))
         if r:
-            e, _ = ar.add(r[0], r[1], -1, 'start:' + os.path.basename(p), 0)
+            e, _ = ar.add(r[0], r[1], -1, 'start:' + os.path.basename(p), 0, fp=r[2].get('fp'))
             e['src'] = p
             print('start', p, f'{r[0]:.10f}', e['desc'], e['roles'], flush=True)
     if a.cross:
@@ -564,11 +572,13 @@ if __name__ == '__main__':
     for k_ in [k_ for k_, v_ in WEIGHTS.items() if v_ == 0]:
         del WEIGHTS[k_]
     kinds, wts = zip(*WEIGHTS.items())
-    bandit = KindBandit([kk for kk, w in WEIGHTS.items() if w > 0]) if a.adapt else None
-    if bandit and a.bandit_state and os.path.exists(a.bandit_state):   # carried per-size move statistics (chain rounds), discounted
+    bandit = KindBandit([kk for kk, w in WEIGHTS.items() if w > 0], half=a.bandit_half) if a.adapt else None
+    b_init = {}
+    if bandit and a.bandit_state and os.path.exists(a.bandit_state):   # carried move statistics (chain rounds)
         bs = json.load(open(a.bandit_state))
         for kk in bandit.kinds:
-            bandit.r[kk] = 0.5 * bs.get('r', {}).get(kk, 0.0); bandit.c[kk] = 0.5 * bs.get('c', {}).get(kk, 0.0)
+            bandit.r[kk] = a.bandit_carry * bs.get('r', {}).get(kk, 0.0); bandit.c[kk] = a.bandit_carry * bs.get('c', {}).get(kk, 0.0)
+        b_init = {kk: (bandit.r[kk], bandit.c[kk]) for kk in bandit.kinds}
     cellb = CellBandit() if a.adapt_cells else None
     import bisect
     nref = sorted(json.load(open(a.novel_ref))) if a.novel_ref else []
@@ -629,7 +639,7 @@ if __name__ == '__main__':
                         if r['lines'] or r['s'] >= ar.smax:
                             stats['discard'] += 1
                         else:
-                            e, isnew = ar.add(r['s'], r['sq'], par['i'], r['kind'], time.time() - t0, mate=r.get('mate'))
+                            e, isnew = ar.add(r['s'], r['sq'], par['i'], r['kind'], time.time() - t0, mate=r.get('mate'), fp=r.get('fp'))
                             stats['new' if isnew else 'dup'] += 1
                             hit = e['i']
                             if isnew:
@@ -686,7 +696,20 @@ if __name__ == '__main__':
     ar.dump(stats, time.time() - t0)
     if bandit and a.bandit_state:
         bandit.decay()
-        json.dump(dict(r=bandit.r, c=bandit.c), open(a.bandit_state, 'w'))
+        if a.bandit_carry == 1.0 and not math.isfinite(a.bandit_half):
+            # pooled file shared by concurrent rounds (chain n bands, 10-14): add this run's increments to the file as it
+            # is now (lock), so rounds running side by side don't overwrite each other
+            import fcntl
+            with open(a.bandit_state + '.lock', 'w') as lk:
+                fcntl.flock(lk, fcntl.LOCK_EX)
+                cur = json.load(open(a.bandit_state)) if os.path.exists(a.bandit_state) else dict(r={}, c={})
+                for kk in bandit.kinds:
+                    r0, c0 = b_init.get(kk, (0.0, 0.0))
+                    cur['r'][kk] = cur['r'].get(kk, 0.0) + bandit.r[kk] - r0
+                    cur['c'][kk] = cur['c'].get(kk, 0.0) + bandit.c[kk] - c0
+                json.dump(cur, open(a.bandit_state + '.tmp', 'w')); os.replace(a.bandit_state + '.tmp', a.bandit_state)
+        else:
+            json.dump(dict(r=bandit.r, c=bandit.c), open(a.bandit_state, 'w'))
     report(a.out)
     man.finish(summary=dict(stats=dict(stats), basins=len(ar.E), sub_k=sum(e['s'] < k for e in ar.E),
                             best=min(e['s'] for e in ar.E) if ar.E else None))

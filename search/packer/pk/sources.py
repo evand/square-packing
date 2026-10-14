@@ -11,26 +11,40 @@ import yaml
 from .packing import Packing, read, side_val
 from .store import Store
 
+# Caps for untrusted downloads (pk/README.md, Security)
+MAX_TARBALL = 200 << 20          # compressed tarball bytes
+MAX_MEMBER = 20 << 20            # one extracted file (bigger members are skipped, not extracted)
+MAX_MEMBERS = 20000              # tar entries
+MAX_UNPACKED = 1 << 30           # total extracted bytes
+MAX_ATTACH = 20 << 20            # one issue attachment
+REPO_NAME = re.compile(r'[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})/[A-Za-z0-9._-]{1,100}')
+SHA = re.compile(r'[0-9a-f]{7,40}')
 HERE = os.path.dirname(os.path.abspath(__file__))
 PKG = os.path.dirname(HERE)
 EXT = os.path.join(PKG, 'runs', 'ext')
-FILE_RE = re.compile(r'\.(txt|yaml|yml|gz|cert|json)$')
+FILE_RE = re.compile(r'\.(txt|yaml|yml|gz|cert|json|sqcert|sqpk)$')
 SKIP_RE = re.compile(r'check|output|cert50|summary|SOURCES|README|archive\.jsonl|proposals|state\.json|exact\.json')
 
 
 def import_paths(st: Store, paths, source, finder=None, ref=None, kind=None, status='raw', ns=None, tol=1e-9,
-                 quiet=False):
-    """Every recognisable packing file under paths -> store.  Returns counts."""
+                 quiet=False, strict=False, collect=None, skip_path=None):
+    """Every recognisable packing file under paths -> store.  Returns counts.  strict: untrusted files (pk.packing
+    strict parse + validate, size cap MAX_MEMBER).  collect: list to append (path, n, s, id, new) to.  skip_path: regex;
+    files whose path (below the given dir) matches are ignored."""
     c = dict(seen=0, new=0, dup=0, infeasible=0, unreadable=0)
     files = []
     for p in paths:
-        files += [p] if os.path.isfile(p) else sorted(glob.glob(f'{p}/**/*', recursive=True))
+        if os.path.isfile(p):
+            files.append(p)
+        else:
+            files += [f for f in sorted(glob.glob(f'{p}/**/*', recursive=True))
+                      if not (skip_path and skip_path.search(os.path.relpath(f, p)))]
     for f in files:
         b = os.path.basename(f)
         if not os.path.isfile(f) or not FILE_RE.search(b) or SKIP_RE.search(b):
             continue
         try:
-            pk = read(f)
+            pk = read(f, strict=True, max_bytes=MAX_MEMBER) if strict else read(f)
         except Exception as e:
             c['unreadable'] += 1
             if not quiet: print(f'  unreadable {f}: {e!r}'[:160])
@@ -44,6 +58,8 @@ def import_paths(st: Store, paths, source, finder=None, ref=None, kind=None, sta
             c['infeasible'] += 1
             if not quiet and new: print(f'  infeasible n={pk.n} s={pk.s:.12f} {f}')
         c['new' if new else 'dup'] += 1
+        if collect is not None:
+            collect.append((f, pk.n, pk.s, pid, new))
     st.db.commit()
     return c
 
@@ -97,24 +113,100 @@ def fetch_register(dest):
 
 
 # ---------- third-party repos (pending registrations) ----------
+def _gh(args, timeout=120):
+    """gh api call (authenticated), args a list (no shell).  Returns stdout text; raises on failure."""
+    return subprocess.run(['gh', 'api'] + args, capture_output=True, text=True, check=True, timeout=timeout).stdout
+
+
+def resolve_sha(owner_repo, ref):
+    """Full sha of a commit / branch on owner/repo (GitHub API), or None if it does not exist there."""
+    if not REPO_NAME.fullmatch(owner_repo) or not re.fullmatch(r'[A-Za-z0-9._/-]{1,200}', ref) or '..' in ref:
+        raise ValueError(f'bad repo / ref {owner_repo!r} {ref!r}')
+    try:
+        sha = _gh([f'repos/{owner_repo}/commits/{ref}', '--jq', '.sha']).strip()
+    except subprocess.CalledProcessError:
+        return None
+    return sha if re.fullmatch(r'[0-9a-f]{40}', sha) else None
+
+
+def _download_capped(cmd, dest, cap, timeout=600):
+    """Run cmd (list) with stdout -> dest, killing it once more than cap bytes arrive.  Raises on failure / cap."""
+    n = 0
+    with open(dest, 'wb') as f, subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL) as pr:
+        try:
+            while True:
+                b = pr.stdout.read(1 << 16)
+                if not b:
+                    break
+                n += len(b)
+                if n > cap:
+                    raise ValueError(f'download over cap ({cap} bytes): {cmd[:3]}')
+                f.write(b)
+            if pr.wait(timeout=timeout) != 0:
+                raise subprocess.CalledProcessError(pr.returncode, cmd)
+        finally:
+            if pr.poll() is None:
+                pr.kill()
+    return n
+
+
+def _extract_capped(tgz, dest):
+    """tarfile filter='data' (no links out, no devices, no absolute paths, no setuid), plus caps: member count, per-file
+    size (bigger files skipped), total size.  Returns (extracted, skipped)."""
+    skipped = []
+    with tarfile.open(tgz) as t:
+        members = []
+        for m in t:                                         # streams headers; stops at the cap
+            members.append(m)
+            if len(members) > MAX_MEMBERS:
+                raise ValueError(f'tarball has more than {MAX_MEMBERS} entries')
+        total = sum(m.size for m in members if m.isfile() and m.size <= MAX_MEMBER)
+        if total > MAX_UNPACKED:
+            raise ValueError(f'tarball unpacks to {total} bytes > {MAX_UNPACKED}')
+
+        def flt(m, path):
+            m = tarfile.data_filter(m, path)
+            if m is not None and m.isfile() and m.size > MAX_MEMBER:
+                skipped.append(m.name)
+                return None
+            return m
+        t.extractall(dest, members=members, filter=flt)
+    return len(members) - len(skipped), skipped
+
+
 def fetch_repo(owner_repo, commit):
-    """GitHub tarball of owner/repo@commit -> runs/ext/<owner>-<repo>-<sha7>/ (cached).  Returns the dir."""
+    """GitHub tarball of owner/repo@commit -> runs/ext/<owner>-<repo>-<sha7>/ (cached).  Returns the dir.
+    Untrusted data: size-capped download and extraction (MAX_*), tarfile filter 'data', everything made read-only,
+    nothing in it is ever executed."""
+    if not REPO_NAME.fullmatch(owner_repo) or not re.fullmatch(r'[0-9a-fA-F]{7,40}', commit):
+        raise ValueError(f'bad repo / commit {owner_repo!r} {commit!r}')
     owner, repo = owner_repo.split('/')
     if len(commit) != 40:
-        commit = subprocess.run(['gh', 'api', f'repos/{owner_repo}/commits/{commit}', '--jq', '.sha'],
-                                capture_output=True, text=True, check=True).stdout.strip()
+        commit = resolve_sha(owner_repo, commit)
+        if commit is None:
+            raise ValueError(f'{owner_repo}: commit not found')
+    commit = commit.lower()
     os.makedirs(EXT, exist_ok=True)
     d = f'{EXT}/{owner}-{repo}-{commit[:7]}'
     if os.path.isdir(d):
         return d
     with tempfile.TemporaryDirectory(dir=EXT) as tmp:
         tgz = f'{tmp}/repo.tgz'
-        with open(tgz, 'wb') as f:
-            subprocess.run(['gh', 'api', f'repos/{owner_repo}/tarball/{commit}'], stdout=f, check=True)
-        with tarfile.open(tgz) as t:
-            t.extractall(tmp + '/x', filter='data')
-        top = glob.glob(f'{tmp}/x/*')[0]
-        os.rename(top, d)
+        nbytes = _download_capped(['gh', 'api', f'repos/{owner_repo}/tarball/{commit}'], tgz, MAX_TARBALL)
+        nfiles, skipped = _extract_capped(tgz, tmp + '/x')
+        top = glob.glob(f'{tmp}/x/*')
+        if len(top) != 1 or not os.path.isdir(top[0]) or os.path.islink(top[0]):
+            raise ValueError(f'{owner_repo}@{commit[:7]}: unexpected tarball layout')
+        os.rename(top[0], d)
+    _read_only(d)
+    with open(f'{EXT}/PROVENANCE.txt', 'a') as f:
+        f.write(f'\n{owner}-{repo}-{commit[:7]} — tarball {owner_repo}@{commit} fetched by pk/sources.py '
+                f'(data only, read-only, nothing executed; {nbytes} bytes, {nfiles} entries'
+                f'{f", skipped over {MAX_MEMBER >> 20} MB: {skipped[:5]}" if skipped else ""})\n')
+    return d
+
+
+def _read_only(d):
     for root, dirs, files in os.walk(d):
         for fn in files:
             p = os.path.join(root, fn)
@@ -122,29 +214,71 @@ def fetch_repo(owner_repo, commit):
                 os.chmod(p, 0o444)
     for root, dirs, files in os.walk(d, topdown=False):
         os.chmod(root, 0o555)
-    with open(f'{EXT}/PROVENANCE.txt', 'a') as f:
-        f.write(f'\n{owner}-{repo}-{commit[:7]} — tarball {owner_repo}@{commit} fetched by pk/sources.py '
-                f'(data only, read-only, nothing executed)\n')
-    return d
 
 
-def issue_claims(number, repo='jlevy/squares'):
-    """(author, {n: claimed side}) from the markdown tables of an issue body (first decimal column after n)."""
-    r = json.loads(subprocess.run(['gh', 'issue', 'view', str(number), '-R', repo, '--json', 'body,author,state'],
-                                  capture_output=True, text=True, check=True).stdout)
+# Issue attachments: only https://github.com/user-attachments/files/<id>/<name>; the redirect is followed by hand, once,
+# and only to GitHub's own object hosts.
+ATTACH_RE = re.compile(r'https://github\.com/user-attachments/files/(\d{1,12})/([A-Za-z0-9._-]{1,120})')
+ATTACH_HOSTS = re.compile(r'(objects\.githubusercontent\.com|github-production-[a-z0-9-]+\.s3\.amazonaws\.com)')
+ATTACH_DIR = os.path.join(EXT, 'attachments')
+
+
+def fetch_attachment(url, issue):
+    """One issue attachment -> runs/ext/attachments/issue-<n>/<id>-<name> (cached, read-only).  Returns (path, sha256)."""
+    import hashlib, urllib.parse
+    m = ATTACH_RE.fullmatch(url)
+    if not m:
+        raise ValueError(f'not an attachment url: {url[:80]}')
+    d = f'{ATTACH_DIR}/issue-{int(issue)}'
+    dest = f'{d}/{m.group(1)}-{m.group(2)}'
+    if not os.path.exists(dest):
+        os.makedirs(d, exist_ok=True)
+        h = subprocess.run(['curl', '-sS', '--proto', '=https', '--max-redirs', '0', '-o', '/dev/null', '-D', '-', url],
+                           capture_output=True, text=True, timeout=60).stdout
+        loc = re.search(r'^location:\s*(\S+)', h, re.M | re.I)
+        if not loc:
+            raise ValueError(f'{url}: no redirect')
+        u = urllib.parse.urlsplit(loc.group(1))
+        if u.scheme != 'https' or not ATTACH_HOSTS.fullmatch(u.hostname or ''):
+            raise ValueError(f'{url}: redirect to an unexpected host {u.hostname!r}')
+        tmp = dest + '.part'
+        try:
+            _download_capped(['curl', '-sS', '-f', '--proto', '=https', '--max-redirs', '0',
+                              '--max-filesize', str(MAX_ATTACH), loc.group(1)], tmp, MAX_ATTACH, timeout=120)
+            os.replace(tmp, dest)
+        finally:
+            if os.path.exists(tmp):
+                os.remove(tmp)
+        os.chmod(dest, 0o444)
+        with open(f'{EXT}/PROVENANCE.txt', 'a') as f:
+            f.write(f'\nattachments/issue-{int(issue)}/{os.path.basename(dest)} — {url} (jlevy/squares#{issue}), fetched by '
+                    f'pk/sources.py (data only, read-only, nothing executed)\n')
+    return dest, hashlib.sha256(open(dest, 'rb').read()).hexdigest()
+
+
+def body_claims(body):
+    """{n: claimed side} from the markdown tables of an issue body (first decimal column after n)."""
     claims = {}
-    for line in r['body'].split('\n'):
+    for line in (body or '').split('\n'):
         cells = [x.strip(' *`$') for x in line.strip().strip('|').split('|')]
         if len(cells) < 2 or not re.fullmatch(r'\d{2,4}', cells[0]):
             continue
         m = re.match(r'(\d+\.\d{6,})', cells[1])
         if m and float(m.group(1)) > 4:
             n = int(cells[0]); claims[n] = min(claims.get(n, 9e9), float(m.group(1)))
-    return r['author']['login'], r['state'], claims
+    return claims
+
+
+def issue_claims(number, repo='jlevy/squares'):
+    """(author, {n: claimed side}) from the markdown tables of an issue body (first decimal column after n)."""
+    r = json.loads(subprocess.run(['gh', 'issue', 'view', str(int(number)), '-R', repo, '--json', 'body,author,state'],
+                                  capture_output=True, text=True, check=True, timeout=120).stdout)
+    return r['author']['login'], r['state'], body_claims(r['body'])
 
 
 def import_pending(st: Store, cfg_path=os.path.join(HERE, 'pending.yaml'), only=None):
-    """pending.yaml: list of {issue, finder, repo, commit, paths: [globs], ns: optional}; repo: null = claims only.  For each: claims from the issue
+    """pending.yaml: list of {issue, finder, repo, commit, paths: [globs], attachments: [urls], claims}; repo: null =
+    no repo (claims and attachments only).  For each: claims from the issue
     table -> frontier rows (pending=1, source 'pending:#<issue>'); packings from the repo -> store; report each claim's
     best stored packing (claim not matched by a feasible file is flagged)."""
     cfg = yaml.safe_load(open(cfg_path))
@@ -158,10 +292,20 @@ def import_pending(st: Store, cfg_path=os.path.join(HERE, 'pending.yaml'), only=
         if e.get('repo'):
             ref = f"{e['repo']}@{e['commit'][:7]}"
             d = fetch_repo(e['repo'], e['commit'])
-            paths = [p for g in e.get('paths', ['.']) for p in glob.glob(os.path.join(d, g), recursive=True)]
-            c = import_paths(st, paths, src, e.get('finder', author), ref, 'pending', quiet=True)
+            paths = [p for g in e.get('paths', ['.']) for p in glob.glob(os.path.join(d, g), recursive=True)
+                     if os.path.realpath(p).startswith(os.path.realpath(d))]
+            c = import_paths(st, paths, src, e.get('finder', author), ref, 'pending', quiet=True, strict=True)
         else:                            # claims only (files not fetchable yet): frontier rows, no packing
-            ref, c = f"issue #{e['issue']}", 'none (claims only)'
+            ref, c = f"issue #{e['issue']}", 'no repo'
+        for url in e.get('attachments') or ():         # files attached to the issue (github user-attachments only)
+            try:
+                f, sha = fetch_attachment(url, e['issue'])
+            except Exception as ex:
+                print(f"  #{e['issue']} attachment not fetched: {url} ({ex!r})"[:200]); continue
+            ca = import_paths(st, [f], src, e.get('finder', author), f"#{e['issue']} attachment {os.path.basename(f)}",
+                              'pending', quiet=True, strict=True)
+            ref = ref if e.get('repo') else f"#{e['issue']} attachment {os.path.basename(f)}"
+            print(f"  #{e['issue']} attachment {os.path.basename(f)} sha256 {sha[:16]}: {ca}")
         for n, s in sorted(claims.items()):
             row = st.query(n=n, source=src, limit=1)
             pid = row[0]['id'] if row else None
@@ -224,7 +368,8 @@ def import_runs(st: Store, runs, below=None, procs=12, below_k=False):
                 if below_k and pk.s >= pk.k:
                     continue
                 pid, new = st.add(pk, src, 'ours', str(e['i']), e.get('kind'), status=status,
-                                  parent=ids.get(e.get('parent')), check=False, commit=False, pre=pre, s_exact=S)
+                                  parent=ids.get(e.get('parent')), check=False, commit=False, pre=pre, s_exact=S,
+                                  fp=e.get('cfp'))       # fq contact fingerprint (archives from 10-14)
                 ids[e['i']] = pid; tot['new'] += new
             st.db.commit()
             tot['runs'] += 1; tot['entries'] += len(ids)
