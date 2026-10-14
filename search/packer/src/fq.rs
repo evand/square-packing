@@ -1319,9 +1319,9 @@ fn lbfgs(f: &mut dyn FnMut(&[f64], &mut [f64]) -> f64, v: &mut [f64], maxit: usi
 
 #[inline]
 fn dot(a: &[f64], b: &[f64]) -> f64 {
-    // FQ_FASTDOT=1 (perf 10-13, PACKER "Q3"): 8 independent accumulators (vectorises; different rounding)
+    // 8 independent accumulators (vectorises; different rounding), default since 10-13 (PACKER "Q3", "Q9b"); FQ_FASTDOT=0 restores the sequential sum
     static FAST: OnceLock<bool> = OnceLock::new();
-    if *FAST.get_or_init(|| std::env::var("FQ_FASTDOT").map(|v| v == "1").unwrap_or(false)) {
+    if *FAST.get_or_init(|| std::env::var("FQ_FASTDOT").map(|v| v != "0").unwrap_or(true)) {
         let n = a.len().min(b.len());
         let (a, b) = (&a[..n], &b[..n]);
         let mut acc = [0.0f64; 8];

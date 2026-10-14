@@ -2365,3 +2365,34 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
   at 110 / 237 vs 2,792 / 764 pre-session (2.64x / 2.91x); was 1.36x after Q0.  Consistent with the stage speedups
   (polish ~2.4-2.7x, screens ~1.3x).  CLAIMS C38-C40.  Next costs at 110: screens are now ~75 % ALM (L-BFGS two-loop
   dot latency 37 %, eval 25 %, sincos 11 %), so FQ_FASTDOT (Q3, equivalence already shown) is worth re-measuring.
+* **Q9, pre-registered (fast dot on the Q2 + Q7 base; rounding-only change):** `FQ_FASTDOT=1` (8-accumulator dot in the
+  ALM's L-BFGS, Q3).  Q3 showed it re-roll-equivalent on the old base; it missed Q3's 1.3x bar when LPs dominated, and
+  screens at 110 are now ~75 % ALM (L-BFGS dot latency ~37 %).  No race: summation order is exactly what the jitter
+  null models, and Q3 already passed equivalence.  Test (fresh held-out slices): fqreplay C110 `--skip 6000 --sample
+  1500`, C237 `--skip 800 --sample 300`; arms cur (deployed), j1 (jitter), fd.  **Rule: adopt if** Q0's equivalence
+  conditions hold (class CIs inside +-1 pp, failures <= cur + 0.2 pp, sign p > 0.01 per corpus x stage), polishes are
+  bit-identical (no L-BFGS there), and screen fq CPU >= 1.05x at C110.  Predictions: screens 1.25x (110) / 1.1x (237),
+  polish 1.00x, unbiased.  Budget ~0.5 CPU-h.
+* **Q9 result, part 1 (20:40):** C110 (1,500 calls): screens **1.16x**, polishes bit-identical (730 / 730), 0 failures,
+  unbiased (p 0.32), all class CIs inside +-1 pp.  C237 (300 calls): screens 1.15x, polishes bit-identical, unbiased
+  (p 0.66), but **above-k -2.6 pp [-5.1, -0.1]: the +-1 pp condition fails** -- and the jitter null fails it too (its
+  CIs span +-2.5-4 pp at 153 screens): the criterion was unattainable at that sample size.  Not adopted; Evan chose
+  the higher-power test.
+* **Q9b, pre-registered (rule fixed before the data):** new corpus **C237b**: same recipe and starts as C237
+  (`--adapt --reward legacy --sparse-share 0.5`, 16 procs), seed 2371, 10 min, deployed fq (Q2 + Q7); expected ~4,000+
+  calls, ~2,000-2,500 screens.  Replay **all screens** (`--stage screen`), arms cur, j1, fd.  Power: per-screen class
+  variance for a re-roll, from the 153-screen run, gives 95 % CI half-widths of ~0.6-1.0 pp at 2,500 screens (grid the
+  widest); a fixed +-1 pp margin would need ~5,000.  **Rule: adopt FQ_FASTDOT=1 if** every class difference fd vs cur
+  has a 95 % CI inside **+-1.5 pp**, sign p > 0.01, failures <= cur + 0.2 pp, screen CPU >= 1.05x; **calibration:** j1
+  must pass the same class condition, else the test is underpowered (inconclusive, not a failure).  Prediction: pass,
+  screens ~1.15x.  Budget ~2.7 CPU-h recording + ~1.6 CPU-h replay.
+  **Methodology note for future tests:** class-shift margins are set per corpus from the re-roll variance (and checked
+  by the jitter arm passing), not a fixed +-1 pp.
+* **Q9b result (21:20): passes; FQ_FASTDOT is the fq default (`FQ_FASTDOT=0` restores the sequential dot).**  C237b
+  (`runs/fqcorpus/c237b`, 7,117 calls, 3,888 screens, all replayed): screens **1.21x**; 0 failures; sign p = 0.92
+  (1,648 / 1,655); class differences fd vs cur: above-k -0.13 pp [-0.59, +0.34], discard +0.41 [-0.13, +0.95], grid
+  -0.21 [-0.92, +0.51], sub-k -0.08 [-0.50, +0.34] -- all inside +-1 pp, well inside the pre-registered +-1.5 pp;
+  calibration: j1 passes too (its CIs <= 0.7 pp).  Deployed default == the tested fd arm (150 / 150).  The Q9 C237
+  "above-k -2.6 pp" was noise at 153 screens, as the power calculation said.
+* **Perf score after Q9: 2.92x** (`runs/perfbench/q2q7q9`): 7,896 / 2,298 proposals per CPU-h at 110 / 237 (2.83x /
+  3.01x).  Fast dot added 1.07x / 1.03x (predicted ~1.06-1.08 at 110).
