@@ -46,3 +46,13 @@ Arm = strongest current settings (value reward + global novelty, cluster-uniform
 fresh ingestion as of T) vs the pre-10-14 chain (`--reward legacy --novel run`), concurrent, compute-matched
 (~2 x 30 CPU-h).  Metric: later records recovered per CPU-h + recovered fraction of later gains.  Pre-register in
 PACKER.md before launch.  Prior pair (time-travel 10-12, 2 x 33 CPU-h) found the 154 record.
+
+## Near-miss queue + finisher + ingest (10-14, agent; class: **functional**)
+Composer side wired into a standing pipeline: `pk.py nearmiss list|tag|requeue` + `pk.py finish` (`pk/nearmiss.py`),
+`pk.py ingest` (`pk/ingest.py`); store change additive (new table `nearmiss`, tag `nearmiss`).  Functional: it picks what
+gets finisher CPU (queue rules: gap 1e-6..1e-3 to frontier_now, n <= 324, not grid, ours only, <= 2 per n) and runs
+fresh.py automatically after each sync.  Read-only scan of the main store 10-14 11:08: 135 items over ~70 n (mostly NH /
+H5 chain rows; the smallest gaps, ~1e-6, look like the frontier minimum re-found at f64 polish precision, which the
+finisher stops on as a tie).  Tested with synthetic temp stores + fake stages (`pk/tests/test_nearmiss.py`) and dry runs
+on a 8.6k-row extract of the main store; the real stages (fq polish, harden.py), candidate.py and `ingest --apply` have
+not been run (CPU busy with TT2).

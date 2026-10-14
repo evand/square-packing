@@ -13,6 +13,9 @@ Tables
   expansion(packing, n, mechanism, params, run, cpu_s, nprop, best_s, frontier_s, added)  -- ledger (10-14): CPU spent
                                            expanding a store packing (one row per lineage root x run) and the best side its
                                            descendants reached; every driver writes it, parent pickers read it
+  nearmiss(packing, n, s, frontier, gap, origin, status, added, updated, best_s, best_pid, cpu_s, note)  -- near-miss
+                                           queue (10-14, pk/nearmiss.py): our packings within ~1e-3 of frontier_now(n);
+                                           status queued / running / done / candidate / failed; drained by `pk.py finish`
   packing.cluster  -- region label for parent sampling (10-14; definition from analysis/similarity110.md), NULL = unset
 
 status: raw (imported, f64-feasible within tol) < screened < polished < certified; or not-min / infeasible / unresolved.
@@ -53,6 +56,11 @@ CREATE TABLE IF NOT EXISTS expansion (
   params TEXT, run TEXT, cpu_s REAL NOT NULL, nprop INTEGER, best_s REAL, frontier_s REAL, added TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS expansion_pk ON expansion(packing);
 CREATE INDEX IF NOT EXISTS expansion_n ON expansion(n);
+CREATE TABLE IF NOT EXISTS nearmiss (
+  packing INTEGER PRIMARY KEY REFERENCES packing(id), n INTEGER NOT NULL, s REAL NOT NULL, frontier REAL, gap REAL,
+  origin TEXT, status TEXT NOT NULL DEFAULT 'queued', added TEXT NOT NULL, updated TEXT, best_s REAL, best_pid INTEGER,
+  cpu_s REAL, note TEXT);
+CREATE INDEX IF NOT EXISTS nearmiss_st ON nearmiss(status, gap);
 CREATE TABLE IF NOT EXISTS frontier (
   n INTEGER NOT NULL, s REAL NOT NULL, s_str TEXT, finder TEXT, source TEXT NOT NULL, ref TEXT, pending INTEGER NOT NULL,
   packing INTEGER, updated TEXT, UNIQUE(n, source));

@@ -17,6 +17,14 @@ copying coordinates.  Store: runs/store.sqlite (env PK_STORE overrides).
   pk.py info ID                            row + sightings + parent chain
   pk.py tag ID TAG... [--rm]
   pk.py export N... --dir D [--source PAT]   best packing per n -> n-<n>.txt (inputs for legacy tools)
+  pk.py nearmiss list [--thr 1e-3] [--per-n 2]   near misses a scan would queue + the queue (read-only; pk/nearmiss.py)
+  pk.py nearmiss tag [--from DIR ...]      scan the store (+ compose2 / harden / fresh output dirs) -> near-miss queue
+  pk.py nearmiss requeue ID...             queue items back to queued
+  pk.py finish [--limit 5] [--stages polish,harden1,harden] [--procs 4] [--candidate] [--dry-run]
+                                           drain the queue: fq long polish, harden rounds; below frontier -> candidate.py
+                                           (printed only without --candidate)
+  pk.py ingest [--apply] [--since ISO] [--no-fresh]   sync-register + sync-pending + watch --apply + fresh.py since
+                                           the last ingest -> near-miss queue (pk/ingest.py; dry run without --apply)
 """
 import argparse, glob, json, math, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -69,7 +77,38 @@ def main():
     p = sp.add_parser('tag'); p.add_argument('id', type=int); p.add_argument('tags', nargs='+'); p.add_argument('--rm', action='store_true')
     p = sp.add_parser('export'); p.add_argument('ns', nargs='+', type=int); p.add_argument('--dir', required=True)
     p.add_argument('--source'); p.add_argument('--fmt', default='ours')
+    p = sp.add_parser('nearmiss'); p.add_argument('action', choices=['list', 'tag', 'requeue'])
+    p.add_argument('ids', nargs='*', type=int); p.add_argument('--thr', type=float, default=1e-3)
+    p.add_argument('--nmax', type=int, default=324); p.add_argument('--ns', type=int, nargs='*')
+    p.add_argument('--per-n', type=int, default=2); p.add_argument('--include-public', action='store_true')
+    p.add_argument('--min-gap', type=float, default=1e-6, help='scan floor (closer = the frontier minimum re-found)')
+    p.add_argument('--from', dest='dirs', nargs='*', default=[], help='compose2 / fresh / harden output dirs')
+    p.add_argument('--no-scan', action='store_true', help='tag: only the --from dirs')
+    p.add_argument('--limit', type=int, default=40)
+    p = sp.add_parser('finish'); p.add_argument('--limit', type=int, default=5); p.add_argument('--ids', type=int, nargs='*')
+    p.add_argument('--stages', default='polish,harden1,harden'); p.add_argument('--procs', type=int, default=4)
+    p.add_argument('--nm-gate', type=float, default=5e-4, help='NM harden only while the gap is below this')
+    p.add_argument('--candidate', action='store_true', help='run candidate.py on items below the frontier (default: print)')
+    p.add_argument('--dry-run', action='store_true', help='print the items and their bars (read-only)')
+    p.add_argument('--out')
+    p = sp.add_parser('ingest'); p.add_argument('--apply', action='store_true'); p.add_argument('--since')
+    p.add_argument('--procs', type=int, default=16); p.add_argument('--no-fresh', action='store_true')
+    p.add_argument('--nmax', type=int, default=324)
     a = ap.parse_args()
+    spath = a.store or os.environ.get('PK_STORE') or os.path.join(HERE, 'runs', 'store.sqlite')
+    if a.cmd == 'nearmiss' and a.action == 'list':            # read-only: safe while a run writes the store
+        from pk import nearmiss
+        nearmiss.print_list(nearmiss.ro_db(spath), nearmiss.frontier_fn(spath), a)
+        return
+    if a.cmd == 'ingest':
+        from pk import ingest
+        ingest.run(store=a.store, apply=a.apply, since=a.since, procs=a.procs, fresh=not a.no_fresh, nmax=a.nmax)
+        return
+    if a.cmd == 'finish' and a.dry_run:
+        from pk import nearmiss
+        nearmiss.finish(nearmiss.ReadOnly(spath), None, a.limit, a.stages.split(','), dry=True,
+                        fnow=nearmiss.frontier_fn(spath), ids=a.ids, nm_gate=a.nm_gate)
+        return
     st = Store(a.store) if a.store else Store()
 
     if a.cmd == 'sync-register':
@@ -151,6 +190,28 @@ def main():
             p = st.best(n, source=a.source)
             if p is not None:
                 p.write(f'{a.dir}/n-{n}.txt', a.fmt); print(f'{n} {p.s:.12f} id {p.meta["id"]}')
+    elif a.cmd == 'nearmiss':
+        from pk import nearmiss
+        if a.action == 'requeue':
+            for i in a.ids:
+                nearmiss.set_status(st, i, 'queued')
+        else:
+            fnow = nearmiss.frontier_fn(spath)
+            k1 = nearmiss.enqueue(st, nearmiss.from_outputs(st, a.dirs, fnow, a.thr, a.nmax, a.per_n),
+                                  note='tag --from') if a.dirs else 0
+            k2 = 0 if a.no_scan else nearmiss.enqueue(
+                st, nearmiss.scan(st.db, fnow, a.thr, nmax=a.nmax, ns=a.ns, per_n=a.per_n,
+                                  include_public=a.include_public, min_gap=a.min_gap), note='tag scan')
+            print(f'queued {k1} from output dirs, {k2} from the store scan')
+    elif a.cmd == 'finish':
+        from pk import nearmiss
+        import datetime, scratch
+        scratch.scope('finish')
+        out = a.out or os.path.join(HERE, 'runs', 'finish', datetime.datetime.now().strftime('%Y%m%dT%H%M%S'))
+        R = nearmiss.finish(st, out, a.limit, a.stages.split(','), a.procs, a.candidate,
+                            fnow=nearmiss.frontier_fn(spath), ids=a.ids, nm_gate=a.nm_gate)
+        print(f"{len(R)} items: {sum(1 for r in R if r.get('candidate'))} below the frontier, "
+              f"{sum(1 for r in R if r.get('err'))} failed; log {out}/finish.jsonl")
     st.close()
 
 
