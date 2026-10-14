@@ -39,8 +39,9 @@ def crop_squares(sq, s, o, W, H):
 
 
 def _fq(inp, outp, d, extra):
-    r = subprocess.run([FQ, 'quench', '--in', inp, '--out', outp, '--loosen', '1.0', '--rect-dx', str(d),
-                        '--flip-top', '32'] + extra, capture_output=True, text=True, timeout=900)
+    """fq rectangle quench ([0, s + d] x [0, s]); extra = fq flags on top (e.g. ['--no-alm'])."""
+    from pk.engine import QOpt, fq_quench
+    r = fq_quench(inp, QOpt(loosen=1.0, rect_dx=float(d), flip_top=32).with_args(extra), out=outp, binary=FQ, timeout=900)
     try:
         js = json.loads(r.stdout.strip().splitlines()[-1])
         L = open(outp).read().split('\n')
@@ -233,8 +234,8 @@ def cmd_construct(a2):
         with open(raw, 'w') as f:
             f.write(f'{n} {float(r["s"])!r}\n' + ''.join(f'{float(x)!r} {float(y)!r} {float(t)!r}\n' for x, y, t in X))
         chk = subprocess.run([FQ, 'check', '--in', raw], capture_output=True, text=True).stdout.split()
-        q = subprocess.run([FQ, 'quench', '--in', raw, '--out', outp, '--loosen', '1.0', '--no-alm', '--flip-top', '64',
-                            '--pit', '600'], capture_output=True, text=True)
+        from pk.engine import fq_quench, POLISH_DEEP
+        q = fq_quench(raw, POLISH_DEEP, out=outp, binary=FQ)
         try:
             js = json.loads(q.stdout.strip().splitlines()[-1])
         except Exception:

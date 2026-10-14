@@ -20,6 +20,8 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+from pk.engine import fq_quench, POLISH
+from pk.moves import harden_xform
 HARDEN = os.path.join(HERE, 'target', 'release', 'harden')
 FQ = os.path.join(HERE, 'target', 'release', 'fq')
 
@@ -38,22 +40,8 @@ def write_cfg(path, n, s, sq):
 
 
 def make_input(sq, s, xform, seed, k):
-    """(n', side, squares) after the transform; k = index for remove:all."""
-    sq = np.asarray(sq, float)
-    rng = np.random.default_rng(seed * 7919 + k)
-    kind, _, arg = xform.partition(':')
-    if kind == 'none':
-        return len(sq), s, sq
-    if kind == 'insert':
-        m = int(arg or 1)
-        add = np.column_stack([rng.uniform(0.5, s - 0.5, m), rng.uniform(0.5, s - 0.5, m), rng.uniform(0, 90, m)])
-        out = np.vstack([sq, add])
-        return len(out), s, out
-    if kind == 'remove':
-        i = k if arg == 'all' else int(rng.integers(len(sq)))
-        out = np.delete(sq, i, axis=0)
-        return len(out), s, out
-    raise ValueError(xform)
+    """(n', side, squares) after the transform; k = index for remove:all.  (pk.moves.harden_xform)"""
+    return harden_xform(sq, s, xform, seed, k)
 
 
 def load_out(path):
@@ -73,8 +61,7 @@ def job(t):
         h = json.loads(r.stdout.strip().splitlines()[-1])
     except Exception:
         return dict(err='harden: ' + r.stderr[-300:])
-    q = subprocess.run([FQ, 'quench', '--in', raw, '--out', pol, '--seed', str(seed), '--loosen', '1.0', '--no-alm'],
-                       capture_output=True, text=True, timeout=3600)
+    q = fq_quench(raw, POLISH.but(seed=seed), out=pol, binary=FQ, timeout=3600)
     try:
         d = json.loads(q.stdout.strip().splitlines()[-1])
     except Exception:

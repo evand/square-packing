@@ -172,6 +172,91 @@ def cross_move(p, rng, variant, P, pick, mates=None, **_):
     return np.asarray(sq, float), dict(mate_dist=round(float(np.mean([d for d, _ in al])), 4), nparents=len(parents))
 
 
+# ---------- neighbour transforms (n -> n - k, n -> n + k; 10-14: one copy for chain seeds and harden) ----------
+# p = Packing or (s, sq); the result has the same form (list sq stays a list of the same tuples, ndarray stays ndarray).
+# rng = random.Random (chain) or np.random.Generator (harden); each branch consumes its rng exactly as the code it
+# replaced did, so a given seed gives the same packing as before.
+
+def _split(p):
+    return (p.s, p.sq) if isinstance(p, Packing) else (p[0], p[1])
+
+
+def _join(p, s, sq):
+    if isinstance(p, Packing):
+        return Packing(float(s), np.asarray(sq, float), meta=dict(parent=p.meta.get('id')))
+    return s, sq
+
+
+def _drop(sq, drop):
+    if isinstance(sq, np.ndarray):
+        return np.delete(sq, sorted(drop), axis=0)
+    return [q for i, q in enumerate(sq) if i not in drop]
+
+
+def remove_k(p, k, rng, idx=None):
+    """Remove k squares: chosen by rng (random.Random: rng.sample(range(n), k), chain seeds; np Generator, k = 1:
+    rng.integers(n), harden remove:R; k > 1: rng.choice(n, k, replace=False)) or given as `idx` (no rng use)."""
+    s, sq = _split(p)
+    if idx is not None:
+        drop = set([idx] if np.isscalar(idx) else idx)
+    elif isinstance(rng, np.random.Generator):
+        drop = {int(rng.integers(len(sq)))} if k == 1 else set(rng.choice(len(sq), k, replace=False).tolist())
+    else:
+        drop = set(rng.sample(range(len(sq)), k))
+    return _join(p, s, _drop(sq, drop))
+
+
+def insert_k(p, k, rng, holes='pose', dilate=(0.002, 0.012), top=12):
+    """Insert k squares.  dilate = (lo, hi): first scale the packing up by 1 + U(lo, hi) sqrt(k) (None: no scaling).
+    holes='pose' (chain seeds, random.Random): each square at one of the `top` best pose holes (mcmin.pose_holes; the
+    best is often a jam), recomputed after each insertion; stops early (fewer than k added) when there is no hole.
+    holes='uniform' (harden insert:K, np Generator): k centres U(0.5, s - 0.5)^2, angles U(0, 90) (all x, all y, all
+    angles drawn in that order)."""
+    s, sq = _split(p)
+    if dilate is not None:
+        f = 1 + rng.uniform(*dilate) * math.sqrt(k)
+        s = s * f
+        sq = np.c_[sq[:, :2] * f, sq[:, 2]] if isinstance(sq, np.ndarray) else [(x * f, y * f, d) for x, y, d in sq]
+    if holes == 'uniform':
+        add = np.column_stack([rng.uniform(0.5, s - 0.5, k), rng.uniform(0.5, s - 0.5, k), rng.uniform(0, 90, k)])
+        if isinstance(sq, np.ndarray):
+            return _join(p, s, np.vstack([sq, add]))
+        return _join(p, s, list(sq) + [tuple(map(float, q)) for q in add])
+    if holes != 'pose':
+        raise ValueError(holes)
+    import sys
+    if os.path.dirname(HERE) not in sys.path:              # mcmin lives in search/packer
+        sys.path.insert(0, os.path.dirname(HERE))
+    import mcmin
+    arr = isinstance(sq, np.ndarray)
+    sq = [tuple(q) for q in sq.tolist()] if arr else list(sq)
+    for _ in range(k):
+        H = mcmin.pose_holes(s, sq)
+        if not H:
+            break
+        e, x, y, d = H[rng.randrange(min(len(H), top))]
+        sq.append((x, y, d))
+    return _join(p, s, np.array(sq, float) if arr else sq)
+
+
+def harden_xform(sq, s, xform, seed, k):
+    """harden.py's input transforms -> (n', side, squares ndarray).  xform: 'none'; 'insert:K' (K uniform squares);
+    'remove:all' (square k removed) or 'remove:R' (one random square; R itself is not used).  rng =
+    np.random.default_rng(seed * 7919 + k)."""
+    sq = np.asarray(sq, float)
+    rng = np.random.default_rng(seed * 7919 + k)
+    kind, _, arg = xform.partition(':')
+    if kind == 'none':
+        return len(sq), s, sq
+    if kind == 'insert':
+        _, out = insert_k((s, sq), int(arg or 1), rng, holes='uniform', dilate=None)
+        return len(out), s, out
+    if kind == 'remove':
+        _, out = remove_k((s, sq), 1, rng, idx=k if arg == 'all' else None)
+        return len(out), s, out
+    raise ValueError(xform)
+
+
 # ---------- arms ----------
 # 10-08 explorer kinds as presets (weights = explore.WEIGHTS; melt off by default there)
 ARMS = {

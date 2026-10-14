@@ -13,9 +13,12 @@ window (n_hi + 1, n_hi + 2) stays at its register record (seed source only).
 import argparse, glob, json, math, os, random, shutil, signal, subprocess, sys, tempfile, time
 from jobpool import run_jobs
 import mcmin, hop
+from pk.engine import QOpt
+from pk.moves import remove_k, insert_k
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TRIES, SEED_FIRST = 12, False                # removal tries per seed; v2 (10-08): non-shrinking removals rejected
+SEED_Q = QOpt(loosen=1.0)                    # seed quench: full ALM + polish, no dilation
 
 
 # a CANDIDATE must beat the register by more than re-polishing the same packing can (10-12: n=207 re-polished
@@ -117,27 +120,18 @@ def seed_job(j):
     s1, sq1 = mcmin.load_deg(src)
     rng = random.Random(seed)
     tmp = tempfile.mkdtemp()
-    hop.EXTRA[:] = ['--loosen', '1.0']
     best = None
     for t in range(TRIES):
         if k > 0:
-            drop = set(rng.sample(range(len(sq1)), k))
-            r = hop.quench(s1, [q for i, q in enumerate(sq1) if i not in drop], tmp)
+            _, sq2 = remove_k((s1, sq1), k, rng)
+            r = hop.quench(s1, sq2, tmp, opt=SEED_Q)
             if not r or r[0] > s1 - 1e-7:      # did not shrink (removed a rattler / polished back): a copy, not a seed
                 continue
         else:
-            f = 1 + rng.uniform(0.002, 0.012) * math.sqrt(-k)
-            s2 = s1 * f
-            sq2 = [(x * f, y * f, d) for x, y, d in sq1]
-            for _ in range(-k):
-                H = mcmin.pose_holes(s2, sq2)
-                if not H:
-                    break
-                e, x, y, d = H[rng.randrange(min(len(H), 12))]                # any of the 12 best holes (the best is often a jam)
-                sq2.append((x, y, d))
+            s2, sq2 = insert_k((s1, sq1), -k, rng, holes='pose')   # dilate, then any of the 12 best pose holes
             if len(sq2) != n:
                 continue
-            r = hop.quench(s2, sq2, tmp)
+            r = hop.quench(s2, sq2, tmp, opt=SEED_Q)
             if not r:
                 continue
         if best is None or r[0] < best[0]:

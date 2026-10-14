@@ -16,21 +16,21 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 FQ = os.path.join(HERE, 'target', 'release', 'fq')
+from pk.engine import QOpt, fq_quench
 OPS = {
-    'polish': ['--loosen', '1.0', '--no-alm'],                                   # rigid baseline
-    'shrink': ['--loosen', '1.0', '--shrink'],                                   # fixed-side overlap relax + shrink hops
-    'kshrink': ['--loosen', '1.0', '--kick', '0.02', '--shrink'],
-    'soft05': ['--loosen', '1.0', '--round-r0', '0.05', '--hold-f', '1.0', '--round-steps', '40', '--round-kick', '0.03'],
-    'soft15': ['--loosen', '1.0', '--round-r0', '0.15', '--hold-f', '1.0', '--round-steps', '40', '--round-kick', '0.03'],
-    'soft15c': ['--loosen', '1.0', '--round-r0', '0.15', '--round-compress', '--round-steps', '40', '--round-kick', '0.02'],
-    'loose': ['--loosen', '1.02', '--kick', '0.03'],                             # jitter + ALM from a dilated box
+    'polish': QOpt(loosen=1.0, no_alm=True),                                     # rigid baseline
+    'shrink': QOpt(loosen=1.0, shrink=True),                                     # fixed-side overlap relax + shrink hops
+    'kshrink': QOpt(loosen=1.0, kick=0.02, shrink=True),
+    'soft05': QOpt(loosen=1.0, round_r0=0.05, hold_f=1.0, round_steps=40, round_kick=0.03),
+    'soft15': QOpt(loosen=1.0, round_r0=0.15, hold_f=1.0, round_steps=40, round_kick=0.03),
+    'soft15c': QOpt(loosen=1.0, round_r0=0.15, round_compress=True, round_steps=40, round_kick=0.02),
+    'loose': QOpt(loosen=1.02, kick=0.03),                                       # jitter + ALM from a dilated box
 }
 
 
 def job(t):
     inp, outp, op, seed = t
-    r = subprocess.run([FQ, 'quench', '--in', inp, '--out', outp, '--seed', str(seed)] + OPS[op],
-                       capture_output=True, text=True, timeout=1800)
+    r = fq_quench(inp, OPS[op].but(seed=seed), out=outp, binary=FQ, timeout=1800)
     try:
         d = json.loads(r.stdout.strip().splitlines()[-1])
         return dict(op=op, seed=seed, s=d['s'], ok=d['min_gap'] > -1e-9 and d['min_wall'] > -1e-9, out=outp, sec=d.get('sec'))

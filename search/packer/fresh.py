@@ -86,6 +86,12 @@ def add_whole(rows):
     return new
 
 
+def repolish(inp, out):
+    """Deep re-polish (fq polish only, 64 flips, 2000 iterations) of an under-converged hit."""
+    from pk.engine import fq_quench, POLISH_DEEP
+    return fq_quench(inp, POLISH_DEEP.but(pit=2000), out=out, binary=os.path.join(HERE, 'target', 'release', 'fq'))
+
+
 def sh(cmd, log):
     with open(log, 'w') as f:
         return subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, cwd=HERE).returncode
@@ -145,8 +151,7 @@ def run(a):
         cs = os.path.join(HERE, 'runs', 'candidates', name, 'summary.json')
         if not os.path.exists(cs):                   # exactsolve failed (seen: under-converged polish): re-polish, retry once
             rp = out(f"repolish-{h['n']}.txt")
-            subprocess.run([os.path.join(HERE, 'target', 'release', 'fq'), 'quench', '--in', h['file'], '--out', rp,
-                            '--loosen', '1.0', '--no-alm', '--flip-top', '64', '--pit', '2000'], capture_output=True)
+            repolish(h['file'], rp)
             if os.path.exists(rp):
                 h['repolished'] = rp
                 h['rc'] = sh([sys.executable, 'candidate.py', rp, '--name', name, '--no-regularize', '--import'],
