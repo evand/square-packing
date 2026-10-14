@@ -67,8 +67,6 @@ First deliverable: a table of exact forms of S + a handful of Lean local-optimal
 
 ## Packings (10-14 triage with Evan: `tasks/packer-arch-2026-10-14/`; handoff `search/packer/HANDOFF-2026-10-14.md`)
 Thesis (Evan 10-14): diversity pays (new mechanisms, new sources); local search at current budgets has mined the frontier.  No compute above n = 324 without a specific reason.
-- [ ] TT2 census analysis (pre-registered in PACKER.md: new minima / regions / near-frontier per CPU-h, exactsolve sample ~40 per arm); record metrics done (PACKER "TT2 results").
-- [ ] Candidate packets pre-packaged (Evan 10-14): `candidate.py` runs `exact/descend.py` when not jammed, certifies + regularizes both ours and the record it beats, writes the distinctness facts (s(146) / #606 by hand: `candidates/tt2_n146_vs505.json`).
 - [ ] Drain the near-miss queue: 142 queued (`pk.py nearmiss list`), `pk.py finish` (~800 CPU-s per item; one-item smoke 10-14: runs, no gain), then `pk.py ingest`.
 - [ ] Run config with test / record modes (sources, mechanisms, reference, reward, grid-rule knob, control); chain imports its own rounds; cfp into the store on import.
 - [ ] Parent-distance model (after A2): fit P(gain | parent gap, distance, n band, mechanism) from logs, then a randomized gap-band slice to de-confound.
