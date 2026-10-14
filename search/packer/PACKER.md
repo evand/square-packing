@@ -2409,3 +2409,12 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
   signed zeros included); (2) the L-BFGS two-loop fuses each update of d with the next fast dot (same 8-lane order).
   Screens 1.17x (110) / 1.22x (237), polishes 1.00x.  **Perf score 3.06x** (`runs/perfbench/bitid1`: 8,377 / 2,384
   proposals per CPU-h; load ~7 from another session at the start, so possibly a little low).
+* **Q10, schedule-replay LDL (`src/ldl.rs`; bit-identical, deployed):** qdldl's numeric factor re-walks the elimination
+  tree for every row on every refactor (~40 % of its time is that bookkeeping).  Within one LP the pattern is fixed, so
+  the symbolic pass records qdldl's schedule (per row: eliminated columns in qdldl's visiting order, target slot in L)
+  and the numeric pass replays it -- the same flops in the same order; same AMD call, qdldl's permuted-column entry order
+  (input order -- sorted rows gave 1e-9 differences), qdldl's regularisation and solve.  Bench (n = 237 step LPs):
+  bitwise-equal D and L, 1.28-1.37x per refactor.  In fq: 800 / 800 replayed calls identical (both corpora, both
+  stages); polish 1.14x (110) / 1.18x (237), screens 1.04x / 1.06x.  **Perf score 3.38x** (`runs/perfbench/bitid2`:
+  8,885 / 2,740 proposals per CPU-h; load ~9 from other sessions at the start, so possibly low).  Also measured: AMD
+  is ~0.25 ms of the ~0.4 ms symbolic setup per LP (~2 % of fq) -- reusing orderings is not worth a re-roll.

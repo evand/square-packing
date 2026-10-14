@@ -20,6 +20,7 @@
 //!     pre-stage with rounded squares (see run_quench), then the usual quench + polish
 //!   --dump-lp DIR: append every polish LP to DIR/lp-<pid>.jsonl (rows/columns with stable keys, Clarabel time; lp_bench.py)
 
+mod ldl;
 mod lpipm;
 use std::fs;
 use std::time::Instant;

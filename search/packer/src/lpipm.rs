@@ -7,8 +7,7 @@
 //! factored by qdldl: AMD + symbolic once per LP, numeric refactor per iteration.  The caller supplies a strictly
 //! interior primal start (b - A x0 > 0, lo < x0 < hi); the primal residual then stays at rounding level, so only the
 //! dual residual and the complementarity have to be driven down.  None on any numerical trouble (caller falls back).
-use clarabel::algebra::CscMatrix;
-use clarabel::qdldl::{QDLDLFactorisation, QDLDLSettingsBuilder};
+use crate::ldl::Ldl;
 
 thread_local! { static PROFT: std::cell::Cell<[f64; 10]> = const { std::cell::Cell::new([0.0; 10]) }; }
 static PROF: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
@@ -80,15 +79,11 @@ pub fn solve(n: usize, rows: &[Vec<(usize, f64)>], b: &[f64], c: &[f64], lo: &[f
     let mut nz = vec![0.0; nnz];
     // symbolic factorisation (AMD + elimination tree) reused while the pattern repeats (consecutive SLP LPs usually
     // keep the contact graph); the permutation depends only on the pattern, so reuse is bit-identical to a fresh one
-    thread_local! { static CACHE: std::cell::RefCell<Option<(Vec<usize>, Vec<usize>, QDLDLFactorisation<f64>)>> = const { std::cell::RefCell::new(None) }; }
+    thread_local! { static CACHE: std::cell::RefCell<Option<(Vec<usize>, Vec<usize>, Ldl)>> = const { std::cell::RefCell::new(None) }; }
     let cached = CACHE.with(|c| { let mut c = c.borrow_mut(); match c.take() { Some(e) if e.0 == colptr && e.1 == rowval => Some(e.2), other => { *c = other; None } } });
     if std::env::var("FQ_IPM_DBG").is_ok() { eprintln!("ipm cache {}", if cached.is_some() { "hit" } else { "miss" }); }
-    let mut fac = match cached { Some(f) => f, None => {
-        for &d in &diag { nz[d] = 1.0; }
-        let kmat = CscMatrix::new(n, n, colptr.clone(), rowval.clone(), nz.clone());
-        let opts = QDLDLSettingsBuilder::default().Dsigns(vec![1i8; n]).logical(true).build().ok()?;
-        QDLDLFactorisation::new(&kmat, Some(opts)).ok()?
-    } };
+    // schedule-replay LDL (ldl.rs): bit-identical to qdldl, ~1.3x faster numeric factor
+    let mut fac = match cached { Some(f) => f, None => Ldl::new(n, &colptr, &rowval)? };
     let setup_s = t_setup.elapsed().as_secs_f64();
     let res: Option<Sol> = 'ipm: {
     let trace = std::env::var("FQ_IPM_TRACE").is_ok();
@@ -98,7 +93,6 @@ pub fn solve(n: usize, rows: &[Vec<(usize, f64)>], b: &[f64], c: &[f64], lo: &[f
     static DREG: std::sync::OnceLock<f64> = std::sync::OnceLock::new();
     let dreg = *DREG.get_or_init(|| std::env::var("FQ_IPM_DREG").ok().and_then(|v| v.parse().ok()).unwrap_or(1e-8));
     let reg = *REG.get_or_init(|| std::env::var("FQ_IPM_REG").ok().and_then(|v| v.parse().ok()).unwrap_or(1e-8));
-    let all: Vec<usize> = (0..nnz).collect();
 
     let ax = |x: &[f64], out: &mut [f64]| {
         for r in 0..m { let mut acc = 0.0; for k in rptr[r]..rptr[r + 1] { acc += rv[k] * x[rc[k] as usize]; } out[r] = acc; }
@@ -165,9 +159,8 @@ pub fn solve(n: usize, rows: &[Vec<(usize, f64)>], b: &[f64], c: &[f64], lo: &[f
             // + static primal regularisation (columns no active row touches have a ~0 diagonal; Clarabel uses 1e-8 too)
             nz[diag[j]] += zl[j] * ixl[j] + zu[j] * ixu[j] + reg;
         }
-        fac.update_values(&all, &nz);
         padd(2, &mut pt);
-        if fac.refactor().is_err() { why("factor"); break 'ipm if almost { Some(Sol { x, y, iters: it }) } else { None }; }
+        if fac.factor(&nz).is_err() { why("factor"); break 'ipm if almost { Some(Sol { x, y, iters: it }) } else { None }; }
         padd(3, &mut pt);
         // one Newton solve for given complementarity right-hand sides rs, rl, ru
         let mut newton = |rs: &[f64], rl: &[f64], ru: &[f64], dx: &mut [f64], ds: &mut [f64], dy: &mut [f64], dzl: &mut [f64], dzu: &mut [f64],
@@ -181,7 +174,7 @@ pub fn solve(n: usize, rows: &[Vec<(usize, f64)>], b: &[f64], c: &[f64], lo: &[f
             padd(7, &mut nt);
             fac.solve(dx);
             padd(5, &mut nt);
-            if trace { let bad = dx.iter().filter(|v| !v.is_finite()).count(); let mx = dx.iter().fold(0.0f64, |a, v| a.max(v.abs())); eprintln!("    solve: nonfinite {bad} max|dx| {mx:.2e} reg {}", fac.regularize_count()); }
+            if trace { let bad = dx.iter().filter(|v| !v.is_finite()).count(); let mx = dx.iter().fold(0.0f64, |a, v| a.max(v.abs())); eprintln!("    solve: nonfinite {bad} max|dx| {mx:.2e} reg {}", fac.reg_count); }
             ax(dx, t_m);
             padd(6, &mut nt);
             // consistent with the regularised system: dy = d~ (A dx - rp + rs / y), ds from complementarity
