@@ -2576,3 +2576,9 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
 * **S1 result: miss** (prediction 10 %): 241 best 15.9879770 (one run, -1.6e-4 vs seed, r0 0.1 stiff0 0.1), not <= 15.9876;
   most runs again at the 16 grid.  211 worse than rounding alone (best +3e-4 vs seed).  Stiffness ramps are not the
   missing piece for 241.  Harden as built: a band-merge finisher that works at 211, nothing else so far.
+* **Family map (Evan 10-14: "squint at the triangle: which packings are out of place?")**: `familymap.py` (k = ceil
+  sqrt n, c = k^2 - n; codes G / D 45-deg block / S 45-deg strip / V one low-angle band / 2 bands / J jumble;
+  `runs/familymap.json`).  The 45-degree cells sit at a fixed offset m = n - (k-1)^2 <~ 9 on every row (89, 104, 109,
+  125, 149-150, 172-174, 200-203, 229-233, 260-265, 294-298) while the V / band region grows with k.  Neighbour bump
+  s(n) - (s(n-1) + s(n+1))/2: positive = weak vs both neighbours.  45-deg cells with positive bumps: 89 +0.009, 125,
+  150 +0.013, 201 +0.015, 203, 229 +0.013, 260 +0.022, 295 +0.022 (147 +0.037 is the plateau).  109 is a dip (-0.001).
