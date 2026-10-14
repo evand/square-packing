@@ -234,6 +234,31 @@ and the site draws ry-xu's packing as posted (`site/tools/provenance.py` 'raw').
 into `lists/certs/raw/n-261.cert.gz`, side 83393899377083393899377/5e21 ≈ 16.67877987541668; VALID under verify_cert and
 verify_cert2 (min separation 1e-12: a dilated copy, ~7e-11 above exactsolve's optimum 16.6787798753429).
 
+## Decisions and plan (Evan, 10-13; after jlevy/squares#497)
+jlevy's assessment (#497, merged 10-13; his answers in `docs/project/policies/regularization-policy.md` §9) adopts
+`conservative` only, source orientation, and refuses the 1 + 1e-20 dilated certificates where the optimum is
+irrational.  (Its note: four level-3 alternates now, not five: 270's went with its record.)
+- **Side length is never changed.**  Plan, two commits: (1) the record's certificate in exact number-field form
+  (`search/exact/minpoly/data`, `verify_exact.py`) where we have one: 253 of the 324 list records match an exact
+  form's side, 16 forms are for superseded packings, 55 open; no new forms in this work (separate session); (2) the
+  regularized view re-solved over the same field K at exactly S* (fixed angles in K => tight constraints linear in
+  the centres over K), checked by `verify_exact.py`; dilated rational certificate only where no form exists, labelled.
+- **Fewest angle groups is the top regularization priority** (and keeps certificates simple).  Same-packing vs fewest
+  is left to jlevy and the group chat: both lists replayable from one switch, each changed record labelled with its
+  proof status (proved same / sampled path / alternate).  Evan's taste leans to fewest; worth compute on proving
+  same-or-alternate instead of the sampled path test.
+- **Exact merges only**: an angle moves only onto an angle the packing already holds exactly (or 0); near-equal
+  distinct angles are kept (fine angle differences tend to be interesting).
+- **Mirror groups** (θ, −θ) stay separate groups.  Candidate rule: prefer mirror pairs at a priority below total
+  groups.  It can only act on ties in the group count, e.g. two undetermined groups near θ where −θ exists: merging
+  both onto θ (mirror of the existing group) or one onto the other both save one group.  Open: does it ever bind?
+  Examples (`mirror.png` sheet, 10-13): mirror-symmetric 37, 107, 171, 198; exact ±θ arms without symmetry 102, 130,
+  153, 207, 263 (arcs: the arms differ in length); near-mirror arms 155, 209, 237, 238, 271, 273, 308 (SQUISH bent
+  strips, groups 0.005-0.5 deg apart).
+- **When cores are free** (exploration): (a) determined test per group on the near-mirror records: can those angles
+  move at all at S*?  (b) instrument the merges to log group-count ties and whether a mirror target is among them;
+  (c) greedy vs best merge order (301, 268, 207, 102, the near-mirror records).
+
 ## Next
 - Round-1 feedback → rules; then levels 1/3 of the angle plan (exact field equality for determined angles; merges
   backed by a certificate) and the flat rotational modes `minpoly.py` pins at an arbitrary rational t.
