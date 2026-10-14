@@ -68,14 +68,11 @@ First deliverable: a table of exact forms of S + a handful of Lean local-optimal
 ## Packings (active, 10-09)
 **10-13 handoff: read `search/packer/HANDOFF-2026-10-13.md` first** (records #584; measured negatives; benchmarks
 `bench110.py race` + `pk/benchkit.py`; claims C25-C36).
-- [ ] **Next (Evan 10-13): dedicated performance session.**  Profile the explorer step and fq; batched soft-to-rigid on the
-  Radeon 8060S iGPU (ROCm / Vulkan) or AVX-512; acceptance = entries per CPU-h on `bench110.py race` (control 3.88), the
-  241 / 211 band-merge control, arms + finisher (HANDOFF "Next session").
-  10-13 progress (PACKER "Performance session 10-13"): profile at 110 = Clarabel LPs ~60 %, ALM ~13 %, Python ~11 %;
-  compute-bound (IPC 4, fits L2); GPU / NPU not a fit (f64, small sequential LPs).  Adopted: native build (bit-identical)
-  + LP iterative refinement off (Q0 via new `fqreplay.py` equivalence benchmark, C37): fq ~1.2x screen / ~1.55x polish.
-  Next: faer LDL backend arm, allocation-free / multi-accumulator L-BFGS, `fq serve` in the explorer, exactsolve
-  probe_flat factor reuse (45 % of its time).
+- [ ] Perf follow-ups (10-13 session closed, PACKER "Performance session 10-13"; CLAIMS C37-C41): each <= ~10 %,
+  measure with paired `fqreplay.py` / `chainreplay.py`, not perfbench (resolves only ~+-10 % at 237): block (3x3 per
+  square) LDL in `src/ldl.rs` (~10 % at 237); SIMD `Prob::eval` (~5-8 % at 110); Q12 `FQ_SOC_ROUNDS=16` (1.06x polish at
+  237, lower-side bias unconfirmed); exactsolve `probe_flat` factor reuse (45 % of its time).  Bigger gains now need
+  algorithmic work (fewer LPs per polish / IPM iterations).
 - [ ] Strip-family test set at n = 88 (Evan 10-13: is the explorer overfit to the double-band V family?): certify 88's
   ~7,500 stored sides, `landscape_depth.py --n 88`, `refset --rule region` holdout, baseline race (~16 CPU-h).  Then a
   strip-family hunt (129, 153, 207, 236 active; 172, 199, 228, 293 quiet).
