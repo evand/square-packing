@@ -2475,3 +2475,66 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
   resolution.**  Q11 stands.  Lessons: (1) perfbench resolves ~+-10 % at 237 per pair of runs (replicate SE 3-9 % per
   run, and a re-roll redraws all 8 trajectories at once); quote perf scores as ~3.2-3.4x, not to 0.01; (2) stage speed
   should come from paired replays, end-to-end gains below ~10 % from chain replays with >= 1,000 chains.
+
+## Soft-to-rigid engine (10-14; Evan: build new features first, background compute yields to tests)
+* **Why**: C29's three negatives used fq's rounding pre-stage, a quasi-static ALM quench at 10-40 radius steps.  Nakajima's
+  protocol (paper §2, `sim.js` step rule; read as data, scratch copy) is ~10^4 momentum steps on a penalty energy:
+  E = sum (2r - sd)_+^2 + walls^2 + mu L, beta 0.85, lr 0.04, |v| cap 0.03, Gaussian noise.  Overlaps tolerated
+  transiently, inertia; a different operator.  Ostashev #575: "every square soft, box held, then release and compress".
+* **Built**: `src/harden.rs` (`harden fresh | reharden | test`; Verlet lists, legalisation by centre scaling) and
+  `harden.py` (inputs x transform none / insert:K / remove:all|R x parameter grid x seeds -> harden -> fq polish ->
+  vs target).  `harden test`: pair gradient vs FD 0 / 19,999 off by > 1e-5 (worst 2.8e-9), energy gradient 0 / 90.
+* **Validation (Nakajima's n = 11 numbers, standard 5k / 45k / 3k schedule, 160 seeds each, raw legalised side)**:
+  anneal 9 / 160 reach Trump 3.8770845 (paper 6 / 160); no anneal 0 / 160; rigid control 0 / 160, best 3.88710
+  (paper 0 / 120, best 3.8877).  0.27 s per run.  Implementation reproduces the paper.
+* **Dev (241 from store 347, 12 cells x 4 seeds, `runs/harden/dev241a`)**: 2-10 s per run incl. fq polish.  Noise 0.001
+  returns to the seed basin (+3e-12); noise 0.004 lands 1.3-1.8e-3 above.  0 / 48 below the seed.
+* **T1 band-merge positive control, pre-registered (before launch)**: inputs store 347 (241, 15.9881324395; #575 ->
+  15.987134249) and store 94 (211, 14.9979607050; #575 -> 14.993694187).  Grid r0 {0.05, 0.1, 0.2} x noise {0.002,
+  0.004, 0.008} x hold {8000, 30000}, 24 seeds per cell per n (864 runs, est. ~1.7 CPU-h).  Success (per n): polished
+  side <= 15.9876 (241) / < 14.9979607 - 1e-8 (211).  Prediction: 20 % for at least one n (dev: the move is not
+  common; Ostashev's batch sizes are unknown).  If 0: look at the trajectories (do bands re-tilt at all?) before more
+  volume; volume x10 is cheap (~17 CPU-h) only if the outcome distribution has a tail toward the target.
+* **T2 insertion (border growth), pre-registered**: the 10-05 register's 307 (`../exact/batch/inputs/n-307.txt`,
+  17.981030549) + 1 square at a uniform random pose per seed (`--xform insert:1`), box held at hold_f x 17.98103.
+  Grid hold_f {1.0, 1.001} x r0 {0.1, 0.2} x noise {0.002, 0.004}, 24 seeds (192 runs, ~0.5 CPU-h).  Baseline: H1
+  (10-12, chain insertion, ~8 CPU-h): best 18.0005167, never below 18; Fang's #484 reached 17.99827 from 307.
+  Success: any polished 308 < 18 - 1e-8 (then candidate.py).  Prediction: 15 %.
+* **T3 plateau rebuild, pre-registered**: Göbel's 233 (store 102, 15.778174593) and 296 (store 128, 17.707106781) with
+  every single square removed (`--xform remove:all`), 1 seed.  Cells: control (r0 0.001, noise 0, hold 2000 = polish
+  of the removal) and r0 {0.05, 0.15} x noise 0.004 x hold_f 0.999 (box squeezed 0.1 %).  ~1,600 runs, ~3 CPU-h.
+  The pre-break values are the plateaus (s(232) = s(233), s(295) = s(296)); itsnaka #481 broke 232 (15.7674283,
+  later 15.7641743 Ostashev / Mishapolk), ry-xu #432 broke 295 (17.7042328).  Success (per n): polished side below the
+  plateau by > 1e-8; strong: at or below the first break.  Prediction: any break 30 % (the control is the C31 /
+  removal_ctl kind of move, expect 0), strong 5 %.
+* **T1 result: pass at 211, fail at 241** (864 runs, 0 failures, ~25 min wall on 16 procs).  211: 11 / 432 below the
+  seed, best polished **14.9936458090** (seed 14.9979607050, -4.3e-3; Ostashev #575 14.993694187; today's frontier
+  14.9935589140 = #583 / #593 refinements of the #575 packing), all hits at r0 0.2 (cells noise 0.004 / 0.008, hold 30k
+  and noise 0.008 hold 8k).  241: 0 / 432 (best = the seed itself; r0 0.2 cells all +5e-3 or worse).  285 / 269
+  distinct polished sides per n: the operator does move between basins.  Prediction (20 % for one n): hit.
+  Reading: the engine does #575's kind of move at 211; softness ~0.2 is where it happens.
+* **Amendment to T2 / T3 (before their launch, after T1)**: T1's hits were all at r0 0.2, so both get a softer cell.
+  T2 grid: hold_f {1.0, 1.001} x r0 {0.1, 0.2, 0.3} x noise {0.002, 0.004} (288 runs).  T3 cells: control, r0 0.15
+  noise 0.004 hold_f 0.999, r0 0.25 noise 0.004 hold_f 0.999 (default hold 8000; launched so -- the noise 0.006 / hold 30k I first
+  wrote here was not what ran) (separate dirs: t3ctl, t3).  Predictions unchanged.
+* **T1 structure check**: seed 94 has 74 tilted squares (one connected group), the hit 14.9936458 has 81 in one band,
+  the current record (#575 refined) 82 in one band, with nearly the same square indices: the hit is in the record's
+  V family, reached from the pre-#575 seed.
+* **T1b second round (Ostashev: "a second round was seeded from that V"), pre-registered**: the 5 best distinct T1 211
+  outputs (14.99365 .. 14.99464) re-hardened, cells r0 {0.05, 0.1, 0.2} x noise {0.002, 0.004}, 16 seeds (480 runs,
+  ~1 CPU-h).  Success (record): polished < 14.9935589140 - 1e-8 (frontier_now), then candidate.py.  Secondary: <
+  14.99369418 (#575's first value).  Prediction: record 10 %, secondary 50 %.
+* **T2 result: fail** (288 runs, 0 failures): no 308 below 18.  8 / 288 end on the grid (18 exactly); best non-grid
+  18.00000023 (near-grid, not looked at further), then 18.0000010, 18.0014.  Better than H1's chain (18.0005 in ~8
+  CPU-h) at ~0.5 CPU-h, but the crossing did not happen.  Prediction 15 %: miss.
+* **T3 result: fail** (control 529 runs; soft 1,058): 0 removals below either plateau.  At 232 the median outcome IS
+  the plateau (+3.6e-12, every arm): Göbel's strips relax straight back after a removal; 295 soft arms median +9e-4
+  (they move, but up).  Both real breaks were new layouts (itsnaka composition, ry-xu), not local re-hardenings.
+  Prediction 30 % any: miss.  Plateaus need a layout generator, not this finisher.
+* **T1b result**: best 14.9936138 (+5.5e-5 vs frontier 14.9935589; below #575's first value 14.99369418): record miss
+  (prediction 10 %), secondary hit (50 %).  Rounds keep improving: harden.py now has `--rounds R --keep K`
+  (monotone; each source restarts from its K best distinct outputs).
+* **T1c, pre-registered**: continue from T1b's 4 best distinct, 4 rounds, keep 4, r0 {0.05, 0.1, 0.2} x noise 0.002,
+  8 seeds (~400 runs, ~0.6 CPU-h).  Success: < 14.9935589140 - 1e-8 (then candidate.py).  Prediction 15 %.
+* **D241 (dev, not a test)**: 241 from 347 with a looser held box: hold_f {1.002, 1.005} x r0 {0.15, 0.25} x noise
+  {0.004, 0.008}, hold 30000, 12 seeds (96 runs).
