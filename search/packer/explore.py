@@ -236,6 +236,8 @@ def _work(job):
             prop, desc = MOVES['kick'](s, sq, rng, A); desc = 'ashallow failed ' + desc
         else:
             s = float(q.s); prop = q.tuples(); desc = f'ashallow s{s:.5f}'
+    elif kind == 'harden':                  # soft-to-rigid re-hardening (src/harden.rs, 10-14; T1: #575's band merge)
+        s, prop, desc = mv_harden(s, sq, rng)
     elif kind == 'melt':                    # regional NPT melt: the box changes size, keep the anneal's side
         s, prop, desc = melt_side(s, sq, rng, A)
     else:
@@ -245,6 +247,28 @@ def _work(job):
     with tempfile.TemporaryDirectory() as tmp:
         return _screen_polish(s, prop, kind, desc, rng, k, known_sides, same, smax, pol_above, pextra, tmp,
                               mate if kind == 'cross2' and cands else None, kr)
+
+
+HARDEN = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'target', 'release', 'harden')
+HARDEN_R0 = (0.05, 0.1, 0.2)
+HARDEN_NOISE = (0.002, 0.004)
+
+
+def mv_harden(s, sq, rng):
+    """Re-harden the whole packing (box held at s, then release + settle; legalised output).  Off unless weighted
+    (--weights harden=W).  Falls back to a kick if the engine fails."""
+    import subprocess
+    r0, nz = rng.choice(HARDEN_R0), rng.choice(HARDEN_NOISE)
+    with tempfile.TemporaryDirectory() as tmp:
+        pi, po = os.path.join(tmp, 'i.txt'), os.path.join(tmp, 'o.txt')
+        mcmin.write_deg(pi, s, sq)
+        q = subprocess.run([HARDEN, 'reharden', '--in', pi, '--out', po, '--seed', str(rng.randrange(1 << 30)),
+                            '--r0', str(r0), '--noise', str(nz)], capture_output=True, text=True, timeout=600)
+        if q.returncode != 0 or not os.path.exists(po):
+            prop, desc = MOVES['kick'](s, sq, rng, A)
+            return s, prop, 'harden failed ' + desc
+        s2, sq2 = mcmin.load_deg(po)
+    return s2, sq2, f'harden r0 {r0} noise {nz} s{s2:.5f}'
 
 
 def kick_retry(s, sq, rng, tmp, k, tries, sigma=1e-4, pextra=(), alm=True):

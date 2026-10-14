@@ -2538,3 +2538,41 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
   8 seeds (~400 runs, ~0.6 CPU-h).  Success: < 14.9935589140 - 1e-8 (then candidate.py).  Prediction 15 %.
 * **D241 (dev, not a test)**: 241 from 347 with a looser held box: hold_f {1.002, 1.005} x r0 {0.15, 0.25} x noise
   {0.004, 0.008}, hold 30000, 12 seeds (96 runs).
+* **Explorer kind `harden`** (explore.py `mv_harden`; off unless `--weights harden=W`): re-harden the whole packing,
+  r0 {0.05, 0.1, 0.2} x noise {0.002, 0.004} drawn per proposal, then the usual screen / polish.  Smoke test (110 record
+  start, 2 procs x 1.5 min, weight 50): proposals run, harden children among the new sub-11 basins.
+* **HR race, pre-registered**: `bench110.py race --arms control:rand harden:rand:--weights=harden=4 --budget 8
+  --check 2 --slots 10 --out runs/bench110/hr` (10 slots: shares the machine with T1c / fresh) (weight 4 ~ 1 in 6 proposals).  Question: does harden raise basin entries
+  per CPU-h at 110 (the explorer's home ground; harden proposals cost ~2-3x a kick)?  Rule: adopt into the default mix
+  if the ratio's lower bound > 1; drop if the upper bound < 1; otherwise keep as an opt-in kind (n = 110 is not a band
+  family, so a null here does not speak to band n).  Prediction: open (ratio 0.8-1.5).
+* **D241 (dev)**: looser held box is worse: 0 / 96 below the seed, best +7.9e-3; many runs end at +1.19e-2 = the 16 grid.
+  At 241 the dynamics fall to the grid rather than merge the bands.  241 stays open (Ostashev's "soft" may not be
+  corner rounding; his batch size unknown).
+* **MB multi-band hunt, pre-registered**: the store-best packing of each n in 100-324 whose tilted squares form >= 2
+  bands (`pk.bands --scan`; 18 n: 126 132 153 171 175 182 198 204 206 232 259 264 272 273 290 291 292 303; ids in
+  `runs/harden/mb_ids.json`), harden.py 3 rounds, keep 3, r0 {0.1, 0.2} x noise {0.004, 0.008}, 6 seeds (~170 runs per
+  n, ~5 CPU-h).  Target frontier_now(n).  Success: a certified packing below the live frontier (candidate.py).
+  Prediction: 1 of 18 (Ostashev: no effect on two identical pieces 175 / 204 / 303; the merge worked 1 / 2 in T1).
+* **T1c result: miss** (prediction 15 %): stopped in round 3 (load 24; rounds 1-2 added nothing).  The chain sits at
+  14.9936138080 (+5.5e-5 vs the frontier) from round 0 on: a fixpoint of the operator.  The record (#575 refined,
+  14.9935589) is a different minimum in the same V family; re-hardening does not hop between neighbouring V minima.
+* **Fresh pass f1014b** (#586 / #593 packings, 45 new; first try f1014 stopped for T1): 0 hits at n <= 324; 3
+  certified hits above (candidate.py: both checkers, cert True): **365 19.6213203436** (store best 19.7071068;
+  composition frontier 199 + 26), **370 19.7677307463** (19.8086632; Couzo 175 crop + rectsearch 38-piece), **460
+  21.9599696830** (21.9838629; SQUISH #481 crop + Couzo #586 crop).  Composer target was frontier_now (L-step closed,
+  envelope).  Not posted: check the beyond-horizon lists (Couzo, Mishapolk, Fang, register T-152) first; ask Evan.
+* **FH (background)**: harden 1 round on the new public packings n <= 324 (r0 {0.1, 0.2}, noise 0.004, 4 seeds); success = below frontier_now.
+* **HR result: open, leaning worse** (8.0 CPU-h): control 47 entries / 3.99 CPU-h (11.8 per CPU-h, matching G1's 11.1),
+  harden 31 / 4.02 (7.7); ratio **0.66 [0.42, 1.03]**.  1 of 31 entries came from a harden proposal.  Rule: keep
+  `harden` opt-in (off by default).  At 110 (not a band family) harden proposals cost CPU without adding entries.
+* **MB result: 0 / 18** (3 rounds, ~5 CPU-h; prediction 1): 13 n come straight back to their seed (+3e-12); closest
+  non-seed outputs 206 +1.4e-11 (a re-found copy), 303 +7.2e-5, 132 +2.5e-4, 273 +7.5e-4.  Re-hardening the
+  frontier's multi-band packings gives nothing at these settings.
+* **S1 stiffness variant, pre-registered (dev-sized)**: `harden --stiff0 k0` = rigid or rounded shapes with the pair
+  penalty scaled by k0 during pre, ramped k0^(1-u) -> 1 while the box is held (soft = finite-stiffness overlap, my
+  second reading of Ostashev's "every square soft").  241 (347) and 211 (94): r0 {0, 0.1} x stiff0 {0.01, 0.1}, noise
+  0.004, hold 30000, 16 seeds (128 runs).  Question: does 241 merge (<= 15.9876)?  Prediction 10 %.
+* **S1 result: miss** (prediction 10 %): 241 best 15.9879770 (one run, -1.6e-4 vs seed, r0 0.1 stiff0 0.1), not <= 15.9876;
+  most runs again at the 16 grid.  211 worse than rounding alone (best +3e-4 vs seed).  Stiffness ramps are not the
+  missing piece for 241.  Harden as built: a band-merge finisher that works at 211, nothing else so far.

@@ -132,6 +132,7 @@ struct St {
     xref: Vec<f64>, // positions at the last neighbour rebuild
     rng: Rng,
     steps: u64,
+    kp: f64, // pair penalty stiffness (1 = Nakajima; < 1 = soft overlaps, ramped up while the box is held)
 }
 
 const SKIN: f64 = 0.3;
@@ -209,8 +210,8 @@ impl St {
             let o = 2.0 * r - sd;
             if o <= 0.0 { continue; }
             maxo = maxo.max(o);
-            e += o * o;
-            let c = -2.0 * o;
+            e += self.kp * o * o;
+            let c = -2.0 * self.kp * o;
             self.g[3 * i] += c * gg[0]; self.g[3 * i + 1] += c * gg[1]; self.g[3 * i + 2] += c * gg[2];
             self.g[3 * j] += c * gg[3]; self.g[3 * j + 1] += c * gg[4]; self.g[3 * j + 2] += c * gg[5];
         }
@@ -289,7 +290,7 @@ fn legalize(st: &St) -> (f64, Vec<f64>, f64) {
     let c = st.l / 2.0;
     // neighbour list for rigid squares at the largest scale we try
     let mut tmp = St { n, x: st.x.clone(), v: vec![0.0; 3 * n], g: vec![0.0; 3 * n], l: st.l, vl: 0.0, nb: vec![],
-        xref: vec![], rng: Rng::new(1), steps: 0 };
+        xref: vec![], rng: Rng::new(1), steps: 0, kp: 1.0 };
     tmp.rebuild();
     let nb = tmp.nb.clone();
     let mut hi = 1.0;
@@ -359,7 +360,7 @@ fn sarg(a: &[String], k: &str) -> Option<String> { a.iter().position(|x| x == k)
 
 fn new_state(n: usize, x: Vec<f64>, l: f64, seed: u64) -> St {
     let mut st = St { n, x, v: vec![0.0; 3 * n], g: vec![0.0; 3 * n], l, vl: 0.0, nb: vec![], xref: vec![],
-        rng: Rng::new(seed), steps: 0 };
+        rng: Rng::new(seed), steps: 0, kp: 1.0 };
     st.rebuild();
     st
 }
@@ -429,18 +430,22 @@ fn reharden(a: &[String]) {
     let mu: f64 = arg(a, "--mu", 0.02);
     let lr: f64 = arg(a, "--lr", 0.04);
     let p: f64 = arg(a, "--p", 1.0); // r(u) = r0 (1 - u)^p during hold
+    let k0: f64 = arg(a, "--stiff0", 1.0); // pair stiffness k0 during pre, ramped k0^(1-u) -> 1 during hold
     let (n, s, x) = read_cfg(&inp);
     let mut st = new_state(n, x, s * hold_f, seed);
     // centre the packing in the held box
     let d = (s * hold_f - s) / 2.0;
     for i in 0..n { st.x[3 * i] += d; st.x[3 * i + 1] += d; }
     st.rebuild();
+    st.kp = k0;
     for _ in 0..pre { st.step(r0, 0.0, noise0, false, lr); }
     for k in 0..hold {
         let u = k as f64 / hold as f64;
         let r = r0 * (1.0 - u).powf(p);
+        st.kp = k0.powf(1.0 - u);
         st.step(r, 0.0, noise0 * (1.0 - u), false, lr);
     }
+    st.kp = 1.0;
     let mut maxo = 0.0;
     for k in 0..release {
         let u = k as f64 / release as f64;
