@@ -65,6 +65,15 @@ First deliverable: a table of exact forms of S + a handful of Lean local-optimal
 - [ ] Techniques from jlevy/Kleddamag/Guzhou (`notes/jlevy-s17-techniques.md` §2): rule atoms as LP columns, near-tight cells as exact LP rows gmpy2 in exact checkers.  s(17) exact: their PR #307 is far ahead and wand125 built its independent check (jlevy PR #410): not ours to do.
 - [ ] s(17) exact via the s(11) method: on hold (CPU). `tasks/s17-core-isolation/`
 
+## Packings: 10-14 direction (Evan)
+- **No compute above n = 324** unless a test has an extremely specific reason; the fertile ground is below 324.
+  (Posted 10-14: jlevy#596, s(365) / s(370) / s(460) from the fresh pass; last n > 324 claim.)
+- **Constructors, diverse** (Evan 10-14): families = two-bulb (110-style), strip (Göbel), distorted strip / diagonal
+  rectangles, Mondrian / machete / lopsided bulb.  Where a Mondrian is the record it is a not-yet-relaxed variant: the
+  trick is relaxing after construction (not found yet).  Out-of-place cells: `familymap.py` (PACKER "Family map").
+- Soft-to-rigid engine `harden` (PACKER "Soft-to-rigid engine (10-14)"): band merge at 211 only; opt-in explorer kind.
+- [ ] Time-lapse records video (agent launched 10-14; jlevy colours, regularised frames): `site/timelapse/` (see its README).
+
 ## Packings (active, 10-09)
 **10-13 handoff: read `search/packer/HANDOFF-2026-10-13.md` first** (records #584; measured negatives; benchmarks
 `bench110.py race` + `pk/benchkit.py`; claims C25-C36).
