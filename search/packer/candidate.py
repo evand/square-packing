@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
-"""Record candidate -> registration packet (10-12; written after s(154), jlevy/squares#552, was assembled by hand).
+"""Record candidate -> registration packet (10-12; written after s(154), jlevy/squares#552, was assembled by hand;
+10-14: descent, prior record and distinctness built in after s(146), jlevy/squares#606, was assembled by hand).
 
-  candidate.py FILE --name NAME [--vs FILE ...] [--chain RUNDIR] [--no-regularize] [--stage] [--import --ref TEXT]
+  candidate.py FILE --name NAME [--vs FILE ...] [--chain RUNDIR] [--no-regularize] [--no-descend] [--no-prior] [--stage]
+               [--import --ref TEXT]
   candidate.py --live N [S]            just the live check (read-only)
 
 Steps (work dir runs/candidates/NAME/, summary.json + a facts block for the issue draft):
-  1. exactsolve (../exact/env.sh: the pinned batch environment) -> KKT point, rational certificate
+  1. exactsolve (../exact/env.sh: the pinned batch environment) -> KKT point, rational certificate.  If it says "not
+     jammed" (a first-order descent exists once corner-corner touches may slip; 2 of 9 TT2 successes, one of them the
+     s(146) record), ../exact/descend.py (MILP kick + slp2) and exactsolve again; the original input is kept as
+     input.orig.txt, summary['descent'] has both sides.  --no-descend: fail instead
   2. both exact checkers (verify_cert.py separating axes, verify_cert2.py polygons) on the certificate: both must say VALID
   3. live check, read-only (nothing is written to the store): jlevy/squares main (known-best witness, case page),
      issues mentioning n (decimals within 0.05 of S on lines naming n), Ellsworth's catalogue, the store's frontier.
@@ -16,8 +21,13 @@ Steps (work dir runs/candidates/NAME/, summary.json + a facts block for the issu
   7. regularized view (search/regularize, coincide style, conservative policy) at the same S*, both checkers on its
      certificate.  The input goes through a private REFRESH dir in the work dir, so runs/regularize/exact (the
      shared refresh inputs) is untouched
-  8. --stage: copy to candidates/NAME{.cert,.exact.txt,.input.txt,.json} (+ NAME_regularized.{cert,json}) for a
-     commit to pin.  --import: add to the store (source candidate:NAME, finder ours, status certified, --ref e.g. "jlevy/squares#552")
+  8. prior record (--no-prior skips): the best public packing at n in the store by someone else
+     (pk.distinct.prior_packing), through the same steps 1, 2, 5, 7 in prior/; then pk.distinct.compare on the two
+     regularized views -> vs_prior.json (sides, optimality, contacts, tilt angles of load-bearing squares, matched
+     square-by-square diff, verdict 'distinct minimum' / 'same minimum') and vs_prior.md (the issue's comparison table)
+  9. --stage: copy to candidates/NAME{.cert,.exact.txt,.input.txt,.json} (+ NAME_regularized.{cert,json},
+     NAME.predescent.txt, NAME_vs_prior.json, NAME_prior.json) for a commit to pin.  --import: add to the store
+     (source candidate:NAME, finder ours, status certified, --ref e.g. "jlevy/squares#552")
 Nothing is posted: the issue text is drafted in outreach/ and posted per Evan's OK (CLAUDE.md).
 """
 import argparse, json, os, re, shutil, subprocess, sys, urllib.request
@@ -155,6 +165,113 @@ def regularize(work, n):
                 checkers=checkers(os.path.join(work, 'regularized.cert')))
 
 
+# ------------------------------------------------------------------ exactsolve (+ corner-slip descent)
+
+def exactsolve(work):
+    """exactsolve on work/cand.txt -> (cand.json as a dict or None, the subprocess result)"""
+    r = sh([os.path.join(EX, 'env.sh'), 'python3', os.path.join(EX, 'exactsolve.py'), os.path.join(work, 'cand.txt'),
+            '--out', work, '-q'], cwd=EX, timeout=7200)
+    f = os.path.join(work, 'cand.json')
+    return (json.load(open(f)) if os.path.exists(f) else None), r
+
+
+def not_jammed(J):
+    return bool(J) and not J.get('cert_valid') and (J.get('status') == 'not jammed' or
+                                                    (J.get('vv_milp_dS') or 0) < -J.get('jam_threshold', 1e-7))
+
+
+def solve(work, src, rounds=30, descend=True, log=print):
+    """src -> work/cand.txt -> exactsolve; if exactsolve says 'not jammed' (a first-order descent once corner-corner
+    touches may slip), exact/descend.py (MILP kick + slp2, as for s(146), jlevy#606) and exactsolve again.  The original
+    input is kept as work/input.orig.txt.  Returns (J, info) with info['descent'] when it ran; J None = no certificate."""
+    from pk.packing import read
+    os.makedirs(work, exist_ok=True)
+    for f in ('cand.json', 'cand.cert', 'cand.exact.txt', 'cand.contacts.json', 'input.orig.txt', 'descended.txt',
+              'descend.log', 'regularized.cert', 'regularized.json', 'vs_prior.json', 'vs_prior.md'):
+        if os.path.exists(os.path.join(work, f)):                 # a rerun must not stage an earlier run's files
+            os.remove(os.path.join(work, f))
+    if os.path.isdir(os.path.join(work, 'prior')):
+        shutil.rmtree(os.path.join(work, 'prior'))
+    dst = os.path.join(work, 'cand.txt')
+    if not (os.path.exists(dst) and os.path.samefile(src, dst)):
+        shutil.copy(src, dst)
+    J, r = exactsolve(work)
+    info = {}
+    if descend and not_jammed(J):
+        shutil.copy(src, os.path.join(work, 'input.orig.txt'))
+        d0 = dict(s_before=float(J['S_input']), vv_milp_dS=J.get('vv_milp_dS'), why=J.get('why'))
+        log(f'    not jammed (corner-corner MILP dS* = {J.get("vv_milp_dS"):.3e}): exact/descend.py, then exactsolve again',
+            flush=True)
+        out = os.path.join(work, 'descended.txt')
+        q = sh([os.path.join(EX, 'env.sh'), 'python3', os.path.join(EX, 'descend.py'), os.path.join(work, 'input.orig.txt'),
+                out, '--rounds', str(rounds)], cwd=EX, timeout=7200)
+        open(os.path.join(work, 'descend.log'), 'w').write(q.stdout + q.stderr)
+        if q.returncode or not os.path.exists(out):
+            info['descent'] = dict(d0, ok=False, error=(q.stderr or q.stdout)[-300:])
+            return None, info
+        for f in ('cand.json', 'cand.cert', 'cand.exact.txt', 'cand.contacts.json'):
+            if os.path.exists(os.path.join(work, f)):
+                os.remove(os.path.join(work, f))
+        shutil.copy(out, os.path.join(work, 'cand.txt'))
+        J, r = exactsolve(work)
+        d0.update(ok=True, s_after=read(out).s, rounds=sum(l.startswith('round ') for l in q.stdout.splitlines()))
+        info['descent'] = d0
+        log(f'    descended {d0["s_before"]:.13f} -> {d0["s_after"]:.13f}', flush=True)
+    if not J or not J.get('cert_valid'):
+        info['exactsolve_tail'] = (r.stdout[-2000:], r.stderr[-2000:])
+        info['why'] = (J or {}).get('why') or (J or {}).get('status')
+        return None, info
+    return J, info
+
+
+def optimality(J):
+    so = J.get('second_order', {})
+    return dict(kkt=J.get('newton_converged'), min_lambda=J.get('lambda_A_maxmin'), status=so.get('status'),
+                flat_motions=so.get('n_zero'), flat_realised=so.get('zero_modes_realised'),
+                flat_residual=(so.get('zero_mode_probe') or {}).get('worst_residual'),
+                negative_eigs=so.get('n_neg'), corner_corner=J.get('n_vv_exact', J.get('n_vv')),
+                vv_milp_dS=J.get('vv_milp_dS'), rattlers=len(J.get('free_squares') or []),
+                min_pair=J.get('cert_min_pair'), min_wall=J.get('cert_min_wall'))
+
+
+def prior_record(work, n, do_reg=True, log=print):
+    """The record this candidate beats (pk.distinct.prior_packing: the best public store packing by someone else), through
+    the same solve / checkers / regularize path in work/prior/; then pk.distinct.compare -> work/vs_prior.{json,md}"""
+    from pk import distinct as D
+    got = D.prior_packing(n)
+    if not got:
+        log('    no public packing at n in the store'); return dict(ok=False, error='no public packing')
+    pid, Q, src = got
+    pw = os.path.join(work, 'prior'); os.makedirs(pw, exist_ok=True)
+    D.write_float(Q, os.path.join(pw, 'input.txt'))
+    log(f'    prior: store {pid}, s = {Q.s:.13f}; ' + '; '.join(src[:4]) + (' ...' if len(src) > 4 else ''), flush=True)
+    J, info = solve(pw, os.path.join(pw, 'input.txt'), log=log)
+    info.pop('exactsolve_tail', None)
+    res = dict(store_id=pid, s=Q.s, sources=src, **info)
+    if not J:
+        log(f'    prior: no certificate ({info.get("why")})'); res['ok'] = False
+        json.dump(res, open(os.path.join(pw, 'summary.json'), 'w'), indent=1, default=str)
+        return res
+    res.update(ok=True, S_exact=J['S_exact'], S_cert=J['S_cert_decimal'], checkers=checkers(os.path.join(pw, 'cand.cert')),
+               optimality=optimality(J))
+    log(f'    prior S* = {J["S_exact"][:30]}; ' + ', '.join(f'{k} {"VALID" if v["ok"] else "FAILED"}'
+                                                       for k, v in res['checkers'].items()), flush=True)
+    if do_reg:
+        res['regularized'] = R = regularize(pw, n)
+        if not R.get('ok'):
+            log(f'    prior: regularize failed ({R.get("error", "")[-160:]})')
+        elif os.path.exists(os.path.join(work, 'regularized.json')):
+            C = D.compare(work, pw)
+            json.dump(C, open(os.path.join(work, 'vs_prior.json'), 'w'), indent=1, default=str)
+            open(os.path.join(work, 'vs_prior.md'), 'w').write(D.table_md(C, 'this packing', f'prior (store {pid})'))
+            for l in D.summary_lines(C):
+                log('    ' + l)
+            res['verdict'] = C['verdict']
+            res['difference'] = {k: v for k, v in C['difference'].items() if k != 'moved_squares'}
+    json.dump(res, open(os.path.join(pw, 'summary.json'), 'w'), indent=1, default=str)
+    return res
+
+
 # ------------------------------------------------------------------ main
 
 def main():
@@ -162,6 +279,8 @@ def main():
     ap.add_argument('file', nargs='?'); ap.add_argument('--name')
     ap.add_argument('--vs', nargs='*', default=[]); ap.add_argument('--chain')
     ap.add_argument('--no-regularize', action='store_true'); ap.add_argument('--stage', action='store_true')
+    ap.add_argument('--no-descend', action='store_true', help='no exact/descend.py when exactsolve says not jammed')
+    ap.add_argument('--no-prior', action='store_true', help='skip certifying / comparing the record this candidate beats')
     ap.add_argument('--import', dest='imp', action='store_true'); ap.add_argument('--ref')
     ap.add_argument('--live', nargs='+', metavar=('N', 'S'))
     a = ap.parse_args()
@@ -179,17 +298,19 @@ def main():
     work = os.path.join(HERE, 'runs', 'candidates', a.name); os.makedirs(work, exist_ok=True)
     from pk import manifest
     man = manifest.start(work, 'candidate', args=dict(vars(a), n=n), procs=1)     # measured CPU for pk.effort
-    shutil.copy(a.file, os.path.join(work, 'cand.txt'))
     out = dict(name=a.name, n=n, input=os.path.abspath(a.file), s_input=P.s)
 
     print(f'[1] exactsolve n = {n}, s = {P.s:.12f}', flush=True)
-    r = sh([os.path.join(EX, 'env.sh'), 'python3', os.path.join(EX, 'exactsolve.py'), os.path.join(work, 'cand.txt'),
-            '--out', work, '-q'], cwd=EX, timeout=7200)
-    J = json.load(open(os.path.join(work, 'cand.json'))) if os.path.exists(os.path.join(work, 'cand.json')) else None
-    if not J or not J.get('cert_valid'):
-        print(r.stdout[-2000:], r.stderr[-2000:]); sys.exit('exactsolve: no valid certificate')
+    J, info = solve(work, a.file, descend=not a.no_descend)
+    out.update({k: v for k, v in info.items() if k != 'exactsolve_tail'})
+    if not J:
+        if 'exactsolve_tail' in info:
+            print(*info['exactsolve_tail'])
+        json.dump(out, open(os.path.join(work, 'summary.json'), 'w'), indent=1, default=str)
+        sys.exit(f'exactsolve: no valid certificate ({info.get("why")})')
     out['S_exact'], out['S_cert'] = J['S_exact'], J['S_cert_decimal']
     S = float(J['S_cert_decimal'])
+    Pc = read(os.path.join(work, 'cand.txt'))                 # the certified f64 input (after the descent, if any)
     print(f'    S* = {J["S_exact"][:30]}   S\' = {J["S_cert_decimal"]}', flush=True)
 
     print('[2] exact checkers', flush=True)
@@ -206,19 +327,13 @@ def main():
     st = Store(); out['distance'] = {}
     b = st.best(n)
     if b:
-        out['distance'][f'store best {b.s:.12f}'] = match_distance(P, b)
+        out['distance'][f'store best {b.s:.12f}'] = match_distance(Pc, b)
     for f in a.vs:
-        q = read(f); out['distance'][f'{os.path.basename(f)} {q.s:.12f}'] = match_distance(P, q)
+        q = read(f); out['distance'][f'{os.path.basename(f)} {q.s:.12f}'] = match_distance(Pc, q)
     for k, v in out['distance'].items():
         print(f'    {v:.3f}  vs {k}')
 
-    so = J.get('second_order', {})
-    out['optimality'] = dict(kkt=J.get('newton_converged'), min_lambda=J.get('lambda_A_maxmin'), status=so.get('status'),
-                             flat_motions=so.get('n_zero'), flat_realised=so.get('zero_modes_realised'),
-                             flat_residual=(so.get('zero_mode_probe') or {}).get('worst_residual'),
-                             negative_eigs=so.get('n_neg'), corner_corner=J.get('n_vv_exact', J.get('n_vv')),
-                             vv_milp_dS=J.get('vv_milp_dS'), rattlers=len(J.get('free_squares') or []),
-                             min_pair=J.get('cert_min_pair'), min_wall=J.get('cert_min_wall'))
+    out['optimality'] = optimality(J)
     print('[5] local optimality: ' + ', '.join(f'{k} {v}' for k, v in out['optimality'].items()))
 
     if a.chain:
@@ -235,13 +350,19 @@ def main():
         for k, v in R.get('checkers', {}).items():
             print(f'    {k}: {"VALID" if v["ok"] else "FAILED"}')
 
+    if not a.no_prior:
+        print('[8] prior record: certified and regularized the same way; is ours a different minimum?', flush=True)
+        out['prior'] = prior_record(work, n, do_reg=not a.no_regularize)
+
     if a.stage:
         dst = os.path.join(HERE, 'candidates', a.name)
         for src, ext in (('cand.cert', '.cert'), ('cand.exact.txt', '.exact.txt'), ('cand.txt', '.input.txt'), ('cand.json', '.json'),
-                         ('regularized.cert', '_regularized.cert'), ('regularized.json', '_regularized.json')):
+                         ('regularized.cert', '_regularized.cert'), ('regularized.json', '_regularized.json'),
+                         ('input.orig.txt', '.predescent.txt'), ('vs_prior.json', '_vs_prior.json'),
+                         ('prior/summary.json', '_prior.json')):
             if os.path.exists(os.path.join(work, src)):
                 shutil.copy(os.path.join(work, src), dst + ext)
-        print(f'[8] staged candidates/{a.name}.*')
+        print(f'[9] staged candidates/{a.name}.*')
     json.dump(out, open(os.path.join(work, 'summary.json'), 'w'), indent=1, default=str)
     man.finish(summary=dict(n=n, S_cert=out.get('S_cert'), beaten=bool(out['live']['beaten'])))
     print(f'summary: {os.path.relpath(os.path.join(work, "summary.json"), HERE)}')
@@ -250,7 +371,7 @@ def main():
             sys.exit('not importing as a record candidate: beaten / tied (see the live check)')
         r = sh([sys.executable, os.path.join(HERE, 'pk.py'), 'import', os.path.join(work, 'cand.exact.txt'), '--source', f'candidate:{a.name}',
                 '--finder', 'ours', '--status', 'certified', '--kind', 'record-candidate'] + (['--ref', a.ref] if a.ref else []), cwd=HERE)
-        print('[8] store import: ' + (r.stdout.strip() or r.stderr.strip())[-300:])
+        print('[10] store import: ' + (r.stdout.strip() or r.stderr.strip())[-300:])
 
 
 if __name__ == '__main__':
