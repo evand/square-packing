@@ -12,6 +12,7 @@ Metropolis at temperature T (side units); reset to the best state after `--patie
 import argparse, json, math, os, random, subprocess, tempfile, time
 from jobpool import run_jobs
 import mcmin
+from pk.engine import QOpt, fq_quench
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FQ = os.path.join(HERE, 'target/release/fq')
@@ -29,14 +30,17 @@ def squish_targets():
     return out
 
 
-def quench(s, sq, tmp, extra=()):
-    a, b = os.path.join(tmp, 'a.txt'), os.path.join(tmp, 'b.txt')
-    mcmin.write_deg(a, s, sq)
-    r = subprocess.run([FQ, 'quench', '--in', a, '--out', b, *EXTRA, *extra], capture_output=True, text=True, timeout=900)
-    d = json.loads(r.stdout)
+def quench(s, sq, tmp, extra=(), opt=None):
+    """fq quench of (s, sq) via pk.engine.fq_quench (subprocess; tmp/a.txt -> tmp/b.txt).  Options: `opt` (a QOpt), or
+    else the legacy flag lists EXTRA + extra (parsed by QOpt.from_args, last wins as in fq).  -> (s, sq, stats) or None
+    if infeasible."""
+    if opt is None:
+        opt = QOpt.from_args([*EXTRA, *extra])
+    r = fq_quench((s, sq), opt, tmp=tmp, binary=FQ, timeout=900, mod90=True)
+    d = r.stats(whole=True)
     if not (d['min_gap'] >= 0 and d['min_wall'] >= 0):
         return None
-    s2, sq2 = mcmin.load_deg(b)
+    s2, sq2 = mcmin.load_deg(r.out)
     return s2, sq2, d
 
 

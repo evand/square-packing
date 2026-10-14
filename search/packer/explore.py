@@ -18,6 +18,7 @@ import argparse, collections, json, math, os, random, subprocess, tempfile, time
 from concurrent.futures import ProcessPoolExecutor, FIRST_COMPLETED, wait
 from pk import identity as ID           # SAME_SIDE: one f64 same-side tolerance (10-11)
 import mcmin, hop
+from pk.engine import QOpt, SCREEN, POLISH   # the explorer's fq stages (one flag builder, 10-14)
 from pk import fingerprint as FP
 from pk.bandit import KindBandit, CellBandit   # moved to pk/bandit.py (10-13)
 
@@ -277,12 +278,13 @@ def kick_retry(s, sq, rng, tmp, k, tries, sigma=1e-4, pextra=(), alm=True):
     to a known minimum).  Up to `tries` kicked re-quenches from the current best; a strictly lower (by SAME_SIDE),
     line-free result replaces it.  Returns (s, sq, info)."""
     from layout import full_lines
-    hop.EXTRA[:] = ['--loosen', '1.0']
     info = dict(tries=0, drops=0, drop=0.0)
     s0 = s
     for _ in range(tries):
-        r = hop.quench(s, sq, tmp, extra=('--kick', f'{sigma:g}', '--seed', str(rng.randrange(1 << 30)))
-                       + (() if alm else ('--no-alm',)) + tuple(pextra))   # no-alm: kick, uniform repair, SLP polish only
+        # sigma goes through '%g' (6 significant digits), as the flag string always did; no-alm: kick, uniform repair,
+        # SLP polish only; pextra (fq flags) on top
+        opt = QOpt(loosen=1.0, kick=float(f'{sigma:g}'), seed=rng.randrange(1 << 30), no_alm=not alm).with_args(pextra)
+        r = hop.quench(s, sq, tmp, opt=opt)
         info['tries'] += 1
         info.setdefault('raw', []).append(r[0] if r else None)
         if r is None or r[0] >= s - ID.SAME_SIDE:
@@ -303,8 +305,7 @@ def _screen_polish(s, prop, kind, desc, rng, k, known_sides, same, smax, pol_abo
     from layout import full_lines
     loosen = rng.choice(('1.0', '1.02', '1.05'))
     t0 = time.time()
-    hop.EXTRA[:] = ['--loosen', loosen]
-    r = hop.quench(s, prop, tmp, extra=('--pit', '8', '--flip-top', '0'))
+    r = hop.quench(s, prop, tmp, opt=SCREEN.but(loosen=float(loosen)))
     out = dict(kind=kind, desc=desc, loosen=loosen)
     if mate is not None:
         out['mate'] = mate                   # archive path of the mate (lineage analysis: own lineage or borrowed?)
@@ -321,8 +322,7 @@ def _screen_polish(s, prop, kind, desc, rng, k, known_sides, same, smax, pol_abo
         return dict(out, status='return', s=min(near, key=lambda x: abs(x - s1)), s_screen=s1, sec=time.time() - t0)
     if s1 > pol_above:                       # far from the best: keep the screened state, no full polish
         return dict(out, status='new?', s=s1, sq=sq1, lines=False, s_screen=s1, unpolished=True, sec=time.time() - t0)
-    hop.EXTRA[:] = ['--loosen', '1.0']
-    r2 = hop.quench(s1, sq1, tmp, extra=('--no-alm',) + pextra)
+    r2 = hop.quench(s1, sq1, tmp, opt=POLISH.with_args(pextra))
     if r2 is None:
         return dict(out, status='fail', sec=time.time() - t0)
     s2, sq2, d2 = r2
@@ -552,10 +552,9 @@ if __name__ == '__main__':
         t0 -= toff
         a.starts = []
         print(f'resumed {len(ar.E)} basins at t = {toff:.0f}s', flush=True)
-    hop.EXTRA[:] = ['--loosen', '1.0']
     for p in a.starts:                       # starts are polished in place (no ALM, no loosen: keep their basins)
         s, sq = mcmin.load_deg(p)
-        r = hop.quench(s, sq, tmp, extra=('--no-alm',))
+        r = hop.quench(s, sq, tmp, opt=POLISH)
         if r:
             e, _ = ar.add(r[0], r[1], -1, 'start:' + os.path.basename(p), 0, fp=r[2].get('fp'))
             e['src'] = p
@@ -686,10 +685,9 @@ if __name__ == '__main__':
                 print(f'{time.time() - t0:7.0f}s basins {len(ar.E)} sub-k {len(sub)} (new vs known {sum(not e["known"] for e in sub)}) '
                       f'best {min(e["s"] for e in ar.E):.10f} cells {len({tuple(e["desc"]) for e in ar.E})} | {dict(stats)}', flush=True)
     if a.final_polish:                        # census step: finish the best entries at full precision
-        hop.EXTRA[:] = ['--loosen', '1.0']
         for e in sorted((e for e in ar.E if e['s'] < ar.smax), key=lambda e: e['s'])[:a.final_polish]:
             s0, sq0 = mcmin.load_deg(e['path'])
-            r = hop.quench(s0, sq0, tmp, extra=('--no-alm',))
+            r = hop.quench(s0, sq0, tmp, opt=POLISH)
             if r and r[0] < e['s'] - 1e-12:
                 e2, isnew = ar.add(r[0], r[1], e['i'], 'refine', time.time() - t0)
                 print(f'refine b{e["i"]} {e["s"]:.12f} -> {r[0]:.12f}', flush=True)

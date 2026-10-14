@@ -204,8 +204,8 @@ def polish(n, S, sq, out, tag=''):
     raw = os.path.join(out, f'raw-{n}{tag}.txt'); outp = os.path.join(out, f'n-{n}{tag}.txt')
     with open(raw, 'w') as g:
         g.write(f'{n} {float(S)!r}\n' + ''.join(f'{float(x)!r} {float(y)!r} {float(t)!r}\n' for x, y, t in X))
-    q = subprocess.run([FQ, 'quench', '--in', raw, '--out', outp, '--loosen', '1.0', '--no-alm',
-                        '--flip-top', '64', '--pit', '600'], capture_output=True, text=True)
+    from pk.engine import fq_quench, POLISH_DEEP
+    q = fq_quench(raw, POLISH_DEEP, out=outp, binary=FQ)
     try:
         return dict(s_pol=json.loads(q.stdout.strip().splitlines()[-1])['s'], out=outp)
     except Exception:

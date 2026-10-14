@@ -36,7 +36,8 @@ study at 110 (`analysis/similarity110.md`), A3 ingestion watcher (`pk/watch.py`)
 Next: parent sampler `pk/parents.py` (pool query n, n+-k, cluster, gap band, as-of; policies; uniform cluster then
 uniform within = default), run config (test / record modes; grid-rule knob), chain imports its rounds, cfp into store
 on import; parent-distance model after A2 (fit from logs, then a randomized gap-band slice); near-miss queue + finisher;
-one fq call path through QOpt (bit-exact); shared neighbour transforms (bit-exact if RNG kept); piece sources (free
+one fq call path through QOpt (bit-exact; done 10-14, `refactor-check.md`); shared neighbour transforms (bit-exact if
+RNG kept; done 10-14 for chain seeds + harden); piece sources (free
 W x H, crop anywhere, n > 324 / catalogue revisions, rectangle records).
 
 ## TT2 (next major test; Evan 10-14: "our best guess at the strongest collection of settings")
