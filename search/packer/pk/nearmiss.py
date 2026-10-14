@@ -275,8 +275,8 @@ def bar(item, fnow):
 def stage_polish(inp, wd, n, target, procs):
     """fq long polish -> [(s, path)] (feasible outputs only), number of proposals"""
     out = os.path.join(wd, 'polish.txt')
-    q = subprocess.run([FQ, 'quench', '--in', inp, '--out', out, '--seed', '1'] + RECIPES['polish'],
-                       capture_output=True, text=True, timeout=7200)
+    from .engine import QOpt, fq_quench               # the one fq call path (B2)
+    q = fq_quench(inp, QOpt.from_args(RECIPES['polish'] + ['--seed', '1']), out=out, timeout=7200)
     try:
         d = json.loads(q.stdout.strip().splitlines()[-1])
     except Exception:
