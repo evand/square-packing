@@ -2582,3 +2582,43 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
   125, 149-150, 172-174, 200-203, 229-233, 260-265, 294-298) while the V / band region grows with k.  Neighbour bump
   s(n) - (s(n-1) + s(n+1))/2: positive = weak vs both neighbours.  45-deg cells with positive bumps: 89 +0.009, 125,
   150 +0.013, 201 +0.015, 203, 229 +0.013, 260 +0.022, 295 +0.022 (147 +0.037 is the plateau).  109 is a dip (-0.001).
+* **FH result**: harden 1 round over 109 new public packings n <= 324: 0 below frontier_now.
+* **Policy (Evan 10-14)**: no compute above n = 324 without an extremely specific test reason.  Posted jlevy#596 (s(365),
+  s(370), s(460), fresh-pass compositions).  Time-lapse video: background agent, <= 3 procs.
+* **M0 Mondrian relax positive controls, pre-registered** (Evan: where a Mondrian is the record it is a not-yet-relaxed
+  variant; the trick is relaxing after construction).  relax1 (10-12): 74 / 95 compositions did not move under fq soft
+  ops ("jammed against grid-like upright blocks"); Ostashev's 304 relaxed "as its aligned blocks shifted".  Inputs:
+  (a) Ostashev's own 176 composition (store 291603, #562, 13.808663; his re-hardening -> 13.7958723), (b) our 5 composer
+  304 layouts (`runs/relax/comp304.jsonl`, 17.9474-17.9593; fq soft best 17.94156).  Grid r0 {0.05, 0.1, 0.2, 0.3} x
+  noise {0.002, 0.004, 0.008}; 6 seeds per input (launched so; I first wrote 16 for 176); 432 runs.  Success: 176 < 13.807637
+  (pre-#575 frontier, Couzo) [strong: <= 13.7959]; 304 < 17.929566 (pre-#575 frontier).  Secondary: 304 drop > 1e-2
+  (beats fq soft's 9.9e-3).  Prediction: 176 success 40 % (it is T1's kind of move: two half-bands through a junction),
+  304 success 10 %, secondary 50 %.
+* **M0 result**: 176 **success (weak)**: best 13.8027534 from Ostashev's seed (< Couzo 13.807637; >> his 13.7958723);
+  many runs end exactly on Couzo's 13.80764 (same seed).  304: miss, best 17.94289 (drop 8.5e-3; fq soft got 9.9e-3);
+  secondary miss.  Prediction (176 40 %, 304 10 %, secondary 50 %): 176 hit weak, 304 miss.
+* **M0b, pre-registered**: 176 rounds from M0's 4 best distinct, 4 rounds, keep 4, r0 {0.1, 0.2, 0.3} x noise {0.002,
+  0.004}, 8 seeds.  Success (strong control): <= 13.7959.  Prediction 25 %.
+* **`--hold-move 1`** (harden reharden): the box is free under pressure mu during pre / hold, i.e. the squares soften and
+  the box shrinks while they are soft, then harden under pressure (Nakajima's morph phase started from a packing).
+  Hypothesis: the held box is why aligned blocks do not shift (relax1: 74 / 95 jammed; M0 304 drop 8.5e-3).
+* **M1, pre-registered**: same inputs as M0 (176 seed + 5 layouts of 304), `--hold-move 1`, r0 {0.1, 0.2, 0.3} x noise
+  {0.002, 0.004} x mu {0.02, 0.005}, 6 seeds (432 runs).  Success as M0 (304 < 17.929566; 176 <= 13.7959 strong).
+  Secondary: 304 drop > 1e-2.  Prediction: 304 success 10 %, secondary 40 %; 176 strong 20 %.
+* **M0b result: strong success** (prediction 25 %): round 0 13.7959023, round 1 **13.795872318439 = Ostashev's #575
+  s(176) exactly** (frontier tie, no gain), then fixpoint.  So harden + rounds rebuilds #575's 176 and 211 moves from
+  their seeds; 241 still not.  Mondrian-type composition -> relaxed V works when the pieces carry half-bands (176);
+  pure upright-block relaxation (304) does not yet.
+* **M1 result: miss** (prediction 304 10 %, secondary 40 %, 176 strong 20 %): soft compression with the box free is
+  worse everywhere (304 best 17.94434, often the 18 grid; 176 best = Couzo's 13.80764).  The held box is not why
+  blocks stay put.  Reading: harden's 304 drop (8.5e-3) is close to Ostashev's (1.0e-2 from 17.9395); our 304
+  layouts start 8e-3 worse than his.  So test harden on compositions already near the frontier.
+* **M2 Mondrian hunt, pre-registered**: relax1's 95 composer near-arms (45 n <= 324, need < 0.015 vs the 10-12
+  frontier; fq soft moved only 21 / 95), harden 2 rounds, keep 2, r0 {0.05, 0.1, 0.2} x noise {0.002, 0.004}, 3
+  seeds (~1,700 + 3,400 runs, ~7 CPU-h).  Target frontier_now(n).  Success: certified below the live frontier.
+  Secondary: inputs that drop > 5e-3 (relax1: 3 / 95 with fq).  Prediction: success 1 of 45 n at most (5-10 %);
+  secondary 20+ inputs.
+* **M2 result: 0 successes** (prediction <= 1 n, 5-10 %; 5,130 runs, 0 failures, ~8 CPU-h): harden moves 85 / 95
+  composer layouts (fq soft: 21 / 95), but only 5 drop > 5e-3 (prediction 20+: miss).  Exact frontier ties at 26, 27,
+  38, 50, 85, 104, 174 (rigid compositions that are the record); closest non-tie 234 +1.1e-4, 106 +3.2e-4, 227
+  +3.6e-4, 53 +3.5e-4.  Reading: the jam is broken (blocks do move) but the moves do not find the relaxed variant.

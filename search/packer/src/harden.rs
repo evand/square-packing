@@ -430,6 +430,7 @@ fn reharden(a: &[String]) {
     let mu: f64 = arg(a, "--mu", 0.02);
     let lr: f64 = arg(a, "--lr", 0.04);
     let p: f64 = arg(a, "--p", 1.0); // r(u) = r0 (1 - u)^p during hold
+    let hold_move: u32 = arg(a, "--hold-move", 0); // 1: box free under pressure mu while soft (Nakajima morph)
     let k0: f64 = arg(a, "--stiff0", 1.0); // pair stiffness k0 during pre, ramped k0^(1-u) -> 1 during hold
     let (n, s, x) = read_cfg(&inp);
     let mut st = new_state(n, x, s * hold_f, seed);
@@ -438,12 +439,13 @@ fn reharden(a: &[String]) {
     for i in 0..n { st.x[3 * i] += d; st.x[3 * i + 1] += d; }
     st.rebuild();
     st.kp = k0;
-    for _ in 0..pre { st.step(r0, 0.0, noise0, false, lr); }
+    let (mu_h, mv) = if hold_move == 1 { (mu, true) } else { (0.0, false) };
+    for _ in 0..pre { st.step(r0, mu_h, noise0, mv, lr); }
     for k in 0..hold {
         let u = k as f64 / hold as f64;
         let r = r0 * (1.0 - u).powf(p);
         st.kp = k0.powf(1.0 - u);
-        st.step(r, 0.0, noise0 * (1.0 - u), false, lr);
+        st.step(r, mu_h, noise0 * (1.0 - u), mv, lr);
     }
     st.kp = 1.0;
     let mut maxo = 0.0;
