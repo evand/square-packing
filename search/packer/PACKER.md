@@ -2279,3 +2279,29 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
   0.60), 0 class shifts; polishes bit-identical (no L-BFGS in polish); the experiment binary in default mode is
   bit-identical to deployed.  ~4 % of explorer CPU at 110.  Misses the 1.3x speed bar; kept as a knob
   (`FQ_FASTDOT=1`), not default.
+* **Q2 race, pre-registered (18:20; Evan "keep going", the race was the pre-registered path for Q2):**
+  `bench110.py race --arms control:rand socas:rand:+FQ_SOC_AS=1 --budget 16 --check 2 --slots 10
+  --out runs/bench110/q2race` (bench110 recipe, entry events below BEST_VISIBLE; arms now take `+KEY=VAL` environment
+  tokens, so fq knobs race without a separate binary).  10 slots, leaving ~6 cores for development.  Expected: ~4 entries
+  / CPU-h control, so ~30 events per arm: resolves ~1.7x.  Prediction: socas 1.2-1.5x (fq ~1.3x faster per proposal at
+  110, plus better-converged polishes), most likely "open".  **Rule: adopt FQ_SOC_AS=1 as the default unless the race
+  resolves "slower"** (the speed gain is measured separately; the race guards against a search-level loss the replay
+  can't see).
+* **Where polish time goes with Q2 (18:15, dev measurements, Q2 on):** perf, 12 C237 polishes: qdldl numeric factor 49 %,
+  triangular solves 16 %, Clarabel IPM other 8 %, per-LP setup (qdldl symbolic, triplet sorts) ~12 %.  LP rows ~2,800
+  (+ 2 x ~1,400 box rows) x ~1,400 columns, ~18-24 IPM iterations; only ~0.1-1 % of rows are provably redundant (jammed:
+  nearly every near row can activate).  Step LPs: ~40 % rejected, mostly the R shrink from r0 = 1e-3 at near-converged
+  inputs.  Flip search (`FQ_FLIPDBG=1` census): C110 200 polishes: flip LPs 33 % of polish LP time, 65 % of them in
+  searches that find nothing (114 of 332 stalls); winning pair ranks spread over 0-7 (16 % at rank >= 4, so a smaller
+  --flip-top would lose real flips).  C237: flips 4 %, SOC-fallback LPs 16 % of LP time.  CPU split per fq stage with
+  Q2: polish 59 % / screen 41 % (C110), 67 / 33 (C237).
+* **Q4 (LP tolerances, dev measurement, negative):** `tol_gap_abs/rel` 1e-7 / 1e-6 (default 1e-8) cut IPM iterations by
+  < 1 per LP and raised SOC fallbacks 2x / 5x (the active set is read from the LP solution).  Knob removed.
+* **Q5 (flip LPs as decisions, dev measurement, negative):** a Clarabel termination callback stopping a flip LP once the
+  primal (found) or dual (none) cost settles "pred > 1e-12 s": 2,761 / 2,761 decisions agree with the full solve, but it
+  saves ~1 of 18 IPM iterations (failing flips sit at the threshold to within the final gap; residual bound 1e-7 or 1e-3
+  makes no difference).  Removed.
+* **Python share with Q2 (cProfile, in-process worker, 3 min each):** Python is 3.6 % (n = 110) / 4.9 % (n = 237) of
+  explorer CPU; process spawning ~0.1 %, so `fq serve` is not worth wiring.  Half to most of the Python is
+  `layout._straight_lines` (O(m^2) loop).  **Vectorised (bit-identical by construction, same float64 ops): 3,000 packings
+  x 3 k, 0 mismatches, 16x faster** (~2-3 % of explorer CPU).  Old loop kept as `_straight_lines_ref`.

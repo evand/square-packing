@@ -510,6 +510,7 @@ fn slp_lp(nv: usize, si: usize, cons: &[Con], r: f64, kappa: f64, hq: &[(usize, 
     }
 }
 
+static FLIP_LPS: AtomicUsize = AtomicUsize::new(0);
 static SOC_STATS: [AtomicUsize; 2] = [AtomicUsize::new(0), AtomicUsize::new(0)]; // [active-set used, fell back]
 
 /// Second-order correction on the step LP's active set (PACKER "Q2").  The step LP (scaled: grad g . w - tau <= -g / R,
@@ -1081,6 +1082,7 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
                     let mut ch = choice.clone();
                     ch[pk] = Some(c);
                     LP_TAG.store(2, Ordering::Relaxed);
+                    FLIP_LPS.fetch_add(1, Ordering::Relaxed);
                     if let Some((pr2, ..)) = try_lp(p, &x, s, &mut ch, rt, &hq) {
                         if pr2 > 1e-12 * s && best.map_or(true, |b| pr2 > b.0) { best = Some((pr2, pk, c)); }
                     }
@@ -1088,6 +1090,10 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
                 }
             }
             if o.verbose { eprintln!("  stall at it {it}: R {r:.1e} pred {pred:.1e}, {} ambiguous pairs, best flip {:?}", amb.len(), best.map(|b| b.0)); }
+            if std::env::var("FQ_FLIPDBG").is_ok() {
+                let rank = best.map_or(-1, |b| amb.iter().position(|q| q.0 == b.1).map_or(-2, |i| i as i64));
+                eprintln!("flipstat it {it} namb {} rank {rank} lps {}", amb.len(), FLIP_LPS.swap(0, Ordering::Relaxed));
+            }
             match best {
                 Some((_, pk, c)) if stalls < 50 => { choice[pk] = Some(c); flips += 1; stalls += 1; r = rt; continue; }
                 _ => break,

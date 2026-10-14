@@ -28,6 +28,7 @@ class Arm:
     name: str
     args: list                                  # extra arguments for the search command
     starts: Callable[[int, str], list]          # (seed, rep_dir) -> start files for one replicate
+    env: dict = dataclasses.field(default_factory=dict)   # extra environment for the search command (e.g. FQ_* knobs)
 
 
 @dataclasses.dataclass
@@ -82,7 +83,7 @@ def race(arms, launch_fn, event_fn, out, slots=16, cap_cpu_s=1800.0, budget_cpu_
         os.makedirs(d, exist_ok=True)
         argv = launch_fn(a, d, seed, a.starts(seed, d))
         p = subprocess.Popen(argv, stdout=open(os.path.join(d, 'log'), 'w'), stderr=subprocess.STDOUT,
-                             start_new_session=True)
+                             start_new_session=True, env={**os.environ, **a.env})
         running.append(Rep(a, k, seed, d, p, time.time()))
 
     last_cpu = {}                                       # replicate pid -> CPU at the last poll (exited groups vanish)

@@ -238,6 +238,24 @@ def full_lines(path, k):
 
 
 def _straight_lines(ax, k):
+    """Distinct sets of >= k axis squares within 0.5 - 1e-9 of a line through some axis square's centre (offsets -0.45,
+    0, +0.45), per direction.  Vectorised 10-13 (same float64 operations as the loop in _straight_lines_ref: identical)."""
+    import numpy as np
+    if len(ax) < k or not ax:
+        return 0
+    A = np.asarray(ax, dtype=float)
+    cnt = 0
+    for c in (0, 1):
+        v = A[:, c]
+        y0 = (v[:, None] + np.array([-0.45, 0.0, 0.45])[None, :]).ravel()      # same order as the loop: p, then off
+        M = np.abs(v[None, :] - y0[:, None]) < 0.5 - 1e-9
+        rows = M[M.sum(1) >= k]
+        if len(rows):
+            cnt += len({r.tobytes() for r in np.packbits(rows, axis=1)})
+    return cnt
+
+
+def _straight_lines_ref(ax, k):
     cnt = 0
     for c in (0, 1):
         seen = set()

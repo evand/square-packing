@@ -91,15 +91,19 @@ def launcher(bank, novel_ref):
 
 
 def parse_arm(spec, pools):
-    """name:pool[:args]  args = explore flags joined by ';' with '=' for values: --weights=mirror=0;--finish=3"""
+    """name:pool[:args]  args = explore flags joined by ';' with '=' for values: --weights=mirror=0;--finish=3;
+    a token +KEY=VAL sets an environment variable for the replicate instead (fq knobs: +FQ_SOC_AS=1)"""
     from pk.benchkit import Arm
     parts = spec.split(':', 2)
     name, pool = parts[0], parts[1]
-    args = []
+    args, env = [], {}
     for tok in (parts[2].split(';') if len(parts) > 2 and parts[2] else []):
+        if tok.startswith('+'):
+            k, _, v = tok[1:].partition('='); env[k] = v
+            continue
         flag, _, val = tok.partition('=')
         args += [flag] + ([val] if val else [])
-    return Arm(name, args, pools.starts(pool))
+    return Arm(name, args, pools.starts(pool), env)
 
 
 # ---------------------------------------------------------------- commands
@@ -115,7 +119,7 @@ def race_cmd(a):
         fingerprint.bank(HOLD, bank)
     pools = Pools()
     arms = [parse_arm(s, pools) for s in a.arms]
-    json.dump([dict(name=x.name, args=x.args) for x in arms], open(os.path.join(a.out, 'arms.json'), 'w'), indent=1)
+    json.dump([dict(name=x.name, args=x.args, env=x.env) for x in arms], open(os.path.join(a.out, 'arms.json'), 'w'), indent=1)
     S = benchkit.race(arms, launcher(bank, f'{refset.ROOT}/{HOLD}/novel_ref.json'), entry_event, a.out, slots=a.slots,
                       cap_cpu_s=a.cap_min * 60, budget_cpu_h=a.budget, check_cpu_h=a.check, margin=a.margin,
                       control=arms[0].name)
