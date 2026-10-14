@@ -2705,3 +2705,14 @@ Review, findings, triage: `../../tasks/packer-arch-2026-10-14/`.  Built today (c
   (bundle test).
 * Prediction: primary 0-3 per arm (the 10-12 time-travel pair, 2 x 33 CPU-h, found 1: s(154)); P(S > C on primary) 0.55;
   secondary S ~1.3x C.  Not tested here: the composer / fresh ingestion (not chain settings).
+* **TT2 census analysis (secondary; registered 10-14 ~12:30 local, before any scoring; only the 2-round health check
+  had been seen: no gain at n = 39, 40 in either arm).**  Reference per n: store rows added before T; each arm scored
+  alone.  New = a polished, grid-free sub-k row from that arm's rounds > 2e-9 (side key, A2) from every reference side.
+  Per measured CPU-h per arm: (1) distinct new sub-k minima; (2) new regions = new minima that start their own cluster
+  (`pk/cluster` leaders vs the as-of reference clusters, r = 0.42 / sqrt n); (3) near-frontier new minima, within 1e-3
+  of frontier_at(n, T); (4) S / C overlap on (1), (2).  Certification sample: ~40 random new minima per arm (sub-k, within
+  1e-2 of the frontier) through exactsolve for the false-new rate (historically 20-25 % not-min), ~1-2 CPU-h after TT2.
+  Prediction: S / C on (2) >= 1.5x, (1) ~1.2x, (3) ~1.3x.  Caveat: S's reward and parent draw partly optimise these.
+* **How the TT2 metrics combine (Evan 10-14):** the record metrics are the strongest evidence (actual later records
+  recovered, recovered fraction of later gains, certified new records).  If the arms look similar there and one is
+  clearly better on new-basin diversity ((1)-(3)), read that as a hint in its favour, not a decision.  No fixed blend.
