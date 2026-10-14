@@ -2622,3 +2622,35 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
   composer layouts (fq soft: 21 / 95), but only 5 drop > 5e-3 (prediction 20+: miss).  Exact frontier ties at 26, 27,
   38, 50, 85, 104, 174 (rigid compositions that are the record); closest non-tie 234 +1.1e-4, 106 +3.2e-4, 227
   +3.6e-4, 53 +3.5e-4.  Reading: the jam is broken (blocks do move) but the moves do not find the relaxed variant.
+
+## Night 10-14/15 (Evan: "the cpu is yours for the night. Go record hunting"; ~128 CPU-h)
+Split ~60 % hunt / ~40 % tests + features.  Nothing above n = 324.
+* **NH night hunt, pre-registered**: chain.py over the 139 non-grid n in 30-324 (`runs/night1014_ns.json`, from
+  familymap), live frontier starts (`runs/live1014`, register b8c9303 + #586 / #593 synced), `--seed-ks 1,2,-1
+  --first-pass`, 6 slots x 2 procs x 4-min rounds, 7 h (~84 CPU-h), post-perf engine (3x, C40 / G1).  Success: a
+  candidate.py-certified packing below the live frontier.  Prediction: 0-2, point 0.7 (10-11/12: ~1 per 100-200 CPU-h
+  on the old engine; /3 for the engine; the frontier got a big refresh from #593 today, which hurts).
+* **Converter screen deferred**: our piece library is (h + d) x h only (rectlib re-optimises with an integer
+  difference), so every piece is on the frac(W) = frac(H) diagonal by construction; an off-diagonal what-if needs pieces
+  re-optimised in free W x H boxes first (a build, not a screen).  Noted for Evan.
+* **NM near-miss follow-up, pre-registered**: M2's 2 best distinct outputs at 53, 106, 227, 234, 258, 299 (+1.1e-4 ..
+  +7e-4), harden 4 rounds keep 3, r0 {0.05, 0.1, 0.2} x noise {0.001, 0.002, 0.004}, 6 seeds, 4 procs.  Success:
+  below frontier_now.  Prediction 5 %.
+* **CP composer probe (feeds Mondrian hunt v2)**: compose2 n 20-324 vs today's frontier, probe 0.015, 60 s per n, 4
+  procs; near arms (need < 0.015) -> harden 2 rounds (M2 recipe).  Success: below frontier_now.  Prediction 5-10 %.
+* **CP result**: 425 near arms at 59 n <= 324 (need < 0.015), many exact ties (need 0: 38 67 82 101 104 122 125 145 147
+  170 171 173 174 197 198 200 201 226 229 231 ...).  0 compositions below the frontier.
+* **MH2 Mondrian hunt v2, pre-registered**: up to 3 distinct arms per n (inputs `runs/night1014/mh2in`), harden 2 rounds
+  keep 2, r0 {0.05, 0.1, 0.2} x noise {0.002, 0.004}, 2 seeds.  Success: below frontier_now.  Prediction 5 % (M2 on
+  stale arms: 0 / 45 n).
+* **NM result: 0** (prediction 5 %): after 4 rounds 53 +3.5e-4, 106 +3.2e-4, 227 +3.6e-4, 258 +5.2e-4, 299 +1.6e-4
+  (no movement after round 1); **234 still descending** (+1.06e-4 -> +4.1e-5 in round 3).  234 gets more rounds (bandit
+  arm with momentum).  MH2 launched.
+* **MH2 result: 0** (prediction 5 %): 128 arms / 59 n, 2 rounds; ties stay ties (no drop > 1e-8 from any record-tie
+  composition), non-ties best 182 +1.8e-3, 129 +2.0e-3.  Harden does not relax our compositions below the frontier.
+* **N234**: 234 continuation from NM's 4 best distinct, 6 rounds keep 4, same grid, 4 procs; success below frontier_now.
+* **Strip excision (dev, ~0 CPU; `excise.py`)**: carry a family one row down, n' = n + 2k - 1 (k = ceil sqrt n; same
+  column m), cut a vertical + a horizontal unit strip from best(n'), side s(n') - 1.  Best cuts keep too few squares:
+  240 -> 211 keeps 200 (allowance 29, short 11), 130 -> 109 keeps 103 (short 6); bands crossing the strips lose extra
+  squares.  Short 6 at side 10.9 ~ 0.27 in side vs 0.045 slack (s(130) - 1 = 10.9045 vs diamond 10.9497): dead as a
+  constructor.  (The row-above family beating the L-step by 0.045 at 109 is still the "pattern boundary" signal.)
