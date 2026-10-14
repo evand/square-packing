@@ -67,15 +67,13 @@ First deliverable: a table of exact forms of S + a handful of Lean local-optimal
 
 ## Packings (10-14 triage with Evan: `tasks/packer-arch-2026-10-14/`; handoff `search/packer/HANDOFF-2026-10-14.md`)
 Thesis (Evan 10-14): diversity pays (new mechanisms, new sources); local search at current budgets has mined the frontier.  No compute above n = 324 without a specific reason.
-- [ ] Agents running 10-14: A1 bandit timescale (`search/packer/analysis/bandit_timescale.md`), A2 similarity / clusters at 110 (`analysis/similarity110.md`), A3 ingestion watcher (`pk/watch.py`).
-- [ ] Parent sampler `pk/parents.py`: pool query (n, n±k, cluster, gap band, as-of), named policies; default uniform over clusters then within; reads the `expansion` ledger.
+- [ ] TT2 census analysis (pre-registered in PACKER.md: new minima / regions / near-frontier per CPU-h, exactsolve sample ~40 per arm); record metrics done (PACKER "TT2 results").
+- [ ] Candidate packets pre-packaged (Evan 10-14): `candidate.py` runs `exact/descend.py` when not jammed, certifies + regularizes both ours and the record it beats, writes the distinctness facts (s(146) / #606 by hand: `candidates/tt2_n146_vs505.json`).
+- [ ] Drain the near-miss queue: 142 queued (`pk.py nearmiss list`), `pk.py finish` (~800 CPU-s per item; one-item smoke 10-14: runs, no gain), then `pk.py ingest`.
 - [ ] Run config with test / record modes (sources, mechanisms, reference, reward, grid-rule knob, control); chain imports its own rounds; cfp into the store on import.
-- [ ] **TT2** time-travel test, strongest settings vs pre-10-14 chain, ~2 × 30 CPU-h; plan in `tasks/packer-arch-2026-10-14/`; pre-register in PACKER.md.
 - [ ] Parent-distance model (after A2): fit P(gain | parent gap, distance, n band, mechanism) from logs, then a randomized gap-band slice to de-confound.
-- [ ] Near-miss queue (store tag) + a finisher that drains it (harden, long polish).
 - [ ] Constructors (Evan 10-14): (1) off-diagonal piece library (free W × H, fq `--rect-dx/--rect-dy`) + offset-converter screen; (2) distorted-strip / V-band (fix `vband.py` fit: 41 / 80 tilted kept at 241); (3) two-bulb, lopsided bulb.
 - [ ] Piece sources: crop anywhere (edge strips, interior), pieces from n > 324 and catalogue revisions, published rectangle-packing records.
-- [ ] Refactors (bit-exact, check by replay): one fq call path through `QOpt`; shared neighbour transforms (remove / insert k, crop) in `pk/moves.py`.
 - [ ] Perf follow-ups (each ≤ ~10 %, PACKER "Performance session 10-13"): block LDL, SIMD `Prob::eval`, `FQ_SOC_ROUNDS=16`, exactsolve `probe_flat` factor reuse; measure with `fqreplay.py` / `chainreplay.py`.
 - [ ] Run `fresh.py` after every sync (A3 automates); fix its finishing gap (364).
 - [ ] exactsolve should snap near-axis corner-loaded squares itself (n = 292, `search/packer/s292.md`).
@@ -83,10 +81,11 @@ Thesis (Evan 10-14): diversity pays (new mechanisms, new sources); local search 
 - [ ] Store backup (last 10-11, `~/store-backups/`; store now ~728k rows after the 10-14 run import); automate if repeated.
 - [ ] s(110) explainer refresh, iterating (`tasks/landscape110-explainer/`); s(110) write-up = rewrite of `search/packer/s110-landscape.md`'s census section.
 - [ ] Time-lapse records video (`site/timelapse/`; Evan to return): store sighting times are local, not UTC.
-- [ ] Watch open jlevy issues: #596, #584, #552, #489.
+- [ ] Watch open jlevy issues: #606, #596, #584, #552, #489.
 - [ ] Evan to decide: n = 88 strip-family test set (~16 CPU-h): drop unless TT2 results look 110-shaped.
 
 ## Outreach / hygiene
+- [ ] Site, per-n history viewer: show what changed between consecutive records (matched-square diff, moved squares highlighted, like the s(146) vs #505 page); design first.
 - [ ] Site: draw every packing we have numbers for (Couzo's 49, itsnaka's 23 SQUISH (local copies + pins: `tasks/site-all-packings/README.md`), de Winter's 211, ours 266/270/272, n > 324; replaces the `NEWER` stopgap in viewer.js); coords with credit, no code/text. `tasks/site-all-packings/`
 - [ ] Announce: VibeMathed entries for s(21), s(32) (and now k²−3, k²−4 / F₄); X drafts `outreach/drafts-s21-s32.md`.
 - [ ] Repo unification, rest: outreach → a small private GitHub repo (versioned, backed up); `wip/*` branches + pre-push hook if needed.
