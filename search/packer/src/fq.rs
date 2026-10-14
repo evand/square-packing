@@ -20,6 +20,7 @@
 //!     pre-stage with rounded squares (see run_quench), then the usual quench + polish
 //!   --dump-lp DIR: append every polish LP to DIR/lp-<pid>.jsonl (rows/columns with stable keys, Clarabel time; lp_bench.py)
 
+mod lpipm;
 use std::fs;
 use std::time::Instant;
 use std::sync::atomic::{AtomicU8, AtomicU64, AtomicUsize, Ordering};
@@ -202,6 +203,8 @@ impl Prob {
         let mut cs = vec![(0.0, 0.0); n];
         for i in 0..n { let t = v[3 * i + 2]; cs[i] = (t.cos(), t.sin()); }
         let sh = self.shapes(v);
+        // container / rounding knobs read once per evaluation (same values as per corner; perf 10-13, bit-identical)
+        let (r, wx, wy) = (rnd(), s + rdx(), s + rdy());
         // walls
         for i in 0..n {
             let (c, sn) = cs[i];
@@ -210,7 +213,6 @@ impl Prob {
             for k in 0..4 {
                 let (ox, oy, oxa, oya) = corner_wh(c, sn, k, wi, hi);
                 let (px, py) = (x + ox, y + oy);
-                let (r, wx, wy) = (rnd(), s + rdx(), s + rdy());
                 let gs = [-px + r, px - wx + r, -py + r, py - wy + r];
                 for w in 0..4 {
                     let (fv, dg) = term(gs[w], self.wlam[16 * i + 4 * k + w], mu);
@@ -475,6 +477,36 @@ fn slp_lp(nv: usize, si: usize, cons: &[Con], r: f64, kappa: f64, hq: &[(usize, 
         ii.push(row); jj.push(k); vv.push(-1.0); b.push(1.0); row += 1;
     }
     ii.push(row); jj.push(nu); vv.push(-1.0); b.push(0.0); row += 1;
+    // Own normal-equation IPM with native bounds (lpipm.rs), default since 10-13 (PACKER "Q7"); Clarabel as fallback and for SQP; FQ_LP_IPM=0 restores Clarabel
+    static LP_IPM: OnceLock<bool> = OnceLock::new();
+    let mut ipm_chk: Option<((Vec<f64>, f64, Vec<f64>), usize, f64, Vec<f64>)> = None;
+    if hq.is_empty() && *LP_IPM.get_or_init(|| std::env::var("FQ_LP_IPM").map(|v| v != "0").unwrap_or(true)) {
+        let t0 = Instant::now();
+        let m = cons.len();
+        let mut rows: Vec<Vec<(usize, f64)>> = Vec::with_capacity(m);
+        for c in cons {
+            let mut e: Vec<(usize, f64)> = Vec::with_capacity(c.nz.len() + 1);
+            for &(k, a) in &c.nz { let j = col[k]; if let Some(q) = e.iter_mut().find(|q| q.0 == j) { q.1 += a; } else { e.push((j, a)); } }
+            e.push((nu, -1.0));
+            rows.push(e);
+        }
+        let bb = &b[..m];
+        let mut cc = vec![0.0; nx]; cc[col[si]] = 1.0; cc[nu] = kappa;
+        let mut lo = vec![-1.0; nx]; let mut hi = vec![1.0; nx]; lo[nu] = 0.0; hi[nu] = f64::INFINITY;
+        let mut x0 = vec![0.0; nx];
+        x0[nu] = bb.iter().fold(0.0f64, |a, &v| a.max(-v)) + 1.0;
+        if let Some(sol) = lpipm::solve(nx, &rows, bb, &cc, &lo, &hi, &x0, 1e-8, 1e-8, 200) {
+            if std::env::var("FQ_LPT").is_ok() { eprintln!("lp rows {row} cols {nx} iters {} sec {:.4} ipm tag {}", sol.iters, t0.elapsed().as_secs_f64(), LP_TAG.load(Ordering::Relaxed)); }
+            let mut w = vec![0.0; nv];
+            for (c, &k) in used.iter().enumerate() { w[k] = sol.x[c]; }
+            let res = (w, sol.x[nu].max(0.0), sol.y);
+            if std::env::var("FQ_IPM_CHK").is_err() { return Some(res); }
+            ipm_chk = Some((res, sol.iters, t0.elapsed().as_secs_f64(), sol.x));
+        } else {
+        IPM_FAIL.fetch_add(1, Ordering::Relaxed);
+        if std::env::var("FQ_LPT").is_ok() { eprintln!("ipm fallback"); }
+        }
+    }
     let a = CscMatrix::new_from_triplets(row, nx, ii, jj, vv);
     let p = if hq.is_empty() { CscMatrix::<f64>::zeros((nx, nx)) } else {
         // SQP: objective + (r/2) w^T H w in the scaled variables (H convexified by the caller), upper triangle
@@ -499,6 +531,17 @@ fn slp_lp(nv: usize, si: usize, cons: &[Con], r: f64, kappa: f64, hq: &[(usize, 
     solver.solve();
     if std::env::var("FQ_LPT").is_ok() { eprintln!("lp rows {row} cols {nx} iters {} sec {:.4} tag {}", solver.info.iterations, t0.elapsed().as_secs_f64(), LP_TAG.load(Ordering::Relaxed)); }
     if let Some(dir) = DUMP_LP.get() { dump_lp(dir, kp, &used, cons, &b, kappa, r, row, nx, &solver, t0.elapsed().as_secs_f64()); }
+    if let Some((res, it2, t2, x2)) = ipm_chk {
+        let x = &solver.solution.x;
+        let ob = |x: &[f64]| x[col[si]] + kappa * x[nu];
+        let dw = (0..nx).fold(0.0f64, |a, c| a.max((x[c] - x2[c]).abs()));
+        let z = &solver.solution.z[..cons.len()];
+        let zn = z.iter().fold(0.0f64, |a, &v| a.max(v.abs()));
+        let dz = z.iter().zip(&res.2).fold(0.0f64, |a, (p, q)| a.max((p - q).abs()));
+        eprintln!("ipmchk tag {} rows {} cl it {} {:.4}s obj {:.9e} | ipm it {it2} {t2:.4}s obj {:.9e} | dw {dw:.1e} dz/zmax {:.1e} {:?}",
+            LP_TAG.load(Ordering::Relaxed), cons.len(), solver.info.iterations, t0.elapsed().as_secs_f64(), ob(x), ob(&x2), dz / zn.max(1e-300), solver.solution.status);
+        return Some(res);
+    }
     match solver.solution.status {
         SolverStatus::Solved | SolverStatus::AlmostSolved => {
             let x = &solver.solution.x;
@@ -510,6 +553,7 @@ fn slp_lp(nv: usize, si: usize, cons: &[Con], r: f64, kappa: f64, hq: &[(usize, 
     }
 }
 
+static IPM_FAIL: AtomicUsize = AtomicUsize::new(0);
 static FLIP_LPS: AtomicUsize = AtomicUsize::new(0);
 static SOC_STATS: [AtomicUsize; 2] = [AtomicUsize::new(0), AtomicUsize::new(0)]; // [active-set used, fell back]
 
@@ -1115,9 +1159,9 @@ fn polish(p: &mut Prob, s0: f64, x0: &[f64], o: &POpt, trace: &mut Vec<(usize, f
                 c.g = p.g_at(&v1, c.sp) - lin;
             }
             LP_TAG.store(1, Ordering::Relaxed);
-            // FQ_SOC_AS=1 (perf 10-13, PACKER "Q2"): min-norm correction on the step LP's active set, LP as fallback
+            // Active-set SOC, default since 10-13 (PACKER "Q2" + race): min-norm correction on the step LP's active set, LP as fallback; FQ_SOC_AS=0 restores the SOC LP
             static SOC_AS: OnceLock<bool> = OnceLock::new();
-            let as_w = if *SOC_AS.get_or_init(|| std::env::var("FQ_SOC_AS").map(|v| v == "1").unwrap_or(false)) && hq.is_empty() {
+            let as_w = if *SOC_AS.get_or_init(|| std::env::var("FQ_SOC_AS").map(|v| v != "0").unwrap_or(true)) && hq.is_empty() {
                 soc_active(nv, 3 * n, &cons, &g_old, r, &w, tau0)
             } else { None };
             if let Some((w2, _, _)) = as_w.map(|w2| (w2, 0.0, Vec::new())).or_else(|| slp_lp(nv, 3 * n, &cons, r, kappa, &hq, p)) {
@@ -1207,6 +1251,7 @@ fn lbfgs(f: &mut dyn FnMut(&[f64], &mut [f64]) -> f64, v: &mut [f64], maxit: usi
     let mut xn = vec![0.0; dim];
     let mut gn = vec![0.0; dim];
     let mut alpha = vec![0.0; m];
+    let mut spare: Option<(Vec<f64>, Vec<f64>)> = None;
     let mut stall = 0;
     let ginf = |g: &[f64]| g.iter().fold(0.0f64, |a, &b| a.max(b.abs()));
     for _ in 0..maxit {
@@ -1245,13 +1290,14 @@ fn lbfgs(f: &mut dyn FnMut(&[f64], &mut [f64]) -> f64, v: &mut [f64], maxit: usi
             let en = f(&xn, &mut gn);
             nev += 1;
             if en <= e + 1e-4 * step * gd {
-                let sv: Vec<f64> = (0..dim).map(|q| xn[q] - v[q]).collect();
-                let yv: Vec<f64> = (0..dim).map(|q| gn[q] - g[q]).collect();
+                // history pair in reused buffers (the evicted oldest pair becomes the next spare; bit-identical)
+                let (mut sv, mut yv) = spare.take().unwrap_or_else(|| (vec![0.0; dim], vec![0.0; dim]));
+                for q in 0..dim { sv[q] = xn[q] - v[q]; yv[q] = gn[q] - g[q]; }
                 let sy = dot(&sv, &yv);
                 if sy > 1e-300 {
-                    if ss.len() == m { ss.remove(0); ys.remove(0); rho.remove(0); }
+                    if ss.len() == m { spare = Some((ss.remove(0), ys.remove(0))); rho.remove(0); }
                     rho.push(1.0 / sy); ss.push(sv); ys.push(yv);
-                }
+                } else { spare = Some((sv, yv)); }
                 if e - en <= 1e-15 * e.abs().max(1.0) { stall += 1; } else { stall = 0; }
                 v.copy_from_slice(&xn);
                 g.copy_from_slice(&gn);

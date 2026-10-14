@@ -124,7 +124,7 @@ def run_cmd(a):
     calls = [json.loads(l) for l in open(os.path.join(a.corpus, 'calls.jsonl'))]
     calls = [c for c in calls if cat_of(c['args']) in ('screen', 'polish')]
     random.Random(a.seed).shuffle(calls)
-    calls = calls[:a.sample]
+    calls = calls[a.skip:a.skip + a.sample]     # --skip: disjoint slices of one shuffle (dev vs held-out samples)
     arms = []
     for spec in a.arm:
         name, binary, *kv = spec.split(':')
@@ -147,7 +147,7 @@ def run_cmd(a):
                 print(f'{i + 1} / {len(jobs)}', flush=True)
     for f in fh.values():
         f.close()
-    json.dump(dict(corpus=a.corpus, sample=a.sample, seed=a.seed, arms=[dict(name=x[0], binary=x[1], env=x[2], jitter=x[3])
+    json.dump(dict(corpus=a.corpus, sample=a.sample, skip=a.skip, seed=a.seed, arms=[dict(name=x[0], binary=x[1], env=x[2], jitter=x[3])
               for x in arms]), open(os.path.join(a.out, 'arms.json'), 'w'), indent=1)
     man.finish()
 
@@ -259,6 +259,7 @@ if __name__ == '__main__':
     p = sub.add_parser('record'); p.add_argument('--out', required=True)
     p = sub.add_parser('run'); p.add_argument('--corpus', required=True); p.add_argument('--out', required=True)
     p.add_argument('--arm', action='append', required=True); p.add_argument('--sample', type=int, default=4000)
+    p.add_argument('--skip', type=int, default=0)
     p.add_argument('--seed', type=int, default=1); p.add_argument('--procs', type=int, default=16)
     p = sub.add_parser('compare'); p.add_argument('dir'); p.add_argument('--base', default='base')
     p = sub.add_parser('certify'); p.add_argument('dir'); p.add_argument('--arms', nargs='+', default=['base', 'noir'])

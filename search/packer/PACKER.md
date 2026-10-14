@@ -2305,3 +2305,63 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
   explorer CPU; process spawning ~0.1 %, so `fq serve` is not worth wiring.  Half to most of the Python is
   `layout._straight_lines` (O(m^2) loop).  **Vectorised (bit-identical by construction, same float64 ops): 3,000 packings
   x 3 k, 0 mismatches, 16x faster** (~2-3 % of explorer CPU).  Old loop kept as `_straight_lines_ref`.
+* **Q6 (adaptive trust-region shrink, dev measurement, negative):** on rejection shrink R by clamp(0.5 / (1 - rho), 4,
+  cap) instead of 4: cap 16 / 64 / 256 all *raise* step LPs (C237 dev 40 polishes: 3,167 -> 3,269-3,313).  Long polishes
+  carry the step LPs (n = 237: 72 % of SLP iterations are in calls with >= 100 iterations); only 13 % (110) / 4 % (237)
+  of iterations come after s is within 1e-12 of its final value, so neither R0 nor termination is a lever.  Removed.
+* **Dev hygiene from here on:** tuning uses the already-used slice of fqreplay's seed-1 shuffle (C110 calls 0-3999, C237
+  0-399); confirmation runs use the untouched rest (`fqreplay.py run --skip`), so each knob is confirmed once on data it
+  was not tuned on.
+* **Q7, pre-registered (19:10; own LP interior point, `FQ_LP_IPM=1`; minor algorithm change: same LPs, different solver):**
+  `src/lpipm.rs`: Mehrotra predictor-corrector, bounds native (no box rows), normal equations A'(Y/S)A + bound diagonal
+  (~1,450 columns at 237, vs Clarabel's ~7,300-row KKT), qdldl with AMD per LP, static primal 1e-8 and dual 1e-8
+  regularisation (Clarabel's values, in normal-equation form), tolerances gap 1e-8 abs / feasibility 1e-8, start primal
+  feasible (w = 0, tau above every row), Clarabel fallback on breakdown (accepts the iterate if within 10x of
+  tolerance).  Dev (dev slices): per LP 13 ms vs 23 ms at 237 (1.75x; factor 55 % of the rest), objectives agree within
+  the 1e-8 gap tolerance (optimal faces are large: w differs O(1) between the two solvers' stopping points, as between
+  Clarabel runs at different settings), fallback ~1 in 3,700 LPs; polish wall 1.37x (110) / 1.9x (237) on dev batches.
+  Built on Q2 (all arms FQ_SOC_AS=1).  Frozen binary `runs/fqreplay/q7bin/fq` (sha256 d1abd440...); with FQ_LP_IPM unset it
+  is bit-identical to deployed (100 / 100 calls).
+  **Test** (held-out): fqreplay C110 `--skip 4000 --sample 2000`, C237 `--skip 400 --sample 400`; arms cur
+  (FQ_SOC_AS=1), j1 (cur + jitter, the null), ipm (FQ_SOC_AS=1 FQ_LP_IPM=1); certification 60 sub-k polish outputs per
+  corpus (cur vs ipm, diverging first).  **Rule: adopt FQ_LP_IPM=1 as default** (together with Q2, which it is built on)
+  if: every class-frequency difference vs cur has a 95 % CI inside +-1 pp; failures <= cur + 0.2 pp; sign test p > 0.01
+  in each of the 4 corpus x stage cells (4 tests: family-wise ~4 %) -- a favourable-direction failure goes to the
+  certification as for Q2; certified fraction within 10 pp of cur and median |S_exact - s_fq| not 10x worse; polish fq
+  CPU >= 1.2x on both corpora.  Predictions: polish 1.35x (110) / 1.7x (237), screens ~1.1x; divergence at least
+  jitter's; unbiased.  Budget ~1.5 CPU-h replay + ~1 CPU-h certification, at 6 procs beside the Q2 race (arms are
+  interleaved per call, so the ratios stay paired).
+* **Q8 (Gondzio multiple-centrality correctors in lpipm, `FQ_IPM_GONDZIO=K`, dev measurement, neutral):** IPM
+  iterations 17.8 -> 15.9 (K = 1) -> 14.9 (K = 2) at 110, 19.8 -> 16.4 at 237, but LP time at 110 rises 3-10 % (the
+  factor is cheap there, so the extra solve + vector passes cost about an iteration); ~15-20 % faster at 237 on 2 calls
+  (loaded machine).  Not worth a test slot; kept as a knob, off.
+* **Bit-identical micro-opts (dev, 100 / 100 calls identical with IPM on and off):** eval reads the container / rounding
+  atomics once per evaluation; L-BFGS reuses its history buffers.  Speed 1.00-1.02x (noise): free, negligible.
+* **Q7 result, C110 held-out (2000 calls):** screens 1.15x, **polish 1.66x** (pred. 1.35x); 0 failures; class shifts all
+  within +-0.3 pp; sign tests p = 0.59 (screen, 165 / 176) and 1.0 (polish, 26 / 25); divergence below jitter's (screen
+  0.33 vs 0.75, polish 0.053 vs 0.040, |ds| q99 4e-5 vs 9e-1 / 3e-5 vs 1e-7).
+* **Q2 race result (20:05): open, so per the rule Q2 is adopted (active-set SOC is the fq default; `FQ_SOC_AS=0`
+  restores the SOC LP).**  16.0 CPU-h, 172 replicates, 159 entries: control 68 / 7.96 CPU-h = 8.55 per CPU-h, socas
+  91 / 8.05 = 11.31; ratio **1.32 [0.97, 1.81]**.  Entering kinds spread as in R1.  Predictions: 1.2-1.5x, "open" --
+  right; the event rate was 2.5x the pre-registered guess (9.9 vs ~4 per CPU-h), so the run resolved ~1.45x instead of
+  ~1.7x.
+* **Was 16 CPU-h the right amount? (Evan asked.)**  The race had one job: catch a search-level loss that the replay
+  cannot see.  Power for that (rate ratio, one-sided 5 %, 80 % power, ~10 events / CPU-h): a true 0.5x is caught with
+  ~5 CPU-h, 0.67x with ~15 CPU-h, 0.8x needs ~50 CPU-h, 0.9x ~220 CPU-h.  This run could catch 0.67x and worse.  What
+  we needed: Q2 had already passed fqreplay (0 class shifts on 2,400 paired calls) and certification (more outputs
+  certified), and the mechanism (fewer polish stalls) points toward better convergence, so the plausible failures were
+  either nothing or something gross (e.g. the explorer starving some move kind); ~5 CPU-h (catches 2x) would have
+  served the decision equally well.  Moderate harms (0.8-0.9x) are out of reach of any race we would run: for
+  fq-local changes the paired replay is the strong instrument (most calls are identical or differ by 1e-10, so the
+  noise is far below the race's per-replicate exponential noise).  **Policy from here:** fq-local changes that pass
+  fqreplay + certification get a ~5 CPU-h guard race (stop early only on "slower"), not 16; search-level changes keep
+  races sized from a stated minimal effect of concern (~50 CPU-h for 0.8x), and if that is too expensive we say the
+  test can only catch large effects.
+* **Q7 result (20:05): adopted (`FQ_LP_IPM=0` restores Clarabel).**  C237 held-out (400 calls): screens 1.14x, **polish
+  1.67x**; 0 failures; 0 class shifts; sign p = 0.069 (screen 50 / 71) and 0.20 (polish 19 / 11).  Certification: C110
+  cur 30 / 60 vs ipm 35 / 60, C237 32 vs 28 (both within 10 pp), median |S_exact - s_fq| identical (2.3e-12 / 3.3e-12).
+  Every rule condition holds.  Deployed default == the tested arm (150 / 150 calls, side + fingerprint).
+* **Perf score after Q2 + Q7 (20:15, quiet machine): 2.77x** (`runs/perfbench/q2q7`): 7,366 / 2,222 proposals per CPU-h
+  at 110 / 237 vs 2,792 / 764 pre-session (2.64x / 2.91x); was 1.36x after Q0.  Consistent with the stage speedups
+  (polish ~2.4-2.7x, screens ~1.3x).  CLAIMS C38-C40.  Next costs at 110: screens are now ~75 % ALM (L-BFGS two-loop
+  dot latency 37 %, eval 25 %, sincos 11 %), so FQ_FASTDOT (Q3, equivalence already shown) is worth re-measuring.
