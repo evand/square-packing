@@ -205,7 +205,22 @@ impl Prob {
         let mut f = if self.fix_s { 0.0 } else { s };
         g[3 * n] = if self.fix_s { 0.0 } else { 1.0 };
         let mut cs = vec![(0.0, 0.0); n];
-        for i in 0..n { let t = v[3 * i + 2]; cs[i] = (t.cos(), t.sin()); }
+        let fsc = fast_sc();
+        let np = self.pairs.len();
+        let (mut pso, mut pco) = (Vec::new(), Vec::new());
+        if fsc {
+            // vectorised sincos of every angle in two batches (<= 2 ulp vs libm), default since 10-13 (PACKER "Q11"); FQ_FASTSC=0 = libm
+            let th: Vec<f64> = (0..n).map(|i| v[3 * i + 2]).collect();
+            let (mut so, mut co) = (vec![0.0; n], vec![0.0; n]);
+            sincos_batch(&th, &mut so, &mut co);
+            for i in 0..n { cs[i] = (co[i], so[i]); }
+            let o = 3 * n + 1;
+            let ph: Vec<f64> = (0..np).map(|pk| v[o + 2 * pk]).collect();
+            pso = vec![0.0; np]; pco = vec![0.0; np];
+            sincos_batch(&ph, &mut pso, &mut pco);
+        } else {
+            for i in 0..n { let t = v[3 * i + 2]; cs[i] = (t.cos(), t.sin()); }
+        }
         let sh = self.shapes(v);
         // container / rounding knobs read once per evaluation (same values as per corner; perf 10-13, bit-identical)
         let (r, wx, wy) = (rnd(), s + rdx(), s + rdy());
@@ -244,7 +259,7 @@ impl Prob {
             let (i, j) = (p.i, p.j);
             let phi = v[o + 2 * pk];
             let d = v[o + 2 * pk + 1];
-            let (ux, uy) = (phi.cos(), phi.sin());
+            let (ux, uy) = if fsc { (pco[pk], pso[pk]) } else { (phi.cos(), phi.sin()) };
             let (hx, hy) = ((v[3 * i] - v[3 * j]) / 2.0, (v[3 * i + 1] - v[3 * j + 1]) / 2.0);
             let (mut gx, mut gti, mut gtj, mut gphi, mut gd) = (0.0, 0.0, 0.0, 0.0, 0.0);
             let (ci, si) = cs[i];
@@ -578,7 +593,10 @@ fn soc_active(nv: usize, _si: usize, cons: &[Con], g_old: &[f64], r: f64, w: &[f
     let mut fixed = vec![false; nv];          // columns held at their step value (box-active) or clamped to a bound
     let mut wb = w.to_vec();                  // base point: step w with clamped columns moved to their bound
     for k in 0..nv { if w[k].abs() >= 1.0 - 1e-7 { fixed[k] = true; } }
-    for round in 0..4 {
+    // FQ_SOC_ROUNDS (PACKER "Q12"): active-set repair rounds before falling back to the SOC LP (default 4)
+    static ROUNDS: OnceLock<usize> = OnceLock::new();
+    let rounds = *ROUNDS.get_or_init(|| std::env::var("FQ_SOC_ROUNDS").ok().and_then(|v| v.parse().ok()).unwrap_or(4));
+    for round in 0..rounds {
         let act: Vec<usize> = (0..cons.len()).filter(|&i| in_act[i]).collect();
         if act.is_empty() { return fail("no active rows"); }
         let mut col = vec![usize::MAX; nv];
@@ -1346,6 +1364,35 @@ fn lbfgs(f: &mut dyn FnMut(&[f64], &mut [f64]) -> f64, v: &mut [f64], maxit: usi
         if stall > 10 { break; }
     }
     (e, nev, ginf(&g))
+}
+
+fn fast_sc() -> bool {
+    static F: OnceLock<bool> = OnceLock::new();
+    *F.get_or_init(|| std::env::var("FQ_FASTSC").map(|v| v != "0").unwrap_or(true))
+}
+
+/// Vectorisable sincos of a batch (perf 10-13, PACKER "Q11"): Cody-Waite reduction by pi/2 (two-part constant, FMA),
+/// Cephes minimax polynomials on [-pi/4, pi/4], branch-free quadrant select; <= 2 ulp from libm (|x| < 1e5; larger
+/// arguments are redone with libm).
+#[inline(never)]
+fn sincos_batch(xs: &[f64], so: &mut [f64], co: &mut [f64]) {
+    let n = xs.len();
+    let (so, co) = (&mut so[..n], &mut co[..n]);
+    for i in 0..n {
+        let x = xs[i];
+        let q = (x * 0.636619772367581343076).round();
+        let r = (-q).mul_add(6.123233995736766035868820e-17, (-q).mul_add(1.5707963267948965579989817, x));
+        let z = r * r;
+        let sn = r + r * z * (-1.66666666666666307295e-1 + z * (8.33333333332211858878e-3 + z * (-1.98412698295895385996e-4
+                 + z * (2.75573136213857245213e-6 + z * (-2.50507477628578072866e-8 + z * 1.58962301576546568060e-10)))));
+        let cn = 1.0 - 0.5 * z + z * z * (4.16666666666665929218e-2 + z * (-1.38888888888730564116e-3 + z * (2.48015872888517045348e-5
+                 + z * (-2.75573141792967388112e-7 + z * (2.08757008419747316778e-9 + z * -1.13585365213876817300e-11)))));
+        let qi = q as i64;
+        let (a, b) = if (qi & 1) != 0 { (cn, sn) } else { (sn, cn) };
+        so[i] = if (qi & 2) != 0 { -a } else { a };
+        co[i] = if ((qi + 1) & 2) != 0 { -b } else { b };
+    }
+    for i in 0..n { if !(xs[i].abs() < 1e5) { let (s, c) = xs[i].sin_cos(); so[i] = s; co[i] = c; } }
 }
 
 #[inline]

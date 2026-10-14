@@ -2418,3 +2418,36 @@ sweep), (4) effort map as a pk command; compute: estimator check on logs, 2 % + 
   stages); polish 1.14x (110) / 1.18x (237), screens 1.04x / 1.06x.  **Perf score 3.38x** (`runs/perfbench/bitid2`:
   8,885 / 2,740 proposals per CPU-h; load ~9 from other sessions at the start, so possibly low).  Also measured: AMD
   is ~0.25 ms of the ~0.4 ms symbolic setup per LP (~2 % of fq) -- reusing orderings is not worth a re-roll.
+* **Q11, pre-registered (vectorised sincos in the ALM eval, `FQ_FASTSC=1`; rounding-only change):** every square angle
+  and separator angle per eval in two batches through a branch-free Cody-Waite + Cephes sincos (<= 2 ulp from libm
+  over 6 M random angles; 8.1x faster than libm when vectorised).  Dev (C110 dev slice, 300 screens): screens 1.11x;
+  knob off is bit-identical to deployed.  Polishes do not evaluate the ALM objective, so they should be bit-identical.
+  **Fresh held-out corpora** (also for the next re-roll tests): C110c = explorer, bench110 recipe, perfbench starts110
+  rep0 + rep1 (80 starts), seed 1101, 16 procs x 6 min; C237c = C237b's recipe, seed 2372, 6 min; deployed binary.
+  Test: all screens of each, arms cur, j1, fsc (+ 200 polishes per corpus for the bit-identity check).  **Rule (Q9b
+  form):** adopt if every class difference has a 95 % CI inside +-1.5 pp, sign p > 0.01, failures <= cur + 0.2 pp,
+  polishes identical, screen CPU >= 1.05x at C110; calibration: j1 passes the same class condition (else
+  inconclusive).  Prediction: pass; screens ~1.1x (110) / ~1.04x (237).  Budget ~3.2 CPU-h recording + ~1.5 replay.
+* **Q11 result (22:05): adopted (vectorised sincos is the default; `FQ_FASTSC=0` = libm).**  C110c (3,000 screens):
+  1.09x, class CIs within +-0.75 pp, sign p 0.92; C237c (all 2,862 screens): **1.17x**, class CIs within +-1.4 pp
+  (grid +0.63 [-0.11, +1.37]), sign p 0.65; j1 passes the same margin on both; 0 failures; 400 / 400 polishes
+  identical.  Corpora: C110c 25,863 calls (13,737 screens), C237c 5,287 (2,862 screens).
+* **AMD reuse (dev, dropped):** consecutive LPs have the same column set only 23 % (237) / 51 % (110) of the time;
+  saving <= ~2-4 % of fq.  Not worth a re-roll.
+* **Q12, pre-registered (active-set SOC repair rounds 4 -> 16, `FQ_SOC_ROUNDS=16`; minor change inside Q2's SOC):**
+  every SOC fallback in a 30-polish C237 dev sample was "rounds exhausted" (650 fallback LPs, 21 % of LP time,
+  concentrated in long polishes); dev: 8 rounds -> 362 fallbacks, 16 -> 245, 32 -> 245; LP time 39.3 -> 34.6 s.
+  Test (held-out polish slices, disjoint from Q11's): C110c polishes 0-1999, C237c polishes 0-1199; arms cur
+  (deployed incl. Q11), j1, r16 (FQ_SOC_ROUNDS=16); certification 60 sub-k outputs per corpus (cur vs r16).
+  **Rule (Q7 form, Q9b margins):** adopt if class CIs inside +-1.5 pp (j1 must pass too), failures <= cur + 0.2 pp,
+  sign p > 0.01 or a favourable bias confirmed by certification (as Q2), certified fraction within 10 pp and median
+  precision not 10x worse, polish CPU >= 1.05x at C237c.  Predictions: most polishes identical (only fallback cases
+  change), unbiased or slightly favourable; polish 1.05-1.1x at 237, ~1.0x at 110.  Budget ~2 CPU-h + certification.
+* **Q12 result (22:25): not adopted; kept as a knob (`FQ_SOC_ROUNDS`, default 4).**  C237c (1,200 polishes): 1.06x,
+  0 class shifts, 0 failures, but **biased lower** (76 / 37, p < 0.001; j1 78 / 82); C110c (2,000): 0.99x, 0.8 %
+  diverge, unbiased.  Certification: C110c 46 vs 46 / 60; C237c 10 (cur) vs 8 (r16) of 60 diverging outputs (paired 5
+  only-cur / 3 only-r16), median precision equal.  The rule needs a favourable bias *confirmed* by certification; it is
+  neither confirmed nor contradicted, and the gain is small (~4 % of fq at 237, ~0 at 110).  Parked.
+* **Policy clarification:** rounding-only changes (Q3/Q9 fast dot, Q11 sincos) are pure re-rolls by construction: replay
+  only.  Changes to the algorithm's path (Q2, Q7, Q12) get the ~5 CPU-h guard race from the Q2 analysis -- Q7 did not
+  get one (it was adopted before that policy); the cumulative guard race below covers it.
