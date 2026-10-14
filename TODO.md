@@ -66,6 +66,7 @@ First deliverable: a table of exact forms of S + a handful of Lean local-optimal
 - [ ] s(17) exact via the s(11) method: on hold (CPU). `tasks/s17-core-isolation/`
 
 ## Packings: 10-14 direction (Evan)
+**10-14 handoff: read `search/packer/HANDOFF-2026-10-14.md` first** (thesis: constructors, not more local search).
 - **No compute above n = 324** unless a test has an extremely specific reason; the fertile ground is below 324.
   (Posted 10-14: jlevy#596, s(365) / s(370) / s(460) from the fresh pass; last n > 324 claim.)
 - **Constructors, diverse** (Evan 10-14): families = two-bulb (110-style), strip (Göbel), distorted strip / diagonal

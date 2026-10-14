@@ -2666,3 +2666,9 @@ Split ~60 % hunt / ~40 % tests + features.  Nothing above n = 324.
   240 -> 211 keeps 200 (allowance 29, short 11), 130 -> 109 keeps 103 (short 6); bands crossing the strips lose extra
   squares.  Short 6 at side 10.9 ~ 0.27 in side vs 0.045 slack (s(130) - 1 = 10.9045 vs diamond 10.9497): dead as a
   constructor.  (The row-above family beating the L-step by 0.045 at 109 is still the "pattern boundary" signal.)
+
+### s(109) region census (10-15, analysis, ~0 CPU; uncertified)
+Store + 87 chain-round archives at 109.  Sub-11 distinct sides ~31,700 (1e-8; 3,383 before 10-09), but side bins
+saturate (4,600 / 5,000 at 1e-5).  Role groups (L/B/axis/J, L-B swap merged) by best side: < 11 716 (123 before 10-09),
+< 10.98 445 (88), < 10.96 112 (23), < 10.955 27 (10).  New groups at every depth since 10-09 (H3's 48 rounds the bulk):
+broad, not saturated; best non-diamond 10.9518715 unchanged since 10-12.  No exactsolve census at 109.
