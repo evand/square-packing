@@ -2649,6 +2649,18 @@ Split ~60 % hunt / ~40 % tests + features.  Nothing above n = 324.
 * **MH2 result: 0** (prediction 5 %): 128 arms / 59 n, 2 rounds; ties stay ties (no drop > 1e-8 from any record-tie
   composition), non-ties best 182 +1.8e-3, 129 +2.0e-3.  Harden does not relax our compositions below the frontier.
 * **N234**: 234 continuation from NM's 4 best distinct, 6 rounds keep 4, same grid, 4 procs; success below frontier_now.
+* **N234 result: 0** (62 min, 4 procs, ~4 CPU-h, 336 runs/round): stalls at +4.12e-5 from round 3 on (fixpoint, like
+  211's T1c).  Harden's descent at 234 was a slow tail into a local fixpoint, not a path to the record.
+* **NB bump-target chain, pre-registered** (freed N234 cores, ~2 h): chain.py on the familymap neighbour-bump / 45-degree
+  cells 89 109 147 150 201 229 260 295, 12-min rounds (3x NH's), 2 slots x 2 procs.  Hypothesis: longer rounds reach
+  what NH's 4-min rounds miss on the out-of-place cells.  Success: certified below live frontier.  Prediction 2 %.
+* **NH result: 0** (prediction 0-2, point 0.7; 593 rounds over 139 n, 424 min x 12 procs, ~85 CPU-h): no candidate below
+  the live frontier; every lineage best stays at or above the register.  First miss of the post-perf engine on a full
+  non-grid sweep: the #593 refresh plus our own earlier passes have mined the chain arm at this budget.
+* **NB result: 0** (prediction 2 %; 20 rounds, 233 min x 4 procs, ~15 CPU-h): lineage bests stay above the record at all
+  8 cells (89 +2.5e-3, 109 +2.1e-3, 147 +2.9e-2, 201 +0.18); chain restarts from the 45-degree records never improve them.
+  Reading: the out-of-place cells need constructors (Evan's thesis), not longer local search.
+* **Night total**: ~128 CPU-h, 0 records at n <= 324.
 * **Strip excision (dev, ~0 CPU; `excise.py`)**: carry a family one row down, n' = n + 2k - 1 (k = ceil sqrt n; same
   column m), cut a vertical + a horizontal unit strip from best(n'), side s(n') - 1.  Best cuts keep too few squares:
   240 -> 211 keeps 200 (allowance 29, short 11), 130 -> 109 keeps 103 (short 6); bands crossing the strips lose extra

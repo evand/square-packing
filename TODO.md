@@ -72,7 +72,13 @@ First deliverable: a table of exact forms of S + a handful of Lean local-optimal
   rectangles, Mondrian / machete / lopsided bulb.  Where a Mondrian is the record it is a not-yet-relaxed variant: the
   trick is relaxing after construction (not found yet).  Out-of-place cells: `familymap.py` (PACKER "Family map").
 - Soft-to-rigid engine `harden` (PACKER "Soft-to-rigid engine (10-14)"): band merge at 211 only; opt-in explorer kind.
-- [ ] Time-lapse records video (agent launched 10-14; jlevy colours, regularised frames): `site/timelapse/` (see its README).
+- [ ] Time-lapse records video: done (`site/timelapse/out/`); Evan to return to it.  Fix: store sighting times are local, not UTC.
+- Night 10-14/15 (~128 CPU-h, PACKER "Night 10-14/15"): 0 records at n <= 324.  Chain (NH 85 CPU-h, NB 15), harden on
+  near-misses (NM, N234 fixpoint +4.1e-5), Mondrian relaxation (M2, MH2), strip excision: all negative.  Local search at
+  current budgets has mined the frontier; next gains need constructors.
+- [ ] Constructor priorities: (1) off-diagonal piece library (rectangles re-optimised in free W x H boxes, fq
+  `--rect-dx/--rect-dy`) + offset-converter screen (Evan's Mondrian-offset idea); (2) distorted-strip / V-band
+  constructor (fix `vband.py`'s fit first: 41 / 80 tilted kept at 241); (3) two-bulb and lopsided-bulb constructors.
 
 ## Packings (active, 10-09)
 **10-13 handoff: read `search/packer/HANDOFF-2026-10-13.md` first** (records #584; measured negatives; benchmarks
