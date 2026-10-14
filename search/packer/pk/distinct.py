@@ -20,7 +20,7 @@ Verdict: 'same minimum' if the exact sides agree within SAME_SIDE (2e-9) and no 
 (1e-4); else 'distinct minimum'.
 """
 from __future__ import annotations
-import collections, json, math, os, sqlite3
+import collections, json, math, os, re, sqlite3
 import numpy as np
 
 SAME_SIDE = 2e-9
@@ -51,12 +51,24 @@ def prior_packing(n, path=None, exclude_s=None):
     rows = [r for r in rows if exclude_s is None or abs(r[1] - exclude_s) > SAME_SIDE]
     if not rows:
         return None
-    pid = rows[0][0]
+    same = [r for r in rows if abs(r[1] - rows[0][1]) <= SAME_SIDE]   # copies of the best minimum (side key)
+
+    def first_posted(pid):        # credit the first public poster of that minimum: lowest issue number, then earliest
+        iss, add = [], []         # public sighting
+        for src, a in db.execute(f'SELECT g.source, g.added FROM sighting g WHERE g.packing=? AND ({PUBLIC}) AND NOT {OURS}',
+                                 (pid,)):
+            m = re.match(r'pending:#(\d+)', src or '')
+            if m:
+                iss.append(int(m[1]))
+            add.append(a or '')
+        return (min(iss) if iss else 10 ** 9, min(add) if add else '')
+    pid = min((r[0] for r in same), key=first_posted)
     src = [f'{s} ({f})' for s, f in db.execute('SELECT source, finder FROM sighting WHERE packing=?', (pid,))]
+    others = [r[0] for r in same if r[0] != pid]
     db.close()
     st = Store(path) if path else Store()
     try:
-        return pid, st.get(pid), src
+        return pid, st.get(pid), src + [f'later copies of the same minimum: store ids {others}'] * bool(others)
     finally:
         st.close()
 
