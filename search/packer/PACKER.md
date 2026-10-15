@@ -3245,14 +3245,14 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   NH (0 in 85), the explorer from the live packings, with or without gating and the parent model, does not move the
   frontier at n <= 324: the near-frontier minima it finds are the frontier.  Live records need new structure
   (composition at new sides, J-style generators), not more local search from the current packings.
-* **Crop library for blind Mondrian (09:30)**: `analysis/croplib.py`, the design proposed above, best effort.  Per allowed
+* **Crop library for blind Mondrian (09:08)**: `analysis/croplib.py`, the design proposed above, best effort.  Per allowed
   source: 8 orientations x up to R = 2 dropped columns / rows, tight corner cuts with m in [3, 330], no tilted square
   cut by the box (bounding-box test, conservative), >= 1 tilted inside, excess >= -3; Pareto per (m, floor W, floor H)
   per source then globally.  #481 cutoff: 1,553 sources -> 16,940 crops -> **3,472** (2 s).  Coverage (`cover`): for
   29 of #481's 30 named pieces the library has a piece with the same m and floors and a box no larger (often from
   another source, e.g. s(152)_r2:34 -> s(106)_r1b); the miss is 232's B (store:72 minus one row: its cut slices a
   tilted square).  With >= 3 tilted: 2,258 crops, 28 / 30 (s(5):5 has one tilted square).
-* **L2d, pre-registered (09:32)**: L2c rerun with the library instead of the atlas: `l2_screen.py run --set 481 --lib
+* **L2d, pre-registered (09:09)**: L2c rerun with the library instead of the atlas: `l2_screen.py run --set 481 --lib
   runs/mondrian/croplib481t1.npz` (window 0.3, 8 sides, keep 100, 4 starts per n, explorer 45 min as BM3c),
   `runs/l2/s481d`.  Question: is the piece library the blocker for L2?  Metric: REPLICATED + BEAT-ANTE of 15 (L1
   named: 4 / 5 informative; L2c atlas: 0 / 15).  Prediction: 1-4, point 2 (the right pieces are now present, but the
