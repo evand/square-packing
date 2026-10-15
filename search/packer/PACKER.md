@@ -3267,7 +3267,7 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   (s - target) / (grid - target) over the train n 51, 84, 103, 105, 126, 127, 146, 175 (J events); `report` re-runs
   the top 5 programs (4 seeds) on these plus the 10 other J n and only then compares with Xu's values.  Population: 4
   islands, tournament parent + cross-island inspiration; 8 Sonnet seeds, mutations Haiku 70 % / Sonnet 30 %, an Opus
-  redesign every 30th proposal.  300 proposals, 6 LLM calls in flight, 8 eval procs (`runs/evolve/ev1`).  *Relaunched 10:00 (first launch: relative program path, every eval failed; ~0 CPU).
+  redesign every 30th proposal.  300 proposals, 6 LLM calls in flight, 8 eval procs (`runs/evolve/ev1`).  *Relaunched 09:56 (first launch: relative program path, every eval failed; ~0 CPU).
   Smoke (4 proposals): ~25-55 s per call, list-price equivalent $0.035 (Sonnet) / $0.006 (Haiku) per proposal; seed
   #2 tied 84's target (9.7071068, a 45-degree band) and reached normalised fitness 0.29.
   Leakage notes: the LLM sees nothing after T, but the train / holdout n are J's n (choosing them uses post-T
