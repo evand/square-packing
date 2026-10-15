@@ -3179,3 +3179,7 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
 * **CP500 composition stage**: only 270 (17.0, grid) and 304 (17.9452) composed at slack sides with crop pieces (harden + explorer on those still running); #500 needs
   its own piece work (see the narrowing note).
 * **MH3 launched (05:11)** on 15 cores (CP500's last harden holds one).
+* **RB62c result (05:25)**: miss (prediction 15 %).  57,294 quenches with hole-targeted relocation (3.5 CPU-h): best
+  still 5.9153600655.  RB62-RB62c: 10.2 CPU-h, one basin.  The (62,6) block at his quality needs a different start
+  model (Ostashev: GPU soft-to-rigid from corner staircases); parked.  303 stays the one Ostashev rectangle-block
+  event we cannot replicate blind.
