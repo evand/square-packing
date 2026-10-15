@@ -30,11 +30,29 @@ def event_set(name):
     return evs
 
 
+def live_set(spec, T):
+    """live hunt: n list (a-b,c,...) at the frontier as of T (UTC ISO; default now)"""
+    from pk import eventbench as EB
+    ns = []
+    for part in spec.split(','):
+        lo, _, hi = part.partition('-'); ns += list(range(int(lo), int(hi or lo) + 1))
+    out = []
+    for n in ns:
+        f = EB.frontier_at(n, T)
+        out.append(dict(n=n, T=T, ante=f, S=f, new=f, T_utc=T, T_local=None))
+    return out
+
+
 def run(a):
     from pk import manifest
     os.makedirs(a.out, exist_ok=True)
     man = manifest.start(a.out, 'l2_compose', args=vars(a), procs=a.cores)
-    evs = event_set(a.set)
+    if a.live:
+        import datetime
+        T = a.live_t or datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M')
+        evs = live_set(a.live, T)
+    else:
+        evs = event_set(a.set)
     if a.only:
         keep = {int(x) for x in a.only.split(',')}; evs = [e for e in evs if e['n'] in keep]
     T_utc, T_local = evs[0]['T_utc'], evs[0]['T_local']
@@ -42,8 +60,10 @@ def run(a):
     ns = ','.join(str(e['n']) for e in evs)
     cdir = f'{a.out}/compose'
     if not os.path.exists(f'{cdir}/near.jsonl'):
-        subprocess.run([sys.executable, f'{PK}/compose2.py', 'run', '--ns', '1-400', '--only', ns, '--blind', T_local,
-                        '--blind-t', T_utc, '--target', f'cutoff:{T_utc}', '--probe', str(a.probe), '--budget', str(a.budget),
+        blind = [] if a.live else ['--blind', T_local, '--blind-t', T_utc]
+        target = 'now' if a.live else f'cutoff:{T_utc}'
+        subprocess.run([sys.executable, f'{PK}/compose2.py', 'run', '--ns', '1-400', '--only', ns, *blind,
+                        '--target', target, '--probe', str(a.probe), '--budget', str(a.budget),
                         '--procs', str(a.cores), '--out', cdir], cwd=PK, check=True)
     near = {}
     for l in open(f'{cdir}/near.jsonl'):
@@ -68,7 +88,8 @@ def run(a):
         json.dump(ev, open(f'{d}/event.json', 'w'), indent=1)
         print(f"n={ev['n']}: {len(R)} near arms, tightest {ev['near_best']}  ante {ev['ante']:.10f} posted {ev['S']:.10f}", flush=True)
     subprocess.run([sys.executable, f'{PK}/harden_explore.py', 'run', '--src', sdir, '--starts-glob', 'start[0-9]*.txt',
-                    '--out', f'{a.out}/explore', '--minutes', str(a.minutes), '--cores', str(a.cores)], cwd=PK, check=True)
+                    '--out', f'{a.out}/explore', '--minutes', str(a.minutes), '--cores', str(a.cores),
+                    *(['--max-need', str(a.max_need)] if a.max_need is not None else [])], cwd=PK, check=True)
     man.finish()
 
 
@@ -82,6 +103,9 @@ if __name__ == '__main__':
     r.add_argument('--only'); r.add_argument('--probe', type=float, default=0.3); r.add_argument('--budget', type=float, default=120)
     r.add_argument('--per-n', type=int, default=4); r.add_argument('--minutes', type=float, default=20)
     r.add_argument('--cores', type=int, default=16)
+    r.add_argument('--live', help='live hunt instead of an event set: n list, e.g. 100-324 (target = frontier now)')
+    r.add_argument('--max-need', type=float, help='explore only n whose tightest near arm is within this of the target')
+    r.add_argument('--live-t', help='UTC ISO for the live frontier (default: now)')
     s = sp.add_parser('score'); s.add_argument('--out', required=True)
     a = ap.parse_args()
     {'run': run, 'score': score}[a.cmd](a)
