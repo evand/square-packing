@@ -27,3 +27,8 @@ Cross-agent lessons (inputs to gen 1):
    hole insertion (build for n - 1, add squares in holes; P005).
 5. Agents segmented the reference PNGs (P001, P003): reproduction partly image-traced -> gen 1 shows only near-record
    packings (`evolve_eval.py near`), never the record, and scores on row segments with a soft-min (Evan 10-15).
+
+## Gen 1 (holdout row 234-240; near-record refs only)
+| prompt | parent | direction | best per n (normalised gap) | notes |
+|---|---|---|---|---|
+| P010 | P004 + P006 | blocks at two angles / composition | **234 0.000, 235 0.000 (hidden records tied blind)**, 236 +0.128, 237-240 1.0 / failed | verified 14:20: feasible (pen 0), 36 tilted each; nearest refs shown were 5e-3 / 7e-3 worse.  234 = 15 + (sqrt 7 - 1) / 2 (the 24.3° catalogue family); 235 = 15.8266056334 is not a family value: the first real holdout reproduction.  The winner is NOT the prompted motif: a 2-wide corner-to-corner band of 18 rungs at 24-28° (19 rungs ~40-45° at 236); the optimiser places the slips.  Every two-angle / composed structure failed (fill 15-20 short).  Method: read its own optimised packings rung by rung to fit rung count and end insets; overlaid candidates on the ref PNGs to check geometry without spending evals.  Found an evaluator bug: softmin drops failed n (a failed n raises the score); fix after gen 1.  Suggests: bands first; blocks only as rungs meeting upright rows at integer heights; per-n tilted counts (~50 at 237 ... ~85 at 240) |
