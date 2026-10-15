@@ -60,7 +60,7 @@ def run(a):
     ns = ','.join(str(e['n']) for e in evs)
     cdir = f'{a.out}/compose'
     if not os.path.exists(f'{cdir}/near.jsonl'):
-        blind = [] if a.live else ['--blind', T_local, '--blind-t', T_utc]
+        blind = [] if a.live else ['--blind', a.blind_local or T_local, '--blind-t', T_utc]
         target = 'now' if a.live else f'cutoff:{T_utc}'
         subprocess.run([sys.executable, f'{PK}/compose2.py', 'run', '--ns', '1-400', '--only', ns, *blind,
                         '--target', target, '--probe', str(a.probe), '--budget', str(a.budget),
@@ -104,6 +104,7 @@ if __name__ == '__main__':
     r.add_argument('--per-n', type=int, default=4); r.add_argument('--minutes', type=float, default=20)
     r.add_argument('--cores', type=int, default=16)
     r.add_argument('--live', help='live hunt instead of an event set: n list, e.g. 100-324 (target = frontier now)')
+    r.add_argument('--blind-local', help="override the store add-time cutoff (e.g. 2000-01-01: register-frontier pieces only)")
     r.add_argument('--max-need', type=float, help='explore only n whose tightest near arm is within this of the target')
     r.add_argument('--live-t', help='UTC ISO for the live frontier (default: now)')
     s = sp.add_parser('score'); s.add_argument('--out', required=True)
