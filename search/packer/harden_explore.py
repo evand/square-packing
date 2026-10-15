@@ -23,7 +23,8 @@ def gather(srcs, starts_glob=None):
                 e = E.setdefault(b, dict(ev=ev, res=[]))
                 for g in starts_glob.split(','):
                     for f in glob.glob(f'{d}/{g}'):
-                        e['res'].append((float(open(f).readline().split()[1]), f))
+                        from fractions import Fraction
+                        e['res'].append((float(Fraction(open(f).readline().split()[1])), f))
             continue
         for ej in sorted(glob.glob(f'{s}/*/event.json')):
             d = os.path.dirname(ej); b = os.path.basename(d)
