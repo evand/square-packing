@@ -3183,3 +3183,6 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   still 5.9153600655.  RB62-RB62c: 10.2 CPU-h, one basin.  The (62,6) block at his quality needs a different start
   model (Ostashev: GPU soft-to-rigid from corner staircases); parked.  303 stays the one Ostashev rectangle-block
   event we cannot replicate blind.
+* **MH3 result (06:00): 0 records** (prediction 0-1, point 0.4).  30 n, 10.0 CPU-h.  The explorer took 12 of the
+  non-tie harden outputs down to the frontier exactly (ties to 1e-11: 29, 38, 53, 87, 125, 151, 198, 201, 257, 258,
+  262, 290), none below.  At the live frontier these compositions land on the known records.  L2-481 launched.
