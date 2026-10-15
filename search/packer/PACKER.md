@@ -3118,3 +3118,26 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
 * **Sync (03:10)**: `pk.py watch --apply`: #607 (Couzo, 237-1024) and #610 (bengreff, s(95) = 10) added to pending.yaml;
   624 new distinct packings (Couzo master, Mishapolk), almost all n > 324.  New bests at n <= 324: only 237
   15.9026036383 (-1.0e-4) and 211 14.9935496263 (-9.3e-6).  The public frontier below 325 is nearly static since 10-13.
+* **JT1 result (03:45): 0 / 10.**  The explorer from the pre-#432 register packings did not move any of the 10 n (all
+  finals = ante to 1e-9; 20 min x 1 proc each, ~3.3 CPU-h).  Prediction (3 BEAT-ANTE, 1 REPLICATED): miss.  Xu's J
+  gains are new layouts; a nearby search from the old record never leaves its basin (consistent with 126 being reached
+  only from structured staircase seeds on 10-09).  Family J needs a generator, not a local search.
+* **RB62b result (03:35)**: no progress: 62,425 more quenches from RB62's 8 best minima, best still 5.9153600655.
+  Rendering his block next to ours (scratchpad blocks.png): same band (rows of ~23 deg squares), different upright
+  slots (his bottom row 3 uprights + 1 tilted, ours 4 uprights; his right edge 3 stacked uprights, ours 2).  The gap is
+  combinatorial (which slot each of a few squares takes); Gaussian kicks cannot swap slots.  `--reloc` (relocate 1-3
+  squares to random spots) added and smoke-tested: 3 / 289 relocations stay below 5.92: random spots are too
+  destructive.  Needs hole-targeted placement; parked.
+* **BM3 near-final (03:45)**: compose -> harden -> explorer: **207 REPLICATED (14.8853676, below SQUISH's 14.8855063),
+  269 REPLICATED (16.9015135822 = posted), 232 BEAT-ANTE (15.7703114)**, 303 +2.4e-4 short, 236 no; 153 / 302 / 307 are
+  grid-collapse starts (uninformative).  First reproduction of the Mondrian v1 squeeze.  Final with the full score.
+* **CP500, pre-registered (03:47)**: the BM3 pipeline on #500's 8 events (Mondrian v2 narrowed): `comp_l1 run --set 500
+  --arm both --window 0.3 --extra 8 --minutes 0` (slack sides, raw layouts saved) -> `reach_harden --glob 'raw[0-9].txt'
+  --procs 1` -> `harden_explore --minutes 20`, 8 cores.  Prediction: BEAT-ANTE or better 3 / 8 (some will not compose
+  even at S + 0.3, as 131 / 209 / 270 / 305 in #481).
+* **BM3 final (03:52)**: 207 REPLICATED (14.8853676016), 269 REPLICATED (16.9015135822), 232 BEAT-ANTE (15.7701888915);
+  303 +2.35e-4, 236 +1.6e-2; 153 / 302 / 307 grid-collapse starts.  **3 / 5 informative** (prediction 1 / 8 BEAT-ANTE,
+  0 REPLICATED: beaten).  CPU: BM1 2.76 + BM2 6.60 + BM3 2.67 = 12.0 CPU-h.  Hits trace to BM1 starts (207, 232) and BM2
+  raw starts (269): both harden sources matter.  Claim C46 (plausible).  The 02:20 "band merging" reading was wrong
+  (count threshold); the right reading: Mondrian v1's squeeze = a soft-to-rigid restructure (uprights join the band)
+  followed by a nearby search.

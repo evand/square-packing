@@ -24,6 +24,7 @@ for _v in ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS'):
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+RELOC = 0.0                      # share of elite moves that relocate 1-3 squares (run --reloc; set before the pool forks)
 sys.path.insert(0, HERE)
 ALPHABET = [45.0, math.degrees(math.atan(0.5)), math.degrees(math.atan(1 / 3)), math.degrees(math.atan(2 / 3)),
             24.4, 36.87, 28.07]
@@ -74,10 +75,24 @@ def worker(args):
             k = min(len(elite) - 1, int(rng.exponential(1.5)))
             h0, sq = elite[k]
             h_par = h0                               # the parent's side, before the dilation below
-            sig = sig_ad if adaptive else KICKS[rng.integers(len(KICKS))]
-            sq = sq.copy(); sq[:, :2] += rng.normal(0, sig, (m, 2)); sq[:, 2] += rng.normal(0, 20 * sig, m)
-            h0 = h0 * (1 + sig / 10)
-            kind = f'kick{sig:.3g}'
+            if RELOC and rng.random() < RELOC:            # relocate 1-3 squares (mostly uprights) to random spots
+                sq = sq.copy(); W = h0 + d
+                up = np.abs(((sq[:, 2] + 45) % 90) - 45) < 0.5
+                kk = int(rng.integers(1, 4))
+                pool = np.nonzero(up)[0] if up.any() and rng.random() < 0.7 else np.arange(m)
+                idx = rng.choice(pool, size=min(kk, len(pool)), replace=False)
+                tilt = sq[~up, 2]
+                for i in idx:
+                    sq[i, 0] = rng.uniform(0.5, W - 0.5); sq[i, 1] = rng.uniform(0.5, h0 - 0.5)
+                    sq[i, 2] = 0.0 if (rng.random() < 0.5 or not len(tilt)) else float(np.median(tilt))
+                sq[:, :2] += rng.normal(0, 0.01, (m, 2))
+                h0 = h0 * 1.01
+                kind = f'reloc{len(idx)}'
+            else:
+                sig = sig_ad if adaptive else KICKS[rng.integers(len(KICKS))]
+                sq = sq.copy(); sq[:, :2] += rng.normal(0, sig, (m, 2)); sq[:, 2] += rng.normal(0, 20 * sig, m)
+                h0 = h0 * (1 + sig / 10)
+                kind = f'kick{sig:.3g}'
         q = Q
         if kind == 'start' and rng.random() < a_soft:
             q = Q.but(round_r0=float(rng.choice([0.1, 0.2, 0.3, 0.45])), round_compress=True, round_steps=20)
@@ -113,6 +128,8 @@ def run(a):
     os.makedirs(a.out, exist_ok=True)
     man = manifest.start(a.out, 'rectsearch', args=vars(a), procs=a.procs)
     scratch.scope('rectsearch')
+    global RELOC
+    RELOC = a.reloc
     cells = [tuple(map(int, c.split(':'))) for c in a.cells.split(',')] if a.cells else \
         [tuple(c) for c in json.load(open(a.cells_file))]
     per = max(1, a.procs // len(cells)) if len(cells) <= a.procs else 1
@@ -252,6 +269,7 @@ if __name__ == '__main__':
     r.add_argument('--adaptive', action='store_true', help='adaptive kick size (x2 on success, /2 on failure)')
     r.add_argument('--start-frac', type=float, default=0.4, help='share of the time spent on fresh starts only')
     r.add_argument('--init', nargs='*', help='earlier rectsearch out dirs: their best minima seed the elite (continue)')
+    r.add_argument('--reloc', type=float, default=0.0, help='share of elite moves that relocate 1-3 squares')
     r.add_argument('--init-split', action='store_true', help='each worker gets one of the init minima (k-th best)')
     b = sp.add_parser('bandit'); b.add_argument('--cells-file', required=True); b.add_argument('--out', required=True)
     b.add_argument('--episode', type=float, default=120); b.add_argument('--cpu-hours', type=float, default=1.0)
