@@ -2958,3 +2958,22 @@ Evan 10-14: a short, high-power test that also covers far reach (the replay cann
   (at 110 nearly every minimum is within 1e-2 of the record, so the model does not starve these as it does the far
   parents at other n; P(PF / G < 1 at md >= 0.05) 0.35).
 * Smoke (1 min each, `runs/h110_pm_smoke`): G 38 withheld, PF 49 in ~125 CPU-s each; every PF pick logged `pm`.
+
+### H110-PM, result (10-15 ~00:15; `analysis/h110_pm.py score --json runs/h110_pm/score.json`)
+Ran at `3185510` (clean); 8 runs x 10 min x 2 procs, ~2.7 CPU-h.  Bookkeeping note (Evan): at 110 the grid is 3.2e-3
+above the record, and the census tracks only sub-11 minima, so every withheld target is within 3.2e-3; above-grid
+states are parents here, never targets.  This test covers sub-11 rediscovery and structural (matching-distance) reach only.
+* **Primary: PF / G = 1.05 [0.85, 1.30]: open** (predicted 1.3).  Withheld per CPU-h G 211, PF 223.
+* Strata: gap < 1e-3 (34): **0.70 [0.46, 1.07]** (predicted 1.8: wrong direction); 1e-3..3e-3 (286): 1.20 [0.98, 1.47];
+  >= 3e-3 (50, the shallow edge 10.9998-11): 0 in both arms; md < 0.05: 0.90 [0.66, 1.23]; md >= 0.05: 1.11 [0.89, 1.38]
+  (predicted 1.1).  Record re-found 4 / 4 reps in both.
+* Saturation: by 150 s PF / G 1.19, by 300 s 1.06, at 600 s 1.05; union over reps G 102, PF 108 of 370: both arms hit
+  the reachable pool from these 40 starts within minutes, which compresses any difference.
+* Why PF did not concentrate: parent CPU by side: G 44 % below 10.998 (elite share 0.3 = the 20 deepest), 14 %
+  10.998-11, 41 % above 11; PF 13 % / 85 % / 2 %.  The fitted model uses *absolute* gap bins (vs best visible
+  10.99679): almost the whole sub-11 census sits in the 1e-3..3e-3 bin, the near bin holds few entries, and the
+  saturation term spreads mass over the big bin, so PF put less CPU near the record than G's elite picks.  PF polished
+  6,236 proposals (89 % of CPU) vs G 7,853 (57 %): fewer proposals, more expensive ones, no more minima.
+* Reading: the absolute-gap model does not transfer to n = 110's compressed band (every sub-11 minimum within 3.2e-3);
+  the TT3 subset gain (C44) is real there but not general.  Fixes to try: gap relative to the run's own distribution
+  (rank / quantile among archive entries, or gap / (grid side - frontier)), and keeping an elite share beside the model.
