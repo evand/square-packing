@@ -2921,3 +2921,20 @@ start, (1 + expanded)^-0.78, (1 + archive-new children)^0.57; `explore.PM_*`); o
   The logged-CPU bound (3.7x for the top 25 % of CPU) is an upper bound.
 * Smoke (`runs/tt3/smoke3`, round 89 n 211, 1.5 min, PF): 96 % of CPU on parents within 1e-3 of frontier_T (G there:
   52 %), pick probabilities up to 0.9 early (one seed dominates until expansions accumulate).
+
+### Result, round 3 (10-14 ~23:30; `analysis/tt3_score.py runs/tt3/PF runs/tt3/PH runs/tt3/G --schedule runs/tt3/sub12_schedule.json --json runs/tt3/score3.json`)
+Ran at `9af0ef3` (clean).  1.60 CPU-h per arm (round manifests), 12 rounds.
+* **PF / G = 1.98 [1.52, 2.63]: PASS.  PH / G = 1.67 [1.25, 2.22]: PASS.**  PF / PH = 1.18 [1.00, 1.41].  Near-frontier
+  new minima PF 654, PH 554, G 332 (S-historical 171).  Predicted PF ~1.5, PH ~1.3: both above.
+* Identity check (PF polishes 38 % of proposals vs G 9 %, so repeat polishes could add side keys by f64 noise): counting
+  a row as new only if no reference / earlier row is within side 1e-5 **and** matching distance (pk.cluster.md) 1e-3:
+  PF / G 1.90, PH / G 1.63; at md 1e-2 (merges rattler variants) 1.73 / 1.60; side 1e-4 + md 1e-2: 1.66 / 1.58.  Side
+  alone at 1e-5 / 1e-4 gives 1.40 / 1.13, but that merges distinct configurations (so it understates).
+* Where the CPU went (share / y per CPU-h by parent gap bin): parents within 1e-3: G 29 %, PH 59 %, PF 77 %; >= 1e-2:
+  G 59 %, PH 27 %, PF 6 %.  Saturation as expected: y per CPU-h in the 1e-4..1e-3 bin G 782, PH 603, PF 511; near
+  parents' mean expansions 9.5 / 18.3 / 25.7.  The shift outweighs it.
+* Best gap per n vs G: PF better 6 / worse 1 / tied 5; PH 5 / 2 / 5.  Near-count higher at 11 / 10 of 12 n.
+  Records on the subset: PF 1 (132), PH 1 (132), G 1 (132).
+* Not measured, and the cost to watch: PF leaves far parents almost no CPU (6 % at >= 1e-2), so far-region discovery
+  (TT2's region metric; Evan's donor question) will drop.  The all-n confirmation should carry the region metric.
+* Next: confirm on the full 49 rounds (PF, maybe a sharper beta), then the all-n hunt-style test with regions + records.
