@@ -1478,7 +1478,12 @@ fn relax_fixed(p: &mut Prob, s: f64, x0: &[f64], skin: f64) -> (Vec<f64>, f64, u
 /// Shrink-hopping descent: grow until the fixed-side overlap problem is solved, then shrink by d (positions scaled about
 /// the centre) while it stays solvable, halving d on failure (back to the last feasible state) down to dmin.
 /// Returns (s, x) of the last feasible state, total evals, shrink steps.
-fn shrink(s0: f64, x0: &[f64], d0: f64, dmin: f64, vtol: f64, verbose: bool) -> (f64, Vec<f64>, usize, usize) {
+/// Hopping (10-15, SQUISH "Iterative Shrink-Hopping" reading): when a shrink step fails, up to `hops` kicks of `hk`
+/// random squares (all if hk = 0; gaussian sigma on x, y and angle) from the failed relaxed state, each re-relaxed at
+/// the same target side, before d is halved; a kick that resolves the step is accepted like a plain success.
+#[allow(clippy::too_many_arguments)]
+fn shrink(s0: f64, x0: &[f64], d0: f64, dmin: f64, vtol: f64, verbose: bool, hops: usize, sig: f64, hk: usize, seed: u64) -> (f64, Vec<f64>, usize, usize) {
+    let mut rng = Rng::new(seed);
     let n = x0.len() / 3;
     let mut p = Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: true, b: Vec::new() };
     let scale = |x: &[f64], s: f64, f: f64| -> Vec<f64> {
@@ -1507,8 +1512,27 @@ fn shrink(s0: f64, x0: &[f64], d0: f64, dmin: f64, vtol: f64, verbose: bool) -> 
         let xt = scale(&xf, sf, 1.0 - d);
         let (xr, vi, ne) = relax_fixed(&mut p, st, &xt, 0.3);
         nev += ne;
-        if vi < vtol { sf = st; xf = xr; if verbose { eprintln!("  shrink ok s {sf:.10} d {d:.1e}"); } }
-        else { d /= 2.0; }
+        if vi < vtol { sf = st; xf = xr; if verbose { eprintln!("  shrink ok s {sf:.10} d {d:.1e}"); } continue; }
+        let (mut xb, mut vb, mut ok) = (xr, vi, false);
+        for h in 0..hops {
+            let mut xk = xb.clone();
+            let m = if hk == 0 || hk >= n { n } else { hk };
+            for _ in 0..m {
+                let i = if m == n { 0 } else { (rng.next() % n as u64) as usize };
+                let idx: Vec<usize> = if m == n { (0..n).collect() } else { vec![i] };
+                for &j in &idx {
+                    xk[3 * j] = (xk[3 * j] + sig * rng.gauss()).clamp(H, st - H);
+                    xk[3 * j + 1] = (xk[3 * j + 1] + sig * rng.gauss()).clamp(H, st - H);
+                    xk[3 * j + 2] += sig * rng.gauss();
+                }
+                if m == n { break; }
+            }
+            let (xr2, vi2, ne2) = relax_fixed(&mut p, st, &xk, 0.3);
+            nev += ne2;
+            if vi2 < vtol { sf = st; xf = xr2; ok = true; if verbose { eprintln!("  hop {h} ok s {sf:.10} d {d:.1e}"); } break; }
+            if vi2 < vb { vb = vi2; xb = xr2; }
+        }
+        if !ok { d /= 2.0; }
     }
     (sf, xf, nev, steps)
 }
@@ -1733,7 +1757,8 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
             // already (nearly) feasible: polish directly
             (s1, x.clone(), 0, 0, 0.0, Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: false, b: Vec::new() })
         } else if a.iter().any(|t| t == "--shrink") {
-            let (ss, xs, ne, st) = shrink(s1, &x, arg(&a, "--d0", 2e-3), arg(&a, "--dmin", 1e-6), arg(&a, "--vtol", 1e-10), o.verbose);
+            let (ss, xs, ne, st) = shrink(s1, &x, arg(&a, "--d0", 2e-3), arg(&a, "--dmin", 1e-6), arg(&a, "--vtol", 1e-10), o.verbose,
+                                          arg(&a, "--hops", 0usize), arg(&a, "--hop-sigma", 0.02), arg(&a, "--hop-k", 3usize), arg(&a, "--seed", 1u64));
             if o.verbose { eprintln!("shrink: s {ss:.10} evals {ne} steps {st}"); }
             (ss, xs, ne, st, 0.0, Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: false, b: Vec::new() })
         } else { quench(s1, &x, &o) };

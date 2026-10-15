@@ -65,6 +65,9 @@ class QOpt:
     soft_p: float | None = None
     d0: float | None = None          # --shrink schedule
     dmin: float | None = None
+    hops: int | None = None          # --shrink hopping (10-15): kicks per failed shrink step
+    hop_sigma: float | None = None
+    hop_k: int | None = None
     vtol: float | None = None
     tr_grow: float | None = None
     tr_shrink: float | None = None
