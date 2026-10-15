@@ -61,7 +61,11 @@ def cmd_eval(a):
         R = list(ex.map(E.eval_job, jobs))
     best = {}
     errs = {}
+    mins = {}
     for (_, n, *_), r in zip(jobs, R):
+        for m in r.get('minima', []):
+            if all(abs(m[0] - x[0]) > 1e-9 for x in mins.setdefault(n, [])):
+                mins[n].append(m)
         if 's' in r:
             if n not in best or r['s'] < best[n]['s']:
                 best[n] = r
@@ -80,11 +84,39 @@ def cmd_eval(a):
             f.write(f"{n} {r['s']!r}\n" + ''.join(f'{x!r} {y!r} {t!r}\n' for x, y, t in r['sq']))
         render(r['s'], r['sq'], f'{a.out}/n{n}.png', f"n={n} s={r['s']:.6f} target {T:.6f}")
         rows.append(dict(n=n, s=r['s'], target=T, ng=ng))
+    ok = [r['ng'] for r in rows if 'ng' in r]
+    if ok:
+        T = 0.02                                          # soft-min: one great n counts (Evan 10-15), the mean for reference
+        sm = -T * math.log(np.mean(np.exp(-np.array(ok) / T)))
+        print(f'SCORE  softmin(T={T}) {sm:+.4f}   best {min(ok):+.4f}   mean {np.mean(ok):+.4f}   '
+              f'(normalised gaps; failed n count as missing)')
+    archive_minima(a, prog, mins)
     print(f'renderings: {a.out}/n<N>.png   coordinates: {a.out}/n<N>.txt   ({time.time() - t0:.0f} s)')
     os.makedirs(os.path.dirname(LOG), exist_ok=True)
     with open(LOG, 'a') as f:
         f.write(json.dumps(dict(t=time.strftime('%Y-%m-%dT%H:%M:%S'), tag=a.tag, prog=prog, target=a.target, rows=rows,
                                 sec=round(time.time() - t0, 1))) + '\n')
+
+
+def archive_minima(a, prog, mins):
+    """every distinct non-grid minimum (>= 5 tilted, feasible) -> <out>/n<N>/archive.jsonl in explore.py's format, so
+    census_collect.py can certify / catalogue them like explorer runs (Evan 10-15: keep novel slightly-worse minima,
+    as in the s(110) census); plus one line each in runs/evolve2/minima.jsonl (the cross-run index)."""
+    import mcmin
+    idx = os.path.join(PK, 'runs', 'evolve2', 'minima.jsonl')
+    with open(idx, 'a') as fi:
+        for n, L in mins.items():
+            d = os.path.abspath(f'{a.out}/n{n}'); os.makedirs(d, exist_ok=True)
+            T = target_of(n, a.target); g = math.ceil(math.sqrt(n) - 1e-12)
+            with open(f'{d}/archive.jsonl', 'w') as fa:
+                for i, (s, sq) in enumerate(sorted(L)):
+                    path = f'{d}/b{i:05d}.txt'
+                    mcmin.write_deg(path, s, [tuple(q) for q in sq])
+                    a_ = np.asarray(sq)[:, 2] % 90.0
+                    nt = int((np.minimum(a_, 90 - a_) > 1.0).sum())
+                    fa.write(json.dumps(dict(i=i, s=s, path=path, kind=f'evolve:{a.tag}', t=0, known=False, parent=-1)) + '\n')
+                    fi.write(json.dumps(dict(n=n, s=s, gap=s - T, ng=(s - T) / max(g - T, 1e-9), tilted=nt, path=path,
+                                             tag=a.tag, prog=prog, t=time.strftime('%Y-%m-%dT%H:%M:%S'))) + '\n')
 
 
 def cmd_ref(a):

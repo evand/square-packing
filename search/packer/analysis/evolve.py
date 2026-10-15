@@ -102,6 +102,7 @@ def eval_job(args):
         return dict(n=n, err=res['error'])
     best = None
     fills = []
+    mins = []
     for s, sq in res['cands']:
         if fill:                                          # the given squares stay; the exact MILP adds uprights
             import mondrian as M
@@ -125,12 +126,15 @@ def eval_job(args):
             pp = q2.p if q2.p is not None else q.p
             if pp.max_pen() > 1e-7:
                 continue
+            if pp.ntilted() >= 5 and all(abs(pp.s - m[0]) > 1e-9 for m in mins):   # distinct non-grid minima
+                mins.append((float(pp.s), pp.sq.tolist()))
             if best is None or pp.s < best.s:
                 best = pp
     fx = f'; exact fill at the given s reached {max(fills)} / {n} squares (best candidate)' if fills else ''
     if best is None:
         return dict(n=n, err='no candidate optimised to a feasible packing' + fx, cands=len(res['cands']))
-    return dict(n=n, s=float(best.s), sq=best.sq.tolist(), desc=describe(best) + fx, cands=len(res['cands']))
+    return dict(n=n, s=float(best.s), sq=best.sq.tolist(), desc=describe(best) + fx, cands=len(res['cands']),
+                minima=sorted(mins)[:40])
 
 
 # ------------------------------------------------------------------ LLM proposals (threads)
