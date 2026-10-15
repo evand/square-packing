@@ -230,6 +230,11 @@ def main(a):
             n, pth = x.split(':')
             dst = f'{a.out}/carry_{n}_x{q}.txt'; shutil.copy(pth, dst)
             S['n'][n].setdefault('carry', []).append(dst)
+        if a.schedule:                              # TT3 replay (10-15): fixed [[round, n], ...] list, run in order
+            S['sched'] = [[int(r), int(n)] for r, n in json.load(open(a.schedule))]
+            bad = [n for _, n in S['sched'] if str(n) not in S['n']]
+            if bad:
+                sys.exit(f'--schedule names n = {sorted(set(bad))} that are not in the n set')
     live = {}
     t_end = time.time() + 3600 * a.hours
     def pick():
@@ -242,14 +247,22 @@ def main(a):
         if a.first_pass and any(S['n'][str(n)]['rounds'] == 0 for n in cand):
             cand = [n for n in cand if S['n'][str(n)]['rounds'] == 0]
         return max(cand, key=lambda n: (sum(S['n'][str(n)]['gains'][-2:]), -S['n'][str(n)]['rounds']))
-    while time.time() < t_end or live:
+    while (time.time() < t_end and (not a.schedule or S['sched'])) or live:
         while time.time() < t_end and len(live) < a.slots:
-            n = pick()
-            if n is None:
-                break
+            if a.schedule:
+                # replay: the first scheduled round whose n is not running (keeps each n's rounds in order); the round
+                # number is the scheduled one, so seeds, removal seeds and library picks match the replayed run
+                nxt = next((i for i, (_, m) in enumerate(S['sched']) if m not in live.values()), None)
+                if nxt is None:
+                    break
+                rr, n = S['sched'].pop(nxt)
+            else:
+                n = pick()
+                if n is None:
+                    break
             v = S['n'][str(n)]
             v['dirty'] = False
-            S['round'] += 1
+            S['round'] = rr if a.schedule else S['round'] + 1
             rd = f'{a.out}/r{S["round"]:04d}_n{n}'
             if os.path.exists(rd):      # left by a run killed mid-round: set it aside (lineage ignores *.partial*)
                 os.rename(rd, f'{rd}.partial{int(time.time())}')
@@ -383,6 +396,8 @@ if __name__ == '__main__':
     ap.add_argument('--lib-policy', default='banded', help='pk/parents policy for --lib store (banded | cluster | spread | best)')
     ap.add_argument('--bandit', default='band', choices=['band', 'n'],
                     help='move-kind statistics: pooled per n band, no decay, full carry (default 10-14, A1) or per n (pre-10-14: 600 s wall half-life, x0.5 carry)')
+    ap.add_argument('--schedule', help='json [[round, n], ...]: replay exactly these rounds in this order with these round '
+                    'numbers (seeds, library picks), instead of the dirty-first scheduler (TT3, 10-15); ends when done')
     ap.add_argument('--allow-missing', action='store_true', help='skip n missing from --src instead of failing')
     a = ap.parse_args()
     TRIES = a.seed_tries

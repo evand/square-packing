@@ -34,7 +34,9 @@ def mv_bigkick(s, sq, rng, a):
     return [(x + rng.gauss(0, sig), y + rng.gauss(0, sig), t + rng.gauss(0, 20 * sig)) for x, y, t in sq], f'bigkick {sig:.3f}'
 
 
-ANNEAL = os.path.join(HERE, 'target/release/anneal')   # current src (10-11; was target-dev, a 10-08 build)
+ANNEAL = os.path.join(HERE, 'target/release/anneal')
+UNP_TOL = 1e-5     # --polish-gate: a screened (unpolished) side is the same basin as an archive / novelty-ref side within this
+                   # (screen side error: median ~7e-5 at k = 0, 2e-6 at k = 4, 1e-8 at k = 8 SLP iterations; PACKER 10-07)   # current src (10-11; was target-dev, a 10-08 build)
 
 
 def melt_side(s, sq, rng, a):
@@ -354,8 +356,8 @@ class Archive:
                 return e
         return None
 
-    def add(self, s, sq, parent, kind, t, mate=None, fp=None):
-        e = self.find(s)
+    def add(self, s, sq, parent, kind, t, mate=None, fp=None, unpolished=False):
+        e = self.find(s, UNP_TOL if unpolished else ID.SAME_SIDE)
         if e:
             e['visits'] += 1
             return e, False
@@ -370,6 +372,8 @@ class Archive:
             e['mate'] = mate                 # crossover mate's archive path (own lineage or borrowed: compare roots)
         if fp:
             e['cfp'] = fp                    # fq contact fingerprint (self.fp is the sparse rule's image list)
+        if unpolished:
+            e['unpolished'] = True           # --polish-gate: screened side only (store import: status 'screened')
         if self.fp is not None:
             self.fp_add(e, s, sq)
         self.E.append(e)
@@ -464,8 +468,9 @@ def replay(out, line):
     p = P[line]
     if 'seed' not in p:
         raise SystemExit('proposal record has no seed (run predates 10-11 provenance)')
-    if man.get('polish_margin'):
-        print('warning: --polish-margin run: pol_above depended on the archive best at the time (not logged)')
+    if man.get('polish_margin') or man.get('polish_gate'):
+        print('warning: --polish-margin / --polish-gate run: pol_above depended on the run best at the time (not logged); '
+              'replayed with polish everything')
     par = E[p['par']]
     s, sq = mcmin.load_deg(os.path.join(out, os.path.basename(par['path'])))
     n = len(sq); k = math.ceil(math.sqrt(n) - 1e-12)
@@ -497,6 +502,9 @@ if __name__ == '__main__':
     ap.add_argument('--elite-share', type=float, default=0.0, help='share of parent picks from the global top-K basins (exploit)')
     ap.add_argument('--elite-k', type=int, default=20)
     ap.add_argument('--polish-margin', type=float, default=0.0, help='full polish only if screened side < best + margin (0 = always)')
+    ap.add_argument('--polish-gate', type=float, default=0.0, help='TT3 (10-15): full polish only if the screened side < '
+                    'min(--frontier-s, run best) + G; the rest are kept as unpolished stepping stones (never elite parents, never '
+                    'the run best, identity / novelty at UNP_TOL).  0 = off (polish everything)')
     ap.add_argument('--novel-ref', help='json list of sides: bandit rewards only basins not within 2e-9 of these (global novelty)')
     ap.add_argument('--polish-extra', default='', help='extra fq args for the stage-2 polish (e.g. "--stag-tol 1e-7": search precision)')
     ap.add_argument('--final-polish', type=int, default=0, help='at the end, full default polish of the K best archive entries')
@@ -581,9 +589,9 @@ if __name__ == '__main__':
     cellb = CellBandit() if a.adapt_cells else None
     import bisect
     nref = sorted(json.load(open(a.novel_ref))) if a.novel_ref else []
-    def novel(s):
-        i = bisect.bisect_left(nref, s - ID.SAME_SIDE)
-        return not (i < len(nref) and abs(nref[i] - s) < ID.SAME_SIDE)
+    def novel(s, tol=ID.SAME_SIDE):
+        i = bisect.bisect_left(nref, s - tol)
+        return not (i < len(nref) and abs(nref[i] - s) < tol)
     pend = {}
     ar_best = [min(e['s'] for e in ar.E)] if getattr(ar, 'E', None) else [math.inf]
     frontier_s = a.frontier_s if a.frontier_s is not None else ar_best[0]
@@ -597,13 +605,17 @@ if __name__ == '__main__':
                  [e['path'] for e in ar.E if e['s'] < ar.smax and e['i'] != par['i']]
             return rng.sample(xp, min(CROSS2_NEAR, len(xp)))
         return []
+    def pol_above():
+        if a.polish_gate:
+            return min(frontier_s, ar_best[0]) + a.polish_gate
+        return (min(e['s'] for e in ar.E) + a.polish_margin) if a.polish_margin else float('inf')
     with ProcessPoolExecutor(a.procs) as ex:
         def submit():
             fr = None
             if a.frontier and rng.random() < a.frontier_share:
                 fr = [e['i'] for e in ar.E if e['parent'] < 0 and e['kind'].startswith('start:') and e.get('src', '').startswith(a.frontier)]
             if not fr and a.elite_share and rng.random() < a.elite_share:
-                el = sorted((e for e in ar.E if e['s'] < k), key=lambda e: e['s'])[:a.elite_k]
+                el = sorted((e for e in ar.E if e['s'] < k and not e.get('unpolished')), key=lambda e: e['s'])[:a.elite_k]
                 par = rng.choices(el, weights=[1.0 / (1 + e['expanded']) for e in el])[0] if el else ar.pick(rng, cb=cellb)
             elif a.sparse_share and rng.random() < a.sparse_share and (par := ar.pick_sparse(rng, k)) is not None:
                 pass
@@ -614,7 +626,7 @@ if __name__ == '__main__':
             kind = bandit.choose(rng) if bandit else rng.choices(kinds, weights=wts)[0]
             sd = rng.randrange(1 << 30)
             f = ex.submit(work, (s, sq, kind, sd, k, [e['s'] for e in ar.E], a.same, ar.smax,
-                                       (min(e['s'] for e in ar.E) + a.polish_margin) if a.polish_margin else float('inf'), a.polish_extra.split(),
+                                       pol_above(), a.polish_extra.split(),
                                        mates(kind, par), (a.finish, a.kick_sigma, False, True) if a.finish else (a.kick_retry, a.kick_sigma, True, False)))
             pend[f] = (par, sd)
         for _ in range(a.procs):
@@ -638,7 +650,8 @@ if __name__ == '__main__':
                         if r['lines'] or r['s'] >= ar.smax:
                             stats['discard'] += 1
                         else:
-                            e, isnew = ar.add(r['s'], r['sq'], par['i'], r['kind'], time.time() - t0, mate=r.get('mate'), fp=r.get('fp'))
+                            e, isnew = ar.add(r['s'], r['sq'], par['i'], r['kind'], time.time() - t0, mate=r.get('mate'), fp=r.get('fp'),
+                                              unpolished=bool(r.get('unpolished')))
                             stats['new' if isnew else 'dup'] += 1
                             hit = e['i']
                             if isnew:
@@ -653,7 +666,7 @@ if __name__ == '__main__':
                     if r['status'] != 'fail':
                         par['nkids'] = par.get('nkids', 0) + 1
                         par['ngrid'] = par.get('ngrid', 0) + (r['status'] == 'screen-grid' or bool(r.get('lines')))
-                    if newi is not None and novel(r['s']):
+                    if newi is not None and novel(r['s'], UNP_TOL if r.get('unpolished') else ID.SAME_SIDE):
                         if a.reward == 'legacy':
                             rew = 1.0 if r['s'] < k else 0.0
                         else:
@@ -661,7 +674,7 @@ if __name__ == '__main__':
                             gap = max(r['s'] - front, 1e-12)
                             robust = (1 + par.get('nkids', 0) - par.get('ngrid', 0)) / (2 + par.get('nkids', 0))
                             rew = min(1.0, (a.reward_g0 / gap) ** a.reward_alpha) * robust
-                    if r.get('s') is not None and r['status'] == 'new?' and not r.get('lines'):
+                    if r.get('s') is not None and r['status'] == 'new?' and not r.get('lines') and not r.get('unpolished'):
                         ar_best[0] = min(ar_best[0], r['s'])
                     if cellb:
                         cellb.update(tuple(par['desc']), r.get('sec', 0.0), rew)
@@ -673,6 +686,7 @@ if __name__ == '__main__':
                                                   sec=round(r.get('sec', 0), 2), cpu=r.get('cpu'), s=r.get('s'),
                                                   s_screen=r.get('s_screen'), new=newi, hit=hit, par=par['i'], seed=sd,
                                                   desc=r.get('desc'), loosen=r.get('loosen'),
+                                                  **({'unp': True} if r.get('unpolished') else {}),
                                                   **({'kr_drop': r['kr_drop'], 'kr_drops': r['kr_drops']} if 'kr_drop' in r else {}),
                                                   **({'mate': r['mate']} if r.get('mate') else {}))) + '\n')
                 if time.time() - t_start < 60 * a.minutes:

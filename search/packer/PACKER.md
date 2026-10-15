@@ -2758,6 +2758,11 @@ Measured CPU-h S 57.6, C 57.5; reference = as-of store rows (sub-k, grid-free); 
 * Ops note: the first certification launch ran in-process exactsolve without thread caps (~47 threads per worker, load
   ~300); `pk/jobs.py` now caps math-library threads at 1 by default (`5e9f662`).
 
+* **Correction (10-15): TT2's CPU-h were double-counted.**  `analysis/tt2_census.py` summed the chain manifest (which
+  includes its children, i.e. every round) and the round manifests: true measured CPU is **S 30.0, C 30.1 CPU-h** (rounds'
+  own manifests 27.6 / 27.4; proposal-level CPU 27.3 / 27.2), not 57.6 / 57.5.  Every per-CPU-h rate above is 1.9x too
+  low; ratios between arms are unchanged.  `cpu_h` fixed (chain manifest only).
+
 ### TT2 at n = 110 (one 4-min round per arm; `analysis/tt2_cert110.py`, `runs/tt2/cert110{,_desc}.json`)
 Every new sub-11 minimum of both arms (vs the as-of store: S 6, C 12) through exactsolve; the 12 'not jammed' ones
 through `exact/descend.py` and exactsolve again.  Result: **no new exact minimum, no new region, no record.**
@@ -2771,3 +2776,37 @@ through `exact/descend.py` and exactsolve again.  Result: **no new exact minimum
   the depth-rank-1 region (leader 10.99688705).  Reading: at 110 one round per arm only re-finds the mapped landscape;
   "new" against the as-of store here means "not yet imported", not new.  18 / 18 'new' rows were known minima or
   unconverged copies of them (the census's 28 % false-new rate understates it at heavily mined n).
+
+## TT3: feature tests on a cheap replay design (10-15; Evan: one feature, one arm, keep power at lower compute)
+Review 10-14/15 (Evan: are we doing too much exact descent?): in TT2 81 % of proposals got a full polish, only 1-4 % of
+those landed within 1e-4 of the round's start best (2-11 % within 1e-3), and polish is ~60-67 % of fq time.  First feature:
+**polish gating**; the movement-heavy arms (GLS feasibility search, bigger melts) come next, on top of it if it holds.
+
+### Design (power analysis: `analysis/tt3_score.py`, numbers from TT2's per-round data)
+* TT2 gave most n one 4-min round (n <= 240: 94 of 102 n one round).  Metric (3) of TT2 (near-frontier new minima,
+  within 1e-3 of frontier_at(T)) has overdispersion ~2.4 vs Poisson; the bootstrap over n gives x/÷ ~1.35 at n <= 240.
+* n set: the **39 n <= 240 where TT2 arm C found >= 1 near-frontier new minimum** (selected on C, so S and any replay of
+  S are not selected on their own noise): 82 % of S's events (297 / 363) at 38 % of its CPU (6.5 / 17.2 CPU-h).
+  Caveat: a feature that only helps at n with no near-frontier activity is invisible here; the final config test covers it.
+* Rounds: `chain.py --schedule runs/tt3/schedule.json` replays S's 49 rounds on those n in S's order with S's round
+  numbers (same explore seeds, removal / insertion seeds, store library picks as of T, starts `runs/tt2/starts`).  None of
+  those 49 rounds used a neighbour seed source that S had already improved (checked), so the subset is self-contained.
+  Not replayed: the pooled move-kind bandit state (S's came from all 205 rounds) and wall-clock timing.  Hence a
+  **concurrent replay control A** (S's settings, no feature); later features reuse A if A ~ S.
+* Arms (concurrent, 4 slots x 2 procs each, 4-min rounds, ~1 h wall, ~6.5 CPU-h each), all with TT2 S's chain settings
+  (`--reward value --novel store --lib store --lib-policy banded --bandit band --as-of 2026-10-10T06:00 --seed-ks 1,2,-1`):
+  - **A**: replay, no change.
+  - **G**: replay + `explore.py --polish-gate 2e-3`: full polish only if the screened side < min(frontier_at(T), run best)
+    + 2e-3 (above the 1e-3 metric window + the screen's error, so every candidate the metric can count is polished).  The
+    rest enter the archive at the screened side as stepping stones (`unpolished`; store status `screened`): never elite
+    parents, never the run best, identity and novelty at UNP_TOL = 1e-5 (screen error), bandit reward as usual (value
+    reward, gap > 2e-3, so <= 0.5 x robustness).
+* Primary: near-frontier new minima per measured CPU-h (round manifests), **G / A**, rate ratio with a 95 % bootstrap over
+  the 39 n.  Rule: G passes (base for the next feature) if the interval excludes 1 from above; fails if it excludes 1 from
+  below; otherwise open (then: decide on throughput + secondary, or one more replicate pair).
+* Secondary (not decisive): records vs frontier_at(T) (eventbench score, G vs A); proposals per CPU-s and polished share;
+  best gap per n (sign test G vs A); **A / S-historical** = replay fidelity (expect ~1; if far from 1, later tests use A).
+* Predictions (written before launch): proposals per CPU-s G / A 1.6x (n < 72) .. 2.5x (n >= 150); primary G / A ~1.4,
+  P(interval excludes 1 from above) ~0.5, P(excludes from below) ~0.1; A / S within [0.75, 1.33].
+* Smoke 10-15 (`runs/tt3/smoke`, rounds 2 and 3 at 0.5 min, gate on): replay numbering works, 4 % of proposals polished,
+  22.7 proposals per CPU-s vs S's 14.4 at n = 38-39 (screens dominate at small n).
