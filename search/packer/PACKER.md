@@ -3157,3 +3157,8 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   ~10 CPU-h, ~40 min wall).  Success: polished below the live frontier, then candidate.py certification.  Prediction:
   0-1 (point 0.4): BM3's events were judged against the ante just before each record; the live frontier is the
   post-everything envelope, and NH / MH2 found nothing at these n last night.
+* **Hole-targeted relocation (04:30)**: `rectsearch --reloc` now drops each moved square at a large hole (grid points,
+  exact point-to-square clearance, one of the top 5; not within 0.6 of its old spot).  Smoke (2 procs x 1.5 min from
+  RB62's minima): 31 / 441 relocations stay below 5.92 (random spots: 3 / 289); best still 5.9153600655.
+* **RB62c, pre-registered (04:31)**: `rectsearch run --cells 62:6 --reloc 0.5 --start-frac 0 --init rb62 rb62b
+  --init-split`, 16 procs x 30 min (8 CPU-h), after MH3.  Success: h <= 5.90995829107 + 1e-9.  Prediction 15 %.

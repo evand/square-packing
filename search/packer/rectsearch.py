@@ -54,6 +54,26 @@ def random_start(m, d, rng, loose):
     return h, np.c_[x, y, a]
 
 
+def holes(sq, W, H, rng, avoid=None, grid=0.1):
+    """Centre of a large hole: the grid point (pitch `grid`) inside [0.5, W - 0.5] x [0.5, H - 0.5] with the largest
+    clearance to every square (exact point-to-square distance) and the walls; sampled among the top 5 (diversity).
+    Points within 0.6 of `avoid` (the removed square's old centre) are skipped."""
+    xs = np.arange(0.5, W - 0.5 + 1e-9, grid); ys = np.arange(0.5, H - 0.5 + 1e-9, grid)
+    X, Y = np.meshgrid(xs, ys); P = np.c_[X.ravel(), Y.ravel()]
+    t = np.radians(sq[:, 2]); c, s_ = np.cos(t), np.sin(t)
+    dx = P[:, None, 0] - sq[None, :, 0]; dy = P[:, None, 1] - sq[None, :, 1]
+    lx = np.abs(c * dx + s_ * dy) - 0.5; ly = np.abs(-s_ * dx + c * dy) - 0.5
+    d = np.hypot(np.maximum(lx, 0), np.maximum(ly, 0)) - (np.minimum(np.maximum(lx, ly), 0) < 0) * 0  # inside -> 0
+    inside = (lx < 0) & (ly < 0)
+    d = np.where(inside, -np.minimum(-lx, -ly), d)
+    clr = d.min(axis=1)
+    if avoid is not None:
+        clr[np.hypot(P[:, 0] - avoid[0], P[:, 1] - avoid[1]) < 0.6] = -9
+    top = np.argsort(-clr)[:5]
+    k = top[rng.integers(len(top))]
+    return float(P[k, 0]), float(P[k, 1])
+
+
 def worker(args):
     m, d, seconds, seed, out, loose, start_frac, a_soft, adaptive, *rest = args
     elite = [(h, np.array(sq, float)) for h, sq in (rest[0] if rest else [])]   # continue from these (bandit episodes)
@@ -83,7 +103,10 @@ def worker(args):
                 idx = rng.choice(pool, size=min(kk, len(pool)), replace=False)
                 tilt = sq[~up, 2]
                 for i in idx:
-                    sq[i, 0] = rng.uniform(0.5, W - 0.5); sq[i, 1] = rng.uniform(0.5, h0 - 0.5)
+                    old_xy = sq[i, :2].copy()
+                    keep = np.ones(m, bool); keep[i] = False
+                    hx, hy = holes(sq[keep], W, h0, rng, avoid=old_xy)
+                    sq[i, 0], sq[i, 1] = hx, hy
                     sq[i, 2] = 0.0 if (rng.random() < 0.5 or not len(tilt)) else float(np.median(tilt))
                 sq[:, :2] += rng.normal(0, 0.01, (m, 2))
                 h0 = h0 * 1.01
