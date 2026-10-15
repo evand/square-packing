@@ -3007,3 +3007,10 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   replicate where cores allow).  Caveat: donor = the first store row with the named side (239: our s(210) row may be a
   later value than Couzo's 10-05 one; check if it hits).  Prediction: BEAT-ANTE 3 / 7, REPLICATED 2 / 7 (the graft is
   a concrete step; SQUISH's follow-up "basin hopping" is the unknown).
+* **b1 / g1 voided (bug, 10-15 ~01:05)**: with `--polish-gate`, the gate line is min(frontier_s, run best) + 2e-3, so a
+  search from seeds far above the frontier never polishes anything (108 and 154 #552 ended exactly at their removal
+  starts).  TT3 (starts at the frontier) is unaffected.  New `explore.py --gate-ref run` (line = run best + gate); the
+  benches use it.  b1 partial before the stop: 155 REPLICATED (12.9524989 vs posted 12.9525032), 154 #401 BEAT-ANTE,
+  108 / 154 #552 / 179 no (5 of 13 done).  Harnesses rescheduled (Evan: no waves): every quench of every event in one
+  queue, then every event's explorer at once (1 proc), spare cores to replicates.  Relaunch: removal b2 (`--cores 13
+  --minutes 20`, ~4.5 CPU-h) and graft g2 (`--procs 6 --minutes 15`, ~1.6 CPU-h), concurrently.  Predictions as before.

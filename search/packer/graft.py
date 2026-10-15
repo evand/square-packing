@@ -115,12 +115,14 @@ def run(a):
         json.dump(dict(ev=ev, results=R), open(f'{d}/grafts.json', 'w'), indent=0)
         if keep and a.minutes > 0:
             runs.append((ev, keep, 0))
-    extra = [(ev, keep, 1) for ev, keep, _ in runs][:max(0, a.procs - len(runs))]
+    extra, r = [], 1
+    while len(runs) + len(extra) < a.procs and runs:
+        extra += [(ev, keep, r) for ev, keep, _ in runs][:a.procs - len(runs) - len(extra)]; r += 1
     P = []
     for ev, keep, rep in runs + extra:
         cmd = [sys.executable, f'{HERE}/explore.py', '--n', str(ev['n']), '--adapt', '--reward', 'value', '--elite-share', '0.3',
-               '--polish-gate', '2e-3', '--frontier-s', repr(ev['ante']), '--starts', *keep, '--minutes', str(a.minutes),
-               '--procs', '1', '--seed', str(ev['n'] * 10 + rep), '--out', f'{ev["dir"]}/explore{rep}']
+               '--polish-gate', '2e-3', '--gate-ref', 'run', '--frontier-s', repr(ev['ante']), '--starts', *keep,
+               '--minutes', str(a.minutes), '--procs', '1', '--seed', str(ev['n'] * 10 + rep), '--out', f'{ev["dir"]}/explore{rep}']
         P.append(subprocess.Popen(cmd, stdout=open(f'{ev["dir"]}/explore{rep}.log', 'w'), stderr=subprocess.STDOUT, cwd=HERE))
     for p in P:
         p.wait()

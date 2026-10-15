@@ -61,60 +61,96 @@ def quench_one(j):
     return idx, r[0], r[1]
 
 
-def run_event(ev, a, out):
+def edir(ev, out):
+    return f'{out}/n{ev["n"]}_{ev["T"][:10]}_{ev["pm"]}m{ev["k"]}'
+
+
+def prepare(ev, a, out):
     from pk.store import Store
-    d = f'{out}/n{ev["n"]}_{ev["T"][:10]}_{ev["pm"]}m{ev["k"]}'
-    os.makedirs(d, exist_ok=True)
+    d = edir(ev, out); os.makedirs(d, exist_ok=True)
     pr = parent_row(ev['pm'], ev['parent_side'])
     if not pr:
-        json.dump(dict(ev, status='no-parent'), open(f'{d}/result.json', 'w')); return
+        return []
     st = Store(); p = st.get(pr[0]); st.close()
     s, sq = float(p.s), [tuple(map(float, q)) for q in p.sq]
+    ev['parent_id'] = pr[0]
     rng = random.Random(ev['n'])
     if ev['k'] == 1:
         idxs = [(i,) for i in range(len(sq))]
     else:
         idxs = list({tuple(sorted(rng.sample(range(len(sq)), ev['k']))) for _ in range(a.pairs)})
-    jobs = [(s, sq, set(ix), d) for ix in idxs]
-    res = []
-    with ProcessPoolExecutor(a.procs) as ex:
-        for idx, s2, sq2 in ex.map(quench_one, jobs, chunksize=4):
-            if s2 is not None and s2 < s - 1e-7:
-                res.append((s2, idx, sq2))
-    res.sort(key=lambda r: r[0])
+    ev['removals'] = len(idxs); ev['parent_s'] = s
+    return [(s, sq, set(ix), d) for ix in idxs]
+
+
+def pick_starts(ev, res, a, out):
+    d = edir(ev, out)
+    s0 = res[0][0] if res else None
+    ok = sorted((r for r in res if r[1] is not None), key=lambda r: r[1])
     keep, seen = [], []
-    for s2, idx, sq2 in res:
+    for idx, s2, sq2 in ok:
         if any(abs(s2 - x) < 2e-9 for x in seen):
             continue
         seen.append(s2); f = f'{d}/start_{len(keep):02d}.txt'; mcmin.write_deg(f, s2, sq2); keep.append(f)
         if len(keep) >= a.keep:
             break
-    rem_best = res[0][0] if res else None
-    best = rem_best
-    if keep and a.minutes > 0:
-        cmd = [sys.executable, f'{HERE}/explore.py', '--n', str(ev['n']), '--adapt', '--reward', 'value', '--elite-share', '0.3',
-               '--polish-gate', '2e-3', '--frontier-s', repr(ev['ante']), '--starts', *keep, '--minutes', str(a.minutes),
-               '--procs', str(a.procs), '--seed', str(ev['n']), '--out', f'{d}/explore']
-        subprocess.run(cmd, stdout=open(f'{d}/explore.log', 'w'), stderr=subprocess.STDOUT, cwd=HERE)
-        try:
-            E = [json.loads(l) for l in open(f'{d}/explore/archive.jsonl')]
-            b = min((e['s'] for e in E if not e.get('unpolished')), default=None)
-            best = min(x for x in (best, b) if x is not None)
-        except FileNotFoundError:
-            pass
+    ev['removal_best'] = ok[0][1] if ok else None
+    return keep
+
+
+def finish(ev, out):
+    d = edir(ev, out); best = ev.get('removal_best')
+    for ad in glob.glob(f'{d}/explore*/archive.jsonl'):
+        for l in open(ad):
+            e = json.loads(l)
+            if not e.get('unpolished') and (best is None or e['s'] < best):
+                best = e['s']
     tier = 'REPLICATED' if best is not None and best <= ev['new'] + 1e-9 else \
         'BEAT-ANTE' if best is not None and best < ev['ante'] - 1e-9 else 'no'
-    json.dump(dict(ev, parent_id=pr[0], removals=len(idxs), removal_best=rem_best, best=best, tier=tier,
-                   need=(best - ev['ante']) if best is not None else None), open(f'{d}/result.json', 'w'), indent=1)
-    print(f"n={ev['n']} {ev['T'][:16]} parent {ev['pm']}-{ev['k']}: removal best {rem_best}, final {best}, ante {ev['ante']:.10f}, "
-          f"posted {ev['new']:.10f} -> {tier}", flush=True)
+    json.dump(dict(ev, best=best, tier=tier, need=(best - ev['ante']) if best is not None else None),
+              open(f'{d}/result.json', 'w'), indent=1)
+
+
+def run_pooled(evs, a):
+    """phase 1: every removal quench of every event in one --cores queue; phase 2: every event's explorer at once
+    (1 proc each), spare cores to extra replicates (Evan 10-15: no waves, no per-event pools)."""
+    from jobpool import run_jobs
+    jobs, owner = [], []
+    for i, ev in enumerate(evs):
+        J = prepare(ev, a, a.out); jobs += J; owner += [i] * len(J)
+    print(f'{len(evs)} events, {len(jobs)} removal quenches', flush=True)
+    res = run_jobs(quench_one, jobs, procs=a.cores, timeout=900)
+    per = {i: [] for i in range(len(evs))}
+    for i, r in zip(owner, res):
+        if isinstance(r, tuple) and r[1] is not None and r[1] < evs[i]['parent_s'] - 1e-7:
+            per[i].append(r)
+    runs = []
+    for i, ev in enumerate(evs):
+        keep = pick_starts(ev, per[i], a, a.out)
+        if keep and a.minutes > 0:
+            runs.append((ev, keep))
+    slots = [(ev, keep, 0) for ev, keep in runs]
+    r = 1
+    while len(slots) < a.cores and runs:
+        slots += [(ev, keep, r) for ev, keep in runs][:a.cores - len(slots)]; r += 1
+    P = []
+    for ev, keep, rep in slots:
+        d = edir(ev, a.out)
+        cmd = [sys.executable, f'{HERE}/explore.py', '--n', str(ev['n']), '--adapt', '--reward', 'value', '--elite-share', '0.3',
+               '--polish-gate', '2e-3', '--gate-ref', 'run', '--frontier-s', repr(ev['ante']), '--starts', *keep,
+               '--minutes', str(a.minutes), '--procs', '1', '--seed', str(ev['n'] * 10 + rep), '--out', f'{d}/explore{rep}']
+        P.append(subprocess.Popen(cmd, stdout=open(f'{d}/explore{rep}.log', 'w'), stderr=subprocess.STDOUT, cwd=HERE))
+    for p in P:
+        p.wait()
+    for ev in evs:
+        finish(ev, a.out)
 
 
 def main():
     ap = argparse.ArgumentParser(); sp = ap.add_subparsers(dest='cmd', required=True)
     sp.add_parser('list')
     r = sp.add_parser('run'); r.add_argument('--only'); r.add_argument('--minutes', type=float, default=20)
-    r.add_argument('--procs', type=int, default=2); r.add_argument('--par', type=int, default=8)
+    r.add_argument('--cores', type=int, default=16)
     r.add_argument('--keep', type=int, default=8); r.add_argument('--pairs', type=int, default=400); r.add_argument('--out', required=True)
     s = sp.add_parser('score'); s.add_argument('out')
     a = ap.parse_args()
@@ -126,13 +162,11 @@ def main():
     elif a.cmd == 'run':
         from pk import manifest
         os.makedirs(a.out, exist_ok=True)
-        man = manifest.start(a.out, 'removal_bench', args=vars(a), procs=a.par * a.procs)
+        man = manifest.start(a.out, 'removal_bench', args=vars(a), procs=a.cores)
         evs = events()
         if a.only:
             keep = {int(x) for x in a.only.split(',')}; evs = [e for e in evs if e['n'] in keep]
-        from concurrent.futures import ThreadPoolExecutor
-        with ThreadPoolExecutor(a.par) as tx:
-            list(tx.map(lambda ev: run_event(ev, a, a.out), evs))
+        run_pooled(evs, a)
         man.finish()
     else:
         R = [json.load(open(f)) for f in sorted(glob.glob(f'{a.out}/*/result.json'))]

@@ -573,6 +573,8 @@ if __name__ == '__main__':
     ap.add_argument('--bandit-carry', type=float, default=0.5, help='factor on carried bandit statistics (1 + half inf = pooled, merged on save)')
     ap.add_argument('--melt', type=float, default=0, help='weight of the regional melt move (anneal melt); 0 = off')
     ap.add_argument('--bigmelt', type=float, default=0, help='weight of the big regional melt (R 3.5-7, rmax 0.1-0.25); 0 = off')
+    ap.add_argument('--gate-ref', default='front', choices=['front', 'run'],
+                    help='polish gate line: front = min(frontier_s, run best) (TT3-tested); run = the run best (searches from far seeds)')
     ap.add_argument('--pm-share', type=float, default=0, help='share of parent picks by the parent value model (pm_pick); 0 = off')
     ap.add_argument('--pm-beta', type=float, default=1.0, help='parent value model sharpness: weight = rate ** beta')
     ap.add_argument('--gls', type=float, default=0, help='weight of the GLS feasibility move (anneal gls); 0 = off')
@@ -673,8 +675,8 @@ if __name__ == '__main__':
             return rng.sample(xp, min(CROSS2_NEAR, len(xp)))
         return []
     def pol_above():
-        if a.polish_gate:
-            return min(frontier_s, ar_best[0]) + a.polish_gate
+        if a.polish_gate:                    # gate-ref run (10-15): far seeds; polish near the run's own best
+            return (ar_best[0] if a.gate_ref == 'run' else min(frontier_s, ar_best[0])) + a.polish_gate
         return (min(e['s'] for e in ar.E) + a.polish_margin) if a.polish_margin else float('inf')
     with ProcessPoolExecutor(a.procs) as ex:
         def submit():
