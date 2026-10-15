@@ -3336,7 +3336,7 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   Metrics: per-prompt softmin; ties with the hidden record; records; secondary: distinct non-grid minima within 1e-2
   of the record that are not in the store (novel near-record seeds).  Prediction: >= 1 tie with a hidden record on
   234-240: 20 %; record: 4 %; >= 10 novel near-record minima across the 4 prompts: 50 %.
-* **Corner signature (13:00-13:40; `analysis/cornersig.py`, Evan 10-15)**: per corner, the axis squares on that corner's
+* **Corner signature (13:40; `analysis/cornersig.py`, Evan 10-15)**: per corner, the axis squares on that corner's
   lattice face-connected to its main block; the rest split into slid rows / slid columns / cut-off blocks / free; L
   additions peeled first (only if the rest fits in s - 1); loose axis squares snapped onto a lattice first (without it
   1 of 60 store copies of the 110 record read [53, 9] instead of [53, 11]: rattlers).  Frontier 100-240: strips
@@ -3347,7 +3347,7 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   certified minima): one shape; medium block 10-11 holds all of the top 50 (8 / 9 / 12 never); a two-big-block
   cluster (52, 52, 11) never top 50; Chao1 49 of ~56 cells seen.  All distinct archive minima of the 110 runs: below
   the grid 70 cells (Chao1 ~97 % seen), above it (to 11.05) 29,226 minima, ~2,500 cells never seen below the grid.
-* **GX1, pre-registered (13:42)** (Evan: "grid-crossing descents are of interest in general"): do structurally foreign
+* **GX1, pre-registered (13:40)** (Evan: "grid-crossing descents are of interest in general"): do structurally foreign
   above-grid 110 minima have sub-grid descendants that keep their structure?  Seeds (`analysis/gx_select.py`,
   `runs/gx110/seeds.json`): best member of each above-grid corner cell never occupied below the grid, within 2e-3 of
   11 (44; mostly junction variants of the V family: 3-4 squares at 45 degrees where the record's junction is ~38-40)
