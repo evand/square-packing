@@ -2757,3 +2757,17 @@ Measured CPU-h S 57.6, C 57.5; reference = as-of store rows (sub-k, grid-free); 
   credit).  Predictions: (3) held, (1) held only through small n, (2) failed.
 * Ops note: the first certification launch ran in-process exactsolve without thread caps (~47 threads per worker, load
   ~300); `pk/jobs.py` now caps math-library threads at 1 by default (`5e9f662`).
+
+### TT2 at n = 110 (one 4-min round per arm; `analysis/tt2_cert110.py`, `runs/tt2/cert110{,_desc}.json`)
+Every new sub-11 minimum of both arms (vs the as-of store: S 6, C 12) through exactsolve; the 12 'not jammed' ones
+through `exact/descend.py` and exactsolve again.  Result: **no new exact minimum, no new region, no record.**
+* Directly certified: 6, all among the 939 known exact minima (10.996923243, 10.997025578, 10.998243315, 10.998443828,
+  10.999196864, 10.999651054).
+* After the descent, 11 / 12 land on known minima: S's queued near-miss 801876 (+4.45e-6) is the **record minimum
+  itself** (10.99678339663159164; the finisher's polish got there too); C's five 10.99688699 rows are two known minima
+  (…868489, …876103); the rest are known minima 10.99801257 (weak), 10.99834170, 10.99841239, 10.99999749.  C 801753
+  (10.99692215) is still not jammed after 2 rounds (dS* -8e-7).
+* All sit in known leader regions (matching distance to the nearest known minimum 0.001-0.004, one 0.021); 9 of 18 in
+  the depth-rank-1 region (leader 10.99688705).  Reading: at 110 one round per arm only re-finds the mapped landscape;
+  "new" against the as-of store here means "not yet imported", not new.  18 / 18 'new' rows were known minima or
+  unconverged copies of them (the census's 28 % false-new rate understates it at heavily mined n).
