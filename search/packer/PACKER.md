@@ -2977,3 +2977,19 @@ states are parents here, never targets.  This test covers sub-11 rediscovery and
 * Reading: the absolute-gap model does not transfer to n = 110's compressed band (every sub-11 minimum within 3.2e-3);
   the TT3 subset gain (C44) is real there but not general.  Fixes to try: gap relative to the run's own distribution
   (rank / quantile among archive entries, or gap / (grid side - frontier)), and keeping an elite share beside the model.
+
+## Baseline on the major tools (10-15; Evan: "get to baseline on the major tools of the modern trade", in order)
+Diagnosis (EVENTS tables): at n <= 324, families A (composition) 32 % -> 61 % of the gain (10-05..12 -> 10-12..15),
+B (soft-to-rigid) 0 -> 29 %, J (evolved constructors) 40 % -> 0, F/G (removal / insertion) 21 % -> 1 %, H (perturbation /
+polish, ours) 5 % / 6 %.  TT3 (gating, parent model) tuned H.  Order now: per family, level 1 (method fidelity: given the
+named parents, does our pipeline reproduce the event?), then level 2 (blind time travel from everything public at T),
+then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register rebuild is a detour (TODO).
+* **F level 1, pre-registered (before launch)**: `removal_bench.py run --minutes 15 --procs 2 --par 7 --out
+  runs/removal_bench/b1`.  The 13 F events with a named parent "s(m) - k" (SQUISH #401 / #422, ours #552): parent = the
+  frontier of m at T or a packing posted in the same update (all 13 in the store); every single removal (k = 2: 400
+  random pairs) quenched (chain seed quench), 8 best distinct -> explorer 15 min x 2 procs (gate 2e-3, value reward,
+  elite 0.3).  Tiers: REPLICATED (<= posted + 1e-9), BEAT-ANTE (< frontier_at(n, T) - 1e-9), no.  ~8 CPU-h.
+  Note: several "removals" are large restructurings (108: s(110) record 10.99678 - 2 -> 10.90994; 179: s(180) 13.92364
+  - 1 -> 13.89131), so the search after removal is the method.  Prior: 10-12 time travel did not move 179 in 1.1 CPU-h.
+  Prediction: BEAT-ANTE or better 3 / 13, REPLICATED 1 / 13.  If low, the missing component is SQUISH's post-removal
+  search ("iterative shrink-hopping": fixed-side basin hopping, then shrink; README wording only).

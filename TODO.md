@@ -20,6 +20,8 @@ External posts: ask Evan explicitly per post.  **Before any bound-chasing run, c
 ## Packings (`search/packer/`: `HANDOFF-2026-10-14.md`, `tasks/packer-arch-2026-10-14/`)
 Thesis (Evan 10-14): diversity pays; local search at current budgets has mined the frontier.  No compute above n = 324 without a specific reason.
 - [ ] TT3: gating PASSED (C42, 2.08x); melt / GLS v0 neutral (C43); parent value model PASSED on the 12-round subset (C44, ~1.7-2x over G).  Next: full 49-round confirmation, then the all-n hunt-style test (new minima + regions + records).
+- [ ] Baseline on the major tools (Evan 10-15): per family (A composition, B soft-to-rigid, F/G removal, J constructors) level 1 = reproduce events from named parents, level 2 = blind time travel; improvements only after.  `tasks/composition-baseline/`, PACKER "Baseline on the major tools".
+- [ ] Detour, parked (Evan 10-15): our own register to n = 1024-4096 (every published regular packing, L groups, mechanical constructions), then hunt / submit records > 324.
 - [ ] Store tiering before cheaper proposals raise the row rate: coords near the frontier + cluster representatives, lineage-only (replayable) rows elsewhere.  Design first.
 - [ ] Near-miss drain `nmdrain1014b`: stopped 10-15 (0 gains in 42 items, 100 queued); low value, resume only if cores idle.
 - [ ] Add #607 (Couzo: 237, 339, 382, ...) to `pk/pending.yaml` + `sync-pending`; scoring rule for our own posted results inside a scored run (146 in TT2).
