@@ -3404,3 +3404,12 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   alone; the per-eval gain is capped by the quench); greedy kernel within 1 on >= 95 %: yes (100 % exact); tolerant
   tau 0.01 overcount <= 1 on most: no (41 % overcount).  Next lever for EV2 eval time: the quench budget (seeds,
   loosens, candidate cap) and per-agent procs, each a quality trade to test, not a free win.
+* **L2e result (17:00): 4 / 15 BEAT-ANTE, 0 REPLICATED** (prediction 3 / 15, range 1-5: hit).  BEAT-ANTE at 153
+  (12.8758979527 vs ante 12.8796793733; explorer), 232 (15.7747351324 vs 15.7781745931; the composition alone already
+  beat ante), 236 (15.8675078438 vs 15.8678008394, by 2.9e-4; explorer), 302 (17.8779639245 vs 17.8813062181;
+  explorer).  None reached the posted record (236 is 3.5e-3 above
+  posted; nearest misses vs ante: 270 +1.3e-3, 259 +2.0e-3).  Grid only: 131, 209, 263, 305, 307.  207 = 14.9044830325 (the named
+  composition, recovered blind, explorer did not improve it).  CPU 95.3 h (compose first 4 n 11.9, other 11 n 71.4,
+  explorer 12.0): the joint fill + fq of up to 8,000 compositions per n dominates.  Read: with the exact ranking, blind
+  Mondrian is at L1 (named) level on this set, so by the pre-registered rule the live slack-composition hunt is next,
+  held for the pause with Evan (cost ~6 CPU-h per n at this keep; the compose stage needs a cheaper screen first).
