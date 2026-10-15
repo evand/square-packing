@@ -3321,3 +3321,18 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   staircase + rotated block families, ~10k characters).  Diagnosis: the loop rediscovers the families its prompt names,
   edits blind (most replies say the code was never run), and the inspiration step collapses diversity.  Superseded by
   EV2 (agentic designers with the evaluator and renderings, prompts as the unit of evolution).
+* **EV2 gen 0 result (12:05)**: reproduced (record shown): 178 (P001), 126 + 145 (P005), 104 + 109 (P006, regular);
+  missed 207 (+0.049), 179-182, 127, 132, 110; no records.  Prediction (1) >= 1 of 9 reproduce targets tied 45 %: yes;
+  (2) record 7 %: no.  Lessons in `evolve2/LOG.md` (count honesty -> `--fill`; staircases first; near-target starts;
+  named mechanisms: staircase events, strip span k cos t + sin t = k - delta, arm chirality, seam pocket, hole
+  insertion; agents segmented the record PNGs -> holdout references).  Agent cost: 135k-240k tokens each.
+* **EV2 gen 1, pre-registered (12:07)**: 4 prompts (`evolve2/prompts/P007-P010`, rules `evolve2/RULES_g1.md`), each
+  mutated from its gen-0 parent(s) with their measured mechanisms and allowed to start from the parent program.
+  **Holdout**: all score on row k = 16, n = 234-240, whose records no agent (and not I) has seen: references are only
+  `evolve_eval.py near` pictures (4 per n, 5e-3 to 5e-2 worse than the record; manifest `runs/evolve2/near/`), `ref`
+  disabled, reading other runs forbidden.  Rows 177-182 / 123-129 are contaminated by gen 0 and not scored.  `--fill`
+  (exact MILP upright fill), softmin score (T = 0.02; Evan: one excellent n counts), every non-grid minimum archived
+  for the census tooling.  4 Opus subagents x 2 eval procs, <= 12 evals each, `runs/evolve2/gen1/`.
+  Metrics: per-prompt softmin; ties with the hidden record; records; secondary: distinct non-grid minima within 1e-2
+  of the record that are not in the store (novel near-record seeds).  Prediction: >= 1 tie with a hidden record on
+  234-240: 20 %; record: 4 %; >= 10 novel near-record minima across the 4 prompts: 50 %.
