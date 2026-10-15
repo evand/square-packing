@@ -62,33 +62,55 @@ def peel_L(s, sq, tol=0.02):
     return s, sq, depth
 
 
+def _components(cells):
+    """4-connected components of a set of lattice cells -> list of sets"""
+    left, comps = set(cells), []
+    while left:
+        c0 = left.pop(); comp, dq = {c0}, deque([c0])
+        while dq:
+            i, j = dq.popleft()
+            for d in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nb = (i + d[0], j + d[1])
+                if nb in left:
+                    left.discard(nb); comp.add(nb); dq.append(nb)
+        comps.append(comp)
+    return comps
+
+
 def signature(s, sq, tol=0.02):
+    """v2 (10-15, Evan's one-dimension question): per corner, the largest 4-connected component of axis squares on that
+    corner's lattice in BOTH axes (and whether it reaches the corner cell: a pocket in the corner must not hide the
+    block, as at 126); then the axis squares in no corner group, split by anchoring: slid rows (on a bottom / top
+    lattice in y only: they slide along x), slid columns (on a left / right lattice in x only), cut-off lattice squares
+    (both axes on some lattice, not in the corner's main block) and free (neither)."""
     sq = np.asarray(sq, float)
     n = len(sq)
     s2, q, depth = peel_L(float(s), sq, tol)
     ax = _axis(q)
     A = q[ax]
-    groups, member = {}, np.zeros(len(A), bool)
+    xl, xr = _on(A[:, 0] - 0.5, tol), _on(s2 - A[:, 0] - 0.5, tol)
+    yb, yt = _on(A[:, 1] - 0.5, tol), _on(s2 - A[:, 1] - 0.5, tol)
+    groups, reach, member = {}, {}, np.zeros(len(A), bool)
     for c in ('LL', 'LR', 'UL', 'UR'):
         xe = A[:, 0] - 0.5 if c[1] == 'L' else s2 - A[:, 0] - 0.5
         ye = A[:, 1] - 0.5 if c[0] == 'L' else s2 - A[:, 1] - 0.5
-        ok = _on(xe, tol) & _on(ye, tol) & (xe > -tol) & (ye > -tol)
+        ok = (xl if c[1] == 'L' else xr) & (yb if c[0] == 'L' else yt)
         cells = {(int(round(x)), int(round(y))): i for i, (x, y) in enumerate(zip(xe, ye)) if ok[i]}
-        seen = set()
-        if (0, 0) in cells:
-            dq = deque([(0, 0)]); seen.add((0, 0))
-            while dq:
-                i, j = dq.popleft()
-                for d in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-                    nb = (i + d[0], j + d[1])
-                    if nb in cells and nb not in seen:
-                        seen.add(nb); dq.append(nb)
-        groups[c] = len(seen)
-        for cell in seen:
+        comps = _components(cells)
+        # the corner's block: the component containing the corner cell, else the largest one adjacent to a wall of
+        # this corner (a pocket may occupy the corner itself)
+        cand = [cp for cp in comps if any(i == 0 or j == 0 for i, j in cp)]
+        main = next((cp for cp in comps if (0, 0) in cp), None) or (max(cand, key=len) if cand else set())
+        groups[c] = len(main); reach[c] = (0, 0) in main
+        for cell in main:
             member[cells[cell]] = True
-    U = int(ax.sum())
-    return dict(n=n, U=U, T=int(len(q) - U), groups=groups, sorted=sorted(groups.values(), reverse=True),
-                floating=int((~member).sum()), L=depth)
+    rest = ~member
+    xa, ya = xl | xr, yb | yt
+    return dict(n=n, U=int(ax.sum()), T=int(len(q) - ax.sum()), groups=groups, reach=reach,
+                sorted=sorted(groups.values(), reverse=True),
+                slid_rows=int((rest & ya & ~xa).sum()), slid_cols=int((rest & xa & ~ya).sum()),
+                cutoff=int((rest & xa & ya).sum()), free=int((rest & ~xa & ~ya).sum()),
+                floating=int(rest.sum()), L=depth)
 
 
 def cmd_frontier(a):
@@ -113,7 +135,8 @@ def cmd_frontier(a):
         k = math.ceil(math.sqrt(n)); c = k * k - n
         g = sig['groups']
         print(f"{n:3d} k{k} c{c:2d} {code}  U {sig['U']:3d} T {sig['T']:3d} L{sig['L']}  corners {sig['sorted']}  "
-              f"float {sig['floating']:3d}  (LL {g['LL']} LR {g['LR']} UL {g['UL']} UR {g['UR']})")
+              f"slid rows {sig['slid_rows']:2d} cols {sig['slid_cols']:2d} cutoff {sig['cutoff']:2d} free {sig['free']}  "
+              f"(LL {g['LL']} LR {g['LR']} UL {g['UL']} UR {g['UR']}{' corner-pocket' if not all(sig['reach'][c] or g[c] == 0 for c in g) else ''})")
         out.append(dict(code=code, **sig))
     if a.json:
         json.dump(out, open(a.json, 'w'), indent=0)

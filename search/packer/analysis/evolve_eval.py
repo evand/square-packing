@@ -119,6 +119,7 @@ def archive_minima(a, prog, mins):
                     sig = cornersig.signature(s, np.asarray(sq))
                     fi.write(json.dumps(dict(n=n, s=s, gap=s - T, ng=(s - T) / max(g - T, 1e-9), tilted=nt, path=path,
                                              corners=sig['groups'], csorted=sig['sorted'], floating=sig['floating'], L=sig['L'],
+                                             slid_rows=sig['slid_rows'], slid_cols=sig['slid_cols'], cutoff=sig['cutoff'], free=sig['free'],
                                              tag=a.tag, prog=prog, t=time.strftime('%Y-%m-%dT%H:%M:%S'))) + '\n')
 
 
