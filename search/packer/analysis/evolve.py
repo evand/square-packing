@@ -143,6 +143,7 @@ def call_llm(model, prompt, system, timeout=600):
 
 class Evo:
     def __init__(self, a):
+        a.out = os.path.abspath(a.out)
         self.a, self.out = a, a.out
         os.makedirs(f'{self.out}/progs', exist_ok=True)
         from pk import eventbench as EB
@@ -294,6 +295,7 @@ class Evo:
 def report(a):
     """best --top programs on train + holdout, more seeds; tiers vs the cutoff frontier and the posted J value"""
     from pk import eventbench as EB
+    a.out = os.path.abspath(a.out)
     db = [json.loads(l) for l in open(f'{a.out}/programs.jsonl')]
     top = sorted([r for r in db if r['fit'] < 1.4], key=lambda r: r['fit'])[:a.top]
     E = json.load(open(os.path.join(PK, 'bench', 'events.json'))); E = E['events'] if isinstance(E, dict) else E
