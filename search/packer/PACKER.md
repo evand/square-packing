@@ -3357,3 +3357,10 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   seen below the grid), junction kept (the seed's 45-degree junction count survives in the best descendant).
   Context: E0 (10-13) crossed from random above-grid packings 16 / 16 (into the known family); C06: anneals 0 / 3,130.
   Prediction: crossed >= 30 / 46; >= 1 NEW: 25 %; >= 1 crossing that keeps a 45-degree junction: 15 %.
+  *GX1 amended (13:58, before start)*: + m4 (`control_020/b01024`, 11.0003018) as a 3rd extra seed (47 seeds); score
+  also tracks squares at 2-20 degrees (seed -> sub-grid descendants).  Background (13:55): below 11, 97 % of distinct
+  110 minima have no square at 2-20 degrees and none of the best 300 do; above 11, 62 % have >= 1 and 36 % >= 4; of
+  1,925 such squares in 400 above-grid minima only 53 are loose (< 2 contacts), so it is jammed structure, not
+  rattlers.  m4's own pair (1.2-1.3 deg, 0 and 2 contacts) is slack; m8's (6 / 19 deg, 4-5 contacts) and m7's
+  staircase (3.5-7 deg, 3-4 contacts each) are load-bearing.  Extra prediction: a sub-grid descendant keeping >= 1
+  load-bearing 2-20 degree square: 15 %.

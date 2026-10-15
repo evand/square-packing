@@ -42,11 +42,21 @@ def _load(p):
         return float(s), np.array([list(map(float, x.split()[:3])) for x in fh if x.strip()])
 
 
+def _inter(sq):
+    """squares at intermediate tilt (2-20 deg): the grid / bulb border transition (Evan 10-15, m4 / m8); below 11 at
+    n = 110: 97 % of distinct minima have none and none of the best 300; above 11: 62 % have >= 1"""
+    a = sq[:, 2] % 90.0; t = np.minimum(a, 90 - a)
+    return int(((t > 2) & (t < 20)).sum())
+
+
 def score(a):
     import cornersig as CS
     import explore as X
     plan = json.load(open(f'{a.out}/plan.json')); k = plan['k']; known = {tuple(c) for c in plan['below_cells']}
-    tally = dict(seeds=0, crossed=0, new_cell=0, junction_kept=0)
+    tally = dict(seeds=0, crossed=0, new_cell=0, junction_kept=0, inter_kept=0)
+    names = {'control_020/b01024': 'm4 (loose border pair)', 'c110_h2/b02882': 'm7 (near-axis staircase)',
+             'control_037/b00237': 'm8 (angle transition)'}
+    flag = {i: v for i, sd in enumerate(plan['seeds']) for kk, v in names.items() if kk in sd}
     for i, seed in enumerate(plan['seeds']):
         ad = f'{a.out}/s{i:03d}/archive.jsonl'
         if not os.path.exists(ad):
@@ -65,11 +75,15 @@ def score(a):
             if c not in known:
                 newc.append((e['s'], c, e['path']))
         jb = X.roles_j(_load(best['path'])[1])[3] if best else None
+        i0 = _inter(q0)
+        ib = max([_inter(_load(e['path'])[1]) for e in sub[:20]] or [0])   # most intermediate squares kept below 11
+        tally['inter_kept'] += bool(sub and i0 >= 1 and ib >= 1)
         crossed = bool(sub)
         tally['crossed'] += crossed; tally['new_cell'] += bool(newc); tally['junction_kept'] += bool(crossed and jb is not None and abs(jb - j0) <= 1 and j0 >= 3)
         print(f"seed {i:2d} s0 {s0:.6f} cell {g0['sorted']} J{j0} -> best {best['s'] if best else float('nan'):.6f} J{jb} "
               f"{'CROSSED' if crossed else 'above'}  sub-grid cells {len(cells)} new {len(newc)}"
-              + (f"  NEW: {newc[0][1]} at {newc[0][0]:.6f} {newc[0][2]}" if newc else ''))
+              + f"  intermediate {i0} -> {ib} (max over sub-grid descendants)"
+              + (f"  NEW: {newc[0][1]} at {newc[0][0]:.6f} {newc[0][2]}" if newc else '') + (f"  <- {flag[i]}" if i in flag else ''))
     print(tally)
 
 
