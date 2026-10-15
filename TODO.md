@@ -19,9 +19,9 @@ External posts: ask Evan explicitly per post.  **Before any bound-chasing run, c
 
 ## Packings (`search/packer/`: `HANDOFF-2026-10-14.md`, `tasks/packer-arch-2026-10-14/`)
 Thesis (Evan 10-14): diversity pays; local search at current budgets has mined the frontier.  No compute above n = 324 without a specific reason.
-- [ ] TT3 (10-15): TT2's cutoff / starts / seeds, reuse arm S as baseline; arms = polish gating, movement-heavy (melt, GLS feasibility); proposals per CPU-s first.
+- [ ] TT3 (10-15): polish gating PASSED (C42, 2.08x near-frontier per CPU-h); next arm: movement-heavy (melt, GLS feasibility) on top of G, scored vs G; then the all-n config test with the region metric.
 - [ ] Store tiering before cheaper proposals raise the row rate: coords near the frontier + cluster representatives, lineage-only (replayable) rows elsewhere.  Design first.
-- [ ] Near-miss drain `nmdrain1014b` (0 gains in 26 items): stop or let it finish; then `pk.py nearmiss requeue` the one pre-10-15 stuck `running` item.
+- [ ] Near-miss drain `nmdrain1014b`: stopped 10-15 (0 gains in 42 items, 100 queued); low value, resume only if cores idle.
 - [ ] Add #607 (Couzo: 237, 339, 382, ...) to `pk/pending.yaml` + `sync-pending`; scoring rule for our own posted results inside a scored run (146 in TT2).
 - [ ] Run config with test / record modes; chain imports its own rounds; cfp into the store on import.
 - [ ] Parent-distance model: fit P(gain | parent gap, distance, n band, mechanism) from logs, then a randomized gap-band slice.

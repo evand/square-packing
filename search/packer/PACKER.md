@@ -2810,3 +2810,25 @@ those landed within 1e-4 of the round's start best (2-11 % within 1e-3), and pol
   P(interval excludes 1 from above) ~0.5, P(excludes from below) ~0.1; A / S within [0.75, 1.33].
 * Smoke 10-15 (`runs/tt3/smoke`, rounds 2 and 3 at 0.5 min, gate on): replay numbering works, 4 % of proposals polished,
   22.7 proposals per CPU-s vs S's 14.4 at n = 38-39 (screens dominate at small n).
+
+### Result (10-14 evening, scored `analysis/tt3_score.py runs/tt3/G runs/tt3/A --json runs/tt3/score.json`)
+Both arms ran on the tree later committed as `d8843de` (the run manifests say "dirty" at 1038892: launched minutes
+before the commit, no edits in between).  Measured CPU (chain manifests) A 6.86, G 6.87 CPU-h; round manifests 6.54 / 6.53.
+* **Primary: G / A = 2.08, 95 % bootstrap over n [1.75, 2.56]: PASS** (predicted ~1.4, P(pass) ~0.5).  Near-frontier
+  new minima: A 282 (43.1 / CPU-h), G 590 (90.3 / CPU-h), S-historical 297 (45.4 / CPU-h).
+* Replay fidelity: **A / S = 0.95 [0.79, 1.10]**, inside [0.75, 1.33]: the replay design holds, so later features reuse it
+  with G (already run) as the baseline instead of a fresh control.
+* Throughput (proposals per CPU-s, G / A): n 37-71 1.81x, 72-150 2.29x, 151-240 2.21x (predicted 1.6x .. 2.5x).  Polished
+  share 81 % -> 6 %.  The gain is mostly more proposals, not better ones: near-frontier events per proposal are ~equal
+  (A 282 / 79.0k, G 590 / 154.2k).
+* Robust to the duplicate-minimum question (f64 polish noise at large n): recounting distinct sides at tolerance 1e-7 /
+  1e-6 / 1e-5 instead of 2e-9 gives G / A 2.03 / 1.93 / 1.95.
+* Spread over n: G higher at 29 n, lower at 6, tied at 4.  Best gap per n (sign test, no event = worse): G better 17,
+  worse 7, tied 15, p = 0.064.
+* Records vs frontier_at(T) (eventbench, underpowered as expected): A 2 (146, 209), G 3 (132, 146, 209); G's 132 is the
+  current frontier (posted after T) re-found to 4e-12.  No new records.
+* Not measured, so not claimed: far (non-near-frontier) minima and new regions.  G polishes far fewer far states, so the
+  store gets far fewer polished far minima and many more `screened` rows (sightings A 28.7k, G 48.5k).  Evan's open
+  question (are looser far packings useful add / remove donors?) is not tested by this design; the final config test
+  on all n should include TT2's region metric.
+* Decision: gating at 2e-3 becomes the base for the next feature (movement-heavy arms), scored as feature+G vs G.
