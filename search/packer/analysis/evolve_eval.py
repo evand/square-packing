@@ -119,7 +119,42 @@ def archive_minima(a, prog, mins):
                                              tag=a.tag, prog=prog, t=time.strftime('%Y-%m-%dT%H:%M:%S'))) + '\n')
 
 
+def cmd_near(a):
+    """holdout references (Evan 10-15): k valid packings of n that are WORSE than the known record (gap to the target in
+    [--lo, --hi]: same neighbourhood of structures, not the record's own basin), chosen for diversity (store cluster,
+    then tilted count); rendered to DIR/near_n<N>_<i>.png.  The record itself is never shown.  The ids shown are logged
+    to DIR/near_manifest.json for the leakage audit."""
+    import sqlite3
+    from pk.store import Store
+    os.makedirs(a.out, exist_ok=True)
+    db = sqlite3.connect(f"file:{os.path.join(PK, 'runs', 'store.sqlite')}?mode=ro", uri=True)
+    st, man = Store(), {}
+    for n in [int(x) for x in a.n.split(',')]:
+        T = target_of(n, a.target)
+        rows = db.execute("SELECT id, s, cluster, ntilted FROM packing WHERE n=? AND status!='infeasible' AND s>=? AND s<=? "
+                          "ORDER BY s", (n, T + a.lo, T + a.hi)).fetchall()
+        pick, seen_c, seen_s = [], set(), []
+        for rnd in (0, 1):                               # first one per cluster / tilted count, then fill up
+            for pid, s_, cl, nt in rows:
+                key = (cl, nt)
+                if len(pick) >= a.k or any(abs(s_ - t) < 1e-6 for t in seen_s):
+                    continue
+                if rnd == 0 and (key in seen_c or (cl is not None and any(c == cl for c, _ in seen_c))):
+                    continue
+                pick.append((pid, s_)); seen_c.add(key); seen_s.append(s_)
+        rng = np.random.default_rng(n)
+        for i, (pid, s_) in enumerate(pick):
+            p = st.get(pid)
+            render(float(p.s), np.asarray(p.sq, float), f'{a.out}/near_n{n}_{i}.png',
+                   f'n={n}: a valid packing, s={s_:.6f} (the known record is {s_ - T:.4f} smaller)')
+        man[n] = dict(target=T, shown=[dict(id=pid, s=s_) for pid, s_ in pick])
+        print(f'n={n}: {len(pick)} near-record references ({len(rows)} in the gap band) -> {a.out}/near_n{n}_<i>.png')
+    json.dump(man, open(f'{a.out}/near_manifest.json', 'w'), indent=1)
+
+
 def cmd_ref(a):
+    if not a.allow_best:
+        print('ref (best known) is disabled for holdout runs; use `near` (pass --allow-best only when told to)'); return
     from pk.store import Store
     import sqlite3
     os.makedirs(a.out, exist_ok=True)
@@ -143,6 +178,9 @@ if __name__ == '__main__':
     e.add_argument('--maxc', type=int, default=24); e.add_argument('--procs', type=int, default=3); e.add_argument('--tag', default='')
     e.add_argument('--fill', action='store_true', help='candidates may hold only the tilted structure (< n squares): the exact MILP upright fill (mondrian.exact_fill) adds axis-aligned squares at the given s (retrying at s x 1.01 / 1.02 / 1.04 if short)')
     r = sp.add_parser('ref'); r.add_argument('--n', required=True); r.add_argument('--out', required=True)
-    r.add_argument('--target', default='live')
+    r.add_argument('--target', default='live'); r.add_argument('--allow-best', action='store_true')
+    q = sp.add_parser('near'); q.add_argument('--n', required=True); q.add_argument('--out', required=True)
+    q.add_argument('--target', default='live'); q.add_argument('--k', type=int, default=4)
+    q.add_argument('--lo', type=float, default=5e-3); q.add_argument('--hi', type=float, default=5e-2)
     a = ap.parse_args()
-    {'eval': cmd_eval, 'ref': cmd_ref}[a.cmd](a)
+    {'eval': cmd_eval, 'ref': cmd_ref, 'near': cmd_near}[a.cmd](a)

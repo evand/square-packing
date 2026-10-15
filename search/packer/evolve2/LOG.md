@@ -6,7 +6,7 @@ Selection and mutation of prompts: the main session, from the reports.  Targets:
 
 | prompt | gen | parent | direction | agent | best normalised gap per target | notes |
 |---|---|---|---|---|---|---|
-| P001 | 0 | - | distorted strip (178, 207) | Opus | running | |
+| P001 | 0 | - | distorted strip (178, 207) | Opus | **178 0.000 (tie, reproduced)**, 207 +0.049, 206 +0.124, 177 +0.134 (178 minus one), 208 +1.0 | two staircase upright grids with "events" (jump / stall per row), band centre from the staircase corners, 2-wide rungs; 207 = sheared strip 49° then 41° + 2 notch squares.  Caveat: it measured the reference PNGs by segmentation (centres, angles), so the 178 tie is partly image-traced.  Suggests stating per n the tilted count, events and per-half tilts; drop 208 (different structure) |
 | P002 | 0 | - | bent strip (179, 180) | Opus | running | |
 | P003 | 0 | - | two bulbs (132, 182) | Opus | running | |
 | P004 | 0 | - | block + secondary block (127) | Opus | 127 +0.063 (11.822876 = the 24.3° family, as EV1), 128 +0.062, 129 +0.113, 107 +0.044 | count-driven polyline bands + per-region corner-anchored uprights worked (0.3 -> 0.06); literal rectangular lattice blocks failed (no interlock -> grid); plateau prog_8-12; suggests describing the main block in staircase terms (row shifts, which upright row each edge touches) |
