@@ -3297,3 +3297,15 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   Prediction: REPLICATED + BEAT-ANTE 3 / 15 (range 1-5; L1 named got 4 / 5 informative).  >= 3: blind Mondrian v1 is
   at baseline -> live slack-composition hunt next; 0-1: composition quality is fine but basins differ, look at the
   starts' structure vs the named ones.
+* **EV2 gen 0, pre-registered (10:55)** (Evan 10-15: use Claude Code subagents, prompts as the unit of evolution, and
+  push the prompts toward the structures the J-style records use, e.g. two-bulb, distorted strips, 127-style blocks).
+  `evolve2/RULES.md` (shared: constructor interface, sandbox, the evaluator `analysis/evolve_eval.py` with PNG
+  renderings, <= 12 evals, no reading record coordinates, report format incl. a suggested PROMPT change) +
+  `evolve2/prompts/P001-P006.md` (gen 0): P001 distorted strip (178, 207; hunt 177 / 206 / 208), P002 bent strip
+  (179, 180; hunt 179-181), P003 two bulbs (132, 182; hunt 133 / 176 / 183), P004 block + secondary block (127; hunt
+  127-129, 107), P005 staircase diamond (126; hunt 123 / 125 / 145), P006 open design (hunt 104 / 109 / 110).  Targets
+  = live frontier (this is the hunt mode: the prompts name post-#432 structures, so no time-travel claim).  6 subagents
+  (Opus, the session model) in parallel, 2 eval procs each, `runs/evolve2/gen0/P00k`.  Selection between generations:
+  me, from the reports (best normalised gaps + the suggested prompt changes); lineage in `evolve2/LOG.md`.
+  Questions: (1) reproduction: does a structure prompt + evaluator loop rebuild the record of that structure (ties)?
+  (2) any live record.  Prediction: (1) >= 1 of the 9 reproduce targets tied: 45 %; (2) any record: 7 %.

@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+"""Evaluator CLI for Claude Code subagents writing square-packing constructors (EV2, prompt evolution; 10-15).
+
+  python3 analysis/evolve_eval.py eval PROG.py --n 126,127 --out DIR [--target live|cutoff:ISO] [--seeds 2] [--tag P003]
+      runs PROG's construct(n, rng) (sandboxed: analysis/evolve_runner.py), optimises every candidate (fq squeeze +
+      SLP polish), prints per n: best side, target, gap, normalised gap (0 = ties target, 1 = grid), a description, and
+      writes DIR/n<N>.png (rendering of the best optimised layout) and DIR/n<N>.txt (its coordinates).  Every call is
+      logged to runs/evolve2/evals.jsonl (with --tag).  A result below the target prints CANDIDATE RECORD.
+  python3 analysis/evolve_eval.py ref --n 127 --out DIR [--target live|cutoff:ISO]
+      renders the best known packing at the target time (store / register) to DIR/ref_n<N>.png for reference.
+"""
+import argparse, json, math, os, sys, time
+import numpy as np
+HERE = os.path.dirname(os.path.abspath(__file__)); PK = os.path.dirname(HERE); sys.path.insert(0, PK); sys.path.insert(0, HERE)
+for _v in ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS'):
+    os.environ.setdefault(_v, '1')
+LOG = os.path.join(PK, 'runs', 'evolve2', 'evals.jsonl')
+
+
+def target_of(n, spec):
+    from pk import eventbench as EB
+    if spec == 'live':
+        return EB.frontier_at(n, None)
+    return EB.frontier_at(n, spec.split(':', 1)[1])
+
+
+def render(s, sq, path, title=''):
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import Polygon
+    fig, ax = plt.subplots(figsize=(6, 6))
+    for x, y, a in sq:
+        a = a % 90.0
+        th = math.radians(a)
+        c, si = math.cos(th), math.sin(th)
+        pts = [(x + dx * c - dy * si, y + dx * si + dy * c) for dx, dy in ((.5, .5), (-.5, .5), (-.5, -.5), (.5, -.5))]
+        tilt = min(a, 90 - a)
+        col = '#d0d0d0' if tilt < 1 else plt.cm.viridis(min(tilt, 45) / 45)
+        ax.add_patch(Polygon(pts, closed=True, fc=col, ec='k', lw=0.4))
+    ax.plot([0, s, s, 0, 0], [0, 0, s, s, 0], 'r-', lw=1)
+    ax.set_xlim(-0.2, s + 0.2); ax.set_ylim(-0.2, s + 0.2); ax.set_aspect('equal')
+    ax.set_xticks(range(int(s) + 1)); ax.set_yticks(range(int(s) + 1)); ax.tick_params(labelsize=6)
+    ax.grid(True, lw=0.2)
+    ax.set_title(title + '  (grey: axis-aligned; colour: tilt 0-45 deg, yellow = 45)', fontsize=7)
+    fig.tight_layout(); fig.savefig(path, dpi=110); plt.close(fig)
+
+
+def cmd_eval(a):
+    import evolve as E
+    from concurrent.futures import ProcessPoolExecutor
+    ns = [int(x) for x in a.n.split(',')]
+    os.makedirs(a.out, exist_ok=True)
+    prog = os.path.abspath(a.prog)
+    bad = E.static_check(open(prog).read())
+    if bad:
+        print(f'REJECTED by the static check: {bad}'); return
+    t0 = time.time()
+    jobs = [(prog, n, 1000 * sd + n, a.maxc, (1.0, 1.03)) for n in ns for sd in range(a.seeds)]
+    with ProcessPoolExecutor(min(a.procs, len(jobs))) as ex:
+        R = list(ex.map(E.eval_job, jobs))
+    best = {}
+    errs = {}
+    for (_, n, *_), r in zip(jobs, R):
+        if 's' in r:
+            if n not in best or r['s'] < best[n]['s']:
+                best[n] = r
+        else:
+            errs.setdefault(n, r['err'])
+    rows = []
+    for n in ns:
+        T = target_of(n, a.target); g = math.ceil(math.sqrt(n) - 1e-12)
+        if n not in best:
+            print(f'n={n}: ERROR {errs.get(n)}'); rows.append(dict(n=n, err=errs.get(n))); continue
+        r = best[n]; ng = (r['s'] - T) / max(g - T, 1e-9)
+        flag = '  *** CANDIDATE RECORD (below target) ***' if r['s'] < T - 1e-9 else ''
+        print(f"n={n}: side {r['s']:.9f}  target {T:.9f}  gap {r['s'] - T:+.2e}  normalised {ng:+.4f}  grid {g}  "
+              f"({r['cands']} candidates)  {r['desc']}{flag}")
+        with open(f'{a.out}/n{n}.txt', 'w') as f:
+            f.write(f"{n} {r['s']!r}\n" + ''.join(f'{x!r} {y!r} {t!r}\n' for x, y, t in r['sq']))
+        render(r['s'], r['sq'], f'{a.out}/n{n}.png', f"n={n} s={r['s']:.6f} target {T:.6f}")
+        rows.append(dict(n=n, s=r['s'], target=T, ng=ng))
+    print(f'renderings: {a.out}/n<N>.png   coordinates: {a.out}/n<N>.txt   ({time.time() - t0:.0f} s)')
+    os.makedirs(os.path.dirname(LOG), exist_ok=True)
+    with open(LOG, 'a') as f:
+        f.write(json.dumps(dict(t=time.strftime('%Y-%m-%dT%H:%M:%S'), tag=a.tag, prog=prog, target=a.target, rows=rows,
+                                sec=round(time.time() - t0, 1))) + '\n')
+
+
+def cmd_ref(a):
+    from pk.store import Store
+    import sqlite3
+    os.makedirs(a.out, exist_ok=True)
+    db = sqlite3.connect(f"file:{os.path.join(PK, 'runs', 'store.sqlite')}?mode=ro", uri=True)
+    st = Store()
+    for n in [int(x) for x in a.n.split(',')]:
+        T = target_of(n, a.target)
+        r = db.execute("SELECT id FROM packing WHERE n=? AND abs(s-?)<2e-9 AND status!='infeasible' ORDER BY added LIMIT 1",
+                       (n, T)).fetchone()
+        if not r:
+            print(f'n={n}: no stored packing at {T}'); continue
+        p = st.get(r[0])
+        render(float(p.s), np.asarray(p.sq, float), f'{a.out}/ref_n{n}.png', f'best known n={n} s={T:.6f}')
+        print(f'n={n}: {a.out}/ref_n{n}.png  (s = {T:.9f})')
+
+
+if __name__ == '__main__':
+    ap = argparse.ArgumentParser(); sp = ap.add_subparsers(dest='cmd', required=True)
+    e = sp.add_parser('eval'); e.add_argument('prog'); e.add_argument('--n', required=True); e.add_argument('--out', required=True)
+    e.add_argument('--target', default='live'); e.add_argument('--seeds', type=int, default=2)
+    e.add_argument('--maxc', type=int, default=24); e.add_argument('--procs', type=int, default=3); e.add_argument('--tag', default='')
+    r = sp.add_parser('ref'); r.add_argument('--n', required=True); r.add_argument('--out', required=True)
+    r.add_argument('--target', default='live')
+    a = ap.parse_args()
+    {'eval': cmd_eval, 'ref': cmd_ref}[a.cmd](a)
