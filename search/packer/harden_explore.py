@@ -13,9 +13,18 @@ import argparse, glob, json, os, subprocess, sys
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 
 
-def gather(srcs):
+def gather(srcs, starts_glob=None):
     E = {}
     for s in srcs:
+        if starts_glob:                                  # control arm: rank plain start files by their header side
+            for ej in sorted(glob.glob(f'{s}/*/event.json')):
+                d = os.path.dirname(ej); b = os.path.basename(d)
+                ev = json.load(open(ej)); ev.setdefault('new', ev.get('S'))
+                e = E.setdefault(b, dict(ev=ev, res=[]))
+                for g in starts_glob.split(','):
+                    for f in glob.glob(f'{d}/{g}'):
+                        e['res'].append((float(open(f).readline().split()[1]), f))
+            continue
         for ej in sorted(glob.glob(f'{s}/*/event.json')):
             d = os.path.dirname(ej); b = os.path.basename(d)
             ev = json.load(open(ej)); ev.setdefault('new', ev.get('S'))
@@ -36,7 +45,9 @@ def run(a):
     os.makedirs(a.out, exist_ok=True)
     man = manifest.start(a.out, 'harden_explore', args=vars(a), procs=a.cores)
     runs = []
-    for b, e in sorted(gather(a.src).items()):
+    for b, e in sorted(gather(a.src, a.starts_glob).items()):
+        if a.only and int(e['ev']['n']) not in {int(x) for x in a.only.split(',')}:
+            continue
         ev = e['ev']; d = f'{a.out}/{b}'; os.makedirs(d, exist_ok=True)
         keep, seen = [], []
         for s, f in sorted(e['res']):
@@ -53,14 +64,19 @@ def run(a):
     slots, r = [(ev, d, k, 0) for ev, d, k in runs], 1
     while len(slots) < a.cores and runs:
         slots += [(ev, d, k, r) for ev, d, k in runs][:a.cores - len(slots)]; r += 1
-    P = []
-    for ev, d, keep, rep in slots:
-        cmd = [sys.executable, f'{HERE}/explore.py', '--n', str(ev['n']), '--adapt', '--reward', 'value', '--elite-share', '0.3',
-               '--polish-gate', '2e-3', '--gate-ref', 'run', '--frontier-s', repr(ev['ante']), '--starts', *keep,
-               '--minutes', str(a.minutes), '--procs', '1', '--seed', str(ev['n'] * 10 + rep), '--out', f'{d}/explore{rep}']
-        P.append(subprocess.Popen(cmd, stdout=open(f'{d}/explore{rep}.log', 'w'), stderr=subprocess.STDOUT, cwd=HERE))
-    for p in P:
-        p.wait()
+    if a.max_need is not None:                           # live hunts: only events whose best start is near
+        slots = [x for x in slots if x[0].get('harden_best') is not None and x[0]['harden_best'] - x[0]['ante'] < a.max_need]
+    P, queue = [], list(slots)
+    import time
+    while queue or P:                                    # at most --cores explorers at a time (events beyond: queued)
+        P = [p for p in P if p.poll() is None]
+        while queue and len(P) < a.cores:
+            ev, d, keep, rep = queue.pop(0)
+            cmd = [sys.executable, f'{HERE}/explore.py', '--n', str(ev['n']), '--adapt', '--reward', 'value', '--elite-share', '0.3',
+                   '--polish-gate', '2e-3', '--gate-ref', 'run', '--frontier-s', repr(ev['ante']), '--starts', *keep,
+                   '--minutes', str(a.minutes), '--procs', '1', '--seed', str(ev['n'] * 10 + rep), '--out', f'{d}/explore{rep}']
+            P.append(subprocess.Popen(cmd, stdout=open(f'{d}/explore{rep}.log', 'w'), stderr=subprocess.STDOUT, cwd=HERE))
+        time.sleep(5)
     man.finish()
     score(a)
 
@@ -89,6 +105,9 @@ if __name__ == '__main__':
     r = sp.add_parser('run'); r.add_argument('--src', nargs='+', required=True); r.add_argument('--out', required=True)
     r.add_argument('--minutes', type=float, default=20); r.add_argument('--cores', type=int, default=16)
     r.add_argument('--keep', type=int, default=4)
+    r.add_argument('--starts-glob', help='control: use these start files in each src event dir (no harden results)')
+    r.add_argument('--only', help='comma list of n')
+    r.add_argument('--max-need', type=float, help='skip events whose best start is more than this above ante')
     s = sp.add_parser('score'); s.add_argument('--out', required=True)
     a = ap.parse_args()
     {'run': run, 'score': score}[a.cmd](a)

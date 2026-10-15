@@ -3141,3 +3141,19 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   raw starts (269): both harden sources matter.  Claim C46 (plausible).  The 02:20 "band merging" reading was wrong
   (count threshold); the right reading: Mondrian v1's squeeze = a soft-to-rigid restructure (uprights join the band)
   followed by a nearby search.
+* **BM3c control, pre-registered (03:56)**: compose -> explorer, no harden, budget-matched: the same compositions
+  (c481 fq'd starts + c481r raw layouts, 4 best distinct per n), the 5 informative events (207, 232, 236, 269, 303),
+  `harden_explore.py run --starts-glob ... --cores 8 --minutes 45` (~6 CPU-h, about BM1-3's per-event spend).
+  Hypothesis C46: harden is the necessary step.  Prediction: 0-1 / 5 BEAT-ANTE or better (vs BM3's 3 / 5).  If >= 3 / 5,
+  C46 is wrong (the explorer alone suffices at this budget) and harden is only a speed-up, if that.
+* **#500 narrowing (04:15)**: `comp_l1 --narrow-deltas` (Pareto narrowing: re-optimise each crop at aspect d + delta,
+  delta in +-{0.003, 0.01, 0.03, 0.05}, polish only; keep boxes no larger in both sides and smaller in one).  181 smoke:
+  629 / 618 narrowed pieces, still 0 compositions (joint fills top out at 180 / 181 even at S + 0.3).  The posted 181 is
+  one 58-square band across the box: its "seam repair" restructures far beyond narrowing.  #500 parked (CP500 still
+  running: only 270 / 304 compose).
+* **MH3 live hunt, pre-registered (04:20)**: the BM3 pipeline's last stage on last night's MH2 harden outputs (which got
+  no explorer stage): `harden_explore.py run --src runs/mh3src --max-need 0.01 --minutes 20 --cores 16` (30 n, non-tie
+  harden outputs within 1e-2 of frontier_at(n, 10-15 04:30), 4 best distinct each, 1 proc x 20 min, queued 16 at a time;
+  ~10 CPU-h, ~40 min wall).  Success: polished below the live frontier, then candidate.py certification.  Prediction:
+  0-1 (point 0.4): BM3's events were judged against the ante just before each record; the live frontier is the
+  post-everything envelope, and NH / MH2 found nothing at these n last night.

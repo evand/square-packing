@@ -62,26 +62,35 @@ def full_crop(src, desc):
 
 
 def narrow_job(args):
-    """re-optimise one crop in its own rectangle; -> (key, T', desc') or (key, None, None)"""
-    key, P, W, H, desc = args
+    """re-optimise one crop in its own rectangle at aspect offsets d + delta (delta < 0 narrows the width relative to the
+    height, > 0 the height); -> (key, [(T', desc'), ...]) for every box no larger than the crop in both sides and
+    smaller in one (the Pareto narrowing; #500: "searched toward a smaller rectangle of its own, by 7e-06 to 5e-02 in
+    one side").  delta = 0 runs ALM + polish, other deltas polish only (stay in the crop's basin)."""
+    key, P, W, H, desc, deltas = args
     import rectlib as RL
     import mondrian as M
-    d = W - H
+    d0 = W - H
+    out = []
+    o, i, j, _, _, m = desc
     with tempfile.TemporaryDirectory() as td:
         inp, outp = os.path.join(td, 'in.txt'), os.path.join(td, 'out.txt')
-        s0 = max(H, W - d)
-        with open(inp, 'w') as f:
-            f.write(f'{len(P)} {float(s0)!r}\n' + ''.join(f'{float(x)!r} {float(y)!r} {float(a)!r}\n' for x, y, a in P))
-        best, _ = RL._fq(inp, outp, d, [])
-        pol, _ = RL._fq(inp, outp, d, ['--no-alm'])
-        if pol is not None and (best is None or pol[0] < best[0]):
-            best = pol
-    if best is None or best[0] > H - 1e-9:
-        return key, None, None
-    h, _, sq = best
-    T = sq[M.is_tilted(sq[:, 2])]
-    o, i, j, _, _, m = desc
-    return key, T, (o, i, j, float(h + d), float(h), int(m))
+        for dl in deltas:
+            d = d0 + dl
+            s0 = max(H, W - d)
+            with open(inp, 'w') as f:
+                f.write(f'{len(P)} {float(s0)!r}\n' + ''.join(f'{float(x)!r} {float(y)!r} {float(a)!r}\n' for x, y, a in P))
+            best = None
+            for extra in (([], ['--no-alm']) if dl == 0 else (['--no-alm'],)):
+                r, _ = RL._fq(inp, outp, d, extra)
+                if r is not None and (best is None or r[0] < best[0]):
+                    best = r
+            if best is None:
+                continue
+            h = best[0]; w = h + d
+            if h <= H + 1e-9 and w <= W + 1e-9 and (h < H - 1e-9 or w < W - 1e-9):
+                sq = best[2]
+                out.append((sq[M.is_tilted(sq[:, 2])], (o, i, j, float(w), float(h), int(m))))
+    return key, out
 
 
 def run(a):
@@ -95,6 +104,7 @@ def run(a):
         keep = {int(x) for x in a.only.split(',')}; evs = [e for e in evs if e['n'] in keep]
     # 1-2: crops and narrowing, every piece of every event in one queue
     jobs, pieces = [], {}
+    deltas = [float(x) for x in a.narrow_deltas.split(',')]
     for ev in evs:
         for side in ('A', 'B'):
             spec, m = ev[side]
@@ -104,12 +114,12 @@ def run(a):
             if a.arm in ('narrow', 'both'):
                 for k, (T, desc) in enumerate(P):
                     Pf, W, H = full_crop(src, desc)
-                    jobs.append(((ev['n'], side, k), Pf, W, H, desc))
+                    jobs.append(((ev['n'], side, k), Pf, W, H, desc, deltas))
     print(f'{len(evs)} events; {sum(len(v) for v in pieces.values())} crops; {len(jobs)} narrowings', flush=True)
     nar = {}
     for r in run_jobs(narrow_job, jobs, procs=a.cores, timeout=900):
-        if isinstance(r, tuple) and r[1] is not None:
-            nar.setdefault(r[0][:2], []).append((r[1], r[2]))
+        if isinstance(r, tuple) and r[1]:
+            nar.setdefault(r[0][:2], []).extend(r[1])
     # 3: compose per event (mondrian.replicate pools internally)
     starts = {}
     for ev in evs:
@@ -180,6 +190,7 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser(); sp = ap.add_subparsers(dest='cmd', required=True)
     r = sp.add_parser('run'); r.add_argument('--set', default='500'); r.add_argument('--out', required=True)
     r.add_argument('--only'); r.add_argument('--arm', default='both', choices=['plain', 'narrow', 'both'])
+    r.add_argument('--narrow-deltas', default='0', help="aspect offsets for narrowing, e.g. '0,-0.01,-0.03,0.01,0.03'")
     r.add_argument('--R', type=int, default=3); r.add_argument('--max-pieces', type=int, default=400)
     r.add_argument('--window', type=float, default=0.1); r.add_argument('--extra', type=int, default=2)
     r.add_argument('--top', type=int, default=150); r.add_argument('--fq-top', type=int, default=4)
