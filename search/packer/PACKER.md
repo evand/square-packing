@@ -3024,3 +3024,16 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   11.7733036); BEAT-ANTE 236 (15.8700139 vs ante 15.8722190)**; no 123 (best 11.6071747: the graft lands at the donor's
   basin side + 1, not below the host), 239 (+3.1e-3), 207 (no count-preserving corner region: 0 / 96).  Prediction
   BEAT-ANTE 3 / 7, REPLICATED 2 / 7: held.  The graft is now a working operator (`graft.py`).
+* **Reach test RH1, pre-registered (01:40)**: `reach_harden.py run --bench runs/removal_bench/b2 --out runs/reach/h1`:
+  per removal event, the 4 best removal starts -> harden.py 3 monotone rounds (keep 4), grid r0 {0.1, 0.2, 0.3} x noise
+  {0.004, 0.008} x 3 seeds, fq polish, target = ante; 1 proc per event, all 12 at once (~0.3-0.8 CPU-h per event, vs
+  the explorer's ~0.42 in b2).  Question: does soft-to-rigid travel further from removal seeds than the explorer?
+  Prediction: BEAT-ANTE or better at 3 / 12 (vs explorer 2 / 12), with the near misses (155, 108, 208, 179) the likely
+  hits.
+* **Composition L1 on #500, pre-registered (01:40)**: `comp_l1.py run --set 500 --arm both --cores 4 --minutes 15 --out
+  runs/comp_l1/c500`: 8 events (181, 238, 239, 270-272, 304, 305; 176 interlock left out), named sources and piece
+  sizes, crops plain + narrowed (each crop with its uprights re-optimised in its own (h + d) x h box, d = W - H), exact
+  fill + fq at sides near the posted S, then explorer (gate-ref run).  Positive control passed: #481 259 REPLICATED
+  through this harness.  Smoke: 181 composes nothing near S (my narrowing shrinks both sides at fixed d; #500 narrowed
+  "in one side").  Prediction: BEAT-ANTE or better 2 / 8, REPLICATED 1 / 8 (270 / 304 = s(209) whole + small pieces
+  are the likeliest).
