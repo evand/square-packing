@@ -3146,30 +3146,30 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   `harden_explore.py run --starts-glob ... --cores 8 --minutes 45` (~6 CPU-h, about BM1-3's per-event spend).
   Hypothesis C46: harden is the necessary step.  Prediction: 0-1 / 5 BEAT-ANTE or better (vs BM3's 3 / 5).  If >= 3 / 5,
   C46 is wrong (the explorer alone suffices at this budget) and harden is only a speed-up, if that.
-* **#500 narrowing (04:15)**: `comp_l1 --narrow-deltas` (Pareto narrowing: re-optimise each crop at aspect d + delta,
+* **#500 narrowing (03:40)**: `comp_l1 --narrow-deltas` (Pareto narrowing: re-optimise each crop at aspect d + delta,
   delta in +-{0.003, 0.01, 0.03, 0.05}, polish only; keep boxes no larger in both sides and smaller in one).  181 smoke:
   629 / 618 narrowed pieces, still 0 compositions (joint fills top out at 180 / 181 even at S + 0.3).  The posted 181 is
   one 58-square band across the box: its "seam repair" restructures far beyond narrowing.  #500 parked (CP500 still
   running: only 270 / 304 compose).
-* **MH3 live hunt, pre-registered (04:20)**: the BM3 pipeline's last stage on last night's MH2 harden outputs (which got
+* **MH3 live hunt, pre-registered (03:41)**: the BM3 pipeline's last stage on last night's MH2 harden outputs (which got
   no explorer stage): `harden_explore.py run --src runs/mh3src --max-need 0.01 --minutes 20 --cores 16` (30 n, non-tie
   harden outputs within 1e-2 of frontier_at(n, 10-15 04:30), 4 best distinct each, 1 proc x 20 min, queued 16 at a time;
   ~10 CPU-h, ~40 min wall).  Success: polished below the live frontier, then candidate.py certification.  Prediction:
   0-1 (point 0.4): BM3's events were judged against the ante just before each record; the live frontier is the
   post-everything envelope, and NH / MH2 found nothing at these n last night.
-* **Hole-targeted relocation (04:30)**: `rectsearch --reloc` now drops each moved square at a large hole (grid points,
+* **Hole-targeted relocation (03:43)**: `rectsearch --reloc` now drops each moved square at a large hole (grid points,
   exact point-to-square clearance, one of the top 5; not within 0.6 of its old spot).  Smoke (2 procs x 1.5 min from
   RB62's minima): 31 / 441 relocations stay below 5.92 (random spots: 3 / 289); best still 5.9153600655.
-* **RB62c, pre-registered (04:31)**: `rectsearch run --cells 62:6 --reloc 0.5 --start-frac 0 --init rb62 rb62b
+* **RB62c, pre-registered (03:44)**: `rectsearch run --cells 62:6 --reloc 0.5 --start-frac 0 --init rb62 rb62b
   --init-split`, 16 procs x 30 min (8 CPU-h), after MH3.  Success: h <= 5.90995829107 + 1e-9.  Prediction 15 %.
-  *Amended (04:47)*: launched early on the 7 idle cores (7 procs x 30 min, 3.5 CPU-h) instead of after MH3.
-* **L2-481, pre-registered (04:58)**: level 2 (blind) on the 14 #481 events: `analysis/l2_compose.py run --set 481`
+  *Amended (03:58)*: launched early on the 7 idle cores (7 procs x 30 min, 3.5 CPU-h) instead of after MH3.
+* **L2-481, pre-registered (04:06)**: level 2 (blind) on the 14 #481 events: `analysis/l2_compose.py run --set 481`
   (compose2 `--blind 2026-10-09T14:59 --blind-t 2026-10-09T21:59` (new: + crops of every store packing at the register
   frontier as of T, from register history), `--probe 0.3 --budget 120`; the 4 tightest distinct near arms per n ->
   explorer 20 min x 1 proc, no harden).  ~6 CPU-h, after MH3.  Tiers as usual.  Prediction: BEAT-ANTE or better 2 / 14
   (L1 with named pieces + slack composition + explorer gave 3 / 5 informative; blind adds the piece choice, and the
   piece table may lack Mondrian v1's whole-packing pieces, e.g. s(130) for 207).
-* **BM3c result (05:10): 4 / 5, the control beats the treatment.**  Compose -> explorer, no harden (45 min x 8 cores,
+* **BM3c result (04:19): 4 / 5, the control beats the treatment.**  Compose -> explorer, no harden (45 min x 8 cores,
   6.0 CPU-h): 207 REPLICATED (14.8855063088), 236 REPLICATED (15.8619343906, below SQUISH's 15.8639557), 232 BEAT-ANTE
   (15.7689324), 303 BEAT-ANTE (17.9196812); 269 no (+1.1e-2; BM3 got it via harden of a raw layout).  BM1-3 (harden
   then explorer): 3 / 5 at 12.0 CPU-h.  By the pre-registered rule, C46 as stated ("harden is the necessary step") is
@@ -3178,21 +3178,21 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   a complement (269), not the mechanism.
 * **CP500 composition stage**: only 270 (17.0, grid) and 304 (17.9452) composed at slack sides with crop pieces (harden + explorer on those still running); #500 needs
   its own piece work (see the narrowing note).
-* **MH3 launched (05:11)** on 15 cores (CP500's last harden holds one).
-* **RB62c result (05:25)**: miss (prediction 15 %).  57,294 quenches with hole-targeted relocation (3.5 CPU-h): best
+* **MH3 launched (04:19)** on 15 cores (CP500's last harden holds one).
+* **RB62c result (04:35)**: miss (prediction 15 %).  57,294 quenches with hole-targeted relocation (3.5 CPU-h): best
   still 5.9153600655.  RB62-RB62c: 10.2 CPU-h, one basin.  The (62,6) block at his quality needs a different start
   model (Ostashev: GPU soft-to-rigid from corner staircases); parked.  303 stays the one Ostashev rectangle-block
   event we cannot replicate blind.
-* **MH3 result (06:00): 0 records** (prediction 0-1, point 0.4).  30 n, 10.0 CPU-h.  The explorer took 12 of the
+* **MH3 result (05:00): 0 records** (prediction 0-1, point 0.4).  30 n, 10.0 CPU-h.  The explorer took 12 of the
   non-tie harden outputs down to the frontier exactly (ties to 1e-11: 29, 38, 53, 87, 125, 151, 198, 201, 257, 258,
   262, 290), none below.  At the live frontier these compositions land on the known records.  L2-481 launched.
-* **L2-481 result (06:40): 0 / 15** (prediction 2 / 14: miss; 6.6 CPU-h).  The blind composer's tightest near arms sit
+* **L2-481 result (05:40): 0 / 15** (prediction 2 / 14: miss; 6.6 CPU-h).  The blind composer's tightest near arms sit
   0.05-0.1 above the posted values (207: 14.950 blind vs 14.904 composed from the named pieces), even at 259 (L1:
   seconds).  Cause found: **the piece table held no off-diagonal piece** (0 of 45,329 have non-integer W - H: rectlib /
   rectsearch pieces are (h + d) x h), while Mondrian v1's pieces are corner crops of arbitrary aspect (259: s(123)'s
   left 8.59 columns).  The 10-14 "converter screen deferred" note saw the same hole.
-* **Off-diagonal pieces imported (06:45)**: `analysis/atlas_to_pieces.py runs/mondrian/atlas_v3.npz` (Mondrian atlas
+* **Off-diagonal pieces imported (05:43)**: `analysis/atlas_to_pieces.py runs/mondrian/atlas_v3.npz` (Mondrian atlas
   crops, m 10-250, d = W - H as stored; source '<packing>:atlas', so --blind still applies): 31,622 new pieces.
-* **L2b-481, pre-registered (06:46)**: L2-481 rerun with the off-diagonal pieces (same flags, fresh compose stage).
+* **L2b-481, pre-registered (05:44)**: L2-481 rerun with the off-diagonal pieces (same flags, fresh compose stage).
   Positive control: 259 (L1 trivially).  Prediction: BEAT-ANTE or better 4 / 15 (259, 263, 292 are pure compositions;
   207 / 232 / 236 need the squeeze as in BM3c).
