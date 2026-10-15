@@ -24,7 +24,7 @@ Thesis (Evan 10-14): diversity pays; local search at current budgets has mined t
 - [ ] Detour, parked (Evan 10-15): our own register to n = 1024-4096 (every published regular packing, L groups, mechanical constructions), then hunt / submit records > 324.
 - [ ] Store tiering before cheaper proposals raise the row rate: coords near the frontier + cluster representatives, lineage-only (replayable) rows elsewhere.  Design first.
 - [ ] Near-miss drain `nmdrain1014b`: stopped 10-15 (0 gains in 42 items, 100 queued); low value, resume only if cores idle.
-- [ ] Add #607 (Couzo: 237, 339, 382, ...) to `pk/pending.yaml` + `sync-pending`; scoring rule for our own posted results inside a scored run (146 in TT2).
+- [ ] (#607 added 10-15 by `pk.py watch --apply`.)  scoring rule for our own posted results inside a scored run (146 in TT2).
 - [ ] Run config with test / record modes; chain imports its own rounds; cfp into the store on import.
 - [ ] Parent-distance model: fit P(gain | parent gap, distance, n band, mechanism) from logs, then a randomized gap-band slice.
 - [ ] Constructors (Evan 10-14): off-diagonal pieces (fq `--rect-dx/--rect-dy`) + offset converter; distorted strip / V-band (fix `vband.py` fit); two-bulb, lopsided bulb.

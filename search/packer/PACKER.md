@@ -3109,3 +3109,12 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   **Rectangle-block family: 5 / 6 of Ostashev's #528 / #562 records replicated blind (175, 176, 204, 232, 264);
   303 waits on the (62,6) block (RB62b).**  Lesson: the crop library must cover every structurally distinct store
   packing, not only the frontier at atlas time.
+* **JT1, pre-registered (03:15)**: family J time travel (never done: TT3's cutoff 10-10 is after Xu's #432).  Top 10 J
+  events by gain (Xu #432, 10-08: 126, 103, 146, 105, 127, 51, 123, 175, 84, 267; gains 0.031 .. 0.008), start = the
+  register packing at frontier_at(n, T), explorer 20 min x 1 proc each (`analysis/jt1.py`, ~3.3 CPU-h).  Tiers as
+  usual, plus the fraction of Xu's gain reached.  Prediction: BEAT-ANTE 3 / 10, REPLICATED 1 / 10 (126's staircase
+  diamond was reached in < 4 min from structured seeds on 10-09, not from the old record; the large gains are new
+  layouts, which a nearby search rarely reaches).
+* **Sync (03:10)**: `pk.py watch --apply`: #607 (Couzo, 237-1024) and #610 (bengreff, s(95) = 10) added to pending.yaml;
+  624 new distinct packings (Couzo master, Mishapolk), almost all n > 324.  New bests at n <= 324: only 237
+  15.9026036383 (-1.0e-4) and 211 14.9935496263 (-9.3e-6).  The public frontier below 325 is nearly static since 10-13.
