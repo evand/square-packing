@@ -3258,3 +3258,23 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   named: 4 / 5 informative; L2c atlas: 0 / 15).  Prediction: 1-4, point 2 (the right pieces are now present, but the
   formula screen must rank the right pair into the top 100, and L1 needed the explorer too).  >= 2 says the library
   is the fix; 0 says the screen / ranking is the next blocker.
+* **LLM program evolution, pilot EV1, pre-registered (09:56)** (Evan 10-15: pilot through Claude Code, subscription
+  tokens).  `analysis/evolve.py` (+ `evolve_runner.py`, `evolve_system.md`): AlphaEvolve-style loop; the LLM writes
+  `construct(n, rng)` -> up to 24 starting layouts, our backend scores them (fq ALM at loosen 1.0 / 1.03 + SLP polish,
+  feasible to 1e-7).  Proposals: headless `claude -p` with no tools, no settings / CLAUDE.md / MCP, empty cwd outside
+  ~/math; constructor code runs under `unshare -rn python3 -I` with an import / token blacklist and CPU / memory limits.
+  Time travel to 2026-10-08T00:00Z (just before Xu #432): targets = frontier_at(n, T); fitness = mean normalised gap
+  (s - target) / (grid - target) over the train n 51, 84, 103, 105, 126, 127, 146, 175 (J events); `report` re-runs
+  the top 5 programs (4 seeds) on these plus the 10 other J n and only then compares with Xu's values.  Population: 4
+  islands, tournament parent + cross-island inspiration; 8 Sonnet seeds, mutations Haiku 70 % / Sonnet 30 %, an Opus
+  redesign every 30th proposal.  300 proposals, 6 LLM calls in flight, 8 eval procs (`runs/evolve/ev1`).
+  Smoke (4 proposals): ~25-55 s per call, list-price equivalent $0.035 (Sonnet) / $0.006 (Haiku) per proposal; seed
+  #2 tied 84's target (9.7071068, a 45-degree band) and reached normalised fitness 0.29.
+  Leakage notes: the LLM sees nothing after T, but the train / holdout n are J's n (choosing them uses post-T
+  knowledge that they had headroom), and I wrote the system text having seen Xu's 126 (I left out staircases and
+  anything J-specific; it names only 45, 40-42 and 24.3 degree families from the catalogue).
+  Question: can a subscription-scale LLM loop produce J-style structural gains at all?  Metrics over the 18 J n:
+  BEAT-ANTE (below frontier_at(n, T)), REPLICATED (<= Xu), fraction of Xu's gain; secondary: fitness trajectory.
+  Prediction: >= 1 BEAT-ANTE 30 %, >= 1 REPLICATED 10 % (Xu: ~7.5k CPU-h and many more proposals; our backend is
+  stronger, our budget much smaller).  0 with a flat trajectory -> the loop needs a better feedback / backend stage
+  (e.g. explorer on the best layouts) before scaling; a BEAT-ANTE -> scale up and go live.
