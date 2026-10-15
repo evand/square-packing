@@ -10,7 +10,7 @@ window (n_hi + 1, n_hi + 2) stays at its register record (seed source only).
   chain.py --lo 123 --hi 131 --minutes 4 --procs-per 2 --slots 8 --hours 1 --out runs/ch1
   chain.py --report runs/ch1
 """
-import argparse, glob, json, math, os, random, shutil, signal, subprocess, sys, tempfile, time
+import argparse, collections, glob, json, math, os, random, shutil, signal, subprocess, sys, tempfile, time
 from jobpool import run_jobs
 import mcmin, hop
 from pk.engine import QOpt
@@ -252,7 +252,14 @@ def main(a):
             if a.schedule:
                 # replay: the first scheduled round whose n is not running (keeps each n's rounds in order); the round
                 # number is the scheduled one, so seeds, removal seeds and library picks match the replayed run
-                nxt = next((i for i, (_, m) in enumerate(S['sched']) if m not in live.values()), None)
+                elig = [i for i, (_, m) in enumerate(S['sched']) if m not in live.values()]
+                if a.sched_order == 'critical' and elig:   # longest remaining same-n chain first (10-14: n 146's 8
+                    left = collections.Counter(m for _, m in S['sched'])     # rounds ran last and idled 3 of 4 slots)
+                    firsts = {}
+                    for i in elig:
+                        firsts.setdefault(S['sched'][i][1], i)
+                    elig = [min(firsts.values(), key=lambda i: (-left[S['sched'][i][1]], i))]
+                nxt = elig[0] if elig else None
                 if nxt is None:
                     break
                 rr, n = S['sched'].pop(nxt)
@@ -396,6 +403,8 @@ if __name__ == '__main__':
     ap.add_argument('--lib-policy', default='banded', help='pk/parents policy for --lib store (banded | cluster | spread | best)')
     ap.add_argument('--bandit', default='band', choices=['band', 'n'],
                     help='move-kind statistics: pooled per n band, no decay, full carry (default 10-14, A1) or per n (pre-10-14: 600 s wall half-life, x0.5 carry)')
+    ap.add_argument('--sched-order', default='given', choices=['given', 'critical'],
+                    help='with --schedule: given = first eligible round in file order; critical = the n with the most rounds left first')
     ap.add_argument('--schedule', help='json [[round, n], ...]: replay exactly these rounds in this order with these round '
                     'numbers (seeds, library picks), instead of the dirty-first scheduler (TT3, 10-15); ends when done')
     ap.add_argument('--allow-missing', action='store_true', help='skip n missing from --src instead of failing')
