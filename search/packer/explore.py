@@ -43,8 +43,17 @@ def melt_side(s, sq, rng, a, rad_r=(1.5, 3.5), rmax_r=(0.05, 0.2)):
     """Regional melt (anneal melt): squares within R of a random square get rounded corners (up to rmax), hard-particle MC
     at high pressure around them, then squared up again; large but local, non-destructive rearrangement.
     Returns (side, squares, desc): the NPT box changes size, so the side matters (falls back to bigkick on failure)."""
-    i = rng.randrange(len(sq))
     rad, rmax = rng.uniform(*rad_r), rng.uniform(*rmax_r)
+    i = rng.randrange(len(sq))
+    avoid = os.environ.get('PK_MELT_AVOID')              # protected melt (Evan 10-15): centres at least rad + margin
+    if avoid:                                            # from every protected point, so that segment is left alone
+        pts, margin = json.load(open(avoid)), float(os.environ.get('PK_MELT_MARGIN', '1.0'))
+        ok = [j for j in range(len(sq)) if all(math.hypot(sq[j][0] - x, sq[j][1] - y) > rad + margin for x, y in pts)]
+        if not ok:
+            rad = max(1.0, min(math.hypot(sq[j][0] - x, sq[j][1] - y) for j in range(len(sq)) for x, y in pts) - margin)
+            ok = [j for j in range(len(sq)) if all(math.hypot(sq[j][0] - x, sq[j][1] - y) > rad + margin for x, y in pts)]
+        if ok:
+            i = ok[rng.randrange(len(ok))]
     with tempfile.TemporaryDirectory() as tmp:
         mcmin.write_deg(f'{tmp}/in.txt', s, sq)
         r = subprocess.run([ANNEAL, 'melt', '--in', f'{tmp}/in.txt', '--out', f'{tmp}/out.txt', '--cx', str(sq[i][0]), '--cy', str(sq[i][1]),

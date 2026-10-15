@@ -15,10 +15,44 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__)); PK = os.path.dirname(HERE); sys.path.insert(0, PK); sys.path.insert(0, HERE)
 
 
+MELT_ONLY = ('kick=0,kicksym=0,lkick=0,bigkick=0,crot=0,aswap=0,band=0,rowslide=0,mirror=0,cross2=0,ashallow=0')
+
+
+def protected(path):
+    """points to protect in the melt arm (Evan 10-15: melt elsewhere, leave the interesting segment alone): centres of
+    jammed squares at 2-20 deg (>= 2 contacts) and of the 40-50 deg junction squares"""
+    s, sq = _load(path)
+    a = sq[:, 2] % 90.0; t = np.minimum(a, 90 - a)
+    pts = []
+    for i in np.nonzero(((t > 2) & (t < 20)) | ((a >= 40) & (a <= 50)))[0]:
+        if t[i] >= 40 or _contacts(sq, s, i) >= 2:
+            pts.append([float(sq[i, 0]), float(sq[i, 1])])
+    return pts
+
+
+def _contacts(sq, s, i, eps=2e-4):
+    from pk.packing import Packing
+    x, y, ang = sq[i]; r = math.radians(ang % 90); h = 0.5 * (abs(math.cos(r)) + abs(math.sin(r)))
+    w = sum([x - h < eps, y - h < eps, x + h > s - eps, y + h > s - eps])
+    d = np.hypot(sq[:, 0] - x, sq[:, 1] - y); c = 0
+    for j in np.nonzero((d < math.sqrt(2) + 0.01) & (np.arange(len(sq)) != i))[0]:
+        v = sq[j, :2] - sq[i, :2]; nv = np.linalg.norm(v)
+        q = np.array([sq[i], np.r_[sq[i, :2] + v * (1 - eps / nv), sq[j, 2]]]) + [40, 40, 0]
+        c += Packing(100.0, q).max_pen() > 1e-9
+    return c + w
+
+
 def run(a):
     from pk import manifest
     d = json.load(open(a.seeds)); n = d['n']; k = math.ceil(math.sqrt(n) - 1e-12)
     seeds = [r['path'] for r in d['seeds']] + list(a.extra or [])
+    prot = {}
+    if a.arm in ('melt', 'meltrand'):                    # melt arms: the seeds with something to protect; seeds with nothing to protect are skipped
+        for sd in seeds:
+            pts = protected(sd)
+            if pts:
+                prot[sd] = pts
+        seeds = [sd for sd in seeds if sd in prot]
     os.makedirs(a.out, exist_ok=True)
     json.dump(dict(n=n, k=k, seeds=seeds, below_cells=d['below_cells']), open(f'{a.out}/plan.json', 'w'), indent=0)
     man = manifest.start(a.out, 'gx_run', args=vars(a), procs=a.cores)
@@ -30,7 +64,14 @@ def run(a):
             cmd = [sys.executable, f'{PK}/explore.py', '--n', str(n), '--adapt', '--reward', 'value', '--elite-share', '0.3',
                    '--polish-gate', '2e-3', '--gate-ref', 'run', '--frontier-s', repr(float(k)), '--starts', s,
                    '--minutes', str(a.minutes), '--procs', '1', '--seed', str(1000 + i), '--out', f'{a.out}/s{i:03d}']
-            P.append(subprocess.Popen(cmd, stdout=open(f'{a.out}/s{i:03d}.log', 'w'), stderr=subprocess.STDOUT, cwd=PK))
+            env = dict(os.environ)
+            if a.arm == 'meltrand':
+                cmd += ['--melt', '4', '--weights', MELT_ONLY]
+            if a.arm == 'melt':
+                pf = f'{a.out}/protect_s{i:03d}.json'; json.dump(prot[s], open(pf, 'w'))
+                env['PK_MELT_AVOID'] = pf; env['PK_MELT_MARGIN'] = str(a.margin)
+                cmd += ['--melt', '4', '--weights', MELT_ONLY]
+            P.append(subprocess.Popen(cmd, stdout=open(f'{a.out}/s{i:03d}.log', 'w'), stderr=subprocess.STDOUT, cwd=PK, env=env))
         time.sleep(5)
     man.finish()
     score(a)
@@ -91,6 +132,8 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser(); sp = ap.add_subparsers(dest='cmd', required=True)
     r = sp.add_parser('run'); r.add_argument('--seeds', required=True); r.add_argument('--extra', nargs='*')
     r.add_argument('--out', required=True); r.add_argument('--minutes', type=float, default=15); r.add_argument('--cores', type=int, default=16)
+    r.add_argument('--arm', choices=['explore', 'melt', 'meltrand'], default='explore', help='melt: protected regional melts only; meltrand: the same melts, random centres (control)')
+    r.add_argument('--margin', type=float, default=1.0)
     s = sp.add_parser('score'); s.add_argument('--out', required=True)
     a = ap.parse_args()
     {'run': run, 'score': score}[a.cmd](a)
