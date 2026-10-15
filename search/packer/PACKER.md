@@ -3390,3 +3390,17 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   mode's.  Predictions: kernel < 15 % of the candidates and >= 5x faster with identical counts; greedy kernel within 1
   square on >= 95 % of instances; tolerant tau = 0.01 overcounts by <= 1 on most and its quench side is within 1e-3 of
   the exact mode's on >= 80 %.  Measured in CPU seconds (the machine is loaded).
+* **FP1 result (16:20)**: **fill solved; the evaluator is now quench-bound.**  `fillfast` (corner rule + per-component
+  MILP): counts identical to `gen.mis_fill2` on 216 / 216 instances (200 EV2 gen-1 candidates + 16 record tilted sets),
+  every set independent; kernel empty on 95 %, largest component 17.  Vectorised (candidates, conflict graph, counter
+  reduction): 140 -> 58 ms / fill (the old path ~0.5 s with its fork); candidate set is a superset of
+  `gen.candidates2` (an inclusive strip test keeps exact boundary touches the old float path dropped on 29 instances;
+  counts unchanged).  `mondrian.exact_fill` now uses it in-process (no fork: the fork-after-HiGHS deadlock is gone;
+  `PK_FILL_IMPL=mondrian` for the old path).  In a real gen-1 eval the fill went 359 -> 79 s (before vectorising);
+  the quench is now 4-25x the fill (320-1,093 s per eval).  Tolerant fill rejected (tau 0.01 overcounts on 41 %, up
+  to 7; tau 0.02 up to 11).  Gated quench (screen all, polish within 2e-3 of the best screen) saves only 25-35 % and
+  lost P009's 236 (15.886 -> 16.0) and worsened 235 / 237: default off.  Predictions: kernel < 15 % and >= 5x with
+  identical counts: kernel yes (median 0), identical yes, 5x no (2.6x before vectorising, then 2.4x more on the fill
+  alone; the per-eval gain is capped by the quench); greedy kernel within 1 on >= 95 %: yes (100 % exact); tolerant
+  tau 0.01 overcount <= 1 on most: no (41 % overcount).  Next lever for EV2 eval time: the quench budget (seeds,
+  loosens, candidate cap) and per-agent procs, each a quality trade to test, not a free win.

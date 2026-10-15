@@ -105,7 +105,7 @@ def eval_job(args):
     mins = []
     tf = tq = 0.0
     impl = os.environ.get('PK_FILL_IMPL', 'fast')
-    g_ = os.environ.get('PK_EVAL_GATE', '2e-3')           # polish only screens within this of the best (C42 gating)
+    g_ = os.environ.get('PK_EVAL_GATE', 'off')            # FP1: gating lost 236 on P009 for a 25-35 % saving: off
     gate = None if g_ == 'off' else float(g_)
     screens = []
 
