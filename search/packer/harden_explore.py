@@ -74,7 +74,8 @@ def run(a):
             ev, d, keep, rep = queue.pop(0)
             cmd = [sys.executable, f'{HERE}/explore.py', '--n', str(ev['n']), '--adapt', '--reward', 'value', '--elite-share', '0.3',
                    '--polish-gate', '2e-3', '--gate-ref', 'run', '--frontier-s', repr(ev['ante']), '--starts', *keep,
-                   '--minutes', str(a.minutes), '--procs', '1', '--seed', str(ev['n'] * 10 + rep), '--out', f'{d}/explore{rep}']
+                   '--minutes', str(a.minutes), '--procs', '1', '--seed', str(ev['n'] * 10 + rep), '--out', f'{d}/explore{rep}',
+                   *(a.explore_extra.split() if a.explore_extra else [])]
             P.append(subprocess.Popen(cmd, stdout=open(f'{d}/explore{rep}.log', 'w'), stderr=subprocess.STDOUT, cwd=HERE))
         time.sleep(5)
     man.finish()
@@ -107,6 +108,7 @@ if __name__ == '__main__':
     r.add_argument('--keep', type=int, default=4)
     r.add_argument('--starts-glob', help='control: use these start files in each src event dir (no harden results)')
     r.add_argument('--only', help='comma list of n')
+    r.add_argument('--explore-extra', help="extra explore.py flags, e.g. '--pm-share 1'")
     r.add_argument('--max-need', type=float, help='skip events whose best start is more than this above ante')
     s = sp.add_parser('score'); s.add_argument('--out', required=True)
     a = ap.parse_args()

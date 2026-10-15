@@ -3236,3 +3236,7 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   minima per CPU-h), 8 slots x 2 procs, 2 h (~32 CPU-h), `runs/night1015/nh2`.  Success: candidate.py-certified below
   the live frontier.  Prediction: 0-1, point 0.4 (NH: 0 in 85 CPU-h with the old explorer; near-frontier minima are
   not records, and PF's region coverage is weaker).
+  *Replaced (08:10) by NH3*: chain.py ran only 1-2 rounds at a time (serial setup in the parent; 3 of 16 threads busy
+  after 10 min), so NH2 was stopped (~0.3 CPU-h).  **NH3**: the same 139 n, explorer only from each n's live start
+  (`runs/live1014`), `harden_explore.py --explore-extra "--pm-share 1"` (gating is on there already; no seeds), 6 min x
+  1 proc each, 16 at a time (~14 CPU-h, ~55 min).  Same success rule and prediction (0-1, point 0.3).
