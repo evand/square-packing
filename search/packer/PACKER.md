@@ -3313,3 +3313,11 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   fills + fq per n); stopped after 4 n (131, 153, 207, 209; 207 composes to 14.9044830325 as in the smoke test, 131 /
   209 only to the grid) and relaunched the other 11 on 16 procs (`runs/l2/s481e_b`), then the explorer over both
   start sets (45 min, 16 at a time, `runs/l2/s481e/explore`).  Same metric and prediction.
+* **EV1 result (12:03): 0 / 18** (prediction: >= 1 BEAT-ANTE 30 %, >= 1 REPLICATED 10 %: both miss).  300 proposals
+  (193 Haiku, 98 Sonnet, 9 Opus), 6.2M tokens, list-price equivalent $12.24 (subscription), 11.4 CPU-h.  The top 5
+  programs (4 seeds) on all 18 J n: ties with the pre-#432 record at 84, 86, 267, 295 (all exact 45-degree / 24.3-degree
+  family values: the families named in the system text), above it everywhere else (126 +0.050, 175 +0.045, 108 / 131
+  at the grid).  Fitness plateaued at 0.081 from proposal ~100; the islands merged into one portfolio design (strip +
+  staircase + rotated block families, ~10k characters).  Diagnosis: the loop rediscovers the families its prompt names,
+  edits blind (most replies say the code was never run), and the inspiration step collapses diversity.  Superseded by
+  EV2 (agentic designers with the evaluator and renderings, prompts as the unit of evolution).
