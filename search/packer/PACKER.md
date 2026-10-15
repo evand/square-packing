@@ -3309,7 +3309,7 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   me, from the reports (best normalised gaps + the suggested prompt changes); lineage in `evolve2/LOG.md`.
   Questions: (1) reproduction: does a structure prompt + evaluator loop rebuild the record of that structure (ties)?
   (2) any live record.  Prediction: (1) >= 1 of the 9 reproduce targets tied: 45 %; (2) any record: 7 %.
-  *L2e amended (11:53)*: the composition stage ran ~20 min per n on 8 procs (keep 1000 x 4 sides: up to 8,000 joint
+  *L2e amended (11:52)*: the composition stage ran ~20 min per n on 8 procs (keep 1000 x 4 sides: up to 8,000 joint
   fills + fq per n); stopped after 4 n (131, 153, 207, 209; 207 composes to 14.9044830325 as in the smoke test, 131 /
   209 only to the grid) and relaunched the other 11 on 16 procs (`runs/l2/s481e_b`), then the explorer over both
   start sets (45 min, 16 at a time, `runs/l2/s481e/explore`).  Same metric and prediction.
