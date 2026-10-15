@@ -584,6 +584,256 @@ fn sched(a: &[String]) {
              sys.s, s0, s_round, s_min, mobile.len(), left, grow, lag_max, q4, if q_cnt > 0 { q_sum / q_cnt as f64 } else { f64::NAN }, n_grow, t_start.elapsed().as_secs_f64());
 }
 
+// ---------------------------------------------------------------- GLS feasibility search (10-15, TT3 arm L)
+/// anneal gls --in F --out G --shrink D --ms T --seed K [--ng 32 --nl 16 --strike-iters 8 --strikes 1000000]
+/// Sparrow-style (Gardeyn & Wauters, guided local search for strip packing), for unit squares in a square box.
+/// Target side S = s (1 - D).  Shrink like Sparrow's strip shrink: on each axis, squares whose centre lies beyond a random
+/// cut slide inward by s - S (so the overlap sits on two seams, not everywhere).  Then: repeatedly move each colliding
+/// square to the best of ng global + nl local samples (+ the current spot) under the weighted overlap, refined by a
+/// coordinate search; overlap of a pair = SAT penetration depth (exact minimal translation for convex polygons), wall
+/// overlap = depth outside the box.  When strike-iters passes bring no 1 % improvement: GLS weight update (overlapping
+/// pairs x (1.2 .. 2 by relative depth), others decay x 0.95 toward 1) = one strike.  Stops when the raw overlap is
+/// < 1e-12 (feasible), or at the time / strike budget.  Writes the lowest-raw-overlap state at side S (the explorer's
+/// screen resolves what is left).  JSON summary on stdout.
+struct Gls { n: usize, s: f64, x: Vec<f64>, w: Vec<f32>, ww: Vec<f32>, cell: f64, nc: usize, grid: Vec<Vec<usize>>, at: Vec<usize> }
+
+fn pen(xi: f64, yi: f64, ti: f64, xj: f64, yj: f64, tj: f64) -> f64 {
+    let d2 = (xi - xj).powi(2) + (yi - yj).powi(2);
+    if d2 >= 2.0 { return 0.0; }
+    (-sat_gap(xi, yi, ti, xj, yj, tj, 0.5)).max(0.0)
+}
+
+
+/// SAT penetration depth of squares i, j (half-side 0.5) and the unit axis u along which moving j by +u separates them
+fn pen_axis(xi: f64, yi: f64, ti: f64, xj: f64, yj: f64, tj: f64) -> (f64, f64, f64) {
+    let (dx, dy) = (xj - xi, yj - yi);
+    if dx * dx + dy * dy >= 2.0 { return (0.0, 0.0, 0.0); }
+    let mut best = (f64::INFINITY, 0.0, 0.0);
+    for &t in &[ti, ti + FRAC_PI_2, tj, tj + FRAC_PI_2] {
+        let (ax, ay) = (t.cos(), t.sin());
+        let pr = dx * ax + dy * ay;
+        let ri = 0.5 * ((ti - t).cos().abs() + (ti - t).sin().abs());
+        let rj = 0.5 * ((tj - t).cos().abs() + (tj - t).sin().abs());
+        let ov = ri + rj - pr.abs();
+        if ov < best.0 { let sg = if pr >= 0.0 { 1.0 } else { -1.0 }; best = (ov, sg * ax, sg * ay); }
+    }
+    if best.0 <= 0.0 { (0.0, 0.0, 0.0) } else { best }
+}
+
+impl Gls {
+    fn cidx(&self, x: f64, y: f64) -> usize {
+        let cx = ((x / self.cell).floor().max(0.0) as usize).min(self.nc - 1);
+        let cy = ((y / self.cell).floor().max(0.0) as usize).min(self.nc - 1);
+        cy * self.nc + cx
+    }
+    fn rebuild(&mut self) {
+        for g in self.grid.iter_mut() { g.clear(); }
+        for i in 0..self.n { let c = self.cidx(self.x[3 * i], self.x[3 * i + 1]); self.grid[c].push(i); self.at[i] = c; }
+    }
+    fn place(&mut self, i: usize, x: f64, y: f64, t: f64) {
+        self.x[3 * i] = x; self.x[3 * i + 1] = y; self.x[3 * i + 2] = t;
+        let c = self.cidx(x, y);
+        if c != self.at[i] {
+            let o = self.at[i]; let p = self.grid[o].iter().position(|&k| k == i).unwrap(); self.grid[o].swap_remove(p);
+            self.grid[c].push(i); self.at[i] = c;
+        }
+    }
+    fn wall(&self, x: f64, y: f64, t: f64) -> f64 {
+        let h = 0.5 * (t.cos().abs() + t.sin().abs());
+        (h - x).max(0.0) + (x - (self.s - h)).max(0.0) + (h - y).max(0.0) + (y - (self.s - h)).max(0.0)
+    }
+    /// weighted (or raw if !wt) overlap of square i placed at (x, y, t) with its neighbours and the walls
+    fn cost(&self, i: usize, x: f64, y: f64, t: f64, wt: bool) -> f64 {
+        let mut c = self.wall(x, y, t) * if wt { self.ww[i] as f64 } else { 1.0 };
+        let cx = ((x / self.cell).floor().max(0.0) as isize).min(self.nc as isize - 1);
+        let cy = ((y / self.cell).floor().max(0.0) as isize).min(self.nc as isize - 1);
+        for dy in -1..=1 { for dx in -1..=1 {
+            let (a, b) = (cx + dx, cy + dy);
+            if a < 0 || b < 0 || a >= self.nc as isize || b >= self.nc as isize { continue; }
+            for &j in &self.grid[b as usize * self.nc + a as usize] {
+                if j == i { continue; }
+                let p = pen(x, y, t, self.x[3 * j], self.x[3 * j + 1], self.x[3 * j + 2]);
+                if p > 0.0 { c += p * if wt { self.w[i * self.n + j] as f64 } else { 1.0 }; }
+            }
+        } }
+        c
+    }
+    fn raw_total(&self) -> (f64, Vec<usize>) {
+        let mut tot = 0.0; let mut col = Vec::new();
+        for i in 0..self.n {
+            let c = self.cost(i, self.x[3 * i], self.x[3 * i + 1], self.x[3 * i + 2], false);
+            if c > 0.0 { col.push(i); }
+            tot += c;
+        }
+        (tot, col)
+    }
+    /// weighted squared overlap of square i at (x, y, t) (for the continuous relaxation)
+    fn e2(&self, i: usize, x: f64, y: f64, t: f64) -> f64 {
+        let h = 0.5 * (t.cos().abs() + t.sin().abs());
+        let wl = [(h - x).max(0.0), (x - (self.s - h)).max(0.0), (h - y).max(0.0), (y - (self.s - h)).max(0.0)];
+        let mut c = self.ww[i] as f64 * wl.iter().map(|v| v * v).sum::<f64>();
+        let cx = ((x / self.cell).floor().max(0.0) as isize).min(self.nc as isize - 1);
+        let cy = ((y / self.cell).floor().max(0.0) as isize).min(self.nc as isize - 1);
+        for dy in -1..=1 { for dx in -1..=1 {
+            let (a, b) = (cx + dx, cy + dy);
+            if a < 0 || b < 0 || a >= self.nc as isize || b >= self.nc as isize { continue; }
+            for &j in &self.grid[b as usize * self.nc + a as usize] {
+                if j == i { continue; }
+                let p = pen(x, y, t, self.x[3 * j], self.x[3 * j + 1], self.x[3 * j + 2]);
+                if p > 0.0 { c += p * p * self.w[i * self.n + j] as f64; }
+            }
+        } }
+        c
+    }
+    /// gradient descent on E = sum w p^2 (pairs once) + walls; translation gradient analytic, rotation by central
+    /// differences; step backtracks on E.  Returns E.
+    fn relax(&mut self, iters: usize, eta: &mut f64) -> f64 {
+        let n = self.n;
+        let etot = |g: &Gls| -> f64 { (0..n).map(|i| g.e2(i, g.x[3 * i], g.x[3 * i + 1], g.x[3 * i + 2])).sum::<f64>() * 0.5 };
+        let mut e = etot(self);
+        for _ in 0..iters {
+            if e < 1e-26 { break; }
+            let mut gr = vec![0.0; 3 * n];
+            for i in 0..n {
+                let (x, y, t) = (self.x[3 * i], self.x[3 * i + 1], self.x[3 * i + 2]);
+                let h = 0.5 * (t.cos().abs() + t.sin().abs());
+                let wv = self.ww[i] as f64;
+                gr[3 * i] += 2.0 * wv * (-(h - x).max(0.0) + (x - (self.s - h)).max(0.0));
+                gr[3 * i + 1] += 2.0 * wv * (-(h - y).max(0.0) + (y - (self.s - h)).max(0.0));
+                let c = self.at[i]; let (cx, cy) = ((c % self.nc) as isize, (c / self.nc) as isize);
+                let mut any = (h - x).max(0.0) + (x - (self.s - h)).max(0.0) + (h - y).max(0.0) + (y - (self.s - h)).max(0.0) > 0.0;
+                for dy in -1..=1isize { for dx in -1..=1isize {
+                    let (a, b) = (cx + dx, cy + dy);
+                    if a < 0 || b < 0 || a >= self.nc as isize || b >= self.nc as isize { continue; }
+                    for &j in &self.grid[b as usize * self.nc + a as usize] {
+                        if j <= i { continue; }
+                        let (p, ux, uy) = pen_axis(x, y, t, self.x[3 * j], self.x[3 * j + 1], self.x[3 * j + 2]);
+                        if p > 0.0 {
+                            let f = 2.0 * self.w[i * n + j] as f64 * p;
+                            gr[3 * i] += f * ux; gr[3 * i + 1] += f * uy; gr[3 * j] -= f * ux; gr[3 * j + 1] -= f * uy;
+                            any = true;
+                        }
+                    }
+                } }
+                if any {
+                    let d = 1e-6;
+                    gr[3 * i + 2] += (self.e2(i, x, y, t + d) - self.e2(i, x, y, t - d)) / (2.0 * d) * 0.5;
+                }
+            }
+            // rotation terms above count pairs from i's side only (x 0.5 of the symmetric sum, same for j's own term)
+            let x0 = self.x.clone();
+            loop {
+                for k in 0..3 * n { self.x[k] = x0[k] - *eta * gr[k]; }
+                self.rebuild();
+                let e1 = etot(self);
+                if e1 < e { e = e1; *eta = (*eta * 1.2).min(1.0); break; }
+                *eta *= 0.5;
+                if *eta < 1e-9 { self.x = x0.clone(); self.rebuild(); *eta = 0.05; return e; }
+            }
+        }
+        e
+    }
+    fn bump(&mut self) {
+        // GLS update: overlapping pairs (and walls) up by 1.2 .. 2 by relative depth; others decay toward 1
+        let n = self.n;
+        let mut pairs = Vec::new(); let mut walls = Vec::new(); let mut mx: f64 = 0.0;
+        for i in 0..n {
+            let (x, y, t) = (self.x[3 * i], self.x[3 * i + 1], self.x[3 * i + 2]);
+            let wv = self.wall(x, y, t); if wv > 0.0 { walls.push((i, wv)); mx = mx.max(wv); }
+            for j in i + 1..n {
+                let p = pen(x, y, t, self.x[3 * j], self.x[3 * j + 1], self.x[3 * j + 2]);
+                if p > 0.0 { pairs.push((i, j, p)); mx = mx.max(p); }
+            }
+        }
+        for v in self.w.iter_mut() { *v = (*v * 0.95).max(1.0); }
+        for v in self.ww.iter_mut() { *v = (*v * 0.95).max(1.0); }
+        for &(i, j, p) in &pairs {
+            let f = (1.2 + 0.8 * p / mx) as f32 / 0.95;
+            let v = (self.w[i * n + j] * f).max(1.0); self.w[i * n + j] = v; self.w[j * n + i] = v;
+        }
+        for &(i, p) in &walls { self.ww[i] = (self.ww[i] * (1.2 + 0.8 * p / mx) as f32 / 0.95).max(1.0); }
+    }
+    fn move_item(&mut self, i: usize, rng: &mut Rng, ng: usize, nl: usize) {
+        let (x0, y0, t0) = (self.x[3 * i], self.x[3 * i + 1], self.x[3 * i + 2]);
+        let mut best = (self.cost(i, x0, y0, t0, true), x0, y0, t0);
+        let lo = 0.5; let hi = self.s - 0.5;
+        for k in 0..ng + nl {
+            let (x, y, t) = if k < ng { (lo + rng.f() * (hi - lo), lo + rng.f() * (hi - lo), rng.f() * FRAC_PI_2) }
+                            else { let sc = [0.3, 0.1, 0.03][k % 3]; (x0 + sc * rng.u(), y0 + sc * rng.u(), t0 + sc * rng.u()) };
+            let c = self.cost(i, x, y, t, true);
+            if c < best.0 { best = (c, x, y, t); }
+        }
+        // coordinate refinement (adaptive step)
+        let (mut c, mut x, mut y, mut t) = best;
+        let mut st = 0.05;
+        let mut evals = 0;
+        while st > 1e-6 && c > 0.0 && evals < 80 {
+            let mut imp = false;
+            for &(dx, dy, dt) in &[(st, 0.0, 0.0), (-st, 0.0, 0.0), (0.0, st, 0.0), (0.0, -st, 0.0), (0.0, 0.0, st), (0.0, 0.0, -st)] {
+                let cc = self.cost(i, x + dx, y + dy, t + dt, true); evals += 1;
+                if cc < c { c = cc; x += dx; y += dy; t += dt; imp = true; break; }
+            }
+            if !imp { st *= 0.5; }
+        }
+        self.place(i, x, y, t);
+    }
+}
+
+fn gls(a: &[String]) {
+    let inp: String = arg(a, "--in", String::new());
+    let out: String = arg(a, "--out", String::from("gls.txt"));
+    let shrink: f64 = arg(a, "--shrink", 1e-3);
+    let ms: f64 = arg(a, "--ms", 500.0);
+    let ng: usize = arg(a, "--ng", 32); let nl: usize = arg(a, "--nl", 16);
+    let ring = arg(a, "--ring", 0u32) == 1; let relax_it: usize = arg(a, "--relax", 20); let mut eta = 0.05f64; let siters: usize = arg(a, "--strike-iters", 8); let max_strikes: usize = arg(a, "--strikes", 1_000_000);
+    let mut rng = Rng::new(arg(a, "--seed", 1u64));
+    let txt = std::fs::read_to_string(&inp).expect("read --in");
+    let num = |w: &str| -> f64 { match w.split_once('/') { Some((p, q)) => p.parse::<f64>().unwrap() / q.parse::<f64>().unwrap(), None => w.parse().unwrap() } };
+    let lines: Vec<Vec<&str>> = txt.lines().filter(|l| !l.trim().is_empty() && !l.starts_with('#')).map(|l| l.split_whitespace().collect()).collect();
+    let n: usize = lines[0][0].parse().unwrap();
+    let s0 = num(lines[0][1]);
+    let mut x = Vec::with_capacity(3 * n);
+    for l in &lines[1..=n] { x.extend_from_slice(&[num(l[0]), num(l[1]), num(l[2]).to_radians()]); }
+    let s = s0 * (1.0 - shrink); let d = s0 - s;
+    for ax in 0..2 {
+        let cut = rng.f() * s0;
+        for i in 0..n { if x[3 * i + ax] > cut { x[3 * i + ax] -= d; } }
+    }
+    let cell = 1.5f64; let nc = ((s / cell).ceil() as usize).max(1);
+    let mut g = Gls { n, s, x, w: vec![1.0; n * n], ww: vec![1.0; n], cell, nc, grid: vec![Vec::new(); nc * nc], at: vec![0; n] };
+    g.rebuild();
+    let t0 = std::time::Instant::now();
+    let (mut cur, mut col) = g.raw_total();
+    let (o0, c0) = (cur, col.len());
+    let (mut best, mut bestx) = (cur, g.x.clone());
+    let (mut strikes, mut passes, mut stale, mut ref_cost) = (0usize, 0usize, 0usize, cur);
+    while cur > 1e-12 && t0.elapsed().as_secs_f64() * 1e3 < ms && strikes < max_strikes {
+        // one pass: move every colliding square (random order)
+        for k in (1..col.len()).rev() { let j = rng.idx(k + 1); col.swap(k, j); }
+        if relax_it > 0 { g.relax(relax_it, &mut eta); }
+        for &i in &col { g.move_item(i, &mut rng, ng, nl); }
+        if ring {                                   // let slack travel: neighbours of colliding squares take local moves
+            let mut seen = vec![false; n]; for &i in &col { seen[i] = true; }
+            let mut nb = Vec::new();
+            for &i in &col { let c = g.at[i]; let (cx, cy) = ((c % g.nc) as isize, (c / g.nc) as isize);
+                for dy in -1..=1isize { for dx in -1..=1isize { let (a2, b2) = (cx + dx, cy + dy);
+                    if a2 < 0 || b2 < 0 || a2 >= g.nc as isize || b2 >= g.nc as isize { continue; }
+                    for &j in &g.grid[b2 as usize * g.nc + a2 as usize] { if !seen[j] { seen[j] = true; nb.push(j); } } } } }
+            for &j in &nb { g.move_item(j, &mut rng, 0, nl); }
+        }
+        passes += 1;
+        let r = g.raw_total(); cur = r.0; col = r.1;
+        if cur < best { best = cur; bestx = g.x.clone(); }
+        if cur < 0.99 * ref_cost { ref_cost = cur; stale = 0; } else { stale += 1; }
+        if stale >= siters { g.bump(); strikes += 1; stale = 0; ref_cost = cur; }
+    }
+    let mut txt = format!("{} {:?}\n", n, s);
+    for i in 0..n { txt += &format!("{:?} {:?} {:?}\n", bestx[3 * i], bestx[3 * i + 1], (bestx[3 * i + 2].to_degrees()).rem_euclid(90.0)); }
+    std::fs::write(&out, txt).unwrap();
+    println!("{{\"s\": {:.12}, \"s0\": {:.12}, \"feasible\": {}, \"overlap0\": {:.3e}, \"colliding0\": {}, \"overlap\": {:.3e}, \"passes\": {}, \"strikes\": {}, \"sec\": {:.3}}}",
+             s, s0, best <= 1e-12, o0, c0, best, passes, strikes, t0.elapsed().as_secs_f64());
+}
+
 fn main() {
     let a: Vec<String> = std::env::args().collect();
     match a.get(1).map(|s| s.as_str()) {
@@ -591,6 +841,7 @@ fn main() {
         Some("run") => run(&a),
         Some("melt") => melt(&a),
         Some("sched") => sched(&a),
+        Some("gls") => gls(&a),
         _ => eprintln!("usage: anneal test | anneal run --n N --seed K --sweeps S --bp0 --bp1 --t0 --t1 --p --out F"),
     }
 }

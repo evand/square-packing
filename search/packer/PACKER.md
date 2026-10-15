@@ -2832,3 +2832,32 @@ before the commit, no edits in between).  Measured CPU (chain manifests) A 6.86,
   question (are looser far packings useful add / remove donors?) is not tested by this design; the final config test
   on all n should include TT2's region metric.
 * Decision: gating at 2e-3 becomes the base for the next feature (movement-heavy arms), scored as feature+G vs G.
+
+### TT3 round 2: melt and GLS arms on top of G (pre-registration, 10-14 ~21:00 local, before launch)
+Evan 10-14: try the other features on top of gating; no new baseline.  **Baseline = G** (TT3 run above): same replay
+schedule, same chain settings, the replay design passed its fidelity check (A / S 0.95).  Load matched: two arms
+concurrent, 4 slots x 2 procs each, as G / A were.  Bandit state starts empty in every arm (as in A and G).
+* **M** = G + `--melt 1 --bigmelt 1`: the regional melt (R 1.5-3.5, rmax 0.05-0.2) plus a new `bigmelt` kind (R 3.5-7,
+  rmax 0.1-0.25; 0.1-0.5 s per melt at n = 211, ~2-4 % box growth, the screen re-compresses).  Melt was off in TT2 / G;
+  the fixed melt was neutral for the census rate at 110 (C10, 0.91 [0.75, 1.11]).
+* **L** = G + `--gls 1`: new kind `gls` (`anneal gls`, src/anneal.rs; `explore.gls_side`), Sparrow-style guided local
+  search at a fixed target side min(parent, gate line) x (1 - d), d log-uniform [1e-4, 3e-3]: per axis, squares beyond
+  a random cut slide in by the shrink (overlap on two seams); then alternate gradient relaxation of the weighted squared
+  SAT penetration depth (20 steps), relocation of each colliding square to the best of 32 global + 16 local samples
+  (+ coordinate refinement), and GLS pair-weight updates (x1.2-2 on overlapping pairs after 8 passes without 1 % gain,
+  decay 0.95 to 1).  Budget 2 ms x n wall per call.  Output (the least-overlap state) goes to the usual screen.
+  **v0 caveat:** on bench cases it resolves slack spread through the box (a record scaled up 5 % then shrunk 4.5 %,
+  n = 55) but not a single hole far from the seams (record minus one square, shrink 1e-3, n = 55) or loose n = 211:
+  collective motion is weak.  A fail here speaks to this v0, not to fixed-side feasibility search in general.
+* Both kinds are chosen by the move-kind bandit (reward per CPU-s, floor 3 % per kind), so a useless kind costs only
+  about its floor share of CPU; a pass needs the kind to earn a large share.  Per-kind CPU share and new-entry rates
+  are reported as diagnostics.
+* Primary per arm: near-frontier new minima per measured CPU-h, **X / G**, 95 % bootstrap over the 39 n
+  (`analysis/tt3_score.py runs/tt3/M runs/tt3/L runs/tt3/G --base runs/tt2/S`).  Same rule as G: pass if the interval
+  excludes 1 from above, fail if from below, else open.  Two arms, no multiplicity correction (each is its own decision;
+  a pass at the margin gets a replicate before adoption).
+* Secondary: records (eventbench), best gap per n (sign test vs G), proposals per CPU-s, per-kind CPU share.
+* Predictions: M / G ~1.0 (P pass 0.15, P fail 0.1); L / G ~0.95 (P pass 0.1, P fail 0.15); bandit CPU share of the new
+  kinds: melt + bigmelt 8-15 %, gls 4-8 %.
+* Smoke 10-14 (`runs/tt3/smoke2{M,L}`, rounds 2 (n 38) and 89 (n 211), 1 min): kinds fire, per-proposal CPU includes the
+  anneal child (gls 0.1 s at n 38, 0.85 s at 211; bigmelt 0.08 / 0.7 s).

@@ -39,12 +39,12 @@ UNP_TOL = 1e-5     # --polish-gate: a screened (unpolished) side is the same bas
                    # (screen side error: median ~7e-5 at k = 0, 2e-6 at k = 4, 1e-8 at k = 8 SLP iterations; PACKER 10-07)   # current src (10-11; was target-dev, a 10-08 build)
 
 
-def melt_side(s, sq, rng, a):
+def melt_side(s, sq, rng, a, rad_r=(1.5, 3.5), rmax_r=(0.05, 0.2)):
     """Regional melt (anneal melt): squares within R of a random square get rounded corners (up to rmax), hard-particle MC
     at high pressure around them, then squared up again; large but local, non-destructive rearrangement.
     Returns (side, squares, desc): the NPT box changes size, so the side matters (falls back to bigkick on failure)."""
     i = rng.randrange(len(sq))
-    rad, rmax = rng.uniform(1.5, 3.5), rng.uniform(0.05, 0.2)
+    rad, rmax = rng.uniform(*rad_r), rng.uniform(*rmax_r)
     with tempfile.TemporaryDirectory() as tmp:
         mcmin.write_deg(f'{tmp}/in.txt', s, sq)
         r = subprocess.run([ANNEAL, 'melt', '--in', f'{tmp}/in.txt', '--out', f'{tmp}/out.txt', '--cx', str(sq[i][0]), '--cy', str(sq[i][1]),
@@ -55,6 +55,34 @@ def melt_side(s, sq, rng, a):
             return s, sq2, 'melt failed ' + desc
         s2, sq2 = mcmin.load_deg(f'{tmp}/out.txt')
     return s2, sq2, f'melt R{rad:.2f} r{rmax:.2f} s{s2:.5f}'
+
+
+BIGMELT = dict(rad_r=(3.5, 7.0), rmax_r=(0.1, 0.25))     # TT3 arm M (10-15): melts too big for the default range
+GLS_DELTA = (1e-4, 3e-3)                                 # TT3 arm L: relative shrink below min(parent, gate line), log-uniform
+GLS_MS_PER_N = 2.0                                       # GLS wall budget per proposal, ms per square
+
+
+def gls_side(s, sq, rng, ref):
+    """Sparrow-style GLS feasibility attempt (anneal gls, 10-15): target side min(s, ref) (1 - delta); squares beyond a
+    random cut per axis slide in, then weighted-overlap relaxation + sampled relocation of colliding squares + GLS pair
+    weights.  Returns (target side, squares, desc); the screen resolves any overlap left (falls back to a kick on failure)."""
+    base = min(s, ref) if ref and math.isfinite(ref) else s
+    dl = math.exp(rng.uniform(math.log(GLS_DELTA[0]), math.log(GLS_DELTA[1])))
+    tgt = base * (1 - dl)
+    with tempfile.TemporaryDirectory() as tmp:
+        mcmin.write_deg(f'{tmp}/in.txt', s, sq)
+        r = subprocess.run([ANNEAL, 'gls', '--in', f'{tmp}/in.txt', '--out', f'{tmp}/out.txt', '--shrink', repr(1 - tgt / s),
+                            '--ms', f'{GLS_MS_PER_N * len(sq):.0f}', '--seed', str(rng.randrange(1 << 30))],
+                           capture_output=True, text=True, timeout=300)
+        if r.returncode != 0 or not os.path.exists(f'{tmp}/out.txt'):
+            sq2, desc = mv_bigkick(s, sq, rng, a=None)
+            return s, sq2, 'gls failed ' + desc
+        s2, sq2 = mcmin.load_deg(f'{tmp}/out.txt')
+        try:
+            j = json.loads(r.stdout)
+        except Exception:
+            j = {}
+    return s2, sq2, f'gls d{dl:.1e} feas{int(bool(j.get("feasible")))} ov{j.get("overlap", -1):.1e} st{j.get("strikes", -1)}'
 
 
 def mv_melt(s, sq, rng, a):
@@ -243,6 +271,10 @@ def _work(job):
         s, prop, desc = mv_harden(s, sq, rng)
     elif kind == 'melt':                    # regional NPT melt: the box changes size, keep the anneal's side
         s, prop, desc = melt_side(s, sq, rng, A)
+    elif kind == 'bigmelt':                 # TT3 arm M: larger regions, deeper rounding
+        s, prop, desc = melt_side(s, sq, rng, A, **BIGMELT); desc = 'big' + desc
+    elif kind == 'gls':                     # TT3 arm L: GLS feasibility attempt below the gate line
+        s, prop, desc = gls_side(s, sq, rng, pol_above)
     else:
         prop, desc = MOVES[kind](s, sq, rng, A)
     kr = tuple(job[11]) if len(job) > 11 and job[11] else (0, 1e-4)
@@ -513,6 +545,8 @@ if __name__ == '__main__':
                     help='bandit count half-life, s (inf = no decay; analysis/bandit_timescale.md: no drift at round scale)')
     ap.add_argument('--bandit-carry', type=float, default=0.5, help='factor on carried bandit statistics (1 + half inf = pooled, merged on save)')
     ap.add_argument('--melt', type=float, default=0, help='weight of the regional melt move (anneal melt); 0 = off')
+    ap.add_argument('--bigmelt', type=float, default=0, help='weight of the big regional melt (R 3.5-7, rmax 0.1-0.25); 0 = off')
+    ap.add_argument('--gls', type=float, default=0, help='weight of the GLS feasibility move (anneal gls); 0 = off')
     ap.add_argument('--cross', type=float, default=0, help='weight of the recombination move (cross.py bestfit 3 of 5); 0 = off')
     ap.add_argument('--cross2', type=float, default=2, help='weight of two-parent crossover (random sub-k mate; nearest '
                     'mate for above-k parents; battery 10-09 best reach move); 0 = off')
@@ -571,6 +605,10 @@ if __name__ == '__main__':
         WEIGHTS['cross'] = a.cross
     if a.melt:
         WEIGHTS['melt'] = a.melt
+    if a.bigmelt:
+        WEIGHTS['bigmelt'] = a.bigmelt
+    if a.gls:
+        WEIGHTS['gls'] = a.gls
     WEIGHTS['cross2'] = a.cross2
     WEIGHTS['ashallow'] = a.ashallow
     for kv in (a.weights.split(',') if a.weights else []):    # ablations (bench110): kind=weight, 0 drops a kind
