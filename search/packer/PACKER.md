@@ -3176,6 +3176,6 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   wrong; rewritten: **Mondrian v1 = compose the pieces at slack sides + a real explorer run.**  Why the 10-10 harness
   missed: it composed only within S + 0.02 (207 / 232 short by 1-5 squares there) and ran a short explorer.  Harden is
   a complement (269), not the mechanism.
-* **CP500 result**: 0 / 8; only 270 (17.0, grid) and 304 (17.9452) composed at slack sides with crop pieces; #500 needs
+* **CP500 composition stage**: only 270 (17.0, grid) and 304 (17.9452) composed at slack sides with crop pieces (harden + explorer on those still running); #500 needs
   its own piece work (see the narrowing note).
 * **MH3 launched (05:11)** on 15 cores (CP500's last harden holds one).
