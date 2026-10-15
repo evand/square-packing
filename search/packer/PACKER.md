@@ -3219,7 +3219,7 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   PF 132, 146, 209, 237; G 132, 146, 209.  Caveat as on the subset: PF polishes 21 % of proposals (G 6 %); the 10-14
   identity recount cut the subset ratio by 4-16 %, not run here.  H110-PM (no transfer at 110) still stands: the
   model's absolute gap bins fit the TT3 n mix, not 110's band.
-* **L2c result (07:40): 0 / 15** (prediction 3 / 15: miss; 7.6 CPU-h).  Blind compositions land 0.02-0.12 above the
+* **L2c result (07:50): 0 / 15** (prediction 3 / 15: miss; 7.6 CPU-h).  Blind compositions land 0.02-0.12 above the
   ante; the explorer closes ~0.005-0.03 (207 14.956 -> 14.924, 302 17.959 -> 17.935), never enough; 232 stays an exact
   tie at the ante.  **Cause: the library, not the screen.**  The atlas keeps only crops that beat the grid in their own
   box (excess >= 1), and Mondrian v1's pieces mostly do not: Kingbird s(11)_r1a has only a 3-square crop in the atlas
@@ -3230,3 +3230,9 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   is a piece library that contains the useful sub-grid crops without exploding: e.g. keep crops whose boundary cuts no
   tilted square and whose tilted count >= 3, prune per (m, floor W, floor H) globally across sources, plus dropped
   rows / columns (259 needs one).  Design question for Evan.
+* **NH2 live hunt, pre-registered (07:58)**: last night's NH (chain.py over the 139 non-grid n in 30-324, live starts
+  `runs/live1014`, `--seed-ks 1,2,-1 --first-pass`, 4-min rounds) with the two validated explorer changes, gating and
+  the parent value model (`--explore-extra "--polish-gate 2e-3 --pm-share 1"`; C42, C44 / PF49 2.8x near-frontier
+  minima per CPU-h), 8 slots x 2 procs, 2 h (~32 CPU-h), `runs/night1015/nh2`.  Success: candidate.py-certified below
+  the live frontier.  Prediction: 0-1, point 0.4 (NH: 0 in 85 CPU-h with the old explorer; near-frontier minima are
+  not records, and PF's region coverage is weaker).
