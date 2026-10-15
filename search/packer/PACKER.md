@@ -3378,3 +3378,15 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   near-record minima 50 %: yes (55 not in the store, but 68 / 79 near-record minima are at 234).  Agent cost 158k-229k
   tokens each; evals 13-26 min (the fill on an oversubscribed machine).  Details and lessons: `evolve2/LOG.md`.
   Evaluator fix: softmin now counts a failed n as 1 (it was dropped, which raised the score).
+* **Fill performance FP1, pre-registered (15:45)** (Evan 10-15: important performance work; then pause and evaluate
+  when L2e / GX1 end).  The upright fill (`mondrian.exact_fill` -> `gen.mis_fill2`: max independent set over ~1,700
+  axis candidates, scipy / HiGHS MILP, forked child, retry ladder) dominates EV2 eval time.  New `fillfast.py`:
+  (a) safe reductions: corner rule (a candidate whose conflicting neighbours all lie weakly right and above it is
+  simplicial -> take it; 4 orientations), then connected components; (b) kernel solved by MILP (exact) or min-degree
+  greedy (approximate); (c) tolerant variant (overlap tau between candidates and with the tilted squares).  Corpus:
+  candidates of the EV2 gen-1 programs on n = 234-240 (re-run in the sandbox) + L2e-style composition fills.
+  Metrics per mode vs the full MILP: count difference (exact modes must agree 100 %), CPU time, kernel size /
+  components; for approximate / tolerant modes also downstream: trim + fq quench + polish side vs the reference
+  mode's.  Predictions: kernel < 15 % of the candidates and >= 5x faster with identical counts; greedy kernel within 1
+  square on >= 95 % of instances; tolerant tau = 0.01 overcounts by <= 1 on most and its quench side is within 1e-3 of
+  the exact mode's on >= 80 %.  Measured in CPU seconds (the machine is loaded).
