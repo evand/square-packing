@@ -19,7 +19,7 @@ External posts: ask Evan explicitly per post.  **Before any bound-chasing run, c
 
 ## Packings (`search/packer/`: `HANDOFF-2026-10-14.md`, `tasks/packer-arch-2026-10-14/`)
 Thesis (Evan 10-14): diversity pays; local search at current budgets has mined the frontier.  No compute above n = 324 without a specific reason.
-- [ ] TT3 (10-15): polish gating PASSED (C42, 2.08x near-frontier per CPU-h); next arm: movement-heavy (melt, GLS feasibility) on top of G, scored vs G; then the all-n config test with the region metric.
+- [ ] TT3: gating PASSED (C42, 2.08x); melt / bigmelt and GLS v0 on top: neutral (C43).  Next: all-n config test of G (+ a melt arm) with the region metric; GLS v1 only with stronger relaxation.
 - [ ] Store tiering before cheaper proposals raise the row rate: coords near the frontier + cluster representatives, lineage-only (replayable) rows elsewhere.  Design first.
 - [ ] Near-miss drain `nmdrain1014b`: stopped 10-15 (0 gains in 42 items, 100 queued); low value, resume only if cores idle.
 - [ ] Add #607 (Couzo: 237, 339, 382, ...) to `pk/pending.yaml` + `sync-pending`; scoring rule for our own posted results inside a scored run (146 in TT2).

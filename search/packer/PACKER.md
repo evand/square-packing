@@ -2861,3 +2861,22 @@ concurrent, 4 slots x 2 procs each, as G / A were.  Bandit state starts empty in
   kinds: melt + bigmelt 8-15 %, gls 4-8 %.
 * Smoke 10-14 (`runs/tt3/smoke2{M,L}`, rounds 2 (n 38) and 89 (n 211), 1 min): kinds fire, per-proposal CPU includes the
   anneal child (gls 0.1 s at n 38, 0.85 s at 211; bigmelt 0.08 / 0.7 s).
+
+### Result, round 2 (10-14 ~22:00; `analysis/tt3_score.py runs/tt3/M runs/tt3/L runs/tt3/G --json runs/tt3/score2.json`)
+Ran at `b90e5fe` (clean).  Round-manifest CPU 6.53 CPU-h per arm, as G.
+* **M / G = 1.03 [0.85, 1.22]: open.  L / G = 0.99 [0.83, 1.18]: open.**  Near-frontier new minima M 610, L 586, G 590.
+  Both inside the predictions (M ~1.0, L ~0.95); neither harms, neither helps at the ~1.2x this design resolves.
+* Bandit CPU share of the new kinds (above the predicted 8-15 % / 4-8 %): melt 6.9 % + bigmelt 10.4 % in M; gls 10.2 %
+  in L.  Near-frontier polished proposals per CPU-h by kind (repeats included, a diagnostic only): bigmelt 1,080, melt
+  1,230, gls 880, vs the arm's kick / aswap / rowslide 1,450-1,990 and mirror ~300.  So the new kinds are mid-pack
+  (melt) to below average (gls) at the near-frontier metric; the bandit funds them on the novelty reward.
+* Bandit allocation is itself noisy between arms with identical kinds (cross2 13.8 % of CPU in G, 9.5 % in M, 5.9 % in
+  L; kicksym 10.6 / 11.8 / 24.7 %), so per-kind shares from one run are rough.
+* Secondary: records M 2 (146, 209), L 3 (132, 146, 209), G 3.  Best gap per n vs G: M better 13 / worse 7 / tied 19
+  (p = 0.26); L 11 / 9 / 19 (p = 0.82).  Proposals per CPU-s: M 5.71, L 6.14, G 6.56 (the new kinds cost more per
+  proposal).
+* Not measured: reach / new regions (melt's earlier positive was reach at s130, PACKER 10-08).  GLS v0's weakness at
+  collective motion (pre-registration) is consistent with its below-average yield; a v1 would need stronger continuous
+  relaxation (e.g. L-BFGS on the weighted penalty), which is close to what fq's screen already does.
+* Decision: config stays **G**.  Melt / bigmelt are cheap and harmless: candidates for an arm in the all-n config test
+  with the region metric, where their claimed benefit (reach) can show.  GLS v0 parked.
