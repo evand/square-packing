@@ -529,6 +529,16 @@ def _fill_child(w, T, S, tol, time_limit):
 
 
 def exact_fill(T, S, tol=1e-6, time_limit=30, hard=None):
+    """FP1 (10-15): in-process fillfast (corner-rule reduction + per-component MILP; identical counts to the old path on
+    216 / 216 instances, kernel components <= 17 candidates), so no fork: the old forked path could deadlock when HiGHS
+    had already run threads in this process.  PK_FILL_IMPL=mondrian restores the old forked MILP."""
+    if os.environ.get('PK_FILL_IMPL', 'fast') != 'mondrian':
+        import fillfast
+        return fillfast.fill(S, T, 'exact', tau=0.0 if tol <= 1e-6 else tol, time_limit=time_limit)
+    return _exact_fill_fork(T, S, tol, time_limit, hard)
+
+
+def _exact_fill_fork(T, S, tol=1e-6, time_limit=30, hard=None):
     """Tilted squares T + the exact MILP upright fill (gen.mis_fill2).  The MILP runs in a forked child under a hard
     wall-clock limit (10-11: HiGHS overran its own time_limit on some fills and wedged a replicate pass for 10 h).  On
     overrun the child is killed, the input saved under runs/mondrian/hung/, and T is returned unfilled (a safe
