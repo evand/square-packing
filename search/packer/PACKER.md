@@ -3196,3 +3196,20 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
 * **L2b-481, pre-registered (05:44)**: L2-481 rerun with the off-diagonal pieces (same flags, fresh compose stage).
   Positive control: 259 (L1 trivially).  Prediction: BEAT-ANTE or better 4 / 15 (259, 263, 292 are pure compositions;
   207 / 232 / 236 need the squeeze as in BM3c).
+* **L2b stopped (06:05)**: with the off-diagonal pieces, compose2's bandit is search-bound: 131 / 153 got 21 / 5 fills
+  in 120 s against 7e8 / 1.2e9 candidate arms (need 5.1e-2 / 1.0e-1).  Restricting to register-frontier sources does
+  not shrink the library (17,121 either way: Kingbird crops 7,837, rectsearch 7,694, store 1,507).  Next: the
+  Mondrian replicate pair screen (vectorised guillotine count over all crop pairs, exact fill on the top) run blind.
+* **TT3 PF49, pre-registered (06:12)**: C44's confirmation on the full 49 rounds: chain.py as TT3 round 3's PF (same
+  flags, `--pm-share 1`) with `--ns-file runs/tt3/ns.json --schedule runs/tt3/schedule.json`, 8 slots x 2 procs (~6.5
+  CPU-h), out `runs/tt3/PF49`; baseline = G's 49 rounds.  Score: `tt3_score.py runs/tt3/PF49 runs/tt3/G`.  Rule: pass
+  if the PF / G 95 % interval is above 1.  Prediction: PF / G 1.5 (P pass 0.65; the subset was chosen by S / A event
+  rate, so some regression toward 1; H110-PM showed no transfer at 110).
+* **Blind pair screen (`analysis/l2_screen.py`, 06:45)**: replicate's guillotine formula over every allowed atlas
+  crop pair (Kingbird 09-30 crops + crops of store packings at the register frontier at T; 9,632 pieces at #481's T),
+  chunked (~1 s per side), the 60 best pairs -> mondrian.replicate on just those pieces (joint exact fill + fq), at 8
+  sides from ante to ante + 0.3; the 4 best distinct compositions -> explorer (no harden).  Smoke 259: composes at
+  16.657 (sides ante + 0.1 .. 0.3), ~1 min.  (Profiling lesson: an `np.load` NpzFile re-reads the array on every
+  `z[key]` access: 20+ min -> 2 s once materialised.)
+* **L2c-481, pre-registered (06:46)**: `l2_screen.py run --set 481 --sides 8 --keep 100 --minutes 20`, 16 cores after
+  PF49 (~6 CPU-h).  Prediction: BEAT-ANTE or better 3 / 15 (BM3c's 4 / 5 used the named pieces incl. dropped rows).
