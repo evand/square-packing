@@ -3213,3 +3213,9 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   `z[key]` access: 20+ min -> 2 s once materialised.)
 * **L2c-481, pre-registered (06:46)**: `l2_screen.py run --set 481 --sides 8 --keep 100 --minutes 20`, 16 cores after
   PF49 (~6 CPU-h).  Prediction: BEAT-ANTE or better 3 / 15 (BM3c's 4 / 5 used the named pieces incl. dropped rows).
+* **PF49 result (06:50): PASS.**  Full 49 rounds, 6.53 CPU-h each: near-frontier new minima PF 1,661 (254 / CPU-h),
+  G 590 (90 / CPU-h); **PF / G = 2.81 [2.22, 3.45]** (bootstrap over n; G / PF 0.36 [0.29, 0.45]).  Prediction 1.5:
+  beaten, and above the 12-round subset's 1.98 (no regression to 1).  Historical candidates (vs the 10-10 register):
+  PF 132, 146, 209, 237; G 132, 146, 209.  Caveat as on the subset: PF polishes 21 % of proposals (G 6 %); the 10-14
+  identity recount cut the subset ratio by 4-16 %, not run here.  H110-PM (no transfer at 110) still stands: the
+  model's absolute gap bins fit the TT3 n mix, not 110's band.
