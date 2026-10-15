@@ -2880,3 +2880,22 @@ Ran at `b90e5fe` (clean).  Round-manifest CPU 6.53 CPU-h per arm, as G.
   relaxation (e.g. L-BFGS on the weighted penalty), which is close to what fq's screen already does.
 * Decision: config stays **G**.  Melt / bigmelt are cheap and harmless: candidates for an arm in the all-n config test
   with the region metric, where their claimed benefit (reach) can show.  GLS v0 parked.
+
+### Parent / move value model, offline (10-14 late; `analysis/parent_model.py build && report [--label yl]`)
+Evan: is parent choice a modeling problem that generalizes?  Today: kind = context-free bandit (rate per CPU-s per n
+band); parent = fixed diversity rule (70 %: a seed lineage uniformly, then a uniform descriptor cell, then best-8 of
+the cell by expansions; ~9 % elite; `--adapt-cells` exists but chain.py never sets it).  No model shares across parents.
+Data: 433k proposals of TT3 G / M / L (19.3 CPU-h); label y = distinct new near-frontier minimum (first in the arm),
+yl = y + 0.5 x descendants' yl within the round (lineage credit).  Poisson GLM, offset log CPU, 5-fold CV over n.
+* Parent gap dominates: y per CPU-h 320-480 for parents within 1e-3 of frontier_T (17 % of CPU), 210 at 1e-3..3e-3, 50 at
+  3e-3..1e-2, 23 / 8 / 3 at 1e-2 / 3e-2 / 1e-1+ (**74 % of CPU at >= 1e-2 for 7 % of y**).  Screened stepping stones
+  as parents: 75 % of CPU, 12.6 per CPU-h (polished 409, store seeds 134).
+* Lineage credit hardly rescues far parents (yl per CPU-h 11-22 at >= 3e-2 vs 610-810 near): within a round, far
+  parents do not lead to near-frontier descendants.  (Not measured: far rows reused as library seeds in later rounds.)
+* Held-out deviance: const 13,713; gap 9,550; + saturation (log expansions, log archive-new children) 9,147; + kind and
+  n 9,078; + near x kind 9,098 (no gain: kinds rank the same near and far).  Saturation: rate x (1+exp)^-0.78
+  x (1+kids)^+0.57 (productive parents stay productive).  Kind spread near the frontier: kicksym 563, kick 513, aswap
+  499 .. mirror 211 per CPU-h.
+* Reallocation bound (held-out ranking, logged CPU): the top 25 % of CPU by predicted rate yields 3.7x the average per
+  CPU (gap alone 3.7x; top 10 % 6x).  Upper bound only: concentrating CPU raises expansions and saturation (the
+  expansion term is the only guard), and the archive's future differs under another policy.  Only an arm measures it.
