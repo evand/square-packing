@@ -77,7 +77,49 @@ def _components(cells):
     return comps
 
 
-def signature(s, sq, tol=0.02):
+def _pen_one(sq, i, cand, s):
+    """max SAT penetration of square i placed at cand against the others and the walls (local check)"""
+    from pk.packing import Packing
+    x, y, a = cand
+    r = math.radians(a % 90.0); h = 0.5 * (abs(math.cos(r)) + abs(math.sin(r)))
+    if x - h < -1e-9 or y - h < -1e-9 or x + h > s + 1e-9 or y + h > s + 1e-9:
+        return 1.0
+    d = np.hypot(sq[:, 0] - x, sq[:, 1] - y)
+    near = np.nonzero((d < math.sqrt(2) + 1e-9) & (np.arange(len(sq)) != i))[0]
+    worst = 0.0
+    for j in near:
+        worst = max(worst, Packing(100.0, np.array([cand, sq[j]]) + [40, 40, 0]).max_pen())
+        if worst > 1e-7:
+            break
+    return worst
+
+
+def snap_rattlers(s, sq, tol=0.02, rounds=3):
+    """rattler normalisation (10-15: copies of the same 110 record gave different signatures): move every axis-aligned
+    square that is off its walls' lattices onto the nearest lattice position (x from the left or right wall, y from the
+    bottom or top), one coordinate at a time, if the move (< 0.5) creates no overlap; repeat a few rounds."""
+    sq = np.asarray(sq, float).copy()
+    ax = _axis(sq)
+    for _ in range(rounds):
+        moved = False
+        for i in np.nonzero(ax)[0]:
+            for dim in (0, 1):
+                v = sq[i, dim]
+                opts = [math.floor(v - 0.5 + 0.5) + 0.5, s - (math.floor(s - v - 0.5 + 0.5) + 0.5)]
+                if any(abs(v - o) < tol for o in opts):
+                    continue
+                for o in sorted(opts, key=lambda o: abs(o - v)):
+                    if abs(o - v) >= 0.5:
+                        continue
+                    cand = sq[i].copy(); cand[dim] = o
+                    if _pen_one(sq, i, cand, s) <= 1e-7:
+                        sq[i] = cand; moved = True; break
+        if not moved:
+            break
+    return sq
+
+
+def signature(s, sq, tol=0.02, snap=True):
     """v2 (10-15, Evan's one-dimension question): per corner, the largest 4-connected component of axis squares on that
     corner's lattice in BOTH axes (and whether it reaches the corner cell: a pocket in the corner must not hide the
     block, as at 126); then the axis squares in no corner group, split by anchoring: slid rows (on a bottom / top
@@ -85,6 +127,8 @@ def signature(s, sq, tol=0.02):
     (both axes on some lattice, not in the corner's main block) and free (neither)."""
     sq = np.asarray(sq, float)
     n = len(sq)
+    if snap:
+        sq = snap_rattlers(float(s), sq, tol)
     s2, q, depth = peel_L(float(s), sq, tol)
     ax = _axis(q)
     A = q[ax]

@@ -3336,3 +3336,24 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   Metrics: per-prompt softmin; ties with the hidden record; records; secondary: distinct non-grid minima within 1e-2
   of the record that are not in the store (novel near-record seeds).  Prediction: >= 1 tie with a hidden record on
   234-240: 20 %; record: 4 %; >= 10 novel near-record minima across the 4 prompts: 50 %.
+* **Corner signature (13:00-13:40; `analysis/cornersig.py`, Evan 10-15)**: per corner, the axis squares on that corner's
+  lattice face-connected to its main block; the rest split into slid rows / slid columns / cut-off blocks / free; L
+  additions peeled first (only if the rest fits in s - 1); loose axis squares snapped onto a lattice first (without it
+  1 of 60 store copies of the 110 record read [53, 9] instead of [53, 11]: rattlers).  Frontier 100-240: strips
+  [a, a, 1, 1], distorted strips [a, b, 1, 1], bulbs / bent strips [big, mid, ~0, ~0] + slid rows / cols, diamonds
+  four equal, J-type (123 / 126 / 127) four distinct + cut-off (126's seam pocket = a 10-square cut-off block); free
+  squares essentially never.  Record events n <= 324 (131): corner-block change 0-5 -> median gain 3-5e-5 (27
+  events), 6-40 -> ~2e-3 (72), > 40 -> 3.3e-3 (32): meaningful records reorganise the corner blocks.  s(110) (775
+  certified minima): one shape; medium block 10-11 holds all of the top 50 (8 / 9 / 12 never); a two-big-block
+  cluster (52, 52, 11) never top 50; Chao1 49 of ~56 cells seen.  All distinct archive minima of the 110 runs: below
+  the grid 70 cells (Chao1 ~97 % seen), above it (to 11.05) 29,226 minima, ~2,500 cells never seen below the grid.
+* **GX1, pre-registered (13:42)** (Evan: "grid-crossing descents are of interest in general"): do structurally foreign
+  above-grid 110 minima have sub-grid descendants that keep their structure?  Seeds (`analysis/gx_select.py`,
+  `runs/gx110/seeds.json`): best member of each above-grid corner cell never occupied below the grid, within 2e-3 of
+  11 (44; mostly junction variants of the V family: 3-4 squares at 45 degrees where the record's junction is ~38-40)
+  + 2 far ones (15 tilted near-axis staircase at 11.0069; one block + cut-off at 11.016).  Explorer per seed (value
+  reward vs frontier 11, gating, 1 proc x 15 min, 16 at a time; ~11.5 CPU-h; `analysis/gx_run.py`, `runs/gx110/x1`),
+  queued after L2e.  Metrics per seed: CROSSED (polished < 11), NEW (a sub-grid descendant in a corner cell never
+  seen below the grid), junction kept (the seed's 45-degree junction count survives in the best descendant).
+  Context: E0 (10-13) crossed from random above-grid packings 16 / 16 (into the known family); C06: anneals 0 / 3,130.
+  Prediction: crossed >= 30 / 46; >= 1 NEW: 25 %; >= 1 crossing that keeps a 45-degree junction: 15 %.
