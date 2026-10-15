@@ -3186,3 +3186,13 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
 * **MH3 result (06:00): 0 records** (prediction 0-1, point 0.4).  30 n, 10.0 CPU-h.  The explorer took 12 of the
   non-tie harden outputs down to the frontier exactly (ties to 1e-11: 29, 38, 53, 87, 125, 151, 198, 201, 257, 258,
   262, 290), none below.  At the live frontier these compositions land on the known records.  L2-481 launched.
+* **L2-481 result (06:40): 0 / 15** (prediction 2 / 14: miss; 6.6 CPU-h).  The blind composer's tightest near arms sit
+  0.05-0.1 above the posted values (207: 14.950 blind vs 14.904 composed from the named pieces), even at 259 (L1:
+  seconds).  Cause found: **the piece table held no off-diagonal piece** (0 of 45,329 have non-integer W - H: rectlib /
+  rectsearch pieces are (h + d) x h), while Mondrian v1's pieces are corner crops of arbitrary aspect (259: s(123)'s
+  left 8.59 columns).  The 10-14 "converter screen deferred" note saw the same hole.
+* **Off-diagonal pieces imported (06:45)**: `analysis/atlas_to_pieces.py runs/mondrian/atlas_v3.npz` (Mondrian atlas
+  crops, m 10-250, d = W - H as stored; source '<packing>:atlas', so --blind still applies): 31,622 new pieces.
+* **L2b-481, pre-registered (06:46)**: L2-481 rerun with the off-diagonal pieces (same flags, fresh compose stage).
+  Positive control: 259 (L1 trivially).  Prediction: BEAT-ANTE or better 4 / 15 (259, 263, 292 are pure compositions;
+  207 / 232 / 236 need the squeeze as in BM3c).
