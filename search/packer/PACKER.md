@@ -3378,7 +3378,7 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   near-record minima 50 %: yes (55 not in the store, but 68 / 79 near-record minima are at 234).  Agent cost 158k-229k
   tokens each; evals 13-26 min (the fill on an oversubscribed machine).  Details and lessons: `evolve2/LOG.md`.
   Evaluator fix: softmin now counts a failed n as 1 (it was dropped, which raised the score).
-* **Fill performance FP1, pre-registered (15:45)** (Evan 10-15: important performance work; then pause and evaluate
+* **Fill performance FP1, pre-registered (15:34)** (Evan 10-15: important performance work; then pause and evaluate
   when L2e / GX1 end).  The upright fill (`mondrian.exact_fill` -> `gen.mis_fill2`: max independent set over ~1,700
   axis candidates, scipy / HiGHS MILP, forked child, retry ladder) dominates EV2 eval time.  New `fillfast.py`:
   (a) safe reductions: corner rule (a candidate whose conflicting neighbours all lie weakly right and above it is
