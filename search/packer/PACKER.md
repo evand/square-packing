@@ -3037,3 +3037,15 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   through this harness.  Smoke: 181 composes nothing near S (my narrowing shrinks both sides at fixed d; #500 narrowed
   "in one side").  Prediction: BEAT-ANTE or better 2 / 8, REPLICATED 1 / 8 (270 / 304 = s(209) whole + small pieces
   are the likeliest).
+* **Finding (10-15 ~02:20): the composition "squeeze" is band merging.**  Tilted clusters (connected at centre distance
+  < 1.45) of the posted packings: every #481 event we REPLICATED has two clusters (259 46 + 27, 292 33 + 16, 263 78 + 1)
+  or a big one + strays (232, 302 partial), while **every #481 miss is one merged band** (131 45, 153 41, 207 46, 209 61,
+  236 40, 269 55, 270 66, 303 59, 305 99, 307 103), and the #500 finals too (181: one band of 58 across the whole box,
+  239 71, 304 68).  Our composer keeps the two pieces as separate corner blocks with uprights between, so it cannot
+  produce these; the step after composing joins the bands.  That is what soft-to-rigid does (#575's V merge; our harden
+  engine reproduced it at 211 / 176).  The 10-13 relax tests on compositions used fq's rounding pre-stage, not harden.rs.
+* **Band-merge test BM1, pre-registered (02:25)**: (1) compose the 10 #481 misses from their named pieces at slack sides
+  (`comp_l1.py run --set 481 --arm plain --window 0.3 --extra 8 --minutes 0`: sides up to S + 0.3, where corner pieces
+  + fill reach n); (2) harden.py 3 rounds (keep 4) from the 4 best compositions per n, grid r0 {0.1, 0.2, 0.3} x noise
+  {0.004, 0.008} x 3 seeds, target = ante.  Success per n: BEAT-ANTE / REPLICATED.  Secondary: the output's largest
+  tilted cluster holds both pieces' tilted squares (merged).  Prediction: BEAT-ANTE or better 3 / 10; merged in > 50 %.
