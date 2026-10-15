@@ -3364,7 +3364,7 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   rattlers.  m4's own pair (1.2-1.3 deg, 0 and 2 contacts) is slack; m8's (6 / 19 deg, 4-5 contacts) and m7's
   staircase (3.5-7 deg, 3-4 contacts each) are load-bearing.  Extra prediction: a sub-grid descendant keeping >= 1
   load-bearing 2-20 degree square: 15 %.
-  *GX1 melt arms, pre-registered (14:05)* (Evan: a regional melt elsewhere might leave the segment alone; a random
+  *GX1 melt arms, pre-registered (13:54)* (Evan: a regional melt elsewhere might leave the segment alone; a random
   one would also often miss it): `explore.py` melt takes a protected point set (`PK_MELT_AVOID` json + margin:
   centres >= R + margin from every protected point).  Arms on the 31 seeds with something to protect (jammed 2-20
   degree squares or 40-50 degree junction squares; 28 of the 44 + m4 / m7 / m8): **melt** (protected melts only) and
