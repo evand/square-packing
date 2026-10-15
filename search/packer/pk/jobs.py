@@ -2,8 +2,8 @@
 """Background jobs without pattern matching (10-10; after `pgrep -f` / `pkill -f` repeatedly matched the controlling
 shell's own command line, `setsid` forked away from `$!`, and output vanished behind `| tail` pipes).
 
-Every job runs in its own session / process group (the group id is the job's pid, recorded at launch), always logs to a
-file, and is stopped by killing that group.  Nothing here ever matches command lines.
+Every job runs in its own session (the session id is the job's pid, recorded at launch), always logs to a file, and is
+stopped by signalling every process group in that session.  Nothing here ever matches command lines.
 
   python3 pk/jobs.py start NAME [--cwd DIR] [--procs N] [--threads T] [--strict] -- CMD ARGS...
                                                              launch (refuses if NAME is still running).  Math-library
@@ -37,7 +37,7 @@ def running_threads(pgid=None, samples=3, dt=0.3):
     (instantaneous, unlike the load average, which lags by minutes)"""
     tot = 0
     for i in range(samples):
-        out = subprocess.run(['ps', '-L', '-eo', 'pgid=,stat='], capture_output=True, text=True).stdout
+        out = subprocess.run(['ps', '-L', '-eo', 'sid=,stat='], capture_output=True, text=True).stdout
         for line in out.splitlines():
             f = line.split()
             if len(f) == 2 and f[1].startswith('R') and (pgid is None or int(f[0]) == pgid):
@@ -60,14 +60,16 @@ def _meta(name):
     return json.load(open(p)) if os.path.exists(p) else None
 
 
-def _group(pgid):
-    """Processes in a process group: [(pid, pcpu, etimes)], read from ps by numeric group id only."""
-    out = subprocess.run(['ps', '-eo', 'pid=,pgid=,pcpu=,etimes='], capture_output=True, text=True).stdout
+def _group(sid):
+    """Processes of a job: [(pid, pcpu, etimes, pgid)], by numeric SESSION id (= the job's pid, start_new_session).
+    Session, not process group: `timeout`, `xargs`-spawned shells etc. may move children into their own process group,
+    but they stay in the session (10-14: a `timeout` child was invisible to status and stop)."""
+    out = subprocess.run(['ps', '-eo', 'pid=,sid=,pcpu=,etimes=,pgid='], capture_output=True, text=True).stdout
     rows = []
     for line in out.splitlines():
         f = line.split()
-        if len(f) == 4 and int(f[1]) == pgid:
-            rows.append((int(f[0]), float(f[2]), int(f[3])))
+        if len(f) == 5 and int(f[1]) == sid:
+            rows.append((int(f[0]), float(f[2]), int(f[3]), int(f[4])))
     return rows
 
 
@@ -121,12 +123,23 @@ def stop(name, grace=10.0):
     pg = m['pid']
     if not _group(pg):
         print(f'{name}: not running'); return
-    os.killpg(pg, signal.SIGTERM)
+    def sig(sg):                                     # every process group in the session, then stragglers by pid
+        for g in {r[3] for r in _group(pg)}:
+            try:
+                os.killpg(g, sg)
+            except ProcessLookupError:
+                pass
+        for r in _group(pg):
+            try:
+                os.kill(r[0], sg)
+            except ProcessLookupError:
+                pass
+    sig(signal.SIGTERM)
     t = time.time()
     while _group(pg) and time.time() - t < grace:
         time.sleep(0.5)
     if _group(pg):
-        os.killpg(pg, signal.SIGKILL); time.sleep(0.5)
+        sig(signal.SIGKILL); time.sleep(0.5)
     print(f'{name}: stopped' if not _group(pg) else f'{name}: still {len(_group(pg))} processes after SIGKILL')
 
 
@@ -148,7 +161,7 @@ def status(name=None):
         if not m:
             continue
         g = _group(m['pid'])
-        cpu = sum(c for _, c, _ in g)
+        cpu = sum(r[1] for r in g)
         el = time.time() - m.get('t0', time.time())
         rt = running_threads(m['pid'], samples=2) if g else 0
         state = f'RUNNING {len(g)} procs, {rt:.0f} running threads' if g else 'done'
