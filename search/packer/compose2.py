@@ -26,6 +26,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 FQ = os.path.join(HERE, 'target', 'release', 'fq')
 PIECES = None
+BLIND = None                   # compose2 run --blind ISO_LOCAL (see load_pieces)
 REQUIRE = False                # compose2 run --new-from: arms must use a piece cut from one of those packings
 PRIOR = (1.0, 0.01)          # weight = (1 + area slack)^PRIOR[0] * exp(-(gap_A + gap_B) / PRIOR[1])
 
@@ -43,7 +44,14 @@ def load_pieces(mmin, per_cell=10 ** 9, source=None, cf_eps=0.0, new_from=None):
     and rattler moves of one minimum), up to per_cell per (m, d), best h first; gap = h / best h in the cell - 1."""
     from pk.store import Store
     keep, seen, cnt = [], {}, {}
+    pre = None
+    if BLIND:                                            # time travel: from-scratch pieces + crops of packings in the
+        import sqlite3                                   # store before BLIND (local time) only
+        db = sqlite3.connect(f"file:{os.path.join(HERE, 'runs', 'store.sqlite')}?mode=ro", uri=True)
+        pre = {r[0] for r in db.execute('SELECT id FROM packing WHERE added < ?', (BLIND,))}
     for p in Store().pieces(mmin=mmin, source=source):
+        if pre is not None and not (p.meta['source'].startswith(('rectsearch', 'kingbird:')) or piece_parent(p.meta) in pre):
+            continue
         m, d, H = p.n, p.dx, p.s
         W = H + d
         if m <= math.floor(W + 1e-9) * math.floor(H + 1e-9):
@@ -328,6 +336,8 @@ def run(a):
     os.makedirs(a.out, exist_ok=True)
     man = manifest.start(a.out, 'compose2', args=vars(a), procs=a.procs)
     scratch.scope('compose2')
+    global BLIND
+    BLIND = a.blind                                      # workers fork after this, so they inherit it
     lo, hi = map(int, a.ns.split('-'))
     tasks = []
     only = {int(x) for x in a.only.split(',')} if a.only else None
@@ -417,6 +427,7 @@ if __name__ == '__main__':
     r.add_argument('--probe-steps', type=int, default=10)
     r.add_argument('--three', action='store_true', help='three-piece arms (LL, UR, UL corners)')
     r.add_argument('--only', help='comma list of n (within --ns)')
+    r.add_argument('--blind', help='local ISO time: only rectsearch pieces + crops of store packings added before it')
     r.add_argument('--new-from', help='JSON list of store packing ids: only arms using a piece cut from one (fresh.py)')
     r.add_argument('--cf-eps', type=float, default=0.0,
                    help='counterfactual: every piece scaled to h (1 - eps); hits say which cells are worth searching')

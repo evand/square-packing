@@ -3055,3 +3055,57 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   explorer's 5.4.  Prediction 3 / 12: miss.  Harden alone is not the removal-reach answer; it is complementary.
 * **c500 result**: composition L1 on #500 (plain + narrowed pieces): 0 / 8; only 304 composed (17.9452, explorer
   17.9378 vs ante 17.9347).  Expected after the band-merge finding (our corner-block compositions cannot form one band).
+* **BM1 result (02:24)**: 0 / 8 (131 / 209 / 270 / 305 composed nothing even at S + 0.3).  Harden bests: 207 14.88975
+  (ante 14.88799), 303 17.92241 (ante 17.92031), 236 15.88562, 269 16.91799; 153 / 232 / 302 / 307 stayed at grid
+  collapses.  Prediction 3 / 10: miss.  Merge check below.
+* **BM2, pre-registered (02:25)**: as BM1, but harden from the raw composed layouts (exact MILP fill, before any fq;
+  `comp_l1` c481r raw0-3, tightest sides first) instead of the fq-relaxed compositions, 2 procs per event, 8 events.
+  Rationale: fq at slack sides may lock the two pieces in place before harden starts.  Prediction: BEAT-ANTE 1 / 8 (low
+  confidence; BM1 says harden from corner-block compositions does not reach the merged band).
+* **BM1 merge check (02:30): the band-merge hypothesis is wrong as stated.**  Tilted squares counted at angle > 0.5 deg
+  (the 02:20 count used > 1e-6 deg, so fq-jittered uprights were counted as tilted): our BM1 starts (fq'd c481
+  compositions) are already one band at 207 (40), 232 (72), 236 (48), 303 (62), like the posted packings (207 45,
+  236 40, 269 51, 303 56).  The posted packings differ in band *content*: 207 = s(11) piece (4 tilted) + s(130)
+  (32 tilted) composes to 36 tilted, and the posted packing has 45, so its squeeze turns ~9 uprights into band squares.
+  Matching distance from our best harden output to the posted packing: 207 0.074 (close basin, 4.2e-3 above), 236
+  0.19, 303 0.28, 269 0.56.  MONDRIAN.md (10-10) already said their squeeze is a real search.  Next: give the hardened
+  layouts a real nearby search.
+* **BM3, pre-registered (02:32)**: `harden_explore.py run --src runs/bm1 runs/bm2 --out runs/bm3` (compose -> harden
+  -> explorer): 4 best distinct harden outputs per event (BM1 + BM2 pooled), explorer 20 min x 2 reps x 8 events, 1
+  proc each (16 cores, ~5.3 CPU-h).  Tiers as before.  Prediction: BEAT-ANTE 1 / 8 (207: 1.76e-3 to go, close basin),
+  REPLICATED 0.  If 0 / 8: compose -> harden -> explore does not reproduce Mondrian v1 squeeze at 20 min.
+  *Amended before launch (02:40)*: 8 cores (1 rep x 8 events, ~2.7 CPU-h); the other 8 go to RB62.
+* **Rectangle-block family status (02:40).**  Ostashev's #528 / #562 records are S = h(m, d) + integer: two searched
+  blocks + aligned squares (175 = (38,2) h + 8; 176, 204 = (44,3) h + 8 / + 9; 232 = (38,2) + 10; 303 = (62,6) + 12).
+  Our from-scratch rectsearch sweep (sw1, 3 min / cell, m 10-60, d 1-4) already holds (38,2) 5.7641743175 and (44,3)
+  5.8086632344 at his values, so 175 / 176 / 204 (and 232 / 264 given the crops) are reachable blind.  (62,6) was only
+  smoke-tested (bandit, 0.04 CPU-h, 5.928 vs his 5.9099583); our best 5.91945 is a crop of his own later 304 (not blind).
+* **RB62, pre-registered (02:40)**: `rectsearch.py run --cells 62:6 --minutes 20 --procs 8 --soft 0.8` (from scratch, no
+  store seeds; the (38,2) control config), ~2.7 CPU-h.  Success: h <= 5.90995829107 + 1e-9 (=> 303 REPLICATED as
+  2 blocks + 179 aligned, S = h + 12).  Prediction 25 % (m = 62 is 1.6x the (38,2) control, which hit at ~1 CPU-h).
+  If it fails: record best h and the gap; next = Ostashev's start model (aligned corner blocks + tilted lattice).
+* **Rectangle-block blind replication (02:50): 3 / 3 REPLICATED.**  `compose2.py run --source rectsearch --target
+  cutoff:2026-10-12T04:00` (pieces = only our from-scratch rectsearch minima, sweep sw1 over every cell m 10-60 x d 1-4,
+  so the cell choice is not informed by his posts): **175 13.764174317489 (#528), 176 13.808663234390 (#562), 204
+  14.808663234390 (#562)**, each = his posted value to 1e-11.  175 in 1 s, 176 in 42 s, 204 needed 291 s of fills
+  (60 s gave count 203).  ~0.4 CPU-h.  232 / 264 (block + a crop of s(85) / s(126)) not run: compose2's single LIKE
+  source filter cannot select "rectsearch + pre-T crops" without admitting his own posted packings' crops.
+  So for this family the pipeline is at baseline wherever the block search reaches his piece; the open question is
+  larger cells (RB62).
+* **RB62 result (03:00)**: miss.  Best h 5.9153600655 (his 5.9099583, gap 5.4e-3; our previous best was 5.9195 from a
+  crop of his own 304), 31,309 quenches, 2.66 CPU-h.  Hits below 5.917 all came from small MBH kicks (0.02: 5,413,
+  0.05: 3,349).  Structure: our best has 45 tilted squares, 31 of them at 22-24 deg; his block in 303 has 46 at ~23
+  deg.  Same family, not converged: depth, not the start model.  (Prediction 25 %.)
+* **RB62b, pre-registered (03:02)**: continue (new `rectsearch.py run --init DIR --init-split`): 8 workers, each
+  seeded with one of RB62's 8 best distinct minima, `--start-frac 0`, 30 min (4 CPU-h).  Success as RB62.
+  Prediction 35 %.  If it misses: compare per-worker trajectories; the next step is a structured start (46 tilted at
+  23 deg in a lattice + upright end blocks) or harden in the rectangle.
+* **232 / 264 blind (03:10): both REPLICATED.**  New `compose2 --blind ISO_LOCAL`: pieces = rectsearch minima +
+  Kingbird-mirror (09-30) crops + crops of store packings added before ISO.  232 (cutoff 10-11 21:14 local): HIT
+  15.764174317490 in 181 s ((38,2) block + Friedman s(85b) minus a row, Kingbird piece 17).  264: first 1 short (263):
+  **crop-library gap**: the (93,3) crop of the pre-T s(126) 11.7747351324 (store 28489, in the store 10-09) was not in
+  the piece table (the atlas cropped other packings).  Added its crops (`runs/rectlib/crop126/pieces.jsonl`, source
+  store:28489:crop126, 7 new pieces) -> HIT 16.774735132391 in 82 s.
+  **Rectangle-block family: 5 / 6 of Ostashev's #528 / #562 records replicated blind (175, 176, 204, 232, 264);
+  303 waits on the (62,6) block (RB62b).**  Lesson: the crop library must cover every structurally distinct store
+  packing, not only the frontier at atlas time.

@@ -14,7 +14,7 @@ def run(a):
         ev = json.load(open(rj)); d = os.path.dirname(rj)
         if 'new' not in ev and 'S' in ev:                  # comp_l1 event.json
             ev['new'] = ev['S']; ev.setdefault('T', ev.get('T', ''))
-        starts = sorted(glob.glob(f'{d}/start_*.txt') + glob.glob(f'{d}/start[0-9]*.txt'))[:a.starts]
+        starts = sorted(sum((glob.glob(f'{d}/{g}') for g in a.glob.split(',')), []))[:a.starts]
         if not starts: continue
         out = f'{a.out}/{os.path.basename(d)}'; os.makedirs(out, exist_ok=True)
         cmd = [sys.executable, f'{HERE}/harden.py', 'run', '--files', *starts, '--out', out, '--target', repr(ev['ante']),
@@ -42,5 +42,6 @@ if __name__ == '__main__':
     r.add_argument('--procs', type=int, default=1); r.add_argument('--starts', type=int, default=4)
     r.add_argument('--grid', default='r0=0.1,0.2,0.3;noise=0.004,0.008'); r.add_argument('--seeds', type=int, default=3)
     r.add_argument('--rounds', type=int, default=3)
+    r.add_argument('--glob', default='start_*.txt,start[0-9]*.txt', help='comma-separated start-file globs per event dir')
     s = sp.add_parser('score'); s.add_argument('--out', required=True)
     a = ap.parse_args(); {'run': run, 'score': score}[a.cmd](a)

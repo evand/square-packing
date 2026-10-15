@@ -116,12 +116,30 @@ def run(a):
     cells = [tuple(map(int, c.split(':'))) for c in a.cells.split(',')] if a.cells else \
         [tuple(c) for c in json.load(open(a.cells_file))]
     per = max(1, a.procs // len(cells)) if len(cells) <= a.procs else 1
+    init = {}
+    for idir in (a.init or []):                          # continue: elite = the best distinct minima of earlier runs
+        import glob as _g
+        for f in _g.glob(os.path.join(idir, 'm*_d*', 'minima_*.jsonl')):
+            mm, dd = map(int, os.path.basename(os.path.dirname(f))[1:].split('_d'))
+            for l in open(f):
+                e = json.loads(l); init.setdefault((mm, dd), []).append((e['h'], e['sq']))
+    for k in init:
+        L, out_ = sorted(init[k], key=lambda e: e[0]), []
+        for e in L:
+            if all(abs(e[0] - x[0]) > 1e-9 for x in out_):
+                out_.append(e)
+            if len(out_) >= 12:
+                break
+        init[k] = out_
     tasks = []
     for m, d in cells:
         od = os.path.join(a.out, f'm{m}_d{d}'); os.makedirs(od, exist_ok=True)
         for k in range(per):
+            el = init.get((m, d), [])
+            if el and a.init_split:                      # worker k starts from the k-th best (diverse chains)
+                el = [el[k % len(el)]]
             tasks.append((m, d, a.minutes * 60, 1000 * m + 10 * d + k + a.seed, od, a.loose, a.start_frac, a.soft,
-                          a.adaptive))
+                          a.adaptive, el))
     with ProcessPoolExecutor(a.procs) as ex:
         res = list(ex.map(worker, tasks))
     summ = {}
@@ -233,6 +251,8 @@ if __name__ == '__main__':
     r.add_argument('--soft', type=float, default=0.5, help='share of fresh starts that go through soft-to-rigid')
     r.add_argument('--adaptive', action='store_true', help='adaptive kick size (x2 on success, /2 on failure)')
     r.add_argument('--start-frac', type=float, default=0.4, help='share of the time spent on fresh starts only')
+    r.add_argument('--init', nargs='*', help='earlier rectsearch out dirs: their best minima seed the elite (continue)')
+    r.add_argument('--init-split', action='store_true', help='each worker gets one of the init minima (k-th best)')
     b = sp.add_parser('bandit'); b.add_argument('--cells-file', required=True); b.add_argument('--out', required=True)
     b.add_argument('--episode', type=float, default=120); b.add_argument('--cpu-hours', type=float, default=1.0)
     b.add_argument('--procs', type=int, default=14); b.add_argument('--seed', type=int, default=1)
