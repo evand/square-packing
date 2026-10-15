@@ -127,6 +127,61 @@ def screen(n, S, W, H, m, keep, chunk=400):
     return out
 
 
+def _ex1(args):
+    T, S = args
+    import mondrian as M
+    if not M.fits(T, S):
+        return -99
+    return len(M.exact_fill(T, S, time_limit=20)) - int(math.floor(S + FT)) ** 2
+
+
+def _pair_job(args):
+    """joint fill of A at LL + B at `corner` (both priority orders); count >= n -> fq + polish"""
+    n, S, TA, TB, corner = args
+    import mondrian as M
+    from pk.engine import FQ, QOpt, POLISH
+    from pk.packing import Packing
+    A, B = M.to_corner(TA, 'LL', S), M.to_corner(TB, corner, S)
+    out = []
+    for T in (np.r_[A, M._drop_conflicts(A, B)], np.r_[M._drop_conflicts(B, A), B]):
+        L = M.exact_fill(T, S, time_limit=10)
+        if len(L) < n:
+            out.append((len(L), None)); continue
+        eng = FQ()
+        r = eng.quench(Packing(S, M.trim(L, n)), QOpt(), timeout=120)
+        r2 = eng.quench(r.p, POLISH, timeout=120) if r.ok else r
+        out.append((len(L), (r2.s, r2.p.sq.tolist()) if r2.ok else None))
+        eng.close()
+    return out
+
+
+def exact_screen(n, S, P, keep, procs):
+    """additive exact excess: e(piece) = single-piece MILP fill at side S minus the grid; pairs with disjoint boxes
+    (A at LL; B at UR: wA + wB <= S or hA + hB <= S; B at LR: wA + wB <= S) ranked by eA + eB (then tilted count);
+    the top `keep` get the joint fill.  -> list of (side, Packing-like (s, sq))"""
+    from concurrent.futures import ProcessPoolExecutor
+    g = int(math.floor(S + FT)) ** 2
+    idx = [k for k, p in enumerate(P) if p[1][5] <= n - 3 and max(p[1][3], p[1][4]) <= S + 1e-12]
+    with ProcessPoolExecutor(procs) as ex:
+        e = np.array(list(ex.map(_ex1, [(P[k][0], S) for k in idx], chunksize=8)))
+    W = np.array([P[k][1][3] for k in idx]); H = np.array([P[k][1][4] for k in idx]); t = np.array([len(P[k][0]) for k in idx])
+    est = (e[:, None] + e[None, :]).astype(float)
+    cand = []
+    for corner, ok in (('UR', (W[:, None] + W[None, :] <= S + 1e-12) | (H[:, None] + H[None, :] <= S + 1e-12)),
+                       ('LR', (W[:, None] + W[None, :] <= S + 1e-12))):
+        I, J = np.nonzero(ok & (est >= n - g - 1) & (e[:, None] > -99) & (e[None, :] > -99))
+        cand += [(est[i, j], t[i] + t[j], idx[i], idx[j], corner) for i, j in zip(I, J)]
+    cand.sort(key=lambda c: (-c[0], -c[1]))
+    cand = cand[:keep]
+    if not cand:
+        return [], 0, max(e.max() * 2, -99) if len(e) else None
+    with ProcessPoolExecutor(procs) as ex:
+        R = list(ex.map(_pair_job, [(n, S, P[a][0], P[b][0], c) for _, _, a, b, c in cand], chunksize=1))
+    comp = [x[1] for r in R for x in r if x[1] is not None]
+    reach = sum(1 for r in R for x in r if x[0] >= n)
+    return comp, reach, cand[0][0]
+
+
 def run(a):
     import mondrian as M
     from pk import manifest
@@ -150,8 +205,15 @@ def run(a):
     for ev in evs:
         n = ev['n']; d = f'{sdir}/n{n}'; os.makedirs(d, exist_ok=True)
         comp = []
-        for Sc in np.linspace(ev['ante'] + 1e-9, ev['ante'] + a.window, a.sides):
+        for Sc in np.linspace(ev['ante'] + a.lo, ev['ante'] + a.window, a.sides):
             t1 = time.time()
+            if a.rank == 'exact':
+                from pk.packing import Packing
+                cs, reach, top = exact_screen(n, float(Sc), P, a.keep, a.cores)
+                comp += [(s_, Packing(s_, np.array(sq)), float(Sc)) for s_, sq in cs]
+                print(f"n={n} Sc={Sc:.6f}: best estimate {top}, {reach} joint fills reach n -> {len(cs)} composed "
+                      f"({time.time() - t1:.0f} s)", flush=True)
+                continue
             pairs = screen(n, float(Sc), W, H, m, a.keep)
             if not pairs:
                 continue
@@ -190,6 +252,9 @@ if __name__ == '__main__':
     r.add_argument('--keep', type=int, default=100); r.add_argument('--per-n', type=int, default=4)
     r.add_argument('--minutes', type=float, default=20); r.add_argument('--cores', type=int, default=16)
     r.add_argument('--min-excess', type=int, help='rebuild crops with excess >= this (e.g. -3) instead of the atlas (>= 1)')
+    r.add_argument('--lo', type=float, default=1e-9, help='first side = ante + lo')
+    r.add_argument('--rank', choices=['formula', 'exact'], default='formula',
+                   help='exact: additive single-piece MILP excess (10-15: the formula ranks #481 pairs thousands deep)')
     r.add_argument('--lib', help='analysis/croplib.py library npz (built for this event set\'s cutoff)')
     s = sp.add_parser('score'); s.add_argument('--out', required=True)
     a = ap.parse_args()

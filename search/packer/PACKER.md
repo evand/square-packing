@@ -3278,3 +3278,22 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   Prediction: >= 1 BEAT-ANTE 30 %, >= 1 REPLICATED 10 % (Xu: ~7.5k CPU-h and many more proposals; our backend is
   stronger, our budget much smaller).  0 with a flat trajectory -> the loop needs a better feedback / backend stage
   (e.g. explorer on the best layouts) before scaling; a BEAT-ANTE -> scale up and go live.
+* **L2d result (10:14): 0 / 15** (prediction 1-4, point 2: miss; 13.9 CPU-h).  The library raised the composed starts
+  (232 now composes to the ante exactly; 259 / 270 / 305 start 5e-3 to 7e-3 above ante), but the explorer closed little
+  from blind starts: 207 14.9170 -> 14.9134 (BM3c from the named composition: 14.9045 -> 14.8855), 303 17.9510 ->
+  17.9365, 305 -> 17.9576 (need 4.6e-3).  By the rule: the library alone is not the fix; next blocker = which pair /
+  layout the screen ranks first (the blind starts are different basins from the named ones, not just looser).
+* **Why L2d missed (10:30)**: the formula screen ranks the named #481 pairs 5,500-42,000 deep (207: formula 204 vs
+  n = 207; the guillotine count undercounts the exact upright fill by 3-5 for these pieces), so they never reach the
+  joint fill.  The single-piece exact fill (MILP, ~0.5 s) gets them right: 207's named pieces have excess 2 + 9 = 11 =
+  exactly what n needs at 14.93.  **Additive exact-excess screen** (`l2_screen.py --rank exact`): excess of every
+  library piece at side S (alone in the corner, MILP fill minus floor(S)^2), pairs with disjoint boxes (B at UR or LR)
+  ranked by eA + eB, then tilted count, top --keep get the joint fill + fq + polish.  207 at ante + 0.05: 1,525 pieces
+  filled in ~70 s (8 procs), 408 joint fills reach n, best composed **14.9044830325 = the named composition** (keep
+  150 gave 14.9134: the tie class at eA + eB = 11 is large, so keep must be large).
+* **L2e, pre-registered (10:31)**: `l2_screen.py run --set 481 --lib runs/mondrian/croplib481t1.npz --rank exact --keep
+  1000 --lo 0.04 --window 0.16 --sides 4` (sides ante + 0.04 / 0.08 / 0.12 / 0.16), 4 starts per n, explorer 45 min as
+  BM3c; 8 procs while EV1 runs (`runs/l2/s481e`).  Question: with the ranking fixed, does blind L2 reach L1's level?
+  Prediction: REPLICATED + BEAT-ANTE 3 / 15 (range 1-5; L1 named got 4 / 5 informative).  >= 3: blind Mondrian v1 is
+  at baseline -> live slack-composition hunt next; 0-1: composition quality is fine but basins differ, look at the
+  starts' structure vs the named ones.
