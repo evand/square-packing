@@ -3169,3 +3169,13 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   explorer 20 min x 1 proc, no harden).  ~6 CPU-h, after MH3.  Tiers as usual.  Prediction: BEAT-ANTE or better 2 / 14
   (L1 with named pieces + slack composition + explorer gave 3 / 5 informative; blind adds the piece choice, and the
   piece table may lack Mondrian v1's whole-packing pieces, e.g. s(130) for 207).
+* **BM3c result (05:10): 4 / 5, the control beats the treatment.**  Compose -> explorer, no harden (45 min x 8 cores,
+  6.0 CPU-h): 207 REPLICATED (14.8855063088), 236 REPLICATED (15.8619343906, below SQUISH's 15.8639557), 232 BEAT-ANTE
+  (15.7689324), 303 BEAT-ANTE (17.9196812); 269 no (+1.1e-2; BM3 got it via harden of a raw layout).  BM1-3 (harden
+  then explorer): 3 / 5 at 12.0 CPU-h.  By the pre-registered rule, C46 as stated ("harden is the necessary step") is
+  wrong; rewritten: **Mondrian v1 = compose the pieces at slack sides + a real explorer run.**  Why the 10-10 harness
+  missed: it composed only within S + 0.02 (207 / 232 short by 1-5 squares there) and ran a short explorer.  Harden is
+  a complement (269), not the mechanism.
+* **CP500 result**: 0 / 8; only 270 (17.0, grid) and 304 (17.9452) composed at slack sides with crop pieces; #500 needs
+  its own piece work (see the narrowing note).
+* **MH3 launched (05:11)** on 15 cores (CP500's last harden holds one).
