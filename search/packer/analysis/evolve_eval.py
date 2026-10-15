@@ -84,12 +84,12 @@ def cmd_eval(a):
             f.write(f"{n} {r['s']!r}\n" + ''.join(f'{x!r} {y!r} {t!r}\n' for x, y, t in r['sq']))
         render(r['s'], r['sq'], f'{a.out}/n{n}.png', f"n={n} s={r['s']:.6f} target {T:.6f}")
         rows.append(dict(n=n, s=r['s'], target=T, ng=ng))
-    ok = [r['ng'] for r in rows if 'ng' in r]
+    ok = [r['ng'] if 'ng' in r else 1.0 for r in rows]       # a failed n counts as the grid (fixed after EV2 gen 1)
     if ok:
         T = 0.02                                          # soft-min: one great n counts (Evan 10-15), the mean for reference
         sm = -T * math.log(np.mean(np.exp(-np.array(ok) / T)))
         print(f'SCORE  softmin(T={T}) {sm:+.4f}   best {min(ok):+.4f}   mean {np.mean(ok):+.4f}   '
-              f'(normalised gaps; failed n count as missing)')
+              f'(normalised gaps; a failed n counts as 1)')
     archive_minima(a, prog, mins)
     print(f'renderings: {a.out}/n<N>.png   coordinates: {a.out}/n<N>.txt   ({time.time() - t0:.0f} s)')
     os.makedirs(os.path.dirname(LOG), exist_ok=True)

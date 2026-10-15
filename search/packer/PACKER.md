@@ -3372,3 +3372,9 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   (`runs/gx110/x1m`, `x1r`).  Same metrics.  Smoke (m8, 2 min, loaded machine): 311 melts.  Prediction: crossings
   melt ~ meltrand (within 1.5x); protected keeps the segment in crossing descendants more often than random (inter /
   junction kept: melt > meltrand) -- the protection matters only for what survives, not for crossing.
+* **EV2 gen 1 result (15:10)**: ties with the hidden records at 234 (P009, P010; the 24.3-degree family value) and 235
+  (P008, P010; 15.8266056334, non-family): blind reproductions on a row no agent had seen; 236 +0.0445 and 237 +0.101
+  normalised (P007); 238-240 never below the grid.  Predictions: tie 20 %: yes; record 4 %: no; >= 10 novel
+  near-record minima 50 %: yes (55 not in the store, but 68 / 79 near-record minima are at 234).  Agent cost 158k-229k
+  tokens each; evals 13-26 min (the fill on an oversubscribed machine).  Details and lessons: `evolve2/LOG.md`.
+  Evaluator fix: softmin now counts a failed n as 1 (it was dropped, which raised the score).
