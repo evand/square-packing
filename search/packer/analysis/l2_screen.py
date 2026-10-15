@@ -18,6 +18,7 @@ import argparse, json, math, os, sqlite3, subprocess, sys, time
 import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__)); PK = os.path.dirname(HERE); sys.path.insert(0, PK); sys.path.insert(0, HERE)
 FT = 1e-9
+MIN_EXCESS = None                # run --min-excess: rebuild crops from the allowed sources with this excess floor
 
 
 def fl(x):
@@ -49,7 +50,16 @@ def load_pieces(atlas, T_utc, T_local, nmax):
     import mondrian as M
     z = dict(np.load(atlas, allow_pickle=True))          # materialise: NpzFile re-reads an array on every access
     A = allowed_sids(z, T_utc, T_local)
-    W, H, m, o, sid = z['W'], z['H'], z['m'], z['o'], z['sid']
+    if MIN_EXCESS is not None:                           # rebuild the allowed sources' crops with a relaxed excess
+        parts = []                                       # (Mondrian v1 pieces need not beat the grid on their own)
+        for k in sorted(A):
+            r = M.pieces_of(np.asarray(z['sq'][k], float), float(z['src_s'][k]), min_excess=MIN_EXCESS)
+            if len(r[0]):
+                r = M.pareto_prune(*r)
+                parts.append(tuple(r) + (np.full(len(r[0]), k),))
+        W, H, m, o, sid = (np.concatenate(c) for c in zip(*parts))
+    else:
+        W, H, m, o, sid = z['W'], z['H'], z['m'], z['o'], z['sid']
     keep = np.array([s in A for s in sid]) & (m >= 3) & (m <= nmax)
     P = []
     for k in np.nonzero(keep)[0]:
@@ -106,6 +116,8 @@ def run(a):
     if a.only:
         ks = {int(x) for x in a.only.split(',')}; evs = [e for e in evs if e['n'] in ks]
     T_utc, T_local = evs[0]['T_utc'], evs[0]['T_local']
+    global MIN_EXCESS
+    MIN_EXCESS = a.min_excess
     t0 = time.time()
     P = load_pieces(a.atlas, T_utc, T_local, max(e['n'] for e in evs))
     W = np.array([p[1][3] for p in P]); H = np.array([p[1][4] for p in P]); m = np.array([p[1][5] for p in P])
@@ -153,6 +165,7 @@ if __name__ == '__main__':
     r.add_argument('--window', type=float, default=0.3); r.add_argument('--sides', type=int, default=8)
     r.add_argument('--keep', type=int, default=100); r.add_argument('--per-n', type=int, default=4)
     r.add_argument('--minutes', type=float, default=20); r.add_argument('--cores', type=int, default=16)
+    r.add_argument('--min-excess', type=int, help='rebuild crops with excess >= this (e.g. -3) instead of the atlas (>= 1)')
     s = sp.add_parser('score'); s.add_argument('--out', required=True)
     a = ap.parse_args()
     {'run': run, 'score': score}[a.cmd](a)

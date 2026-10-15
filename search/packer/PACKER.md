@@ -3219,3 +3219,14 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   PF 132, 146, 209, 237; G 132, 146, 209.  Caveat as on the subset: PF polishes 21 % of proposals (G 6 %); the 10-14
   identity recount cut the subset ratio by 4-16 %, not run here.  H110-PM (no transfer at 110) still stands: the
   model's absolute gap bins fit the TT3 n mix, not 110's band.
+* **L2c result (07:40): 0 / 15** (prediction 3 / 15: miss; 7.6 CPU-h).  Blind compositions land 0.02-0.12 above the
+  ante; the explorer closes ~0.005-0.03 (207 14.956 -> 14.924, 302 17.959 -> 17.935), never enough; 232 stays an exact
+  tie at the ante.  **Cause: the library, not the screen.**  The atlas keeps only crops that beat the grid in their own
+  box (excess >= 1), and Mondrian v1's pieces mostly do not: Kingbird s(11)_r1a has only a 3-square crop in the atlas
+  (207 / 269 / 303 use its 8-square crop), s(123) (259 / 292) has none, s(152)_r2 none of 34.  Their value is in how
+  the tilted squares meet the upright fill, which the excess filter cannot see.  Relaxing to excess >= -3 over the
+  1,553 allowed sources gives 1.07M crops (35 s to build): too many for an all-pairs screen.
+* **State of L2 (blind) for Mondrian v1**: open.  The pipeline is right (L1 with named pieces: 4 / 5); the missing part
+  is a piece library that contains the useful sub-grid crops without exploding: e.g. keep crops whose boundary cuts no
+  tilted square and whose tilted count >= 3, prune per (m, floor W, floor H) globally across sources, plus dropped
+  rows / columns (259 needs one).  Design question for Evan.
