@@ -3162,3 +3162,10 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   RB62's minima): 31 / 441 relocations stay below 5.92 (random spots: 3 / 289); best still 5.9153600655.
 * **RB62c, pre-registered (04:31)**: `rectsearch run --cells 62:6 --reloc 0.5 --start-frac 0 --init rb62 rb62b
   --init-split`, 16 procs x 30 min (8 CPU-h), after MH3.  Success: h <= 5.90995829107 + 1e-9.  Prediction 15 %.
+  *Amended (04:47)*: launched early on the 7 idle cores (7 procs x 30 min, 3.5 CPU-h) instead of after MH3.
+* **L2-481, pre-registered (04:58)**: level 2 (blind) on the 14 #481 events: `analysis/l2_compose.py run --set 481`
+  (compose2 `--blind 2026-10-09T14:59 --blind-t 2026-10-09T21:59` (new: + crops of every store packing at the register
+  frontier as of T, from register history), `--probe 0.3 --budget 120`; the 4 tightest distinct near arms per n ->
+  explorer 20 min x 1 proc, no harden).  ~6 CPU-h, after MH3.  Tiers as usual.  Prediction: BEAT-ANTE or better 2 / 14
+  (L1 with named pieces + slack composition + explorer gave 3 / 5 informative; blind adds the piece choice, and the
+  piece table may lack Mondrian v1's whole-packing pieces, e.g. s(130) for 207).

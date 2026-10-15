@@ -27,6 +27,7 @@ sys.path.insert(0, HERE)
 FQ = os.path.join(HERE, 'target', 'release', 'fq')
 PIECES = None
 BLIND = None                   # compose2 run --blind ISO_LOCAL (see load_pieces)
+BLIND_T = None                 # compose2 run --blind-t ISO_UTC: + register-frontier packings as of then
 REQUIRE = False                # compose2 run --new-from: arms must use a piece cut from one of those packings
 PRIOR = (1.0, 0.01)          # weight = (1 + area slack)^PRIOR[0] * exp(-(gap_A + gap_B) / PRIOR[1])
 
@@ -49,6 +50,13 @@ def load_pieces(mmin, per_cell=10 ** 9, source=None, cf_eps=0.0, new_from=None):
         import sqlite3                                   # store before BLIND (local time) only
         db = sqlite3.connect(f"file:{os.path.join(HERE, 'runs', 'store.sqlite')}?mode=ro", uri=True)
         pre = {r[0] for r in db.execute('SELECT id FROM packing WHERE added < ?', (BLIND,))}
+        if BLIND_T:                                      # + every store packing at a register frontier side as of BLIND_T
+            from pk import eventbench as EB              # (register history: public at T even if stored later)
+            for n in range(2, 401):
+                f = EB.frontier_at(n, BLIND_T)
+                if f is None or not math.isfinite(f):
+                    continue
+                pre |= {r[0] for r in db.execute('SELECT id FROM packing WHERE n=? AND abs(s-?)<2e-9', (n, f))}
     for p in Store().pieces(mmin=mmin, source=source):
         if pre is not None and not (p.meta['source'].startswith(('rectsearch', 'kingbird:')) or piece_parent(p.meta) in pre):
             continue
@@ -336,8 +344,8 @@ def run(a):
     os.makedirs(a.out, exist_ok=True)
     man = manifest.start(a.out, 'compose2', args=vars(a), procs=a.procs)
     scratch.scope('compose2')
-    global BLIND
-    BLIND = a.blind                                      # workers fork after this, so they inherit it
+    global BLIND, BLIND_T
+    BLIND, BLIND_T = a.blind, a.blind_t                                      # workers fork after this, so they inherit it
     lo, hi = map(int, a.ns.split('-'))
     tasks = []
     only = {int(x) for x in a.only.split(',')} if a.only else None
@@ -427,6 +435,7 @@ if __name__ == '__main__':
     r.add_argument('--probe-steps', type=int, default=10)
     r.add_argument('--three', action='store_true', help='three-piece arms (LL, UR, UL corners)')
     r.add_argument('--only', help='comma list of n (within --ns)')
+    r.add_argument('--blind-t', help='UTC ISO: with --blind, also admit crops of packings at the register frontier as of then')
     r.add_argument('--blind', help='local ISO time: only rectsearch pieces + crops of store packings added before it')
     r.add_argument('--new-from', help='JSON list of store packing ids: only arms using a piece cut from one (fresh.py)')
     r.add_argument('--cf-eps', type=float, default=0.0,
