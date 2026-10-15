@@ -770,7 +770,7 @@ def replicate(n, S, piecesA, piecesB, procs=2, top=30, fq_top=6, slack=8, fill_t
         r2 = eng.quench(r.p, POLISH, timeout=120) if r.ok else r
         s2 = r2.s if r2.ok else s1
         out.append(dict(count=c, inserted=(n - c if t is not None else 0), est=descs[k][0], A=descs[k][1], B=descs[k][2], order=descs[k][3], pen=p.max_pen(),
-                        fq=s1, polish=s2, packing=(r2.p if r2.ok else (r.p if r.ok else p))))
+                        fq=s1, polish=s2, packing=(r2.p if r2.ok else (r.p if r.ok else p)), raw=p))
         log(f'    count {c}{"+" + str(n - c) + " ins" if t is not None else ""} A{descs[k][1]} B{descs[k][2]} drop-{descs[k][3]}: composed pen {p.max_pen():.1e} '
             f'-> fq {s1:.10f} -> polish {s2:.10f} ({time.time() - t1:.0f} s)')
     return out

@@ -117,11 +117,12 @@ def run(a):
         PA = (pieces[(n, 'A')] if a.arm in ('plain', 'both') else []) + nar.get((n, 'A'), [])
         PB = (pieces[(n, 'B')] if a.arm in ('plain', 'both') else []) + nar.get((n, 'B'), [])
         ev['nA'], ev['nB'], ev['narrowedA'], ev['narrowedB'] = len(PA), len(PB), len(nar.get((n, 'A'), [])), len(nar.get((n, 'B'), []))
-        comp = []
+        comp, raws = [], []
         for Sc in M.comp_sides(S, PA + PB, a.window, a.extra):
             for X, Y in ((PA, PB), (PB, PA)) if ev['A'] != ev['B'] else ((PA, PB),):
                 for r in M.replicate(n, Sc, X, Y, procs=a.cores, top=a.top, fq_top=a.fq_top, log=lambda *x: None):
                     comp.append((r['polish'], r['packing']))
+                    raws.append((r['polish'], Sc, r['raw']))
         comp.sort(key=lambda c: c[0])
         d = f'{a.out}/n{n}'; os.makedirs(d, exist_ok=True)
         st, seen = [], []
@@ -130,6 +131,9 @@ def run(a):
                 seen.append(sp); f = f'{d}/start{len(st)}.txt'; pk.write(f); st.append(f)
             if len(st) >= 4:
                 break
+        raws.sort(key=lambda r: r[1])                       # raw composed layouts (before fq), tightest side first
+        for k, (_, Sc, p) in enumerate(raws[:8]):
+            p.write(f'{d}/raw{k}.txt')
         ev['compose_best'] = comp[0][0] if comp else None
         json.dump(ev, open(f'{d}/event.json', 'w'), indent=1)
         print(f"n={n}: {len(PA)} x {len(PB)} pieces (narrowed {ev['narrowedA']} / {ev['narrowedB']}); composed {len(comp)}, "

@@ -10,9 +10,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 def run(a):
     P = []
-    for rj in sorted(glob.glob(f'{a.bench}/*/result.json')):
+    for rj in sorted(glob.glob(f'{a.bench}/*/result.json') + glob.glob(f'{a.bench}/*/event.json')):
         ev = json.load(open(rj)); d = os.path.dirname(rj)
-        starts = sorted(glob.glob(f'{d}/start_*.txt'))[:a.starts]
+        if 'new' not in ev and 'S' in ev:                  # comp_l1 event.json
+            ev['new'] = ev['S']; ev.setdefault('T', ev.get('T', ''))
+        starts = sorted(glob.glob(f'{d}/start_*.txt') + glob.glob(f'{d}/start[0-9]*.txt'))[:a.starts]
         if not starts: continue
         out = f'{a.out}/{os.path.basename(d)}'; os.makedirs(out, exist_ok=True)
         cmd = [sys.executable, f'{HERE}/harden.py', 'run', '--files', *starts, '--out', out, '--target', repr(ev['ante']),
