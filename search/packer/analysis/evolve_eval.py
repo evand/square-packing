@@ -115,7 +115,10 @@ def archive_minima(a, prog, mins):
                     a_ = np.asarray(sq)[:, 2] % 90.0
                     nt = int((np.minimum(a_, 90 - a_) > 1.0).sum())
                     fa.write(json.dumps(dict(i=i, s=s, path=path, kind=f'evolve:{a.tag}', t=0, known=False, parent=-1)) + '\n')
+                    import cornersig
+                    sig = cornersig.signature(s, np.asarray(sq))
                     fi.write(json.dumps(dict(n=n, s=s, gap=s - T, ng=(s - T) / max(g - T, 1e-9), tilted=nt, path=path,
+                                             corners=sig['groups'], csorted=sig['sorted'], floating=sig['floating'], L=sig['L'],
                                              tag=a.tag, prog=prog, t=time.strftime('%Y-%m-%dT%H:%M:%S'))) + '\n')
 
 
