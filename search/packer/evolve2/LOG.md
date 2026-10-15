@@ -11,4 +11,4 @@ Selection and mutation of prompts: the main session, from the reports.  Targets:
 | P003 | 0 | - | two bulbs (132, 182) | Opus | running | |
 | P004 | 0 | - | block + secondary block (127) | Opus | running | |
 | P005 | 0 | - | staircase diamond (126) | Opus | running | |
-| P006 | 0 | - | open design (104, 109, 110) | Opus | running | |
+| P006 | 0 | - | open design (104, 109, 110) | Opus | 104 0.000, 109 0.000 (ties; regular 45° strip / 7x7 diamond), 110 +1.000 | built its own greedy upright fill + bisection proxy (tolerance 0.025 overstated counts by 2); suggests describing 110 explicitly (two mirrored tilted regions of sliding brick rows, ~43 tilted) |

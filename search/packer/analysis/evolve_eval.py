@@ -56,7 +56,7 @@ def cmd_eval(a):
     if bad:
         print(f'REJECTED by the static check: {bad}'); return
     t0 = time.time()
-    jobs = [(prog, n, 1000 * sd + n, a.maxc, (1.0, 1.03)) for n in ns for sd in range(a.seeds)]
+    jobs = [(prog, n, 1000 * sd + n, a.maxc, (1.0, 1.03), a.fill) for n in ns for sd in range(a.seeds)]
     with ProcessPoolExecutor(min(a.procs, len(jobs))) as ex:
         R = list(ex.map(E.eval_job, jobs))
     best = {}
@@ -109,6 +109,7 @@ if __name__ == '__main__':
     e = sp.add_parser('eval'); e.add_argument('prog'); e.add_argument('--n', required=True); e.add_argument('--out', required=True)
     e.add_argument('--target', default='live'); e.add_argument('--seeds', type=int, default=2)
     e.add_argument('--maxc', type=int, default=24); e.add_argument('--procs', type=int, default=3); e.add_argument('--tag', default='')
+    e.add_argument('--fill', action='store_true', help='candidates may hold only the tilted structure (< n squares): the exact MILP upright fill (mondrian.exact_fill) adds axis-aligned squares at the given s (retrying at s x 1.01 / 1.02 / 1.04 if short)')
     r = sp.add_parser('ref'); r.add_argument('--n', required=True); r.add_argument('--out', required=True)
     r.add_argument('--target', default='live')
     a = ap.parse_args()

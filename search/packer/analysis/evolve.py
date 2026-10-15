@@ -79,7 +79,8 @@ def ascii_map(p):
 def eval_job(args):
     """(program path, n, seed, maxc, loosens) -> dict(n, s, sq, desc, err, cands)"""
     global _ENG
-    prog, n, seed, maxc, loosens = args
+    prog, n, seed, maxc, loosens = args[:5]
+    fill = len(args) > 5 and args[5]
     from pk.engine import FQ, QOpt, POLISH
     from pk.packing import Packing
     if _ENG is None:
@@ -87,7 +88,7 @@ def eval_job(args):
     td = tempfile.mkdtemp(prefix='evo_')
     try:
         r = subprocess.run(['unshare', '-rn', sys.executable, '-I', os.path.join(HERE, 'evolve_runner.py'), prog, str(n),
-                            str(seed), str(maxc)], cwd=td, capture_output=True, text=True, timeout=60)
+                            str(seed), str(maxc), '1' if fill else '0'], cwd=td, capture_output=True, text=True, timeout=60)
         line = (r.stdout.strip().splitlines() or [''])[-1]
         try:
             res = json.loads(line)
@@ -100,7 +101,21 @@ def eval_job(args):
     if 'error' in res:
         return dict(n=n, err=res['error'])
     best = None
+    fills = []
     for s, sq in res['cands']:
+        if fill:                                          # the given squares stay; the exact MILP adds uprights
+            import mondrian as M
+            T = np.array(sq, float).reshape(-1, 3)
+            got = None
+            for f in (1.0, 1.01, 1.02, 1.04):
+                L = M.exact_fill(T * [f, f, 1], s * f, time_limit=10)
+                if f == 1.0:
+                    fills.append(len(L))
+                if len(L) >= n:
+                    got = (s * f, M.trim(L, n)); break
+            if got is None:
+                continue
+            s, sq = got
         p = Packing(float(s), np.array(sq, float))
         for L in loosens:
             q = _ENG.quench(p, QOpt(loosen=L), timeout=60)
@@ -112,9 +127,10 @@ def eval_job(args):
                 continue
             if best is None or pp.s < best.s:
                 best = pp
+    fx = f'; exact fill at the given s reached {max(fills)} / {n} squares (best candidate)' if fills else ''
     if best is None:
-        return dict(n=n, err='no candidate optimised to a feasible packing', cands=len(res['cands']))
-    return dict(n=n, s=float(best.s), sq=best.sq.tolist(), desc=describe(best), cands=len(res['cands']))
+        return dict(n=n, err='no candidate optimised to a feasible packing' + fx, cands=len(res['cands']))
+    return dict(n=n, s=float(best.s), sq=best.sq.tolist(), desc=describe(best) + fx, cands=len(res['cands']))
 
 
 # ------------------------------------------------------------------ LLM proposals (threads)

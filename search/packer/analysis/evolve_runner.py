@@ -8,6 +8,7 @@ import json, math, resource, sys
 resource.setrlimit(resource.RLIMIT_AS, (3 << 30, 3 << 30))
 resource.setrlimit(resource.RLIMIT_CPU, (40, 45))
 prog, n, seed, maxc = sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4])
+partial = len(sys.argv) > 5 and sys.argv[5] == '1'     # fill mode: fewer than n squares allowed (uprights added)
 try:
     import numpy as np
     g = {'__name__': 'constructor'}
@@ -18,7 +19,7 @@ try:
     cands = []
     for s, sq in list(out)[:maxc]:
         a = np.asarray(sq, float).reshape(-1, 3)
-        if len(a) != n or not np.isfinite(a).all() or not (0 < float(s) < 2 * math.sqrt(n) + 4):
+        if (len(a) != n and not (partial and 1 <= len(a) <= n)) or not np.isfinite(a).all() or not (0 < float(s) < 2 * math.sqrt(n) + 4):
             continue
         cands.append([float(s), a.tolist()])
     print(json.dumps({'cands': cands} if cands else {'error': f'no valid candidate (need {n} rows of x, y, deg)'}))
