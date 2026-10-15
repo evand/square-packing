@@ -2993,3 +2993,17 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   - 1 -> 13.89131), so the search after removal is the method.  Prior: 10-12 time travel did not move 179 in 1.1 CPU-h.
   Prediction: BEAT-ANTE or better 3 / 13, REPLICATED 1 / 13.  If low, the missing component is SQUISH's post-removal
   search ("iterative shrink-hopping": fixed-side basin hopping, then shrink; README wording only).
+* **Removal L1 interim reading (10-15 ~00:40)**: the posted removal-event packings are structurally far from the named
+  parent: min matching distance to every single removal of the parent 0.28-0.30 (179 x2), 0.15 (155); to our 8 best
+  quenched removals 0.16-0.29 (single-move reach ~0.05; the whole 110 census spans 0.11).  Our own #552 (154) is 0.27
+  from its removal seeds after 17 chain rounds.  So F events are long-range searches seeded by a removal: level 1 here
+  measures search reach, not a missing step.  fq `--shrink` + hopping (new `--hops/--hop-sigma/--hop-k`: kicks of k
+  random squares re-relaxed at the failed target side before halving d) = plain shrink on 108 (10.947694 both; need
+  10.920659): local hopping does not travel.
+* **Graft L1, pre-registered (launched 00:45, prediction written before results)**: `graft.py run --out runs/graft/g1
+  --procs 8 --minutes 10` on the 7 graft events with both parents in the store (88, 123, 126, 207, 236, 239 #401 / #422;
+  199 / 302 hosts not in the store).  Donor = whole s(m) at each host corner x 8 orientations x margin {0, 0.3, 0.6};
+  only count-preserving substitutions; fq quench at the host side; best 4 distinct -> explorer 10 min x 1 proc (+1
+  replicate where cores allow).  Caveat: donor = the first store row with the named side (239: our s(210) row may be a
+  later value than Couzo's 10-05 one; check if it hits).  Prediction: BEAT-ANTE 3 / 7, REPLICATED 2 / 7 (the graft is
+  a concrete step; SQUISH's follow-up "basin hopping" is the unknown).
