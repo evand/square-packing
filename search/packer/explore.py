@@ -62,6 +62,33 @@ GLS_DELTA = (1e-4, 3e-3)                                 # TT3 arm L: relative s
 GLS_MS_PER_N = 2.0                                       # GLS wall budget per proposal, ms per square
 
 
+# Parent value model (10-14, PACKER "Parent / move value model", analysis/parent_model.py 'full' fit on TT3 G / M / L):
+# log rate of distinct new near-frontier minima per CPU-s = gap-bin term + screened / start terms
+# - 0.78 log(1 + times expanded) + 0.57 log(1 + archive-new children).  Kind and n terms omitted (kind is the bandit's;
+# n is constant within a run).  Pick weight = rate ** beta over every archive entry below smax.
+PM_GAP = ((0.0, -0.26), (1e-4, 0.13), (1e-3, -0.80), (3e-3, -2.14), (1e-2, -2.91), (3e-2, -4.06), (1e-1, -5.00))
+PM_UNP, PM_START, PM_EXP, PM_KIDS = -0.30, 0.16, -0.78, 0.57
+
+
+def pm_lograte(e, front):
+    g = e['s'] - front
+    c = 0.0
+    for lo, v in PM_GAP:
+        if g >= lo:
+            c = v
+    return (c + PM_UNP * bool(e.get('unpolished')) + PM_START * e['kind'].startswith('start')
+            + PM_EXP * math.log1p(e['expanded']) + PM_KIDS * math.log1p(e.get('children', 0)))
+
+
+def pm_pick(E, front, smax, beta, rng):
+    """parent drawn with weight exp(beta * pm_lograte); returns (entry, its pick probability)"""
+    C = [e for e in E if e['s'] < smax] or E
+    L = [beta * pm_lograte(e, front) for e in C]
+    m = max(L); W = [math.exp(x - m) for x in L]; tot = sum(W)
+    j = rng.choices(range(len(C)), weights=W)[0]
+    return C[j], W[j] / tot
+
+
 def gls_side(s, sq, rng, ref):
     """Sparrow-style GLS feasibility attempt (anneal gls, 10-15): target side min(s, ref) (1 - delta); squares beyond a
     random cut per axis slide in, then weighted-overlap relaxation + sampled relocation of colliding squares + GLS pair
@@ -546,6 +573,8 @@ if __name__ == '__main__':
     ap.add_argument('--bandit-carry', type=float, default=0.5, help='factor on carried bandit statistics (1 + half inf = pooled, merged on save)')
     ap.add_argument('--melt', type=float, default=0, help='weight of the regional melt move (anneal melt); 0 = off')
     ap.add_argument('--bigmelt', type=float, default=0, help='weight of the big regional melt (R 3.5-7, rmax 0.1-0.25); 0 = off')
+    ap.add_argument('--pm-share', type=float, default=0, help='share of parent picks by the parent value model (pm_pick); 0 = off')
+    ap.add_argument('--pm-beta', type=float, default=1.0, help='parent value model sharpness: weight = rate ** beta')
     ap.add_argument('--gls', type=float, default=0, help='weight of the GLS feasibility move (anneal gls); 0 = off')
     ap.add_argument('--cross', type=float, default=0, help='weight of the recombination move (cross.py bestfit 3 of 5); 0 = off')
     ap.add_argument('--cross2', type=float, default=2, help='weight of two-parent crossover (random sub-k mate; nearest '
@@ -649,10 +678,15 @@ if __name__ == '__main__':
         return (min(e['s'] for e in ar.E) + a.polish_margin) if a.polish_margin else float('inf')
     with ProcessPoolExecutor(a.procs) as ex:
         def submit():
-            fr = None
-            if a.frontier and rng.random() < a.frontier_share:
+            fr = None; pick = None
+            if a.pm_share and rng.random() < a.pm_share:     # parent value model (TT3 round 3)
+                par, pp = pm_pick(ar.E, frontier_s, ar.smax, a.pm_beta, rng)
+                pick = ('pm', pp)
+            elif a.frontier and rng.random() < a.frontier_share:
                 fr = [e['i'] for e in ar.E if e['parent'] < 0 and e['kind'].startswith('start:') and e.get('src', '').startswith(a.frontier)]
-            if not fr and a.elite_share and rng.random() < a.elite_share:
+            if pick:
+                pass
+            elif not fr and a.elite_share and rng.random() < a.elite_share:
                 el = sorted((e for e in ar.E if e['s'] < k and not e.get('unpolished')), key=lambda e: e['s'])[:a.elite_k]
                 par = rng.choices(el, weights=[1.0 / (1 + e['expanded']) for e in el])[0] if el else ar.pick(rng, cb=cellb)
             elif a.sparse_share and rng.random() < a.sparse_share and (par := ar.pick_sparse(rng, k)) is not None:
@@ -666,14 +700,14 @@ if __name__ == '__main__':
             f = ex.submit(work, (s, sq, kind, sd, k, [e['s'] for e in ar.E], a.same, ar.smax,
                                        pol_above(), a.polish_extra.split(),
                                        mates(kind, par), (a.finish, a.kick_sigma, False, True) if a.finish else (a.kick_retry, a.kick_sigma, True, False)))
-            pend[f] = (par, sd)
+            pend[f] = (par, sd, pick)
         for _ in range(a.procs):
             submit()
         last = 0
         while pend:
             done, _ = wait(pend, return_when=FIRST_COMPLETED)
             for f in done:
-                par, sd = pend.pop(f)
+                par, sd, pick = pend.pop(f)
                 try:
                     r = f.result()
                 except Exception as exn:
@@ -725,6 +759,7 @@ if __name__ == '__main__':
                                                   s_screen=r.get('s_screen'), new=newi, hit=hit, par=par['i'], seed=sd,
                                                   desc=r.get('desc'), loosen=r.get('loosen'),
                                                   **({'unp': True} if r.get('unpolished') else {}),
+                                                  **({'pick': pick[0], 'pp': round(pick[1], 8)} if pick else {}),
                                                   **({'kr_drop': r['kr_drop'], 'kr_drops': r['kr_drops']} if 'kr_drop' in r else {}),
                                                   **({'mate': r['mate']} if r.get('mate') else {}))) + '\n')
                 if time.time() - t_start < 60 * a.minutes:

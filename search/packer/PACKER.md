@@ -2899,3 +2899,25 @@ yl = y + 0.5 x descendants' yl within the round (lineage credit).  Poisson GLM, 
 * Reallocation bound (held-out ranking, logged CPU): the top 25 % of CPU by predicted rate yields 3.7x the average per
   CPU (gap alone 3.7x; top 10 % 6x).  Upper bound only: concentrating CPU raises expansions and saturation (the
   expansion term is the only guard), and the archive's future differs under another policy.  Only an arm measures it.
+
+### TT3 round 3: parent value model arms (pre-registration, 10-14 ~23:00 local, before launch)
+Evan 10-14: try the simple model (it shifts as compute is applied through the saturation terms, and it scales to many
+parents).  `explore.py --pm-share q --pm-beta b`: with probability q the parent is drawn from every archive entry below
+smax with weight rate^b, rate = the 'full' Poisson fit above without kind / n terms (gap bin vs frontier_s, screened,
+start, (1 + expanded)^-0.78, (1 + archive-new children)^0.57; `explore.PM_*`); otherwise the old rule.  Proposals log
+`pick: pm` and `pp` (the pick probability under the model), for later off-policy scoring.
+* **Cheap design** (Evan: fast iteration): 12 of TT3's 49 rounds (`runs/tt3/sub12_schedule.json`, n 55 68 132 172 176
+  181 182 204 208 211 234 240), chosen by the event rate of **S and A** (not G, so the baseline is not picked on its own
+  luck): 25 % of the CPU (G 1.61 CPU-h) and 59 % of S + A's events; G has 332 events there.  Baseline = G on the same
+  rounds (no new control).  Expected resolution ~1.3x; the bootstrap has only 12 clusters (rougher intervals).
+* Arms (concurrent, 4 slots x 2 procs each, as before): **PH** = G + `--pm-share 0.5`; **PF** = G + `--pm-share 1`;
+  both b = 1.  ~1.6 CPU-h each, ~15 min wall.
+* Primary: X / G near-frontier new minima per CPU-h on the 12 rounds, 95 % bootstrap over n (`analysis/tt3_score.py
+  runs/tt3/PF runs/tt3/PH runs/tt3/G --schedule runs/tt3/sub12_schedule.json`); rule as before (pass / fail / open).
+  A pass here is confirmed on the full 49 rounds before adoption.
+* Secondary: CPU share by parent gap bin, records, best gap per n, the model's predicted vs realised rate by bin
+  (calibration under the new policy: saturation is the risk).
+* Predictions: PF / G ~1.5 (P pass 0.6, P fail 0.15: herding on a few parents, repeats); PH / G ~1.3 (P pass 0.4).
+  The logged-CPU bound (3.7x for the top 25 % of CPU) is an upper bound.
+* Smoke (`runs/tt3/smoke3`, round 89 n 211, 1.5 min, PF): 96 % of CPU on parents within 1e-3 of frontier_T (G there:
+  52 %), pick probabilities up to 0.9 early (one seed dominates until expansions accumulate).
