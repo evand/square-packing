@@ -1,7 +1,10 @@
 {
- "source": "EVENTS-2026-10-12.md",
- "built": "2026-10-13T01:35:33+00:00",
- "note": "rebuilt from the EVENTS markdown table by pk/eventbench.py build-events; dates UTC (issue post time); unposted=true marks our big1 375 (counted in the running frontier as the table does)",
+ "source": [
+  "EVENTS-2026-10-12.md",
+  "EVENTS-2026-10-15.md"
+ ],
+ "built": "2026-10-15T00:54:19+00:00",
+ "note": "rebuilt from the EVENTS markdown tables by pk/eventbench.py build-events; dates UTC (issue post time); each event carries its source file; unposted=true marks our big1 375 (counted in the running frontier as the table does)",
  "events": [
   {
    "n": 51,
@@ -16,7 +19,8 @@
    "parent_public": "-",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 70,
@@ -31,7 +35,8 @@
    "parent_public": "-",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 84,
@@ -46,7 +51,8 @@
    "parent_public": "-",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 84,
@@ -61,7 +67,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 86,
@@ -76,7 +83,8 @@
    "parent_public": "-",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 86,
@@ -91,7 +99,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 88,
@@ -106,7 +115,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 102,
@@ -121,7 +131,8 @@
    "parent_public": "-",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 103,
@@ -136,7 +147,8 @@
    "parent_public": "-",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 105,
@@ -151,7 +163,8 @@
    "parent_public": "-",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 105,
@@ -166,7 +179,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 105,
@@ -181,7 +195,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 108,
@@ -196,7 +211,8 @@
    "parent_public": "N",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 108,
@@ -211,7 +227,8 @@
    "parent_public": "N",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 108,
@@ -226,7 +243,8 @@
    "parent_public": "-",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 108,
@@ -241,7 +259,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 123,
@@ -256,7 +275,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 123,
@@ -271,7 +291,8 @@
    "parent_public": "-",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 126,
@@ -286,7 +307,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 126,
@@ -301,7 +323,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 126,
@@ -316,7 +339,8 @@
    "parent_public": "-",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 127,
@@ -331,7 +355,8 @@
    "parent_public": "-",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 127,
@@ -346,7 +371,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 129,
@@ -361,7 +387,8 @@
    "parent_public": "N",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 129,
@@ -376,7 +403,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 129,
@@ -391,7 +419,8 @@
    "parent_public": "-",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 129,
@@ -406,7 +435,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 130,
@@ -421,7 +451,8 @@
    "parent_public": "N",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 131,
@@ -436,7 +467,8 @@
    "parent_public": "-",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 131,
@@ -451,7 +483,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 131,
@@ -466,7 +499,8 @@
    "parent_public": "partial",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 132,
@@ -481,7 +515,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": true,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 132,
@@ -496,7 +531,8 @@
    "parent_public": "?",
    "arr": "?",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 132,
@@ -511,7 +547,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 132,
@@ -526,7 +563,8 @@
    "parent_public": "Y",
    "arr": "ref",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 132,
@@ -541,7 +579,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": true,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 146,
@@ -556,7 +595,8 @@
    "parent_public": "-",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 146,
@@ -571,7 +611,8 @@
    "parent_public": "Y",
    "arr": "ref",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 153,
@@ -586,7 +627,8 @@
    "parent_public": "N",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 153,
@@ -601,7 +643,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 153,
@@ -616,7 +659,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 154,
@@ -631,7 +675,8 @@
    "parent_public": "N",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 154,
@@ -646,7 +691,8 @@
    "parent_public": "N",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 154,
@@ -661,7 +707,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 154,
@@ -676,7 +723,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": true,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 154,
@@ -691,7 +739,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 155,
@@ -706,7 +755,8 @@
    "parent_public": "N",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 155,
@@ -721,7 +771,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 155,
@@ -736,7 +787,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 155,
@@ -751,7 +803,8 @@
    "parent_public": "-",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 156,
@@ -766,7 +819,8 @@
    "parent_public": "-",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 156,
@@ -781,7 +835,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 175,
@@ -796,7 +851,8 @@
    "parent_public": "-",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 175,
@@ -811,7 +867,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 175,
@@ -826,7 +883,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 175,
@@ -841,7 +899,8 @@
    "parent_public": "Y",
    "arr": "ref",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 175,
@@ -856,7 +915,8 @@
    "parent_public": "partial",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 176,
@@ -871,7 +931,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 176,
@@ -886,7 +947,8 @@
    "parent_public": "partial",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 176,
@@ -901,7 +963,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 176,
@@ -916,7 +979,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 179,
@@ -931,7 +995,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 179,
@@ -946,7 +1011,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 180,
@@ -961,7 +1027,8 @@
    "parent_public": "N",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 180,
@@ -976,7 +1043,8 @@
    "parent_public": "N",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 180,
@@ -991,7 +1059,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 181,
@@ -1006,7 +1075,8 @@
    "parent_public": "N(src released w/ issue)",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 199,
@@ -1021,7 +1091,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 204,
@@ -1036,7 +1107,8 @@
    "parent_public": "N(new piece)",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 207,
@@ -1051,7 +1123,8 @@
    "parent_public": "Y*",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 207,
@@ -1066,7 +1139,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 207,
@@ -1081,7 +1155,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 208,
@@ -1096,7 +1171,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 209,
@@ -1111,7 +1187,8 @@
    "parent_public": "N",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 209,
@@ -1126,7 +1203,8 @@
    "parent_public": "N(src released w/ issue)",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 209,
@@ -1141,7 +1219,8 @@
    "parent_public": "Y",
    "arr": "ref",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 211,
@@ -1156,7 +1235,8 @@
    "parent_public": "-",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 211,
@@ -1171,7 +1251,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 228,
@@ -1186,7 +1267,8 @@
    "parent_public": "Y",
    "arr": "ref",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 232,
@@ -1201,7 +1283,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 232,
@@ -1216,7 +1299,8 @@
    "parent_public": "partial",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 236,
@@ -1231,7 +1315,8 @@
    "parent_public": "Y*",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 236,
@@ -1246,7 +1331,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 237,
@@ -1261,7 +1347,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 237,
@@ -1276,7 +1363,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 237,
@@ -1291,7 +1379,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 237,
@@ -1306,7 +1395,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 237,
@@ -1321,7 +1411,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 238,
@@ -1336,7 +1427,8 @@
    "parent_public": "N",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 238,
@@ -1351,7 +1443,8 @@
    "parent_public": "N",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 238,
@@ -1366,7 +1459,8 @@
    "parent_public": "N(src released w/ issue)",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 239,
@@ -1381,7 +1475,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 239,
@@ -1396,7 +1491,8 @@
    "parent_public": "partial",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 241,
@@ -1411,7 +1507,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 258,
@@ -1426,7 +1523,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 259,
@@ -1441,7 +1539,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 261,
@@ -1456,7 +1555,8 @@
    "parent_public": "-",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 263,
@@ -1471,7 +1571,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 263,
@@ -1486,7 +1587,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 263,
@@ -1501,7 +1603,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 263,
@@ -1516,7 +1619,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 264,
@@ -1531,7 +1635,8 @@
    "parent_public": "partial",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 266,
@@ -1546,7 +1651,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": true,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 267,
@@ -1561,7 +1667,8 @@
    "parent_public": "-",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 267,
@@ -1576,7 +1683,8 @@
    "parent_public": "?",
    "arr": "?",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 267,
@@ -1591,7 +1699,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 269,
@@ -1606,7 +1715,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 270,
@@ -1621,7 +1731,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": true,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 270,
@@ -1636,7 +1747,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 270,
@@ -1651,7 +1763,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 270,
@@ -1666,7 +1779,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 270,
@@ -1681,7 +1795,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 270,
@@ -1696,7 +1811,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 271,
@@ -1711,7 +1827,8 @@
    "parent_public": "partial",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 271,
@@ -1726,7 +1843,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 272,
@@ -1741,7 +1859,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": true,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 272,
@@ -1756,7 +1875,8 @@
    "parent_public": "partial",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 292,
@@ -1771,7 +1891,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 295,
@@ -1786,7 +1907,8 @@
    "parent_public": "-",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 302,
@@ -1801,7 +1923,8 @@
    "parent_public": "Y*",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 302,
@@ -1816,7 +1939,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 302,
@@ -1831,7 +1955,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 303,
@@ -1846,7 +1971,8 @@
    "parent_public": "N",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 303,
@@ -1861,7 +1987,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 303,
@@ -1876,7 +2003,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 303,
@@ -1891,7 +2019,8 @@
    "parent_public": "N(new piece)",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 304,
@@ -1906,7 +2035,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 304,
@@ -1921,7 +2051,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 305,
@@ -1936,7 +2067,8 @@
    "parent_public": "partial",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 305,
@@ -1951,7 +2083,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 305,
@@ -1966,7 +2099,8 @@
    "parent_public": "N(same post)",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 305,
@@ -1981,7 +2115,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 306,
@@ -1996,7 +2131,8 @@
    "parent_public": "Y",
    "arr": "ref",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 307,
@@ -2011,7 +2147,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 308,
@@ -2026,7 +2163,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 308,
@@ -2041,7 +2179,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": true,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 338,
@@ -2056,7 +2195,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 338,
@@ -2071,7 +2211,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 339,
@@ -2086,7 +2227,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 343,
@@ -2101,7 +2243,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 343,
@@ -2116,7 +2259,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": true,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 344,
@@ -2131,7 +2275,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 344,
@@ -2146,7 +2291,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": true,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 344,
@@ -2161,7 +2307,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 344,
@@ -2176,7 +2323,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 375,
@@ -2191,7 +2339,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": true,
-   "unposted": true
+   "unposted": true,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 375,
@@ -2206,7 +2355,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 375,
@@ -2221,7 +2371,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 378,
@@ -2236,7 +2387,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 378,
@@ -2251,7 +2403,8 @@
    "parent_public": "Y",
    "arr": "ref",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 379,
@@ -2266,7 +2419,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 379,
@@ -2281,7 +2435,8 @@
    "parent_public": "Y",
    "arr": "near",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 380,
@@ -2296,7 +2451,8 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
   },
   {
    "n": 381,
@@ -2311,13 +2467,688 @@
    "parent_public": "Y",
    "arr": "new",
    "ours": false,
-   "unposted": false
+   "unposted": false,
+   "source": "EVENTS-2026-10-12.md"
+  },
+  {
+   "n": 146,
+   "date": "2026-10-14T21:51Z",
+   "author": "Evan Daniel (ours)",
+   "issue": "606",
+   "old": 12.583782203951,
+   "new": 12.583782190152,
+   "gain": 1.38e-08,
+   "family": "H",
+   "parents": "Xu #432 (chain: two big kicks + polish, then exact corner-slip descent); distinct minimum from #505",
+   "parent_public": "Y",
+   "arr": "near",
+   "ours": true,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 154,
+   "date": "2026-10-13T17:37Z",
+   "author": "Francisco Couzo",
+   "issue": "586",
+   "old": 12.922499814643,
+   "new": 12.921206577133,
+   "gain": 0.00129,
+   "family": "H",
+   "parents": "ours #552 via own #570 / #583 (browser, basin hop, exact finish)",
+   "parent_public": "Y",
+   "arr": "near",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 211,
+   "date": "2026-10-13T14:11Z",
+   "author": "Francisco Couzo",
+   "issue": "583",
+   "old": 14.993694186584,
+   "new": 14.993558914123,
+   "gain": 0.000135,
+   "family": "H",
+   "parents": "Ostashev #575 (native search + refinement)",
+   "parent_public": "Y",
+   "arr": "near",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 237,
+   "date": "2026-10-14T01:40Z",
+   "author": "Mishapolk",
+   "issue": "593",
+   "old": 15.902947773659,
+   "new": 15.902705057866,
+   "gain": 0.000243,
+   "family": "?",
+   "parents": "unstated (baseline holder per issue; \"exact dual-verified optimum\" re-solves)",
+   "parent_public": "?",
+   "arr": "?",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 237,
+   "date": "2026-10-14T23:18Z",
+   "author": "Francisco Couzo",
+   "issue": "607",
+   "old": 15.902705057866,
+   "new": 15.902603638284,
+   "gain": 0.000101,
+   "family": "H",
+   "parents": "Mishapolk #593 (native fq)",
+   "parent_public": "Y",
+   "arr": "near",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 241,
+   "date": "2026-10-13T14:11Z",
+   "author": "Francisco Couzo",
+   "issue": "583",
+   "old": 15.987134249051,
+   "new": 15.987117095169,
+   "gain": 1.72e-05,
+   "family": "H",
+   "parents": "Ostashev #575 (native search + refinement)",
+   "parent_public": "Y",
+   "arr": "near",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 302,
+   "date": "2026-10-13T14:11Z",
+   "author": "Francisco Couzo",
+   "issue": "583",
+   "old": 17.870275382734,
+   "new": 17.870013850405,
+   "gain": 0.000262,
+   "family": "H",
+   "parents": "PingYou #564 (basin hop + refine, exact contact solve)",
+   "parent_public": "Y",
+   "arr": "near",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 304,
+   "date": "2026-10-13T00:42Z",
+   "author": "Daniil Ostashev",
+   "issue": "575 (edit)",
+   "old": 17.929565946849,
+   "new": 17.929427758076,
+   "gain": 0.000138,
+   "family": "B",
+   "parents": "own composer layout (55-sq + 68-sq pieces + 181 aligned), all-soft re-hardening (no V forms)",
+   "parent_public": "N",
+   "arr": "new",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 339,
+   "date": "2026-10-13T14:11Z",
+   "author": "Francisco Couzo",
+   "issue": "583",
+   "old": 18.929433883808,
+   "new": 18.927383638495,
+   "gain": 0.00205,
+   "family": "H",
+   "parents": "own L-border #506 (Ellsworth search, browser)",
+   "parent_public": "Y",
+   "arr": "near",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 339,
+   "date": "2026-10-13T14:31Z",
+   "author": "Evan Daniel (ours)",
+   "issue": "584",
+   "old": 18.927383638495,
+   "new": 18.926898900357,
+   "gain": 0.000485,
+   "family": "A",
+   "parents": "two pieces (67 + 68 sq, (h+7)xh) cut from Ostashev #575 s(304), + aligned fill",
+   "parent_public": "Y",
+   "arr": "new",
+   "ours": true,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 339,
+   "date": "2026-10-13T17:37Z",
+   "author": "Francisco Couzo",
+   "issue": "586",
+   "old": 18.926898900357,
+   "new": 18.925319360704,
+   "gain": 0.00158,
+   "family": "H",
+   "parents": "own L-border #506 / #583 (fq, browser)",
+   "parent_public": "Y",
+   "arr": "near",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 339,
+   "date": "2026-10-14T17:45Z",
+   "author": "Francisco Couzo",
+   "issue": "repo 487b058",
+   "old": 18.925319360704,
+   "new": 18.916047442533,
+   "gain": 0.00927,
+   "family": "?",
+   "parents": "unstated (index through n=1024; no issue)",
+   "parent_public": "?",
+   "arr": "?",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 339,
+   "date": "2026-10-14T23:18Z",
+   "author": "Francisco Couzo",
+   "issue": "607",
+   "old": 18.916047442533,
+   "new": 18.91581855547,
+   "gain": 0.000229,
+   "family": "H",
+   "parents": "own L-border #506 line (native basin hop)",
+   "parent_public": "Y",
+   "arr": "near",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 364,
+   "date": "2026-10-13T14:31Z",
+   "author": "Evan Daniel (ours)",
+   "issue": "584",
+   "old": 19.591378145498,
+   "new": 19.583782203951,
+   "gain": 0.0076,
+   "family": "A",
+   "parents": "BuddenPing #566 s(146) whole + Schadt s(50), + aligned fill",
+   "parent_public": "Y",
+   "arr": "new",
+   "ours": true,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 365,
+   "date": "2026-10-14T06:51Z",
+   "author": "Evan Daniel (ours)",
+   "issue": "596",
+   "old": 19.634146341463,
+   "new": 19.62132034356,
+   "gain": 0.0128,
+   "family": "A",
+   "parents": "SQUISH s(199) (register) whole + Friedman s(26) whole, + aligned fill",
+   "parent_public": "Y",
+   "arr": "new",
+   "ours": true,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 370,
+   "date": "2026-10-14T06:51Z",
+   "author": "Evan Daniel (ours)",
+   "issue": "596",
+   "old": 19.778174593052,
+   "new": 19.767730746255,
+   "gain": 0.0104,
+   "family": "A",
+   "parents": "Couzo s(175) (#488) whole + own 38-sq (h+2)xh rectangle",
+   "parent_public": "partial",
+   "arr": "new",
+   "ours": true,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 375,
+   "date": "2026-10-13T13:53Z",
+   "author": "Francisco Couzo",
+   "issue": "repo 4596670",
+   "old": 19.901618621328,
+   "new": 19.893906534236,
+   "gain": 0.00771,
+   "family": "?",
+   "parents": "unstated (no issue; prev own #561 375)",
+   "parent_public": "?",
+   "arr": "?",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 375,
+   "date": "2026-10-13T14:31Z",
+   "author": "Evan Daniel (ours)",
+   "issue": "584",
+   "old": 19.893906534236,
+   "new": 19.882451030482,
+   "gain": 0.0115,
+   "family": "A",
+   "parents": "69-sq crop of SQUISH s(88) (register) + 118-sq crop of Xu s(129) (#432)",
+   "parent_public": "Y",
+   "arr": "new",
+   "ours": true,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 379,
+   "date": "2026-10-13T14:11Z",
+   "author": "Francisco Couzo",
+   "issue": "583",
+   "old": 19.95354259365,
+   "new": 19.953531531603,
+   "gain": 1.11e-05,
+   "family": "H",
+   "parents": "own L-border #506 / #570 (browser + native refine)",
+   "parent_public": "Y",
+   "arr": "near",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 379,
+   "date": "2026-10-13T17:37Z",
+   "author": "Francisco Couzo",
+   "issue": "586",
+   "old": 19.953531531603,
+   "new": 19.953531362123,
+   "gain": 1.69e-07,
+   "family": "H",
+   "parents": "own #583 (native SLP)",
+   "parent_public": "Y",
+   "arr": "ref",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 380,
+   "date": "2026-10-12T19:06Z",
+   "author": "Kevin Fang",
+   "issue": "repo e646c47",
+   "old": 19.987440766556,
+   "new": 19.976775433975,
+   "gain": 0.0107,
+   "family": "?",
+   "parents": "unstated (direct packing; Fang n^2-n family)",
+   "parent_public": "-",
+   "arr": "?",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 380,
+   "date": "2026-10-13T14:11Z",
+   "author": "Francisco Couzo",
+   "issue": "583",
+   "old": 19.976775433975,
+   "new": 19.973553606628,
+   "gain": 0.00322,
+   "family": "H",
+   "parents": "Fang repo e646c47 (browser + native search)",
+   "parent_public": "Y",
+   "arr": "near",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 380,
+   "date": "2026-10-13T17:37Z",
+   "author": "Francisco Couzo",
+   "issue": "586",
+   "old": 19.973553606628,
+   "new": 19.961611078672,
+   "gain": 0.0119,
+   "family": "H",
+   "parents": "Fang repo via own #583 (fq, browser)",
+   "parent_public": "Y",
+   "arr": "near",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 381,
+   "date": "2026-10-12T19:06Z",
+   "author": "Kevin Fang",
+   "issue": "repo e646c47",
+   "old": 19.992663288464,
+   "new": 19.976969740406,
+   "gain": 0.0157,
+   "family": "?",
+   "parents": "unstated (direct packing; Fang n^2-n+1 family)",
+   "parent_public": "-",
+   "arr": "?",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 381,
+   "date": "2026-10-13T14:11Z",
+   "author": "Francisco Couzo",
+   "issue": "583",
+   "old": 19.976969740406,
+   "new": 19.974977397657,
+   "gain": 0.00199,
+   "family": "H",
+   "parents": "Fang repo e646c47 (browser + native search)",
+   "parent_public": "Y",
+   "arr": "near",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 382,
+   "date": "2026-10-13T00:05Z",
+   "author": "Kevin Fang",
+   "issue": "repo c284cd0",
+   "old": 20.0,
+   "new": 19.9894797294,
+   "gain": 0.0105,
+   "family": "?",
+   "parents": "unstated (direct n^2-n+2 packing)",
+   "parent_public": "-",
+   "arr": "?",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 382,
+   "date": "2026-10-13T14:11Z",
+   "author": "Francisco Couzo",
+   "issue": "583",
+   "old": 19.9894797294,
+   "new": 19.988600568289,
+   "gain": 0.000879,
+   "family": "H",
+   "parents": "Fang repo c284cd0 (browser + native search)",
+   "parent_public": "Y",
+   "arr": "near",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 382,
+   "date": "2026-10-13T17:37Z",
+   "author": "Francisco Couzo",
+   "issue": "586",
+   "old": 19.988600568289,
+   "new": 19.98771315761,
+   "gain": 0.000887,
+   "family": "H",
+   "parents": "Fang repo via own #583 (fq, browser)",
+   "parent_public": "Y",
+   "arr": "near",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 382,
+   "date": "2026-10-14T17:45Z",
+   "author": "Francisco Couzo",
+   "issue": "repo 487b058",
+   "old": 19.98771315761,
+   "new": 19.987621288667,
+   "gain": 9.19e-05,
+   "family": "?",
+   "parents": "unstated (index through n=1024; no issue)",
+   "parent_public": "?",
+   "arr": "?",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 382,
+   "date": "2026-10-14T23:18Z",
+   "author": "Francisco Couzo",
+   "issue": "607",
+   "old": 19.987621288667,
+   "new": 19.987621154241,
+   "gain": 1.34e-07,
+   "family": "H",
+   "parents": "Fang arrangement via own 487b058 (native basin hop)",
+   "parent_public": "Y",
+   "arr": "ref",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 409,
+   "date": "2026-10-14T23:18Z",
+   "author": "Francisco Couzo",
+   "issue": "607",
+   "old": 20.767479046279,
+   "new": 20.767428349966,
+   "gain": 5.07e-05,
+   "family": "H",
+   "parents": "own campaign 409 (browser fq; lineage incl. ours s(298))",
+   "parent_public": "Y",
+   "arr": "near",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 419,
+   "date": "2026-10-14T23:18Z",
+   "author": "Francisco Couzo",
+   "issue": "607",
+   "old": 20.961496327041,
+   "new": 20.959997582079,
+   "gain": 0.0015,
+   "family": "H",
+   "parents": "own campaign (browser ellsworth; starts incl. Fang 380/381 refinements)",
+   "parent_public": "Y",
+   "arr": "?",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 450,
+   "date": "2026-10-14T23:18Z",
+   "author": "Francisco Couzo",
+   "issue": "607",
+   "old": 21.76747904566,
+   "new": 21.767428350587,
+   "gain": 5.07e-05,
+   "family": "D",
+   "parents": "one L-border layer on own new s(409) (same post)",
+   "parent_public": "Y*",
+   "arr": "new",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 460,
+   "date": "2026-10-14T06:51Z",
+   "author": "Evan Daniel (ours)",
+   "issue": "596",
+   "old": 21.961611078671,
+   "new": 21.959969683021,
+   "gain": 0.00164,
+   "family": "A",
+   "parents": "81-sq crop of SQUISH s(306) (#481) + 130-sq crop of Couzo s(380) (#586)",
+   "parent_public": "Y",
+   "arr": "new",
+   "ours": true,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 461,
+   "date": "2026-10-14T23:18Z",
+   "author": "Francisco Couzo",
+   "issue": "607",
+   "old": 21.97447310409,
+   "new": 21.973183753375,
+   "gain": 0.00129,
+   "family": "H",
+   "parents": "own campaign (browser ellsworth)",
+   "parent_public": "Y",
+   "arr": "?",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 552,
+   "date": "2026-10-14T23:18Z",
+   "author": "Francisco Couzo",
+   "issue": "607",
+   "old": 23.973761315361,
+   "new": 23.968034845503,
+   "gain": 0.00573,
+   "family": "H",
+   "parents": "own campaign (browser ellsworth)",
+   "parent_public": "Y",
+   "arr": "?",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 599,
+   "date": "2026-10-14T23:18Z",
+   "author": "Francisco Couzo",
+   "issue": "607",
+   "old": 24.973587230053,
+   "new": 24.968034846127,
+   "gain": 0.00555,
+   "family": "D",
+   "parents": "one L-border layer on own new s(552) (same post)",
+   "parent_public": "Y*",
+   "arr": "new",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 648,
+   "date": "2026-10-14T23:18Z",
+   "author": "Francisco Couzo",
+   "issue": "607",
+   "old": 25.973587230678,
+   "new": 25.968034846328,
+   "gain": 0.00555,
+   "family": "D",
+   "parents": "two L-border layers on own new s(552) (same post)",
+   "parent_public": "Y*",
+   "arr": "new",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 649,
+   "date": "2026-10-14T23:18Z",
+   "author": "Francisco Couzo",
+   "issue": "607",
+   "old": 25.977785776262,
+   "new": 25.976974088403,
+   "gain": 0.000812,
+   "family": "F",
+   "parents": "own s(651) by elimination, then browser fq",
+   "parent_public": "Y",
+   "arr": "?",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 651,
+   "date": "2026-10-14T23:18Z",
+   "author": "Francisco Couzo",
+   "issue": "607",
+   "old": 25.984894424966,
+   "new": 25.984515068279,
+   "gain": 0.000379,
+   "family": "H",
+   "parents": "Fang direct 651 (e646c47) via own campaign (browser ellsworth)",
+   "parent_public": "Y",
+   "arr": "?",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 757,
+   "date": "2026-10-14T23:18Z",
+   "author": "Francisco Couzo",
+   "issue": "607",
+   "old": 27.992467660533,
+   "new": 27.991000865994,
+   "gain": 0.00147,
+   "family": "F",
+   "parents": "own campaign seed: s(758) minus 1 (browser ellsworth)",
+   "parent_public": "Y",
+   "arr": "?",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
+  },
+  {
+   "n": 804,
+   "date": "2026-10-14T23:18Z",
+   "author": "Francisco Couzo",
+   "issue": "607",
+   "old": 28.927176135381,
+   "new": 28.920398747577,
+   "gain": 0.00678,
+   "family": "H",
+   "parents": "own campaign (browser ellsworth; L-border / elimination starts)",
+   "parent_public": "Y",
+   "arr": "?",
+   "ours": false,
+   "unposted": false,
+   "source": "EVENTS-2026-10-15.md"
   }
  ],
  "precision": [
-  "#375 (ours, 48 analytic optima, 3e-13..5e-11); #425 / #428 (lollipoll, 1e-19); #438 (SidG2k1, 14 SQUISH packings, ~1e-12); #470 103 (Mishapolk, 1.5e-10 below Xu); #465 155 (ours, 1e-12 below Couzo #451, same basin); #483 (ebdeleeuw, 70); #503 / #504 / #564 refinements (PingYou, 1e-14..1.5e-9); #505 261 (Barnett, 5.7e-11); #528 re-solves of 155 / 156 / 211 (Ostashev); #529 102 (Rio Calle, 5.5e-11: an independent from-scratch rediscovery of Xu's design); #566-#569 (PingYou contact re-solves of 146 / 261 / 105 / 272, 1e-29..2e-13); #573 (Mishapolk: 103 / 153 / 207 / 258 at \u2264 1.5e-9; 209 / 270 not below)."
+  "[EVENTS-2026-10-12.md] #375 (ours, 48 analytic optima, 3e-13..5e-11); #425 / #428 (lollipoll, 1e-19); #438 (SidG2k1, 14 SQUISH packings, ~1e-12); #470 103 (Mishapolk, 1.5e-10 below Xu); #465 155 (ours, 1e-12 below Couzo #451, same basin); #483 (ebdeleeuw, 70); #503 / #504 / #564 refinements (PingYou, 1e-14..1.5e-9); #505 261 (Barnett, 5.7e-11); #528 re-solves of 155 / 156 / 211 (Ostashev); #529 102 (Rio Calle, 5.5e-11: an independent from-scratch rediscovery of Xu's design); #566-#569 (PingYou contact re-solves of 146 / 261 / 105 / 272, 1e-29..2e-13); #573 (Mishapolk: 103 / 153 / 207 / 258 at \u2264 1.5e-9; 209 / 270 not below).",
+  "[EVENTS-2026-10-15.md] #586 211 / 241 (Couzo, 1.5e-10 / 1.9e-11 below his #583); #593 (Mishapolk): 62 of 73 counts at \u2264 1.5e-9 below the running frontier (re-solves of the holders' packings; 207 is the largest, 1.5e-9), including exact ties with #586 at 211 / 241 (Mishapolk's repo `8bb41af` had them at 10-13 15:51, before #586's 17:37 post but after #583) and with #575 at 304; Mishapolk repo `70a033f` (10-14 16:11, no issue: 14 \"ultra-precision\" re-solves of contested counts); PingYou PR #574 (opened 10-13 00:13, updated after: 148 exact-endpoint refinements of others' packings, ~1e-20 level); #607 342 / 542 (Couzo, 2.9e-10 / 1.0e-9)."
  ],
  "stale": [
-  "Xu #432 at 88, 130, 153, 179, 236, 258 and 263.  SQUISH had posted lower values for these 0-29 h earlier.  Xu's 88 is within 1.3e-10 of SQUISH's 88, so two unrelated methods found the same packing.  Couzo's 376 (#506, #561) does not beat G\u00f6bel's 19.899494937.  Mishapolk #470: 26 of 28 table rows equal earlier public values to \u2264 5e-12.  These are re-polishes of Couzo / SQUISH / Xu packings, and the issue credits those finders."
+  "[EVENTS-2026-10-12.md] Xu #432 at 88, 130, 153, 179, 236, 258 and 263.  SQUISH had posted lower values for these 0-29 h earlier.  Xu's 88 is within 1.3e-10 of SQUISH's 88, so two unrelated methods found the same packing.  Couzo's 376 (#506, #561) does not beat G\u00f6bel's 19.899494937.  Mishapolk #470: 26 of 28 table rows equal earlier public values to \u2264 5e-12.  These are re-polishes of Couzo / SQUISH / Xu packings, and the issue credits those finders.",
+  "[EVENTS-2026-10-15.md] #582 / #589 (Miles Gray, 381 = 19.985624661052): above Fang's repo 381 (19.976969740406, 10-12 19:06) and, for #589, Couzo's #583; it would have been an event at 10-13 11:38 if repo publications without an issue did not count.  #583 154 = #570's certificate byte for byte.  #593 at 146, 236, 238, 239, 266, 269, 270, 308 (equal to the frontier to \u2264 5e-13) and at 154 / 302 (above #586 / #583).  #607's seven replays of Fang's 10-12 composites (703, 812, 930, 931, 992, 993, 994: the same certificates, Fang's construction)."
  ]
 }

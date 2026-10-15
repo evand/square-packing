@@ -20,7 +20,7 @@ copying coordinates.  Store: runs/store.sqlite (env PK_STORE overrides).
   pk.py nearmiss list [--thr 1e-3] [--per-n 2]   near misses a scan would queue + the queue (read-only; pk/nearmiss.py)
   pk.py nearmiss tag [--from DIR ...]      scan the store (+ compose2 / harden / fresh output dirs) -> near-miss queue
   pk.py nearmiss requeue ID...             queue items back to queued
-  pk.py finish [--limit 5] [--stages polish,harden1,harden] [--procs 4] [--candidate] [--dry-run]
+  pk.py finish [--limit N] [--stages polish,harden1,harden] [--procs 4] [--candidate] [--dry-run]
                                            drain the queue: fq long polish, harden rounds; below frontier -> candidate.py
                                            (printed only without --candidate)
   pk.py ingest [--apply] [--since ISO] [--no-fresh]   sync-register + sync-pending + watch --apply + fresh.py since
@@ -81,11 +81,11 @@ def main():
     p.add_argument('ids', nargs='*', type=int); p.add_argument('--thr', type=float, default=1e-3)
     p.add_argument('--nmax', type=int, default=324); p.add_argument('--ns', type=int, nargs='*')
     p.add_argument('--per-n', type=int, default=2); p.add_argument('--include-public', action='store_true')
-    p.add_argument('--min-gap', type=float, default=1e-6, help='scan floor (closer = the frontier minimum re-found)')
+    p.add_argument('--min-gap', type=float, default=2e-5, help='scan floor (closer = the frontier minimum re-found)')
     p.add_argument('--from', dest='dirs', nargs='*', default=[], help='compose2 / fresh / harden output dirs')
     p.add_argument('--no-scan', action='store_true', help='tag: only the --from dirs')
     p.add_argument('--limit', type=int, default=40)
-    p = sp.add_parser('finish'); p.add_argument('--limit', type=int, default=5); p.add_argument('--ids', type=int, nargs='*')
+    p = sp.add_parser('finish'); p.add_argument('--limit', type=int, default=None, help='items (default: all queued)'); p.add_argument('--ids', type=int, nargs='*')
     p.add_argument('--stages', default='polish,harden1,harden'); p.add_argument('--procs', type=int, default=4)
     p.add_argument('--nm-gate', type=float, default=5e-4, help='NM harden only while the gap is below this')
     p.add_argument('--candidate', action='store_true', help='run candidate.py on items below the frontier (default: print)')

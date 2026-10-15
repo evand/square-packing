@@ -208,6 +208,25 @@ def test_ingest():
             nm.frontier_fn = orig
 
 
+
+
+def test_reclaim_stale():
+    with tempfile.TemporaryDirectory() as d:
+        st, ids = mkstore(d)
+        NM.enqueue(st, NM.scan(st.db, fr, per_n=3))
+        dead = 2 ** 22 + 12345                     # above the default pid_max on most systems: not a live process
+        while NM._pid_alive(dead):
+            dead += 1
+        NM.set_status(st, ids['a'], 'running', note=f'pid {dead}')
+        NM.set_status(st, ids['b'], 'running', note=f'pid {os.getpid()}')     # alive: left alone
+        NM.set_status(st, ids['c'], 'running')                                 # no pid (pre-10-15): reported only
+        msgs = []
+        assert NM.reclaim_stale(st, log=msgs.append) == 1 and len(msgs) == 1
+        S = {x['packing']: x['status'] for x in NM.queue(st.db)}
+        assert (S[ids['a']], S[ids['b']], S[ids['c']]) == ('queued', 'running', 'running'), S
+        st.close()
+
+
 if __name__ == '__main__':
     for k, f in list(globals().items()):
         if k.startswith('test_'):

@@ -307,6 +307,10 @@ class Checker:
             d = w.denominator
             den = den * d // math.gcd(den, d)
             if den > 10 ** 15: den = 0; break
+        # int64 guard (audit 09-26): every CHAIN total is a sub-sum of sum(Wnum) = den * sum(W), so bounding that
+        # one number keeps all of them exact; otherwise CHAIN is disabled (den = 0), which is always safe
+        if den and n and sum(self.W) * den >= 2 ** 62:
+            den = 0
         self.Wden = den
         self.Wnum = (np.array([int(w * den) for w in self.W], dtype=np.int64) if (den and n)
                      else np.zeros(n, dtype=np.int64))
@@ -1224,6 +1228,11 @@ def roots(m, pitch=F(1, 10), ubins=8, cy_max=None, cx_lo=None, cx_hi=None, cy_lo
     timing or for isolating a region; it proves nothing about the poses it skips, and the summary
     says so."""
     m = F(m); cy_max = m / 2 if cy_max is None else F(cy_max)
+    # A pitch that does not divide cy_max silently dropped the last partial strip of centre rows below cy_max, which
+    # for the default m/2 is mid-container (review 10-04).  In x the dropped strip lies within `pitch` of the wall
+    # x = m, where no unit-square centre can be (centres are >= 1/2 from every wall) as long as pitch <= 1/2.
+    assert (cy_max / pitch).denominator == 1, "cy_max (default m/2) must be a multiple of the pitch"
+    assert pitch <= F(1, 2), "pitch > 1/2 would drop feasible centre columns at x = m"
     nx = int(m / pitch); ny = int(cy_max / pitch)
     R = []
     for i in range(nx):

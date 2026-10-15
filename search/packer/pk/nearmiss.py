@@ -1,12 +1,13 @@
 """Near-miss queue + finisher (10-14).  A near miss = one of OUR packings (no public sighting) at n <= NMAX, not grid,
-feasible, with MIN_GAP (1e-6) < s - frontier_now(n) < THR (1e-3).  The queue is the store table `nearmiss` (one row per packing;
-status queued -> running -> done | candidate | failed) and the tag 'nearmiss' on the packing (for `pk.py ls --tag`).
+feasible, with MIN_GAP (2e-5) < s - frontier_now(n) < THR (1e-3).  The queue is the store table `nearmiss` (one row per packing;
+status queued -> running -> done | candidate | failed; a `running` item whose finisher process is gone goes back to queued
+at the next `finish`) and the tag 'nearmiss' on the packing (for `pk.py ls --tag`).
 A table, not only a tag: the queue needs per-item state (status, gap at enqueue, best result, CPU) that tags cannot hold.
 
   pk.py nearmiss list [--thr 1e-3] [--per-n 2]      what a scan would enqueue + the queue (read-only)
   pk.py nearmiss tag [--from DIR ...]               scan the store (+ compose2 / harden / fresh output dirs) -> enqueue
   pk.py nearmiss requeue ID ...                     put items back to queued
-  pk.py finish [--limit 5] [--stages polish,harden1,harden] [--candidate] [--dry-run]
+  pk.py finish [--limit N (default all)] [--stages polish,harden1,harden] [--candidate] [--dry-run]
 
 Sources of near misses: every store packing we made (chain / explore runs once imported (`pk.py import-run`), battery,
 corpus, candidates); output dirs (`--from`): compose2 probe arms (`near.jsonl`: layout at the arm's smallest side,
@@ -38,8 +39,10 @@ if PK not in sys.path:
 FQ = os.path.join(PK, 'target', 'release', 'fq')
 THR = 1e-3            # near-miss threshold: s - frontier_now(n)
 TIE = 1e-8            # |gap| <= TIE: a tie with the frontier (eventbench.THR); never an item
-MIN_GAP = 1e-6        # scan floor: polished rows within 1e-6 above the frontier are mostly the frontier minimum re-found
-                      # at f64 polish precision (main store 10-14: 1e-8..1e-6 rows at 146, 131, 84, 109, 38, 299, ...)
+MIN_GAP = 2e-5        # scan floor: rows this close above the frontier are mostly the frontier minimum re-found at f64
+                      # polish precision.  10-14 drain (runs/nmdrain1014, first 26 items, gaps 1.2e-6..1.6e-5, 6.6 CPU-h):
+                      # 15 ended exactly on the frontier minimum (< 4e-11), 11 did not move below their start, 0 gains.
+                      # Was 1e-6 (main store 10-14: 1e-8..1e-6 rows at 146, 131, 84, 109, 38, 299, ...)
 NMAX = 324            # policy (Evan 10-14): no compute above 324 without a specific reason
 NMIN = 10
 PER_N = 2             # queue items per n (a new one only if it beats all of them)
@@ -310,16 +313,45 @@ def candidate_cmd(path, name):
     return [sys.executable, os.path.join(PK, 'candidate.py'), path, '--name', name, '--no-regularize', '--import']
 
 
-def finish(st, out, limit=5, stages=STAGES, procs=4, candidate=False, dry=False, fnow=None, runners=None,
+def _pid_alive(pid):
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def reclaim_stale(st, log=print):
+    """`running` items whose finisher process is gone -> queued.  The finisher records 'pid <p>' in the note when it starts
+    an item; items marked running before that (10-14) carry no pid and are only reported (requeue by hand)."""
+    k = 0
+    for r in queue(st.db, 'running'):
+        m = (r['note'] or '').split()
+        if len(m) == 2 and m[0] == 'pid' and m[1].isdigit():
+            if not _pid_alive(int(m[1])):
+                set_status(st, r['packing'], 'queued', note=f'reclaimed (finisher pid {m[1]} gone)'); k += 1
+        else:
+            log(f"note: item {r['packing']} is 'running' with no finisher pid (pre-10-15 run?): `pk.py nearmiss requeue "
+                f"{r['packing']}` once no finisher runs")
+    return k
+
+
+def finish(st, out, limit=None, stages=STAGES, procs=4, candidate=False, dry=False, fnow=None, runners=None,
            nm_gate=NM_GATE, ids=None, log=print):
-    """Drain up to `limit` queued items (smallest gap first).  Returns [result dict per item]."""
+    """Drain up to `limit` queued items (None = all; smallest gap first).  Returns [result dict per item]."""
     from .packing import read
     runners = runners or RUNNERS
     fnow = fnow or frontier_fn()
+    if not dry:
+        k = reclaim_stale(st, log)
+        if k:
+            log(f'reclaimed {k} stale running item(s)')
     items = queue(st.db, 'queued')
     if ids:
         items = [r for r in items if r['packing'] in set(ids)]
-    items = [dict(r) for r in items[:limit]]
+    items = [dict(r) for r in (items if limit is None else items[:limit])]
     for it in items:
         fnow(it['n'])                                       # the bar is fixed before anything is added
     if not dry:
@@ -332,7 +364,7 @@ def finish(st, out, limit=5, stages=STAGES, procs=4, candidate=False, dry=False,
             f" stages {','.join(stages)}")
         if dry:
             results.append(dict(packing=pid, n=n, bar=b, dry=True)); continue
-        set_status(st, pid, 'running')
+        set_status(st, pid, 'running', note=f'pid {os.getpid()}')
         wd = os.path.join(out, f'nm{pid}')
         os.makedirs(wd, exist_ok=True)
         inp = os.path.join(wd, 'in.txt')

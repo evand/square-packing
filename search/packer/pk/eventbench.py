@@ -5,12 +5,14 @@ A benchmark = (cutoff T, operator, budget).  Inputs = everything public at T.  F
   frontier_at(n, T) = min(base(n), every event 'new' side dated < T), where base = the frozen 10-05 register
   (../exact/batch/inputs/n-<n>.txt) for n <= 324; for n > 324 the first event's 'old' (grid, or Couzo's 375 from 10-08),
   as in EVENTS-2026-10-12.md; for n > 324 without events the store's frontier (flagged 'store').
-  frontier_now(n) = frontier_at(n, +infinity) (events through 10-13 00:42 UTC).
+  frontier_now(n) = frontier_at(n, +infinity) (events through 10-15 00:50 UTC: EVENTS-2026-10-12.md + EVENTS-2026-10-15.md).
+  (The code's frontier_now also folds in the store and the L-step closure; see frontier_now.)
 Success at n = a certified packing with side <= frontier_at(n, T) - 1e-8 (candidate.py).  Secondary = recovered fraction
 (frontier(T) - ours) / (frontier(T) - frontier_now), capped at 1.  At an n with no event after T, success = a live record
 candidate ('live'): check the live register (candidate.py does) before anyone says "record".
 
-  eventbench.py build-events [--md EVENTS-2026-10-12.md]   parse the events table -> bench/events.json
+  eventbench.py build-events [--md EVENTS-....md ...]      parse the events tables (default: EVENTS_MD, in order)
+                                                            -> bench/events.json
   eventbench.py cutoffs                                     batch cutoffs, n moved in the next window / any time after
   eventbench.py frontier N [--cutoff T]
   eventbench.py starts --cutoff T --out DIR                 as-of-T start set (n-<n>.txt, chain.py --src), missing.json
@@ -29,7 +31,7 @@ sys.path.insert(0, PK)
 from pk.packing import Packing, read                          # noqa: E402
 
 REG = os.path.join(PK, '..', 'exact', 'batch', 'inputs')
-EVENTS_MD = os.path.join(PK, 'EVENTS-2026-10-12.md')
+EVENTS_MD = [os.path.join(PK, f) for f in ('EVENTS-2026-10-12.md', 'EVENTS-2026-10-15.md')]   # read in this order
 EVENTS_JSON = os.path.join(PK, 'bench', 'events.json')
 STORE = os.environ.get('PK_STORE', os.path.join(PK, 'runs', 'store.sqlite'))
 THR = 1e-8            # success threshold (gain)
@@ -61,9 +63,10 @@ def cutoff(T):
 
 # ------------------------------------------------------------------ events.json from the markdown table
 
-def build_events(md=EVENTS_MD, out=EVENTS_JSON):
+def _parse_events_md(md):
     L = open(md).read().splitlines()
     ev, prec, stale, sec = [], [], [], None
+    src = os.path.relpath(md, PK)
     for l in L:
         if l.startswith('## Events'):
             sec = 'ev'
@@ -78,16 +81,27 @@ def build_events(md=EVENTS_MD, out=EVENTS_JSON):
             o, nw = (float(x) for x in oldnew.split('->'))
             ev.append(dict(n=int(n), date=f'{YEAR}-{m[1]}-{m[2]}T{m[3]}:{m[4]}Z', author=author, issue=issue, old=o, new=nw,
                            gain=float(gain), family=fam, parents=par, parent_public=pub, arr=arr, ours=ours == 'Y',
-                           unposted='unposted' in issue))
+                           unposted='unposted' in issue, source=src))
         if sec == 'not' and l.startswith('- **'):
             (prec if 'Precision' in l else stale).append(l)
         elif sec == 'not' and l.startswith('  ') and (prec or stale):
             (stale if stale else prec)[-1] += ' ' + l.strip()
-    clean = lambda s: re.sub(r'^- \*\*[^*]+\*\*\s*', '', s)
-    D = dict(source=os.path.relpath(md, PK), built=datetime.now(timezone.utc).isoformat(timespec='seconds'),
-             note='rebuilt from the EVENTS markdown table by pk/eventbench.py build-events; dates UTC (issue post time); '
-                  'unposted=true marks our big1 375 (counted in the running frontier as the table does)',
-             events=ev, precision=[clean(x) for x in prec], stale=[clean(x) for x in stale])
+    clean = lambda s: f'[{src}] ' + re.sub(r'^- \*\*[^*]+\*\*\s*', '', s)
+    return ev, [clean(x) for x in prec], [clean(x) for x in stale]
+
+
+def build_events(md=None, out=EVENTS_JSON):
+    """md: one path or a list (default EVENTS_MD, in order); events / precision / stale are concatenated"""
+    mds = EVENTS_MD if md is None else [md] if isinstance(md, str) else list(md)
+    ev, prec, stale = [], [], []
+    for m in mds:
+        e, p, s = _parse_events_md(m)
+        ev += e; prec += p; stale += s
+    D = dict(source=[os.path.relpath(m, PK) for m in mds], built=datetime.now(timezone.utc).isoformat(timespec='seconds'),
+             note='rebuilt from the EVENTS markdown tables by pk/eventbench.py build-events; dates UTC (issue post time); '
+                  'each event carries its source file; unposted=true marks our big1 375 (counted in the running '
+                  'frontier as the table does)',
+             events=ev, precision=prec, stale=stale)
     os.makedirs(os.path.dirname(out), exist_ok=True)
     json.dump(D, open(out, 'w'), indent=1)
     return D
@@ -377,7 +391,8 @@ def print_score(rows, T):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sp = ap.add_subparsers(dest='cmd', required=True)
-    p = sp.add_parser('build-events'); p.add_argument('--md', default=EVENTS_MD); p.add_argument('--out', default=EVENTS_JSON)
+    p = sp.add_parser('build-events'); p.add_argument('--out', default=EVENTS_JSON)
+    p.add_argument('--md', action='append', help='events markdown file (repeatable, read in order; default: EVENTS_MD)')
     sp.add_parser('cutoffs')
     p = sp.add_parser('frontier'); p.add_argument('n', type=int); p.add_argument('--cutoff')
     p = sp.add_parser('starts'); p.add_argument('--cutoff', required=True); p.add_argument('--out', required=True)

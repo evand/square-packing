@@ -117,10 +117,10 @@ def one_n(n):
 
 
 def cpu_h(a):
-    c = 0.0
-    for m in glob.glob(os.path.join(OUT, a, '**', 'manifest.json'), recursive=True):
-        c += json.load(open(m)).get('cpu_s') or 0
-    return c / 3600
+    # the chain's own manifest counts its children (every round's explore process, RUSAGE_CHILDREN), so it alone is the
+    # arm's CPU; summing it with the rounds' manifests (the 10-14 version: recursive glob) counted the rounds twice
+    # (57.6 / 57.5 reported; true 30.0 / 30.1).  Fixed 10-15.
+    return (json.load(open(os.path.join(OUT, a, 'manifest.json'))).get('cpu_s') or 0) / 3600
 
 
 def census(procs):
