@@ -149,6 +149,75 @@ def score(a):
     json.dump(rows, open(f'{a.out}/score.json', 'w'), indent=1)
 
 
+def live_candidates(lo=1e-7, hi=0.03, nmin=20, nmax=324):
+    """live sweep: host = frontier_now(n) packing, donor = frontier_now(m) packing; count-preserving corner regions whose
+    host block extent b exceeds the donor side d by lo < b - d < hi (the donor is a tighter version of a block the host
+    already has).  -> [(gap, n, m, corner, margin, host_id, donor_id)]"""
+    import sqlite3
+    import mondrian as M
+    from pk import eventbench as EB
+    from pk.store import Store
+    st = Store(); db = sqlite3.connect(f'file:{os.path.join(HERE, "runs", "store.sqlite")}?mode=ro', uri=True)
+    F = {}
+    for n in range(5, nmax + 1):
+        f = EB.frontier_now(n)
+        r = db.execute("SELECT id FROM packing WHERE n=? AND abs(s-?)<2e-9 AND status!='infeasible' LIMIT 1", (n, f)).fetchone()
+        if r:
+            F[n] = (f, np.array(st.get(r[0]).sq), r[0])
+    out = []
+    for n in range(nmin, nmax + 1):
+        if n not in F:
+            continue
+        S, H, hid = F[n]; h = M.half_ext(H[:, 2])
+        for m in range(5, n):
+            if m not in F or F[m][0] > S - 0.9:
+                continue
+            d, _, did = F[m]
+            for c in range(4):
+                seen = set()
+                for mg in (0.0, 0.3, 0.6):
+                    lo_x, hi_x = (0, d + mg) if not c & 1 else (S - d - mg, S)
+                    lo_y, hi_y = (0, d + mg) if not c & 2 else (S - d - mg, S)
+                    ins = (H[:, 0] >= lo_x) & (H[:, 0] <= hi_x) & (H[:, 1] >= lo_y) & (H[:, 1] <= hi_y)
+                    if ins.sum() != m or ins.tobytes() in seen:
+                        continue
+                    seen.add(ins.tobytes())
+                    X, Y, hh = H[ins, 0], H[ins, 1], h[ins]
+                    ex = (X + hh).max() if not c & 1 else S - (X - hh).min()
+                    ey = (Y + hh).max() if not c & 2 else S - (Y - hh).min()
+                    b = max(ex, ey)
+                    if lo < b - d < hi:
+                        out.append((float(b - d), n, m, c, mg, hid, did))
+    return out
+
+
+def live(a):
+    from pk.store import Store
+    from pk import manifest, eventbench as EB
+    from jobpool import run_jobs
+    os.makedirs(a.out, exist_ok=True)
+    man = manifest.start(a.out, 'graft_live', args=vars(a), procs=a.procs)
+    C = live_candidates(hi=a.hi)
+    st = Store(); jobs = []
+    for gap, n, m, c, mg, hid, did in C:
+        H, D = st.get(hid), st.get(did)
+        d = f'{a.out}/n{n}'; os.makedirs(d, exist_ok=True)
+        ev = dict(n=n, m=m, gap=gap)
+        for k in range(8):
+            jobs.append((ev, float(H.s), H.sq.tolist(), float(D.s), D.sq.tolist(), c, k, mg, d))
+    print(f'{len(C)} candidates, {len(jobs)} quenches', flush=True)
+    res = run_jobs(one, jobs, procs=a.procs, timeout=900)
+    hits = []
+    for j, r in zip(jobs, res):
+        if isinstance(r, dict) and r.get('status') == 'ok':
+            n = j[0]['n']; f = EB.frontier_now(n)
+            if r['s'] < f - 1e-9:
+                hits.append(dict(n=n, m=j[0]['m'], s=r['s'], frontier=f, gain=f - r['s'], path=r['path']))
+    json.dump(hits, open(f'{a.out}/hits.json', 'w'), indent=1)
+    print(f'{len(hits)} below frontier_now:', sorted({(h["n"], round(h["gain"], 9)) for h in hits}), flush=True)
+    man.finish()
+
+
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(); sp = ap.add_subparsers(dest='cmd', required=True)
     r = sp.add_parser('run'); r.add_argument('--out', required=True); r.add_argument('--margins', default='0,0.3,0.6')
@@ -156,8 +225,10 @@ if __name__ == '__main__':
     r.add_argument('--procs', type=int, default=16)
     s = sp.add_parser('score'); s.add_argument('out')
     sp.add_parser('list')
+    lv = sp.add_parser('live'); lv.add_argument('--out', required=True); lv.add_argument('--hi', type=float, default=0.03)
+    lv.add_argument('--procs', type=int, default=16)
     a = ap.parse_args()
     if a.cmd == 'list':
         for e in events(): print(e)
     else:
-        {'run': run, 'score': score}[a.cmd](a)
+        {'run': run, 'score': score, 'live': live}[a.cmd](a)
