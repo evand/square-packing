@@ -2938,3 +2938,23 @@ Ran at `9af0ef3` (clean).  1.60 CPU-h per arm (round manifests), 12 rounds.
 * Not measured, and the cost to watch: PF leaves far parents almost no CPU (6 % at >= 1e-2), so far-region discovery
   (TT2's region metric; Evan's donor question) will drop.  The all-n confirmation should carry the region metric.
 * Next: confirm on the full 49 rounds (PF, maybe a sharper beta), then the all-n hunt-style test with regions + records.
+
+### H110-PM: n = 110 holdout test of the parent value model (pre-registration, 10-14 ~23:55 local, before launch)
+Evan 10-14: a short, high-power test that also covers far reach (the replay cannot).  `analysis/h110_pm.py`.
+* Holdout `refsets/h110_rand50` (census110_1011, 390 visible / 370 withheld certified-or-weak minima, record withheld;
+  the 40 visible random starts).  Census v2's control re-found ~110 withheld / CPU-h (old recipe), census v2 smoke and
+  this smoke: ~1,000 / CPU-h in the first minutes (saturating), so runs are short.
+* Arms (explore.py directly, current explorer config as in TT3 rounds: `--adapt --reward value --elite-share 0.3
+  --polish-gate 2e-3`, novelty vs the visible minima, `--frontier-s` = best visible 10.9967871155): **G** (old parent rule)
+  vs **PF** (+ `--pm-share 1`).  4 replicates per arm x 2 procs x 10 min, all 8 runs concurrent (16 procs), ~2.7 CPU-h.
+  No chain: no library / seed / frontier-lineage picks (a difference from TT3's G, same in both arms).
+* Primary: certified withheld minima re-found per measured CPU-h (side key -> store minima, as refset.score; polished
+  archive entries only), **PF / G** ratio of mean log per-replicate rates, 95 % Welch t interval.  Pass / fail / open as
+  in TT3.
+* Strata (the far-reach question): withheld by side gap to the record (< 1e-3: 34; 1e-3..3e-3: 286; >= 3e-3: 50) and by
+  matching distance of their representative to the record's (< 0.05: 71; >= 0.05: 299; max 0.106).  PF / G per stratum.
+* Secondary: withheld found by 150 s / 300 s (saturation check); record re-found (reps); union over reps.
+* Predictions: PF / G all 1.3 (P pass 0.5); gap < 1e-3 stratum 1.8; gap >= 3e-3 stratum 0.6; md >= 0.05 stratum 1.1
+  (at 110 nearly every minimum is within 1e-2 of the record, so the model does not starve these as it does the far
+  parents at other n; P(PF / G < 1 at md >= 0.05) 0.35).
+* Smoke (1 min each, `runs/h110_pm_smoke`): G 38 withheld, PF 49 in ~125 CPU-s each; every PF pick logged `pm`.
