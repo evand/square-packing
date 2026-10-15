@@ -3390,7 +3390,7 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   mode's.  Predictions: kernel < 15 % of the candidates and >= 5x faster with identical counts; greedy kernel within 1
   square on >= 95 % of instances; tolerant tau = 0.01 overcounts by <= 1 on most and its quench side is within 1e-3 of
   the exact mode's on >= 80 %.  Measured in CPU seconds (the machine is loaded).
-* **FP1 result (16:20)**: **fill solved; the evaluator is now quench-bound.**  `fillfast` (corner rule + per-component
+* **FP1 result (16:06)**: **fill solved; the evaluator is now quench-bound.**  `fillfast` (corner rule + per-component
   MILP): counts identical to `gen.mis_fill2` on 216 / 216 instances (200 EV2 gen-1 candidates + 16 record tilted sets),
   every set independent; kernel empty on 95 %, largest component 17.  Vectorised (candidates, conflict graph, counter
   reduction): 140 -> 58 ms / fill (the old path ~0.5 s with its fork); candidate set is a superset of
