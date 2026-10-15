@@ -3049,3 +3049,9 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   + fill reach n); (2) harden.py 3 rounds (keep 4) from the 4 best compositions per n, grid r0 {0.1, 0.2, 0.3} x noise
   {0.004, 0.008} x 3 seeds, target = ante.  Success per n: BEAT-ANTE / REPLICATED.  Secondary: the output's largest
   tilted cluster holds both pieces' tilted squares (merged).  Prediction: BEAT-ANTE or better 3 / 10; merged in > 50 %.
+* **RH1 result (02:55)**: harden rounds from the removal starts: BEAT-ANTE 1 / 12 (154 #401, as the explorer), no
+  REPLICATED; better than the explorer's b2 best at 153 / 237 / 238 / 258 (the large restructurings: 258 16.5912 vs
+  16.6009), worse at 155 / 179 / 108 / 129.  ~10 CPU-h (12 procs x 50 min, round barriers idle the tail) vs the
+  explorer's 5.4.  Prediction 3 / 12: miss.  Harden alone is not the removal-reach answer; it is complementary.
+* **c500 result**: composition L1 on #500 (plain + narrowed pieces): 0 / 8; only 304 composed (17.9452, explorer
+  17.9378 vs ante 17.9347).  Expected after the band-merge finding (our corner-block compositions cannot form one band).
