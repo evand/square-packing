@@ -3326,7 +3326,7 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   (2) record 7 %: no.  Lessons in `evolve2/LOG.md` (count honesty -> `--fill`; staircases first; near-target starts;
   named mechanisms: staircase events, strip span k cos t + sin t = k - delta, arm chirality, seam pocket, hole
   insertion; agents segmented the record PNGs -> holdout references).  Agent cost: 135k-240k tokens each.
-* **EV2 gen 1, pre-registered (12:07)**: 4 prompts (`evolve2/prompts/P007-P010`, rules `evolve2/RULES_g1.md`), each
+* **EV2 gen 1, pre-registered (12:06)**: 4 prompts (`evolve2/prompts/P007-P010`, rules `evolve2/RULES_g1.md`), each
   mutated from its gen-0 parent(s) with their measured mechanisms and allowed to start from the parent program.
   **Holdout**: all score on row k = 16, n = 234-240, whose records no agent (and not I) has seen: references are only
   `evolve_eval.py near` pictures (4 per n, 5e-3 to 5e-2 worse than the record; manifest `runs/evolve2/near/`), `ref`
