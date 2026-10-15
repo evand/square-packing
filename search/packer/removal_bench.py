@@ -62,7 +62,7 @@ def quench_one(j):
 
 
 def edir(ev, out):
-    return f'{out}/n{ev["n"]}_{ev["T"][:10]}_{ev["pm"]}m{ev["k"]}'
+    return f'{out}/n{ev["n"]}_{ev["T"][:16].replace(":", "")}_{ev["pm"]}m{ev["k"]}'
 
 
 def prepare(ev, a, out):

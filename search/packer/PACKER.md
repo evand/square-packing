@@ -3014,3 +3014,13 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   108 / 154 #552 / 179 no (5 of 13 done).  Harnesses rescheduled (Evan: no waves): every quench of every event in one
   queue, then every event's explorer at once (1 proc), spare cores to replicates.  Relaunch: removal b2 (`--cores 13
   --minutes 20`, ~4.5 CPU-h) and graft g2 (`--procs 6 --minutes 15`, ~1.6 CPU-h), concurrently.  Predictions as before.
+* **Removal L1 result (b2, 10-15 ~01:35)**: 5.4 CPU-h, 25.2 min wall (13 cores: the pooled scheduling works).  12 of 13
+  scored (the two 179 events shared a directory; fixed): **REPLICATED 154 (#401: 12.9264064 vs posted 12.9265622),
+  BEAT-ANTE 129 (11.8808032 vs ante 11.8808936)**, no at 10 (need above ante: 155 +6.5e-4, 108 +1.0e-3, 208 +1.2e-3,
+  179 +1.7e-3, 154 #552 +3.9e-3, 237 +6.9e-3, 238 +9.4e-3, 180 +1.1e-2, 153 / 258 +3e-2).  ~25 CPU-min per event.
+  Prediction 3 / 13 BEAT-ANTE or better, 1 REPLICATED: 2 / 12 and 1.  Four misses within 2e-3 = reach / budget, not a
+  missing step (the posted packings are 0.15-0.3 matching distance from the seeds).
+* **Graft L1 result (g2)**: 1.5 CPU-h, 15.5 min.  **REPLICATED 88 (9.8824510 = SQUISH exactly), 126 (11.7732970 vs
+  11.7733036); BEAT-ANTE 236 (15.8700139 vs ante 15.8722190)**; no 123 (best 11.6071747: the graft lands at the donor's
+  basin side + 1, not below the host), 239 (+3.1e-3), 207 (no count-preserving corner region: 0 / 96).  Prediction
+  BEAT-ANTE 3 / 7, REPLICATED 2 / 7: held.  The graft is now a working operator (`graft.py`).
