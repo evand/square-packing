@@ -3240,3 +3240,21 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   after 10 min), so NH2 was stopped (~0.3 CPU-h).  **NH3**: the same 139 n, explorer only from each n's live start
   (`runs/live1014`), `harden_explore.py --explore-extra "--pm-share 1"` (gating is on there already; no seeds), 6 min x
   1 proc each, 16 at a time (~14 CPU-h, ~55 min).  Same success rule and prediction (0-1, point 0.3).
+  *Result (09:07)*: **0 records.**  138 of 139 n end exactly at their live frontier (ties, best `need` -1.5e-10 at
+  n=70: float noise); n=146 ends 1.7e-9 above (its start file).  13.9 CPU-h.  With MH3 (0 in 10 CPU-h) and last night's
+  NH (0 in 85), the explorer from the live packings, with or without gating and the parent model, does not move the
+  frontier at n <= 324: the near-frontier minima it finds are the frontier.  Live records need new structure
+  (composition at new sides, J-style generators), not more local search from the current packings.
+* **Crop library for blind Mondrian (09:30)**: `analysis/croplib.py`, the design proposed above, best effort.  Per allowed
+  source: 8 orientations x up to R = 2 dropped columns / rows, tight corner cuts with m in [3, 330], no tilted square
+  cut by the box (bounding-box test, conservative), >= 1 tilted inside, excess >= -3; Pareto per (m, floor W, floor H)
+  per source then globally.  #481 cutoff: 1,553 sources -> 16,940 crops -> **3,472** (2 s).  Coverage (`cover`): for
+  29 of #481's 30 named pieces the library has a piece with the same m and floors and a box no larger (often from
+  another source, e.g. s(152)_r2:34 -> s(106)_r1b); the miss is 232's B (store:72 minus one row: its cut slices a
+  tilted square).  With >= 3 tilted: 2,258 crops, 28 / 30 (s(5):5 has one tilted square).
+* **L2d, pre-registered (09:32)**: L2c rerun with the library instead of the atlas: `l2_screen.py run --set 481 --lib
+  runs/mondrian/croplib481t1.npz` (window 0.3, 8 sides, keep 100, 4 starts per n, explorer 45 min as BM3c),
+  `runs/l2/s481d`.  Question: is the piece library the blocker for L2?  Metric: REPLICATED + BEAT-ANTE of 15 (L1
+  named: 4 / 5 informative; L2c atlas: 0 / 15).  Prediction: 1-4, point 2 (the right pieces are now present, but the
+  formula screen must rank the right pair into the top 100, and L1 needed the explorer too).  >= 2 says the library
+  is the fix; 0 says the screen / ranking is the next blocker.

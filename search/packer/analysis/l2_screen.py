@@ -18,6 +18,7 @@ import argparse, json, math, os, sqlite3, subprocess, sys, time
 import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__)); PK = os.path.dirname(HERE); sys.path.insert(0, PK); sys.path.insert(0, HERE)
 FT = 1e-9
+LIB = None                       # run --lib: analysis/croplib.py library (clean crops, dropped rows) instead of the atlas
 MIN_EXCESS = None                # run --min-excess: rebuild crops from the allowed sources with this excess floor
 
 
@@ -46,8 +47,29 @@ def allowed_sids(z, T_utc, T_local):
     return set(ok)
 
 
+def load_lib(lib, nmax):
+    """croplib.py library (already restricted to the cutoff's allowed sources): (T, (o, i, j, W, H, m), label)"""
+    import mondrian as M
+    L = dict(np.load(lib, allow_pickle=True))
+    z = dict(np.load(str(L['atlas']), allow_pickle=True))
+    P = []
+    for W, H, m, o, i, j, sid in zip(L['W'], L['H'], L['m'], L['o'], L['i'], L['j'], L['sid']):
+        if m > nmax:
+            continue
+        q = M.orient(np.asarray(z['sq'][sid], float), float(z['src_s'][sid]), int(o))
+        q[:, 0] -= i; q[:, 1] -= j
+        h = M.half_ext(q[:, 2])
+        inn = (q[:, 0] - h >= -1e-9) & (q[:, 1] - h >= -1e-9) & (q[:, 0] + h <= W + 1e-9) & (q[:, 1] + h <= H + 1e-9)
+        T = q[inn & M.is_tilted(q[:, 2])]
+        if len(T):
+            P.append((T, (int(o), int(i), int(j), float(W), float(H), int(m)), str(z['labels'][sid])))
+    return P
+
+
 def load_pieces(atlas, T_utc, T_local, nmax):
     import mondrian as M
+    if LIB:
+        return load_lib(LIB, nmax)
     z = dict(np.load(atlas, allow_pickle=True))          # materialise: NpzFile re-reads an array on every access
     A = allowed_sids(z, T_utc, T_local)
     if MIN_EXCESS is not None:                           # rebuild the allowed sources' crops with a relaxed excess
@@ -118,6 +140,8 @@ def run(a):
     T_utc, T_local = evs[0]['T_utc'], evs[0]['T_local']
     global MIN_EXCESS
     MIN_EXCESS = a.min_excess
+    global LIB
+    LIB = a.lib
     t0 = time.time()
     P = load_pieces(a.atlas, T_utc, T_local, max(e['n'] for e in evs))
     W = np.array([p[1][3] for p in P]); H = np.array([p[1][4] for p in P]); m = np.array([p[1][5] for p in P])
@@ -166,6 +190,7 @@ if __name__ == '__main__':
     r.add_argument('--keep', type=int, default=100); r.add_argument('--per-n', type=int, default=4)
     r.add_argument('--minutes', type=float, default=20); r.add_argument('--cores', type=int, default=16)
     r.add_argument('--min-excess', type=int, help='rebuild crops with excess >= this (e.g. -3) instead of the atlas (>= 1)')
+    r.add_argument('--lib', help='analysis/croplib.py library npz (built for this event set\'s cutoff)')
     s = sp.add_parser('score'); s.add_argument('--out', required=True)
     a = ap.parse_args()
     {'run': run, 'score': score}[a.cmd](a)
