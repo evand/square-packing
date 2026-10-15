@@ -81,7 +81,7 @@ def eval_job(args):
     global _ENG
     prog, n, seed, maxc, loosens = args[:5]
     fill = len(args) > 5 and args[5]
-    from pk.engine import FQ, QOpt, POLISH
+    from pk.engine import FQ, QOpt, POLISH, SCREEN
     from pk.packing import Packing
     if _ENG is None:
         _ENG = FQ()
@@ -103,38 +103,69 @@ def eval_job(args):
     best = None
     fills = []
     mins = []
+    tf = tq = 0.0
+    impl = os.environ.get('PK_FILL_IMPL', 'fast')
+    g_ = os.environ.get('PK_EVAL_GATE', '2e-3')           # polish only screens within this of the best (C42 gating)
+    gate = None if g_ == 'off' else float(g_)
+    screens = []
+
+    def _keep(pp):
+        nonlocal best
+        if pp is None or pp.max_pen() > 1e-7:
+            return
+        if pp.ntilted() >= 5 and all(abs(pp.s - m[0]) > 1e-9 for m in mins):   # distinct non-grid minima
+            mins.append((float(pp.s), pp.sq.tolist()))
+        if best is None or pp.s < best.s:
+            best = pp        # FP1 (10-15): fillfast = same counts, in-process, no fork
     for s, sq in res['cands']:
         if fill:                                          # the given squares stay; the exact MILP adds uprights
             import mondrian as M
+            import fillfast
             T = np.array(sq, float).reshape(-1, 3)
             got = None
+            t0 = time.time()
             for f in (1.0, 1.01, 1.02, 1.04):
-                L = M.exact_fill(T * [f, f, 1], s * f, time_limit=10)
+                if impl == 'fast':
+                    L = fillfast.fill(s * f, T * [f, f, 1], 'exact')
+                else:
+                    L = M.exact_fill(T * [f, f, 1], s * f, time_limit=10)
                 if f == 1.0:
                     fills.append(len(L))
                 if len(L) >= n:
                     got = (s * f, M.trim(L, n)); break
+            tf += time.time() - t0
             if got is None:
                 continue
             s, sq = got
         p = Packing(float(s), np.array(sq, float))
-        for L in loosens:
-            q = _ENG.quench(p, QOpt(loosen=L), timeout=60)
-            if q.p is None:
-                continue
-            q2 = _ENG.quench(q.p, POLISH, timeout=60)
-            pp = q2.p if q2.p is not None else q.p
-            if pp.max_pen() > 1e-7:
-                continue
-            if pp.ntilted() >= 5 and all(abs(pp.s - m[0]) > 1e-9 for m in mins):   # distinct non-grid minima
-                mins.append((float(pp.s), pp.sq.tolist()))
-            if best is None or pp.s < best.s:
-                best = pp
+        t0 = time.time()
+        if gate is None:                                  # ungated (gen 0 / gen 1 behaviour)
+            for L in loosens:
+                q = _ENG.quench(p, QOpt(loosen=L), timeout=60)
+                if q.p is None:
+                    continue
+                q2 = _ENG.quench(q.p, POLISH, timeout=60)
+                _keep(q2.p if q2.p is not None else q.p)
+        else:                                             # gated (FP1): screen every start, polish only the near-best
+            for L in loosens:
+                q = _ENG.quench(p, SCREEN.but(loosen=L), timeout=60)
+                if q.p is not None:
+                    screens.append(q.p)
+        tq += time.time() - t0
+    if gate is not None and screens:
+        t0 = time.time()
+        b = min(x.s for x in screens)
+        for x in sorted(screens, key=lambda x: x.s):
+            if x.s > b + gate:
+                break
+            q2 = _ENG.quench(x, POLISH, timeout=60)
+            _keep(q2.p if q2.p is not None else x)
+        tq += time.time() - t0
     fx = f'; exact fill at the given s reached {max(fills)} / {n} squares (best candidate)' if fills else ''
     if best is None:
-        return dict(n=n, err='no candidate optimised to a feasible packing' + fx, cands=len(res['cands']))
+        return dict(n=n, err='no candidate optimised to a feasible packing' + fx, cands=len(res['cands']), t_fill=tf, t_quench=tq)
     return dict(n=n, s=float(best.s), sq=best.sq.tolist(), desc=describe(best) + fx, cands=len(res['cands']),
-                minima=sorted(mins)[:40])
+                minima=sorted(mins)[:40], t_fill=tf, t_quench=tq)
 
 
 # ------------------------------------------------------------------ LLM proposals (threads)
