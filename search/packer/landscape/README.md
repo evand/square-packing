@@ -91,3 +91,7 @@ mode (higher-order minimum likely, unproved); 24 shrink somewhere, but only 3 cl
 (> -1e-15; the projection lets S float, so the sign may be the projection's choice).  Next: for dS < 0 cases, check
 feasibility of the projected point and descend from it (a lower minimum = not-min); the 6 "negative curvature blocked"
 cases need the contact-sign case split.
+Page refresh (10-15): store after the exactsolve multiplier fix (1,076 certified minima below 11, store sha 6e1306b66996);
+mapdata.py -> layout.py (rule picked seed 4, fill 47 %) -> export.py; tour / settle / forces unchanged.  Text: second
+pocket island now also holds the best 41-tilted minima (fp cut 0.02); methods note on the 11 inconclusive minima and
+the fixed solver bug.  Old 775 snapshot kept in runs/landscape110/map/snap775/.
