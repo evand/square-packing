@@ -3487,3 +3487,144 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   'negative curvature blocked', the genuine residue).  **Census below 11: 1,076 certified + 11 weak** (was 1,031 + 56).
   One orphan weak minimum row (10.99790958586097942: its side key now solves to certified 10.9979095857501).  Store
   backup before: ~/store-backups/store-2026-10-15-pre-weakfix.sqlite.
+
+## Composition count structure (10-15 night; Evan: "isn't it just filling a rectangle? place two rectangles, fill two")
+Where L2e's compose cost went (`l2_screen._pair_job`): per kept pair two forked HiGHS fills (0.5-10 s) + an fq quench +
+polish (<= 2 x 120 s) for every joint fill reaching n (207: 408 of them).  Counting itself is cheap now (`fillfast`,
+58 ms, kernel empty on 95 %).  If the count decomposes, the pair screen becomes a table lookup for every n.
+* **AD1, pre-registered (22:38)**: `analysis/additivity.py` on croplib481t1 (the L2e library), counts by fillfast (spot
+  check 40 / 40 equal to `mondrian.exact_fill`).  (a) `period`: 300 random pieces, random frac(S), e(P, S) = single-piece
+  fill at LL minus floor(S)^2 at S0 + k, k = 0..3.  Question: is e a function of frac(S) only?  Prediction: constant in
+  >= 95 % of pieces; exceptions only at small slack (S0 - max(W, H) < ~0.3).  (b) `pairs`: the 15 #481 events, S =
+  ante + 0.08, e of every allowed piece, joint fill (both conflict orders, max) for the 300 best pairs by eA + eB (the
+  L2e ranking) + 300 random disjoint pairs; delta = joint excess - (eA + eB) against sep = max(S - wA - wB, S - hA - hB).
+  Prediction: delta = 0 in >= 90 % at sep >= 1; delta != 0 mostly at sep < 1 (edges sharing a band), with delta > 0
+  more common than < 0 (the old "superadditive" note).  Rule: if both hold, the next step is the per-piece phase table +
+  lookup screen (joint fill only at sep < 1, polish only the best few per n); if (b) fails at sep >= 1, the screen keeps
+  joint fills and we only cut the polishing.  ~1 CPU-h.
+* **AD1 result (22:45)**: ~2.5 min wall, ~0.3 CPU-h (`runs/additivity/`).
+  (a) **Periodic: 300 / 300** pieces have e(P, S0 + k) identical for k = 0..3, even at slack0 < 0.05.  Prediction held.
+  So a piece's single-corner excess is a function of frac(S) only: one table per piece serves every n.
+  (b) **Not additive** (prediction missed).  9 non-trivial events (6 of 15, 131 / 209 / 270 / 303 / 305 / 307, cross
+  an integer at ante + 0.08: floor(S)^2 >= n, trivial; L2e's ante + 0.04..0.16 window had the same artifact there).
+  Top-ranked pairs (2,700): delta = 0 in 61 %, delta < 0 in 39 % (down to -10), **never > 0**; random disjoint pairs
+  (2,700): 85 % exact, 0.6 % > 0 (max +3).  Box separation does not predict it (top pairs at sep >= 3 are all short
+  by 5-8); neither does a floor-sum term on shared row / column bands (1,588 / 2,638).  Reading: a piece's lone excess
+  uses rows / columns that run to the far walls, through where the other piece sits.
+  **As a screen it works**: of 2,131 top pairs whose joint fill reaches n, additive also said yes for all 2,131 (0 false
+  negatives); 569 false positives (21 %).  The fills themselves are cheap: e for ~2,000 pieces + 600 joint fills = ~10 s
+  per n on 9 procs (fillfast), vs L2e's ~6 CPU-h per n, which was the HiGHS fills + an fq quench / polish of every pair
+  reaching n.  Next (per the rule, branch 2): keep joint fills, screen by the per-piece phase table (additive >= need,
+  maybe need - 2 for the rare superadditive pairs), dedupe, polish only the best few per n; keep the side window below
+  the next integer.
+* **compose3 (22:58; `analysis/compose3.py`)**: the AD1 rule's branch 2.  Per-piece phase table e(P, j / 128) by
+  monotone bisection (croplib481t1: 3,461 pieces, 21 fills each, 1.1 CPU-h, cached in `runs/compose3/tables/`); 5 /
+  443k entries dip by 1 as S grows (fillfast and the MILP agree: the candidate set, with wall-anchored lattices, is not
+  monotone in S, though true packings are), so the table takes the running max.  Pair screen = table lookup (bound
+  >= need), joint fill in rank order with early stop, polish every reaching pair (polish_k 8 by surplus missed 207's
+  named composition; all 90 found it: 14.9044830325 at ante + 0.04).  Sides clipped below the next integer k, plus k -
+  1e-6.  **Above-integer arm** (Evan 10-15): pairs 1-3 short at k - 1e-6 composed at k + 0.02, trimmed to n, quenched;
+  logged with the shortfall (calibration of "relaxes below k").  Smoke 207: 41 s wall, ~0.14 CPU-h (L2e ~6 CPU-h / n).
+* **V1, pre-registered (23:00)**: `compose3.py run --set 481 --lib runs/mondrian/croplib481t1.npz --polish-k 400
+  --out runs/compose3/v481` (the 15 #481 events, sides ante + 0.04 .. 0.16, no explorer yet).  Gate: at L2e's 4 hit n
+  (153, 232, 236, 302) our start set contains L2e's best start (12.8867460286, 15.7749168491, 15.8824510305,
+  17.8879922583, to 1e-9) or a lower one; elsewhere our best start <= L2e's + 1e-9 in >= 9 / 11.  Cost <= 4 CPU-h.
+  Prediction: hits 4 / 4 (153 most at risk: its start came at a side we now may clip), elsewhere 10 / 11.  Pass ->
+  explorer only where starts differ from L2e's, then the live library + live hunt.  Above arm: report P(< k | d) on the
+  crossing events (131, 209, 270, 303, 305, 307); no prediction beyond "some relax below k" (50 %).
+* **V1 result (23:20): gate FAILED** (hits 3 / 4, elsewhere 8 / 11; prediction 4 / 4, 10 / 11).  4.3 CPU-h (0.29 / n).
+  232 missed L2e's 15.7749168 because reach_cap 200 stopped the joint fills (L2e: 1,308 reach at that side); 269 / 270 /
+  303 worse than L2e (L2e also composed at sides above the integer).  The V1 above arm never fired (at k - 1e-6 every
+  top pair reaches, and those polish to k exactly).  Selection: no cheap order finds the winner (rank of the best
+  polished composition by surplus / bound: median ~120 of ~200, often a unique pair), so polish all reaching pairs;
+  but the best start came from the lowest side (ante + 0.04) in 15 / 15 events.
+* **Above arm v2 smoke (23:23)**: 270, pairs ranked by table bound at the ante's phase, composed at 17.02 / 17.06,
+  600 quench + polish: **530 end at exactly 17.000000, 70 fail, 0 below 17.**  Quench + polish from above the integer
+  lands on the grid; relaxing below k needs the explorer (cf. GX1).  Arm off by default (`--above-k 0`); separate test.
+  Smoke, sides ante + 0.01 / 0.025 / 0.04, uncapped: 232 = L2e's 15.7749168491 at ante + 0.01 (192 fills); 270
+  16.9488776 (L2e 16.9487425).
+* **V2, pre-registered (23:25)**: `compose3.py run --set 481 --lib runs/mondrian/croplib481t1.npz --lo 0.01 --hi 0.04
+  --sides 3 --reach-cap 100000 --fill-cap 50000 --polish-k 100000 --above-k 0 --out runs/compose3/v481b`.  Gate as V1.
+  Prediction: hits 4 / 4; elsewhere 8 / 11 (269 / 270 / 303 may need L2e's higher or above-integer sides); ~4 CPU-h.
+  If hits 4 / 4 but elsewhere < 9: add one higher side (ante + 0.08) and compare cost.
+* **V2 result (00:45; 307 still running)**: hits **4 / 4** (153, 232, 236, 302 = L2e's starts); elsewhere equal or better than L2e at 8 /
+  10 scored before 307 (worse: 270 by 1.4e-4; 131: no pair reaches below 12, L2e's "start" was the 12 grid).  Composition
+  alone (no explorer) rebuilds the posted #481 records at **259 (16.5913781455), 263 (16.7331660079), 292
+  (17.5913781455)** and gives starts below L2e's at 209, 269, 303, 305.  Prediction (4 / 4, 8 / 11): held.  Cost ~20
+  CPU-h (prediction ~4: miss): polishing every reaching pair at loose sides (292: 6,000 per side, 13 min each; 259:
+  3,700).  Fix: `--reach-budget 1500` per n (sides ascending; higher sides skipped once spent; the lowest side won in
+  15 / 15 V1 events and gave 292's record).
+* **Live library (23:58)**: `mondrian.py atlas` on today's store (register synced 23:50, e2e018f; 43,352 sources ->
+  286k pruned crops, `runs/mondrian/atlas_live1016.npz`), `croplib.py build --set all --min-tilted 3` -> **11,189**
+  crops (`croplib_live1016.npz`); + store piece table without the `:atlas` imports (rectsearch / rectlib / re-optimised
+  crops of #593 etc., best 3 per (m, d), >= 3 squares at a real angle, both transposes): 7,661.  The long-strip
+  pieces the 481 library lacked are in it ((60, 6) h 5.8348, (70, 8) 5.8112, (30, 6) / (33, 7) 3.8175).
+* **LH1, pre-registered (00:50)**: live hunt, `compose3.py run --live 50-324 --T 2026-10-16T09:00 --lib
+  runs/mondrian/croplib_live1016.npz,store --lo 0.01 --hi 0.04 --sides 3 --reach-cap 100000 --fill-cap 50000
+  --polish-k 100000 --reach-budget 1500 --out runs/compose3/live1` (non-grid frontier n only; table first, ~7 CPU-h).
+  Then LH2: explorer 30 min x 1 proc on the n whose best composed start is within 0.02 of the frontier
+  (`harden_explore.py --max-need 0.02`).  Success = candidate.py-certified below the live frontier, then the register
+  check (jlevy cases page) before any claim.  Predictions: compose stage alone below the frontier: 0 (point 0.1: the
+  frontier holders ran this method with their libraries); a record after LH2: 0-1 (point 0.35; V2 / L2e beat the ante
+  at 4 / 15, but the live frontier is the post-everything envelope, and MH3 / NH3 found nothing at these n).  Budget
+  LH1 <= 40 CPU-h, LH2 <= 50.
+* **s(236) found in the store (01:00)**: a scan for store packings below the register frontier (n <= 400) found ours
+  at **236: 15.8619343906 (BM3c, 10-15 03:50, `runs/bm3c/n236/explore0`)**, 2.02e-3 below #481 / #593's 15.8639557472,
+  logged at the time as "REPLICATED" (time-travel tier) and never live-checked.  `candidate.py`: both checkers VALID
+  (also regularized), live check clean (register e2e018f, issues through #643, Ellsworth), distinct minimum from
+  #481 (no shared tilt angle; 209 load-bearing squares move > 1e-4).  Staged `candidates/s236_bm3c*`; draft post
+  `outreach/draft-jlevy-n236-2026-10-16.md` (waits for Evan).  The other sub-frontier store rows (207 -1.5e-9 float
+  noise; 211 -9.3e-6; 344, 370, 378-381) are raw imports from Couzo's / Mishapolk's public repos, not ours.
+  Lesson: time-travel tiers must also be scored against the live frontier (`harden_explore.py score` only compares
+  with ante / posted).  V2 stopped at 307's near-integer side (50,000 fills, ~0 reach).
+* **X236 (01:20)**: explorer from the new 236, 1 proc x 30 min (`runs/x236`): does it go lower before we post?
+* **RS1, pre-registered (01:20)**: `rectsearch.py bandit --cells-file runs/rectsearch/rs1_cells.json --cpu-hours 9
+  --procs 6` (store pieces seed each cell): one more square than the long-strip pieces (h 5.847 family: (65,7) store
+  5.8471, (50,4) 5.8674, (55,5) 5.8697, (75,9) 5.8855; h 3.823 family: (24,4) 3.8683, (27,5) 3.8685).  Success: h <=
+  target in any cell.  Prediction: (65,7) 45 % (gap 1e-4), any other 15 %.  Note: the one-short analysis behind these
+  cells used the #481 library; the live library (with store pieces) may move the priorities.
+  *LH1 amended (01:35, before launch)*: `--fill-cap 5000` (not 50,000: V2's near-integer sides spent 50,000 fills for
+  0-3 reaching pairs), 9 procs (RS1 has 6); starts automatically when the live table finishes.
+* `harden_explore.py score` now flags results below the live frontier.  Rescoring every past time-travel run dir:
+  only bm3c 236 (and nh3 207 at -1.5e-9, float noise).
+* **02:25 status**: X236 (30 min) found nothing below 15.8619343906; post the BM3c point as it is.  RS1 at 7.2 / 9
+  CPU-h: (75,9) MET at ep 2 (h 5.8401 < 5.847; the store had 5.8855); (65,7) 5.84710 (gap 1.0e-4, unchanged);
+  (50,4) 5.8582; (55,5) 5.8670; (24,4) 3.8510, (27,5) 3.8508 (target 3.8228).  LH1 started 02:24 (9 procs).
+* **compose3 table cache fix (02:30)**: tables were keyed by the lib *string*, but `store` grows (rectsearch imports
+  at its end), so a cached table could misalign with the pieces, and workers that reload the lib mid-run could
+  disagree with the parent.  Now: the table name includes a digest of the loaded pieces; workers get the parent's
+  piece list; tables save per-piece keys and a new table reuses matching rows (only new pieces cost fills; tested:
+  `store` alone reused 7661/7661 rows, identical).  LH1 is unaffected (its 9 workers loaded before RS1 imports).
+  New `--new-vs TABLE`: only pairs that contain a piece absent from TABLE.
+* **RC1, pre-registered (02:35)**: when RS1 ends (store import), `compose3.py run --live 50-324 --T 2026-10-16T09:00
+  --lib runs/mondrian/croplib_live1016.npz,store --new-vs <LH1 table> --lo 0.01 --hi 0.04 --sides 3 --reach-cap
+  100000 --fill-cap 5000 --polish-k 100000 --reach-budget 1500 --out runs/compose3/rc1 --cores 6`: the new strip
+  pieces paired with the whole live library.  Prediction: a start below the live frontier 3 % (the one-short n need
+  +1 square and the (75,9) piece gives it only where the #481 strip sat in exactly that box); a start within 0.02 of
+  ante at some n where LH1 has none, 25 %.  Budget <= 6 CPU-h.
+* **RC1 (to 04:40, n 50-299 so far)**: 36 new pieces (table 5 s, 18,239 rows reused).  No start below the live frontier
+  and none within 0.02 where LH1 has none (closest: 151 +0.024, 234 +0.024, 299 +0.024, 177 +0.025); both
+  predictions no.  RS1 final: only (75,9) met; (65,7) stuck at 5.847105.
+* **LH1 at 88/134 n (04:40)**: no start below the live frontier.  Composition alone re-builds the record (|gap| < 1e-7)
+  at 30+ n; closest non-ties 151 +3.5e-4, 129 +2.0e-3, 86 +2.3e-3, 175 +2.9e-3, 110 +3.2e-3, 68 +4.6e-3.
+  *LH2 launch amended (04:45)*: `--cores 15 --keep 4 --minutes 30 --max-need 0.02` (the ties stay in: the s(236) find
+  started from a re-built record).
+* **LE1, pre-registered (04:50)**: early explorer on LH1's closest non-ties while LH1 finishes (RC1's 6 cores):
+  `harden_explore.py run --src runs/compose3/live1/starts --starts-glob 'start[0-9]*.txt' --only 151,129,86,175,110,68
+  --out runs/compose3/live1/explore_early --minutes 60 --cores 6 --explore-extra '--seed 7'` (seed differs from LH2).
+  Prediction: a value below the live frontier at any of the six, 10 % (151's 3.5e-4 gap is the best chance).
+* **LH1 done (07:52, ~5.5 h wall x 9 procs, ~48 CPU-h: over the 40 budget by the large-n near-integer sides)**:
+  134 n, **0 starts below the live frontier** (prediction point 0.1: right).  Record re-built by composition at 30+
+  n; closest non-ties 151 +3.5e-4, 299 +4e-4, 129 +2.0e-3, 308 +1.7e-3, 86 +2.3e-3, 295 +2.9e-3, 175 +2.9e-3.
+* **LE1 done (60 min x 6)**: no record.  151 descended to the record itself (+2.6e-12, same point), 68 to +5.0e-4
+  (from +4.6e-3); 86, 110, 129, 175 did not move.  Prediction 10 %: no.
+* **LH2 started 07:52**: 75 events with a start within 0.02, 15 procs x 30 min each (~38 CPU-h, ~2.5 h wall).
+* **s(236) posted (08:10)**: same-day live check clean (register e2e018f, newest issue #643); certificate pushed at
+  5ad0069 (with two earlier note commits, Evan OK'd); pushed files' SHA-256 match the draft; posted
+  **jlevy/squares#659**.
+* **LH2 done (10:20)**: 134 events scored (75 explored), **0 below the live frontier**; 51 re-reach the record
+  exactly (REPLICATED = ties), closest non-ties 234 +1.6e-3, 105 +1.7e-3, 308 +1.7e-3, 129 +2.0e-3.  Prediction
+  (record after LH2: point 0.35): no.  Night total: the one record is s(236) (found 10-15, posted #659).
+  Reading: composition + 30 min explorer on the live library reproduces the frontier broadly but does not move it;
+  the posted frontier at 50-324 is already at the composition fixed point of the pieces we have.  Next lever is
+  pieces (one-more-square strips), not compute on the same library.

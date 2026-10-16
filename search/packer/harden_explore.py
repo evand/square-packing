@@ -9,7 +9,7 @@ then run explore.py (current config: gate 2e-3 gate-ref run, value reward, elite
   python3 harden_explore.py run --src runs/bm1 runs/bm2 --out runs/bm3 [--minutes 20 --cores 16 --keep 4]
   python3 harden_explore.py score --out runs/bm3
 """
-import argparse, glob, json, os, subprocess, sys
+import argparse, glob, json, os, subprocess, sys, time
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 
 
@@ -97,8 +97,16 @@ def score(a):
             'BEAT-ANTE' if best is not None and best < ev['ante'] - 1e-9 else 'no'
         C[tier] += 1
         hb = ev.get('harden_best')
+        # 10-16: a time-travel result can also beat the LIVE frontier (s(236) BM3c sat unnoticed for a day): flag it
+        live = ''
+        if best is not None:
+            from pk import eventbench as EB
+            f_now = EB.frontier_at(ev['n'], time.strftime('%Y-%m-%dT%H:%M', time.gmtime()))
+            if best < f_now - 1e-9:
+                live = f'  ** BELOW LIVE FRONTIER {f_now:.10f} ({best - f_now:+.2e}): run candidate.py **'
+                C['LIVE'] += 1
         print(f"n={ev['n']:3d} harden {hb if hb is not None else float('nan'):.10f} final {best if best is not None else float('nan'):.10f} "
-              f"need {(best - ev['ante']) if best is not None else float('nan'):+.2e}  posted {ev['new']:.10f} ante {ev['ante']:.10f} {tier}")
+              f"need {(best - ev['ante']) if best is not None else float('nan'):+.2e}  posted {ev['new']:.10f} ante {ev['ante']:.10f} {tier}{live}")
     print(dict(C))
 
 
