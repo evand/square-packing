@@ -453,6 +453,40 @@ class KKT:
 
 
 # ------------------------------------------------------------------------------------------- 4. verification
+def cone_fallback(P, Eq, log_=log):
+    """Multiplier + load-bearing set when full_lambda_lp fails (conesupport.py).  Over all closed contacts Eq: exact
+    multiplier by mp Lawson-Hanson NNLS (KKT iff residual ~0); load-bearing set E = implicit equalities of the critical
+    cone {J d >= 0, d_S = 0}, seeded by the contacts with positive exact multiplier; squares with no E contact are dropped
+    with their contacts (a relaxation: a strict local minimum of the relaxed problem is one of the full problem)."""
+    import conesupport as CS
+    sq_of = lambda c: [c[1]] + ([c[3]] if c[0] == 'C' else [])
+    allsq = sorted({i for c in Eq for i in sq_of(c)})
+    V = [3 * i + k for i in allsq for k in range(3)] + [3 * P.n]
+    J, _ = jacobian(P, Eq)
+    JV = J[:, V]
+    lam, res = CS.mp_nnls(JV, CS.jac_mp(P, Eq, V, eval_contact))
+    out = {'kkt_residual': float(res), 'kkt': bool(res < mpf(10) ** -50)}
+    if not out['kkt']:
+        return out
+    seed = np.array([x > mpf(10) ** -60 for x in lam])
+    E, tmin = CS.cone_support(JV, seed)
+    if E is None:                       # LP trouble: the seed alone (fewer equalities = larger cone: conservative)
+        E, tmin = seed, None
+        out['cone_lp'] = 'failed; seed only'
+    A = [c for c, e in zip(Eq, E) if e]
+    load_sq = sorted({i for c in A for i in sq_of(c)})
+    ls = set(load_sq)
+    weak = [c for c, e in zip(Eq, E) if not e and all(i in ls for i in sq_of(c))]
+    lamA = np.array([float(x) for x, e in zip(lam, E) if e])
+    out.update(A=A, lam=lamA, weak=weak, load_sq=load_sq, V=[3 * i + k for i in load_sq for k in range(3)] + [3 * P.n],
+               n_E=len(A), n_open=int((~E).sum()), min_opening=tmin, dropped_squares=sorted(set(allsq) - ls),
+               lam_min=float(min((x for x, s_ in zip(lam, seed) if s_), default=0)), n_lam_pos=int(seed.sum()))
+    log_(f'  multiplier fallback (mp NNLS over {len(Eq)} closed contacts): KKT residual {float(res):.1e}, '
+         f'{out["n_lam_pos"]} with lambda > 0 (min {out["lam_min"]:.2e}); critical cone: {len(A)} load-bearing, '
+         f'{out["n_open"]} can open (min opening {tmin}); force-free squares dropped: {out["dropped_squares"]}')
+    return out
+
+
 def full_lambda_lp(P, A, V):
     """max t s.t. sum_A lambda_k grad g_k = e_S (rows V), lambda_k >= t (f64 at the solution)."""
     J, _ = jacobian(P, A)
@@ -1004,12 +1038,30 @@ def run(path, dps=80, eps='1e-20', outdir=None, algdeg=0, tol=0, quiet=False, fo
     log_(f'  multipliers: equilibrium residual {etaq:.1e}; best strictly positive choice over the {len(A)} '
          f'load-bearing contacts: min lambda = {tmin if tmin is None else f"{tmin:.3e}"}, '
          f'max {max(lam_full) if lam_full is not None else float("nan"):.3e}')
+    no_kkt = False
     if lam_full is None:
-        lam_full = np.zeros(len(A))
-        log_('  !! no multiplier lambda >= 0 balances the load at the exact point: NOT a KKT point of min S')
+        # 10-15: the f64 multiplier LPs miss contacts that need lambda ~1e-9 .. 1e-11 (max_support counts support above
+        # 0.01 tau0), and running second_order with lambda = 0 then reported 'PSD with k zero modes' (47 s(110) census
+        # points).  Fallback: exact (mp) multiplier over all closed contacts, load-bearing set from the critical cone.
+        fb = cone_fallback(P, Eq, log_)
+        rep['multiplier_fallback'] = {k: v for k, v in fb.items() if k not in ('A', 'lam', 'weak', 'load_sq', 'V')}
+        if fb['kkt']:
+            A, lam_full, weak_eq, load_sq, VA = fb['A'], fb['lam'], fb['weak'], fb['load_sq'], fb['V']
+            rep['n_active_exact'] = len(A)
+            rep['load_bearing_squares_exact'] = len(load_sq)
+            rep['lambda_A_maxmin'] = fb['lam_min']
+        else:
+            no_kkt = True
+            lam_full = np.zeros(len(A))
+            log_('  !! no multiplier lambda >= 0 balances the load at the exact point (mp NNLS): not a KKT point for '
+                 'this contact set')
 
     so = second_order(P, A, lam_full, VA, load_sq, weak_eq)
     zm = so.pop('_zero_modes', None)
+    if no_kkt:
+        so['status'] = (f'inconclusive: no multiplier lambda >= 0 for the closed contact set (mp NNLS residual '
+                        f'{rep["multiplier_fallback"]["kkt_residual"]:.1e})')
+        zm = None
     if zm is not None and zm.shape[1]:
         nre, wr, wc, wds = probe_flat(P, A, VA, zm)
         so['zero_modes_realised'] = nre

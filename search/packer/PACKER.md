@@ -3441,3 +3441,49 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   fqcorpus 9, bench110/r1 8, h110_pm 7, gx110 melt arms 7, tt3 1, night1014 1.  Best new one: GX1 seed 0 descendant
   10.9968278855 (certified, 6th best overall, 4.4e-5 above the record; in the 10.996828 cluster; corner signature
   [53, 11, 1, 1], 1 slid column).
+* **s(110) unresolved / weak: second-order descent (10-15 evening, `nlpdesc.py`, `resolve110_nlp.py`; outputs
+  `runs/resolve110_nlp/`; store backup `~/store-backups/store-2026-10-15-pre-nlpdesc.sqlite`).**  Diagnosis: the 37
+  'solve failed' side keys are X01 slow valleys, not degenerate minima: corner-corner MILP slopes −5e-9 … −4e-7, below
+  descend.py's stop (1e-6), and slp2 crawls (2,000 iterations at R ≈ 2.6e-7 for 2e-10: curvature-limited first order).
+  `nlpdesc.py`: fixed-line NLP (each near pair: all 4 corners of one square outside one edge line of the other, the best
+  SAT separator; walls on every corner), exact Hessians (FD-checked), IPOPT via `ipenv.sh` (nix python + cyipopt), trust
+  box 0.02, lines re-picked per round, exact MILP kick when stalled.  ~10-60 s per point.  Result on 94 targets (39
+  unresolved with a packing + 55 weak): unresolved -> 28 certified (24 known, 4 new), 4 weak, 2 not-min (MILP descent
+  my kick cannot follow), 5 still 'solve failed' (+ 10.999021730, no packing).  Weak representatives: 38 stay at their
+  weak point (higher-order question untouched), 13 descend to certified minima (4 new; gains 6e-8 … 6e-4), 2 not-min,
+  2 unresolved; weak rows unchanged (copies linked by 1e-9 side key: evidence only).  The 10.99931237x cluster (13 keys)
+  drains into one certified minimum 10.9993122015018.  Store: 1,031 certified + 56 weak below 11 (+8 / +1; 9 distinct
+  new minima, best new 10.9979072988), basin unresolved 40 -> 6.  Pass 2 (60 rounds, R 0.05) on the 11 unfinished: no
+  progress.  Next for those: case-split kick (follow the MILP branch with the switched lines held as constraints).
+* **s(110) weak rows explained (10-15 night; `weakmodes.py`, `weakcone.py` (+ `conelp.py`), `weakfarkas.py`, `weakkkt.py`,
+  `weakprobe.py`; outputs `runs/resolve110_nlp/weak*`, verdicts `weak_verdicts.json`; store not changed).**
+  Cause of the 47 'PSD with k zero modes' rows: an exactsolve bug, not geometry.  After the active-set step a newly
+  closed pair needs force lambda ~1e-9 .. 1e-11; max_support counts support only above 0.01 tau0 = 1e-8 (tau0 = 1e-6), so
+  that contact goes to the weakly active list, full_lambda_lp over the rest is infeasible ('no multiplier'), and run()
+  then calls second_order with lambda = 0 => Hessian 0 => 'PSD, every null direction a zero mode' => classified weak
+  (the '!! NOT a KKT point' log line is ignored by the classifier).  mp check (Lawson-Hanson NNLS with iterative
+  refinement, all closed contacts): every one of the 56 is an exact KKT point (residual 1e-71 .. 1e-81).
+  Multiplier-free second-order test (`weakcone.py`): critical cone C = {J d >= 0 on all closed contacts, d_S = 0};
+  load-bearing set E = implicit equalities of C by one homogeneous LP (scale-free; gap to the opening rows ~1 in most);
+  squares with no E contact dropped (relaxation); second_order + probe_flat on E.  Verdicts on the 56: **34 local
+  minima** (4 rigid, 30 strict modulo exact flat motions; all zero modes realised in mp), 10 degenerate (KKT, zero modes
+  not exact flat motions: needs third / fourth order), 2 with one negative-curvature direction blocked at first order by
+  opening contacts, 10 not analysed (cone LP: HiGHS model status Unknown in scipy 1.17 (HiGHS 1.8) and 1.18; KKT holds
+  in mp).  Caveats: second order is checked in the best-axis corner-corner branch only (first order over all branches
+  by the MILP, as for every census minimum); nlpdesc descended from stored copies of some of the 34 (e.g. 10.9984550502
+  by 1.1e-5), and the radius probe on three weak points found lower packings at radius >= 1e-3 but none at <= 3e-4:
+  small basins ('ledges'), or second-order descent in another corner-corner branch.  Not yet done: fix exactsolve
+  (tau0 / fall back to a cone-based support instead of lambda = 0; then re-certify the census), store relabel.
+* **exactsolve fix: multiplier fallback (10-15 night; `search/exact/conesupport.py`, `exactsolve.cone_fallback`).**  When
+  full_lambda_lp finds no strictly positive multiplier, run() no longer runs second_order with lambda = 0 (which always
+  said 'PSD with k zero modes' => weak).  Instead: exact multiplier over all closed contacts by mp Lawson-Hanson NNLS
+  (KKT iff residual < 1e-50; else status 'inconclusive: no multiplier', classified unresolved); load-bearing set = implicit
+  equalities of the critical cone {J d >= 0, d_S = 0}, seeded by the positive exact multipliers, the rest decided by
+  iterated homogeneous LPs (null-space reduced; HiGHS 1.8 'Unknown' handled by presolve-off / per-row fallbacks);
+  force-free squares dropped with their contacts (relaxation); then second_order + probe_flat as before.  Path only runs
+  when full_lambda_lp fails, so other verdicts are unchanged: ./verify.sh fast tier passes; 24 random certified census
+  points re-solved: 19 identical, 5 differ identically under the unpatched exactsolve (representative-packing effects).
+  `census_certify.py certify --redo weak` (new option) on n = 110: 61 weak side keys -> 49 certified, 12 weak (all 12
+  'negative curvature blocked', the genuine residue).  **Census below 11: 1,076 certified + 11 weak** (was 1,031 + 56).
+  One orphan weak minimum row (10.99790958586097942: its side key now solves to certified 10.9979095857501).  Store
+  backup before: ~/store-backups/store-2026-10-15-pre-weakfix.sqlite.

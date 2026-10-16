@@ -8,7 +8,7 @@ census_exact.solve, result into `basin` and the representative's status.  Unlike
 output directory is kept (runs/census/n<n>/<key>/: .exact.txt, .cert, contacts.json), so contact graphs can be compared
 later ("same basin" is a contact-graph question; matching distance is the parent-usefulness proxy).
 
-  census_certify.py certify --n 110 [--k 11] [--procs 14] [--timeout 900] [--limit N]
+  census_certify.py certify --n 110 [--k 11] [--procs 14] [--timeout 900] [--limit N] [--redo weak]
   census_certify.py report  --n 110 [--k 11]
 """
 import argparse, collections, json, math, os, sys, time
@@ -23,12 +23,15 @@ def kgrid(n):
     return r if r * r == n else r + 1
 
 
-def todo(st, n, k):
+def todo(st, n, k, redo=None):
+    """Sides below k with packing rows but no basin row; with redo = a class ('weak', ...), the sides whose basin row
+    has that class instead (re-solve after an exactsolve fix; record_verdict overwrites the basin row)."""
     have = set(r[0] for r in st.db.execute('SELECT key FROM basin WHERE n=?', (n,)))
+    want = set(r[0] for r in st.db.execute('SELECT key FROM basin WHERE n=? AND cls=?', (n, redo))) if redo else None
     rep = {}
     for pid, s, status, pen in st.db.execute('SELECT id, s, status, pen FROM packing WHERE n=? AND s<?', (n, k)):
         key = f'{s:.9f}'
-        if key in have:
+        if (key not in want) if redo else (key in have):
             continue
         cand = (-RANK.get(status, 0), pen if pen is not None else 0.0, pid)
         if key not in rep or cand < rep[key][0]:
@@ -54,9 +57,9 @@ def job(arg):
 def certify(a):
     st = Store()
     k = a.k or kgrid(a.n)
-    T = todo(st, a.n, k)[:a.limit or None]
+    T = todo(st, a.n, k, a.redo)[:a.limit or None]
     root = f'{HERE}/runs/census/n{a.n}'
-    print(f'n={a.n}: {len(T)} sides below {k} without a basin row; solving on {a.procs} procs', flush=True)
+    print(f'n={a.n}: {len(T)} sides below {k} {("with basin class " + a.redo) if a.redo else "without a basin row"}; solving on {a.procs} procs', flush=True)
     from pk import manifest
     man = manifest.start(root, 'census_certify', args=vars(a), procs=a.procs,
                          fname=f'manifest_certify_{time.strftime("%Y%m%dT%H%M%S")}.json', extra=dict(todo=len(T)))
@@ -119,5 +122,6 @@ if __name__ == '__main__':
         if c == 'certify':
             p.add_argument('--procs', type=int, default=14); p.add_argument('--timeout', type=float, default=900)
             p.add_argument('--limit', type=int)
+            p.add_argument('--redo', help='re-solve the sides whose basin class is this (e.g. weak)')
     a = ap.parse_args()
     {'certify': certify, 'report': report}[a.cmd](a)

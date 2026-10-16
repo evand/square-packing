@@ -39,7 +39,8 @@ Thesis (Evan 10-14): diversity pays; local search at current budgets has mined t
 - [ ] Perf follow-ups (each ≤ ~10 %; PACKER "Performance session 10-13"): block LDL, SIMD `Prob::eval`, `FQ_SOC_ROUNDS=16`, exactsolve `probe_flat` reuse.
 - [ ] `fresh.py`: fix its finishing gap (364).  (It runs after every sync via `pk.py ingest`.)
 - [ ] exactsolve should snap near-axis corner-loaded squares itself (n = 292, `search/packer/s292.md`).
-- [ ] Shallow-valley descender X01 (eventually): corner-corner MILP direction with exact contacts until jammed; test on the 225 stuck n = 110 points.
+- [ ] s(110) weak residue: 12 side keys / 10 minima "negative curvature blocked" (cone-QP check, then branch-aware second order); exactsolve fallback fixed 10-15 (PACKER "exactsolve fix").
+- [ ] Shallow-valley descender X01: `search/packer/nlpdesc.py` (second-order fixed-line NLP, IPOPT) resolved 34 / 40 unresolved s(110) keys 10-15 (PACKER "unresolved / weak: second-order descent"); next: the 225 stuck points, the 6 left (MILP-branch kick).
 - [ ] s(110) explainer refresh + write-up (`tasks/landscape110-explainer/`; rewrite of `s110-landscape.md`'s census section).
 
 ## Major: exact results
