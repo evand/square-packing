@@ -34,6 +34,7 @@ optimum of the same packing).  See `batch/README.md`.
 | (quadratic `S*`) | `lean_cert.py` also emits `packs_closed : Packs n (a + b * √d)` and `minSide_le_closed : minSide n ≤ a + b * √d` (generic lemma `lean/Sqpack/ExactQuad.lean`: rational check that the root of `pS` in `[Sa, Sb]` is `a + b√d`); list in `lean_batch/results.md` § Closed forms; committed example `Exact/N5c.lean` |
 | `explain/`, `CONTACT_SYSTEMS.md` | expository: contact systems of s(5), s(11), s(17), s(29) counted (unknowns, trivial contacts, Jacobian rank), s(11)'s octic by Gröbner basis from the contact graph, the octic's phantom real root (10-13) |
 | `chain_lean.py` | band-lemma local-minimum certificates for the integer-side records (`lean/Sqpack/Exact/ChainUpTo82.lean`, `Exact/Chain/N*.lean`) |
+| `cur/` | exact forms for the **current** records (10-15): `run.py` (store → exactsolve → minpoly → verify), 23 new forms in `cur/data/`, `RESULTS.md`; 272 / 324 current records exact; the 52 open by failure in `cur/README.md` |
 
 ## Method
 

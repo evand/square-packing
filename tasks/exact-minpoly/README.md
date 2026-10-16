@@ -26,6 +26,8 @@ changes the field the coordinates live in.
 
 ## State (10-07)
 
+**10-15 update:** the records moved; current-record coverage is 272 / 324 after `search/exact/cur/` (+23, the pipeline unchanged on the newer packings).  Open list and failure modes for the current records: `search/exact/cur/README.md`.  The rest of this section is as of 10-07.
+
 **269 of 324 verified** (`search/exact/minpoly/results.md`; 10-07 evening: + 53, 106, 129, 177 from settling flat
 angle directions).  That is all 176 axis-parallel records (S an integer) plus 93 tilted ones, up to field degree 48.
 Field degrees: 1: 182, 2: 61, 4–8: 12, 16–48: 14.  **86 cross-checks agree, none differ** (findpoly on the 68-digit
