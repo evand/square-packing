@@ -3431,3 +3431,13 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   past the crossing erases it -- the record basin is a strong attractor from this whole neighbourhood; keeping a
   feature needs stopping early (melt arms), and then the sub-grid states reached are ~1.5-2.5e-3 above the record.  No
   110 improvement.
+* **s(110) census brought up to date (19:12)**.  `pk.py import-run --below-k` over every explorer archive written since
+  the last update (10-12 18:40; 2,580 run dirs: bench110, gx110, h110_pm, tt2 / tt3, night1014, perfbench, evolve2,
+  ...): 253,378 new packing rows (all n).  `census_certify.py certify --n 110 --procs 16`: 2,178 new side keys solved in
+  4 min (1,985 not-min, 169 certified, 10 weak, 14 unresolved).  Census now: 6,490 side keys (1,127 certified / 5,262
+  not-min / 61 weak / 40 unresolved, 0 unsolved) -> **1,078 distinct minima below 11 (1,023 certified + 55 weak)**, up
+  from 939 (890 + 49) on 10-12; within 1e-4 / 1e-3 / 3e-3 of the record: 10 / 59 / 859.  Best still 10.9967833966.
+  The 139 new minima by source: bench110/hr 25, q2race 20, gx110/x1 18, bench110/e0 17, perfbench 14, bench110/g1 12,
+  fqcorpus 9, bench110/r1 8, h110_pm 7, gx110 melt arms 7, tt3 1, night1014 1.  Best new one: GX1 seed 0 descendant
+  10.9968278855 (certified, 6th best overall, 4.4e-5 above the record; in the 10.996828 cluster; corner signature
+  [53, 11, 1, 1], 1 slid column).

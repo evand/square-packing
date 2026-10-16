@@ -49,3 +49,8 @@ short); 238-240 need a constructive way to make interlocking staircase blocks; (
 that are wrong by 10-15; (4) evaluator 13-26 min per call and noisy under load (+-0.02 normalised) -> fill
 performance work; (5) softmin dropped failed n (fixed after gen 1); (6) good agent methods to keep: read your own
 optimised packings to fit parameters; overlay candidates on the reference PNGs; zoom references.
+
+## Next (10-15 19:15, paused for Evan's review)
+Gen 2 plan and the other open items: `tasks/packer-next-2026-10-15/README.md` §2 (focus 236-240, interlocking
+staircase-block helper, cheaper quench budget, gen-1 lessons).  Fill is no longer the bottleneck (FP1: `fillfast`,
+58 ms / fill); the evaluator quench is.
