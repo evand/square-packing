@@ -26,6 +26,14 @@ Integer-shift families (same polynomial up to x → x + k): 70 / 207, 175 / 232,
 
 Run (10-15): `python3 run.py <75 n> --procs 12`, `--tmo 900`, `--mem 12G`, ~1 h wall.
 
+**Register (jlevy/squares main 4e8c898, synced 10-15).**  Every S* equals the register's reported value (to
+1e-14; 207 to 2.4e-12, a 12-digit rounding there).  The register already has s(51) = (16+5√2)/3 (Ryan Xu, #432):
+ours agrees.  For the other 22 it records a rational (a certified side, `algebraic_degree: 1`) or nothing.
+Input packings: the store's best, which at 153 and 207 is a Mishapolk / Couzo copy tying the register witness
+(PingYou).  Re-run on the register witnesses (`run.py 153:291578 207:291579`): the same p at both; 153 VALID; 207
+NOT VERIFIED on pair (73, 74) ("no separating line proved"; that witness's own exact point, not investigated), so
+207's committed form is from the copy (store id 1044231).
+
 Published cross-checks: none for these packings.  Ellsworth's page (fetched 10-06,
 `tasks/exact-minpoly/results/kingbird_crosscheck.json`) predates them; at these n it has the older packings.
 
