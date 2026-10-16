@@ -46,6 +46,9 @@ class Leaf:
     CAP_TAG = os.environ.get('V7_CAP_TAG', '0') == '1'
     # prefer the box-wide alternatives unless the vertex ones cut the combinations by this factor
     BOX_FACTOR = float(os.environ.get('V7_BOX_FACTOR', '1'))
+    # a claim counts as meeting the square at a sample point only when its chord is longer than this; at zero
+    # margin a segment that touches the square at u = 0 and misses it for u > 0 must be dropped (V7_TOUCH)
+    TOUCH = float(os.environ.get('V7_TOUCH', '1e-12'))
     USE_CORNER = True
     ANCHOR = 'hi'
 
@@ -191,7 +194,7 @@ class Leaf:
             for u, v in pts:
                 uv = [svals(L, u, v) for L in ups]; lv = [svals(L, u, v) for L in los]
                 mu = min(uv); ml = max(lv)
-                posl.append(mu - ml > 1e-12)
+                posl.append(mu - ml > Leaf.TOUCH)
                 if mu - ml > -1e-9:
                     Ua |= {i for i in range(3) if uv[i] <= mu + tol}
                     La |= {i for i in range(3) if lv[i] >= ml - tol}
