@@ -3413,3 +3413,21 @@ then improvements.  Evaluation on n <= 324 + time travel; the n > 324 register r
   explorer 12.0): the joint fill + fq of up to 8,000 compositions per n dominates.  Read: with the exact ranking, blind
   Mondrian is at L1 (named) level on this set, so by the pre-registered rule the live slack-composition hunt is next,
   held for the pause with Evan (cost ~6 CPU-h per n at this keep; the compose stage needs a cheaper screen first).
+* **GX1 result (18:47)** (27.1 CPU-h: explorer 11.7, melt 7.7, meltrand 7.7).  **Explorer arm** (47 seeds): CROSSED
+  45 / 47 (all 44 V-junction seeds + m4; m7 staircase 11.00185 and m8 angle transition 11.00789 stay above).  The
+  crossings collapse into the record basin: best descendant 10.996783 J0 on 41 seeds (10.996887 J4 on 3), so the
+  45-degree junction is never kept (0 / 45).  NEW 1: seed 7 (cell [55, 11, 1, 1] J1) -> sub-grid cell (52, 7, 2) at
+  10.999669 (`runs/gx110/x1/s007/b00691.txt`), with 2 squares at 2-20 degrees, which the seed did not have; no
+  descendant keeps a seed's load-bearing intermediate squares (m7 / m8 never cross).  **Melt arms** (31 seeds, 15
+  min): melt CROSSED 22 / 31, meltrand 24 / 31.  Both stop in shallower sub-grid basins (10.9982-10.9993, J2-J4)
+  instead of relaxing to the record, so 12 crossings keep the junction in each arm (12 = 12: the protection changed
+  nothing measurable).  Protection cost crossings where the protected part was the obstacle: m4 (loose border pair)
+  crosses under meltrand and the explorer, not under protected melt; seeds 18 / 19 / 21 / 23 similar.  NEW: melt 0,
+  meltrand 1 (seed 2 -> (48, 9, 2) at 10.999862, `runs/gx110/x1r/s002/b00001.txt`).  The arms really differ (separate
+  archives, ~250 melts each per seed); the shared values are the same few basins next to the seeds.  Predictions:
+  crossed >= 30 / 46 yes (45); >= 1 NEW 25 %: yes (2, both ~3e-4 below 11, far from the record); 45-degree junction
+  kept 15 %: yes in the melt arms only (explorer 0); intermediate kept 15 %: no; melt ~ meltrand crossing (within
+  1.5x) yes; protected keeps more than random: no.  Read: foreign above-grid structure crosses easily, but descent
+  past the crossing erases it -- the record basin is a strong attractor from this whole neighbourhood; keeping a
+  feature needs stopping early (melt arms), and then the sub-grid states reached are ~1.5-2.5e-3 above the record.  No
+  110 improvement.
