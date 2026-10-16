@@ -15,7 +15,7 @@ External posts: ask Evan explicitly per post.  **Before any bound-chasing run, c
 - [ ] Time-lapse records video (`site/timelapse/`): Evan to return; store sighting times are local, not UTC.
 
 ## Watch
-- [ ] jlevy #606 (our 146), #596, #584, #552, #489, #465, #419 / #420 (exact forms, no reply), #375, #3 (preprint, left open), PR #6 `example` ask; chelokot#18.
+- [ ] jlevy #639 (exact forms, 22 current records), #606 (our 146), #596, #584, #552, #489, #465, #419 / #420 (exact forms, no reply), #375, #3 (preprint, left open), PR #6 `example` ask; chelokot#18.
 
 ## Packings (`search/packer/`: `HANDOFF-2026-10-14.md`, `tasks/packer-arch-2026-10-14/`)
 Thesis (Evan 10-14): diversity pays; local search at current budgets has mined the frontier.  No compute above n = 324 without a specific reason.
@@ -53,7 +53,7 @@ Thesis (Evan 10-14): diversity pays; local search at current budgets has mined t
 ## Exact forms (`tasks/exact-minpoly/`, `search/exact/EXACT_FORMS.md`)
 - [ ] Target (10-07): exact + Lean `Packs` for all n ≤ 82 (open 29, 55, 68, 71; 83 deg 672), Lean local min ~70.  10-11: 269/324 exact, `Packs` 258, local min 178.
 - [ ] Lean local minima: next n = 5 (grade B), one grade C (10 or 19).
-- [ ] Exact forms for current records: 272 / 324 (10-15, `search/exact/cur/`: +23); 52 open by failure in its README (22 OOM, 18 timeout → homotopy with a path cap, 7 multi-direction force balance, 3 flat rotation).  Paused 10-15.  jlevy submission drafted: `outreach/draft-jlevy-exact-forms-current-2026-10-15.md` (needs push + Evan OK).  Superseded certificates stay (Evan 10-10).
+- [ ] Exact forms for current records: 272 / 324 (10-15, `search/exact/cur/`: +23); 52 open by failure in its README (22 OOM, 18 timeout → homotopy with a path cap, 7 multi-direction force balance, 3 flat rotation).  Paused 10-15.  Posted as jlevy#639 (10-15).  Superseded certificates stay (Evan 10-10).
 - [ ] Coverage of the 55 open, by cost: flat rotation, force balance, block-triangular elimination, msolve-hard 29 / 68 / 71 / 126 / 228 (task doc §Numerics).
 - [ ] Grade-C certificates (`search/exact/gradec.py`, `grade-C.md`): 233/250 VALID at degree ≤ 4; left 17 timeouts, degree > 4.
 - [ ] s(29) exact form (degree 7213, `search/exact/homotopy/N29.md`): grade-C cert (mod-q + arb), rigidity, EXACT_FORMS row; data `runs/n29-backup/`.
