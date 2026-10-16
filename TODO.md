@@ -7,7 +7,6 @@ Pre-tidy text (10-15, has details dropped here): `tasks/todo-tidy-2026-10-15/TOD
 External posts: ask Evan explicitly per post.  **Before any bound-chasing run, check jlevy's register (`jlevy.github.io/squares/cases/<n>.html`).**
 
 ## Waiting on Evan
-- [ ] PR #7 (wand125, ValidTilt7 without Face): spot check OK 10-12 (`tasks/pr7-valid7-followup/`); merge (blocked for Claude), then post `outreach/draft-pr7-thanks-2026-10-12.md`.
 - [ ] Review the Lean explainer (`notes/lean-explainer-draft.html`, artifact FJPhwWoQLhdkcerwh4VBwY) → site page.
 - [ ] Compute OKs: s(29) grade-C (`search/exact/homotopy/N29.md` §Pickup); 17 grade-C timeouts uncapped; regularize the 16 raw records; #279 replay (`tasks/s59-replay/`).
 - [ ] Decide: n = 88 strip-family test set (~16 CPU-h; TT2 is done, results not 110-shaped → drop?).
@@ -15,7 +14,7 @@ External posts: ask Evan explicitly per post.  **Before any bound-chasing run, c
 - [ ] Time-lapse records video (`site/timelapse/`): Evan to return; store sighting times are local, not UTC.
 
 ## Watch
-- [ ] jlevy #639 (exact forms, 22 current records), #606 (our 146), #596, #584, #552, #489, #465, #419 / #420 (exact forms, no reply), #375, #3 (preprint, left open), PR #6 `example` ask; chelokot#18.
+- [ ] jlevy #639 (exact forms, 22 current records), #606 (our 146: T-187 V0/C0 10-15, awaiting their replay review), #545 (s29 / grade-C retained 10-15; their replays wait on budget; they note exact-point non-overlap for s(29) open), #596, #584, #552, #489, #465, #419 / #420 (exact forms, no reply), #375, #3 (preprint, left open); chelokot#18 (repo unknown: not under bend / bend-math).
 
 ## Packings (`search/packer/`: `HANDOFF-2026-10-14.md`, `tasks/packer-arch-2026-10-14/`)
 Thesis (Evan 10-14): diversity pays; local search at current budgets has mined the frontier.  No compute above n = 324 without a specific reason.
