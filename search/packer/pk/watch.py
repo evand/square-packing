@@ -28,6 +28,7 @@ from . import sources
 from .sources import REPO_NAME, ATTACH_RE, body_claims, resolve_sha, _gh
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+BACKTICK = re.compile(r'`([A-Za-z0-9._+/-]{1,200}\.[A-Za-z0-9]{1,10})`')   # `file.ext` or `dir/file.ext` in issue bodies
 PENDING = os.path.join(HERE, 'pending.yaml')
 WDIR = os.path.join(HERE, '..', 'runs', 'watch')
 STATE = os.path.join(WDIR, 'state.json')
@@ -105,7 +106,7 @@ def refs(text):
         name = f'{owner}/{repo}'
         if owner.lower() in RESERVED or name.lower() == UPSTREAM or not repo or not REPO_NAME.fullmatch(name):
             continue
-        e = R.setdefault(name, dict(shas=[], paths=[]))
+        e = R.setdefault(name, dict(shas=[], paths=[], trees=[]))
         if kind and re.fullmatch(r'[0-9a-f]{7,40}', ref):
             e['shas'].append(ref)
         if at:
@@ -114,6 +115,8 @@ def refs(text):
             p = urllib.parse.unquote(path.strip('/')).rstrip('.,;:')
             if p and '..' not in p.split('/') and re.fullmatch(r'[A-Za-z0-9._/ +-]{1,300}', p):
                 e['paths'].append(p)
+                if kind == 'tree':
+                    e['trees'].append(p)
     loose = [s for s in SHA_MENTION.findall(text or '')]
     return R, loose
 
@@ -147,7 +150,20 @@ def propose(issue):
                         (f'(named commit {named[0][:12]} not found)' if named else '(issue names no commit)'))
         if not pin:
             return None, f'repo {repo} not reachable'
-        e.update(repo=repo, commit=pin, paths=sorted(set(info['paths'])) or ['.'])
+        # 10-17: a tree link (a directory) used to pin the whole dir, so every older packing in it became a sighting
+        # of this issue (#659 / #664 tagged ~40 each).  When the body names files in backticks, narrow each linked dir
+        # to those names (bare names under the dir, or full paths inside it); missing names just glob to nothing.
+        named = [x.strip() for x in BACKTICK.findall(body)]
+        paths = []
+        for p in info['paths']:
+            if p in info.get('trees', []):
+                sub = [f'{p}/{x}' for x in named if '/' not in x] + [x for x in named if x.startswith(p + '/')]
+                if sub:
+                    paths += sub
+                    note.append(f'tree {p} narrowed to {len(sub)} named files')
+                    continue
+            paths.append(p)
+        e.update(repo=repo, commit=pin, paths=sorted(set(paths)) or ['.'])
     else:
         e.update(repo=None)
     if claims:

@@ -75,7 +75,7 @@ def run(a):
             ev, d, keep, rep = queue.pop(0)
             cmd = [sys.executable, f'{HERE}/explore.py', '--n', str(ev['n']), '--adapt', '--reward', 'value', '--elite-share', '0.3',
                    '--polish-gate', '2e-3', '--gate-ref', 'run', '--frontier-s', repr(ev['ante']), '--starts', *keep,
-                   '--minutes', str(a.minutes), '--procs', '1', '--seed', str(ev['n'] * 10 + rep), '--out', f'{d}/explore{rep}',
+                   '--minutes', str(a.minutes), '--procs', '1', '--seed', str(ev['n'] * 10 + rep + a.seed_offset), '--out', f'{d}/explore{rep}',
                    *(a.explore_extra.split() if a.explore_extra else [])]
             P.append(subprocess.Popen(cmd, stdout=open(f'{d}/explore{rep}.log', 'w'), stderr=subprocess.STDOUT, cwd=HERE))
         time.sleep(5)
@@ -103,8 +103,22 @@ def score(a):
             from pk import eventbench as EB
             f_now = EB.frontier_at(ev['n'], time.strftime('%Y-%m-%dT%H:%M', time.gmtime()))
             if best < f_now - 1e-9:
-                live = f'  ** BELOW LIVE FRONTIER {f_now:.10f} ({best - f_now:+.2e}): run candidate.py **'
-                C['LIVE'] += 1
+                # 10-16 (EX1): frontier_at is the event-bench snapshot (events through 10-15 00:50 UTC); n=211 "beat" it
+                # by tying franciscouzo #607, posted later.  Confirm each flag with candidate.py's live check (register,
+                # case page, issues, store).
+                import candidate
+                L = candidate.live(ev['n'], best - 1e-12)
+                # our own finds imported into the store (finders == 'ours' only) are not prior art
+                from pk.store import Store
+                r0 = (Store().query(n=ev['n'], limit=1) or [None])[0]
+                if r0 is not None and (r0['finders'] or '') == 'ours' and 'store best' in L['beaten']:
+                    L['beaten'].remove('store best')
+                if L['beaten']:
+                    live = f'  (below event bench {f_now:.10f}; live check: at/below by {", ".join(L["beaten"])})'
+                    C['LIVE-STALE'] += 1
+                else:
+                    live = f'  ** BELOW LIVE FRONTIER {L["best_other"]:.10f} ({best - L["best_other"]:+.2e}; live-checked): run candidate.py **'
+                    C['LIVE'] += 1
         print(f"n={ev['n']:3d} harden {hb if hb is not None else float('nan'):.10f} final {best if best is not None else float('nan'):.10f} "
               f"need {(best - ev['ante']) if best is not None else float('nan'):+.2e}  posted {ev['new']:.10f} ante {ev['ante']:.10f} {tier}{live}")
     print(dict(C))
@@ -119,6 +133,7 @@ if __name__ == '__main__':
     r.add_argument('--only', help='comma list of n')
     r.add_argument('--explore-extra', help="extra explore.py flags, e.g. '--pm-share 1'")
     r.add_argument('--max-need', type=float, help='skip events whose best start is more than this above ante')
+    r.add_argument('--seed-offset', type=int, default=0, help='added to every explorer seed (repeat runs: fresh streams)')
     s = sp.add_parser('score'); s.add_argument('--out', required=True)
     a = ap.parse_args()
     {'run': run, 'score': score}[a.cmd](a)

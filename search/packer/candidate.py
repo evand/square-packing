@@ -59,12 +59,31 @@ def _gh(args):
     return r.stdout
 
 
-def _decimals_near(text, n, S, width=0.05):
-    """decimals within `width` of S on lines that name n as a token"""
+def _decimals_near(text, n, S, width=0.05, amb=None):
+    """decimals within `width` of S on lines that name n as a token.  10-17: #401's comment "154 (was 12.928293657678),
+    155 (was ...)" gave n = 155 the s(154) value and blocked a real candidate.  A decimal that equals (1e-9) a store
+    packing at ANOTHER count named on the same line, and no store packing at n, goes to `amb` (printed for a human)
+    instead of counting at n.  A decimal nobody knows still counts at n (fail safe)."""
     found = []
+    st = None
     for line in text.splitlines():
-        if re.search(rf'(?<![\d.]){n}(?![\d.])', line):
-            found += [float(x) for x in re.findall(r'\d+\.\d{6,}', line) if abs(float(x) - S) < width]
+        if not re.search(rf'(?<![\d.]){n}(?![\d.])', line):
+            continue
+        for x in [float(v) for v in re.findall(r'\d+\.\d{6,}', line) if abs(float(v) - S) < width]:
+            if amb is not None:
+                ks = {int(k) for k in re.findall(r'(?<![\d.])\d{1,4}(?![\d.])', line)} - {n}
+                ks = {k for k in ks if 2 <= k <= 1100}
+                if ks:
+                    if st is None:
+                        from pk.store import Store
+                        st = Store()
+                    def known(k):
+                        return st.db.execute('SELECT 1 FROM packing WHERE n=? AND abs(s-?)<1e-9 LIMIT 1', (k, x)).fetchone() is not None
+                    other = [k for k in sorted(ks) if known(k)]
+                    if other and not known(n):
+                        amb.append((x, other[0], line.strip()[:160]))
+                        continue
+            found.append(x)
     return found
 
 
@@ -96,7 +115,10 @@ def live(n, S):
         for i in iss:
             body = _gh(['issue', 'view', str(i['number']), '--repo', 'jlevy/squares', '--json', 'title,body,comments',
                         '--jq', '.title, .body, (.comments[].body)'])
-            v = _decimals_near(body, n, S)
+            amb = []
+            v = _decimals_near(body, n, S, amb=amb)
+            for x, k, ln in amb:
+                L.setdefault('ambiguous', []).append(f'#{i["number"]}: {x} (nearest count {k}): {ln}')
             who = (i.get('author') or {}).get('login', '?')
             L['issues'].append(dict(number=i['number'], author=who, state=i['state'], updated=i['updatedAt'], min=min(v) if v else None))
             if v:
@@ -141,6 +163,8 @@ def print_live(L):
         print(f'  {v:.13f}  {v - L["S"]:+.2e}  {k}' + ('   <-- at or below' if k in L['beaten'] else ''))
     for e in L['errors']:
         print(f'  ERROR {e}')
+    for a in L.get('ambiguous', []):
+        print(f'  CHECK BY HAND (decimal nearest another count): {a}')
     print('  BEATEN / TIED: ' + ', '.join(L['beaten']) if L['beaten'] else '  nothing at or below')
 
 

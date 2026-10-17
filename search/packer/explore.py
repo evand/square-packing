@@ -585,6 +585,10 @@ if __name__ == '__main__':
     ap.add_argument('--gate-ref', default='front', choices=['front', 'run'],
                     help='polish gate line: front = min(frontier_s, run best) (TT3-tested); run = the run best (searches from far seeds)')
     ap.add_argument('--pm-share', type=float, default=0, help='share of parent picks by the parent value model (pm_pick); 0 = off')
+    ap.add_argument('--focus', type=int, default=0,
+                    help='FB1 (10-16): each new run best (and the best start) gets its next FOCUS expansions as the parent '
+                         '(new-best hits per CPU-h fall ~2x per expansion; below the ranks 2-20 rate after ~10); 0 = off')
+    ap.add_argument('--focus-share', type=float, default=1.0, help='share of picks that go to the focus while it has budget')
     ap.add_argument('--pm-beta', type=float, default=1.0, help='parent value model sharpness: weight = rate ** beta')
     ap.add_argument('--gls', type=float, default=0, help='weight of the GLS feasibility move (anneal gls); 0 = off')
     ap.add_argument('--cross', type=float, default=0, help='weight of the recombination move (cross.py bestfit 3 of 5); 0 = off')
@@ -673,6 +677,8 @@ if __name__ == '__main__':
     pend = {}
     ar_best = [min(e['s'] for e in ar.E)] if getattr(ar, 'E', None) else [math.inf]
     frontier_s = a.frontier_s if a.frontier_s is not None else ar_best[0]
+    pol0 = [e for e in getattr(ar, 'E', []) if not e.get('unpolished')]
+    focus = [min(pol0, key=lambda e: e['s']) if (a.focus and pol0) else None, a.focus]   # [entry, budget left]
     t_start = time.time()
     def mates(kind, par):
         if kind == 'cross':
@@ -690,7 +696,10 @@ if __name__ == '__main__':
     with ProcessPoolExecutor(a.procs) as ex:
         def submit():
             fr = None; pick = None
-            if a.pm_share and rng.random() < a.pm_share:     # parent value model (TT3 round 3)
+            if focus[0] is not None and focus[1] > 0 and rng.random() < a.focus_share:   # FB1: fresh run best
+                par = focus[0]; focus[1] -= 1
+                pick = ('focus', float(focus[1]))
+            elif a.pm_share and rng.random() < a.pm_share:     # parent value model (TT3 round 3)
                 par, pp = pm_pick(ar.E, frontier_s, ar.smax, a.pm_beta, rng)
                 pick = ('pm', pp)
             elif a.frontier and rng.random() < a.frontier_share:
@@ -758,6 +767,8 @@ if __name__ == '__main__':
                             robust = (1 + par.get('nkids', 0) - par.get('ngrid', 0)) / (2 + par.get('nkids', 0))
                             rew = min(1.0, (a.reward_g0 / gap) ** a.reward_alpha) * robust
                     if r.get('s') is not None and r['status'] == 'new?' and not r.get('lines') and not r.get('unpolished'):
+                        if a.focus and newi is not None and r['s'] < ar_best[0] - 1e-9:
+                            focus[0] = next(x for x in ar.E if x['i'] == newi); focus[1] = a.focus
                         ar_best[0] = min(ar_best[0], r['s'])
                     if cellb:
                         cellb.update(tuple(par['desc']), r.get('sec', 0.0), rew)

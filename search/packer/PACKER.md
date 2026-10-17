@@ -3628,3 +3628,297 @@ polish (<= 2 x 120 s) for every joint fill reaching n (207: 408 of them).  Count
   Reading: composition + 30 min explorer on the live library reproduces the frontier broadly but does not move it;
   the posted frontier at 50-324 is already at the composition fixed point of the pieces we have.  Next lever is
   pieces (one-more-square strips), not compute on the same library.
+* **Rectangle-curve usefulness check (10-16 ~11:00, scratchpad trace.py / tracetest.py / jointtest.py)**: H(W)
+  traces by warm-started fixed-d polish are cheap (~0.4 s per point) and smooth (75-strip at d = 9: dH/dW ~ -0.33;
+  d = 8.94 gives 5.855 where the store's crop at 8.914 says 5.9665: off-integer store entries are weak).  Test: the 60
+  store pieces in the most live-library one-short pairs (screen bound = need - 1; 1.07 M pairs, 79 n), traced d0 +- 0.3
+  (step 0.02): single-piece excess gains +1 at 31 of ~1,600 (piece, record side) cases.  Joint fills of those
+  pieces' one-short pairs (<= 150 pairs per case), original vs best traced shape: traced raises the joint excess by
+  +1..+7 (median ~+4), but **0 of 31 cases reach**; still 3-10 squares short.  The bigger finding: the screen's
+  "one short" pairs are 3-10 short in real joint fills (the interface loses squares), so +1 square in a strip piece
+  (RS1 targets) cannot unlock them either -- consistent with RC1's 0.  Verdict: don't build the curve tool for
+  the one-short hunt; the binding loss is at the pair interface.
+* Curves vs constant area (60 traced pieces): local slope / (-H/W) median 0.67 (quartiles 0.57-1.04); area varies 1.3 %
+  (median, max 3.4 %) over d0 +- 0.3; height off the constant-area hyperbola by 0.049 median.  Pieces sit near a
+  local area minimum at their searched d.
+* **MX1, pre-registered (~11:20)**: is the pair interface the loss, and does meshing recover it?  Pairs: the live-
+  library one-short screen pairs (oneshort.json), 40 n x the 8 best-screened pairs each, at S = record side - 1e-9.
+  Measure: interface loss = eA + eB - joint excess (rigid drop-conflicts fill), and B squares dropped.  Arms, same
+  quench (QOpt then POLISH, as compose3's polish): R = drop conflicts, fill, top up to n uprights at the emptiest
+  spots; M = keep all of B (overlaps), fill around A u B, top up to n.  Outcome: polished side per arm.  Predictions:
+  loss median 4-6 squares; M lower side than R in 55 % of pairs; any side below the record in either arm 3 %.
+  Budget <= 6 CPU-h.
+* **MX1 result (to ~14:10)**: 320 pairs, 40 n.  **No tilted square of B ever overlaps A (dropped = 0 in 320/320)**, so
+  the mesh arm is identical to the rigid one and the M-vs-R question is moot (prediction untestable).  Loss is
+  large: each piece alone has excess +2 (median), the pair jointly -5 (median); loss eA + eB - joint median 10
+  (quartiles 3-12; prediction 4-6: no).  Polished sides: median +0.33 over the record, best per n +0.23 median, 0
+  below (prediction 3 %: no).  Reading: the loss is in the uprights between the pieces, not at a tilted interface.
+  Alone, a piece's excess uses uprights aligned to the opposite walls; with two pieces in opposite corners the
+  middle uprights have to align to both, which a non-integer side cannot do.  The screen ignores this, which is why
+  "one short" pairs are ~10 short.  Meshing does not address it; whether the pieces' boxes leave integer strips
+  (S - W_A - W_B, etc.) does.
+* **Gap check (14:20)**: fractional part of the inter-box gap (S - W_A - W_B, or the H analog for UR; best
+  orientation): LH1 reaching pairs (3,000 sampled) median 0.011, 65 % < 0.1; MX1 one-short pairs median 0.279,
+  12 % < 0.1.  The pairs that work leave (nearly) integer strips between the boxes; the screen's one-short pairs
+  mostly don't.  Implications: (a) a gap-compatibility term in the screen should cut most false positives; (b) the
+  H(W) curves come back in: tune a piece's width along its curve so the gap becomes integer + epsilon (cost ~0.3 x
+  the shift in the other dimension).
+* **GS1 + GT1, pre-registered (14:35)**.
+  GT1 (screen term, offline on LH1's compose.jsonl): per n and side, rank the reaching pairs by gap fraction
+  (min over orientations/axes of frac(S - W_A - W_B), frac(S - H_A - H_B)) and compare the rank of the pair that
+  gave the per-n best polished side with its rank under the current order (screen bound, then tilted count).  If
+  gap order puts the winner in the top 10 % at >= 2x the rate of the current order, add it to compose3 as the
+  polish order (no hard filter: 35 % of reaching pairs have gap frac > 0.1).  Prediction: yes, 60 %.
+  GS1 (curve sliding): the MX1 pairs whose traced piece is a store piece (full packing available): trace that piece
+  d0 +- 0.4 (step 0.02; both pieces when both are store pieces), joint fill at every traced shape, best joint excess
+  vs need; any pair reaching n is polished.  Predictions: median joint gain >= +3 (55 %); some pair reaches (25 %);
+  a polished side below the record (2 %).  Budget <= 4 CPU-h.
+* **GS1 result (14:40, 0.2 CPU-h + quench subprocesses)**: 448 (traced piece, pair) cases from 154 store pieces.
+  Joint gain from sliding along the curve: median 0 (quartiles 0-1, max +5); still short by a median 12.  4 cases
+  reach (all n = 145, one piece, store:291615:ids#3206 at d 3.98 vs 4.0) and polish to 12.5355339059 = the record
+  itself.  Predictions: median gain >= 3: no; some pair reaches: yes (but only to the record); below record: no.
+  Earlier "+4 median" (jointtest) was on the 31 screen-gain cases, a selected subset.  Verdict: sliding pieces
+  along their curves does not repair off-integer pairs; most MX1 pairs are ~12 short, too far for any local fix.
+* **GT1 result (14:57)**: 156 (n, side) groups of LH1 reaching pairs (median 507 pairs).  Rank quantile of the
+  per-group winner: current order median 0.39, top 10 % in 19 % of groups; gap order median 0.54, top 10 % 13 %.
+  Prediction (gap >= 2x better, 60 %): no, gap order is worse.  The gap separates reaching from non-reaching pairs
+  but says nothing about which reaching pair polishes lowest.  As a filter it would only save joint fills (~60 ms
+  each), not polishes, so it is not worth adding.
+* **Day verdict (rectangle curves / interface)**: H(W) curves are cheap and real, but they don't help composition:
+  no reach from screen gains (jointtest), no repair of off-integer pairs (GS1), and the gap does not rank winners
+  (GT1).  The screen's "one short" list was an additivity artifact (MX1: pairs ~10-12 short; loss in the
+  uprights between the pieces, not at a tilted interface).  Not building rectcurve.py.
+
+## Waste model: which n look improvable? (10-16 afternoon, Evan's idea)
+* First look (live frontier, 149 non-integer n <= 324): waste w = s^2 - n vs side: log w = 0.984 log s + 0.035,
+  residual sd 0.037 (~0.4 squares, ~0.015 in s at s = 13).  109 (diamond) sits on the curve (resid -0.00).  Most
+  wasteful: frac(s) ~ 0.82 records (18, 39, 68, 86, 127, 105, 299, 151); L-steps add waste 2 frac(s) per unit of s
+  vs the trend's ~1, so L-chain records drift above the curve.
+* **WM1, pre-registered (15:15)**: `analysis/wastemodel.py backtest`.  At each cutoff T (reg1005, 1008, 1009, 1011,
+  1012, and 10-14 00:00), using only frontier_at(n, T) for non-integer n <= 324: scores M0 = residual of a global
+  log w ~ log s fit, M1 = w/s minus the median w/s of the other n within +-1 in s, plus baselines (random, frac(s),
+  "flat" = s(n) = s(n+1) at T, L = record is an L-step of a smaller n).  Labels: improved after T (frontier_at(n,
+  now) < s_T - 1e-8), and "own event at n after T".  Metrics: AUC, precision at 15 / 30 vs base rate, per cutoff,
+  and n < 150 / >= 150 slices.  Success = M1 AUC >= 0.6 at >= 4 of 6 cutoffs and beats every baseline on mean AUC.
+  Prediction: 30 % (improvements came in batches aimed by other people's methods, and the model's resolution is
+  ~0.015 in s, coarser than many improvements).
+* **WM1 result (15:30)**: waste model fails.  M1 mean AUC 0.52 (>= 0.6 at 0 / 6 cutoffs), M0 0.49; flat 0.51;
+  L-step 0.44 (L-built records improve *less*).  Prediction 30 %: no.  But the frac(s) baseline predicts well: AUC
+  0.70 / 0.70 / 0.78 / 0.78 / 0.70 at reg1005 .. 1012 (10-14 has 2 events: uninformative).  Improvement rate after
+  10-05 by frac(s): 0.50-0.55 0 / 11, 0.65-0.70 1 / 12, 0.80-0.85 0.25, 0.85-0.90 0.67, 0.90-0.95 0.65, 0.95-1.00
+  0.74.  It holds within n bands (AUC 0.71 for 100-199, 0.73 for 200-324; 0.57 below 100).  Reading: records just
+  below the next integer are the immature ones (crossing constructions); k + 0.5355 / 0.707 type classical
+  constructions are mature.  Caveat: one 10-day history, most events from three batch posts (#470, #481, #593).
+* **EX1, pre-registered (15:45)**: explorer from the current record packings, aimed by frac(s).  High arm: the 40 n
+  in 100-324 with frac(s) >= 0.85 (108-110, 129-132, 153-156, 179-182, 206-211, 236-241, 268-273, 302-308); control:
+  12 drawn at random (seed 1016) from the 56 with frac < 0.80 (105, 145, 176, 197, 198, 230, 231, 260, 261, 265, 290,
+  297).  Starts: the store packing at the live frontier side (`runs/ex1/starts`).  `harden_explore.py run --src
+  runs/ex1/starts --starts-glob 'start0.txt' --out runs/ex1/explore --minutes 120 --cores 16` (1 replicate per n,
+  ~104 CPU-h, ~6.5 h wall).  Score: `harden_explore.py score` (live flag) then candidate.py on any hit.
+  Predictions: a live record in the high arm 30 %, in the control 10 %; share of n where the explorer gets below
+  the start side: high > control, 65 %.
+* **EX1 midway peek (10-16 ~19:00, 32 of 52 n started, job still running; Evan asked to peek).**  Three flags below
+  the event-bench frontier: 207 (re-polish of the start: ties the record, candidate.py `s207_ex1`), 211 (−9.3e-6 vs
+  start; certified only with exactsolve's QR rank cutoff loosened 1e-9 -> 1e-5 in a scratch copy, the stock solver says
+  "contact equations inconsistent"; ties franciscouzo #607, posted after the event-bench snapshot, so not a record),
+  and **271: 16.9489477337 (−4.46e-5 vs #561), live-checked, candidate.py `s271_ex1` all green** (both checkers on cert
+  and regularized cert, strict local min modulo 54 flat motions, distinct minimum: same design, 59 squares move > 1e-4;
+  found 90 s in by one aswap move).  Staged `candidates/s271_ex1*`, store id 1328144, draft
+  `outreach/draft-jlevy-n271-2026-10-16.md` (not posted).  Fix: `harden_explore.py score` now confirms each event-bench
+  flag with candidate.py's live check (the event bench stops at 10-15 00:50 UTC).  Stale starts: 211 (#607) and 236
+  (behind our own #659); 207 differs only by rounding.  Final arm comparison when the job ends.
+* **AS1, pre-registered (10-16 ~20:10; Evan: "If it refined once with a move we know, should we try repeating it?")**:
+  exhaustive greedy angle-swap descent from s271_ex1 (16.9489477337).  Each round: every pair (i, j) within centre
+  distance 1.6 whose tilts differ by > 3° (mod 90; the explorer's `aswap` neighbourhood), swap tilts, fq SCREEN at
+  loosen 1.0 / 1.02 / 1.05, then POLISH (the explorer's stages); accept the best side below the current one by > 1e-10
+  and repeat; stop when a round has none (max 10 rounds).  `analysis/aswap_sweep.py`, 4 procs (alongside EX1).
+  Metric: side after the last round.  Rule: any side below 16.9489477337 - 1e-9 -> candidate.py.  Predictions: a
+  further gain 35 % (the EX1 explorer keeps expanding the new best for ~110 min, so random aswap repeats compete);
+  gain > 1e-5 if any 15 %.
+* **AS1 result (10-16 ~20:20)**: round 0, 91 pairs x 3 loosens, 195 feasible, 0 below; the best 6 all return to the
+  start (swapping tilts between squares in matching roles re-polishes to the same packing).  s271_ex1 is aswap-stable:
+  the gain was one swap, not the first step of a chain.  Prediction (further gain 35 %) missed.  Side note: the EX1
+  explorer expanded the new best only 3 times in its first 617 s (243 entries; elite share 0.3 spread over 65 cells).
+* **AS2, pre-registered (~20:25)**: focused explorer from s271_ex1 alone, all moves, 60 min x 2 procs (seeds 2711,
+  2712), same flags as EX1.  Rule: below 16.9489477337 - 1e-9 -> candidate.py.  Prediction: further gain 20 %.
+
+## Focus on fresh bests (10-16 evening; Evan: "write a disciplined version of that heuristic")
+Idea: when a run finds a new best, spend a block of expansions on it before diffusing again.  It rhymes with the
+parent-value picks (best parents as sources) and with EX1's premise (new records come from where recent records are);
+a fresh own-improvement is also the strongest evidence that a source is unexplored by others.  Today the explorer gives
+the run best ~1/20 of its 30 % elite share (weights 1/(1+expanded) over the top 20): 3 of the first 243 n=271 picks.
+* **FB1, pre-registered (~20:45), offline backtest, no compute**: all explorer proposal logs (`runs/**/explore*/
+  proposals.jsonl` + archive, 306 runs).  Each polished, non-duplicate proposal is classed by its parent at submission
+  time: rank among the run's polished entries (1 = run best, 2-5, 6-20, >20), whether the parent is the start or a
+  descendant, and the parent's expansions so far (0-4, 5-19, 20+).  Outcome: the proposal sets a new run best (side <
+  run best at its completion - 1e-9).  Metric: new-best hits per CPU-hour by class, pooled, and within runs (only runs
+  with >= 1 descendant run best).  Split by the start's need (start side - frontier_s: <= 1e-9 "at record", else
+  "weak start").  Rule: build `--focus` (a share of picks on the run best while it has < B expansions, B from the
+  expansion-count curve) if rank-1 descendants beat ranks 2-20 per CPU-hour by >= 2x in the at-record split; then A/B
+  it on the battery.  Predictions: rank-1 descendant >= 2x ranks 2-20 per CPU-hour at record 55 %; the rate falls
+  with the parent's expansions (0-4 > 20+) 70 %.
+* **FB1 result (~20:55; `analysis/focus_bt.py --json runs/fb1.json`, 28 s)**: 3,431 runs, 5.69 M proposals, 3,231
+  new-run-best hits.  Within the 880 runs with >= 1 hit: rank-1 descendant parents 226 hits / CPU-h vs ranks 2-20
+  30 (7.5x); at record (30 runs) 47 vs 6.5 (7.3x, but 3 hits); weak starts 214 vs 27 (7.9x).  Hits are real gains (at
+  gain > 1e-5: 512 of 778 rank-1-descendant hits).  Decay with the parent's expansions so far (rank 1, gain > 1e-7):
+  0: 352 / CPU-h, 1: 179, 2: 114, 3: 90, 4: 71, 5-9: 44, 10-19: 17, 20+: 0.2, i.e. about halving per expansion, below
+  the ranks 2-20 rate (~30) by ~10.  The explorer spends 0.5 % of its CPU on rank-1 descendant parents.  Both
+  predictions held (>= 2x at record: 7.3x on 3 hits; 0-4 > 20+).  Rule met: built `explore.py --focus B
+  [--focus-share 1.0]` (the best start, then each new run best by > 1e-9, gets the next B parent picks; logged as
+  pick 'focus'; off by default, and then the RNG stream is unchanged).  Smoke tests: n=236 at record (10 focus picks on
+  the start), n=207 weak start (9 on the start, 10 on the new best b5).
+* **FB2, pre-registered (~21:00)**: paired A/B of `--focus 10` on weak starts: the 53 harden-output events of MH3
+  (`runs/mh3src`, 45) + BM1/BM2 (8).  Both arms concurrently, 8 cores each, 15 min per explorer, same seeds
+  (n*10 + rep): `harden_explore.py run --src runs/mh3src runs/bm1 runs/bm2 --out runs/fb2/{base,focus} --minutes 15
+  --cores 8 --keep 4 [--explore-extra '--focus 10']` (~27 CPU-h, ~1.7 h wall), launched when EX1 ends.  Metric: per
+  event, final best side, focus vs base (|diff| > 1e-9 counts); sign test; secondary: tier counts (REPLICATED /
+  BEAT-ANTE), time to the arm's final best.  Rule: focus wins >= 60 % of decided events and the sign test p < 0.05 ->
+  make `--focus 10` the default in harden_explore / live hunts.  Predictions: focus wins more events than it loses 70 %;
+  passes the rule 45 %.
+* **AS2 result (20:52)**: 2 x 60 min focused explorer from s271_ex1: no gain (both bests = the start; best new
+  minima 16.9490156 and 16.9491289).  Prediction (20 %) missed.  With AS1 and EX1's own n=271 run, ~3,600 proposals
+  from the new best found nothing lower: s271_ex1 looks locally exhausted for our moves.
+  *Amended (22:27)*: launched at 22:27 alongside EX1's last 4 explorers (EX1's 52 n in 16 slots left a 4-proc tail of ~75 min; load ~20) instead of after EX1.
+* **s(271) posted (10-16 ~22:45): jlevy/squares#664** (cert 757b40b; Evan: "Let's go ahead and submit the record now").
+
+## Corner shove (CS1, 10-16 night; Evan's idea: "an L routed through the interior")
+Operator, harness and bench in `shove/` (README there).  Smoke tests (CPU congested; 3 tasks each): built-in fills
+work (`lstep` quenches to s + 1 within 1.8e-4 (as-of-cutoff sources are not fully polished; vsL uses s + 1 exactly);
+`uprights` = transplant.py's operator reproduces the L count at 101 / 126 / 151); the shoved packing is clean (max pen
+< 4e-15); clean upright cells in the opened strip 16 / 13 / 8 vs the L's 21 / 23 / 25 (the strip follows the block's
+staircase); the example fill collapses to the grid 9 / 9.
+* **CS1, pre-registered (~23:15)**: three agents, one fill mechanism each, on `runs/shove/b1005` (cutoff reg1005,
+  293 tasks / 105 n): (A) noisy greedy best fit (Evan's sketch), (B) least-overlap insertion + staged penalty squeeze,
+  (C) local re-solve (release a band of jumble squares near the interface and refill it with the new ones).  Each
+  agent: dev tests <= 2 procs while FB2 runs, final bench run <= 4 CPU-h (4 procs).  Metrics (non-grid candidates):
+  beats the L-step from its source (s' < s + 1), below the record as of reg1005, later records rediscovered, live
+  candidates.  Predictions: at least one mechanism beats the L-step on >= 5 % of tasks 35 %; any rediscovered later
+  record 15 %; a live record < 10 %.
+* **EX1 final (23:40)**: 52 n, 0 more movers in the last 4 (305-308).  High arm: 3 / 40 got below their start (207
+  rounding tie, 211 = #607 rediscovered from a stale start, **271 a live record, posted #664**); control 0 / 12.
+  Predictions: live record high arm (30 %) hit, control (10 %) none; high > control in share improved (65 %) held in
+  direction (7.5 % vs 0 %), far from significant (Fisher p ~ 0.6).  Scorer fixes from this run: live flag confirmed by
+  candidate.py's live check; our own store candidates not counted as prior art.  Stale starts noted: 211, 236.
+* **FB2 result (00:25; 13.2 + 13.1 CPU-h)**: no effect.  Final best per event: focus better 4, worse 5, tie 44 (sign
+  p = 1.0); tiers identical (REPLICATED 19, BEAT-ANTE 2 in both); improved below start 33 vs 31.  On the 23 events where
+  both arms ended at the same improved best, focus was not faster (median time to best 149 s vs 63 s; faster 9,
+  slower 12).  Rule not met: `--focus` stays off by default.  Predictions: focus wins more than loses (70 %) missed;
+  passes the rule (45 %) missed.  Reading: FB1's 7x per-pick rate for fresh run bests does not change outcomes in
+  15-minute runs from weak starts, because the baseline reaches the same bests quickly anyway (median 63 s); FB1's
+  rate is probably inflated by timing (fresh bests occur during descents, when every parent near the front is
+  productive).  Still untested: at-record starts, where hits are rare and a found improvement may be abandoned
+  (EX1's n=271 run expanded its new best 3 times in 617 s).
+
+## Night 10-16/17 (Evan: "use your judgment on how best to spend compute for the rest of the night")
+* Store refreshed 00:24 (`pk.py ingest --apply --no-fresh`; ~1,085 sightings; oddity to check: #659 / #664 sightings
+  attached to the s(146) packing).  Since 10-14 only 7 n have a newly public best in 100-324: 146, 153, 207, 211, 236,
+  237, 271 (271 just explored ~3,600 proposals).
+* **NH4, pre-registered (00:32)**: the recency premise at its purest: explorer from the current best packing at the 6
+  newly-recorded n (146, 153, 207, 211, 236 (our #659; EX1 started from the old one), 237), 120 min x 1 proc each, 6
+  procs alongside the three CS1 agents' final runs (load ~18).  `harden_explore.py run --src runs/nh4/starts
+  --starts-glob start0.txt --out runs/nh4/explore --minutes 120 --cores 6` (12 CPU-h).  Rule: live-checked flags ->
+  candidate.py; nothing posted without Evan.  Prediction: a live record 15 %.
+* **Sighting fix (00:45)**: the s(146) oddity was `pk watch` auto-entries for #659 / #664 pinning the whole
+  `search/packer/candidates` dir (our posts link the tree), so sync-pending tagged ~40 older candidate packings as
+  sightings of each.  Fixed: `pk/pending.yaml` paths narrowed to the two cert files each; 36 + 39 wrong sightings
+  deleted (store backup `~/store-backups/store-2026-10-17-pre-sighting-fix.sqlite`).  Frontier claims were never
+  affected (claims limited to 236 / 271).  Root cause open: watch.py takes tree links from issue bodies; either link
+  the cert files in future posts or have watch prefer backticked file names under a linked dir.
+* **CS1 agent A (greedy best fit, `shove/fill_greedy.py`, NOTES_greedy.md), ~01:00; 2.7 + 0.8 CPU-h**: FFT-scored
+  overlap/contact field per angle (0 + up to 5 neighbourhood tilts), best of K random poses slid to local minima, SAT
+  push-out; K = 64,16,16 over 3 candidates.  293 tasks: 2,636 feasible, 1,461 non-grid; **beats the L-step on 31 tasks**
+  (11 with n + 2k + 1 below s + 1, margins to 0.0155; 20 with n + 2k + 2 at exactly s + 1), **0 below the record as of
+  reg1005** (closest 235 UL -> 266 and 266 UL -> 299, both +1.6e-4 above it), 0 rediscovered, 0 live.  K: 4 worst (and
+  slowest), 64-256 reproduce the L-step reliably and found most +1-square cases, 16 found the larger side margins.  d <
+  1 never helped (quench expands back).  Geometry note (A): after a d = 1 shove the band + wall strips hold exactly 2k + 1
+  upright lattice squares; `meta['cells']` undercounts because `strip_rects` uses the block's bounding box.  Harness
+  fixes applied from A's report: evaluate catches fq divergence (min_gap inf), bench catches per-candidate errors, hit
+  names carry the candidate index, `beatL` = (>= 2k + 1 squares below s + 1) or (>= 2k + 2 at s + 1), hits also saved
+  when within 1e-3 of the cutoff record.  Reading: beating the L-step is real but not record-level: the records at
+  n + 2k + 1 are mostly already below s(n) + 1.
+  *CS1 near-miss follow-up (01:05)*: fill_greedy with 4 more seeds (SHOVE_K=16,16,64) on the A tasks that beat the
+  L-step on side or came within 2e-4 of the cutoff record (`runs/shove/b1005_near`), 4 procs, <= 2 CPU-h.  Rule as CS1.
+* **CS1 agent C (local re-solve, `shove/fill_resolve.py`, NOTES_resolve.md), ~01:00; 3.1 + 0.7 CPU-h, 74 tasks
+  (--tasks-every 4)**: Chebyshev-distance gap region along the staircase (not the bbox guide), block-lattice clean cells
+  nearest first (usually reach 2k + 1), greedy least-pen extras, joint L-BFGS overlap relax of a band (non-block squares
+  within 1.5 of the block) + new squares, keep + 4 kicks, one SCREEN each, 3 distinct candidates.  666 rows, 418
+  non-grid; m = 2k + 1 beats the L-step on 10 tasks (best 267 UL -> 300, vsL -0.0172, vsT +0.0054); m = 2k + 2 never;
+  0 below the cutoff record, 0 rediscovered, 0 live.  Near records: 300 UL -> 335 (+6e-5; n > 324, not chased),
+  235 UL -> 266 (+1.6e-4; A found the same), 300 -> 334 tie.  Without the local relax: grid.  Suggested harness
+  changes (per-m rng, per-m score, staircase guide) noted, not yet made.
+* **CS1 near-miss follow-up, restarted (01:15)**: the first launch selected 146 tasks (vsT < 2e-4 matched ties where
+  the cutoff record is itself an L-step); stopped after a few minutes.  Now 36 tasks (side wins over the L-step, or
+  1e-9 < vsT < 5e-4; n' <= 324) in `runs/shove/b1005_near`: greedy seeds 1-2 + resolve seed 1, 0.6 CPU-h each, 4 procs.
+* **NH4b (01:15)**: explorer from the three 266 near misses (A 235 UL, A 236 LR, C 235 UL; 1.9e-4 above the live record
+  16.8230287508, ours #399), 60 min x 2 procs.  Prediction: below the record 5 %.
+* **CS1 agent B (infeasible fill + expand/relax, `shove/fill_relax.py`, NOTES_relax.md), ~01:20; 4.0 + 1.3 CPU-h,
+  83 of 98 tasks (--tasks-every 3; budget)**: clean cells, then best-of-K least-total-penetration poses, then one fq
+  quench per schedule (rounded squares r0 0.15 / 0.25 then r -> 0; box held at 1.01 S then SLP).  Every plain ALM
+  relaxation (loosen 1.0-1.2, shrink, soft, one-at-a-time) collapses to the grid; only rounded-square stages keep
+  structure.  747 rows, 476 non-grid; m = 2k + 1 below s + 1 once (126 UL -> 149, -0.012; +0.056 vs the cutoff
+  record); m = 2k + 2 never; 228 UR -> 258 (m = 2k) below the cutoff record but +7.0e-4 above today's.  K: larger K
+  lowers placement penetration (9.0 / 4.9 / 3.3 at 4 / 16 / 64), weakly more non-grid, no measurable cost.
+* **CS1 verdict**: the operator is sound and beats the L-step from the same source (A 31 tasks, C 10 of 74, B 1 of
+  83), but nothing reached a record as of the cutoff at the L-step's count; nearest +6e-5 (300 -> 335, n > 324) and
+  +1.6e-4 (235 -> 266, found by A and C).  Predictions: some mechanism beats L on >= 5 % of tasks (35 %): held (A 31 /
+  293 = 10.6 %); rediscovery (15 %) and live (< 10 %): none.  Fill ranking: A (greedy, best-of-K) > C (local re-solve) >
+  B (infeasible + relax).  Open harness items: staircase strip guide (A, C), per-m rng and per-m score (C), cpu-h stop
+  discards queued work (B).
+* **EX2, pre-registered (01:30)**: second explorer pass on EX1's high arm (frac(s) >= 0.85, n 100-324), minus 207 /
+  211 / 236 (in NH4) and 271 (exhausted): 36 n, from the current best packing (store refreshed 00:24), fresh seeds
+  (`--seed-offset 5000`, new harden_explore flag), 120 min x 1 proc each, 16 cores, launched when NH4 ends (~02:35;
+  ~72 CPU-h, ~4.5 h wall).  `harden_explore.py run --src runs/ex2/starts --starts-glob start0.txt --out
+  runs/ex2/explore --minutes 120 --cores 16 --seed-offset 5000`.  Question: does a second 2 h pass on the same n still
+  find records (EX1: 1 / 40)?  Prediction: a live record 20 %.
+* **NH4c (01:35)**: explorer from B's 228 UR -> 258 (+7.0e-4 above today's record), 60 min x 2 procs on idle cores.  Prediction: below the record 3 %.
+* **NH4 / NH4b / NH4c / near-miss results (02:30)**: nothing below any record.  NH4 (12 CPU-h, 6 n from the current
+  best): 0 / 6 improved (each run ended at its start; the 3 "below event bench" flags are our own #639 / #659 and
+  Couzo's #607, live-check stale).  Prediction 15 %: miss.  NH4b (266 near misses): best stayed +1.95e-4 above the
+  record; prediction 5 %: miss.  NH4c (258): stayed +7.0e-4; prediction 3 %: miss.  Near-miss reseed (36 tasks,
+  greedy seeds 1-2, resolve seed 1; 1.1 CPU-h): beats the L-step on 6-7 tasks per arm, 0 below the cutoff record,
+  0 rediscovered, 0 live.  Reading: the explorer adds nothing from a packing that is already a fresh, polished best
+  (NH4: 12 CPU-h, 0 proposals below start), so the recency signal (FB1) doesn't extend to "explore again from the record
+  just posted" at 6 / 6 n.  Caveat: EX1's 271 win also started from the then-current record (Couzo's #561), so n = 271
+  was 1 hit in ~40 such starts; NH4 at 6 n is too small to tell that rate from zero.  The CS1 near misses
+  sit in basins 2e-4 to 7e-4 above the record that a 1 h explore doesn't leave.
+* **watch.py fix (02:45)**: `propose` now narrows a linked tree dir to the backticked file names in the issue body
+  (bare names under the dir, or full paths inside it).  Dry check on real issues: #664 / #659 -> the s271_ex1 / s236_bm3c
+  files only (not the 40 older candidates); #607 keeps its blob cert links.  No store change (pending.yaml already fixed
+  by hand).
+* **EX2-fill, pre-registered (02:40)**: EX2 runs 36 events 16 at a time (waves ~02:20 / 04:20 / 06:20), so the last
+  wave uses 4 cores.  When it starts: a second replicate (seed offset 6000, 120 min x 1 proc) on the 12 EX2 events from
+  waves 1-2 whose final best is closest to the live record (smallest need, records excluded), ~24 CPU-h on otherwise idle
+  cores.  Rule as EX2.  Prediction: a live record 5 %.
+* **EX2 waves 1-2 (06:30)**: 35 / 36 n ended exactly at their start (the current record).  **n = 155: 12.9522609447,
+  1.64e-4 below the register's 12.9524254070** (explore0, aswap at 4,486 s; b03287).  harden_explore marked it LIVE-STALE
+  because candidate.live gave #401 (itsnaka) 12.9282936577 for n = 155.  That number is #401's s(154): the comment line
+  "154 (was 12.928293657678), 155 (was ...)" names both n and the parser takes the decimal near 155.  Parser bug, to fix.
+  Everything else (register witness, case page, other issues, Ellsworth, store) is >= 12.9524254070.  candidate.py
+  started (runs/candidates/s155_ex2).
+* **EX2-fill launched (06:35), changed from the pre-registration**: the "closest 12" rule doesn't work as written (35
+  tied at need 0).  Now: 4 explorers from the new n = 155 best (`runs/ex2fill/e155`, the best-parent heuristic) +
+  6 n drawn at random (seed 6000) from the tied 35: 179, 180, 210, 268, 306, 308 (`runs/ex2fill/eoth`); 120 min, seed
+  offset 6000, 10 procs.  Predictions: n = 155 improves further 25 %; a live record among the other 6 at 3 %.
+* **candidate.live fix (06:55)**: `_decimals_near` moves a decimal off n only when it equals (1e-9, direct SQL) a store
+  packing at another count named on the same line and no store packing at n; those print as "CHECK BY HAND".  Unknown
+  decimals still count at n (fail safe).  A first try (nearest preceding integer token) was dropped: dates, `#574` and
+  repeated values made it hide real claims (#561's s(271) row).  Checks: 155 -> #401's 12.9283 is s(154) (hand
+  check), nothing at or below 12.9522609447; 271 and 154 unchanged.
+* **EX2 final + EX2-fill (08:35)**: EX2 1 / 36 live (n = 155; prediction 20 %: hit), ~72 CPU-h.  EX2-fill: n = 155 from
+  its new best, 4 x 2 h: no further gain (prediction 25 %: miss); the 6 drawn n: 0 / 6 (3 %: miss).  The 155 lineage
+  (explore0, 18 moves): climbs to 13.047 within 90 s (crot / rowslide / kick), drifts down by cross2 / kicksym / band
+  over an hour, last two moves aswap (12.9540 -> 12.9523).  So not an aswap polish of the record: a new basin reached
+  through a high detour, which suggests EX2's gain came from walking far, not from the start being fresh.
+* **s(155) candidate (08:50)**: candidate.py re-run with the fixed live check: both checkers VALID (certificate and
+  regularized), nothing at or below (register main @804eff36, issues through #668), distinct minimum from T-149
+  (Ostashev #501 / #528; no tilt angle shared, 81 load-bearing squares move > 1e-4), strict local min modulo 31 flat.
+  S' = 12.952260944650564035267179660865; cert SHA a1a3b6e7...c4cc, regularized ab3c0b93...a897.  Staged (uncommitted)
+  as candidates/s155_ex2*; draft `outreach/draft-jlevy-n155-2026-10-17.md`.  Not posted: waiting for Evan.
+* **EX3, pre-registered (08:55)**: EX2 again on the same 36 n with fresh seeds (offset 7000), 120 min x 1 proc,
+  16 cores (~72 CPU-h, ~6 h); n = 155 starts from our new 12.95226 best.  Question: is EX2's 1 / 36 repeatable on the
+  same n (EX1 -> EX2 went 1 / 40 -> 1 / 36)?  Prediction: a live record 15 %.  Stop anytime (`jobs.py stop ex3`) if
+  Evan wants the machine.  Rule as EX2.
+* **s(155) posted (09:20)**: Evan "Let's commit, push, and post it!".  Commit 59326b8 (candidate files only),
+  verify.sh --spot passed, fast-forward push `git push origin 59326b8:main`, pushed SHA-256 re-checked, same-day live
+  check clean (register main @804eff36, issues through #668), **jlevy/squares#669**.  pending.yaml entry added by hand
+  (cert paths only).
