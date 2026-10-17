@@ -1,0 +1,28 @@
+# Credit knowledge the issue text and the register don't carry (10-17; moved here from tools/provenance.py).
+# Read by tools/provenance.py.  Dated postings that are jlevy/squares issues come from the packing store (pk/watch.py
+# syncs every issue; date = the issue's creation time, who = its author's credit name via pk/people.py).
+#
+# events: postings that are NOT issues (repos the register's source keys point at), keyed as provenance.py uses them.
+events:
+  dewinter: {who: Joost de Winter, date: '2026-09-16', label: JoostdeWinter/square-packing-211, url: 'https://github.com/JoostdeWinter/square-packing-211'}
+  casson: {who: Griff Casson (griffcass), date: '2026-09-23', label: griffcass/square-packing, url: 'https://github.com/griffcass/square-packing'}
+  couzo0927: {who: Francisco Couzo, date: '2026-09-27', label: franciscouzo/square-packing, url: 'https://github.com/franciscouzo/square-packing'}
+  couzo1003: {who: Francisco Couzo, date: '2026-10-03', label: franciscouzo/square-packing (10-03 update), url: 'https://github.com/franciscouzo/square-packing'}
+
+# lineage: posting -> {n: the posting whose packing it started from}, from each posting's own "lineage and credit"
+# section.  The poster asked that the construction be credited to where it started, so the site credits the root of
+# the chain as the finder and lists the later postings as improvements (fetched 2026-10-11).
+lineage:
+  '#451': {105: '#432', 108: '#432', 127: '#432', 131: '#432', 155: '#422', 180: '#422'}
+  '#465': {155: '#422'}   # "a nearby minimum of SQUISH's packing"
+  '#476': {132: '#470', 237: '#422', 263: '#422', 303: '#422', 267: '#432', 270: '#399'}
+  '#488': {209: '#481', 237: '#481', 270: '#481', 305: '#481', 132: '#470', 175: '#432'}
+  '#489': {308: '#484', 343: '#484', 344: '#484'}   # "please credit the construction to him"
+  '#505': {146: '#432', 261: '#432'}   # "both original layouts are by Ryan Xu"
+  # added 2026-10-17 from each posting's own lineage / credit section:
+  '#552': {154: couzo0927}                          # ours: "Please credit the start to Francisco Couzo's packings"
+  '#561': {156: '#501', 237: '#488', 271: '#500'}   # "Daniil Ostashev's arrangements" (156); "SQUISH arrangements" (237 via #488, 271)
+  '#606': {146: '#432'}                             # ours: "Please credit Ry Xu's #432 packing as the start"
+  '#659': {236: '#481'}                             # ours: "Please credit itsnaka's SQUISH 'Mondrian composition' (#481)"
+  '#664': {271: '#561'}                             # ours: "Please credit Francisco Couzo's #561 packing and ... SQUISH"
+  '#669': {155: '#501'}                             # ours: "Please credit Daniil Ostashev's T-149 packing as the start"

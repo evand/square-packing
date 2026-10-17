@@ -57,6 +57,11 @@ def load(n, use_refresh=None):
     if rb:
         base = rb
         r = dict(r, status='KKT point (refreshed from store)', from_=os.path.basename(rb))
+        # 10-17: the refreshed packing's own credit (refresh.py writes source.json from the store frontier); before,
+        # `by` stayed the batch's, i.e. the PREVIOUS record holder's (our s(155) was credited to Francisco Couzo)
+        src = os.path.join(os.path.dirname(rb), 'source.json')
+        if os.path.exists(src):
+            r['by'] = json.load(open(src)).get('by') or r.get('by')
     lines = open(base + '.exact.txt').read().split('\n')
     S = mpf(lines[0].split()[1])
     sq = [tuple(mpf(v) for v in ln.split()) for ln in lines[1:] if ln.strip()]

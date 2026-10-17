@@ -2847,14 +2847,15 @@
  },
  "40": {
   "best": {
-   "value": 6.715815746082023,
-   "exact_form": "1340000/199529",
+   "value": 6.718,
+   "exact_form": "3359/500",
    "source": "Guzhou0806_2026",
    "year": 2026,
    "status": "preprint",
-   "url": "https://github.com/Guzhou0806/n40-square-packing/tree/71c97d07553d7d5ff5c5c82f0c9d1c75a150a4e3",
-   "note": "continuous-pose interval kernel on wand125's rect_n40_L67 density, strict bound (jlevy/squares#485 follow-up); jlevy/squares replayed both kernels and audited the finite steps exactly (E-n040-guzhou-continuous-pose-kernel-replay). The source says the work came from AI-assisted research",
-   "date": "2026-10-10"
+   "url": "https://github.com/Guzhou0806/n40-square-packing/releases/tag/n40-new-supports-6718-20261011",
+   "note": "new rational density (685 D4 rectangle orbits, 522 of them rows of wand125's rect_n40_L67 pool, every weight new) with the 10 October continuous-pose interval kernel and an exact near-axis certificate; reported on jlevy/squares#485. jlevy/squares replayed both kernels and audited the finite steps exactly; the register lists it as verified (E-n040-guzhou-new-supports-kernel-replay). The source says the work came from AI-assisted research",
+   "date": "2026-10-11",
+   "register": "verified"
   },
   "history": [
    {
@@ -2954,6 +2955,16 @@
     "note": "new rectangle supports, strict bound (jlevy/squares#485, 11 October update); reported, not independently replayed",
     "date": "2026-10-11",
     "reported": true
+   },
+   {
+    "value": 6.715815746082023,
+    "exact_form": "1340000/199529",
+    "source": "Guzhou0806_2026",
+    "year": 2026,
+    "status": "preprint",
+    "url": "https://github.com/Guzhou0806/n40-square-packing/tree/71c97d07553d7d5ff5c5c82f0c9d1c75a150a4e3",
+    "note": "continuous-pose interval kernel on wand125's rect_n40_L67 density, strict bound (jlevy/squares#485 follow-up); jlevy/squares replayed both kernels and audited the finite steps exactly (E-n040-guzhou-continuous-pose-kernel-replay). The source says the work came from AI-assisted research",
+    "date": "2026-10-10"
    }
   ]
  },
@@ -17186,7 +17197,7 @@
   "generated": "2026-09-08",
   "caveats": "See site/notes/lower-bounds-notes.md for sourcing notes and uncertainties. Entries with status 'preprint' are 2026 results that have not been refereed (most computer-assisted; Karakus 2026 is a conventional arXiv proof). Others' certificates are linked as published; this project replays only its own. Where a 2026 repository is still moving (n = 17 especially), the history keeps the main steps and the linked repository has the rest.",
   "precision": "`value` is the full double-precision evaluation of `exact_form`, not a rounded decimal: storing the n=5 floor as 2.7071068 put it ABOVE the true 2+1/sqrt(2)=2.707106781..., so it compared as greater than the matching upper bound and s(5) and s(10) were reported open with a gap of -0.0000. Entries whose exact_form is absent or flagged unreliable keep their curated decimal.",
-  "updated": "2026-10-12",
+  "updated": "2026-10-17",
   "families": "s(k^2-3) = k is proved here for every k >= 6 (EvanDaniel2026, 2026-09-29, s12/certificates/k2m3). The table covers n <= 100, so it holds the cases n = 33, 46, 61, 78, 97 (k = 6..10); for n = 33, 46, 61, which were already settled, it is a history entry and `best` keeps the earlier proof; for n = 78, 97 it is `best`. The family continues beyond the table (n = 118, 141, ...). s(k^2-4) = k is proved here for every k >= 5 (EvanDaniel2026, 2026-10-03, s12/certificates/k2m4): for k >= 8 by one family (its 9 x 9 box certified by our exact checker and, for the tilted squares, re-checked by wand125's separately written exact checker (2026-10-06; reviewed by jlevy/squares, recorded there as reported evidence, T-081 not yet register-verified), the box-to-every-k reduction in Lean), for k = 5, 6, 7 by the separate s21, s32, s45 bundles, which are the entries for n = 21, 32, 45. In the table: n = 60 (k = 8) gets a history entry and `best` keeps the s60 bundle; n = 77 (k = 9) is `best`, with wand125's earlier s(77) = 9 (2026-10-01) in the history; n = 96 (k = 10) is `best`. The family continues beyond the table (n = 117, 140, ...).",
   "reported": "Entries with \"reported\": true are values their authors report but that no one other than the author has replayed (jlevy/squares grades them V0/C0). They are kept in `history` for the record and are never `best`, even where they are larger.",
   "claimed": "Entries with status \"claimed\" are values whose proof was never published and cannot be reviewed: T. Green's 2000 bounds, cited in Friedman's survey DS7 as a private communication (Theorems 9-10 and Table 2), and Friedman's table values for n = 13 (3.8437) and n = 21 (4.7438), which the survey gives without figure or proof. They are kept in the history for the record and are never `best`. For n = 17-18 the survey's Figure 34 draws Green's unavoidable set, which could be checked; it has not been checked here.",

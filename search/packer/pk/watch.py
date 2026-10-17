@@ -42,7 +42,7 @@ CLAIM_TOL = 1e-6        # a file matches a claim when claim - CLAIM_TOL <= s <= 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS issue (
   number INTEGER PRIMARY KEY, author TEXT, state TEXT, title TEXT, updated TEXT, synced TEXT, units TEXT,
-  claims TEXT, notes TEXT);
+  claims TEXT, notes TEXT, created TEXT, credit TEXT);
 CREATE TABLE IF NOT EXISTS resolved (
   repo TEXT NOT NULL, ref TEXT NOT NULL, issue INTEGER NOT NULL, sha TEXT NOT NULL, at TEXT, UNIQUE(repo, ref, issue));
 """
@@ -58,17 +58,22 @@ def _clean(t, k=90):
 
 
 def overrides():
-    """{issue: override dict} from pk/overrides.yaml; key 'finders' -> {login: display name}"""
-    Y = yaml.safe_load(open(OVERRIDES)) or {}
-    out = {int(k): v or {} for k, v in Y.items() if k != 'finders'}
-    out['finders'] = Y.get('finders') or {}
-    return out
+    """{issue: override dict} from pk/overrides.yaml"""
+    return {int(k): v or {} for k, v in (yaml.safe_load(open(OVERRIDES)) or {}).items()}
+
+
+def ensure_schema(st):
+    st.db.executescript(SCHEMA)
+    have = {r[1] for r in st.db.execute('PRAGMA table_info(issue)')}
+    for col in ('created', 'credit'):                     # 10-17: added after the first issue syncs
+        if col not in have:
+            st.db.execute(f'ALTER TABLE issue ADD COLUMN {col} TEXT')
 
 
 def resolver(st):
     """resolve(repo, ref, issue) -> full sha or None, cached in the store: a commit ref (hex) once for everyone; HEAD or
     a branch name once per issue (its first sight).  Misses are not cached (a commit can be pushed later, #583)."""
-    st.db.executescript(SCHEMA)
+    ensure_schema(st)
 
     def resolve(repo, ref, issue):
         key = 0 if issues.HEX.fullmatch(ref) else int(issue)
@@ -121,8 +126,8 @@ def sync_issue(st, number, ov=None, data=None, apply=True, log=print):
         log(f'{tag}: {len(U)} units {[(u["repo"], u["commit"][:7], len(u["paths"])) for u in U]}, '
             f'{len(att)} attachments, {len(claims)} claims' + (f'; {"; ".join(notes)}' if notes else ''))
         return S
-    ovs = ov if ov is not None else overrides()
-    src, finder = f'pending:#{number}', o.get('finder') or ovs.get('finders', {}).get(P['author']) or P['author']
+    from .people import credit
+    src, finder = f'pending:#{number}', o.get('finder') or credit(st, P['author'])
     seen, refs_ = 0, []
     for u in U:
         ref = f"{u['repo']}@{u['commit'][:7]}"
@@ -133,7 +138,7 @@ def sync_issue(st, number, ov=None, data=None, apply=True, log=print):
         paths = [p for g in u['paths'] for p in glob.glob(os.path.join(d, g), recursive=True)
                  if os.path.realpath(p).startswith(os.path.realpath(d))]
         c = import_paths(st, paths, src, finder, ref, 'pending', quiet=True, strict=True)
-        seen += c['seen']; refs_.append(ref)
+        seen += c['seen']; refs_.append(ref); u['files'] = c['seen']
     for url in att:
         try:
             f, sha = github.fetch_attachment(url, number)
@@ -148,9 +153,10 @@ def sync_issue(st, number, ov=None, data=None, apply=True, log=print):
     ref0 = refs_[0] if refs_ else f'issue #{number}'
     for n, s in sorted(claims.items()):
         st.set_frontier(n, s, f'{s}', finder, src, ref0, P['state'] == 'open', R['matched'].get(n))
-    st.db.execute('INSERT OR REPLACE INTO issue(number, author, state, title, updated, synced, units, claims, notes) '
-                  'VALUES (?,?,?,?,?,?,?,?,?)', (number, P['author'], P['state'], P['title'], P['updated'], now(),
-                                                json.dumps(U), json.dumps(claims), json.dumps(notes)))
+    st.db.execute('INSERT OR REPLACE INTO issue(number, author, state, title, updated, synced, units, claims, notes, '
+                  'created, credit) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+                  (number, P['author'], P['state'], P['title'], P['updated'], now(), json.dumps(U), json.dumps(claims),
+                   json.dumps(notes), P['created'], finder))
     st.db.commit()
     S.update(seen=seen, matched=sorted(R['matched']), unmatched=R['unmatched_claims'], context=R['context'],
              below=R['below_claim'], dropped=gone)
@@ -183,15 +189,19 @@ def poll_repo(repo, base):
 
 
 def watched(st):
-    """{repo: finder} : every repo an issue unit names (except ours) + every repo imported before"""
-    st.db.executescript(SCHEMA)
+    """{repo: finder} : every repo (except ours) that has given us a packing, through an issue unit or an earlier
+    watch import.  10-17: repos an issue links that hold no packings (code, Lean proofs, the maintainer's other repos)
+    are imported once with the issue and not watched."""
+    ensure_schema(st)
     W = {}
-    for r in st.db.execute('SELECT author, units FROM issue'):
+    for r in st.db.execute('SELECT credit, author, units FROM issue'):
         for u in json.loads(r['units'] or '[]'):
-            if u['repo'] not in issues.OWN:
-                W.setdefault(u['repo'], r['author'])
-    for k in st.get_sync('repo:'):
-        W.setdefault(k[5:], None)
+            if u['repo'] not in issues.OWN and u.get('files'):
+                W.setdefault(u['repo'], r['credit'] or r['author'])
+    for r in st.db.execute("SELECT DISTINCT substr(source, 7, instr(source, '@') - 7) AS repo FROM sighting "
+                           "WHERE source LIKE 'watch:%'"):
+        if r['repo'] and r['repo'] not in issues.OWN:
+            W.setdefault(r['repo'], None)
     return W
 
 
@@ -232,7 +242,7 @@ def run(st=None, apply=False, only=None, everything=False, repos=True, max_commi
     plus every issue in overrides.yaml), then watched repos."""
     from .store import Store
     st = st or Store()
-    st.db.executescript(SCHEMA)
+    ensure_schema(st)
     started = now()
     started_local = dt.datetime.now().isoformat(timespec='seconds')     # the store's sighting.added clock
     ov = overrides()
@@ -240,7 +250,7 @@ def run(st=None, apply=False, only=None, everything=False, repos=True, max_commi
     if only or everything:
         nums = set(only or ())
         if everything:
-            nums |= {r['number'] for r in st.db.execute('SELECT number FROM issue')} | {k for k in ov if k != 'finders'}
+            nums |= {r['number'] for r in st.db.execute('SELECT number FROM issue')} | set(ov)
         upd, todo = [], [(n, None) for n in sorted(nums)]
     else:
         upd = github.updated_since(cursor)
@@ -298,12 +308,13 @@ def probe(st=None):
         for r in github.updated_since(cur, pages=1):
             kind = 'PR' if r.get('pull_request') else 'issue'
             stale.append(f"{kind} #{r['number']} updated {r['updated_at']}: {_clean(r['title'], 60)}")
+    W = watched(st)
     for k, (v, at) in sorted(Y.items()):
-        if k.startswith('repo:'):
+        if k.startswith('repo:') and k[5:] in W:
             h = github.head(k[5:])
             if h and v and not h.startswith(v[:7]):
                 stale.append(f'repo {k[5:]}: HEAD {h[:7]} != imported {v[:7]}')
-    for repo in sorted(set(watched(st)) - {k[5:] for k in Y if k.startswith('repo:')}):
+    for repo in sorted(set(W) - {k[5:] for k in Y if k.startswith('repo:')}):
         stale.append(f'repo {repo}: watched, never imported')
     as_of['repos'] = sum(1 for k in Y if k.startswith('repo:'))
     return dict(stale=stale, as_of=as_of)

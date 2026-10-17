@@ -1,12 +1,11 @@
 # What a human knows about jlevy/squares issues that their text doesn't say (10-17; replaces pending.yaml, whose
 # per-issue pins / paths / claims are now derived from each issue's current text by pk/issues.py on every sync).
 #
-# A packing is its own proof: the frontier is the best published packing (store.frontier), and an issue's claimed
+# Credit names live in site/data/people.yaml (pk/people.py).  A packing is its own proof: the frontier is the best published packing (store.frontier), and an issue's claimed
 # number only matters when no published packing backs it (store.unverified).  So per-issue entries are for the
 # unbacked cases only: a claim whose file we can't reach or parse, a pin the text gets wrong.  On 10-17 there are none
 # (#501 / #529 / #589's old entries changed nothing once derived: every claim backed).
 #
-#   finders: {login: display name}       credit names (frontier rows, sightings, our drafts' "source" column)
 #   <issue>:
 #     claims: {n: side}                  a claim no file backs (merged by min with the issue's own claims)
 #     units: [{repo, commit, paths}]     extra repo @ commit imports
@@ -16,14 +15,4 @@
 #     note: why
 
 
-finders:
-  evand: Evan Daniel (evand)
-  mstrmg: Miles Gray (mstrmg)
-  franciscouzo: Francisco Couzo
-  dostashev: Daniil Ostashev (dostashev)
-  BuddenPing: BuddenPing (PingYou Ltd)
-  riocalle: Rio Calle (riocalle)
-  RobertBarnettProjects: Robert Barnett (RobertBarnettProjects)
-  itsnaka: itsnaka (SQUISH)
-  TheSnakeFang: Kevin Fang (TheSnakeFang)
-
+{}

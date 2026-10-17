@@ -32,6 +32,15 @@ def sh(args, timeout, log, cwd=None):
     return out
 
 
+def write_source(n, d):
+    """source.json: who the refreshed packing is credited to (the store frontier's credit at n), for reg.load"""
+    sys.path.insert(0, PK)
+    from pk.store import Store
+    f = Store().frontier(n).get(n)
+    json.dump(dict(n=n, by=[f['finder']] if f and f['finder'] else [], source=f['source'] if f else None,
+                   s=f['s'] if f else None), open(os.path.join(d, 'source.json'), 'w'))
+
+
 def job(n):
     d = os.path.join(OUT, f'n-{n}')
     os.makedirs(d, exist_ok=True)
@@ -40,6 +49,7 @@ def job(n):
     sh([PY, os.path.join(PK, 'pk.py'), 'get', f'best:{n}', '--fmt', 'ours', '-o', inp], 300, log, cwd=PK)
     if not os.path.exists(inp):
         return n, 'export failed'
+    write_source(n, d)
     tmo = 1800 if n < 200 else 3600
 
     def exact(path):

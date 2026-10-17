@@ -3983,3 +3983,32 @@ staircase); the example fill collapses to the grid 9 / 9.
   packing was below a published one, so no past result changes).  overrides.yaml: per-issue entries removed (#501 /
   #529 / #589 change nothing once derived: frontier identical at 102 / 155 / 156 / 211 / 381); only `finders` left.
   candidate.live reads the view + lists unverified claims.  Tests 29 pass (new: frontier view, pool:ours private).
+* **Issue backfill (10:50)**: `pk.py sync-issues 1..669` (every jlevy/squares issue and PR, from current text): imports
+  every linked packing (more parents, Evan 10-17) and gives the site's provenance a dated posting list from the store
+  instead of provenance.py's hand EVENTS table (frozen 10-11).  1 process alongside EX3.  Store backup
+  ~/store-backups/store-auto-2026-10-17T0949.sqlite.zst.
+* **EX3 halted (11:20; Evan: halt it for the site update)**: ~2 h of the planned ~6 h (first wave of 16 n, partly the
+  second).  0 / 36 improved (155 sits at our posted #669).  Prediction 15 %: miss (partial run).
+* **s(110) census update (11:00; Evan: "Do we have more minima to add to the s(110) census?")**: since 10-15 19:12 the
+  census has 1,076 certified + 11 weak minima; new material: EX1 / EX2 / EX3 n=110 archives (29 / 19 / 18 polished sides
+  not in the census, overlapping), 52 store rows, 3 unsolved sides.  Same procedure as 10-15: `pk.py import-run
+  --below-k` over the 330 explorer run dirs written since (fb2, compose3, ex1-3, ex2fill, nh4*, as2, x236), then
+  `census_certify.py certify --n 110 --procs 14`.  Expect ~20-40 new minima, none near the record (EX runs started at
+  the record and stayed there).
+  *Census update, first part (11:40)*: import 330 run dirs (444,995 entries, 441,612 new rows, all n); certify n=110:
+  185 new side keys (6 certified, 179 not-min) -> minima 1,076 -> 1,077 certified (+1; the other 5 copies of known
+  minima).  Next: descend_census on the new not-min points (10-10: 40 new minima from 912), queued after the site build.
+* **Site brought up to date (12:00; Evan: "make sure our web view is up to date, with new packings, history, and
+  bounds history")**: credit names from site/data/people.yaml (handle) else the GitHub profile name (pk/people.py; the
+  `finders` table in overrides.yaml removed); provenance.py's EVENTS / ORDER / LINEAGE / OURS replaced by the store's
+  issue table (created time, credit) + site/data/lineage.yaml (repo postings + lineage, with posts since 10-11 added
+  from their own credit sections); all issue claim rows read (closed = registered too); a register record no known
+  posting carries becomes its own event (211).  Backfill: all 669 issues synced (630 ok, 25 API errors on old numbers;
+  claims gated to claim issues, bare repo links imported only from claim issues, only packing repos watched).
+  Regularize: 30 n had newer records than the 10-10 lists; refresh.py certified 28 (229 and 261 don't: drawn as
+  posted), atlas conservative + fewest, lists rebuilt; refreshed inputs now carry their own credit (source.json:
+  before, `by` stayed the previous record holder's, e.g. our s(155) credited to Couzo).  227 / 260: exactsolve's KKT
+  point is ~1.7e-8 below #668's posted side (Joost de Winter's packings, not fully polished); provenance's same-packing
+  tolerance 1e-8 -> 1e-7.  Lower bounds: n = 40 -> 3359/500 (Guzhou0806, register-verified); #610 (s(95) = 10) and
+  #640 (s(19)) are pending registration, not added.  Site: provenance (76 n), lists, credits, history (553 holders, all
+  drawn), bounds; checked Explore 155, Compare 271, Bounds in headless Firefox.

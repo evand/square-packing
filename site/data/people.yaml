@@ -38,9 +38,10 @@ stead:       {name: Tej Stead, aliases: [Tej Stead]}
 loyd:        {name: Jake Loyd, aliases: [Jake Loyd]}
 wang:        {name: Ruilin Wang, aliases: [Ruilin Wang]}
 hmbelvedere: {name: hmbelvedere, aliases: [hmbelvedere.com, hmbelvedere]}
-dewinter:    {name: Joost de Winter, aliases: [Joost de Winter]}
+dewinter:    {name: Joost de Winter, handle: JoostdeWinter, aliases: [Joost de Winter]}
 
-# --- 2026 postings (tools/provenance.py EVENTS) ---
+# --- 2026 postings (jlevy/squares issues; `handle` = GitHub login: search/packer/pk/people.py credits a login by
+#     the entry with that handle, else by its GitHub profile name) ---
 casson:      {name: Griff Casson, handle: griffcass, aliases: [Griff Casson (griffcass), Griff Casson]}
 couzo:       {name: Francisco Couzo, handle: franciscouzo, aliases: [Francisco Couzo]}
 evand:       {name: Evan Daniel, handle: evand, aliases: [Evan Daniel (this project), Evan Daniel], sources: [EvanDaniel2026]}
@@ -51,6 +52,8 @@ fang:        {name: Kevin Fang, handle: TheSnakeFang, aliases: [Kevin Fang (TheS
 ostashev:    {name: Daniil Ostashev, handle: dostashev, aliases: [Daniil Ostashev (dostashev), Daniil Ostashev]}
 pingyou:     {name: PingYou Ltd, handle: BuddenPing, aliases: [PingYou Ltd (BuddenPing), PingYou Ltd]}
 barnett:     {name: Robert Barnett, handle: RobertBarnettProjects, aliases: [Robert Barnett (RobertBarnettProjects), Robert Barnett]}
+gray:        {name: Miles Gray, handle: mstrmg, aliases: [Miles Gray (mstrmg), Miles Gray]}
+riocalle:    {name: Rio Calle, handle: riocalle, aliases: [Rio Calle (riocalle), Rio Calle]}
 # --- register refiners (jlevy/squares register `improved_by`) ---
 rehwaldt:    {name: Seth Rehwaldt, aliases: [Seth Rehwaldt]}
 gupta:       {name: Siddharth Gupta, aliases: [Siddharth Gupta]}

@@ -26,6 +26,19 @@ TITLE_CLAIM = re.compile(r's\(\s*(\d{1,5})\s*\)\s*(?:≤|<=|\\le)\s*(\d+\.\d{6,}
 # Issue attachments: only https://github.com/user-attachments/files/<id>/<name> (fetched by github.fetch_attachment)
 ATTACH_RE = re.compile(r'https://github\.com/user-attachments/files/(\d{1,12})/([A-Za-z0-9._-]{1,120})')
 HEX = re.compile(r'[0-9a-f]{7,40}')
+# 10-17: tables are read as upper-bound claims only in claim issues (the 669-issue backfill: the maintainer's working
+# issues, lower-bound and proof issues carry tables of sides that are not claims).  Files are imported regardless.
+CLAIM_TITLE = re.compile(r'registration request|s\(\s*\d+\s*\)\s*(?:≤|<=|\\le)|upper bound|below (?:the )?(?:record|register)|'
+                         r'new (?:best|record|packing|upper|results?)|improved|certified s\s*=|certificate refinement', re.I)
+NOT_CLAIM_TITLE = re.compile(r'lower bound|optimality|lean proof|exact value', re.I)
+MAINTAINERS = {UPSTREAM.split('/')[0]}
+
+
+def claim_issue(author, title):
+    """does this issue claim upper bounds (so its tables are claims)?"""
+    t = title or ''
+    return (author not in MAINTAINERS and bool(CLAIM_TITLE.search(t))
+            and not (NOT_CLAIM_TITLE.search(t) and not re.search('upper', t, re.I)))
 
 
 def refs(text):
@@ -89,17 +102,19 @@ def parse(issue, comments=()):
     alltext = '\n\n'.join([title, body, *(b for _, b in comments)])
     R, loose = refs(alltext)
     return dict(number=issue['number'], author=who, state=issue['state'], title=title,
-                updated=issue.get('updated_at'), pr=bool(issue.get('pull_request')),
+                updated=issue.get('updated_at'), created=issue.get('created_at'), pr=bool(issue.get('pull_request')),
                 repos=R, loose=loose,
                 attachments=sorted(set(m.group(0) for m in ATTACH_RE.finditer(alltext))),
-                claims=text_claims(title, body, [b for w, b in comments if w == who]))
+                claim_issue=claim_issue(who, title),
+                claims=text_claims(title, body, [b for w, b in comments if w == who]) if claim_issue(who, title) else {})
 
 
 def units(P, resolve, override=None):
     """Parsed issue -> (units, attachments, claims, notes).  units = [dict(repo, commit, paths)]: one per (repo,
     commit) the issue links; paths linked at a commit that doesn't resolve go with the repo's pin.  A repo linked
     without paths is imported whole at its pin.  Pin = the first named commit (link or mention) that resolves, else
-    the default-branch HEAD at first sight (resolve is expected to cache it per issue, so it stays put).
+    the default-branch HEAD at first sight (resolve is expected to cache it per issue, so it stays put).  A repo linked
+    bare (no path) is imported whole only from a claim issue (10-17: the maintainer's issues link big code repos).
     resolve(repo, ref, issue) -> full sha or None.
     override (pk/overrides.yaml, one issue): skip (import nothing), claims (merged by min: prose claims), units
     (added), only_override_units (drop the derived ones), finder (display name)."""
@@ -122,6 +137,8 @@ def units(P, resolve, override=None):
                     by.setdefault(sha, []).append(p)
                 else:
                     loose_paths.append(p)
+            if not info['links'] and not P.get('claim_issue', True):
+                notes.append(f'{repo}: linked bare in a non-claim issue: not imported'); continue
             if loose_paths or not info['links']:          # paths at a dead ref, or the repo linked bare: need a pin
                 pin = None
                 for c in info['shas'] + P['loose']:

@@ -155,7 +155,7 @@ def _res(repo, ref, issue):                         # fake resolver: two commits
     return H if ref == 'HEAD' else next((s for s in (A, B) if s.startswith(ref)), None)
 
 
-def _issue(body, comments=(), who='alice', title='t'):
+def _issue(body, comments=(), who='alice', title='s(17) <= 4.6759: registration request'):
     return issues.parse(dict(number=7, user=dict(login=who), state='open', title=title, body=body), comments)
 
 
@@ -176,6 +176,16 @@ def test_parse_and_units():
     # ours only from our own issues
     assert issues.units(_issue('https://github.com/evand/square-packing/tree/aaaaaaa/c'), _res)[0] == []
     assert issues.units(_issue('https://github.com/evand/square-packing/tree/aaaaaaa/c', who='evand'), _res)[0] != []
+
+
+def test_claim_gate():
+    tbl = '| 17 | 4.675900000000 |'
+    assert _issue(tbl)['claims'] == {17: 4.6759}
+    assert _issue(tbl, title='New lower bound s(17) >= 4.6')['claims'] == {}                 # a lower-bound table
+    assert _issue(tbl, who='jlevy', title='registration request')['claims'] == {}           # the maintainer's own
+    assert _issue(tbl, title='Lean proof of s(19) optimality: registration request')['claims'] == {}
+    assert _issue(tbl, title='Upper bound and lower bound for n = 17')['claims'] == {17: 4.6759}
+    assert issues.units(_issue('https://github.com/alice/c/blob/aaaaaaa/x.cert', title='notes'), _res)[0] != []  # files anyway
 
 
 def test_overrides():

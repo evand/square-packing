@@ -9,13 +9,15 @@ the rest (found since mid-September 2026) this script reads who posted it first:
     (open issues, synced by pk/watch.py), each with its side;
   - the register's case files (sparse clone search/packer/runs/jlevy, refreshed by `pk.py sync-register`): finder,
     refinements, source keys;
-  - EVENTS below: the dated public postings (issue creation dates from the GitHub API, repo dates from the register's
-    source keys).
+  - the dated public postings: jlevy/squares issues from the store's `issue` table (creation time, credit name; 10-17:
+    pk/watch.py syncs every issue), and data/lineage.yaml `events` for postings that are not issues (repos the
+    register's source keys point at).
 
 A packing counts as "the same" as a posting if the sides agree to SAME_TOL (exact re-solves of one arrangement move the
 side by < 1e-9).  The credited finder is the earliest posting of the record packing; later postings of the same
 packing are listed as `also`.  Where a posting says it started from someone else's packing (LINEAGE, from its own
-lineage section), the root of that chain is credited as the finder and the later postings as improvements.  A record
+lineage section; data/lineage.yaml `lineage`), the root of that chain is credited as the finder and the later
+postings as improvements.  A record
 the lists could not certify, or posted after them, is drawn as posted (`raw`): those are the n that still need
 regularizing (search/regularize/REGULARIZE.md).  For n <= 100 (the Bounds page's range) every posting that improved on the best before
 it is kept as a history step.
@@ -32,55 +34,30 @@ ROOT = os.path.abspath(os.path.join(SITE, '..'))
 STORE = os.path.join(ROOT, 'search', 'packer', 'runs', 'store.sqlite')
 REG = os.path.join(ROOT, 'search', 'packer', 'runs', 'jlevy')
 BEST = os.path.join(ROOT, 'search', 'regularize', 'lists', 'best.json')
-SAME_TOL = 1e-8
+SAME_TOL = 1e-7     # 10-17: exactsolve's KKT point of a float-posted packing can sit ~2e-8 below it (#668's 227, 260)
 HISTORY_MAX = 100
 
 ISSUE = 'https://github.com/jlevy/squares/issues/'
-# Dated public postings.  Issue dates: GitHub createdAt (UTC), fetched 2026-10-10 / 2026-10-11.
-EVENTS = {
-    'dewinter': dict(who='Joost de Winter', date='2026-09-16', label='JoostdeWinter/square-packing-211',
-                     url='https://github.com/JoostdeWinter/square-packing-211'),
-    'casson': dict(who='Griff Casson (griffcass)', date='2026-09-23', label='griffcass/square-packing',
-                   url='https://github.com/griffcass/square-packing'),
-    'couzo0927': dict(who='Francisco Couzo', date='2026-09-27', label='franciscouzo/square-packing',
-                      url='https://github.com/franciscouzo/square-packing'),
-    'couzo1003': dict(who='Francisco Couzo', date='2026-10-03', label='franciscouzo/square-packing (10-03 update)',
-                      url='https://github.com/franciscouzo/square-packing'),
-    '#399': dict(who='Evan Daniel (this project)', date='2026-10-07', label='jlevy/squares#399', url=ISSUE + '399'),
-    '#401': dict(who='Nate Chaoweeraprasit (itsnaka, SQUISH)', date='2026-10-07', label='jlevy/squares#401', url=ISSUE + '401'),
-    '#432': dict(who='ry-xu', date='2026-10-08', label='jlevy/squares#432', url=ISSUE + '432'),
-    '#451': dict(who='Francisco Couzo', date='2026-10-08', label='jlevy/squares#451', url=ISSUE + '451'),
-    '#465': dict(who='Evan Daniel (this project)', date='2026-10-09', label='jlevy/squares#465', url=ISSUE + '465'),
-    '#470': dict(who='Mishapolk', date='2026-10-09', label='jlevy/squares#470', url=ISSUE + '470'),
-    '#476': dict(who='Francisco Couzo', date='2026-10-09', label='jlevy/squares#476', url=ISSUE + '476'),
-    '#481': dict(who='Nate Chaoweeraprasit (itsnaka, SQUISH)', date='2026-10-09', label='jlevy/squares#481', url=ISSUE + '481'),
-    '#484': dict(who='Kevin Fang (TheSnakeFang)', date='2026-10-10', label='jlevy/squares#484', url=ISSUE + '484'),
-    '#488': dict(who='Francisco Couzo', date='2026-10-10', label='jlevy/squares#488', url=ISSUE + '488'),
-    '#489': dict(who='Evan Daniel (this project)', date='2026-10-10', label='jlevy/squares#489', url=ISSUE + '489'),
-    '#422': dict(who='Nate Chaoweeraprasit (itsnaka, SQUISH)', date='2026-10-07', label='jlevy/squares#422', url=ISSUE + '422'),
-    '#500': dict(who='Nate Chaoweeraprasit (itsnaka, SQUISH)', date='2026-10-11', label='jlevy/squares#500', url=ISSUE + '500'),
-    '#501': dict(who='Daniil Ostashev (dostashev)', date='2026-10-11', label='jlevy/squares#501', url=ISSUE + '501'),
-    '#503': dict(who='PingYou Ltd (BuddenPing)', date='2026-10-11', label='jlevy/squares#503', url=ISSUE + '503'),
-    '#504': dict(who='PingYou Ltd (BuddenPing)', date='2026-10-11', label='jlevy/squares#504', url=ISSUE + '504'),
-    '#505': dict(who='Robert Barnett (RobertBarnettProjects)', date='2026-10-11', label='jlevy/squares#505', url=ISSUE + '505'),
-}
-# Same-day order (issue creation times), so that "earliest" is well defined.
-ORDER = ['dewinter', 'casson', 'couzo0927', 'couzo1003', '#399', '#401', '#422', '#432', '#451', '#465', '#470', '#476',
-         '#481', '#484', '#488', '#489', '#500', '#501', '#503', '#504', '#505']
-# Lineage, from each posting's own "lineage and credit" section: posting -> {n: the posting whose packing it started
-# from}.  The poster asked that the construction be credited to where it started, so the site credits the root of the
-# chain as the finder and lists the later postings as improvements (fetched 2026-10-11).
-LINEAGE = {
-    '#451': {105: '#432', 108: '#432', 127: '#432', 131: '#432', 155: '#422', 180: '#422'},
-    '#465': {155: '#422'},                                              # "a nearby minimum of SQUISH's packing"
-    '#476': {132: '#470', 237: '#422', 263: '#422', 303: '#422', 267: '#432', 270: '#399'},
-    '#488': {209: '#481', 237: '#481', 270: '#481', 305: '#481', 132: '#470', 175: '#432'},
-    '#489': {308: '#484', 343: '#484', 344: '#484'},                    # "please credit the construction to him"
-    '#505': {146: '#432', 261: '#432'},                                 # "both original layouts are by Ryan Xu"
-}
-# Our older posts (before the store tracked our issues) are not in its pending rows: sides from the issue titles.
-OURS = {'#465': {132: 11.98709933224506, 155: 12.95249894401401},
-        '#489': {132: 11.985680198846, 308: 17.998269879526}}
+LINEAGE_FILE = os.path.join(SITE, 'data', 'lineage.yaml')
+
+
+def load_events(db):
+    """(EVENTS, ORDER, LINEAGE).  10-17: postings that are jlevy/squares issues come from the packing store's `issue`
+    table (pk/watch.py syncs every issue: creation time, the author's credit name via pk/people.py); postings that are
+    not issues and the lineage come from data/lineage.yaml.  ORDER = posting time (issues to the second)."""
+    Y = yaml.safe_load(open(LINEAGE_FILE))
+    ev, when = {}, {}
+    for k, v in (Y.get('events') or {}).items():
+        ev[k] = dict(v); when[k] = str(v['date']) + 'T00:00:00Z'
+    for num, who, created, title in db.execute('SELECT number, credit, created, title FROM issue WHERE created IS NOT NULL'):
+        k = f'#{num}'
+        ev[k] = dict(who=who, date=created[:10], label=f'jlevy/squares#{num}', url=ISSUE + str(num))
+        when[k] = created
+    order = sorted(ev, key=lambda k: (when[k], k))
+    lineage = {str(k): {int(n): str(e) for n, e in v.items()} for k, v in (Y.get('lineage') or {}).items()}
+    return ev, order, lineage
+
+
 # Register finders -> the posting their registered packing came from.  Couzo's 10-03 update changed these n.
 COUZO_1003 = {208, 209, 228, 263, 272, 303, 306}
 
@@ -117,6 +94,8 @@ def build():
     best = {b['n']: b for b in json.load(open(BEST))}
     idx = json.load(open(os.path.join(SITE, 'www', 'data', 'index.json')))
     db = sqlite3.connect(STORE)
+    global EVENTS, ORDER, LINEAGE
+    EVENTS, ORDER, LINEAGE = load_events(db)
     reg_ref = os.popen(f'git -C {REG} log -1 --format="%h %cs"').read().strip()
     out = {'note': 'generated by site/tools/provenance.py; see its docstring', 'register': f'jlevy/squares@{reg_ref}',
            'events': EVENTS, 'n': {}}
@@ -134,15 +113,22 @@ def build():
         posts = []
         if reg_s is not None and reg_s < ref - 1e-9:
             ev = register_event(n, ru.get('found_by') or [])
-            if ev:
-                posts.append((reg_s, ev))
-        for src, finder, ps in db.execute('select source, finder, s from frontier where n=? and pending=1', (n,)):
+            if not ev:
+                # 10-17: a register record no posting we know carries (e.g. 211: Couzo's T-188 was a note inside #607):
+                # its own dated event, credited as the register credits it
+                ev = f'register-{n}'
+                EVENTS[ev] = dict(who=', '.join(ru.get('found_by') or []) or 'jlevy/squares register',
+                                  date=str(ru.get('source_date') or case.get('source_reviewed') or ''),
+                                  label=f'jlevy/squares register, s({n})',
+                                  url=f'https://jlevy.github.io/squares/cases/{n}.html')
+                ORDER.append(ev)
+            posts.append((reg_s, ev))
+        # every issue's claim at n, open or closed (10-17: closed = registered; before, only open issues were read
+        # and a registered posting counted only if register_event knew its finder)
+        for src, finder, ps in db.execute("select source, finder, s from frontier where n=? and source like 'pending:%'", (n,)):
             ev = src.split(':', 1)[1]
             if ev in EVENTS and ps < ref - 1e-9:
                 posts.append((ps, ev))
-        for ev, d in OURS.items():
-            if n in d:
-                posts.append((d[n], ev))
         # this project's exact optimum of someone's packing is theirs; dedupe by (event, side)
         posts = sorted(set(posts), key=lambda p: ORDER.index(p[1]))
         # A posting below the list's packing: the list could not certify it (exactsolve fails; REGULARIZE.md, n = 261).
