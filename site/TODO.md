@@ -261,7 +261,7 @@ public unfixed — see the Publishing section for why each one is on that list.
 
 * ✓ **16 records posted since the 10-10 sync were missing** (jlevy#500 SQUISH Mondrian, #501 dostashev, #503/#504
   PingYou, #505 Barnett: 146, 153, 155, 156, 176, 181, 207, 211, 238, 239, 261, 270, 271, 272, 304, 305): added to
-  `pk/pending.yaml` (`claims:` for issues without a table), synced, and drawn as posted (`raw`) until they are
+  `pk/overrides.yaml` (`claims:` for issues without a table), synced, and drawn as posted (`raw`) until they are
   regularized; each poster's certificate passes both our exact checkers (SQUISH's after a 1e-30 dilation: their box is
   the exact extent), `search/regularize/posted_cert.py` → `lists/certs/raw/`.  n = 261 now draws #505's certified
   refinement of Ryan Xu's packing instead of the uncertifiable posting.

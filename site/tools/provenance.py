@@ -6,7 +6,7 @@ for every n <= 324).  For most n that packing is the catalogue's record and the 
 the rest (found since mid-September 2026) this script reads who posted it first:
 
   - the packing store (search/packer/runs/store.sqlite): jlevy/squares register rows and pending registration requests
-    (open issues, pk/pending.yaml), each with its side;
+    (open issues, synced by pk/watch.py), each with its side;
   - the register's case files (sparse clone search/packer/runs/jlevy, refreshed by `pk.py sync-register`): finder,
     refinements, source keys;
   - EVENTS below: the dated public postings (issue creation dates from the GitHub API, repo dates from the register's
@@ -78,7 +78,7 @@ LINEAGE = {
     '#489': {308: '#484', 343: '#484', 344: '#484'},                    # "please credit the construction to him"
     '#505': {146: '#432', 261: '#432'},                                 # "both original layouts are by Ryan Xu"
 }
-# Our own posts are not in the store's pending table (pk/pending.yaml lists other people's): sides from the issue titles.
+# Our older posts (before the store tracked our issues) are not in its pending rows: sides from the issue titles.
 OURS = {'#465': {132: 11.98709933224506, 155: 12.95249894401401},
         '#489': {132: 11.985680198846, 308: 17.998269879526}}
 # Register finders -> the posting their registered packing came from.  Couzo's 10-03 update changed these n.

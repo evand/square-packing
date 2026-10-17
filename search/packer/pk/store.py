@@ -21,7 +21,7 @@ Tables
 status: raw (imported, f64-feasible within tol) < screened < polished < certified; or not-min / infeasible / unresolved.
 """
 from __future__ import annotations
-import datetime, json, math, os, sqlite3
+import collections, datetime, json, math, os, sqlite3
 import numpy as np
 from .packing import Packing
 
@@ -67,6 +67,23 @@ CREATE TABLE IF NOT EXISTS frontier (
   n INTEGER NOT NULL, s REAL NOT NULL, s_str TEXT, finder TEXT, source TEXT NOT NULL, ref TEXT, pending INTEGER NOT NULL,
   packing INTEGER, updated TEXT, UNIQUE(n, source));
 """
+
+
+# Sighting sources that mean "someone published this packing" (10-17: the one definition; fresh, nearmiss, ingest,
+# eventbench and distinct used to carry their own copies, eventbench's without watch:, and every one let pool:ours, our
+# own seed pool, count as public).
+PUBLIC = ('register', 'pending:', 'kingbird', 'pool:', 'watch:')
+PRIVATE = ('pool:ours',)
+
+
+def is_public(source):
+    return source.startswith(PUBLIC) and source not in PRIVATE
+
+
+def public_sql(alias='g'):
+    """SQL condition: sighting `alias` is a public source"""
+    return ('((' + ' OR '.join(f"{alias}.source LIKE '{p}%'" for p in PUBLIC) + ')'
+            + ''.join(f" AND {alias}.source != '{x}'" for x in PRIVATE) + ')')
 
 
 def now():
@@ -292,14 +309,68 @@ class Store:
         r = self.query(n=n, limit=1, **kw)
         return self.get(r[0]['id']) if r else None
 
-    def frontier(self, n=None, pending=True):
-        """{n: best frontier row} (register + pending if pending=True)."""
-        q = 'SELECT * FROM frontier' + ('' if pending else ' WHERE pending=0')
+    def claims(self, n=None, pending=True):
+        """{n: lowest claim row}: the `frontier` table is the CLAIMS table (10-17): one row per (n, source), from the
+        register (pending=0) and issues (pending=1), with the packing that backs it when one matched."""
+        w = ([] if pending else ['pending=0']) + ([] if n is None else ['n=?'])
+        q = 'SELECT * FROM frontier' + (' WHERE ' + ' AND '.join(w) if w else '')
         out = {}
-        for r in self.db.execute(q):
-            if (n is None or r['n'] == n) and (r['n'] not in out or r['s'] < out[r['n']]['s']):
+        for r in self.db.execute(q, (n,) if n is not None else ()):
+            if r['n'] not in out or r['s'] < out[r['n']]['s']:
                 out[r['n']] = r
         return out
+
+    def public_best(self, n=None):
+        """{n: (s, packing id, source, finder)}: the best feasible packing someone has published (sighting from a
+        PUBLIC source), per n"""
+        q = ("SELECT p.n, p.s, p.id, g.source, g.finder, g.kind, g.added FROM sighting g JOIN packing p ON p.id = g.packing "
+             f"WHERE {public_sql('g')} AND p.status != 'infeasible' AND (p.pen IS NULL OR p.pen <= 1e-9)"
+             + (' AND p.n = ?' if n is not None else ''))
+        # credit: the sighting that claims it, then the register / a watched repo / the catalogue, a seed pool, and a
+        # file that merely sat in some issue's linked dir ('context') last; earliest first
+        rank = {'claim': 0, 'record': 0, 'watch': 1, 'catalogue-current': 1, 'seed-pool': 2, 'context': 3}
+        out, key = {}, {}
+        for r in self.db.execute(q, (n,) if n is not None else ()):
+            k = (r['s'], rank.get(r['kind'], 2), r['added'] or '')
+            if r['n'] not in out or k < key[r['n']]:
+                out[r['n']], key[r['n']] = (r['s'], r['id'], r['source'], r['finder']), k
+        return out
+
+    def frontier(self, n=None, pending=True):
+        """{n: row} : the best known side at n (10-17: a derived view).  A packing is its own proof, so the frontier is
+        the best feasible PUBLISHED packing, or a claim no published packing backs (row 'verified' False: an assertion
+        we can't check; it still counts, so a record check stays conservative).  Rows are dicts with n, s, s_str,
+        finder, source, ref, pending, packing, verified.  pending=False: the register's own rows only (claims table)."""
+        if not pending:
+            return {k: dict(r, verified=r['packing'] is not None) for k, r in self.claims(n, pending=False).items()}
+        best = self.public_best(n)
+        C = collections.defaultdict(list)
+        for r in self.db.execute('SELECT * FROM frontier' + (' WHERE n=?' if n is not None else ''),
+                                 (n,) if n is not None else ()):
+            C[r['n']].append(r)
+        out = {}
+        for k in set(best) | set(C):
+            cands = []
+            if k in best:
+                s, pid, src, fnd = best[k]
+                m = [r for r in C.get(k, ()) if r['packing'] == pid] or [r for r in C.get(k, ()) if abs(r['s'] - s) < 1e-6]
+                c = min(m, key=lambda r: (r['pending'], r['s'])) if m else None
+                cands.append(dict(n=k, s=s, s_str=None, finder=(c['finder'] if c else fnd), source=(c['source'] if c else src),
+                                  ref=(c['ref'] if c else None), pending=(c['pending'] if c else int(src != 'register')),
+                                  packing=pid, verified=True))
+            for r in C.get(k, ()):
+                if k not in best or best[k][0] > r['s'] + 1e-9:          # a claim nothing published backs
+                    cands.append(dict(r, verified=False))
+            out[k] = min(cands, key=lambda d: d['s'])
+        return out
+
+    def unverified(self, n=None):
+        """claim rows no published packing backs (side above every public packing at n is not 'unverified': it is
+        just superseded)"""
+        best = self.public_best(n)
+        q = 'SELECT * FROM frontier' + (' WHERE n=?' if n is not None else '')
+        return [r for r in self.db.execute(q, (n,) if n is not None else ())
+                if r['n'] not in best or best[r['n']][0] > r['s'] + 1e-9]
 
     def find_hash(self, p: Packing):
         """store id of a packing equal to p up to box symmetry (canonical hash), else None"""

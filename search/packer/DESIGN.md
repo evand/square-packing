@@ -44,5 +44,5 @@ Done: 1 (store + importers + `pk.py`), 2 (`fq serve`; staged polish tried and dr
 `cross`), 4 (`pk/corpus.py`) and the battery (`pk/battery.py`) as the idea-grading front end; plus `anneal sched`,
 `pk/crossing.py`, `pk/umbrella.py`, `pk/rediscovery.py`, `pk/bridging.py`.  Not done: 5 (explorer v2 on pk: the explorer
 still has its own moves / pipeline; recipe fixes were applied to `explore.py` directly), 6 (library tags / grid-collapse
-robustness per packing).  Store size ~0.8 GB (gitignored); rebuild: `pk.py sync-register`, `sync-pending`,
+robustness per packing).  Store size ~0.8 GB (gitignored); rebuild: `pk.py sync-register`, `watch --apply` (`sync-issues --all`),
 `import-run runs`, seed pools (see PACKER.md).

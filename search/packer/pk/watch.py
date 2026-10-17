@@ -1,55 +1,51 @@
-"""Watch jlevy/squares issues and other people's packing repos; import every packing they publish (10-14).
+"""Keep the store current with jlevy/squares issues and the repos they link (10-14; rebuilt 10-17).
 
-  pk.py watch            dry run: what is new and what --apply would do (GitHub API reads only, nothing fetched)
-  pk.py watch --apply    fetch + import, append pending.yaml entries for new issues, save the state
+  pk.py watch                    dry run: updated issues and what each would import; watched repos' new commits
+  pk.py watch --apply            sync them (fetch, import, reconcile), import new repo commits, record the sync state
+  pk.py sync-issues [N ...] [--all]   re-sync given issues (or every issue the store has seen + pk/overrides.yaml)
 
-(a) Issues: every jlevy/squares issue updated since the cursor (10-17; see below) not already in pending.yaml gets an
-    entry.  From its body and comments: github.com/OWNER/REPO references (plus /commit|tree|blob/<sha>[/path] and
-    `@sha` / `commit <sha>` mentions), claims (markdown table: sources.body_claims; `s(n) <= x` in the title), and
-    github user-attachment file links.  Proposed pending.yaml entry: pin = the commit the issue names (checked to exist
-    on that repo), else the default-branch HEAD now (the comment says which); paths = the blob / tree paths the issue
-    links, else the whole repo.  Issues with no repo, attachment or claim are recorded as skipped.  --apply appends the
-    entries and runs sources.import_pending on them (source pending:#N, as for hand-written entries).
-(b) Repos: every repo in pending.yaml (except ours) plus repos found in new issues.  New commits since the last import
-    (first time: since the newest pending.yaml pin) are fetched, newest MAX_COMMITS per repo, and EVERY parseable
-    packing file is imported (strict parse), source watch:<owner>/<repo>@<sha7>, kind 'watch'.
+Issues.  Every issue updated since the cursor is synced from its CURRENT text: github.issue -> issues.parse ->
+issues.units (+ pk/overrides.yaml) -> each unit's files imported (source `pending:#N`, kind 'pending'), attachments
+too -> reconcile (each of the issue's packings 'claim' or 'context'; claims with no matching file and files below their
+claim reported) -> frontier rows for its claims (rows it no longer claims dropped).  Nothing parsed is kept by hand:
+the `issue` table records each sync (units, claims, notes) for reading, and is rewritten on the next one.
+Pins: a named commit resolves once and is cached (`resolved` table); "HEAD" and branch names resolve at an issue's
+first sight and stay pinned for that issue.
 
-10-17 (Evan: import more packings, wherever they appear; record checks = the store + a check for anything newer):
-(a) now reads every issue UPDATED since the cursor (state 'issues_updated'), body and comments together.  A new issue
-    -> entry as before; a known issue -> a supplemental entry for attachments / lower claims that appeared later
-    (supplement()).  Every repo linked anywhere in an updated issue is watched (whole-repo imports).  Tree links are not
-    narrowed: sources.reconcile marks each issue's packings 'claim' (n claimed, side matches) or 'context'.
-probe(): register main sha, issues / PRs updated since the cursor, watched repos' HEADs vs the store's sync table
-    (store.set_sync, written by sync-register and watch --apply).  candidate.live() = probe (+ sync when stale) + store.
-State: runs/watch/state.json (last issue seen, per-repo last imported sha); one line per --apply in runs/watch/log.jsonl.
-Security (pk/README.md): issue bodies and repo files are untrusted data.  Only regexes read issue bodies; the only links
-followed are github.com/OWNER/REPO (via the GitHub API) and github user-attachment files; nothing fetched is executed;
-downloads are size-capped (sources.MAX_*); files are parsed only by pk.packing.parse(strict=True).  Nothing is posted.
+Repos.  Every repo an issue unit names (except ours) is watched: new commits on its default branch since the last
+import (first time: its HEAD), newest MAX_COMMITS, EVERY parseable packing file imported (source
+`watch:<owner>/<repo>@<sha7>`, kind 'watch'; test / example dirs skipped).
+
+State is all in the store (`sync` table): `watch.issues_updated` (cursor), `watch.poll`, `repo:<name>` (last imported
+HEAD), `register.sha` (sync-register).  probe() compares them with GitHub (one call for the register, one for issues,
+one per repo) for candidate.live.  One line per --apply in runs/watch/log.jsonl.
+
+Security (pk/README.md): issue text and repo files are untrusted data, read only by pk/issues.py's regexes and
+pk.packing.parse(strict=True); network reads only through pk/github.py (size caps, read-only dirs, nothing executed).
+Nothing is posted.
 """
 from __future__ import annotations
-import collections, datetime as dt, json, os, re, subprocess, urllib.parse
+import collections, datetime as dt, glob, json, os, re, subprocess
 
 import yaml
 
-from . import sources
-from .sources import REPO_NAME, ATTACH_RE, resolve_sha, _gh
+from . import github, issues
+from .sources import import_paths
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PENDING = os.path.join(HERE, 'pending.yaml')
+OVERRIDES = os.path.join(HERE, 'overrides.yaml')
 WDIR = os.path.join(HERE, '..', 'runs', 'watch')
-STATE = os.path.join(WDIR, 'state.json')
-UPSTREAM = 'jlevy/squares'
-OWN = {'evand/square-packing'}                      # ours: never watched (pending entries for our issues are by hand)
 MAX_COMMITS = 20                                    # commits fetched per repo per run (newest first)
-RESERVED = {'user-attachments', 'orgs', 'settings', 'issues', 'pulls', 'marketplace', 'sponsors', 'apps', 'features',
-            'topics', 'notifications', 'login', 'about', 'pricing', 'enterprise', 'collections', 'search',
-            'advisories', 'site', 'contact', 'explore', 'trending', 'new', 'organizations', 'join', 'security'}
-# github.com/OWNER/REPO[/commit|tree|blob/REF[/path]]: the only link form read from issue bodies
-GH_RE = re.compile(r'(?<![\w./-])(?:https?://)?(?:www\.)?github\.com/([A-Za-z0-9][A-Za-z0-9-]{0,38})/([A-Za-z0-9._-]{1,100})'
-                   r'(?:/(commit|tree|blob)/([0-9A-Za-z._-]{1,100})((?:/[^\s/?#)\]>"\'`]{1,200}){0,20}))?'
-                   r'(?:@([0-9a-f]{7,40})\b)?')
-SHA_MENTION = re.compile(r'(?:commit|pinned at|pin|sha)[\s:`*]*([0-9a-f]{7,40})\b', re.I)
 TEST_DIRS = re.compile(r'(^|/)(tests?|test_?data|fixtures|examples?)/', re.I)   # checker test inputs: not packings
+CLAIM_TOL = 1e-6        # a file matches a claim when claim - CLAIM_TOL <= s <= claim + 1e-9 (claims are rounded up)
+
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS issue (
+  number INTEGER PRIMARY KEY, author TEXT, state TEXT, title TEXT, updated TEXT, synced TEXT, units TEXT,
+  claims TEXT, notes TEXT);
+CREATE TABLE IF NOT EXISTS resolved (
+  repo TEXT NOT NULL, ref TEXT NOT NULL, issue INTEGER NOT NULL, sha TEXT NOT NULL, at TEXT, UNIQUE(repo, ref, issue));
+"""
 
 
 def now():
@@ -57,367 +53,257 @@ def now():
 
 
 def _clean(t, k=90):
-    """Untrusted text for a yaml comment / terminal: one line, printable, short."""
+    """Untrusted text for the terminal: one line, printable, short."""
     return re.sub(r'[^\x20-\x7e]', '?', ' '.join(str(t).split()))[:k]
 
 
-def load_state():
-    try:
-        return json.load(open(STATE))
-    except FileNotFoundError:
-        return dict(last_issue=None, repos={}, issues={})
-
-
-def save_state(S):
-    os.makedirs(WDIR, exist_ok=True)
-    tmp = STATE + '.tmp'
-    json.dump(S, open(tmp, 'w'), indent=1, sort_keys=True)
-    os.replace(tmp, STATE)
-
-
-def pending_cfg():
-    return yaml.safe_load(open(PENDING)) or []
-
-
-# ---------- (a) issues ----------
-def updated_since(cursor, pages=10):
-    """10-17: jlevy/squares issues and PRs updated after `cursor` (ISO Z; None = the last day), newest update first."""
-    since = cursor or (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%SZ')
-    out = []
-    for page in range(1, pages + 1):
-        rows = json.loads(_gh([f'repos/{UPSTREAM}/issues?state=all&sort=updated&direction=desc&per_page=100'
-                               f'&page={page}&since={since}']))
-        out += [r for r in rows if r['updated_at'] > since]
-        if len(rows) < 100:
-            break
+def overrides():
+    """{issue: override dict} from pk/overrides.yaml; key 'finders' -> {login: display name}"""
+    Y = yaml.safe_load(open(OVERRIDES)) or {}
+    out = {int(k): v or {} for k, v in Y.items() if k != 'finders'}
+    out['finders'] = Y.get('finders') or {}
     return out
 
 
-def comments(number):
-    """[(login, body)] of an issue's comments, oldest first"""
-    out = []
-    for line in _gh(['--paginate', f'repos/{UPSTREAM}/issues/{int(number)}/comments?per_page=100',
-                     '--jq', '[.[] | [.user.login, .body]]']).splitlines():
-        if line.strip():
-            out += [(w, b or '') for w, b in json.loads(line)]
-    return out
+def resolver(st):
+    """resolve(repo, ref, issue) -> full sha or None, cached in the store: a commit ref (hex) once for everyone; HEAD or
+    a branch name once per issue (its first sight).  Misses are not cached (a commit can be pushed later, #583)."""
+    st.db.executescript(SCHEMA)
 
-
-def probe(st=None):
-    """10-17: is the store current?  Cheap reads only (one call for the register, one for issues, one per watched repo):
-    -> dict(stale=[...], as_of={...}).  Stale = register main moved since the last sync-register, an issue / PR updated
-    since the last watch --apply, or a watched repo whose HEAD is not the commit last imported."""
-    from .store import Store
-    st = st or Store()
-    Y = st.get_sync()
-    S = load_state()
-    stale, as_of = [], {}
-    reg = (Y.get('register.sha') or (None,))[0]
-    main = _gh([f'repos/{UPSTREAM}/commits/main', '--jq', '.sha']).strip()
-    as_of['register'] = f'{(reg or "never")[:8]} (main {main[:8]})'
-    if main != reg:
-        stale.append(f'register main {main[:8]} != synced {(reg or "never")[:8]}')
-    cur = (Y.get('watch.issues_updated') or (None,))[0]
-    as_of['issues_updated'] = cur
-    as_of['last_issue'] = S.get('last_issue')
-    for r in updated_since(cur, pages=1) if cur else [None]:
-        if r is None:
-            stale.append('issues: never watched into this store'); break
-        kind = 'PR' if r.get('pull_request') else 'issue'
-        stale.append(f"{kind} #{r['number']} updated {r['updated_at']} by activity since the last watch: {_clean(r['title'], 60)}")
-    for k, (v, at) in sorted(Y.items()):
-        if not k.startswith('repo:'):
-            continue
-        repo = k[5:]
+    def resolve(repo, ref, issue):
+        key = 0 if issues.HEX.fullmatch(ref) else int(issue)
+        r = st.db.execute('SELECT sha FROM resolved WHERE repo=? AND ref=? AND issue=?', (repo, ref, key)).fetchone()
+        if r:
+            return r['sha']
         try:
-            head = resolve_sha(repo, 'HEAD')
+            sha = github.resolve_sha(repo, ref)
         except (subprocess.CalledProcessError, ValueError):
-            head = None
-        if head and v and not head.startswith(v[:7]):
-            stale.append(f'repo {repo}: HEAD {head[:7]} != imported {v[:7]}')
-    as_of['repos'] = sum(1 for k in Y if k.startswith('repo:'))
-    return dict(stale=stale, as_of=as_of)
+            sha = None
+        if sha:
+            st.db.execute('INSERT OR IGNORE INTO resolved(repo, ref, issue, sha, at) VALUES (?,?,?,?,?)',
+                          (repo, ref, key, sha, now()))
+        return sha
+    return resolve
 
 
-def refs(text):
-    """{repo: {'shas': [...], 'paths': [...]}} for github.com/OWNER/REPO links in text (upstream, ours-as-upstream and
-    reserved paths excluded), in order of appearance; plus standalone sha mentions."""
-    R = collections.OrderedDict()
-    for m in GH_RE.finditer(text or ''):
-        owner, repo, kind, ref, path, at = m.groups()
-        repo = re.sub(r'(\.git)?\.*$', '', repo)
-        name = f'{owner}/{repo}'
-        if owner.lower() in RESERVED or name.lower() == UPSTREAM or not repo or not REPO_NAME.fullmatch(name):
-            continue
-        e = R.setdefault(name, dict(shas=[], paths=[], links=[]))
-        if kind and re.fullmatch(r'[0-9a-f]{7,40}', ref):
-            e['shas'].append(ref)
-        if at:
-            e['shas'].append(at)
-        if kind in ('tree', 'blob') and path:
-            p = urllib.parse.unquote(path.strip('/')).rstrip('.,;:')
-            if p and '..' not in p.split('/') and re.fullmatch(r'[A-Za-z0-9._/ +-]{1,300}', p):
-                e['paths'].append(p)
-                e['links'].append((ref, p))          # 10-17: which commit each path was linked at (#607)
-    loose = [s for s in SHA_MENTION.findall(text or '')]
-    return R, loose
+def reconcile(st, src, claims):
+    """Sort an issue's packings (sightings with source `src`) into 'claim' (its n is claimed and its side matches the
+    claim) and 'context' (anything else the linked files held: other counts, older packings, parents).  Every packing
+    stays in the store and counts for record checks; the kind only says what the issue claimed.
+    -> dict(matched={n: pid}, unmatched_claims={n: s}, context=k, below_claim=[(n, s, claim, pid)])"""
+    rows = st.db.execute('SELECT p.id, p.n, p.s, p.status FROM packing p JOIN sighting g ON g.packing = p.id '
+                         'WHERE g.source = ?', (src,)).fetchall()
+    out = dict(matched={}, unmatched_claims={}, context=0, below_claim=[])
+    for r in rows:
+        c = claims.get(r['n'])
+        ok = r['status'] != 'infeasible' and c is not None and c - CLAIM_TOL <= r['s'] <= c + 1e-9
+        st.db.execute('UPDATE sighting SET kind=? WHERE packing=? AND source=?', ('claim' if ok else 'context', r['id'], src))
+        if ok:
+            out['matched'][r['n']] = r['id']
+        else:
+            out['context'] += 1
+            if c is not None and r['status'] != 'infeasible' and r['s'] < c - CLAIM_TOL:
+                out['below_claim'].append((r['n'], r['s'], c, r['id']))
+    out['unmatched_claims'] = {n: s for n, s in claims.items() if n not in out['matched']}
+    return out
 
 
-def propose(issue):
-    """One issue -> (entry dict for pending.yaml or None, note)."""
-    body, title = issue.get('body') or '', issue.get('title') or ''
-    R, loose = refs(title + '\n' + body)
-    R = collections.OrderedDict((k, v) for k, v in R.items() if k not in OWN or issue['user']['login'] == 'evand')
-    claims = sources.text_claims(title, body)        # body = issue body + comments (run() joins them)
-    att = sorted(set(m.group(0) for m in ATTACH_RE.finditer(body)))
-    e = dict(issue=issue['number'], finder=issue['user']['login'])
-    note = []
-    if R:
-        repo, info = next(iter(R.items()))              # first repo linked is the subject (others listed in the note)
-        if len(R) > 1:
-            note.append(f'also links {", ".join(list(R)[1:4])}')
-        pin = None
-        for c in info['shas'] + loose:
-            pin = resolve_sha(repo, c)
-            if pin:
-                note.append(f'pin = commit {c[:12]} named in the issue')
-                break
-        if not pin:
-            br = json.loads(_gh([f'repos/{repo}', '--jq', '{b: .default_branch}']))['b']
-            pin = resolve_sha(repo, br)
-            named = info['shas'] + loose
-            note.append(f'pin = {br} HEAD at {now()} ' +
-                        (f'(named commit {named[0][:12]} not found)' if named else '(issue names no commit)'))
-        if not pin:
-            return None, f'repo {repo} not reachable'
-        # 10-17: no narrowing.  A tree link imports the whole dir (more parents); sources.reconcile marks which of the
-        # packings the issue actually claims ('claim') and which just sat in the linked files ('context')
-        # 10-17 (#607): paths linked at another commit of the same repo get their own entry at that commit (one pin
-        # per issue put 23 certificate paths at a commit that lacks them)
-        by_ref = collections.OrderedDict()
-        for ref_, p_ in info['links']:
-            by_ref.setdefault(ref_, []).append(p_)
-        mine, extra = [], []
-        for ref_, ps in by_ref.items():
-            sha = pin if pin.startswith(ref_) or ref_ == pin else resolve_sha(repo, ref_)
-            if sha is None or sha == pin:
-                mine += ps
-            else:
-                extra.append(dict(issue=e['issue'], finder=e['finder'], repo=repo, commit=sha, paths=sorted(set(ps))))
-        e.update(repo=repo, commit=pin, paths=sorted(set(mine)) or (['.'] if not extra else []))
-        if extra:
-            note.append(f'{len(extra)} more commit(s) linked: {", ".join(x["commit"][:7] for x in extra)}')
-            e['_extra'] = extra
-    else:
-        e.update(repo=None)
-    if claims:
-        e['claims'] = {int(n): float(s) for n, s in sorted(claims.items())}
-    if att:
-        e['attachments'] = att
-    if not R and not claims and not att:
-        return None, 'no repo, attachment or claim'
-    return e, '; '.join(note)
+def sync_issue(st, number, ov=None, data=None, apply=True, log=print):
+    """Sync one issue from its current text (see the module doc).  data = (issue json, comments) if already fetched.
+    apply=False: parse and plan only (resolution still goes through the cache).  -> summary dict"""
+    r, cm = data or github.issue(number)
+    P = issues.parse(r, cm)
+    o = (ov if ov is not None else overrides()).get(number, {})
+    U, att, claims, notes = issues.units(P, resolver(st), o)
+    tag = f"#{number} {P['author']} ({P['state']}) {_clean(P['title'], 60)}"
+    S = dict(issue=number, units=U, attachments=att, claims=claims, notes=notes)
+    if not apply:
+        log(f'{tag}: {len(U)} units {[(u["repo"], u["commit"][:7], len(u["paths"])) for u in U]}, '
+            f'{len(att)} attachments, {len(claims)} claims' + (f'; {"; ".join(notes)}' if notes else ''))
+        return S
+    ovs = ov if ov is not None else overrides()
+    src, finder = f'pending:#{number}', o.get('finder') or ovs.get('finders', {}).get(P['author']) or P['author']
+    seen, refs_ = 0, []
+    for u in U:
+        ref = f"{u['repo']}@{u['commit'][:7]}"
+        try:
+            d = github.fetch_repo(u['repo'], u['commit'])
+        except Exception as ex:
+            notes.append(f'{ref}: fetch failed {_clean(repr(ex), 80)}'); continue
+        paths = [p for g in u['paths'] for p in glob.glob(os.path.join(d, g), recursive=True)
+                 if os.path.realpath(p).startswith(os.path.realpath(d))]
+        c = import_paths(st, paths, src, finder, ref, 'pending', quiet=True, strict=True)
+        seen += c['seen']; refs_.append(ref)
+    for url in att:
+        try:
+            f, sha = github.fetch_attachment(url, number)
+        except Exception as ex:
+            notes.append(f'attachment not fetched: {_clean(url, 80)} ({_clean(repr(ex), 60)})'); continue
+        aref = f"#{number} attachment {os.path.basename(f)}"
+        seen += import_paths(st, [f], src, finder, aref, 'pending', quiet=True, strict=True)['seen']; refs_.append(aref)
+    R = reconcile(st, src, claims)
+    gone = [x['n'] for x in st.db.execute('SELECT n FROM frontier WHERE source=?', (src,)) if x['n'] not in claims]
+    if gone:
+        st.db.execute(f'DELETE FROM frontier WHERE source=? AND n IN ({",".join("?" * len(gone))})', (src, *gone))
+    ref0 = refs_[0] if refs_ else f'issue #{number}'
+    for n, s in sorted(claims.items()):
+        st.set_frontier(n, s, f'{s}', finder, src, ref0, P['state'] == 'open', R['matched'].get(n))
+    st.db.execute('INSERT OR REPLACE INTO issue(number, author, state, title, updated, synced, units, claims, notes) '
+                  'VALUES (?,?,?,?,?,?,?,?,?)', (number, P['author'], P['state'], P['title'], P['updated'], now(),
+                                                json.dumps(U), json.dumps(claims), json.dumps(notes)))
+    st.db.commit()
+    S.update(seen=seen, matched=sorted(R['matched']), unmatched=R['unmatched_claims'], context=R['context'],
+             below=R['below_claim'], dropped=gone)
+    flags = []
+    if R['unmatched_claims'] and refs_:
+        flags.append(f"claims without a matching file: {sorted(R['unmatched_claims'])}")
+    if R['below_claim']:
+        flags.append(f"files BELOW their claim: {[(n, round(s, 12), c) for n, s, c, _ in R['below_claim']]}")
+    if gone:
+        flags.append(f'dropped frontier rows no longer claimed: {sorted(gone)}')
+    log(f'{tag}: {len(U)} units, {len(att)} attachments; {seen} files, {len(claims)} claims '
+        f'({len(R["matched"])} matched), {R["context"]} context' + ''.join(f'; {x}' for x in flags + notes))
+    return S
 
 
-def supplement(issue, entries):
-    """10-17: a known issue was updated.  -> (supplemental pending entry or None, note): attachments and claims in the
-    issue (body + comments) that none of its pending.yaml entries has yet.  New repos are watched by run()."""
-    body, title = issue.get('body') or '', issue.get('title') or ''
-    have_att = {a for x in entries for a in (x.get('attachments') or [])}
-    have_cl = {}
-    for x in entries:
-        for n_, s_ in (x.get('claims') or {}).items():
-            have_cl[int(n_)] = min(have_cl.get(int(n_), 9e9), float(s_))
-    att = sorted(set(m.group(0) for m in ATTACH_RE.finditer(body)) - have_att)
-    from .sources import text_claims
-    cl = {n_: s_ for n_, s_ in text_claims(title, body).items() if s_ < have_cl.get(n_, 9e9) - 1e-12}
-    if not att and not cl:
-        return None, 'no new attachments or claims'
-    e = dict(issue=issue['number'], finder=issue['user']['login'], repo=None)
-    if cl:
-        e['claims'] = {int(n_): float(s_) for n_, s_ in sorted(cl.items())}
-    if att:
-        e['attachments'] = att
-    return e, f'supplement: {len(att)} new attachments, {len(cl)} new / lower claims (issue updated)'
-
-
-def append_pending(entries):
-    """Insert entries (newest first) above the existing ones in pending.yaml, one flow-style line each + comment."""
-    lines = open(PENDING).read().split('\n')
-    i = next((k for k, l in enumerate(lines) if l.startswith('- ')), len(lines))
-    new = []
-    for e, note, title in entries:
-        y = '- ' + yaml.safe_dump(e, default_flow_style=True, sort_keys=False, width=100000).strip()
-        new.append(f'{y}  # auto (pk.py watch {now()[:10]}): {_clean(note, 120)}; title: {_clean(title)}')
-    open(PENDING, 'w').write('\n'.join(lines[:i] + new + lines[i:]))
-
-
-# ---------- (b) repos ----------
-def watch_list(S, cfg):
-    """{repo: {'base': newest pending pin or None, 'finder': name}} for every watched repo."""
-    W = {}
-    for e in sorted(cfg, key=lambda e: e.get('issue') or 0):
-        r = e.get('repo')
-        if r and r not in OWN and REPO_NAME.fullmatch(r):
-            W[r] = dict(base=str(e['commit']), finder=e.get('finder'))
-    for r, v in S['repos'].items():
-        W.setdefault(r, dict(base=None, finder=v.get('finder')))
-    return W
-
-
+# ---------- repos ----------
 def poll_repo(repo, base):
     """(head sha, default branch, [new commit shas newest first] or None if base unknown / not comparable)."""
-    br = json.loads(_gh([f'repos/{repo}', '--jq', '{b: .default_branch}']))['b']
-    head = resolve_sha(repo, br)
+    br = json.loads(github._gh([f'repos/{repo}', '--jq', '{b: .default_branch}']))['b']
+    head = github.resolve_sha(repo, br)
     if not base or not head:
         return head, br, None
     if head.startswith(base) or base.startswith(head):
         return head, br, []
     try:
-        c = json.loads(_gh([f'repos/{repo}/compare/{base}...{head}', '--jq', '{s: .status, c: [.commits[].sha]}']))
+        c = json.loads(github._gh([f'repos/{repo}/compare/{base}...{head}', '--jq', '{s: .status, c: [.commits[].sha]}']))
     except subprocess.CalledProcessError:
         return head, br, None
     return head, br, list(reversed(c['c'])) if c['s'] in ('ahead', 'diverged') else []
 
 
-# ---------- driver ----------
-def run(st=None, apply=False, max_commits=MAX_COMMITS):
-    S = load_state()
-    cfg = pending_cfg()
-    known = {e['issue'] for e in cfg if e.get('issue')}
-    if S['last_issue'] is None:                     # first run: everything up to the newest pending.yaml issue was seen
-        S['last_issue'] = max(known)
-    started = now()
-    started_local = dt.datetime.now().isoformat(timespec='seconds')     # the store's sighting.added clock (local time)
-    log = dict(start=started, start_local=started_local, apply=apply, issues=[], skipped_issues=[], prs=[], repos=[], counts={})
+def watched(st):
+    """{repo: finder} : every repo an issue unit names (except ours) + every repo imported before"""
+    st.db.executescript(SCHEMA)
+    W = {}
+    for r in st.db.execute('SELECT author, units FROM issue'):
+        for u in json.loads(r['units'] or '[]'):
+            if u['repo'] not in issues.OWN:
+                W.setdefault(u['repo'], r['author'])
+    for k in st.get_sync('repo:'):
+        W.setdefault(k[5:], None)
+    return W
 
-    # (a) issues: every issue updated since the cursor (10-17: comments too, and known issues get supplemental entries
-    #     for attachments / claims that appeared later; every repo any of them links is watched)
-    cursor = S.get('issues_updated') or S.get('last_poll')
-    upd = updated_since(cursor)
-    prs = [r for r in upd if r.get('pull_request') and r['user']['login'] != UPSTREAM.split('/')[0]]
-    issues = [r for r in upd if not r.get('pull_request')]
-    props, extra_repos, touched = [], {}, []
-    for r in sorted(issues, key=lambda r: r['number']):
-        tag = f"#{r['number']} {r['user']['login']} ({r['state']}) {_clean(r['title'], 70)}"
-        try:
-            cm = comments(r['number']) if r.get('comments') else []
-            own = [b for who, b in cm if who == r['user']['login']]       # claims: the author's comments only
-            full = dict(r, body='\n\n'.join([r.get('body') or '', *own]))
-            if r['number'] not in known:
-                e, note = propose(full)
-            else:
-                e, note = supplement(full, [x for x in cfg if x.get('issue') == r['number']])
-            Rr, _ = refs((r.get('title') or '') + '\n' + '\n\n'.join([r.get('body') or '', *(b for _, b in cm)]))
-            for repo in Rr:
-                if repo not in OWN:
-                    extra_repos.setdefault(repo, r['user']['login'])
-        except (subprocess.CalledProcessError, ValueError, KeyError) as ex:
-            e, note = None, f'error {_clean(repr(ex), 80)}'
-        if e is None:
-            print(f'issue {tag}: {"known; nothing new" if r["number"] in known and not note.startswith("error") else "skip"} ({note})')
-            if r['number'] not in known:
-                log['skipped_issues'].append(dict(issue=r['number'], why=note))
-        else:
-            extra = e.pop('_extra', [])
-            for x in [e, *extra]:
-                print(f'issue {tag}: propose {json.dumps(x)[:300]}' + (f'  [{note}]' if note else ''))
-                props.append((x, note, r['title']))
-                log['issues'].append(dict(entry=x, note=note))
-    for r in prs:
-        print(f"PR #{r['number']} {r['user']['login']} {_clean(r['title'], 70)}: not handled (PRs are not watched)")
-        log['prs'].append(r['number'])
 
-    # (b) repos
-    W = watch_list(S, cfg)
-    for e, _, _ in props:
-        if e.get('repo') and e['repo'] not in OWN:
-            W.setdefault(e['repo'], dict(base=e['commit'], finder=e['finder']))
-    for repo, who in extra_repos.items():                 # 10-17: every repo linked anywhere in an updated issue
-        if REPO_NAME.fullmatch(repo):
-            W.setdefault(repo, dict(base=None, finder=who))
-    plan = []
-    for repo, w in sorted(W.items()):
-        prev = S['repos'].get(repo, {}).get('imported')
-        base = prev or w['base']
-        try:
-            head, br, new = poll_repo(repo, base)
-        except subprocess.CalledProcessError as ex:
-            print(f'repo {repo}: not reachable ({_clean(ex.stderr or ex, 80)})'); continue
-        if head is None:
-            print(f'repo {repo}: no HEAD'); continue
-        if prev and head.startswith(prev[:7]):
-            print(f'repo {repo}: no new commits ({head[:7]})'); continue
-        if new is None:
-            todo = [head]
-        else:
-            todo = ([head] if not prev and not new else new)[:max_commits]
-        print(f'repo {repo}: {br} {head[:7]}; base {base[:7] if base else None}'
-              f'{"" if prev else " (newest pending pin; first watch import)"}; {len(new) if new is not None else "?"} '
-              f'new commits; import {len(todo)}: {" ".join(c[:7] for c in todo)}')
-        plan.append((repo, w, head, todo, len(new) if new is not None else None))
-        log['repos'].append(dict(repo=repo, head=head, base=base, new_commits=len(new) if new is not None else None,
-                                 fetch=todo))
-
-    if not apply:
-        print(f'dry run: {len(props)} new issue entries, {sum(len(p[3]) for p in plan)} commits to fetch in '
-              f'{len(plan)} repos; --apply to fetch and import')
-        return log
-
-    from .store import Store
-    st = st or Store()
+def sync_repos(st, apply, max_commits=MAX_COMMITS, log=print):
+    Y = st.get_sync('repo:')
     C = collections.Counter()
-    coll = []
-    for repo, w, head, todo, nnew in plan:
+    for repo, finder in sorted(watched(st).items()):
+        prev = (Y.get(f'repo:{repo}') or (None,))[0]
+        try:
+            head, br, new = poll_repo(repo, prev)
+        except subprocess.CalledProcessError as ex:
+            log(f'repo {repo}: not reachable ({_clean(ex.stderr or ex, 80)})'); continue
+        if head is None or (prev and head.startswith(prev[:7])):
+            continue
+        todo = ([head] if new is None or not new else new)[:max_commits]
+        log(f'repo {repo}: {br} {head[:7]}; last imported {prev[:7] if prev else None}; import {len(todo)}: '
+            f'{" ".join(c[:7] for c in todo)}')
+        if not apply:
+            continue
         for sha in todo:
             try:
-                d = sources.fetch_repo(repo, sha)
+                d = github.fetch_repo(repo, sha)
             except Exception as ex:
-                print(f'  {repo}@{sha[:7]}: fetch failed ({_clean(repr(ex), 120)})'); C['fetch_failed'] += 1; continue
-            c = sources.import_paths(st, [d], f'watch:{repo}@{sha[:7]}', w.get('finder') or repo.split('/')[0],
-                                     f'{repo}@{sha[:7]}', 'watch', quiet=True, strict=True, collect=coll,
-                                     skip_path=TEST_DIRS)
-            print(f'  {repo}@{sha[:7]}: {c}')
+                log(f'  {repo}@{sha[:7]}: fetch failed ({_clean(repr(ex), 120)})'); C['fetch_failed'] += 1; continue
+            c = import_paths(st, [d], f'watch:{repo}@{sha[:7]}', finder or repo.split('/')[0], f'{repo}@{sha[:7]}',
+                             'watch', quiet=True, strict=True, skip_path=TEST_DIRS)
+            log(f'  {repo}@{sha[:7]}: {c}')
             C['commits'] += 1
             for k, v in c.items():
                 C[k] += v
-        S['repos'][repo] = dict(imported=head, finder=w.get('finder'), checked=now())
-    if props or touched:
-        append_pending(props)
-        nums = sorted({e['issue'] for e, _, _ in props} | set(touched))
-        print(f'pending.yaml: appended {nums}; importing them (sync-pending)')
-        before = len(coll)
-        n0 = st.db.execute('SELECT max(id) FROM packing').fetchone()[0] or 0
-        sources.import_pending(st, only=nums)
-        for r in st.db.execute('SELECT id, n, s, status FROM packing WHERE id > ?', (n0,)):
-            coll.append((f'pending', r['n'], r['s'], r['id'], True))
-        C['pending_new'] = len(coll) - before
-    for e, _, _ in props:
-        S['issues'][str(e['issue'])] = dict(at=now(), action='appended')
-    for d in log['skipped_issues']:
-        S['issues'][str(d['issue'])] = dict(at=now(), action='skipped: ' + d['why'])
-    nums = [r['number'] for r in issues]
-    if nums:
-        S['last_issue'] = max(S['last_issue'], max(nums))
-    S['last_poll'] = started
-    if upd:
-        S['issues_updated'] = max(r['updated_at'] for r in upd)
-    S['issues_updated'] = S.get('issues_updated') or started
-    st.set_sync('watch.issues_updated', S['issues_updated'], commit=False)
-    st.set_sync('watch.poll', started, commit=False)
-    for repo, v in S['repos'].items():
-        if v.get('imported'):
-            st.set_sync(f'repo:{repo}', v['imported'], commit=False)
-    st.db.commit()
-    save_state(S)
-    ids = {pid for _, _, _, pid, new in coll if new}
-    rows = [st.db.execute('SELECT n, status FROM packing WHERE id=?', (i,)).fetchone() for i in ids]
-    byn = collections.Counter(r['n'] for r in rows if r['status'] != 'infeasible')
-    C['new_distinct'] = sum(byn.values()); C['new_infeasible'] = sum(1 for r in rows if r['status'] == 'infeasible')
-    log['counts'] = dict(C); log['new_by_n'] = dict(sorted(byn.items())); log['end'] = now()
+        st.set_sync(f'repo:{repo}', head)
+    return C
+
+
+# ---------- driver ----------
+def run(st=None, apply=False, only=None, everything=False, repos=True, max_commits=MAX_COMMITS, log=print):
+    """Updated issues since the cursor (or `only` issue numbers, or with everything=True every issue the store has seen
+    plus every issue in overrides.yaml), then watched repos."""
+    from .store import Store
+    st = st or Store()
+    st.db.executescript(SCHEMA)
+    started = now()
+    started_local = dt.datetime.now().isoformat(timespec='seconds')     # the store's sighting.added clock
+    ov = overrides()
+    cursor = (st.get_sync('watch.issues_updated').get('watch.issues_updated') or (None,))[0]
+    if only or everything:
+        nums = set(only or ())
+        if everything:
+            nums |= {r['number'] for r in st.db.execute('SELECT number FROM issue')} | {k for k in ov if k != 'finders'}
+        upd, todo = [], [(n, None) for n in sorted(nums)]
+    else:
+        upd = github.updated_since(cursor)
+        todo = [(r['number'], r) for r in sorted(upd, key=lambda r: r['number']) if not r.get('pull_request')]
+        for r in upd:
+            if r.get('pull_request') and r['user']['login'] != github.UPSTREAM.split('/')[0]:
+                log(f"PR #{r['number']} {r['user']['login']} {_clean(r['title'], 70)}: not handled (PRs are not watched)")
+    rows = []
+    for n, r in todo:
+        try:
+            data = (r, github.comments(n) if r.get('comments') else []) if r else None
+            rows.append(sync_issue(st, n, ov, data, apply=apply, log=log))
+        except (subprocess.CalledProcessError, ValueError, KeyError) as ex:
+            log(f'#{n}: error {_clean(repr(ex), 120)}')
+    C = sync_repos(st, apply, max_commits, log) if repos else collections.Counter()
+    if not apply:
+        log(f'dry run: {len(todo)} issues, nothing fetched or written beyond the resolution cache; --apply to import')
+        return rows
+    if only or everything:                          # an explicit re-sync does not move the cursor
+        pass
+    elif upd:
+        st.set_sync('watch.issues_updated', max(r['updated_at'] for r in upd), commit=False)
+    elif cursor is None:
+        st.set_sync('watch.issues_updated', started, commit=False)
+    st.set_sync('watch.poll', started)
+    os.makedirs(WDIR, exist_ok=True)
     with open(os.path.join(WDIR, 'log.jsonl'), 'a') as f:
-        f.write(json.dumps(log) + '\n')
-    print(f'watch --apply: {dict(C)}')
-    print('new distinct feasible packings by n:', ' '.join(f'{n}:{k}' for n, k in sorted(byn.items())) or 'none')
-    print(f'first sighting of this run: {started_local} local (python3 fresh.py new --since {started_local[:16]})')
-    return log
+        f.write(json.dumps(dict(start=started, start_local=started_local, issues=[x['issue'] for x in rows],
+                                counts=dict(C), end=now())) + '\n')
+    log(f'watch --apply: {len(rows)} issues synced; repos {dict(C)}')
+    log(f'first sighting of this run: {started_local} local (python3 fresh.py new --since {started_local[:16]})')
+    return rows
+
+
+def probe(st=None):
+    """Is the store current?  Cheap reads only (one call for the register, one for issues, one per watched repo):
+    -> dict(stale=[...], as_of={...}).  Stale = register main moved since the last sync-register, an issue / PR updated
+    since the last watch --apply, or a watched repo whose HEAD is not the commit last imported."""
+    from .store import Store
+    st = st or Store()
+    Y = st.get_sync()
+    stale, as_of = [], {}
+    reg = (Y.get('register.sha') or (None,))[0]
+    main = github.resolve_sha(github.UPSTREAM, 'main') or ''
+    as_of['register'] = f'{(reg or "never")[:8]} (main {main[:8]})'
+    if main != reg:
+        stale.append(f'register main {main[:8]} != synced {(reg or "never")[:8]}')
+    cur = (Y.get('watch.issues_updated') or (None,))[0]
+    as_of['issues_updated'] = cur
+    as_of['last_issue'] = (st.db.execute('SELECT max(number) m FROM issue').fetchone() or {'m': None})['m'] \
+        if st.db.execute("SELECT 1 FROM sqlite_master WHERE name='issue'").fetchone() else None
+    if cur is None:
+        stale.append('issues: never watched into this store')
+    else:
+        for r in github.updated_since(cur, pages=1):
+            kind = 'PR' if r.get('pull_request') else 'issue'
+            stale.append(f"{kind} #{r['number']} updated {r['updated_at']}: {_clean(r['title'], 60)}")
+    for k, (v, at) in sorted(Y.items()):
+        if k.startswith('repo:'):
+            h = github.head(k[5:])
+            if h and v and not h.startswith(v[:7]):
+                stale.append(f'repo {k[5:]}: HEAD {h[:7]} != imported {v[:7]}')
+    for repo in sorted(set(watched(st)) - {k[5:] for k in Y if k.startswith('repo:')}):
+        stale.append(f'repo {repo}: watched, never imported')
+    as_of['repos'] = sum(1 for k in Y if k.startswith('repo:'))
+    return dict(stale=stale, as_of=as_of)

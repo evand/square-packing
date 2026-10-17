@@ -4,9 +4,9 @@
   pk.py ingest --apply [--procs 16] [--no-fresh] [--since ISO]
 
 --apply runs, each as its own process with the same store (PK_STORE), logs in runs/ingest/<stamp>/:
-  1. pk.py sync-register   2. pk.py sync-pending   3. pk.py watch --apply
-  4. fresh.py run --since <last ingest> --nmax 324 --out runs/ingest/<stamp>/fresh   (unless --no-fresh)
-  5. near misses of the fresh pass (compose_lo / compose_hi dirs: near.jsonl arms, polished hits) + a store scan of the
+  1. pk.py sync-register   2. pk.py watch --apply (updated issues + watched repos)
+  3. fresh.py run --since <last ingest> --nmax 324 --out runs/ingest/<stamp>/fresh   (unless --no-fresh)
+  4. near misses of the fresh pass (compose_lo / compose_hi dirs: near.jsonl arms, polished hits) + a store scan of the
      packings added since -> the near-miss queue (pk/nearmiss.py; drained by `pk.py finish`)
 State runs/ingest/state.json: `last` = start time of the last ingest whose steps all succeeded (local time, the clock of
 sighting.added), so the next --since covers everything first seen after it.  One line per --apply in runs/ingest/log.jsonl.
@@ -42,8 +42,7 @@ def plan(since, out, procs=16, fresh=True, nmax=324, store=None):
     """[(name, argv)] for --apply (cwd search/packer)."""
     py, pk = sys.executable, os.path.join(PK, 'pk.py')
     base = [py, pk] + (['--store', store] if store else [])
-    P = [('sync-register', base + ['sync-register']), ('sync-pending', base + ['sync-pending']),
-         ('watch', base + ['watch', '--apply'])]
+    P = [('sync-register', base + ['sync-register']), ('watch', base + ['watch', '--apply'])]
     if fresh:
         P.append(('fresh', [py, os.path.join(PK, 'fresh.py'), 'run', '--since', since, '--nmax', str(nmax),
                             '--procs', str(procs), '--out', os.path.join(out, 'fresh'),
@@ -53,8 +52,8 @@ def plan(since, out, procs=16, fresh=True, nmax=324, store=None):
 
 def new_since(db, since):
     """rows (id, n, s, first public sighting) first seen publicly at or after since (fresh.new_packings, read-only)"""
-    from .nearmiss import PUBLIC
-    pub = ' OR '.join(f"g.source LIKE '{p}%'" for p in PUBLIC)
+    from .store import public_sql
+    pub = public_sql('g')
     return db.execute(f"""SELECT p.id, p.n, p.s, min(g.added) AS first FROM packing p JOIN sighting g ON g.packing = p.id
         WHERE p.status != 'infeasible' AND ({pub}) GROUP BY p.id HAVING first >= ? ORDER BY p.n""", (since,)).fetchall()
 

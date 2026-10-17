@@ -15,8 +15,8 @@ Steps (work dir runs/candidates/NAME/, summary.json + a facts block for the issu
   2. both exact checkers (verify_cert.py separating axes, verify_cert2.py polygons) on the certificate: both must say VALID
   3. live check (10-17): the store, after pk.watch.probe checks it is current (register main sha, issues / PRs updated
      since the last watch, watched repos' HEADs); anything newer -> `pk.py sync-register` + `pk.py watch --apply`
-     first (--no-sync: don't; stale items are listed).  Sources: every frontier row at n (register, each issue's
-     claims), the best stored packing (anyone's, and by others), the monotone envelope.  "beaten" = any of them at or
+     first (--no-sync: don't; stale items are listed).  Sources: the store's frontier at n (best published packing, or
+     a claim nothing published backs: UNVERIFIED), every unverified claim, the best stored packing, the envelope.  "beaten" = any of them at or
      below S' + 1e-12
   4. matching distance (pk.crossing) to the store's best packing for n and to each --vs file
   5. local-optimality facts from exactsolve's report (min lambda, flat motions, corner-corner jams, rattlers)
@@ -58,8 +58,8 @@ def live(n, S, sync=False):
     """10-17: the record check reads the store, after a cheap probe that the store is current (pk.watch.probe:
     register main sha, issues / PRs updated since the last watch, watched repos' HEADs).  sync=True: when the probe
     finds anything newer, run `pk.py sync-register` and `pk.py watch --apply` first, then probe again.  What is still
-    stale is listed (L['stale']) and printed.  Sources: every frontier row at n (register + each issue's claims, with
-    or without a file), the best stored packing at n (anyone's) and by someone other than us, and the monotone envelope.
+    stale is listed (L['stale']) and printed.  Sources: the store's frontier at n (the best published packing, or a
+    claim nothing published backs), every unverified claim, the best stored packing (ours included), the envelope.
     (Until 10-17 this read the register, case page, issue texts (decimal grep) and Ellsworth directly; the grep gave
     n = 155 the s(154) value from #401 and blocked a real record, and caught nothing the store missed.)"""
     from pk import watch
@@ -78,14 +78,15 @@ def live(n, S, sync=False):
         L['errors'].append(f'probe: {e!r}'[:300])
     try:
         st = Store()
-        for r in st.db.execute('SELECT * FROM frontier WHERE n=?', (n,)):
-            L['sources'][f"store frontier: {r['source']} ({r['finder'] or '?'})"] = r['s']
-        rows = st.query(n=n, limit=None)
+        f = st.frontier(n).get(n)          # the best published packing, or a claim nothing published backs
+        if f:
+            L['sources'][f"store frontier: {f['source']} ({f['finder'] or '?'})"
+                         + ('' if f['verified'] else ' UNVERIFIED claim')] = f['s']
+        for r in st.unverified(n):         # every unbacked claim, even above the frontier: listed for a human
+            L['sources'][f"unverified claim: {r['source']} ({r['finder'] or '?'})"] = r['s']
+        rows = st.query(n=n, limit=1)
         if rows:
             L['sources'][f"store best any ({(rows[0]['finders'] or '?')[:40]})"] = rows[0]['s']
-            oth = next((r for r in rows if any(f.strip() != 'ours' for f in (r['finders'] or 'ours').split(','))), None)
-            if oth is not None:
-                L['sources'][f"store best public ({(oth['finders'] or '?')[:40]})"] = oth['s']
         # monotone envelope (10-12): s(n) <= s(m) for m > n by dropping squares
         r = st.db.execute("SELECT n, s FROM packing WHERE n > ? AND n <= ? AND status != 'infeasible' AND pen <= 1e-9 "
                           "ORDER BY s LIMIT 1", (n, n + 80)).fetchone()

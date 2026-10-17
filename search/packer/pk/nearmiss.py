@@ -48,7 +48,7 @@ NMIN = 10
 PER_N = 2             # queue items per n (a new one only if it beats all of them)
 DISTINCT = 1e-7       # sides closer than this at one n = the same minimum
 BELOW = 1e-9          # candidate: s < bar - BELOW
-PUBLIC = ('register', 'pending:', 'kingbird', 'pool:', 'watch:')   # = fresh.PUBLIC: other people's packings
+from .store import PUBLIC, is_public, public_sql   # 10-17: the store's one definition
 TERMINAL = ('finish:',)                                       # finisher outputs: results, not items
 STAGES = ('polish', 'harden1', 'harden')
 NM_GATE = 5e-4
@@ -103,13 +103,13 @@ def queue(db, status=None, n=None):
 
 
 def _pub_clause(alias='g'):
-    return '(' + ' OR '.join(f"{alias}.source LIKE '{p}%'" for p in PUBLIC) + ')'
+    return public_sql(alias)
 
 
 def _origin(db, pid):
     """first non-public sighting source of a packing (the mechanism that made it)"""
     for r in db.execute('SELECT source FROM sighting WHERE packing=? ORDER BY added', (pid,)):
-        if not r[0].startswith(PUBLIC):
+        if not is_public(r[0]):
             return r[0]
     return None
 

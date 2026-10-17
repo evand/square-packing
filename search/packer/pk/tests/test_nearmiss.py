@@ -182,7 +182,7 @@ def test_ingest():
             pass
         r = ingest.run(store=sp, root=root, since='2000-01-01T00:00:00', log=logs.append)
         assert r['apply'] is False and not os.path.exists(root)                 # dry run writes nothing
-        assert [n for n, _ in r['plan']] == ['sync-register', 'sync-pending', 'watch', 'fresh']
+        assert [n for n, _ in r['plan']] == ['sync-register', 'watch', 'fresh']
         assert '--nmax' in r['plan'][-1][1] and r['plan'][-1][1][r['plan'][-1][1].index('--since') + 1] == '2000-01-01T00:00:00'
         assert any('store already holds 1 packings' in l for l in logs), logs   # the 'register' row
         seen = []
@@ -200,7 +200,7 @@ def test_ingest():
             assert r['ok'] and r['nearmiss_fresh'] == 2, r
             assert r['nearmiss_scan'] >= 1, r                      # store rows added since (a, b, c; per n 2 incl. fresh)
             S = ingest.load_state(root)
-            assert S['last'] == r['start'] and len(seen) == 4
+            assert S['last'] == r['start'] and len(seen) == 3
             r2 = ingest.run(store=sp, root=root, apply=True, runner=lambda c, f: 1 if 'watch' in c else 0,
                             log=logs.append)
             assert r2['since'] == r['start'] and not r2['ok'] and ingest.load_state(root)['last'] == r['start']

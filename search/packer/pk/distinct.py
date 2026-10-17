@@ -28,8 +28,8 @@ MOVE = 1e-4
 TILT = 1e-6                     # degrees: below = axis-parallel
 ROUND = 4                       # tilt angles grouped at 1e-4 degrees
 R = 0.5 * math.sqrt(2)          # corner radius of a unit square
-PUBLIC = ("g.source LIKE 'register%' OR g.source LIKE 'pending:%' OR g.source LIKE 'kingbird%' OR g.source LIKE 'pool:%' "
-          "OR g.source LIKE 'watch:%'")
+from .store import public_sql
+PUBLIC = public_sql('g')                          # 10-17: the store's one definition
 OURS = "(g.finder = 'ours' OR g.finder LIKE '%(evand)%' OR g.finder = 'evand')"
 
 

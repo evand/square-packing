@@ -29,7 +29,7 @@ posting (`data/records2026.json`, `tools/provenance.py`).  See `www/sources.html
 
 ```sh
 ./build.sh all        # fetch (polite, ~5 min), scrape, parse (~20 min), export (analysis), timeline, bounds, lists
-./build.sh provenance # after `pk.py sync-register` / `sync-pending` and a new lists/best.json; then ./build.sh lists
+./build.sh provenance # after `pk.py sync-register` / `watch --apply` and a new lists/best.json; then ./build.sh lists
 python3 -m http.server -d www 8765
 ```
 

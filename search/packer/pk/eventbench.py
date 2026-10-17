@@ -139,7 +139,8 @@ def store_match(n, s, tol=MATCH):
 
 
 PUBLIC = False      # set_public(True): only what others can see (posted packings / claims); ours unposted left out
-_PUB_SRC = "(g.source LIKE 'register%' OR g.source LIKE 'pending:%' OR g.source LIKE 'kingbird%' OR g.source LIKE 'pool:%')"
+from .store import public_sql
+_PUB_SRC = public_sql('g')   # 10-17: the store's one definition (adds watch:, drops pool:ours)
 
 
 EXCLUDE = ()        # sighting sources left out in public mode (e.g. 'pending:#584' to replay a pass before we posted)

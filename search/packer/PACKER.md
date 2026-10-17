@@ -3958,3 +3958,28 @@ staircase); the example fill collapses to the grid 9 / 9.
     were added by this morning's comment parse from jlevy's tables, none existed before, nothing lost).
   - Full pass after the fixes (runs/watch/sync-pending-2026-10-17-reconcile3.log): remaining flags are #639 (exact
     forms, no files by design) and #570 (above).  Dead code removed: watch.list_issues, `pk.py watch --recent`.
+* **Issue ingestion refactor (09:55, branch issues-refactor; Evan: "Let's try it!")**: pending.yaml (a stored, hand-
+  edited copy of each issue's parsed pins / paths / claims; source of #503 / #607 / #668 / #664's bugs) replaced by
+  re-deriving every issue from its current text on each sync.  New modules: `pk/issues.py` (pure parsing: links per
+  repo and commit, claims from the author's text, `units()`), `pk/github.py` (every network read, moved verbatim with
+  their caps), `pk/overrides.yaml` (37 lines: finders map + prose claims for #529 / #589 + #501's hand pin).  watch.py:
+  sync_issue / sync_repos / probe; state only in the store (`sync`, new `issue` and `resolved` tables; state.json
+  unused).  Gone: propose, supplement, append_pending, import_pending, the second claim parser, `pk.py sync-pending`
+  (now `pk.py sync-issues N... | --all`; ingest = sync-register + watch).  Lines: watch + sources + pending.yaml 971 ->
+  watch + sources + issues + github + overrides 887.  Migration check (scratch store, then real): 45 issues re-derived
+  in 1.5 min; frontier rows identical (323 = 323, 0 changed); every old sighting count kept (1,468 -> 1,857: more of
+  each linked repo; 24 packings new to the store); flags left: #570 (master past a dead commit), #639 (exact forms).
+  Tests 28 pass (new: parse/units with a fake resolver, overrides).  Store backup before the real run:
+  ~/store-backups/store-auto-2026-10-17T0949.sqlite.zst.
+* **Frontier as a derived view (10:30; Evan: "When is a claim not self-verifying from its demonstrated packing?")**:
+  measured first: of 323 issue claim rows, 298 are backed by the issue's own feasible file, 25 by another stored
+  packing (#639's exact forms, #570), 0 by nothing; 1 register row (n = 51) has no parsed witness.  So the claimed
+  number only matters when unbacked.  `Store.frontier()` = per n the best feasible published packing, else a claim
+  nothing published backs (flagged unverified; `Store.unverified()`); the `frontier` table is the claims table.
+  Credit picks the claiming sighting first (then register / watch / catalogue, seed pool, context last).  Differs from
+  the old min-of-claims at 18 n, all > 324: unregistered files in watched repos (Couzo master, Kevin Fang) and Göbel's
+  376.  One definition of "public" in the store (fresh, nearmiss, ingest, eventbench, distinct had five copies;
+  eventbench's lacked watch:, and all counted `pool:ours`, our own seed pool, as public; checked: no pool:ours
+  packing was below a published one, so no past result changes).  overrides.yaml: per-issue entries removed (#501 /
+  #529 / #589 change nothing once derived: frontier identical at 102 / 155 / 156 / 211 / 381); only `finders` left.
+  candidate.live reads the view + lists unverified claims.  Tests 29 pass (new: frontier view, pool:ours private).

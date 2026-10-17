@@ -6,9 +6,11 @@ copying coordinates.  Store: runs/store.sqlite (env PK_STORE overrides).
   pk.py sync-kingbird [--date D] [--all]   crawl Ellsworth's catalogue (all pages, incl. revisions), dated snapshot in
                                            runs/kingbird/<date>/, parse, import with provenance (pk/kingbird.py)
   pk.py sync-kingbird --snapshot DIR       parse + import an existing snapshot dir (no network)
-  pk.py sync-pending [--issue 481 ...]     pending issues + repos from pk/pending.yaml
-  pk.py watch [--apply]                   updated jlevy/squares issues -> pending.yaml entries; new commits in watched
-                                           repos -> every packing file imported (pk/watch.py; dry run without --apply)
+  pk.py watch [--apply]                    jlevy/squares issues updated since the last watch, synced from their
+                                           current text (+ pk/overrides.yaml); new commits in watched repos -> every
+                                           packing file imported (pk/watch.py; dry run without --apply)
+  pk.py sync-issues [N ...] [--all] [--dry]  re-sync the given issues (--all: every issue the store has seen +
+                                           overrides.yaml) from their current text
   pk.py import PATH... --source S [--finder F] [--ref R] [--status raw|polished|certified]
   pk.py import-run RUNDIR... [--below K]   explorer archives (parent links kept)
   pk.py frontier [N...] [--lo A --hi B] [--changed]   best known (register / pending / ours) per n
@@ -23,7 +25,7 @@ copying coordinates.  Store: runs/store.sqlite (env PK_STORE overrides).
   pk.py finish [--limit N] [--stages polish,harden1,harden] [--procs 4] [--candidate] [--dry-run]
                                            drain the queue: fq long polish, harden rounds; below frontier -> candidate.py
                                            (printed only without --candidate)
-  pk.py ingest [--apply] [--since ISO] [--no-fresh]   sync-register + sync-pending + watch --apply + fresh.py since
+  pk.py ingest [--apply] [--since ISO] [--no-fresh]   sync-register + watch --apply + fresh.py since
                                            the last ingest -> near-miss queue (pk/ingest.py; dry run without --apply)
 """
 import argparse, glob, json, math, os, sys
@@ -56,7 +58,8 @@ def main():
     sp.add_parser('sync-register')
     p = sp.add_parser('sync-kingbird'); p.add_argument('--date'); p.add_argument('--all', action='store_true')
     p.add_argument('--snapshot'); p.add_argument('--procs', type=int, default=4)
-    p = sp.add_parser('sync-pending'); p.add_argument('--issue', type=int, nargs='*')
+    p = sp.add_parser('sync-issues'); p.add_argument('issues', type=int, nargs='*'); p.add_argument('--all', action='store_true')
+    p.add_argument('--dry', action='store_true')
     p = sp.add_parser('watch'); p.add_argument('--apply', action='store_true')
     p.add_argument('--max-commits', type=int, default=20)
     p = sp.add_parser('import'); p.add_argument('paths', nargs='+'); p.add_argument('--source', required=True)
@@ -125,8 +128,11 @@ def main():
             kingbird.import_snapshot(st, a.snapshot, recs)
         else:
             kingbird.sync(st, a.date, a.all, a.procs)
-    elif a.cmd == 'sync-pending':
-        sources.import_pending(st, only=a.issue)
+    elif a.cmd == 'sync-issues':
+        from pk import watch
+        if not a.issues and not a.all:
+            raise SystemExit('sync-issues: give issue numbers or --all')
+        watch.run(st, apply=not a.dry, only=a.issues, everything=a.all, repos=False)
     elif a.cmd == 'watch':
         from pk import watch
         watch.run(st, apply=a.apply, max_commits=a.max_commits)

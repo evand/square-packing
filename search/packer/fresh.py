@@ -11,7 +11,7 @@ least one piece cut from a new packing, so it is cheap and can run after every s
 
 Steps:
   1. new packings: store packings whose first public sighting (register, pending issue, catalogue, outside pool) is at
-     or after --since (or --ids), feasible, n >= 10.  Sync first (pk.py sync-register / sync-pending / sync-kingbird).
+     or after --since (or --ids), feasible, n >= 10.  Sync first (pk.py sync-register / watch --apply / sync-kingbird).
   2. pieces: corner crops (mondrian.pieces_of, Pareto-pruned) re-optimised as rectangles (rectlib.reopt, fq), + each
      whole packing as a d = 0 piece; all into the store's piece table (pk.pieces).
   3. compose: compose2 run --new-from (arms must use one of the new packings' pieces), n 20..324 below the grid and
@@ -31,7 +31,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-PUBLIC = ('register', 'pending:', 'kingbird', 'pool:', 'watch:')   # watch: = pk/watch.py repo polls (10-14)
+from pk.store import PUBLIC, public_sql   # 10-17: the one definition of a public sighting
 
 
 def new_packings(since=None, ids=None, nmin=10):
@@ -42,7 +42,7 @@ def new_packings(since=None, ids=None, nmin=10):
         q = f"SELECT id, n, s FROM packing WHERE id IN ({','.join('?' * len(ids))})"
         rows = [(r['id'], r['n'], r['s'], 'ids') for r in db.execute(q, list(ids))]
     else:
-        pub = ' OR '.join(f"g.source LIKE '{p}%'" for p in PUBLIC)
+        pub = public_sql('g')
         rows = db.execute(f"""SELECT p.id, p.n, p.s, min(g.added) AS first, group_concat(DISTINCT g.source) AS src
             FROM packing p JOIN sighting g ON g.packing = p.id
             WHERE p.status != 'infeasible' AND (p.pen IS NULL OR p.pen <= 1e-9) AND ({pub})
