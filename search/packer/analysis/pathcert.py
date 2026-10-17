@@ -23,6 +23,10 @@ the scaled configuration is a packing with side <= L for every λ:
               pairs  G(λ) + 1 - lerp(s)/L >= 0        walls  G(λ) + (1 - lerp(s)/L)/2 >= 0,
           each a convex quadratic in λ whose minimum on [0, 1] is evaluated in closed form (mpmath, 50 digits; a margin
           of 1e-30 absorbs its rounding).
+Proved in Lean (lean/Sqpack/PathCert.lean, 10-17): `step_isPacking` (StepCert = exactly these tests, plus 0 < s <= L
+at both ends) and `joined_of_chain` (a certified chain joins its end packings inside the packings of side <= L).
+Outside the proof: node margins and the quadratic minima are evaluated in 50-digit floating point (1e-30 margin, not
+interval arithmetic), and the float pre-filter that calls a pair "far" (centres >= √2 + slack throughout).
 A step that fails is bisected (midpoint node = linear interpolation; its own overlaps are covered by the scaling).
 
 The chain from a posting P to a minimum M: P, the descent's accepted iterates (slp2.TRACE; every accepted step lowers
@@ -152,6 +156,8 @@ def step_ok(A, B, L):
     sA, a = A
     sB, b = B
     n = len(a)
+    if not (0 < sA <= L and 0 < sB <= L):      # the scaling argument needs 0 < s <= L at both ends (Lean StepCert)
+        return False, min(L - sA, L - sB, sA, sB), ('side', sA, sB)
     worst = (mpf('inf'), None)
     # walls
     for i in range(n):

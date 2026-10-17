@@ -60,4 +60,5 @@ import Sqpack.LocalMinRows
 import Sqpack.LocalMinCheck
 import Sqpack.Exact.N11L
 import Sqpack.ChainLocalMin
+import Sqpack.PathCert
 import Sqpack.Exact.N8Chain

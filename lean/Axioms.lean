@@ -261,6 +261,11 @@ import Sqpack
 #print axioms UnitSquarePacking.isLocalMin_of_band
 #print axioms UnitSquarePacking.isLocalMin_of_axisCert
 #print axioms UnitSquarePacking.Chain.N8.localMin
+-- path certificates: two packings joined below a level (Sqpack/PathCert.lean; search/packer/analysis/pathcert.py)
+#print axioms UnitSquarePacking.pairGap_chord
+#print axioms UnitSquarePacking.step_isPacking
+#print axioms UnitSquarePacking.qmin_nonneg
+#print axioms UnitSquarePacking.joined_of_chain
 -- elementary items of the open-problems statements (Sqpack/Conjectures.lean, ConjecturesProofs.lean)
 #print axioms UnitSquarePacking.Conjectures.GridOptimal.mono
 #print axioms UnitSquarePacking.Conjectures.CStarUnitSteps.stepsOfTwo
