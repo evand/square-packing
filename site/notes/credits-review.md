@@ -595,6 +595,7 @@ file) or the parser.
 - **found** 2026-10 → 2026-10, s = 9.698052061: Ryan Xu. _jlevy/squares#432_
 - **found** 2026-10 → now, s = 9.697934799: Mishapolk. _jlevy/squares#470_
   - (alternative) 2005 David W. Cantrell
+  - (refined) ? Francisco Couzo
   - lower 9.174676 (2026, preprint): Hakan Karakuş
   - lower 9.400000 (2026, preprint): wand125
   - lower 9.411000 (2026, preprint): wand125
@@ -610,6 +611,7 @@ file) or the parser.
 - **found** 1997 → 2026-10, s = 9.822875656: Erich Friedman. _Found by Erich Friedman in 1997._
 - **found** 2026-10 → 2026-10, s = 9.820565730: Ryan Xu. _jlevy/squares#432_
 - **found** 2026-10 → now, s = 9.820535407: Mishapolk. _jlevy/squares#470_
+  - (refined) ? Francisco Couzo
   - lower 9.289198 (2026, preprint): Hakan Karakuş
   - lower 9.460000 (2026, preprint): wand125
   - lower 9.503000 (2026, preprint): wand125
@@ -740,6 +742,8 @@ file) or the parser.
 - **found** 2026-10 → 2026-10, s = 10.790618268: Francisco Couzo. _jlevy/squares#451_
 - **found** 2026-10 → now, s = 10.789303784: Mishapolk. _jlevy/squares#470_
   - (refined) 2026-03 David Ellsworth
+  - (refined) ? Francisco Couzo
+  - (refined) ? PingYou Ltd
   - lower 10.259611 (2026, preprint): Hakan Karakuş
   - lower 10.280000 (2026, preprint): wand125
 
@@ -1019,7 +1023,6 @@ file) or the parser.
 - **found** 2026-10 → 2026-10, s = 12.979172614: Daniil Ostashev. _jlevy/squares#501_
 - **found** 2026-10 → now, s = 12.979165854: Francisco Couzo. _jlevy/squares#561_
   - (refined) 2026-06 Tej Stead
-  - (refined) ? Francisco Couzo
   - (refined) ? PingYou Ltd
   - (refined) ? Mishapolk
   - lower 12.510412 (2026, preprint): Hakan Karakuş
@@ -1138,6 +1141,7 @@ file) or the parser.
 - **improved** 2026-01 → 2026-10, s = 13.895341070: David Ellsworth. _Improved by David Ellsworth in January 2026, using his modified version of Thomas Schadt's simulated annealing program._
 - **found** 2026-10 → now, s = 13.883795491: Nate Chaoweeraprasit. _jlevy/squares#422_
   - (refined) 2026-06 Tej Stead
+  - (refined) ? Siddharth Gupta
   - lower 13.393797 (2026, preprint): Hakan Karakuş
 
 ## 180
@@ -1146,6 +1150,7 @@ file) or the parser.
 - **found** 2026-10 → 2026-10, s = 13.923635004: Nate Chaoweeraprasit. _jlevy/squares#401_
 - **found** 2026-10 → now, s = 13.916993522: Francisco Couzo. _jlevy/squares#451_
   - (refined) 2026-06 Tej Stead
+  - (refined) ? Siddharth Gupta
   - lower 13.432517 (2026, preprint): Hakan Karakuş
 
 ## 181
@@ -1311,9 +1316,7 @@ file) or the parser.
 
 ## 211
 - **found** 2026-10 → 2026-10, s = 14.993694187: Daniil Ostashev. _jlevy/squares#501 → #575_
-- **found** 2026-10 → 2026-10, s = 14.993558914: Francisco Couzo. _jlevy/squares#583_
-- **found** 2026-10 → now, s = 14.993549626: Daniil Ostashev. _jlevy/squares register, s(211)_
-  - (refined) ? Francisco Couzo
+- **found** 2026-10 → now, s = 14.993549626: Francisco Couzo. _jlevy/squares#583 →  register, s(211)_
   - lower 14.544572 (2026, preprint): Hakan Karakuş
 
 ## 212
@@ -1441,6 +1444,7 @@ file) or the parser.
 - **found** 2026-10 → 2026-10, s = 15.902947774: Francisco Couzo. _jlevy/squares#488 → #561_
 - **found** 2026-10 → 2026-10, s = 15.902705058: Mishapolk. _jlevy/squares#593_
 - **found** 2026-10 → now, s = 15.902603638: Francisco Couzo. _jlevy/squares#607_
+  - (refined) ? Mishapolk
   - lower 15.408052 (2026, preprint): Hakan Karakuş
 
 ## 238
@@ -1472,7 +1476,6 @@ file) or the parser.
 - **found** 2026-10 → 2026-10, s = 15.987134249: Daniil Ostashev. _jlevy/squares#575_
 - **found** 2026-10 → now, s = 15.987117095: Francisco Couzo. _jlevy/squares#583_
   - (refined) 2026-06 Tej Stead
-  - (refined) ? Francisco Couzo
   - lower 15.541609 (2026, preprint): Hakan Karakuş
 
 ## 242
@@ -1578,6 +1581,7 @@ file) or the parser.
 - **found** 2026-10 → 2026-10, s = 16.740446480: Nate Chaoweeraprasit. _jlevy/squares#401_
 - **found** 2026-10 → 2026-10, s = 16.740412654: Francisco Couzo. _jlevy/squares#476_
 - **found** 2026-10 → now, s = 16.733166008: Nate Chaoweeraprasit. _jlevy/squares#481_
+  - (refined) ? Evan Daniel
   - lower 16.224185 (2026, preprint): Hakan Karakuş
 
 ## 264
@@ -1786,7 +1790,6 @@ file) or the parser.
 - **found** 2026-10 → 2026-10, s = 17.872029849: Nate Chaoweeraprasit. _jlevy/squares#422 → #481_
 - **found** 2026-10 → 2026-10, s = 17.870275383: PingYou Ltd. _jlevy/squares#564_
 - **found** 2026-10 → now, s = 17.870013850: Francisco Couzo. _jlevy/squares#583_
-  - (refined) ? Francisco Couzo
   - (refined) ? Mishapolk
   - lower 17.389346 (2026, preprint): Hakan Karakuş
 
@@ -1835,7 +1838,6 @@ file) or the parser.
 ## 308
 - **found** 2026-10 → 2026-10, s = 17.999309855: Kevin Fang. _jlevy/squares#484_
 - **found** 2026-10 → now, s = 17.998269880: Evan Daniel. _jlevy/squares#489_
-  - (refined) ? Evan Daniel
   - lower 17.566048 (2026, preprint): Hakan Karakuş
 
 ## 309

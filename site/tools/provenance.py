@@ -17,7 +17,11 @@ A packing counts as "the same" as a posting if the sides agree to SAME_TOL and s
 has not found them to be distinct local minima (it exact-solves every two postings at one n within SAME_TOL).  The credited finder is the earliest posting of the record packing; later postings of the same
 packing are listed as `also`.  Where a posting says it started from someone else's packing (LINEAGE, from its own
 lineage section; data/lineage.yaml `lineage`), the root of that chain is credited as the finder and the later
-postings as improvements.  A record
+postings as improvements only when same_minimum.py certifies the two are the same local minimum (a path between them
+with the side never above the higher one's); otherwise the later poster is the finder, `based_on` the root.  The
+register's found_by, when its own posting is a different minimum from the register's value, is `based_on` too.
+Undecided cases default in two directions on purpose: an undecided lineage link counts as distinct (the poster is
+credited), while two undecided postings within SAME_TOL count as one packing (the earlier is credited; n = 261).  A record
 the lists could not certify, or posted after them, is drawn as posted (`raw`): those are the n that still need
 regularizing (search/regularize/REGULARIZE.md).  For every n <= 324 (10-17; was n <= 100) every posting that improved on the best before
 it is kept as a history step.
@@ -145,6 +149,13 @@ def build():
         reg_ev = reg_from = None
         if reg_s is not None and reg_s < ref - 1e-9:
             ev = register_event(n, ru.get('found_by') or [])
+            if ev is None:
+                # 10-17: a finder register_event doesn't know (Ostashev, PingYou, Mishapolk, Fang ...): their earliest
+                # posting at n, matched by name
+                names = [f.split('(')[0].strip() for f in ru.get('found_by') or [] if f.strip()]
+                mine = [p for p in posts if any(nm and nm in EVENTS[p[1]]['who'] for nm in names)]
+                if mine:
+                    ev = min(mine, key=lambda p: ORDER.index(p[1]))[1]
             own = [p for p in posts if p[1] == ev]
             carry = sorted((p for p in posts if abs(p[0] - reg_s) < 1e-10), key=lambda p: ORDER.index(p[1]))
             # found_by's own claim is not the register's packing: farther than SAME_TOL, or decided a distinct minimum
@@ -154,11 +165,15 @@ def build():
                 if away:
                     reg_from = ev                        # the register's found_by: what the carrier was based on
                 ev = carry[0][1]
+            elif away:
+                reg_from, ev = ev, None                  # nobody we know posted the register's value (211): own event
             if not ev:
                 # 10-17: a register record no posting we know carries (e.g. 211: Couzo's T-188 was a note inside #607):
                 # its own dated event, credited as the register credits it
                 ev = f'register-{n}'
-                EVENTS[ev] = dict(who=', '.join(ru.get('found_by') or []) or 'jlevy/squares register',
+                # found_by's own posting is another minimum (211): the value is the improvers' (Couzo's T-188)
+                makers = (ru.get('improved_by') or []) if reg_from else (ru.get('found_by') or [])
+                EVENTS[ev] = dict(who=', '.join(makers) or 'jlevy/squares register',
                                   date=str(ru.get('source_date') or case.get('source_reviewed') or ''),
                                   label=f'jlevy/squares register, s({n})',
                                   url=f'https://jlevy.github.io/squares/cases/{n}.html')
@@ -207,16 +222,20 @@ def build():
         # "based on" someone's own earlier packing says nothing (179: itsnaka's #422 from itsnaka's #401)
         credited = EVENTS[found or first]['who'] if (found or first) in EVENTS else None
         based = [b for b in based if b in EVENTS and EVENTS[b]['who'] != credited]
+        based = [b for i, b in enumerate(based) if all(EVENTS[c]['who'] != EVENTS[b]['who'] for c in based[:i])]   # one per person (180: #422, #401)
+        shown = [EVENTS[x]['who'] for x in [found or first] + (chain if found else []) if x in EVENTS]
         e = {'s': best[n]['side'] if raw is None else repr(raw[0]), 'catalogue_s': cat, 'first': first, 'raw': raw is not None,
              'drawn': drawn, 'found_by': found, 'improved_in': chain if found else [], 'based_on': based,
-             'also': [p[1] for p in same[1:] if EVENTS[p[1]]['who'] != EVENTS[first]['who'] and p[1] not in chain]
+             'also': [p[1] for i, p in enumerate(same) if i and EVENTS[p[1]]['who'] != EVENTS[first]['who'] and p[1] not in chain
+                      and all(EVENTS[q[1]]['who'] != EVENTS[p[1]]['who'] for q in same[1:i])]   # one per person (108)
                      if first else [],
              'registered': registered,
              'register_s': ru.get('value'), 'register_verified': bool(reg_verified.get('value')) and
              reg_s is not None and abs(side(reg_verified['value']) - reg_s) < 1e-12,
              # the register's improved_by describes the register's packing: only when that is the one drawn
-             # (not when the credit moved to the improver: then the register's improvements are this packing's finding)
-             'refined_by': (ru.get('improved_by') or []) if registered and not reg_from else []}
+             # less anyone already credited on this line (the finder, the refinements in `improved_in`)
+             'refined_by': [r for r in ru.get('improved_by') or []
+                            if not any(r.split('(')[0].strip() in w for w in shown)] if registered else []}
         steps, cur = [], ref
         for ps, ev in posts:                   # in posting order: keep each that beats everything before it
             cur_pk = (ps, ev) in same

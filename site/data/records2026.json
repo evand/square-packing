@@ -3807,7 +3807,7 @@
    "url": "https://github.com/jlevy/squares/issues/669"
   },
   "register-211": {
-   "who": "Daniil Ostashev",
+   "who": "Francisco Couzo",
    "date": "2026-10-14",
    "label": "jlevy/squares register, s(211)",
    "url": "https://jlevy.github.io/squares/cases/211.html"
@@ -3907,7 +3907,9 @@
    "registered": true,
    "register_s": "9.6979347990149214",
    "register_verified": true,
-   "refined_by": [],
+   "refined_by": [
+    "Francisco Couzo"
+   ],
    "steps": [
     {
      "s": 9.69805206050969,
@@ -3936,7 +3938,9 @@
    "registered": true,
    "register_s": "9.8205354074967423",
    "register_verified": true,
-   "refined_by": [],
+   "refined_by": [
+    "Francisco Couzo"
+   ],
    "steps": [
     {
      "s": 9.82056573000982,
@@ -3963,7 +3967,6 @@
     "#432",
     "#438",
     "#470",
-    "#593",
     "#639"
    ],
    "registered": true,
@@ -4017,9 +4020,7 @@
    "improved_in": [],
    "based_on": [],
    "also": [
-    "#470",
-    "#573",
-    "#593"
+    "#470"
    ],
    "registered": true,
    "register_s": "10.6792320473613065",
@@ -4030,7 +4031,7 @@
    ],
    "steps": [
     {
-     "s": 10.6792320475106,
+     "s": 10.679232047361307,
      "event": "#432",
      "current": true
     }
@@ -4053,7 +4054,10 @@
    "registered": true,
    "register_s": "10.78930378374815884",
    "register_verified": true,
-   "refined_by": [],
+   "refined_by": [
+    "Francisco Couzo",
+    "PingYou Ltd"
+   ],
    "steps": [
     {
      "s": 10.806077865519704,
@@ -4118,8 +4122,7 @@
    ],
    "based_on": [],
    "also": [
-    "#470",
-    "#593"
+    "#470"
    ],
    "registered": true,
    "register_s": "10.9048210123203565",
@@ -4251,8 +4254,7 @@
     "#432"
    ],
    "also": [
-    "#470",
-    "#593"
+    "#470"
    ],
    "registered": true,
    "register_s": "11.8108787875891799",
@@ -4322,8 +4324,7 @@
    "based_on": [],
    "also": [
     "#438",
-    "#470",
-    "#593"
+    "#470"
    ],
    "registered": true,
    "register_s": "11.9044830325157865",
@@ -4469,7 +4470,6 @@
    "based_on": [],
    "also": [
     "#573",
-    "#593",
     "#639"
    ],
    "registered": true,
@@ -4586,7 +4586,6 @@
    "register_s": "12.97916585383427646",
    "register_verified": true,
    "refined_by": [
-    "Francisco Couzo",
     "PingYou Ltd",
     "Mishapolk"
    ],
@@ -4753,13 +4752,14 @@
    "based_on": [],
    "also": [
     "#438",
-    "#470",
-    "#593"
+    "#470"
    ],
    "registered": true,
    "register_s": "13.8837954905108985",
    "register_verified": true,
-   "refined_by": [],
+   "refined_by": [
+    "Siddharth Gupta"
+   ],
    "steps": [
     {
      "s": 13.891312565740696,
@@ -4782,17 +4782,17 @@
    "found_by": null,
    "improved_in": [],
    "based_on": [
-    "#422",
-    "#401"
+    "#422"
    ],
    "also": [
-    "#470",
-    "#593"
+    "#470"
    ],
    "registered": true,
    "register_s": "13.9169935224778325",
    "register_verified": true,
-   "refined_by": [],
+   "refined_by": [
+    "Siddharth Gupta"
+   ],
    "steps": [
     {
      "s": 13.923635004252,
@@ -4876,7 +4876,6 @@
    "also": [
     "#438",
     "#470",
-    "#593",
     "#639"
    ],
    "registered": true,
@@ -4958,7 +4957,6 @@
    "based_on": [],
    "also": [
     "#573",
-    "#593",
     "#639"
    ],
    "registered": true,
@@ -4996,8 +4994,7 @@
    "based_on": [],
    "also": [
     "#438",
-    "#470",
-    "#593"
+    "#470"
    ],
    "registered": true,
    "register_s": "14.9245187720293559",
@@ -5022,12 +5019,10 @@
    "found_by": null,
    "improved_in": [],
    "based_on": [
-    "#481",
-    "#401"
+    "#481"
    ],
    "also": [
-    "#573",
-    "#593"
+    "#573"
    ],
    "registered": true,
    "register_s": "14.9462232264464511",
@@ -5088,14 +5083,14 @@
    "drawn": "register-211",
    "found_by": null,
    "improved_in": [],
-   "based_on": [],
+   "based_on": [
+    "#501"
+   ],
    "also": [],
    "registered": true,
    "register_s": "14.9935496262994211",
    "register_verified": true,
-   "refined_by": [
-    "Francisco Couzo"
-   ],
+   "refined_by": [],
    "steps": [
     {
      "s": 14.996336737028043,
@@ -5268,7 +5263,9 @@
    "registered": true,
    "register_s": "15.9026036382595969",
    "register_verified": true,
-   "refined_by": [],
+   "refined_by": [
+    "Mishapolk"
+   ],
    "steps": [
     {
      "s": 15.903676235190629,
@@ -5409,16 +5406,16 @@
    "drawn": "#583",
    "found_by": null,
    "improved_in": [],
-   "based_on": [],
+   "based_on": [
+    "#575"
+   ],
    "also": [
     "#593"
    ],
    "registered": true,
    "register_s": "15.9871170951502388",
    "register_verified": true,
-   "refined_by": [
-    "Francisco Couzo"
-   ],
+   "refined_by": [],
    "steps": [
     {
      "s": 15.987134249051,
@@ -5443,8 +5440,6 @@
    "based_on": [],
    "also": [
     "#470",
-    "#573",
-    "#593",
     "#639"
    ],
    "registered": true,
@@ -5554,7 +5549,9 @@
    "registered": true,
    "register_s": "16.7331660078993790",
    "register_verified": true,
-   "refined_by": [],
+   "refined_by": [
+    "Evan Daniel"
+   ],
    "steps": [
     {
      "s": 16.74044648004287,
@@ -5893,7 +5890,7 @@
    ],
    "steps": [
     {
-     "s": 17.7042327915177,
+     "s": 17.70423279073603,
      "event": "#432",
      "current": true
     }
@@ -5961,7 +5958,9 @@
    "drawn": "#583",
    "found_by": null,
    "improved_in": [],
-   "based_on": [],
+   "based_on": [
+    "#564"
+   ],
    "also": [
     "#639"
    ],
@@ -5969,7 +5968,6 @@
    "register_s": "17.87001385040446435",
    "register_verified": true,
    "refined_by": [
-    "Francisco Couzo",
     "Mishapolk"
    ],
    "steps": [
@@ -6114,8 +6112,7 @@
    "based_on": [],
    "also": [
     "#451",
-    "#470",
-    "#593"
+    "#470"
    ],
    "registered": true,
    "register_s": "17.9634337174914258",
@@ -6170,9 +6167,7 @@
    "registered": true,
    "register_s": "17.998269879526255875387992744507",
    "register_verified": true,
-   "refined_by": [
-    "Evan Daniel"
-   ],
+   "refined_by": [],
    "steps": [
     {
      "s": 17.99930985516275,
