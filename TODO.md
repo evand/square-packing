@@ -14,7 +14,7 @@ External posts: ask Evan explicitly per post.  **Before any bound-chasing run, c
 - [ ] Time-lapse records video (`site/timelapse/`): Evan to return; store sighting times are local, not UTC.
 
 ## Watch
-- [ ] jlevy #669 (our s(155) ≤ 12.952260944651, posted 10-17, cert 59326b8), #664 (our s(271) ≤ 16.948947733714, posted 10-16, cert 757b40b), #659 (our s(236) ≤ 15.861934390608, posted 10-16, cert 5ad0069), #639 (exact forms, 22 current records), #606 (our 146: T-187 V0/C0 10-15, awaiting their replay review), #545 (s29 / grade-C retained 10-15; their replays wait on budget; they note exact-point non-overlap for s(29) open), #596, #584, #552, #489, #465, #419 / #420 (exact forms, no reply), #375, #3 (preprint, left open); chelokot#18 (repo unknown: not under bend / bend-math).
+- [ ] jlevy #673 (credit correction: found_by at 146 and 308 to us, per the same-minimum rule; posted 10-17), #669 (our s(155) ≤ 12.952260944651, posted 10-17, cert 59326b8), #664 (our s(271) ≤ 16.948947733714, posted 10-16, cert 757b40b), #659 (our s(236) ≤ 15.861934390608, posted 10-16, cert 5ad0069), #639 (exact forms, 22 current records), #606 (our 146: T-187 V0/C0 10-15, awaiting their replay review), #545 (s29 / grade-C retained 10-15; their replays wait on budget; they note exact-point non-overlap for s(29) open), #596, #584, #552, #489, #465, #419 / #420 (exact forms, no reply), #375, #3 (preprint, left open); chelokot#18 (repo unknown: not under bend / bend-math).
 
 ## Packings (`search/packer/`: `HANDOFF-2026-10-14.md`, `tasks/packer-arch-2026-10-14/`)
 - [x] Watcher review list (10-17): all causes found and fixed (PACKER.md "Watcher review list, causes").  Remove at the next TODO sweep.
