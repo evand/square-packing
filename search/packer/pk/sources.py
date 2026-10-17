@@ -257,66 +257,142 @@ def fetch_attachment(url, issue):
 
 
 def body_claims(body):
-    """{n: claimed side} from the markdown tables of an issue body (first decimal column after n)."""
+    """{n: claimed side} from the markdown tables of an issue body.  10-17: the smallest cell in the row that can be a
+    side for n (sqrt(n) <= v <= sqrt(n) + 3), not the first decimal column: #668's table reads "n | website-listed
+    side | certified upper bound | reduction", so the first column was the OLD record.  Tables with or without the
+    outer pipes."""
     claims = {}
     for line in (body or '').split('\n'):
         cells = [x.strip(' *`$') for x in line.strip().strip('|').split('|')]
-        if len(cells) < 2 or not re.fullmatch(r'\d{2,4}', cells[0]):
+        m0 = re.fullmatch(r'\[?(\d{2,4})\]?(?:\([^)]*\))?', cells[0]) if len(cells) >= 2 else None   # 237 or [237](url)
+        if not m0:
             continue
-        m = re.match(r'(\d+\.\d{6,})', cells[1])
-        if m and float(m.group(1)) > 4:
-            n = int(cells[0]); claims[n] = min(claims.get(n, 9e9), float(m.group(1)))
+        n = int(m0.group(1))
+        v = [float(m.group(1)) for c in cells[1:] for m in [re.match(r'(\d+\.\d{6,})', c)] if m]
+        v = [x for x in v if math.sqrt(n) - 1e-9 <= x <= math.sqrt(n) + 3]
+        if v:
+            claims[n] = min(claims.get(n, 9e9), min(v))
+    return claims
+
+
+TITLE_CLAIM = re.compile(r's\(\s*(\d{1,5})\s*\)\s*(?:≤|<=|\\le)\s*(\d+\.\d{6,})')
+
+
+def issue_text(number, repo='jlevy/squares'):
+    """(author, state, title, body, [the author's comment bodies]) of an issue (10-17)"""
+    r = json.loads(subprocess.run(['gh', 'issue', 'view', str(int(number)), '-R', repo, '--json',
+                                   'title,body,author,state,comments'],
+                                  capture_output=True, text=True, check=True, timeout=120).stdout)
+    who = r['author']['login']
+    # claims: the author's own comments only (the maintainer's verdict tables restate other issues' values, #503);
+    # links and attachments are read from every comment by watch.py
+    return who, r['state'], r.get('title') or '', r.get('body') or '', \
+        [c.get('body') or '' for c in r.get('comments') or [] if (c.get('author') or {}).get('login') == who]
+
+
+def text_claims(title, body, comments=()):
+    """{n: smallest claimed side}: markdown tables in the body and every comment, plus `s(n) <= x` in the title"""
+    claims = {}
+    for txt in [body, *comments]:
+        for n, s in body_claims(txt).items():
+            claims[n] = min(claims.get(n, 9e9), s)
+    for n, s in TITLE_CLAIM.findall(title or ''):
+        claims[int(n)] = min(claims.get(int(n), 9e9), float(s))
     return claims
 
 
 def issue_claims(number, repo='jlevy/squares'):
-    """(author, {n: claimed side}) from the markdown tables of an issue body (first decimal column after n)."""
-    r = json.loads(subprocess.run(['gh', 'issue', 'view', str(int(number)), '-R', repo, '--json', 'body,author,state'],
-                                  capture_output=True, text=True, check=True, timeout=120).stdout)
-    return r['author']['login'], r['state'], body_claims(r['body'])
+    """(author, state, {n: claimed side}) from the issue's tables (body and comments) and title"""
+    author, state, title, body, comments = issue_text(number, repo)
+    return author, state, text_claims(title, body, comments)
+
+
+CLAIM_TOL = 1e-6        # a file matches a claim when claim - CLAIM_TOL <= s <= claim + 1e-9 (claims are rounded up)
+
+
+def reconcile(st, src, claims):
+    """10-17: sort an issue's packings (sightings with source `src`) into 'claim' (its n is claimed and its side matches
+    the claim) and 'context' (anything else the linked files held: other counts, older packings, parents).  Every
+    packing stays in the store and counts for record checks; the kind only says what the issue claimed.
+    Returns dict(matched={n: pid}, unmatched_claims={n: s}, context=k, below_claim=[(n, s, claim, pid)])."""
+    rows = st.db.execute('SELECT p.id, p.n, p.s, p.status FROM packing p JOIN sighting g ON g.packing = p.id '
+                         'WHERE g.source = ?', (src,)).fetchall()
+    out = dict(matched={}, unmatched_claims={}, context=0, below_claim=[])
+    for r in rows:
+        c = claims.get(r['n'])
+        ok = r['status'] != 'infeasible' and c is not None and c - CLAIM_TOL <= r['s'] <= c + 1e-9
+        st.db.execute('UPDATE sighting SET kind=? WHERE packing=? AND source=?', ('claim' if ok else 'context', r['id'], src))
+        if ok:
+            out['matched'][r['n']] = r['id']
+        else:
+            out['context'] += 1
+            if c is not None and r['status'] != 'infeasible' and r['s'] < c - CLAIM_TOL:
+                out['below_claim'].append((r['n'], r['s'], c, r['id']))
+    out['unmatched_claims'] = {n: s for n, s in claims.items() if n not in out['matched']}
+    return out
 
 
 def import_pending(st: Store, cfg_path=os.path.join(HERE, 'pending.yaml'), only=None):
     """pending.yaml: list of {issue, finder, repo, commit, paths: [globs], attachments: [urls], claims}; repo: null =
-    no repo (claims and attachments only).  For each: claims from the issue
-    table -> frontier rows (pending=1, source 'pending:#<issue>'); packings from the repo -> store; report each claim's
-    best stored packing (claim not matched by a feasible file is flagged)."""
+    no repo (claims and attachments only).  An issue may have several entries (10-17: one per linked commit, plus
+    supplements).  Per ISSUE: every entry's files -> store (source 'pending:#<issue>'); claims (issue body, comments,
+    title, and the entries' own) -> frontier rows (pending=1); then reconcile once: each packing 'claim' or 'context',
+    and every claim without a matching file is reported."""
     cfg = yaml.safe_load(open(cfg_path))
-    report = []
+    by_issue = collections.OrderedDict()
     for e in cfg:
-        if only and e['issue'] not in only:
-            continue
-        author, state, claims = issue_claims(e['issue'])
-        claims.update({int(n): float(s) for n, s in (e.get('claims') or {}).items()})   # claims stated outside a table
-        src = f"pending:#{e['issue']}"
-        if e.get('repo'):
-            ref = f"{e['repo']}@{e['commit'][:7]}"
-            d = fetch_repo(e['repo'], e['commit'])
-            paths = [p for g in e.get('paths', ['.']) for p in glob.glob(os.path.join(d, g), recursive=True)
-                     if os.path.realpath(p).startswith(os.path.realpath(d))]
-            c = import_paths(st, paths, src, e.get('finder', author), ref, 'pending', quiet=True, strict=True)
-        else:                            # claims only (files not fetchable yet): frontier rows, no packing
-            ref, c = f"issue #{e['issue']}", 'no repo'
-        for url in e.get('attachments') or ():         # files attached to the issue (github user-attachments only)
-            try:
-                f, sha = fetch_attachment(url, e['issue'])
-            except Exception as ex:
-                print(f"  #{e['issue']} attachment not fetched: {url} ({ex!r})"[:200]); continue
-            ca = import_paths(st, [f], src, e.get('finder', author), f"#{e['issue']} attachment {os.path.basename(f)}",
-                              'pending', quiet=True, strict=True)
-            ref = ref if e.get('repo') else f"#{e['issue']} attachment {os.path.basename(f)}"
-            print(f"  #{e['issue']} attachment {os.path.basename(f)} sha256 {sha[:16]}: {ca}")
+        if not only or e['issue'] in only:
+            by_issue.setdefault(e['issue'], []).append(e)
+    report = []
+    for issue, E in by_issue.items():
+        author, state, claims = issue_claims(issue)
+        src = f"pending:#{issue}"
+        finder = E[0].get('finder', author)
+        refs_, counts = [], []
+        for e in E:
+            for n_, s_ in (e.get('claims') or {}).items():  # claims stated outside a table (10-17: min, not overwrite)
+                claims[int(n_)] = min(claims.get(int(n_), 9e9), float(s_))
+            if e.get('repo'):
+                ref = f"{e['repo']}@{e['commit'][:7]}"
+                d = fetch_repo(e['repo'], e['commit'])
+                paths = [p for g in e.get('paths', ['.']) for p in glob.glob(os.path.join(d, g), recursive=True)
+                         if os.path.realpath(p).startswith(os.path.realpath(d))]
+                c = import_paths(st, paths, src, e.get('finder', author), ref, 'pending', quiet=True, strict=True)
+                refs_.append(ref); counts.append(c)
+            for url in e.get('attachments') or ():     # files attached to the issue (github user-attachments only)
+                try:
+                    f, sha = fetch_attachment(url, issue)
+                except Exception as ex:
+                    print(f"  #{issue} attachment not fetched: {url} ({ex!r})"[:200]); continue
+                aref = f"#{issue} attachment {os.path.basename(f)}"
+                ca = import_paths(st, [f], src, e.get('finder', author), aref, 'pending', quiet=True, strict=True)
+                refs_.append(aref); counts.append(ca)
+                print(f"  #{issue} attachment {os.path.basename(f)} sha256 {sha[:16]}: {ca}")
+        seen = sum(c['seen'] for c in counts)
+        R = reconcile(st, src, claims)
+        if R['context'] or R['below_claim']:
+            print(f"  #{issue}: {len(R['matched'])} claims matched by a file, {R['context']} context packings"
+                  + (f"; BELOW their claim: {[(n_, round(s_, 12), c_) for n_, s_, c_, _ in R['below_claim']]}"
+                     if R['below_claim'] else ''))
+        if claims and refs_ and not seen:
+            print(f"  #{issue}: WARNING {len(claims)} claims but no packing files at {', '.join(refs_)}")
+        ref = refs_[0] if refs_ else f"issue #{issue}"
+        # 10-17: rows from an earlier parse that the issue no longer claims (e.g. maintainer tables in comments, #573)
+        gone = [r['n'] for r in st.db.execute('SELECT n FROM frontier WHERE source=?', (src,)) if r['n'] not in claims]
+        if gone:
+            st.db.execute(f'DELETE FROM frontier WHERE source=? AND n IN ({",".join("?" * len(gone))})', (src, *gone))
+            print(f"  #{issue}: dropped {len(gone)} frontier rows no longer claimed: {sorted(gone)}")
         for n, s in sorted(claims.items()):
             row = st.query(n=n, source=src, limit=1)
-            pid = row[0]['id'] if row else None
-            ok = bool(row) and row[0]['s'] <= s + 1e-9
-            st.set_frontier(n, s, f'{s}', e.get('finder', author), src, ref, state == 'OPEN', pid)
-            report.append((e['issue'], n, s, row[0]['s'] if row else None, ok))
+            pid = R['matched'].get(n) or (row[0]['id'] if row else None)
+            st.set_frontier(n, s, f'{s}', finder, src, ref, state == 'OPEN', pid)
+            report.append((issue, n, s, row[0]['s'] if row else None, n in R['matched']))
         st.db.commit()
-        print(f"#{e['issue']} {author} ({state}): {len(claims)} claims; files {c}")
+        print(f"#{issue} {author} ({state}): {len(claims)} claims, {len(E)} entries; files seen {seen}"
+              + ('' if refs_ else ' (no repo or attachment)'))
     bad = [r for r in report if not r[4]]
     for r in bad:
-        print(f'  claim not matched by a feasible stored packing: #{r[0]} n={r[1]} claim {r[2]} best file {r[3]}')
+        print(f'  claim not matched by a stored file: #{r[0]} n={r[1]} claim {r[2]} best file {r[3]}')
     return report
 
 

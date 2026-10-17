@@ -3922,3 +3922,39 @@ staircase); the example fill collapses to the grid 9 / 9.
   verify.sh --spot passed, fast-forward push `git push origin 59326b8:main`, pushed SHA-256 re-checked, same-day live
   check clean (register main @804eff36, issues through #668), **jlevy/squares#669**.  pending.yaml entry added by hand
   (cert paths only).
+* **Watcher / record check rebuilt (09:30; Evan: "import more packings ... a check against the store and a check for
+  whether there are new issues or commits")**:
+  - store: `sync` table (register.sha, watch.issues_updated, watch.poll, repo:<name> -> last imported HEAD).
+  - watch: every issue updated since the cursor, body + comments; known issues get supplemental entries (new
+    attachments / lower claims); every linked repo watched; tree links no longer narrowed (last night's fix reverted).
+  - sources: claims from body + comments + title; a claim row's value = smallest cell that can be a side for n
+    (#668's table put the OLD record first); entry claims merge by min; `reconcile` marks each issue's packings
+    claim / context and flags files below their claim; a pending entry that imports no files warns.
+  - candidate.live: `watch.probe()` (~1 s) -> if stale, `pk.py sync-register` + `pk.py watch --apply` (~1 min) -> the
+    store (frontier rows at n, best any / best public, envelope).  `--no-sync` read-only; `--grep` adds the old direct
+    reads as a tripwire.  harden_explore's own-candidate rule follows the new labels.
+  - Tests: pk/tests 26 pass (new: text_claims, reconcile, supplement; fixed test_refs, broken by last night's change).
+    Scratch-store replays: #664 linked as the whole dir -> 2 claim + 39 context; #401 comments add 8 counts.
+  - Real run: store backup, sync-register, watch --apply (#666, #668 + 22 new packings), full sync-pending (1.5 min).
+    **#668 (JoostdeWinter) holds new public records: s(227) <= 15.563796703670, s(229) <= 15.650174756949,
+    s(260) <= 16.645778804182** (7.3e-3 / 6.7e-3 / 1.1e-2 below Ellsworth), caught by the claim/file mismatch (its
+    first decimal column was the old record); our verify_cert accepts its 260 certificate.  Review list from the full
+    pass (runs/watch/sync-pending-2026-10-17-reconcile.log): 40 claims without a matching file (mostly #639 exact forms,
+    #573 claim-only; #570 n=379 file 3e-5 above its claim, #503 n=207 1.5e-9), 5 entries with no files at their paths
+    (#600, #607, #610, #639, #640).
+* **Watcher review list, causes (10:15)**: every item traced.
+  - #600 / #610 / #640: proof / lower-bound issues (Lean s(19), s(95) = 10, closed-form bounds): no packings and no
+    claims, so not a fault.  The no-files warning now fires per issue and only when the issue has claims.
+  - #607: (1) its table's count cells are links (`[237](.../n237.cert)`), so body_claims saw 0 claims; now parsed.
+    (2) it links two commits of one repo (23 certificates at 43ac7d29, n211 at 487b058); one pin per issue put every
+    certificate path at 487b058, where they don't exist.  Now one pending entry per linked commit; import_pending
+    reconciles per issue across its entries.  Result: 23 / 23 claims matched by 46 files.
+  - #503: hand-written entry pinned to the original n207 file (9dc93b6); the issue now links the refinement at
+    10418630.  Re-proposed: 207 matched.  Its "153" claim came from a jlevy comment restating #504: claims now come only
+    from the issue author's body / comments / title (links and attachments still from every comment).
+  - #570: the issue's commit 1b31bc9 is gone from GitHub; the fallback (master HEAD) holds later files below both
+    claims (154: #586's 12.92121; 379: 19.95301).  Flagged "below their claim": correct, nothing to fix.
+  - Stale frontier rows: import_pending now drops an issue's rows it no longer claims (#586 11, #573 13, #562 1; all 25
+    were added by this morning's comment parse from jlevy's tables, none existed before, nothing lost).
+  - Full pass after the fixes (runs/watch/sync-pending-2026-10-17-reconcile3.log): remaining flags are #639 (exact
+    forms, no files by design) and #570 (above).  Dead code removed: watch.list_issues, `pk.py watch --recent`.

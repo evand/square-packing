@@ -4,7 +4,8 @@
 
   candidate.py FILE --name NAME [--vs FILE ...] [--chain RUNDIR] [--no-regularize] [--no-descend] [--no-prior] [--stage]
                [--import --ref TEXT]
-  candidate.py --live N [S]            just the live check (read-only)
+  candidate.py --live N [S] [--no-sync]   just the live check (10-17: the store, synced first when the probe
+                                       finds newer issues / commits; --no-sync: read-only, stale items listed)
 
 Steps (work dir runs/candidates/NAME/, summary.json + a facts block for the issue draft):
   1. exactsolve (../exact/env.sh: the pinned batch environment) -> KKT point, rational certificate.  If it says "not
@@ -12,9 +13,11 @@ Steps (work dir runs/candidates/NAME/, summary.json + a facts block for the issu
      s(146) record), ../exact/descend.py (MILP kick + slp2) and exactsolve again; the original input is kept as
      input.orig.txt, summary['descent'] has both sides.  --no-descend: fail instead
   2. both exact checkers (verify_cert.py separating axes, verify_cert2.py polygons) on the certificate: both must say VALID
-  3. live check, read-only (nothing is written to the store): jlevy/squares main (known-best witness, case page),
-     issues mentioning n (decimals within 0.05 of S on lines naming n), Ellsworth's catalogue, the store's frontier.
-     "beaten" = any of them at or below S' + 1e-12
+  3. live check (10-17): the store, after pk.watch.probe checks it is current (register main sha, issues / PRs updated
+     since the last watch, watched repos' HEADs); anything newer -> `pk.py sync-register` + `pk.py watch --apply`
+     first (--no-sync: don't; stale items are listed).  Sources: every frontier row at n (register, each issue's
+     claims), the best stored packing (anyone's, and by others), the monotone envelope.  "beaten" = any of them at or
+     below S' + 1e-12
   4. matching distance (pk.crossing) to the store's best packing for n and to each --vs file
   5. local-optimality facts from exactsolve's report (min lambda, flat motions, corner-corner jams, rattlers)
   6. --chain RUNDIR: lineage through a chain.py run (chain_lineage.py), for the credit paragraph
@@ -30,11 +33,10 @@ Steps (work dir runs/candidates/NAME/, summary.json + a facts block for the issu
      (source candidate:NAME, finder ours, status certified, --ref e.g. "jlevy/squares#552")
 Nothing is posted: the issue text is drafted in outreach/ and posted per Evan's OK (CLAUDE.md).
 """
-import argparse, json, os, re, shutil, subprocess, sys, urllib.request
+import argparse, json, os, re, shutil, subprocess, sys
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 EX = os.path.join(HERE, '..', 'exact')
 RG = os.path.join(HERE, '..', 'regularize')
-UA = 'square-packing-explorer (+https://github.com/evand/square-packing)'
 
 
 def sh(cmd, **kw):
@@ -52,119 +54,61 @@ def checkers(cert):
 
 # ------------------------------------------------------------------ live check (read-only)
 
-def _gh(args):
-    r = sh(['gh', *args])
-    if r.returncode:
-        raise RuntimeError(f'gh {" ".join(args)}: {r.stderr.strip()[:200]}')
-    return r.stdout
-
-
-def _decimals_near(text, n, S, width=0.05, amb=None):
-    """decimals within `width` of S on lines that name n as a token.  10-17: #401's comment "154 (was 12.928293657678),
-    155 (was ...)" gave n = 155 the s(154) value and blocked a real candidate.  A decimal that equals (1e-9) a store
-    packing at ANOTHER count named on the same line, and no store packing at n, goes to `amb` (printed for a human)
-    instead of counting at n.  A decimal nobody knows still counts at n (fail safe)."""
-    found = []
-    st = None
-    for line in text.splitlines():
-        if not re.search(rf'(?<![\d.]){n}(?![\d.])', line):
-            continue
-        for x in [float(v) for v in re.findall(r'\d+\.\d{6,}', line) if abs(float(v) - S) < width]:
-            if amb is not None:
-                ks = {int(k) for k in re.findall(r'(?<![\d.])\d{1,4}(?![\d.])', line)} - {n}
-                ks = {k for k in ks if 2 <= k <= 1100}
-                if ks:
-                    if st is None:
-                        from pk.store import Store
-                        st = Store()
-                    def known(k):
-                        return st.db.execute('SELECT 1 FROM packing WHERE n=? AND abs(s-?)<1e-9 LIMIT 1', (k, x)).fetchone() is not None
-                    other = [k for k in sorted(ks) if known(k)]
-                    if other and not known(n):
-                        amb.append((x, other[0], line.strip()[:160]))
-                        continue
-            found.append(x)
-    return found
-
-
-def live(n, S):
-    import base64
+def live(n, S, sync=False):
+    """10-17: the record check reads the store, after a cheap probe that the store is current (pk.watch.probe:
+    register main sha, issues / PRs updated since the last watch, watched repos' HEADs).  sync=True: when the probe
+    finds anything newer, run `pk.py sync-register` and `pk.py watch --apply` first, then probe again.  What is still
+    stale is listed (L['stale']) and printed.  Sources: every frontier row at n (register + each issue's claims, with
+    or without a file), the best stored packing at n (anyone's) and by someone other than us, and the monotone envelope.
+    (Until 10-17 this read the register, case page, issue texts (decimal grep) and Ellsworth directly; the grep gave
+    n = 155 the s(154) value from #401 and blocked a real record, and caught nothing the store missed.)"""
+    from pk import watch
     from pk.store import Store
-    L = dict(n=n, S=S, sources={}, errors=[])
+    L = dict(n=n, S=S, sources={}, errors=[], stale=[], as_of={})
     try:
-        L['register_main'] = json.loads(_gh(['api', 'repos/jlevy/squares/commits?per_page=1']))[0]['sha'][:8]
-        w = json.loads(_gh(['api', f'repos/jlevy/squares/contents/packing/witnesses/known-best/n-{n:03d}.yaml']))
-        m = re.search(r'^\s*side:\s*(\S+)', base64.b64decode(w['content']).decode(), re.M)
-        if m:
-            a, _, b = m[1].partition('/')
-            L['sources']['register witness'] = int(a) / int(b) if b else float(a)
+        P = watch.probe()
+        if P['stale'] and sync:
+            for cmd in (['sync-register'], ['watch', '--apply']):
+                r = sh([sys.executable, os.path.join(HERE, 'pk.py'), *cmd], cwd=HERE, timeout=3600)
+                if r.returncode:
+                    L['errors'].append(f'pk.py {cmd[0]}: rc {r.returncode}: {(r.stderr or r.stdout)[-300:]}')
+            P = watch.probe()
+        L['stale'], L['as_of'] = P['stale'], P['as_of']
     except Exception as e:
-        L['errors'].append(f'register: {e}')
-    try:
-        req = urllib.request.Request(f'https://jlevy.github.io/squares/cases/{n}.html', headers={'User-Agent': UA})
-        txt = re.sub(r'<[^>]*>', ' ', urllib.request.urlopen(req, timeout=30).read().decode('utf-8', 'replace'))
-        v = [float(x) for x in re.findall(r'\d+\.\d{6,}', txt) if abs(float(x) - S) < 0.05]
-        if v:
-            L['sources']['case page'] = min(v)
-    except Exception as e:
-        L['errors'].append(f'case page: {e}')
-    try:
-        iss = json.loads(_gh(['search', 'issues', '--repo', 'jlevy/squares', str(n), '--limit', '50',
-                              '--json', 'number,title,state,updatedAt,author']))
-        L['issues'] = []
-        for i in iss:
-            body = _gh(['issue', 'view', str(i['number']), '--repo', 'jlevy/squares', '--json', 'title,body,comments',
-                        '--jq', '.title, .body, (.comments[].body)'])
-            amb = []
-            v = _decimals_near(body, n, S, amb=amb)
-            for x, k, ln in amb:
-                L.setdefault('ambiguous', []).append(f'#{i["number"]}: {x} (nearest count {k}): {ln}')
-            who = (i.get('author') or {}).get('login', '?')
-            L['issues'].append(dict(number=i['number'], author=who, state=i['state'], updated=i['updatedAt'], min=min(v) if v else None))
-            if v:
-                L['sources'][f'issue #{i["number"]} ({who})'] = min(v)
-        L['latest_issue'] = max(int(x) for x in _gh(['issue', 'list', '--repo', 'jlevy/squares', '--state', 'all',
-                                                       '--limit', '1', '--json', 'number', '--jq', '.[].number']).split())
-    except Exception as e:
-        L['errors'].append(f'issues: {e}')
-    try:
-        req = urllib.request.Request('https://kingbird.myphotos.cc/packing/squares_in_squares.html', headers={'User-Agent': UA})
-        html = urllib.request.urlopen(req, timeout=30).read().decode('utf-8', 'replace')
-        m = re.search(rf'<font size="\+3">{n}<br>.*?\\Nn\{{([\d.]+)\}}', html, re.S)
-        if m:
-            L['sources']['Ellsworth catalogue'] = float(m[1])
-    except Exception as e:
-        L['errors'].append(f'kingbird: {e}')
+        L['errors'].append(f'probe: {e!r}'[:300])
     try:
         st = Store()
-        f = st.frontier(n).get(n)
-        if f:
-            L['sources']['store frontier'] = f['s']
-        b = st.best(n)
-        if b:
-            L['sources']['store best'] = b.s
-        # monotone envelope (10-12): s(n) <= s(m) for m > n by dropping squares; any feasible store packing with more
-        # squares at or below S already beats the candidate
+        for r in st.db.execute('SELECT * FROM frontier WHERE n=?', (n,)):
+            L['sources'][f"store frontier: {r['source']} ({r['finder'] or '?'})"] = r['s']
+        rows = st.query(n=n, limit=None)
+        if rows:
+            L['sources'][f"store best any ({(rows[0]['finders'] or '?')[:40]})"] = rows[0]['s']
+            oth = next((r for r in rows if any(f.strip() != 'ours' for f in (r['finders'] or 'ours').split(','))), None)
+            if oth is not None:
+                L['sources'][f"store best public ({(oth['finders'] or '?')[:40]})"] = oth['s']
+        # monotone envelope (10-12): s(n) <= s(m) for m > n by dropping squares
         r = st.db.execute("SELECT n, s FROM packing WHERE n > ? AND n <= ? AND status != 'infeasible' AND pen <= 1e-9 "
                           "ORDER BY s LIMIT 1", (n, n + 80)).fetchone()
         if r and r['s'] <= S + 0.05:
             L['sources'][f'store s({r["n"]}) (envelope)'] = r['s']
     except Exception as e:
-        L['errors'].append(f'store: {e}')
+        L['errors'].append(f'store: {e!r}'[:300])
+    L['register_main'] = L['as_of'].get('register')
+    L['latest_issue'] = L['as_of'].get('last_issue')
     L['best_other'] = min(L['sources'].values()) if L['sources'] else None
     L['beaten'] = [k for k, v in L['sources'].items() if v <= S + 1e-12]
     return L
 
 
 def print_live(L):
-    print(f'live check n = {L["n"]} vs {L["S"]:.13f}  (register main @{L.get("register_main")}, issues through '
-          f'#{L.get("latest_issue")})')
+    print(f'live check n = {L["n"]} vs {L["S"]:.13f}  (store as of: register {L.get("register_main")}, issues updated '
+          f'through {L.get("as_of", {}).get("issues_updated")}, last issue #{L.get("latest_issue")})')
     for k, v in sorted(L['sources'].items(), key=lambda kv: kv[1]):
         print(f'  {v:.13f}  {v - L["S"]:+.2e}  {k}' + ('   <-- at or below' if k in L['beaten'] else ''))
     for e in L['errors']:
         print(f'  ERROR {e}')
-    for a in L.get('ambiguous', []):
-        print(f'  CHECK BY HAND (decimal nearest another count): {a}')
+    for s_ in L.get('stale', []):
+        print(f'  STALE (store may be behind): {s_}')
     print('  BEATEN / TIED: ' + ', '.join(L['beaten']) if L['beaten'] else '  nothing at or below')
 
 
@@ -307,12 +251,13 @@ def main():
     ap.add_argument('--no-prior', action='store_true', help='skip certifying / comparing the record this candidate beats')
     ap.add_argument('--import', dest='imp', action='store_true'); ap.add_argument('--ref')
     ap.add_argument('--live', nargs='+', metavar=('N', 'S'))
+    ap.add_argument('--no-sync', action='store_true', help='live check: do not sync a stale store (read-only)')
     a = ap.parse_args()
     if a.live:
         n = int(a.live[0])
         from pk.store import Store
         S = float(a.live[1]) if len(a.live) > 1 else Store().best(n).s
-        print_live(live(n, S)); return
+        print_live(live(n, S, sync=not a.no_sync)); return
     if not (a.file and a.name):
         ap.error('FILE and --name are required')
     from pk.packing import read
@@ -345,7 +290,7 @@ def main():
         sys.exit('a checker rejected the certificate')
 
     print('[3] live check', flush=True)
-    out['live'] = live(n, S); print_live(out['live'])
+    out['live'] = live(n, S, sync=not a.no_sync); print_live(out['live'])
 
     print('[4] matching distance', flush=True)
     st = Store(); out['distance'] = {}

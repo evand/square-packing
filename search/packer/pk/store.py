@@ -61,6 +61,8 @@ CREATE TABLE IF NOT EXISTS nearmiss (
   origin TEXT, status TEXT NOT NULL DEFAULT 'queued', added TEXT NOT NULL, updated TEXT, best_s REAL, best_pid INTEGER,
   cpu_s REAL, note TEXT);
 CREATE INDEX IF NOT EXISTS nearmiss_st ON nearmiss(status, gap);
+CREATE TABLE IF NOT EXISTS sync (
+  key TEXT PRIMARY KEY, value TEXT, at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS frontier (
   n INTEGER NOT NULL, s REAL NOT NULL, s_str TEXT, finder TEXT, source TEXT NOT NULL, ref TEXT, pending INTEGER NOT NULL,
   packing INTEGER, updated TEXT, UNIQUE(n, source));
@@ -323,6 +325,19 @@ class Store:
             w.append('packing=?'); a.append(pid)
         q += (' WHERE ' + ' AND '.join(w) if w else '') + ' GROUP BY packing'
         return {r['packing']: (r['c'], r['k'], r['b']) for r in self.db.execute(q, a)}
+
+    # 10-17: what each outside source was last synced to (register main sha, issue update cursor, watched repo HEADs):
+    # record checks read the store plus a cheap probe of these (watch.probe), not the sources themselves
+    def set_sync(self, key, value, commit=True):
+        self.db.execute('INSERT INTO sync(key,value,at) VALUES (?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, '
+                        'at=excluded.at', (key, None if value is None else str(value), now()))
+        if commit:
+            self.db.commit()
+
+    def get_sync(self, key=None):
+        """{key: (value, at)} for keys starting with `key` (all if None)"""
+        rows = self.db.execute('SELECT * FROM sync' + (' WHERE key LIKE ?' if key else ''), ((key + '%',) if key else ()))
+        return {r['key']: (r['value'], r['at']) for r in rows}
 
     def sightings(self, pid):
         return self.db.execute('SELECT * FROM sighting WHERE packing=? ORDER BY added', (pid,)).fetchall()

@@ -111,8 +111,8 @@ def score(a):
                 # our own finds imported into the store (finders == 'ours' only) are not prior art
                 from pk.store import Store
                 r0 = (Store().query(n=ev['n'], limit=1) or [None])[0]
-                if r0 is not None and (r0['finders'] or '') == 'ours' and 'store best' in L['beaten']:
-                    L['beaten'].remove('store best')
+                if r0 is not None and (r0['finders'] or '') == 'ours':      # 10-17: live() labels 'store best any (...)'
+                    L['beaten'] = [k for k in L['beaten'] if not k.startswith('store best any')]
                 if L['beaten']:
                     live = f'  (below event bench {f_now:.10f}; live check: at/below by {", ".join(L["beaten"])})'
                     C['LIVE-STALE'] += 1

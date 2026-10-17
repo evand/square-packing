@@ -54,7 +54,7 @@ def test_refs():
             'https://evil.example/github.com/x/y, commit `deadbeef12` and [r](https://github.com/alice/sq-certs).')
     R, loose = watch.refs(body)
     assert list(R) == ['alice/sq-certs', 'bob/x'], R
-    assert R['alice/sq-certs'] == dict(shas=['0123abcd'], paths=['certs/n100'])
+    assert R['alice/sq-certs'] == dict(shas=['0123abcd'], paths=['certs/n100'], links=[('0123abcd', 'certs/n100')])
     assert loose == ['deadbeef12']
     assert [m.group(0) for m in sources.ATTACH_RE.finditer(body)] == ['https://github.com/user-attachments/files/123/a.cert.txt']
     R, _ = watch.refs('https://github.com/a/b/blob/main/../../etc/passwd')
@@ -101,6 +101,37 @@ def test_bad_names():
     assert raises(sources.fetch_repo, '../x/y', 'a' * 40)
     assert raises(sources.fetch_repo, 'a/b', 'HEAD; rm -rf /')
     assert raises(sources.fetch_attachment, 'https://evil.example/user-attachments/files/1/a', 1)
+
+
+def test_text_claims():
+    body = '| n | side |\n|---|---|\n| 155 | 12.952503202605 | x |\n'
+    cm = ['update:\n| 155 | 12.952400000000 |\n| 154 | 12.926562245853 |', 'no table here 155 12.0000001']
+    assert sources.text_claims('', body) == {155: 12.952503202605}
+    assert sources.text_claims('s(271) ≤ 16.948947733714: registration request', body, cm) == \
+        {155: 12.9524, 154: 12.926562245853, 271: 16.948947733714}
+
+
+def test_reconcile_and_supplement():
+    from pk.store import Store
+    with tempfile.TemporaryDirectory() as d:
+        st = Store(f'{d}/s.sqlite')
+        a = parse('2 2\n0.5 0.5 0\n1.5 1.5 0\n', strict=True)                       # n = 2 at s = 2: the claim
+        b = parse('3 3\n0.5 0.5 0\n1.5 1.5 0\n2.5 2.5 0\n', strict=True)           # n = 3: context (no claim)
+        c = parse('4 2\n0.5 0.5 0\n1.5 0.5 0\n0.5 1.5 0\n1.5 1.5 0\n', strict=True)  # n = 4 at 2, claimed 2.5: below
+        for p_ in (a, b, c):
+            st.add(p_, 'pending:#9', 'x', 'r', 'pending')
+        R = sources.reconcile(st, 'pending:#9', {2: 2.0000000000001, 4: 2.5, 5: 3.0})
+        kinds = dict(st.db.execute("SELECT p.n, g.kind FROM sighting g JOIN packing p ON p.id = g.packing").fetchall())
+        assert kinds == {2: 'claim', 3: 'context', 4: 'context'}, kinds
+        assert set(R['matched']) == {2} and R['context'] == 2 and R['unmatched_claims'] == {4: 2.5, 5: 3.0}
+        assert [x[0] for x in R['below_claim']] == [4]
+    iss = dict(number=9, user=dict(login='x'), title='', body='| 17 | 4.675900000000 |\n'
+               'https://github.com/user-attachments/files/1/a.cert.txt')
+    e, note = watch.supplement(iss, [dict(issue=9, claims={17: 4.7}, attachments=[])])
+    assert e['claims'] == {17: 4.6759} and e['attachments'] == ['https://github.com/user-attachments/files/1/a.cert.txt']
+    e, note = watch.supplement(iss, [dict(issue=9, claims={17: 4.6759}, attachments=[
+        'https://github.com/user-attachments/files/1/a.cert.txt'])])
+    assert e is None
 
 
 if __name__ == '__main__':
