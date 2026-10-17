@@ -595,7 +595,6 @@ file) or the parser.
 - **found** 2026-10 → 2026-10, s = 9.698052061: Ryan Xu. _jlevy/squares#432_
 - **found** 2026-10 → now, s = 9.697934799: Mishapolk. _jlevy/squares#470_
   - (alternative) 2005 David W. Cantrell
-  - (refined) ? Francisco Couzo
   - lower 9.174676 (2026, preprint): Hakan Karakuş
   - lower 9.400000 (2026, preprint): wand125
   - lower 9.411000 (2026, preprint): wand125
@@ -611,7 +610,6 @@ file) or the parser.
 - **found** 1997 → 2026-10, s = 9.822875656: Erich Friedman. _Found by Erich Friedman in 1997._
 - **found** 2026-10 → 2026-10, s = 9.820565730: Ryan Xu. _jlevy/squares#432_
 - **found** 2026-10 → now, s = 9.820535407: Mishapolk. _jlevy/squares#470_
-  - (refined) ? Francisco Couzo
   - lower 9.289198 (2026, preprint): Hakan Karakuş
   - lower 9.460000 (2026, preprint): wand125
   - lower 9.503000 (2026, preprint): wand125
@@ -739,11 +737,9 @@ file) or the parser.
 - **found** 2025-12 → 2026-10, s = 10.807619333: Thomas Schadt. _Found by Thomas Schadt in December 2025, using a simulated annealing program he wrote, starting from randomness._
 - **found** 2026-10 → 2026-10, s = 10.806077866: Evan Daniel. _jlevy/squares#375_
 - **found** 2026-10 → 2026-10, s = 10.790676575: Ryan Xu. _jlevy/squares#432_
+- **found** 2026-10 → 2026-10, s = 10.790618268: Francisco Couzo. _jlevy/squares#451_
 - **found** 2026-10 → now, s = 10.789303784: Mishapolk. _jlevy/squares#470_
   - (refined) 2026-03 David Ellsworth
-  - (refined) ? Francisco Couzo
-  - (refined) ? PingYou Ltd
-  - (improvement) 2026-10 Francisco Couzo
   - lower 10.259611 (2026, preprint): Hakan Karakuş
   - lower 10.280000 (2026, preprint): wand125
 
@@ -763,8 +759,7 @@ file) or the parser.
 - **improved** 2024-11 → 2026-10, s = 10.925919390: David Ellsworth. _Improved by David Ellsworth in November 2024._
 - **found** 2026-10 → 2026-10, s = 10.920658939: Nate Chaoweeraprasit. _jlevy/squares#401_
 - **found** 2026-10 → now: Ryan Xu. _jlevy/squares#432_
-  - (improvement) 2026-10 Francisco Couzo
-  - (refined) ? Francisco Couzo
+  - (refined) 2026-10 Francisco Couzo
   - lower 10.412114 (2026, preprint): Hakan Karakuş
 
 ## 109
@@ -855,9 +850,8 @@ file) or the parser.
 
 ## 127
 - **construction** 1997 → 2026-10, s = 11.822875656: construction on Erich Friedman. _Extends the s(86) found by Erich Friedman in 1997._
-- **found** 2026-10 → now: Ryan Xu. _jlevy/squares#432_
-  - (improvement) 2026-10 Francisco Couzo
-  - (refined) ? Francisco Couzo
+- **found** 2026-10 → 2026-10, s = 11.810936648: Ryan Xu. _jlevy/squares#432_
+- **found** 2026-10 → now, s = 11.810878788: Francisco Couzo. _jlevy/squares#451_
   - lower 11.281929 (2026, preprint): Hakan Karakuş
 
 ## 128
@@ -957,8 +951,9 @@ file) or the parser.
 ## 146
 - **improved** 2024-12 → 2025-01: David Ellsworth. _Found by David W. Cantrell in January 2025 by switching to the rotationally symmetric form of adding an "L" to the s(123) found and improved by David Ellsworth in December 2024 and improved by David W. Cantrell in January 2025 with a technique independently found by both David W. Cantrell and David Ellsworth._
 - **found** 2025-01 → 2026-10, s = 12.600907779: David W. Cantrell. _Found by David W. Cantrell in January 2025 by switching to the rotationally symmetric form of adding an "L" to the s(123) found and improved by David Ellsworth in December 2024 and improved by David W. Cantrell in January 2025 with a technique independently found by both David W. Cantrell and David Ellsworth._
-- **found** 2026-10 → now, s = 12.583782190: Ryan Xu. _jlevy/squares#432_
-  - (refined) ? Evan Daniel
+- **found** 2026-10 → 2026-10, s = 12.583782278: Ryan Xu. _jlevy/squares#432_
+- **found** 2026-10 → 2026-10, s = 12.583782204: Robert Barnett. _jlevy/squares#505_
+- **found** 2026-10 → now, s = 12.583782190: Evan Daniel. _jlevy/squares#606_
   - lower 12.086630 (2026, preprint): Hakan Karakuş
 
 ## 147
@@ -1009,11 +1004,11 @@ file) or the parser.
 ## 155
 - **improved** 2024-12 → 2026-01, s = 12.958447112: David Ellsworth. _Found by David Ellsworth in January 2026, using his modified version of Thomas Schadt's simulated annealing program, starting from the s(182) found by M.Z. Arslanov, S.A. Mustafin, and Z.K. Shangitbayev in March 2019 and improved by David Ellsworth in December 2024 and January 2026, with 27 squares removed._
 - **found** 2026-01 → 2026-10: David Ellsworth. _Found by David Ellsworth in January 2026, using his modified version of Thomas Schadt's simulated annealing program, starting from the s(182) found by M.Z. Arslanov, S.A. Mustafin, and Z.K. Shangitbayev in March 2019 and improved by David Ellsworth in December 2024 and January 2026, with 27 squares removed._
-- **found** 2026-10 → 2026-10, s = 12.952498944: Nate Chaoweeraprasit. _jlevy/squares#401 → #422_
-- **found** 2026-10 → now: Daniil Ostashev. _jlevy/squares#501_
+- **found** 2026-10 → 2026-10, s = 12.952503203: Nate Chaoweeraprasit. _jlevy/squares#401_
+- **found** 2026-10 → 2026-10, s = 12.952498944: Francisco Couzo. _jlevy/squares#451_
+- **found** 2026-10 → 2026-10, s = 12.952425407: Daniil Ostashev. _jlevy/squares#501_
+- **found** 2026-10 → now, s = 12.952260945: Evan Daniel. _jlevy/squares#669_
   - (refined) 2026-06 Tej Stead
-  - (improvement) 2026-10 Evan Daniel
-  - (improvement) 2026-10 Francisco Couzo
   - lower 12.468709 (2026, preprint): Hakan Karakuş
 
 ## 156
@@ -1021,9 +1016,9 @@ file) or the parser.
 - **improved** 2024-12 → 2025-03: David Ellsworth. _Improved by David Ellsworth in December 2024._
 - **improved** 2025-03 → 2026-01: David W. Cantrell. _Improved by David W. Cantrell in March 2025._
 - **improved** 2026-01 → 2026-10, s = 12.982083760: David Ellsworth. _Improved by David Ellsworth in January 2026, using his modified version of Thomas Schadt's simulated annealing program._
-- **found** 2026-10 → now: Daniil Ostashev. _jlevy/squares#501_
+- **found** 2026-10 → 2026-10, s = 12.979172614: Daniil Ostashev. _jlevy/squares#501_
+- **found** 2026-10 → now, s = 12.979165854: Francisco Couzo. _jlevy/squares#561_
   - (refined) 2026-06 Tej Stead
-  - (improvement) 2026-10 Francisco Couzo
   - (refined) ? Francisco Couzo
   - (refined) ? PingYou Ltd
   - (refined) ? Mishapolk
@@ -1113,11 +1108,10 @@ file) or the parser.
 - **found** 2024-12 → 2026-10, s = 13.778174593: David Ellsworth. _Found by David Ellsworth in December 2024._
 - **found** 2026-10 → 2026-10, s = 13.768899277: Ryan Xu. _jlevy/squares#432_
 - **found** 2026-10 → 2026-10, s = 13.767155164: Mishapolk. _jlevy/squares#470_
-- **found** 2026-10 → 2026-10, s = 13.767120725: Ryan Xu. _jlevy/squares#432_
+- **found** 2026-10 → 2026-10, s = 13.767120725: Francisco Couzo. _jlevy/squares#488_
 - **found** 2026-10 → now, s = 13.764174317: Daniil Ostashev. _jlevy/squares#528_
   - (refined) ? PingYou Ltd
   - (refined) ? Mishapolk
-  - (improvement) 2026-10 Francisco Couzo
   - lower 13.237739 (2026, preprint): Hakan Karakuş
 
 ## 176
@@ -1142,18 +1136,16 @@ file) or the parser.
 ## 179
 - **found** 2025-01 → 2026-01: David Ellsworth. _Found by David Ellsworth in January 2025, using a computer program he wrote._
 - **improved** 2026-01 → 2026-10, s = 13.895341070: David Ellsworth. _Improved by David Ellsworth in January 2026, using his modified version of Thomas Schadt's simulated annealing program._
-- **found** 2026-10 → now, s = 13.883795491: Nate Chaoweeraprasit. _jlevy/squares#401_
+- **found** 2026-10 → now, s = 13.883795491: Nate Chaoweeraprasit. _jlevy/squares#422_
   - (refined) 2026-06 Tej Stead
-  - (refined) ? Siddharth Gupta
   - lower 13.393797 (2026, preprint): Hakan Karakuş
 
 ## 180
 - **improved** 2024-12 → 2026-01, s = 13.935087053: David Ellsworth. _Found by David Ellsworth in January 2026, using his modified version of Thomas Schadt's simulated annealing program, starting from the s(209) found by David Ellsworth in January 2026, using his modified version of Thomas Schadt's simulated annealing program, starting from the s(240) converted in December 2024 from the s(210) found by M.Z. Arslanov, S.A. Mustafin, and Z.K. Shangitbayev in March 2019 and improved by David Ellsworth in December 2024 and January 2026, with 31 squares removed, with 29 squares removed._
 - **found** 2026-01 → 2026-10: David Ellsworth. _Found by David Ellsworth in January 2026, using his modified version of Thomas Schadt's simulated annealing program, starting from the s(209) found by David Ellsworth in January 2026, using his modified version of Thomas Schadt's simulated annealing program, starting from the s(240) converted in December 2024 from the s(210) found by M.Z. Arslanov, S.A. Mustafin, and Z.K. Shangitbayev in March 2019 and improved by David Ellsworth in December 2024 and January 2026, with 31 squares removed, with 29 squares removed._
-- **found** 2026-10 → now, s = 13.916993522: Nate Chaoweeraprasit. _jlevy/squares#401_
+- **found** 2026-10 → 2026-10, s = 13.923635004: Nate Chaoweeraprasit. _jlevy/squares#401_
+- **found** 2026-10 → now, s = 13.916993522: Francisco Couzo. _jlevy/squares#451_
   - (refined) 2026-06 Tej Stead
-  - (refined) ? Siddharth Gupta
-  - (refined) ? Francisco Couzo
   - lower 13.432517 (2026, preprint): Hakan Karakuş
 
 ## 181
@@ -1302,9 +1294,9 @@ file) or the parser.
 ## 209
 - **improved** 2024-12 → 2026-01, s = 14.958615001: David Ellsworth. _Found by David Ellsworth in January 2026, using his modified version of Thomas Schadt's simulated annealing program, starting from the s(240) converted in December 2024 from the s(210) found by M.Z. Arslanov, S.A. Mustafin, and Z.K. Shangitbayev in March 2019 and improved by David Ellsworth in December 2024 and January 2026, with 31 squares removed._
 - **found** 2026-01 → 2026-10: David Ellsworth. _Found by David Ellsworth in January 2026, using his modified version of Thomas Schadt's simulated annealing program, starting from the s(240) converted in December 2024 from the s(210) found by M.Z. Arslanov, S.A. Mustafin, and Z.K. Shangitbayev in March 2019 and improved by David Ellsworth in December 2024 and January 2026, with 31 squares removed._
-- **found** 2026-10 → now, s = 14.946223226: Nate Chaoweeraprasit. _jlevy/squares#401_
+- **found** 2026-10 → 2026-10, s = 14.946223654: Nate Chaoweeraprasit. _jlevy/squares#401 → #481_
+- **found** 2026-10 → now, s = 14.946223226: Francisco Couzo. _jlevy/squares#488_
   - (refined) 2026-06 Tej Stead
-  - (refined) ? Francisco Couzo
   - lower 14.473189 (2026, preprint): Hakan Karakuş
 
 ## 210
@@ -1437,28 +1429,31 @@ file) or the parser.
 - **found** 2024-11 → 2024-12: David Ellsworth. _Found by David Ellsworth in November 2024, by extending the s(88) found by Erich Friedman in 1997 and adapting the s(102) improvement found by David W. Cantrell in November 2024._
 - **improved** 2024-12 → 2026-09: David Ellsworth. _Improved by David Ellsworth in December 2024._
 - **improved** 2026-09 → 2026-10, s = 15.876075393: Grigoriy Dyachkov. _Improved by Grigoriy Dyachkov in September 2026, working with Claude Opus 5 and Claude Fable 5._
-- **found** 2026-10 → now, s = 15.863955747: Nate Chaoweeraprasit. _jlevy/squares#401 → #481_
-  - (improvement) 2026-10 Evan Daniel
+- **found** 2026-10 → 2026-10, s = 15.863955747: Nate Chaoweeraprasit. _jlevy/squares#401_
+- **found** 2026-10 → now, s = 15.861934391: Evan Daniel. _jlevy/squares#659_
   - lower 15.374475 (2026, preprint): Hakan Karakuş
 
 ## 237
 - **found** 2024-12 → 2026-10, s = 15.914213562: David Ellsworth. _Found by David Ellsworth in December 2024._
-- **found** 2026-10 → now, s = 15.902603638: Nate Chaoweeraprasit. _jlevy/squares#401_
-  - (refined) ? Francisco Couzo
-  - (refined) ? Mishapolk
+- **found** 2026-10 → 2026-10, s = 15.903676235: Nate Chaoweeraprasit. _jlevy/squares#401_
+- **found** 2026-10 → 2026-10, s = 15.903670906: Francisco Couzo. _jlevy/squares#476_
+- **found** 2026-10 → 2026-10, s = 15.902989221: Nate Chaoweeraprasit. _jlevy/squares#481_
+- **found** 2026-10 → 2026-10, s = 15.902947774: Francisco Couzo. _jlevy/squares#488 → #561_
+- **found** 2026-10 → 2026-10, s = 15.902705058: Mishapolk. _jlevy/squares#593_
+- **found** 2026-10 → now, s = 15.902603638: Francisco Couzo. _jlevy/squares#607_
   - lower 15.408052 (2026, preprint): Hakan Karakuş
 
 ## 238
 - **improved** 2024-12 → 2026-02, s = 15.939655200: David Ellsworth. _Found by David Ellsworth in February 2026, using his modified version of Thomas Schadt's simulated annealing program, starting from the s(239) found by David Ellsworth in January 2026, using his modified version of Thomas Schadt's simulated annealing program, starting from the s(272) converted in December 2024 from the s(210) found by M.Z. Arslanov, S.A. Mustafin, and Z.K. Shangitbayev in March 2019 and improved by David Ellsworth in December 2024 and January 2026, with 33 squares removed, with 1 square removed and 4 straightened._
 - **found** 2026-02 → 2026-10: David Ellsworth. _Found by David Ellsworth in February 2026, using his modified version of Thomas Schadt's simulated annealing program, starting from the s(239) found by David Ellsworth in January 2026, using his modified version of Thomas Schadt's simulated annealing program, starting from the s(272) converted in December 2024 from the s(210) found by M.Z. Arslanov, S.A. Mustafin, and Z.K. Shangitbayev in March 2019 and improved by David Ellsworth in December 2024 and January 2026, with 33 squares removed, with 1 square removed and 4 straightened._
-- **found** 2026-10 → now, s = 15.924106785: Nate Chaoweeraprasit. _jlevy/squares#401_
+- **found** 2026-10 → now, s = 15.924106785: Nate Chaoweeraprasit. _jlevy/squares#401 → #500_
   - (refined) 2026-08 Grigoriy Dyachkov
   - lower 15.441553 (2026, preprint): Hakan Karakuş
 
 ## 239
 - **improved** 2024-12 → 2026-01, s = 15.956353584: David Ellsworth. _Found by David Ellsworth in January 2026, using his modified version of Thomas Schadt's simulated annealing program, starting from the s(272) converted in December 2024 from the s(210) found by M.Z. Arslanov, S.A. Mustafin, and Z.K. Shangitbayev in March 2019 and improved by David Ellsworth in December 2024 and January 2026, with 33 squares removed._
 - **found** 2026-01 → 2026-10: David Ellsworth. _Found by David Ellsworth in January 2026, using his modified version of Thomas Schadt's simulated annealing program, starting from the s(272) converted in December 2024 from the s(210) found by M.Z. Arslanov, S.A. Mustafin, and Z.K. Shangitbayev in March 2019 and improved by David Ellsworth in December 2024 and January 2026, with 33 squares removed._
-- **found** 2026-10 → now, s = 15.948443327: Nate Chaoweeraprasit. _jlevy/squares#401_
+- **found** 2026-10 → now, s = 15.948443327: Nate Chaoweeraprasit. _jlevy/squares#401 → #500_
   - (refined) 2026-06 Tej Stead
   - lower 15.474979 (2026, preprint): Hakan Karakuş
 
@@ -1580,8 +1575,9 @@ file) or the parser.
 
 ## 263
 - **found** 2025-01 → 2026-10, s = 16.742640687: David Ellsworth. _Found by David Ellsworth in January 2025, based on the s(297) he found._
-- **found** 2026-10 → now, s = 16.733166008: Nate Chaoweeraprasit. _jlevy/squares#401_
-  - (refined) ? Evan Daniel
+- **found** 2026-10 → 2026-10, s = 16.740446480: Nate Chaoweeraprasit. _jlevy/squares#401_
+- **found** 2026-10 → 2026-10, s = 16.740412654: Francisco Couzo. _jlevy/squares#476_
+- **found** 2026-10 → now, s = 16.733166008: Nate Chaoweeraprasit. _jlevy/squares#481_
   - lower 16.224185 (2026, preprint): Hakan Karakuş
 
 ## 264
@@ -1602,9 +1598,8 @@ file) or the parser.
 
 ## 267
 - **construction** 2024-11 → 2026-10, s = 16.846667193: construction on Károly Hajba. _Extends the s(107) found by Károly Hajba in November 2024._
-- **found** 2026-10 → now: Ryan Xu. _jlevy/squares#432_
-  - (improvement) 2026-10 Francisco Couzo
-  - (refined) ? Francisco Couzo
+- **found** 2026-10 → 2026-10, s = 16.838831961: Ryan Xu. _jlevy/squares#432_
+- **found** 2026-10 → now, s = 16.838815270: Francisco Couzo. _jlevy/squares#476_
   - lower 16.350867 (2026, preprint): Hakan Karakuş
 
 ## 268
@@ -1632,10 +1627,9 @@ file) or the parser.
 ## 271
 - **improved** 2024-12 → 2026-02, s = 16.954999094: David Ellsworth. _Found by David Ellsworth in February 2026, using his modified version of Thomas Schadt's simulated annealing program, starting from the s(272) converted in December 2024 from the s(210) found by M.Z. Arslanov, S.A. Mustafin, and Z.K. Shangitbayev in March 2019 and improved by David Ellsworth in December 2024 and January 2026, with 1 square removed and 4 straightened._
 - **found** 2026-02 → 2026-10: David Ellsworth. _Found by David Ellsworth in February 2026, using his modified version of Thomas Schadt's simulated annealing program, starting from the s(272) converted in December 2024 from the s(210) found by M.Z. Arslanov, S.A. Mustafin, and Z.K. Shangitbayev in March 2019 and improved by David Ellsworth in December 2024 and January 2026, with 1 square removed and 4 straightened._
-- **found** 2026-10 → now, s = 16.948992356: Nate Chaoweeraprasit. _jlevy/squares#401 → #500_
+- **found** 2026-10 → 2026-10, s = 16.948992356: Nate Chaoweeraprasit. _jlevy/squares#401_
+- **found** 2026-10 → now, s = 16.948947734: Evan Daniel. _jlevy/squares#664_
   - (refined) 2026-06 Tej Stead
-  - (improvement) 2026-10 Evan Daniel
-  - (improvement) 2026-10 Francisco Couzo
   - lower 16.476545 (2026, preprint): Hakan Karakuş
 
 ## 272
@@ -1798,12 +1792,13 @@ file) or the parser.
 
 ## 303
 - **found** 2026-04 → 2026-10, s = 17.931255096: David Ellsworth. _Found by David Ellsworth in April 2026, using his modified version of Thomas Schadt's simulated annealing program, starting from the latest s(305) as of March 2026, with 2 squares removed and 8 straightened._
-- **found** 2026-10 → 2026-10, s = 17.917443925: Nate Chaoweeraprasit. _jlevy/squares#401 → #422_
+- **found** 2026-10 → 2026-10, s = 17.920312373: Nate Chaoweeraprasit. _jlevy/squares#401_
+- **found** 2026-10 → 2026-10, s = 17.917443925: Francisco Couzo. _jlevy/squares#476_
+- **found** 2026-10 → 2026-10, s = 17.913065463: Nate Chaoweeraprasit. _jlevy/squares#481_
 - **found** 2026-10 → now, s = 17.909958291: Daniil Ostashev. _jlevy/squares#562_
   - (refined) 2026-06 Tej Stead
   - (refined) ? PingYou Ltd
   - (refined) ? Mishapolk
-  - (improvement) 2026-10 Francisco Couzo
   - lower 17.418924 (2026, preprint): Hakan Karakuş
 
 ## 304
@@ -1838,8 +1833,8 @@ file) or the parser.
   - lower 17.536725 (2026, preprint): Hakan Karakuş
 
 ## 308
-- **found** 2026-10 → now: Kevin Fang. _jlevy/squares#484_
-  - (improvement) 2026-10 Evan Daniel
+- **found** 2026-10 → 2026-10, s = 17.999309855: Kevin Fang. _jlevy/squares#484_
+- **found** 2026-10 → now, s = 17.998269880: Evan Daniel. _jlevy/squares#489_
   - (refined) ? Evan Daniel
   - lower 17.566048 (2026, preprint): Hakan Karakuş
 

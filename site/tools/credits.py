@@ -269,11 +269,14 @@ def upper_chain(n, files, rec2026, events, OV, problems):
         chain = [root] + [e for e in r.get('improved_in', []) if e != root]
         for i, ev in enumerate(chain):
             E = events[ev]
-            # the root of a lineage chain holds the record (provenance.py's rule, at the posters' request); later
-            # postings along the chain are credited as improvements without taking the record over
-            all_credits.append({'kind': 'found' if i == 0 else 'improvement', 'who': people_of(E['who']),
+            # the root of a same-minimum chain holds the record (10-17: provenance.py credits a root only when the
+            # postings are the same local minimum); later postings of that minimum are refinements.  A record found
+            # from another minimum carries it as based_on ('based on a packing by ...')
+            bo = [{'who': people_of(events[b]['who']), 'date': [int(x) for x in events[b]['date'].split('-')[:2]]}
+                  for b in r.get('based_on', [])] if i == 0 else []
+            all_credits.append({'kind': 'found' if i == 0 else 'refined', 'who': people_of(E['who']),
                                 'date': [int(x) for x in E['date'].split('-')[:2]], 'day': E['date'],
-                                'based_on': [], 'text': E['label'], 'url': E['url'], 'event': ev,
+                                'based_on': bo, 'text': E['label'], 'url': E['url'], 'event': ev,
                                 # the record's side belongs to the last posting of the chain
                                 's': float(r['s']) if i == len(chain) - 1 else None, 'page': '2026'})
         for name in r.get('refined_by', []):  # register `improved_by`: names, undated
@@ -286,11 +289,13 @@ def upper_chain(n, files, rec2026, events, OV, problems):
             E = events[ev]
             c = {'kind': 'found', 'who': people_of(E['who']), 'date': [int(x) for x in E['date'].split('-')[:2]],
                  'day': E['date'], 'based_on': [], 'text': E['label'], 'url': E['url'], 'event': ev, 's': step['s'], 'page': '2026'}
-            if step.get('root'):  # started from the root's packing: the root holds it, the poster gets an improvement credit
+            if step.get('root'):  # the same minimum as the root's: the root holds it, the poster refined it
                 R0 = events[step['root']]
-                all_credits.append({'kind': 'improvement', 'who': c['who'], 'date': c['date'], 'day': E['date'], 'based_on': [],
+                all_credits.append({'kind': 'refined', 'who': c['who'], 'date': c['date'], 'day': E['date'], 'based_on': [],
                                     'text': E['label'], 'url': E['url'], 'event': ev, 'page': '2026'})
                 c.update(who=people_of(R0['who']), text=R0['label'], url=R0['url'])
+            c['based_on'] = [{'who': people_of(events[b]['who']), 'date': [int(x) for x in events[b]['date'].split('-')[:2]]}
+                             for b in step.get('based_on', [])]
             all_credits.append(c)
     # holders: found / improved / construction / previous, in date order, deduplicated on (who, date)
     hs = []

@@ -7,14 +7,14 @@ Sources:
   search/regularize/lists/alternates.json  packings at the record side that are truly different: ours (certs/alt/)
                                            and Ellsworth's catalogue drawings (already on the site, annotated here)
   site/data/records2026.json               who posted the records newer than the catalogue, and when (provenance.py)
-  search/packer/runs/store.sqlite          coordinates of the history steps that are no longer the record (n <= 100)
+  search/packer/runs/store.sqlite          coordinates of the history steps that are no longer the record (n <= 324)
 
 Writes, alongside what export.py and timeline.py made from the catalogue:
   www/data/p/best-N.json, alt-N.json, step-N-K.json   squares + analysis (tools/analysis.py), as for the SVGs
   www/data/index.json     files[...] for each (origin 'best' / 'alt' / 'step'); records[n].best for every n <= 324;
                           records[n].credit for records newer than the catalogue; catalogue files at the record side
                           annotated with their relation to the record (alt_relation)
-  www/data/timeline.json  one dated entry per record posted since the catalogue (all of them for n <= 100, where
+  www/data/timeline.json  one dated entry per record posted since the catalogue (all of them, every n <= 324 since 10-17; was n <= 100, where
                           Bounds draws the history; the current record elsewhere), the catalogue's entry demoted
 
 Idempotent: entries it added before are removed first.  Analysis is skipped when the output exists and its input
@@ -278,7 +278,7 @@ def main():
         r['best'] = raw_key.get(n, key)
         r['best_s'] = e['s'] if n in raw_key else best[n]['side']
         if e:
-            ev = EV[e.get('drawn') or e['first']] if n in raw_key else EV[e['first']]
+            ev = EV[e['first']]          # 10-17: credit the earliest posting of the minimum, also when drawn from a later one
             r['newer'] = True
             r['credit'] = {'who': ev['who'], 'date': ev['date'], 'label': ev['label'], 'url': ev['url'],
                            # lineage (provenance.py LINEAGE): the construction it started from, and the improvements
@@ -286,6 +286,9 @@ def main():
                                         if e.get('found_by') else None),
                            'improved': [{k: EV[x][k] for k in ('who', 'date', 'label', 'url')}
                                         for x in reversed(e.get('improved_in') or [])],
+                           # 10-17: the packings it was found from, when those are other local minima
+                           'based_on': [{k: EV[x][k] for k in ('who', 'date', 'label', 'url')}
+                                        for x in e.get('based_on') or []],
                            'also': [dict(who=EV[x]['who'], date=EV[x]['date'], label=EV[x]['label'], url=EV[x]['url'])
                                     for x in e['also']],
                            'registered': e['registered'], 'refined_by': e['refined_by'],
@@ -299,7 +302,7 @@ def main():
             if d.get('is_record'):
                 d['was_record'] = True
                 d['is_record'] = False
-        posted = (e.get('drawn') or e['first']) if e.get('raw') else e['first']
+        posted = e['first']               # 10-17: as the credit (a raw record is drawn from e['drawn'])
         steps = e.get('steps') or [{'s': float(e['s']), 'event': posted, 'current': True}]
         for k, step in enumerate(steps):
             ev = EV[posted if step['current'] else step['event']]
@@ -313,9 +316,12 @@ def main():
             if step['current'] and e.get('found_by'):     # credit the construction it started from (LINEAGE)
                 root = EV[e['found_by']]
                 who = root['who']
-                text = (f"Found by {who} ({root['label']}, {ev_date(root)['text']}); improved by "
+                text = (f"Found by {who} ({root['label']}, {ev_date(root)['text']}); refined by "
                         + '; '.join(f"{EV[x]['who']} ({EV[x]['label']}, {ev_date(EV[x])['text']})"
                                     for x in reversed(e['improved_in'])) + '.')
+            bo = (e.get('based_on') or []) if step['current'] else step.get('based_on') or []
+            if bo:
+                text = text[:-1] + ', based on ' + '; '.join(f"{EV[x]['who']}'s packing ({EV[x]['label']})" for x in bo) + '.'
             L.append({'file': key, 'n': n, 's': float(idx['files'][key]['s']) if not step['current'] else float(e['s']),
                       'events': [{'verb': verb, 'who': who, 'date': dt, 'text': text}], 'prose': text, 's_tex': None,
                       'rigid': False, 'date': [dt['year'], dt['month']], 'is_record': bool(step['current']),

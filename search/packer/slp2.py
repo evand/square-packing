@@ -23,6 +23,7 @@ from rigid import load, shrink_lp, shrink_switch, pair_rows
 import inc
 
 H = 0.5
+TRACE = None    # 10-17: a list -> every accepted iterate (s, sq) is appended (analysis/pathcert.py certifies the path)
 
 
 def worst(s, sq):
@@ -60,6 +61,8 @@ def slp2(s, sq, R=1e-2, iters=2000, verbose=False, rmin=1e-10, fixed=(), budget=
     info.update(timeout=False, switch_steps=0, iters=0)
     t0 = time.time()
     s, sq = repair(s, sq)
+    if TRACE is not None:
+        TRACE.append((s, list(sq)))
 
     def step(ds, z):
         new = [(float(x + z[3 * i]), float(y + z[3 * i + 1]), float(t + z[3 * i + 2])) for i, (x, y, t) in enumerate(sq)]
@@ -101,6 +104,8 @@ def slp2(s, sq, R=1e-2, iters=2000, verbose=False, rmin=1e-10, fixed=(), budget=
             s2, new = step(ds, z)
         if s2 < s - 1e-15:
             s, sq = s2, new
+            if TRACE is not None:
+                TRACE.append((s, list(sq)))
             info['switch_steps'] += via_milp
             R = min(R * 1.5, 0.05)
             if verbose and (it % 10 == 0 or via_milp):

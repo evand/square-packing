@@ -4012,3 +4012,97 @@ staircase); the example fill collapses to the grid 9 / 9.
   tolerance 1e-8 -> 1e-7.  Lower bounds: n = 40 -> 3359/500 (Guzhou0806, register-verified); #610 (s(95) = 10) and
   #640 (s(19)) are pending registration, not added.  Site: provenance (76 n), lists, credits, history (553 holders, all
   drawn), bounds; checked Explore 155, Compare 271, Bounds in headless Firefox.
+* **Same-minimum check (10-17 13:20; Evan: "Let's check the not jammed cases")**: analysis/same_minimum.py on the 32
+  lineage pairs: 25 distinct (17 by posted gap > 1e-5, 8 by exact sides differing 4e-7..7e-6, incl. 146 #505 / #606
+  vs #432), 0 same, 7 unknown.  Pre-registered follow-up: the unknowns whose solve failed (#432 at 261 p114 and 108
+  p42, #422 at 263 p349: "not jammed", corner-corner MILP finds descent dS -2e-5 / -6e-5 / -4e-7; #422 at 263 p284
+  solve failed; #422 at 155 p226 cert invalid) -> exact/descend.py (MILP kicks + slp2) then exactsolve.
+  Hypothesis: a posting the solver says isn't a minimum descends to the minimum its successor reached.  Rule: the
+  descended packing's exact side equals the successor's (|dS| < 1e-15) -> the successor is a refinement ('same');
+  else distinct.  Metric: exact side of each descended packing.
+  Result (13:50): same_minimum.py now descends a posting whose solve finds no certified KKT point and solves the
+  descended packing.  #432 at 108 and 261 descend (side drop 3.8e-6 / 7e-11) to exactly the minima #451 / #505
+  posted (exact sides agree to 25 digits) -> 'same': #451's s(108) and #505's s(261) are refinements of #432.  #422 at
+  155 descends to a certified minimum 4.26e-6 above #451 / #465's -> distinct.  Still unknown: 263 (#422 solve fails,
+  #476's posting has no smooth-contact equilibrium even after descent), 303 and 154 (no stored packing).  Totals: 2
+  same, 27 distinct, 3 unknown.
+* **s(110) census descent stopped (13:45; Evan: "We probably don't need 20 hours of 110 census work")**: the run wrote
+  results only at its end, so descend_census.py got `recover` (rebuilds rows + store minima from each finished point's
+  directory).  Recovered 385 of the ~430 points done in 2 h: 323 known, 9 new, 48 not-min, 5 unresolved; ~45 in flight
+  or timed out, redone by any later run.  Store minima at n = 110: 1,097 (was 1,088 before this run).  Cumulative:
+  1,397 of 4,509 not-min points descended -> 223 distinct minima, 49 new; the most-hit minimum 10.998341703195 takes 191.
+* **Same-minimum check over close postings (10-17 14:00)**: provenance groups postings whose sides are within SAME_TOL
+  = 1e-7 as one packing, but 146's #505 and #606 are distinct minima 1.4e-8 apart (and #606 8.7e-8 below #432), so
+  the site credited our s(146) to #432.  same_minimum.py now also decides every two postings at one n <= 324 with
+  1e-12 <= |posted gap| <= 1e-7 (113 pairs over 37 n; mostly reposts in #593 / #639).  Prediction: nearly all 'same';
+  'distinct' at 146 (#606 vs the rest); a few unknown.  provenance.py then: one packing = within SAME_TOL and not
+  decided distinct.
+* **Basin-radius prototype (10-17 14:30; Evan: "a provably correct way to say two packings are the same when they're
+  numerically solved … thresholds derived from numerical analysis, rather than magic constants" → "Let's try it!")**:
+  analysis/basin.py.  For a certified minimum M (exactsolve output) and postings P: (1) matched distance d(P, M) on
+  M's rigid squares (load-bearing minus flat-mode squares; all squares interchangeable, angle mod 90, 8 box
+  symmetries; per-square metric max(|dx|, |dy|, |dθ|/√2), so corners move <= 2d); (2) margins at which M's contact
+  structure could change: smallest gap of non-touching pairs / walls, of inactive corner-side incidences of touching
+  pairs, and of active incidences' distance to their side's ends (corner-corner touches excepted: those are branches);
+  (3) growth φ(t) = min over rigid coordinates and signs of the side found by slp2 (trust radius t) with that coordinate
+  held at displacement t (every point of the radius-t sphere has such a coordinate, so φ(t) is the empirical lower
+  bound of S - S* on it).  Sphere test: P is in M's basin if d(P, M) < t and S(P) - S* < φ(t) for some t with φ > 0 on
+  every smaller tested radius (continuous descent from P can't cross the sphere).  Cases: 146 (#432 / #505 / #606
+  minima and postings), 108 (#432's posting vs #451's minimum), 261 (#432's posting vs #505's minimum).
+  Predictions: float postings within 1e-9 of their minimum pass at small t; d(#505 min, #606 min) ~ 0.056; φ grows
+  ~quadratically (reduced-Hessian eigenvalue 0.039 at #606) in critical directions, so #432's 108 posting (3.8e-6
+  above) likely fails the test -> "descends to M under our descender" is algorithm-dependent there.  Not rigorous yet:
+  φ comes from a local solver, and the test doesn't exclude a second minimum inside the ball (needs a uniqueness radius
+  from Lipschitz bounds; next step if the scales look useful).
+  Interim (15:30).  Distances (rigid squares, matched): own float postings sit 1e-10 .. 1.9e-7 from their minima;
+  146's three minima are 1.7e-2 .. 4.8e-1 apart; #432's 261 posting is 1.4e-6 from #505's minimum (S gap 7.4e-11);
+  #432's 108 posting is 2.3e-2 from #451's minimum (S gap 3.8e-6), as far as 146's distinct minima are from each
+  other.  Margins: smallest non-touching gap 2.8e-8 (#505's 146), 4.3e-8 (#606), 6.2e-7 (261), 3.0e-6 (108): smaller
+  than some postings' own distance, so a contact-structure radius alone certifies nothing; flush grid contacts give
+  end margin 0 (excluded later).  Growth: the hold-and-push SLP (analysis/basin.py push_min) shows linear growth
+  (dS ≈ 0.15 .. 1.0 x push) in the directions it completes, but stalls in about half the directions (nonsmooth
+  corner-corner switching), so no φ(t) table yet.  Same-minimum close-pairs run: 146 the only n with distinct close
+  postings (#432 / #505 = #566 = #593 / #606), 44 same, 7 unknown.  provenance.py: one packing = within SAME_TOL and
+  not decided distinct; the register's value goes to the posting that carries it when its found_by's own claim is a
+  different minimum (credit moves at 146 -> #606, and 179, 180, 209, 237, 238, 239, 263 from #401 to the improver, each
+  "based on" #401); synthetic register-N events no longer anchor or appear in `also`.
+* **Path certificate, "same basin" (10-17 16:00; Evan: "'can you move from one to the other without increasing side
+  length' is the real test … Can we make something provably correct there and use it?")**: analysis/pathcert.py.
+  P and Q (S(P) >= S(Q)) are the same minimum at level L = S(P) if a continuous path joins them with side <= L
+  throughout.  Certificate: a chain of configurations (P's descent iterates -> exact minimum M <- Q's, matched by
+  symmetry + assignment); each step interpolates (x, y, θ) linearly; per pair one separating axis valid at both ends,
+  gap(λ) >= lerp(end gaps) - λ(1-λ) q / 2 with q = |w| Δθ_o² + 2 |Δw| |Δθ_o| + (√2/2) Δφ² (owner's normal times
+  centre offset, minus the other square's support: concave kinks only help); walls likewise with (√2/2) Δθ²; a
+  shortfall v is closed by scaling about the origin by 1/(1-2v) (any separating normal has n·w >= 1, walls >= 1/2), so
+  each constraint is a quadratic inequality in λ checked by its exact maximum; failing steps are bisected.  mpmath at
+  50 digits.  Prediction: 108 (#432 -> #451, descent drops 3.8e-6 over 0.023) and 261 (#432 -> #505) certify as
+  same; 146 postings vs their own minima certify; a deliberately wrong pair (#505 posting -> #606 minimum, straight
+  segment) fails.
+  Result (17:00): 108 certified: #432's posted s(108) -> #451's posted s(108) at level S(#432) (descent 241 sub-steps,
+  114 bisections with midpoints put back on their contacts, worst margin 5e-13; junction inside the minimum's family:
+  14 flat squares slide in one step, each rattler via its cage's max-clearance pose; 33 s).  #505's 146 posting ->
+  its own minimum certified (level 5.8e-15 above its side: the posted floats overlap).  Control: straight step from
+  #505's posting to #606's minimum fails.  Bugs met on the way: float iterates overlap ~1e-17 (nodes lifted to exact
+  feasibility); straight lines between trust-region iterates lose O(R²) (bisection midpoints corrected); rattlers
+  parked 1e-6 from a neighbour (waypoint); labels / quarter turns across matched chains.  Next, pre-registered:
+  same_minimum.py requires a certified path for 'same' (else 'same-side', treated as unknown); prediction: all 46
+  same pairs certify except perhaps large-n ones with many rattlers.
+  Result (18:10): same_minimum.py with certified paths: of 44 exact-side-equal pairs, 23 'same' (path certified at the
+  higher posting's side x (1 + 1e-25); incl. 108 #432 -> #451), 10 'same-core' (certified for all but rattlers:
+  different rattler cages or no route found), 11 'same-side' (no path: 261's descent crosses a corner-corner switch
+  that a straight step cuts, first-order, slack 7e-11; the rest are junctions between two exact solutions at different
+  points of a curved flat family).  Planner limits, not certificate limits: next, route corner switches through a
+  node where both lines touch, and follow flat motions with corrected nodes.  Distinct (barrier) certificates not yet
+  built: 'distinct' still means posted gap > 1e-5 or certified minima with different exact sides.
+  Definition settled (18:40; Evan: "I think that's probably the right test … a packing gets credit for its refinements,
+  even if the first posted improvement is a slightly different configuration"): a minimum is its core (squares that
+  are rattlers in neither solution); 'same' = certified core path at the higher posting's side, both ends full
+  packings.  same-core folded into same (flag core_only).  Rerun from cached solves / paths.
+  Result (19:30): verdicts 33 same (10 core-only), 11 same-side, 34 distinct, 7 unknown; site credits unchanged by the
+  fold (grouping uses only 'distinct'; the one lineage 'same' link, 108, was already certified).  261 (#432 -> #505):
+  the descent step from iterate 2 to 3 is an slp2 MILP switch step crossing 7 corner-corner switches at once (e.g.
+  squares 11 / 36, grid neighbours meeting at (5, 2): separated vertically before, horizontally after, 8e-8 apart in
+  the other direction).  pathcert's midpoint LP (now scaled: HiGHS' 1e-7 feasibility tolerance had hidden 4e-8
+  overlaps) asks for a corner touch for every switching pair at the midpoint; that linearised system is infeasible
+  even with the side free (unexplained: possibly a bad axis pairing, or switches that must happen in sequence).  Open:
+  switch one pair at a time at nodes off the segment.  Until then 261 stays same-side (credit unaffected).

@@ -12,6 +12,7 @@ minimum.
 
   descend_census.py run    --n 110 [--procs 14] [--limit N] [--thr 1e-9] [--kick 1e-5] [--rounds 20] [--timeout 900]
   descend_census.py report --n 110
+  descend_census.py recover --n 110   after a stopped run: record the points it finished
 """
 import argparse, collections, contextlib, io, json, math, os, sys, time
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -64,6 +65,52 @@ def job(arg):
                 rounds=log.getvalue().count('round '), t_descend=t1 - t0, t_solve=time.time() - t1)
 
 
+def record(st, n, root, key, pid, r, fo):
+    """store + jsonl bookkeeping for one finished point; returns its outcome"""
+    if r['cls'] in ('certified', 'weak'):
+        # the descended point is a minimum: record it (minimum table, merged within 1e-17) and the copy link from
+        # the not-min input side key.  (Before 10-11: a basin row keyed by float(S) to 1e-9, which could
+        # overwrite another side's row; the outcome test used S[:23] of the basin table.)
+        r['outcome'] = 'known' if st.find_minimum(n, r['S']) is not None else 'new'
+        from pk.packing import read
+        pid2, _ = st.add(read(f"{root}/{key}/in.txt"), source='descend:census', finder='ours', ref=f'from {pid}',
+                         status=r['cls'])
+        mk, _ = st.add_minimum(n, r['S'], r['cls'], r.get('status'), src='descend:census', pid=pid2)
+        st.add_copy(n, key, mk, via='descend')
+        r['pid_out'] = pid2; r['min_key'] = mk
+    else:
+        r['outcome'] = r['cls']
+    fo.write(json.dumps(r) + '\n')
+    return r['outcome']
+
+
+def recover(a):
+    """a run stopped before its end records nothing (results are written after the pool returns): rebuild the rows of
+    every point whose directory has a finished exact solve (in.json) and isn't in descend.jsonl yet.  Points in flight
+    at the stop have no in.json and are redone by the next run."""
+    import census_exact
+    st = Store()
+    root = f'{HERE}/runs/census/n{a.n}/descend'
+    outp = f'{HERE}/runs/census/n{a.n}/descend.jsonl'
+    done = set(json.loads(l)['key'] for l in open(outp)) if os.path.exists(outp) else set()
+    T = dict(todo(st, a.n, float('inf'), done))
+    C = collections.Counter(); skipped = 0
+    with open(outp, 'a') as fo:
+        for key in sorted(os.listdir(root)):
+            rep = f'{root}/{key}/in.json'
+            if key in done or not os.path.exists(rep) or key not in T:
+                skipped += key not in done
+                continue
+            pid = T[key]
+            c = census_exact.classify(json.load(open(rep)))       # fields as job() returns them
+            r = dict(key=key, pid=pid, s_in=st.get(pid).s, cls=c.get('cls', 'unresolved'), S=c.get('S'),
+                     status=c.get('status'), recovered=True)
+            with open(f'{root}/{key}/in.txt') as fh:
+                r['s_out'] = float(fh.readline().split()[1])
+            C[record(st, a.n, root, key, pid, r, fo)] += 1
+    print(f'n={a.n}: recovered {sum(C.values())} points: {dict(C)}; {skipped} directories without a finished solve (redone next run)')
+
+
 def run(a):
     st = Store()
     k = a.k or kgrid(a.n)
@@ -87,21 +134,7 @@ def run(a):
     with open(outp, 'a') as fo:
         for (key, pid), r in zip(T, res):
             r = r or dict(key=key, pid=pid, cls='unresolved', status='timeout')
-            if r['cls'] in ('certified', 'weak'):
-                # the descended point is a minimum: record it (minimum table, merged within 1e-17) and the copy link from
-                # the not-min input side key.  (Before 10-11: a basin row keyed by float(S) to 1e-9, which could
-                # overwrite another side's row; the outcome test used S[:23] of the basin table.)
-                r['outcome'] = 'known' if st.find_minimum(a.n, r['S']) is not None else 'new'
-                from pk.packing import read
-                pid2, _ = st.add(read(f"{root}/{key}/in.txt"), source='descend:census', finder='ours', ref=f'from {pid}',
-                                 status=r['cls'])
-                mk, _ = st.add_minimum(a.n, r['S'], r['cls'], r.get('status'), src='descend:census', pid=pid2)
-                st.add_copy(a.n, key, mk, via='descend')
-                r['pid_out'] = pid2; r['min_key'] = mk
-            else:
-                r['outcome'] = r['cls']
-            C[r['outcome']] += 1
-            fo.write(json.dumps(r) + '\n')
+            C[record(st, a.n, root, key, pid, r, fo)] += 1
     man.finish(summary=dict(C))
     print(f'  done in {time.time() - t0:.0f}s: {dict(C)}')
 
@@ -114,7 +147,7 @@ def report(a):
     ok = [r for r in R if 's_out' in r]
     if ok:
         dsv = sorted(r['s_in'] - r['s_out'] for r in ok)
-        td = sorted(r['t_descend'] + r.get('t_solve', 0) for r in ok)
+        td = sorted(r['t_descend'] + r.get('t_solve', 0) for r in ok if 't_descend' in r) or [0]
         print(f'  side drop: median {dsv[len(dsv) // 2]:.1e}, p90 {dsv[int(.9 * len(dsv))]:.1e}, max {dsv[-1]:.1e};'
               f' time per point: median {td[len(td) // 2]:.0f}s, p90 {td[int(.9 * len(td))]:.0f}s')
     land = collections.Counter(r['S'][:23] for r in R if r.get('S'))
@@ -133,5 +166,6 @@ if __name__ == '__main__':
     r.add_argument('--thr', type=float, default=1e-9); r.add_argument('--kick', type=float, default=1e-5)
     r.add_argument('--rounds', type=int, default=20); r.add_argument('--seed', type=int, default=0); r.add_argument('--skip-started', action='store_true'); r.add_argument('--timeout', type=float, default=900)
     p = sp.add_parser('report'); p.add_argument('--n', type=int, required=True)
+    v = sp.add_parser('recover'); v.add_argument('--n', type=int, required=True)
     a = ap.parse_args()
-    {'run': run, 'report': report}[a.cmd](a)
+    {'run': run, 'report': report, 'recover': recover}[a.cmd](a)

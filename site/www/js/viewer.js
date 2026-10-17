@@ -526,9 +526,10 @@ const REPO = 'https://github.com/evand/square-packing/blob/main/';
 const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const lnk = (url, text) => `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(text)}</a>`;
 function creditHTML(n, c) {
-  // A posting that started from someone else's packing credits that construction (provenance.py LINEAGE).
-  let h = c.found_by ? `Found by ${esc(c.found_by.who)} (${lnk(c.found_by.url, c.found_by.label)}, ${c.found_by.date}); improved by ${c.improved.map(x => `${esc(x.who)} (${lnk(x.url, x.label)}, ${x.date})`).join('; ')}.`
+  // found_by: the same local minimum posted earlier (later postings refined it); based_on: other minima it was found from
+  let h = c.found_by ? `Found by ${esc(c.found_by.who)} (${lnk(c.found_by.url, c.found_by.label)}, ${c.found_by.date}); refined by ${c.improved.map(x => `${esc(x.who)} (${lnk(x.url, x.label)}, ${x.date})`).join('; ')}.`
                      : `Found by ${esc(c.who)}, posted ${c.date} (${lnk(c.url, c.label)}).`;
+  if (c.based_on && c.based_on.length) h = h.slice(0, -1) + `, based on ${c.based_on.map(x => `${esc(x.who)}'s packing (${lnk(x.url, x.label)}, ${x.date})`).join('; ')}.`;
   if (c.also && c.also.length) h += ` Also posted by ${c.also.map(x => `${esc(x.who)} (${lnk(x.url, x.label)}, ${x.date})`).join(', ')}.`;
   h += c.registered ? ` Accepted on jlevy/squares' register (${lnk(c.register_url, `case ${n}`)}).`
                     : ` Not yet on jlevy/squares' register: a registration request is open, and the packing passes our own two exact certificate checkers.`;
