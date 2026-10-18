@@ -15,7 +15,7 @@ packings), `runs/quad_band_w{4,5,6}/` (band LP, pending).  Labels **[proved] [me
 * **Roth–Vaughan does not give `A`** [proved, given the bound as secondhand sources state it].  The bound is
   `W(α) ≥ 10⁻¹⁰⁰√(α‖α‖)`, which vanishes as the side approaches an integer from below.  QUADRANT.md §7(iii) was wrong.
   `A` (equivalently `c*(k) → ∞`) is **claimed** by Ryu 2026 (preprint, unrefereed; see the update above), and otherwise open.  Known: `3 ≤ c*(k)` for `k ≥ 3`; `c*(k) ≤ k−1` for `k ≥ 12` (Arslanov et al. 2021);
-  `c*(k) = O(k^{0.6})` (waste bounds).
+  `c*(k) = O(k^{0.6})` (waste bounds); **update 10-18:** `c*(k) = O(k^{3/8})` (Ryu 2026 preprint, explicit tiers) and, Lean-checked here, `c*(k) ≤ 4⌈√(2k−7)⌉ − 1` (k ≥ 7), `c*(k) < 18.9 k^{2/5} + 35.7 k^{1/5} + 122` (k ≥ 3·10⁵) (`certificates/k2-minus-c/`).
 * **Status by c.**  `F_1`, `F_2`: Nagamochi.  `F_3`: **now a theorem** (KS `k=3`, Bentz `4..7`, ours `k ≥ 6`).
   `F_4` ⇔ `s(k²−4) = k` ∀k ≥ 5, **independent of `s(12)`**: **now holds** (2026-10-03, `certificates/k2m4/`): the k²−4 family (R = w = 3, `k ≥ 8`, resting on `ValidTilt9`, one implementation) plus our k = 5..8.
   `F_5` needs `D > 5/4` plus per-k certificates starting at a threshold that is itself open (`s(20)`, `s(31)`).
@@ -35,7 +35,7 @@ packings), `runs/quad_band_w{4,5,6}/` (band LP, pending).  Labels **[proved] [me
 * **Conjecture ladder (§9, 2026-10-02).**  Thresholds `k₁ ≤ k_LP = k_D4 ≤ k_ins ≤ k_fam` by certificate class; group
   symmetry is free, insertability is the first paid restriction and its price is seam capacity.  Rate side R1–R3
   (families prove A iff seam capacity grows and corners cost a bounded fraction); structure side S1–S5 (bounded splice
-  cost ⇒ almost-monotone fractional Friedman).  Any threshold is ≳ c^{5/3}.  First test: S2 at c = 4, k = 5.
+  cost ⇒ almost-monotone fractional Friedman).  Any threshold is ≳ c^{5/3} (now ≳ c^{5/2} with explicit constants, ≳ c^{8/3} by Ryu's tiers; update 10-18).  First test: S2 at c = 4, k = 5.
 
 ## 1. Definitions and elementary facts
 
@@ -310,7 +310,8 @@ results: SEAM_W1.md.  Labels as above.
 ### 9.0 The constraint every rate conjecture must respect
 Packing constructions with waste `O(x^α)` for every real x (α = 0.6 as cited in §0; **re-check the source and
 whether the constant is effective** before quoting) give `c*(k) ≤ C k^{0.6}`, i.e. **s(k²−c) = k forces
-k ≳ (c/C)^{5/3}**.  So no threshold can be linear in c: "k₁(c) ≤ a·c + b" is false for large c.  The only explicit
+k ≳ (c/C)^{5/3}**.  (Update 10-18: explicit now, and stronger: `c*(k) < 18.9 k^{2/5} + 35.7 k^{1/5} + 122` for
+k ≥ 3·10⁵ is Lean-checked here, so `s(k² − c) = k` forces `k ≥ (c/20)^{5/2}` roughly; Ryu's `O(k^{3/8})` gives `c^{8/3}`.)  So no threshold can be linear in c: "k₁(c) ≤ a·c + b" is false for large c.  The only explicit
 small-k statement known to us: `c*(k) ≤ k − 1` for k ≥ 12 (Arslanov et al. 2021, secondhand), i.e. k ≥ c + 1.
 Roth–Vaughan gives nothing here (§0).  Every conjecture below is either polynomial with exponent ≥ 5/3 or structural.
 

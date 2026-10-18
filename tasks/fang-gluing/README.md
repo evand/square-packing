@@ -24,7 +24,7 @@ r = 27..30, R glued to m² − m (m = 11..14: Ellsworth's 110, AMS21's 132, 156,
 | 1. Lean reduction | **done 10-17**: `lean/Sqpack/FangGlue.lean` (`glue`: Lemma 3 on `PacksIn`, any real d ≥ 0), `lean/Sqpack/FangTheorem.lean` (`Squeezable`, `Excess`, `Squeezable.glue/step`, `FangPieces` structure, `FangPieces.theorem1/2`).  Axioms: propext, Classical.choice, Quot.sound. |
 | 2. Base certificates in Lean | **done 10-17**: all 18 pieces (`certificates/fang-gluing/`, `search/exact/fang_pieces.py`, rectangle checker `lean/Sqpack/ExactRect.lean`), 30-136 s each, ~19 min total; `lean/Sqpack/FangFinal.lean`: `theorem1`, `theorem2` unconditional, standard axioms. Earlier note: square pieces: existing `lean_cert.py` + `ExactCheck` (decide +kernel) works with K = Q (converter `f = T, t = 0`).  Rectangle pieces (257, 443) need a rectangle container: not started. |
 | 3. Better linear pieces | not started (packer target: squeezable a × b with gain/height > 2/21). |
-| 4. Explicit power law | already done by Ryu (c*(k) ≤ 8⌈√(k−4)⌉ − 1, k ≥ 6; jlevy #471/#486, registered as reported). Next: formalize his L-shaped family (closed form, all k), then the subagent's end-fill variant R1′ (~5.66√k, unproved for all k). `literature/waste-constructions-2026-10-17.md`. |
+| 4. Explicit power law | **done 10-18**: `certificates/k2-minus-c/` (Ryu's bounds + filled ends + staircase in Lean).  Earlier note: already done by Ryu (c*(k) ≤ 8⌈√(k−4)⌉ − 1, k ≥ 6; jlevy #471/#486, registered as reported). Next: formalize his L-shaped family (closed form, all k), then the subagent's end-fill variant R1′ (~5.66√k, unproved for all k). `literature/waste-constructions-2026-10-17.md`. |
 
 ## Cost of step 2 (measured 10-17)
 
