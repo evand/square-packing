@@ -83,3 +83,14 @@ evident family).  Beyond 40 nothing direct is known: only gluing.  j/m rises fro
 Upper bounds on c*(k): Fang k − 1 − F(k); gluing with de Winter's pieces k − 1 − E(k); Ryu 8⌈√(k−4)⌉ − 1.
 k = 40: 36 / 31 / 47; 80: 72 / 64 / 71; 100: 90 / 83 / 79; 150: 136 / 123 / 103.  Gluing beats Ryu only up to k = 94
 (Fang: 86).  So better linear pieces are a small win; order (Evan 10-17): finish Fang in Lean (done), then Ryu's family.
+
+## Ryu's Theorem 1.4 in Lean (done 10-17)
+
+`lean/Sqpack/RyuBand.lean` (geometry: same-angle separation `sep_U`/`sep_V`, `unitSq_subset_box`,
+`PacksIn.transpose`, `band`, `lshape`, `lpacking`) and `lean/Sqpack/RyuBound.lean` (angle and counts):
+`packs_sub_8sqrt : ∀ k ≥ 6, ∃ s < k, Packs (k·k − 8(⌊√(k−5)⌋ + 1)) s`, i.e. c*(k) ≤ 8⌈√(k−4)⌉ − 1, and
+`packs_sub_8b` (any b ≥ 2 with b + 4 ≤ k ≤ b² + 4).  Standard axioms, no certificates, ~400 lines.
+Simplification over Ryu: rows R₁ = k − 4, R₂ = k − b − 4 directly (no ceilings; k² − N = 8b exactly), slack 4/D at
+t₀ = 1/b, tilt t = 1/b + 1/(D(6k + 4b)) with three one-variable perturbation bounds instead of his mean-value
+argument and M = 14kb² + 1.
+Next: the end fills (R1′, ~4√(2k)); `literature/waste-constructions-2026-10-17.md` §3.
