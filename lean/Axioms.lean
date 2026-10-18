@@ -279,3 +279,8 @@ import Sqpack
 #print axioms UnitSquarePacking.Conjectures.FinitelyManyPlateausPerFract.finitelyMany
 #print axioms UnitSquarePacking.Conjectures.FinitelyManyPlateaus.bounded
 #print axioms UnitSquarePacking.Conjectures.tilingsEventuallyNotOptimal_of
+-- Ryu's L-shaped packings and the filled-end variants (Sqpack/RyuBand, RyuBound, RyuFill, RyuEnds, RyuLayers)
+#print axioms UnitSquarePacking.Ryu.packs_sub_8sqrt
+#print axioms UnitSquarePacking.Ryu.packs_sub_4sqrt2
+#print axioms UnitSquarePacking.Ryu.band_ends
+#print axioms UnitSquarePacking.Ryu.packs_sub_4sqrt2_layers

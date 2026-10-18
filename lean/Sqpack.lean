@@ -51,6 +51,8 @@ import Sqpack.FangTheorem
 import Sqpack.RyuBand
 import Sqpack.RyuBound
 import Sqpack.RyuFill
+import Sqpack.RyuEnds
+import Sqpack.RyuLayers
 import Sqpack.SpecBridge
 import Sqpack.FCSquarePacking
 import Sqpack.SpecFC
