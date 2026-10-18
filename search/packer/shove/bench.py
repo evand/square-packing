@@ -27,7 +27,7 @@ import harness as H
 def read_pk(path):
     with open(path) as f:
         n, s = f.readline().split()[:2]
-        sq = np.array([list(map(float, l.split()[:3])) for l in f if l.strip()])
+        sq = np.array([[float(v.replace('np.float64(', '').rstrip(')')) for v in l.split()[:3]] for l in f if l.strip()])
     from fractions import Fraction
     return float(Fraction(s)), sq[:int(n)]
 
@@ -92,7 +92,7 @@ def one(args):
             cands.append((len(X) - len(sq2), X, S))
         else:
             fill = get_fill(fill_name)
-            for m in (2 * task['k'], 2 * task['k'] + 1, 2 * task['k'] + 2):
+            for m in task.get('ms') or (2 * task['k'], 2 * task['k'] + 1, 2 * task['k'] + 2):   # 'ms': per-task counts
                 try:
                     out = fill(S, sq2.copy(), dict(meta), m, rng)
                 except Exception as ex:
@@ -113,6 +113,7 @@ def one(args):
         r = dict(n=task['n'], s0=s, corner=task['corner'], block=task['block'], m=m, n2=n2, S=S, s2=e['s'], grid=e['grid'],
                  vsL=None if e['s'] is None else e['s'] - (s + 1), vsT=None if e['s'] is None else e['s'] - fT,
                  vsNow=None if e['s'] is None else e['s'] - fN)
+        r.update(task.get('tags') or {})                   # 10-17: per-task features (parent gap etc.) for parent-value fits
         r['rediscovered'] = bool(e['s'] is not None and r['vsNow'] <= 1e-9 < r['vsT'])
         # 10-17 (agent A): a real win over the L-step = more squares than it at a side below s + 1, or two more at s + 1
         k0 = task['k']
@@ -137,15 +138,17 @@ def run(a):
     T = json.load(open(os.path.join(a.bench, 'tasks.json')))['tasks'][::a.tasks_every]
     if a.limit:
         T = T[:a.limit]
+    frm = a.from_task or 0                                 # 10-17: shards keep each task's seed (global index)
+    T = T[frm:a.to_task]
     print(f'{len(T)} tasks, fill {a.fill}, d {a.d}', flush=True)
     t0 = time.time(); cpu = 0.0; nrow = 0
     with open(os.path.join(a.out, 'results.jsonl'), 'a') as out, ProcessPoolExecutor(a.procs) as ex:
-        jobs = [(a.bench, t, a.fill, a.d, a.seed * 100003 + i, a.max_cands) for i, t in enumerate(T)]
+        jobs = [(a.bench, t, a.fill, a.d, a.seed * 100003 + frm + i, a.max_cands) for i, t in enumerate(T)]
         for rows in ex.map(one, jobs):
             for r in rows:
                 sqv = r.pop('_sq', None)
                 if sqv is not None:
-                    mcmin.write_deg(os.path.join(a.out, 'hits', r['file']), r['s2'], [tuple(q) for q in sqv])
+                    mcmin.write_deg(os.path.join(a.out, 'hits', r['file']), r['s2'], [tuple(map(float, q)) for q in sqv])
                 out.write(json.dumps(r) + '\n'); nrow += 1
                 cpu += r.get('cpu', 0)
                 if r.get('live'):
@@ -188,7 +191,8 @@ if __name__ == '__main__':
     r.add_argument('--out', required=True); r.add_argument('--d', type=float, default=1.0)
     r.add_argument('--limit', type=int); r.add_argument('--tasks-every', type=int, default=1)
     r.add_argument('--procs', type=int, default=4); r.add_argument('--seed', type=int, default=0)
-    r.add_argument('--max-cands', type=int, default=3); r.add_argument('--cpu-h', type=float, default=4.0)
+    r.add_argument('--max-cands', type=int, default=3)
+    r.add_argument('--from-task', type=int); r.add_argument('--to-task', type=int); r.add_argument('--cpu-h', type=float, default=4.0)
     s = sp.add_parser('score'); s.add_argument('dirs', nargs='+')
     a = ap.parse_args()
     {'build': build, 'run': run, 'score': lambda a: score_dirs(a.dirs)}[a.cmd](a)

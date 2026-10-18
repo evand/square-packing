@@ -249,6 +249,7 @@ def main():
     ap.add_argument('--vs', nargs='*', default=[]); ap.add_argument('--chain')
     ap.add_argument('--no-regularize', action='store_true'); ap.add_argument('--stage', action='store_true')
     ap.add_argument('--no-descend', action='store_true', help='no exact/descend.py when exactsolve says not jammed')
+    ap.add_argument('--no-dilate', action='store_true', help='exactsolve failure is fatal (no dilation-certificate fallback)')
     ap.add_argument('--no-prior', action='store_true', help='skip certifying / comparing the record this candidate beats')
     ap.add_argument('--import', dest='imp', action='store_true'); ap.add_argument('--ref')
     ap.add_argument('--live', nargs='+', metavar=('N', 'S'))
@@ -272,16 +273,35 @@ def main():
 
     print(f'[1] exactsolve n = {n}, s = {P.s:.12f}', flush=True)
     J, info = solve(work, a.file, descend=not a.no_descend)
+    fl = None                                                 # the float packing a dilation certificate was built from
     out.update({k: v for k, v in info.items() if k != 'exactsolve_tail'})
     if not J:
         if 'exactsolve_tail' in info:
             print(*info['exactsolve_tail'])
-        json.dump(out, open(os.path.join(work, 'summary.json'), 'w'), indent=1, default=str)
-        sys.exit(f'exactsolve: no valid certificate ({info.get("why")})')
-    out['S_exact'], out['S_cert'] = J['S_exact'], J['S_cert_decimal']
-    S = float(J['S_cert_decimal'])
-    Pc = read(os.path.join(work, 'cand.txt'))                 # the certified f64 input (after the descent, if any)
-    print(f'    S* = {J["S_exact"][:30]}   S\' = {J["S_cert_decimal"]}', flush=True)
+        # 10-17 (tasks/certify-pipeline): fall back to a dilation certificate of the float packing (upper bound only;
+        # local minimality unresolved).  s(229) (#674): exactsolve "not first-order jammed", dilate_cert VALID at +1.6e-11
+        fl = os.path.join(work, 'cand.txt') if os.path.exists(os.path.join(work, 'cand.txt')) else a.file
+        if a.no_dilate:
+            json.dump(out, open(os.path.join(work, 'summary.json'), 'w'), indent=1, default=str)
+            sys.exit(f'exactsolve: no valid certificate ({info.get("why")})')
+        print(f'    exactsolve failed ({info.get("why")}): dilation certificate of {os.path.relpath(fl, HERE)}', flush=True)
+        r = sh([sys.executable, os.path.join(HERE, 'dilate_cert.py'), fl, os.path.join(work, 'cand.cert')], cwd=HERE)
+        print('    ' + (r.stdout.strip() or r.stderr.strip())[-200:])
+        if r.returncode:
+            json.dump(out, open(os.path.join(work, 'summary.json'), 'w'), indent=1, default=str)
+            sys.exit('dilate_cert failed')
+        rows = [l.split() for l in open(os.path.join(work, 'cand.cert')) if l.strip() and not l.startswith('#')]
+        from fractions import Fraction
+        S = float(Fraction(rows[0][1]))
+        out['S_cert'], out['cert_kind'] = repr(S), 'dilation (upper bound; local minimality unresolved)'
+        out['minimality'] = f'unresolved: {info.get("why")}'
+        Pc = read(fl)
+        a.no_regularize = True                                # regularize / optimality need the exact KKT point
+    else:
+        out['S_exact'], out['S_cert'], out['cert_kind'] = J['S_exact'], J['S_cert_decimal'], 'exactsolve'
+        S = float(J['S_cert_decimal'])
+        Pc = read(os.path.join(work, 'cand.txt'))             # the certified f64 input (after the descent, if any)
+        print(f'    S* = {J["S_exact"][:30]}   S\' = {J["S_cert_decimal"]}', flush=True)
 
     print('[2] exact checkers', flush=True)
     out['checkers'] = checkers(os.path.join(work, 'cand.cert'))
@@ -303,8 +323,11 @@ def main():
     for k, v in out['distance'].items():
         print(f'    {v:.3f}  vs {k}')
 
-    out['optimality'] = optimality(J)
-    print('[5] local optimality: ' + ', '.join(f'{k} {v}' for k, v in out['optimality'].items()))
+    if J:
+        out['optimality'] = optimality(J)
+        print('[5] local optimality: ' + ', '.join(f'{k} {v}' for k, v in out['optimality'].items()))
+    else:
+        print(f'[5] local optimality: {out["minimality"]}')
 
     if a.chain:
         import chain_lineage
@@ -339,8 +362,9 @@ def main():
     if a.imp:
         if out['live']['beaten']:
             sys.exit('not importing as a record candidate: beaten / tied (see the live check)')
-        r = sh([sys.executable, os.path.join(HERE, 'pk.py'), 'import', os.path.join(work, 'cand.exact.txt'), '--source', f'candidate:{a.name}',
-                '--finder', 'ours', '--status', 'certified', '--kind', 'record-candidate'] + (['--ref', a.ref] if a.ref else []), cwd=HERE)
+        imp, status = (os.path.join(work, 'cand.exact.txt'), 'certified') if J else (fl, 'polished')
+        r = sh([sys.executable, os.path.join(HERE, 'pk.py'), 'import', imp, '--source', f'candidate:{a.name}',
+                '--finder', 'ours', '--status', status, '--kind', 'record-candidate'] + (['--ref', a.ref] if a.ref else []), cwd=HERE)
         print('[10] store import: ' + (r.stdout.strip() or r.stderr.strip())[-300:])
 
 

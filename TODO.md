@@ -14,7 +14,7 @@ External posts: ask Evan explicitly per post.  **Before any bound-chasing run, c
 - [ ] Time-lapse records video (`site/timelapse/`): Evan to return; store sighting times are local, not UTC.
 
 ## Watch
-- [ ] jlevy #673 (credit correction: found_by at 146 and 308 to us, per the same-minimum rule; posted 10-17), #669 (our s(155) ≤ 12.952260944651, posted 10-17, cert 59326b8), #664 (our s(271) ≤ 16.948947733714, posted 10-16, cert 757b40b), #659 (our s(236) ≤ 15.861934390608, posted 10-16, cert 5ad0069), #639 (exact forms, 22 current records), #606 (our 146: T-187 V0/C0 10-15, awaiting their replay review), #545 (s29 / grade-C retained 10-15; their replays wait on budget; they note exact-point non-overlap for s(29) open), #596, #584, #552, #489, #465, #419 / #420 (exact forms, no reply), #375, #3 (preprint, left open); chelokot#18 (repo unknown: not under bend / bend-math).
+- [ ] jlevy #674 (our s(229) ≤ 15.650163254859, posted 10-17, dilation cert e0338c7; updated same day to ≤ 15.650161513896, cert 00e68df; start: #672 / #668), #673 (credit correction: found_by at 146 and 308 to us, per the same-minimum rule; posted 10-17), #669 (our s(155) ≤ 12.952260944651, posted 10-17, cert 59326b8), #664 (our s(271) ≤ 16.948947733714, posted 10-16, cert 757b40b), #659 (our s(236) ≤ 15.861934390608, posted 10-16, cert 5ad0069), #639 (exact forms, 22 current records), #606 (our 146: T-187 V0/C0 10-15, awaiting their replay review), #545 (s29 / grade-C retained 10-15; their replays wait on budget; they note exact-point non-overlap for s(29) open), #596, #584, #552, #489, #465, #419 / #420 (exact forms, no reply), #375, #3 (preprint, left open); chelokot#18 (repo unknown: not under bend / bend-math).
 
 ## Packings (`search/packer/`: `HANDOFF-2026-10-14.md`, `tasks/packer-arch-2026-10-14/`)
 - [x] Watcher review list (10-17): all causes found and fixed (PACKER.md "Watcher review list, causes").  Remove at the next TODO sweep.
@@ -43,12 +43,16 @@ Thesis (Evan 10-14): diversity pays; local search at current budgets has mined t
 - [ ] Shallow-valley descender X01: `search/packer/nlpdesc.py` (second-order fixed-line NLP, IPOPT) resolved 34 / 40 unresolved s(110) keys 10-15 (PACKER "unresolved / weak: second-order descent"); next: the 225 stuck points, the 6 left (MILP-branch kick).
 - [ ] s(110) explainer refresh + write-up (`tasks/landscape110-explainer/`; rewrite of `s110-landscape.md`'s census section).
 
+- [ ] Next jlevy submission: bundle s(260)'s exact form (S* 16.645778786061741…, certified 10-17, `search/packer/runs/candidates/s260_cs3/`, store kind exact-form): the analytic optimum of de Winter's #668 packing, 1.6e-8 below the posted floats; credit de Winter.  Not its own issue (Evan 10-17).
+
 ## Major: exact results
 - [ ] s(12) strip leaf (paused 10-11): 4-strip width ≤ 1.90 + seam at x = 1.02 ⇒ no 12-packing, margin ~0.02; region lemma needs branching. `tasks/strip-leaf/`
 - [ ] k²−5 for all large k: conditional GO, margin ≈ 0.05 (`K2M4_MARGIN.md`); make it cheaper first (cert golf `tasks/cert-slack/`, finer-pitch D at w = 4).
 - [ ] Seam capacity M(∞) (FRIEDMAN §8–9, `SEAM_W1.md`, `SEAM_1D.md`): dual-side band LP w = 2, 3; wall-row + slow-variation lemmas.
 - [ ] Corner coupling (R3): does D(w) ≥ κ M(w)?  Start with the corner dual at w = 1 (D = ½, corner cost ¼?).
 - [ ] Proof-piece wishlist `search/WISHLIST.md` (10-03 picks: Lean `E(n) ≤ 0` + seam `D ≤ m_v`, then `M(1) ≤ ¾`, then `M(1) = ¾`).
+
+- [ ] Certification pipeline (Evan 10-17): benchmark the stuck points with every existing tool, then refactor into one `certify.py`; first step done-now: candidate.py falls back to dilate_cert.  `tasks/certify-pipeline/`
 
 ## Exact forms (`tasks/exact-minpoly/`, `search/exact/EXACT_FORMS.md`)
 - [ ] Target (10-07): exact + Lean `Packs` for all n ≤ 82 (open 29, 55, 68, 71; 83 deg 672), Lean local min ~70.  10-11: 269/324 exact, `Packs` 258, local min 178.

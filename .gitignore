@@ -41,3 +41,7 @@ search/packer/bench/polish*/out_*/*
 !search/packer/bench/polish*/out_base/res.json
 search/exact/batch/inputs_live/
 /search/exact/gradec_runs/*.log
+# held until published (Evan 10-17): symlinks into ../private/s12/held and notes
+search/packer/shove/delL.py
+search/packer/shove/fill_wallL.py
+search/packer/HELD-cs3.md

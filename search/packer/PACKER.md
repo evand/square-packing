@@ -4106,3 +4106,11 @@ staircase); the example fill collapses to the grid 9 / 9.
   overlaps) asks for a corner touch for every switching pair at the midpoint; that linearised system is infeasible
   even with the side free (unexplained: possibly a bad axis pairing, or switches that must happen in sequence).  Open:
   switch one pair at a time at nodes off the segment.  Until then 261 stays same-side (credit unaffected).
+
+## 10-17 evening: tool changes (details of the runs that prompted them are held for a day or two)
+* `pk/jobs.py` queue: `queue add NAME [--prio high|normal|low] [--procs N] [--min-procs M] [--backfill] [--peek CMD] -- CMD`, `queue ls / rm`, scheduler job `_queue` (declared procs of running jobs + outside threads vs 16 - 2 reserve; high up to 20; smoothed use; zombies reaped); `jobs.py peek NAME`.
+* `pk/nearmiss.finish`: no longer stops when an item is below the bar (Evan: a hit still needs finishing); harden targets min(bar, current side).
+* `candidate.py`: when exactsolve fails, falls back to a dilation certificate (`dilate_cert.py`: upper bound, minimality unresolved; `--no-dilate` = old behaviour).  `tasks/certify-pipeline/` (TODO).
+* `pk/parents.sources()` + policy `elite+banded`; `shove/bench.py`: `--from-task / --to-task` shards (seeds by global task index), per-task `ms` and `tags`, hit files written as plain floats.
+* Posted 10-17: jlevy#674 s(229) <= 15.650163254859 (e0338c7), updated the same day to <= 15.650161513896 (00e68df).
+* Lesson (s(260), 10-17): a 'below the record' gap under ~1e-7 can be float slack in the posted packing; compare exact solves (candidate.py's prior step) before calling it a find.  s(260)'s exact form (= #668's analytic optimum) is in the store, to bundle with the next submission (TODO).

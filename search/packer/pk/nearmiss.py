@@ -373,14 +373,14 @@ def finish(st, out, limit=None, stages=STAGES, procs=4, candidate=False, dry=Fal
         c0, nprop, log_st, err = cpu_now(), 0, [], None
         try:
             for name in stages:
-                if cur_s < b - BELOW:
-                    break
+                # 10-17 (Evan): no stop below the bar.  A hit still needs finishing: a deeper / jammed point is lower
+                # and often what makes it certifiable (s(229), #674: valid, not first-order jammed)
                 if abs(cur_s - b) <= TIE:                  # polished onto the frontier: the record re-found, stop
                     log_st.append(dict(stage=name, skipped='tie with the frontier')); break
                 if name == 'harden' and cur_s - b > nm_gate:
                     log_st.append(dict(stage=name, skipped=f'gap {cur_s - b:.1e} > gate {nm_gate:g}')); continue
                 swd = os.path.join(wd, name); os.makedirs(swd, exist_ok=True)
-                outs, k = runners[name](cur_path, swd, n, b, procs)
+                outs, k = runners[name](cur_path, swd, n, min(b, cur_s), procs)   # below the bar: aim below itself
                 nprop += k
                 rec = dict(stage=name, runs=k, best=outs[0][0] if outs else None)
                 if outs and outs[0][0] < cur_s - 1e-12:

@@ -3,6 +3,8 @@
   pool = Pool(n, ks=(0,), asof=None, above_k=0.05)        rows at n (and n + k for k in ks), feasible, s < k(n) + above_k
   pick(pool, m, policy='cluster', rng=random.Random(0))    -> [store ids]
   starts(n, m, out_dir, ...)                               -> files out_dir/lib_<i>.txt for legacy drivers (chain)
+  sources(n, m, policy='elite+banded', asof=None, ...)     -> [dict(id, s, gap, gap_bin, cl, sq, dist, rank)] in memory,
+                                                             for benches (dist = matching distance to the best row)
 
 Policies
   best      lowest side first (the old default everywhere)
@@ -10,6 +12,8 @@ Policies
   banded    a gap decade (log10 gap to the frontier) uniformly, then `cluster` inside it: spread in depth and in region
             (C33: deep parents pay most, far ones some; at most n clusters are near-singletons, so `cluster` alone
             would draw mostly far stepping stones).  Chain default (10-14).
+  elite+banded  the best row first, then `banded` for the rest (10-17: test benches draw from a slightly wider set than
+            the optimum, Evan: "standard bandit arm theory"; the record stays the anchor arm)
   cluster   uniform over region clusters, then uniform over minima (side keys) inside, then the least-expanded copy
             (Evan 10-14: diversity = spread across distinct regions); the default.  Minima weighted down by ledger CPU
             already spent on them (1 / (1 + cpu / CPU0)).
@@ -141,6 +145,9 @@ def pick(pool: Pool, m, policy='cluster', rng=None, exclude=()):
         if len(rows) <= m:
             return [r['id'] for r in rows]
         return [rows[round(i * (len(rows) - 1) / (m - 1 if m > 1 else 1))]['id'] for i in range(m)]
+    if policy == 'elite+banded':
+        top = min(rows, key=lambda r: (r['s'], r['id']))
+        return [top['id']] + (pick(pool, m - 1, 'banded', rng, exclude=list(exclude) + [top['id']]) if m > 1 else [])
     if policy == 'banded':                           # gap decade uniform, then cluster, then minimum (default 10-14)
         B = defaultdict(list)
         for r in rows:
@@ -191,6 +198,36 @@ def starts(n, m, out_dir, policy='cluster', ks=(0,), asof=None, seed=0, exclude=
     finally:
         st.close()
     return out
+
+
+def sources(n, m, policy='elite+banded', asof=None, seed=0, exclude=(), cluster=True, max_gap=None, dist=True):
+    """m picked packings at n, in memory, with the features a bench should log per row (parent-value data for free):
+    gap to the frontier (as of `asof` or now), its decade, region cluster, matching distance to the pool's best row,
+    rank by side.  max_gap: drop rows further than this above the frontier before picking."""
+    pool = Pool(n, asof=asof, cluster=cluster)
+    if max_gap is not None:
+        pool.rows = [r for r in pool.rows if r['gap'] <= max_gap]
+    if not pool.rows:
+        return []
+    ids = pick(pool, m, policy, random.Random(seed), exclude)
+    by = {r['id']: r for r in pool.rows}
+    order = sorted({r['key'] for r in pool.rows}, key=lambda k: float(k.split(':')[1]))
+    rank = {k: i for i, k in enumerate(order)}
+    st = Store()
+    try:
+        top = st.get(min(pool.rows, key=lambda r: (r['s'], r['id']))['id'])
+        out = []
+        for pid in ids:
+            p, r = st.get(pid), by[pid]
+            d = None
+            if dist:
+                from .cluster import md
+                d = 0.0 if pid == top.meta.get('id') else float(md(p.sq, p.s, top.sq, top.s))
+            out.append(dict(id=pid, s=float(p.s), gap=float(r['gap']), gap_bin=gap_bin(r['gap']), cl=r['cl'],
+                            sq=np.asarray(p.sq, float), dist=d, rank=rank[r['key']]))
+        return out
+    finally:
+        st.close()
 
 
 if __name__ == '__main__':
