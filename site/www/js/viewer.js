@@ -540,6 +540,9 @@ const isCat = f => !(S.idx.files[f] || {}).origin;   // an SVG from Ellsworth's 
 const TABLE_MAX = 324;   // Ellsworth's main table: every n up to here with a packing better than the grid
 function renderSide() {
   const r = S.rec, a = r.analysis, meta = S.idx.files[S.file] || {}, recMeta = S.idx.records[S.n] || {};
+  // Our regularized copy stands in for the dated drawing it was made from (import_lists.py): that drawing's
+  // closed form, prose and credit describe this packing too.
+  const srcMeta = meta.source ? S.idx.files[meta.source] || null : null;
   const bestS = recMeta.best_s != null ? +recMeta.best_s : null;
   const atRecord = bestS != null && Math.abs(+r.s - bestS) < 1e-9;     // same side as the record
   const catSame = recMeta.s_dec != null && Math.abs(+r.s - +recMeta.s_dec) < 1e-9;   // the catalogue's record side (its closed form applies)
@@ -567,8 +570,8 @@ function renderSide() {
   const sShown = (+r.s).toFixed(12).replace(/0+$/, '').replace(/\.$/, '');
   $('sval').textContent = 's = ' + sShown + (+sShown === +r.s ? '' : '…');   // no ellipsis on an exact 2, 3, …
   // exact form.  The record's closed form and prose describe the record: never lend them to an alternative.
-  const tex = meta.s_tex || ((isRecord || meta.origin === 'alt' || S.file === recMeta.svg) && catSame ? recMeta.s_tex : '') || '';
-  const polys = meta.polys && meta.polys.length ? meta.polys : (isRecord || meta.origin === 'alt') && catSame ? recMeta.polys : null;
+  const tex = meta.s_tex || (srcMeta && srcMeta.s_tex) || ((isRecord || meta.origin === 'alt' || S.file === recMeta.svg) && catSame ? recMeta.s_tex : '') || '';
+  const polys = meta.polys && meta.polys.length ? meta.polys : srcMeta && srcMeta.polys && srcMeta.polys.length ? srcMeta.polys : (isRecord || meta.origin === 'alt') && catSame ? recMeta.polys : null;
   let closed = tex.replace(/\\Nn\{[^}]*\}/, '').replace(/\\(begin|end)\{aligned\}/g, '').replace(/\\\\\s*&?=\s*$/, '').replace(/&/g, '').replace(/=\s*$/, '').trim();
   const lock = closed.match(/\{\}\^\{(\d+)\}🔒/);
   const sf = $('sform'); sf.innerHTML = '';
@@ -593,10 +596,10 @@ function renderSide() {
   $('tags').innerHTML = tags.join(' ');
   const tex2html = t => t.replace(/\$([^$]+)\$/g, (m, x) => { try { return katex.renderToString(x, { throwOnError: false }); } catch (e) { return m; } });
   if (isRecord && recMeta.credit) $('prose').innerHTML = creditHTML(S.n, recMeta.credit);
-  else if (meta.origin === 'step') $('prose').innerHTML = `Found by ${esc(meta.credit.who)}, posted ${meta.credit.date} (${lnk(meta.credit.url, meta.credit.label)}); since improved: the record is now ${(+recMeta.best_s).toFixed(10)}.`;
+  else if (meta.origin === 'step' || (srcMeta && srcMeta.origin === 'step')) { const c = (srcMeta || meta).credit; $('prose').innerHTML = `Found by ${esc(c.who)}, posted ${c.date} (${lnk(c.url, c.label)}); since improved: the record is now ${(+recMeta.best_s).toFixed(10)}.`; }
   else if (meta.origin === 'alt') $('prose').innerHTML = `A different packing of ${S.n} squares in the record's box: ${esc(meta.relation)}. Made by merging rotation groups of the record (${esc(meta.groups)} groups)${meta.parent ? `, found by ${esc(meta.parent)}` : ''}; a display choice, not a new bound.`;
   else {
-    const prose = (meta.prose || ((isRecord || S.file === recMeta.svg) && catSame ? recMeta.prose : '') || '').replace(/\n/g, ' ');
+    const prose = (meta.prose || (srcMeta && srcMeta.prose) || ((isRecord || S.file === recMeta.svg) && catSame ? recMeta.prose : '') || '').replace(/\n/g, ' ');
     $('prose').innerHTML = prose ? tex2html(prose) : '';
   }
   const certLink = c => c ? lnk(REPO + c, 'certificate') : '';
@@ -605,9 +608,12 @@ function renderSide() {
       (meta.cert ? `The posted packing is certified at this side (${certLink(meta.cert)}: the poster's exact certificate, converted without rounding and accepted by our two exact checkers)` : `Not certified here`) +
       `. It was posted after our regularized lists were made, so unlike most records it has no regularized copy yet.`;
   } else if (meta.origin === 'best' && !isRecord) {
-    $('srcline').innerHTML = `Our certified, regularized copy (${certLink(meta.cert)}) of the catalogue's record, which has since been beaten: <a href="explore.html?n=${S.n}">the record</a>.`;
+    const src = meta.source ? `<a href="explore.html?p=${encodeURIComponent(meta.source)}">${esc(meta.source)}</a>` : '';
+    const of = srcMeta && srcMeta.origin === 'step' ? `the packing as posted (${src})` : src ? `the catalogue's drawing (${src})` : "the catalogue's record";
+    $('srcline').innerHTML = `Our certified copy (${certLink(meta.cert)}) of ${of}, ${meta.same_as ? 'the same squares within 1e-6 up to a symmetry of the box' : `regularized for display: ${esc(meta.level_text)}` +
+      (meta.orientation && meta.orientation !== 'as source' ? `, ${esc(meta.orientation)}` : '')}. It has since been beaten: <a href="explore.html?n=${S.n}">the record</a>.`;
   } else if (meta.origin === 'best') {
-    const cat = recMeta.svg && S.idx.files[recMeta.svg] && catSame ? recMeta.svg : null;
+    const cat = srcMeta && !srcMeta.origin ? meta.source : recMeta.svg && S.idx.files[recMeta.svg] && catSame ? recMeta.svg : null;
     if (meta.same_as) $('srcline').innerHTML = `Drawn from our copy of the record, certified at this side (${certLink(meta.cert)}, checked by two exact checkers). ${meta.same_as === recMeta.svg ? "It is the catalogue's own drawing of the record" : 'The catalogue draws the same packing'}, every square within 1e-6: <a href="explore.html?p=${encodeURIComponent(meta.same_as)}">${esc(meta.same_as)}</a> (David Ellsworth's <a href="https://kingbird.myphotos.cc/packing/squares_in_squares.html" target="_blank" rel="noopener">Squares in Squares</a>, after Erich Friedman).`;
     else $('srcline').innerHTML = `Drawn from our copy of the record, certified at this side (${certLink(meta.cert)}, checked by two exact checkers) and regularized for display: ${esc(meta.level_text)}` +
       (meta.orientation && meta.orientation !== 'as source' ? `, ${esc(meta.orientation)} from the source drawing` : '') + '. ' +

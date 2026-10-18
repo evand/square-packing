@@ -5,7 +5,9 @@ packings, what can be said about them (angles, contacts, free squares, gaps, sym
 records changed over time, the proven lower bounds, and how the few exact results are proved.
 
 The record packings for n ≤ 324 are drawn from our certified, display-regularized copies
-(`../search/regularize/lists/`, REGULARIZE.md): one per n, the best known packing at its side.  Everything else
+(`../search/regularize/lists/`, REGULARIZE.md): one per n, the best known packing at its side.  That copy replaces the
+drawing it was made from everywhere the packing appears, also in the history once it is beaten (`import_lists.py`:
+the timeline entry points at `best-N`, the source is marked `dup_of`; Explore links it from the source line).  Everything else
 (older records, alternatives, n > 324) is parsed from David Ellsworth's SVG catalogue, at the precision each file gives
 (exact constants for most; decimals for the ~60 numerically optimised packings, flagged as numeric contacts)
 (https://kingbird.myphotos.cc/packing/squares_in_squares.html, continuing Erich Friedman's survey); attributions and

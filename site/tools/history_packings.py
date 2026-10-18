@@ -6,7 +6,8 @@ www/data/p/.  Catalogue holders already carry their drawing (`file`); the rest (
 mostly superseded within days) are found by side length among the drawings the site already has (best-, rec-, alt-,
 step-), and failing that in the packing store (search/packer/runs/store.sqlite: register witnesses and pending-issue
 packings), which are written out as www/data/p/hist-<n>-<event>.json.  Holders posted without a side (s null) are
-matched by the issue that posted them.  Grid holders (kind 'grid') get null: the page draws the grid itself.
+matched by the issue that posted them.  A drawing our regularized lists reproduce (index.json dup_of) is replaced by
+our copy (best-N).  Grid holders (kind 'grid') get null: the page draws the grid itself.
 
 Not in build.sh `site` (needs the local store); its outputs are committed.  Re-run after `credits` when the
 histories change:  ./build.sh history
@@ -97,6 +98,9 @@ def main():
         print('no store:', e)
     if store is None:
         print('history: the packing store is missing; hist.json not rewritten'); return 1
+    # our regularized copy stands in for the drawing it was made from (import_lists.py: dup_of), as on Explore/Compare
+    idx = json.load(open(os.path.join(SITE, 'www', 'data', 'index.json')))
+    reg = {k.replace('.svg', '.json'): v['dup_of'] for k, v in idx['files'].items() if v.get('dup_of')}
     out, made, miss = {}, [], []
     keep = set()
     for n, d in sorted(C.items(), key=lambda x: int(x[0])):
@@ -130,7 +134,7 @@ def main():
             else:
                 miss.append((n_, st.get('who'), st.get('date'), s, ev)); row.append(None)
         revisions(store, n_, d['upper'], row, keep)
-        out[n] = row
+        out[n] = [reg.get(f, f) for f in row]
     for f in os.listdir(P):
         if f.startswith('hist-') and f not in keep:
             os.remove(os.path.join(P, f))

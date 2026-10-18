@@ -150,8 +150,9 @@ def main():
         for d in TL[n]:
             if 'was_record' in d:
                 d['is_record'] = d.pop('was_record')
-            if 'catalogue_file' in d:
-                d['file'] = d.pop('catalogue_file')
+            for k in ('catalogue_file', 'source_file'):     # catalogue_file: before 10-17
+                if k in d:
+                    d['file'] = d.pop(k)
 
     # ---- the packings ----
     jobs, files = [], {}
@@ -327,45 +328,62 @@ def main():
                       'rigid': False, 'date': [dt['year'], dt['month']], 'is_record': bool(step['current']),
                       'origin': 'lists', 'url': ev['url'], 'label': ev['label']})
 
-    # ---- one packing, one entry: where our record drawing is the catalogue's record drawing ----
-    # (all squares within SAME_TOL in position and angle mod 90, under the best of the 8 container symmetries), the
-    # catalogue's dated timeline entry points at our certified file and the catalogue SVG is marked dup_of (Explore
-    # and Compare skip it; a ?p= link still opens it).  The regularization level is relative to the lists' input
-    # (the exact batch), not to the drawing a reader sees, so it can say "rattlers only" for an identical drawing.
-    ndup = 0
+    # ---- one packing, one entry: the regularized copy is the drawing shown (Evan, 10-17) ----
+    # best-N is a certified, regularized drawing of the packing that held (or holds) the record at its side: level <= 2,
+    # the same packing up to rattlers and flat motions (REGULARIZE.md).  Where a dated timeline entry carries that
+    # packing (the catalogue's record drawing, or a 2026 posting since superseded by a raw record), the entry points at
+    # best-N instead and the source file is marked dup_of: Explore and Compare skip it, a ?p= link still opens it, and
+    # Explore links it from best-N's source line (best-N.source).  The catalogue's record drawing is not the source
+    # where alternates.json says it differs from the record (18: a distinct tilt structure; untested 'same tilts').
+    # Other catalogue drawings at the side (the plain grids, e.g. square-12.svg, linked from Ellsworth's pages without
+    # an entry) fold in only when identical: every square within SAME_TOL in position and angle mod 90, under the best
+    # of the 8 container symmetries (same_as).
+    def drawing(f):
+        try:
+            return json.load(open(os.path.join(W, 'p', f.replace('.svg', '.json'))))
+        except (OSError, ValueError):
+            return None
+    nsrc = nsame = 0
     for n in range(1, NMAX + 1):
+        key = f'best-{n}.json'
+        if key not in idx['files']:
+            continue
         r = idx['records'].get(str(n)) or {}
-        key = r.get('best')
-        if not key or not key.startswith('best-'):
-            continue
-        # the catalogue's record entry first, then any other catalogue drawing of n at the record side (the plain
-        # grids, e.g. square-12.svg, are linked from Ellsworth's pages without an entry)
         side = float(idx['files'][key]['s'])
-        cands = [r['svg']] if r.get('svg') in idx['files'] else []
+        L = TL.get(str(n), [])
+        def fits(d):
+            f = d['file']
+            m = idx['files'].get(f)
+            if f == key or not m or m.get('n_parsed') != n or abs(float(d['s']) - side) > SAME_TOL:
+                return False
+            if m.get('origin') == 'step':
+                return True
+            return not m.get('origin') and (cat_alt.get(f) or 'same as').startswith('same as')
+        # the catalogue's record entry first, then a superseded posting.  None where best-N already has its own entry
+        # (a record posted since the catalogue): an older entry within SAME_TOL is then a different record (68: the
+        # 2026 posting beat square-68.svg by 9e-7).
+        ents = [] if any(d['file'] == key for d in L) else \
+            sorted((d for d in L if fits(d)), key=lambda d: (d['file'] != r.get('svg'), not d.get('was_record')))
+        src = ents[0]['file'] if ents else None
+        if src:
+            for d in L:
+                if d['file'] == src:
+                    d['source_file'] = src
+                    d['file'] = key
+            idx['files'][src]['dup_of'] = key
+            idx['files'][key]['source'] = src
+            nsrc += 1
+        A = drawing(key)
+        cands = ([src] if src and not idx['files'][src].get('origin') else [])
         cands += sorted(k for k, f in idx['files'].items() if not f.get('origin') and f.get('n_parsed') == n
-                        and k not in cands and f.get('s') and abs(float(f['s']) - side) < SAME_TOL)
-        cat = None
+                        and k != src and not f.get('dup_of') and f.get('s') and abs(float(f['s']) - side) < SAME_TOL)
         for c in cands:
-            if idx['files'][c].get('n_parsed') != n:
-                continue
-            try:
-                A = json.load(open(os.path.join(W, 'p', c.replace('.svg', '.json'))))
-                B = json.load(open(os.path.join(W, 'p', key)))
-            except (OSError, ValueError):
-                continue
-            if same_drawing(A, B):
-                cat = c
-                break
-        if not cat:
-            continue
-        idx['files'][cat]['dup_of'] = key
-        idx['files'][key]['same_as'] = cat
-        for d in TL.get(str(n), []):
-            if d['file'] == cat:
-                d['catalogue_file'] = cat
-                d['file'] = key
-        ndup += 1
-    print(f'{ndup} record drawings identical to the catalogue drawing: listed once')
+            B = drawing(c)
+            if A and B and same_drawing(B, A):
+                idx['files'][c]['dup_of'] = key
+                idx['files'][key].setdefault('same_as', c)
+                nsame += 1
+    print(f'{nsrc} timeline entries drawn from our regularized copy; {nsame} catalogue drawings identical to it')
 
     json.dump(idx, open(os.path.join(W, 'index.json'), 'w'), separators=(',', ':'), ensure_ascii=False)
     json.dump(TL, open(os.path.join(W, 'timeline.json'), 'w'), separators=(',', ':'), ensure_ascii=False)
