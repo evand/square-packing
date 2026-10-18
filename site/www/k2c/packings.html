@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Packings Row by Row · Square Packing Atlas</title>
+<meta name="description" content="Every grid size k, every deficit c: which of the Lean-checked constructions (Fang's gluing, Ryu's L-shape, the filled L-shape) packs k² − c unit squares in a square of side less than k, drawn square by square.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --paper:#F2F4F1; --surface:#FBFCFA; --ink:#131A1E; --muted:#5F6B70; --rule:#D6DCD7;
+  --accent:#0E7490; --accent-soft:#DCEDF1; --gold:#9C6410; --gold-soft:#F5EBDA; --green:#2A6E4F; --green-soft:#DFEDE5;
+  --open:#E9ECE8; --known:#C9CFCB; --axis:#C3CCD0; --axis-line:#9AA6AB;
+  --s-fang:#7357A8; --s-ryu:#0E7490; --s-layers:#C2410C; --s-end:#2A6E4F; --s-r257:#2F6FA8; --s-r443:#B03A6F;
+  --shadow:0 1px 2px rgba(19,26,30,.05),0 8px 24px -12px rgba(19,26,30,.14);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E1316; --surface:#151C20; --ink:#E4EBEA; --muted:#96A4A8; --rule:#263238;
+    --accent:#54C3D6; --accent-soft:#0F3138; --gold:#DBA745; --gold-soft:#33280F; --green:#63BE92; --green-soft:#16352A;
+    --open:#1A2226; --known:#3A464C; --axis:#3B474D; --axis-line:#56656C;
+    --s-fang:#A68BE0; --s-ryu:#54C3D6; --s-layers:#F08A4B; --s-end:#63BE92; --s-r257:#6FA8E0; --s-r443:#E07AAA;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E1316; --surface:#151C20; --ink:#E4EBEA; --muted:#96A4A8; --rule:#263238;
+  --accent:#54C3D6; --accent-soft:#0F3138; --gold:#DBA745; --gold-soft:#33280F; --green:#63BE92; --green-soft:#16352A;
+  --open:#1A2226; --known:#3A464C; --axis:#3B474D; --axis-line:#56656C;
+  --s-fang:#A68BE0; --s-ryu:#54C3D6; --s-layers:#F08A4B; --s-end:#63BE92; --s-r257:#6FA8E0; --s-r443:#E07AAA;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Spectral,Georgia,"Times New Roman",serif;font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3{text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:clamp(1.9rem,4.6vw,2.6rem);font-weight:700;letter-spacing:-.015em}
+h2{font-size:1.35rem;font-weight:600}
+h3{font-size:1.05rem;font-weight:600}
+p{margin:0}
+a{color:var(--accent);text-decoration-thickness:.08em;text-underline-offset:.18em}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+code{font-family:"IBM Plex Mono",monospace;font-size:.86em;background:var(--accent-soft);padding:.1em .35em;border-radius:2px;overflow-wrap:anywhere}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.topbar{display:flex;align-items:center;gap:6px 18px;padding:10px 20px;border-bottom:1px solid var(--rule);background:var(--surface);flex-wrap:wrap;font-size:16px;line-height:1.5}
+.topbar .brand{font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+.topbar nav{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.92rem}
+.topbar nav a{text-decoration:none;color:var(--muted);white-space:nowrap}
+.topbar nav a.here,.topbar nav a:hover{color:var(--accent)}
+.subnav{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 14px;padding:6px 20px;border-bottom:1px solid var(--rule);font-size:15px;line-height:1.5}
+.subnav .lbl{font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.subnav a{text-decoration:none;color:var(--muted);white-space:nowrap}
+.subnav a.here,.subnav a:hover{color:var(--accent)}
+.wrap{max-width:1180px;margin:0 auto;padding:36px 20px 80px;display:flex;flex-direction:column;gap:22px}
+header{display:flex;flex-direction:column;gap:12px}
+.lede{font-size:1.06rem;color:var(--muted);max-width:72ch}
+.tabs{display:flex;gap:4px;font-family:"IBM Plex Mono",monospace;font-size:.78rem}
+.tabs a{padding:5px 12px;border:1px solid var(--rule);border-radius:999px;text-decoration:none;color:var(--muted);background:var(--surface)}
+.tabs a.here{color:var(--accent);border-color:var(--accent)}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;font-size:.92rem;padding:10px 14px;background:var(--surface);border:1px solid var(--rule);border-radius:3px}
+.controls label{display:inline-flex;align-items:center;gap:7px;cursor:pointer;user-select:none}
+.controls input[type=range]{width:220px;max-width:46vw;accent-color:var(--accent)}
+.controls input[type=checkbox]{accent-color:var(--ink)}
+.sw{display:inline-block;width:12px;height:12px;border-radius:2px;flex:none}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.86rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:14px;border-radius:2px;display:inline-block;border:1px solid var(--rule);flex:none}
+.legend i.ring{background:transparent;border:2px solid var(--ink)}
+.legend i.hatch{background:repeating-linear-gradient(135deg,var(--known) 0 3px,var(--open) 3px 6px)}
+.tri{position:relative;width:100%}
+.tri canvas{display:block;width:100%;touch-action:manipulation}
+#over{position:absolute;left:0;top:0;pointer-events:none}
+.hint{font-size:.86rem;color:var(--muted)}
+.tip{position:fixed;z-index:20;display:none;pointer-events:none;background:var(--surface);border:1px solid var(--rule);border-radius:3px;box-shadow:var(--shadow);padding:10px 12px;font-family:"IBM Plex Mono",monospace;font-size:.76rem;line-height:1.5;max-width:340px;white-space:pre-line;color:var(--ink)}
+.tip canvas{display:block;margin-bottom:8px;width:180px;height:180px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow)}
+.card h3{display:flex;align-items:center;gap:8px}
+.card p{font-size:.93rem;color:var(--muted)}
+.card .stmt{font-family:"IBM Plex Mono",monospace;font-size:.88rem;color:var(--ink)}
+.card button,.vbar button{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:.8rem;padding:5px 11px;border:1px solid var(--rule);border-radius:3px;background:var(--paper);color:var(--ink);cursor:pointer}
+.card button:hover,.vbar button:hover{border-color:var(--accent);color:var(--accent)}
+.card button{align-self:flex-start}
+.notes{display:flex;flex-direction:column;gap:10px;max-width:78ch;font-size:.95rem}
+.notes ul{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:6px}
+/* viewer */
+dialog#viewer{width:min(1100px,96vw);max-width:none;height:min(860px,94vh);padding:0;border:1px solid var(--rule);border-radius:4px;background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+dialog#viewer::backdrop{background:rgba(10,14,16,.55)}
+.vgrid{display:grid;grid-template-columns:minmax(0,1fr) 300px;height:100%}
+.vcanvas{position:relative;min-height:0;background:var(--paper);border-right:1px solid var(--rule)}
+.vcanvas canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab;touch-action:none}
+.vcanvas canvas.drag{cursor:grabbing}
+.vzoom{position:absolute;right:10px;bottom:10px;display:flex;gap:4px}
+.vzoom button{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:.85rem;width:34px;height:30px;border:1px solid var(--rule);border-radius:3px;background:var(--surface);color:var(--ink);cursor:pointer}
+.vzoom button.wide{width:auto;padding:0 10px}
+.vside{display:flex;flex-direction:column;gap:14px;padding:16px 18px;overflow-y:auto;min-height:0}
+.vbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.vbar .k{font-family:"IBM Plex Mono",monospace;font-size:1.05rem;font-weight:600;min-width:5.5em;text-align:center}
+.stabs{display:flex;flex-wrap:wrap;gap:4px}
+.stabs button{display:inline-flex;align-items:center;gap:6px}
+.stabs button.on{border-color:var(--ink);font-weight:600}
+.stabs button:disabled{opacity:.4;cursor:default}
+.big{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-weight:600;font-size:1.5rem;letter-spacing:-.02em}
+.vstat{display:flex;flex-direction:column;gap:4px;font-size:.92rem}
+.vstat .mono{font-size:.86rem}
+.vparts{display:flex;flex-direction:column;gap:5px;font-size:.86rem}
+.vparts div{display:flex;gap:8px;align-items:baseline}
+.vparts .sw{transform:translateY(1px)}
+.vparts b{font-family:"IBM Plex Mono",monospace;font-weight:600;min-width:4.2em;text-align:right}
+.vclose{position:absolute;top:8px;left:8px;font:inherit;font-size:1.1rem;width:32px;height:32px;border:1px solid var(--rule);border-radius:3px;background:var(--surface);color:var(--ink);cursor:pointer;z-index:2}
+.small{font-size:.84rem;color:var(--muted)}
+@media (max-width:760px){
+  .vgrid{grid-template-columns:1fr;grid-template-rows:minmax(0,58%) minmax(0,42%)}
+  .vcanvas{border-right:none;border-bottom:1px solid var(--rule)}
+  .wrap{padding:28px 16px 64px}
+  .tip canvas{width:120px;height:120px}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="brand">Square Packing Atlas</span>
+  <nav><a href="../index.html">Overview</a><a href="../explore.html">Explore</a><a href="../compare.html">Compare</a><a href="../bounds.html">Bounds</a><a href="../leaderboard.html">Leaderboard</a><a href="../proofs.html" class="here">Proofs &amp; results</a><a href="../problems.html">Open problems</a><a href="../sources.html">Sources</a></nav>
+</div>
+<div class="subnav"><span class="lbl">Results</span><a href="../s12/">s(11), s(12)</a><a href="../s13/">s(13)</a><a href="../s21/">s(21)</a><a href="../s32/">s(32)</a><a href="../s45/">s(45)</a><a href="../s60/">s(60)</a><a href="../k2m3/">s(k²−3)</a><a href="../k2m4/">s(k²−4)</a><a href="./" class="here">c*(k)</a></div>
+<div class="wrap">
+<header>
+  <div class="tabs"><a href="./">Write-up</a><a href="packings.html" class="here">Packings</a></div>
+  <span class="eyebrow">c*(k) · the packings, row by row</span>
+  <h1>Packings Row by Row</h1>
+  <p class="lede">Row <i>k</i> holds every count <i>n</i> from (<i>k</i> − 1)² + 1 to <i>k</i>², right-aligned, so the column
+  counted from the right is the deficit <span class="mono">c = k² − n</span>. Each Lean-checked construction gives one packing
+  per row: <span class="mono">k² − c</span> squares in a square of side less than <i>k</i>. Its cell shows that packing in
+  miniature, and every cell to its left follows by deleting squares. Hover a cell to see it larger; click to open the packing,
+  then step to the next one in its series.</p>
+</header>
+
+<div class="controls">
+  <label>rows up to <i>k</i> = <span class="mono" id="Kv">48</span> <input id="K" type="range" min="20" max="120" step="1" value="48"></label>
+  <label><input type="checkbox" id="s-fang" checked><span class="sw" style="background:var(--s-fang)"></span>Fang</label>
+  <label><input type="checkbox" id="s-ryu" checked><span class="sw" style="background:var(--s-ryu)"></span>Ryu 8√</label>
+  <label><input type="checkbox" id="s-layers" checked><span class="sw" style="background:var(--s-layers)"></span>filled L-shape</label>
+  <label><input type="checkbox" id="s-known" checked><span class="sw" style="border:2px solid var(--ink)"></span>best known packing</label>
+</div>
+<div class="legend" id="legend">
+  <span><i style="background:var(--green-soft)"></i>side <em>k</em> is needed (proved)</span>
+  <span><i style="background:var(--open)"></i>open</span>
+  <span><i class="hatch"></i>packed below side <em>k</em> only by a search record</span>
+  <span><i style="background:color-mix(in srgb,var(--s-layers) 30%,var(--surface))"></i>follows from a construction (tint: the best one in that row)</span>
+  <span><i class="ring"></i>the best known packing (any method)</span>
+</div>
+<div class="tri" id="tri"><canvas id="cv" aria-label="Triangle of grid sizes k and deficits c, coloured by which construction packs k squared minus c unit squares in side less than k"></canvas><canvas id="over"></canvas></div>
+<p class="hint" id="note">Loading Fang's pieces…</p>
+<div class="tip" id="tip"></div>
+
+<div class="cards">
+  <div class="card">
+    <h3><span class="sw" style="background:var(--s-fang)"></span>Fang's gluing</h3>
+    <p class="stmt">k² − k + 1 + p + 2q in side &lt; k, k ≥ 15, 16p + 21q ≤ k − 15</p>
+    <p>Kevin Fang's theorem, after Arslanov, Mustafin and Shangitbayev: a base piece of side 15 to 30, then 17 × 16 and
+    22 × 21 rectangles (257 and 443 squares) glued on, each with aligned blocks. Linear: about <span class="mono">k − 1 − 2(k − 15)/21</span>.
+    Best here for 15 ≤ k ≤ 39. Lean: <code>FangFinal.theorem2</code>.</p>
+    <button data-open="fang" data-k="40">open k = 40</button>
+  </div>
+  <div class="card">
+    <h3><span class="sw" style="background:var(--s-ryu)"></span>Ryu's L-shape</h3>
+    <p class="stmt">c*(k) ≤ 8⌈√(k − 4)⌉ − 1, k ≥ 6</p>
+    <p>Sungjoon Ryu's Theorem 1.4: an axis grid of side k − b and two bands of rows of b squares, tilted just past
+    2 arctan(1/b), so each row is a little narrower than b. The band ends are left empty. Lean: <code>RyuBound.packs_sub_8sqrt</code>.</p>
+    <button data-open="ryu" data-k="40">open k = 40</button>
+  </div>
+  <div class="card">
+    <h3><span class="sw" style="background:var(--s-layers)"></span>The filled L-shape</h3>
+    <p class="stmt">c*(k) ≤ 4⌈√(2k − 7)⌉ − 1, k ≥ 7</p>
+    <p>Ryu's L-shape with b = ⌈√(2k − 7)⌉ and axis squares in the four band ends (green in the viewer): 2b of them in all.
+    Best here from k = 40 to about 7.4 · 10⁵. As far as we know a new bound. Lean: <code>RyuLayers.packs_sub_4sqrt2_layers</code>.</p>
+    <button data-open="layers" data-k="40">open k = 40</button>
+  </div>
+</div>
+
+<div class="notes">
+  <h2>Reading the triangle</h2>
+  <ul>
+    <li>A construction's cell is the packing its theorem gives: in row <i>k</i>, column <span class="mono">c</span>, it packs
+    <span class="mono">k² − c</span> squares in side &lt; <i>k</i>, so <span class="mono">c*(k) ≤ c − 1</span>. The cells to its
+    left are the same packing with squares deleted.</li>
+    <li>Green cells are where side <i>k</i> is proved necessary: the grid families <span class="mono">s(k² − c) = k</span> for
+    <span class="mono">c ≤ 4</span> (for <span class="mono">c = 3</span> from <i>k</i> = 6, <span class="mono">c = 4</span> from <i>k</i> = 5),
+    and every <i>n</i> ≤ 324 whose lower bound has reached <i>k</i> (some of those proofs are from 2026 and unrefereed).
+    Open cells are where neither a packing below side <i>k</i> nor such a proof is known.</li>
+    <li>The ring is the best known packing below side <i>k</i> by any method, from the jlevy/squares register and the
+    packings reported on its issues (some not yet accepted there), up to <i>k</i> = 40. Those are search results and are not
+    drawn here. Beyond <i>k</i> = 40 the constructions are all that is known.</li>
+    <li>Drawings are floating point. The exact statements are the Lean theorems; <code>search/ryu/explorer_check.mjs</code>
+    re-checks every drawing on this page (count equal to the theorem's, side &lt; <i>k</i>, no overlaps) for <i>k</i> ≤ 400.</li>
+    <li>Not drawn: the staircase bound <span class="mono">c*(k) &lt; 18.9 k<sup>2/5</sup> + 35.7 k<sup>1/5</sup> + 122</span>,
+    which starts at <i>k</i> = 3 · 10⁵ (see the <a href="./">write-up</a>).</li>
+  </ul>
+</div>
+</div>
+
+<dialog id="viewer" aria-label="Packing viewer">
+  <div class="vgrid">
+    <div class="vcanvas"><button class="vclose" id="vclose" aria-label="Close">×</button><canvas id="vcv"></canvas>
+      <div class="vzoom"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button><button id="zfit" class="wide">fit</button><button id="zcorner" class="wide" title="zoom to where the two bands' ends meet">band ends</button></div></div>
+    <div class="vside">
+      <div class="stabs" id="stabs"></div>
+      <div class="vbar"><button id="prev" aria-label="Previous k">← k − 1</button><span class="k" id="vk"></span><button id="next" aria-label="Next k">k + 1 →</button></div>
+      <div class="vstat" id="vstat"></div>
+      <div class="vparts" id="vparts"></div>
+      <p class="small" id="vnote"></p>
+      <p class="small">Drag to pan, scroll or +/− to zoom; ←/→ step <i>k</i>, Esc closes.</p>
+    </div>
+  </div>
+</dialog>
+
+<script src="constructions.js"></script>
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const SER = ['fang', 'ryu', 'layers'];
+const NAME = { fang: 'Fang', ryu: 'Ryu 8√', layers: 'filled L-shape' };
+const FULL = { fang: "Fang's gluing (Theorem 2)", ryu: "Ryu's L-shape (Theorem 1.4)", layers: 'The filled L-shape' };
+const LEAN = { fang: ['FangFinal.theorem2', 'FangFinal.lean'], ryu: ['RyuBound.packs_sub_8sqrt', 'RyuBound.lean'], layers: ['RyuLayers.packs_sub_4sqrt2_layers', 'RyuLayers.lean'] };
+const REPO = 'https://github.com/evand/square-packing/blob/main/lean/Sqpack/';
+const KMAXV = 300;   // the viewer steps up to here
+const state = { K: 48, on: { fang: true, ryu: true, layers: true, known: true } };
+let KNOWN = {}, LB = {}, piecesOK = false;
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let C = {};
+function readColours() {
+  C = {};
+  for (const n of ['accent', 'paper', 'surface', 'ink', 'muted', 'rule', 'open', 'known', 'axis', 'axis-line', 'green-soft', 'gold', 's-fang', 's-ryu', 's-layers', 's-end', 's-r257', 's-r443']) C[n] = css('--' + n);
+}
+// colour-mix in JS: hex a over hex b, fraction f of a
+function mix(a, b, f) {
+  const h = x => { x = x.replace('#', ''); if (x.length === 3) x = x.split('').map(c => c + c).join(''); return [0, 2, 4].map(i => parseInt(x.slice(i, i + 2), 16)); };
+  const A = h(a), B = h(b);
+  return '#' + A.map((v, i) => Math.round(v * f + B[i] * (1 - f)).toString(16).padStart(2, '0')).join('');
+}
+
+/* ------------------------------------------------------------ packings, cached */
+const cache = new Map();
+function get(s, k) {
+  const key = s + ':' + k;
+  if (!cache.has(key)) { const S = K2C.SERIES[s]; cache.set(key, k >= S.kmin && (s !== 'fang' || piecesOK) ? S.build(k) : null); }
+  return cache.get(key);
+}
+const thr = (s, k) => (k >= K2C.SERIES[s].kmin && (s !== 'fang' || piecesOK)) ? K2C.SERIES[s].bound(k) : Infinity;
+
+/* ------------------------------------------------------------ drawing one packing */
+function groupColour(g, series) {
+  return { grid: C.axis, block: C.axis, band: C['s-' + series] || C['s-ryu'], end: C['s-end'], base: C['s-fang'], R257: C['s-r257'], R443: C['s-r443'] }[g] || C.muted;
+}
+// Draw P into ctx: the container [0, side]^2 maps to the square (x0, y0, size) with y up.
+function drawPacking(ctx, P, x0, y0, size, view) {
+  const v = view || { cx: P.side / 2, cy: P.side / 2, scale: size / P.side };
+  const sc = v.scale, X = x => x0 + size / 2 + (x - v.cx) * sc, Y = y => y0 + size / 2 - (y - v.cy) * sc;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(x0, y0, size, size); ctx.clip();
+  ctx.fillStyle = C.surface; ctx.fillRect(X(0), Y(P.side), P.side * sc, P.side * sc);
+  const fine = sc >= 6, gap = fine ? Math.min(0.07, 1.2 / sc) : 0;
+  // blocks: one rectangle each, grid lines when they are visible
+  for (const B of P.blocks) {
+    ctx.fillStyle = groupColour(B.g, P.series);
+    ctx.fillRect(X(B.x), Y(B.y + B.h), B.w * sc, B.h * sc);
+    if (fine) {
+      ctx.strokeStyle = C.surface; ctx.lineWidth = Math.max(1, gap * sc * 2);
+      ctx.beginPath();
+      const xa = Math.max(B.x, v.cx - size / 2 / sc - 1), xb = Math.min(B.x + B.w, v.cx + size / 2 / sc + 1);
+      const ya = Math.max(B.y, v.cy - size / 2 / sc - 1), yb = Math.min(B.y + B.h, v.cy + size / 2 / sc + 1);
+      for (let i = Math.ceil(xa - B.x); B.x + i <= xb; i++) { ctx.moveTo(X(B.x + i), Y(B.y)); ctx.lineTo(X(B.x + i), Y(B.y + B.h)); }
+      for (let j = Math.ceil(ya - B.y); B.y + j <= yb; j++) { ctx.moveTo(X(B.x), Y(B.y + j)); ctx.lineTo(X(B.x + B.w), Y(B.y + j)); }
+      ctx.stroke();
+    }
+  }
+  // single squares, batched by colour
+  const h = 0.5 - gap, lo = v.cx - size / 2 / sc - 1, hi = v.cx + size / 2 / sc + 1, lo2 = v.cy - size / 2 / sc - 1, hi2 = v.cy + size / 2 / sc + 1;
+  const byCol = new Map();
+  for (const q of P.sq) {
+    if (q[0] < lo || q[0] > hi || q[1] < lo2 || q[1] > hi2) continue;
+    let col = groupColour(q[4], P.series);
+    if ((q[4] === 'base' || q[4] === 'R257' || q[4] === 'R443') && Math.abs(q[3]) < 1e-12) col = mix(col, C.surface, 0.42);   // axis squares inside a piece: lighter
+    (byCol.get(col) || byCol.set(col, []).get(col)).push(q);
+  }
+  for (const [col, L] of byCol) {
+    ctx.fillStyle = col; ctx.beginPath();
+    for (const [x, y, c, s] of L) {
+      const ax = c * h, ay = s * h, bx = -s * h, by = c * h;
+      ctx.moveTo(X(x + ax + bx), Y(y + ay + by)); ctx.lineTo(X(x - ax + bx), Y(y - ay + by));
+      ctx.lineTo(X(x - ax - bx), Y(y - ay - by)); ctx.lineTo(X(x + ax - bx), Y(y + ay - by)); ctx.closePath();
+    }
+    ctx.fill();
+  }
+  // the container and the k x k square it beats
+  if (view) {
+    ctx.lineWidth = 1; ctx.setLineDash([5, 4]); ctx.strokeStyle = C.muted;
+    ctx.strokeRect(X(0), Y(P.k), P.k * sc, P.k * sc); ctx.setLineDash([]);
+  }
+  ctx.strokeStyle = C.ink; ctx.lineWidth = view ? 1.5 : Math.max(0.5, Math.min(1, size / 40));
+  ctx.strokeRect(X(0), Y(P.side), P.side * sc, P.side * sc);
+  ctx.restore();
+}
+
+/* ------------------------------------------------------------ the triangle */
+const cv = $('cv'), over = $('over');
+let G = null;   // geometry of the current layout
+function cellState(k, c) {
+  // what is known about n = k^2 - c in side < k
+  const n = k * k - c;
+  const th = SER.filter(s => state.on[s]).map(s => [s, thr(s, k)]).filter(x => x[1] < Infinity).sort((a, b) => a[1] - b[1]);
+  const best = th.length ? th[0] : null;
+  const kn = KNOWN[k] && KNOWN[k].c;
+  const proved = c === 0 || c <= 2 || (c === 3 && k >= 6) || (c === 4 && k >= 5) || (LB[n] != null && LB[n] >= k - 1e-9);
+  const thumb = th.filter(x => x[1] === c).map(x => x[0]);
+  let kind = 'open';
+  if (best && c >= best[1]) kind = 'cons';
+  else if (kn != null && c >= kn) kind = 'known';
+  else if (proved) kind = 'proved';
+  return { k, c, n, kind, best, th, thumb, kn };
+}
+function layout() {
+  const W = $('tri').clientWidth, K = state.K, cols = 2 * K - 1, rows = K - 1;
+  const ml = W < 520 ? 22 : 30, mt = 18;
+  const cs = Math.max(2, Math.floor((W - ml - 4) / cols));
+  const width = ml + cols * cs + 2, height = mt + rows * cs + 2;
+  const right = width - 1;
+  G = { K, cs, ml, mt, width, height, right, x: c => right - (c + 1) * cs, y: k => mt + (k - 2) * cs };
+}
+let drawToken = 0;
+function drawTriangle() {
+  layout();
+  const dpr = window.devicePixelRatio || 1;
+  for (const el of [cv, over]) { el.width = Math.round(G.width * dpr); el.height = Math.round(G.height * dpr); el.style.width = G.width + 'px'; el.style.height = G.height + 'px'; }
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, G.width, G.height);
+  const cs = G.cs, gap = cs >= 7 ? 1 : 0;
+  // hatch pattern for "search records only"
+  const pc = document.createElement('canvas'); pc.width = pc.height = 6; const px = pc.getContext('2d');
+  px.fillStyle = C.open; px.fillRect(0, 0, 6, 6); px.strokeStyle = C.known; px.lineWidth = 2; px.beginPath(); px.moveTo(-1, 7); px.lineTo(7, -1); px.stroke();
+  const hatch = ctx.createPattern(pc, 'repeat');
+  const thumbs = [];
+  for (let k = 2; k <= G.K; k++) {
+    for (let c = 0; c <= 2 * k - 2; c++) {
+      const S = cellState(k, c), x = G.x(c), y = G.y(k);
+      if (S.kind === 'cons') ctx.fillStyle = mix(C['s-' + S.best[0]], C.surface, S.thumb.length ? 1 : 0.3);
+      else ctx.fillStyle = S.kind === 'known' ? hatch : S.kind === 'proved' ? C['green-soft'] : C.open;
+      ctx.fillRect(x, y, cs - gap, cs - gap);
+      if (S.thumb.length) thumbs.push(S);
+    }
+  }
+  // labels
+  ctx.fillStyle = C.muted; ctx.font = `${Math.min(11, Math.max(8, cs))}px "IBM Plex Mono", monospace`;
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  const step = cs >= 14 ? 2 : cs >= 7 ? 5 : 10;
+  for (let k = 2; k <= G.K; k++) if (k % step === 0) ctx.fillText(k, G.ml - 4 + (G.x(2 * k - 2) - G.ml), G.y(k) + cs / 2);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  const cstep = cs >= 10 ? 5 : cs >= 5 ? 10 : 20;
+  for (let c = 0; c <= 2 * G.K - 2; c += cstep) ctx.fillText(c, G.x(c) + cs / 2, G.mt - 5);
+  // best known rings
+  if (state.on.known) {
+    ctx.strokeStyle = C.ink; ctx.lineWidth = cs >= 8 ? 1.5 : 1;
+    for (const [k, r] of Object.entries(KNOWN)) if (+k <= G.K && +k >= 2) ctx.strokeRect(G.x(r.c) + 0.75, G.y(+k) + 0.75, cs - gap - 1.5, cs - gap - 1.5);
+  }
+  // series threshold lines, faint, so the curves read when cells are tiny
+  for (const s of SER) if (state.on[s]) {
+    ctx.strokeStyle = C['s-' + s]; ctx.globalAlpha = 0.55; ctx.lineWidth = 1; ctx.beginPath(); let first = true;
+    for (let k = K2C.SERIES[s].kmin; k <= G.K; k++) { const t = thr(s, k); if (t === Infinity || t > 2 * k - 2) continue; const X = G.x(t) + cs / 2, Y = G.y(k) + cs / 2; if (first) { ctx.moveTo(X, Y); first = false; } else ctx.lineTo(X, Y); }
+    ctx.stroke(); ctx.globalAlpha = 1;
+  }
+  // thumbnails: progressively, a few rows per frame
+  const token = ++drawToken;
+  let i = 0;
+  const pump = () => {
+    if (token !== drawToken) return;
+    const t0 = performance.now();
+    while (i < thumbs.length && performance.now() - t0 < 12) {
+      const S = thumbs[i++], P = get(S.thumb[0], S.k);
+      if (P) drawPacking(ctx, P, G.x(S.c), G.y(S.k), cs - gap);
+      if (S.thumb.length > 1) {   // a tie: a corner flag in the other series' colour
+        ctx.fillStyle = C['s-' + S.thumb[1]]; ctx.beginPath(); const x = G.x(S.c), y = G.y(S.k), z = Math.max(3, cs * 0.4);
+        ctx.moveTo(x + cs - gap, y); ctx.lineTo(x + cs - gap - z, y); ctx.lineTo(x + cs - gap, y + z); ctx.fill();
+      }
+    }
+    if (i < thumbs.length) requestAnimationFrame(pump);
+  };
+  requestAnimationFrame(pump);
+}
+function hit(e) {
+  const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  if (!G) return null;
+  const k = Math.floor((y - G.mt) / G.cs) + 2, c = Math.floor((G.right - x) / G.cs);
+  if (k < 2 || k > G.K || c < 0 || c > 2 * k - 2) return null;
+  return cellState(k, c);
+}
+function highlight(S) {
+  const ctx = over.getContext('2d'), dpr = window.devicePixelRatio || 1;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, G.width, G.height);
+  if (!S) return;
+  ctx.strokeStyle = C.accent || C.ink; ctx.lineWidth = 2;
+  ctx.strokeRect(G.x(S.c) - 1, G.y(S.k) - 1, G.cs + 1, G.cs + 1);
+  ctx.globalAlpha = 0.09; ctx.fillStyle = C.ink;
+  ctx.fillRect(G.ml, G.y(S.k), G.width - G.ml, G.cs); ctx.globalAlpha = 1;
+}
+const fmt = x => x.toLocaleString('en-US');
+function tipText(S) {
+  const L = [`k = ${S.k} · c = ${S.c} · n = ${fmt(S.n)}`];
+  if (S.kind === 'cons') {
+    const s = S.thumb[0] || S.best[0], P = S.thumb.length ? get(s, S.k) : null;
+    if (P) L.push(`${NAME[s]}: ${fmt(P.n)} squares in side ${P.side.toFixed(6)} < ${S.k}`, `so c*(${S.k}) ≤ ${S.c - 1}`);
+    else L.push(`delete ${S.c - S.best[1]} square${S.c - S.best[1] === 1 ? '' : 's'} from the ${NAME[S.best[0]]} packing (c = ${S.best[1]})`);
+    if (S.thumb.length > 1) L.push(`(tie: ${S.thumb.map(t => NAME[t]).join(' and ')})`);
+  } else if (S.kind === 'known') L.push('packed below side k only by a search record');
+  else if (S.kind === 'proved') L.push(`side ${S.k} is needed: s(${S.n}) = ${S.k}`);
+  else L.push(`open: no packing below side ${S.k}, no proof that ${S.k} is needed`);
+  if (S.kn != null) { const r = KNOWN[S.k]; L.push(`best known: c = ${r.c} (${r.finder.replace(/ \(.*\)$/, '')}${r.registered ? ', register' : ', ' + r.source.replace('pending:', 'jlevy/squares') + ', reported'})`); }
+  const cons = S.th.map(([s, t]) => `${NAME[s]} c = ${t}`).join(' · ');
+  if (cons) L.push(cons);
+  return L.join('\n');
+}
+let tipFor = null;
+function showTip(e, S) {
+  const T = $('tip');
+  if (!S) { T.style.display = 'none'; tipFor = null; return; }
+  const key = S.k + ':' + S.c;
+  if (tipFor !== key) {
+    tipFor = key; T.innerHTML = '';
+    const s = S.thumb[0];
+    if (s) {
+      const P = get(s, S.k), c = document.createElement('canvas'), z = window.matchMedia('(max-width:760px)').matches ? 120 : 180, dpr = window.devicePixelRatio || 1;
+      c.width = c.height = z * dpr; const x = c.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); drawPacking(x, P, 0, 0, z); T.appendChild(c);
+    }
+    T.appendChild(document.createTextNode(tipText(S)));
+  }
+  T.style.display = 'block';
+  const r = T.getBoundingClientRect();
+  let x = e.clientX + 16, y = e.clientY + 16;
+  if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 16;
+  if (y + r.height > innerHeight - 8) y = Math.max(8, e.clientY - r.height - 16);
+  T.style.left = Math.max(8, x) + 'px'; T.style.top = y + 'px';
+}
+cv.addEventListener('mousemove', e => { const S = hit(e); highlight(S); showTip(e, S); });
+cv.addEventListener('mouseleave', () => { highlight(null); showTip(null, null); });
+cv.addEventListener('click', e => {
+  const S = hit(e); if (!S) return;
+  showTip(null, null);
+  if (S.kind === 'cons') openViewer(S.thumb[0] || S.best[0], S.k);
+  else if (S.kn != null && S.kind === 'known') {
+    const r = KNOWN[S.k];
+    if (r.n <= 324) location.href = `../explore.html?n=${r.n}`;
+    else { const m = /#(\d+)/.exec(r.source); if (m) window.open(`https://github.com/jlevy/squares/issues/${m[1]}`, '_blank', 'noopener'); }
+  }
+});
+
+/* ------------------------------------------------------------ the viewer */
+const V = { s: 'layers', k: 40, P: null, view: null, mode: 'fit' };   // mode: fit | band (presets, re-applied per k) | free
+const vcv = $('vcv'), dlg = $('viewer');
+function vsize() { const r = vcv.getBoundingClientRect(); return [r.width, r.height]; }
+function fit() { const [w, h] = vsize(), P = V.P; V.view = { cx: P.k / 2, cy: P.k / 2, scale: Math.min(w, h) * 0.94 / P.k, k: P.k }; V.mode = 'fit'; }
+// the corner where the top band's far end meets the right band's top end: both ends with their axis layers
+function bandView() { const P = V.P, b = P.params.b, m = P.params.m, [w, h] = vsize(); V.view = { cx: m, cy: P.side - b * 0.6, scale: Math.min(w, h) / (b * 2.4), k: P.k }; V.mode = 'band'; }
+function vdraw() {
+  const [w, h] = vsize(), dpr = window.devicePixelRatio || 1;
+  vcv.width = Math.round(w * dpr); vcv.height = Math.round(h * dpr);
+  const ctx = vcv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = C.paper; ctx.fillRect(0, 0, w, h);
+  const z = Math.max(w, h);
+  // drawPacking maps a square window; centre it on the canvas
+  ctx.save(); ctx.translate((w - z) / 2, (h - z) / 2);
+  drawPacking(ctx, V.P, 0, 0, z, V.view);
+  ctx.restore();
+}
+function vset(s, k, keepView) {
+  const S = K2C.SERIES[s];
+  k = Math.max(S.kmin, Math.min(KMAXV, k));
+  V.s = s; V.k = k; V.P = get(s, k);
+  if (!V.P) return;
+  if (!keepView || !V.view || V.mode === 'fit' || (V.mode === 'band' && s === 'fang')) fit();
+  else if (V.mode === 'band') bandView();
+  else { const r = V.view.k / k; V.view = { cx: V.view.cx / r, cy: V.view.cy / r, scale: V.view.scale * r, k }; }   // free: same place and zoom, relative to k
+  const P = V.P, c = k * k - P.n;
+  $('vk').textContent = `k = ${k}`;
+  $('prev').disabled = k <= S.kmin; $('next').disabled = k >= KMAXV;
+  $('stabs').innerHTML = '';
+  for (const t of SER) {
+    const b = document.createElement('button'); b.className = t === s ? 'on' : '';
+    b.innerHTML = `<span class="sw" style="background:var(--s-${t})"></span>${NAME[t]}`;
+    b.disabled = k < K2C.SERIES[t].kmin || (t === 'fang' && !piecesOK);
+    b.onclick = () => { V.mode = V.mode === 'band' && t !== 'fang' ? 'band' : 'fit'; vset(t, V.k, true); }; $('stabs').appendChild(b);
+  }
+  const others = SER.filter(t => t !== s && thr(t, k) < Infinity).map(t => `${NAME[t]}: c*(${k}) ≤ ${thr(t, k) - 1}`).join(' · ');
+  const kn = KNOWN[k] ? `best known (search): c*(${k}) ≤ ${KNOWN[k].c - 1}` : '';
+  $('vstat').innerHTML = `<h3>${FULL[s]}</h3>
+    <div class="big">${fmt(P.n)}</div>
+    <div>unit squares in side <span class="mono">${P.side.toFixed(9)}</span> &lt; ${k}</div>
+    <div>so <span class="mono">c*(${k}) ≤ ${c - 1}</span> (c = ${c})</div>
+    <div class="small">${[others, kn].filter(Boolean).join('<br>')}</div>
+    <div class="small">Lean: <a href="${REPO}${LEAN[s][1]}" target="_blank" rel="noopener"><code>${LEAN[s][0]}</code></a></div>`;
+  $('vparts').innerHTML = P.parts.map(([g, n, txt]) => `<div><span class="sw" style="background:${groupColour(g, s)}"></span><b>${fmt(n)}</b><span>${txt}</span></div>`).join('');
+  const pr = P.params;
+  $('vnote').innerHTML = s === 'fang'
+    ? `p = ${pr.p}, q = ${pr.q}; base side r = ${pr.r}. Gluing order, inside out: ${pr.tree.join(' → ')}.${pr.r === 18 ? ' (Fang\'s 308-square piece, one square left out: the theorem uses 307.)' : ''} Lighter squares inside a piece are its axis-parallel ones. Squeeze d = ${pr.d.toExponential(3)}.`
+    : `b = ${pr.b}, grid side m = k − b = ${pr.m}; tilt θ = ${(pr.theta * 180 / Math.PI).toFixed(4)}° (tan θ/2 = 1/b + ${(pr.t - 1 / pr.b).toExponential(3)}); rows ${pr.rows.join(' + ')}.` + (s === 'layers' ? ' The green squares fill the triangles left at the band ends.' : ' The band ends are empty.');
+  $('zcorner').style.display = s === 'fang' ? 'none' : '';
+  history.replaceState(null, '', `#${s}-${k}`);
+  vdraw();
+}
+function openViewer(s, k) {
+  if (!dlg.open) dlg.showModal();
+  V.view = null; vset(s, k, false);
+}
+$('prev').onclick = () => vset(V.s, V.k - 1, true);
+$('next').onclick = () => vset(V.s, V.k + 1, true);
+$('vclose').onclick = () => dlg.close();
+dlg.addEventListener('close', () => history.replaceState(null, '', location.pathname + location.search));
+dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+dlg.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') { e.preventDefault(); vset(V.s, V.k + 1, true); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); vset(V.s, V.k - 1, true); }
+});
+function zoomAt(f, mx, my) {
+  const [w, h] = vsize(), z = Math.max(w, h), v = V.view;
+  const ux = v.cx + (mx - w / 2) / v.scale, uy = v.cy - (my - h / 2) / v.scale;
+  v.scale = Math.max(0.5, Math.min(400, v.scale * f)); V.mode = 'free';
+  v.cx = ux - (mx - w / 2) / v.scale; v.cy = uy + (my - h / 2) / v.scale;
+  vdraw();
+}
+vcv.addEventListener('wheel', e => { e.preventDefault(); const r = vcv.getBoundingClientRect(); zoomAt(Math.exp(-e.deltaY * 0.0015), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+let drag = null; const ptrs = new Map();
+vcv.addEventListener('pointerdown', e => { vcv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]); drag = { x: e.clientX, y: e.clientY, cx: V.view.cx, cy: V.view.cy }; vcv.classList.add('drag'); });
+vcv.addEventListener('pointermove', e => {
+  if (!ptrs.has(e.pointerId)) return;
+  const prev = ptrs.get(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+  if (ptrs.size === 2) {   // pinch
+    const [a, b] = [...ptrs.values()], o = [...ptrs.entries()].find(([id]) => id !== e.pointerId)[1];
+    const d1 = Math.hypot(prev[0] - o[0], prev[1] - o[1]), d2 = Math.hypot(a[0] - b[0], a[1] - b[1]), r = vcv.getBoundingClientRect();
+    if (d1 > 0) zoomAt(d2 / d1, (a[0] + b[0]) / 2 - r.left, (a[1] + b[1]) / 2 - r.top);
+    return;
+  }
+  if (!drag) return;
+  V.view.cx = drag.cx - (e.clientX - drag.x) / V.view.scale; V.view.cy = drag.cy + (e.clientY - drag.y) / V.view.scale; V.mode = 'free'; vdraw();
+});
+const up = e => { ptrs.delete(e.pointerId); if (!ptrs.size) { drag = null; vcv.classList.remove('drag'); } else { const [p] = ptrs.values(); drag = { x: p[0], y: p[1], cx: V.view.cx, cy: V.view.cy }; } };
+vcv.addEventListener('pointerup', up); vcv.addEventListener('pointercancel', up);
+$('zin').onclick = () => { const [w, h] = vsize(); zoomAt(1.6, w / 2, h / 2); };
+$('zout').onclick = () => { const [w, h] = vsize(); zoomAt(1 / 1.6, w / 2, h / 2); };
+$('zfit').onclick = () => { fit(); vdraw(); };
+$('zcorner').onclick = () => { bandView(); vdraw(); };
+new ResizeObserver(() => { if (dlg.open && V.P) vdraw(); }).observe(vcv);
+
+/* ------------------------------------------------------------ controls, start */
+function readURL() {
+  const q = new URLSearchParams(location.search);
+  if (q.get('K')) state.K = Math.max(20, Math.min(120, +q.get('K') || 48));
+  else if (innerWidth < 600) state.K = 30;   // phones: fewer, larger cells
+  $('K').value = state.K; $('Kv').textContent = state.K;
+}
+$('K').oninput = () => { state.K = +$('K').value; $('Kv').textContent = state.K; history.replaceState(null, '', `?K=${state.K}${location.hash}`); drawTriangle(); };
+for (const s of [...SER, 'known']) $('s-' + s).onchange = () => { state.on[s] = $('s-' + s).checked; drawTriangle(); };
+for (const b of document.querySelectorAll('[data-open]')) b.onclick = () => openViewer(b.dataset.open, +b.dataset.k);
+let rT; new ResizeObserver(() => { clearTimeout(rT); rT = setTimeout(drawTriangle, 80); }).observe($('tri'));
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { readColours(); drawTriangle(); if (dlg.open) vdraw(); });
+
+async function main() {
+  readColours(); readURL();
+  const [pieces, known, lb] = await Promise.all([
+    fetch('data/fang-pieces.json').then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch('data/best-known.json').then(r => r.ok ? r.json() : {}).catch(() => ({})),
+    fetch('../data/lower_bounds.json').then(r => r.ok ? r.json() : {}).catch(() => ({})),
+  ]);
+  if (pieces) { K2C.setPieces(pieces); piecesOK = true; }
+  KNOWN = known;
+  for (const [n, b] of Object.entries(lb)) if (b && b.best && typeof b.best.value === 'number') LB[+n] = b.best.value;
+  $('note').textContent = piecesOK ? '' : "Fang's pieces did not load; his series is left out.";
+  $('note').style.display = piecesOK ? 'none' : '';
+  drawTriangle();
+  const m = /^#(fang|ryu|layers)-(\d+)$/.exec(location.hash);
+  if (m) openViewer(m[1], +m[2]);
+}
+window.K2Cdebug = { geom: () => G, state: () => ({ s: V.s, k: V.k, open: dlg.open, view: V.view }) };   // for scripted tests
+main();
+})();
+</script>
+</body>
+</html>

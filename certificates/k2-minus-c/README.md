@@ -6,7 +6,8 @@ side less than `k`.  Every theorem below is of that form, `∃ s < k, Packs (k *
 definition of `lean/Sqpack/Spec.lean` (closed unit squares, any angles, in `[0, s]²`, pairwise disjoint
 interiors), and is checked by the Lean kernel with the standard axioms only (propext, Classical.choice,
 Quot.sound).  Re-check: `certificates/k2-minus-c/verify.sh` (a few minutes; `--fang` adds Fang's pieces, ~20 min).
-Write-up: [`docs/k2c.html`](../../docs/k2c.html).
+Write-up: [`site/www/k2c/index.html`](../../site/www/k2c/index.html) (served at `/k2c/`); every packing drawn, row by
+row, with a viewer: [`site/www/k2c/packings.html`](../../site/www/k2c/packings.html) (`/k2c/packings.html`).
 
 | bound | for | Lean (`lean/Sqpack/`) | mathematics |
 |---|---|---|---|
@@ -74,6 +75,11 @@ certificates: `certificates/fang-gluing/`.
 | `RyuStairEnd.lean` | the end cost: `lb_identity`, the six term bounds, `tilt_ok`, `end_bound` |
 | `RyuStairBound.lean` | the band facts, rows, the waste identity, `packs_stair`, the two closed forms |
 | `FangGlue.lean`, `FangTheorem.lean`, `FangFinal.lean`, `ExactCheckCut.lean`, `ExactRect.lean` | Fang's theorems |
+
+The drawings on the packings page come from `site/www/k2c/constructions.js`, which follows each Lean proof's layout
+(same parameters, same placement); `node search/ryu/explorer_check.mjs [KMAX]` re-checks them in floats (count equal to
+the theorem's, side < k, walls, no overlaps; all three series, k ≤ 400 in about a minute).  Its data:
+`search/ryu/explorer_data.py` (Fang's pieces as floats; best known packing per k from the store's frontier table).
 
 Numerical companions: `search/ryu/r1prime.py` (the axis-filled L-shape, exact rationals, pairwise check),
 `search/ryu/endcost.py` (axis vs staircase end cost), `search/ryu/staircase.py` (our staircase end: exact-floor end

@@ -1,0 +1,306 @@
+{
+"3": {
+"n": 5,
+"c": 4,
+"s": 2.70710678118654,
+"finder": "Frits Göbel",
+"source": "register",
+"registered": true
+},
+"4": {
+"n": 11,
+"c": 5,
+"s": 3.87708359002281,
+"finder": "Walter Trump",
+"source": "register",
+"registered": true
+},
+"5": {
+"n": 19,
+"c": 6,
+"s": 4.88561808316412,
+"finder": "Robert Wainwright",
+"source": "register",
+"registered": true
+},
+"6": {
+"n": 29,
+"c": 7,
+"s": 5.93383346267692,
+"finder": "Thomas Schadt",
+"source": "register",
+"registered": true
+},
+"7": {
+"n": 41,
+"c": 8,
+"s": 6.9266930944688,
+"finder": "Thomas Schadt",
+"source": "register",
+"registered": true
+},
+"8": {
+"n": 55,
+"c": 9,
+"s": 7.94577100750391,
+"finder": "Thomas Schadt",
+"source": "register",
+"registered": true
+},
+"9": {
+"n": 71,
+"c": 10,
+"s": 8.94407155757031,
+"finder": "Thomas Schadt",
+"source": "register",
+"registered": true
+},
+"10": {
+"n": 89,
+"c": 11,
+"s": 9.94974746830583,
+"finder": "Evert Stenlund",
+"source": "register",
+"registered": true
+},
+"11": {
+"n": 110,
+"c": 11,
+"s": 10.996783396631592,
+"finder": "Mishapolk",
+"source": "pending:#593",
+"registered": false
+},
+"12": {
+"n": 132,
+"c": 12,
+"s": 11.98568019884581,
+"finder": "Evan Daniel (evand)",
+"source": "pending:#489",
+"registered": false
+},
+"13": {
+"n": 156,
+"c": 13,
+"s": 12.979165853834276,
+"finder": "Mishapolk",
+"source": "pending:#593",
+"registered": false
+},
+"14": {
+"n": 182,
+"c": 14,
+"s": 13.97409071312144,
+"finder": "Mishapolk",
+"source": "pending:#593",
+"registered": false
+},
+"15": {
+"n": 211,
+"c": 14,
+"s": 14.993549626299421,
+"finder": "Daniil Ostashev",
+"source": "register",
+"registered": true
+},
+"16": {
+"n": 241,
+"c": 15,
+"s": 15.98711709515024,
+"finder": "Mishapolk",
+"source": "pending:#593",
+"registered": false
+},
+"17": {
+"n": 273,
+"c": 16,
+"s": 16.983925962650403,
+"finder": "Mishapolk",
+"source": "pending:#593",
+"registered": false
+},
+"18": {
+"n": 308,
+"c": 16,
+"s": 17.998269879526255,
+"finder": "Evan Daniel (evand)",
+"source": "pending:#489",
+"registered": false
+},
+"19": {
+"n": 344,
+"c": 17,
+"s": 18.99374187292,
+"finder": "Francisco Couzo (franciscouzo)",
+"source": "pending:#561",
+"registered": false
+},
+"20": {
+"n": 382,
+"c": 18,
+"s": 19.987621153966,
+"finder": "Francisco Couzo (franciscouzo)",
+"source": "pending:#670",
+"registered": false
+},
+"21": {
+"n": 422,
+"c": 19,
+"s": 20.984021832955,
+"finder": "Francisco Couzo (franciscouzo)",
+"source": "pending:#670",
+"registered": false
+},
+"22": {
+"n": 464,
+"c": 20,
+"s": 21.988813022694,
+"finder": "Joost de Winter (JoostdeWinter)",
+"source": "pending:#666",
+"registered": false
+},
+"23": {
+"n": 509,
+"c": 20,
+"s": 22.994328036438,
+"finder": "Joost de Winter (JoostdeWinter)",
+"source": "pending:#666",
+"registered": false
+},
+"24": {
+"n": 555,
+"c": 21,
+"s": 23.993653790591,
+"finder": "Joost de Winter (JoostdeWinter)",
+"source": "pending:#666",
+"registered": false
+},
+"25": {
+"n": 603,
+"c": 22,
+"s": 24.995268064197,
+"finder": "Joost de Winter (JoostdeWinter)",
+"source": "pending:#666",
+"registered": false
+},
+"26": {
+"n": 654,
+"c": 22,
+"s": 25.996103908965,
+"finder": "Joost de Winter (JoostdeWinter)",
+"source": "pending:#666",
+"registered": false
+},
+"27": {
+"n": 706,
+"c": 23,
+"s": 26.998712100405,
+"finder": "Joost de Winter (JoostdeWinter)",
+"source": "pending:#666",
+"registered": false
+},
+"28": {
+"n": 760,
+"c": 24,
+"s": 27.995949340329,
+"finder": "Joost de Winter (JoostdeWinter)",
+"source": "pending:#666",
+"registered": false
+},
+"29": {
+"n": 817,
+"c": 24,
+"s": 28.998352177961,
+"finder": "Francisco Couzo (franciscouzo)",
+"source": "pending:#672",
+"registered": false
+},
+"30": {
+"n": 875,
+"c": 25,
+"s": 29.998783733108,
+"finder": "Joost de Winter (JoostdeWinter)",
+"source": "pending:#666",
+"registered": false
+},
+"31": {
+"n": 935,
+"c": 26,
+"s": 30.995336946282,
+"finder": "Francisco Couzo (franciscouzo)",
+"source": "pending:#672",
+"registered": false
+},
+"32": {
+"n": 998,
+"c": 26,
+"s": 31.998349747355,
+"finder": "Joost de Winter (JoostdeWinter)",
+"source": "pending:#666",
+"registered": false
+},
+"33": {
+"n": 1061,
+"c": 28,
+"s": 32.996048342114,
+"finder": "Joost de Winter (JoostdeWinter)",
+"source": "pending:#666",
+"registered": false
+},
+"34": {
+"n": 1128,
+"c": 28,
+"s": 33.998294117981,
+"finder": "Joost de Winter (JoostdeWinter)",
+"source": "pending:#666",
+"registered": false
+},
+"35": {
+"n": 1196,
+"c": 29,
+"s": 34.998294118334,
+"finder": "Joost de Winter (JoostdeWinter)",
+"source": "pending:#666",
+"registered": false
+},
+"36": {
+"n": 1266,
+"c": 30,
+"s": 35.996046404219,
+"finder": "Joost de Winter (JoostdeWinter)",
+"source": "pending:#666",
+"registered": false
+},
+"37": {
+"n": 1339,
+"c": 30,
+"s": 36.997865207179,
+"finder": "Joost de Winter (JoostdeWinter)",
+"source": "pending:#666",
+"registered": false
+},
+"38": {
+"n": 1413,
+"c": 31,
+"s": 37.999463832123,
+"finder": "Joost de Winter (JoostdeWinter)",
+"source": "pending:#666",
+"registered": false
+},
+"39": {
+"n": 1489,
+"c": 32,
+"s": 38.997600184483,
+"finder": "Joost de Winter (JoostdeWinter)",
+"source": "pending:#666",
+"registered": false
+},
+"40": {
+"n": 1568,
+"c": 32,
+"s": 39.999336626159,
+"finder": "Joost de Winter (JoostdeWinter)",
+"source": "pending:#666",
+"registered": false
+}
+}

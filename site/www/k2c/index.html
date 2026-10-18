@@ -105,6 +105,9 @@ section>*{min-width:0}
 .fam .zone{fill:none;stroke:var(--gold);stroke-width:1.5;stroke-dasharray:6 5}
 .status{border-left:3px solid var(--gold);background:var(--gold-soft);padding:14px 18px;border-radius:3px;font-size:1.02rem;line-height:1.55}
 .status b{color:var(--gold)}
+.tabs{display:flex;gap:4px;font-family:"IBM Plex Mono",monospace;font-size:.78rem}
+.tabs a{padding:5px 12px;border:1px solid var(--rule);border-radius:999px;text-decoration:none;color:var(--muted);background:var(--surface)}
+.tabs a.here{color:var(--accent);border-color:var(--accent)}
 .sw{display:inline-block;width:18px;height:10px;vertical-align:-1px;margin-right:6px;border-radius:1px}
 </style>
 
@@ -127,6 +130,7 @@ td.new{font-weight:600;color:var(--accent)}
 <div class="subnav"><span class="lbl">Results</span><a href="../s12/">s(11), s(12)</a><a href="../s13/">s(13)</a><a href="../s21/">s(21)</a><a href="../s32/">s(32)</a><a href="../s45/">s(45)</a><a href="../s60/">s(60)</a><a href="../k2m3/">s(k²−3)</a><a href="../k2m4/">s(k²−4)</a><a href="./" class="here">c*(k)</a></div>
 <div class="wrap">
 <header>
+  <div class="tabs"><a href="./" class="here">Write-up</a><a href="packings.html">Packings</a></div>
   <span class="eyebrow">Discrete geometry · formal proof</span>
   <h1>Short of a Square</h1>
   <p class="lede">Remove <i>c</i> unit squares from a <span class="mono">k × k</span> grid. For small <i>c</i> the rest still
@@ -143,6 +147,7 @@ td.new{font-weight:600;color:var(--accent)}
     <span class="tag ok">standard axioms only</span>
     <span class="tag open">not peer reviewed</span>
     <a class="tag neutral" href="https://github.com/evand/square-packing/tree/main/certificates/k2-minus-c">Lean bundle on GitHub →</a>
+    <a class="tag neutral" href="packings.html">every packing, drawn →</a>
   </div>
 </header>
 
@@ -211,7 +216,7 @@ td.new{font-weight:600;color:var(--accent)}
     </svg>
     </div>
     <figcaption>Schematic (not to scale): the grid, the two bands of tilted rows, and the four end regions (gold).
-    The ends decide the constant.</figcaption>
+    The ends decide the constant. The actual packings, for every <i>k</i> up to 300: <a href="packings.html">Packings row by row</a>.</figcaption>
   </figure>
   <div class="grid2">
     <div class="card"><h3>Empty ends</h3><p>Each end wastes about <i>b</i>. Total ≈ <span class="mono">4b + 4k/b</span>,
