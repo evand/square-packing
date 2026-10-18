@@ -284,3 +284,10 @@ import Sqpack
 #print axioms UnitSquarePacking.Ryu.packs_sub_4sqrt2
 #print axioms UnitSquarePacking.Ryu.band_ends
 #print axioms UnitSquarePacking.Ryu.packs_sub_4sqrt2_layers
+#print axioms UnitSquarePacking.Ryu.staircase
+#print axioms UnitSquarePacking.Ryu.EndP.packs
+#print axioms UnitSquarePacking.Ryu.EndP.count
+#print axioms UnitSquarePacking.Ryu.end_bound
+#print axioms UnitSquarePacking.Ryu.packs_stair
+#print axioms UnitSquarePacking.Ryu.packs_stair_k25
+#print axioms UnitSquarePacking.Ryu.packs_ryu_thm12
