@@ -94,3 +94,23 @@ Simplification over Ryu: rows R₁ = k − 4, R₂ = k − b − 4 directly (no 
 t₀ = 1/b, tilt t = 1/b + 1/(D(6k + 4b)) with three one-variable perturbation bounds instead of his mean-value
 argument and M = 14kb² + 1.
 Next: the end fills (R1′, ~4√(2k)); `literature/waste-constructions-2026-10-17.md` §3.
+
+## Filled ends ("R1′") in Lean: c*(k) ≤ 4⌈√(2k − 7)⌉ + 5 (done 10-17)
+
+`lean/Sqpack/RyuBand.lean` (`unitSq_subset_half`, `disjoint_half`/`disjoint_half'`, `append_explicit`,
+`band_fill`, `lpacking_fill`) and `lean/Sqpack/RyuFill.lean`:
+`packs_sub_4sqrt2 : ∀ k ≥ 7, ∃ s < k, Packs (k·k − (4⌈√(2k−7)⌉ + 6)) s` and `packs_fill` (any b ≥ 2 with
+b + 4 ≤ k, 2k ≤ b² + 7: k² − 6b + 4(⌊b/2⌋ − 1)).  Standard axioms, no certificates.
+* Construction: Ryu's L-shape with b ≈ √(2k), L − 3 rows per band, and ⌊b/2⌋ − 1 axis squares under the first row
+  and over the last row of each band.  Both fill conditions are the one inequality nf ≤ bγ − cot θ (`fill_ok`).
+  Separation from the band by the half-planes V ≤ −σ² and V ≥ R − σ² of the row frame.
+* Found by the literature subagent (10-17, `literature/waste-constructions-2026-10-17.md` §3); our exact
+  implementation `search/ryu/r1prime.py` reproduces its counts (c = 24, 30, 32, 36, 40, 56, 80 at k = 20 … 200 with
+  all top layers) and its exact pairwise check passes at k = 30, 50.  The Lean theorem uses one top layer only.
+* Comparison (upper bounds on c*): new < Ryu's 8⌈√(k−4)⌉ − 1 for every 7 ≤ k ≤ 10⁶ except 7, 8, 12, 13;
+  new < Fang for every k ≥ 55 (and at 50).  k = 100: 61 vs Ryu 79, Fang 90; k = 10⁴: 573 vs 799.  Ryu's k^{2/5}
+  bound is better from k ≥ 1.6·10⁷, and his certificates at 10⁵, 10⁶, 10⁷.  Direct packings beat it at some small
+  k (de Winter at 40: 31).
+* Novelty: not checked against everything; Ryu's Remark 5.4 is a different small gain.  Before any claim: check
+  jlevy's asymptotic register and Ryu's repo for filled ends.
+* Next: all top layers (≈ 4√(2k), k = 100: 55), then staircase-style ends.

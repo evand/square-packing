@@ -133,15 +133,23 @@ lemma V_ctr {γ σ : ℝ} (hu : γ ^ 2 + σ ^ 2 = 1) (i j : ℕ) :
   simp only [V, ctr, Prod.fst_add, Prod.snd_add]
   linear_combination (↑j + 1 / 2) * hu
 
-/-- **One band** (Ryu, Lemmas 3.1–3.4): `R` rows of `b` squares at the angle `θ`. -/
-theorem band {θ : ℝ} (hγ : 0 < Real.cos θ) (hσ : 0 ≤ Real.sin θ) (R b : ℕ) :
-    PacksIn (R * b) (rect (b * Real.cos θ + Real.sin θ) ((R - 1) / Real.cos θ + b * Real.sin θ + Real.cos θ)) := by
+/-- The centres of a band of `R` rows of `b` squares, indexed by `Fin (R * b)`. -/
+noncomputable def bandCen (γ σ : ℝ) (R b : ℕ) (k : Fin (R * b)) : ℝ × ℝ :=
+  ctr γ σ (((finProdFinEquiv : Fin R × Fin b ≃ Fin (R * b)).symm k).2)
+    (((finProdFinEquiv : Fin R × Fin b ≃ Fin (R * b)).symm k).1)
+
+/-- **One band** (Ryu, Lemmas 3.1–3.4), explicitly: containment and pairwise disjointness. -/
+theorem band_explicit {θ : ℝ} (hγ : 0 < Real.cos θ) (hσ : 0 ≤ Real.sin θ) (R b : ℕ) :
+    (∀ k, unitSq (bandCen (Real.cos θ) (Real.sin θ) R b k) θ ⊆
+      rect (b * Real.cos θ + Real.sin θ) ((R - 1) / Real.cos θ + b * Real.sin θ + Real.cos θ)) ∧
+    Pairwise fun k k' => Disjoint (interior (unitSq (bandCen (Real.cos θ) (Real.sin θ) R b k) θ))
+      (interior (unitSq (bandCen (Real.cos θ) (Real.sin θ) R b k') θ)) := by
   set γ := Real.cos θ with hγd
   set σ := Real.sin θ with hσd
   have hu : γ ^ 2 + σ ^ 2 = 1 := by rw [hγd, hσd, add_comm]; exact Real.sin_sq_add_cos_sq θ
-  let e := (finProdFinEquiv : Fin R × Fin b ≃ Fin (R * b))
-  let cen : Fin (R * b) → ℝ × ℝ := fun k => ctr γ σ (e.symm k).2 (e.symm k).1
-  refine ⟨cen, fun _ => θ, fun k => ?_, fun k k' hkk => ?_⟩
+  set e := (finProdFinEquiv : Fin R × Fin b ≃ Fin (R * b)) with he
+  set cen : Fin (R * b) → ℝ × ℝ := bandCen γ σ R b with hcen
+  refine ⟨fun k => ?_, fun k k' hkk => ?_⟩
   · -- containment, corner by corner
     have hj := (e.symm k).1.isLt
     have hi := (e.symm k).2.isLt
@@ -154,6 +162,7 @@ theorem band {θ : ℝ} (hγ : 0 < Real.cos θ) (hσ : 0 ≤ Real.sin θ) (R b :
     have hi' : (i : ℝ) + 1 ≤ b := by exact_mod_cast hi
     have hi0 : (0 : ℝ) ≤ i := by positivity
     have hj0 : (0 : ℝ) ≤ j := by positivity
+    show unitSq (bandCen γ σ R b k) θ ⊆ _
     have hsub := unitSq_subset_box (c := ctr γ σ i j) (θ := θ) (x₀ := 0) (x₁ := b * γ + σ) (y₀ := 0)
       (y₁ := (R - 1) / γ + b * σ + γ) ?_
     · intro p hp
@@ -184,9 +193,8 @@ theorem band {θ : ℝ} (hγ : 0 < Real.cos θ) (hσ : 0 ≤ Real.sin θ) (R b :
     rw [ex, ey]
     refine ⟨by linarith, by linarith, by linarith, by linarith⟩
   · -- disjointness: different rows by `V`, same row by `U`
-    change Disjoint _ _
     have hne : e.symm k ≠ e.symm k' := fun h => hkk (e.symm.injective h)
-    simp only [cen]
+    simp only [cen, bandCen]
     by_cases hrow : (e.symm k).1 = (e.symm k').1
     · have hcol : ((e.symm k).2 : ℕ) ≠ (e.symm k').2 := by
         intro h; exact hne (Prod.ext hrow (Fin.ext h))
@@ -209,6 +217,194 @@ theorem band {θ : ℝ} (hγ : 0 < Real.cos θ) (hσ : 0 ≤ Real.sin θ) (R b :
         · have : ((e.symm k').1 : ℝ) + 1 ≤ (e.symm k).1 := by exact_mod_cast h
           rw [abs_of_nonneg (by linarith)]; linarith
       convert this using 2; ring
+
+
+theorem band {θ : ℝ} (hγ : 0 < Real.cos θ) (hσ : 0 ≤ Real.sin θ) (R b : ℕ) :
+    PacksIn (R * b) (rect (b * Real.cos θ + Real.sin θ) ((R - 1) / Real.cos θ + b * Real.sin θ + Real.cos θ)) :=
+  ⟨bandCen _ _ R b, fun _ => θ, (band_explicit hγ hσ R b).1, (band_explicit hγ hσ R b).2⟩
+
+lemma V_bandCen {γ σ : ℝ} (hu : γ ^ 2 + σ ^ 2 = 1) {R b : ℕ} (k : Fin (R * b)) :
+    -σ ^ 2 + 1 / 2 ≤ V γ σ (bandCen γ σ R b k) ∧ V γ σ (bandCen γ σ R b k) ≤ R - σ ^ 2 - 1 / 2 := by
+  simp only [bandCen]
+  rw [V_ctr hu]
+  have h := ((finProdFinEquiv : Fin R × Fin b ≃ Fin (R * b)).symm k).1.isLt
+  have h' : (((finProdFinEquiv : Fin R × Fin b ≃ Fin (R * b)).symm k).1 : ℝ) + 1 ≤ R := by exact_mod_cast h
+  constructor
+  · have : (0 : ℝ) ≤ (((finProdFinEquiv : Fin R × Fin b ≃ Fin (R * b)).symm k).1 : ℝ) := by positivity
+    nlinarith
+  · nlinarith
+
+/-! ## Filled band ends -/
+
+/-- An affine function `≤ c` at the four corners is `≤ c` on the square. -/
+lemma unitSq_subset_half {c₀ : ℝ × ℝ} {θ α β c : ℝ}
+    (h : ∀ a b, Half a → Half b →
+      α * (c₀.1 + Real.cos θ * a - Real.sin θ * b) + β * (c₀.2 + Real.sin θ * a + Real.cos θ * b) ≤ c) :
+    unitSq c₀ θ ⊆ {p | α * p.1 + β * p.2 ≤ c} := by
+  rintro p ⟨q, ⟨⟨h1, h2⟩, h3, h4⟩, rfl⟩
+  simp only [rot, Set.mem_ofPred_eq, Prod.fst_add, Prod.snd_add]
+  have := affine_nonneg (A := c - α * c₀.1 - β * c₀.2) (B := -(α * Real.cos θ + β * Real.sin θ))
+    (C := α * Real.sin θ - β * Real.cos θ) ⟨h1, h2⟩ ⟨h3, h4⟩
+    (fun a b ha hb => by have := h a b ha hb; nlinarith)
+  nlinarith
+
+/-- A square inside `{V ≤ c}` and a square at angle `θ` with centre at `V ≥ c + 1/2` have disjoint interiors. -/
+lemma disjoint_half {c₀ c₁ : ℝ × ℝ} {θ₀ θ c : ℝ}
+    (h₀ : unitSq c₀ θ₀ ⊆ {p | -Real.sin θ * p.1 + Real.cos θ * p.2 ≤ c})
+    (h₁ : c + 1 / 2 ≤ V (Real.cos θ) (Real.sin θ) c₁) :
+    Disjoint (interior (unitSq c₀ θ₀)) (interior (unitSq c₁ θ)) := by
+  rw [Set.disjoint_left]
+  intro p hp hp'
+  have hv := h₀ (interior_subset hp)
+  rw [mem_interior_iff] at hp'
+  obtain ⟨h2, _⟩ := abs_lt.1 hp'.2
+  have hvp : V (Real.cos θ) (Real.sin θ) p ≤ c := by
+    simp only [Set.mem_ofPred_eq] at hv; simp only [V]; linarith
+  linarith
+
+/-- The mirror image: `{V ≥ c}` against centre `V ≤ c − 1/2`. -/
+lemma disjoint_half' {c₀ c₁ : ℝ × ℝ} {θ₀ θ c : ℝ}
+    (h₀ : unitSq c₀ θ₀ ⊆ {p | Real.sin θ * p.1 + -Real.cos θ * p.2 ≤ -c})
+    (h₁ : V (Real.cos θ) (Real.sin θ) c₁ ≤ c - 1 / 2) :
+    Disjoint (interior (unitSq c₀ θ₀)) (interior (unitSq c₁ θ)) := by
+  rw [Set.disjoint_left]
+  intro p hp hp'
+  have hv := h₀ (interior_subset hp)
+  rw [mem_interior_iff] at hp'
+  obtain ⟨_, h2⟩ := abs_lt.1 hp'.2
+  have hvp : c ≤ V (Real.cos θ) (Real.sin θ) p := by
+    simp only [Set.mem_ofPred_eq] at hv; simp only [V]; linarith
+  linarith
+
+/-- Two explicit families in a common region, pairwise disjoint within and across, append. -/
+lemma append_explicit {m n : ℕ} {S : Set (ℝ × ℝ)} {c₁ : Fin m → ℝ × ℝ} {θ₁ : Fin m → ℝ}
+    {c₂ : Fin n → ℝ × ℝ} {θ₂ : Fin n → ℝ}
+    (h₁ : ∀ i, unitSq (c₁ i) (θ₁ i) ⊆ S) (h₂ : ∀ i, unitSq (c₂ i) (θ₂ i) ⊆ S)
+    (d₁ : Pairwise fun i j => Disjoint (interior (unitSq (c₁ i) (θ₁ i))) (interior (unitSq (c₁ j) (θ₁ j))))
+    (d₂ : Pairwise fun i j => Disjoint (interior (unitSq (c₂ i) (θ₂ i))) (interior (unitSq (c₂ j) (θ₂ j))))
+    (d : ∀ i j, Disjoint (interior (unitSq (c₁ i) (θ₁ i))) (interior (unitSq (c₂ j) (θ₂ j)))) :
+    (∀ i, unitSq (Fin.append c₁ c₂ i) (Fin.append θ₁ θ₂ i) ⊆ S) ∧
+    Pairwise fun i j => Disjoint (interior (unitSq (Fin.append c₁ c₂ i) (Fin.append θ₁ θ₂ i)))
+      (interior (unitSq (Fin.append c₁ c₂ j) (Fin.append θ₁ θ₂ j))) := by
+  refine ⟨fun i => ?_, fun i j hij => ?_⟩
+  · induction i using Fin.addCases with
+    | left i => simp only [Fin.append_left]; exact h₁ i
+    | right i => simp only [Fin.append_right]; exact h₂ i
+  · induction i using Fin.addCases <;> induction j using Fin.addCases <;>
+      simp only [Fin.append_left, Fin.append_right]
+    · exact d₁ fun h => hij (by rw [h])
+    · exact d _ _
+    · exact (d _ _).symm
+    · exact d₂ fun h => hij (by rw [h])
+
+lemma half_cases' {a : ℝ} (h : Half a) : a = 1 / 2 ∨ a = -1 / 2 := h
+
+/-- **A band with filled ends** (the "R1′" variant of Ryu's band): besides the `R` rows, `nf` axis squares under the
+first row (`[w − 1 − q, w − q] × [0, 1]`) and `nf` over the last (`[q, q + 1] × [L − 1, L]`), where
+`nf ≤ bγ − cot θ`. -/
+theorem band_fill {θ : ℝ} (hγ : 0 < Real.cos θ) (hσ : 0 < Real.sin θ) (R b nf : ℕ) {L : ℝ}
+    (hL : (R - 1) / Real.cos θ + b * Real.sin θ + Real.cos θ ≤ L) (hL2 : 2 ≤ L)
+    (hnf : (nf : ℝ) ≤ b * Real.cos θ - Real.cos θ / Real.sin θ) :
+    PacksIn (R * b + nf + nf) (rect (b * Real.cos θ + Real.sin θ) L) := by
+  set γ := Real.cos θ with hγd
+  set σ := Real.sin θ with hσd
+  have hu : γ ^ 2 + σ ^ 2 = 1 := by rw [hγd, hσd, add_comm]; exact Real.sin_sq_add_cos_sq θ
+  set w := b * γ + σ with hw
+  have hcot : 0 ≤ γ / σ := div_nonneg hγ.le hσ.le
+  have hnfw : (nf : ℝ) ≤ w := by
+    have : (b : ℝ) * γ ≤ w := by rw [hw]; linarith
+    linarith
+  have hkey : σ * (w - nf) ≥ σ ^ 2 + γ := by
+    have : w - nf ≥ σ + γ / σ := by rw [hw]; linarith
+    have := mul_le_mul_of_nonneg_left this hσ.le
+    rw [mul_add, mul_div_cancel₀ _ hσ.ne'] at this
+    nlinarith
+  -- the three families
+  let cB : Fin (R * b) → ℝ × ℝ := bandCen γ σ R b
+  let tB : Fin (R * b) → ℝ := fun _ => θ
+  let cD : Fin nf → ℝ × ℝ := fun q => (w - 1 / 2 - q, 1 / 2)
+  let cT : Fin nf → ℝ × ℝ := fun q => ((q : ℝ) + 1 / 2, L - 1 / 2)
+  let t0 : Fin nf → ℝ := fun _ => 0
+  have hB := band_explicit hγ hσ.le R b
+  have sB : ∀ i, unitSq (cB i) (tB i) ⊆ rect w L := fun i =>
+    (hB.1 i).trans (rect_mono le_rfl hL)
+  have axis_sub : ∀ (c : ℝ × ℝ), 0 ≤ c.1 - 1 / 2 → c.1 + 1 / 2 ≤ w → 0 ≤ c.2 - 1 / 2 → c.2 + 1 / 2 ≤ L →
+      unitSq c 0 ⊆ rect w L := by
+    intro c h1 h2 h3 h4 p hp
+    have := unitSq_subset_box (c := c) (θ := 0) (x₀ := 0) (x₁ := w) (y₀ := 0) (y₁ := L) (by
+      intro a b' ha hb
+      simp only [Real.cos_zero, Real.sin_zero, one_mul, zero_mul, sub_zero, add_zero]
+      rcases ha with rfl | rfl <;> rcases hb with rfl | rfl <;> refine ⟨?_, ?_, ?_, ?_⟩ <;> linarith) hp
+    simpa [box, rect] using this
+  have sD : ∀ q, unitSq (cD q) (t0 q) ⊆ rect w L := fun q => by
+    have hq : (q : ℝ) + 1 ≤ nf := by exact_mod_cast q.isLt
+    apply axis_sub <;> simp only [cD] <;> linarith
+  have sT : ∀ q, unitSq (cT q) (t0 q) ⊆ rect w L := fun q => by
+    have hq : (q : ℝ) + 1 ≤ nf := by exact_mod_cast q.isLt
+    have : (0 : ℝ) ≤ q := by positivity
+    apply axis_sub <;> simp only [cT] <;> linarith
+  have axis_disj : ∀ (c c' : ℝ × ℝ), 1 ≤ |c.1 - c'.1| ∨ 1 ≤ |c.2 - c'.2| →
+      Disjoint (interior (unitSq c 0)) (interior (unitSq c' 0)) := by
+    intro c c' h
+    rcases h with h | h
+    · apply sep_U; simp only [U, Real.cos_zero, Real.sin_zero, mul_one, mul_zero, add_zero]; exact h
+    · apply sep_V; simp only [V, Real.cos_zero, Real.sin_zero, mul_one, mul_zero, neg_zero, zero_add]; exact h
+  have int_gap : ∀ q q' : Fin nf, q ≠ q' → 1 ≤ |(q : ℝ) - q'| := by
+    intro q q' h
+    have h' : (q : ℕ) ≠ q' := fun e => h (Fin.ext e)
+    rcases Nat.lt_or_gt_of_ne h' with h | h
+    · have : (q : ℝ) + 1 ≤ q' := by exact_mod_cast h
+      rw [abs_sub_comm, abs_of_nonneg (by linarith)]; linarith
+    · have : (q' : ℝ) + 1 ≤ q := by exact_mod_cast h
+      rw [abs_of_nonneg (by linarith)]; linarith
+  have dD : Pairwise fun i j => Disjoint (interior (unitSq (cD i) (t0 i))) (interior (unitSq (cD j) (t0 j))) := by
+    intro q q' h; apply axis_disj; left
+    have := int_gap q q' h
+    simp only [cD]; rw [abs_sub_comm]; convert this using 2; ring
+  have dT : Pairwise fun i j => Disjoint (interior (unitSq (cT i) (t0 i))) (interior (unitSq (cT j) (t0 j))) := by
+    intro q q' h; apply axis_disj; left
+    have := int_gap q q' h
+    simp only [cT]; convert this using 2; ring
+  -- band against the bottom fill: the fill lies in `{V ≤ −σ²}`
+  have hDhalf : ∀ q : Fin nf, unitSq (cD q) 0 ⊆ {p | -σ * p.1 + γ * p.2 ≤ -σ ^ 2} := fun q => by
+    have hq : (q : ℝ) + 1 ≤ nf := by exact_mod_cast q.isLt
+    apply unitSq_subset_half
+    intro a b' ha hb
+    simp only [cD, Real.cos_zero, Real.sin_zero, one_mul, zero_mul, sub_zero, add_zero]
+    rcases ha with rfl | rfl <;> rcases hb with rfl | rfl <;> nlinarith
+  have dBD : ∀ i j, Disjoint (interior (unitSq (cB i) (tB i))) (interior (unitSq (cD j) (t0 j))) := by
+    intro i j
+    exact (disjoint_half (θ := θ) (c := -σ ^ 2) (hDhalf j) (by have := (V_bandCen hu i).1; linarith)).symm
+  -- band against the top fill: the fill lies in `{V ≥ R − σ²}`
+  have hrow : γ * (L - 1) ≥ R - 1 + b * σ * γ + γ ^ 2 - γ := by
+    have := mul_le_mul_of_nonneg_left hL hγ.le
+    rw [mul_add, mul_add, mul_div_cancel₀ _ hγ.ne'] at this
+    nlinarith
+  have hTop : σ * (b * γ - nf) ≥ γ := by
+    have := mul_le_mul_of_nonneg_left hnf hσ.le
+    rw [mul_sub, mul_div_cancel₀ _ hσ.ne'] at this
+    nlinarith
+  have hThalf : ∀ q : Fin nf, unitSq (cT q) 0 ⊆ {p | σ * p.1 + -γ * p.2 ≤ -(R - σ ^ 2)} := fun q => by
+    have hq : (q : ℝ) + 1 ≤ nf := by exact_mod_cast q.isLt
+    have hq0 : (0 : ℝ) ≤ q := by positivity
+    apply unitSq_subset_half
+    intro a b' ha hb
+    simp only [cT, Real.cos_zero, Real.sin_zero, one_mul, zero_mul, sub_zero, add_zero]
+    rcases ha with rfl | rfl <;> rcases hb with rfl | rfl <;> nlinarith
+  have dBT : ∀ i j, Disjoint (interior (unitSq (cB i) (tB i))) (interior (unitSq (cT j) (t0 j))) := by
+    intro i j
+    exact (disjoint_half' (θ := θ) (c := R - σ ^ 2) (hThalf j) (by have := (V_bandCen hu i).2; linarith)).symm
+  have dDT : ∀ i j, Disjoint (interior (unitSq (cD i) (t0 i))) (interior (unitSq (cT j) (t0 j))) := by
+    intro i j; apply axis_disj; right
+    simp only [cD, cT]
+    rw [abs_sub_comm, abs_of_nonneg (by linarith)]; linarith
+  -- assemble: band ++ bottom, then ++ top
+  have A1 := append_explicit sB sD hB.2 dD dBD
+  have A2 := append_explicit A1.1 sT A1.2 dT (fun i j => by
+    induction i using Fin.addCases with
+    | left i => simp only [Fin.append_left]; exact dBT i j
+    | right i => simp only [Fin.append_right]; exact dDT i j)
+  exact ⟨_, _, A2.1, A2.2⟩
 
 /-! ## The L-shape -/
 
@@ -241,5 +437,15 @@ theorem lpacking {θ : ℝ} (hγ : 0 < Real.cos θ) (hσ : 0 ≤ Real.sin θ) (m
     Packs (m * m + R₁ * b + R₂ * b) (m + (b * Real.cos θ + Real.sin θ)) := by
   have hw : 0 ≤ b * Real.cos θ + Real.sin θ := by positivity
   exact lshape hw ((band hγ hσ R₁ b).mono (rect_mono le_rfl hL1)) ((band hγ hσ R₂ b).mono (rect_mono le_rfl hL2))
+
+/-- **The L-shape with filled band ends.** -/
+theorem lpacking_fill {θ : ℝ} (hγ : 0 < Real.cos θ) (hσ : 0 < Real.sin θ) (m b R₁ R₂ nf : ℕ) (hm : 2 ≤ m)
+    (hL1 : (R₁ - 1) / Real.cos θ + b * Real.sin θ + Real.cos θ ≤ m + (b * Real.cos θ + Real.sin θ))
+    (hL2 : (R₂ - 1) / Real.cos θ + b * Real.sin θ + Real.cos θ ≤ m)
+    (hnf : (nf : ℝ) ≤ b * Real.cos θ - Real.cos θ / Real.sin θ) :
+    Packs (m * m + (R₁ * b + nf + nf) + (R₂ * b + nf + nf)) (m + (b * Real.cos θ + Real.sin θ)) := by
+  have hw : 0 ≤ b * Real.cos θ + Real.sin θ := by positivity
+  have hm' : (2 : ℝ) ≤ m := by exact_mod_cast hm
+  exact lshape hw (band_fill hγ hσ R₁ b nf hL1 (by linarith) hnf) (band_fill hγ hσ R₂ b nf hL2 hm' hnf)
 
 end UnitSquarePacking.Ryu
