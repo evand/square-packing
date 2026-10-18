@@ -110,11 +110,35 @@ dialog#viewer::backdrop{background:rgba(10,14,16,.55)}
 .vparts b{font-family:"IBM Plex Mono",monospace;font-weight:600;min-width:4.2em;text-align:right}
 .vclose{position:absolute;top:8px;left:8px;font:inherit;font-size:1.1rem;width:32px;height:32px;border:1px solid var(--rule);border-radius:3px;background:var(--surface);color:var(--ink);cursor:pointer;z-index:2}
 .small{font-size:.84rem;color:var(--muted)}
+.controls .grp{display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding-left:12px;border-left:1px solid var(--rule)}
+.glbl{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.chip{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:999px;font-weight:500;vertical-align:2px}
+.chip.orig{background:var(--accent-soft);color:var(--accent)}
+.chip.new{background:var(--gold-soft);color:var(--gold)}
+.credit{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:.86rem;color:var(--muted);border-top:1px solid var(--rule);padding-top:8px;margin-top:2px}
+.credit dt{font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding-top:3px}
+.credit dd{margin:0}
+.credit dd.ours{color:var(--ink)}
+section.kk{display:flex;flex-direction:column;gap:14px}
+.kk .lede{font-size:1rem}
+.chart{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:10px 6px 4px}
+.chart svg{display:block;width:100%;height:auto}
+.chart text{font-family:"IBM Plex Mono",monospace;font-size:11px;fill:var(--muted)}
+.tablewrap{overflow-x:auto}
+table.mil{border-collapse:collapse;width:100%;font-size:.92rem}
+table.mil th,table.mil td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+table.mil th{font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500}
+table.mil td.y{font-family:"IBM Plex Mono",monospace;white-space:nowrap;font-size:.85rem}
+table.mil tr.ours td{background:color-mix(in srgb,var(--gold-soft) 60%,transparent)}
 @media (max-width:760px){
   .vgrid{grid-template-columns:1fr;grid-template-rows:minmax(0,58%) minmax(0,42%)}
   .vcanvas{border-right:none;border-bottom:1px solid var(--rule)}
   .wrap{padding:28px 16px 64px}
   .tip canvas{width:120px;height:120px}
+  .chart{overflow-x:auto}
+  .chart svg{min-width:640px}
+  table.mil td.y{white-space:normal}
+  table.mil th,table.mil td{padding:6px 6px}
 }
 </style>
 </head>
@@ -138,10 +162,14 @@ dialog#viewer::backdrop{background:rgba(10,14,16,.55)}
 
 <div class="controls">
   <label>rows up to <i>k</i> = <span class="mono" id="Kv">48</span> <input id="K" type="range" min="20" max="120" step="1" value="48"></label>
+  <span class="grp"><span class="glbl">original</span>
   <label><input type="checkbox" id="s-fang" checked><span class="sw" style="background:var(--s-fang)"></span>Fang</label>
-  <label><input type="checkbox" id="s-ryu" checked><span class="sw" style="background:var(--s-ryu)"></span>Ryu 8√</label>
-  <label><input type="checkbox" id="s-layers" checked><span class="sw" style="background:var(--s-layers)"></span>filled L-shape</label>
+  <label><input type="checkbox" id="s-ryu" checked><span class="sw" style="background:var(--s-ryu)"></span>Ryu 8√</label></span>
+  <span class="grp"><span class="glbl">ours</span>
+  <label><input type="checkbox" id="s-layers" checked><span class="sw" style="background:var(--s-layers)"></span>filled L-shape</label></span>
+  <span class="grp">
   <label><input type="checkbox" id="s-known" checked><span class="sw" style="border:2px solid var(--ink)"></span>best known packing</label>
+  <label><input type="checkbox" id="s-line" checked><span class="sw" style="background:linear-gradient(90deg,transparent 40%,var(--ink) 40% 60%,transparent 60%)"></span>the k² − k line</label></span>
 </div>
 <div class="legend" id="legend">
   <span><i style="background:var(--green-soft)"></i>side <em>k</em> is needed (proved)</span>
@@ -149,35 +177,78 @@ dialog#viewer::backdrop{background:rgba(10,14,16,.55)}
   <span><i class="hatch"></i>packed below side <em>k</em> only by a search record</span>
   <span><i style="background:color-mix(in srgb,var(--s-layers) 30%,var(--surface))"></i>follows from a construction (tint: the best one in that row)</span>
   <span><i class="ring"></i>the best known packing (any method)</span>
+  <span><i style="background:linear-gradient(90deg,var(--open) 40%,var(--ink) 40% 60%,var(--surface) 60%)"></i><em>n</em> = <em>k</em>² − <em>k</em>: cells to its right beat it</span>
 </div>
 <div class="tri" id="tri"><canvas id="cv" aria-label="Triangle of grid sizes k and deficits c, coloured by which construction packs k squared minus c unit squares in side less than k"></canvas><canvas id="over"></canvas></div>
 <p class="hint" id="note">Loading Fang's pieces…</p>
 <div class="tip" id="tip"></div>
 
+<section class="kk" id="kk">
+  <span class="eyebrow">a landmark</span>
+  <h2>Beating <span class="mono">k² − k</span></h2>
+  <p class="lede">Is <span class="mono">s(k² − k) &lt; k</span>? That is, can a <span class="mono">k × k</span> grid lose one full
+  row and have the rest fit in a smaller square? It is the bold line in the triangle. Erdős and Graham's waste bound (1975) passes it for all
+  <em>sufficiently large</em> <i>k</i>, with no explicit threshold; otherwise it was known only at single <i>k</i> until Arslanov,
+  Mustafin and Shangitbayev reached it for every <i>k</i> ≥ 12. Fang was the first to pass it for every <i>k</i> from an explicit
+  start (15). The chart counts the squares beyond <span class="mono">k² − k</span> that each construction packs in side
+  &lt; <i>k</i>: above zero beats the line. The filled L-shape (ours) beats it for every <i>k</i> ≥ <span id="lay-all">37</span>
+  (first at <span id="lay-first">33</span>), Ryu's square-root bound from <i>k</i> ≥ <span id="ryu-all">73</span>; both margins grow
+  like <span class="mono">k − O(√k)</span>, against Fang's <span class="mono">≈ 2k/21</span>.</p>
+  <div class="chart" id="chart" role="img" aria-label="Squares beyond k squared minus k packed in side less than k, by construction, for k from 10 to 120"></div>
+  <div class="tablewrap"><table class="mil">
+    <tr><th>when</th><th>who</th><th>what, relative to <span class="mono">k² − k</span></th></tr>
+    <tr><td class="y">1975</td><td>P. Erdős, R. L. Graham</td><td>beats it for all sufficiently large <i>k</i> (wasted area <span class="mono">O(k<sup>7/11</sup>)</span>), no explicit threshold</td></tr>
+    <tr><td class="y">1991–98</td><td>Lars Cleemann</td><td>reaches it at <i>k</i> = 17: <span class="mono">s(272) &lt; 17</span></td></tr>
+    <tr><td class="y">2015</td><td>Károly Hajba</td><td>reaches it at <i>k</i> = 16: <span class="mono">s(240) &lt; 16</span></td></tr>
+    <tr><td class="y">2019 (EJC 2021)</td><td>M. Z. Arslanov, S. A. Mustafin, Z. K. Shangitbayev</td><td>reaches it for every <i>k</i> ≥ 12, and beats it by one square at <i>k</i> = 16, 17, 18 (refereed)</td></tr>
+    <tr><td class="y">2025</td><td>David W. Cantrell</td><td>reaches it at <i>k</i> = 11: <span class="mono">s(110) &lt; 11</span>, the smallest such <i>k</i> known</td></tr>
+    <tr><td class="y">2026</td><td>Kevin Fang</td><td>beats it for every <i>k</i> ≥ 15, by <span class="mono">1 + p + 2q</span> squares (draft, jlevy/squares #603)</td></tr>
+    <tr><td class="y">2026</td><td>Sungjoon Ryu</td><td>the L-shape: beats it by <span class="mono">k − 8⌈√(k − 4)⌉</span>, for every <i>k</i> ≥ <span class="ryu-all2">73</span> (preprint)</td></tr>
+    <tr class="ours"><td class="y">2026-10</td><td>ours (Evan Daniel, with Claude)</td><td>all of the above constructions checked in Lean; the filled L-shape beats it by <span class="mono">k − 4⌈√(2k − 7)⌉</span>, for every <i>k</i> ≥ <span class="lay-all2">37</span></td></tr>
+    <tr><td class="y">2024–26</td><td>record searches: Ellsworth, Stead, de Winter, Couzo, Ostashev, Mishapolk, Fang, us and others</td><td>single-<i>k</i> packings, best known up to <i>k</i> = 40 (the rings): up to 8 squares beyond the line</td></tr>
+    <tr><td class="y">open</td><td></td><td>4 ≤ <i>k</i> ≤ 10: whether <span class="mono">s(k² − k) &lt; k</span> at all</td></tr>
+  </table></div>
+  <p class="small">Dates and finders before 2026 as Erich Friedman's and David Ellsworth's catalogue records them; later ones from the
+  jlevy/squares register and issues.</p>
+</section>
+
 <div class="cards">
   <div class="card">
-    <h3><span class="sw" style="background:var(--s-fang)"></span>Fang's gluing</h3>
+    <h3><span class="sw" style="background:var(--s-fang)"></span>Fang's gluing <span class="chip orig">original</span></h3>
     <p class="stmt">k² − k + 1 + p + 2q in side &lt; k, k ≥ 15, 16p + 21q ≤ k − 15</p>
     <p>Kevin Fang's theorem, after Arslanov, Mustafin and Shangitbayev: a base piece of side 15 to 30, then 17 × 16 and
     22 × 21 rectangles (257 and 443 squares) glued on, each with aligned blocks. Linear: about <span class="mono">k − 1 − 2(k − 15)/21</span>.
     Best here for 15 ≤ k ≤ 39. Lean: <code>FangFinal.theorem2</code>.</p>
+    <dl class="credit"><dt>maths</dt><dd>Kevin Fang (2026 draft); the gluing lemma is Arslanov–Mustafin–Shangitbayev's decomposition (2021).
+    Pieces: packings from the record lists, whose lineages run from Arslanov–Mustafin–Shangitbayev (2019) through Ellsworth, Cantrell,
+    Stead, de Winter and others, and Fang's own.</dd>
+    <dt>Lean</dt><dd class="ours">ours: the gluing lemma, the induction, and exact certificates of all 18 pieces (a rectangle checker for the two rectangles).</dd></dl>
     <button data-open="fang" data-k="40">open k = 40</button>
   </div>
   <div class="card">
-    <h3><span class="sw" style="background:var(--s-ryu)"></span>Ryu's L-shape</h3>
+    <h3><span class="sw" style="background:var(--s-ryu)"></span>Ryu's L-shape <span class="chip orig">original</span></h3>
     <p class="stmt">c*(k) ≤ 8⌈√(k − 4)⌉ − 1, k ≥ 6</p>
     <p>Sungjoon Ryu's Theorem 1.4: an axis grid of side k − b and two bands of rows of b squares, tilted just past
     2 arctan(1/b), so each row is a little narrower than b. The band ends are left empty. Lean: <code>RyuBound.packs_sub_8sqrt</code>.</p>
+    <dl class="credit"><dt>maths</dt><dd>Sungjoon Ryu (2026 preprint, jlevy/squares #471, #486); the bands go back to Erdős and Graham (1975).</dd>
+    <dt>Lean</dt><dd class="ours">ours, with simpler row counts (exactly <span class="mono">8b</span> squares short).</dd></dl>
     <button data-open="ryu" data-k="40">open k = 40</button>
   </div>
   <div class="card">
-    <h3><span class="sw" style="background:var(--s-layers)"></span>The filled L-shape</h3>
+    <h3><span class="sw" style="background:var(--s-layers)"></span>The filled L-shape <span class="chip new">ours · new</span></h3>
     <p class="stmt">c*(k) ≤ 4⌈√(2k − 7)⌉ − 1, k ≥ 7</p>
     <p>Ryu's L-shape with b = ⌈√(2k − 7)⌉ and axis squares in the four band ends (green in the viewer): 2b of them in all.
     Best here from k = 40 to about 7.4 · 10⁵. As far as we know a new bound. Lean: <code>RyuLayers.packs_sub_4sqrt2_layers</code>.</p>
+    <dl class="credit"><dt>maths</dt><dd class="ours">ours (Evan Daniel, with Claude, October 2026): the end fills, their count and the choice of b,
+    on Ryu's L-shape. Filling the ends with axis squares was suggested by a literature-reading agent of this project.</dd>
+    <dt>Lean</dt><dd class="ours">ours.</dd></dl>
     <button data-open="layers" data-k="40">open k = 40</button>
   </div>
 </div>
+
+<p class="small">Also ours, not drawn here: the staircase bound <span class="mono">c*(k) &lt; 18.9 k<sup>2/5</sup> + 35.7 k<sup>1/5</sup> + 122</span>
+(<i>k</i> ≥ 3 · 10⁵; Ryu's staircase ends with our count) and Ryu's Theorem 1.2 in Lean on a wider range (<i>k</i> ≥ 8 · 10⁶,
+against 1.6 · 10⁷ in his proof). See the <a href="./#credits">write-up</a>.</p>
 
 <div class="notes">
   <h2>Reading the triangle</h2>
@@ -221,12 +292,17 @@ dialog#viewer::backdrop{background:rgba(10,14,16,.55)}
 'use strict';
 const $ = id => document.getElementById(id);
 const SER = ['fang', 'ryu', 'layers'];
-const NAME = { fang: 'Fang', ryu: 'Ryu 8√', layers: 'filled L-shape' };
+const NAME = { fang: 'Fang', ryu: 'Ryu 8√', layers: 'filled L-shape (ours)' };
 const FULL = { fang: "Fang's gluing (Theorem 2)", ryu: "Ryu's L-shape (Theorem 1.4)", layers: 'The filled L-shape' };
 const LEAN = { fang: ['FangFinal.theorem2', 'FangFinal.lean'], ryu: ['RyuBound.packs_sub_8sqrt', 'RyuBound.lean'], layers: ['RyuLayers.packs_sub_4sqrt2_layers', 'RyuLayers.lean'] };
 const REPO = 'https://github.com/evand/square-packing/blob/main/lean/Sqpack/';
+const CREDIT = {
+  fang: { tag: '<span class="chip orig">original</span>', math: "Kevin Fang (2026 draft, jlevy/squares #603); gluing lemma after Arslanov, Mustafin and Shangitbayev (2021). Pieces: record-list packings (lineages from Arslanov–Mustafin–Shangitbayev 2019 through Ellsworth, Cantrell, Stead, de Winter and others) and Fang's own.", lean: 'ours: gluing lemma, induction, exact certificates of the 18 pieces.' },
+  ryu: { tag: '<span class="chip orig">original</span>', math: 'Sungjoon Ryu (2026 preprint, jlevy/squares #471, #486), Theorem 1.4; bands after Erdős and Graham (1975).', lean: 'ours, with simpler row counts.' },
+  layers: { tag: '<span class="chip new">ours · new</span>', math: "ours (Evan Daniel, with Claude, October 2026), on Ryu's L-shape: the green end squares are the new part; grid and bands are Ryu's. The end-fill idea came from a literature-reading agent of this project.", lean: 'ours.', ours: true },
+};
 const KMAXV = 300;   // the viewer steps up to here
-const state = { K: 48, on: { fang: true, ryu: true, layers: true, known: true } };
+const state = { K: 48, on: { fang: true, ryu: true, layers: true, known: true, line: true } };
 let KNOWN = {}, LB = {}, piecesOK = false;
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 let C = {};
@@ -325,13 +401,14 @@ function layout() {
   const W = $('tri').clientWidth, K = state.K, cols = 2 * K - 1, rows = K - 1;
   const ml = W < 520 ? 22 : 30, mt = 18;
   const cs = Math.max(2, Math.floor((W - ml - 4) / cols));
-  const width = ml + cols * cs + 2, height = mt + rows * cs + 2;
+  const width = ml + cols * cs + 2, height = mt + rows * cs + 22;
   const right = width - 1;
   G = { K, cs, ml, mt, width, height, right, x: c => right - (c + 1) * cs, y: k => mt + (k - 2) * cs };
 }
 let drawToken = 0;
 function drawTriangle() {
   layout();
+  if (piecesOK || Object.keys(KNOWN).length) drawChart();
   const dpr = window.devicePixelRatio || 1;
   for (const el of [cv, over]) { el.width = Math.round(G.width * dpr); el.height = Math.round(G.height * dpr); el.style.width = G.width + 'px'; el.style.height = G.height + 'px'; }
   const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -345,7 +422,8 @@ function drawTriangle() {
   for (let k = 2; k <= G.K; k++) {
     for (let c = 0; c <= 2 * k - 2; c++) {
       const S = cellState(k, c), x = G.x(c), y = G.y(k);
-      if (S.kind === 'cons') ctx.fillStyle = mix(C['s-' + S.best[0]], C.surface, S.thumb.length ? 1 : 0.3);
+      const faded = state.on.line && c > k;   // left of the k^2 - k line
+      if (S.kind === 'cons') ctx.fillStyle = mix(C['s-' + S.best[0]], C.surface, S.thumb.length ? 1 : faded ? 0.16 : 0.34);
       else ctx.fillStyle = S.kind === 'known' ? hatch : S.kind === 'proved' ? C['green-soft'] : C.open;
       ctx.fillRect(x, y, cs - gap, cs - gap);
       if (S.thumb.length) thumbs.push(S);
@@ -364,6 +442,15 @@ function drawTriangle() {
     ctx.strokeStyle = C.ink; ctx.lineWidth = cs >= 8 ? 1.5 : 1;
     for (const [k, r] of Object.entries(KNOWN)) if (+k <= G.K && +k >= 2) ctx.strokeRect(G.x(r.c) + 0.75, G.y(+k) + 0.75, cs - gap - 1.5, cs - gap - 1.5);
   }
+  // the k^2 - k line: the right edge of cell c = k in every row
+  if (state.on.line) {
+    ctx.strokeStyle = C.ink; ctx.lineWidth = cs >= 6 ? 2 : 1.5; ctx.beginPath();
+    for (let k = 2; k <= G.K; k++) { const X = G.x(k) + cs - gap / 2, Y = G.y(k); if (k === 2) ctx.moveTo(X, Y); else ctx.lineTo(X, Y); ctx.lineTo(X, Y + cs); }
+    ctx.stroke();
+    // label under the line's lower end (the canvas has a bottom margin for it)
+    ctx.font = `600 ${Math.max(10, Math.min(13, cs + 2))}px "IBM Plex Mono", monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillStyle = C.ink; ctx.fillText('n = k² − k', G.x(G.K) + cs, G.y(G.K) + cs + 4);
+  }
   // series threshold lines, faint, so the curves read when cells are tiny
   for (const s of SER) if (state.on[s]) {
     ctx.strokeStyle = C['s-' + s]; ctx.globalAlpha = 0.55; ctx.lineWidth = 1; ctx.beginPath(); let first = true;
@@ -378,7 +465,9 @@ function drawTriangle() {
     const t0 = performance.now();
     while (i < thumbs.length && performance.now() - t0 < 12) {
       const S = thumbs[i++], P = get(S.thumb[0], S.k);
+      ctx.globalAlpha = state.on.line && S.c > S.k ? 0.45 : 1;
       if (P) drawPacking(ctx, P, G.x(S.c), G.y(S.k), cs - gap);
+      ctx.globalAlpha = 1;
       if (S.thumb.length > 1) {   // a tie: a corner flag in the other series' colour
         ctx.fillStyle = C['s-' + S.thumb[1]]; ctx.beginPath(); const x = G.x(S.c), y = G.y(S.k), z = Math.max(3, cs * 0.4);
         ctx.moveTo(x + cs - gap, y); ctx.lineTo(x + cs - gap - z, y); ctx.lineTo(x + cs - gap, y + z); ctx.fill();
@@ -406,7 +495,7 @@ function highlight(S) {
 }
 const fmt = x => x.toLocaleString('en-US');
 function tipText(S) {
-  const L = [`k = ${S.k} · c = ${S.c} · n = ${fmt(S.n)}`];
+  const L = [`k = ${S.k} · c = ${S.c} · n = ${fmt(S.n)}` + (S.c < S.k ? ` = k² − k + ${S.k - S.c}` : S.c === S.k ? ' = k² − k' : '')];
   if (S.kind === 'cons') {
     const s = S.thumb[0] || S.best[0], P = S.thumb.length ? get(s, S.k) : null;
     if (P) L.push(`${NAME[s]}: ${fmt(P.n)} squares in side ${P.side.toFixed(6)} < ${S.k}`, `so c*(${S.k}) ≤ ${S.c - 1}`);
@@ -492,12 +581,14 @@ function vset(s, k, keepView) {
   }
   const others = SER.filter(t => t !== s && thr(t, k) < Infinity).map(t => `${NAME[t]}: c*(${k}) ≤ ${thr(t, k) - 1}`).join(' · ');
   const kn = KNOWN[k] ? `best known (search): c*(${k}) ≤ ${KNOWN[k].c - 1}` : '';
-  $('vstat').innerHTML = `<h3>${FULL[s]}</h3>
+  const j = k - c, rel = j > 0 ? `beats <span class="mono">k² − k</span> by ${j} square${j === 1 ? '' : 's'}` : j === 0 ? `reaches <span class="mono">k² − k</span>` : `${-j} short of <span class="mono">k² − k</span>`;
+  $('vstat').innerHTML = `<h3>${FULL[s]} ${CREDIT[s].tag}</h3>
     <div class="big">${fmt(P.n)}</div>
     <div>unit squares in side <span class="mono">${P.side.toFixed(9)}</span> &lt; ${k}</div>
-    <div>so <span class="mono">c*(${k}) ≤ ${c - 1}</span> (c = ${c})</div>
+    <div>so <span class="mono">c*(${k}) ≤ ${c - 1}</span> (c = ${c}); ${rel}</div>
     <div class="small">${[others, kn].filter(Boolean).join('<br>')}</div>
-    <div class="small">Lean: <a href="${REPO}${LEAN[s][1]}" target="_blank" rel="noopener"><code>${LEAN[s][0]}</code></a></div>`;
+    <div class="small">Lean: <a href="${REPO}${LEAN[s][1]}" target="_blank" rel="noopener"><code>${LEAN[s][0]}</code></a></div>
+    <dl class="credit"><dt>maths</dt><dd${CREDIT[s].ours ? ' class="ours"' : ''}>${CREDIT[s].math}</dd><dt>Lean</dt><dd class="ours">${CREDIT[s].lean}</dd></dl>`;
   $('vparts').innerHTML = P.parts.map(([g, n, txt]) => `<div><span class="sw" style="background:${groupColour(g, s)}"></span><b>${fmt(n)}</b><span>${txt}</span></div>`).join('');
   const pr = P.params;
   $('vnote').innerHTML = s === 'fang'
@@ -550,6 +641,48 @@ $('zfit').onclick = () => { fit(); vdraw(); };
 $('zcorner').onclick = () => { bandView(); vdraw(); };
 new ResizeObserver(() => { if (dlg.open && V.P) vdraw(); }).observe(vcv);
 
+/* ------------------------------------------------------------ the k^2 - k chart */
+function drawChart() {
+  const K1 = 10, K2 = Math.max(60, state.K), W = 900, H = 330, ml = 44, mr = 150, mt = 14, mb = 30;
+  const jf = { fang: k => k - thr('fang', k), ryu: k => k - thr('ryu', k), layers: k => k - thr('layers', k) };
+  let ymax = 4; for (const s of SER) for (let k = K1; k <= K2; k++) { const v = jf[s](k); if (isFinite(v)) ymax = Math.max(ymax, v); }
+  const ymin = -16; ymax = Math.ceil((ymax + 2) / 5) * 5;
+  const X = k => ml + (k - K1) / (K2 - K1) * (W - ml - mr), Y = j => mt + (ymax - j) / (ymax - ymin) * (H - mt - mb);
+  const o = [];
+  o.push(`<rect x="${ml}" y="${Y(ymax)}" width="${W - ml - mr}" height="${Y(0.5) - Y(ymax)}" fill="${C['green-soft']}" opacity=".55"/>`);
+  for (let j = Math.ceil(ymin / 5) * 5; j <= ymax; j += 5) o.push(`<line x1="${ml}" x2="${W - mr}" y1="${Y(j)}" y2="${Y(j)}" stroke="${C.rule}"/><text x="${ml - 6}" y="${Y(j) + 4}" text-anchor="end">${j}</text>`);
+  const xs = K2 - K1 > 80 ? 20 : 10;
+  for (let k = Math.ceil(K1 / xs) * xs; k <= K2; k += xs) o.push(`<line x1="${X(k)}" x2="${X(k)}" y1="${Y(ymin)}" y2="${Y(ymin) + 4}" stroke="${C.muted}"/><text x="${X(k)}" y="${H - 10}" text-anchor="middle">${k}</text>`);
+  o.push(`<text x="${W - mr + 14}" y="${H - 10}">k</text>`);
+  o.push(`<line x1="${ml}" x2="${W - mr}" y1="${Y(0)}" y2="${Y(0)}" stroke="${C.ink}" stroke-width="2"/><text x="${W - mr + 8}" y="${Y(0) + 4}" style="fill:${C.ink};font-weight:600">k² − k</text>`);
+  o.push(`<text x="${ml + 6}" y="${Y(ymax) + 14}">squares beyond k² − k in side &lt; k (above the line: beats it)</text>`);
+  // Arslanov-Mustafin-Shangitbayev: on the line from k = 12
+  o.push(`<line x1="${X(12)}" x2="${X(K2)}" y1="${Y(0)}" y2="${Y(0)}" stroke="${C.muted}" stroke-width="5" opacity=".35"/>`);
+  const lab = [];
+  for (const s of SER) {
+    if (!state.on[s] || (s === 'fang' && !piecesOK)) continue;
+    let d = ''; let last = null;
+    for (let k = Math.max(K1, K2C.SERIES[s].kmin); k <= K2; k++) { const v = Math.max(ymin, jf[s](k)); d += (d ? ` H${X(k)} V${Y(v)}` : `M${X(k)} ${Y(v)}`); last = [k, v]; }
+    o.push(`<path d="${d}" fill="none" stroke="${C['s-' + s]}" stroke-width="${s === 'layers' ? 3 : 2}"/>`);
+    lab.push([Y(last[1]), NAME[s], C['s-' + s]]);
+  }
+  if (state.on.known) {
+    for (const [k, r] of Object.entries(KNOWN)) if (+k >= K1 && +k <= K2) o.push(`<circle cx="${X(+k)}" cy="${Y(+k - r.c)}" r="3.6" fill="none" stroke="${C.ink}" stroke-width="1.5"/>`);
+    const kk = Object.keys(KNOWN).map(Number).filter(k => k >= K1 && k <= K2); if (kk.length) { const k = Math.max(...kk); lab.push([Y(k - KNOWN[k].c), 'best known (search)', C.ink]); }
+  }
+  lab.push([Y(0) + 16, 'AMS: on it from 12', C.muted]);
+  lab.sort((a, b) => a[0] - b[0]);
+  for (let i = 1; i < lab.length; i++) lab[i][0] = Math.max(lab[i][0], lab[i - 1][0] + 15);
+  for (const [y, t, c] of lab) o.push(`<text x="${W - mr + 8}" y="${y + 4}" style="fill:${c}">${t.length > 22 ? t.slice(0, 21) + '…' : t}</text>`);
+  $('chart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${o.join('')}</svg>`;
+  // the numbers quoted in the text
+  const allFrom = s => { let last = 0; for (let k = K2C.SERIES[s].kmin; k <= 5000; k++) if (k - thr(s, k) < 1) last = k; return last + 1; };
+  const firstAt = s => { for (let k = K2C.SERIES[s].kmin; k <= 5000; k++) if (k - thr(s, k) >= 1) return k; };
+  $('lay-all').textContent = allFrom('layers'); $('lay-first').textContent = firstAt('layers'); $('ryu-all').textContent = allFrom('ryu');
+  for (const e of document.querySelectorAll('.lay-all2')) e.textContent = allFrom('layers');
+  for (const e of document.querySelectorAll('.ryu-all2')) e.textContent = allFrom('ryu');
+}
+
 /* ------------------------------------------------------------ controls, start */
 function readURL() {
   const q = new URLSearchParams(location.search);
@@ -558,7 +691,7 @@ function readURL() {
   $('K').value = state.K; $('Kv').textContent = state.K;
 }
 $('K').oninput = () => { state.K = +$('K').value; $('Kv').textContent = state.K; history.replaceState(null, '', `?K=${state.K}${location.hash}`); drawTriangle(); };
-for (const s of [...SER, 'known']) $('s-' + s).onchange = () => { state.on[s] = $('s-' + s).checked; drawTriangle(); };
+for (const s of [...SER, 'known', 'line']) $('s-' + s).onchange = () => { state.on[s] = $('s-' + s).checked; drawTriangle(); };
 for (const b of document.querySelectorAll('[data-open]')) b.onclick = () => openViewer(b.dataset.open, +b.dataset.k);
 let rT; new ResizeObserver(() => { clearTimeout(rT); rT = setTimeout(drawTriangle, 80); }).observe($('tri'));
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { readColours(); drawTriangle(); if (dlg.open) vdraw(); });

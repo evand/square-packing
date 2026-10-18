@@ -154,15 +154,16 @@ td.new{font-weight:600;color:var(--accent)}
 <section id="results">
   <div class="sechead"><span class="eyebrow">The theorems</span><h2>Upper bounds on c*(k)</h2></div>
   <p>Each line is a Lean theorem <span class="mono">∀ k ≥ k₀, ∃ s &lt; k, Packs (k·k − c) s</span>, which gives
-  <span class="mono">c*(k) ≤ c − 1</span>. Highlighted rows are new.</p>
+  <span class="mono">c*(k) ≤ c − 1</span>. Highlighted rows are new mathematics of ours; every Lean proof on this page is ours.
+  The <a href="packings.html#kk">packings page</a> shows where each one passes <span class="mono">k² − k</span>.</p>
   <div class="tablewrap"><table>
     <tr><th>bound</th><th>for</th><th>Lean theorem · mathematics</th></tr>
     <tr><td class="num">c*(n) ≤ n − 2</td><td class="num">n ≥ 15</td><td><span class="mono" style="font-size:.85em;overflow-wrap:anywhere">FangFinal.theorem1</span><br>Kevin Fang, after Arslanov–Mustafin–Shangitbayev</td></tr>
     <tr><td class="num">+ p + 2q more squares</td><td class="num">16p + 21q ≤ n − 15</td><td><span class="mono" style="font-size:.85em;overflow-wrap:anywhere">FangFinal.theorem2</span><br>Fang</td></tr>
     <tr><td class="num">c*(k) ≤ 8⌈√(k − 4)⌉ − 1</td><td class="num">k ≥ 6</td><td><span class="mono" style="font-size:.85em;overflow-wrap:anywhere">RyuBound.packs_sub_8sqrt</span><br>Ryu, Theorem 1.4</td></tr>
-    <tr><td class="num new">c*(k) ≤ 4⌈√(2k − 7)⌉ − 1</td><td class="num new">k ≥ 7</td><td><span class="mono" style="font-size:.85em;overflow-wrap:anywhere">RyuLayers.packs_sub_4sqrt2_layers</span><br>here: axis-filled band ends</td></tr>
-    <tr><td class="num new">c*(k) &lt; 18.9 k<sup>2/5</sup> + 35.7 k<sup>1/5</sup> + 122</td><td class="num new">k ≥ 3·10⁵</td><td><span class="mono" style="font-size:.85em;overflow-wrap:anywhere">RyuStairBound.packs_stair_k25</span><br>here, with Ryu's staircase ends</td></tr>
-    <tr><td class="num">c*(k) &lt; 20.668 k<sup>2/5</sup> + 0.623</td><td class="num">k ≥ 8·10⁶</td><td><span class="mono" style="font-size:.85em;overflow-wrap:anywhere">RyuStairBound.packs_ryu_thm12</span><br>Ryu, Theorem 1.2 (proved there for k ≥ 1.6·10⁷)</td></tr>
+    <tr><td class="num new">c*(k) ≤ 4⌈√(2k − 7)⌉ − 1</td><td class="num new">k ≥ 7</td><td><span class="mono" style="font-size:.85em;overflow-wrap:anywhere">RyuLayers.packs_sub_4sqrt2_layers</span><br><b>ours</b>: axis-filled band ends (new)</td></tr>
+    <tr><td class="num new">c*(k) &lt; 18.9 k<sup>2/5</sup> + 35.7 k<sup>1/5</sup> + 122</td><td class="num new">k ≥ 3·10⁵</td><td><span class="mono" style="font-size:.85em;overflow-wrap:anywhere">RyuStairBound.packs_stair_k25</span><br><b>ours</b>: Ryu's staircase ends, our count (new)</td></tr>
+    <tr><td class="num">c*(k) &lt; 20.668 k<sup>2/5</sup> + 0.623</td><td class="num">k ≥ 8·10⁶</td><td><span class="mono" style="font-size:.85em;overflow-wrap:anywhere">RyuStairBound.packs_ryu_thm12</span><br>Ryu, Theorem 1.2 (proved there for k ≥ 1.6·10⁷; the wider range is ours)</td></tr>
   </table></div>
   <p>Which is smallest where: Fang's for <span class="mono">15 ≤ k ≤ 39</span>; <span class="mono">4⌈√(2k − 7)⌉ − 1</span>
   from 40 to about 7.4·10⁵ (it is below Ryu's <span class="mono">8⌈√(k − 4)⌉ − 1</span> at every <i>k</i> ≥ 7); then the
@@ -262,6 +263,7 @@ certificates/k2-minus-c/verify.sh --fang   # also Fang's 18 pieces, ~20 min, ≤
 
 <section id="credits">
   <div class="sechead"><span class="eyebrow">Credits</span><h2>Whose mathematics</h2></div>
+  <h3>Original work</h3>
   <ul>
     <li><b>Sungjoon Ryu</b> (squarepacker), <i>k² − c upper bounds</i>, preprint v1.1 (jlevy/squares #471, #486): the L-shaped
     family, the explicit square-root bound, the lifted rows and the waste identity, the staircase end and the
@@ -269,10 +271,20 @@ certificates/k2-minus-c/verify.sh --fang   # also Fang's 18 pieces, ~20 min, ≤
     <li><b>H. D. Bui</b>: tilted columns whose lower squares are replaced by axis layers, behind the staircase.
     <b>Erdős and Graham</b> (1975): the band construction.</li>
     <li><b>Kevin Fang</b>, <i>Packing n² − n + 1 unit squares in a square of side less than n, for every n ≥ 15</i>
-    (draft, jlevy/squares #603, registered as T-163), after <b>Arslanov, Mustafin and Shangitbayev</b> (2021); its pieces
-    are packings by Fang, de Winter, Ellsworth, Stead and Arslanov–Mustafin–Shangitbayev.</li>
-    <li>The axis-filled ends were suggested by a literature-reading agent of this repository; the formalization and the
-    new bounds are this repository's (Evan Daniel, with Claude), October 2026.</li>
+    (draft, jlevy/squares #603, registered as T-163), after <b>Arslanov, Mustafin and Shangitbayev</b> (2021), whose
+    decomposition is his gluing lemma. His pieces are packings from the record lists, whose lineages run from
+    Arslanov–Mustafin–Shangitbayev (2019) through Ellsworth, Cantrell, Stead, de Winter and others, and his own.</li>
+  </ul>
+  <h3>Ours (Evan Daniel, with Claude, October 2026)</h3>
+  <ul>
+    <li><b>New bounds</b>: <span class="mono">c*(k) ≤ 4⌈√(2k − 7)⌉ − 1</span> for every <i>k</i> ≥ 7 (the axis-filled band
+    ends, their count and the choice of <i>b</i>), and <span class="mono">c*(k) &lt; 18.9 k<sup>2/5</sup> + 35.7 k<sup>1/5</sup> + 122</span>
+    for every <i>k</i> ≥ 3·10⁵ (Ryu's staircase ends with our own count of the squares, no area argument). Filling the band ends
+    with axis squares was suggested by a literature-reading agent of this project.</li>
+    <li><b>Formalization</b>: every theorem on this page in Lean, from the plain definition of a packing. For Fang's theorems:
+    the gluing lemma, the induction and exact certificates of all 18 pieces (with a rectangle checker); for Ryu's: simpler row
+    counts, and his Theorem 1.2 from <i>k</i> ≥ 8·10⁶ instead of 1.6·10⁷.</li>
+    <li><b>The drawings</b> on the <a href="packings.html">packings page</a>, re-checked against the theorems' counts.</li>
   </ul>
 </section>
 </div>
