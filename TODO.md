@@ -95,6 +95,7 @@ Thesis (Evan 10-14): diversity pays; local search at current budgets has mined t
 - [ ] Arslanov rectangle decomposition in Lean (s(k²−k) < k for k ≥ 12?); read the paper first (E-JC doi:10.37236/8586).
 
 ## Outreach / site
+- [ ] Site: show exact sides (minimal polynomial + isolating interval) for every n that has one (`search/exact/cur/RESULTS.md`, `search/exact/minpoly/`); none shown today (Evan 10-17: later, math first).
 - [ ] Per-n history viewer: what changed between consecutive records (matched-square diff, like the s(146) vs #505 page); design first.
 - [ ] Draw every packing we have numbers for (`tasks/site-all-packings/`; replaces the `NEWER` stopgap in viewer.js).
 - [ ] Repo unification: outreach → a small private GitHub repo; `wip/*` branches + pre-push hook if needed.

@@ -2,6 +2,7 @@
 
 Moved from `TODO.md`; one line each, newest first.  Details in the linked `search/*.md` / `notes/*.md`.
 
+- 2026-10-17 **s(232) record: exact certificate with exactly 3 angle groups** (`tasks/reg-cert-232/`): the regularized drawing (0° ×172, 45° ×36, θ₁ ×24) solved exactly over K(√2) (degree 14) from its 2049 contacts; `verify_exact.py` VALID, Lean `Sqpack.Exact.Packs.N232R3` (standard axioms), also the first Lean proof of the current degree-7 side.
 - 2026-10-15 **Exact forms for 23 more current records** (`search/exact/cur/`): the 10-07 pipeline on the 75 current records without one; 23 VALID (independent replay 23 / 23), 12 of them open since 10-07 (88, 123, 126, 172, 199, 207, 259, 263, 292, 297, 301, 302), 11 replacing superseded packings' forms; degrees 2–41, quadratics s(51) ≤ (16 + 5√2)/3, s(126) ≤ 15/2 + 3√2, s(295) ≤ 22(1 + √2)/3.  272 / 324 current records exact.  Pushed 7d1407a; posted jlevy#639.
 - 2026-10-15 **PR #7 (wand125) merged (44a105e)**: `ValidTilt7` from `v7_tree` via `validTilt_of_tree`, `Face` dropped, `LebMass` bridge, cost figures in `VALID7.md`; spot check 10-12 at head 4eb59c4 (`tasks/pr7-valid7-followup/`); also answers PR #6's `example` ask; thank-you posted 10-15 (`outreach/posted-pr7-thanks-2026-10-15.md`).
 - 2026-10-15 **Fill performance (FP1)** (PACKER "FP1 result (16:06)"): `search/packer/fillfast.py` (corner-rule reduction + per-component MILP), counts identical to the MILP on 216 / 216, 58 ms / fill; `mondrian.exact_fill` in-process (fork-after-HiGHS deadlock gone).  Tolerant fill and gated quench rejected.

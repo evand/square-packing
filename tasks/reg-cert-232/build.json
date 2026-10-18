@@ -1,0 +1,18 @@
+{
+ "rep": {
+  "g": 2,
+  "groups_after": 3,
+  "verify": {
+   "ok": true,
+   "min_gap": "-4.8431e-71",
+   "contacts": 770
+  }
+ },
+ "rows": 2049,
+ "classes": {
+  "A": 172,
+  "B": 24,
+  "C": 36
+ },
+ "max_dev": "2.9863e-69"
+}
