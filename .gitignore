@@ -45,3 +45,5 @@ search/exact/batch/inputs_live/
 search/packer/shove/delL.py
 search/packer/shove/fill_wallL.py
 search/packer/HELD-cs3.md
+# Fang pieces (search/exact/fang_pieces.py; certificates/fang-gluing/README.md)
+/lean/Sqpack/Exact/Fang/

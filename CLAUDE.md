@@ -30,4 +30,6 @@ Start at `TODO.md` (open items; conventions in `~/math/TODO.md`), then `README.m
 - Before any bound-chasing or record claim, check jlevy's register (`jlevy.github.io/squares/cases/<n>.html`, `packing/frontier/RESULTS.md`); the local clone's `frontier/n-<n>.md` is in `~/math/_untrusted-third-party/jlevy-squares` (refresh per its PROVENANCE.txt).
 - `site/www/problems.html` is the reader-facing copy of `search/WISHLIST.md`'s object-level items: edit both together.
 - `~/math/_untrusted-third-party/`: read only, never execute.
+- Licensing (Evan, 10-17): never copy others' code, but packings / certificates are mathematical facts, not
+  copyrightable: use them freely (store, Lean, gluing), like a result from a paper, with careful, courteous citation.
 - Work on `main` (single checkout, no long-lived worktrees); branch for big restructures.  Commit messages end with the attribution lines the session gives.

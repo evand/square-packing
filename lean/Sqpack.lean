@@ -44,6 +44,10 @@ import Sqpack.AnchorLemma2
 import Sqpack.Spec
 import Sqpack.Conjectures
 import Sqpack.ConjecturesProofs
+import Sqpack.ExactCheckCut
+import Sqpack.ExactRect
+import Sqpack.FangGlue
+import Sqpack.FangTheorem
 import Sqpack.SpecBridge
 import Sqpack.FCSquarePacking
 import Sqpack.SpecFC

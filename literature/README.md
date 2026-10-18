@@ -18,6 +18,7 @@ Labels used in the scans: **[verified]** / [P] means we read the source or its b
 | [`notes/wishlist-literature-2026-10-03.md`](../notes/wishlist-literature-2026-10-03.md) | 10-03 | What is known for each WISHLIST item. |
 | [`notes/conjectures-literature-2026-10-04.md`](../notes/conjectures-literature-2026-10-04.md) | 10-04 | Double-check for the conjectures page: Chung–Graham prizes, Erdős #106, Ellsworth's {s(n²+1)} ≥ ½. |
 | [`waste-bounds-2026-10-12.md`](waste-bounds-2026-10-12.md) | 10-12 | Primary-source read of Erdős–Graham 1975, Roth–Vaughan 1978 (exact theorem, c₀ = 10⁻¹⁰⁰), Stromquist's 1984 memoranda I–III, Bui 2504.09489, Bašić–Slivková 2018 (s(61) ≥ 7.8906, superseded); claim-by-claim check of our files. |
+| [`waste-constructions-2026-10-17.md`](waste-constructions-2026-10-17.md) | 10-17 | Explicit power-law upper bounds on c*(k) for side just below an integer.  Centre: Ryu's k2-minus-c-upper (Thm 1.3 L-shaped family, closed form, c*(k) ≤ 8⌈√(k−4)⌉ − 1 for k ≥ 6; 2/5 and 3/8 tiers) and a Lean lemma plan for it.  Also: our filled-end variant (≈ 5.66√k; beats Fang for k ≥ 38), Ryu's #414 lower bounds (k^{1/4}, k^{1/3}; reported), and the constructions of EG, Kearney–Shiu, CG 2009/2020, WDL, Bui and McClenagan read as background. |
 
 ## Packing search: records, optimizers, methods
 
