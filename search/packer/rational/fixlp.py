@@ -114,3 +114,33 @@ def max_pen(sq, s):
     hx = halfw(th, np.tile([1.0, 0.0], (len(sq), 1))); hy = halfw(th, np.tile([0.0, 1.0], (len(sq), 1)))
     wall = max((hx - sq[:, 0]).max(), (sq[:, 0] + hx - s).max(), (hy - sq[:, 1]).max(), (sq[:, 1] + hy - s).max())
     return max(-gap.min() if len(gap) else 0.0, wall)
+
+
+def mobility(sq, s, k=12, trust=0.2, cut=1.6, seed=0):
+    """per-square max centre displacement over k LPs at the side fixed to s (random linear objectives over centres,
+    separators from the current geometry, box +-trust): ~0 = locked (no first-order motion at this side), > 0 = loose.
+    The locked set is the union of every possible force support (unlike one dual vertex)."""
+    rng = np.random.default_rng(seed)
+    sq = np.asarray(sq, float); n = len(sq)
+    i, j = pairs(sq, cut)
+    d, need, gap = separators(sq, i, j)
+    th = sq[:, 2]
+    hx = halfw(th, np.tile([1.0, 0.0], (n, 1))); hy = halfw(th, np.tile([0.0, 1.0], (n, 1)))
+    m = len(i); r = np.arange(m)
+    rows = [r, r, r, r]; cols = [2 * i, 2 * i + 1, 2 * j, 2 * j + 1]; vals = [d[:, 0], d[:, 1], -d[:, 0], -d[:, 1]]
+    A = sp.csr_matrix((np.concatenate(vals), (np.concatenate(rows), np.concatenate(cols))), shape=(m, 2 * n))
+    b = -np.minimum(need, need + gap)                      # current slack kept non-negative (tiny float overlaps)
+    x0 = sq[:, :2].ravel()
+    lo = np.empty(2 * n); hi = np.empty(2 * n)
+    lo[0::2] = np.maximum(x0[0::2] - trust, hx); hi[0::2] = np.minimum(x0[0::2] + trust, s - hx)
+    lo[1::2] = np.maximum(x0[1::2] - trust, hy); hi[1::2] = np.minimum(x0[1::2] + trust, s - hy)
+    lo = np.minimum(lo, x0); hi = np.maximum(hi, x0)
+    disp = np.zeros(n)
+    for _ in range(k):
+        c = rng.normal(size=2 * n)
+        res = linprog(c, A_ub=A, b_ub=b, bounds=list(zip(lo, hi)), method='highs')
+        if res.status != 0:
+            continue
+        dx = (res.x - x0).reshape(-1, 2)
+        disp = np.maximum(disp, np.sqrt((dx ** 2).sum(1)))
+    return disp
