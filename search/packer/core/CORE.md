@@ -32,3 +32,19 @@ the shove runs (`runs/shove/ties1018`, 46 n) rearranging only the filler?  `core
   neighbours), but the pictures are unambiguous at these n.
 * Reading: the plateau is the record's combinatorial family; shove / delete-L / duplicate-half sample it.  Beating
   these records needs a different piece set (a construction change), not a rearrangement.
+
+## The s(174) bend (10-18; Evan: "that wonky bend is interesting ... can we place it anywhere? move pieces locally?")
+`bend174.py`, `stripslack.py` (~1 CPU-h).
+* In the record (Göbel, 13 + 1/sqrt 2) all 16 strip squares are loose (fixlp.mobility >= 0.2); the upright staircases
+  carry the side.  The alternates' bend squares (39 / 67 degrees, slightly tipped uprights at staircase notches) are
+  loose too: a bend is the strip's slack parked somewhere.
+* E1 (insert one square at each of the 17-20 strip gaps, record + 3 alternates, r0 0.1 / 0.2, box held / free, 608
+  runs): best 175 = 13.8267 (s(175) record 13.7641743; 174's side 13.7071).  No room for another square.
+* E2 (melt a window r 1.5 / 2.5 around each strip square, re-insert at random, box held, 432 runs): 8 return to the
+  record side, every one with a bend (5-9 non-45 squares), at windows k = 0, 1, 3, 6, 7, 14 (lower left .. upper right);
+  0 below; median outcome +0.20.  So bends sit almost anywhere along the strip, at zero cost and zero gain.
+* Consolidated slack (LP: slide range of the top strip square along (1, 1), side fixed, all else free) in the
+  13 + 1/sqrt 2 family: 27 0.243, 38 0.657, 52 0.071, 67 0.328, 104 0.157, 125 0.400, 149 0.142, 174 0.328, 201
+  0.571, 231 0.228, 262 0.400, 296 0.157.  Values of the form a + b sqrt 2 (174: 2 sqrt 2 - 5/2), set by where the
+  strip ends meet the staircases; no growth with k, never near 1.
+* Reading: the bend is slack spreading, not structure.  Nothing to collect at these n.
