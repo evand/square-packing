@@ -26,6 +26,11 @@ Start at `TODO.md` (open items; conventions in `~/math/TODO.md`), then `README.m
 - Run scripts from the repo root unless they `cd` themselves.
 
 ## Rules
+- Record hunting (Evan, 10-18): a new generator / idea never "produces one packing".  Read its output as a
+  distribution of starts for refinement: score how many starts land near the record and are new (matching distance,
+  structure), then what equal refinement budget makes of them (refined outcome distribution per CPU-h vs a baseline such
+  as explorer-from-kicked-record).  Never close a line on its best raw output.  (Exact bounds that grow with n are a
+  different kind of result.)
 - External posts (GitHub issues/comments on other repos, X, email): draft in `outreach/`, ask Evan explicitly per post.
 - Before any bound-chasing or record claim, check jlevy's register (`jlevy.github.io/squares/cases/<n>.html`, `packing/frontier/RESULTS.md`); the local clone's `frontier/n-<n>.md` is in `~/math/_untrusted-third-party/jlevy-squares` (refresh per its PROVENANCE.txt).
 - `site/www/problems.html` is the reader-facing copy of `search/WISHLIST.md`'s object-level items: edit both together.

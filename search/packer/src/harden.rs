@@ -360,9 +360,12 @@ fn sarg(a: &[String], k: &str) -> Option<String> { a.iter().position(|x| x == k)
 
 /// Md (diagonal mirror, (x, y, th) -> (y, x, -th)) partner of each square, matched once from a symmetric input
 /// (10-18, symmetric-subspace test).  Self-partnered squares sit on the diagonal.
-fn sym_pairs(st: &St) -> Vec<usize> {
+fn sym_pairs(st: &St, band: f64) -> Vec<usize> {
     let n = st.n;
     (0..n).map(|i| {
+        if band > 0.0 && (st.x[3 * i] - st.x[3 * i + 1]).abs() / std::f64::consts::SQRT_2 < band {
+            return usize::MAX;                                          // seam band: free, not projected
+        }
         let (xi, yi) = (st.x[3 * i + 1], st.x[3 * i]);              // mirror image of i
         let mut best = (f64::MAX, i);
         for j in 0..n {
@@ -387,7 +390,7 @@ fn sym_project(st: &mut St, pr: &[usize]) {
     let q4 = std::f64::consts::FRAC_PI_4;
     for i in 0..st.n {
         let j = pr[i];
-        if j < i { continue; }
+        if j == usize::MAX || j < i { continue; }
         for arr in [&mut st.x, &mut st.v] {
             if j == i {
                 let m = 0.5 * (arr[3 * i] + arr[3 * i + 1]);
@@ -487,14 +490,15 @@ fn reharden(a: &[String]) {
     let p: f64 = arg(a, "--p", 1.0); // r(u) = r0 (1 - u)^p during hold
     let hold_move: u32 = arg(a, "--hold-move", 0); // 1: box free under pressure mu while soft (Nakajima morph)
     let k0: f64 = arg(a, "--stiff0", 1.0);
-    let sym: u32 = arg(a, "--sym-md", 0); // 1: project onto the diagonal-mirror subspace after every step // pair stiffness k0 during pre, ramped k0^(1-u) -> 1 during hold
+    let sym: u32 = arg(a, "--sym-md", 0); // 1: project onto the diagonal-mirror subspace after every step
+    let band: f64 = arg(a, "--sym-band", 0.0); // with --sym-md: squares within this distance of the diagonal (at the start) stay free // pair stiffness k0 during pre, ramped k0^(1-u) -> 1 during hold
     let (n, s, x) = read_cfg(&inp);
     let mut st = new_state(n, x, s * hold_f, seed);
     // centre the packing in the held box
     let d = (s * hold_f - s) / 2.0;
     for i in 0..n { st.x[3 * i] += d; st.x[3 * i + 1] += d; }
     st.rebuild();
-    let pr: Vec<usize> = if sym == 1 { sym_pairs(&st) } else { vec![] };
+    let pr: Vec<usize> = if sym == 1 { sym_pairs(&st, band) } else { vec![] };
     if sym == 1 { sym_project(&mut st, &pr); }
     st.kp = k0;
     let (mu_h, mv) = if hold_move == 1 { (mu, true) } else { (0.0, false) };

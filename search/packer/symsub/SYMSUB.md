@@ -85,3 +85,22 @@ from current records at all 38 Md n (pre-registered separately).  Predictions: s
   trivial); median best gap > +0.05 70 %: miss (median ~+0.048).  Line closed for now: the subspace refines within a
   design but every way of entering it from a non-symmetric packing (blend, duplicate-half, from scratch) costs more
   than it gives back at these n.
+
+## DUP3: duplicate-half as a start distribution, pre-registered (10-18 ~23:00; Evan: "reduce the n, reduce compute,
+see if this framing gets any interesting results at all")
+`dup3.py gen / refine / report` (runs/symsub/dup3).  n = 51 110 153 172 207 297 (DUP2's ties / near misses).  Gen: 64
+variants per n (written as 120 before launch; the grid is 64: seed 2 only at w = 0) (mirror Md / Ma x half x seam band w 0 / 0.7 / 1.5 (`harden --sym-band`: band deleted, refilled at
+random, left free) x r0 0.05 / 0.15 x box loose / tight (held at the record side, overlaps persist) (+ seed 2 at w 0)),
+symmetric soft stage + free polish.  Filter: within 5e-3 of the record, matching distance >= 0.005, distinct sides,
+<= 6 per n.  Refine: explore.py 5 min each; baseline: the same number of 5-min explorer runs from the record itself.
+~5 CPU-h.  Metrics: per arm, distinct polished minima within 1e-4 of the record (sides 1e-9 apart), how many at or
+below the record, best refined side.  Predictions: dup finds more distinct near-record minima than base 55 %; any
+minimum below a record 3 %; dup's kept starts number >= 3 at >= 4 of 6 n 60 %.
+* **DUP3 result (10-18 ~23:30; gen 384 variants 95 s wall ~0.4 CPU-h; refine 26 x 5 min ~2.2 CPU-h)**: kept new starts
+  (within 5e-3, md >= 0.005): 51: 1, 110: 5, 153: 2, 172: 0, 207: 3, 297: 2; every kept start came from w = 0 (seam
+  bands never within 5e-3); best non-tie start 110 tight-box +1.1e-4.  After 5 min refinement: no record.  Dup starts
+  reach the exact record side at 51 / 153 / 207 as DISTINCT packings (md 0.007-0.017; base from the record stays md
+  0.000), at 110 collapse onto the record itself (md 0.001, 3 / 5), and 297 refines +8.8e-4 -> +1.8e-4 (md 0.014, new).
+  Distinct minima within 1e-4: dup 14, base 18.  Predictions: dup more near-record minima 55 %: miss; below a record
+  3 %: none; >= 3 kept at >= 4 n 60 %: miss (2 n).  Reading: as a start distribution, duplicate-half lands in the
+  record's own funnel or on its exact-side plateau (like the shove ties), with one new near miss (297, +1.8e-4).
