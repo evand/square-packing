@@ -4124,3 +4124,51 @@ staircase); the example fill collapses to the grid 9 / 9.
   Funnel width FW1: returns to the record 179 / 288 sym vs 41 / 288 free (wider funnels in the subspace).  Time travel
   TT-S1 (8.3 CPU-h): 0 / 20 starts reach the record in either arm; blend vs duplicate-half (DUP1) and duplicate-half
   of current asymmetric records (DUP2): 0 records.  Reading: a conservative refiner, not an explorer.
+
+## H183: s(183) below the grid (10-18 ~21:50; Evan: "182 has too much slack, 183 should pack sub-grid")
+Live check (candidate.py --live 183, issues through #678): s(183) = 14 (grid); s(182) = 13.97409071 (Couzo), whose margin
+0.026 is the largest end-of-column margin k - s(k^2 - c) for k = 8..18 (the 182 record has visible holes in both tilted
+bands).  10-12's H2 gave 183 only 2-3 chain rounds.  `h183.py` (pre-registered here, before launch):
+* **Seeds** (~2 CPU-h): arm `record` = 120 one-square insertions into the 182 record; `diverse182` = 120 distinct 182s
+  (best 60 + 60 stratified by side band x tilted count, s < 13.995) x 4; `diverse181` = 30 distinct 181s x 4, two squares.
+  chain.seed_job (dilate, pose hole, fq quench), 4 tries per seed.  Smoke: the record's insertions quench to 14.0190.
+* **Explore** (~12 CPU-h): per arm 4 explorer runs x 40 min from the best distinct non-grid seeds < 14.04 (6 per run).
+* Metric: seed side distribution per arm (< 14, grid, 14-14.01, ...); explorer best per run; any certified 183 < 14.
+* Predictions: a 183 below 14 in this budget: 15 %.  Diverse arms give more seeds within 0.01 of 14 than `record`: 60 %.
+  If 0 in all arms and nothing gets within 0.005 of 14: insertion + local search is not the route (needs a band rebuild:
+  re-cut the lower band one row longer).
+* **H183 seeds result (10-18 ~22:10; 381 s wall, 15 procs)**: 0 below 14.  The grid attractor dominates: blocked by a
+  full line or staggered axis chain (`layout.full_lines`) record 112 / 120, diverse182 454 / 480, diverse181 92 / 120
+  (the 14.0000x seeds are grids with a stuck square; the smoke's 14.019 was blocked too).  Line-free: record 8 (best
+  14.02930), diverse182 26 (14.01501), diverse181 28 (14.01168).  None within 0.01 of 14 (prediction 2 can't resolve;
+  diverse arms give 3x the line-free seeds and better bests).  Deviation before explore: starts = line-free seeds only.
+* **LC1: inexact L removal** (10-18 ~22:30; Evan: strict L removal from 211 drops 29 -> 182 and leaves two big gaps
+  where squares only gently poke into the L band; keep one of them -> 183).  `lcut.py`: per donor, enumerate strip
+  cuts (0.05 grid), remove the n0 - 183 squares with the most area inside the strips, rank cuts by kept-in-strip area +
+  removed-outside area; 40 best distinct cuts x 2 quenches (loosen 1.02 / 1.05).  Baseline arm `random` = cropseed's
+  rule (uniform cut, centre removal, fix_count), 60 per donor.  Donors: 211 x 4 distinct (record 1044256 + 3 near
+  copies), 210 x 2 (remove 27), 209 x 2 (remove 26).  211 record's best cut: right column + bottom row, kept pokes
+  ~0.02 area each.  Metric: line-free seed sides per arm (< 14, < 14.01, < 14.02).  Predictions: lcut line-free share >
+  random's: 80 %; a seed < 14.01: 35 %; a seed < 14 directly: 8 %.
+* **LC1 result (10-18 ~22:45; 438 s on 4 procs)**: lcut line-free 323 / 640 vs random 84 / 480; < 14.01: 41 vs 1;
+  < 14.02: 48 vs 18; none < 14.  Best 14.0004214 (line-free, the 211 record's two-band structure intact; cut (9.95,
+  0.05) on 211 #1764549), repeated across all four 211 donors; 210 / 209 donors 14.016-14.03.  Predictions: line-free
+  share (80 %): hit; a seed < 14.01 (35 %): hit; < 14 directly (8 %): no.  Insertion explorer at 18 / 40 min: 14.0174.
+  Next (not a test, a hunt): explorer x 4 (1 proc, 40 min) from the 24 best distinct lcut seeds.
+* **H183 explore result (10-18 ~23:00)**: **s(183) <= 13.999805115795071626646 (S*), certified** (candidate.py
+  s183_h183: both checkers VALID, strict local minimum mod 33 flat motions, 4 rattlers, 73 tilted; live check: nothing
+  at or below through #678; distinct from the grid, matching distance 0.61).  First sub-grid 183: c*(14) <= 13.
+  From explorer run x5_diverse182 (starts: one-square insertions into 6 non-record 182s, 13.9746-13.9941; donor
+  lineage of b00178 not yet traced).  Run bests: record arm 14.0135-14.0204 (0 / 4 below 14), diverse182 13.9998 /
+  14.0000000 / 14.0097 / 14.0121, diverse181 14.0040-14.0154.  Predictions: a sub-14 183 (15 %): hit; diverse arms
+  better (60 %): yes (every record-arm run is worse than 3 / 8 diverse runs; n = 4 per arm, weak).
+  Next: refinement, explorer x 12 from the hit (elite share 0.5, 40 min).  Not posted (ask Evan).
+* **H183 refine + LC1 explore (10-18 ~23:45)**: refine (12 x 40 min explorer from the hit, elite 0.5): **s(183) <=
+  13.999580178736252502 (S*), certified** (s183_h183b: both checkers VALID, strict local minimum mod 27 flat motions,
+  1 rattler, 73 tilted; live: nothing at or below), -2.25e-4 below the first hit; every run reached it; other distinct
+  sub-14 minima 13.9995816 .. 13.99978.  LC1 explore (4 x 40 min from lcut seeds): all stuck at 14.0004214 (the
+  jammed lcut minimum); lcut gives the best raw seeds but this basin does not cross 14 under the explorer.
+* **H183 lineage (10-18 ~23:55)**: Couzo's 182 witness (store 340) -> EX2 explorer at 182, 10-17, 17 moves -> 1597470
+  (13.990326) -> one-square insertion seed 182_1597470_0 (14.03347, line-free) -> x5_diverse182: aswap, cross2, cross2
+  (mates not logged; all six starts descend from public 182s) -> 13.9998051 (b00178) -> refine r3: kicksym x 3 ->
+  13.9995802 (b00051).  Draft for jlevy: `outreach/draft-jlevy-n183-2026-10-18.md`.
