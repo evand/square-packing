@@ -4114,3 +4114,13 @@ staircase); the example fill collapses to the grid 9 / 9.
 * `pk/parents.sources()` + policy `elite+banded`; `shove/bench.py`: `--from-task / --to-task` shards (seeds by global task index), per-task `ms` and `tags`, hit files written as plain floats.
 * Posted 10-17: jlevy#674 s(229) <= 15.650163254859 (e0338c7), updated the same day to <= 15.650161513896 (00e68df).
 * Lesson (s(260), 10-17): a 'below the record' gap under ~1e-7 can be float slack in the posted packing; compare exact solves (candidate.py's prior step) before calling it a find.  s(260)'s exact form (= #668's analytic optimum) is in the store, to bundle with the next submission (TODO).
+
+## 10-18 evening: rational constructions and the symmetric subspace (logs in their own dirs)
+* `rational/RATIONAL.md`: Pythagorean-angle block enumerator (`ratgen.py`), exact fixed-angle LP with contact forces
+  (`fixlp.py`), angle release (`release.py`).  RG1 / RG2 (~8 CPU-h): 0 records; near misses are rational shadows of
+  45-degree records; RG2's positive control (293 = 723/41) failed: the right shear + wall-flush placement is ~1 in 8,748
+  (sampling can't reach it; a count-aware construction would be needed).  236 packings in the store (ours:rational*).
+* `symsub/SYMSUB.md`: Md-symmetric subspace (`harden reharden --sym-md 1`).  From random starts: worse than free.
+  Funnel width FW1: returns to the record 179 / 288 sym vs 41 / 288 free (wider funnels in the subspace).  Time travel
+  TT-S1 (8.3 CPU-h): 0 / 20 starts reach the record in either arm; blend vs duplicate-half (DUP1) and duplicate-half
+  of current asymmetric records (DUP2): 0 records.  Reading: a conservative refiner, not an explorer.

@@ -358,6 +358,61 @@ fn arg<T: std::str::FromStr>(a: &[String], k: &str, def: T) -> T {
 }
 fn sarg(a: &[String], k: &str) -> Option<String> { a.iter().position(|x| x == k).and_then(|i| a.get(i + 1)).cloned() }
 
+/// Md (diagonal mirror, (x, y, th) -> (y, x, -th)) partner of each square, matched once from a symmetric input
+/// (10-18, symmetric-subspace test).  Self-partnered squares sit on the diagonal.
+fn sym_pairs(st: &St) -> Vec<usize> {
+    let n = st.n;
+    (0..n).map(|i| {
+        let (xi, yi) = (st.x[3 * i + 1], st.x[3 * i]);              // mirror image of i
+        let mut best = (f64::MAX, i);
+        for j in 0..n {
+            let d = (st.x[3 * j] - xi).powi(2) + (st.x[3 * j + 1] - yi).powi(2);
+            if d < best.0 { best = (d, j); }
+        }
+        best.1
+    }).collect()
+}
+
+fn wrap_q(a: f64) -> f64 {
+    // to (-pi/4, pi/4]
+    let q = std::f64::consts::FRAC_PI_2;
+    let mut b = a % q;
+    if b > q / 2.0 { b -= q; }
+    if b <= -q / 2.0 { b += q; }
+    b
+}
+
+/// project positions and velocities onto the Md-invariant subspace
+fn sym_project(st: &mut St, pr: &[usize]) {
+    let q4 = std::f64::consts::FRAC_PI_4;
+    for i in 0..st.n {
+        let j = pr[i];
+        if j < i { continue; }
+        for arr in [&mut st.x, &mut st.v] {
+            if j == i {
+                let m = 0.5 * (arr[3 * i] + arr[3 * i + 1]);
+                arr[3 * i] = m; arr[3 * i + 1] = m;
+            } else {
+                let a = 0.5 * (arr[3 * i] + arr[3 * j + 1]);
+                let b = 0.5 * (arr[3 * i + 1] + arr[3 * j]);
+                arr[3 * i] = a; arr[3 * i + 1] = b; arr[3 * j] = b; arr[3 * j + 1] = a;
+            }
+        }
+        if j == i {
+            let th = st.x[3 * i + 2];
+            let k = (th / q4).round();
+            st.x[3 * i + 2] = k * q4;
+            st.v[3 * i + 2] = 0.0;
+        } else {
+            let d = wrap_q(-st.x[3 * j + 2] - st.x[3 * i + 2]);
+            st.x[3 * i + 2] += 0.5 * d;
+            st.x[3 * j + 2] = -st.x[3 * i + 2];
+            let dv = 0.5 * (st.v[3 * i + 2] - st.v[3 * j + 2]);
+            st.v[3 * i + 2] = dv; st.v[3 * j + 2] = -dv;
+        }
+    }
+}
+
 fn new_state(n: usize, x: Vec<f64>, l: f64, seed: u64) -> St {
     let mut st = St { n, x, v: vec![0.0; 3 * n], g: vec![0.0; 3 * n], l, vl: 0.0, nb: vec![], xref: vec![],
         rng: Rng::new(seed), steps: 0, kp: 1.0 };
@@ -431,31 +486,34 @@ fn reharden(a: &[String]) {
     let lr: f64 = arg(a, "--lr", 0.04);
     let p: f64 = arg(a, "--p", 1.0); // r(u) = r0 (1 - u)^p during hold
     let hold_move: u32 = arg(a, "--hold-move", 0); // 1: box free under pressure mu while soft (Nakajima morph)
-    let k0: f64 = arg(a, "--stiff0", 1.0); // pair stiffness k0 during pre, ramped k0^(1-u) -> 1 during hold
+    let k0: f64 = arg(a, "--stiff0", 1.0);
+    let sym: u32 = arg(a, "--sym-md", 0); // 1: project onto the diagonal-mirror subspace after every step // pair stiffness k0 during pre, ramped k0^(1-u) -> 1 during hold
     let (n, s, x) = read_cfg(&inp);
     let mut st = new_state(n, x, s * hold_f, seed);
     // centre the packing in the held box
     let d = (s * hold_f - s) / 2.0;
     for i in 0..n { st.x[3 * i] += d; st.x[3 * i + 1] += d; }
     st.rebuild();
+    let pr: Vec<usize> = if sym == 1 { sym_pairs(&st) } else { vec![] };
+    if sym == 1 { sym_project(&mut st, &pr); }
     st.kp = k0;
     let (mu_h, mv) = if hold_move == 1 { (mu, true) } else { (0.0, false) };
-    for _ in 0..pre { st.step(r0, mu_h, noise0, mv, lr); }
+    for _ in 0..pre { st.step(r0, mu_h, noise0, mv, lr); if sym == 1 { sym_project(&mut st, &pr); } }
     for k in 0..hold {
         let u = k as f64 / hold as f64;
         let r = r0 * (1.0 - u).powf(p);
         st.kp = k0.powf(1.0 - u);
-        st.step(r, mu_h, noise0 * (1.0 - u), mv, lr);
+        st.step(r, mu_h, noise0 * (1.0 - u), mv, lr); if sym == 1 { sym_project(&mut st, &pr); }
     }
     st.kp = 1.0;
     let mut maxo = 0.0;
     for k in 0..release {
         let u = k as f64 / release as f64;
-        maxo = st.step(0.0, mu, 0.25 * noise0 * (1.0 - u), true, lr);
+        maxo = st.step(0.0, mu, 0.25 * noise0 * (1.0 - u), true, lr); if sym == 1 { sym_project(&mut st, &pr); }
     }
     for k in 0..settle {
         let m = mu * 1e-4f64.powf(k as f64 / settle as f64);
-        maxo = st.step(0.0, m, 0.0, true, lr);
+        maxo = st.step(0.0, m, 0.0, true, lr); if sym == 1 { sym_project(&mut st, &pr); }
     }
     finish(&st, &out, t0, format!(", \"s_in\": {:.15}, \"maxo\": {:.3e}", s, maxo));
 }
