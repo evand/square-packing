@@ -17,3 +17,18 @@ the shove runs (`runs/shove/ties1018`, 46 n) rearranging only the filler?  `core
   only halves the target (locked ~ half the packing), and the minimal force chains (~2s) are not unique.  The test that
   would decide whether skeleton-targeted moves are worth building: kicks restricted to locked vs loose vs all squares
   from the record, same quench, compare how often the side changes (not ties) and how far.
+
+## What the exact-side alternates are (10-18; Evan: "a common deterministic program we're finding inefficiently, like
+149, or different packings with a related core and different fill?"; `altshape.py`, figures in the session scratchpad)
+132 alternates (ties1018 + DUP3's refined ties), aligned to their record:
+* 55 "loose only": >= 80 % of the squares that differ were loose (mobility > 0) in the record: the same packing with
+  rattlers / slack squares elsewhere.  Not distinct in any useful sense.
+* 77 "mixed": locked squares differ too.  Drawn (257, 153, 174, 207, 298, 125): every one is a discrete rearrangement
+  of the record's own pieces: where a 45-degree strip jogs or breaks (125, 174), a strip vs a diamond block of 45-degree
+  squares (257), which diamond cells are vacant (298), which wall row / column carries the fractional slack and where
+  the upright blocks sit along the strip (153, 207).  Same piece set, same side, different placement: the 149 situation
+  (`search/goebel_alt`), i.e. a combinatorial family a placement model / ILP (Ellsworth's 45-degree enumerator, goebel_alt)
+  would list in full.  No rigid-translation test catches it (blocks shifted by whole lattice units match onto their
+  neighbours), but the pictures are unambiguous at these n.
+* Reading: the plateau is the record's combinatorial family; shove / delete-L / duplicate-half sample it.  Beating
+  these records needs a different piece set (a construction change), not a rearrangement.
