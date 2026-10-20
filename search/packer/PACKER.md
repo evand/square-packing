@@ -4676,3 +4676,30 @@ SW's 13, 110 (as SW), 308 and 146 (D308 / D308b / R308 and D146 / HB2 today): 42
   Equivalence: old snapshot vs git import, identical packing sets at Mishapolk / TheSnakeFang / BuddenPing / Couzo /
   wand125 commits (git dirs 1-35 MB vs snapshots 8-208 MB); next Couzo commit costs +5.5 MB vs ~200 MB.  Live:
   `sync-issues 703` through git, 60 packings (7 new).  The 154 old snapshot dirs (11.0 GB) are unused; not yet deleted.
+* **Identity at 274 (10-20; `analysis/ident.py`, runs/ident_274*.{npz,json}).**  6,542 polished non-grid 274s < 17.01.
+  Cheap test = nearest lower row (side window 1e-3) by fingerprint distance; quantiles 10/50/90 0.0009 / 0.0024 / 0.011.
+  Calibration, 120 pairs (20 per distance bin), long fq polish (nearmiss recipe) of both rows: the polish moved the
+  stored rows by ~1e-13 (max 5e-7): they are already converged.  Same minimum (polished sides within 1e-7): fp
+  [0, 0.002) 6 / 20, [0.002, 0.005) 2 / 20, [0.005, 0.01) 2 / 20, >= 0.01 0 / 60.  Fingerprint-close pairs are mostly
+  distinct neighbouring minima (side gaps 1e-7..1e-4), so no tau gives a copy test.  Polished rows dedupe by side
+  instead: distinct at 2e-9 / 1e-8 / 1e-7 / 1e-6: 5,347 / 5,012 / 4,315 / 2,337.  Reading: identity (dedupe) and
+  similarity (diversity) are separate questions; the fingerprint is a diversity measure, not an identity test.
+* **Rigid-core identity (10-20; Evan: "fingerprint ... over the rigid core only, or ignoring rattlers"; `analysis/corekey.py`).**
+  Core = fixlp.mobility < 1e-7 (0.1 s at 274; ~234 / 274 locked).  Test: best of 8 symmetries + Hungarian over all
+  squares; deviation measured over squares locked in BOTH packings (membership itself drifts by up to ~7 squares between
+  copies; a union or core-to-core matching fails the control).  Max centre deviation:
+  - control, 20 true copies (mirror + relabel + 1e-6 jitter + long polish): 3e-11 .. 5e-5 (19), 8e-4 (1);
+  - the 10 polish-"same" pairs (sides within 1e-7): 9e-11 .. 2e-4 (8), 3e-3, 7e-3;
+  - the 110 polish-distinct pairs: smallest 2e-3, median 0.11.
+  So at tol ~1e-3: 19 / 20 copies, 8 / 10 same-side pairs merged, 0 / 110 false merges; the margin is thin (8e-4 vs
+  2e-3): squares on flat motions drift between copies, so regularization (or a tighter polish) is what would widen it.
+  Same-side pairs earlier read as "alternates" (large raw deviation) are mostly one rigid core with flat-motion squares
+  placed differently.  Cost of strict dedupe for polished rows: bucket by side (1e-7), core-compare within a bucket.
+* **Identity at 110 (10-20; same tools, 7,702 polished 110s < 10.9972, record 10.9967834).**  The opposite regime from
+  274: ~41 distinct sides at 1e-7 (49 at 1e-8, 29 at 1e-6) for 7,702 rows, i.e. ~190 stored rows per minimum (274:
+  6,542 rows, 4,315 sides).  Fingerprint nearest-lower distance median 0.0000 (90th pct 0.0002).  Long-polish
+  calibration (38 pairs; few far pairs exist): fp < 0.002 20 / 20 same, [0.002, 0.005) 4 / 16, the rest 1 / 2.
+  Rigid-core deviation: same-side pairs 23 / 25 <= 8e-5, then 1e-3, 1e-2; distinct pairs 8e-3 .. 0.2 (polished side
+  gaps 6e-6 .. 4e-4).  At tol 1e-3: 24 / 25 merged, 0 / 13 false merges; the margin is wider than at 274 (8e-3 vs 1e-3).
+  The 1e-2 same-side pair is either a weak-lock artefact or two minima with equal sides (the 10-11 audit found 4 such
+  side-key collisions at 110); exactsolve's minimum table could settle it.
