@@ -32,10 +32,7 @@ sys.path.insert(0, PK); sys.path.insert(0, os.path.join(PK, 'analysis'))
 CORNERS = ('LL', 'LR', 'UL', 'UR')        # (y side, x side): 'LR' = lower right
 
 
-def half_extent(a):
-    r = math.radians(a % 90.0)
-    return 0.5 * (abs(math.cos(r)) + abs(math.sin(r)))
-
+from pk.fill import half_extent  # noqa: E402  (10-20: moved to pk/fill.py)
 
 # ------------------------------------------------------------------ corner blocks
 
@@ -64,7 +61,60 @@ def corner_blocks(s, sq, tol=0.02):
 
 # ------------------------------------------------------------------ the shove
 
-def shove(s, sq, corner, d=1.0, block=None):
+def pair_pen(sq):
+    """(i, j, depth) for every pair with centre distance < sqrt 2 (SAT over the 4 axes; depth 0 = separated)"""
+    sq = np.asarray(sq, float)
+    x, y, a = sq[:, 0], sq[:, 1], np.radians(sq[:, 2])
+    dx = x[None, :] - x[:, None]; dy = y[None, :] - y[:, None]
+    I, J = np.nonzero(np.triu(dx * dx + dy * dy < 2.0, 1))
+    if len(I) == 0:
+        return I, J, np.zeros(0)
+    ddx, ddy, ai, aj = dx[I, J], dy[I, J], a[I], a[J]
+    best = np.full(len(I), np.inf)
+    for phi in (ai, ai + math.pi / 2, aj, aj + math.pi / 2):
+        ux, uy = np.cos(phi), np.sin(phi)
+        h1 = 0.5 * (np.abs(np.cos(ai - phi)) + np.abs(np.sin(ai - phi)))
+        h2 = 0.5 * (np.abs(np.cos(aj - phi)) + np.abs(np.sin(aj - phi)))
+        best = np.minimum(best, h1 + h2 - np.abs(ddx * ux + ddy * uy))
+    return I, J, np.maximum(best, 0.0)
+
+
+def fix_levels(sq, t, b, o, groups=(), tol=1e-7, max_iter=10000):
+    """10-18 (collision fix): per-square level t (0 = moves with the corner block by b, 1 = with the rest by o;
+    offset = b + t (o - b)).  While some pair's penetration exceeds its source penetration by > tol and the two levels
+    differ, the higher square drops to the lower level (a group, e.g. an island, drops as a whole).  t only decreases
+    and all-equal levels move nothing, so this terminates with no new overlap.  -> (t, number of squares lowered)"""
+    sq = np.asarray(sq, float); t = np.asarray(t, float).copy(); t0 = t.copy()
+    b = np.asarray(b, float); o = np.asarray(o, float)
+    I, J, D0 = pair_pen(sq)
+    gid = -np.ones(len(sq), int)
+    for g, G in enumerate(groups):
+        gid[np.asarray(G, int)] = g
+    for _ in range(max_iter):
+        off = b[None, :] + t[:, None] * (o - b)[None, :]
+        P = sq.copy(); P[:, :2] += off
+        I1, J1, D1 = pair_pen(P)
+        d0 = dict(zip(zip(I.tolist(), J.tolist()), D0.tolist()))
+        bad = [(i, j) for i, j, dd in zip(I1.tolist(), J1.tolist(), D1.tolist())
+               if dd > d0.get((i, j), 0.0) + tol and abs(t[i] - t[j]) > 1e-12]
+        if not bad:
+            break
+        for i, j in bad:
+            hi, lo = (i, j) if t[i] > t[j] else (j, i)
+            if t[hi] <= t[lo]:
+                continue
+            if gid[hi] >= 0:
+                m = gid == gid[hi]; t[m] = np.minimum(t[m], t[lo])
+            else:
+                t[hi] = t[lo]
+    return t, int((t < t0 - 1e-12).sum())
+
+
+def shove_fix_on():
+    return os.environ.get('SHOVE_FIX', '0') not in ('0', '')
+
+
+def shove(s, sq, corner, d=1.0, block=None, fix=None):
     """grow the box to s + d; the block moves with `corner`, everything else with the opposite corner.
     -> (S, sq2, meta)"""
     sq = np.asarray(sq, float).copy()
@@ -74,11 +124,17 @@ def shove(s, sq, corner, d=1.0, block=None):
     bx = d if corner[1] == 'R' else 0.0          # block's offset (moves with its corner)
     by = d if corner[0] == 'U' else 0.0
     ox, oy = d - bx, d - by                      # everything else: with the opposite corner
+    fix = shove_fix_on() if fix is None else fix
+    nfix = 0
+    if fix:                                      # 10-18: squares the shove would drive into the block move with it
+        tl, nfix = fix_levels(sq, (~blk).astype(float), (bx, by), (ox, oy))
+        blk = tl < 0.5
+        block = np.nonzero(blk)[0]
     sq[blk, 0] += bx; sq[blk, 1] += by
     sq[~blk, 0] += ox; sq[~blk, 1] += oy
     S = s + d
     meta = dict(corner=corner, d=d, block=sorted(int(i) for i in block), s0=float(s), n0=len(sq),
-                k0=int(math.floor(s + 1e-9)), strip=strip_rects(S, sq, blk, corner, d))
+                k0=int(math.floor(s + 1e-9)), strip=strip_rects(S, sq, blk, corner, d), fixed=nfix)
     meta['cells'] = clean_cells(S, sq, meta)
     return S, sq, meta
 
@@ -109,22 +165,7 @@ def strip_rects(S, sq, blk, corner, d):
 
 # ------------------------------------------------------------------ helpers for fills
 
-def _inside(px, py, x, y, a):
-    r = math.radians(a); c, s_ = math.cos(r), math.sin(r)
-    u = (px - x) * c + (py - y) * s_; v = -(px - x) * s_ + (py - y) * c
-    return (np.abs(u) <= 0.5) & (np.abs(v) <= 0.5)
-
-
-def free_mask(S, sq, h=0.05):
-    """(xs, ys, free) : free[j, i] = point (xs[i], ys[j]) lies in no square (raster of the uncovered region)"""
-    xs = np.arange(h / 2, S, h); ys = np.arange(h / 2, S, h)
-    X, Y = np.meshgrid(xs, ys)
-    free = np.ones(X.shape, bool)
-    for x, y, a in np.asarray(sq, float):
-        i0, i1 = max(0, int((x - 0.75) / h)), min(len(xs), int((x + 0.75) / h) + 2)
-        j0, j1 = max(0, int((y - 0.75) / h)), min(len(ys), int((y + 0.75) / h) + 2)
-        free[j0:j1, i0:i1] &= ~_inside(X[j0:j1, i0:i1], Y[j0:j1, i0:i1], x, y, a)
-    return xs, ys, free
+from pk.fill import _inside, free_mask  # noqa: E402  (10-20: moved to pk/fill.py)
 
 
 def pen_one(S, sq, pose, skip=None):

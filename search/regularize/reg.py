@@ -49,7 +49,9 @@ def refreshed(n):
 
 def load(n, use_refresh=None):
     res = {r['n']: r for r in json.load(open(os.path.join(BATCH, 'results.json')))}
-    r = res[n]
+    r = res.get(n)                    # 10-20: n beyond the 10-05 batch (n > 324) works from a refreshed input alone
+    if r is None:
+        r = dict(n=n, from_='input', status='KKT point (refreshed input)', register=None, by=[])
     base = os.path.join(BATCH, 'work', f'n-{n}', r['from_'])
     if use_refresh is None:
         use_refresh = os.environ.get('REG_REFRESH', '1') != '0'

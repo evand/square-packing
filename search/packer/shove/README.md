@@ -24,6 +24,7 @@ loosen 1.0 / 1.02 / 1.05 from the overlapping state, then POLISH) and checks gri
 * `bench.py`: `build` (tasks from the as-of-cutoff record set; built: `runs/shove/b1005`, cutoff reg1005, n 100-300,
   293 tasks over 105 n, blocks >= 4), `run --fill NAME` (each task at m = 2k, 2k + 1, 2k + 2; up to --max-cands
   candidates per m), `score`.  Built-in fills: `lstep`, `uprights`, `none`.
+* 10-20: the engines of `fill_greedy.py` and `fill_relax.py` moved to `pk/fill.py` (placers `bestofK`, `leastbad`); the files here are adapters with the same env knobs and the same output for a seed (checked).  Relax schedules: `pk/schedules.py`.  `free_mask` / `half_extent` / `_inside` now come from `pk.fill`.
 * `fill_<name>.py`: one module per mechanism.  `fill_example.py` is the interface check.
 
 **Metrics** (per evaluated candidate, non-grid only): beats the L-step from its source (s' < s + 1 at the same

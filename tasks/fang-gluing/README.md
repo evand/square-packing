@@ -114,3 +114,18 @@ b + 4 ≤ k, 2k ≤ b² + 7: k² − 6b + 4(⌊b/2⌋ − 1)).  Standard axioms,
 * Novelty: not checked against everything; Ryu's Remark 5.4 is a different small gain.  Before any claim: check
   jlevy's asymptotic register and Ryu's repo for filled ends.
 * Next: all top layers (≈ 4√(2k), k = 100: 55), then staircase-style ends.
+
+## Merged junction corner (10-19)
+
+Evan's idea: flip the top band (rotate it instead of transposing) so both bands' thick top ends meet at the corner
+(m, S), and fill the merged region with one axis fill (rows from the ceiling crossing x = m, then columns down the
+top band's side).  `search/ryu/junction.py` (exact rationals; same frames as `r1prime.py`).
+* Gain over r1prime (best b re-chosen), k = 15..400: c lower by 2 at 260 k, by 1 at 114, 0 at 12 (k = 16, 28, 44,
+  64, 88, 116, ..., 368: second differences 4).  E.g. k = 100: 56 → 54; 400: 114 → 112; also 1 below the Lean
+  closed form 4⌈√(2k − 7)⌉ − 1 at the sampled k (40: 34 vs 35).  Table: `search/ryu/junction-table-15-400.txt`.
+* Checks: whole-packing exact pairwise check for k = 15..100 at the best b, and an exact check of every pair
+  involving a corner-fill square for k = 101..400 (the rest is r1prime's checked pieces under a rigid motion); all
+  386 VALID.  Planted shifts of 1/1000 are caught.
+* Why only 1-2: the merge turns floor(A) + floor(B) into floor(A + B) per layer, 2-3 layers.  O(1), so 5.66√k stays.
+* Not in Lean: needs one separation lemma (corner fill vs both bands: their two row half-planes plus x = m below
+  the right band's last row) and the rotated top band in `RyuEnds`.

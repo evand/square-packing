@@ -53,7 +53,7 @@ def block(origin, deg, a, b):
 
 
 def axis_fill(s, placed, tol=0.0, anchors=(0, 1, 2, 3)):
-    """Greedy axis fill.  anchor 0 = lower-left, 1 = lower-right, 2 = upper-right, 3 = upper-left."""
+    """[Legacy heuristic fill: new code uses pk/fill.py.]  Greedy axis fill.  anchor 0 = lower-left, 1 = lower-right, 2 = upper-right, 3 = upper-left."""
     m = int(math.floor(s))
     cand = []
     for an in anchors:
@@ -118,7 +118,7 @@ def _line_fill(s, allsq, out, horiz, fromlow, pos, toward_low, tol, step):
 
 
 def sweep_fill(s, placed, tol=0.0, order='rows', step=0.004):
-    """Axis fill by lines.  order: 'rows' (rows from bottom and top alternately), 'cols', or 'mixed'.
+    """[Legacy heuristic fill: new code uses pk/fill.py.]  Axis fill by lines.  order: 'rows' (rows from bottom and top alternately), 'cols', or 'mixed'.
     Lines alternate between the two anchor walls; within each line squares pack toward both ends
     (first toward the low end, then a second pass toward the high end fills the remaining gaps)."""
     m = int(math.floor(s))
@@ -139,7 +139,7 @@ def sweep_fill(s, placed, tol=0.0, order='rows', step=0.004):
 
 
 def best_seed(n, s, tilted, tol=0.0):
-    """Try the fill variants; return (squares or None, best total, variant)."""
+    """[Legacy heuristic fill: new code uses pk/fill.py.]  Try the fill variants; return (squares or None, best total, variant)."""
     tilted = [q for q in tilted if wall_viol(q, s) <= max(tol, 1e-9)]
     best = (None, -1, None)
     for v in ('corner', 'rows', 'cols', 'mixed'):
@@ -165,7 +165,8 @@ def candidates(s, placed, tol, extra_offsets=()):
 
 
 def mis_fill(s, placed, tol=1e-6, extra_offsets=(), time_limit=20):
-    """Maximum set of mutually non-overlapping axis candidates (exact MILP, HiGHS)."""
+    """Maximum set of mutually non-overlapping axis candidates (exact MILP, HiGHS).  Superseded (older candidate set):
+    new code uses pk/fill.py or fillfast.fill; kept for its 3 old callers."""
     import numpy as np
     from scipy.optimize import milp, LinearConstraint, Bounds
     from scipy.sparse import lil_matrix
@@ -245,6 +246,19 @@ def candidates2(s, placed, tol=1e-6, reach=4):
 
 
 def mis_fill2(s, placed, tol=1e-6, reach=4, time_limit=30, axtol=1e-6):
+    """Maximum set of non-overlapping axis candidates (candidates2) around `placed` -> list of upright (x, y, 0.0).
+    10-20: delegates to fillfast (FP1: same problem, identical counts on 216 / 216; ~58 ms); PK_FILL_IMPL=legacy runs
+    the original MILP below.  New code: pk/fill.py (placer 'exact') or fillfast.fill directly."""
+    import os
+    if os.environ.get('PK_FILL_IMPL', 'fast') != 'legacy' and tol <= 1e-6 and axtol <= 1e-6 and reach == 4:
+        import fillfast
+        T = [tuple(map(float, q)) for q in placed]
+        X = fillfast.fill(s, T, 'exact', tau=0.0, time_limit=time_limit)
+        return [tuple(map(float, q)) for q in X[len(T):]]
+    return _mis_fill2_milp(s, placed, tol, reach, time_limit, axtol)
+
+
+def _mis_fill2_milp(s, placed, tol=1e-6, reach=4, time_limit=30, axtol=1e-6):
     import numpy as np
     from scipy.optimize import milp, LinearConstraint, Bounds
     from scipy.sparse import coo_matrix

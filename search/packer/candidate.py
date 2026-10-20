@@ -31,7 +31,7 @@ Steps (work dir runs/candidates/NAME/, summary.json + a facts block for the issu
   9. --stage: copy to candidates/NAME{.cert,.exact.txt,.input.txt,.json} (+ NAME_regularized.{cert,json},
      NAME.predescent.txt, NAME_vs_prior.json, NAME_prior.json) for a commit to pin.  --import: add to the store
      (source candidate:NAME, finder ours, status certified, --ref e.g. "jlevy/squares#552")
-Nothing is posted: the issue text is drafted in outreach/ and posted per Evan's OK (CLAUDE.md).
+Nothing is posted: the issue text is drafted in outreach/ (submission.py NAME; style guide SUBMITTING.md) and posted per Evan's OK (CLAUDE.md).
 """
 import argparse, json, os, re, shutil, subprocess, sys
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
@@ -115,8 +115,15 @@ def print_live(L):
 
 # ------------------------------------------------------------------ regularize (private REFRESH dir)
 
-def regularize(work, n):
+OUR_CREDIT = 'Evan Daniel'
+
+
+def regularize(work, n, by):
+    """by: who found the packing being regularized (ours: [OUR_CREDIT]; the prior record: its store finder).  Written to
+    the private refresh dir's source.json, which reg.load reads; without it reg.load fell back to the 10-05 batch's
+    holder at n, so our views said "by": ["Francisco Couzo"] (jlevy asked on #552 and #669, 10-12 / 10-20)."""
     d = os.path.join(work, 'reg'); os.makedirs(os.path.join(d, 'exact', f'n-{n}'), exist_ok=True)
+    json.dump(dict(n=n, by=list(by), source='candidate.py'), open(os.path.join(d, 'exact', f'n-{n}', 'source.json'), 'w'))
     shutil.copy(os.path.join(work, 'cand.exact.txt'), os.path.join(d, 'exact', f'n-{n}', 'input.exact.txt'))
     shutil.copy(os.path.join(work, 'cand.json'), os.path.join(d, 'exact', f'n-{n}', 'input.json'))
     code = ('import sys, os, json; sys.path.insert(0, sys.argv[1]); import reg, atlas; d = sys.argv[2]; n = int(sys.argv[3])\n'
@@ -132,6 +139,17 @@ def regularize(work, n):
     return dict(ok=bool(j['cert_valid'] and j['verify_80']['ok']), S_exact=j['S_exact'], S_cert=j['S_cert'],
                 groups=[j['groups_before'], j['groups_after']], level=j['level'], level_text=j['level_text'],
                 checkers=checkers(os.path.join(work, 'regularized.cert')))
+
+
+def _finders(pid):
+    """distinct named finders of a store packing (its sightings), for the prior record's regularized view"""
+    from pk.store import Store
+    st = Store()
+    out = []
+    for (f,) in st.db.execute('SELECT finder FROM sighting WHERE packing=? AND finder IS NOT NULL', (pid,)):
+        if f and f not in out and f != 'ours':
+            out.append(f)
+    return out
 
 
 # ------------------------------------------------------------------ exactsolve (+ corner-slip descent)
@@ -226,7 +244,7 @@ def prior_record(work, n, do_reg=True, log=print):
     log(f'    prior S* = {J["S_exact"][:30]}; ' + ', '.join(f'{k} {"VALID" if v["ok"] else "FAILED"}'
                                                        for k, v in res['checkers'].items()), flush=True)
     if do_reg:
-        res['regularized'] = R = regularize(pw, n)
+        res['regularized'] = R = regularize(pw, n, _finders(pid))
         if not R.get('ok'):
             log(f'    prior: regularize failed ({R.get("error", "")[-160:]})')
         elif os.path.exists(os.path.join(work, 'regularized.json')):
@@ -338,7 +356,7 @@ def main():
 
     if not a.no_regularize:
         print('[7] regularize', flush=True)
-        out['regularized'] = R = regularize(work, n)
+        out['regularized'] = R = regularize(work, n, [OUR_CREDIT])
         print(f'    {json.dumps({k: v for k, v in R.items() if k != "checkers"})}')
         for k, v in R.get('checkers', {}).items():
             print(f'    {k}: {"VALID" if v["ok"] else "FAILED"}')

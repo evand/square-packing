@@ -142,6 +142,38 @@ class QResult:
         return self.stats.get('fp')
 
 
+def _proc_cpu(pid):
+    """CPU seconds (user + system, all threads) of a live process, from /proc; None if unreadable"""
+    try:
+        with open(f'/proc/{pid}/stat') as f:
+            v = f.read().rsplit(')', 1)[1].split()
+        return (int(v[11]) + int(v[12])) / os.sysconf('SC_CLK_TCK')
+    except (OSError, ValueError, IndexError):
+        return None
+
+
+class _Watchdog(threading.Thread):
+    """Kill `proc` once it has used `cpu_limit` CPU seconds since start() (or after `wall` s, the hang guard).
+    Same interface as threading.Timer for FQ.request (cancel(), is_alive()); records why in `why`."""
+
+    def __init__(self, proc, cpu_limit, wall, why, poll=0.25):
+        super().__init__()
+        self.proc, self.cpu_limit, self.wall, self.why, self.poll = proc, cpu_limit, wall, why, poll
+        self._stop_ev = threading.Event()
+
+    def cancel(self):
+        self._stop_ev.set()
+
+    def run(self):
+        c0, t0 = _proc_cpu(self.proc.pid), time.time()
+        while not self._stop_ev.wait(self.poll):
+            c = _proc_cpu(self.proc.pid)
+            if c is not None and c0 is not None and c - c0 > self.cpu_limit:
+                self.why.append(f'cpu limit ({self.cpu_limit:g} s CPU)'); self.proc.kill(); return
+            if self.wall and time.time() - t0 > self.wall:
+                self.why.append(f'timeout ({self.wall:g} s wall)'); self.proc.kill(); return
+
+
 class FQ:
     """Persistent `fq serve` child.  Not thread-safe; use one per process."""
 
@@ -163,24 +195,31 @@ class FQ:
                 self.proc.kill()
             self.proc = None
 
-    def quench(self, p: Packing, opt: QOpt = QOpt(), timeout: float | None = 3600.0) -> QResult:
-        """One quench.  `timeout` (s, None = none) kills a hung fq child (it is restarted on the next call); the result is
-        then an error QResult with error='timeout'.  The 1 h default is a hang guard, not a budget."""
+    def quench(self, p: Packing, opt: QOpt = QOpt(), timeout: float | None = 3600.0,
+               cpu_limit: float | None = None) -> QResult:
+        """One quench.  `timeout` (wall s, None = none) kills a hung fq child (it is restarted on the next call); the
+        result is then an error QResult with error='timeout ...'.  The 1 h default is a hang guard, not a budget.
+        `cpu_limit` (s of the child's CPU during this request; 10-20): a budget that doesn't depend on machine load
+        (a wall limit cuts quenches short when the machine is busy: EV2's 60 s wall limit, PACKER "Load noise")."""
         t0 = time.time()
-        stats, head, rows, _ = self.request(opt, p.s, p.sq, timeout)
+        stats, head, rows, _ = self.request(opt, p.s, p.sq, timeout, cpu_limit)
         if head is None:
             return QResult(None, stats, time.time() - t0)
         n, s = head.split()
         q = Packing(float(s), np.array([r.split() for r in rows], float), meta=dict(parent=p.meta.get('id')))
         return QResult(q, stats, time.time() - t0)
 
-    def request(self, opt: QOpt, s, sq, timeout: float | None = 3600.0):
+    def request(self, opt: QOpt, s, sq, timeout: float | None = 3600.0, cpu_limit: float | None = None):
         """Raw request: -> (stats, 'n s' header line, n row lines, the JSON line) as fq printed them ({:.17} / {:.15},
         the same text as `fq quench --out` / its stdout); (stats with 'error', None, None, None) on failure."""
         if self.proc is None or self.proc.poll() is not None:
             self._start()
         proc = self.proc
-        timer = threading.Timer(timeout, proc.kill) if timeout else None
+        why = []
+        if cpu_limit is None:
+            timer = threading.Timer(timeout, proc.kill) if timeout else None
+        else:                                         # watchdog: the child's CPU during this request, plus the wall guard
+            timer = _Watchdog(proc, cpu_limit, timeout, why)
         if timer:
             timer.daemon = True; timer.start()
         req = ['quench ' + ' '.join(opt.args()), f'{len(sq)} {float(s)!r}']
@@ -202,7 +241,7 @@ class FQ:
         except (EOFError, BrokenPipeError, json.JSONDecodeError, AssertionError, ValueError) as e:
             timed_out = timer is not None and not timer.is_alive() and proc.poll() is not None
             self.close()
-            err = f'timeout ({timeout:g} s)' if timed_out else repr(e)[:200]
+            err = (why[0] if why else f'timeout ({timeout:g} s)') if timed_out else repr(e)[:200]
             return dict(error=err), None, None, None
         finally:
             if timer:

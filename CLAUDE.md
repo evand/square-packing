@@ -31,7 +31,12 @@ Start at `TODO.md` (open items; conventions in `~/math/TODO.md`), then `README.m
   structure), then what equal refinement budget makes of them (refined outcome distribution per CPU-h vs a baseline such
   as explorer-from-kicked-record).  Never close a line on its best raw output.  (Exact bounds that grow with n are a
   different kind of result.)
+- Progress, not clocks (Evan 10-20): judge whether a run or quench is making progress from its trajectory and numeric
+  output (side vs step, stalls), not from elapsed time.  Wall-clock timeouts are hang guards only; a budget that
+  decides results should be CPU (`FQ.quench(cpu_limit=)`) or iterations, and every limit hit gets counted.
 - External posts (GitHub issues/comments on other repos, X, email): draft in `outreach/`, ask Evan explicitly per post.
+  Record submissions: follow `search/packer/SUBMITTING.md` (vocabulary: *refinement* only for the same local minimum,
+  else *a new packing found from X*; credit; template; checklist); draft with `search/packer/submission.py NAME`.
 - Before any bound-chasing or record claim, check jlevy's register (`jlevy.github.io/squares/cases/<n>.html`, `packing/frontier/RESULTS.md`); the local clone's `frontier/n-<n>.md` is in `~/math/_untrusted-third-party/jlevy-squares` (refresh per its PROVENANCE.txt).
 - `site/www/problems.html` is the reader-facing copy of `search/WISHLIST.md`'s object-level items: edit both together.
 - `~/math/_untrusted-third-party/`: read only, never execute.

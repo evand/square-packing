@@ -198,7 +198,8 @@ def status(name=None):
 # ------------------------------------------------------------------ queue
 
 QFILE = os.path.join(JOBS, 'queue.json')
-RESERVE = 2              # cores normal / low jobs leave for high-priority quick tests
+RESERVE = 0              # cores normal / low jobs leave free (10-20, Evan: fill to 16; quick tests that support an
+                         # active conversation go first anyway: --prio high starts on top, up to TARGET x SLACK)
 PRIO = {'high': 0, 'normal': 1, 'low': 2}
 QNAME = '_queue'
 

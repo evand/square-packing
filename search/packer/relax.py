@@ -17,15 +17,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 FQ = os.path.join(HERE, 'target', 'release', 'fq')
 from pk.engine import QOpt, fq_quench
-OPS = {
-    'polish': QOpt(loosen=1.0, no_alm=True),                                     # rigid baseline
-    'shrink': QOpt(loosen=1.0, shrink=True),                                     # fixed-side overlap relax + shrink hops
-    'kshrink': QOpt(loosen=1.0, kick=0.02, shrink=True),
-    'soft05': QOpt(loosen=1.0, round_r0=0.05, hold_f=1.0, round_steps=40, round_kick=0.03),
-    'soft15': QOpt(loosen=1.0, round_r0=0.15, hold_f=1.0, round_steps=40, round_kick=0.03),
-    'soft15c': QOpt(loosen=1.0, round_r0=0.15, round_compress=True, round_steps=40, round_kick=0.02),
-    'loose': QOpt(loosen=1.02, kick=0.03),                                       # jitter + ALM from a dilated box
-}
+from pk.schedules import SCHEDULES, OPS_NAMES
+OPS = {k: SCHEDULES[k] for k in OPS_NAMES}             # 10-20: the table lives in pk/schedules.py (one registry)
 
 
 def job(t):

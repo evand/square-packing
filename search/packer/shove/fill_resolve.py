@@ -452,6 +452,9 @@ def _offsets(corner, d):
 def unshove(sq, meta):
     """the source packing (side s0) from the shoved one"""
     sq = np.asarray(sq, float).copy()
+    if 'offsets' in meta:                                  # 10-17 IS1: per-square offsets (island shove)
+        off = np.asarray(meta['offsets'], float); sq[:len(off), :2] -= off
+        return sq
     blk = np.zeros(len(sq), bool); blk[meta['block']] = True
     bx, by, ox, oy = _offsets(meta['corner'], meta['d'])
     sq[blk, 0] -= bx; sq[blk, 1] -= by; sq[~blk, 0] -= ox; sq[~blk, 1] -= oy

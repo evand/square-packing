@@ -62,7 +62,11 @@ def cmd_eval(a):
     best = {}
     errs = {}
     mins = {}
+    lims = {}
     for (_, n, *_), r in zip(jobs, R):
+        L = lims.setdefault(n, dict(squeeze=0, polish=0, quenches=0))
+        for k, v in r.get('limits', {}).items():
+            L[k] += v
         for m in r.get('minima', []):
             if all(abs(m[0] - x[0]) > 1e-9 for x in mins.setdefault(n, [])):
                 mins[n].append(m)
@@ -80,10 +84,14 @@ def cmd_eval(a):
         flag = '  *** CANDIDATE RECORD (below target) ***' if r['s'] < T - 1e-9 else ''
         print(f"n={n}: side {r['s']:.9f}  target {T:.9f}  gap {r['s'] - T:+.2e}  normalised {ng:+.4f}  grid {g}  "
               f"({r['cands']} candidates)  {r['desc']}{flag}")
+        L = lims.get(n, {})
+        if L.get('squeeze') or L.get('polish'):
+            print(f"  n={n}: quench limit hit on {L['squeeze']} squeezes (candidate dropped) and {L['polish']} polishes "
+                  f"(unpolished side kept) of {L['quenches']} quenches")
         with open(f'{a.out}/n{n}.txt', 'w') as f:
             f.write(f"{n} {r['s']!r}\n" + ''.join(f'{x!r} {y!r} {t!r}\n' for x, y, t in r['sq']))
         render(r['s'], r['sq'], f'{a.out}/n{n}.png', f"n={n} s={r['s']:.6f} target {T:.6f}")
-        rows.append(dict(n=n, s=r['s'], target=T, ng=ng))
+        rows.append(dict(n=n, s=r['s'], target=T, ng=ng, limits=lims.get(n)))
     ok = [r['ng'] if 'ng' in r else 1.0 for r in rows]       # a failed n counts as the grid (fixed after EV2 gen 1)
     if ok:
         T = 0.02                                          # soft-min: one great n counts (Evan 10-15), the mean for reference

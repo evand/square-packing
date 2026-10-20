@@ -4172,3 +4172,461 @@ bands).  10-12's H2 gave 183 only 2-3 chain rounds.  `h183.py` (pre-registered h
   (13.990326) -> one-square insertion seed 182_1597470_0 (14.03347, line-free) -> x5_diverse182: aswap, cross2, cross2
   (mates not logged; all six starts descend from public 182s) -> 13.9998051 (b00178) -> refine r3: kicksym x 3 ->
   13.9995802 (b00051).  Draft for jlevy: `outreach/draft-jlevy-n183-2026-10-18.md`.
+
+## HB: H183's recipe at 147, 157, 274 + removal 291 -> 290 (10-19 ~09:50; Evan: "let's try it")
+Targets (normalized slack = (T - s(n - 1)) x 2 s(n - 1), the share of one square's typical side increment that the
+insertion may cost; 183 needed 0.72 and landed at 0.71; non-grid pairs over 100..324: median 0.93, 10th pct 0.47):
+**157** (T = 13 grid; 156 = 12.97917, slack 0.54), **274** (T = 17 grid; 273 = 16.98393, 0.55), **147** (T = 7 + 4 sqrt 2 =
+12.65685424949, the 148 diamond minus a square; 146 = 12.58378 Xu, 1.84; column s(k^2 + 3) - k is 0.698 0.679 0.657
+**0.657** 0.619 0.618 0.605 0.591 0.591 for k = 9..17, only k = 12 never moved; 172 / 199 use a strip band).  Live
+check (candidate.py --live) 10-19 09:35: frontier unchanged at 147, 157, 274, 290.  147's earlier misses (h2 10-09,
+removal control, NB 10-14): record-only insertion (quenched to the grid), transplant, block sweeps, chain from the 45-deg
+record; never diverse donors + line-free filter + explorer.
+`hborder.py` = h183.py parameterized (n, T); also skips store status 'infeasible' donors (308 id 212401 is a kingbird
+variant at 17.99295, infeasible; h183.py did not filter).  Per target:
+* **Seeds**: arm record = 120 one-square insertions into best(n - 1); d1 = 120 distinct (n - 1)s below T - 0.005
+  (best 60 + 60 stratified) x 4; d2 = 30 distinct (n - 2)s below T - 0.03 x 4, two squares.  4 tries each, 15 procs.
+* **LC**: `lcut.py` (40 cuts x 2 quenches + random 60 per donor; 4 procs).  147 <- 172 x 4 (335, 1250166, 1062418,
+  914440; remove 25, side ~12.62 before quench).  157 <- 183 x 2 (ours 1770900, 1770899; remove 26) + 182 x 2 (340,
+  1597470; remove 25).  274 <- 308 x 4 (169393, 1627596, 1647639, 1647710; remove 34) + 307 x 2 (398, 1564833; 33).
+* **Explore**: 4 arms (record, d1, d2, lcut) x 4 explorer runs x 1 proc x 40 min; starts = the best 24 distinct
+  line-free non-tie seeds per arm, round-robin (6 per run).  Deviation from h183: no fixed 0.04 seed cap (147's smoke
+  seeds quench ~0.12 above T), explorer --smax = max(T + 0.06, worst start + 0.01).  Targets in sequence, 16 procs.
+* **R290**: `removal_ctl.py` on the 291 record (id 124, the two 25-square bands), modes shrink, soft05, soft15c, loose;
+  success < 17.535533905933 - 1e-9.  (148 -> 147 control: 592 runs, all exactly at the tie.)
+* Budget ~45 CPU-h, ~3 h wall.  Metric: line-free seed sides per arm; explorer best per run; certified hits.
+* Predictions: below T at 157: 10 %; 274: 12 %; 147: 10 %; at least one of the three: 25 %.  d1's best explorer run beats
+  record's at each target: 70 %.  lcut line-free share > random's: 80 %; an lcut seed below T directly: 3 %.  R290: 2 %.
+* Rules: a hit -> candidate.py (both checkers, live check), then refine 12 x 40 min from it (elite 0.5), then a jlevy
+  draft in outreach/ (ask Evan per post).  A target with 0 hits and no run best within 0.005 of T: insertion + explorer
+  is not the route there (needs a constructor).
+* **HB result (10-19 12:09; seeds 147 146 s / 157 252 s / 274 912 s on 15 procs, LC on 3 x 4 procs, explore 3 x 16 x
+  40 min; ~38 CPU-h): 0 below T at all three.**  Explorer run bests per arm (4 runs each):
+  - 147 (T 12.6568542): record 12.6867-12.6879, d1 **12.6804**-12.6879, d2 12.7050-12.7168 (two runs end on the
+    12 + 1/sqrt 2 = 12.7071068 form), lcut 12.67875 x 4 (one jammed basin from 172: 301 / 320 line-free seeds below
+    13, best 12.67878 already as a raw seed).  Closest 0.0219 above T.
+  - 157 (T 13): record 13.0127-13.0149, d1 13.0126-13.0154, d2 13.0000 (grid) / 13.0142-13.0200, lcut 13.0120-13.0145
+    (from 183 / 182).  Closest 0.0120.
+  - 274 (T 17): record 17.0124-17.0183, d1 17.0133-17.0167, d2 17.0179-17.0268, **lcut 17.0037**-17.0063 (from 308 /
+    307; seeds 17.0064).  Closest 0.0037: the only target within the 0.005 rule.
+  - Seeds (line-free, best): 147 record 12.7071 (the 1/sqrt 2 form) vs d1 12.6888 (16 within 0.05 vs 0); 157 13.0208 /
+    13.0203 / 13.0289; 274 17.0125 / 17.0152 / 17.0418.  The explorer moved bests only 0.003-0.008 below the seeds
+    (183: 14.015 -> 13.9998, ~0.015).
+  - Predictions: a hit at 157 / 274 / 147 (10 / 12 / 10 %, any 25 %): no.  d1's best run beats record's (70 %): 147
+    yes (12.6804 vs 12.6867), 157 a tie (13.01262 vs 13.01274), 274 no (17.0133 vs 17.0124).  lcut line-free share >
+    random's (80 %): yes at all three (147 94 vs 84 %, 157 28 vs 18 %, 274 61 vs 18 %).  lcut seed below T (3 %): no.
+  - Rule: 157 and 147 (no run within 0.005): insertion + explorer is not the route at this budget.  274: L-cut from
+    308 / 307 is the route to push (more distinct 308s, explorer from lcut seeds with more time).
+  - 147 donor analysis (seeds): best seed per donor vs donor side corr 0.36, vs tilt -0.30; best seed 12.6888 from a
+    12.6066 donor.  Store 146s < 12.66 by tilt: 30-34 895, 35-39 9,186 (Xu family; 2,050 within 0.01), 40-44 341 (14
+    within 0.01, reaches 12.583782), 25-29 + 45+ 60.  16 / 120 donors' best seeds are the 12 + 1/sqrt 2 trap.
+    Evan: spend effort on more diverse near-record 146s (-> D146).
+* **R290 bug**: `removal_ctl.py` crashed (relax.OPS holds `QOpt` since 10-14; it concatenated them as flag lists), so
+  the 10-12 removal controls cannot have been rerun since; fixed (`_flags`: `QOpt.args()`), rerun at 15 procs.
+* **R290 result** (rerun after the fix, 15 procs, ~13 min): 291 removals x 4 modes = 1,164 runs, every one exactly
+  17.5355339059 (prediction 2 %: no).  The 291 two-band layout has no shrink after a removal, like 148 -> 147.
+
+## D146 + HB2: more diverse near-record 146s as 147 donors (10-19 ~12:45; Evan: "we want to spend some effort on more diverse near-record 146 packings")
+Pre-registered before launch.  Basis: HB 147 seeds (above): structure, not donor side, predicts the seed; the store's 146s
+are the Xu family.
+* **D146** (`d146.py`; ~10.7 CPU-h): bank = fingerprints of the 6,669 distinct store 146s < 12.652 (tilt 25-29 20,
+  30-34 700, 35-39 5,681, 40-44 251, 45-49 17).  16 explorer runs x 1 proc x 40 min at n = 146 from the minority bands
+  (40-44 x 6 runs, 30-34 x 6, 20-29 x 2, 45-54 x 2; the best 6 distinct per run), `--adapt --adapt-cells --sparse-share
+  0.5 --fp-bank bank.npz --smax 12.652`.  Metric: distinct 146s < 12.652 by tilt band; novel = fingerprint nnd to the
+  bank > the bank's own median nnd (0.0201).  Predictions: >= 100 novel: 60 %; >= 20 novel below 12.62 outside 35-39: 50 %.
+* **HB2** (`hborder.py seeds --tag b --donor-file runs/d146/donors.json --exclude runs/hborder/n147/seeds.jsonl`):
+  arm new = the best 120 novel D146 donors (by side), arm ctl = as many fresh store 146s by HB's d1 rule (< 12.652,
+  best half + stratified), excluding HB's 120 d1 donors; 4 insertions each, 4 tries.  Explore: 4 runs x 1 proc x 40 min
+  per arm, best 24 distinct line-free non-tie seeds (as HB).  Metric: line-free seeds within 0.04 of T per arm; explorer
+  run bests per arm; HB's d1 (12.6804-12.6879) as a reference.  Predictions: new has more seeds within 0.04 than ctl:
+  55 %; new's best run below ctl's: 55 %; a 147 below T: 4 %.  Rule: new <= ctl on both -> donor structure (as the
+  fingerprint sees it) is not what limits 147; 147 then needs a constructor (a k = 12 strip band like 172 / 199).
+* **D146 + HB2 result (14:05; 0 records).**  D146: 13,958 distinct 146s < 12.652 in the archives (tilt 25-29 595,
+  30-34 6,232, 35-39 6,260, 40-44 867, 45-49 4); below 12.60 outside 35-39: 62 (30-34 16, 40-44 46); best per band
+  12.609258 / 12.591378 / 12.583782 (the record, re-found) / 12.593406 / 12.625404.  No new 146 below the record.
+  **The novelty test is broken**: 13,655 / 13,958 counted novel, including a copy of the record at the record's side
+  (nnd 0.0356 vs the bank median 0.0201).  Archive nnds sit far above the bank's own (archive median 0.065 vs bank 0.023;
+  even the < 12.59 rows have median 0.025), i.e. the fingerprint moves with rattlers and small shifts; "nnd > bank
+  median" separates run output from the store, not new structure.  The same test made dgen's D308 donors.json (LC274b
+  stage B's lc_dgen arm): read that arm as "D308 run output", not "novel".  Predictions: >= 100 novel: yes, but void;
+  >= 20 novel below 12.62 outside 35-39: yes (several hundred), same caveat.
+  HB2 (seeds within 0.04 of T, line-free; explorer run bests): new 14, ctl 17; new 12.6862-12.6879, ctl 12.6671-12.6871
+  (ctl x6 12.667133 is the best 147 explorer result to date, HB's 12.6804).  new <= ctl on both.  **But HB2 did not test
+  diversity**: "the best 120 novel by side" were 108 / 120 tilt 35-39 (the Xu family, sides 12.58378-12.59448), the
+  same family as ctl.  The rule's conclusion is withheld until HB2c.  Predictions: new more seeds within 0.04: no;
+  new's best below ctl's: no; 147 < T: no.
+* **HB2c, pre-registered (14:15).**  The test HB2 meant to run: arm new = 120 D146 donors from the minority bands only,
+  quota by band (25-29 24, 30-34 52, 40-44 40, 45-49 4), fingerprint farthest-point within each band over its best 6x
+  quota (sides 12.59138-12.63895; `runs/d146/donors_minority.json`).  `hborder.py seeds --tag c --donor-file ...
+  --no-ctl` (new flag: new arm only), same per 4 / tries 4; explore 4 runs x 1 proc x 40 min (as HB2).  Baseline = HB2's
+  ctl (17 seeds within 0.04 of 480; runs 12.6671-12.6871).  Runs over the 16 target by 4 while LC274b / CS274 hold 16
+  (~1.5 h).  Predictions: more seeds within 0.04 than ctl: 40 %; best run below 12.6671: 25 %; 147 < T: 2 %.  Rule:
+  no on both -> the D1 insertion route at 147 is closed across donor families; 147 needs a constructor (k = 12 strip
+  band as 172 / 199).
+
+* **HB2c result (14:55; 0 records).**  Seeds: 408 / 480 line-free (ctl 449), within 0.04 of T: 6 (ctl 17), best
+  12.683119.  By donor band: 25-29 0 within 0.04 (best 12.70711 = the 12 + 1/sqrt 2 trap), 30-34 0 (12.7007), 40-44 6
+  (12.68312), 45-49 0.  Explorer run bests 12.6794 / 12.6869 / 12.6870 / 12.6888 (ctl 12.6671-12.6871).  Predictions:
+  more seeds within 0.04: no; best run below 12.6671: no; 147 < T: no.  **Rule fires: the one-square insertion route at
+  147 is closed across donor families** (record family, d1, minority bands: every explorer run 0.010-0.032 above the
+  tie).  Lower-tilt donors are worse, not better (HB's -0.30 tilt correlation was within the 35-39 family).  147 needs a
+  constructor (k = 12 strip band as 172 / 199), not more donors.  D146's 14k 146s stay as starts (not imported: 146 is
+  not a target).
+## LC274b: L-cut at 274 from many 308s + diverse-donor generation (10-19 ~12:55; Evan: "follow up with more L cut work.  We might also want to spend more effort generating additional starting packings, even if they're not new records themselves.  Near-record start packings might be valuable.")
+Pre-registered before launch.  Basis (HB): 274's only sub-0.005 lineage is L-cut from 308 (17.0037); all of HB's good
+lcut seeds came from the 4 donors of the 111-tilt 308 family (307 donors ~0.015 worse); the store has 1,106 distinct
+308s < 18 (tilt 105-109 195, 110-114 897, 115+ 14; the best 400 span 17.99827-17.99917).
+* **Starts imported** (done 12:40): `pk.py import-run` of HB's explorer archives: 274 < 17.03 3,020, 157 < 13.03 7,585,
+  147 < 12.71 4,567 (all new; best 274 17.00366).  Near-record starts for later hunts.
+* **dgen.py** = d146.py generalized: bank = fingerprints of the store's distinct packings at n < smax; starts =
+  greedy farthest-point sample (fingerprint distance) over the best --pool 400; explorer `--adapt --adapt-cells
+  --sparse-share 0.5 --fp-bank`; report -> donors.json (novel = nnd to bank > bank median).  `lcut.py` takes
+  `--donor-list` / `--donor-paths`; `hborder.py explore` takes any arm names (composed seeds.jsonl).
+* **Stage A** (during HB2's explore, 8 procs): lc_fps = `lcut.py` from 60 farthest-point 308s (17.99827-17.99917;
+  `runs/dgen/n308/lcut_donors.txt`), 20 cuts x 2 quenches, no random arm (random < lcut at 3 / 3 targets in HB);
+  4 procs.  D308 = `dgen.py run --n 308 --smax 18 --runs 4 --minutes 40`.
+* **Stage B** (16 procs): lc_dgen = lcut from D308's novel donors (best 40), 20 x 2, 8 procs; then explore 274 (`--tag c`),
+  arms fps / dgen / cont (cont = the best 24 distinct store 274s: HB's imported minima, continuation), 4 runs x 1 proc
+  x 80 min per arm (2x HB).
+* Metric: line-free lcut seed sides per arm (< 17.01, best) and per donor; explorer run bests per arm.
+* Predictions: lc_fps has a seed below HB's best lcut seed 17.00637: 60 %; >= 30 % of its donors give a seed < 17.01:
+  50 %.  D308 >= 50 novel 308s < 18: 50 %.  A 274 below 17: 10 %.  Best run below HB's 17.0037: 60 %.  cont's best
+  run below fps's: 50 %.
+* Rules: a hit -> candidate.py, refine, draft (ask Evan).  If no run gets below 17.002: 274 by L-cut is at its limit at
+  this budget (the 308 family's L band costs ~0.004); next would be a 308 -> 274 cut keeping two pokes (remove 33 + 1 from
+  309-like) or a different donor family.
+
+* **LC274b result (15:40; 0 records at 274; a 308 hit, below).**  lcut seeds (line-free; < 17.01; best): lc_fps 1,821 /
+  2,400, 321, 17.004216 (55 / 60 donors give a seed < 17.01); lc_dgen 980 / 1,600, 111, 17.003294 (22 / 40).  D308:
+  951 distinct 308s < 18, best 17.997149 (x1).  Explore 274 (4 x 80 min per arm): fps 17.00363-17.00408, **dgen
+  17.00234-17.00372**, cont 17.00314-17.00370.  Predictions: lc_fps seed < 17.00637: yes; >= 30 % of donors < 17.01: yes
+  (92 %); D308 >= 50 novel: yes (metric void, see D146); 274 < 17: no; best run < 17.0037: yes (17.00234); cont below
+  fps: yes.  Rule: no run < 17.002 -> L-cut at its limit: fires, by 0.0003.  But the best arm is the one fed by D308's
+  better 308s: donor quality, not the cut, is what moved.  Next for 274 (not yet registered): L-cut from the new 308
+  family (below).
+* **s(308) <= 17.9971491212709 (hit, 15:45; D308 run x1, b00134).**  `candidate.py` (n308-d308): verify_cert and
+  verify_cert2 VALID (also on the regularized cert); live: nothing at or below (frontier 17.9982698795 = our pending
+  #489; also pending #593 Mishapolk, #624 mstrmg at that side); -1.121e-3; distinct minimum (295 load-bearing squares
+  move > 1e-4, matching distance 0.089); local minimum mod 47 flat motions, 5 rattlers, 102 tilted (#489's: 111).
+  Starts of x1: 6 store 308s 17.99880-17.99917 (farthest-point sample, not the best).  The explorer reached 17.9971491
+  by 1,943 s and held it.  Prediction for this (D308 was registered as donor generation, not a record chase): none.
+  Not posted (ask Evan).
+* **R308 refine, pre-registered (15:50)**: 12 x 40 min explorer from b00134 (elite 0.5, `--smax 18.0`, seeds 3080+),
+  as H183's refine.  Runs over the 16 target (cs274 holds 16; its arms are CPU-h capped).  Metric: best certified side.
+  Predictions: some run below the hit by > 1e-5: 60 %; by > 1e-4: 30 %.  Then candidate.py on the best, jlevy draft in
+  outreach/, ask Evan.
+## LR274: 273 inexact L removal, shove, refill + 1 (10-19 ~12:55; Evan: "273 inexact L removal, shove, and refill with an extra square might also be worth a few tries")
+Pre-registered before launch.  `lrefill.py`: per 273 donor and cut, drop the squares centred in the unit strip union
+(pokes kept), shove the squares beyond each strip's midline outward by delta, refill d + 1 unit squares along the strip
+centre lines (one in the crossing cell), fq quench.  Smoke (273 record, 10-19): axis refill makes a full line of 17
+(24 / 24 blocked: a straight axis row of the arm + crossing square); tilted refills (tilt 10-35 random, or the donor's
+dominant tilt) 2 / 36 line-free, best 17.0387 (HB insertion seeds: 26 / 120 line-free from the record, best 17.0125).
+* Run: 20 farthest-point 273 donors (`runs/dgen/n273/lrefill_donors.txt`, from the best 400 distinct < 16.995),
+  5 scored + 10 uniform cuts x delta {0, 0.03, 0.08} x modes {tilt, band}: 1,800 quenches on 4 procs (the cores
+  LC274b's explore leaves free); then `hborder.py explore --tag d`: 4 runs x 1 proc x 40 min from the best 24 distinct
+  line-free seeds.
+* Metric: line-free share and seed sides per mode / delta / cut arm vs HB's insertion arms; explorer run bests.
+* Predictions: line-free share below HB insertion's (record 22 %, d1 19 %): 80 %; a seed < 17.01: 15 %; best explorer
+  run below 17.0037: 10 %; a 274 below 17: 2 %.
+* **LR274 withdrawn before launch (13:00)**: Evan asked whether this reuses the corner-shove code; it did not.
+  `lrefill.py` duplicates CS3's `shove/delL.py` (approximate-L deletion incl. pokers + corner shove + greedy fill) with a
+  cruder fill and no SHOVE_FIX.  CS3 had already run the 273 record (10-17; L at UR, patterns 0 / 1, 8 tasks, ms 32-34 /
+  30-32): 24 rows at 274 + 24 at 273 per arm (greedy s0 / s1, wallL s0 / s1), **all grid**.  `lrefill.py` kept only as
+  the smoke's record; not to be used.  (Also: `pkill -f` on the driver path killed the calling shell; use the jobs.py
+  pgid.)
+* **LR274 v2, pre-registered (13:05)**: CS3 tooling on 20 farthest-point 273s (`runs/shove/cs274_parents`, sides
+  16.98393-16.98658): `delL.py build --out runs/shove/cs274 --nmin 273 --nmax 273 --parents-dir ... --corners all
+  --classes exact,dips,missing --min-missing 0 --max-missing 4 --patterns 3` = 54 cores, 216 tasks, ms D-1..D+1.
+  SHOVE_FIX=1.  Arms A = greedy seeds 0, 1; W = wallL seed 0 (control); cap 4 CPU-h each.  A s0 runs on the 4 cores
+  LC274b's explore leaves free; A s1 + W after LC274b.  Metric: non-grid rows at n' = 274 (best, count < 17.01) and at
+  273 (returns: ties / distinct); any below 17 -> candidate.py.  Predictions: a 274 below 17: 3 %; any non-grid 274 row
+  (CS3: 0 / 48): 60 %; a 274 row < 17.01: 15 %; A beats W on best 274: 55 %.
+* **LR274 v2 / CS274 result (16:15; 0 records).**  Rows per arm (each task gives n' = 272, 273, 274): greedy s0 597,
+  greedy s1 465, wallL s0 600 (4 CPU-h caps).  **274: 0 non-grid of 1,662; 273: 0 non-grid** (all returns go grid);
+  272: greedy s0 8 non-grid (best 16.982546), s1 4 (16.983466), wallL 0, all ~0.021 above s(272).  live 0.  Predictions:
+  274 < 17: no; any non-grid 274 row: no (60 %); a 274 row < 17.01: no; A beats W at 274: no (both nothing).  With CS3
+  (0 / 48 on the record) this closes delete-L + shove + refill at 273 -> 274 at 20 diverse parents: the refill always
+  rebuilds the 17-grid.  (The driver's summary printed identical 273 / 274 dicts; that is correct, rows come in m-triples.)
+* **R308 refine result (16:30).**  All 12 runs stayed at 17.9971491213; 0 distinct below the hit.  Predictions (> 1e-5:
+  60 %, > 1e-4: 30 %): no, no.  The hit stands as found.  Lineage (chain_lineage on runs/tt2/S + the x1 archive):
+  itsnaka's s(307) (#481, register) -> TT2 chain 10-14, 307 + 1 square (18.000000) -> rounds 141-166 -> 17.998568 ->
+  store 847173 (17.998946) -> D308 x1: kicksym x 5, kick, mirror -> 17.9971491 at 710 s.  Not descended from #484 / #489.
+  Staged `candidates/s308_d308.*` (candidate.py --stage; both checkers VALID on cert and regularized cert).  Draft:
+  `outreach/draft-jlevy-n308-2026-10-19.md` (not posted; needs Evan, and a commit + push of the staged files).
+  Imported into the store: D308 + R308 archives < 18 (4,746 new), LC274b's 274 explorer archives < 17.03 (6,640 new).
+  Committed + pushed bc0708f (candidates/s308_d308.*, Evan 16:55 "Yes, please commit and push"; pushed SHA-256s match the
+  draft).  Structure: same two-band L family as #484 / #489, mirrored (a ~6-wide tilted band down one side + one along
+  the bottom, axis block in the far corner); 102 tilted (> 3 deg) vs 110 / 110; main angles 18-19 deg (57) and 19-20 (23)
+  where #489 has 18-19 (64) and 20-21 (20); 5 rattlers vs 0.  Regularized: 34 -> 29 angle groups, level 2 (same packing,
+  path-checked), both checkers VALID.  **Posted as jlevy/squares#689** (17:05; Evan: "Let's post it."; live check clean, register main 926cd764).
+
+## LC274c: L-cut at 274 from the new 308 family (10-19 ~16:45; follows LC274b: its best arm was the one fed by better 308s)
+Pre-registered before launch.  Basis: LC274b explore bests by donor arm: dgen (D308, 308s 17.99715-17.9975) 17.00234,
+fps (store 308s 17.99827-17.99917) 17.00363; lcut seed bests 17.00329 vs 17.00422.  The new 308 record family
+(17.99715) is 0.0011 better than LC274b's fps donors.
+* Donors: 60 = fingerprint farthest-point sample over the best 189 distinct new-family 308s < 17.9975 (D308 + R308
+  archives).  `lcut.py --cuts 20 --reps 2 --random 0` (as LC274b), 16 procs.
+* Explore 274 (`hborder.py explore --tag d`, 80 min): arm new (lcut seeds from these donors) 8 runs, as two arms newA / newB by donor half (0-29, 30-59), 4 runs each; arm cont (best 24
+  distinct store 274s, now incl. LC274b's minima) 4 runs.  Alongside: D308b = `dgen.py run --n 308` style explorer, 4
+  runs x 40 min from 24 farthest-point new-family 308s (more donors; any 308 below 17.9971491 -> candidate.py).
+* Metric: lcut seed sides (best, < 17.005 count); explorer run bests per arm.
+* Predictions: an lcut seed below LC274b's 17.003294: 60 %; best new run below 17.00234: 45 %; new's best below cont's:
+  55 %; a 274 below 17: 8 %; D308b a 308 below 17.9971491: 15 %.
+* Rule: no run below 17.002 again -> L-cut 308 -> 274 is done at this donor quality; 274 rests.
+
+* **LC274c result (18:10; 0 records; new best 274).**  lcut 2,400 seeds, line-free 1,307, < 17.01 8, best 17.001346
+  (newA 2 < 17.01, best 17.001346; newB 6, best 17.005849).  Explore 274 (4 x 80 min per arm): newA 17.001346 /
+  17.001346 / 17.002971 / 17.003844; **newB 17.000932** / 17.001103 / 17.004475 / 17.007348; cont 17.002262-17.003145.
+  Best 274 now 17.000932 (+9.3e-4; LC274b 17.00234, HB 17.0037).  newB's best run started from seeds >= 17.0058: the
+  explorer moved 4.9e-3, the largest move at 274 so far (SR's twist: big moves from starts well above the best).
+  D308b (4 x 40 min from 24 farthest-point new-family 308s, record excluded): all 4 runs ended exactly at the record
+  17.9971491213 (fell into its basin; nothing below).  Predictions: lcut seed < 17.003294: yes; best new run < 17.00234:
+  yes; new below cont: yes; 274 < 17: no; D308b record: no.  Rule (no run < 17.002 -> done): not fired; the L-cut line
+  is still moving (17.0037 -> 17.00234 -> 17.00093 with each better 308 family).  Imported LC274c's 274 archives < 17.03
+  (4,742 new).
+## IS308: opposite-island shove on the new 308 family (10-19 ~17:15; Evan: "a corner shove move that pushes the two tilted bulb regions in opposite directions")
+Pre-registered before launch.  Existing tool: `shove/island.py` (IS1, HELD-cs3.md): islands = clusters of tilted squares;
+each takes a fraction t of the corner shove (0 = with the corner block, 1 = with the rest).  Vectors (0, 1) / (1, 0) move
+the two islands in opposite directions; IS1 tried them only on the 198 family (best +0.028 vs plain +0.020; t = 1/2 worse).
+At 308 the scan finds exactly the two bulbs: s308_d308 = side band 53 squares (~ -19 deg) + bottom band 49 (~ +18 deg); all
+8 parents have 2 islands.
+* Base bench `runs/shove/is308_base` (`delL.py build --nmin 308 --nmax 308 --parents-dir runs/shove/is308_parents
+  --corners all --classes exact,dips,missing --min-missing 0 --max-missing 6 --patterns 2`): parents = s308_d308 + 7
+  farthest-point new-family 308s (LC274c donors 2-8); UL wall L (30 / 33 clean on the record), 16 cores x 4 corners = 64
+  tasks, ms D-1..D+1 (n' = 307 / 308 / 309).
+* Island bench `runs/shove/is308` (`island.py build --fracs 0,1`): vectors (0,0), (0,1), (1,0) x 64 = 192 tasks.
+* Arms: I = island bench, greedy fill seed 0, SHOVE_FIX=1, 4 procs from ~17:30 (when D308b ends), cap 6 CPU-h; P = base
+  bench (plain shove = (1,1)), greedy seed 0, SHOVE_FIX=1, 8 procs after LC274c, cap 3 CPU-h.
+* Metric: rows at n' = 308 (best vs 17.9971491212709, ties = distinct packings at the record side), 309 (vs 18), 307 (vs
+  17.98086278405); per vector best and median non-grid; any below -> candidate.py.
+* Predictions: a 308 below the record: 2 %; a sub-18 309: 1 %; a 307 record: 1 %; an opposite vector ((0,1) or (1,0))
+  beats plain shove on best 308 row: 40 %; at least one non-grid 308 row within 1e-3 of the record: 35 %.
+
+## LC274i: cut one past, then insert (10-19 ~17:25; Evan: "smaller seeds in the right structure are more promising?  Easier to add tilted squares than delete?")
+Pre-registered before launch.  Survey of PACKER.md (no general answer exists: no matched-compute insertion vs removal
+test): removal has more record lineages (154, 343, 108, 129; SQUISH census removal 13 events, 5.6e-2); insertion into a
+jammed record mostly quenches to the grid (insert110, H1 307->308, HB2c 147), but has two wins, both from non-record
+donors in the right family: s(183) (diverse 182s + 1) and today's s(308) (itsnaka's 307 + 1 in the TT2 chain, then search).
+On tilt counts the data point to "the record's tilt family", not "fewer tilted squares" (110, 147 HB2c).
+* Test, matched to LC274c's donors: the same 60 new-family 308 donors cut to **273** (`lcut.py --n 273 --cuts 20 --reps
+  2 --random 0`, 2,400 quenches), then the best 120 distinct line-free 273 seeds -> one-square insertion
+  (`hborder.py seeds --n 274 --tag i --donor-file ... --no-ctl`, 4 per donor, 4 tries) -> explore 274 (arm new, 4 runs x
+  1 proc x 80 min, as each LC274c arm).  Baseline: LC274c newA / newB (direct cut to 274, same donors, same explore).
+  4 procs after LC274c (IS308 holds 12).
+* Metric: explorer run bests vs newA / newB; seed counts within 0.01 of 17 per 480.
+* Predictions: cut-273 + insert's best run below the better of newA / newB: 35 %; a 274 below 17: 4 %.
+
+## SR: are records the best seeds, and do they play out? (10-19 ~17:45; Evan: "records make the best seeds, but play out relatively soon, and there are far more near-record seeds available")
+Pre-registered before running (retrospective; ~0 CPU).  Data: the chain rounds of TT2 (S, C) and TT3 (A, G, L, M), ~685
+explorer rounds; each round at n starts from best_<n>.txt (the chain best at n = "record" in that world) plus carries
+(seed_c*: earlier near-record results), library picks (seed_l*: store packings) and k-seeds (seed_k*: removal / insertion).
+`analysis/seed_retro.py`: per (round, start): kind, gap = start side - best side, effort = archive entries descended from
+it, hit = some descendant below the round's best side by > 1e-9.  Record age = number of earlier rounds at that n that
+started from a best of the same side (to 1e-9).
+* H1 (best per seed): hits / start and hits / 1,000 descendants by kind and gap bin (0, < 1e-3, 1e-3-1e-2, > 1e-2).
+* H2 (plays out): best-start hit rate by record age 0, 1, 2, 3+.
+* H3 (more near-records): in rounds with record age >= 2, share of hits rooted at non-best starts.
+* Predictions: best starts have the highest hit rate per start of any kind: 65 %; age-0 best rate >= 2x age-3+ rate: 60 %;
+  H3 share > 50 %: 55 %.  Caveats to report: the explorer's elite share steers effort toward low sides (per-descendant
+  rates partly correct this); rounds are short (TT2 4 min), so "plays out" is within a chain, not per CPU-h at scale.
+* **SR result (17:55; `analysis/seed_retro.py`, 2 s).**  605 rounds with a best start, 3,287 starts, 29 hits (a
+  descendant below the round's best side).  Per kind (hits / start; hits / 1k descendants): best 19 / 605 (0.031; 0.246),
+  carry 6 / 489 (0.012; 0.170), lib 3 / 919 (0.003; 0.055), kseed 1 / 1,274 (0.001; 0.007).  By gap: near-records
+  < 1e-3 0.018 / start but 0.249 / 1k desc = the record's rate per unit effort; 1e-3..1e-2 0.0055; > 1e-2 0.0005.
+  **Sizes differ**: of best's 19 hits, 15 gain < 1e-6 (largest 5.6e-5); the only gains > 1e-4 are two, both at 132
+  (1.27e-3, found independently by two arms) from far starts (lib gap 5.3e-3, kseed gap 1.3e-2).  Total gain: best
+  8.3e-5, non-best 2.6e-3.  Age (best starts): age 0 17 / 452 (0.038), age 1 0 / 51, age 2 1 / 26, age 3+ 1 / 76 (0.013);
+  old bests also get little effort (age 2+: ~9 desc / start vs ~125 at age 0: the explorer skips known bests).  Hits
+  in rounds with age >= 1: 6 / 8 non-best.
+  Predictions: best has the highest hit rate per start: yes; age-0 >= 2x age-3+: yes (2.8x; 1 hit at 3+, weak); H3 share
+  at age >= 2 > 50 %: yes (3 / 5, weak).  Reading: consistent with Evan's guess, with a twist: the record is the most
+  reliable seed for *small* gains (polish-scale, usually < 1e-6) and its rate drops once the chain has worked it; the
+  large moves came from starts well above the record (5e-3..1e-2 at 132; today 308: starts 1.5e-3..2.9e-3 above #489
+  gained 1.1e-3; 183: non-record donors).  Near-records within 1e-3 match the record per unit effort.  Small data
+  (29 hits, 2 large events, TT rounds 4 min); not a CPU-h-at-scale measurement.
+* **SR follow-up: where the seeds are (18:00).**  Distinct store packings 1e-3..1e-2 above the store frontier, n 100-324
+  non-square (216 n): >= 200 at 45 n, >= 20 at 81, **none at 115** (median 0).  Largest: 110 (8,842), 155, 182, 308,
+  131, 154, 210, 181, 180, 306, 307, 156, 274, 132, 305 (1,763-4,012).  "Far more near-record seeds" holds only where we
+  have already worked; elsewhere a pool must be generated first.  Farthest-point diversity runs (dgen) have been done at
+  146 (D146, 16 runs, 0 records) and 308 (D308, 4 runs, 1 record) only.
+
+## SW: diversity sweep over the large-pool n (10-19 ~18:15; Evan: "Yes please!" to the sweep proposed after SR)
+Pre-registered before launch.  Basis: SR (C49: large moves come from starts 1e-3..1e-2 above the record; near-records
+match the record per unit effort) and D308 (4 farthest-point runs, 1 record); D146 (16 runs, 0) is the counter-case.
+* Per n in {155, 182, 131, 154, 210, 181, 180, 306, 307, 156, 132, 305} (>= 1,763 distinct stored packings 1e-3..1e-2 above
+  the frontier; 110 left out: searched far more than the rest): `dgen.py sweep --n N --band 0.001,0.01 --pool 2000 --runs
+  4 --minutes 40 --tag _sw`: bank = distinct store packings below F + 0.012; starts = 24 farthest-point (fingerprint)
+  from the record over the lowest 2,000 distinct in [F + 1e-3, F + 1e-2), record excluded; 4 explorer runs x 1 proc x 40
+  min (D308 settings: --adapt --adapt-cells --sparse-share 0.5).  F = min over the store's frontier rows (register +
+  pending).  New code: `dgen.py --band / --tag / sweep` (smoke at 155, 0.5 min: plumbing fine).
+* Queued per n (`jobs.py queue`, 4 procs, backfill) behind the running jobs: ~32 CPU-h.
+* Metric: per n, best side reached - F; any below F - 1e-9 -> candidate.py (both checkers, live check), refine, draft (ask
+  Evan).  Secondary: per n, distinct new packings within 1e-3 of F (pool growth); records per CPU-h vs D308's 1 / 2.7.
+* Predictions: at least one record among the 12 n: 30 %; >= 2: 8 %; median best - F over the 12 n < 5e-4: 50 %.
+* Rule: 0 records -> the D308 hit was luck at this budget; the sweep recipe is not a record generator by itself (keep it as
+  a pool builder for other operators).  >= 1 record -> extend to the other 33 n with >= 200 in the band.
+* **SW addendum (18:15): n = 274 added** (13th n, same recipe; registered before its launch).  Pool: the store's 274s in
+  [17.001, 17.01) now include HB / LC274b / LC274c archives (LC274c best 17.000932 sits just below the band, so it is
+  excluded as the "record" would be: the band starts at F + 1e-3 with F = 17, the grid).  Prediction: a sub-17 274: 5 %;
+  best run below 17.000932: 30 %.
+
+## SW154 hit + R154 refine (10-19 20:20)
+* **Hit.**  SW sweep at 154 (`runs/dgen/n154_sw/x0/b00281.txt`, start band frontier + 1e-3..1e-2): S' = 12.921100940761680549857,
+  1.056e-4 below the live frontier 12.9212065771326 (pending #586 franciscouzo; also #570, #624, ours in the register).
+  candidate.py `runs/candidates/s154_sw`: both checkers VALID (also on the regularized cert, groups 19 -> 10, level 2);
+  live check nothing at or below; distinct minimum vs the prior (35 load-bearing squares move, matching 0.051, no shared
+  angles); 38 tilted (33 held) vs prior 39.  Local optimality *inconclusive*: KKT, but 1 negative eigenvalue blocked
+  only to first order by weakly active contacts (flat 51, corner-corner 58, rattlers 9) -- so a refine may descend.
+* **R154 refine, pre-registered (20:20)**: 12 x 40 min explorer from b00281 (elite 0.5, `--smax 12.93`, seeds 1540+),
+  as R308.  Runs ~8 over the 16 target for 40 min (sweep queue backfill holds).  Metric: best certified side.
+  Predictions: some run below the hit by > 1e-6: 55 % (the inconclusive status raises it vs R308's 60 % for > 1e-5);
+  by > 1e-5: 30 %; by > 1e-4: 8 %.  Then candidate.py on the best, jlevy draft in outreach/, ask Evan.
+
+## IS308 result (10-19 ~20:00)
+* Plain delL shove (`runs/shove/is308_base/greedy_s0`, 64 tasks, 576 rows, 1.92 CPU-h): 1 non-grid row out of 576, at
+  307: 17.9969154 (vsL -5.5e-4, +1.61e-2 above the 307 record).  Opposite-bulb island shove (`runs/shove/is308/greedy_s0`,
+  192 tasks, 1,728 rows, 5.21 CPU-h): 1 non-grid row out of 1,728, at 307: 17.9974880 (vsL +2.3e-4, +1.66e-2 above).
+  Nothing non-grid at 308 or 309 in either arm.
+* Predictions: 308 record (2 %), sub-18 309 (1 %), 307 record (1 %): miss.  Opposite vector beats plain (40 %): miss
+  (same non-grid count on 3x the rows, worse side).  Non-grid 308 within 1e-3 (35 %): miss.
+* Reading: from the record family at 308, removal-shove-refill goes grid almost always, opposite bulb vectors
+  included -- the same as CS274 at 273 -> 274.  Opposite-bulb shove closed at 308 at this budget.
+* **R154 refine result (21:00).**  All 12 runs stayed at 12.9211009407650 (the hit, float); 0 distinct below it.
+  Predictions (> 1e-6 55 %, > 1e-5 30 %, > 1e-4 8 %): all miss.  The hit stands as the candidate: S' above.
+
+## LC274i result (10-19 21:00)
+* 273 L-cuts of the 60 donors: 2,400 seeds, best 16.98557 at 273 (above the 273 record).  Best 120 -> 274 insertion
+  seeds (`hborder --no-ctl`): 480, line-free 132, best 17.011611.  Explore 4 x 80 min: 17.011603 / 17.011604 /
+  17.011607 / 17.012238.  Baseline LC274c direct: newA 17.001346, newB 17.000932.
+* Predictions: beats direct (35 %): miss, by 1.07e-2.  Sub-17 (4 %): miss.  Smaller-seed-then-insert loses badly at
+  274 from these donors: the explorer barely moves the inserted seeds (7e-6), the same insertion wall as HB2c at 147.
+
+## SW2: sweep extension (10-19 21:30; SW's pre-registered rule fired: 154 record -> extend)
+Pre-registered before launch.  SW so far (6 of 13 n): 154 record (-1.056e-4); 131 and 181 tie the frontier (to 3e-12);
+155 +1.6e-4, 182 +1.2e-4, 210 +6.0e-4.  The rule said "the other 33 n with >= 200 in the band"; the store's pools have
+grown since SR (imports), so today 58 n have >= 200 distinct in [F + 1e-3, F + 1e-2).  Extension = all of them except
+SW's 13, 110 (as SW), 308 and 146 (D308 / D308b / R308 and D146 / HB2 today): 42 n, largest pool first:
+240 130 108 208 239 273 238 237 241 343 109 39 68 209 269 89 304 271 86 211 270 179 272 103 207 344 175 41 71 88 129 261 53 230 303 55 153 234 38 199 236 66.
+* Same recipe and code as SW (`dgen.py sweep --band 0.001,0.01 --pool 2000 --runs 4 --minutes 40 --tag _sw`), queued
+  low priority with backfill behind SW's remaining 4: ~113 CPU-h, overnight.
+* Metric as SW; records per CPU-h vs SW (1 in ~16 CPU-h so far).
+* Predictions: >= 1 record among the 42: 45 %; >= 3: 10 %; records at n < 100 (pools there are old and heavily
+  searched): 3 %; median best - F < 5e-4: 45 %.
+* Rule: records per CPU-h across SW + SW2 >= 1 / 40 CPU-h -> the near-record band sweep becomes a standing generator
+  (rerun as pools grow); < 1 / 100 -> 154 was the lucky draw, keep it as a pool builder.
+* **154 provenance check (10-19 ~22:00; Evan: "jlevy credits it to us as well ... distinct local minimum ... or the
+  same one?").**  The register's 154 (12.92120657713263, found_by Evan Daniel, improved_by Couzo, Mishapolk) = #586's
+  minimum, Mishapolk's KKT certificate of it; #586 says "continued Evan Daniel's arrangement from #552 ... browser
+  refinement, native basin hopping and exact finishing".  Certified + regularized (candidate.py work dirs chk154_552,
+  chk154_583, s154_sw/prior) and pk.distinct.compare, all pairs:
+  - #552 (12.9225664, ours) -> #583 (12.9224998, Couzo): distinct, adjacent minimum: 48 squares move, max 0.044,
+    matching 0.006.  A refinement into a neighbouring minimum.
+  - #583 -> #586 (12.9212066): distinct, a different arrangement: 134 move (37 > 1e-2), max 0.29, all tilt angles
+    change (new 26.53 deg x 10 band), matching 0.099.  Basin hopping, not a local refinement.
+  - SW hit (12.9211009) -> #586: distinct, same family: 35 move (23 > 1e-2), max 0.47, matching 0.051, keeps the
+    26.53 deg x 10 band and 38-44 deg group.  Hit vs #552 / #583: 136-137 move, matching 0.10.
+  - Lineage: NOT independent of #586.  In night1014 r0508, the hit's root (seed_k2, from the 156 register packing) took
+    three cross2 moves whose mates descend from carry seeds c0 / c1 (12.92128 / 12.92306; float matching 0.024 / 0.040
+    to #586).  Draft corrected to credit #586 (via #552) and the 156 packing.
+* **154 barrier test, pre-registered (10-19 ~22:30; Evan: "be cautious about magic number thresholds.  Changes in
+  contact graphs can produce small local minimum differences from small moves").**  Distinctness itself needs no
+  threshold (two KKT points at exact sides 1.06e-4 apart); the question is how different.  Threshold-free measures:
+  (a) contact-graph diff in the aligned frame (`analysis/cmp154.py`; exactsolve's active sets, pair level): hit-586
+  61 / 64 of ~296 differ, 552-583 20 / 20 of 288, 583-586 62 / 72; (b) expansion barrier: morph.walk_carrot at side
+  max(S_A, S_B) + h, h = 1e-8 .. 1e-2 (decade ladder), both directions x both frames, pairs hit-586, 552-583, 583-586,
+  552-586 (16 walks, 8 procs).  A success is a feasible LP-step path (an upper bound on the barrier); a failure is
+  only a failed heuristic.  Predictions: 552-583 connects at h <= 1e-6: 60 %; hit-586 connects at h <= 1e-6 (i.e. our
+  hit is reachable from the record with no expansion = a descent): 25 %; 583-586 needs h >= 1e-3: 70 %.
+* **154 barrier result (10-19 ~23:15).**  `runs/cmp154.json`.  walk_carrot at max(S_A, S_B) + h, h = 1e-8 .. 1e-2,
+  both directions x both frames (a success = a feasible path, upper bound on the barrier; a failure = heuristic only):
+  - #583 -> #552 connects at +1e-5 (both frames); #552 -> #583 only at +1e-2 (the walker is asymmetric by 3 decades
+    on this one pair, so read failures loosely).  #552 and #583: neighbouring minima, barrier <= 1e-5 above #552.
+  - hit <-> #586, #583 <-> #586, #552 <-> #586: no connection up to +1e-2, either direction, either frame.  Residual
+    distance at +1e-2: hit-586 1.6-1.8, 583/552-586 6.1-7.0 (corner L1 units).
+  - Predictions: 552-583 at <= 1e-6 (60 %): miss (1e-5).  hit-586 at <= 1e-6 (25 %): miss, not connected at all.
+    583-586 needs >= 1e-3 (70 %): hit (none up to 1e-2).
+  - Reading: the register's chain #552 -> #583 is a refinement within one basin (<= 1e-5 expansion); #583 -> #586 is a
+    jump between basins (basin hopping, as #586 says).  Our hit is a third basin: the walker finds no path from #586
+    even at +1e-2, though it is nearer #586 than #586 is to #583 (residual 1.6 vs 6.9; 21 % vs 22 % contact pairs
+    differ).  "Same family, different basin", not a refinement of #586.
+* **pk.distinct (10-19, Evan's threshold point):** verdict now from the exact sides alone (SIDE_RES 1e-30 on the
+  80-digit KKT sides; equal sides + different contact graphs -> 'same side, different contact graph'); new
+  contact_diff (active-set pairs + walls, matched over the 8 symmetries); move counts are descriptive only.
+  table_md / summary_lines lead with the exact gap and the contact diff.  Tested: 154 pairs + self-compare (same).
+* **s(154) POSTED (10-19 ~23:40): jlevy/squares#694**, cert at 1d2bb82 (`candidates/s154_sw.*`, SHA-256 cert c2242dcd…,
+  regularized 7fb7f288…).  Claim 12.921100940762.  Credit: #586 (via #552) and the register's 156 (Ostashev) as starts.
+
+## SW result (12 of 13 n; 10-19 22:31) and pause
+* best - F per n: 154 -1.056e-4 (record, posted #694); 131, 132, 156, 180, 181 tie F (+2.5e-12 .. +3.0e-12: back into
+  the record's basin); 307 +2.1e-5; 182 +1.2e-4; 155 +1.6e-4; 306 +5.6e-4; 210 +6.0e-4; 305 +7.3e-4.  ~32 CPU-h.
+* Predictions: >= 1 record (30 %): hit.  >= 2 (8 %): miss.  Median best - F < 5e-4 (50 %): hit (~1e-5).
+* Rule fired (>= 1 record): SW2 extension queued (see SW2).  Five of 12 n land exactly on the record: near-record
+  starts in the band mostly fall back into the record's basin, as in D308b.
+* **Paused 22:10 for an idle night (Evan: noise).**  `_queue` scheduler stopped; 43 entries kept in
+  runs/jobs/queue.json (sw274 + SW2's 42 n), none started.  Resume: `python3 pk/jobs.py start _queue -- python3
+  pk/jobs.py queue run`.  The SW2 record watcher (bi2dogxe4) is still polling the logs every 5 min (grep only).
+* **Resumed 10-20 07:56** (Evan): `_queue` restarted; sw274, sw240, sw130 started first (4 procs each), 40 waiting.
+
+## Fill module (10-20; Evan: "more refactor than new"; plan in the 10-20 session, BULB.md)
+* **Survey: fill code in about 15 places, four families.**
+  - Exact upright fill, 5 copies of one problem: `fillfast.fill` (FP1, canonical), `gen.mis_fill2` (13 callers),
+    `gen.mis_fill` (older candidate set, 3), `mondrian.exact_fill` (already calls fillfast), `vband.fill_count`.
+  - Heuristic upright: `gen.axis_fill` / `sweep_fill` / `best_seed` (only gen + bulbgen).
+  - Inexact, any angle, overlap allowed: `shove/fill_greedy.py` (best of K, CS1 A: K = 4 worst, K >= 16 similar, the
+    quench dominates CPU), `fill_relax.py` (least total penetration of K + relax, CS1 B: the relax schedule mattered
+    more than the placement; only the rounded compress pre-stages kept non-grid structure), `fill_resolve.py` (local
+    re-solve; band locally rigid), `mcmin.holes` / `pose_holes` (reinsert, `insert_k`), `bulbgen.largest_holes`,
+    `best_hole` in the Rust annealer.
+  - Not general: `lrefill.refill`, `ryu/junction.corner_fill`, `bandcut_*` (theory), `landscape/sweep.fill` (a statistic).
+  - Relax schedules: two tables, `relax.OPS` (QOpt base) and `fill_relax.RELAX` (SCREEN base).
+* **Done:**
+  - `pk/schedules.py`: one named table (both, same QOpts; checked equal).  `relax.OPS` and `fill_relax.RELAX` are views.
+  - `pk/fill.py`: placers `bestofK`, `leastbad` (the CS1 engines moved verbatim), `exact` / `greedy` (fillfast),
+    `farthest`, `uniform`; parameter spaces as pk/moves.py (drawn, logged); `m` = count or None (until full: bestofK
+    ov_full, leastbad pen_full, capped by m_max); optional `region` bias; `relax_with` = a schedule name.
+    `shove/fill_greedy.py` / `fill_relax.py` are adapters: **same output for the same seed** (2 shove tasks x 2
+    candidates + least-bad placements + free masks, all bit-identical to the 10-16 files).
+  - `gen.mis_fill2` -> fillfast (`PK_FILL_IMPL=legacy` for the MILP): counts equal on the records' tilted sets at
+    110 / 154 / 211 / 241 / 308 (and each refills to exactly n at s + 1e-4), 5-10x faster.  `mis_fill`, `axis_fill`,
+    `sweep_fill`, `best_seed` marked legacy; old scripts untouched (archive pass: separate session).
+  - `bulbgen.py` on pk/fill: target n + extra (-2..2), stop = count / full, no forced insertion, files named by the
+    count reached.  Smoke (k 18, 8 starts, 3 s): counts 295-310.
+  - `fillbench.py`: refill benchmark (delete uprights, or a disc at the band boundary, from the store's best; refill;
+    CS1 evaluate; scored at the reached count).  Uses `cancel_futures` at the CPU cap (CS1 harness note 2).
+* **Smoke (plumbing, not a test; runs/fillbench/smoke, 7 disc tasks at 110 / 211 / 308, 6-15 squares deleted,
+  2 seeds, 0.13 CPU-h):** refilling a small hole cut from a record rarely gets back near it: within 1e-3 of the
+  record in 0-3 of 14 rows per config, recovered (<= record) 0.  bestofK:16+round.15c best (3 / 14, median d_ref
+  6.5e-3); exact + round.15c ends 2-4 short (uprights only) but non-grid 10 / 14.  Next: a pre-registered bench
+  (placer x relax x stop x K, more n), K = 1 and softmax choice (CS1 untested), then bulbgen's fill choice from it.
+
+## Load noise: wall-clock limits (10-20; Evan: "is fq time-limited?")
+* fq itself has no time limit (its timers only feed log lines; same flags + input -> byte-identical output).  Load
+  enters through callers' wall-clock limits:
+  - **EV2 evaluator** (`analysis/evolve.py eval_job`): 60 s *wall* per fq quench.  A squeeze cut off dropped the
+    candidate; a polish cut off kept the unpolished side.  Silent, uncounted (0 of 98 evals.jsonl rows mention a
+    timeout).  Likely cause of P008's reported 236 spread (15.8813 / 15.9164 on the same candidates at load ~25):
+    not provable from the logs.  The constructor runner also has a 60 s wall limit (unchanged).
+  - Explorer / dgen `--minutes`: wall budget, so fewer proposals under load (fine for hunts; benchkit rates are per CPU).
+  - hop.quench 900 s wall: a hang guard; rarely hit at these sizes.
+* **Changed:** `FQ.quench(..., cpu_limit=S)` (pk/engine.py `_Watchdog`: the fq child's CPU from /proc during this
+  request, polled every 0.25 s; the wall timeout stays as the hang guard).  Checked: no-limit and cpu_limit=300 give
+  byte-identical output; cpu_limit 0.79 s killed a 2.6 CPU-s quench ("cpu limit (0.7941 s CPU)"), the worker
+  restarted and reproduced the result.  EV2 eval_job now uses cpu_limit 60 + wall 1800 (`PK_EVAL_LIMIT=wall` restores
+  the old 60 s wall, for comparisons with gens 0-1) and counts limit hits per n (squeeze / polish), printed and logged.
+* Rule (Evan 10-20): judge "not making progress" from trajectories and numeric output (side vs step, stalls), not
+  from timing; timeouts are a backup against hangs.
+
+## SW2 result (42 n; 10-20 07:56 - ~20:30)
+* **Records (2): 343** 18.977682482404 (-5.50e-4 vs Couzo #678; descent from the sweep's 18.9776923), beyond the corpus;
+  **270** 16.928162252197 (-3.47e-5 vs the register, Chaoweeraprasit #500).  Both certified (both checkers), strict
+  local minima (numerical), distinct minima from the prior record (candidate.py; `candidates/s343_sw*`, `s270_sw*`).
+  Both came through pools of non-record packings: 343 from a Hunt 3 (10-10) leftover 7.4e-3 above the record, 270
+  from the 10-17 explorer's 8-generation descendants of #500, 9.2e-3 above.  Drafts `outreach/draft-jlevy-n{343,270}-2026-10-20.md`.
+* Near misses: 211 +9.3e-6, 241 +1.7e-5, 303 +7.2e-5, 271 +1.7e-4, 208 +1.3e-4.  23 of 42 tie the frontier to 1e-9
+  (back into the record's basin; every n < 100 did).  Median best - F 3.4e-12.
+* CPU (measured, manifests): 114.4 CPU-h.  SW + SW2: 3 records in ~146 CPU-h = 1 / 49 CPU-h.
+* Predictions: >= 1 record (45 %): hit.  >= 3 (10 %): miss (2).  Records at n < 100 (3 %): miss.  Median best - F
+  < 5e-4 (45 %): hit.
+* Rule: >= 1 / 40 CPU-h -> standing generator; < 1 / 100 -> pool builder.  **1 / 49: between the two; the rule does not
+  decide.**  For Evan.  Note the band sweep's value shows up as records two generations later (both hits started from
+  stored non-record packings), so "pool builder" and "generator" are not separate here.

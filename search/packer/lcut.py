@@ -93,7 +93,9 @@ def job(j):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--donors', nargs='+', required=True, help="store ids")
+    ap.add_argument('--donors', nargs='*', default=[], help="store ids")
+    ap.add_argument('--donor-paths', nargs='*', default=[], help='packing files (e.g. dgen.py donors.json paths)')
+    ap.add_argument('--donor-list', help='file: one store id per line (added to --donors)')
     ap.add_argument('--n', type=int, default=183); ap.add_argument('--cuts', type=int, default=60)
     ap.add_argument('--reps', type=int, default=2); ap.add_argument('--random', type=int, default=120)
     ap.add_argument('--step', type=float, default=0.05); ap.add_argument('--sep', type=float, default=0.15)
@@ -110,9 +112,14 @@ def main():
     st = Store(); rng = random.Random(a.seed)
     k = math.ceil(math.sqrt(a.n) - 1e-12)
     J, cutinfo = [], {}
-    for dn in a.donors:
-        pk_ = st.get(int(dn))
-        src = f'{a.out}/donors/{dn.replace(":", "")}.txt'; pk_.write(src)
+    if a.donor_list:
+        a.donors += [l.strip() for l in open(a.donor_list) if l.strip()]
+    for dn in a.donors + a.donor_paths:
+        if os.path.exists(dn):                        # a file: keep its run / name in the donor label
+            src = f'{a.out}/donors/' + dn.strip('/').replace('/', '_')
+            import shutil; shutil.copy(dn, src)
+        else:
+            src = f'{a.out}/donors/{dn.replace(":", "")}.txt'; st.get(int(dn)).write(src)
         s, sq = mcmin.load_deg(src)
         d = len(sq) - a.n
         cuts = best_cuts(sq, s, d, a.step, a.cuts, a.sep)

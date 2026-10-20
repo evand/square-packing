@@ -1,0 +1,107 @@
+{
+ "store_id": 240,
+ "s": 14.0,
+ "sources": [
+  "kingbird (None)",
+  "kingbird (None)",
+  "kingbird (None)",
+  "pending:#375 (Evan Daniel (evand))",
+  "pending:#375 (Evan Daniel (evand))",
+  "pool:ours (ours)",
+  "pool:reg (reg)",
+  "register (None)",
+  "register (None)",
+  "register (None)",
+  "register (None)",
+  "register (None)",
+  "register (None)",
+  "register (None)",
+  "register (None)",
+  "register (None)",
+  "register (None)",
+  "register (None)",
+  "register (None)"
+ ],
+ "ok": true,
+ "S_exact": "14.0",
+ "S_cert": "14.00000000000000000014",
+ "checkers": {
+  "verify_cert": {
+   "ok": true,
+   "line": "VALID: s(n) <= S"
+  },
+  "verify_cert2": {
+   "ok": true,
+   "line": "VALID: 183 closed unit squares pairwise disjoint inside the open box of side 14 (338 close pairs checked)"
+  }
+ },
+ "optimality": {
+  "kkt": true,
+  "min_lambda": 0.017857142857142856,
+  "status": "local minimum of S, strict modulo 170 exact flat motions (PD on the rest of null(J_A)); the configuration is not isolated",
+  "flat_motions": 170,
+  "flat_realised": 170.0,
+  "flat_residual": 6.028546050427981e-61,
+  "negative_eigs": 0,
+  "corner_corner": 313,
+  "vv_milp_dS": 0.0,
+  "rattlers": 0,
+  "min_pair": 1e-20,
+  "min_wall": 5e-21
+ },
+ "regularized": {
+  "ok": true,
+  "S_exact": "14.0",
+  "S_cert": "700000000000000000007/50000000000000000000",
+  "groups": [
+   1,
+   1
+  ],
+  "level": 0,
+  "level_text": "identical (orientation aside)",
+  "checkers": {
+   "verify_cert": {
+    "ok": true,
+    "line": "VALID: s(n) <= S"
+   },
+   "verify_cert2": {
+    "ok": true,
+    "line": "VALID: 183 closed unit squares pairwise disjoint inside the open box of side 14 (338 close pairs checked)"
+   }
+  }
+ },
+ "verdict": "distinct minimum",
+ "difference": {
+  "side_gap": 0.00019488420492841385,
+  "matching_distance_regularized": 0.6104462460116915,
+  "symmetry": 5,
+  "moved_gt_1e4": 135,
+  "moved_gt_1e2": 93,
+  "max_move": 1.374477118683595,
+  "max_angle_change": 30.06128111936802,
+  "rattler_status_swaps": 4,
+  "shared_angles": [],
+  "ours_only_angles": [
+   "18.1133",
+   "18.2917",
+   "18.4778",
+   "18.5426",
+   "18.5460",
+   "18.5626",
+   "18.5901",
+   "18.6035",
+   "18.7581",
+   "19.0801",
+   "19.9166",
+   "21.6823",
+   "23.2770",
+   "25.0412",
+   "25.6064",
+   "26.3743",
+   "28.1912",
+   "3.4263",
+   "30.0613"
+  ],
+  "prior_only_angles": []
+ }
+}

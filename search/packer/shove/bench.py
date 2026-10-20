@@ -81,7 +81,11 @@ def one(args):
     if fill_name == 'lstep':
         S, X = H.lstep(s, sq); cands.append((2 * task['k'] + 1, X, S))
     else:
-        S, sq2, meta = H.shove(s, sq, task['corner'], d)
+        if task.get('ishove'):                             # 10-17 IS1: island shove (shove/island.py)
+            import island
+            S, sq2, meta = island.from_task(s, sq, task, d)
+        else:
+            S, sq2, meta = H.shove(s, sq, task['corner'], d)
         if fill_name == 'none':
             cands.append((0, sq2, S))
         elif fill_name == 'uprights':
@@ -121,7 +125,7 @@ def one(args):
                           ((n2 - task['n'] >= 2 * k0 + 1 and r['vsL'] < -1e-9) or (n2 - task['n'] >= 2 * k0 + 2 and r['vsL'] <= 1e-9)))
         r['live'] = bool(e['s'] is not None and r['vsNow'] < -1e-9)
         if e['s'] is not None and (r['live'] or r['beatL'] or r['rediscovered'] or r['vsT'] < 1e-3):
-            r['file'] = f"{task['n']}_{task['corner']}_{n2}_{seed}_c{ci}.txt"
+            r['file'] = f"{task['n']}_{task['corner']}_{n2}_{seed}_c{ci}" + (f"_t{task['id']}" if 'id' in task else '') + '.txt'
             r['_sq'] = e['sq']
         rows.append(r)
     for r in rows:

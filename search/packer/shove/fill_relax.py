@@ -30,110 +30,24 @@ def _k():
     return int(os.environ.get('SHOVE_K', '64'))
 
 
-# ------------------------------------------------------------------ penetration (vectorised SAT, unit squares)
-
-def pen_vec(S, X, pose):
-    """(depths vs each row of X, wall excess) for unit square `pose`; depth 0 = separated"""
-    x, y, a = pose
-    if len(X):
-        dx, dy = X[:, 0] - x, X[:, 1] - y
-        near = dx * dx + dy * dy < 2.0
-        dep = np.zeros(len(X))
-        if near.any():
-            dxn, dyn, an = dx[near], dy[near], np.radians(X[near, 2])
-            a0 = math.radians(a)
-            best = np.full(len(dxn), np.inf)
-            for phi in (np.full(len(dxn), a0), np.full(len(dxn), a0 + math.pi / 2), an, an + math.pi / 2):
-                ux, uy = np.cos(phi), np.sin(phi)
-                h1 = 0.5 * (np.abs(np.cos(a0 - phi)) + np.abs(np.sin(a0 - phi)))
-                h2 = 0.5 * (np.abs(np.cos(an - phi)) + np.abs(np.sin(an - phi)))
-                best = np.minimum(best, h1 + h2 - np.abs(dxn * ux + dyn * uy))
-            dep[near] = np.maximum(best, 0.0)
-    else:
-        dep = np.zeros(0)
-    h = H.half_extent(a)
-    wall = max(0.0, h - x) + max(0.0, h - y) + max(0.0, x + h - S) + max(0.0, y + h - S)
-    return dep, wall
-
-
-def total_pen(S, X, pose):
-    dep, wall = pen_vec(S, X, pose)
-    return float(dep.sum()) + wall
-
-
-# ------------------------------------------------------------------ least-bad placement
-
-def _sample_pts(S, X, strip, h=0.1):
-    xs, ys, free = H.free_mask(S, X, h=h)
-    J, I = np.nonzero(free)
-    px, py = xs[I], ys[J]
-    ins = np.zeros(len(px), bool)
-    for x0, y0, x1, y1 in strip:
-        ins |= (px > x0 - 0.6) & (px < x1 + 0.6) & (py > y0 - 0.6) & (py < y1 + 0.6)
-    return np.c_[px, py], np.c_[px[ins], py[ins]]
-
-
-def _angle(X, x, y, rng):
-    u = rng.random()
-    if u < 0.5:
-        return 0.0
-    if u < 0.85 and len(X):
-        d = np.hypot(X[:, 0] - x, X[:, 1] - y)
-        nb = np.nonzero((d < 2.5))[0]
-        tilts = [X[j, 2] % 90 for j in nb if 1.0 < X[j, 2] % 90 < 89.0]
-        if tilts:
-            return (rng.choice(tilts) + rng.gauss(0, 2.0)) % 90
-    return rng.uniform(0, 90)
+# 10-20: penetration + least-bad placement moved to pk/fill.py (placer 'leastbad'); same draws and output.
+from pk.fill import pen_vec, total_pen, _sample_pts, _angle, leastbad_place  # noqa: F401
 
 
 def place(S, X, strip, m, rng, K, resample_every=4):
     """add m squares to X one at a time, each the least-total-penetration of K random poses -> (X', total pen)"""
-    X = np.asarray(X, float)
-    tot = 0.0
-    allp, stp = _sample_pts(S, X, strip)
-    for i in range(m):
-        if i and i % resample_every == 0:
-            allp, stp = _sample_pts(S, X, strip)
-        best = None
-        for _ in range(K):
-            if len(stp) and (rng.random() < 0.75 or not len(allp)):
-                p = stp[rng.randrange(len(stp))]
-            elif len(allp):
-                p = allp[rng.randrange(len(allp))]
-            else:                                          # no uncovered raster point at all: anywhere in the strip
-                r = strip[rng.randrange(len(strip))] if strip else (0, 0, S, S)
-                p = (rng.uniform(r[0], r[2]), rng.uniform(r[1], r[3]))
-            x, y = float(p[0]) + rng.uniform(-0.05, 0.05), float(p[1]) + rng.uniform(-0.05, 0.05)
-            a = _angle(X, x, y, rng)
-            hh = H.half_extent(a)
-            x, y = min(max(x, hh), S - hh), min(max(y, hh), S - hh)
-            pv = total_pen(S, X, (x, y, a))
-            if best is None or pv < best[0]:
-                best = (pv, (x, y, a))
-        tot += best[0]
-        X = np.vstack([X, np.array(best[1])])
-    return X, tot
+    X2, tot, _ = leastbad_place(S, X, strip, m, rng, K, resample_every)
+    return X2, tot
 
 
-# ------------------------------------------------------------------ relax
-
-# relax schedules (fq pre-stages; dev tests 10-16, NOTES_relax.md): plain big-loosen ALM collapses to the k + 1 grid,
-# the rounded-square pre-stages keep some structure.
-RELAX = {
-    'L1.1':      dict(loosen=1.1),
-    'L1.2':      dict(loosen=1.2),
-    'round.15c': dict(loosen=1.0, round_r0=0.15, round_compress=True),
-    'round.25c': dict(loosen=1.0, round_r0=0.25, round_compress=True, round_steps=40),
-    'round.15cL1.1': dict(loosen=1.1, round_r0=0.15, round_compress=True),
-    'holdP1.01': dict(loosen=1.0, round_r0=0.15, hold_f=1.01, no_alm=True, pit=300, flip_top=8),
-    'shrinkhop': dict(loosen=1.1, shrink=True, hops=3),
-}
+# relax schedules: pk/schedules.py (10-20; this file's RELAX table moved there, same QOpts)
+from pk.schedules import RELAX_NAMES, SCHEDULES
+RELAX = {k: SCHEDULES[k] for k in RELAX_NAMES}
 
 
 def _quench(S, X, tmp, kw):
     import hop
-    from pk.engine import SCREEN
-    r = hop.quench(S, [tuple(map(float, q)) for q in X], tmp, opt=SCREEN.but(**kw))
+    r = hop.quench(S, [tuple(map(float, q)) for q in X], tmp, opt=kw)
     return None if r is None else (float(r[0]), np.asarray(r[1], float))
 
 

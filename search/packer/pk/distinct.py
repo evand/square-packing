@@ -16,14 +16,22 @@ A square "moves" by max(centre distance, corner radius x angle change); moves ar
 both (a rattler's place and angle are the regularizer's choice; squares that rattle in one and not the other are counted
 as swaps; exactsolve's contact and rattler sets can differ between two inputs of one minimum).  The per-angle tilt
 counts are over load-bearing squares only, for the same reason.
-Verdict: 'same minimum' if the exact sides agree within SAME_SIDE (2e-9) and no load-bearing square moves more than MOVE
-(1e-4); else 'distinct minimum'.
+Verdict (10-19, Evan: "be cautious about magic number thresholds.  Changes in contact graphs can produce small local
+minimum differences from small moves"): decided by the exact sides alone.  Both inputs are exactsolve KKT points at
+80 digits; sides that differ by more than SIDE_RES (1e-30, far above the solver's precision and far below any real gap)
+are different KKT points, however little moved; equal sides with different contact graphs -> 'same side, different
+contact graph' (a symmetric / degenerate twin, or one minimum reached twice with different weakly active contacts: look
+closer); equal sides and equal graphs -> 'same minimum'.  The move counts (> MOVE, > 1e-2) are descriptive only, and the
+contact-graph diff (exactsolve's active sets, pair level: square-square pairs and square-wall sides, matched in the raw
+frames) says how different the two are.  Neither says how far apart the basins are: for that, an expansion barrier
+(landscape/morph.walk_carrot; analysis/cmp154.py).
 """
 from __future__ import annotations
 import collections, json, math, os, re, sqlite3
 import numpy as np
 
-SAME_SIDE = 2e-9
+SAME_SIDE = 2e-9                # legacy (descriptive): the old float-side rule
+SIDE_RES = 1e-30                # exact sides (80-digit KKT points) closer than this are equal
 MOVE = 1e-4
 TILT = 1e-6                     # degrees: below = axis-parallel
 ROUND = 4                       # tilt angles grouped at 1e-4 degrees
@@ -150,6 +158,45 @@ def facts(work):
         _reg=(s_reg, reg, free))
 
 
+def _wall(x, y, s):
+    """the wall a square touching the box is nearest to (geometry, so no symmetry-label bookkeeping)"""
+    return min((x, 'L'), (s - x, 'R'), (y, 'B'), (s - y, 'T'))[1]
+
+
+def contact_diff(ours_work, prior_work):
+    """contact graphs of two candidate.py work dirs (exactsolve's active sets, cand.contacts.json, indices of
+    cand.exact.txt), pair level, prior mapped onto ours by best_match on the raw packings"""
+    from .packing import read
+    G = []
+    for w in (ours_work, prior_work):
+        K = json.load(open(os.path.join(w, 'cand.contacts.json')))
+        P = read(os.path.join(w, 'cand.exact.txt'))
+        G.append((K, np.array(P.sq, float), float(P.s)))
+    (Ko, Oq, sO), (Kp, Pq, sP) = G
+    _, k, perm, Pm = best_match(Oq, sO, Pq, sP)          # ours[i] ~ Pm[perm[i]]
+    inv = {int(perm[i]): i for i in range(len(perm))}
+    def edges(K, sq, s, m):
+        E = set()
+        for e in K['equations']:
+            if e[0] == 'W':
+                i = m(e[1]); E.add(('W', i, _wall(sq[e[1], 0], sq[e[1], 1], s)))
+            else:
+                E.add(('C',) + tuple(sorted((m(e[1]), m(e[3])))))
+        return E
+    Eo = edges(Ko, Oq, sO, lambda i: i)
+    Ep = edges(Kp, Pm, sO, lambda j: inv[j])
+    fo, fp = set(Ko.get('free') or []), {inv[j] for j in (Kp.get('free') or [])}
+    return dict(symmetry=int(k), edges_ours=len(Eo), edges_prior=len(Ep), shared=len(Eo & Ep),
+                ours_only=len(Eo - Ep), prior_only=len(Ep - Eo), rattlers_ours=len(fo), rattlers_prior=len(fp),
+                rattlers_shared=len(fo & fp))
+
+
+def _side_eq(a, b):
+    from decimal import Decimal, getcontext
+    getcontext().prec = 90
+    return abs(Decimal(a) - Decimal(b)) <= Decimal(SIDE_RES)
+
+
 def compare(ours_work, prior_work):
     O, P = facts(ours_work), facts(prior_work)
     sO, Oq, fo = O.pop('_reg'); sP, Pq, fp = P.pop('_reg')
@@ -161,25 +208,42 @@ def compare(ours_work, prior_work):
     ao, ap = set(O['regularized']['angles_load_bearing']), set(P['regularized']['angles_load_bearing'])
     gap = float(P['S_exact'][:40]) - float(O['S_exact'][:40])
     n1, n2 = int((mv[held] > MOVE).sum()), int((mv[held] > 1e-2).sum())
-    same = abs(gap) <= SAME_SIDE and n1 == 0
+    n3, n3all = int((mv[held] > 0.1).sum()), int((mv > 0.1).sum())     # 10-20: jlevy's refinement threshold (0.1)
+    try:
+        cd = contact_diff(ours_work, prior_work)
+    except Exception as e:                                # older work dirs without contacts
+        cd = dict(error=repr(e))
+    if not _side_eq(O['S_exact'], P['S_exact']):
+        verdict = 'distinct minimum'
+    elif cd.get('ours_only') == 0 and cd.get('prior_only') == 0:
+        verdict = 'same minimum'
+    else:
+        verdict = 'same side, different contact graph'
     moved = sorted(held, key=lambda i: -mv[i])[:n1]
     return dict(
         ours=O, prior=P,
         difference=dict(side_gap=gap, matching_distance_regularized=md, symmetry=int(k),
-                        moved_gt_1e4=n1, moved_gt_1e2=n2, max_move=float(mv[held].max()) if held else 0.0,
+                        moved_gt_1e4=n1, moved_gt_1e2=n2, moved_gt_1e1=n3, moved_gt_1e1_all=n3all,
+                        max_move=float(mv[held].max()) if held else 0.0, max_move_all=float(mv.max()),
                         max_angle_change=float(da[held].max()) if held else 0.0,
                         rattler_status_swaps=len(swaps), shared_angles=sorted(ao & ap),
                         ours_only_angles=sorted(ao - ap), prior_only_angles=sorted(ap - ao),
                         moved_squares=[dict(i=int(i), x=round(float(Oq[i, 0]), 4), y=round(float(Oq[i, 1]), 4),
-                                            move=float(mv[i]), dangle=float(da[i])) for i in moved]),
-        verdict='same minimum' if same else 'distinct minimum')
+                                            move=float(mv[i]), dangle=float(da[i])) for i in moved],
+                        contacts=cd),
+        verdict=verdict)
 
 
 def summary_lines(C):
     d, o, p = C['difference'], C['ours'], C['prior']
-    L = [f"verdict: {C['verdict']}  (side gap {d['side_gap']:+.3e}; {d['moved_gt_1e4']} load-bearing squares move > 1e-4, "
-         f"{d['moved_gt_1e2']} > 1e-2, max {d['max_move']:.3g}; {d['rattler_status_swaps']} rattler / held swaps; "
-         f"matching distance {d['matching_distance_regularized']:.3g})"]
+    c = d.get('contacts') or {}
+    cg = (f"contact pairs ours {c['edges_ours']} / prior {c['edges_prior']}: {c['shared']} shared, {c['ours_only']} ours "
+          f"only, {c['prior_only']} prior only; rattlers {c['rattlers_shared']} of {c['rattlers_ours']} / "
+          f"{c['rattlers_prior']} shared") if 'shared' in c else f"contact diff: {c.get('error')}"
+    L = [f"verdict: {C['verdict']}  (exact side gap {d['side_gap']:+.3e}; {cg})",
+         f"  descriptive: matching distance {d['matching_distance_regularized']:.3g}; max move {d['max_move']:.3g}; "
+         f"{d['moved_gt_1e4']} / {d['moved_gt_1e2']} held squares move > 1e-4 / > 1e-2; "
+         f"{d['rattler_status_swaps']} rattler / held swaps"]
     for nm, F in (('ours ', o), ('prior', p)):
         r, q = F['regularized'], F['optimality']
         L.append(f"  {nm} S* {F['S_exact'][:22]}  {q['status'] and q['status'][:40]}; flat {q['flat_motions']}, "
@@ -195,6 +259,7 @@ def _angles(F):
 
 def table_md(C, ours='this packing', prior='prior'):
     o, p, d = C['ours'], C['prior'], C['difference']
+    c = d.get('contacts') or {}
     row = lambda k, a, b: f'| {k} | {a} | {b} |'
     def st(F):
         q = F['optimality']
@@ -211,7 +276,10 @@ def table_md(C, ours='this packing', prior='prior'):
              row('tilted squares (regularized; load-bearing)', f"{o['regularized']['tilted']} ({o['regularized']['load_bearing_tilted']})",
                  f"{p['regularized']['tilted']} ({p['regularized']['load_bearing_tilted']})"),
              row('load-bearing tilt angles', _angles(o), _angles(p)), '',
-             f"Matched square by square (regularized views, 8 box symmetries): {d['moved_gt_1e4']} load-bearing squares move by more "
-             f"than 1e-4 (max {d['max_move']:.3g}), {d['rattler_status_swaps']} switch between rattler and load-bearing; "
-             f"tilt angles shared: {', '.join(d['shared_angles']) or 'none'}.  Verdict: {C['verdict']}."]
+             f"Verdict: {C['verdict']} (exact sides {'equal' if C['verdict'] != 'distinct minimum' else 'differ by %.3e' % abs(d['side_gap'])}).  "
+             + (f"Contact graphs (active sets, square pairs and walls, matched over the 8 box symmetries): "
+                f"{c['shared']} pairs shared, {c['ours_only']} only in {ours}, {c['prior_only']} only in {prior}; "
+                f"{c['rattlers_shared']} of {c['rattlers_ours']} rattlers shared.  " if 'shared' in c else '')
+             + f"Geometry: matching distance {d['matching_distance_regularized']:.3g} (regularized views), largest square "
+             f"move {d['max_move']:.3g}; tilt angles shared: {', '.join(d['shared_angles']) or 'none'}."]
     return '\n'.join(lines) + '\n'

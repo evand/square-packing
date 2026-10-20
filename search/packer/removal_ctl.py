@@ -21,6 +21,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 FQ = os.path.join(HERE, 'target', 'release', 'fq')
 from relax import OPS                    # one operator table (10-13)
+def _flags(m):
+    """relax.OPS holds QOpt since 10-14 (engine.QOpt.args() builds fq flags); local modes are flag lists"""
+    return m.args() if hasattr(m, 'args') else m
+
+
 MODES = dict(OPS, plain=['--loosen', '1.0'], soft=['--loosen', '1.0', '--round-r0', '0.15', '--round-compress'],
              kick=['--loosen', '1.01', '--kick', '0.02'])
 
@@ -35,7 +40,7 @@ def read(path):
 
 def job(t):
     inp, outp, mode, k = t
-    r = subprocess.run([FQ, 'quench', '--in', inp, '--out', outp, '--seed', str(k + 1)] + MODES[mode],
+    r = subprocess.run([FQ, 'quench', '--in', inp, '--out', outp, '--seed', str(k + 1)] + _flags(MODES[mode]),
                        capture_output=True, text=True, timeout=1200)
     try:
         d = json.loads(r.stdout.strip().splitlines()[-1])

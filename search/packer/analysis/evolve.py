@@ -108,6 +108,20 @@ def eval_job(args):
     g_ = os.environ.get('PK_EVAL_GATE', 'off')            # FP1: gating lost 236 on P009 for a 25-35 % saving: off
     gate = None if g_ == 'off' else float(g_)
     screens = []
+    # quench limits (10-20): 60 s of fq CPU per quench, wall 1800 s only as a hang guard.  The old 60 s WALL limit
+    # (PK_EVAL_LIMIT=wall restores it, for comparisons with EV2 gens 0-1) cut quenches short when the machine was
+    # busy, silently: a squeeze dropped the candidate, a polish kept the unpolished side.  Every hit is now counted.
+    wall_mode = os.environ.get('PK_EVAL_LIMIT', 'cpu') == 'wall'
+    lim = dict(timeout=60) if wall_mode else dict(timeout=1800, cpu_limit=60)
+    hits = dict(squeeze=0, polish=0, quenches=0)
+
+    def _q(pp, opt, kind):
+        q = _ENG.quench(pp, opt, **lim)
+        hits['quenches'] += 1
+        e = str(q.stats.get('error', ''))
+        if q.p is None and (e.startswith('timeout') or e.startswith('cpu limit')):
+            hits[kind] += 1
+        return q
 
     def _keep(pp):
         nonlocal best
@@ -141,14 +155,14 @@ def eval_job(args):
         t0 = time.time()
         if gate is None:                                  # ungated (gen 0 / gen 1 behaviour)
             for L in loosens:
-                q = _ENG.quench(p, QOpt(loosen=L), timeout=60)
+                q = _q(p, QOpt(loosen=L), 'squeeze')
                 if q.p is None:
                     continue
-                q2 = _ENG.quench(q.p, POLISH, timeout=60)
+                q2 = _q(q.p, POLISH, 'polish')
                 _keep(q2.p if q2.p is not None else q.p)
         else:                                             # gated (FP1): screen every start, polish only the near-best
             for L in loosens:
-                q = _ENG.quench(p, SCREEN.but(loosen=L), timeout=60)
+                q = _q(p, SCREEN.but(loosen=L), 'squeeze')
                 if q.p is not None:
                     screens.append(q.p)
         tq += time.time() - t0
@@ -158,14 +172,15 @@ def eval_job(args):
         for x in sorted(screens, key=lambda x: x.s):
             if x.s > b + gate:
                 break
-            q2 = _ENG.quench(x, POLISH, timeout=60)
+            q2 = _q(x, POLISH, 'polish')
             _keep(q2.p if q2.p is not None else x)
         tq += time.time() - t0
     fx = f'; exact fill at the given s reached {max(fills)} / {n} squares (best candidate)' if fills else ''
     if best is None:
-        return dict(n=n, err='no candidate optimised to a feasible packing' + fx, cands=len(res['cands']), t_fill=tf, t_quench=tq)
+        return dict(n=n, err='no candidate optimised to a feasible packing' + fx, cands=len(res['cands']), t_fill=tf,
+                    t_quench=tq, limits=hits)
     return dict(n=n, s=float(best.s), sq=best.sq.tolist(), desc=describe(best) + fx, cands=len(res['cands']),
-                minima=sorted(mins)[:40], t_fill=tf, t_quench=tq)
+                minima=sorted(mins)[:40], t_fill=tf, t_quench=tq, limits=hits)
 
 
 # ------------------------------------------------------------------ LLM proposals (threads)
