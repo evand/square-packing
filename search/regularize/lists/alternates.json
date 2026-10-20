@@ -531,15 +531,6 @@
   "attribution": "simplified"
  },
  {
-  "n": 227,
-  "source": "ours (fewest rotation groups variant)",
-  "side": "15.5637966870605545282",
-  "relation": "alternate packing at the record side: not shown connected to the source (path blocked at s = 0.00)",
-  "groups": "11 -> 3",
-  "parent": "Joost de Winter (JoostdeWinter)",
-  "cert": "search/regularize/lists/certs/alt/n-227.cert.gz"
- },
- {
   "n": 231,
   "source": "Ellsworth catalogue square-231.svg",
   "side": "15.707106781187",

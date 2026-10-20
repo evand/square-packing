@@ -63,7 +63,6 @@ Ours: level-3 variants (merging determined angles gives a packing at the record 
 | 201 | Ellsworth catalogue square-201c.svg | 14.707106781187 | distinct: different tilt structure |  |  | 13.697786 | Alternative combining the $s(52)$ rigid alternative with minimal rotated squares found by David W. Cantrell in 2005, and |  |
 | 201 | Ellsworth catalogue square-201d.svg | 14.707106781187 | distinct: different tilt structure |  |  | 10.61844 | Rotationally symmetric alternative with minimal rotated squares arranged by David W. Cantrell in December 2024. |  |
 | 201 | Ellsworth catalogue square-201s.svg | 14.707106781187 | same as the record up to symmetry / rattlers |  |  | 0.0 | simplified |  |
-| 227 | ours (fewest rotation groups variant) | 15.5637966870605545282 | alternate packing at the record side: not shown connected to the source (path blocked at s = 0.00) | 11 -> 3 | Joost de Winter (JoostdeWinter) |  |  | search/regularize/lists/certs/alt/n-227.cert.gz |
 | 231 | Ellsworth catalogue square-231.svg | 15.707106781187 | same as the record up to symmetry / rattlers |  |  | 0.0 | Extends the $s(52)$ found by Frits Göbel in early 1979. Explore group |  |
 | 231 | Ellsworth catalogue square-231s.svg | 15.707106781187 | same as the record up to symmetry / rattlers |  |  | 0.0 | simplified |  |
 | 233 | Ellsworth catalogue square-233.svg | 15.778174593052 | same as the record up to symmetry / rattlers |  |  | 0.0 | Continues a pattern found by Frits Göbel in early 1979. Explore group |  |

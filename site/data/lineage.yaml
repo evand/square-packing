@@ -26,3 +26,5 @@ lineage:
   '#659': {236: '#481'}                             # ours: "Please credit itsnaka's SQUISH 'Mondrian composition' (#481)"
   '#664': {271: '#561'}                             # ours: "Please credit Francisco Couzo's #561 packing and ... SQUISH"
   '#669': {155: '#501'}                             # ours: "Please credit Daniil Ostashev's T-149 packing as the start"
+  # added 2026-10-19:
+  '#674': {229: '#672'}                             # ours: "Please credit Francisco Couzo's #672 packing (which refines Joost de Winter's #668) as the start"

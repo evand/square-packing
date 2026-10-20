@@ -99,3 +99,4 @@ Thesis (Evan 10-14): diversity pays; local search at current budgets has mined t
 - [ ] Per-n history viewer: what changed between consecutive records (matched-square diff, like the s(146) vs #505 page); design first.
 - [ ] Draw every packing we have numbers for (`tasks/site-all-packings/`; replaces the `NEWER` stopgap in viewer.js).
 - [ ] Repo unification: outreach → a small private GitHub repo; `wip/*` branches + pre-push hook if needed.
+- [ ] Site build speed (when cores are idle): `site/tools/import_lists.py` -> `analysis.analyze()` takes 160-1,510 s per changed drawing on one core (10-19: step-229-1 1,508 s, step-229-0 759 s); profile it (cProfile on step-229-1: LPs vs `free_region` vs mpmath).  Also cap BLAS threads in import_lists itself (uncapped, 8 workers drove load to 108 on 10-19).
