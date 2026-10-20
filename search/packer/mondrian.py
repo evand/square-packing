@@ -404,7 +404,7 @@ def kingbird_svg(name):
 
 
 def load_src(spec):
-    """kingbird:<name> | store:<id> | file:<path>  ->  (sq, s)."""
+    """kingbird:<name> | store:<id> | file:<path> | git:<owner>/<repo>@<sha>:<path>  ->  (sq, s)."""
     kind, _, ref = spec.partition(':')
     if kind == 'kingbird':
         from pk import kingbird as KB
@@ -422,6 +422,13 @@ def load_src(spec):
     if kind == 'file':
         from pk.packing import read
         p = read(ref)
+        return np.array(p.sq), float(p.s)
+    if kind == 'git':                             # untrusted repo file: strict parse
+        from pk import github
+        from pk.packing import parse
+        repo, _, rest = ref.partition('@')
+        sha, _, path = rest.partition(':')
+        p = parse(github.read_file(repo, sha, path).decode(), strict=True)
         return np.array(p.sq), float(p.s)
     raise ValueError(spec)
 
@@ -786,12 +793,13 @@ def replicate(n, S, piecesA, piecesB, procs=2, top=30, fq_top=6, slack=8, fill_t
     return out
 
 
-_SQ = os.path.join(HERE, 'runs/ext/itsnaka-squish-certs-d45669b/squish-submission-2026-10-09/sources/squish-s{}-source.cert.txt')
+# itsnaka's #481 sources, read from git (pk.github; 10-20, was the runs/ext/itsnaka-squish-certs-d45669b/ snapshot)
+_SQ = 'itsnaka/squish-certs@d45669b48cc97ad3aa17a6c847a8d06630f66eac:squish-submission-2026-10-09/sources/squish-s{}-source.cert.txt'
 LINEAGE_481 = {   # n: (their S, (source A, m_A), (source B, m_B))  (jlevy/squares#481 lineage table; store ids resolved 10-10)
-    131: (11.949659588035860, ('store:79', 26), ('file:' + _SQ.format(155), 33)),
+    131: (11.949659588035860, ('store:79', 26), ('git:' + _SQ.format(155), 33)),
     153: (12.872029849081180, ('kingbird:square-152_r2', 34), ('kingbird:square-152_r2', 34)),
     207: (14.885506308841677, ('kingbird:square-11_r1a', 8), ('store:53', 130)),
-    209: (14.946223654487920, ('file:' + _SQ.format(155), 42), ('file:' + _SQ.format(240), 47)),
+    209: (14.946223654487920, ('git:' + _SQ.format(155), 42), ('git:' + _SQ.format(240), 47)),
     232: (15.767428349941842, ('kingbird:square-5', 5), ('store:72', 162)),
     236: (15.863955747159268, ('kingbird:square-152_r2', 34), ('store:33', 88)),
     259: (16.591378145497700, ('kingbird:square-50_r5', 36), ('store:46', 90)),
@@ -801,7 +809,7 @@ LINEAGE_481 = {   # n: (their S, (source A, m_A), (source B, m_B))  (jlevy/squar
     292: (17.591378145497902, ('kingbird:square-50_r5', 43), ('store:46', 90)),
     302: (17.872029849081180, ('kingbird:square-152_r2', 34), ('store:52', 118)),
     303: (17.913065462738533, ('kingbird:square-11_r1a', 8), ('store:91', 208)),
-    305: (17.951196144147385, ('store:92', 57), ('file:' + _SQ.format(306), 81)),
+    305: (17.951196144147385, ('store:92', 57), ('git:' + _SQ.format(306), 81)),
     307: (17.980862784054690, ('kingbird:square-241_r3', 64), ('kingbird:square-241_r3', 69)),
 }
 

@@ -4639,3 +4639,40 @@ SW's 13, 110 (as SW), 308 and 146 (D308 / D308b / R308 and D146 / HB2 today): 42
   ~/math/_untrusted-third-party/jlevy-squares is stale (its n-270 case still shows our #399); use the store's
   runs/jlevy sparse clone (synced by `pk.py sync-register`) or refresh the clone per its PROVENANCE.txt.
 
+
+## Store intake / pruning policy + archive dedupe (10-20 evening; Evan: "some restrictions on what goes into the store ... intake rules and pruning rules"; "dedupe the per-result coords against the store")
+* Why: results only reached the store by hand (`import-run --below X`, per-run cutoffs); 1,176 of 5,502 explorer runs
+  were never imported (time-travel worlds, hunt1012, evolve2, h183, d146, r154, SW2's dgen/*_sw ...).  SW2's best 274
+  (17.000478) was not in the store until imported by hand tonight.  Goal: one sink (every evaluated result), one policy.
+* `pk/policy.py`: one classifier for intake (full / stub / drop) and pruning (full / stub; rows never deleted: hash =
+  dedupe memory, parent = lineage).  Tests in order: protected (public sighting, certified / weak, exact side, near-miss
+  queue, frontier packing, tags) -> infeasible -> n range (nmax 324 + extra_n + targets) -> grid line -> area excess
+  a = s^2 - F^2 (F = min(frontier, our best); unit squares, so one number across n; screened rows tighter).  Per-target
+  overrides.  Config defaults in the module, `pk/policy.yaml` overrides.
+* `pk.py prune --dry-run` (`pk/prune.py`, 17 s): store 1.80M rows, coordinates 5.43 GB.  Default cfg (full 1.0, screened
+  0.1): full 532k rows (1.63 GB), stub 1.27M (3.80 GB; 727k of them screened rows).  Sweep (full rows / GB): 0.05
+  132k / 0.45, 0.1 194k / 0.67, 0.2 231k / 0.78, 0.5 331k / 1.08, 1 532k / 1.63, 2 782k / 2.22, 4 988k / 2.73.
+  Lineage: 1,705 stored ancestors of our record-side rows; area excess quantiles 50 / 90 / 99 / max 0.036 / 0.18 / 2.7 / 6.9;
+  coordinates kept for 66 / 86 / 95 / 97 % of them at full 0.05 / 0.1 / 0.5 / 1.  n = 110 alone holds 213k full rows.
+  Not applied: thresholds are Evan's call; applying = turning far rows into stubs (needs the coords-optional schema).
+* `pk/archive.py` + `pk.py archive-dedupe [--apply]` / `archive-restore`: an explorer archive file (b#####.txt) is removed
+  only if the store row its import created regenerates it byte for byte (mcmin.write_deg format); removals logged first
+  to <run>/coords_in_store.jsonl (file, packing id, sha1).  `pk.packing.read` and `mcmin.load_deg` write a removed file
+  back on demand (sha1 checked); tools that hand paths to fq / shutil need `archive.ensure(path)` or `archive-restore RUN`.
+  Runs whose archive.jsonl changed in the last 12 h are skipped (live explorers read their own files).  Sample before
+  applying (400 runs, 6k entries): 70 % byte-identical, 28 % not in the store (old import cutoffs), 1 % stored as a
+  near-identical copy (kept).  Round trip on runs/hborder/n274d/x6_newB: 639 removed, read via hooks, restored, diff -r
+  identical.  Test pk/tests/test_archive.py.
+* **Applied 10-20**: 1,813,467 files removed (15.4 GB of blocks; disk free 58 -> 72 GB); kept 595k not in the store,
+  7.7k differing copies; 172 runs skipped (active).  These files now live only in the store (+ the daily zstd backups):
+  1.78M rows back removed files, and 1.27M of those would be stubs under the default cfg, so applying a prune means
+  accepting that their run files lose coordinates (prune must say so per run).
+* **ext/ snapshots -> git (10-20; Evan: "stop snapshotting entire repos and just use git as it is meant to be used").**
+  `pk/github.py`: one bare partial clone per watched repo (`runs/ext/git/<owner>-<repo>.git`, trees fetched, only the
+  packing files we read fetched as blobs; no hooks, no work tree, caps and PROVENANCE lines kept); `repo_files` /
+  `checkout` (temp dir with just the selected files) / `read_file`.  `watch.sync_repos` imports only files changed since
+  the previously imported commit (unchanged files no longer get a per-commit duplicate sighting; credit uses the earliest
+  sighting / lowest issue, so unaffected).  mondrian.py reads its squish sources as `git:<repo>@<sha>:<path>`.
+  Equivalence: old snapshot vs git import, identical packing sets at Mishapolk / TheSnakeFang / BuddenPing / Couzo /
+  wand125 commits (git dirs 1-35 MB vs snapshots 8-208 MB); next Couzo commit costs +5.5 MB vs ~200 MB.  Live:
+  `sync-issues 703` through git, 60 packings (7 new).  The 154 old snapshot dirs (11.0 GB) are unused; not yet deleted.

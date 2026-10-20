@@ -2,6 +2,7 @@
 
 Moved from `TODO.md`; one line each, newest first.  Details in the linked `search/*.md` / `notes/*.md`.
 
+- 2026-10-20 **Store hygiene, step 1** (PACKER "Store intake / pruning policy"): explorer archive files deduplicated against the store (1.81M files, -15 GB, lossless: byte-identical regeneration, read hooks, `archive-restore`); `pk/policy.py` + `pk.py prune --dry-run`; stale `test_finish_candidate_dry` fixed (missing `harden` runner); CLAUDE.md register rule -> `runs/jlevy`.
 - 2026-10-20 **SW2 records: s(343) ≤ 18.977682482405 (jlevy#702), s(270) ≤ 16.928162252197 (#703)** (PACKER "SW2 result"): near-record band sweep over 42 n, 114 CPU-h; both new minima found through pools of stored non-record packings; certs 88385ab.  Replies posted on #664 / #669 / #674.
 - 2026-10-20 **Submission style guide + draft generator** (`search/packer/SUBMITTING.md`, `submission.py`): *refinement* only for the same local minimum, else *a new packing found from X*; template, checklist, audit of past issues; regularized views' `"by"` now names the finder (was the 10-05 batch holder).
 - 2026-10-18 **s(183) below the grid: s(183) ≤ 13.999580178737** (PACKER "H183" / "LC1"): first sub-14 183 (c*(14) ≤ 13); one-square insertion into a non-record 182 (from Couzo's witness) -> explorer -> refine; certified (both checkers, strict local min mod 27 flat); `search/packer/h183.py`, `lcut.py` (inexact L removal: best raw seeds 14.00042, jammed).  Pushed 3a9948c; posted jlevy#680.

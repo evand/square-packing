@@ -31,6 +31,9 @@ SLP_BUDGET = 60
 
 # ---------- io (file angles in degrees) ----------
 def load_deg(path):
+    if not os.path.exists(path):                       # removed by pk/archive's dedupe: write it back from the store
+        from pk.archive import ensure
+        ensure(path)
     L = [l.split() for l in open(path) if l.strip() and not l.startswith('#')]
     f = lambda v: float(Fraction(v)) if '/' in v else float(v)        # exact exports write n/d sides (pk.py export)
     n, s = int(L[0][0]), f(L[0][1])

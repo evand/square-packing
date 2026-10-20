@@ -131,9 +131,11 @@ def test_finish_candidate_dry():
         f = lambda n: 4.00005 if n == 10 else fr(n)                 # frontier above a after one stage: a hit
         calls = []
         R = NM.finish(st, os.path.join(d, 'out'), fnow=f, log=lambda *a: None,
-                      runners=dict(polish=fake_runner(1e-4, calls=calls), harden1=fake_runner(0, calls=calls)))
+                      runners=dict(polish=fake_runner(1e-4, calls=calls), harden1=fake_runner(0, calls=calls),
+                                   harden=fake_runner(0, calls=calls)))
         r = R[0]
-        assert calls == ['polish'] and r['candidate'][1].endswith('candidate.py') and 'candidate_rc' not in r
+        # 10-17: no stop below the bar, a hit still runs the later stages
+        assert calls == ['polish', 'harden1', 'harden'] and r['err'] is None and r['candidate'][1].endswith('candidate.py') and 'candidate_rc' not in r
         q = NM.queue(st.db)[0]
         assert q['status'] == 'candidate' and q['note'].startswith('candidate (dry run)')
         # dry-run finish on a read-only view writes nothing

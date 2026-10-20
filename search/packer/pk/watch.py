@@ -13,7 +13,8 @@ Pins: a named commit resolves once and is cached (`resolved` table); "HEAD" and 
 first sight and stay pinned for that issue.
 
 Repos.  Every repo an issue unit names (except ours) is watched: new commits on its default branch since the last
-import (first time: its HEAD), newest MAX_COMMITS, EVERY parseable packing file imported (source
+import (first time: its HEAD), newest MAX_COMMITS, oldest first, each importing the parseable packing files changed
+since the previous imported commit (all on a repo's first import; 10-20, git via github.checkout) (source
 `watch:<owner>/<repo>@<sha7>`, kind 'watch'; test / example dirs skipped).
 
 State is all in the store (`sync` table): `watch.issues_updated` (cursor), `watch.poll`, `repo:<name>` (last imported
@@ -30,7 +31,7 @@ import collections, datetime as dt, glob, json, os, re, subprocess
 import yaml
 
 from . import github, issues
-from .sources import import_paths
+from .sources import import_paths, FILE_RE, SKIP_RE
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OVERRIDES = os.path.join(HERE, 'overrides.yaml')
@@ -131,13 +132,13 @@ def sync_issue(st, number, ov=None, data=None, apply=True, log=print):
     seen, refs_ = 0, []
     for u in U:
         ref = f"{u['repo']}@{u['commit'][:7]}"
-        try:
-            d = github.fetch_repo(u['repo'], u['commit'])
+        try:   # the commit's packing-like files in a temp dir (github.checkout: bare git clone, no snapshot kept)
+            with github.checkout(u['repo'], u['commit'], name_re=FILE_RE, skip_re=SKIP_RE) as d:
+                paths = [p for g in u['paths'] for p in glob.glob(os.path.join(d, g), recursive=True)
+                         if os.path.realpath(p).startswith(os.path.realpath(d))]
+                c = import_paths(st, paths, src, finder, ref, 'pending', quiet=True, strict=True)
         except Exception as ex:
             notes.append(f'{ref}: fetch failed {_clean(repr(ex), 80)}'); continue
-        paths = [p for g in u['paths'] for p in glob.glob(os.path.join(d, g), recursive=True)
-                 if os.path.realpath(p).startswith(os.path.realpath(d))]
-        c = import_paths(st, paths, src, finder, ref, 'pending', quiet=True, strict=True)
         seen += c['seen']; refs_.append(ref); u['files'] = c['seen']
     for url in att:
         try:
@@ -221,13 +222,19 @@ def sync_repos(st, apply, max_commits=MAX_COMMITS, log=print):
             f'{" ".join(c[:7] for c in todo)}')
         if not apply:
             continue
-        for sha in todo:
+        # 10-20: oldest first, each commit importing only the files changed since the previously imported one (all
+        # files on a repo's first import).  Unchanged files no longer get a fresh watch:<repo>@<sha7> sighting per
+        # commit; credit reads the earliest sighting (store.public_best: earliest `added` within a rank;
+        # distinct.first_posted: lowest issue, then earliest), so later duplicate sightings never changed it.
+        base = prev
+        for sha in reversed(todo):
             try:
-                d = github.fetch_repo(repo, sha)
+                with github.checkout(repo, sha, name_re=FILE_RE, skip_re=SKIP_RE, changed_since=base) as d:
+                    c = import_paths(st, [d], f'watch:{repo}@{sha[:7]}', finder or repo.split('/')[0],
+                                     f'{repo}@{sha[:7]}', 'watch', quiet=True, strict=True, skip_path=TEST_DIRS)
             except Exception as ex:
                 log(f'  {repo}@{sha[:7]}: fetch failed ({_clean(repr(ex), 120)})'); C['fetch_failed'] += 1; continue
-            c = import_paths(st, [d], f'watch:{repo}@{sha[:7]}', finder or repo.split('/')[0], f'{repo}@{sha[:7]}',
-                             'watch', quiet=True, strict=True, skip_path=TEST_DIRS)
+            base = sha
             log(f'  {repo}@{sha[:7]}: {c}')
             C['commits'] += 1
             for k, v in c.items():

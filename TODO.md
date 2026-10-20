@@ -31,15 +31,15 @@ Thesis (Evan 10-14): diversity pays; local search at current budgets has mined t
 - [ ] Explorer seeded from EV2 gen 1's 55 novel near-record minima (~5 CPU-h).  `tasks/packer-next-2026-10-15/` §3.
 - [ ] s(110) corner-cell holdouts (census 1,078 minima, 19:12 10-15) + a stop-early descent mode (GX1: crossings collapse to the record basin).  §4.
 - [ ] Detour, parked (Evan 10-15): our own register to n = 1024-4096 (every published regular packing, L groups, mechanical constructions), then hunt / submit records > 324.
-- [ ] Store tiering before cheaper proposals raise the row rate: coords near the frontier + cluster representatives, lineage-only (replayable) rows elsewhere.  Design first.
+- [ ] One sink + one policy (Evan 10-20, PACKER "Store intake / pruning policy"): `pk/policy.py` + `pk.py prune --dry-run` built, archive dedupe applied (-15 GB); next: Evan picks thresholds, stub schema + prune apply, sink (auto-import on manifest.finish / jobs.py) + backfill of 1,176 unimported runs, detection on import, then CPU budgets + campaign driver.
 - [ ] Near-miss drain `nmdrain1014b`: stopped 10-15 (0 gains in 42 items, 100 queued); low value, resume only if cores idle.
+- [ ] `pk/tests/test_distinct.py::test_verdicts` fails (pre-existing, likely the 10-19 exact-side verdict change): update the test.
 - [ ] (#607 added 10-15 by `pk.py watch --apply`.)  scoring rule for our own posted results inside a scored run (146 in TT2).
 - [ ] Run config with test / record modes; chain imports its own rounds; cfp into the store on import.
 - [ ] Parent-distance model: fit P(gain | parent gap, distance, n band, mechanism) from logs, then a randomized gap-band slice.
 - [ ] Constructors (Evan 10-14): off-diagonal pieces (fq `--rect-dx/--rect-dy`) + offset converter; distorted strip / V-band (fix `vband.py` fit); two-bulb, lopsided bulb.  Band/bulb family (10-19): `search/packer/BULB.md` + `bulbgen.py` (randomised L / V / two-bulb starts, on pk/fill since 10-20; next: fitted distributions from the records, 308 / 211 rebuild check, re-angle move, c*(k) gadget accounting).
 - [ ] Piece sources: crop anywhere (edge strips, interior), pieces from n > 324 and catalogue revisions, published rectangle-packing records.
 - [ ] Perf follow-ups (each ≤ ~10 %; PACKER "Performance session 10-13"): block LDL, SIMD `Prob::eval`, `FQ_SOC_ROUNDS=16`, exactsolve `probe_flat` reuse.
-- [ ] `pk/tests/test_nearmiss.py::test_finish_candidate_dry` fails since the 10-17 "finish a hit too" change: after a polish hit the finisher runs harden1 (expected now) but then reports no candidate (`candidate` None): test stale or a real bug?  Check before the next `pk.py finish`.
 - [ ] `fresh.py`: fix its finishing gap (364).  (It runs after every sync via `pk.py ingest`.)
 - [ ] exactsolve should snap near-axis corner-loaded squares itself (n = 292, `search/packer/s292.md`).
 - [ ] s(110) weak residue: 12 side keys / 10 minima "negative curvature blocked" (cone-QP check, then branch-aware second order); exactsolve fallback fixed 10-15 (PACKER "exactsolve fix").

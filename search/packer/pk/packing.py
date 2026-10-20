@@ -273,7 +273,11 @@ def _parse(txt: str, strict=False) -> Packing | None:
 
 
 def read(path, strict=False, max_bytes=MAX_READ) -> Packing | None:
-    """parse() a file (.gz transparently); a file larger than max_bytes (after decompression) raises ValueError."""
+    """parse() a file (.gz transparently); a file larger than max_bytes (after decompression) raises ValueError.
+    An explorer archive file removed by pk/archive's dedupe is written back from the store first."""
+    if not os.path.exists(path):
+        from .archive import ensure
+        ensure(path)
     with _open(path) as f:
         txt = f.read(max_bytes + 1)
     if len(txt) > max_bytes:

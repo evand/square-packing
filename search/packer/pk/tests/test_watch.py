@@ -1,5 +1,5 @@
 """Ingestion safety + parsing tests (no network): python3 pk/tests/test_watch.py"""
-import io, os, sys, tarfile, tempfile
+import os, sys, tempfile
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from pk.packing import parse, Packing
 from pk import github, issues, watch
@@ -61,34 +61,35 @@ def test_refs():
     assert R['a/b']['links'] == []
 
 
-def _tgz(members):
-    b = io.BytesIO()
-    with tarfile.open(fileobj=b, mode='w:gz') as t:
-        for name, data, kind in members:
-            ti = tarfile.TarInfo(name)
-            if kind == 'sym':
-                ti.type = tarfile.SYMTYPE; ti.linkname = data; t.addfile(ti)
-            else:
-                ti.size = len(data); t.addfile(ti, io.BytesIO(data))
-    return b.getvalue()
-
-
-def test_extract_caps():
+def test_git_checkout():
+    """github.repo_files / checkout on a local bare clone (no network): selection, caps, symlinks, changed_since."""
+    import subprocess
     with tempfile.TemporaryDirectory() as d:
-        f = f'{d}/a.tgz'
-        open(f, 'wb').write(_tgz([('top/ok.txt', b'1 1\n0.5 0.5 0\n', 'f'), ('top/big.bin', b'x' * 2048, 'f'),
-                                  ('top/link', '/etc/passwd', 'sym')]))
-        old = github.MAX_MEMBER; github.MAX_MEMBER = 1024
+        g = lambda *a, cwd=f'{d}/src': subprocess.run(['git', '-c', 'core.hooksPath=/dev/null', '-c', 'user.name=t', '-c',
+                                                      'user.email=t@t', *a], cwd=cwd, check=True, capture_output=True,
+                                                     text=True).stdout.strip()
+        os.makedirs(f'{d}/src/a')
+        open(f'{d}/src/a/p.txt', 'w').write('x'); open(f'{d}/src/big.txt', 'w').write('x' * 2048)
+        open(f'{d}/src/check.txt', 'w').write('x'); open(f'{d}/src/code.py', 'w').write('x')
+        os.symlink('/etc/passwd', f'{d}/src/link.txt')
+        g('init', '-q', f'{d}/src', cwd=d); g('add', '-A'); g('commit', '-qm', 'one'); c1 = g('rev-parse', 'HEAD')
+        open(f'{d}/src/a/q.txt', 'w').write('y'); g('add', '-A'); g('commit', '-qm', 'two'); c2 = g('rev-parse', 'HEAD')
+        old = github.EXT, github.GIT_DIR, github.MAX_MEMBER
+        github.EXT, github.GIT_DIR, github.MAX_MEMBER = d, f'{d}/git', 1024
         try:
-            assert raises(github._extract_capped, f, f'{d}/x')             # absolute symlink: data filter refuses
-            open(f, 'wb').write(_tgz([('top/ok.txt', b'1 1\n', 'f'), ('top/big.bin', b'x' * 2048, 'f')]))
-            n, skipped = github._extract_capped(f, f'{d}/y')
-            assert skipped == ['top/big.bin'] and os.path.exists(f'{d}/y/top/ok.txt')
-            assert not os.path.exists(f'{d}/y/top/big.bin')
+            os.makedirs(f'{d}/git')
+            g('clone', '-q', '--bare', '--template=', f'{d}/src', f'{d}/git/o-r.git', cwd=d)
+            import re
+            names = lambda L: sorted(p for p, _, _ in L)
+            fr, sk = re.compile(r'\.txt$'), re.compile('check')
+            assert names(github.repo_files('o/r', c2, fr, sk)) == ['a/p.txt', 'a/q.txt']      # big, link, check, .py out
+            assert names(github.repo_files('o/r', c2, fr, sk, changed_since=c1)) == ['a/q.txt']
+            with github.checkout('o/r', c2, fr, sk) as co:
+                assert open(f'{co}/a/q.txt').read() == 'y' and not os.path.lexists(f'{co}/link.txt')
+            assert not os.path.exists(co)
+            assert github.read_file('o/r', c1, 'a/p.txt') == b'x' and raises(github.read_file, 'o/r', c1, 'big.txt')
         finally:
-            github.MAX_MEMBER = old
-        open(f, 'wb').write(_tgz([('../escape.txt', b'x', 'f')]))
-        assert raises(github._extract_capped, f, f'{d}/z') and not os.path.exists(f'{d}/escape.txt')
+            github.EXT, github.GIT_DIR, github.MAX_MEMBER = old
 
 
 def test_download_cap():
@@ -98,8 +99,12 @@ def test_download_cap():
 
 
 def test_bad_names():
-    assert raises(github.fetch_repo, '../x/y', 'a' * 40)
-    assert raises(github.fetch_repo, 'a/b', 'HEAD; rm -rf /')
+    assert raises(github.repo_files, '../x/y', 'a' * 40)
+    assert raises(github.repo_files, 'a/b', 'HEAD; rm -rf /')
+    assert raises(github.read_file, 'a/b', 'a' * 40, '../etc/passwd')
+    assert raises(github.read_blob, 'a/b', 'HEAD')
+    assert not any(github._safe_path(p) for p in ('', '/abs', 'a/../b', '.git/config', 'a//b', './a'))
+    assert github._safe_path('a/b.txt')
     assert raises(github.fetch_attachment, 'https://evil.example/user-attachments/files/1/a', 1)
 
 

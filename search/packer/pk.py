@@ -25,6 +25,9 @@ copying coordinates.  Store: runs/store.sqlite (env PK_STORE overrides).
   pk.py finish [--limit N] [--stages polish,harden1,harden] [--procs 4] [--candidate] [--dry-run]
                                            drain the queue: fq long polish, harden rounds; below frontier -> candidate.py
                                            (printed only without --candidate)
+  pk.py prune --dry-run [--policy F]       what pk/policy.py would keep (tiers, threshold sweep, record lineage)
+  pk.py archive-dedupe [ROOT...] [--apply]  drop explorer archive files the store regenerates byte for byte
+  pk.py archive-restore RUN...             write them back (reads do this per file automatically)
   pk.py ingest [--apply] [--since ISO] [--no-fresh]   sync-register + watch --apply + fresh.py since
                                            the last ingest -> near-miss queue (pk/ingest.py; dry run without --apply)
 """
@@ -94,11 +97,25 @@ def main():
     p.add_argument('--candidate', action='store_true', help='run candidate.py on items below the frontier (default: print)')
     p.add_argument('--dry-run', action='store_true', help='print the items and their bars (read-only)')
     p.add_argument('--out')
+    p = sp.add_parser('prune', help='store thinning per pk/policy.py (report only for now)')
+    p.add_argument('--dry-run', action='store_true', required=True); p.add_argument('--policy')
+    p = sp.add_parser('archive-dedupe', help='remove explorer archive files the store regenerates byte for byte (pk/archive.py)')
+    p.add_argument('roots', nargs='*'); p.add_argument('--apply', action='store_true')
+    p.add_argument('--min-age-h', type=float, default=12.0); p.add_argument('--procs', type=int, default=16)
+    p = sp.add_parser('archive-restore', help='write back the archive files dedupe removed'); p.add_argument('runs', nargs='+')
     p = sp.add_parser('ingest'); p.add_argument('--apply', action='store_true'); p.add_argument('--since')
     p.add_argument('--procs', type=int, default=16); p.add_argument('--no-fresh', action='store_true')
     p.add_argument('--nmax', type=int, default=324)
     a = ap.parse_args()
     spath = a.store or os.environ.get('PK_STORE') or os.path.join(HERE, 'runs', 'store.sqlite')
+    if a.cmd in ('archive-dedupe', 'archive-restore'):          # store read-only here
+        from pk import archive
+        if a.cmd == 'archive-dedupe':
+            archive.dedupe(a.roots or [os.path.join(HERE, 'runs')], apply=a.apply, min_age_h=a.min_age_h, procs=a.procs)
+        else:
+            for r in a.runs:
+                print(r, archive.restore(r), 'files restored')
+        return
     if a.cmd == 'nearmiss' and a.action == 'list':            # read-only: safe while a run writes the store
         from pk import nearmiss
         nearmiss.print_list(nearmiss.ro_db(spath), nearmiss.frontier_fn(spath), a)
@@ -114,6 +131,10 @@ def main():
         return
     st = Store(a.store) if a.store else Store()
 
+    if a.cmd == 'prune':
+        from pk import policy, prune
+        prune.report(st, policy.load(a.policy))
+        return
     if a.cmd == 'sync-register':
         d = os.path.join(HERE, 'runs', 'jlevy')
         sha = sources.fetch_register(d)
