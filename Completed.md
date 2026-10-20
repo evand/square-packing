@@ -2,6 +2,7 @@
 
 Moved from `TODO.md`; one line each, newest first.  Details in the linked `search/*.md` / `notes/*.md`.
 
+- 2026-10-20 **SW2 records: s(343) ≤ 18.977682482405 (jlevy#702), s(270) ≤ 16.928162252197 (#703)** (PACKER "SW2 result"): near-record band sweep over 42 n, 114 CPU-h; both new minima found through pools of stored non-record packings; certs 88385ab.  Replies posted on #664 / #669 / #674.
 - 2026-10-20 **Submission style guide + draft generator** (`search/packer/SUBMITTING.md`, `submission.py`): *refinement* only for the same local minimum, else *a new packing found from X*; template, checklist, audit of past issues; regularized views' `"by"` now names the finder (was the 10-05 batch holder).
 - 2026-10-18 **s(183) below the grid: s(183) ≤ 13.999580178737** (PACKER "H183" / "LC1"): first sub-14 183 (c*(14) ≤ 13); one-square insertion into a non-record 182 (from Couzo's witness) -> explorer -> refine; certified (both checkers, strict local min mod 27 flat); `search/packer/h183.py`, `lcut.py` (inexact L removal: best raw seeds 14.00042, jammed).  Pushed 3a9948c; posted jlevy#680.
 - 2026-10-18 **c*(k) bounds in Lean** (`certificates/k2-minus-c/`, `site/www/k2c/`): c*(k) ≤ 4⌈√(2k−7)⌉ − 1 for every k ≥ 7 (`RyuLayers`, axis-filled band ends, 2b end squares); Ryu's staircase ends (`RyuStair*`: geometry, closed-form count, end cost ≤ 4.33v² + 11v + 30) giving c*(k) < 18.9 k^{2/5} + 35.7 k^{1/5} + 122 for k ≥ 3·10⁵ and Ryu's Theorem 1.2 for k ≥ 8·10⁶ (his range 1.6·10⁷); standard axioms.  FRIEDMAN/WISHLIST/problems c* growth notes updated.

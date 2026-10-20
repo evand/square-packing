@@ -4630,3 +4630,12 @@ SW's 13, 110 (as SW), 308 and 146 (D308 / D308b / R308 and D146 / HB2 today): 42
 * Rule: >= 1 / 40 CPU-h -> standing generator; < 1 / 100 -> pool builder.  **1 / 49: between the two; the rule does not
   decide.**  For Evan.  Note the band sweep's value shows up as records two generations later (both hits started from
   stored non-record packings), so "pool builder" and "generator" are not separate here.
+* **Posted 10-20 (Evan: "Push, then post all 5"):** jlevy#702 (s(343)), #703 (s(270)), certs 88385ab; replies on #664
+  (271 is a different minimum; finder us), #669 (`"by"` = tooling bug, fixed a435c97), #674 (229: input not loosened on
+  purpose; not first-order jammed, so no exactsolve certificate: the MILP predicts a 2.2e-7 descent that neither
+  descend.py nor nlpdesc.py (60 rounds, `runs/candidates/c229x`) realises; a slightly lower 229 may exist nearby).
+* Handoff (10-20 evening): machine idle.  Next to discuss with Evan: 272 / 273 / 274 targets (TODO), SW2's
+  generator-vs-pool-builder call, the pre-registered refill bench (pk/fill).  Note: the local jlevy clone in
+  ~/math/_untrusted-third-party/jlevy-squares is stale (its n-270 case still shows our #399); use the store's
+  runs/jlevy sparse clone (synced by `pk.py sync-register`) or refresh the clone per its PROVENANCE.txt.
+
