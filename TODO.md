@@ -34,7 +34,6 @@ Thesis (Evan 10-14): diversity pays; local search at current budgets has mined t
 - [ ] Dedupe (`pk/ident.py`, PACKER "Conservative dedupe"): applied once 10-20 at 110 / 272-274 (-91k rows); rule must be re-discussed with Evan before any further `--apply`.  Next ideas: contact-graph refusal from exactsolve reports; run-side cluster weighting for seed selection.
 - [ ] One sink + one policy (Evan 10-20, PACKER "Store intake / pruning policy"): `pk/policy.py` + `pk.py prune --dry-run` built, archive dedupe applied (-15 GB); next: Evan picks thresholds, stub schema + prune apply, sink (auto-import on manifest.finish / jobs.py) + backfill of 1,176 unimported runs, detection on import, then CPU budgets + campaign driver.
 - [ ] Near-miss drain `nmdrain1014b`: stopped 10-15 (0 gains in 42 items, 100 queued); low value, resume only if cores idle.
-- [ ] `pk/tests/test_distinct.py::test_verdicts` fails (pre-existing, likely the 10-19 exact-side verdict change): update the test.
 - [ ] (#607 added 10-15 by `pk.py watch --apply`.)  scoring rule for our own posted results inside a scored run (146 in TT2).
 - [ ] Run config with test / record modes; chain imports its own rounds; cfp into the store on import.
 - [ ] Parent-distance model: fit P(gain | parent gap, distance, n band, mechanism) from logs, then a randomized gap-band slice.

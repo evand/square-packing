@@ -17,25 +17,31 @@ def config(shift=0.0):
     return np.array(sq)
 
 
-def workdir(root, name, sq, free=(), S_exact=None, side=S):
+EQS = [['W', 0, 2, 'B'], ['C', 0, 1, 1, 3], ['C', 1, 2, 3, 0]]     # exactsolve format: ['C', i, corner, j, side]
+
+
+def workdir(root, name, sq, free=(), S_exact=None, side=S, order=None):
+    """order[r] = config() row of row r (from sym_perm); contact equations are relabelled to match"""
     w = os.path.join(root, name); os.makedirs(w)
     S_exact = S_exact or f'{side:.40f}'
     with open(os.path.join(w, 'cand.exact.txt'), 'w') as f:
         f.write(f'{len(sq)} {side!r}\n' + ''.join(f'{float(x)!r} {float(y)!r} {float(a)!r}\n' for x, y, a in sq))
     json.dump(dict(S_exact=S_exact, S_cert_decimal=S_exact, second_order=dict(status='local minimum of S, strict', n_zero=3),
                    n_vv=1, vv_milp_dS=0.0), open(os.path.join(w, 'cand.json'), 'w'))
-    json.dump(dict(equations=[['W', 0, 2, 'B'], ['C', 0, 1, 'x']], free=list(free)), open(os.path.join(w, 'cand.contacts.json'), 'w'))
+    new = {o: r for r, o in enumerate(order)} if order is not None else {i: i for i in range(len(sq))}
+    eqs = [[e[0], new[e[1]]] + e[2:] if e[0] == 'W' else [e[0], new[e[1]], e[2], new[e[3]], e[4]] for e in EQS]
+    json.dump(dict(equations=eqs, free=list(free)), open(os.path.join(w, 'cand.contacts.json'), 'w'))
     json.dump(dict(S_exact=S_exact, groups_after=3, orientation_g=0,
                    packing=dict(S=S_exact, sq=[[repr(float(v)) for v in r] for r in sq])),
               open(os.path.join(w, 'regularized.json'), 'w'))
     return w
 
 
-def sym_perm(sq, k, seed=0):
-    """apply box symmetry k and shuffle the rows"""
+def sym_perm(sq, k, seed=0, with_order=False):
+    """apply box symmetry k and shuffle the rows (with_order: also return the row order)"""
     q = D._sym(sq, S, k)
     idx = list(range(len(q))); random.Random(seed).shuffle(idx)
-    return q[idx]
+    return (q[idx], idx) if with_order else q[idx]
 
 
 def test_match():
@@ -55,12 +61,15 @@ def test_tilt():
 def test_verdicts():
     with tempfile.TemporaryDirectory() as t:
         a = workdir(t, 'a', config(), free=[7])
-        same = workdir(t, 'same', sym_perm(config(), 5, 1), free=[0])            # same rows, reoriented and shuffled
+        q, order = sym_perm(config(), 5, 1, with_order=True)
+        same = workdir(t, 'same', q, free=[order.index(7)], order=order)            # same rows, reoriented and shuffled
         C = D.compare(a, same)
         assert C['verdict'] == 'same minimum', D.summary_lines(C)
-        moved = workdir(t, 'moved', config(shift=0.003), free=[7])
+        moved = workdir(t, 'moved', config(shift=0.003), free=[7])     # same side; moves are descriptive only (10-19)
+        K = json.load(open(os.path.join(moved, 'cand.contacts.json')))
+        K['equations'][1][3] = 2; json.dump(K, open(os.path.join(moved, 'cand.contacts.json'), 'w'))
         C = D.compare(a, moved)
-        assert C['verdict'] == 'distinct minimum' and C['difference']['moved_gt_1e4'] == 1, D.summary_lines(C)
+        assert C['verdict'] == 'same side, different contact graph' and C['difference']['moved_gt_1e4'] == 1, D.summary_lines(C)
         assert C['difference']['shared_angles'] == ['45.0000'], C['difference']
         rat = workdir(t, 'rat', np.vstack([config()[:7], [[2.6, 1.6, 30.0]]]), free=[7])  # only the rattler differs
         C = D.compare(a, rat)
