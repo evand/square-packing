@@ -5002,3 +5002,17 @@ grid-locked (d = 32 leaves a full row).
 Pre-registered.  SW157 moved 157's best line-free 13.011364 -> 13.009188 in 16 CPU-h (not floored).  Same recipe from the
 grown pool (grid-locked now excluded): `dgen.py sweep --n 157 --band 0.0,0.012 --pool 2000 --runs 6 --cpu-h 12 --seed
 1572 --tag _sw2` (6 cores free).  Predictions: below 13.009188: 50 %; below 13.005: 10 %; below 13: 1 %.
+* **LC274d result (07:40; 12.5 CPU-h measured).**  e307 runs 17.011919 / 17.012216 / 17.014199 / 17.016776; e306
+  17.016815.  8,845 entries imported.  Predictions: explorer < 17.003 no (40 %); < 17.0003 no (5 %); < 17 no (1.5 %).
+  The 307-cut outputs keep their own design (bands 51-53 + 51-52 at 14-17 deg, meeting head to tail, 164-170 upright;
+  render in the 10-21 morning note), i.e. a distinct family, not a drift into family A; but 0.0117 above A's floor.
+
+## Junction moves and donor records (10-21 ~07:45; Evan: "Have we tried local melt, or delete and refill, at the junction region?  We could also spend some time targeting improved 308, 272, and 273 packings.  It's maybe even 240/241 and approximate L addition moves.")
+* Survey: no.  The explorer's melt picks a random centre square (R 1.5-3.5), so junction melts happen only by chance
+  (~10 of 274 centres), and melt yields 0-3.5 % of new minima overall.  Delete-and-refill was tried only as an L strip
+  at 273 -> 274 (LR274 / CS274: the axis refill rebuilds the grid line, 0 / 1,662 line-free); junction refill was
+  named as the needed test (10-20 junction-waste note) but never built.  "Approximate L addition" (the inexact inverse
+  of lcut) has no tool; only Friedman's exact L-step (closure) exists.
+* **SW273, pre-registered.**  `dgen.py sweep --n 273 --band 0.0,0.006 --pool 2000 --runs 6 --cpu-h 12 --seed 2731 --tag
+  _sw2` (6 free cores): 273 best 16.983926 (record), a donor for 274 by insertion and for 308 by L addition.
+  Predictions: a 273 below 16.983926: 10 %; >= 50 new side keys within 0.003 of it: 50 %.
