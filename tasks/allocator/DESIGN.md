@@ -43,13 +43,19 @@ h is the explorer's existing parent value model (Poisson rate with saturation te
 2.81x [2.22, 3.45] over G) lifted from within-run to the store: label = records in p's lineage subtree, exposure = CPU
 spent in that subtree (a hazard per CPU, so recent packings are censored correctly: little CPU, little evidence).
 
-V_n (Evan 10-20): a record is the unit; n ≤ 324 counts more than n > 324.  Where the ratio matters: TS compares
-rate × V, so V only moves compute between arms aimed at different n classes.  Within n ≤ 324 (all V = 1) it changes
-nothing.  Between the classes, an n > 324 arm wins compute iff its record rate exceeds 1/ratio of the best n ≤ 324
-arm's.  Records beyond the corpus are probably several times cheaper (thin competition; 343 came out of a leftover
-pool), so ratio 2 vs 10 is the difference between "most compute leaves 324" and "it stays".  Start at 10 (or n > 324
-arms off, as now) and revisit with measured rates.  A 274-only campaign is the same machinery with V = 1 at 274 and
-other n valued only as stepping stones (through h's cross-n lineage).
+V_n (decided, Evan 10-20): **V = 1 for a record at n ≤ 324, 1/3 at n > 324** ("we'll see what we get").  What the
+ratio does: TS compares rate × V, so V only moves compute between arms whose output lands in different n classes;
+an n > 324 record must come 3x cheaper to draw compute away from n ≤ 324.
+
+**Campaign scope (274, Evan 10-20): only arms that can produce a 274 outcome are launched**, but many generators fix
+an input and produce whatever n results (deletion / insertion, L-cut, refill, compose).  So an arm's value is over its
+output distribution:
+
+    value rate(a) = Σ_n λ_{a,n} V_n,     eligible iff P_a(output at 274, or a 274 pool packing) > 0
+
+and a record at any n counts at its V_n.  λ_{a,n} pools across n through the hierarchy (an arm's rate at 273 informs
+its rate at 274).  The campaign's own target enters through h: pool packings at 272-276 that are stepping stones to 274
+carry potential at 274 through cross-n lineage.
 
 ## 3. Posterior per arm
 
