@@ -57,3 +57,27 @@ constructions (rect3_wedge, grid, column) this gives R_3 exactly (w <= h): fits 
   probe; secondary weights proportional to the distance from the line), directed-rounding interval AD along rays
   from the line, sector/rho/beta subdivision.  Works on the side-by-side and wedge types tested; too slow on the
   raw tube boxes, so first `r3line1`: refine the tube, keeping only boxes that touch a zero line.
+
+## 2026-10-21: chain reduction for R_3 (replaces the tube/origin interval search)
+
+Tube run r3tube6 stopped at 42/423 (0 failures) in favour of this.  Scripts: `chain/`.
+
+Setup: strip of height H < 2, length L; three unit squares sorted by centre x (a, b, c).
+1. Wall clearance: x_a >= k_a, x_c <= L - k_c, k = (|cos| + |sin|)/2 (Lean: `half_extent`).
+2. Pair separation: disjoint interiors give a separating edge normal u; u_x <= 0 would force |dy| >= 1,
+   impossible since |dy| <= H - 1 < 1.  So dx >= (h_A(u) + h_B(u) - u_y dy)/u_x.
+3. The resulting bound on L is linear in the centre heights, so b sits on the floor or ceiling
+   (vertical mirror: floor).  The sides then decouple: L >= P(beta) + P(-beta), where P(beta) is the
+   least x_b with b on the floor and some square to its left.
+4. Numerically (lemP3.py) the neighbour can be taken upright, giving the closed form
+   P(t) = min(1+k, U, V'),  P(-t) = min(1+k, V, U')  (t in [0,45], c=cos t, s=sin t, k=(c+s)/2):
+     U  = 1/2 + (k+1/2 - s(k-1/2))/c        V  = 1/2 + (k+1/2 - s(H-1/2-k))/c
+     U' = 1/2 + (k+1/2 - c(k-1/2))/s        V' = 1/2 + (k+1/2 - c(H-1/2-k))/s
+   Closed form matches brute force over all neighbour tilts to 1.6e-15.
+5. Target L >= 2 m(H), m = min(3/2, 2+sqrt2-H).  Splits into 9 term pairs, each linear in H on
+   either side of the kink H = 1/2+sqrt2, so only H in {max(1,c+s), 1/2+sqrt2, 2} need checking
+   (combos.py): all >= 0, zeros only at t=0 (all upright) and t=45 with pair (V', V) (the wedge).
+
+Grid evidence only so far.  To prove: (i) the upright neighbour is worst (step 4); (ii) the 1-variable trig
+inequalities in step 5; (iii) step 2 needs the separating-axis direction (disjoint => separating normal), or
+in Lean its contrapositive with an explicit common interior point.
