@@ -13,6 +13,8 @@ Sources of near misses: every store packing we made (chain / explore runs once i
 corpus, candidates); output dirs (`--from`): compose2 probe arms (`near.jsonl`: layout at the arm's smallest side,
 trimmed to n), compose2 / fresh polishes (`results.jsonl` / `polish.jsonl` rows with `s_pol`), harden runs
 (`results.jsonl` rows with `ok`).  Those are imported first (source compose2:<dir> / harden:<dir>), then queued.
+Grid frontiers (10-20): at an onset n (frontier(n - 1) below ceil(sqrt n), frontier(n) = the grid) non-grid rows within
+THR above the grid are near misses too (274, 157, 242, ...): the bar is the grid, a hit is the first sub-grid packing.
 Rules: per n at most PER_N queue items (a new one only if it beats every item already there), and none within DISTINCT
 (1e-7) in side of an existing item (explorer copies of one minimum).  Finisher outputs (source finish:*) are results,
 never new items.
@@ -158,9 +160,19 @@ def scan(db, frontier, thr=THR, nmin=NMIN, nmax=NMAX, ns=None, ids=None, per_n=P
         if not nmin <= n <= nmax:
             continue
         f = frontier(n)
-        if f is None or f >= math.ceil(math.sqrt(n) - 1e-12) - 1e-9:
-            continue                                    # the grid is the frontier: nothing to finish towards
-        lo = -math.inf if allow_below else f + min_gap
+        if f is None:
+            continue
+        kg = math.ceil(math.sqrt(n) - 1e-12)
+        floor = min_gap
+        if f >= kg - 1e-9:
+            # the grid is the frontier.  10-20 (274 campaign): at an onset n (n - 1 already below the grid) a non-grid
+            # packing just above the grid is a near miss for the first sub-grid packing, so finish towards the grid.
+            # No min_gap floor: a non-grid row is never a float copy of the grid minimum.  Elsewhere: nothing to do.
+            fp = frontier(n - 1) if n - 1 >= nmin else None
+            if fp is None or fp >= kg - 1e-9:
+                continue
+            floor = 0.0
+        lo = -math.inf if allow_below else f + floor
         q = (f'SELECT p.id, p.n, p.s FROM packing p WHERE {" AND ".join(w)} AND p.n=? AND p.s>? AND p.s<? '
              f'ORDER BY p.s LIMIT {max(500, 10 * per_n)}')
         for r in db.execute(q, a + [n, lo, f + thr]):

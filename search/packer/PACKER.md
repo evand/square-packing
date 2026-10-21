@@ -4812,3 +4812,11 @@ an upright block), band-side boundaries (bands vs upright field, away from the z
   1 unit of area = 0.029 in side; 274 needs a few 1e-3 of extra slack by the onset extrapolation (DESIGN §10), i.e.
   ~0.1-0.2 area, 1-2 interface squares' worth.  So the guess needs only a small redesign gain, but this local measure
   cannot see one; a test needs constructions (junction refill / redesigned corner), not more accounting.
+
+## Near misses at grid frontiers (10-20 ~23:00; Evan: "Let's try it!")
+* `nearmiss.scan` skipped every n whose frontier is the grid, so 274's best non-grid packings never reached the
+  finisher.  Now: at an onset n (frontier(n - 1) below ceil(sqrt n)) non-grid rows within THR (1e-3) above the grid
+  are near misses, bar = the grid, no min_gap floor (a non-grid row is never a float copy of the grid minimum).
+  Today only 274 has such rows (157's best is +1.1e-2).
+* FIN274: `pk.py finish --ids 2530360 2526616 --procs 2 --candidate` (SW274b's 17.000303 / 17.000379; stages polish,
+  harden1, harden; ~1 CPU-h each).  Prediction: either below 17: 3 %; best moves down by > 1e-5: 30 %.
