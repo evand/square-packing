@@ -5016,3 +5016,14 @@ grown pool (grid-locked now excluded): `dgen.py sweep --n 157 --band 0.0,0.012 -
 * **SW273, pre-registered.**  `dgen.py sweep --n 273 --band 0.0,0.006 --pool 2000 --runs 6 --cpu-h 12 --seed 2731 --tag
   _sw2` (6 free cores): 273 best 16.983926 (record), a donor for 274 by insertion and for 308 by L addition.
   Predictions: a 273 below 16.983926: 10 %; >= 50 new side keys within 0.003 of it: 50 %.
+* **Where did melts melt? (08:20; ~1 CPU-h; `analysis/melt_junction.py`).**  The 274 campaign never melted: `melt` is
+  not in the explorer's default weights (only hunt1 / hunt1b / hunt2 / h2r1 / tt3 M / big1-2 / gx110 / be_melt enabled
+  it; n 68-175 two-band packings there).  Melt centres were never logged, so the region is inferred: the 12 child squares
+  farthest from any parent square of similar angle, centroid; junction = midpoint of the closest (+, -) tilted pair;
+  statistic = rank of the centre's distance to the junction among the parent's squares (uniform centre -> U(0, 1)).
+  Melts (6,292 archived): 40 % in the nearest 10 %, 72 % in the nearest 25 %; improved and not improved alike.
+  **Control (hunt1 + hunt2): kick 45 % / 70 %, bigkick 43 % / 70 %, aswap 40 % / 69 %, melt 34 % / 59 %.**  So the
+  estimator sees where the packing rearranges after the move + polish, not where the move was applied: for every move
+  type, accepted changes concentrate at the junction (the most mobile region), and melt is no more junction-focused than
+  kicks.  It cannot say whether melts *centred* at the junction do better.  Fix: `melt_side` now logs its centre in
+  desc (`c<x>,<y>`).  The real test is an A/B on the same parents: melt centred on the junction vs a random centre.

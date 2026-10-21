@@ -63,7 +63,7 @@ def melt_side(s, sq, rng, a, rad_r=(1.5, 3.5), rmax_r=(0.05, 0.2)):
             sq2, desc = mv_bigkick(s, sq, rng, a)
             return s, sq2, 'melt failed ' + desc
         s2, sq2 = mcmin.load_deg(f'{tmp}/out.txt')
-    return s2, sq2, f'melt R{rad:.2f} r{rmax:.2f} s{s2:.5f}'
+    return s2, sq2, f'melt R{rad:.2f} r{rmax:.2f} s{s2:.5f} c{sq[i][0]:.3f},{sq[i][1]:.3f}'   # centre logged (10-21)
 
 
 BIGMELT = dict(rad_r=(3.5, 7.0), rmax_r=(0.1, 0.25))     # TT3 arm M (10-15): melts too big for the default range
