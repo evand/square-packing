@@ -217,3 +217,6 @@ Target (Friedman's S_4 pieces, closed forms in wand125 k05.json, fetched a6c0dbb
 
 **Part a ≥ 2**: the chain breaks (squares can stack), and it contains s(5).  Not started; read how s(5) has been
 proved before designing anything.
+
+## 2026-10-21 (paused): see `LESSONS.md`
+Techniques, what worked (chain, one-square lemma), what failed (tube search, decouplings, certificate pipeline cost), R₅ status and Plan B.
