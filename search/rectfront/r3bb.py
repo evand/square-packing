@@ -90,6 +90,9 @@ def type_data(box, typ, pt=None):
     k = [isupp_diff(*bx) for bx in box]             # k_K = support along x = (|cos t| + |sin t|)/2
     pairs = []
     for (i, j), oi in zip(PAIRS, typ):
+        if oi is None:                       # free pair (partial type): no constraint, weight forced to 0
+            pairs.append((i, j, (0.0, 0.0), (0.0, 0.0), (0.0, 0.0)))
+            continue
         o, m = OPTS[oi]
         own, oth = (i, j) if o == 0 else (j, i)
         a, b = box[own][0] + 90 * m, box[own][1] + 90 * m
@@ -127,7 +130,7 @@ def margin_lp(box, typ):
         r[9] = 1.0
         A.append(r); bb.append(0.0)
     c = [0.0] * nv; c[9] = -1.0
-    bounds = [(0, None)] * 9 + [(None, None)]
+    bounds = [(0, 0) if typ[p] is None else (0, None) for p in range(3)] + [(0, None)] * 6 + [(None, None)]
     res = linprog(c, A_ub=A, b_ub=bb, A_eq=[[1, 1, 1] + [0] * 7], b_eq=[1], bounds=bounds, method='highs')
     if res.status != 0:
         return None, -math.inf
