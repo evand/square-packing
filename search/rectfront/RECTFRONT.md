@@ -186,3 +186,34 @@ side s < 2: `Fried4 ℓ s`, i.e. some unit (C, S), C, S > 0, with S C ℓ ≥ 2C
 * `rect4_friedman`: the configuration at any (C, S) with L(t, H) < 4 is a packing (grid check `construct.py`,
   then proved: H ≥ 3/2 > C + S, x_b ≥ k, x_c − k ≥ 1 via `core_g` = 2v(1 − v)(2v⁴ + v³ + v² − v + 1)/(1+v²)³ ≥ 0;
   pairs split by b's edge line, the common b–c edge line, and x = 1 / x = L − 1).
+
+## 2026-10-21: R_5 — plan (strip part numerically settled; s(5) part open)
+
+Target (Friedman's S_4 pieces, closed forms in wand125 k05.json, fetched a6c0dbb), short side a, long side b:
+4.1 a < 1.8713: b = 5; 4.2 1.8713 ≤ a < 2: 4a + b = 4 + 6√2; 4.3/4.4 2 ≤ a ≤ 1 + √2: b = 3;
+4.5 1 + √2 ≤ a ≤ 2 + 1/√2: a + b = 4 + √2 (its corner a = b is s(5) = 2 + 1/√2, Göbel 1979).
+
+**Strip part (a < 2)**, scripts `search/rectfront/r5/`, outputs `runs/rectfront/r5*.txt`:
+* Piece 4.2's packing: uprights in both bottom corners, b and d at 45° on the ceiling against their corners,
+  c at 45° on the floor between them (edge to edge with b and d).  Mirror-symmetric, angle fixed.
+* `relax5.py`: chain relaxation (left shelf on b, right shelf on d, b|c and c|d disjoint; no b–d needed) equals
+  min(5, 4 + 6√2 − 4H) to 3e-15 at 10 heights; minimiser = the zigzag above H ≈ 1.8713, the row below.
+* `split5.py`: L ≥ B_b(line 1) + W_c(line 1, line 2) + B_d(line 2), B from the Lean one-square lemma in its four
+  orientations, W = min over c of max(x + m₂y) − min(x + m₁y): still exact (grid), tight only at t₁ = t₂ = 45°,
+  opposite slopes.
+* Decoupling: full (`halves5.py`) and partial (c's tilt or height per half, `partial5.py`) LOSE up to 0.1, so c's
+  pose must be shared.  Lines first is lossless: L ≥ X(c) + X(mirror c), X = min over the line of
+  B(t) − m y + h_c(m)/2; but X's minimising line is not always along c's edges (`xpos5.py`: c at 10° on the
+  floor, H = 1.95, best line 42.9°).
+* `cands5.py`: for fixed lines, c's width (height at its worst end) is homogeneous linear in (cos θ, sin θ) on
+  each piece between kinks, positive, hence concave: min at c aligned with line 1, with line 2, or upright.
+  Matches the θ grid to 1e-14.  Candidates "aligned" are tight at the zigzag; "upright" has slack ≥ 0.005.
+  Lean form of the reduction: on an arc between unit vectors e₁, e₂ (< 90° apart), (P, Q) = λe₁ + μe₂ with
+  λ, μ ≥ 0, λ + μ ≥ 1, so a linear form nonnegative at both ends is ≥ its smaller end value.
+* What remains for the strip: the final two-angle (+ H) inequalities B₁(t₁) + W_cand(t₁, t₂) + B₂(t₂) ≥ target,
+  over 3 candidates × 4 slope signs × 2 × 2 one-square branches.  Only (aligned, signs (−, +), Ψ/Ψ) is tight
+  (a line of equality t₁ = t₂ = 45°, H ∈ [1.8713, 2)); the rest have slack, except near the vertical-line corner
+  (C → 0) where the row bound 5 is approached.
+
+**Part a ≥ 2**: the chain breaks (squares can stack), and it contains s(5).  Not started; read how s(5) has been
+proved before designing anything.
