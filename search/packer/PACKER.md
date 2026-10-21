@@ -5161,3 +5161,12 @@ grown pool (grid-locked now excluded): `dgen.py sweep --n 157 --band 0.0,0.012 -
   Predictions: stage 1: same-tilt 273 below 16.993: 60 %; same-tilt line-free 274 below 17.02: 40 %; same-tilt 308
   below 18.0174: 50 %.  Stage 2: same-tilt 273 below the 273 record: 8 %; any same-tilt 274 below 17.005: 15 %;
   below the floor 17.0002995: 3 %; below 17: 1 %.
+* **Census correction (17:00; Evan: "How are you counting the 211 record?").**  The census clustered tilted squares into
+  connected same-sign components, so a band that bends around a corner (211: one same-tilt strip, 35 along the bottom
+  at -22.2 deg + 31 up the left at -24.0 + 6) counted as ONE band, and the same-tilt records 176 / 211 (Ostashev) were
+  missed.  Corrected criterion (all tilted bands one sign, arms of >= 10 squares on >= 2 walls): 211: 6,583 of 7,062
+  store packings are this design; 264: 769 of 2,273 (record 35 + 17 + 17 at -23.2 deg, plus a -29.4 deg band);
+  272: 0; 273: 0; 274: 67 (best 17.019794, arms 41 + 10 at -16 deg); 308: 184 (best 18.017939).  So the bent
+  same-tilt strip is the record design at 211 and 264 and is essentially unexplored at 272-274 and 308.  BF1's flips
+  make two same-tilt bands with the corner block between them; the bent strip (band continuing through the corner)
+  is the next surgery to add.
