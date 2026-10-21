@@ -4787,3 +4787,14 @@ SW's 13, 110 (as SW), 308 and 146 (D308 / D308b / R308 and D146 / HB2 today): 42
   guard, default 24 h; manifest summary `stop` = cpu / wall / wall guard / drained); `dgen.py run --cpu-h` and
   `hborder.py explore --cpu-h` split a total over their explorer runs.  Smoke (n 110, 4 procs, budget 36 CPU-s):
   stopped at 41.1 CPU-s measured (in-flight proposals finish; the manifest charges what was used).
+
+## SW274b: band sweep at 274, CPU-budgeted (10-20 ~22:00; Evan: "Don't start anything that can't produce a 274 outcome"; first arm of the 274 campaign under the allocator design)
+Pre-registered before launch.  SW2 at 274 (4 runs x 40 min, ~2.7 CPU-h) gave our best 274, 17.000478.  Pool now (after
+the sink backfill), distinct non-grid: 106 < 17.001, 197 in [17.001, 17.003), 4,873 in [17.003, 17.01).
+* Run: `dgen.py sweep --n 274 --band 0.0,0.01 --pool 2000 --runs 14 --cpu-h 28 --seed 2741 --tag _sw3` (farthest-point
+  starts over the best 2000 distinct in the band, explorer recipe as SW; 2 CPU-h per run; new seed so starts and
+  explorer streams differ from SW2's).  Outputs reach the store via `pk.py sink` after the run.
+* Metric: best 274 (vs 17 and vs 17.000478); distinct 274s < 17.001 added (pool growth); CPU from the manifests.
+* Predictions: a 274 below 17: 4 %; best below 17.000478: 30 %; >= 50 new distinct < 17.001: 50 %.
+* Rule: none needed for continuation (standing arm); the result is the first data point for the 274 posterior.
+  A hit -> candidate.py, then Evan.
