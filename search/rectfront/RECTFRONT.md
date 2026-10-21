@@ -137,3 +137,33 @@ alone against two upright shelves carries the whole boundary.  Equality cases: a
 * The nine case lemmas are one `chain_bound`.  Seven cases give `L ≥ 3` outright (so `√2` is not needed
   there); only UU and DD (b hanging from the ceiling / standing on the floor between both shelves) give the wedge bound.
 * Build: ~15 s wall, ~20 s CPU (was ~15 s wall, ~100 s CPU); standard axioms.
+
+## 2026-10-21: R_4 plan — the chain relaxation is exact, and reduces to one square
+
+Scripts `search/rectfront/r4/`; outputs `runs/rectfront/r4*.txt`.
+
+* **Target** (`frontier4.py`).  For H < 2: 4 squares fit iff L >= 4 or L >= F(H) = min_t L(t, H),
+  `L(t, H) = 2 + (1 - 2(H - k - 1)S)/C + (1 - (H - 2k)C)/S`, C = cos t, S = sin t, k = (C + S)/2
+  (point-symmetric: uprights in opposite corners, b on the ceiling and c on the floor at tilt t; contacts
+  a-corner/b-edge, b-c edge to edge, c-edge/d-corner).  Agrees to 1e-15 with Friedman's piece 3.2 of S_3
+  (mostly Morandi), as listed in closed form by wand125 `problems/rectangles/data/edges/k04.json` (fetched a6c0dbb).
+  Range 1.8816489 <= H < 2, from L = 4 down to 4√2 − 2 at H = 2 (t = 45°).
+* **Relaxation is exact** (`relax.py`, `sweep.py`): sort a, b, c, d by centre x; keep only the left shelf on b,
+  the right shelf on c (bands chosen adversarially) and b, c disjoint.  Its minimum equals min(4, F(H)) to
+  1e-15 at 32 heights in [1.2, 2), minimiser = Friedman's configuration.  `tilts.py`: minimum over heights at
+  fixed (tb, tc) is >= F, zero only at tb = tc = t* (parallel middle squares).
+* **One-square reduction.**  Let the b-c separating line have slope m = u₂/u₁ (u₁ > 0).  Its two support
+  bounds split into a b-term and a c-term; rotating the c half by 180° about the rectangle's centre turns c
+  into another square with a left shelf.  Hence
+      L >= σ_b(m) + σ_c'(m) − mH >= G(m) := 2φ(m) − mH,
+  σ_X(m) = max_{p∈X} (p_x + m p_y), φ(m) = min of σ over one square right of a left shelf in the strip.
+  G(−m) = G(m) (vertical flip), and min_m G = the relaxation, exactly.
+* **φ in closed form** (`phi.py`, `lemma1.py`, 104 grid points, all tight to 1e-14): for m = −cot t <= 0,
+      φ(m) = min(2 + mH/2, Φ(t, H)),  Φ = 1 + (1/2 − (H − k − 1)S)/C + (1 − 2(H − k)C)/(2S),
+  and 2Φ − mH = L(t, H).  The minimising square has its edge parallel to the separating line, which is why
+  the frontier's tilt is the separating direction.
+* **Lean statement this suggests**: three unit squares' tools plus four squares in [0,L] × [0,H], H < 2 ⇒
+  4 <= L ∨ L(C, S, H) <= L for the unit direction (C, S) of the b-c separating line (so ∃ (C, S)).
+  Work: (1) the one-square lemma (witness cases V/U/D for b against its shelf, a polynomial inequality in
+  b's frame, (C, S), y, lo, H); (2) the 180° rotation and vertical flip; (3) Friedman's construction for the
+  converse (valid t range to check).
