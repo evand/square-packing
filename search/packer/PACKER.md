@@ -5170,3 +5170,17 @@ grown pool (grid-locked now excluded): `dgen.py sweep --n 157 --band 0.0,0.012 -
   same-tilt strip is the record design at 211 and 264 and is essentially unexplored at 272-274 and 308.  BF1's flips
   make two same-tilt bands with the corner block between them; the bent strip (band continuing through the corner)
   is the next surgery to add.
+
+## Chained modular moves (10-21 ~16:35; Evan: "Or remove and refill moves, or junction melt moves -- it doesn't have to be part of the same construction.  Modular moves and probability distributions, chained, everywhere -- I suspect that's the route.")
+* explore.py: new kinds `bflip` (bandflip.flip on a random band) and `bflipx` (flip, then one of jmelt / jrefill /
+  melt drawn uniformly, in the same proposal); `junction_point` falls back, for same-tilt designs, to the closest
+  pair between the two largest band arms (bands split by nearest wall, so a 211-style bent strip gives its bend:
+  211 record -> (4.82, 4.82)).  Walks then chain flip -> polish -> junction moves -> ... with the bandit allocating.
+* **CH1, pre-registered.**  Paired arms, same starts and seeds, `--reward value`, 1.25 CPU-h each, 2 runs per arm per n:
+  chain (`melt=2,bflip=2,bflipx=2,jmelt=1,jrefill=1`) vs ctrl (`melt=2`).  273 starts: record 356, the four smoke
+  same-tilt flips (16.9930-16.9974), 2604329; 274 starts: one per census design (A floor 2618512, 6+6 2555357, 7+7
+  2599150, 5+7 2559638, one band 2599015, bent same-tilt 2600517, smoke same-tilt flip 17.0295); smax 17.01 / 17.035.
+  Metrics: best per arm; best same-tilt per arm; distinct designs (sign pattern x band count) among outputs within
+  0.005 of the arm's best.  Predictions: chain's best same-tilt 273 below 16.990: 50 %; chain finds more distinct
+  designs within 0.005 of best than ctrl at both n: 55 %; chain's overall best beats ctrl's at 273: 30 %; any 273
+  below the record: 5 %; 274 below the floor: 2 %; below 17: 1 %.

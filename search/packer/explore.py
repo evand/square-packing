@@ -47,7 +47,18 @@ def junction_point(sq):
     a = Q[:, 2] % 90.0; t = np.where(a < 45, a, a - 90)
     P, N = Q[t > 5, :2], Q[t < -5, :2]
     if len(P) < 10 or len(N) < 10:
-        return None
+        # same-tilt designs (10-21): the junction between the two largest band arms (bands split by nearest wall, so a
+        # strip bent round a corner, 211-style, gives its bend)
+        import bandflip
+        s_ = float(Q[:, :2].max() + 0.5)
+        G = []
+        for J in bandflip.bands(Q, 10):
+            X = Q[J, :2]; w = np.c_[s_ - X[:, 0], X[:, 1], X[:, 0], s_ - X[:, 1]].argmin(1)
+            G += [X[w == i] for i in range(4) if (w == i).sum() >= 6]
+        if len(G) < 2:
+            return None
+        G.sort(key=len, reverse=True)
+        P, N = G[0], G[1]
     d = np.linalg.norm(P[:, None] - N[None], axis=-1)
     i, j = np.unravel_index(np.argmin(d), d.shape)
     return tuple(((P[i] + N[j]) / 2).tolist())
@@ -58,6 +69,19 @@ def _near(sq, pt, m):
 
 
 JMELT_NEAR = 8          # jmelt: centre = one of the 8 squares nearest the junction point
+
+
+def mv_bflip(s, sq, rng):
+    """Band flip (bandflip.py, 10-21; Evan: "Modular moves and probability distributions, chained, everywhere"): reflect
+    one tilted band's wall strip along its wall (tilt sign flips, ends swap, new junction).  Kick if no band >= 15."""
+    import bandflip
+    B = bandflip.bands(sq)
+    if not B:
+        prop, desc = MOVES['kick'](s, sq, rng, A)
+        return s, prop, 'bflip none ' + desc
+    i = rng.randrange(len(B))
+    prop, info = bandflip.flip(s, sq, B[i], rng, B)
+    return s, prop, f"bflip b{i}/{len(B)} w{info['wall']} D{info['D']} [{info['lo']},{info['hi']}] n{info['nflip']}"
 
 
 def mv_jrefill(s, sq, rng, a):
@@ -359,6 +383,15 @@ def _work(job):
         s, prop, desc = melt_side(s, sq, rng, A, junction=True); desc = 'j' + desc
     elif kind == 'jrefill':                 # junction delete-and-refill (10-21)
         s, prop, desc = mv_jrefill(s, sq, rng, A)
+    elif kind in ('bflip', 'bflipx'):       # band flip (bandflip.py, 10-21); bflipx: + a random junction follow-up
+        s, prop, desc = mv_bflip(s, sq, rng)
+        if kind == 'bflipx' and desc.startswith('bflip'):
+            f = rng.choice(('jmelt', 'jrefill', 'melt'))
+            if f == 'jrefill':
+                s, prop, d2 = mv_jrefill(s, prop, rng, A)
+            else:
+                s, prop, d2 = melt_side(s, prop, rng, A, junction=(f == 'jmelt'))
+            desc += ' + ' + f + ' ' + d2
     elif kind == 'bigmelt':                 # TT3 arm M: larger regions, deeper rounding
         s, prop, desc = melt_side(s, sq, rng, A, **BIGMELT); desc = 'big' + desc
     elif kind == 'gls':                     # TT3 arm L: GLS feasibility attempt below the gate line
