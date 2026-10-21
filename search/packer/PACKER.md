@@ -5138,3 +5138,26 @@ grown pool (grid-locked now excluded): `dgen.py sweep --n 157 --band 0.0,0.012 -
   1.25 CPU-h each, 8 procs.  Metric: distinct sides < 17.0005 per arm (pooled), best, below floor.  Predictions: value
   more distinct near-floor sides than legacy: 55 %; value wins >= 3 of 4 groups on that count: 35 %; any run below
   17.0002995: 4 %.
+
+## Design sweep: multi-band bulbgen and band flips (10-21 ~16:30; Evan: "Systematically trying different counts / widths that have been undersampled ... trying same-tilt more ... varying counts more.  Same-tilt also gives a very different set of junction patterns ... Let's try more systematic searches with bulbgen!")
+* Census of the store (bands = clusters >= 15 squares of similar signed tilt; width = rows across, PCA estimate):
+  274: 93 % two opposite-tilt bands; by widths 5+6 best 17.000299 (61k), 5+7 17.000451, 6+6 17.000988, 6+7 17.003123,
+  4+6 17.011, 5+5 17.0115, 7+7 17.0119; one band 17.0167; three bands 17.0209; same-tilt pairs only 41 (best 17.0264).
+  Same-tilt in the whole store: 272: 2 (17.0296), 273: 2 (17.0287), 308: 210 (18.0174).  Neighbour records are
+  balanced 6+6 at ~+-18.7 deg; 274 has none such better than 17.0034.
+* `bulbgen` gained multi-band layouts (`sample_design`, `build_multi`: one band per chosen wall, any widths, any tilt
+  signs, corner junctions bulb / L / V; arms rotated so tilt signs are free) and `pk/fill.py` a bottom-left-fill
+  upright placer (`blf`).  Smoke (1-4 bands, same / mixed, 0.4 CPU-h): the idealised bands + uprights hold only
+  232-257 squares at side < 17 with either filler (exact 236-256, blf 232-257), so reaching 274 needs heavy overlap
+  and the quench grid-locks (line-free at 272-274: 0-4 of 6 per design, sides 17.08-17.78).  The waste is the band /
+  upright interface of the idealised geometry, not the filler.  Construction from scratch stays parked.
+* `bandflip.py`: design surgery on real packings: reflect one band's wall strip along the wall (tilt sign flips, ends
+  swap, new junction), quench, line check.  Smoke (2 seeds x 4 donors): the 273 record flipped -> same-tilt 273s at
+  16.99302 / 16.99331 / 16.99349 raw (record 16.983926; store's best same-tilt 273 was 17.0287); 274 1 / 24 line-free
+  (17.0295, same-tilt); 308 1 / 12 (18.0383).
+* **BF1, pre-registered.**  Donors: best 2 distinct per (widths, signs, angle) cell of the two-band census: 24 x 274,
+  12 x 273, 12 x 308, 8 x 272 (`runs/bandflip/donors*.txt`); `--reps 30` per band (2 bands), `--both 2`.  Then
+  explorer (`--reward value`, melt=2, 1.25 CPU-h per run) from the best farthest-point same-tilt seeds, 2 runs per n.
+  Predictions: stage 1: same-tilt 273 below 16.993: 60 %; same-tilt line-free 274 below 17.02: 40 %; same-tilt 308
+  below 18.0174: 50 %.  Stage 2: same-tilt 273 below the 273 record: 8 %; any same-tilt 274 below 17.005: 15 %;
+  below the floor 17.0002995: 3 %; below 17: 1 %.

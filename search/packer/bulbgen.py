@@ -141,6 +141,8 @@ def reflect(sq, s):
 def build(P, rng):
     """Tilted squares for one parameter draw, inside the box [0, s]^2.  Arm A on the right wall, arm B on the bottom
     (308's layout; symmetry is free, the quench does not care)."""
+    if P['topology'] == 'multi':
+        return build_multi(P, rng)
     s = P['k'] - P['delta']
     A, B = P['arms']
     tp = [(P['taper_rows'][i], P['taper_tip'][i], P['taper_side'][i]) for i in range(4)]
@@ -166,6 +168,72 @@ def build(P, rng):
         if gen.wall_viol(q, s) <= 1e-9 and all(gen.pen(q, p) <= 1e-9 for p in T):
             T.append(q)
     return s, T
+
+
+# ---------------------------------------------------------------- multi-band layouts (10-21)
+# Evan 10-21: "Systematically trying different counts / widths that have been undersampled ... trying same-tilt more ...
+# Same-tilt also gives a very different set of junction patterns."  A design = one band per chosen wall (0 right,
+# 1 bottom, 2 left, 3 top), each with its own width b and signed tilt; every arm is built on the right wall and rotated
+# by w quarter turns, (x, y) -> (y, s - x), which keeps the tilt sign (mod 90), so tilt signs are free per arm.
+# Corners (0 BR, 1 BL, 2 TL, 3 TR): arm on wall w has its low end at corner w and its high end at corner w - 1.
+# A corner shared by two arms draws a junction (bulb: both stop short by the other's width + gap, leaving a corner
+# block; L: one runs through, the other stops at it; V: both run in, overlaps dropped); a free end stops end_gap short.
+
+def _rot(sq, s, w):
+    for _ in range(w % 4):
+        sq = [(y, s - x, a) for x, y, a in sq]
+    return sq
+
+
+def sample_design(rng, k, n, walls, signs, bs, sd=0.7, junction_p=(0.6, 0.2, 0.2)):
+    """params for a fixed design (walls, tilt signs, widths); geometry details stay random (record-style tapers/gaps)"""
+    P = sample_params(rng, k, n, 'record')
+    arms = []
+    for w, sg, b in zip(walls, signs, bs):
+        th = 2 * math.degrees(math.atan(1 / b)) + rng.normal(0, sd)
+        arms.append(dict(wall=int(w), b=int(b), theta=float(sg * th)))
+    J = {c: str(rng.choice(['bulb', 'L', 'V'], p=list(junction_p))) for c in range(4)}
+    P.update(arms=arms, topology='multi', junction=J, runner={c: int(rng.integers(0, 2)) for c in range(4)},
+             corner_gaps=[float(rng.uniform(0.2, 1.4)) for _ in range(4)],
+             end_gaps=[float(rng.uniform(0.2, 1.4)) for _ in range(8)],
+             tapers=[[(int(rng.choice([1, 2, 3, 4], p=[0.1, 0.25, 0.45, 0.2])), int(rng.choice([2, 3, 4], p=[0.2, 0.6, 0.2])),
+                       str(rng.choice(['inner', 'outer', 'both']))) for _ in range(2)] for _ in arms])
+    return P
+
+
+def build_multi(P, rng):
+    s = P['k'] - P['delta']
+    arms = P['arms']
+    W = {a['wall']: a['b'] * math.cos(math.radians(abs(a['theta']))) + abs(math.sin(math.radians(a['theta']))) for a in arms}
+    T = []
+    for i, a in enumerate(arms):
+        w = a['wall']
+        res = []
+        for end, c in ((0, w % 4), (1, (w - 1) % 4)):
+            other = (c + 1) % 4 if end == 0 else c         # the other wall at corner c
+            if other in W:
+                J = P['junction'][c]
+                if J == 'bulb':
+                    res.append(W[other] + P['corner_gaps'][c])
+                elif J == 'L':
+                    # runner index 0 -> the lower-numbered wall of the pair runs through
+                    runs = (min(w, other) == w) == (P['runner'][c] == 0)
+                    res.append(0.0 if runs else W[other])
+                else:
+                    res.append(0.0)
+            else:
+                res.append(P['end_gaps'][2 * i + end])
+        lo, hi = res[0], s - res[1]
+        if hi - lo <= 1.5:
+            continue
+        A = arm(a['b'], a['theta'], hi - lo, tuple(P['tapers'][i]), P['row_shear'], rng, 'round')
+        A = place_right(A, s, P['wall_gap'][i % 2], lo)
+        T += _rot(A, s, w)
+    out = []
+    for q in T:
+        if gen.wall_viol(q, s) <= 1e-9 and all(gen.pen(q, p) <= 1e-9 for p in out):
+            out.append(q)
+    return s, out
 
 
 # ---------------------------------------------------------------- fill and count (pk/fill.py)
@@ -214,11 +282,11 @@ def fill_to_count(s, T, P, prng):
 
 # ---------------------------------------------------------------- driver
 
-def one(k, n, seed, quench=None, prior='broad', side=None):
+def one(k, n, seed, quench=None, prior='broad', side=None, design=None):
     import random
     rng = np.random.default_rng(seed)
     prng = random.Random(seed)                       # pk.fill draws (random.Random, as pk.moves)
-    P = sample_params(rng, k, n, prior)
+    P = sample_design(rng, k, n, *design) if design else sample_params(rng, k, n, prior)
     if side:                                         # 10-21: build in a larger box (side k + U(lo, hi)), quench compresses
         P['delta'] = -float(rng.uniform(*side))
     s, T = build(P, rng)

@@ -434,6 +434,46 @@ def _p_uniform(S, sq, m, rng, region, **P):
     return np.vstack([np.asarray(sq, float)] + ([np.array(add)] if add else [])), {}
 
 
+def blf_uprights(S, sq, rng, corner=0, order='yx', h=0.02, m=None):
+    """Bottom-left-fill of upright unit squares around fixed squares (10-21, bulbgen multi-band): raster h (1/h an
+    integer, so uprights abut exactly; against tilted squares the gap is < h), feasible lower-left cells = a free
+    (1/h)^2 block (summed-area table), place the first in `order` ('yx': lowest then leftmost; 'xy': leftmost then
+    lowest), seen from `corner` (0 BL, 1 BR, 2 TR, 3 TL: coordinates flipped so that corner is the origin).  Stops when
+    no block is free or m are placed.  -> list of (x, y, 0)"""
+    w = int(round(1 / h)); assert abs(w * h - 1) < 1e-12
+    fx, fy = corner in (1, 2), corner in (2, 3)
+    T = [((S - x) if fx else x, (S - y) if fy else y, (-a if fx != fy else a)) for x, y, a in np.asarray(sq, float)]
+    N = int(math.floor(S / h + 1e-9))
+    xs = (np.arange(N) + 0.5) * h
+    X, Y = np.meshgrid(xs, xs)
+    occ = np.zeros((N, N), bool)
+    for x, y, a in T:
+        i0, i1 = max(0, int((x - 0.75) / h)), min(N, int((x + 0.75) / h) + 2)
+        j0, j1 = max(0, int((y - 0.75) / h)), min(N, int((y + 0.75) / h) + 2)
+        occ[j0:j1, i0:i1] |= _inside(X[j0:j1, i0:i1], Y[j0:j1, i0:i1], x, y, a)
+    out = []
+    while m is None or len(out) < m:
+        A = np.zeros((N + 1, N + 1), np.int32)
+        A[1:, 1:] = occ.cumsum(0).cumsum(1)
+        B = A[w:, w:] - A[:-w, w:] - A[w:, :-w] + A[:-w, :-w]          # occupied cells in the block at (j, i)
+        F = B == 0
+        if not F.any():
+            break
+        j, i = np.unravel_index(np.argmax(F if order == 'yx' else F.T), F.shape if order == 'yx' else F.T.shape)
+        if order != 'yx':
+            i, j = j, i
+        occ[j:j + w, i:i + w] = True
+        x, y = (i + w / 2) * h, (j + w / 2) * h
+        out.append(((S - x) if fx else x, (S - y) if fy else y, 0.0))
+    return out
+
+
+@placer('blf', corner=('choice', [0, 1, 2, 3]), order=('choice', ['yx', 'xy']), h=0.02)
+def _p_blf(S, sq, m, rng, region, **P):
+    add = blf_uprights(S, sq, rng, P['corner'], P['order'], P['h'], m)
+    return np.vstack([np.asarray(sq, float)] + ([np.array(add)] if add else [])), dict(room=len(add))
+
+
 # ================================================================== relax + the one entry point
 
 def relax(S, X, schedule, tmp=None, seed=None):
