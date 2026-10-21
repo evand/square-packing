@@ -100,3 +100,123 @@ Escape = max over squares in the container of min over points (gauge − ½); �
   cell), escape ≈ 0.015 > 0.  Local search only, but every start and family lands at the same value: **no 4-point
   unavoidable set near the corner** (consistent with the literature note's crude search).  Pigeonhole on 4 points
   does not reach the b = 3 piece at a ≈ 2.4; a second stage on the long-wall sitters is the natural next step.
+
+## 7. Second stage: escaper + holders relaxation [measured] (`stage2.py`, 96 SLSQP starts per case)
+Relaxation: E avoids all four points; S_j contains P_j for j in a set J; all disjoint, in the box; maximise the
+common slack t (t ≥ 0 feasible).  E starts on the left wall (mirror).  "E" prefix = a second escaper on the right.
+| (a, b) | J = 0123 | any 3 of 4 | two escapers + 2 | two escapers + 3 |
+|---|---|---|---|---|
+| (1+√2, 2.90) | −0.0246 | — | — | — |
+| (1+√2, 2.95) | — | feasible (all 4 choices) | feasible (all 6) | −0.007 to −0.0125 |
+| (1+√2, 2.99) | −0.0025 | — | — | — |
+| (2.5, 2.89) (line at 2.914) | −0.0140 | feasible (all 4) | — | −0.0035, −0.025 |
+* So the relaxation is infeasible below the boundary and t ≈ (b − 3)/4 at the corner, apparently sharp; its
+  near-optimum is the grid-like stack (E upright mid-left wall, 2 + 2 + 1 rows) at the corner, and the stretched
+  s(5) layout on the line.  **Every proper sub-relaxation is feasible**: the second stage needs all five squares
+  (E with S₀ and S₂ alone fit: S₀, S₂ slide right; S₁, S₃ are what push them back).
+
+## 8. Weighted point covers reach the corner and the line [measured] (`mixlp.py`, `ptcover.py`, `structlp.py`, `cand*.py`)
+
+**Answer: yes, with points only (weights < 1), total < 5, all the way to the boundary.**  Segment densities were
+offered to the LP (`mixlp.py`, pitch 0.1, plus the lines y = 1, b − 1, x = 1, a − 1) and always got weight 0.
+The parent's "points alone fail" argument assumed weight-1 points; fractional weights get around it: a square
+typically catches 2/3 + 1/3 or three 1/3's, and the wall sitters catch row points at x ≈ 0.6–0.9 on *both* rows.
+
+Checker (`ptcover.min_capture`): for each angle on a grid (1800–7200 angles over 90°), the minimum of
+Σ w_p [p ∈ closed square] over centres is attained in an open cell of the arrangement of the tilted unit squares
+around the points (plus the centre box); every arrangement vertex is probed in 16 directions at offset 1e−7.
+Much sharper than grid + Nelder–Mead on a step function (which missed a 0.667 hole in an LP solution at b = 2.95).
+Still sampled in the angle and float only: **not a proof**, and every cover below is tight (min capture exactly 1
+on most angles: closed covers at the boundary have no slack).
+
+**Two parameterised covers** (12 points, D2-symmetric; rows y = 1 and y = b − 1; total 4 + 4γ):
+
+| | row x (and a − x) | weights | interior points (and mirrors) | γ | total | valid on the line (sampled) |
+|---|---|---|---|---|---|---|
+| A | 0.84, 1 | 2/3, 1/3 | (1, 1.25), (1, b − 1.25), (a−1, ·) | 1/6 | 14/3 | a ∈ [1+√2, ≈2.502] (13 points; fails 2.511) |
+| B | 0.78, 1 | 0.4, 0.6 | (1, 1.45), (1, b − 1.45), (a−1, ·) | 0.1 | 4.4 | a ∈ [2.48, 4−√2] (10 points; fails 2.45) |
+
+"Line" = R₅'s boundary: b = 3 at a = 1+√2, b = 4 + √2 − a after.  `runs/rectfront/r5pts/cand3_dense.txt`.
+* A at a = 1+√2: valid for b = 2.9, 2.95, 2.99, 2.999, 3.0 (7200 angles at 3.0, 2.99); fails at b = 3.05 (0.333).
+  Valid **at b = 3 itself** although the 2×3 grid fits there: shared edges let closed squares share points, as
+  for the 4-point set at a + b = 4 + √2.  So the scaling argument of §4 works unchanged: a packing strictly below
+  the line, scaled up to the line, gives 5 ≤ 14/3 (or 4.4).
+* An earlier hand cover with 1/3 at x ∈ {0.6, 0.9, 1} and 1/6 at (0.9, 1.2) (`cand.py`) also works at a = 1+√2,
+  b ∈ [2.9, 3] (14/3), but not on the line beyond.
+* LP optima on the line (`structlp.py`, fine row atoms, interior columns; `runs/rectfront/r5pts/structlp_line.txt`):
+  14/3 at the corner, 4.4 at a = 2.45, 2.5, 2.55, and 4 (the 4-point set) at a = 4 − √2.
+* Control (2.6, 2.80): LP = 4.000 (the 4-point set), as expected.
+* Earlier LP numbers from `ptcover.run` (4.217 at (2.414, 2.95), …) came from an orbit-key bug (fixed: it tied
+  unrelated atoms); the covers were still checked on their actual weights, but they weren't optimal.
+
+**What this means for the proof.**  The corner and the slanted line need no second stage: two weighted 12-point
+covers, parameterised by (a, b) only through the mirror positions a − x, b − y, cover the whole remaining
+boundary (piece A to a ≈ 2.50, piece B from 2.48), and the 4-point set takes over at a ≥ 4 − √2.  The Lean cost
+is a weighted cover lemma (each closed square catches weight ≥ 1) per piece: more cases than §4, since captures
+are sums of fractional weights, and the covers are tight on whole families of poses, so each case needs exact
+equality structure (as in §1–§3).  Next numerics if pursued: list the tight pose families (which weight
+combinations reach exactly 1) to plan the case split, and look for one family with x, y, γ linear in a.
+
+## 9. A simple cover for the whole remaining line: 10 points, weights 2/3 and 1/3 [measured] (`c10.py`, `scanA.py`, `tightC.py`, `minsetsC.py`, `blocksC.py`)
+
+**Cover C** (total 14/3), for a + b = 4 + √2 (b = 3 at the corner a = 1 + √2), with c₀ = 9/10:
+
+| point | weight | count |
+|---|---|---|
+| (c₀, 1), (a − c₀, 1), (c₀, b − 1), (a − c₀, b − 1) | 2/3 | 4 |
+| (1, 1), (a − 1, 1), (1, b − 1), (a − 1, b − 1) — our 4-point set | 1/3 | 4 |
+| (1, b/2), (a − 1, b/2) — on the midline | 1/3 | 2 |
+
+Each corner's row pair weighs 1 (the 4-point set with its weight split 2/3 + 1/3 and moved 0.1 toward the wall);
+the spare 2/3 sits on the midline, where the long-wall sitters are.
+* Valid (closed) for c₀ ∈ [≈ 0.879, √2 − ½ ≈ 0.9142] at 1800 angles; the upper end is the 45° wall sitter at the
+  corner (it catches row points only for x ≤ √2 − ½), the lower end a tilted square near (1.27, 2.14) at a = 4 − √2.
+* c₀ = 9/10: min capture exactly 1 at 61 points of the line a ∈ [1 + √2, 2 + 1/√2] with 36,000 angles, for
+  a ≤ ≈ 2.624; fails (2/3) from a ≈ 2.629 (`runs/rectfront/r5pts/c10_dense36k.txt`).  So it covers the whole of
+  [1 + √2, 4 − √2] with margin; the 4-point set (`rect5_pts_lower`) takes over beyond.  One cover, no split.
+* Found by scanning the §8 family: the interior points can sit on the column x = 1 and merge on the midline.
+
+**Blocks** (`blocksC.py`): every closed unit square on the line contains a full **block** of weight exactly 1:
+* corner pairs {(c₀, 1), (1, 1)} (×4 by the mirrors);
+* wall blocks {(c₀, 1), (1, b/2)} and {(c₀, b − 1), (1, b/2)} (×2 sides);
+* centre blocks {(1, 1), (1, b/2), (a − 1, b/2)} (×4: either row point, either side… i.e. one row-(1) point + both
+  midline points).
+Checked on all 4.6·10⁸ arrangement-vertex probes (41 points of the line, 3600 angles): no probe without a block.
+So the proof is "every square contains a block; blocks weigh 1; total 14/3 < 5" — the weights are bookkeeping.
+
+**Tight families** (`tightC.py`, capture exactly 1; centre folded to the lower-left quadrant):
+| centre cell | caught set (exactly) | angles |
+|---|---|---|
+| y < 1 (any x ≤ a/2) | corner pair r + s | all |
+| x < c₀, 1 < y ≤ b/2 (wall band) | r + s; m + r; m + r^ (wall sitters) | all |
+| c₀ < x < 1, 1 < y | r + s | all |
+| 1 < x ≤ a/2, 1 < y ≤ b/2 (centre) | m + m′ + s (and the top-row twin) | 29°–61° |
+(r = (c₀, 1), s = (1, 1), m = (1, b/2); ′ mirror in x, ^ mirror in y.)  Inclusion-minimal caught sets per cell
+(`minsetsC.py`) all contain a block, and give the case split below.
+
+**Proof plan** (one quadrant; mirrors as in `Rect5Pts.lean`; centre m = (x, y), k = (c + s)/2):
+1. *Row cells*, k ≤ y ≤ 1, k ≤ x ≤ a/2 ⇒ the square contains r and s.
+   * x ≤ 1: both by `In_corner` (offsets |·| ≤ 1 − k).  **In Lean.**
+   * 1 ≤ x ≤ a/2: s by `In_corner`; r needs a new one-line lemma: offsets dx ∈ [−δ, 0], dy ∈ [0, 1 − k] ⇒ In,
+     since |u| ≤ max(δc, (1−k)s) and |v| ≤ δs + (1 − k)c ≤ ½ for δ ≤ δ* ≈ 0.39411 (max at θ = 0 below δ*).
+     Here δ = a/2 − c₀ ≤ 2 − 1/√2 − 9/10 ≈ 0.39289: **margin only 0.0012** (c₀ = 0.91 gives 0.011; the cover is
+     valid up to c₀ ≈ 0.914).  Consider c₀ = 0.91 or another value in [0.899, 0.914] for slack here.
+2. *Wall band*, k ≤ x ≤ 1, 1 ≤ y ≤ b/2 ⇒ {r, s} or {r, m} or {r^, m}.  New lemma (side-strip type: the square
+   always catches a c₀-row point, plus s or m).
+3. *Centre*, 1 ≤ x ≤ a/2, 1 ≤ y ≤ b/2 ⇒ {r, s} or {s, m, m′} or {s^, m, m′}.  New lemma (centre-rectangle type;
+   tight at 29°–61° with three points).  `In_rect` alone gives only one corner of [1, a − 1] × [1, b/2].
+Then `packing_le_weight` with the 10 weighted points and the scaling of §4, on the line.  Reduction to the line:
+a packing with a ≤ 1 + √2, b < 3 also fits at a = 1 + √2 (monotone); scaling by (4 + √2)/(a + b) lands on the line
+at a′ ∈ [1 + √2, 2 + 1/√2]; for a′ ≥ 4 − √2 the 4-point cover applies (b′ ≤ 2√2).
+
+**Exact checking.**  `search/zeromargin.py` and `verify2` (`zmcheck`) both handle *weighted* closed covers exactly,
+but only for square containers [0, m]² with rational data.  Two obstacles: the container is a rectangle (the
+admissible-pose bounds; a small change in a copy), and every point of the line a + b = 4 + √2 (and the corner
+(1 + √2, 3)) is irrational, so exact checks need Q(√2) arithmetic, not Fractions.  Not adapted.
+
+**Web view.**  Like the s(12) ≥ 35/9 page: the box with the 10 points (two weights), a draggable/rotatable square
+that highlights the block it contains, and the capture map (min over angles per centre).  The block picture
+(corner pairs, wall blocks, centre blocks) is the explanation.
+* c₀ = 0.91 also passes: blocks on all 4.65·10⁸ probes, min capture 1 at 41 points of [1 + √2, 4 − √2] with
+  36,000 angles (`runs/rectfront/r5pts/c10_091_36k.txt`; `C0=0.91 python3 blocksC.py`).  Recommended for the
+  row-lemma margin (δ* − δ = 0.011 instead of 0.0012).
