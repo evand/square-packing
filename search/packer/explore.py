@@ -39,12 +39,60 @@ UNP_TOL = 1e-5     # --polish-gate: a screened (unpolished) side is the same bas
                    # (screen side error: median ~7e-5 at k = 0, 2e-6 at k = 4, 1e-8 at k = 8 SLP iterations; PACKER 10-07)   # current src (10-11; was target-dev, a 10-08 build)
 
 
-def melt_side(s, sq, rng, a, rad_r=(1.5, 3.5), rmax_r=(0.05, 0.2)):
+def junction_point(sq):
+    """Two-band junction (10-21): midpoint of the closest pair of squares tilted > +5 deg and < -5 deg; None unless
+    both signs have >= 10 squares (analysis/melt_junction.py uses the same rule)."""
+    import numpy as np
+    Q = np.asarray(sq, float)
+    a = Q[:, 2] % 90.0; t = np.where(a < 45, a, a - 90)
+    P, N = Q[t > 5, :2], Q[t < -5, :2]
+    if len(P) < 10 or len(N) < 10:
+        return None
+    d = np.linalg.norm(P[:, None] - N[None], axis=-1)
+    i, j = np.unravel_index(np.argmin(d), d.shape)
+    return tuple(((P[i] + N[j]) / 2).tolist())
+
+
+def _near(sq, pt, m):
+    return sorted(range(len(sq)), key=lambda j: math.hypot(sq[j][0] - pt[0], sq[j][1] - pt[1]))[:m]
+
+
+JMELT_NEAR = 8          # jmelt: centre = one of the 8 squares nearest the junction point
+
+
+def mv_jrefill(s, sq, rng, a):
+    """Junction delete-and-refill (10-21; Evan: "delete and refill at the junction region"): drop the m (3-10) squares
+    nearest a point jittered (sd 0.5) around the junction, scale up by 1 + U(3e-4, 1.5e-3), re-add m squares one at a
+    time at one of the 4 best pose holes (mcmin.pose_holes, recomputed after each).  Falls back to a kick when the
+    packing has no two-band junction or no hole."""
+    J = junction_point(sq)
+    if J is None:
+        prop, desc = MOVES['kick'](s, sq, rng, a); return s, prop, 'jrefill no-junction ' + desc
+    m = rng.randint(3, 10)
+    pt = (J[0] + rng.gauss(0, 0.5), J[1] + rng.gauss(0, 0.5))
+    drop = set(_near(sq, pt, m))
+    rest = [tuple(q) for j, q in enumerate(sq) if j not in drop]
+    f = 1 + rng.uniform(3e-4, 1.5e-3)
+    s2 = s * f; rest = [(x * f, y * f, d) for x, y, d in rest]
+    for _ in range(m):
+        H = mcmin.pose_holes(s2, rest)
+        if not H:
+            prop, desc = MOVES['kick'](s, sq, rng, a); return s, prop, 'jrefill no-hole ' + desc
+        e, x, y, d = H[rng.randrange(min(len(H), 4))]
+        rest.append((x, y, d))
+    return s2, rest, f'jrefill m{m} J{J[0]:.2f},{J[1]:.2f} f{f:.5f}'
+
+
+def melt_side(s, sq, rng, a, rad_r=(1.5, 3.5), rmax_r=(0.05, 0.2), junction=False):
     """Regional melt (anneal melt): squares within R of a random square get rounded corners (up to rmax), hard-particle MC
     at high pressure around them, then squared up again; large but local, non-destructive rearrangement.
     Returns (side, squares, desc): the NPT box changes size, so the side matters (falls back to bigkick on failure)."""
     rad, rmax = rng.uniform(*rad_r), rng.uniform(*rmax_r)
     i = rng.randrange(len(sq))
+    if junction:                                         # jmelt (10-21): same draws as melt, centre near the junction
+        J = junction_point(sq)
+        if J is not None:
+            i = _near(sq, J, JMELT_NEAR)[i % JMELT_NEAR]
     avoid = os.environ.get('PK_MELT_AVOID')              # protected melt (Evan 10-15): centres at least rad + margin
     if avoid:                                            # from every protected point, so that segment is left alone
         pts, margin = json.load(open(avoid)), float(os.environ.get('PK_MELT_MARGIN', '1.0'))
@@ -307,6 +355,10 @@ def _work(job):
         s, prop, desc = mv_harden(s, sq, rng)
     elif kind == 'melt':                    # regional NPT melt: the box changes size, keep the anneal's side
         s, prop, desc = melt_side(s, sq, rng, A)
+    elif kind == 'jmelt':                   # melt centred near the two-band junction (10-21)
+        s, prop, desc = melt_side(s, sq, rng, A, junction=True); desc = 'j' + desc
+    elif kind == 'jrefill':                 # junction delete-and-refill (10-21)
+        s, prop, desc = mv_jrefill(s, sq, rng, A)
     elif kind == 'bigmelt':                 # TT3 arm M: larger regions, deeper rounding
         s, prop, desc = melt_side(s, sq, rng, A, **BIGMELT); desc = 'big' + desc
     elif kind == 'gls':                     # TT3 arm L: GLS feasibility attempt below the gate line

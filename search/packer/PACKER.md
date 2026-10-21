@@ -5027,3 +5027,18 @@ grown pool (grid-locked now excluded): `dgen.py sweep --n 157 --band 0.0,0.012 -
   type, accepted changes concentrate at the junction (the most mobile region), and melt is no more junction-focused than
   kicks.  It cannot say whether melts *centred* at the junction do better.  Fix: `melt_side` now logs its centre in
   desc (`c<x>,<y>`).  The real test is an A/B on the same parents: melt centred on the junction vs a random centre.
+* **JAB1: junction moves A/B, pre-registered (08:10; Evan: "Sure, let's try it! ... the evidence supports trying new
+  stuff").**  New explorer moves: `jmelt` (melt_side with the same draws, centre = one of the 8 squares nearest the
+  junction point) and `jrefill` (drop the 3-10 squares nearest the jittered junction, scale 1 + U(3e-4, 1.5e-3), re-add
+  as many at the 4 best pose holes); `junction_ab.py`: paired single proposals (same seed for the three arms: melt =
+  random centre, jmelt, jrefill) through the explorer's screen + polish.  Parents (`runs/jab/parents1.txt`, fingerprint
+  farthest-point): 274 x 12 (< 17.0005, incl. the 17.0002995 floor), 273 x 6 (incl. record), 272 x 4, 308 x 4, 241 x 4;
+  40 seeds each: 3,600 trials, ~3 CPU-h, 5 procs.  Smoke (2 parents x 2 seeds): 1-4 CPU-s per trial; jrefill often
+  screen-grid (3 / 4).
+* Metrics per arm and n: line-free share; other-basin share; below-parent count; distinct new sides per CPU-h; paired
+  wins (lower polished side) jmelt vs melt, jrefill vs melt; best child per parent.
+* Predictions: jmelt line-free share within +-5 points of melt's: 60 %; jrefill line-free share below melt's: 80 %;
+  paired wins jmelt > melt at 274: 55 %; distinct new sides per CPU-h jmelt >= melt: 50 %, jrefill >= melt: 30 %;
+  a 274 below 17: 1 %; a new record at 241 / 272 / 273 / 308: 3 %.
+* Follow-up rule: an arm with paired wins or new-sides rate >= melt's goes into explorer walks (`--weights
+  jmelt=2` / `jrefill=2`) from the same starts as a baseline walk (the moves are walks, judged as walks).
