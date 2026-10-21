@@ -5062,3 +5062,14 @@ grown pool (grid-locked now excluded): `dgen.py sweep --n 157 --band 0.0,0.012 -
 * **SW273 result (09:42; 12.0 CPU-h measured).**  Best 16.985085 (record 16.983926 not beaten); 11,704 entries, ~1,000
   new distinct 273 side keys within 0.003 of the record (store 714 -> 1,715).  Predictions: below record no (10 %);
   >= 50 new side keys within 0.003 yes (50 %).  A big new donor pool for 274 insertion / 308 L addition.
+* **JW1 result (11:00; 4 arms x 2 waves x 1.25 CPU-h = 2.5 CPU-h per arm, measured).**  No 274 below the floor in any
+  arm; final refines of jrefill_r0 / jmelt_r0 / melt_r0 children land exactly on 17.000299454593 again (the floor is now
+  reached from many independent walks).  Pooled distinct sides < 17.0005: **melt 168**, jmelt 144, base 141, jrefill 133.
+  Best: base 17.0002999 vs jmelt / melt / jrefill each back to the floor.  Bandit: reward = sub-k (below 17) only, so
+  every kind sat at 0.0 and the final weights carry no signal (a near-floor / novelty reward is needed for the bandit to
+  learn anything at 274).  Predictions: some arm below the floor no (10 %); jrefill most new near-17 sides no (40 %;
+  last); jmelt best below base yes (35 %; but only by returning to the floor, which melt and jrefill also did);
+  274 below 17 no (1 %).  Reading: turning melt on (+19 % near-floor diversity vs base) is the one positive; junction
+  centring and refill add nothing as walk moves.  Family A floor stands; depth needs a new design, not more walking.
+* **SW157c, pre-registered (11:10).**  Same recipe, seed 1573, tag _sw3, 6 runs x 12 CPU-h total; 157 still moving
+  (13.011364 -> 13.009188 -> 13.008929).  Predictions: below 13.008929: 45 %; below 13.005: 8 %; below 13: 1 %.
