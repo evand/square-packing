@@ -297,3 +297,5 @@ import Sqpack
 -- R_3 exactly (Sqpack/Rect3): chain argument, Hahn-Banach separation, upright replacement
 #print axioms SquarePacking.rect3_lower
 #print axioms SquarePacking.rect3_iff
+-- R_4 lower bound (Sqpack/Rect4): chain + one-square reduction, Friedman's piece of S_3
+#print axioms SquarePacking.rect4_lower

@@ -225,6 +225,23 @@ theorem upright_repl (P Q u1 u2 : ℝ) (hP : 0 ≤ P) (hQ : 0 ≤ Q) (hPQ : P^2 
 
 /-! ## Shelves -/
 
+/-- **Separation in a strip.**  Two squares ordered by centre `x` in a strip of height `H < 2` are
+separated by a line whose normal points right (`u₁ > 0`). -/
+theorem separate_lr {ca cb : ℝ × ℝ} {θa θb L H : ℝ} (hA : sq ca θa 1 ⊆ rbox L H)
+    (hB : sq cb θb 1 ⊆ rbox L H) (hd : Disjoint (sqInt ca θa 1) (sqInt cb θb 1))
+    (hx : ca.1 ≤ cb.1) (hH : H < 2) :
+    ∃ u1 u2 s : ℝ, 0 < u1 ∧ (∀ p ∈ sq ca θa 1, u1 * p.1 + u2 * p.2 ≤ s) ∧
+      (∀ p ∈ sq cb θb 1, s ≤ u1 * p.1 + u2 * p.2) := by
+  obtain ⟨u1, u2, s, hu, hsa, hsb⟩ := separate hd
+  obtain ⟨P, Q, hP, hQ, hPQ, -, -, a3, a4, hpa⟩ := framed hA
+  obtain ⟨P', Q', hP', hQ', hPQ', -, -, b3, b4, hpb⟩ := framed hB
+  obtain ⟨la1, la2⟩ := abs_le_supp P Q u1 u2 hPQ
+  obtain ⟨lb1, lb2⟩ := abs_le_supp P' Q' u1 u2 hPQ'
+  have hk : 1 ≤ P + Q := by nlinarith
+  have hk' : 1 ≤ P' + Q' := by nlinarith
+  exact ⟨u1, u2, s, u1_pos hu hx (by rw [abs_lt]; constructor <;> linarith) (support_le hpa hsa)
+    (support_ge hpb hsb) la1 la2 lb1 lb2, hsa, hsb⟩
+
 /-- **Left shelf.**  If `a` is left of `b` (by centre) in a strip of height `H < 2`, some height band
 `[lo, lo + 1] ⊆ [0, H]` has every point of `b` at those heights at `x ≥ 1`: the upright square
 `[0,1] × [lo, lo + 1]` lies on `a`'s side of the separating line. -/
@@ -232,16 +249,10 @@ theorem left_shelf {ca cb : ℝ × ℝ} {θa θb L H : ℝ} (hA : sq ca θa 1 �
     (hB : sq cb θb 1 ⊆ rbox L H) (hd : Disjoint (sqInt ca θa 1) (sqInt cb θb 1))
     (hx : ca.1 ≤ cb.1) (hH : H < 2) :
     ∃ lo, 0 ≤ lo ∧ lo ≤ H - 1 ∧ ∀ p ∈ sq cb θb 1, lo ≤ p.2 → p.2 ≤ lo + 1 → 1 ≤ p.1 := by
-  obtain ⟨u1, u2, s, hu, hsa, hsb⟩ := separate hd
+  obtain ⟨u1, u2, s, hu1, hsa, hsb⟩ := separate_lr hA hB hd hx hH
   obtain ⟨P, Q, hP, hQ, hPQ, a1, -, a3, a4, hpa⟩ := framed hA
-  obtain ⟨P', Q', hP', hQ', hPQ', -, -, b3, b4, hpb⟩ := framed hB
   have sa := support_le hpa hsa
-  have sb := support_ge hpb hsb
-  obtain ⟨la1, la2⟩ := abs_le_supp P Q u1 u2 hPQ
-  obtain ⟨lb1, lb2⟩ := abs_le_supp P' Q' u1 u2 hPQ'
   have hk : 1 ≤ P + Q := by nlinarith
-  have hk' : 1 ≤ P' + Q' := by nlinarith
-  have hu1 : 0 < u1 := u1_pos hu hx (by rw [abs_lt]; constructor <;> linarith) sa sb la1 la2 lb1 lb2
   have rep := upright_repl P Q u1 u2 hP hQ hPQ hu1.le
   have hxa : u1 * ((P + Q) / 2) ≤ u1 * ca.1 := mul_le_mul_of_nonneg_left a1 hu1.le
   rcases le_or_gt 0 u2 with hu2 | hu2
@@ -286,6 +297,44 @@ lemma disj_mir {ca cb : ℝ × ℝ} {θa θb : ℝ} (L : ℝ) (hd : Disjoint (sq
   intro p h1 h2
   rw [← mir_mir L p, mem_sqInt_mir] at h1 h2
   exact Set.disjoint_left.1 hd h1 h2
+
+/-- The mirror `y ↦ H - y`. -/
+def vmir (H : ℝ) (p : ℝ × ℝ) : ℝ × ℝ := (p.1, H - p.2)
+
+lemma vmir_vmir (H : ℝ) (p : ℝ × ℝ) : vmir H (vmir H p) = p := by simp [vmir]
+
+lemma mem_sq_vmir (H : ℝ) (c p : ℝ × ℝ) (θ : ℝ) :
+    vmir H p ∈ sq (vmir H c) (-θ) 1 ↔ p ∈ sq c θ 1 := by
+  have e : coord (vmir H c) (-θ) (vmir H p) = ((coord c θ p).1, -(coord c θ p).2) := by
+    simp only [coord, vmir, Real.cos_neg, Real.sin_neg]; ext <;> simp only <;> ring
+  simp only [sq, Set.mem_ofPred_eq, e, abs_neg]
+
+lemma sq_vmir_subset {c : ℝ × ℝ} {θ L H : ℝ} (h : sq c θ 1 ⊆ rbox L H) :
+    sq (vmir H c) (-θ) 1 ⊆ rbox L H := by
+  intro p hp
+  rw [← vmir_vmir H p, mem_sq_vmir] at hp
+  have := h hp
+  simp only [rbox, vmir, Set.mem_ofPred_eq] at this ⊢
+  exact ⟨this.1, this.2.1, by linarith, by linarith⟩
+
+/-- The half turn `p ↦ (L, H) - p` about the rectangle's centre. -/
+def rot (L H : ℝ) (p : ℝ × ℝ) : ℝ × ℝ := (L - p.1, H - p.2)
+
+lemma rot_rot (L H : ℝ) (p : ℝ × ℝ) : rot L H (rot L H p) = p := by simp [rot]
+
+lemma mem_sq_rot (L H : ℝ) (c p : ℝ × ℝ) (θ : ℝ) :
+    rot L H p ∈ sq (rot L H c) θ 1 ↔ p ∈ sq c θ 1 := by
+  have e : coord (rot L H c) θ (rot L H p) = (-(coord c θ p).1, -(coord c θ p).2) := by
+    simp only [coord, rot]; ext <;> simp only <;> ring
+  simp only [sq, Set.mem_ofPred_eq, e, abs_neg]
+
+lemma sq_rot_subset {c : ℝ × ℝ} {θ L H : ℝ} (h : sq c θ 1 ⊆ rbox L H) :
+    sq (rot L H c) θ 1 ⊆ rbox L H := by
+  intro p hp
+  rw [← rot_rot L H p, mem_sq_rot] at hp
+  have := h hp
+  simp only [rbox, rot, Set.mem_ofPred_eq] at this ⊢
+  exact ⟨by linarith, by linarith, by linarith, by linarith⟩
 
 /-- **Right shelf**, the left shelf of the mirror image: points of `b` at the band's heights have
 `x ≤ L - 1`. -/

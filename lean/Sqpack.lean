@@ -4,6 +4,8 @@ import Sqpack.ChordLine
 import Sqpack.Rect
 import Sqpack.RectChain
 import Sqpack.Rect3
+import Sqpack.Rect4Core
+import Sqpack.Rect4
 import Sqpack.ZeroMargin
 import Sqpack.D4
 import Sqpack.StripRect
