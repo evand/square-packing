@@ -18,6 +18,7 @@ Identity:
   side_key(s)   f64 side to 1e-9 (the old basin-table key): a lookup cache for screened sides, NOT a minimum.
                 One minimum spans many side keys (unconverged copies sit up to ~1e-3 above it) and two minima can
                 share one (10-11 audit: 4 cases at n = 110).
+  copy table    NOT identity: 'via descend' rows map a side key to the minimum it descends to (10-20 trap).
   SAME_SIDE     f64 tolerance for "same screened side" (archive dedupe, novelty, chain library): 2e-9.
 """
 from __future__ import annotations

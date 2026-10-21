@@ -4761,3 +4761,5 @@ SW's 13, 110 (as SW), 308 and 146 (D308 / D308b / R308 and D146 / HB2 today): 42
   representative; an archive file backed by a merged row (runs/hborder/n274d/x9_cont/b00000.txt) reads back from the
   representative with a note in restored_from_dedup.txt.  Do not rerun --apply (any n) without discussing the rule
   with Evan again.
+* **Wrap-up (10-20 evening).**  SW2's dgen runs at 270-273 imported (16 runs, 10,034 new rows; not deduped).  Handoff:
+  `HANDOFF-2026-10-20b.md`.
