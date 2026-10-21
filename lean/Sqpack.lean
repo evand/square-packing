@@ -1,6 +1,7 @@
 import Sqpack.Basic
 import Sqpack.Chord
 import Sqpack.ChordLine
+import Sqpack.Rect
 import Sqpack.ZeroMargin
 import Sqpack.D4
 import Sqpack.StripRect

@@ -291,3 +291,5 @@ import Sqpack
 #print axioms UnitSquarePacking.Ryu.packs_stair
 #print axioms UnitSquarePacking.Ryu.packs_stair_k25
 #print axioms UnitSquarePacking.Ryu.packs_ryu_thm12
+-- unit squares in rectangles (Sqpack/Rect): R_2 exactly
+#print axioms SquarePacking.rect2_iff
