@@ -43,19 +43,15 @@ h is the explorer's existing parent value model (Poisson rate with saturation te
 2.81x [2.22, 3.45] over G) lifted from within-run to the store: label = records in p's lineage subtree, exposure = CPU
 spent in that subtree (a hazard per CPU, so recent packings are censored correctly: little CPU, little evidence).
 
-V_n (decided, Evan 10-20): **V = 1 for a record at n ≤ 324, 1/3 at n > 324** ("we'll see what we get").  What the
-ratio does: TS compares rate × V, so V only moves compute between arms whose output lands in different n classes;
-an n > 324 record must come 3x cheaper to draw compute away from n ≤ 324.
+V_n is the one true input (a preference; Evan 10-20, as guidance: 1 for a record at n ≤ 324, 1/3 at n > 324, a 274
+record the campaign's focus).  It is not a rule either: report how the allocation changes over a range of V (§9) and
+only ask when the decision is sensitive to it.  V moves compute only between arms whose outputs land in different n
+classes (TS compares Σ_n λ_{a,n} V_n).
 
-**Campaign scope (274, Evan 10-20): only arms that can produce a 274 outcome are launched**, but many generators fix
-an input and produce whatever n results (deletion / insertion, L-cut, refill, compose).  So an arm's value is over its
-output distribution:
-
-    value rate(a) = Σ_n λ_{a,n} V_n,     eligible iff P_a(output at 274, or a 274 pool packing) > 0
-
-and a record at any n counts at its V_n.  λ_{a,n} pools across n through the hierarchy (an arm's rate at 273 informs
-its rate at 274).  The campaign's own target enters through h: pool packings at 272-276 that are stepping stones to 274
-carry potential at 274 through cross-n lineage.
+Scope is derived, not stated.  Many generators fix an input and produce whatever n results, so an arm's value is over
+its output distribution, value rate(a) = Σ_n λ_{a,n} V_n + its potential gain (incl. stepping stones toward 274 via
+cross-n lineage).  "Only arms that can produce a 274 outcome" is then a consequence: an arm with no 274 output and no
+274 potential scores low on a 274-weighted V, not zero; nothing is excluded by fiat.
 
 ## 3. Posterior per arm
 
@@ -140,6 +136,25 @@ To treat α as a math problem rather than a setting:
 4. π_{α,τ} in pk/parents + explore.py with per-pick propensity logging; the (α, τ) mixture.
 5. Posterior + TS scheduler (feeds the queue); reports (allocation, posterior per arm, OPE of α).
 
-The near-miss finisher is an arm like any other (Evan 10-20: probably high value, small sample, hard to test, so it runs
-mostly on its prior; the hierarchical prior is exactly that, and its posterior moves as items finish).  candidate.py is
-a checker, not an arm.  Still open: horizon H, the quantum.
+Every arm is an arm: the finisher (few samples: its posterior stays near its prior, which is the honest state),
+arms with bad history (CS274: 1,662 rows at 274, all grid, is a likelihood, not a verdict), arms never run at 274.
+candidate.py is a checker, not an arm.  Pre-registered predictions stay: they are elicited priors, and scoring them
+(Brier / log score over PACKER's history) calibrates how much weight elicited priors get (§9).
+
+## 9. What the framing resolves, and what is left open
+
+Resolved by the math (no judgment call): arm inclusion / retirement (posterior shares); thresholds like SW2's
+"1 / 40 vs 1 / 100" (replaced by the posterior); the default α (a prior over the α grid, then learned); horizon H
+(the empirical lineage delay distribution, records vs generations / CPU since the ancestor); the quantum (setup cost vs
+adaptivity; per-arm, from measured overhead); pipeline credit (potential Φ).
+
+Left open, by kind:
+1. Utility V_n: a preference.  Handled by sensitivity analysis; asked only where allocation flips.
+2. Model specification (hierarchy groupings, h's features, depletion form, stationarity): assumptions, but testable:
+   chosen by held-out predictive score (§7), not taste.
+3. Priors where data cannot speak (new arms, the finisher): from the family level, and from the calibration of past
+   elicited predictions.
+4. Building new arms (junction refill, bulbgen at 274, ...): a VOI question in developer time, not CPU; the same
+   prior-from-family gives an expected value per arm, but the cost side (our time) is outside the CPU bandit.
+5. CPU outside the campaign (other projects, census, exact forms): the same machinery if their outputs get a V; until
+   then a fixed split.
