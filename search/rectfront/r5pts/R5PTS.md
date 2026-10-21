@@ -287,3 +287,37 @@ E₂ = c(c − s)/2 − (√2 − 1.1)c + s/2.  **Lean: both compile** (`nlinari
 Checks (`checkproofs2.py`, 2·10⁶ samples each, 0 violations): `In_side2` conclusion on its full hypothesis set, its
 key and majorant inequalities, its B < 0 bound; `In_far` conclusion, its key bound and factor form; row lemma
 (δ = 0.39) and its polynomial; E₁, E₂; and the three cells on the line (1.75·10⁶ / 1.8·10⁵ / 6.3·10⁴ samples).
+
+## 11. Point covers for the strip part (short side H < 2) [measured] (`strip_lp.py`, `strip_cand.py`, `strip_dual.py`, `strip_flex*.py`)
+
+Box [0, L] × [0, H] on the curve L_b(H) = 5 (H ≤ h₀ = (6√2 − 1)/4 ≈ 1.8713), 4 + 6√2 − 4H (h₀ ≤ H < 2); closed squares.
+(Note: `ptcover.min_capture_angle` now returns ∞ for an empty centre box, e.g. H = 1 exactly.)
+
+**H ≤ 2√2 − 1 ≈ 1.8284: a 4-point cover, and it is already provable.**  Points (1, H/2), (2, H/2), (3, H/2), (4, H/2),
+weight 1, total 4 (in a 5 × H box).  min capture = 1 at H ∈ {1.02, 1.1, …, 1.82, 1.828, 2√2 − 1} (3600 angles,
+`runs/rectfront/r5pts/strip_mid4_3600.txt`); fails (0) at H = 1.83: a ≈ 42° square at (1.485, 1.124) slips between two
+midline points.  The threshold is exactly DS7's side-strip condition with gap X = 1 and point distance y₀ = H/2 from the
+floor: X/2 + y₀ ≤ √2 ⇔ H ≤ 2√2 − 1.  Proof (fold y ≤ H/2 by the vertical mirror, x by the horizontal one):
+* centre x ∈ [k, 1]: `In_corner` with (1, H/2) (|1 − x| ≤ 1 − k, 0 ≤ H/2 − y ≤ H/2 − k ≤ 1 − k);
+* x ∈ [i, i + 1], i = 1, 2 (3 by mirror): `In_side2` with A = i + 1 − x, A′ = x − i, X = 1, y₀ = H/2, B = H/2 − y ≥ 0
+  (no frame swap); hypotheses X ≤ 1, y₀ ≤ 1, X/2 + y₀ ≤ √2, B ≤ y₀ − k.
+Both lemmas are in `Rect5Pts.lean` / `Rect5Line.lean`.  Scaling: a packing at (L, H) with L < 5, H < 2√2 − 1 also fits
+at (L′, H) for L′ ∈ (max(L, 5H/(2√2 − 1)), 5); scale by 5/L′ > 1 onto (5, H′), H′ < 2√2 − 1, where the cover gives 5 ≤ 4.
+
+**2√2 − 1 < H < h₀ (flat piece): covers exist but get expensive.**  LP optima (sampled poses, restricted atoms; converged
+to min capture 1 at 900 angles): H = 1.84: 4.75, 1.85: 4.833, 1.86: 4.8, 1.865: 4.8, **1.87: 5.0**
+(`runs/rectfront/r5pts/strip_lp_scan2.txt`).  Weights 1/16 … 3/8 on points near the midline and the row y = H − 1, at
+x ≈ 1, 1.1–1.8, 2, 2.3 (plus mirrors): no clean structure; the cost rises to 5 at or just below h₀.
+
+**h₀ ≤ H < 2 (zigzag piece): no cover below 5 found.**  LP = 5.000 at H = 1.8713, 1.9, 1.95, 1.99
+(`strip_lp_scan.txt`), and still 5.000 at H = 1.9 with atoms added on the zigzag's contact lines (x + y = 2 through
+the a–b contact (1, 1), and the b–c edge line through its midline point x* = 2 + 2√2 − 1.5H, `CONTACT=1`).
+Not a proof of impossibility: the LP duals tried (`strip_dual.py`) are fractional packings only relative to the
+atom set (true depth 1.5, so they certify only ≥ 3.33), and a column-generation run (`strip_dual.py cg`) ran out of
+memory (min_capture with hundreds of weighted atoms) and was stopped.  Rigidity of the zigzag (`strip_flex2.py`):
+re-optimised perturbed zigzags return to the zigzag (one success at ε = 0.05; SLSQP on the non-smooth SAT gap is
+unreliable), so no continuum of boundary packings was seen.
+* Upshot: points settle H ≤ 2√2 − 1 cheaply (the L ≥ 5 part below 1.8284); the strip from 2√2 − 1 to 2 (the end of
+  the flat piece and all of the zigzag piece) needs the chain argument (`Final5`, LESSONS §5) or a new idea; the
+  chain only has to handle H ∈ [2√2 − 1, 2), which may simplify `Final5` (the row-bound-5 cases with lines turning
+  vertical are exactly the small-H regime).

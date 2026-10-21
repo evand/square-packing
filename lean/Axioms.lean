@@ -309,3 +309,4 @@ import Sqpack
 -- R_5 with both sides >= 2 exactly (Sqpack/Rect5Line): cover C (10 points, weights 2/3, 1/3) + scaling onto the line
 #print axioms SquarePacking.rect5_wide_lower
 #print axioms SquarePacking.rect5_wide_iff
+#print axioms SquarePacking.rect5_low

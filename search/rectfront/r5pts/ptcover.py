@@ -47,6 +47,7 @@ def min_capture_angle(P, w, a, b, th):
     off = EPS * np.stack([np.cos(ang), np.sin(ang)], 1)
     M = (V[:, None, :] + off[None, :, :]).reshape(-1, 2)
     M = M[(M[:, 0] >= k) & (M[:, 0] <= a - k) & (M[:, 1] >= k) & (M[:, 1] <= b - k)]
+    if len(M) == 0: return np.inf, None
     cv = caps(P, w, M, th)
     t = np.argmin(cv)
     return cv[t], (M[t, 0], M[t, 1], th)
