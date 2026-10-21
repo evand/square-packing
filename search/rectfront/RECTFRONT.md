@@ -9,7 +9,7 @@ dx 0.6..2.2 step 0.02, 150 + 150).  Lean: `lean/Sqpack/Rect.lean`.  Labels: [pro
 * **R_2** [proved, `rect2`]: two unit squares need max(w, h) >= 2.  Proof: with w, h < 2 every unit square
   contains the rectangle's centre in its interior (`centre_mem_sqInt`; `|dx|, |dy| < 1 - k`, `k = (|C|+|S|)/2`,
   and `2k(1 - k) <= 1/2`).
-* **R_3 has a tilted piece** [measured]: two uprights in the bottom corners, a 45 deg square in the gap touching
+* **R_3 has a tilted piece** [measured; known: it is the piece x + 2y = 4 + 2√2 of Friedman's Math Magic, June 2010 (erich-friedman.github.io/mathmagic/0610.html; boundary of S_2, no individual attribution; the problem's solvers were Maurizio Morandi, Evert Stenlund, David W. Cantrell and Hiroaki Hosono), which we missed until 10-21]: two uprights in the bottom corners, a 45 deg square in the gap touching
   their inner top corners and the top wall: `h = 2 + sqrt2 - w/2`, below the grid for `2 sqrt2 < w < 3`
   (e.g. 2.942809 x 1.942809, = (2 + 2sqrt2/3) x (1 + 2sqrt2/3)).  Every sub-grid optimum the search found matches
   this formula to 1e-12; nothing else beat the grid.  Conjecture (w >= h): `h_3(w) = 2` on [2, 2sqrt2],
@@ -28,9 +28,10 @@ gives less; n = 8 long thin cells worse than the trivial row).  Below-grid hits 
 "no hit" means little.  A continuation along the frontier (seed dx + 0.02 from dx's best) would fix most of it.
 
 ## Literature (scan `literature/rectangles-small-n-2026-10-20.md`)
-No paper characterises R_n for n >= 2.  Yang (arXiv 2608.13595, G_3) settles R_3 by rescaling except 1.5 <= w < 2,
-max(w, 3 - w/2) <= h < 3 (w short); the scan's "natural conjecture" (that region infeasible) is refuted by our 45 deg
-family, which lies inside it.  R_4: Stenlund 2010 (Friedman's Squares in Dominoes) has 4 in 1.930 x 3.861, the
+No paper proves R_n for n >= 2.  The boundaries (constructions) for n <= 10 are in Friedman's Math Magic, June 2010
+(boundary of S_{n-1}; R_3's, with the 45 deg piece, is S_2's); the scan missed this (corrected 10-21).  Yang (arXiv
+2608.13595, G_3) settles R_3 by rescaling except 1.5 <= w < 2, max(w, 3 - w/2) <= h < 3 (w short); the scan's "natural
+conjecture" (that region infeasible) is refuted by Friedman's 45 deg piece, which lies inside it.  R_4: Stenlund 2010 (Friedman's Squares in Dominoes) has 4 in 1.930 x 3.861, the
 same shape as our tilted-pair family.  No rectangle result in any proof assistant.
 
 ## R_3 lower bound: method and status (10-20/21)

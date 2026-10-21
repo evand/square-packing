@@ -23,7 +23,9 @@ so MO 396776 is known only through Yang's summary.
   (attributed there to Erdős) works verbatim in an A × B rectangle.  It gives **R_2 = {min(a, b) ≥ 1, max(a, b) ≥ 2}**,
   and more generally s₁ + s₂ ≤ max(A, B) for two squares of sides s₁, s₂ (§1.1).
 * **n = 3 is partly determined, by Yang's G₃ [read] plus scaling [I].**  Every w × h box with w ≤ h is settled
-  except the region 1.5 ≤ w < 2, max(w, 3 − w/2) ≤ h < 3 (§1.2).  The conjecture R_3 = {min ≥ 2} ∪ {max ≥ 3} is false (correction in §1.2).
+  except the region 1.5 ≤ w < 2, max(w, 3 − w/2) ≤ h < 3 (§1.2).  The conjecture R_3 = {min ≥ 2} ∪ {max ≥ 3} is false (correction in §1.2): the true boundary, with a 45° piece,
+  is already tabulated (constructions) in Friedman's Math Magic, June 2010 (§2 correction, 10-21).  Proved in Lean on 10-21
+  (`rect3_iff`).
 * **From n = 4 on, the frontier is not just the axis grid.**  Friedman's "Squares in Dominoes" page lists 4 unit
   squares in 1.930+ × 3.861+ (Stenlund, 2010) [read: listing only; packing not checked here].  So "width < 2 forces
   height ≥ n" is false at n = 4.  Similar tilted entries: n = 9, 11, 12, 13 at widths 2.47–2.98.
@@ -85,7 +87,8 @@ Trivial facts [I]:
     R_3 = {min ≥ 2} ∪ {max ≥ 3}.  Yang's Remark 8 [read] says H ≥ 2 is used only in Step 1 (pairwise sums > 1,
     automatic for equal sides > ½) and in Step 6.  For equal squares Step 6's inequality would need
     3 − h > C_α(w − 1), which is not automatic [I].  So the open region needs a new argument.  It is a cheap target
-    for our point/segment certificate machinery. **Correction (main session, 10-20): this conjecture is false.**  Two uprights at the ends of the long side and a 45° square in the gap between them, touching their inner corners and the far wall, fit three squares in w × h with w + h/2 = 2 + √2 (w short side, 2√2 ≤ h < 3), e.g. (1 + 2√2/3) × (2 + 2√2/3) ≈ 1.9428 × 2.9428, inside the open region (exact by hand: the diamond's L1 ball touches the corners (1,1), (1+g,1) and the wall; `search/rectfront/RECTFRONT.md`).  Conjectured boundary there: w ≥ 2 + √2 − h/2.
+    for our point/segment certificate machinery. **Correction (main session, 10-20): this conjecture is false.**  (The counterexample family below is the piece
+x + 2y = 4 + 2√2 of S_2 in Friedman's Math Magic, June 2010; we re-found it without knowing that.  Credit: Friedman's page.)  Two uprights at the ends of the long side and a 45° square in the gap between them, touching their inner corners and the far wall, fit three squares in w × h with w + h/2 = 2 + √2 (w short side, 2√2 ≤ h < 3), e.g. (1 + 2√2/3) × (2 + 2√2/3) ≈ 1.9428 × 2.9428, inside the open region (exact by hand: the diamond's L1 ball touches the corners (1,1), (1+g,1) and the wall; `search/rectfront/RECTFRONT.md`).  Conjectured boundary there: w ≥ 2 + √2 − h/2.
 * Not found: any paper on three *equal* squares in a rectangle.
 
 ### 1.3 n ≥ 4
@@ -214,8 +217,8 @@ Trivial facts [I]:
 
 ## 7. Open, as far as this scan can tell
 
-1. R_3 on 1.5 ≤ w < 2, max(w, 3 − w/2) ≤ h < 3: NOT infeasible (the 45° family, §1.2 correction); conjectured
-   boundary w + h/2 = 2 + √2 for 2√2 ≤ h < 3.
+1. R_3 on 1.5 ≤ w < 2, max(w, 3 − w/2) ≤ h < 3: NOT infeasible (the 45° piece of Friedman's Math Magic, June 2010,
+   §1.2 correction); boundary w + h/2 = 2 + √2 for 2√2 ≤ h < 3.  **Closed 10-21**: proved in Lean (`rect3_iff`).
 2. R_4 and beyond: no lower bound below integer boxes.  Even H_4(w) for w ∈ [1.93, 2) is unknown.  Is Stenlund's
    1.930 optimal for the 1:2 aspect ratio?
 3. Domino n = 5 (s = 2?), n = 10 (s = 5/2?).
