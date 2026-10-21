@@ -99,3 +99,27 @@ in Lean its contrapositive with an explicit common interior point.
   (u-(sqrt2-1))^2 ((1+2sqrt2)u^2 - 2(1+sqrt2)u - 1) over 4u(u^2-1).
 
 Remaining for a complete proof: (iii) the separating-axis step for two squares, plus a clean write-up.
+
+## 2026-10-21: R_3 exactly, in Lean (`lean/Sqpack/Rect3.lean`)
+
+`rect3_iff`: three unit squares (any angles) fit in [0,w] × [0,h] iff 1 ≤ w, 1 ≤ h and
+(2 ≤ w ∧ 2 ≤ h) ∨ 3 ≤ w ∨ 3 ≤ h ∨ (h < 2 ∧ w + 2h ≥ 4 + 2√2) ∨ (w < 2 ∧ h + 2w ≥ 4 + 2√2).
+Standard axioms only; 706 lines; compiles in ~16 s.  No interval search, LP, or separating-axis enumeration.
+
+Proof (`rect3_lower`: strip height H < 2 gives L ≥ 3 or L + 2H ≥ 4 + 2√2):
+1. Sort the squares by centre x: a, b, c (`rect3_lower`, 6 orderings).
+2. `separate`: Mathlib's `geometric_hahn_banach_open_open` on the open squares, extended to the closed squares
+   along segments to the centre (`lim_le`); `support_le/ge` turn it into u·c ± (|u·e| + |u·e⊥|)/2 vs s.
+   `u1_pos`: the normal points right, since the vertical centre offset is < H − 1 < 1.
+3. Shelves (`left_shelf`, `right_shelf`): the upright square [0,1] × [lo, lo+1], lo = y_a − k_a or y_a + k_a − 1 by
+   the sign of u₂, lies on a's side of the line (`upright_repl`:
+   2(u₁+|u₂|) ≤ (|C|+|S|)(u₁+|u₂|) + |u₁C+u₂S| + |u₂C−u₁S|, polynomial after symmetry reduction to C, S, u₂ ≥ 0).
+   Hence every point of b at heights in [lo, lo+1] has x ≥ 1 (mirror: x ≤ L − 1).
+4. `middle`: in a frame (P, Q ≥ 0) of b, the witness on each side is the side vertex if the shelf band contains
+   its height, else the point on the adjacent edge at the band's bottom (edge above) or top (edge below).
+   This gives 3 × 3 real inequalities (`case_*`), seven closed by nlinarith; the two wedge cases (`case_UU`, `case_DD`)
+   go through `wedge_core`: CS(A+B) ≥ C³ + S³ − G, and p − 2√2 q ≥ G(1 − 2q) for G < 1 (p = C+S, q = CS).
+5. Constructions: row, L, wedge (`rect3_wedge` from Rect.lean), and `RectPacks.swap`.
+
+The step "neighbour may be taken upright" (found numerically on 10-21) is what makes this short: after it, b
+alone against two upright shelves carries the whole boundary.  Equality cases: all upright (L = 3) and the wedge.

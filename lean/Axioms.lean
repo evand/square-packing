@@ -294,3 +294,6 @@ import Sqpack
 -- unit squares in rectangles (Sqpack/Rect): R_2 exactly
 #print axioms SquarePacking.rect2_iff
 #print axioms SquarePacking.rect3_wedge
+-- R_3 exactly (Sqpack/Rect3): chain argument, Hahn-Banach separation, upright replacement
+#print axioms SquarePacking.rect3_lower
+#print axioms SquarePacking.rect3_iff

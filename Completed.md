@@ -2,6 +2,7 @@
 
 Moved from `TODO.md`; one line each, newest first.  Details in the linked `search/*.md` / `notes/*.md`.
 
+- 2026-10-21 **R₃ exactly, in Lean** (`lean/Sqpack/Rect3.lean`, `rect3_iff`, standard axioms, 706 lines): three unit squares fit in w × h iff sides ≥ 1 and (both ≥ 2, one ≥ 3, or ℓ + 2s ≥ 4 + 2√2 for short side s < 2).  Chain proof: Hahn–Banach separation, upright replacement (polynomial), shelves, 3 × 3 witness cases; replaces the interval tube search (`search/rectfront/RECTFRONT.md`).
 - 2026-10-20 **Sink + inclusive store policy** (PACKER "Sink + inclusive policy"): `pk/sink.py` / `pk.py sink`, `pk/policy.yaml` (keep every distinct feasible packing); backfill 708,525 new rows from 4,520 runs, 0 hits, 62 near misses queued.
 - 2026-10-20 `test_distinct::test_verdicts` fixed: fixture used the old contact format (`["C", i, j, "x"]` vs exactsolve's `["C", i, corner, j, side]`) and pre-10-19 verdict semantics (moves are descriptive; verdict = exact side + contact graph).  pk tests 33 / 33.
 - 2026-10-20 **Store hygiene, step 1** (PACKER "Store intake / pruning policy"): explorer archive files deduplicated against the store (1.81M files, -15 GB, lossless: byte-identical regeneration, read hooks, `archive-restore`); `pk/policy.py` + `pk.py prune --dry-run`; stale `test_finish_candidate_dry` fixed (missing `harden` runner); CLAUDE.md register rule -> `runs/jlevy`.
