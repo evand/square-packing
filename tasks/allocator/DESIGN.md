@@ -43,8 +43,13 @@ h is the explorer's existing parent value model (Poisson rate with saturation te
 2.81x [2.22, 3.45] over G) lifted from within-run to the store: label = records in p's lineage subtree, exposure = CPU
 spent in that subtree (a hazard per CPU, so recent packings are censored correctly: little CPU, little evidence).
 
-V_n (preferences, Evan's call): default 1 for any record at n ≤ 324; targets weighted up (274 sub-grid: W ≫ 1);
-n > 324 small.
+V_n (Evan 10-20): a record is the unit; n ≤ 324 counts more than n > 324.  Where the ratio matters: TS compares
+rate × V, so V only moves compute between arms aimed at different n classes.  Within n ≤ 324 (all V = 1) it changes
+nothing.  Between the classes, an n > 324 arm wins compute iff its record rate exceeds 1/ratio of the best n ≤ 324
+arm's.  Records beyond the corpus are probably several times cheaper (thin competition; 343 came out of a leftover
+pool), so ratio 2 vs 10 is the difference between "most compute leaves 324" and "it stays".  Start at 10 (or n > 324
+arms off, as now) and revisit with measured rates.  A 274-only campaign is the same machinery with V = 1 at 274 and
+other n valued only as stepping stones (through h's cross-n lineage).
 
 ## 3. Posterior per arm
 
@@ -129,5 +134,6 @@ To treat α as a math problem rather than a setting:
 4. π_{α,τ} in pk/parents + explore.py with per-pick propensity logging; the (α, τ) mixture.
 5. Posterior + TS scheduler (feeds the queue); reports (allocation, posterior per arm, OPE of α).
 
-Open for Evan: V_n weights (274 sub-grid W; n > 324); horizon H; the quantum; whether the finisher and candidate.py
-count as arms (proposal: yes for the finisher, no for candidate.py, which is a checker).
+The near-miss finisher is an arm like any other (Evan 10-20: probably high value, small sample, hard to test, so it runs
+mostly on its prior; the hierarchical prior is exactly that, and its posterior moves as items finish).  candidate.py is
+a checker, not an arm.  Still open: horizon H, the quantum.
