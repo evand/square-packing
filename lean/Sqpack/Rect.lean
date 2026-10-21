@@ -39,7 +39,7 @@ lemma pt_mem_sq (c : ℝ × ℝ) (θ u v : ℝ) (hu : |u| ≤ 1 / 2) (hv : |v| �
     rw [this, hCS, mul_one]; linarith
 
 /-- `|a|/2` as `±a/2` with the sign chosen by `a`. -/
-private lemma sgn_half (a : ℝ) : ∃ s : ℝ, |s| = 1 / 2 ∧ s * a = |a| / 2 := by
+lemma sgn_half (a : ℝ) : ∃ s : ℝ, |s| = 1 / 2 ∧ s * a = |a| / 2 := by
   rcases le_or_gt 0 a with h | h
   · exact ⟨1 / 2, by norm_num, by rw [abs_of_nonneg h]; ring⟩
   · exact ⟨-(1 / 2), by norm_num, by rw [abs_of_neg h]; ring⟩
@@ -166,6 +166,33 @@ theorem rect2_iff {w h : ℝ} : RectPacks 2 w h ↔ 1 ≤ w ∧ 1 ≤ h ∧ (2 �
         · rw [Set.disjoint_left]; intro p hp hq
           simp [sqInt, coord, abs_lt] at hp hq
           norm_num at hp hq; linarith
+
+/-! ## The swap `x ↔ y` -/
+
+lemma coord_swap (c p : ℝ × ℝ) (θ : ℝ) :
+    coord (c.2, c.1) (Real.pi / 2 - θ) p =
+      ((coord c θ (p.2, p.1)).1, -(coord c θ (p.2, p.1)).2) := by
+  simp only [coord, Real.cos_pi_div_two_sub, Real.sin_pi_div_two_sub]; ext <;> simp only <;> ring
+
+lemma mem_sq_swap (c p : ℝ × ℝ) (θ : ℝ) :
+    p ∈ sq (c.2, c.1) (Real.pi / 2 - θ) 1 ↔ (p.2, p.1) ∈ sq c θ 1 := by
+  simp only [sq, Set.mem_ofPred_eq, coord_swap, abs_neg]
+
+lemma mem_sqInt_swap (c p : ℝ × ℝ) (θ : ℝ) :
+    p ∈ sqInt (c.2, c.1) (Real.pi / 2 - θ) 1 ↔ (p.2, p.1) ∈ sqInt c θ 1 := by
+  simp only [sqInt, Set.mem_ofPred_eq, coord_swap, abs_neg]
+
+/-- Packings are symmetric in the two sides. -/
+theorem RectPacks.swap {n : ℕ} {w h : ℝ} (hp : RectPacks n w h) : RectPacks n h w := by
+  obtain ⟨ctr, ang, hin, hd⟩ := hp
+  refine ⟨fun i => ((ctr i).2, (ctr i).1), fun i => Real.pi / 2 - ang i, fun i p hp => ?_,
+    fun i j hij => ?_⟩
+  · have := hin i ((mem_sq_swap _ _ _).1 hp)
+    simp only [rbox, Set.mem_ofPred_eq] at this ⊢
+    exact ⟨this.2.2.1, this.2.2.2, this.1, this.2.1⟩
+  · rw [Set.disjoint_left]
+    intro p h1 h2
+    exact Set.disjoint_left.1 (hd i j hij) ((mem_sqInt_swap _ _ _).1 h1) ((mem_sqInt_swap _ _ _).1 h2)
 
 /-! ## Constructions -/
 

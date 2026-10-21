@@ -126,3 +126,14 @@ Proof (`rect3_lower`: strip height H < 2 gives L ≥ 3 or L + 2H ≥ 4 + 2√2):
 
 The step "neighbour may be taken upright" (found numerically on 10-21) is what makes this short: after it, b
 alone against two upright shelves carries the whole boundary.  Equality cases: all upright (L = 3) and the wedge.
+
+### 2026-10-21 (later): golf; reusable chain tools
+
+`Rect3.lean` 707 → 171 lines; the general steps now live in `lean/Sqpack/RectChain.lean` (369 lines) for n ≥ 4.
+* Everything after `framed` works in a frame `(P, Q)`, `P, Q ≥ 0` (a quarter turn of `(cos θ, sin θ)`), so the
+  sign reductions of `upright_repl` collapse to one vertical mirror (`u₂ < 0` swaps `P` and `Q`).
+* `right_shelf` is `left_shelf` of the mirror image `x ↦ L − x` (`mir`); the right witness is the left
+  `witness` with `(P, Q)` swapped (`witnesses`); `Wit` names the three alternatives.
+* The nine case lemmas are one `chain_bound`.  Seven cases give `L ≥ 3` outright (so `√2` is not needed
+  there); only UU and DD (b hanging from the ceiling / standing on the floor between both shelves) give the wedge bound.
+* Build: ~15 s wall, ~20 s CPU (was ~15 s wall, ~100 s CPU); standard axioms.
