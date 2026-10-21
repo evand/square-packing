@@ -5057,3 +5057,8 @@ grown pool (grid-locked now excluded): `dgen.py sweep --n 157 --band 0.0,0.012 -
   at a time... 8 runs on the free cores).  Metric: best 274; new side keys < 17.0005 (store-new); below 17.0002995.
   Predictions: some arm below 17.0002995: 10 %; jrefill arm the most new side keys: 40 %; jmelt arm best side below
   base's: 35 %; a 274 below 17: 1 %.
+* **SW157b result (09:13; 12.0 CPU-h measured).**  157 best 13.009188 -> 13.008929 (6,159 entries; imported 10:55).
+  Predictions: below 13.009188 yes (50 %); below 13.005 no (10 %); below 13 no (1 %).  Still moving (-2.6e-4), not floored.
+* **SW273 result (09:42; 12.0 CPU-h measured).**  Best 16.985085 (record 16.983926 not beaten); 11,704 entries, ~1,000
+  new distinct 273 side keys within 0.003 of the record (store 714 -> 1,715).  Predictions: below record no (10 %);
+  >= 50 new side keys within 0.003 yes (50 %).  A big new donor pool for 274 insertion / 308 L addition.
