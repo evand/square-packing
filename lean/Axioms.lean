@@ -299,3 +299,5 @@ import Sqpack
 #print axioms SquarePacking.rect3_iff
 -- R_4 lower bound (Sqpack/Rect4): chain + one-square reduction, Friedman's piece of S_3
 #print axioms SquarePacking.rect4_lower
+#print axioms SquarePacking.rect4_friedman
+#print axioms SquarePacking.rect4_iff

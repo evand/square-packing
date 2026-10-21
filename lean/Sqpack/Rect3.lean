@@ -110,10 +110,10 @@ theorem rect3_lower {L H : ℝ} (hp : RectPacks 3 L H) (hH : H < 2) :
 
 /-! ## Constructions and the exact region -/
 
-/-- Three upright squares from their centres, when the centres are pairwise `1` apart in some axis. -/
-lemma upright3 {w h : ℝ} (c : Fin 3 → ℝ × ℝ) (hin : ∀ i, sq (c i) 0 1 ⊆ rbox w h)
+/-- Upright squares from their centres, when the centres are pairwise `1` apart in some axis. -/
+lemma upright_pack {n : ℕ} {w h : ℝ} (c : Fin n → ℝ × ℝ) (hin : ∀ i, sq (c i) 0 1 ⊆ rbox w h)
     (hsep : ∀ i j, i ≠ j → 1 ≤ |(c i).1 - (c j).1| ∨ 1 ≤ |(c i).2 - (c j).2|) :
-    RectPacks 3 w h := by
+    RectPacks n w h := by
   refine ⟨c, fun _ => 0, hin, fun i j hij => ?_⟩
   rw [Set.disjoint_left]
   intro p hp hq
@@ -126,7 +126,7 @@ lemma upright3 {w h : ℝ} (c : Fin 3 → ℝ × ℝ) (hin : ∀ i, sq (c i) 0 1
 
 /-- Three in a row. -/
 theorem rect3_row {w h : ℝ} (hw : 3 ≤ w) (hh : 1 ≤ h) : RectPacks 3 w h := by
-  apply upright3 ![(1 / 2, 1 / 2), (3 / 2, 1 / 2), (5 / 2, 1 / 2)]
+  apply upright_pack ![(1 / 2, 1 / 2), (3 / 2, 1 / 2), (5 / 2, 1 / 2)]
   · intro i; fin_cases i <;> exact sq_zero_subset (by norm_num) (by simp; linarith)
       (by norm_num) (by simp; linarith)
   · intro i j hij; left
@@ -134,7 +134,7 @@ theorem rect3_row {w h : ℝ} (hw : 3 ≤ w) (hh : 1 ≤ h) : RectPacks 3 w h :=
 
 /-- An L of three. -/
 theorem rect3_ell {w h : ℝ} (hw : 2 ≤ w) (hh : 2 ≤ h) : RectPacks 3 w h := by
-  apply upright3 ![(1 / 2, 1 / 2), (3 / 2, 1 / 2), (1 / 2, 3 / 2)]
+  apply upright_pack ![(1 / 2, 1 / 2), (3 / 2, 1 / 2), (1 / 2, 3 / 2)]
   · intro i; fin_cases i <;> exact sq_zero_subset (by norm_num) (by simp; linarith)
       (by norm_num) (by simp; linarith)
   · intro i j hij

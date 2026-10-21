@@ -102,4 +102,19 @@ theorem core_D2 {P Q C S : ℝ} (hP : 0 ≤ P) (hQ : 0 ≤ Q) (hC : 0 ≤ C) (hS
   have := sub_nonneg.2 hvu; have := sub_nonneg.2 hu1; have := sub_nonneg.2 hv1
   positivity
 
+/-- For the construction: `g(C, S) = S/2 + C - S² - 2C² + k(S² - CS + 2C²) ≥ 0`, `k = (C + S)/2`
+(`= 2v(1 - v)(2v⁴ + v³ + v² - v + 1)/(1 + v²)³`). -/
+theorem core_g {C S : ℝ} (hC : 0 ≤ C) (hS : 0 ≤ S) (hCS : C ^ 2 + S ^ 2 = 1) :
+    0 ≤ S / 2 + C - S ^ 2 - 2 * C ^ 2 + (C + S) / 2 * (S ^ 2 - C * S + 2 * C ^ 2) := by
+  obtain ⟨v, hv0, hv1, rfl, rfl⟩ := half_angle hC hS hCS
+  have e : 2 * v / (1 + v ^ 2) / 2 + (1 - v ^ 2) / (1 + v ^ 2) - (2 * v / (1 + v ^ 2)) ^ 2 -
+      2 * ((1 - v ^ 2) / (1 + v ^ 2)) ^ 2 + ((1 - v ^ 2) / (1 + v ^ 2) + 2 * v / (1 + v ^ 2)) / 2 *
+        ((2 * v / (1 + v ^ 2)) ^ 2 - (1 - v ^ 2) / (1 + v ^ 2) * (2 * v / (1 + v ^ 2)) +
+          2 * ((1 - v ^ 2) / (1 + v ^ 2)) ^ 2) =
+      2 * v * (1 - v) * (2 * v ^ 4 + v ^ 3 + (v - 1 / 2) ^ 2 + 3 / 4) / (1 + v ^ 2) ^ 3 := by
+    field_simp; ring
+  rw [e]
+  have := sub_nonneg.2 hv1
+  positivity
+
 end SquarePacking

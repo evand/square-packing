@@ -2,6 +2,7 @@
 
 Moved from `TODO.md`; one line each, newest first.  Details in the linked `search/*.md` / `notes/*.md`.
 
+- 2026-10-21 **R₄ exactly, in Lean** (`lean/Sqpack/Rect4.lean` + `Rect4Core.lean`, `rect4_iff`, standard axioms, 592 lines): four unit squares fit in w × h iff sides ≥ 1 and (both ≥ 2, one ≥ 4, or ℓ ≥ L(t, s) for short side s < 2; Friedman's piece of S₃, mostly Morandi).  Proof: shelves on the middle pair, the b–c separating line (direction t), a one-square lemma (witness cases V/U/D; two-angle inequalities by half-angle factorisation), half turn for c.
 - 2026-10-21 Golfed R₃'s Lean proof: `Rect3.lean` 707 → 171 lines plus reusable `RectChain.lean` (frames, separation, upright replacement, shelves by mirror, witnesses); 7 of 9 final cases give L ≥ 3 outright.
 - 2026-10-21 **R₃ exactly, in Lean** (`lean/Sqpack/Rect3.lean`, `rect3_iff`, standard axioms, 706 lines): three unit squares fit in w × h iff sides ≥ 1 and (both ≥ 2, one ≥ 3, or ℓ + 2s ≥ 4 + 2√2 for short side s < 2; this boundary, wedge included, is Friedman's Math Magic, June 2010, given there by constructions).  Chain proof: Hahn–Banach separation, upright replacement (polynomial), shelves, 3 × 3 witness cases; replaces the interval tube search (`search/rectfront/RECTFRONT.md`).
 - 2026-10-20 **Sink + inclusive store policy** (PACKER "Sink + inclusive policy"): `pk/sink.py` / `pk.py sink`, `pk/policy.yaml` (keep every distinct feasible packing); backfill 708,525 new rows from 4,520 runs, 0 hits, 62 near misses queued.

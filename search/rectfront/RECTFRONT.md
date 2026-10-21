@@ -167,3 +167,22 @@ Scripts `search/rectfront/r4/`; outputs `runs/rectfront/r4*.txt`.
   Work: (1) the one-square lemma (witness cases V/U/D for b against its shelf, a polynomial inequality in
   b's frame, (C, S), y, lo, H); (2) the 180° rotation and vertical flip; (3) Friedman's construction for the
   converse (valid t range to check).
+
+## 2026-10-21: R_4 exactly, in Lean (`lean/Sqpack/Rect4.lean`, `Rect4Core.lean`)
+
+`rect4_iff`: four unit squares fit in [0,w] × [0,h] iff 1 ≤ w, 1 ≤ h and (both ≥ 2, or one ≥ 4, or for the short
+side s < 2: `Fried4 ℓ s`, i.e. some unit (C, S), C, S > 0, with S C ℓ ≥ 2C(S − C) + 2(1 + C + S − s) + C² s, which is
+ℓ ≥ L(t, s)).  Standard axioms; 592 lines (472 + 120); ~15 s.  Boundary credit: Friedman, Math Magic June 2010
+(piece of S₃, mostly Morandi), closed form also in wand125 k04.json.  New here: the proof.
+
+* Lower bound `rect4_lower` exactly as planned above: sort, left shelf on b, right shelf on c, `separate_lr` for
+  b, c (unit direction (C, S); vertical mirror when u₂ > 0), `one_square` on b and on the half-turned c, `combine4`.
+* `one_square` (support T of a square with a left shelf in direction (S, −C)): T ≥ 2S − C(H − 1) or
+  C T ≥ C(S − C) + 1 + C + S − H.  Cases: V → `upright_repl`; U → upright bound (σ ≤ 0: `upright_repl` + 2C(1 − Q);
+  σ > 0: worst at H → 2, residual (1 − Q)(CQ + S(1 − P))); D → P T ≥ P(S − C) + Pσ⁺ + γ(1 + P + Q − H), then
+  D1 (σ ≥ 0: weights CQ/(SP), 1 − CQ/(SP) on the two branches; H drops out) or D2 (σ ≤ 0: worst at H = 2).
+  D1, D2 factor in half angles (u, v): −4uv(u − v)R₁ and 2(1 − u)(u − v)(1 − v)R₂, R concave in u
+  (chord identities).  Certificates: `search/rectfront/r4/certs.py` (exact multipliers of the circle relations).
+* `rect4_friedman`: the configuration at any (C, S) with L(t, H) < 4 is a packing (grid check `construct.py`,
+  then proved: H ≥ 3/2 > C + S, x_b ≥ k, x_c − k ≥ 1 via `core_g` = 2v(1 − v)(2v⁴ + v³ + v² − v + 1)/(1+v²)³ ≥ 0;
+  pairs split by b's edge line, the common b–c edge line, and x = 1 / x = L − 1).
