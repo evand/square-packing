@@ -4798,3 +4798,17 @@ the sink backfill), distinct non-grid: 106 < 17.001, 197 in [17.001, 17.003), 4,
 * Predictions: a 274 below 17: 4 %; best below 17.000478: 30 %; >= 50 new distinct < 17.001: 50 %.
 * Rule: none needed for continuation (standing arm); the result is the first data point for the 274 posterior.
   A hit -> candidate.py, then Evan.
+
+## Junction waste, first look (10-20 ~22:45; Evan: "junctions between the two-bulb regions in 270-273 look unsophisticated ... more slack than is apparent" (a guess); "same is true for 308")
+Raster (h = 0.01) of the frontier packings; squares classed U (upright) / P / M (the two bulb orientations); empty
+space split into the junction zone (within 3.0 of both bands: the lower-left corner where the two bands end against
+an upright block), band-side boundaries (bands vs upright field, away from the zone and walls), walls, interiors.
+(`analysis/junction_waste.py` has the first, simpler split; the zone split ran inline, same raster.)
+* Empty fraction of the junction zone: 269-273 0.091-0.110, 307 0.088, 308 0.097, 240 / 241 0.097, 239 0.102.  Waste
+  per adjacent square: junction 0.10-0.14, band sides 0.09-0.11.  273: junction 1.92 of 15.45 total waste (zone 21 area,
+  19 squares), band sides 7.67, walls ~2.8, interiors ~1.2.
+* Reading: locally, 273's junction is no sloppier than its band sides, or than 308's (already sub-grid).  The cost of
+  the junction is its extent (how much tilted / upright interface it forces), not its local fill.  Scale: at s = 17,
+  1 unit of area = 0.029 in side; 274 needs a few 1e-3 of extra slack by the onset extrapolation (DESIGN §10), i.e.
+  ~0.1-0.2 area, 1-2 interface squares' worth.  So the guess needs only a small redesign gain, but this local measure
+  cannot see one; a test needs constructions (junction refill / redesigned corner), not more accounting.
