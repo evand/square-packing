@@ -4965,3 +4965,27 @@ Pre-registered.  Same recipe as SW274b on the grown pool (1,088 distinct minima 
   runs x 3 CPU-h (12 CPU-h; 4 cores free beside SW157 and the Lean job; same band / seed); predictions unchanged except
   ">= 100 new side keys" scaled to >= 50 at 60 %.
   (The first relaunch was queued as 8 runs and started before the edit; stopped after 1 min, kept as `n274_sw5_relaunch1`; SW274d proper started 03:57 with `jobs.py start`.)
+* **SW157 result (04:35; 16.0 CPU-h measured).**  14,602 entries, all new.  Best line-free 157 **13.009188** (was
+  13.011364; -2.2e-3), 40 line-free 157s < 13.0115 now.  Predictions: below 13.011364 yes (50 %); below 13.005 no
+  (10 %); below 13 no (1 %).  (Its pool included one grid-locked start at 13.00046: the dgen bug fixed at 04:00.)
+
+## LC274d: L-cut at 274 from 307 and 306 donors (10-21 ~04:50; a new upstream for the near-17 family)
+Pre-registered.  Basis: every near-17 274 descends from L-cuts of 308 (LC274b/c; the line moved with each better 308
+family); BAL274b's convergence on SW274c's best (17.0002995) says that lineage is near its floor under the explorer.
+307's record sits 0.019 below its grid (17.98086), 306's 0.037 (17.96343), vs 308's 0.003: more slack in the donor;
+d = 33 / 32 squares removed instead of 34.  Never tried.  Donors: farthest-point fingerprint samples, 30 each, over the
+best 300 distinct line-free 307s (17.98086-17.98130) and 306s (17.96343-17.96415): `runs/lc274d/donors{307,306}.txt`
+(`runs/lc274d/pick.py`).  Smoke (2 donors x 4 cuts each): 307 seeds 7 / 8 line-free, best 17.0265; 306 seeds 8 / 8
+grid-locked (d = 32 leaves a full row).
+* `lcut.py --n 274 --cuts 20 --reps 2 --random 0 --procs 8` per donor set, then explorer: the best distinct line-free
+  seeds, `bulbgen.py explore` (8 runs x 6 starts, 16 CPU-h, frontier-s = grid).
+* Metrics: seeds line-free / < 17.01; explorer best; new side keys < 17.001; whether outputs keep the donor's band
+  shape (band sizes) or fall into family A.
+* Predictions: a 307 seed < 17.01: 30 %; any 306 seed line-free: 40 %; explorer best < 17.003: 40 %; < 17.0003: 5 %;
+  < 17: 1.5 %.
+* **LC274d seeds (05:05; ~0.3 CPU-h).**  307: 1,200 seeds, 698 line-free, < 17.01 0, < 17.02 6, best 17.016916 (all 30
+  donors give a line-free seed < 17.03).  306: 133 / 1,200 line-free, best 17.018032 (11 donors).  Predictions: a 307
+  seed < 17.01 no (30 %); a 306 seed line-free yes (40 %).  Seeds sit ~0.01 above LC274c's (17.0013 best); LC274c's
+  best run started >= 17.0058 and moved 4.9e-3.  Explore sized to the 5 free cores: e307 = best distinct seed per
+  donor first (36 starts, 30 donors), 4 runs x 9, 10 CPU-h; e306 = 12 starts (12 donors), 1 run, 2.5 CPU-h.
+  Explorer predictions unchanged.
