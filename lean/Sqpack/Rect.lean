@@ -167,4 +167,81 @@ theorem rect2_iff {w h : ℝ} : RectPacks 2 w h ↔ 1 ≤ w ∧ 1 ≤ h ∧ (2 �
           simp [sqInt, coord, abs_lt] at hp hq
           norm_num at hp hq; linarith
 
+/-! ## Constructions -/
+
+/-- Converse of `half_extent`: a unit square whose centre keeps distance `(|cos θ| + |sin θ|)/2` from
+every wall lies in the rectangle. -/
+lemma sq_subset_rbox {c : ℝ × ℝ} {θ w h : ℝ}
+    (h1 : (|Real.cos θ| + |Real.sin θ|) / 2 ≤ c.1) (h2 : c.1 ≤ w - (|Real.cos θ| + |Real.sin θ|) / 2)
+    (h3 : (|Real.cos θ| + |Real.sin θ|) / 2 ≤ c.2) (h4 : c.2 ≤ h - (|Real.cos θ| + |Real.sin θ|) / 2) :
+    sq c θ 1 ⊆ rbox w h := by
+  intro p ⟨hu, hv⟩
+  set C := Real.cos θ; set S := Real.sin θ
+  have hCS : C ^ 2 + S ^ 2 = 1 := Real.cos_sq_add_sin_sq θ
+  set u := (coord c θ p).1; set v := (coord c θ p).2
+  have ex : p.1 - c.1 = u * C - v * S := by
+    simp only [u, v, coord]; linear_combination -(p.1 - c.1) * hCS
+  have ey : p.2 - c.2 = u * S + v * C := by
+    simp only [u, v, coord]; linear_combination -(p.2 - c.2) * hCS
+  have bx : |p.1 - c.1| ≤ (|C| + |S|) / 2 := by
+    rw [ex]
+    calc |u * C - v * S| ≤ |u| * |C| + |v| * |S| := by
+          rw [← abs_mul, ← abs_mul]; exact abs_sub _ _
+      _ ≤ 1 / 2 * |C| + 1 / 2 * |S| := by
+          gcongr
+      _ = (|C| + |S|) / 2 := by ring
+  have by' : |p.2 - c.2| ≤ (|C| + |S|) / 2 := by
+    rw [ey]
+    calc |u * S + v * C| ≤ |u| * |S| + |v| * |C| := by
+          rw [← abs_mul, ← abs_mul]; exact abs_add_le _ _
+      _ ≤ 1 / 2 * |S| + 1 / 2 * |C| := by
+          gcongr
+      _ = (|C| + |S|) / 2 := by ring
+  rw [abs_le] at bx by'
+  simp only [rbox, Set.mem_ofPred_eq]
+  refine ⟨?_, ?_, ?_, ?_⟩ <;> linarith [bx.1, bx.2, by'.1, by'.2]
+
+/-- **The wedge.**  Two upright squares in the bottom corners of `[0,L] × [0,S]` and a `45°` square
+between them touching the top wall: three unit squares fit whenever `2 ≤ L ≤ 3` and
+`S ≥ 2 + √2 - L/2` (the tilted piece of `R₃`'s boundary, for `2√2 ≤ L ≤ 3`). -/
+theorem rect3_wedge {L S : ℝ} (hL : 2 ≤ L) (hL3 : L ≤ 3) (hS : 2 + Real.sqrt 2 - L / 2 ≤ S) :
+    RectPacks 3 L S := by
+  have r2 : Real.sqrt 2 ^ 2 = 2 := Real.sq_sqrt (by norm_num)
+  have r2p : 0 < Real.sqrt 2 := by positivity
+  have r2l : Real.sqrt 2 < 3 / 2 := by nlinarith
+  have r2g : 1 < Real.sqrt 2 := by nlinarith
+  have a2 : |Real.sqrt 2 / 2| = Real.sqrt 2 / 2 := abs_of_pos (by positivity)
+  have hc : Real.cos (Real.pi / 4) = Real.sqrt 2 / 2 := Real.cos_pi_div_four
+  have hs : Real.sin (Real.pi / 4) = Real.sqrt 2 / 2 := Real.sin_pi_div_four
+  have k45 : (|Real.cos (Real.pi / 4)| + |Real.sin (Real.pi / 4)|) / 2 = Real.sqrt 2 / 2 := by
+    rw [hc, hs, abs_of_pos (by positivity)]; ring
+  refine ⟨![(1 / 2, 1 / 2), (L - 1 / 2, 1 / 2), (L / 2, S - Real.sqrt 2 / 2)], ![0, 0, Real.pi / 4],
+    ?_, ?_⟩
+  · intro i
+    fin_cases i
+    · exact sq_zero_subset (by norm_num) (by simp; linarith) (by norm_num) (by simp; linarith)
+    · exact sq_zero_subset (by simp; linarith) (by simp) (by norm_num) (by simp; linarith)
+    · apply sq_subset_rbox <;> simp [hc, hs, a2] <;> nlinarith
+  · -- interiors, as inequalities
+    have i0 : ∀ p, p ∈ sqInt ((2⁻¹, 2⁻¹) : ℝ × ℝ) 0 1 → p.1 < 1 ∧ p.2 < 1 := by
+      intro p hp; simp [sqInt, coord, abs_lt] at hp; constructor <;> linarith
+    have i1 : ∀ p, p ∈ sqInt ((L - 2⁻¹, 2⁻¹) : ℝ × ℝ) 0 1 → L - 1 < p.1 ∧ p.2 < 1 := by
+      intro p hp; simp [sqInt, coord, abs_lt] at hp; constructor <;> linarith
+    have i2 : ∀ p, p ∈ sqInt ((L / 2, S - Real.sqrt 2 / 2) : ℝ × ℝ) (Real.pi / 4) 1 →
+        L / 2 + S - Real.sqrt 2 < p.1 + p.2 ∧ S - Real.sqrt 2 - L / 2 < p.2 - p.1 := by
+      intro p hp
+      simp only [sqInt, coord, hc, hs, Set.mem_ofPred_eq, abs_lt] at hp
+      obtain ⟨⟨a1, -⟩, ⟨b1, -⟩⟩ := hp
+      constructor <;> nlinarith
+    intro i j hij
+    rw [Set.disjoint_left]
+    intro p hp hq
+    fin_cases i <;> fin_cases j <;> simp at hij hp hq
+    · have := i0 p hp; have := i1 p hq; linarith
+    · have := i0 p hp; have := i2 p hq; linarith
+    · have := i1 p hp; have := i0 p hq; linarith
+    · have := i1 p hp; have := i2 p hq; linarith
+    · have := i2 p hp; have := i0 p hq; linarith
+    · have := i2 p hp; have := i1 p hq; linarith
+
 end SquarePacking
