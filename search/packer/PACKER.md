@@ -4907,3 +4907,14 @@ Pre-registered.  Same recipe as SW274b on the grown pool (1,088 distinct minima 
   then overlaps (pen up to 13) and the quench mostly grid-locks.  Next for the constructor: per-region upright lattices
   (corner block, the two strips beside the bands, the far field), each with its own offset; longer bands.  BC274a runs
   as registered (its sample stage started before this prior change).
+* **Constructor quench tests (01:20; ~0.3 CPU-h).**  `arm(..., rows_mode='round')` + record gaps: bulb bands 76-90 tilted
+  (records 87-100) but uprights fall by as much (165-170 vs the records' 186): idealised rows' edges do not interlock
+  with the upright lattice (the records' band edges are staggered to it).  16 starts each, record prior:
+  quench shrink / soft15c / loose / soft05 at side k - delta: line-free 1 / 0 / 1 / 1 of 16, none at n >= 273.
+  `--side lo,hi` (build at k + U(lo, hi), then quench): base fill 265-270 (+0.1-0.3) and 268-274 (+0.3-0.6), i.e. the
+  design holds ~274 with room, but compression grid-locks: line-free 1 / 0 / 0 / 0 of 16 (one 272 at 17.16).  Same
+  as H183's insertion seeds (112 / 120 blocked).  183 went sub-grid by L-cut (a real record's structure kept), so for
+  274 the real-structure arm (BAL274) is the analogue; idealised construction needs a non-locking compression.
+* Evan (01:20): the 18 deg / 6-wide bands are Ryu's angle.  Yes: band width b cos t + sin t = b again at
+  t0(b) = 2 arctan(1/b) (max sqrt(b^2 + 1) at tan t = 1/b), narrower beyond; t0(6) = 18.92 deg.  Records: 273 B 18.9,
+  307 / 308 19.2 (width 5.996), 308 L 18.3 (6.010), 306 17.7-18.0: Ryu bands at t0(6) with tapered ends.

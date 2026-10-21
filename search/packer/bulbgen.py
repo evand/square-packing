@@ -82,8 +82,9 @@ def _record(rng, P):
     (= arm width ~6.0 + corner_gap 0.3-1.4), far ends ~0.5-1 from the far wall.  Still distributions, wider than the
     four records."""
     P.update(
-        corner_gap=float(rng.uniform(0.0, 1.8)),
-        end_gap=[float(rng.uniform(0.2, 1.4)) for _ in range(4)],
+        corner_gap=float(rng.uniform(0.2, 1.4)),
+        end_gap=[float(rng.uniform(0.0, 0.9)) for _ in range(4)],
+        rows_mode='round',
         taper_rows=[int(rng.choice([1, 2, 3, 4], p=[0.1, 0.25, 0.45, 0.2])) for _ in range(4)],
         taper_tip=[int(rng.choice([2, 3, 4], p=[0.2, 0.6, 0.2])) for _ in range(4)],
         row_shear=float(abs(rng.normal(0, 0.02))),
@@ -93,7 +94,7 @@ def _record(rng, P):
 
 # ---------------------------------------------------------------- arms
 
-def arm(b, theta, length, taper, shear_sd, rng):
+def arm(b, theta, length, taper, shear_sd, rng, rows_mode='floor'):
     """A vertical band in local coords: rows of up to b squares at angle theta (deg), stacked along +y with spacing
     sec theta (Ryu Lemma 3.3: in the rotated frame square (i, j) is [i + j tan, i + 1 + j tan] x [j, j + 1]).
     taper = ((rows, tip, side) at the low end, (rows, tip, side) at the high end).  Returns (x, y, deg) list; the
@@ -101,7 +102,7 @@ def arm(b, theta, length, taper, shear_sd, rng):
     t = math.radians(theta)
     c, s = math.cos(t), math.sin(t)
     u, v = np.array([c, s]), np.array([-s, c])
-    nrows = max(1, int(length / (1 / c)))
+    nrows = max(1, int(length * c) if rows_mode == 'floor' else int(round(length * c)))   # 'round': record prior (10-21)
     out = []
     for j in range(nrows):
         w, lo = b, 0
@@ -155,8 +156,9 @@ def build(P, rng):
     else:                    # bulb: neither reaches the corner; grid block in [s - wA, s] x [0, wB]
         a_lo, a_hi = wB + P['corner_gap'], s - P['end_gap'][1]
         b_lo, b_hi = P['end_gap'][2], s - wA - P['corner_gap']
-    TA = arm(A['b'], A['theta'], a_hi - a_lo, (tp[0], tp[1]), P['row_shear'], rng) if a_hi - a_lo > 1.5 else []
-    TB = arm(B['b'], B['theta'], b_hi - b_lo, (tp[2], tp[3]), P['row_shear'], rng) if b_hi - b_lo > 1.5 else []
+    rm = P.get('rows_mode', 'floor')
+    TA = arm(A['b'], A['theta'], a_hi - a_lo, (tp[0], tp[1]), P['row_shear'], rng, rm) if a_hi - a_lo > 1.5 else []
+    TB = arm(B['b'], B['theta'], b_hi - b_lo, (tp[2], tp[3]), P['row_shear'], rng, rm) if b_hi - b_lo > 1.5 else []
     TA = place_right(TA, s, P['wall_gap'][0], a_lo) if TA else []
     TB = reflect(place_right(TB, s, P['wall_gap'][1], s - b_hi), s) if TB else []   # built on the right, mirrored
     T = []
@@ -212,11 +214,13 @@ def fill_to_count(s, T, P, prng):
 
 # ---------------------------------------------------------------- driver
 
-def one(k, n, seed, quench=None, prior='broad'):
+def one(k, n, seed, quench=None, prior='broad', side=None):
     import random
     rng = np.random.default_rng(seed)
     prng = random.Random(seed)                       # pk.fill draws (random.Random, as pk.moves)
     P = sample_params(rng, k, n, prior)
+    if side:                                         # 10-21: build in a larger box (side k + U(lo, hi)), quench compresses
+        P['delta'] = -float(rng.uniform(*side))
     s, T = build(P, rng)
     sq, finfo = fill_to_count(s, T, P, prng)
     rec = dict(seed=seed, params=P, s0=s, tilted=len(T), n_target=n, n_out=len(sq), fill=finfo, sq=sq)
@@ -250,6 +254,7 @@ def main():
     a.add_argument('--quench', default=None, help='relax.OPS key, e.g. shrink, soft05, loose')
     a.add_argument('--prior', default='broad', choices=PRIORS)
     a.add_argument('--procs', type=int, default=1)
+    a.add_argument('--side', default=None, help='lo,hi: build at side k + U(lo, hi) instead of k - delta (then quench)')
     e = sub.add_parser('explore', help='explorer runs from the line-free starts of a sample dir (10-21: composers are '
                        'sources of starts; each explorer run is a walk from them)')
     e.add_argument('--dir', required=True); e.add_argument('--n', type=int, required=True)
@@ -264,7 +269,9 @@ def main():
     from pk import manifest
     man = manifest.start(g.out, 'bulbgen', seed=g.seed, args=vars(g), procs=g.procs)
     with open(os.path.join(g.out, 'starts.jsonl'), 'a') as f, ProcessPoolExecutor(g.procs) as ex:
-        for r in ex.map(_one, [(g.k, g.n, g.seed + i, g.quench, g.prior) for i in range(g.count)], chunksize=1):
+        for r in ex.map(_one, [(g.k, g.n, g.seed + i, g.quench, g.prior,
+                                     tuple(map(float, g.side.split(','))) if getattr(g, 'side', None) else None)
+                                    for i in range(g.count)], chunksize=1):
             gen.write(os.path.join(g.out, f's{r["seed"]:05d}_n{r["n_out"]}.txt'), r.get('s1', r['s0']), r['sq'])
             sq = r.pop('sq')
             f.write(json.dumps(r) + '\n')
