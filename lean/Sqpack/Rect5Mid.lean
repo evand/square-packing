@@ -14,7 +14,7 @@ kinks `a₁`, `a₂`.  So its minimum is at `c` upright or aligned with one of t
 * `cr_trans` — the angle order (`cr x y ≥ 0`) is transitive on the quarter circle.
 * `kink_min` — linear plus two kinks: at least the value at `(1, 0)`, `a₁`, `a₂` or `(0, 1)`.
 * `mid_floor`, `mid_ceil`, `mid_set` — the middle square.
-
+-/
 
 namespace SquarePacking
 
