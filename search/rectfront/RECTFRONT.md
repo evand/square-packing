@@ -235,3 +235,17 @@ Techniques, what worked (chain, one-square lemma), what failed (tube search, dec
   slanted line for 1 + √2 ≤ a < 4 − √2.  No 4-point set works there (`R5PTS.md` §6: best escape ≈ 0.015);
   the escapers of the rectangular set are long-wall sitters (centre within ~0.085 of the wall, height within
   ~0.1 of b/2, any tilt).
+
+## 2026-10-21 (later): R₅ with both sides ≥ 2, exactly, in Lean (`lean/Sqpack/Rect5Line.lean`)
+
+`rect5_wide_iff`: for a, b ≥ 2, five unit squares fit iff a ≥ 3, b ≥ 3 or a + b ≥ 4 + √2 (Friedman's pieces
+4.3–4.5 of S₄; includes s(5) = 2 + 1/√2).  Standard axioms; 533 lines, ~12 s.
+* Reduction: widen to a, b ≥ 1 + √2 (monotone), scale onto the line a + b = 4 + √2 (`no_pack_of_cover`).
+* On the line, a ≥ 4 − √2: the four points (`rect5_cover`).  1 + √2 ≤ a ≤ 4 − √2: **cover C**, ten points with
+  weights 2/3 ((0.91, 1) and mirrors) and 1/3 ((1, 1) and mirrors, (1, b/2), (a − 1, b/2)), total 14/3.  Every
+  closed square contains a block of weight 1 (`quadC`, three cells: row `In_corner`/`In_row`; wall band
+  `In_side2`; centre `In_far` + `In_mp`), the mirrors give the other quadrants (`coverC`).
+* Indexed weighted pigeonhole `packing_le_idx` (points may repeat).
+* History: the 4-point set cannot reach a ≈ 2.4 (R5PTS §6); an escaper second stage needs all five squares (§7);
+  an LP found fractional point covers (§8); the 2/3–1/3 block cover C (§9); paper proofs (§10).
+Open for R₅: only the strip part (short side < 2, `Final5`, LESSONS.md §5).

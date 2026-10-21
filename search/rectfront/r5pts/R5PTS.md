@@ -220,3 +220,70 @@ that highlights the block it contains, and the capture map (min over angles per 
 * c₀ = 0.91 also passes: blocks on all 4.65·10⁸ probes, min capture 1 at 41 points of [1 + √2, 4 − √2] with
   36,000 angles (`runs/rectfront/r5pts/c10_091_36k.txt`; `C0=0.91 python3 blocksC.py`).  Recommended for the
   row-lemma margin (δ* − δ = 0.011 instead of 0.0012).
+
+## 10. Paper proofs for cover C, c₀ = 91/100 [proved on paper; every step checked on 2·10⁶ samples, 0 failures] (`wz_*.py`, `checkproofs2.py`)
+
+Setting: the line a + b = 4 + √2, 1 + √2 ≤ a ≤ 4 − √2 (so 2√2 ≤ b ≤ 3).  Centre (x, y) in the lower-left quadrant
+[k, a/2] × [k, b/2] (mirrors x ↦ a − x, y ↦ b − y map the point set and the blocks to themselves).  Frame (c, s),
+c, s ≥ 0, p = c + s ∈ [1, √2], k = p/2 ≤ √2/2.  `In dx dy c s` as in `Rect5Pts.lean`.  Points r = (c₀, 1),
+s = (1, 1), m = (1, b/2), r^ = (c₀, b − 1), s^ = (1, b − 1), m′ = (a − 1, b/2).
+
+**Restructured statement** (replaces the W / Z split of §9 by three cells; the numerics of W, Z as stated hold too,
+worst 0 = tight, `wz_check.py`, `wz_refine.py`, but Z's natural proof needs the wall blocks):
+| cell | block | proof |
+|---|---|---|
+| 1: y ≤ 2 − k (any x ∈ [k, a/2]) | r, s | s: `In_corner`.  r: `In_corner` if x ≤ 1; **row lemma** if x ≥ 1 |
+| 2: y ≥ 2 − k, x ≤ 11/10 | m, and r or r^ | m: `In_corner`; r ∨ r^: **`In_side2`** (frame swapped) |
+| 3: y ≥ 2 − k, x ≥ 11/10 | m, m′, and s or s^ | m: `In_corner`; m′: **m′ bound**; s ∨ s^: **`In_far`** (frame swapped) |
+Margins (worst sampled gauge − ½): cell 2's r ∨ r^ −0.0004 (tight only at b = 3, `In_side2`'s g(√2) = −0.004);
+cell 3's m ∧ m′ −0.027; s ∨ s^ tight at 45° on the line (equality case of `In_far`).  Split point 11/10: r ∨ r^
+fails from x ≈ 1.13, m ∧ m′ fails below x ≈ 1.07 (`wz_split.py`).
+
+`In_corner` hypotheses used (all from k ≤ √2/2, a ≤ 4 − √2, b ≤ 3, c₀ = 0.91):
+|1 − x| ≤ a/2 − 1 ≤ 1 − √2/2 ≤ 1 − k;  |c₀ − x| ≤ 1 − k for k ≤ x ≤ 1;  |1 − y| ≤ 1 − k in cell 1;
+|b/2 − y| ≤ b/2 − 2 + k ≤ 1 − k in cells 2–3 (b ≤ 6 − 4k ⇐ b ≤ 3 < 6 − 2√2);  x − 1 ≤ 1/10 ≤ 1 − k in cell 2.
+
+**Row lemma.**  |dx| ≤ 39/100, |dy| ≤ 1 − k ⇒ In dx dy c s.  (Used with dx = c₀ − x, |dx| ≤ a/2 − c₀ ≤ 0.3829.)
+|u| ≤ |dx|c + |dy|s, |v| ≤ |dx|s + |dy|c, so it suffices that F(c, s) := δc + (1 − (c+s)/2)s ≤ ½ (and F(s, c), the
+same statement with the frame swapped).  ½ − F = (1 − s)²/2 + c(s/2 − δ).  If s ≥ 2δ done.  Else
+(1 − s)³ ≥ (1 + s)(2δ − s)², exactly (δ = 39/100): (1 − s)³ − (1 + s)(39/50 − s)² = (s − ½)²(39/25 − 2s) + 29s/2500 + 1/625;
+times (1 − s), with c² = (1 − s)(1 + s): (c(2δ − s))² ≤ ((1 − s)²)², so c(2δ − s) ≤ (1 − s)².  Tight at θ = 90°
+(F = ½ there for every δ); δ* ≈ 0.39411.  **Lean: compiles** (scratch test, `nlinarith` with the hint
+`mul_nonneg (sq_nonneg (s - 1/2)) (39/25 - 2s ≥ 0)`, then `abs_le_of_sq_le_sq'`).
+
+**`In_side2`** (DS7 Lemma 2, general point distance y₀, centre allowed slightly past the point row).  Side
+orientation as `In_side`: offsets (A, B) and (−A′, B), X = A + A′.  Hypotheses: c, s ≥ 0, c² + s² = 1; A, A′ ≥ 0;
+X ≤ 1; y₀ ≤ 1; X/2 + y₀ ≤ √2; B ≤ y₀ − (c + s)/2; −(√2 − 1)/2 ≤ B.  Conclusion In A B ∨ In (−A′) B.
+(y₀ = 1, B ≥ 0 recovers `In_side`.)  WLOG s ≤ c (reflection A ↔ A′, `In_negx`).
+* B ≥ 0 (as `In_side_le`): Q's witness is u_Q = Ac + Bs > ½ (v_Q > ½ impossible: Bc ≤ B ≤ y₀ − ½ ≤ ½;
+  −v_Q > ½ ⇒ u_Q ≥ As − Bc > ½); P: u_P > ½ impossible (Bs ≤ ½), −u_P > ½ ⇒ Xc > 1 ✗, −v_P > ½ impossible (≥ 0);
+  v_P > ½: s·u_Q + c·v_P = csX + B > p/2 (c > 0), B ≤ y₀ − p/2 ⇒ g(p) = X(p² − 1)/2 + y₀ − p > 0; but
+  X(p² − 1)/2 ≤ X(√2 + 1)(p − 1)/2 and L(p) := X(√2 + 1)(p − 1)/2 + y₀ − p is linear with L(1) = y₀ − 1 ≤ 0,
+  L(√2) = X/2 + y₀ − √2 ≤ 0, i.e. (√2 − 1)L(p) = (√2 − p)L(1) + (p − 1)L(√2) ≤ 0.  ✗
+* B = −β < 0: Q: u_Q = Ac − βs, v_Q = −As − βc ≤ 0; P: u_P = −A′c − βs ≤ 0, v_P = A′s − βc.
+  Impossible singles: u_Q < −½ (βs ≤ ½), u_P > ½, v_Q > ½, v_P < −½ (βc ≤ ½).  Pairs:
+  (u_Q > ½, −u_P > ½): Xc > 1 ✗;  (u_Q, v_P > ½): s·u_Q + c·v_P = csX − β > p/2, but csX = X(p² − 1)/2 ≤ (p² − 1)/2
+  ≤ p/2 ✗;  (−v_Q > ½, −u_P > ½): c·(As + βc) + s·(A′c + βs) = csX + β > p/2, but (p² − 1)/2 + β ≤ p/2 because
+  p − p² + 1 ≥ √2 + 1 − √2p ≥ √2 − 1 ≥ 2β (from (p − 1)(p − √2) ≤ 0) ✗;  (−v_Q, v_P > ½): sX > 1 ✗.
+Use in cell 2 (frame (s, c), `In_swap`): along-wall offsets A = b − 1 − y, A′ = y − 1 (y ≥ 2 − k ≥ 1), X = b − 2,
+y₀ = c₀, B = c₀ − x ∈ [c₀ − 11/10, c₀ − k] = [−0.19, ·]; X/2 + c₀ ≤ √2 ⇔ b ≤ 2√2 + 0.18 ✓.
+
+**`In_far`** (centre on the far side of the point row, no wall).  Offsets (A, −β), (−A′, −β); hypotheses A, A′ ≥ 0,
+X = A + A′ ∈ [√2 − 1, 1], β ≥ 0, X + 2β ≤ √2 (so β ≤ ½).  Conclusion In A (−β) ∨ In (−A′) (−β).  WLOG s ≤ c.
+Same four pairs as `In_side2`'s B < 0 case; only (−v_Q, −u_P) changes: csX + β > p/2, but
+csX + β ≤ X(p² − 1)/2 + (√2 − X)/2 and X(p² − 2) + √2 − p = (√2 − p)(1 − X(√2 + p)) ≤ 0 (X(√2 + p) ≥ (√2 − 1)(√2 + 1)
+= 1).  **Equality** at p = √2 (45°) with X + 2β = √2: the centre-of-box 45° square on the line; all steps are ≤.
+Use in cell 3 (frame (s, c)): A = b − 1 − y, A′ = y − 1, X = b − 2 ∈ [2√2 − 2, 1], β = x − 1 ∈ [1/10, a/2 − 1];
+X + 2β ≤ b − 2 + a − 2 = √2 ✓.
+
+**m′ bound** (cell 3).  μ = a − 1 − x ∈ [0, a − 21/10] ⊂ [0, ½], ν = b/2 − y ∈ [0, b/2 − 2 + k] ⊂ [0, ½]:
+|v| ≤ max(μs, νc) ≤ ½; u = μc + νs ≤ (a − 2.1)c + (b/2 − 2 + p/2)s, and with ½ = (c² + s²)/2,
+½ − that = H(β′) := c(c − s)/2 − (a − 2.1)c + (2 − β′)s, β′ = b/2, a − 2.1 = 1.9 + √2 − 2β′: linear in β′ ∈ [√2, 3/2],
+so ≥ min of the endpoints E₁ = c(c − s)/2 − (1.9 − √2)c + (2 − √2)s (min 0.014 at θ = 0) and
+E₂ = c(c − s)/2 − (√2 − 1.1)c + s/2.  **Lean: both compile** (`nlinarith` with `mul_nonneg hc hs`,
+`sq_nonneg (c - 1)`, `sq_nonneg (s - 1/4)`, `mul_nonneg hs (1 - c ≥ 0)`; resp. `sq_nonneg (c - 1/3)`), given
+√2 bounds 1.4142 < √2 < 1.4143.
+
+Checks (`checkproofs2.py`, 2·10⁶ samples each, 0 violations): `In_side2` conclusion on its full hypothesis set, its
+key and majorant inequalities, its B < 0 bound; `In_far` conclusion, its key bound and factor form; row lemma
+(δ = 0.39) and its polynomial; E₁, E₂; and the three cells on the line (1.75·10⁶ / 1.8·10⁵ / 6.3·10⁴ samples).

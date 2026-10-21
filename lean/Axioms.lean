@@ -306,3 +306,6 @@ import Sqpack
 -- R_5, both sides >= 2 (Sqpack/Rect5Pts): four unavoidable points; a + b >= 4 + sqrt 2 (incl. s(5))
 #print axioms SquarePacking.rect5_cover
 #print axioms SquarePacking.rect5_pts_lower
+-- R_5 with both sides >= 2 exactly (Sqpack/Rect5Line): cover C (10 points, weights 2/3, 1/3) + scaling onto the line
+#print axioms SquarePacking.rect5_wide_lower
+#print axioms SquarePacking.rect5_wide_iff

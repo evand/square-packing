@@ -10,6 +10,7 @@ import Sqpack.Rect5Mid
 import Sqpack.Rect5
 import Sqpack.Rect5Pack
 import Sqpack.Rect5Pts
+import Sqpack.Rect5Line
 import Sqpack.ZeroMargin
 import Sqpack.D4
 import Sqpack.StripRect
