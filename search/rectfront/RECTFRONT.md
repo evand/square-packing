@@ -81,3 +81,21 @@ Setup: strip of height H < 2, length L; three unit squares sorted by centre x (a
 Grid evidence only so far.  To prove: (i) the upright neighbour is worst (step 4); (ii) the 1-variable trig
 inequalities in step 5; (iii) step 2 needs the separating-axis direction (disjoint => separating normal), or
 in Lean its contrapositive with an explicit common interior point.
+
+### 2026-10-21 (later): steps (i) and (ii) proved on paper
+
+(i) Upright neighbour is worst — for every direction phi (cos phi > 0), not only edge normals:
+  replace a (tilt alpha, height y_a) by an upright square at y' = y_a - sgn(sin phi)(k_alpha - 1/2), which stays in
+  the strip.  The bound k + (h_a(phi) + h_b(phi) - sin phi (y_b - y))/cos phi does not increase iff
+      k_alpha (c + |s|) + h_alpha(phi) >= c + |s|          (c = cos phi, s = sin phi).
+  WLOG s >= 0 (reflect).  With d = alpha - phi this is 2cos d + |sin d| + sin(alpha+phi) >= 2(c+s).  On alpha in
+  [0, phi] and in [phi, 90] the left side is one sinusoid in alpha, positive at both ends of an interval shorter
+  than 180 deg, hence concave there, so its minimum is at an endpoint: alpha = 0 or 90 gives equality, alpha = phi
+  gives 2 + sin 2phi = 1 + p^2 >= 2p (p = c + s).  Then for the upright square the support-line bound in any
+  direction is >= the octagon boundary rho, so the term is >= P(beta) closed form.  (famA.py: grid check.)
+(ii) The 9 pairs x 3 H-checkpoints become rational functions of u = tan(t/2) on (0, sqrt2 - 1] (ii.py prints all 27
+  numerators/denominators).  Signs are elementary: zeros at u = 0 (all upright) and a double root at
+  u = sqrt2 - 1 for (V', V) (the wedge): at H = 2 the numerator is (u - (sqrt2-1))^2, at the kink it is
+  (u-(sqrt2-1))^2 ((1+2sqrt2)u^2 - 2(1+sqrt2)u - 1) over 4u(u^2-1).
+
+Remaining for a complete proof: (iii) the separating-axis step for two squares, plus a clean write-up.
