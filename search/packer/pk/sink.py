@@ -5,6 +5,7 @@ What it reads (adapters; every run dir under runs/, ext/ excluded):
   explore    <run>/archive.jsonl (explore.py, dgen / hborder / chain sub-runs, time-travel worlds ...): every entry,
              parent links kept, exactsolve verdicts from exact.json.  Incremental: the state remembers how many archive
              lines were imported, so a live run is imported in slices (only lines older than SETTLE are taken).
+  bulb       bulbgen.py sample dirs (starts.jsonl + s<seed>_n<count>.txt; status screened if quenched, else raw)
   outputs    compose2 near.jsonl, results.jsonl / polish.jsonl rows (compose2, fresh, harden): nearmiss.read_outputs
              (thr = inf: every row).
 Dirs with a manifest but no adapter are listed by `pk.py sink --report` (by manifest name), never guessed at.
@@ -54,6 +55,12 @@ def explore_runs(root=RUNS):
                   if '/ext/' not in a)
 
 
+def bulb_dirs(root=RUNS):
+    """bulbgen.py sample dirs: starts.jsonl + s<seed>_n<count>.txt"""
+    return sorted(os.path.dirname(f) for f in glob.glob(os.path.join(root, '**', 'starts.jsonl'), recursive=True)
+                  if '/ext/' not in f and glob.glob(os.path.join(os.path.dirname(f), 's[0-9]*_n[0-9]*.txt')))
+
+
 def output_dirs(root=RUNS):
     out = set()
     for pat in ('near.jsonl', 'results.jsonl', 'polish.jsonl'):
@@ -95,6 +102,7 @@ def run(st=None, runs=None, dry=False, procs=12, log=print, outputs=True):
     pubF = {n: r['s'] for n, r in st.frontier().items()}
     S = load_state()
     now = time.time()
+    runs_in = runs
     runs = explore_runs() if runs is None else [r for r in runs if os.path.exists(os.path.join(r, 'archive.jsonl'))]
     todo = [(r, S['explore'].get(_rel(r), 0), now) for r in runs]
     tot = dict(runs=0, entries=0, new=0, seen=0, drop=0)
@@ -149,6 +157,29 @@ def run(st=None, runs=None, dry=False, procs=12, log=print, outputs=True):
                 touched.add(pid); tot['entries'] += 1; tot['new' if new else 'seen'] += 1
             if not dry:
                 st.db.commit(); S['outputs'][key] = mt; save_state(S)
+    if outputs:
+        from .packing import read
+        for d in bulb_dirs() if runs_in is None or outputs == 'all' else [r for r in runs_in if os.path.exists(os.path.join(r, 'starts.jsonl'))]:
+            key = _rel(d); f0 = os.path.join(d, 'starts.jsonl')
+            mt = os.path.getmtime(f0)
+            if now - mt < SETTLE or S.setdefault('bulb', {}).get(key) == mt:
+                continue
+            for l in open(f0):
+                try:
+                    r = json.loads(l)
+                except Exception:
+                    continue
+                f = os.path.join(d, f's{r["seed"]:05d}_n{r["n_out"]}.txt')
+                q = read(f) if os.path.exists(f) else None
+                if q is None:
+                    continue
+                if dry:
+                    tot['entries'] += 1; continue
+                pid, new = st.add(q, f'bulb:{key}', finder='ours', ref=os.path.basename(f), kind='bulbgen',
+                                  status='screened' if 's1' in r else 'raw', commit=False)
+                touched.add(pid); tot['entries'] += 1; tot['new' if new else 'seen'] += 1
+            if not dry:
+                st.db.commit(); S['bulb'][key] = mt; save_state(S)
     hits = []
     if not dry and touched:
         ids = sorted(touched)

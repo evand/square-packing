@@ -4918,3 +4918,10 @@ Pre-registered.  Same recipe as SW274b on the grown pool (1,088 distinct minima 
 * Evan (01:20): the 18 deg / 6-wide bands are Ryu's angle.  Yes: band width b cos t + sin t = b again at
   t0(b) = 2 arctan(1/b) (max sqrt(b^2 + 1) at tan t = 1/b), narrower beyond; t0(6) = 18.92 deg.  Records: 273 B 18.9,
   307 / 308 19.2 (width 5.996), 308 L 18.3 (6.010), 306 17.7-18.0: Ryu bands at t0(6) with tapered ends.
+* **BC274a result (~01:40; ~0.8 CPU-h).**  900 starts (600 record prior as at launch, i.e. before the profile fit; 300
+  broad), quench shrink: line-free 79 / 600 and 61 / 300, all at short counts (mostly n 247-265; best near-target
+  rows 272 at 17.046, 271 at 17.030), none at 273-275, so `explore` had no starts: every metric void, predictions void.
+  The construction's starts at the target count all grid-lock (the quench tests above).  Starts imported by the sink
+  (inclusive).  Not a verdict on the idea: the compression step is what is missing.
+* BAL274 relaunched as 3 runs x 12 starts (6 CPU-h, same 36 starts) so it fits beside SW274c (8) and the Lean agent's
+  job (4); SW157 waits for SW274c.
