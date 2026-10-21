@@ -5089,3 +5089,33 @@ grown pool (grid-locked now excluded): `dgen.py sweep --n 157 --band 0.0,0.012 -
   4 runs per target.  Baselines: LC274d (307 cuts -> 274: 58 % line-free, raw best 17.0169, explore 17.0119).
   Predictions: stage 1 274 line-free yield >= 10 %: 65 %; raw 274 seed < 17.0169: 20 %; raw 308 seed < 17.9971: 2 %.
   Stage 2: 274 explore < 17.0119: 30 %; < 17.0002995 (floor): 3 %; < 17: 1 %; 308 below 17.9971491: 3 %.
+
+## Reward replay, pre-registered (10-21 ~12:00; Evan: "should we be trying to figure out better reward criteria in cases where we're chasing a new below-grid packing?" / "Yes, let's try the replay!")
+* Why: at 274 the default bandit reward (1 iff a new basin below k) never fired in JW1: every kind 0.0, so the bandit was
+  uniform.  `--reward value` exists (10-09) but the 274 campaign never used it.  Prior (bandit_timescale.md, 10-14): kind
+  choice is worth ~x1.17 vs uniform, and per-n learning at n >= 200 hurts (too few rewards).  So the question is which
+  reward *predicts progress*, not only which ranks kinds.
+* `analysis/reward_replay.py` (logs only): unit = archive entry created by a move in the first half of a run; rewards
+  legacy / value / closek (closeness to k) / improve (below parent) / nnd (fingerprint distance to the fp bank) / blend
+  (value x (1 + nnd rank)); outcomes from descendants: prog (a descendant sets a new run best), subk (a descendant below
+  k), near (a distinct descendant within 1e-4 of the run's final best).  Within-run AUC, minority-weighted, by n bucket,
+  all entries and expanded only (selection bias); kind-level Spearman.
+* Predictions: value beats legacy on prog AUC at n >= 200: 80 %; nnd AUC > 0.55 for prog (expanded) at n >= 200: 50 %;
+  blend beats value on prog at n >= 200: 40 %; legacy and value within 0.03 for subk where subk occurs: 60 %;
+  kind-level Spearman(value, prog) > 0.3: 50 %.
+* **Reward replay result (12:20; logs only, ~25 CPU-min).**  5,589 runs, 4,339 usable, 1.33 M entries.  `runs/reward_replay.{txt,json}`.
+  | AUC (all entries), n 200-259 / >= 260 | legacy | value | closek | improve | nnd | blend |
+  | prog (descendant sets a new run best) | 0.53 / 0.52 | **0.69 / 0.65** | 0.53 / 0.59 | 0.54 / 0.54 | 0.59 / 0.57 | 0.67 / 0.64 |
+  | near (distinct descendant within 1e-4 of final best) | 0.56 / 0.54 | **0.78 / 0.72** | 0.56 / 0.61 | 0.51 / 0.53 | 0.49 / 0.54 | 0.73 / 0.66 |
+  | subk, expanded only | 0.82 / 0.83 | 0.81 / 0.82 | 0.84 / 0.85 | 0.49 / 0.47 | 0.31 / 0.43 (few runs) | 0.84 / 0.69 |
+  Kind level (Spearman across kinds of reward per CPU-s vs outcome per CPU-s): prog 0.05-0.11 for every reward; subk
+  legacy 0.75, value 0.60.  Predictions: value beats legacy on prog at n >= 200 yes (80 %); nnd > 0.55 (expanded) no
+  (50 %; 0.53 / 0.54); blend beats value no (40 %); legacy ~ value on subk yes (60 %); kind Spearman(value, prog) > 0.3 no
+  (50 %; 0.11).
+  Reading: (1) for "which states lead to progress", value is the best of these and legacy is blind above n ~ 130 (AUC
+  ~0.52), so 274 walks should run `--reward value` (it also feeds the cell bandit, `--adapt-cells`).  Caveat: part of
+  value's edge is locality (entries near the run best sit where the next best appears), which is still the right signal
+  for parent / cell credit.  (2) No reward ranks *kinds* by progress (Spearman ~0.1), matching bandit_timescale.md:
+  kind effects are small, so the reward matters for parent / cell choice, not kind choice.  (3) Structural novelty (nnd)
+  alone is weak and mixed; blending it in does not help.  Not tested: lineage credit propagated to the move that made
+  the ancestor (parent_model.py's yl), the "walk" version of the reward.
