@@ -5073,3 +5073,19 @@ grown pool (grid-locked now excluded): `dgen.py sweep --n 157 --band 0.0,0.012 -
   centring and refill add nothing as walk moves.  Family A floor stands; depth needs a new design, not more walking.
 * **SW157c, pre-registered (11:10).**  Same recipe, seed 1573, tag _sw3, 6 runs x 12 CPU-h total; 157 still moving
   (13.011364 -> 13.009188 -> 13.008929).  Predictions: below 13.008929: 45 %; below 13.005: 8 %; below 13: 1 %.
+
+## Approximate L addition (10-21 ~11:30; Evan: "approximate L addition moves" / "Let's do it!")
+* Tool: `ladd.py`, the inexact inverse of lcut.py.  Open a vertical and a horizontal strip of width w = U(1, 1.06) at a
+  cut (cx, cy) (donor squares shift by +w by centre), lay the d new squares along the cross centre lines at uniform
+  spacing (overlap when d exceeds the axis capacity: 241 -> 274 needs 33 in a cross that holds 31 axis squares at 16.99),
+  each strip tilted 0 or U(+-20 deg) + jitter, fq quench (loosen 1.02 / 1.05), full-line check.  Smoke (241 record
+  291673 -> 274, 96 random cuts): 13 / 96 line-free, raw 17.041-17.12.  Finding from the smoke: the 'scored' arm
+  (cleanest cut = least torn squares) picks the donor's own full lines / the edge, i.e. exact L addition, and every such
+  seed is grid-locked (the donor's 16-square rows plus one strip square = a 17 row).  So random cuts only.
+* **LA1, pre-registered.**  Donors: farthest-point picks (`runs/ladd/pick.py`) of the best 300 distinct: 20 x 241
+  (15.98712-15.98941), 20 x 240 (15.96969-15.97096) -> 274; 30 x 273 (16.98393-16.98554, SW273's pool) -> 308.
+  Stage 1: `ladd.py --random 60` per 274 donor, `--random 40` per 273 donor (3,600 seeds, ~3 CPU-h).  Stage 2: explorer
+  (JW1 settings + `--weights melt=2`, 1.25 CPU-h per run) from the 12 farthest-point best line-free seeds per target,
+  4 runs per target.  Baselines: LC274d (307 cuts -> 274: 58 % line-free, raw best 17.0169, explore 17.0119).
+  Predictions: stage 1 274 line-free yield >= 10 %: 65 %; raw 274 seed < 17.0169: 20 %; raw 308 seed < 17.9971: 2 %.
+  Stage 2: 274 explore < 17.0119: 30 %; < 17.0002995 (floor): 3 %; < 17: 1 %; 308 below 17.9971491: 3 %.
