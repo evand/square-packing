@@ -4781,3 +4781,9 @@ SW's 13, 110 (as SW), 308 and 146 (D308 / D308b / R308 and D146 / HB2 today): 42
 * Periodic pass: `~/.config/systemd/user/pk-sink.{service,timer}` written (every 30 min, nice 19, 4 procs); **not
   enabled** (needs Evan: `systemctl --user enable --now pk-sink.timer`).
 * Allocator design (standing generators as a bandit, cluster weighting as a parameter family): `tasks/allocator/DESIGN.md`.
+* **CPU budgets (10-20 late; allocator step 1).**  `pk/cpubudget.py`: tree_cpu(pid) = Σ over the live process tree of
+  utime + stime + cutime + cstime (finished, waited-for children included); check: 8 x 1 CPU-s in a live pool reads
+  8.05, + a 1 s subprocess 9.12.  `explore.py --cpu-h H` (budget of the whole run tree; `--minutes` becomes a hang
+  guard, default 24 h; manifest summary `stop` = cpu / wall / wall guard / drained); `dgen.py run --cpu-h` and
+  `hborder.py explore --cpu-h` split a total over their explorer runs.  Smoke (n 110, 4 procs, budget 36 CPU-s):
+  stopped at 41.1 CPU-s measured (in-flight proposals finish; the manifest charges what was used).

@@ -559,7 +559,8 @@ def replay(out, line):
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument('--n', type=int, default=110); ap.add_argument('--starts', nargs='+')
-    ap.add_argument('--minutes', type=float, default=60); ap.add_argument('--procs', type=int, default=15)
+    ap.add_argument('--minutes', type=float, default=None, help='wall budget (default 60); with --cpu-h a hang guard only (default 24 h)')
+    ap.add_argument('--cpu-h', type=float, default=None, help='CPU budget of the whole run tree (pk/cpubudget; allocator)'); ap.add_argument('--procs', type=int, default=15)
     ap.add_argument('--smax', type=float, default=None, help='stepping-stone ceiling (default k + 0.05)')
     ap.add_argument('--same', type=float, default=0.0, help='screened side within this of a known basin = return, no polish '
                     '(10-09 bench c110a: 1e-6 lost half the new certified basins; default 0 = polish everything)')
@@ -680,6 +681,16 @@ if __name__ == '__main__':
     pol0 = [e for e in getattr(ar, 'E', []) if not e.get('unpolished')]
     focus = [min(pol0, key=lambda e: e['s']) if (a.focus and pol0) else None, a.focus]   # [entry, budget left]
     t_start = time.time()
+    from pk.cpubudget import Budget
+    cpu_budget = Budget(a.cpu_h * 3600 if a.cpu_h else None)
+    wall_min = a.minutes if a.minutes is not None else (24 * 60 if a.cpu_h else 60)
+    stop_why = []
+    def go():
+        if cpu_budget.over():
+            stop_why[:] = ['cpu']; return False
+        if time.time() - t_start >= 60 * wall_min:
+            stop_why[:] = ['wall' if not a.cpu_h else 'wall guard']; return False
+        return True
     def mates(kind, par):
         if kind == 'cross':
             xp = [e['path'] for e in ar.E if e['s'] < ar.smax and e['i'] != par['i']]
@@ -784,7 +795,7 @@ if __name__ == '__main__':
                                                   **({'pick': pick[0], 'pp': round(pick[1], 8)} if pick else {}),
                                                   **({'kr_drop': r['kr_drop'], 'kr_drops': r['kr_drops']} if 'kr_drop' in r else {}),
                                                   **({'mate': r['mate']} if r.get('mate') else {}))) + '\n')
-                if time.time() - t_start < 60 * a.minutes:
+                if go():
                     submit()
             if time.time() - last > 120:
                 last = time.time()
@@ -819,4 +830,5 @@ if __name__ == '__main__':
             json.dump(dict(r=bandit.r, c=bandit.c), open(a.bandit_state, 'w'))
     report(a.out)
     man.finish(summary=dict(stats=dict(stats), basins=len(ar.E), sub_k=sum(e['s'] < k for e in ar.E),
-                            best=min(e['s'] for e in ar.E) if ar.E else None))
+                            best=min(e['s'] for e in ar.E) if ar.E else None, stop=(stop_why or ['drained'])[0],
+                            cpu_budget_s=cpu_budget.cpu_s))

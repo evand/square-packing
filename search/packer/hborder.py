@@ -185,8 +185,8 @@ def explore(a):
             os.makedirs(out, exist_ok=True)
             json.dump(R, open(f'{out}/starts.json', 'w'))
             smax = max(a.target + 0.06, max(m['s'] for m in R) + 0.01)     # 147's seeds sit ~0.12 above the tie
-            cmd = [sys.executable, f'{HERE}/explore.py', '--n', str(a.n), '--starts', *[m['path'] for m in R], '--minutes',
-                   str(a.minutes), '--procs', str(a.procs_per), '--seed', str(a.seed + 700 + i), '--adapt', '--smax',
+            cmd = [sys.executable, f'{HERE}/explore.py', '--n', str(a.n), '--starts', *[m['path'] for m in R],
+                   *(['--cpu-h', str(a.cpu_h / max(1, len(arms) * a.runs_per_arm))] if a.cpu_h else ['--minutes', str(a.minutes)]), '--procs', str(a.procs_per), '--seed', str(a.seed + 700 + i), '--adapt', '--smax',
                    str(smax), '--frontier-s', str(a.target), '--final-polish', '8', '--out', out]
             P.append(subprocess.Popen(cmd, stdout=open(f'{out}/log.txt', 'w'), stderr=subprocess.STDOUT))
     for p in P:
@@ -236,6 +236,7 @@ if __name__ == '__main__':
         if c == 'explore':
             p.add_argument('--runs-per-arm', type=int, default=4); p.add_argument('--procs-per', type=int, default=1)
             p.add_argument('--starts-per-run', type=int, default=6); p.add_argument('--minutes', type=float, default=40)
+            p.add_argument('--cpu-h', type=float, default=None, help='total CPU budget over all explorer runs (replaces --minutes)')
             p.add_argument('--seed-gap', type=float, default=0.3, help='sanity cap; starts = the best distinct seeds')
     a = ap.parse_args()
     if not a.seed:

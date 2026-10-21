@@ -108,7 +108,8 @@ def run(a):
         out = f'{R0}/x{r}'
         os.makedirs(out, exist_ok=True)
         json.dump([dict(id=int(ids[j]), s=float(sides[j])) for j in S], open(f'{out}/starts.json', 'w'))
-        cmd = [sys.executable, f'{HERE}/explore.py', '--n', str(a.n), '--starts', *paths, '--minutes', str(a.minutes),
+        cmd = [sys.executable, f'{HERE}/explore.py', '--n', str(a.n), '--starts', *paths,
+               *(['--cpu-h', str(a.cpu_h / a.runs)] if a.cpu_h else ['--minutes', str(a.minutes)]),
                '--procs', '1', '--seed', str(a.seed + r), '--adapt', '--adapt-cells', '--sparse-share', '0.5',
                '--fp-bank', f'{R0}/bank.npz', '--smax', str(a.smax), '--frontier-s', str(sides[0]),
                '--final-polish', '8', '--out', out]
@@ -180,6 +181,7 @@ if __name__ == '__main__':
     ap.add_argument('--band', help='SW: start band above the store frontier, "lo,hi" (record excluded)')
     ap.add_argument('--tag', default='', help='output dir suffix: runs/dgen/n<n><tag>')
     ap.add_argument('--runs', type=int, default=8); ap.add_argument('--minutes', type=float, default=40)
+    ap.add_argument('--cpu-h', type=float, default=None, help='total CPU budget, split evenly over --runs (replaces --minutes)')
     ap.add_argument('--pool', type=int, default=400, help='farthest-point sample over the best POOL distinct')
     ap.add_argument('--starts-per-run', type=int, default=6); ap.add_argument('--seed', type=int, default=0)
     a = ap.parse_args()
