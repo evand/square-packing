@@ -382,6 +382,7 @@ def finish(st, out, limit=None, stages=STAGES, procs=4, candidate=False, dry=Fal
         inp = os.path.join(wd, 'in.txt')
         st.get(pid).write(inp)
         cur_s, cur_path, cur_pid = it['s'], inp, pid
+        gridbar = b >= math.ceil(math.sqrt(n) - 1e-12) - 1e-9
         c0, nprop, log_st, err = cpu_now(), 0, [], None
         try:
             for name in stages:
@@ -394,6 +395,15 @@ def finish(st, out, limit=None, stages=STAGES, procs=4, candidate=False, dry=Fal
                 swd = os.path.join(wd, name); os.makedirs(swd, exist_ok=True)
                 outs, k = runners[name](cur_path, swd, n, min(b, cur_s), procs)   # below the bar: aim below itself
                 nprop += k
+                if gridbar and outs:
+                    # 10-20: at a grid bar, an output with a full line / chain is grid-locked (side >= the grid
+                    # whatever it shows): not progress, and never a tie.  Keep the best line-free output.
+                    keep = []
+                    for s_o, p_o in outs:
+                        q = read(p_o)
+                        if q is not None and q.n == n and q.grid_lines() == 0:
+                            keep.append((s_o, p_o)); break
+                    outs = keep
                 rec = dict(stage=name, runs=k, best=outs[0][0] if outs else None)
                 if outs and outs[0][0] < cur_s - 1e-12:
                     s2, path2 = outs[0]

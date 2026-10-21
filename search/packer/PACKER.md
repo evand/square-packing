@@ -4820,3 +4820,7 @@ an upright block), band-side boundaries (bands vs upright field, away from the z
   Today only 274 has such rows (157's best is +1.1e-2).
 * FIN274: `pk.py finish --ids 2530360 2526616 --procs 2 --candidate` (SW274b's 17.000303 / 17.000379; stages polish,
   harden1, harden; ~1 CPU-h each).  Prediction: either below 17: 3 %; best moves down by > 1e-5: 30 %.
+* **FIN274 result (~23:20): harden1 "tied" the grid with grid-locked outputs** (17.0000000000036 / 17.000000000017,
+  grid = 1: a full line forces side >= 17), so the finisher read a tie and skipped the full harden stage.  Fix:
+  at a grid bar only line-free outputs count (best line-free per stage).  Line-free harden1 best = the unchanged start.
+  Requeued as FIN274b: stage harden only (~500 runs each); predictions unchanged.
