@@ -5042,3 +5042,18 @@ grown pool (grid-locked now excluded): `dgen.py sweep --n 157 --band 0.0,0.012 -
   a 274 below 17: 1 %; a new record at 241 / 272 / 273 / 308: 3 %.
 * Follow-up rule: an arm with paired wins or new-sides rate >= melt's goes into explorer walks (`--weights
   jmelt=2` / `jrefill=2`) from the same starts as a baseline walk (the moves are walks, judged as walks).
+* **JAB1 result (08:25; 1.6 CPU-h measured, 3,599 trials).**  No records (the lowest children are weaker parents falling
+  into the record basins: 308 jmelt from 17.99749 lands on the 17.9971491 record; 273 -7.8e-4 from 16.9857).  Overall:
+  line-free melt 75 % / jmelt 66 % / jrefill 38 %; below parent 217 / 171 / 11; distinct new sides per CPU-h 482 / 518 /
+  363 (per trial 0.25 / 0.26 / 0.36).  Paired lower side: melt beats jmelt at every n (274: 129 vs 59; 273: 135 vs 67),
+  and beats jrefill heavily (274: 239 vs 53).  jmelt line-free drops at 273 / 274 (-13 / -12 points), not elsewhere.
+  Predictions: jmelt line-free within 5 points: no (-9 overall); jrefill line-free below melt: yes; jmelt paired wins at
+  274: no; jmelt new sides / CPU-h >= melt: yes (marginal); jrefill >= melt: no; 274 < 17: no; other record: no.
+  Reading: as one step, centring at the junction breaks more than it fixes; refill is a diversity source (almost every
+  line-free child is a new minimum, almost none below the parent).  By the rule, jmelt goes to walks; jrefill too, as
+  a start / diversity source (Evan: moves are walks).
+* **JW1, pre-registered.**  Explorer walks at 274 from the 12 JAB1 274 parents (6 starts per run, 2 runs per arm), arms:
+  base (default weights), +melt=2, +jmelt=2, +jrefill=2; same seeds across arms; 1.25 CPU-h per run (10 CPU-h, 4 procs
+  at a time... 8 runs on the free cores).  Metric: best 274; new side keys < 17.0005 (store-new); below 17.0002995.
+  Predictions: some arm below 17.0002995: 10 %; jrefill arm the most new side keys: 40 %; jmelt arm best side below
+  base's: 35 %; a 274 below 17: 1 %.
