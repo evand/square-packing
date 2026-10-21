@@ -4989,3 +4989,16 @@ grid-locked (d = 32 leaves a full row).
   best run started >= 17.0058 and moved 4.9e-3.  Explore sized to the 5 free cores: e307 = best distinct seed per
   donor first (36 starts, 30 donors), 4 runs x 9, 10 CPU-h; e306 = 12 starts (12 donors), 1 run, 2.5 CPU-h.
   Explorer predictions unchanged.
+* **SW274d result (07:05; 12.0 CPU-h measured).**  6,466 entries.  Best **17.000299454593** again: the third independent
+  arrival (SW274c, BAL274b, SW274d) at the same minimum; 266 new side keys < 17.0005.  Predictions: below 17 no (3 %);
+  below 17.0002995 no (40 %); >= 50 new side keys < 17.0005 yes (60 %).  Reading: 17.0002995 is family A's floor under
+  the explorer's move set (three arrivals, from three different start sets); more family-A walking buys breadth only.
+  The next 274 progress needs a different design (LC274d running) or different moves (finisher / harden on the floor
+  packing, junction refill).
+* LC274d at 2 h (of ~2.5): e307 runs 17.01195 / 17.01242 / 17.01420 / 17.01678 (from 17.0169), e306 17.01682 (from
+  17.0180): moving ~5e-3 at most, well short of family A.
+
+## SW157b: continued sweep at 157 (10-21 ~07:15)
+Pre-registered.  SW157 moved 157's best line-free 13.011364 -> 13.009188 in 16 CPU-h (not floored).  Same recipe from the
+grown pool (grid-locked now excluded): `dgen.py sweep --n 157 --band 0.0,0.012 --pool 2000 --runs 6 --cpu-h 12 --seed
+1572 --tag _sw2` (6 cores free).  Predictions: below 13.009188: 50 %; below 13.005: 10 %; below 13: 1 %.
