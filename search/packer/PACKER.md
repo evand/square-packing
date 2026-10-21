@@ -5184,3 +5184,21 @@ grown pool (grid-locked now excluded): `dgen.py sweep --n 157 --band 0.0,0.012 -
   0.005 of the arm's best.  Predictions: chain's best same-tilt 273 below 16.990: 50 %; chain finds more distinct
   designs within 0.005 of best than ctrl at both n: 55 %; chain's overall best beats ctrl's at 273: 30 %; any 273
   below the record: 5 %; 274 below the floor: 2 %; below 17: 1 %.
+
+## Design bandit (10-21 ~16:55; Evan: "I suspect that > 2 bands, or bands that don't join at a corner (opposite sides) aren't useful; let's see if our bandit arm selector agrees!")
+* `bandflip.design_class` (bands >= 15 squares, arms by nearest wall): none / one / bent / adj-mixed / adj-same /
+  opp-mixed / opp-same / same-wall-* / 3+.  Store at 274: adj-mixed 92,700 (17.000299), one 5,290 (17.0167), bent 68
+  (17.0198), 3+ 1,264 (17.0209), none 56 (17.0231), opp-mixed 104 (17.0237), same-wall-same 41 (17.0264),
+  same-wall-mixed 23 (17.0384), adj-same 0.  273: adj-mixed 18,786 (record), 3+ 80 (17.0101), one 82, opp-mixed 5,
+  same-wall-same 2.
+* explore.py: `--desc design` (archive / cell-bandit cells = design class) and kind `bmove` (bandflip.relocate: swap a
+  band's wall strip with its 180-degree image on the opposite wall; tilt signs kept).
+* **DB1, pre-registered (replaces CH1, withdrawn before launch: DB1 runs the same chained moves and asks Evan's
+  question).**  3 runs per n (273, 274), 1.5 CPU-h each, `--adapt --adapt-cells --desc design --reward value`,
+  weights melt=2, bflip=2, bflipx=1, bmove=2, jmelt=1, jrefill=1; starts: the best 2 distinct of every design class
+  in the store (274: 16, 273: 10) + the smoke flips (273: 2 adj-same 16.9930 / 16.9933; 274: 1 adj-same 17.0295).
+  Metric: the cell bandit's CPU share by the parent's design class (proposals, second half of each run), reward per
+  CPU-s by class, best per class.  Exploration floor: uniform 0.3 over ~9 cells = ~3 % per cell.
+  Predictions: 3+ and opp-* together get < 12 % of second-half CPU at 274 (agreeing with Evan): 60 %; adj-mixed gets
+  > 50 %: 65 %; adj-same (the flip family) gets > 15 % at 273: 40 %; a non-adj-mixed 274 within 0.005 of 17.0003: 10 %;
+  a 273 below the record: 4 %; a 274 below the floor: 2 %.

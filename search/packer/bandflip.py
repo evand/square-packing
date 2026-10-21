@@ -146,3 +146,54 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+def design_class(s, sq):
+    """Band-layout class (10-21, the design bandit): bands = same-sign tilted components >= 15 squares, each split into
+    wall arms (nearest wall, >= 6 squares).  'none' / 'one' (one straight band) / 'bent' (one band with arms >= 10 on
+    two walls, 211-style) / 'adj-mixed' 'adj-same' 'opp-mixed' 'opp-same' (two bands: main walls adjacent or
+    opposite, tilt signs) / '3+' (three or more bands)."""
+    sq = np.asarray(sq, float)
+    a = (sq[:, 2] + 45) % 90 - 45
+    B = bands(sq)
+    if not B:
+        return 'none'
+    walls = []
+    for J in B:
+        X = sq[J, :2]
+        w = np.c_[s - X[:, 0], X[:, 1], X[:, 0], s - X[:, 1]].argmin(1)
+        cnt = np.bincount(w, minlength=4)
+        walls.append((cnt, int(cnt.argmax()), np.sign(np.median(a[J]))))
+    if len(B) >= 3:
+        return '3+'
+    if len(B) == 1:
+        return 'bent' if (walls[0][0] >= 10).sum() >= 2 else 'one'
+    (_, w1, g1), (_, w2, g2) = walls
+    rel = 'opp' if (w1 - w2) % 2 == 0 and w1 != w2 else 'adj' if w1 != w2 else 'same-wall'
+    return f"{rel}-{'same' if g1 == g2 else 'mixed'}"
+
+
+def relocate(s, sq, idx, rng, B):
+    """Move a band to the opposite wall (10-21; Evan: bands on opposite sides / > 2 bands, let the bandit decide): the
+    band's wall strip (depth D, wall range [lo, hi] as in flip) and its 180-degree image on the opposite wall are
+    swapped by the rotation (x, y) -> (s - x, s - y), which keeps tilt signs.  R = strip u rot(strip) is rot-invariant,
+    so this is a permutation of the squares in R."""
+    sq = [tuple(q) for q in np.asarray(sq, float)]
+    C = np.asarray(sq)[idx, :2].mean(0)
+    w = int(np.argmin([s - C[0], C[1], C[0], s - C[1]]))
+    fwd, inv = wall_frame(s, w)
+    DT = np.array([fwd(sq[i][0], sq[i][1]) for i in idx])
+    D = DT[:, 0].max() + 0.5 + rng.uniform(0, 1.0)
+    lo = max(0.0, DT[:, 1].min() - 0.5 - rng.uniform(0, 1.0)); hi = min(s, DT[:, 1].max() + 0.5 + rng.uniform(0, 1.0))
+    def inR(x, y):
+        d, t = fwd(x, y)
+        if d < D and lo <= t <= hi:
+            return True
+        d, t = fwd(s - x, s - y)
+        return d < D and lo <= t <= hi
+    out, nmov = [], 0
+    for x, y, a in sq:
+        if inR(x, y):
+            x, y = s - x, s - y; nmov += 1
+        out.append((x, y, a % 90))
+    return out, dict(wall=w, D=round(D, 2), lo=round(lo, 2), hi=round(hi, 2), nmov=nmov)

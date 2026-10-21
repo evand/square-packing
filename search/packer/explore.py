@@ -314,7 +314,13 @@ def roles_j(sq):
     return (c['L'], c['B'], c['A'], c['J'], c['O'])
 
 
+DESC_MODE = ['tilt']
+
+
 def descriptor(s, sq, k):
+    if DESC_MODE[0] == 'design':          # 10-21: cells = band-layout class (bandflip.design_class): the design bandit
+        import bandflip
+        return (bandflip.design_class(s, sq), s < k)
     nt, ncl = tilt_classes(sq)
     return (nt // 2, ncl, s < k)
 
@@ -383,6 +389,14 @@ def _work(job):
         s, prop, desc = melt_side(s, sq, rng, A, junction=True); desc = 'j' + desc
     elif kind == 'jrefill':                 # junction delete-and-refill (10-21)
         s, prop, desc = mv_jrefill(s, sq, rng, A)
+    elif kind == 'bmove':                   # move a band to the opposite wall (bandflip.relocate, 10-21)
+        import bandflip
+        B = bandflip.bands(sq)
+        if B:
+            i = rng.randrange(len(B)); prop, inf = bandflip.relocate(s, sq, B[i], rng, B)
+            desc = f"bmove b{i}/{len(B)} w{inf['wall']} D{inf['D']} n{inf['nmov']}"
+        else:
+            prop, desc = MOVES['kick'](s, sq, rng, A); desc = 'bmove none ' + desc
     elif kind in ('bflip', 'bflipx'):       # band flip (bandflip.py, 10-21); bflipx: + a random junction follow-up
         s, prop, desc = mv_bflip(s, sq, rng)
         if kind == 'bflipx' and desc.startswith('bflip'):
@@ -681,6 +695,8 @@ if __name__ == '__main__':
     ap.add_argument('--cross2', type=float, default=2, help='weight of two-parent crossover (random sub-k mate; nearest '
                     'mate for above-k parents; battery 10-09 best reach move); 0 = off')
     ap.add_argument('--ashallow', type=float, default=2, help='weight of the shallow whole-box anneal (battery 10-09); 0 = off')
+    ap.add_argument('--desc', default='tilt', choices=['tilt', 'design'],
+                    help="descriptor cells (--adapt-cells, archive cells): tilt classes, or band-layout design class")
     ap.add_argument('--weights', help='move weight overrides, e.g. "mirror=0,kicksym=3" (0 removes a kind; ablations)')
     ap.add_argument('--adapt', action='store_true', help='Thompson sampling over move kinds (reward: new below-k basin)')
     ap.add_argument('--reward', default='legacy', choices=['legacy', 'value'],
@@ -699,6 +715,7 @@ if __name__ == '__main__':
     ap.add_argument('--fp-bank', help='npz of fingerprint images of known configurations (fingerprint.py bank), for --sparse-share')
     ap.add_argument('--replay', help='OUT:LINE: re-run proposal LINE of OUT/proposals.jsonl and compare with the log')
     a = ap.parse_args()
+    DESC_MODE[0] = a.desc
     if a.report:
         report(a.report); raise SystemExit
     if a.replay:
