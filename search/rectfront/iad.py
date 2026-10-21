@@ -53,11 +53,18 @@ class I:
 
     def __init__(self, lo, hi=None):
         if hi is None: hi = lo
-        self.lo, self.hi = float(lo), float(hi)
+        self.lo = lo if type(lo) is float else float(lo)
+        self.hi = hi if type(hi) is float else float(hi)
 
     def __add__(s, o):
-        o = o if isinstance(o, I) else I(o)
-        return I(_add_lo(s.lo, o.lo), _add_hi(s.hi, o.hi))
+        if not isinstance(o, I): o = I(o)
+        a, b = s.lo, o.lo
+        lo = a + b; bb = lo - a; e = (a - (lo - bb)) + (b - bb)        # TwoSum, inline
+        if e < 0: lo = _dn(lo)
+        a, b = s.hi, o.hi
+        hi = a + b; bb = hi - a; e = (a - (hi - bb)) + (b - bb)
+        if e > 0: hi = _up(hi)
+        return I(lo, hi)
     __radd__ = __add__
 
     def __neg__(s):
@@ -71,9 +78,15 @@ class I:
         return I(o) - s
 
     def __mul__(s, o):
-        o = o if isinstance(o, I) else I(o)
-        pairs = ((s.lo, o.lo), (s.lo, o.hi), (s.hi, o.lo), (s.hi, o.hi))
-        return I(min(_mul_lo(a, b) for a, b in pairs), max(_mul_hi(a, b) for a, b in pairs))
+        if not isinstance(o, I): o = I(o)
+        p = ((s.lo * o.lo, s.lo, o.lo), (s.lo * o.hi, s.lo, o.hi), (s.hi * o.lo, s.hi, o.lo), (s.hi * o.hi, s.hi, o.hi))
+        mn = min(p); mx = max(p)
+        lo = mn[0]; hi = mx[0]
+        # exactness of the extreme product (fma residual); with ties between different factor pairs, pad anyway
+        # every factor pair whose float product equals the extreme must have a residual of the safe sign
+        if any(q[0] == lo and math.fma(q[1], q[2], -lo) < 0 for q in p): lo = _dn(lo)
+        if any(q[0] == hi and math.fma(q[1], q[2], -hi) > 0 for q in p): hi = _up(hi)
+        return I(lo, hi)
     __rmul__ = __mul__
 
     def __repr__(s):

@@ -33,6 +33,8 @@ def model(tilts, typ, lam_fn):
     n = len(tilts[0].g)
     us, Ss = [], []
     for (i, j), oi in zip(B.PAIRS, typ):
+        if oi is None:                                  # free pair: no row
+            z = D.const(0.0, n); us.append((z, z)); Ss.append(z); continue
         o, m = B.OPTS[oi]
         own, oth = (i, j) if o == 0 else (j, i)
         c, sn = dcos(tilts[own]), dsin(tilts[own])          # quarter turns exactly: no sin(pi) != 0
@@ -40,6 +42,7 @@ def model(tilts, typ, lam_fn):
         Ss.append(dfsq(tilts[oth] - tilts[own]) + 0.5)
     k = [dfsq(t) for t in tilts]
     lam = lam_fn(us, Ss)
+    lam = [None if typ[p] is None else l for p, l in enumerate(lam)]
     for l in lam:                                   # weights must be >= 0 on the whole box
         if l is not None and l.enc().lo < 0:
             raise ZeroDivisionError('negative weight')
@@ -186,7 +189,7 @@ def check_quadrant(box_deg, typ, radial, signs, rho_deg):
     return False, dict(info, why='derivative not sign-definite')
 
 
-def check_sector(box_deg, typ, radial, phi, rho_deg, probe_frac=0.3):
+def check_sector(box_deg, typ, radial, phi, rho_deg, probe_frac=0.3, rho_lo=0.0):
     """Rays from the line: radial tilts = rho * (cos phi, sin phi), rho in [0, rho_deg], phi in the degree interval
     `phi` (a sector on which the |.| signs are fixed).  One AD variable (rho)."""
     from iad import icos, isin
@@ -194,42 +197,45 @@ def check_sector(box_deg, typ, radial, phi, rho_deg, probe_frac=0.3):
     pm = math.radians((phi[0] + phi[1]) / 2)
     pt = [(lo + hi) / 2 for lo, hi in box_deg]
     dirs_pt = [math.cos(pm), math.sin(pm)]
-    for r, d in zip(radial, dirs_pt): pt[r] = probe_frac * rho_deg * d
+    for r, d in zip(radial, dirs_pt): pt[r] = (rho_lo + probe_frac * (rho_deg - rho_lo)) * d
     rule = probe_rule(pt, typ)
     if rule is None or rule['margin'] <= 0:
         return False, dict(why='probe LP not positive', rule=rule)
-    rule['rho_probe'] = probe_frac * rho_deg * RAD
+    rule['rho_probe'] = (rho_lo + probe_frac * (rho_deg - rho_lo)) * RAD
     ph = I(math.radians(phi[0]), math.radians(phi[1]))
-    for variant in ('cancel', 'const'):
-        r = _sector_eval(box_deg, typ, radial, rho_deg, rule, ph, variant)
+    for variant in ('cancel', 'const', 'fixed'):
+        r = _sector_eval(box_deg, typ, radial, rho_deg, rule, ph, variant, rho_lo)
         if r[0] or r[1].get('why') not in ('division by 0',):
             return r
     return r
 
 
-def _sector_eval(box_deg, typ, radial, rho_deg, rule, ph, variant):
+def _sector_eval(box_deg, typ, radial, rho_deg, rule, ph, variant, rho_lo=0.0):
     from iad import icos, isin
-    if variant == 'const':
-        rule = dict(rule, zeros=[])                    # ratios from the probe, scaled with rho
-    rho_d_line = D(I(0.0), [I(0)], I(0.0))
-    rho_d_box = D(I(0.0, rho_deg * RAD), [I(1)], I(0.0))
+    if variant in ('const', 'fixed'):
+        rule = dict(rule, zeros=[])                    # ratios from the probe ('const': scaled with rho)
+    ra = rho_lo * RAD
+    rho_d_line = D(I(ra), [I(0)], I(ra))
+    rho_d_box = D(I(ra, rho_deg * RAD), [I(1)], I(ra))
     rp = rule.get('rho_probe', 0.3 * rho_deg * RAD)
+    if variant == 'fixed':
+        variant = 'cancel'                             # make_lam_fn without rho: constant ratios (zeros are [])
     dvec = [icos(ph), isin(ph)]
     def tilts(rho_iv, deriv):
         out = []
         for K in range(3):
             if K in radial:
                 d = dvec[radial.index(K)]
-                out.append(D(rho_iv * d, [d if deriv else I(0)], I(0.0)))
+                out.append(D(rho_iv * d, [d if deriv else I(0)], I(rho_iv.lo) * d))
             else:
                 out.append(D.const(I(box_deg[K][0] * RAD, box_deg[K][1] * RAD), 1))
         return out
     import iad
     try:
         iad.RHO = None
-        mline = model(tilts(I(0.0), False), typ, make_lam_fn(rule, rho_d_line, rp) if variant == 'const' else make_lam_fn(rule))
-        iad.RHO = I(0.0, rho_deg * RAD)
-        mb = model(tilts(I(0.0, rho_deg * RAD), True), typ, make_lam_fn(rule, rho_d_box, rp) if variant == 'const' else make_lam_fn(rule))
+        mline = model(tilts(I(ra), False), typ, make_lam_fn(rule, rho_d_line, rp) if variant == 'const' else make_lam_fn(rule))
+        iad.RHO = I(0.0, rho_deg * RAD - ra)
+        mb = model(tilts(I(ra, rho_deg * RAD), True), typ, make_lam_fn(rule, rho_d_box, rp) if variant == 'const' else make_lam_fn(rule))
     except ZeroDivisionError:
         return False, dict(why='division by 0', rule=rule)
     line_lo = min(x.v.lo for x in mline)
@@ -238,7 +244,7 @@ def _sector_eval(box_deg, typ, radial, rho_deg, rule, ph, variant):
     hows = []
     for ml, x in zip(mline, mb):                       # per vertex of the excluded region
         lv, d = ml.v.lo, x.g[0].lo
-        if lv > B.TOL and lv + min(0.0, d) * rho_deg * RAD > B.TOL:
+        if lv > B.TOL and lv + min(0.0, d) * (rho_deg - rho_lo) * RAD > B.TOL:
             hows.append('line>0')
         elif lv >= 0 and d > 0:
             hows.append('derivative')                  # lv >= 0 must hold exactly: see the caller / analytic classes
@@ -247,7 +253,7 @@ def _sector_eval(box_deg, typ, radial, rho_deg, rule, ph, variant):
     return True, dict(info, how=hows)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__' and len(sys.argv) == 1:
     box = [(0, 0.5), (19, 21), (0, 0.5)]
     for typ in [(5, 2, 3), (1, 0, 3)]:
         for ph in [(0, 45), (45, 90), (90, 180), (180, 225), (225, 270), (270, 360)]:
@@ -333,7 +339,10 @@ def polar_cell_box(sbox, radial, ph, rh):
     r = I(rh[0], rh[1])
     xa, ya = r * c, r * s
     b = list(sbox)
-    b[radial[0]] = (xa.lo, xa.hi); b[radial[1]] = (ya.lo, ya.hi)
+    for K, iv in zip(radial, (xa, ya)):
+        lo, hi = max(iv.lo, sbox[K][0]), min(iv.hi, sbox[K][1])     # clip to the box
+        if lo > hi: return None                                      # the cell misses the box
+        b[K] = (lo, hi)
     return b
 
 
@@ -342,6 +351,8 @@ def certify_box_type2(box, typ, eps, beta_step=0.5, min_sector=0.02, min_rho=1e-
     if len(near) != 2:
         return False, dict(why=f'{len(near)} near-zero tilts')
     radial = near; T = [K for K in range(3) if K not in near][0]
+    if force_T is None and box[T][0] <= 0.0 <= box[T][1]:
+        return certify_origin_box(box, typ, eps)
     rho0 = math.hypot(*[max(abs(box[K][0]), abs(box[K][1])) for K in radial])
     lo, hi = box[T]
     nb = max(1, math.ceil((hi - lo) / beta_step - 1e-9))
@@ -383,3 +394,270 @@ def certify_box_type2(box, typ, eps, beta_step=0.5, min_sector=0.02, min_rho=1e-
             m = (rh[0] + rh[1]) / 2
             stack += [(b, ph, (rh[0], m)), (b, ph, (m, rh[1]))]
     return True, stats
+
+
+def check_sector_multi(sbox, typ, radial, ph, rho, rho_lo=0.0):
+    last = None
+    for pf in (0.3, 0.1, 0.6):
+        ok, info = check_sector(sbox, typ, radial, ph, rho, probe_frac=pf, rho_lo=rho_lo)
+        if ok: return ok, info
+        last = info
+    return False, last
+
+
+def certify_box_type3(box, typ, eps, beta_step=0.1, sector0=5.0, rho1=0.3, min_sector=0.25, min_rho=0.02,
+                      max_checks=20000, force_T=None):
+    near = [K for K in range(3) if max(abs(box[K][0]), abs(box[K][1])) <= eps + 1e-12]
+    if force_T is not None:
+        near = [K for K in range(3) if K != force_T]
+    elif len(near) == 3:
+        return certify_origin_box(box, typ, eps)
+    if len(near) != 2:
+        return False, dict(why=f'{len(near)} near-zero tilts')
+    radial = near; T = [K for K in range(3) if K not in near][0]
+    if force_T is None and box[T][0] <= 0.0 <= box[T][1]:
+        return certify_origin_box(box, typ, eps)
+    rho0 = math.hypot(*[max(abs(box[K][0]), abs(box[K][1])) for K in radial])
+    lo, hi = box[T]
+    nb = max(1, math.ceil((hi - lo) / beta_step - 1e-9))
+    st = dict(checks=0, deriv=0, cell=0)
+    stack = []
+    for ib in range(nb):
+        b = (lo + (hi - lo) * ib / nb, lo + (hi - lo) * (ib + 1) / nb)
+        for q in sectors_for(box, radial):
+            k = q[0]
+            while k < q[1] - 1e-9:
+                stack.append((b, (k, min(q[1], k + sector0)), (0.0, min(rho1, rho0))))
+                k += sector0
+            if rho0 > rho1:
+                stack.append((b, q, (rho1, rho0)))
+    while stack:
+        b, ph, rh = stack.pop()
+        st['checks'] += 1
+        if st['checks'] > max_checks:
+            return False, dict(why='too many checks', stats=st, beta=b, phi=ph, rho=rh)
+        sbox = list(box); sbox[T] = b
+        if polar_cell_box(sbox, radial, ph, rh) is None:
+            st['outside'] = st.get('outside', 0) + 1; continue
+        if rh[0] == 0.0:
+            ok, info = check_sector_multi(sbox, typ, radial, ph, rh[1])
+            if ok: st['deriv'] += 1; continue
+            cb = polar_cell_box(sbox, radial, ph, rh)
+            lam, mc = B.margin_lp(cb, typ)
+            if lam is not None and B.margin_box(cb, typ, lam) > B.TOL:
+                st['cell'] += 1; continue
+            if ph[1] - ph[0] > min_sector:
+                m = (ph[0] + ph[1]) / 2
+                stack += [(b, (ph[0], m), rh), (b, (m, ph[1]), rh)]; continue
+            if b[1] - b[0] > 0.01:
+                m = (b[0] + b[1]) / 2
+                stack += [((b[0], m), ph, rh), ((m, b[1]), ph, rh)]; continue
+            if rh[1] > min_rho:
+                m = rh[1] / 4
+                stack += [(b, ph, (0.0, m)), (b, ph, (m, rh[1]))]; continue
+            return False, dict(why='inner ray', stats=st, beta=b, phi=ph, rho=rh, info=info)
+        ok, info = check_sector_multi(sbox, typ, radial, ph, rh[1], rho_lo=rh[0])
+        if ok: st['deriv'] += 1; continue
+        cb = polar_cell_box(sbox, radial, ph, rh)
+        lam, mc = B.margin_lp(cb, typ)
+        if lam is not None and B.margin_box(cb, typ, lam) > B.TOL:
+            st['cell'] += 1; continue
+        # split the cell: angular if its arc is the longer side, else radial; beta if tiny
+        arc = math.radians(ph[1] - ph[0]) * rh[1]; rad = rh[1] - rh[0]
+        if max(arc, rad) < 1e-4:
+            if b[1] - b[0] > 1e-3:
+                m = (b[0] + b[1]) / 2
+                stack += [((b[0], m), ph, rh), ((m, b[1]), ph, rh)]; continue
+            return False, dict(why='cell', stats=st, beta=b, phi=ph, rho=rh)
+        if arc >= rad:
+            m = (ph[0] + ph[1]) / 2
+            stack += [(b, (ph[0], m), rh), (b, (m, ph[1]), rh)]
+        else:
+            m = (rh[0] + rh[1]) / 2
+            stack += [(b, ph, (rh[0], m)), (b, ph, (m, rh[1]))]
+    return True, st
+
+
+def _work(args):
+    box, typ, eps = args
+    try:
+        ok, info = certify_box_type3(box, typ, eps)
+    except Exception as e:                     # record, never hide
+        ok, info = False, dict(why=f'exception {type(e).__name__}: {e}')
+    return dict(box=box, typ=typ, ok=ok, info={k: (v if k != 'info' else None) for k, v in info.items()})
+
+
+def run3(path, out, procs, eps=1.0):
+    from concurrent.futures import ProcessPoolExecutor
+    rows = [json.loads(l) for l in open(path)]
+    jobs = [([tuple(x) for x in r['box']], tuple(t), eps) for r in rows for t in r['fail']]
+    jobs.sort(key=lambda j: -(j[0][0][1] - j[0][0][0]) * (j[0][2][1] - j[0][2][0]))
+    n = nok = 0
+    with ProcessPoolExecutor(procs) as ex, open(out, 'w') as f:
+        for r in ex.map(_work, jobs, chunksize=8):
+            n += 1; nok += r['ok']
+            f.write(json.dumps(r, default=str) + '\n')
+            if n % 200 == 0: print(f'{n}/{len(jobs)} ok {nok}', flush=True)
+    print('done', n, 'ok', nok, 'failed', n - nok, flush=True)
+
+
+if __name__ == '__main__' and len(sys.argv) > 1 and sys.argv[1] == 'run3':
+    run3(sys.argv[2], sys.argv[3], int(sys.argv[4]))
+
+
+# ---------------- the all-upright point: rays from the origin in tilt space ----------------
+def check_cone(typ, phi, psi, rho_deg, probe_frac=0.3, rho_lo=0.0):
+    """All three tilts = rho * (cos psi cos phi, cos psi sin phi, sin psi), rho in [rho_lo, rho_deg] (deg),
+    (phi, psi) in the given degree intervals.  Same tests as check_sector, base point at rho_lo."""
+    import iad
+    from iad import icos, isin
+    pm, sm = math.radians(sum(phi) / 2), math.radians(sum(psi) / 2)
+    dm = [math.cos(sm) * math.cos(pm), math.cos(sm) * math.sin(pm), math.sin(sm)]
+    rp_deg = rho_lo + probe_frac * (rho_deg - rho_lo)
+    rule = probe_rule([rp_deg * x for x in dm], typ)
+    if rule is None or rule['margin'] <= 0:
+        return False, dict(why='probe LP not positive')
+    rule['rho_probe'] = rp_deg * RAD
+    P = I(math.radians(phi[0]), math.radians(phi[1])); S = I(math.radians(psi[0]), math.radians(psi[1]))
+    cs = icos(S)
+    dvec = [cs * icos(P), cs * isin(P), isin(S)]
+    ra = rho_lo * RAD
+    best = None
+    for variant in ('cancel', 'const'):
+        rl = dict(rule, zeros=[]) if variant == 'const' else rule
+        def tilts(rho_iv, deriv):
+            return [D(rho_iv * d, [d if deriv else I(0)], I(rho_iv.lo) * d) for d in dvec]
+        try:
+            iad.RHO = None
+            fl = make_lam_fn(rl, D(I(ra), [I(0)], I(ra)), rule['rho_probe']) if variant == 'const' else make_lam_fn(rl)
+            mline = model(tilts(I(ra), False), typ, fl)
+            iad.RHO = I(0.0, rho_deg * RAD - ra)
+            fb = make_lam_fn(rl, D(I(ra, rho_deg * RAD), [I(1)], I(ra)), rule['rho_probe']) if variant == 'const' else make_lam_fn(rl)
+            mb = model(tilts(I(ra, rho_deg * RAD), True), typ, fb)
+        except ZeroDivisionError:
+            continue
+        hows = []
+        for ml, x in zip(mline, mb):
+            lv, d = ml.v.lo, x.g[0].lo
+            if lv > B.TOL and lv + min(0.0, d) * (rho_deg - rho_lo) * RAD > B.TOL: hows.append('line>0')
+            elif lv >= 0 and d > 0: hows.append('derivative')
+            else: hows = None; break
+        if hows: return True, dict(how=hows)
+        best = dict(why='vertex not certified', line=[x.v.lo for x in mline], der=[(x.g[0].lo, x.g[0].hi) for x in mb])
+    return False, best or dict(why='division by 0')
+
+
+def certify_origin_type(typ, r0, cone0=15.0, min_cone=0.5, max_checks=40000):
+    """All tilts in the ball of radius r0 (deg) around 0: cover the sphere of directions by (phi, psi) cells."""
+    st = dict(checks=0)
+    stack = [((p, p + cone0), (q, q + cone0), (0.0, r0)) for p in range(0, 360, int(cone0)) for q in range(-90, 90, int(cone0))]
+    while stack:
+        ph, ps, rh = stack.pop()
+        st['checks'] += 1
+        if st['checks'] > max_checks:
+            return False, dict(why='too many checks', stats=st)
+        ok, info = check_cone(typ, ph, ps, rh[1], rho_lo=rh[0])
+        if not ok:
+            for pf in (0.1, 0.6):
+                ok, info = check_cone(typ, ph, ps, rh[1], probe_frac=pf, rho_lo=rh[0])
+                if ok: break
+        if ok: continue
+        if ph[1] - ph[0] > min_cone:
+            m = (ph[0] + ph[1]) / 2; n = (ps[0] + ps[1]) / 2
+            stack += [((ph[0], m), (ps[0], n), rh), ((m, ph[1]), (ps[0], n), rh), ((ph[0], m), (n, ps[1]), rh), ((m, ph[1]), (n, ps[1]), rh)]
+            continue
+        if rh[1] - rh[0] > r0 / 64:
+            m = (rh[0] + rh[1]) / 2
+            stack += [(ph, ps, (rh[0], m)), (ph, ps, (m, rh[1]))]
+            continue
+        return False, dict(why=info.get('why'), phi=ph, psi=ps, rho=rh, info=info, stats=st)
+    return True, st
+
+
+def certify_origin_box(box, typ, eps):
+    """All three tilts near 0: rays from each zero line in turn (side-by-side types are tight on one of them),
+    then rays from the origin (stack types, tight only there)."""
+    tried = []
+    for T in range(3):
+        ok, info = certify_box_type3(box, typ, eps, force_T=T, max_checks=6000)
+        if ok: return True, dict(info, method=f'line T={T}')
+        tried.append(info.get('why'))
+    r0 = math.sqrt(sum(max(abs(lo), abs(hi)) ** 2 for lo, hi in box))
+    ok, info = certify_origin_type(typ, r0)
+    if ok: return True, dict(info, method='origin')
+    return False, dict(why=f'origin box: lines {tried}, origin {info.get("why")}')
+
+
+def _free_choice(box, typ):
+    """Order the pairs to free by the LP margin of the partial type at probes near the line (best first)."""
+    near = [K for K in range(3) if box[K][0] <= 0.0 <= box[K][1] or max(abs(box[K][0]), abs(box[K][1])) <= 1.0]
+    pts = []
+    mid = [(lo + hi) / 2 for lo, hi in box]
+    for f in (0.2, 0.6):
+        for sgn in ((1, 1), (1, -1), (-1, 1), (-1, -1)):
+            pt = list(mid)
+            for K, sg in zip(near[:2], sgn): pt[K] = sg * f * max(abs(box[K][0]), abs(box[K][1]), 0.1)
+            pts.append(pt)
+    for corner in itertools.product(*box):                       # the box's corners too
+        pts.append(list(corner))
+    scores = []
+    for X in range(3):
+        part = tuple(None if p == X else typ[p] for p in range(3))
+        scores.append((min(B.margin_lp([(x, x) for x in pt], part)[1] for pt in pts), X))
+    scores.sort(reverse=True)
+    return [X for sc, X in scores if sc > 0]
+
+
+MAXC = 8000
+
+
+def _box_work(args):
+    import r3vec
+    certify = r3vec.certify_box_type_vec
+    box, fails, eps = args
+    remaining = [tuple(t) for t in fails]
+    certs, failed = [], []
+    while remaining:
+        f = remaining[0]
+        done = False
+        for X in _free_choice(box, f):
+            part = tuple(None if p == X else f[p] for p in range(3))
+            try:
+                ok, info = certify(box, part, eps, max_checks=MAXC)
+            except Exception as e:
+                ok, info = False, dict(why=f'exception {e}')
+            if ok:
+                cov = [g for g in remaining if all(part[p] is None or part[p] == g[p] for p in range(3))]
+                certs.append(dict(part=part, covers=len(cov), stats={k: v for k, v in info.items() if k != 'info'}))
+                remaining = [g for g in remaining if g not in cov]
+                done = True; break
+        if not done:
+            try:
+                ok, info = certify(box, f, eps, max_checks=MAXC)
+            except Exception as e:
+                ok, info = False, dict(why=f'exception {e}')
+            if ok: certs.append(dict(part=f, covers=1, stats={k: v for k, v in info.items() if k != 'info'}))
+            else: failed.append(dict(typ=f, why=info.get('why')))
+            remaining = remaining[1:]
+    return dict(box=box, ncerts=len(certs), certs=certs, failed=failed)
+
+
+def run4(path, out, procs, eps=1.0):
+    from concurrent.futures import ProcessPoolExecutor
+    rows = [json.loads(l) for l in open(path)]
+    jobs = [([tuple(x) for x in r['box']], r['fail'], eps) for r in rows]
+    jobs.sort(key=lambda j: all(lo <= 0 <= hi for lo, hi in j[0]))          # origin boxes last
+    n = nf = 0
+    with ProcessPoolExecutor(procs) as ex, open(out, 'w') as f:
+        from concurrent.futures import as_completed
+        futs = [ex.submit(_box_work, j) for j in jobs]
+        for fu in as_completed(futs):
+            r = fu.result()
+            n += 1; nf += len(r['failed'])
+            f.write(json.dumps(r, default=str) + '\n'); f.flush()
+            print(f'{n}/{len(jobs)} boxes, certs {r["ncerts"]}, failed types so far {nf}', flush=True)
+    print('done', n, 'failed types', nf, flush=True)
+
+
+if __name__ == '__main__' and len(sys.argv) > 1 and sys.argv[1] == 'run4':
+    run4(sys.argv[2], sys.argv[3], int(sys.argv[4]))
