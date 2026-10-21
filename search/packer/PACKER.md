@@ -4939,3 +4939,14 @@ Pre-registered.  Same recipe as SW274b on the grown pool (1,088 distinct minima 
   Why: a family-A lineage with a different upstream; cheap (3 cores free beside SW274c and the Lean job).  Metrics: best
   274, new distinct < 17.0005.  Predictions: below 17.000303 (our best): 12 %; below 17: 2 %; >= 10 new distinct
   < 17.0005: 40 %.
+* **SW274c result (03:05; 24.0 CPU-h measured).**  15,669 archive entries (15,668 new to the store).  Best line-free 274
+  **17.000299454593** (was 17.000302875; -3.4e-6).  Predictions: below 17 no (4 %); below 17.000303 yes (35 %);
+  >= 15 new distinct minima < 17.0005 yes (50 %), by far: the store now holds 306 line-free 274s < 17.0005 (248 side
+  keys), 244 of them first sighted by SW274c.
+* Richness recount (03:10; side keys at 2e-9, incidence over campaigns, i.e. dgen run dirs grouped; coarser than the
+  23:50 count, which split by run): < 17.0005 248 seen, q1 231, Chao2 >= 1,582 (~16 %); < 17.001 4,423 seen, >= 23,632
+  (~19 %); < 17.002 8,977, >= 61,044.  Each campaign mostly finds minima no other has: the pool is still far from
+  exhausted; the best moved by 3e-6 per 24 CPU-h, i.e. the walk is not converging on 17 fast in this family.
+* **SW274d, pre-registered.**  Same recipe on the grown pool (best 2000 now below 17.000648), band narrowed:
+  `dgen.py sweep --n 274 --band 0.0,0.0007 --pool 2000 --runs 8 --cpu-h 24 --seed 2743 --tag _sw5`, queued behind SW157.
+  Predictions: below 17: 3 %; below 17.0002995: 40 %; >= 100 new side keys < 17.0005: 60 %.
