@@ -234,7 +234,15 @@ def main():
     a.add_argument('--quench', default=None, help='relax.OPS key, e.g. shrink, soft05, loose')
     a.add_argument('--prior', default='broad', choices=PRIORS)
     a.add_argument('--procs', type=int, default=1)
+    e = sub.add_parser('explore', help='explorer runs from the line-free starts of a sample dir (10-21: composers are '
+                       'sources of starts; each explorer run is a walk from them)')
+    e.add_argument('--dir', required=True); e.add_argument('--n', type=int, required=True)
+    e.add_argument('--runs', type=int, default=6); e.add_argument('--starts-per-run', type=int, default=6)
+    e.add_argument('--cpu-h', type=float, default=6.0, help='total, split over the runs')
+    e.add_argument('--smax', type=float, default=None); e.add_argument('--seed', type=int, default=0)
     g = ap.parse_args()
+    if g.cmd == 'explore':
+        return explore(g)
     os.makedirs(g.out, exist_ok=True)
     from concurrent.futures import ProcessPoolExecutor
     from pk import manifest
@@ -249,6 +257,42 @@ def main():
                   f"th={P['arms'][0]['theta']:.1f},{P['arms'][1]['theta']:.1f} tilted={r['tilted']} "
                   f"base={r['fill']['base_count']} n_out={r['n_out']} (target {r['fill']['target']}) pen={r['fill']['pen']:.3f} s0={r['s0']:.5f}"
                   + (f" s1={r['s1']:.6f} pen1={r['pen1']:.1e} lines={r['lines']}" if 's1' in r else ''), flush=True)
+    man.finish()
+
+
+def explore(g):
+    """Starts = line-free, feasible, count n outputs of `sample` (any side), spread over the runs round-robin in side
+    order so every run gets a range; explorer as SW (--adapt --adapt-cells --sparse-share 0.5), CPU-budgeted."""
+    import subprocess
+    from pk import manifest
+    R = [json.loads(l) for l in open(os.path.join(g.dir, 'starts.jsonl'))]
+    ok = sorted((r for r in R if r['n_out'] == g.n and r.get('lines') == 0 and r.get('pen1', 1) <= 1e-9 and 's1' in r),
+                key=lambda r: r['s1'])
+    seen, S = set(), []
+    for r in ok:
+        if round(r['s1'], 7) not in seen:
+            seen.add(round(r['s1'], 7)); S.append(r)
+    S = S[:g.runs * g.starts_per_run]
+    print(f'{len(ok)} line-free n={g.n} starts ({len(S)} used; sides {S[0]["s1"]:.5f}..{S[-1]["s1"]:.5f})' if S else 'no starts',
+          flush=True)
+    if not S:
+        return
+    smax = g.smax or max(r['s1'] for r in S) + 0.01
+    man = manifest.start(os.path.join(g.dir, 'explore'), 'bulbgen-explore', seed=g.seed, args=vars(g), procs=g.runs)
+    P = []
+    for i in range(g.runs):
+        mine = S[i::g.runs]
+        if not mine:
+            continue
+        out = os.path.join(g.dir, 'explore', f'x{i}'); os.makedirs(out, exist_ok=True)
+        paths = [os.path.join(g.dir, f's{r["seed"]:05d}_n{g.n}.txt') for r in mine]
+        cmd = [sys.executable, os.path.join(HERE, 'explore.py'), '--n', str(g.n), '--starts', *paths,
+               '--cpu-h', str(g.cpu_h / g.runs), '--procs', '1', '--seed', str(g.seed + 900 + i), '--adapt',
+               '--adapt-cells', '--sparse-share', '0.5', '--smax', str(smax), '--frontier-s', str(float(math.ceil(math.sqrt(g.n) - 1e-12))),
+               '--final-polish', '8', '--out', out]
+        P.append(subprocess.Popen(cmd, stdout=open(os.path.join(out, 'log.txt'), 'w'), stderr=subprocess.STDOUT))
+    for p in P:
+        p.wait()
     man.finish()
 
 

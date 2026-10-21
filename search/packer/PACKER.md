@@ -4869,3 +4869,17 @@ Pre-registered.  Same recipe as SW274b on the grown pool (1,088 distinct minima 
      (4 x 1 CPU-h) reach within 1e-3 of the records?  If not, fix fill / geometry before 274.
   3. 274: N starts (fitted prior, balanced), refine with the SW explorer recipe; compare the refined distribution per
      CPU-h with SW274c on the same budget.
+* **Revised (00:30; Evan: "everything -- especially composers -- should be viewed as a source for exploration; each move
+  is a walk, from a starting point, and everything viewed as probability distribution ... Don't judge something too
+  harshly if it fails to produce a record when nothing else has either -- no record but new diverse starts is a good
+  sign").**  No gates: step 1 (fitting the record profiles) improves the prior over time; step 2 is dropped as a
+  precondition.  Composer output goes straight to exploration.
+* **BC274a, pre-registered.**  `bulbgen.py sample --k 17 --n 274 --prior record --quench shrink --count 600 --seed 1000`
+  + `--prior broad --count 300 --seed 5000` (same dir `runs/bulb/bc274a`, 6 procs), then `bulbgen.py explore --n 274
+  --runs 6 --starts-per-run 6 --cpu-h 6` (the 36 best distinct line-free 274 starts, spread over runs).
+  Outputs go to the store via the sink (every count, so 273 / 275 starts too).
+  Metrics: (a) diversity: line-free 274 starts and explorer outputs vs the store pool: fingerprint distance to the
+  nearest pool packing below 17.01, detail tuples (band sizes / angles / shims) not seen before, balanced share;
+  (b) refined distribution: explorer bests per run, outputs < 17.005 / 17.001, vs SW274c per CPU-h.
+  Predictions: >= 50 % of explorer outputs < 17.01 are new detail tuples: 60 %; a balanced 274 below the pool's best
+  balanced (17.0041): 25 %; any output < 17.001: 10 %; below 17: 1 %.
