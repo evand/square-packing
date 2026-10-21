@@ -31,6 +31,7 @@ Thesis (Evan 10-14): diversity pays; local search at current budgets has mined t
 - [ ] Explorer seeded from EV2 gen 1's 55 novel near-record minima (~5 CPU-h).  `tasks/packer-next-2026-10-15/` §3.
 - [ ] s(110) corner-cell holdouts (census 1,078 minima, 19:12 10-15) + a stop-early descent mode (GX1: crossings collapse to the record basin).  §4.
 - [ ] Detour, parked (Evan 10-15): our own register to n = 1024-4096 (every published regular packing, L groups, mechanical constructions), then hunt / submit records > 324.
+- [ ] Dedupe (`pk/ident.py`, PACKER "Conservative dedupe"): applied once 10-20 at 110 / 272-274 (-91k rows); rule must be re-discussed with Evan before any further `--apply`.  Next ideas: contact-graph refusal from exactsolve reports; run-side cluster weighting for seed selection.
 - [ ] One sink + one policy (Evan 10-20, PACKER "Store intake / pruning policy"): `pk/policy.py` + `pk.py prune --dry-run` built, archive dedupe applied (-15 GB); next: Evan picks thresholds, stub schema + prune apply, sink (auto-import on manifest.finish / jobs.py) + backfill of 1,176 unimported runs, detection on import, then CPU budgets + campaign driver.
 - [ ] Near-miss drain `nmdrain1014b`: stopped 10-15 (0 gains in 42 items, 100 queued); low value, resume only if cores idle.
 - [ ] `pk/tests/test_distinct.py::test_verdicts` fails (pre-existing, likely the 10-19 exact-side verdict change): update the test.

@@ -42,7 +42,8 @@ SCHEMA = """CREATE TABLE IF NOT EXISTS dedup (
   old INTEGER PRIMARY KEY, hash TEXT NOT NULL, n INTEGER NOT NULL, s REAL NOT NULL, rep INTEGER NOT NULL,
   method TEXT NOT NULL, evidence TEXT, added TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS dedup_hash ON dedup(hash);
-CREATE INDEX IF NOT EXISTS dedup_rep ON dedup(rep);"""
+CREATE INDEX IF NOT EXISTS dedup_rep ON dedup(rep);
+CREATE INDEX IF NOT EXISTS packing_parent ON packing(parent);"""
 
 
 def ensure_schema(db):

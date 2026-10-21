@@ -4753,3 +4753,11 @@ SW's 13, 110 (as SW), 308 and 146 (D308 / D308b / R308 and D146 / HB2 today): 42
   examined pairs in different groups; the 10.99790729879133969 census row's group now empty; no merge joins rows that
   resolve to disjoint exact minima (82,235 both-same, 27,212 one or none resolved); all 1,100 resolvable exact keys keep a
   row.  Merge core dev median 5e-8, 99th pct 5e-5.
+* **Applied 10-20 (Evan: "Let's apply it!").**  Backup first: ~/store-backups/store-2026-10-20-pre-dedupe.sqlite
+  (1,804,544 rows, quick_check ok).  Index packing(parent) added (each merge repoints children).  Deleted into `dedup`:
+  110 226,934 -> 136,977 (89,957); 272 2,791 -> 2,570 (221); 273 2,339 -> 2,167 (172); 274 16,737 -> 15,672 (1,065).
+  Checks: quick_check ok; per-n counts match dedup rows; census page rows 1,076 / 1,076, minimum.pid 341 / 341,
+  frontier packings 965 / 965 present; 0 orphan sightings / parents / expansion rows; Store.get(old id) -> its
+  representative; an archive file backed by a merged row (runs/hborder/n274d/x9_cont/b00000.txt) reads back from the
+  representative with a note in restored_from_dedup.txt.  Do not rerun --apply (any n) without discussing the rule
+  with Evan again.
