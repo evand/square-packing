@@ -4847,3 +4847,25 @@ Store after SW274b's import: line-free polished 274s, minima = side keys (2e-9 c
   L-cut-from-308 lineage (the cut shortens one band), so the pool's shape is a construction artefact, not evidence about
   the landscape.  The record design extended to 274 (balanced ~42-47 per band, ~18.5 deg) is the unexplored region;
   HB's insertion into the 273 record (17.0125, 4 x 40 min) is the only probe of it.
+
+## SW274c: continued band sweep at 274 (10-21 ~00:05; Evan: "15% seen sounds promising ... keep hunting")
+Pre-registered.  Same recipe as SW274b on the grown pool (1,088 distinct minima < 17.001), new seed:
+`dgen.py sweep --n 274 --band 0.0,0.006 --pool 2000 --runs 8 --cpu-h 24 --seed 2742 --tag _sw4` (band narrowed to
+0.006: the best 2000 now lie below ~17.0025).  Leaves ~8 cores for the bulb constructor work.
+* Metric: best line-free 274; new distinct minima < 17.0005 (Chao2 recount).
+* Predictions: a 274 below 17: 4 %; best below 17.000303: 35 %; >= 15 new distinct minima < 17.0005: 50 %.
+
+## BC274: balanced-band construction for 274 (10-21 ~00:20; Evan: "new ideas and diversity matter a lot; the direct construction approach makes sense ... Let's do it!")
+* `bulbgen.py sample` gained `--prior record` (6-row bands at theta0(6) = 18.9 +- 0.7 deg, b in {5, 6, 7} 0.2 / 0.6 /
+  0.2, balanced or +-1, bulb layout 0.8, side 10^U(-4, -2.5) below k), `--procs`, a manifest, and post-quench
+  pen / line counts per start.
+* Smoke (16 starts, record prior, quench shrink, 28 s on 6 procs): not usable yet.  Fill shortfall (n_out 246-264 for
+  targets 273-276 in 6 / 16); bands too big (69-163 tilted vs the records' 87-100); after the quench 10 / 16 grid-locked,
+  the line-free ones far off (17.02-17.16) or short counts.
+* Plan (each step a gate; Evan's 10-18 rule: judge a generator by its refined outcome distribution per CPU-h):
+  1. Fit the record profiles: per band of 272 / 273 / 307 / 308 (and 241, 270, 271): squares, rows, row widths
+     (taper profile), angle, wall offset, end positions, corner block.  Replace the guessed distributions.
+  2. Positive control: with the fitted prior at k = 17 / n = 273 and k = 18 / n = 308, do starts + the standard explorer
+     (4 x 1 CPU-h) reach within 1e-3 of the records?  If not, fix fill / geometry before 274.
+  3. 274: N starts (fitted prior, balanced), refine with the SW explorer recipe; compare the refined distribution per
+     CPU-h with SW274c on the same budget.

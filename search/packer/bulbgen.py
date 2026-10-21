@@ -26,17 +26,33 @@ TOPOLOGIES = ('L', 'V', 'bulb')
 
 # ---------------------------------------------------------------- parameters (all random)
 
-def sample_params(rng, k, n):
-    """One draw of every structural parameter.  Edit the distributions here; keep each one explicit."""
-    b1 = int(rng.choice([b for b in range(3, 9)], p=None))          # right-arm width (rows of b1 tilted squares)
-    b2 = int(np.clip(b1 + rng.choice([-1, 0, 0, 1]), 3, 9))        # bottom arm: same width or +-1 (211: 5 and 4)
-    shared = rng.random() < 0.6                                     # one angle for both arms (211) or each its own
-    th1 = 2 * math.degrees(math.atan(1 / b1)) + rng.normal(0, 1.5)
-    th2 = th1 if shared else 2 * math.degrees(math.atan(1 / b2)) + rng.normal(0, 1.5)
+PRIORS = ('broad', 'record')
+
+
+def sample_params(rng, k, n, prior='broad'):
+    """One draw of every structural parameter.  Edit the distributions here; keep each one explicit.
+    prior 'record' (10-21, 274 campaign): centred on the two-bulb records next to the target (272 / 273 / 307 / 308:
+    6-row bands at ~18.5-19 deg = theta0(6) 18.9, balanced, mostly the bulb layout, side just below k)."""
+    if prior == 'record':
+        b1 = int(rng.choice([5, 6, 7], p=[0.2, 0.6, 0.2]))
+        b2 = int(b1 if rng.random() < 0.5 else np.clip(b1 + rng.choice([-1, 1]), 4, 8))
+        shared = rng.random() < 0.7
+        sd = 0.7
+        topo_p = [0.1, 0.1, 0.8]
+        delta = float(10 ** rng.uniform(-4, -2.5))
+    else:
+        b1 = int(rng.choice([b for b in range(3, 9)], p=None))      # right-arm width (rows of b1 tilted squares)
+        b2 = int(np.clip(b1 + rng.choice([-1, 0, 0, 1]), 3, 9))    # bottom arm: same width or +-1 (211: 5 and 4)
+        shared = rng.random() < 0.6                                 # one angle for both arms (211) or each its own
+        sd = 1.5
+        topo_p = [0.25, 0.25, 0.5]
+        delta = float(10 ** rng.uniform(-4, -1.7))                  # side s = k - delta
+    th1 = 2 * math.degrees(math.atan(1 / b1)) + rng.normal(0, sd)
+    th2 = th1 if shared else 2 * math.degrees(math.atan(1 / b2)) + rng.normal(0, sd)
     return dict(
-        k=k, n=n,
-        delta=float(10 ** rng.uniform(-4, -1.7)),                    # side s = k - delta
-        topology=str(rng.choice(TOPOLOGIES, p=[0.25, 0.25, 0.5])),
+        k=k, n=n, prior=prior,
+        delta=delta,
+        topology=str(rng.choice(TOPOLOGIES, p=topo_p)),
         arms=[dict(b=b1, theta=th1), dict(b=b2, theta=th2)],
         # bulb: how far each arm stops short of the far wall / the corner block (in units; 308: ~1 and ~b)
         end_gap=[float(rng.uniform(0, 2)) for _ in range(4)],
@@ -180,11 +196,11 @@ def fill_to_count(s, T, P, prng):
 
 # ---------------------------------------------------------------- driver
 
-def one(k, n, seed, quench=None):
+def one(k, n, seed, quench=None, prior='broad'):
     import random
     rng = np.random.default_rng(seed)
     prng = random.Random(seed)                       # pk.fill draws (random.Random, as pk.moves)
-    P = sample_params(rng, k, n)
+    P = sample_params(rng, k, n, prior)
     s, T = build(P, rng)
     sq, finfo = fill_to_count(s, T, P, prng)
     rec = dict(seed=seed, params=P, s0=s, tilted=len(T), n_target=n, n_out=len(sq), fill=finfo, sq=sq)
@@ -196,7 +212,14 @@ def one(k, n, seed, quench=None):
             if r.out:
                 s1, sq1 = read_cfg(r.out)
                 rec.update(s1=float(s1), sq=[tuple(map(float, q)) for q in sq1])
+        from pk.packing import Packing
+        q = Packing(rec.get('s1', s), np.array(rec['sq'], float))
+        rec.update(pen1=float(q.max_pen()), lines=int(q.grid_lines()))
     return rec
+
+
+def _one(t):
+    return one(*t)
 
 
 def main():
@@ -209,19 +232,24 @@ def main():
     a.add_argument('--seed', type=int, default=0)
     a.add_argument('--out', required=True)
     a.add_argument('--quench', default=None, help='relax.OPS key, e.g. shrink, soft05, loose')
+    a.add_argument('--prior', default='broad', choices=PRIORS)
+    a.add_argument('--procs', type=int, default=1)
     g = ap.parse_args()
     os.makedirs(g.out, exist_ok=True)
-    with open(os.path.join(g.out, 'starts.jsonl'), 'a') as f:
-        for i in range(g.count):
-            r = one(g.k, g.n, g.seed + i, g.quench)
-            gen.write(os.path.join(g.out, f's{g.seed + i:05d}_n{r["n_out"]}.txt'), r.get('s1', r['s0']), r['sq'])
+    from concurrent.futures import ProcessPoolExecutor
+    from pk import manifest
+    man = manifest.start(g.out, 'bulbgen', seed=g.seed, args=vars(g), procs=g.procs)
+    with open(os.path.join(g.out, 'starts.jsonl'), 'a') as f, ProcessPoolExecutor(g.procs) as ex:
+        for r in ex.map(_one, [(g.k, g.n, g.seed + i, g.quench, g.prior) for i in range(g.count)], chunksize=1):
+            gen.write(os.path.join(g.out, f's{r["seed"]:05d}_n{r["n_out"]}.txt'), r.get('s1', r['s0']), r['sq'])
             sq = r.pop('sq')
             f.write(json.dumps(r) + '\n')
             P = r['params']
             print(f"seed {r['seed']}: {P['topology']:4s} b={P['arms'][0]['b']},{P['arms'][1]['b']} "
                   f"th={P['arms'][0]['theta']:.1f},{P['arms'][1]['theta']:.1f} tilted={r['tilted']} "
                   f"base={r['fill']['base_count']} n_out={r['n_out']} (target {r['fill']['target']}) pen={r['fill']['pen']:.3f} s0={r['s0']:.5f}"
-                  + (f" s1={r['s1']:.6f}" if 's1' in r else ''), flush=True)
+                  + (f" s1={r['s1']:.6f} pen1={r['pen1']:.1e} lines={r['lines']}" if 's1' in r else ''), flush=True)
+    man.finish()
 
 
 if __name__ == '__main__':
