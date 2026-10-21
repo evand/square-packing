@@ -4883,3 +4883,14 @@ Pre-registered.  Same recipe as SW274b on the grown pool (1,088 distinct minima 
   (b) refined distribution: explorer bests per run, outputs < 17.005 / 17.001, vs SW274c per CPU-h.
   Predictions: >= 50 % of explorer outputs < 17.01 are new detail tuples: 60 %; a balanced 274 below the pool's best
   balanced (17.0041): 25 %; any output < 17.001: 10 %; below 17: 1 %.
+
+## Overnight 10-20/21 (Evan: "compute is yours for the night"; a Lean agent uses ~4 cores: we aim at ~12)
+* **BAL274, pre-registered.**  Explorer walks from the balanced-band 274s already in the store (smaller band >= 40 tilted;
+  5,051 distinct < 17.03, best 17.00406): 36 starts by fingerprint farthest-point among the best 1,500 (sides
+  17.0041-17.0098), `runs/bal274/starts.jsonl` (store ids), `bulbgen.py explore --dir runs/bal274 --n 274 --runs 6
+  --cpu-h 6`.  Why: the record design at 272 / 273 / 307 / 308 is balanced; the near-17 pool is all unbalanced.
+  Metrics: best balanced 274 (vs 17.00406), outputs < 17.003 / 17.001, new detail tuples.  Predictions: best balanced
+  < 17.003: 30 %; < 17.001: 8 %; < 17: 1 %.
+* **SW157, pre-registered.**  157 (k = 13, offset +1; 156's slack 0.0208 is the largest unstepped one; DESIGN §10): pool
+  1,056 distinct line-free in [13.01, 13.02), best 13.011364.  `dgen.py sweep --n 157 --band 0.0,0.02 --pool 2000 --runs 8
+  --cpu-h 16 --seed 1571 --tag _sw1`.  Predictions: best below 13.011364: 50 %; below 13.005: 10 %; below 13: 1 %.
