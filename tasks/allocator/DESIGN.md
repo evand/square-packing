@@ -158,3 +158,24 @@ Left open, by kind:
    prior-from-family gives an expected value per arm, but the cost side (our time) is outside the CPU bandit.
 5. CPU outside the campaign (other projects, census, exact forms): the same machinery if their outputs get a V; until
    then a fixed split.
+
+## 10. Target choice is the same calculation (Evan 10-20: "even the 274 record hunt is a math problem ... where value
+and likelihood align")
+
+Events have values, not only n: V(first packing below the grid at n) ≫ V(improving an existing sub-grid record).
+The campaign target is argmax over (n, event) of V × P(event | effort), so it is derived the same way as arm shares.
+
+Likelihood data: the sub-grid onset m(k) = max{n : s(n) < k known} (frontier 10-20):
+
+| k | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| m(k) − (k² − k) | −1 | −1 | −1 | 0 | 0 | 0 | +1 | +1 | +1 | **+1** | +2 |
+| slack k − s(m) | .054 | .056 | .050 | .0032 | .0143 | .0208 | .0004 | .0065 | .0129 | **.0161** | .0029 |
+
+Plateaus of 3-4 k; slack grows inside a plateau, then the offset steps up and the slack resets.  274 = 17² − 17 + 2
+would be the step at k = 17 (k = 18 has already stepped: 308 = 18² − 18 + 2).  Crude reading: the step at 13 → 14
+came after slack 0.0208; 17's slack is 0.0161, so the extrapolation says "close call", and our best non-grid 274
+(17.000478, +4.8e-4) is already nearer than that.  Two likelihood signals per n disagree elsewhere: 157 (k = 13,
+offset +1) has the largest unstepped slack (0.0208) but our best non-grid 157 is +1.1e-2, and smaller n have had more
+outside search (evidence against an easy sub-grid packing).  A model of P(first sub-grid at n | slack, our closest,
+outside effort) reconciles these and ranks the next targets (candidates: 157, 242, 133, 309); 274 tops both signals.
