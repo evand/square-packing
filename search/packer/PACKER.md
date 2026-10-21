@@ -4763,3 +4763,21 @@ SW's 13, 110 (as SW), 308 and 146 (D308 / D308b / R308 and D146 / HB2 today): 42
   with Evan again.
 * **Wrap-up (10-20 evening).**  SW2's dgen runs at 270-273 imported (16 runs, 10,034 new rows; not deduped).  Handoff:
   `HANDOFF-2026-10-20b.md`.
+
+## Sink + inclusive policy (10-20 late; Evan: "inclusive intake thresholds, conservative pruning / dedupe.  If they're distinct packings, track them.")
+* `pk/policy.yaml`: full / screened_full / drop = inf, keep_grid, keep_n_range: every feasible distinct packing is kept
+  with coordinates; only exact copies merge (canon hash; pk/ident's rule unchanged, never auto-applied).  `pk.py prune`
+  stays report-only and now reports nothing to thin.
+* `pk/sink.py`, `pk.py sink [--dry-run] [--runs ...] [--report]`: explorer archives (every run with archive.jsonl,
+  incremental by line count in runs/sink/state.json; lines younger than 10 min wait) + compose2 / fresh / harden output
+  dirs (nearmiss.read_outputs, thr = inf), policy.classify(intake=True) on each row; on import: hits (s < public
+  frontier - 1e-9, no public sighting -> tag candidate-hit, runs/sink/hits.jsonl) and nearmiss.scan -> queue.
+  Archive files removed by archive-dedupe are skipped (their rows are the store's), never restored.
+  `--report`: dirs no adapter reads, by manifest name (~130, all benches / smokes / checkers: candidate 42, fqreplay 24,
+  rectsearch 12 (pieces), lcut 7, ...).
+* **Backfill applied 10-20 ~21:00** (4.3 min, 12 procs): 4,520 runs, 736,713 entries, **708,525 new rows** (store
+  1.72M -> 2.43M, 10.95 GB, quick_check ok), 0 hits, 62 near misses queued (gaps 2.0e-5 .. 8.5e-4; 272 / 273 one each;
+  the 260 exact-form row marked done: it is de Winter's #668 minimum).
+* Periodic pass: `~/.config/systemd/user/pk-sink.{service,timer}` written (every 30 min, nice 19, 4 procs); **not
+  enabled** (needs Evan: `systemctl --user enable --now pk-sink.timer`).
+* Allocator design (standing generators as a bandit, cluster weighting as a parameter family): `tasks/allocator/DESIGN.md`.

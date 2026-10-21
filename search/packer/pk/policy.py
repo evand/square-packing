@@ -32,6 +32,8 @@ DEFAULT = dict(
     drop=8.0,                 # intake only: beyond this, not stored at all
     protect_tags=['kingbird', 'record', 'finish', 'candidate'],
     targets={},               # {n: {full: .., screened_full: .., drop: ..}}
+    keep_grid=False,          # True: grid-line rows are kept (full) like any other distinct packing
+    keep_n_range=False,       # True: rows beyond nmax are kept (full)
 )
 PROTECT_STATUS = ('certified', 'weak')
 
@@ -61,9 +63,9 @@ def classify(row, F, cfg, protected=False, intake=False):
         return ('drop' if intake else 'stub'), 'infeasible'
     n = row['n']
     t = dict(cfg, **cfg['targets'].get(n, {}))
-    if n > t['nmax'] and n not in t['extra_n'] and n not in cfg['targets']:
+    if n > t['nmax'] and n not in t['extra_n'] and n not in cfg['targets'] and not t['keep_n_range']:
         return ('drop' if intake else 'stub'), 'n range'
-    if (row['grid'] or 0) > 0:
+    if (row['grid'] or 0) > 0 and not t['keep_grid']:
         return ('drop' if intake else 'stub'), 'grid line'
     if F is None:
         return 'full', 'no reference'

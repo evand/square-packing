@@ -107,11 +107,22 @@ EXACT_STATUS = {'certified': 'certified', 'weak': 'weak', 'not-min': 'not-min', 
 
 
 def _prep_run(args):
-    """Worker: read one run's archive -> list of (entry, Packing, precomputed) (no db access)."""
-    run, below = args
+    """Worker: read one run's archive -> list of (entry, Packing, precomputed) (no db access).
+    args = (run, below) or (run, below, start, stop): archive lines [start, stop) only (pk/sink's incremental import)."""
+    run, below = args[:2]
+    lo, hi = (args[2], args[3]) if len(args) > 2 else (0, None)
     out = []
+    E = []
     try:
-        E = [json.loads(l) for l in open(f'{run}/archive.jsonl')]
+        with open(f'{run}/archive.jsonl') as fh:
+            for k, l in enumerate(fh):
+                if hi is not None and k >= hi:
+                    break
+                if k >= lo:
+                    try:
+                        E.append(json.loads(l))
+                    except Exception:
+                        continue
     except Exception:
         return run, out
     X = {}

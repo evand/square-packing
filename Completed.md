@@ -2,6 +2,7 @@
 
 Moved from `TODO.md`; one line each, newest first.  Details in the linked `search/*.md` / `notes/*.md`.
 
+- 2026-10-20 **Sink + inclusive store policy** (PACKER "Sink + inclusive policy"): `pk/sink.py` / `pk.py sink`, `pk/policy.yaml` (keep every distinct feasible packing); backfill 708,525 new rows from 4,520 runs, 0 hits, 62 near misses queued.
 - 2026-10-20 `test_distinct::test_verdicts` fixed: fixture used the old contact format (`["C", i, j, "x"]` vs exactsolve's `["C", i, corner, j, side]`) and pre-10-19 verdict semantics (moves are descriptive; verdict = exact side + contact graph).  pk tests 33 / 33.
 - 2026-10-20 **Store hygiene, step 1** (PACKER "Store intake / pruning policy"): explorer archive files deduplicated against the store (1.81M files, -15 GB, lossless: byte-identical regeneration, read hooks, `archive-restore`); `pk/policy.py` + `pk.py prune --dry-run`; stale `test_finish_candidate_dry` fixed (missing `harden` runner); CLAUDE.md register rule -> `runs/jlevy`.
 - 2026-10-20 **SW2 records: s(343) ≤ 18.977682482405 (jlevy#702), s(270) ≤ 16.928162252197 (#703)** (PACKER "SW2 result"): near-record band sweep over 42 n, 114 CPU-h; both new minima found through pools of stored non-record packings; certs 88385ab.  Replies posted on #664 / #669 / #674.

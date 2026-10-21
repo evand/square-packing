@@ -1,0 +1,10 @@
+# Store policy overrides (pk/policy.py DEFAULT is the base).
+# 10-20 Evan: "inclusive intake thresholds, conservative pruning / dedupe.  If they're distinct packings, track them."
+# So: every feasible distinct packing is kept with coordinates (no area-excess cut, grid rows and n > nmax included);
+# only exact copies are merged (the store's canon hash; pk/ident's conservative rule, applied only after discussion).
+# Infeasible rows stay as the store records them (status 'infeasible', rejection memory).
+full: .inf
+screened_full: .inf
+drop: .inf
+keep_grid: true
+keep_n_range: true

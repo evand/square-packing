@@ -98,6 +98,9 @@ def main():
     p.add_argument('--candidate', action='store_true', help='run candidate.py on items below the frontier (default: print)')
     p.add_argument('--dry-run', action='store_true', help='print the items and their bars (read-only)')
     p.add_argument('--out')
+    p = sp.add_parser('sink', help='import every run result under the intake policy, detect hits / near misses (pk/sink.py)')
+    p.add_argument('--runs', nargs='*'); p.add_argument('--dry-run', action='store_true'); p.add_argument('--procs', type=int, default=12)
+    p.add_argument('--report', action='store_true', help='run dirs no adapter reads, by manifest name')
     p = sp.add_parser('prune', help='store thinning per pk/policy.py (report only for now)')
     p.add_argument('--dry-run', action='store_true', required=True); p.add_argument('--policy')
     p = sp.add_parser('archive-dedupe', help='remove explorer archive files the store regenerates byte for byte (pk/archive.py)')
@@ -147,6 +150,14 @@ def main():
                       open(os.path.join(HERE, 'runs', 'dedup', f'plan_{n}.json'), 'w'))
             if a.apply:
                 ident.apply(st, P)
+        return
+    if a.cmd == 'sink':
+        from pk import sink
+        if a.report:
+            for c, name, ex in sink.report():
+                print(f'{c:6d}  {name}  e.g. {ex}')
+            return
+        print(sink.run(st, runs=a.runs, dry=a.dry_run, procs=a.procs))
         return
     if a.cmd == 'prune':
         from pk import policy, prune
