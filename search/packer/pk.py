@@ -28,6 +28,7 @@ copying coordinates.  Store: runs/store.sqlite (env PK_STORE overrides).
   pk.py prune --dry-run [--policy F]       what pk/policy.py would keep (tiers, threshold sweep, record lineage)
   pk.py archive-dedupe [ROOT...] [--apply]  drop explorer archive files the store regenerates byte for byte
   pk.py archive-restore RUN...             write them back (reads do this per file automatically)
+  pk.py dedupe N... [--apply --i-discussed-this]   conservative same-minimum dedupe (pk/ident.py); plan in runs/dedup/
   pk.py ingest [--apply] [--since ISO] [--no-fresh]   sync-register + watch --apply + fresh.py since
                                            the last ingest -> near-miss queue (pk/ingest.py; dry run without --apply)
 """
@@ -103,6 +104,10 @@ def main():
     p.add_argument('roots', nargs='*'); p.add_argument('--apply', action='store_true')
     p.add_argument('--min-age-h', type=float, default=12.0); p.add_argument('--procs', type=int, default=16)
     p = sp.add_parser('archive-restore', help='write back the archive files dedupe removed'); p.add_argument('runs', nargs='+')
+    p = sp.add_parser('dedupe', help='conservative identity dedupe per n (pk/ident.py; dry run unless --apply)')
+    p.add_argument('ns', nargs='+', type=int); p.add_argument('--procs', type=int, default=16)
+    p.add_argument('--apply', action='store_true'); p.add_argument('--i-discussed-this', action='store_true',
+                   help='Evan 10-20: no apply without discussing the rule again in that session')
     p = sp.add_parser('ingest'); p.add_argument('--apply', action='store_true'); p.add_argument('--since')
     p.add_argument('--procs', type=int, default=16); p.add_argument('--no-fresh', action='store_true')
     p.add_argument('--nmax', type=int, default=324)
@@ -131,6 +136,18 @@ def main():
         return
     st = Store(a.store) if a.store else Store()
 
+    if a.cmd == 'dedupe':
+        from pk import ident
+        if a.apply and not a.i_discussed_this:
+            sys.exit('dedupe --apply: discuss the rule with Evan first (pk/ident.py RULE), then add --i-discussed-this')
+        os.makedirs(os.path.join(HERE, 'runs', 'dedup'), exist_ok=True)
+        for n in a.ns:
+            P = ident.plan(st, n, procs=a.procs)
+            json.dump(dict(stats=P['stats'], groups={str(k): v for k, v in P['groups'].items()}, refused=P['refused']),
+                      open(os.path.join(HERE, 'runs', 'dedup', f'plan_{n}.json'), 'w'))
+            if a.apply:
+                ident.apply(st, P)
+        return
     if a.cmd == 'prune':
         from pk import policy, prune
         prune.report(st, policy.load(a.policy))

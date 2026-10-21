@@ -55,7 +55,14 @@ def classify(rep: dict) -> str:
 
 
 def min_key(S) -> str:
-    return str(Decimal(str(S).strip()).quantize(_Q, rounding=ROUND_HALF_EVEN))
+    t = str(S).strip()
+    if '/' in t:                                     # rational sides (rational constructions store 'p/q')
+        from decimal import localcontext
+        num, den = t.split('/')
+        with localcontext() as c:
+            c.prec = 60
+            return str((Decimal(num) / Decimal(den)).quantize(_Q, rounding=ROUND_HALF_EVEN))
+    return str(Decimal(t).quantize(_Q, rounding=ROUND_HALF_EVEN))
 
 
 def same_min_keys(S) -> tuple[str, str, str]:

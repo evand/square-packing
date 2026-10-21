@@ -4703,3 +4703,53 @@ SW's 13, 110 (as SW), 308 and 146 (D308 / D308b / R308 and D146 / HB2 today): 42
   gaps 6e-6 .. 4e-4).  At tol 1e-3: 24 / 25 merged, 0 / 13 false merges; the margin is wider than at 274 (8e-3 vs 1e-3).
   The 1e-2 same-side pair is either a weak-lock artefact or two minima with equal sides (the 10-11 audit found 4 such
   side-key collisions at 110); exactsolve's minimum table could settle it.
+* **110 against exact minima (10-20; Evan: "use a much tighter equivalence check?").**  The census `minimum` table (1,097
+  exact minima, all certified / weak) + `copy` (side key -> minimum) + s_exact resolve 7,460 of the 7,702 rows (242
+  unresolved): **32 distinct exact minima** (largest copy counts 962, 779, 725, 699, 522 ...).  f64 side buckets give 32 at
+  1e-7 and 50 at 1e-9 (copies scatter between 1e-9 and 1e-7); two pairs of distinct exact minima have f64 sides equal
+  to ~1e-9, so side alone cannot be the key.  Calibration pairs with an exact verdict (33 / 38): long-polish rule
+  (1e-7) agrees 33 / 33; rigid-core deviation: exact-same 21 / 22 <= 4e-5, one 1e-3; exact-distinct 8e-3 .. 0.2.  The
+  earlier 1e-2 same-side pair is among the 5 unresolved.  Reading: the cheap tests hold up against exact identity;
+  where an exact minimum key exists it is the key, else polish + side + core.
+* **Counting vs the 110 census (10-20).**  minimum table: 1,097 exact minima < 11 (page: 1,076; 21 since).  Store: 116,662
+  rows < 11 (polished 89k, certified 21k, not-min 5k, weak 922).  Polished-type f64 side buckets: 3,622 / 2,398 / 1,795 /
+  675 at 1e-9 / 1e-8 / 1e-7 / 1e-6, so side counting at 1e-7 overcounts by ~700.  Cause: of the 875 side buckets (1e-7)
+  not near a known minimum, 704 hold only not-min rows and the rest are mostly status 'polished' with basin verdict
+  not-min (8,381 rows): converged-looking f64 points that exactsolve's MILP shows are not jammed (they descend to a
+  known minimum).  "Polished" is not "minimum"; a minimum count needs the not-min check (descend / exactsolve).  Rows
+  resolved to exact keys: 94,753 -> 1,099 keys (2 extra = exact-side rounding at the key quantum); 4 census minima have
+  no store row; 271 rows ambiguous (side key -> 2+ minima).  274's 4,315 side buckets are likewise an upper bound.
+* **Conservative dedupe, dry runs (10-20; `pk/ident.py`, `pk.py dedupe`, plans in runs/dedup/; rule in pk/ident.py).**
+  Rule (Evan: conservative enough for now; never applied automatically; revisit before applying again): same exact
+  minimum key, or converged rows with |ds| <= 1e-7 and rigid-core deviation <= 1e-4 (nearest-neighbour test, matched
+  core angles within 0.01 deg); compare with representatives only; protected rows never deleted (public, certified /
+  weak, exact side, near-miss, frontier, census page pids, minimum.pid).  Cores cached in runs/dedup/cores_<n>.npz.
+  - 274: 16,737 rows -> delete 1,865 (1,060 groups, max 18); 273: 2,339 -> 211; 272: 2,791 -> 259.  Merge core dev
+    medians 1e-6 / 1e-9 / 3e-7.
+  - 110: 226,934 rows -> delete 113,072 (13,329 groups, largest 1,071); protected rows linked but kept 20,476.  Census:
+    no deleted row is in the page data (1,076 pids) or minimum.pid; every exact minimum keeps a row.  20 % of merges have
+    core dev in (1e-5, 1e-4].  258 merges refused for "different exact minima": 233 rely on the census `copy` table on
+    both sides, mostly via 'descend' (a side key -> the minimum it descends to, which is not identity), so these are mostly
+    artefacts of the check (conservative: kept apart).  Only 2 are exact vs exact: two pairs of distinct certified minima
+    with exact sides 7.2e-10 / 2.9e-9 apart and cores 1e-7 / 6.7e-6 apart, i.e. geometrically near-identical distinct
+    minima that no core tolerance above 1e-7 separates.  One group (census row of 10.99790729879133969) also takes rows
+    8e-11 away in side at core ~9.9e-5, likely copies of the neighbouring minimum 10.99790729887219109 (side key maps
+    to both, so the check cannot see it).  Evan: losing a couple of distinct packings is acceptable.
+* **The two exact-distinct pairs at 110: contact graphs (10-20; `analysis/contactswitch.py`, exactsolve reports
+  runs/ex0/exact/b00687 vs ex7/b02902, ex1/b00022 vs ex5/b01184).**  Distinct contact graphs: pair 1 285 vs 295 edges,
+  276 shared; corner-corner 55 vs 72; null dims 14 vs 9.  Pair 2 217 vs 218, 209 shared; cc 52 vs 56.  Contact-level
+  differences (A vs B mapped into A's frame): pair 1 open/close 24, a corner on a different side of the same square
+  ("switch-side") 19, roles swapped ("switch-role") 26; pair 2 open/close 17, switch-side 2, switch-role 1.  Every
+  switch sits at a corner-corner touch: 43 / 45 on pairs exactsolve lists as vv, the rest with the corner within 8e-4
+  (pair 2: 1e-4 .. 8e-4) of the other square's corner.  So the two minima are different branches at near-coincident
+  corners (which side a corner rests on): passing between them means a corner crossing, over a distance <= 8e-4.
+* **Rule tightened for conservatism (10-20; Evan: "those pairs should remain distinct").**  Known exact minima at 110:
+  consecutive side gaps 4.6e-13, 5.9e-13, ..., 19 pairs < 1e-9, 171 < 1e-7, so the 1e-7 window could span distinct
+  minima.  f64 side of converged rows vs exact side: median 2.3e-12, 96 % within 1e-11, 99 % within 1e-9.  New rule:
+  side window 1e-11; guard: no merge if a row's side is within 1e-9 of two or more distinct known minima; core 1e-4 with
+  matched core angles; exact / census-lookup refusals kept.  Dry runs (cores cached): 274 16,737 -> delete 1,065 (597
+  groups); 273 2,339 -> 172; 272 2,791 -> 221; 110 226,934 -> 89,957 (12,209 groups, largest 1,062; refused: guard
+  1,137, different exact minima 10).  Checks at 110: no deleted row in the census page data or minimum.pid; both
+  examined pairs in different groups; the 10.99790729879133969 census row's group now empty; no merge joins rows that
+  resolve to disjoint exact minima (82,235 both-same, 27,212 one or none resolved); all 1,100 resolvable exact keys keep a
+  row.  Merge core dev median 5e-8, 99th pct 5e-5.

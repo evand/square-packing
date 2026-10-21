@@ -106,12 +106,20 @@ def ensure(path):
     db = _ro()
     try:
         r = _row(db, d['packing'])
+        rep = None
+        if r is None:                                   # the row was merged by pk/ident's dedupe: its representative
+            from .ident import resolve_old
+            rep = resolve_old(db, d['packing'])
+            r = _row(db, rep) if rep is not None else None
     finally:
         db.close()
     if r is None:
         raise FileNotFoundError(f'{path}: removed by archive dedupe, but store row {d["packing"]} has no coordinates')
     b = text_of(*r)
-    if hashlib.sha1(b).hexdigest() != d['sha1']:
+    if rep is not None:                                 # same minimum, not the same bytes: say so next to the file
+        with open(os.path.join(run, 'restored_from_dedup.txt'), 'a') as f:
+            f.write(f'{fn}: store row {d["packing"]} was merged into {rep} (pk/ident); written from {rep}\n')
+    elif hashlib.sha1(b).hexdigest() != d['sha1']:
         raise ValueError(f'{path}: store row {d["packing"]} no longer regenerates the removed file')
     tmp = f'{path}.restore{os.getpid()}'
     with open(tmp, 'wb') as f:
@@ -129,7 +137,7 @@ def restore(run):
     return n
 
 
-def backing_ids(root=None):
+def backing_ids(root=None):  # noqa: E302
     """Store rows whose coordinates back a removed archive file."""
     import glob
     root = root or os.path.join(PKG, 'runs')

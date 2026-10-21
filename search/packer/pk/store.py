@@ -112,6 +112,12 @@ class Store:
         pre = pre or {}                                  # precomputed hash / grid / ntilted / pen (parallel importers)
         h = pre.get('hash') or p.canon_hash()
         row = self.db.execute('SELECT id, status, tags FROM packing WHERE hash=?', (h,)).fetchone()
+        if row is None and self._has_dedup():            # a copy removed by pk/ident's dedupe: its representative
+            d = self.db.execute('SELECT rep FROM dedup WHERE hash=?', (h,)).fetchone()
+            if d is not None:
+                from .ident import resolve_old
+                rid = resolve_old(self.db, d[0])
+                row = self.db.execute('SELECT id, status, tags FROM packing WHERE id=?', (rid,)).fetchone() if rid else None
         created = row is None
         if created:
             pen = pre['pen'] if 'pen' in pre else (p.max_pen() if check else None)
@@ -265,9 +271,21 @@ class Store:
     # ---------- read ----------
     def get(self, pid) -> Packing:
         r = self.db.execute('SELECT * FROM packing WHERE id=?', (pid,)).fetchone()
+        if r is None and self._has_dedup():             # removed by pk/ident's dedupe: the representative
+            from .ident import resolve_old
+            rid = resolve_old(self.db, pid)
+            if rid is not None:
+                p = self._pk(self.db.execute('SELECT * FROM packing WHERE id=?', (rid,)).fetchone())
+                p.meta['dedup_of'] = pid
+                return p
         if r is None:
             raise KeyError(pid)
         return self._pk(r)
+
+    def _has_dedup(self):
+        if not getattr(self, '_dedup', False):          # cache only a yes (the table can appear mid-session)
+            self._dedup = self.db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='dedup'").fetchone() is not None
+        return self._dedup
 
     def _pk(self, r) -> Packing:
         sq = np.frombuffer(r['coords'], '<f8').reshape(-1, 3)
