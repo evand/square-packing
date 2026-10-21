@@ -4925,3 +4925,17 @@ Pre-registered.  Same recipe as SW274b on the grown pool (1,088 distinct minima 
   (inclusive).  Not a verdict on the idea: the compression step is what is missing.
 * BAL274 relaunched as 3 runs x 12 starts (6 CPU-h, same 36 starts) so it fits beside SW274c (8) and the Lean agent's
   job (4); SW157 waits for SW274c.
+* **BAL274 result (01:45; 6.0 CPU-h measured, 3 x 2 h).**  6,084 new entries (sink).  Balanced (smaller band >= 40):
+  1,113 entries, best 17.004246 (start 17.00406 -> no gain beyond 2e-4 within the family).  The walks left the balanced
+  family: 4,075 entries drifted to smaller band 37-38 (family A shape: 37 + 47-53), best 17.000513 (x1, kick), 31
+  below 17.001 (30 in the store after dedupe), of which 8 match an existing non-BAL packing's side to 1e-8 (the same
+  minima reached from a different lineage) and 22 are new side values.  Predictions: balanced < 17.003 no (30 %),
+  < 17.001 no (8 %), < 17 no (1 %): all three missed, and the 30 % one should be counted against the prior.  Reading:
+  under the explorer's moves, the balanced 274 basin sits at ~17.004 and the walk's way down is to unbalance (the
+  near-17 pool's shape); balanced bands at 274 have not yet earned their record-design promise.  The drift is still
+  a source: a new lineage into family A (different upstream than the L-cut-of-308 pool).
+* **BAL274b, pre-registered.**  Explorer walks from BAL274's 21 new line-free outputs < 17.001 (distinct sides,
+  17.000513-17.000987; `runs/bal274b/starts.jsonl`), `bulbgen.py explore --dir runs/bal274b --n 274 --runs 3 --starts-per-run 7 --cpu-h 6`.
+  Why: a family-A lineage with a different upstream; cheap (3 cores free beside SW274c and the Lean job).  Metrics: best
+  274, new distinct < 17.0005.  Predictions: below 17.000303 (our best): 12 %; below 17: 2 %; >= 10 new distinct
+  < 17.0005: 40 %.
