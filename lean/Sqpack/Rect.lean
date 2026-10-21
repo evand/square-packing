@@ -203,7 +203,8 @@ lemma sq_subset_rbox {c : ℝ × ℝ} {θ w h : ℝ}
 
 /-- **The wedge.**  Two upright squares in the bottom corners of `[0,L] × [0,S]` and a `45°` square
 between them touching the top wall: three unit squares fit whenever `2 ≤ L ≤ 3` and
-`S ≥ 2 + √2 - L/2` (the tilted piece of `R₃`'s boundary, for `2√2 ≤ L ≤ 3`). -/
+`S ≥ 2 + √2 - L/2` (the tilted piece of `R₃`'s boundary, for `2√2 ≤ L ≤ 3`; the piece
+`x + 2y = 4 + 2√2` of `S₂` in Friedman's Math Magic, June 2010). -/
 theorem rect3_wedge {L S : ℝ} (hL : 2 ≤ L) (hL3 : L ≤ 3) (hS : 2 + Real.sqrt 2 - L / 2 ≤ S) :
     RectPacks 3 L S := by
   have r2 : Real.sqrt 2 ^ 2 = 2 := Real.sq_sqrt (by norm_num)

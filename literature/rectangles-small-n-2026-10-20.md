@@ -127,7 +127,7 @@ Trivial facts [I]:
   * The 1:2 container appears as "… in Dominoes" (Squares in Dominoes, above).
   * This agrees with `notes/wishlist-literature-2026-10-03.md` §4 ("no squares-in-rectangles page").  The Dominoes page
     was not mentioned there; it is new here.
-* Not found: a Friedman Math Magic problem on this.
+* Not found: a Friedman Math Magic problem on this. **Correction (10-21): wrong.** Math Magic, June 2010 (erich-friedman.github.io/mathmagic/0610.html) tabulates the boundaries of S_n = {s(x,y) ≤ n} for unit squares in rectangles, n ≤ 9 (solvers Morandi, Stenlund, Cantrell, Hosono).  S_2's boundary is x = 3, x + 2y = 4 + 2√2, y = 2: exactly R_3, wedge included (constructions, no proofs).  Found via wand125/square-packing `problems/rectangles/` (F_k edges, constructions only, lower bounds listed as not done).
 
 ## 3. Strips: n unit squares in width w, least height, and "how many fit in w × h"
 

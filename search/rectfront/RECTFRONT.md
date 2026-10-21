@@ -102,6 +102,8 @@ Remaining for a complete proof: (iii) the separating-axis step for two squares, 
 
 ## 2026-10-21: R_3 exactly, in Lean (`lean/Sqpack/Rect3.lean`)
 
+**Attribution.** The boundary, including the 45° wedge piece x + 2y = 4 + 2√2, is already in Friedman, Math Magic, June 2010 (erich-friedman.github.io/mathmagic/0610.html) (boundary of S_2; constructions only; no individual credit for this piece).  Our 10-20 literature scan missed it (corrected there); we did not find the wedge first.  What is new here, as far as we know, is the proof of the lower bound.  wand125/square-packing `problems/rectangles/` lists the same edge (k = 3) with certified constructions and no lower bounds.
+
 `rect3_iff`: three unit squares (any angles) fit in [0,w] × [0,h] iff 1 ≤ w, 1 ≤ h and
 (2 ≤ w ∧ 2 ≤ h) ∨ 3 ≤ w ∨ 3 ≤ h ∨ (h < 2 ∧ w + 2h ≥ 4 + 2√2) ∨ (w < 2 ∧ h + 2w ≥ 4 + 2√2).
 Standard axioms only; 706 lines; compiles in ~16 s.  No interval search, LP, or separating-axis enumeration.

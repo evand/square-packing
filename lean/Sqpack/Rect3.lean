@@ -5,7 +5,8 @@ import Sqpack.Rect
 
 `rect3_lower`: if three unit squares (any angles) pack `[0,L] × [0,H]` with `H < 2`, then
 `L ≥ 3` or `L + 2H ≥ 4 + 2√2`.  With the constructions of `Rect.lean` this gives `R₃` exactly
-(`rect3_iff`).
+(`rect3_iff`).  The boundary (with the wedge) is the boundary of `S₂` in Friedman's Math Magic, June 2010,
+given there by constructions; this file proves the lower bound.
 
 The proof is a *chain* argument, no case enumeration over separating axes:
 1. Sort the squares by the x-coordinate of their centres: `a`, `b`, `c`.
