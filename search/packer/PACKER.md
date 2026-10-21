@@ -4894,3 +4894,16 @@ Pre-registered.  Same recipe as SW274b on the grown pool (1,088 distinct minima 
 * **SW157, pre-registered.**  157 (k = 13, offset +1; 156's slack 0.0208 is the largest unstepped one; DESIGN §10): pool
   1,056 distinct line-free in [13.01, 13.02), best 13.011364.  `dgen.py sweep --n 157 --band 0.0,0.02 --pool 2000 --runs 8
   --cpu-h 16 --seed 1571 --tag _sw1`.  Predictions: best below 13.011364: 50 %; below 13.005: 10 %; below 13: 1 %.
+* **Record band profiles (00:50; 0 CPU)** (rows along the band; widths per row; angle; centres along the wall):
+  273 L 41 sq 18.5 deg 9 rows [3 4 5 6 6 5 5 4 3] 7.4-15.7 | B 46 sq 18.9 deg 10 rows [3 4 5 5 6 6 5 5 4 3] 6.3-15.7;
+  308 L 48 / 18.3 / 10 rows [3 5 5 6 6 6 5 5 4 3] 7.4-16.7 | B 52 / 19.2 / 11 rows; 307 50 + 51 at 18.4 / 19.2, 12 rows
+  each; 306 45 + 55 at 17.7 / 18.0.  272 (39 + 38, 21.4 / 23.4, 10 rows, max width 5) and 241 / 270 / 271 are narrower
+  bands at steeper angles.  Shared: tapers 3 -> 6 -> 3 over ~3 rows, corner block ~6.3-7.4 from the corner, far ends
+  ~0.5-1 short of the far wall.
+* `bulbgen --prior record` now also draws corner_gap U(0, 1.8), end gaps U(0.2, 1.4), taper rows 1-4 (mode 3), tip
+  2-4 (mode 3), row shear sd 0.02 (`_record`).  Smoke (12 starts): bulb bands 54-88 tilted (records 87-100); the base
+  fill reaches 245-260 of 274: the uprights lose 15-25 squares against the records' (the A1 / A2 lesson of 10-13: one
+  exact upright lattice per box loses ~20; the records' upright regions are separate lattices, shifted).  The top-up
+  then overlaps (pen up to 13) and the quench mostly grid-locks.  Next for the constructor: per-region upright lattices
+  (corner block, the two strips beside the bands, the far field), each with its own offset; longer bands.  BC274a runs
+  as registered (its sample stage started before this prior change).

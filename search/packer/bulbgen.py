@@ -49,7 +49,7 @@ def sample_params(rng, k, n, prior='broad'):
         delta = float(10 ** rng.uniform(-4, -1.7))                  # side s = k - delta
     th1 = 2 * math.degrees(math.atan(1 / b1)) + rng.normal(0, sd)
     th2 = th1 if shared else 2 * math.degrees(math.atan(1 / b2)) + rng.normal(0, sd)
-    return dict(
+    P = dict(
         k=k, n=n, prior=prior,
         delta=delta,
         topology=str(rng.choice(TOPOLOGIES, p=topo_p)),
@@ -73,6 +73,22 @@ def sample_params(rng, k, n, prior='broad'):
         topup_K=int(rng.choice([1, 4, 16, 64])),
         drop=str(rng.choice(['random', 'overlap'])),                     # base fill above the target: which uprights go
     )
+    return _record(rng, P) if prior == 'record' else P
+
+
+def _record(rng, P):
+    """10-21: overrides fitted to the two-bulb records 273 / 306 / 307 / 308 (PACKER "Overnight 10-20/21", band
+    profiles): 9-12 rows, widths ramp 3 -> 6 -> 3 over ~3 rows at each end, corner block ~6.3-7.4 from the corner
+    (= arm width ~6.0 + corner_gap 0.3-1.4), far ends ~0.5-1 from the far wall.  Still distributions, wider than the
+    four records."""
+    P.update(
+        corner_gap=float(rng.uniform(0.0, 1.8)),
+        end_gap=[float(rng.uniform(0.2, 1.4)) for _ in range(4)],
+        taper_rows=[int(rng.choice([1, 2, 3, 4], p=[0.1, 0.25, 0.45, 0.2])) for _ in range(4)],
+        taper_tip=[int(rng.choice([2, 3, 4], p=[0.2, 0.6, 0.2])) for _ in range(4)],
+        row_shear=float(abs(rng.normal(0, 0.02))),
+    )
+    return P
 
 
 # ---------------------------------------------------------------- arms
