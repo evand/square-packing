@@ -85,7 +85,9 @@ def run(a):
         from pk import fingerprint as FP
         F = frontier(st, a.n)
         lo, hi = map(float, a.band.split(','))
-        C = [j for j in range(len(ids)) if F + lo <= sides[j] < F + hi][:a.pool]
+        locked = {r[0] for r in st.db.execute('SELECT id FROM packing WHERE n=? AND grid > 0', (a.n,))}
+        C = [j for j in range(len(ids)) if F + lo <= sides[j] < F + hi and int(ids[j]) not in locked][:a.pool]
+        # grid-locked packings (pk.packing.grid_lines > 0) have side >= ceil(sqrt n): never starts (10-21; kept in the bank)
         ims = bk['images']
         d = FP.nearest(ims[0], ims[C], a.n).astype(float)    # bank index 0 = the best stored packing (the record)
         sel = []
@@ -94,7 +96,9 @@ def run(a):
             d = np.minimum(d, FP.nearest(ims[C[j]], ims[C], a.n)); d[[C.index(x) for x in sel]] = -1
         print(f'n {a.n}: frontier {F:.9f}; band {lo:g}..{hi:g}: {len(C)} distinct; {len(sel)} starts', flush=True)
     else:
-        sel = fps(bk['images'][:P0], a.n, a.runs * a.starts_per_run)
+        locked = {r[0] for r in st.db.execute('SELECT id FROM packing WHERE n=? AND grid > 0', (a.n,))}
+        keep = [j for j in range(P0) if int(ids[j]) not in locked] or list(range(P0))
+        sel = [keep[j] for j in fps(bk['images'][keep], a.n, a.runs * a.starts_per_run)]
     man = manifest.start(R0, f'dgen-run-{a.n}', seed=a.seed, args=vars(a), procs=a.runs, fname='manifest_run.json')
     os.makedirs(f'{R0}/starts', exist_ok=True)
     print(f'n {a.n}: {len(sel)} farthest-point starts from the best {P0} (sides {min(sides[j] for j in sel):.6f}..'

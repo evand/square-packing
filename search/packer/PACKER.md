@@ -4950,3 +4950,18 @@ Pre-registered.  Same recipe as SW274b on the grown pool (1,088 distinct minima 
 * **SW274d, pre-registered.**  Same recipe on the grown pool (best 2000 now below 17.000648), band narrowed:
   `dgen.py sweep --n 274 --band 0.0,0.0007 --pool 2000 --runs 8 --cpu-h 24 --seed 2743 --tag _sw5`, queued behind SW157.
   Predictions: below 17: 3 %; below 17.0002995: 40 %; >= 100 new side keys < 17.0005: 60 %.
+* **BAL274b result (03:50; 6.0 CPU-h measured).**  4,474 entries.  Best **17.000299454593**, the same minimum as SW274c's
+  best (sides agree to 1e-12; canon hashes differ, so a symmetric or near-identical copy), and its second best is
+  17.000302875, FIN274c's old best: two lineages (L-cut-of-308 pool -> dgen sweep; balanced starts -> drift -> explorer)
+  meet at the same two minima.  25 new side keys < 17.0005.  Predictions: below 17.000303 yes (12 %, but by
+  convergence, not a new floor); below 17 no (2 %); >= 10 new < 17.0005 yes (40 %).  Reading: 17.0002995 looks like a
+  floor of family A under the explorer's moves (two independent arrivals); the many new minima above it are breadth,
+  not depth.  That raises the value of different designs or moves over more of the same walk.
+* SW274d re-queued at 4 procs (backfill; same command and predictions) so it uses the 4 free cores now.
+* **dgen fix (04:00).**  SW274d's first launch drew 2 of 48 starts that are grid-locked (bulbgen quench outputs at
+  17.0000000-17.0000354, imported by the inclusive sink; SW274c had 1 of 48): dgen's pool query had no grid filter.
+  `dgen.py run` now drops grid-locked packings (store `grid > 0`) from start candidates (band and plain), keeping them
+  in the fingerprint bank.  The stopped run (~3 min) is kept as `runs/dgen/n274_sw5_stopped`.  SW274d relaunched at 4
+  runs x 3 CPU-h (12 CPU-h; 4 cores free beside SW157 and the Lean job; same band / seed); predictions unchanged except
+  ">= 100 new side keys" scaled to >= 50 at 60 %.
+  (The first relaunch was queued as 8 runs and started before the edit; stopped after 1 min, kept as `n274_sw5_relaunch1`; SW274d proper started 03:57 with `jobs.py start`.)
