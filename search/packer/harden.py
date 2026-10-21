@@ -70,6 +70,13 @@ def job(t):
                 q_sec=d.get('sec'), out=pol)
 
 
+def _locked(path):
+    """True if the output has a full line / chain of axis squares (side >= the grid whatever it shows) or is unreadable"""
+    from pk.packing import read
+    q = read(path)
+    return q is None or q.grid_lines() > 0
+
+
 def run(a):
     from pk import manifest
     import scratch
@@ -131,7 +138,7 @@ def run(a):
             nxt = {}
             for si in cur:
                 pool = [(s, None, (lab, n, s, sq)) for (lab, n, s, sq, xf) in cur[si] if xf == 'none']
-                pool += [(s_, o, None) for s_, o, n_ in outs.get(si, [])]
+                pool += [(s_, o, None) for s_, o, n_ in outs.get(si, []) if not (a.line_free and _locked(o))]
                 pool.sort(key=lambda t: t[0])
                 keep = []
                 for s_, o, src in pool:
@@ -186,6 +193,8 @@ if __name__ == '__main__':
     r.add_argument('--procs', type=int, default=4)
     r.add_argument('--rounds', type=int, default=1, help='monotone rounds: each source restarts from its --keep best')
     r.add_argument('--keep', type=int, default=4)
+    r.add_argument('--line-free', action='store_true', help='later rounds restart only from outputs without a full line '
+                   '/ chain (grid-locked outputs cannot go below the grid; 10-20, onset n such as 274)')
     q = sp.add_parser('report'); q.add_argument('--out', required=True)
     a = ap.parse_args()
     run(a) if a.cmd == 'run' else report(a)

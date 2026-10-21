@@ -4824,3 +4824,10 @@ an upright block), band-side boundaries (bands vs upright field, away from the z
   grid = 1: a full line forces side >= 17), so the finisher read a tie and skipped the full harden stage.  Fix:
   at a grid bar only line-free outputs count (best line-free per stage).  Line-free harden1 best = the unchanged start.
   Requeued as FIN274b: stage harden only (~500 runs each); predictions unchanged.
+* **FIN274b result (~00:15): no line-free improvement reported, but two more finisher bugs.**  harden: 540 runs per item;
+  ~80 % of outputs collapse to grid-locked 17.0000000000034; item 2526616 did produce a line-free 17.000302875 (below
+  SW274b's best by 1.85e-7) that the finisher never saw: the harden runner returned only its single best output
+  (grid-locked).  And harden's later rounds restarted from the best 3 outputs per source, i.e. mostly grid-locked ones.
+  Fixes: runner returns all outputs (finish keeps the best line-free one at a grid bar); `harden.py run --line-free`
+  (later rounds restart from line-free outputs only), passed automatically at a grid bar.  Requeued as FIN274c (harden,
+  8 procs).

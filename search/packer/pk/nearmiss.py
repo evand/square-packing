@@ -307,6 +307,8 @@ def _stage_harden(name):
         cmd = [sys.executable, os.path.join(PK, 'harden.py'), 'run', '--files', inp, '--out', hd, '--grid', r['grid'],
                '--seeds', str(r['seeds']), '--rounds', str(r['rounds']), '--keep', str(r['keep']), '--procs', str(procs),
                '--target', repr(float(target))]
+        if target >= math.ceil(math.sqrt(n) - 1e-12) - 1e-9:
+            cmd.append('--line-free')                     # grid bar: rounds restart from line-free outputs only
         with open(os.path.join(wd, f'{name}.log'), 'w') as f:
             rc = subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, cwd=PK).returncode
         res = os.path.join(hd, 'results.jsonl')
@@ -314,7 +316,7 @@ def _stage_harden(name):
             raise RuntimeError(f'{name}: rc {rc}, no results')
         R = [json.loads(l) for l in open(res)]
         good = sorted((x['s'], _resolve(x['out'], hd)) for x in R if x.get('ok') and x.get('n') == n)
-        return [g for g in good if g[1]][:1], len(R)
+        return [g for g in good if g[1]], len(R)    # all, best first (finish filters grid-locked ones at a grid bar)
     return run
 
 
