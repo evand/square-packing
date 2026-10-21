@@ -220,3 +220,18 @@ proved before designing anything.
 
 ## 2026-10-21 (paused): see `LESSONS.md`
 Techniques, what worked (chain, one-square lemma), what failed (tube search, decouplings, certificate pipeline cost), R₅ status and Plan B.
+
+## 2026-10-21 (resumed): R₅ constructions and the four-point piece, in Lean
+
+* `lean/Sqpack/Rect5Pack.lean`: `rect5_upper` — every construction on R₅'s boundary (row, 2×3 grid, zigzag
+  piece 4.2 for √2 ≤ H ≤ 2, stretched s(5) piece 4.5 for w, h ≥ 2), both orientations.  All tilts are 45°, so
+  each square gives four linear bounds (`int_lin`) and one tactic (`pairs5`) splits every pair by `linarith`.
+* `lean/Sqpack/Rect5Pts.lean`: `rect5_pts_lower` — 2 ≤ a, b < 2√2 and a + b < 4 + √2 ⇒ ¬ RectPacks 5 a b
+  (piece 4.5 exactly for 4 − √2 ≤ a ≤ 2 + 1/√2, with `rect5_stretch`; includes s(5) ≥ 2 + 1/√2).  Four points
+  (1,1), (a−1,1), (1,b−1), (a−1,b−1) (`rect5_cover`, 9 cells), then scaling + `packing_le_weight`.  Core lemmas
+  are real inequalities on `In dx dy c s` (corner, DS7 side strip, new centre-rectangle lemma X + Y ≤ √2);
+  reflections only swap c, s.  Paper proofs and numerics: `r5pts/R5PTS.md`.  339 lines, ~10 s.
+* Left for R₅, short side ≥ 2: by monotonicity in a, the b = 3 piece reduces to a = 1 + √2, b → 3; plus the
+  slanted line for 1 + √2 ≤ a < 4 − √2.  No 4-point set works there (`R5PTS.md` §6: best escape ≈ 0.015);
+  the escapers of the rectangular set are long-wall sitters (centre within ~0.085 of the wall, height within
+  ~0.1 of b/2, any tilt).

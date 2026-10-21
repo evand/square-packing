@@ -301,3 +301,8 @@ import Sqpack
 #print axioms SquarePacking.rect4_lower
 #print axioms SquarePacking.rect4_friedman
 #print axioms SquarePacking.rect4_iff
+-- R_5 constructions (Sqpack/Rect5Pack): row, grid, zigzag (piece 4.2), stretched s(5) (piece 4.5)
+#print axioms SquarePacking.rect5_upper
+-- R_5, both sides >= 2 (Sqpack/Rect5Pts): four unavoidable points; a + b >= 4 + sqrt 2 (incl. s(5))
+#print axioms SquarePacking.rect5_cover
+#print axioms SquarePacking.rect5_pts_lower
