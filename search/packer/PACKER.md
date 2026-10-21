@@ -5119,3 +5119,9 @@ grown pool (grid-locked now excluded): `dgen.py sweep --n 157 --band 0.0,0.012 -
   kind effects are small, so the reward matters for parent / cell choice, not kind choice.  (3) Structural novelty (nnd)
   alone is weak and mixed; blending it in does not help.  Not tested: lineage credit propagated to the move that made
   the ancestor (parent_model.py's yl), the "walk" version of the reward.
+* **LA1 stage 1 result (12:35; ~0.8 CPU-h per donor set).**  Line-free: 241 -> 274 247 / 1,200 (21 %), 240 -> 274 30 / 1,200
+  (2.5 %), 273 -> 308 185 / 1,200 (15 %); the 'scored' cuts (2 per donor, left on by --cuts 0's first cut) 0 / 140 as the
+  smoke said.  Best raw: 274 17.02428 (241 donors), 17.03179 (240); 308 18.02070.  Predictions: 274 line-free >= 10 %
+  yes (65 %; 11 % pooled); raw 274 < 17.0169 no (20 %); raw 308 < 17.9971 no (2 %).  Raw starts sit 0.007 above LC274d's
+  raw best; stage 2 decides.  Stage 2 launched split (another agent's 8-proc phase1.py is on the machine): 274 now, 308
+  when SW157c ends.
