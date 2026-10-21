@@ -4831,3 +4831,19 @@ an upright block), band-side boundaries (bands vs upright field, away from the z
   Fixes: runner returns all outputs (finish keeps the best line-free one at a grid bar); `harden.py run --line-free`
   (later rounds restart from line-free outputs only), passed automatically at a grid bar.  Requeued as FIN274c (harden,
   8 procs).
+
+## 274 pool: richness, detail diversity, design gap (10-20 ~23:50; Evan: "whether we have enough diversity on the details of the two-bulb construction ... whether 3e-4 is close enough ... Chao1 style tests")
+Store after SW274b's import: line-free polished 274s, minima = side keys (2e-9 chains).
+* Richness (incidence over runs, Chao2): < 17.0005 29 seen, >= 142; < 17.001 1,088 seen (953 in one run only),
+  >= 6,248; < 17.002 2,123, >= 16,184; < 17.01 21,158, >= 134,127.  Minima coverage ~15 %: far from exhausted.
+* Detail tuples (larger / smaller band size, band angles to 0.5 deg, shim count = tilt 0.5-5 deg): < 17.001 302 seen,
+  Chao1 >= 434 (~70 % coverage); < 17.0005 21 seen, >= 85.  Within the family, detail combinations are mostly seen.
+* Tail extrapolation is not identifiable: order-statistic endpoint fits swing with K; block-minima GEV over 18 SW-recipe
+  runs is degenerate (endpoint = sample minimum), and runs are not independent (each campaign starts from the last one's
+  outputs).  No P(sub-17) number from these.  Precedent instead: 183 went +4.2e-4 (L-cut seed) -> -4.2e-4 (explorer).
+* **Design gap.**  Neighbouring records have balanced bands at ~18.5-19 deg with 0-3 shims: 272 39 / 38, 273 41 / 46,
+  307 50 / 51, 308 48 / 52.  The 274 pool below 17.001 is all unbalanced, 36-38 / 44-54 at ~20 / 22.5 deg with 5-12
+  shims; balanced 274s (smaller band >= 40) exist (5,206 < 17.03) but the best is 17.0041.  The near-17 family is the
+  L-cut-from-308 lineage (the cut shortens one band), so the pool's shape is a construction artefact, not evidence about
+  the landscape.  The record design extended to 274 (balanced ~42-47 per band, ~18.5 deg) is the unexplored region;
+  HB's insertion into the 273 record (17.0125, 4 x 40 min) is the only probe of it.
