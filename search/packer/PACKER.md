@@ -5125,3 +5125,16 @@ grown pool (grid-locked now excluded): `dgen.py sweep --n 157 --band 0.0,0.012 -
   yes (65 %; 11 % pooled); raw 274 < 17.0169 no (20 %); raw 308 < 17.9971 no (2 %).  Raw starts sit 0.007 above LC274d's
   raw best; stage 2 decides.  Stage 2 launched split (another agent's 8-proc phase1.py is on the machine): 274 now, 308
   when SW157c ends.
+* **LA1 stage 2 result (~14:30; 274: 5.05 CPU-h, 308: 5.05 CPU-h measured).**  Best line-free 274: 17.017366 (x1;
+  the archives' "17.000000" is a final refine that collapsed to a 16-line grid packing, and x0's 17.01665 has lines);
+  308 best 18.005892 (record 17.9971491).  Predictions: 274 < 17.0119 no (30 %); < floor no (3 %); < 17 no (1 %); 308
+  record no (3 %).  L addition from 240/241 lands in the same band as LC274d's 307 cuts (17.012-17.017) and 0.017 above
+  family A; from 273 it gives 308s 0.009 above the record.  Bug noted: explorer's final refine admits grid-locked
+  results into the archive (lines not re-checked); harmless to the store (grid flag) but it fakes the run best.
+* **SW157c result (~13:15; 12.0 CPU-h).**  5 of 6 runs end exactly on 13.008928564 (SW157b's best), none below: 157 has
+  now floored like 274.  Predictions: below 13.008929 no (45 %); < 13.005 no (8 %); < 13 no (1 %).
+* **RV1, pre-registered (15:55): `--reward value` vs legacy at 274** (the replay's recommendation, live).  Same 12
+  near-floor starts as JW1, 4 groups of 3 starts, a legacy and a value run per group with the same seed (melt=2 both),
+  1.25 CPU-h each, 8 procs.  Metric: distinct sides < 17.0005 per arm (pooled), best, below floor.  Predictions: value
+  more distinct near-floor sides than legacy: 55 %; value wins >= 3 of 4 groups on that count: 35 %; any run below
+  17.0002995: 4 %.
