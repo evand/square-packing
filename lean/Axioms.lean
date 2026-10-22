@@ -310,3 +310,5 @@ import Sqpack
 #print axioms SquarePacking.rect5_wide_lower
 #print axioms SquarePacking.rect5_wide_iff
 #print axioms SquarePacking.rect5_low
+#print axioms SquarePacking.final5_high
+#print axioms SquarePacking.rect5_iff

@@ -248,4 +248,16 @@ Techniques, what worked (chain, one-square lemma), what failed (tube search, dec
 * Indexed weighted pigeonhole `packing_le_idx` (points may repeat).
 * History: the 4-point set cannot reach a ≈ 2.4 (R5PTS §6); an escaper second stage needs all five squares (§7);
   an LP found fractional point covers (§8); the 2/3–1/3 block cover C (§9); paper proofs (§10).
-Open for R₅: only the strip part (short side < 2, `Final5`, LESSONS.md §5).
+Open for R₅: only the strip part (short side < 2, `Final5`, LESSONS.md §5).  (Closed later the same day, below.)
+
+## 2026-10-21 (evening): R₅ done in Lean, `rect5_iff` (`lean/Sqpack/Rect5Thm.lean`)
+
+`rect5_iff : RectPacks 5 w h ↔ Fits5 w h` (`Fits5` in `Rect5Iff.lean`: row; both sides ≥ 2 with a side ≥ 3 or
+w + h ≥ 4 + √2; strip h < 2 with w + 4h ≥ 4 + 6√2, or swapped).  Standard axioms.
+* Strip, H < 2√2 − 1: `rect5_low`, midline points (i, H/2), i = 1..4 (`Rect5Low.lean`).
+* Strip, 2√2 − 1 ≤ H < 2: `final5_high : Final5Hi` (`Rect5Final.lean` + generated `Rect5Hi*.lean`, ~14k
+  lines, ~16 min to build one file at a time).  64 case theorems, 160 leaves: 144 Handelman certificates at the
+  H endpoints, 16 tight zigzag leaves by (1 + u)ᵐ G = R + kQ, 2 corner leaves by hand.  Generator
+  `r5strip/hi5.py`; details `r5strip/FINAL5.md`.  The lower bound H ≥ 2√2 − 1 is what let the old 10-21
+  pipeline (stalled at 120/160) close.
+* Style is machine-generated; a structured strip proof is a later task.

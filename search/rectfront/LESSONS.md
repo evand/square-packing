@@ -13,7 +13,7 @@ effort on extensibility until an approach has proved itself.
 | R₂ | max side ≥ 2 | `rect2_iff` (`Rect.lean`) | centre point lies in every square |
 | R₃ | `rect3_iff`: one side ≥ 3, both ≥ 2, or (short side s < 2) ℓ + 2s ≥ 4 + 2√2 | `Rect3.lean` (171 lines) + `RectChain.lean` | chain, 3 × 3 witness cases |
 | R₄ | `rect4_iff`: one side ≥ 4, both ≥ 2, or s < 2 and ℓ ≥ L(t, s) for some t (Friedman/Morandi piece of S₃) | `Rect4.lean`, `Rect4Core.lean` (592 lines) | chain + one-square lemma + half turn |
-| R₅, s < 2 | L ≥ 5 or L + 4H ≥ 4 + 6√2 (pieces 4.1, 4.2 of S₄) | `Rect5Mid.lean` (middle square), `Rect5.lean` (`rect5_strip_lower_of`, given the real inequality `Final5`) | **`Final5` not proved** (§5) |
+| R₅, s < 2 | L ≥ 5 or L + 4H ≥ 4 + 6√2 (pieces 4.1, 4.2 of S₄) | `Rect5Mid.lean` (middle square), `Rect5.lean` (`rect5_strip_lower_of`, given the real inequality `Final5`) | **done 10-21**: `rect5_low` (H < 2√2 − 1, four midline points, `Rect5Low.lean`); `final5_high` (H ≥ 2√2 − 1, generated Handelman certificates + tight zigzag decomposition, `Rect5Final.lean`, `r5strip/FINAL5.md`); not yet in good style |
 | R₅, s ≥ 2 | b = 3 on 2 ≤ a ≤ 1 + √2; a + b = 4 + √2 on 1 + √2 ≤ a ≤ 2 + 1/√2 (contains s(5)) | `rect5_wide_iff` (`Rect5Line.lean`, `Rect5Pts.lean`) | **done 10-21**: weighted point covers + scaling onto the line (`r5pts/R5PTS.md`); constructions `rect5_upper` (`Rect5Pack.lean`) |
 
 All boundaries are Friedman's (Math Magic, June 2010; closed forms also in wand125 `problems/rectangles`,
