@@ -370,3 +370,32 @@ With E2 this gives: every odd n, 1.87 ≤ H < 2 ⇒ L ≥ min(n, F_n).  Complete
 need H down to H*(n) → 2√2 − 1.
 Lean shape: (W), (S2), (C) are per-square inequalities in (frame, m, m′, H) (two route branches each for u₀);
 (S1) says the two-step minimum is attained on one of two routes (the real content).
+
+## 2026-10-22 (evening): odd n exactly for 1.87 ≤ H < 2, in Lean (`strip_odd_iff`)
+
+`strip_odd_iff` (`lean/Sqpack/StripC.lean`): for odd n ≥ 3 and 1.87 ≤ H < 2, n unit squares fit in L × H iff
+L ≥ n or L ≥ (n − 2)(2√2 − H) + 4 − H (the row or the 45° zigzag).  Standard axioms; whole library builds.
+With `strip_low` (H < 2√2 − 1 ⇒ L ≥ n) the only gap for odd n is 2√2 − 1 ≤ H < 1.87, i.e. odd n ≥ 7 near their
+thresholds H*(n) (H*(7) ≈ 1.857 … → 2√2 − 1).  n = 3, 5 are complete (also `rect3_iff`, `rect5_iff`).
+
+Files and the shape of the proof:
+* `StripWalk` (E4): packing → slope walk, Σ kap ≤ L.
+* `StripKernel`: `kap`, `kap_symm`, `kap_mirror`, `kap_wall` (next to a wall an upright square is cheapest),
+  `kap_ge_zigzag` (E1, not needed in the end).
+* `StripPot`: `kap_B` (excess ≥ β(|m| + |m′| − 2); `two_lines`: a square between its two edge lines costs exactly
+  2/(1 + cos t + sin t)), `kap_same` (lines leaning the same way cost ≥ a grid square; H drops out).
+* `StripS`: `kap_S` (a square costs a grid unit or the zigzag amount), via per-line parts (`line_W`, `line_Ly`), `aligned`
+  (both lines along edges), and `X3` (threshold vertex; convex quadratic in μ, end values `P1`–`P3`, exact
+  factorizations, double root at 45°).
+* `StripOdd`: the walk argument with parity potentials u₁ = a + β|m|, u₀ = min(2a + β|m|, a + β(2 − |m|))
+  (`pot_step`, `pot_cheap`, `prefix_bound`, `suffix_bound`, `strip_odd_of`).
+* `StripC`: `kap_C` (C′, only place needing H ≥ 1.87; `C_187` is a six-product certificate, slack ≈ 6e-4), the theorem.
+* `StripZigzag`: `strip_row`, `strip_zigzag` (every odd n).
+
+Style notes for later (Evan: geometric > certificates): the certificate-like pieces are `C_187` (LP-found products,
+`chainn/certlp.py`), and the per-case nlinarith steps in `kap_B_same` / `kap_same` / `kap_S_opp`; each is a vertex
+configuration (lines vertical / along an edge / at the threshold), documented in the docstrings.  `P1`, `P2`, `X3F`
+are exact factorizations.
+
+Open: (1) 2√2 − 1 ≤ H < 1.87 for odd n (needs 3-step prefix routes in u₁, and the length condition below ≈ 1.845,
+`chainn/excess_len.py`); (2) even n (Morandi family; n-dependent tilt, needs its own argument).
