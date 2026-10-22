@@ -1,0 +1,821 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Squares in Rectangles · Square Packing Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --paper:#F2F4F1; --surface:#FBFCFA; --ink:#131A1E; --muted:#5F6B70; --rule:#D6DCD7;
+  --accent:#0E7490; --accent-soft:#DCEDF1; --gold:#9C6410; --gold-soft:#F5EBDA; --green:#2A6E4F; --green-soft:#DFEDE5;
+  --red:#B4322A;
+  --shadow:0 1px 2px rgba(19,26,30,.05),0 8px 24px -12px rgba(19,26,30,.14);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E1316; --surface:#151C20; --ink:#E4EBEA; --muted:#96A4A8; --rule:#263238;
+    --accent:#54C3D6; --accent-soft:#0F3138; --gold:#DBA745; --gold-soft:#33280F; --green:#63BE92; --green-soft:#122B20;
+    --red:#E0675C;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E1316; --surface:#151C20; --ink:#E4EBEA; --muted:#96A4A8; --rule:#263238;
+  --accent:#54C3D6; --accent-soft:#0F3138; --gold:#DBA745; --gold-soft:#33280F; --green:#63BE92; --green-soft:#122B20;
+  --red:#E0675C;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:Spectral,Georgia,"Times New Roman",serif;font-size:17.5px;line-height:1.65;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:760px;margin:0 auto;padding:64px 24px 96px}
+h1,h2,h3{text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:clamp(2.1rem,5.2vw,3rem);font-weight:700;letter-spacing:-.015em}
+h2{font-size:1.55rem;font-weight:600;margin-top:0}
+h3{font-size:1.1rem;font-weight:600}
+p{margin:0}
+a{color:var(--accent);text-decoration-thickness:.08em;text-underline-offset:.18em}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted);font-weight:500}
+header{display:flex;flex-direction:column;gap:18px;padding-bottom:34px;border-bottom:1px solid var(--rule)}
+.lede{font-size:1.16rem;color:var(--muted);max-width:60ch}
+section{display:flex;flex-direction:column;gap:18px;padding:44px 0;border-bottom:1px solid var(--rule)}
+section:last-of-type{border-bottom:none}
+.sechead{display:flex;flex-direction:column;gap:6px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:24px;box-shadow:var(--shadow)}
+.thm{border-left:3px solid var(--accent);display:flex;flex-direction:column;gap:14px}
+.thm .stmt{font-size:1.12rem;line-height:1.55}
+.tag{display:inline-flex;align-items:center;gap:7px;font-family:"IBM Plex Mono",monospace;font-size:.72rem;
+  letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:999px;font-weight:500}
+.tag.ok{background:var(--green-soft);color:var(--green)}
+.tag.open{background:var(--gold-soft);color:var(--gold)}
+.tag.neutral{background:var(--accent-soft);color:var(--accent)}
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+.tablewrap{overflow-x:auto}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);font-weight:500}
+td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+figure{margin:0;display:flex;flex-direction:column;gap:12px}
+figcaption{font-size:.9rem;color:var(--muted)}
+.figbox{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:18px}
+pre{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:16px;overflow-x:auto;
+  font-family:"IBM Plex Mono",monospace;font-size:.83rem;line-height:1.6;margin:0}
+code{font-family:"IBM Plex Mono",monospace;font-size:.9em;background:var(--accent-soft);
+  padding:.1em .35em;border-radius:2px}
+pre code{background:none;padding:0;font-size:1em}
+ul,ol{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:9px}
+li::marker{color:var(--muted)}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.footnote{font-size:.87rem;color:var(--muted)}
+section>*{min-width:0}
+.footnote .mono,td .mono{overflow-wrap:anywhere}
+@media (max-width:520px){th,td{padding:8px 6px}td.num{white-space:normal}.wrap{padding:40px 16px 72px}.card{padding:18px}.figbox{padding:12px}}
+.topbar{display:flex;align-items:center;gap:6px 18px;padding:10px 20px;border-bottom:1px solid var(--rule);background:var(--surface);flex-wrap:wrap;font-size:16px;line-height:1.5}
+.topbar .brand{font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+.topbar nav{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.92rem}
+.topbar nav a{text-decoration:none;color:var(--muted);white-space:nowrap}
+.topbar nav a.here,.topbar nav a:hover{color:var(--accent)}
+.subnav{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 14px;padding:6px 20px;border-bottom:1px solid var(--rule);font-size:15px;line-height:1.5}
+.subnav .lbl{font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.subnav a{text-decoration:none;color:var(--muted);white-space:nowrap}
+.subnav a.here,.subnav a:hover{color:var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.85rem;color:var(--muted);align-items:center}
+.legend i{display:inline-block;width:18px;height:0;border-top:3px solid;vertical-align:middle;margin-right:6px}
+.legend i.box{height:12px;border:1px solid var(--rule);width:14px}
+/* static diagrams */
+.diag{width:100%;max-width:560px;display:block;margin:0 auto;height:auto}
+.narrow .diag{max-width:400px}
+.diag .wall{fill:none;stroke:var(--ink);stroke-width:2}
+.diag .sq{fill:var(--accent-soft);stroke:var(--ink);stroke-width:1.4}
+.diag .sqt{fill:var(--gold-soft);stroke:var(--gold);stroke-width:1.6}
+.diag .ghost{fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:5 4}
+.diag .sep{stroke:var(--red);stroke-width:1.6;stroke-dasharray:7 4}
+.diag .shelf{stroke:var(--green);stroke-width:5;stroke-linecap:butt}
+.diag .band{fill:var(--green-soft);stroke:none}
+.diag .dot{fill:var(--ink)}
+.diag .ctr{fill:var(--red)}
+.diag .name{font-family:"IBM Plex Mono",monospace;font-size:17px;font-weight:600;fill:var(--ink)}
+.diag .lab{font-family:"IBM Plex Mono",monospace;font-size:13px;fill:var(--muted)}
+/* interactive widgets */
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tabs button,.btn{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:.8rem;padding:5px 12px;border-radius:999px;
+  border:1px solid var(--rule);background:var(--surface);color:var(--muted);cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.tabs button.tilt[aria-pressed="true"]{background:var(--gold);border-color:var(--gold)}
+.btn:hover,.tabs button:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.5;cursor:default}
+.duo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:700px){.duo{grid-template-columns:1fr}}
+.plot{width:100%;aspect-ratio:1/1;display:block;touch-action:none;cursor:crosshair;user-select:none;-webkit-user-select:none}
+.plot .ax{stroke:var(--muted);stroke-width:1}
+.plot .grid{stroke:var(--rule);stroke-width:1}
+.plot .tick{font-family:"IBM Plex Mono",monospace;font-size:13px;fill:var(--muted)}
+.plot .axl{font-family:"IBM Plex Mono",monospace;font-size:14px;fill:var(--ink)}
+.plot .feas{fill:var(--accent-soft)}
+.plot .under{fill:var(--rule);opacity:.45}
+.plot .diagl{stroke:var(--muted);stroke-width:1;stroke-dasharray:3 4}
+.plot .bd{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linecap:round}
+.plot .bdt{fill:none;stroke:var(--gold);stroke-width:5;stroke-linecap:round}
+.plot .yang{fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:2 3}
+.plot .mk{fill:var(--red);stroke:var(--surface);stroke-width:2}
+.plot .note{font-family:"IBM Plex Mono",monospace;font-size:12px;fill:var(--muted)}
+.plot .pin{fill:var(--ink)}
+.pack{width:100%;display:block}
+.pack .wall{fill:none;stroke:var(--ink);stroke-width:2;vector-effect:non-scaling-stroke}
+.pack .sq{fill:var(--accent-soft);stroke:var(--ink);stroke-width:1.3;vector-effect:non-scaling-stroke}
+.pack .sqt{fill:var(--gold-soft);stroke:var(--gold);stroke-width:1.6;vector-effect:non-scaling-stroke}
+.readout{display:flex;flex-direction:column;gap:6px;font-size:.92rem}
+.readout .big{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-size:1.05rem;color:var(--ink)}
+.readout .pc{font-weight:600}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.ctl{display:flex;flex-direction:column;gap:4px;font-size:.9rem}
+.ctl.row{flex-direction:row;align-items:center;gap:8px}
+select{font:inherit;font-size:.9rem;padding:4px 6px;border:1px solid var(--rule);border-radius:3px;background:var(--surface);color:var(--ink);max-width:100%}
+.play{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:16px;align-items:start}
+@media (max-width:760px){.play{grid-template-columns:1fr}}
+.play svg{width:100%;display:block;background:var(--surface);border:1px solid var(--rule);border-radius:3px;touch-action:none;cursor:grab}
+.play .wall{fill:none;stroke:var(--ink);vector-effect:non-scaling-stroke;stroke-width:2}
+.play .gl{stroke:var(--rule);vector-effect:non-scaling-stroke;stroke-width:1}
+.play .usq{fill:var(--accent);fill-opacity:.16;stroke:var(--accent);vector-effect:non-scaling-stroke;stroke-width:2}
+.play .pt{fill:var(--muted)}
+.play .pt.on{fill:var(--red)}
+.play .pt.blk{fill:var(--red);stroke:var(--ink);vector-effect:non-scaling-stroke;stroke-width:1.5}
+.panel{display:flex;flex-direction:column;gap:12px;font-size:.92rem}
+.count{font-family:"IBM Plex Mono",monospace;font-size:2.4rem;font-weight:600;line-height:1;color:var(--accent)}
+.count.tight{color:var(--gold)}
+.count.low{color:var(--red)}
+.note{font-size:.85rem;color:var(--muted)}
+.land canvas{width:100%;image-rendering:pixelated;border:1px solid var(--rule);border-radius:3px;background:var(--surface);display:block}
+.keys{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.8rem;color:var(--muted)}
+.keys i{display:inline-block;width:11px;height:11px;margin-right:5px;vertical-align:-1px;border:1px solid var(--rule)}
+.formula{font-family:"IBM Plex Mono",monospace;font-size:.9rem;overflow-x:auto;white-space:nowrap;padding:10px 0}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="brand">Square Packing Atlas</span>
+  <nav><a href="../index.html">Overview</a><a href="../explore.html">Explore</a><a href="../compare.html">Compare</a><a href="../bounds.html">Bounds</a><a href="../leaderboard.html">Leaderboard</a><a href="../proofs.html" class="here">Proofs &amp; results</a><a href="../problems.html">Open problems</a><a href="../sources.html">Sources</a></nav>
+</div>
+<div class="subnav"><span class="lbl">Results</span><a href="../s12/">s(11), s(12)</a><a href="../s13/">s(13)</a><a href="../s21/">s(21)</a><a href="../s32/">s(32)</a><a href="../s45/">s(45)</a><a href="../s60/">s(60)</a><a href="../k2m3/">s(k²−3)</a><a href="../k2m4/">s(k²−4)</a><a href="../k2c/">c*(k)</a><a href="./" class="here">Rectangles</a></div>
+<div class="wrap">
+<header>
+  <span class="eyebrow">Discrete geometry · Lean 4 proofs</span>
+  <h1>Squares in Rectangles</h1>
+  <p class="lede">Which rectangles hold three, four or five unit squares, if the squares may be turned to any angle?
+  The boundaries have been on record since 2010, as constructions in a problem posed by Erich Friedman. Here they are
+  proved: the constructions cannot be beaten. All three theorems are checked in Lean 4 with no hypotheses.</p>
+  <div class="tags">
+    <span class="tag ok">Lean 4, no hypothesis, standard axioms</span>
+    <span class="tag neutral">boundaries: Friedman's Math Magic, June 2010</span>
+    <span class="tag open">not peer reviewed</span>
+    <a class="tag neutral" href="https://github.com/evand/square-packing/tree/main/lean/Sqpack">Lean sources on GitHub →</a>
+  </div>
+</header>
+
+<section id="answer">
+  <div class="sechead"><span class="eyebrow">01 · The question and the answer</span><h2>Which rectangles hold n unit squares?</h2></div>
+  <p>Call the rectangle's sides <span class="mono">s ≤ ℓ</span> (short and long). The squares are closed unit squares at any
+  positions and angles, inside the rectangle, with disjoint interiors. Every square needs <span class="mono">s ≥ 1</span>, and
+  two squares need <span class="mono">ℓ ≥ 2</span>, since otherwise every unit square in the box contains the box's centre in its interior. For three
+  squares or more, tilting starts to pay.</p>
+  <div class="card thm">
+    <p class="stmt"><strong>Theorem</strong> (<span class="mono">rect3_iff</span>, <span class="mono">rect4_iff</span>,
+    <span class="mono">rect5_iff</span>). With <span class="mono">1 ≤ s ≤ ℓ</span>:</p>
+    <ul>
+      <li><strong>Three</strong> unit squares fit iff <span class="mono">s ≥ 2</span>, or <span class="mono">ℓ ≥ 3</span>, or
+      <span class="mono">ℓ + 2s ≥ 4 + 2√2</span>.</li>
+      <li><strong>Four</strong> fit iff <span class="mono">s ≥ 2</span>, or <span class="mono">ℓ ≥ 4</span>, or
+      <span class="mono">ℓ ≥ L(t, s)</span> for some angle <span class="mono">0° &lt; t &lt; 90°</span>, where
+      <div class="formula">L(t, s) = 2 + (1 − 2(s − k − 1) sin t)/cos t<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ (1 − (s − 2k) cos t)/sin t,<br>k = (cos t + sin t)/2.</div></li>
+      <li><strong>Five</strong> fit iff <span class="mono">ℓ ≥ 5</span>; or <span class="mono">s ≥ 2</span> and
+      (<span class="mono">ℓ ≥ 3</span> or <span class="mono">s + ℓ ≥ 4 + √2</span>); or <span class="mono">s &lt; 2</span> and
+      <span class="mono">ℓ + 4s ≥ 4 + 6√2</span>.</li>
+    </ul>
+    <p class="footnote">At <span class="mono">s = ℓ</span> the five-square case is <span class="mono">s(5) = 2 + 1/√2</span>
+    (Göbel 1979). The tilted pieces live in thin slivers: <span class="mono">1.9142 ≤ s &lt; 2</span> for three squares
+    (<span class="mono">(1 + 2√2)/2 ≤ s</span>), <span class="mono">1.8816489 ≤ s &lt; 2</span> for four,
+    <span class="mono">1.8713 ≤ s &lt; 2</span> (<span class="mono">(6√2 − 1)/4 ≤ s</span>) and
+    <span class="mono">1 + √2 ≤ s ≤ 2 + 1/√2</span> for five.</p>
+  </div>
+
+  <p>In the plot, a point is a rectangle: short side across, long side up. The shaded region is the set of rectangles that
+  hold <i>n</i> squares; its lower edge is the boundary, with the tilted pieces in gold. Click or drag along the boundary, or
+  use the slider, to see the packing that sits exactly on it. Every packing is drawn from the construction proved in Lean.</p>
+  <div class="card" style="display:flex;flex-direction:column;gap:14px">
+    <div class="tabs" id="ntabs" role="group" aria-label="number of squares">
+      <button data-n="3" aria-pressed="true">n = 3</button><button data-n="4" aria-pressed="false">n = 4</button><button data-n="5" aria-pressed="false">n = 5</button>
+      <label class="ctl row" style="margin-left:auto"><input type="checkbox" id="zoom"> zoom near s = 2</label>
+    </div>
+    <div class="duo">
+      <svg class="plot" id="plot" viewBox="0 0 400 400" role="img" aria-label="Boundary of the set of rectangles holding n unit squares, short side against long side"></svg>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <svg class="pack" id="pack" viewBox="0 0 10 4" role="img" aria-label="The extremal packing at the selected boundary point"></svg>
+        <div class="readout" id="readout"></div>
+      </div>
+    </div>
+    <label class="ctl">position along the boundary<input type="range" id="bpos" min="0" max="1000" value="500"></label>
+    <div class="tabs" id="ptabs" role="group" aria-label="boundary pieces"></div>
+    <div class="legend"><span><i style="border-color:var(--ink)"></i>boundary, upright packing</span><span><i style="border-color:var(--gold)"></i>boundary, tilted packing</span><span><i class="box" style="background:var(--accent-soft)"></i>fits</span><span id="yangkey"><i style="border-top:2px dotted var(--muted)"></i>left open by Yang (2026)</span></div>
+  </div>
+  <p class="footnote">Each boundary point is attained: the packings drawn are in the closed rectangle, touching where they
+  look as if they touch. Inside the shaded region more room is to spare; below the boundary, the theorem says no packing
+  exists at all, at any angles. The vertical pieces at <span class="mono">s = 2</span> are where the short side reaches 2 and
+  the squares can be stacked two high.</p>
+</section>
+
+<section id="credits">
+  <div class="sechead"><span class="eyebrow">02 · Who found what</span><h2>The boundaries are Friedman's; the proofs are new</h2></div>
+  <p>All three boundaries, and every packing on them, are in Erich Friedman's
+  <a href="https://erich-friedman.github.io/mathmagic/0610.html">Math Magic problem of the month for June 2010</a>. Friedman asks
+  for the region <span class="mono">S<sub>n</sub></span> of rectangles that hold <em>at most</em> <i>n</i> unit squares, so the
+  boundary of <span class="mono">S<sub>n−1</sub></span> is the boundary we want for <i>n</i>; his <span class="mono">x</span> is
+  our long side <span class="mono">ℓ</span> and his <span class="mono">y</span> our short side <span class="mono">s</span>.
+  The page names that month's solvers as Maurizio Morandi, Evert Stenlund, David W. Cantrell and Hiroaki Hosono, and gives an
+  author for some of the pieces in its table:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>n here</th><th>Friedman</th><th>pieces of the boundary</th><th>author column</th></tr></thead>
+    <tbody>
+      <tr><td class="num">3</td><td class="num">S₂</td><td><span class="mono">x = 3</span>; <span class="mono">x + 2y = 4 + 2√2</span> (the 45° wedge); <span class="mono">y = 2</span></td><td>empty for all three</td></tr>
+      <tr><td class="num">4</td><td class="num">S₃</td><td><span class="mono">x = 4</span>; a parametric curve (the tilted pair); <span class="mono">y = 2</span></td><td>MM for the curve, empty for the other two</td></tr>
+      <tr><td class="num">5</td><td class="num">S₄</td><td><span class="mono">x = 5</span>; <span class="mono">x + 4y = 4 + 6√2</span> (the zigzag); <span class="mono">y = 2</span>; <span class="mono">x = 3</span>; <span class="mono">x + y = 4 + √2</span></td><td>MM for all five</td></tr>
+    </tbody>
+  </table></div>
+  <p class="footnote">The table gives authors by initials only. MM matches Maurizio Morandi, the only named solver with those
+  initials. The page was last updated in February 2019 and gives constructions, not proofs.</p>
+  <p>Other earlier work bears on these three cases:</p>
+  <ul>
+    <li><strong>s(5).</strong> The square case of the five-square theorem, <span class="mono">s(5) = 2 + 1/√2</span>, is
+    Göbel's (1979). Our proof for both sides at least 2 starts from the same four unavoidable points, in the form given in
+    Friedman's survey of square packing (§04).</li>
+    <li><strong>The 1:2 rectangle for four squares.</strong> Friedman's page <i>Squares in Dominoes</i> lists four unit
+    squares in <span class="mono">1.930 × 3.861</span>, found by Evert Stenlund in 2010. It lies on the four-square boundary
+    (marked in the plot).</li>
+    <li><strong>Three squares.</strong> Yang (<a href="https://arxiv.org/abs/2608.13595">arXiv:2608.13595</a>, 2026)
+    determines the largest total side of three squares of any sizes in a <span class="mono">1 × x</span> rectangle. Rescaled, this
+    settles three <em>equal</em> squares in every rectangle except the region <span class="mono">1.5 ≤ s &lt; 2</span>,
+    <span class="mono">max(s, 3 − s/2) ≤ ℓ &lt; 3</span> (dotted in the plot for <span class="mono">n = 3</span>). Friedman's
+    wedge lies inside that region.</li>
+    <li><strong>Constructions with certificates.</strong> wand125's
+    <a href="https://github.com/wand125/square-packing">square-packing</a> repository (<span class="mono">problems/rectangles/</span>)
+    lists the same boundary pieces, with closed forms and certified constructions, and no lower bounds.</li>
+  </ul>
+  <p><strong>Our part.</strong> We came to the three-square case by a numerical search, found the 45° wedge, and took it for
+  new; a day later we learned it was in Friedman's table (posted in 2010, last updated in 2019). We then used his tables as the target for
+  four and five. What is new here is the other direction: the proof that nothing below the boundary can be packed. As far as
+  we know these are the first proofs of these lower bounds, for <i>n</i> = 3, 4 and 5, and the first theorems about squares in
+  non-square rectangles in any proof assistant.</p>
+</section>
+
+<section id="chain">
+  <div class="sechead"><span class="eyebrow">03 · Strips lower than 2</span><h2>The chain: three and four squares</h2></div>
+  <p>When the short side is 2 or more, all three answers are easy for <i>n</i> = 3 and 4: two rows fit. The work is in strips
+  <span class="mono">[0, L] × [0, H]</span> with <span class="mono">H &lt; 2</span>. There the squares cannot be stacked: each
+  centre lies between heights <span class="mono">½</span> and <span class="mono">H − ½</span>, so any two centres differ in
+  height by less than <span class="mono">H − 1 &lt; 1</span>. That makes the squares a chain, left to right.</p>
+  <ol>
+    <li><strong>Sort and separate.</strong> Sort the squares by the <i>x</i>-coordinate of their centres. Two squares with
+    disjoint interiors are separated by a line (in Lean: Hahn–Banach, from Mathlib). Because neighbours are less than one
+    unit apart in height, the line between them always has the left square on its left.</li>
+    <li><strong>The shelf.</strong> Take the first square <i>a</i> and its line. Replace <i>a</i> by an upright unit square
+    pushed against the left wall, level with the top or the bottom of <i>a</i>. The upright square is still on <i>a</i>'s side
+    of the line. (This is one elementary trigonometric inequality, <span class="mono">upright_repl</span>.) So the second square
+    <i>b</i>, on the other side, cannot reach left of <span class="mono">x = 1</span> anywhere within that unit band of
+    heights. That is a <em>shelf</em>. The last square gives a shelf at <span class="mono">x = L − 1</span> on the other side.</li>
+  </ol>
+  <figure>
+    <div class="figbox"><svg viewBox="0 0 440 242" class="diag" role="img" aria-label="Three unit squares a, b, c in a strip of height below 2, sorted by centre. A line separates a from b and another separates b from c. An upright square against the left wall, level with a, lies on a's side of the first line; so in its band of heights b cannot reach left of x = 1. Likewise on the right.">
+<polygon class="ghost" points="14.0,203.3 124.0,203.3 124.0,93.3 14.0,93.3"/>
+<polygon class="ghost" points="316.5,204.6 426.5,204.6 426.5,94.6 316.5,94.6"/>
+<polygon class="wall" points="14.0,212.0 426.5,212.0 426.5,14.0 14.0,14.0"/>
+<polygon class="sq" points="120.6,62.3 17.2,99.9 54.8,203.3 158.2,165.7"/>
+<polygon class="sq" points="223.3,16.6 133.2,79.7 196.3,169.8 286.4,106.7"/>
+<polygon class="sq" points="400.7,74.2 293.1,97.0 315.9,204.6 423.5,181.8"/>
+<line class="sep" x1="178.2" y1="212.0" x2="106.1" y2="14.0"/>
+<line class="sep" x1="313.1" y1="212.0" x2="271.1" y2="14.0"/>
+<text class="name" x="87.7" y="138.8" text-anchor="middle">a</text>
+<text class="name" x="209.8" y="99.2" text-anchor="middle">b</text>
+<text class="name" x="358.3" y="145.4" text-anchor="middle">c</text>
+<line class="shelf" x1="124.0" y1="203.3" x2="124.0" y2="93.3"/>
+<line class="shelf" x1="316.5" y1="204.6" x2="316.5" y2="94.6"/>
+<text class="lab" x="14.0" y="230.0" text-anchor="middle">0</text>
+<text class="lab" x="124.0" y="230.0" text-anchor="middle">1</text>
+<text class="lab" x="316.5" y="230.0" text-anchor="middle">L − 1</text>
+<text class="lab" x="426.5" y="230.0" text-anchor="middle">L</text>
+</svg></div>
+    <figcaption>Three squares in a strip of height 1.8. The red dashed lines separate neighbours. The dashed outlines are the
+    upright stand-ins for <i>a</i> and <i>c</i>; they lie on the same side of the lines as the squares they replace, so in the
+    stand-ins' bands of heights, <i>b</i> stays between the green shelves at <span class="mono">x = 1</span> and
+    <span class="mono">x = L − 1</span>. (The shelves constrain only <i>b</i>; <i>a</i> and <i>c</i> themselves may cross them.)</figcaption>
+  </figure>
+  <p><strong>Three squares.</strong> Now <i>b</i> sits alone between two shelves, and the whole question is how short
+  <span class="mono">L</span> can be. Which point of <i>b</i> a shelf stops is one of three: the corner of <i>b</i> that points
+  at the shelf, if it is at a height inside the band, or else the point of an adjacent edge at the band's top or bottom. That
+  gives 3 × 3 cases, each a real inequality in <i>b</i>'s angle. Seven give <span class="mono">L ≥ 3</span> outright. The two
+  where <i>b</i> stands on the floor or hangs from the ceiling with an edge on each shelf give
+  <span class="mono">L + 2H ≥ 4 + 2√2</span>, with equality only at 45°: Friedman's wedge.</p>
+  <figure>
+    <div class="figbox narrow"><svg viewBox="0 0 350 258" class="diag" role="img" aria-label="The wedge: uprights in the bottom corners and a square at 45 degrees touching the ceiling and the uprights' inner top corners.">
+<polygon class="band" points="14.0,228.5 336.1,228.5 336.1,118.5 14.0,118.5"/>
+<polygon class="wall" points="14.0,228.5 336.1,228.5 336.1,14.0 14.0,14.0"/>
+<polygon class="sq" points="124.0,118.5 14.0,118.5 14.0,228.5 124.0,228.5"/>
+<polygon class="sq" points="336.1,118.5 226.1,118.5 226.1,228.5 336.1,228.5"/>
+<polygon class="sqt" points="175.1,14.0 97.3,91.8 175.1,169.6 252.8,91.8"/>
+<line class="shelf" x1="124.0" y1="228.5" x2="124.0" y2="118.5"/>
+<line class="shelf" x1="226.1" y1="228.5" x2="226.1" y2="118.5"/>
+<circle class="dot" cx="124.0" cy="118.5" r="3.5"/>
+<circle class="dot" cx="226.1" cy="118.5" r="3.5"/>
+<text class="name" x="175.1" y="97.8" text-anchor="middle">b</text>
+<text class="name" x="69.0" y="179.5" text-anchor="middle">a</text>
+<text class="name" x="281.1" y="179.5" text-anchor="middle">c</text>
+<text class="lab" x="175.1" y="246.5" text-anchor="middle">L = 4 + 2√2 − 2H</text>
+</svg></div>
+    <figcaption>The equality case for three squares: the shelves are the two upright squares themselves, and <i>b</i> at 45°
+    touches the ceiling and the two inner corners.</figcaption>
+  </figure>
+  <p>The step that makes this short is the shelf: once the neighbours may be taken upright, a single square against two
+  shelves carries the whole boundary. The Lean proof of <span class="mono">rect3_iff</span> is 171 lines, on top of 418 lines
+  of chain tools reused below.</p>
+  <p><strong>Four squares.</strong> Sort <i>a, b, c, d</i>. Square <i>b</i> has a shelf on its left (from <i>a</i>),
+  <i>c</i> a shelf on its right (from <i>d</i>), and a line at some angle <i>t</i> separates <i>b</i> from <i>c</i>. Two
+  more steps:</p>
+  <ul>
+    <li><strong>One square against a line</strong> (<span class="mono">one_square</span>). A unit square in the strip with a
+    left shelf, lying to the left of a line at angle <i>t</i>, pushes the line at least as far right as one of two explicit
+    squares would: an upright square at the ceiling, or the square tilted by <i>t</i> on the ceiling against the shelf's
+    corner, with an edge along the line.
+    The proof is the same three witness cases, plus two inequalities in two angles that factor after the half-angle
+    substitution <span class="mono">u = tan(θ/2)</span>.</li>
+    <li><strong>A half turn.</strong> Rotate the right half of the picture by 180° about the centre of the rectangle. Then
+    <i>c</i> becomes a square with a <em>left</em> shelf, against a line parallel to the first. The one-square bound applies to
+    both <i>b</i> and the turned <i>c</i>, and the two bounds add up to <span class="mono">L ≥ 4</span> or
+    <span class="mono">L ≥ L(t, H)</span>.</li>
+  </ul>
+  <figure>
+    <div class="figbox"><svg viewBox="0 0 453 256" class="diag" role="img" aria-label="Friedman's packing of four squares: uprights in opposite corners, two parallel squares tilted by t between them, edge to edge. The line through their common edge separates them; the configuration is symmetric under a half turn about the centre of the rectangle.">
+<polygon class="wall" points="14.0,226.3 438.8,226.3 438.8,14.0 14.0,14.0"/>
+<polygon class="sq" points="124.0,116.3 14.0,116.3 14.0,226.3 124.0,226.3"/>
+<polygon class="sqt" points="181.3,14.0 97.6,85.5 169.1,169.1 252.7,97.6"/>
+<polygon class="sqt" points="283.7,71.2 200.0,142.7 271.5,226.3 355.1,154.8"/>
+<polygon class="sq" points="438.8,14.0 328.8,14.0 328.8,124.0 438.8,124.0"/>
+<line class="sep" x1="102.1" y1="226.3" x2="350.6" y2="14.0"/>
+<circle class="ctr" cx="226.4" cy="120.1" r="3.5"/>
+<text class="name" x="69.0" y="177.3" text-anchor="middle">a</text>
+<text class="name" x="175.2" y="97.5" text-anchor="middle">b</text>
+<text class="name" x="277.6" y="154.8" text-anchor="middle">c</text>
+<text class="name" x="383.8" y="75.0" text-anchor="middle">d</text>
+<text class="lab" x="226.4" y="244.3" text-anchor="middle">L = L(t, H)</text>
+</svg></div>
+    <figcaption>Friedman's four-square packing at <span class="mono">H = 1.93</span>, <span class="mono">t ≈ 40.5°</span>. The
+    middle pair lie edge to edge, and their common edge is the separating line. A half turn about the red centre maps the
+    packing to itself, which is why the two one-square bounds are tight together. The angle of Friedman's tilted squares is
+    the angle of that separating line.</figcaption>
+  </figure>
+  <p>So the minimum of <span class="mono">L(t, H)</span> over <i>t</i> is exactly the boundary, and <span class="mono">rect4_friedman</span>
+  shows that the packing exists for every <i>t</i> with <span class="mono">L(t, H) &lt; 4</span>. The tilted piece runs from
+  <span class="mono">H = 1.8816489</span>, where it meets the row of four, up to <span class="mono">H = 2</span>, where
+  <span class="mono">t = 45°</span> and <span class="mono">L = 4√2 − 2 ≈ 3.657</span>. Lean: 592 lines.</p>
+</section>
+
+<section id="covers">
+  <div class="sechead"><span class="eyebrow">04 · Both sides at least 2</span><h2>Weighted points: five squares and s(5)</h2></div>
+  <p>With both sides at least 2 the chain breaks: squares can stack. For five squares this part of the boundary contains the
+  square <span class="mono">2 + 1/√2</span>, and we use the method that proves <span class="mono">s(5)</span>: unavoidable
+  points, here with weights.</p>
+  <div class="card thm">
+    <p class="stmt"><strong>The principle.</strong> Put points with weights in the <span class="mono">a × b</span> box so that
+    every closed unit square inside the box contains points of total weight at least 1. Five closed unit squares that do not
+    even touch contain disjoint sets of points, so if the total weight is less than 5, they cannot all be in the box.</p>
+    <p class="footnote">Packed squares may touch, and a point on a shared edge would be counted twice. But the covers have to
+    count points on a square's edge: at the boundary they are tight. Scaling resolves both. A packing in a box below the
+    boundary is ruled out by scaling it up: enlarge the box onto the boundary line
+    <span class="mono">a + b = 4 + √2</span> by a factor <span class="mono">λ &gt; 1</span>, together with the squares. The
+    enlarged squares have disjoint interiors, so the unit squares at their centres are disjoint even as closed sets, and each
+    contains weight at least 1. Boxes with <span class="mono">a ≤ 1 + √2</span> and <span class="mono">b &lt; 3</span> are
+    first widened to <span class="mono">a = 1 + √2</span>, which handles the flat piece <span class="mono">ℓ = 3</span>.</p>
+  </div>
+  <p><strong>Four points</strong> (for <span class="mono">4 − √2 ≤ a ≤ 2 + 1/√2</span> on the line). The points
+  <span class="mono">(1, 1)</span>, <span class="mono">(a − 1, 1)</span>, <span class="mono">(1, b − 1)</span>,
+  <span class="mono">(a − 1, b − 1)</span>, weight 1 each. Split the possible centres into nine cells: near a corner the corner
+  point is caught; along a wall, one of the two points on that wall (the side-strip lemma of Friedman's survey, which needs the gap between
+  them at most <span class="mono">2√2 − 2</span>); in the middle, a new lemma: a unit square whose centre lies in an
+  <span class="mono">X × Y</span> rectangle with <span class="mono">X, Y ≤ 1</span> and <span class="mono">X + Y ≤ √2</span>
+  contains one of the rectangle's corners. At <span class="mono">a = b</span> this gives <span class="mono">s(5) = 2 + 1/√2</span>,
+  by essentially the classical argument with the centre handled by the rectangle lemma.</p>
+  <p><strong>Cover C</strong> (for <span class="mono">1 + √2 ≤ a ≤ 4 − √2</span>). Here the side-strip lemma fails: a square at
+  45° sitting against a long wall slips between the two points on it, and a numerical search found no set of four points that works.
+  A linear program over fractional weights found covers, and one simplifies to ten points:</p>
+  <ul>
+    <li>weight <span class="mono">2/3</span> at <span class="mono">(0.91, 1)</span> and its three mirror images;</li>
+    <li>weight <span class="mono">1/3</span> at the four points above, <span class="mono">(1, 1)</span> and mirrors;</li>
+    <li>weight <span class="mono">1/3</span> at <span class="mono">(1, b/2)</span> and <span class="mono">(a − 1, b/2)</span> on the midline.</li>
+  </ul>
+  <p>Total <span class="mono">14/3 &lt; 5</span>. Every closed unit square in the box contains a whole <em>block</em> of
+  weight exactly 1: a row pair <span class="mono">{(0.91, 1), (1, 1)}</span>, a wall pair
+  <span class="mono">{(0.91, 1 or b − 1), (1, b/2)}</span>, or a centre triple <span class="mono">{(1, 1 or b − 1), (1, b/2), (a − 1, b/2)}</span>,
+  up to mirror images. The Lean proof splits the centres into three cells, each closed by short lemmas of the same kinds as above (corner,
+  side strip, and a variant of the centre lemma).</p>
+
+  <div class="card" style="display:flex;flex-direction:column;gap:14px" id="playcard">
+    <div class="play">
+      <svg id="pl" viewBox="0 0 1 1" tabindex="0" aria-label="A unit square over the weighted points; drag to move it, scroll or use the angle slider to rotate, arrow keys when focused"></svg>
+      <div class="panel">
+        <label class="ctl">point set<select id="cset">
+          <option value="C">cover C (10 points, 2/3 and 1/3)</option>
+          <option value="D">four points (weight 1)</option>
+          <option value="S">low strip: four midline points</option>
+        </select></label>
+        <label class="ctl"><span id="parlab">box</span><input type="range" id="par" min="0" max="1000" value="0"></label>
+        <div><div class="eyebrow">weight caught</div><div class="count" id="cnt">—</div><div class="note" id="cntnote"></div></div>
+        <label class="ctl">angle <span class="mono" id="angv">0°</span><input id="ang" type="range" min="0" max="90" step="0.1" value="0"></label>
+        <div class="land"><canvas id="land" width="140" height="140"></canvas></div>
+        <div class="keys"><span><i style="background:var(--rule)"></i>no room at this angle</span><span><i style="background:var(--red)"></i>below 1</span><span><i style="background:var(--gold)"></i>exactly 1</span><span><i style="background:var(--gold-soft)"></i>4/3</span><span><i style="background:var(--accent-soft)"></i>5/3 or more</span></div>
+        <div class="note" id="landnote"></div>
+        <button class="btn" id="scan">check all angles</button><div class="note" id="scannote"></div>
+      </div>
+    </div>
+  </div>
+  <p class="footnote">Drag the square, turn it with the slider (or the mouse wheel), and try to catch less than weight 1. The
+  small map shows the weight caught for every centre at the current angle; gold is exactly 1, where the cover is tight.
+  The box follows the boundary line <span class="mono">a + b = 4 + √2</span> (for cover C and the four points) or the strip
+  <span class="mono">5 × H</span> (§05). The page samples; the Lean proof covers every position and angle.</p>
+</section>
+
+<section id="strip5">
+  <div class="sechead"><span class="eyebrow">05 · Five squares in a strip</span><h2>Midline points, then certificates</h2></div>
+  <p><strong>Low strips</strong>, <span class="mono">H &lt; 2√2 − 1 ≈ 1.828</span>. Four points on the midline,
+  <span class="mono">(1, H/2)</span>, …, <span class="mono">(4, H/2)</span>, in the <span class="mono">5 × H</span> box: every
+  unit square in it contains one (select "low strip" above). Between two midline points this is the side-strip lemma again,
+  with gap 1 at height <span class="mono">H/2</span>, and its condition <span class="mono">1/2 + H/2 ≤ √2</span> is exactly
+  <span class="mono">H ≤ 2√2 − 1</span>. So in low strips five squares need length 5. Lean: 98 lines.</p>
+  <p><strong>High strips</strong>, <span class="mono">2√2 − 1 ≤ H &lt; 2</span>. This contains the zigzag, Friedman's piece
+  <span class="mono">ℓ + 4s = 4 + 6√2</span> for <span class="mono">s ≥ (6√2 − 1)/4 ≈ 1.8713</span>.</p>
+  <figure>
+    <div class="figbox"><svg viewBox="0 0 473 229" class="diag" role="img" aria-label="The zigzag: uprights in both bottom corners, squares at 45 degrees on the ceiling against them and one on the floor between, edge to edge. Two separating lines, b|c and c|d.">
+<polygon class="wall" points="14.0,199.2 459.1,199.2 459.1,14.0 14.0,14.0"/>
+<polygon class="sq" points="109.0,104.2 14.0,104.2 14.0,199.2 109.0,199.2"/>
+<polygon class="sqt" points="153.1,14.0 85.9,81.2 153.1,148.4 220.3,81.2"/>
+<polygon class="sqt" points="236.6,64.9 169.4,132.1 236.6,199.2 303.7,132.1"/>
+<polygon class="sqt" points="320.0,14.0 252.8,81.2 320.0,148.4 387.2,81.2"/>
+<polygon class="sq" points="459.1,104.2 364.1,104.2 364.1,199.2 459.1,199.2"/>
+<line class="sep" x1="102.2" y1="199.2" x2="287.5" y2="14.0"/>
+<line class="sep" x1="370.9" y1="199.2" x2="185.7" y2="14.0"/>
+<text class="name" x="61.5" y="157.8" text-anchor="middle">a</text>
+<text class="name" x="153.1" y="87.2" text-anchor="middle">b</text>
+<text class="name" x="236.6" y="138.1" text-anchor="middle">c</text>
+<text class="name" x="320.0" y="87.2" text-anchor="middle">d</text>
+<text class="name" x="411.6" y="157.8" text-anchor="middle">e</text>
+<text class="lab" x="236.6" y="217.2" text-anchor="middle">L = 4 + 6√2 − 4H</text>
+</svg></div>
+    <figcaption>The zigzag at <span class="mono">H = 1.95</span>: two uprights, three squares at 45°, edge to edge. Unlike the
+    four-square packing, the two separating lines are different lines.</figcaption>
+  </figure>
+  <p>The chain applies as before: shelves on <i>b</i> and <i>d</i>, lines between <i>b</i> and <i>c</i> and between <i>c</i> and
+  <i>d</i>. A concavity argument (in Lean) shows that the middle square is narrowest between the two lines when it is upright
+  or parallel to one of them. What is left is one real inequality in the two lines' angles and the height. But the two halves
+  now see different lines, coupled through the middle square, and the natural ways to decouple them lose (numerically, by 0.1
+  or more); one split that loses nothing has not been turned into a proof yet. We proved the remaining inequality by machine:</p>
+  <ul>
+    <li>half-angle substitution makes it polynomial; it splits into 64 case theorems and 160 polynomial inequalities on
+    boxes;</li>
+    <li>144 are not tight and are linear in <span class="mono">H</span>, so it is enough to prove them at the two ends of its
+    range. All but two are proved there by Handelman certificates: the polynomial is written as a positive combination of products of the box constraints
+    (<span class="mono">u ≥ 0</span>, <span class="mono">1 − u ≥ 0</span>, …), found by a linear program and checked by
+    Lean's <span class="mono">linarith</span>;</li>
+    <li>16 are tight: they hold with equality along the zigzag, at both angles 45°, for every <span class="mono">H</span>
+    in the zigzag range. Those are proved by an exact factorisation that exhibits a squared factor;</li>
+    <li>the remaining two vanish only at corners of their box and are proved by hand.</li>
+  </ul>
+  <p>That is 14,411 lines of generated Lean, about 5 minutes to build on 16 cores (70 CPU-minutes). It was not a surprise to need certificates at
+  <span class="mono">n = 5</span>, though we had hoped to put them off to larger <i>n</i>. A structured proof of this step is
+  open.</p>
+</section>
+
+<section id="check">
+  <div class="sechead"><span class="eyebrow">06 · Check it</span><h2>Building the proofs</h2></div>
+  <div class="card" style="display:flex;flex-direction:column;gap:14px">
+    <pre><code>git clone https://github.com/evand/square-packing && cd square-packing/lean
+lake exe cache get              # Mathlib
+lake build Sqpack.Rect3         # rect3_iff     ~15 s
+lake build Sqpack.Rect4         # rect4_iff     ~15 s
+lake build Sqpack.Rect5Thm      # rect5_iff     ~5 min on 16 cores, mostly the generated files
+lake build &amp;&amp; lake env lean Axioms.lean</code></pre>
+    <p class="footnote"><span class="mono">Axioms.lean</span> prints the axioms of every theorem in the library (it imports
+    all of it; the rectangle theorems are near the end) and must show only <span class="mono">propext</span>,
+    <span class="mono">Classical.choice</span> and <span class="mono">Quot.sound</span>: no <span class="mono">sorry</span>, no
+    <span class="mono">native_decide</span>. To check only these three, put <span class="mono">import Sqpack.Rect5Thm</span>
+    and <span class="mono">#print axioms SquarePacking.rect5_iff</span> (and the same for <span class="mono">rect3_iff</span>,
+    <span class="mono">rect4_iff</span>) in a file and run <span class="mono">lake env lean</span> on it. The build times are
+    wall times on a 16-core machine; the generated files build one at a time, each Lean process using about 5 cores. A full
+    <span class="mono">lake build</span> also builds unrelated parts of the library, one of which needs about 23 GB of memory.</p>
+  </div>
+  <p>The statements use one definition, <span class="mono">RectPacks n w h</span>: <i>n</i> closed unit squares, at any
+  centres and angles, each inside <span class="mono">[0, w] × [0, h]</span>, with pairwise disjoint interiors.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>file (lean/Sqpack/)</th><th>what</th></tr></thead>
+    <tbody>
+      <tr><td class="num">Rect.lean</td><td><span class="mono">RectPacks</span>; two squares (<span class="mono">rect2_iff</span>); the wedge</td></tr>
+      <tr><td class="num">RectChain.lean</td><td>the chain: separation, upright replacement, shelves, witnesses</td></tr>
+      <tr><td class="num">Rect3.lean</td><td><span class="mono">rect3_iff</span></td></tr>
+      <tr><td class="num">Rect4.lean, Rect4Core.lean</td><td>one-square lemma, half turn, Friedman's packing; <span class="mono">rect4_iff</span></td></tr>
+      <tr><td class="num">Rect5Pack.lean</td><td>the five-square constructions: row, grid, zigzag, stretched s(5)</td></tr>
+      <tr><td class="num">Rect5Pts.lean, Rect5Line.lean</td><td>the four points and cover C; both sides ≥ 2</td></tr>
+      <tr><td class="num">Rect5Low.lean</td><td>midline points, low strips</td></tr>
+      <tr><td class="num">Rect5.lean, Rect5Mid.lean, Rect5Final.lean, Rect5Hi*.lean</td><td>high strips: the chain for five squares and the generated certificates</td></tr>
+      <tr><td class="num">Rect5Iff.lean, Rect5Thm.lean</td><td><span class="mono">Fits5</span>; <span class="mono">rect5_iff</span></td></tr>
+    </tbody>
+  </table></div>
+  <p class="footnote">Research notes: <a href="https://github.com/evand/square-packing/blob/main/search/rectfront/RECTFRONT.md">search/rectfront/RECTFRONT.md</a>
+  (the log), <a href="https://github.com/evand/square-packing/blob/main/search/rectfront/LESSONS.md">LESSONS.md</a> (techniques,
+  what failed), <a href="https://github.com/evand/square-packing/blob/main/search/rectfront/r5pts/R5PTS.md">r5pts/R5PTS.md</a>
+  (point covers, with paper proofs), <a href="https://github.com/evand/square-packing/blob/main/search/rectfront/r5strip/FINAL5.md">r5strip/FINAL5.md</a>
+  (the certificates).</p>
+</section>
+
+<section id="limits">
+  <div class="sechead"><span class="eyebrow">07 · Caveats</span><h2>What to keep in mind</h2></div>
+  <ul>
+    <li>These are machine-checked proofs, not peer reviewed. What Lean checks is the statement of
+    <span class="mono">rect3_iff</span>, <span class="mono">rect4_iff</span> and <span class="mono">rect5_iff</span> against
+    the definition of <span class="mono">RectPacks</span>; read those (a few lines each) to see that they say what this page
+    says.</li>
+    <li>The high-strip part of the five-square proof is generated and teaches little. The rest is written by hand.</li>
+    <li>Credit for the boundaries is as far as we could trace it (Friedman's page, §02). If you know of earlier proofs of any
+    of these lower bounds, please tell us.</li>
+    <li>Six squares and up are open here. Friedman's table lists boundaries up to <span class="mono">S₉</span>
+    (<i>n</i> = 10), with higher-degree algebraic curves from <i>n</i> = 7 on; wand125's lists go to <i>n</i> = 15 and lower
+    one piece for <i>n</i> = 7.</li>
+  </ul>
+</section>
+</div>
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+const el = (t, a = {}, p = null) => { const e = document.createElementNS(NS, t); for (const [k, v] of Object.entries(a)) e.setAttribute(k, v); if (p) p.appendChild(e); return e; };
+const R2 = Math.SQRT2, D45 = Math.PI / 4;
+const fmt = (x, d = 4) => x.toFixed(d);
+
+/* ---------- constructions (from the Lean files) ---------- */
+// R4: L(t,H) and Friedman's packing (rect4_friedman)
+function L4(t, H) { const C = Math.cos(t), S = Math.sin(t), k = (C + S) / 2; return 2 + (1 - 2 * (H - k - 1) * S) / C + (1 - (H - 2 * k) * C) / S; }
+function tStar(H) {
+  let best = 0.01, bv = Infinity;
+  for (let i = 1; i < 400; i++) { const t = i / 400 * Math.PI / 2, v = L4(t, H); if (v < bv) { bv = v; best = t; } }
+  let lo = Math.max(1e-4, best - Math.PI / 800), hi = Math.min(Math.PI / 2 - 1e-4, best + Math.PI / 800);
+  const g = (Math.sqrt(5) - 1) / 2;
+  for (let i = 0; i < 80; i++) { const a = hi - g * (hi - lo), b = lo + g * (hi - lo); if (L4(a, H) < L4(b, H)) hi = b; else lo = a; }
+  return (lo + hi) / 2;
+}
+function bisect(f, a, b) { let fa = f(a); for (let i = 0; i < 100; i++) { const m = (a + b) / 2, fm = f(m); if ((fm > 0) === (fa > 0)) { a = m; fa = fm; } else b = m; } return (a + b) / 2; }
+const H4 = bisect(H => L4(tStar(H), H) - 4, 1.85, 1.95);
+const H5 = (6 * R2 - 1) / 4, S3 = (1 + 2 * R2) / 2;
+const up = (x, y) => [x, y, 0];
+const row = n => Array.from({ length: n }, (_, i) => up(i + .5, .5));
+const grid = cells => cells.map(([i, j]) => up(i + .5, j + .5));
+const FR = 'Friedman, Math Magic, June 2010';
+function packR4(H) { const t = tStar(H), C = Math.cos(t), S = Math.sin(t), k = (C + S) / 2, xb = 1 + (.5 - (H - k - 1) * S) / C, L = L4(t, H);
+  return { l: L, t, sq: [up(.5, .5), [xb, H - k, t], [L - xb, k, t], up(L - .5, H - .5)] }; }
+// Each piece: p in [p0, p1] -> {s, l, sq (in the box l x s, long side horizontal), extra}
+const PIECES = {
+  3: [
+    { name: 'row of three', tilt: false, p0: 1, p1: S3, at: s => ({ s, l: 3, sq: row(3) }),
+      eq: 'ℓ = 3', cred: `${FR}: S₂, piece x = 3 (no author listed). The row itself is trivial.` },
+    { name: 'the wedge', tilt: true, p0: S3, p1: 2, at: s => { const l = 4 + 2 * R2 - 2 * s; return { s, l, sq: [up(.5, .5), up(l - .5, .5), [l / 2, s - R2 / 2, D45]] }; },
+      eq: 'ℓ + 2s = 4 + 2√2', cred: `${FR}: S₂, piece x + 2y = 4 + 2√2 (no author listed). Lean: rect3_wedge.` },
+    { name: 'three of a 2 × 2 grid', tilt: false, vert: true, p0: 2 * R2, p1: 2, at: l => ({ s: 2, l, sq: grid([[0, 0], [1, 0], [0, 1]]) }),
+      eq: 's = 2', cred: `${FR}: S₂, piece y = 2 (no author listed).` },
+  ],
+  4: [
+    { name: 'row of four', tilt: false, p0: 1, p1: H4, at: s => ({ s, l: 4, sq: row(4) }),
+      eq: 'ℓ = 4', cred: `${FR}: S₃, piece x = 4 (no author listed).` },
+    { name: 'tilted pair', tilt: true, p0: H4, p1: 2 - 1e-9, at: s => { const r = packR4(s); return { s, l: r.l, sq: r.sq, t: r.t }; },
+      eq: 'ℓ = min over t of L(t, s)', cred: `${FR}: S₃, the parametric piece (author column: MM, Maurizio Morandi). The point 1.930 × 3.861 (aspect 1:2) is Evert Stenlund's, 2010, on Friedman's Squares in Dominoes. Lean: rect4_friedman.` },
+    { name: '2 × 2 grid', tilt: false, vert: true, p0: 4 * R2 - 2, p1: 2, at: l => ({ s: 2, l, sq: grid([[0, 0], [1, 0], [0, 1], [1, 1]]) }),
+      eq: 's = 2', cred: `${FR}: S₃, piece y = 2 (no author listed).` },
+  ],
+  5: [
+    { name: 'row of five', tilt: false, p0: 1, p1: H5, at: s => ({ s, l: 5, sq: row(5) }),
+      eq: 'ℓ = 5', cred: `${FR}: S₄, piece x = 5 (author column: MM). Lean: rect5_row.` },
+    { name: 'the zigzag', tilt: true, p0: H5, p1: 2 - 1e-9, at: s => { const l = 4 + 6 * R2 - 4 * s, xb = 2 - s + R2;
+        return { s, l, sq: [up(.5, .5), [xb, s - R2 / 2, D45], [l / 2, R2 / 2, D45], [l - xb, s - R2 / 2, D45], up(l - .5, .5)] }; },
+      eq: 'ℓ + 4s = 4 + 6√2', cred: `${FR}: S₄, piece x + 4y = 4 + 6√2 (author column: MM). Lean: rect5_zigzag.` },
+    { name: 'five of a 2 × 3 grid', tilt: false, vert: true, p0: 6 * R2 - 4, p1: 3, at: l => ({ s: 2, l, sq: grid([[0, 0], [1, 0], [2, 0], [0, 1], [1, 1]]) }),
+      eq: 's = 2', cred: `${FR}: S₄, piece y = 2 (author column: MM). Lean: rect5_grid.` },
+    { name: 'five of a 2 × 3 grid', tilt: false, p0: 2, p1: 1 + R2, at: s => ({ s, l: 3, sq: grid([[0, 0], [1, 0], [2, 0], [0, 1], [1, 1]]) }),
+      eq: 'ℓ = 3', cred: `${FR}: S₄, piece x = 3 (author column: MM). Lean: rect5_grid.` },
+    { name: 'stretched s(5)', tilt: true, p0: 1 + R2, p1: 2 + 1 / R2, at: s => { const l = 4 + R2 - s;
+        return { s, l, sq: [up(.5, .5), up(l - .5, .5), up(.5, s - .5), up(l - .5, s - .5), [l / 2, s / 2, D45]] }; },
+      eq: 's + ℓ = 4 + √2', cred: `${FR}: S₄, piece x + y = 4 + √2 (author column: MM). The square end is s(5) = 2 + 1/√2, Göbel 1979. Lean: rect5_stretch.` },
+  ],
+};
+const VIEW = { 3: { full: [1, 2.4, 1, 3.6], zoom: [1.8, 2.1, 1.9, 3.15] }, 4: { full: [1, 2.4, 1, 4.6], zoom: [1.8, 2.1, 1.9, 4.15] }, 5: { full: [1, 3, 1, 5.6], zoom: [1.8, 2.8, 1.9, 5.2] } };
+
+/* ---------- boundary plot ---------- */
+let N = 3, cur = { pi: 0, f: .5 };
+const plot = $('plot');
+const M = { l: 44, r: 12, t: 12, b: 38 }, PW = 400 - M.l - M.r, PH = 400 - M.t - M.b;
+let V;
+const PX = s => M.l + (s - V[0]) / (V[1] - V[0]) * PW, PY = l => M.t + (1 - (l - V[2]) / (V[3] - V[2])) * PH;
+function pieceAt(pc, f) { return pc.at(pc.p0 + f * (pc.p1 - pc.p0)); }
+const SCACHE = new Map();
+function samples(pc, m = 300) { const key = pc; if (SCACHE.has(key)) return SCACHE.get(key); const out = []; for (let i = 0; i <= m; i++) { const r = pieceAt(pc, i / m); out.push([r.s, r.l, i / m]); } SCACHE.set(key, out); return out; }
+function lmin(s) { // least long side at short side s (for the region fill)
+  for (const pc of PIECES[N]) if (!pc.vert) { const a = Math.min(pc.p0, pc.p1), b = Math.max(pc.p0, pc.p1); if (s >= a - 1e-12 && s <= b + 1e-12) return pc.at(s).l; }
+  return s;
+}
+function drawPlot() {
+  V = VIEW[N][$('zoom').checked ? 'zoom' : 'full'];
+  plot.innerHTML = '';
+  el('clipPath', { id: 'pc' }, plot).appendChild(el('rect', { x: M.l, y: M.t, width: PW, height: PH }));
+  const g = el('g', { 'clip-path': 'url(#pc)' }, plot);
+  // grid
+  const step = (V[1] - V[0]) > .6 ? .5 : .1, stepl = (V[3] - V[2]) > 1.5 ? .5 : .25;
+  for (let s = Math.ceil(V[0] / step) * step; s <= V[1] + 1e-9; s += step) el('line', { class: 'grid', x1: PX(s), x2: PX(s), y1: M.t, y2: M.t + PH }, g);
+  for (let l = Math.ceil(V[2] / stepl) * stepl; l <= V[3] + 1e-9; l += stepl) el('line', { class: 'grid', y1: PY(l), y2: PY(l), x1: M.l, x2: M.l + PW }, g);
+  // region below the diagonal (s > l): not used
+  el('polygon', { class: 'under', points: [[V[0], V[0]], [V[1], V[1]], [V[1], V[2] - 1], [V[0], V[2] - 1]].map(p => PX(p[0]) + ',' + PY(p[1])).join(' ') }, g);
+  // feasible region
+  const pts = [];
+  const sMax = N === 5 ? 2 + 1 / R2 : 2;
+  for (let i = 0; i <= 600; i++) { const s = 1 + i / 600 * (sMax - 1); pts.push([s, Math.max(s, lmin(s))]); }
+  // at s = 2 the region jumps down (vertical piece); include it
+  const poly = [[1, 99], ...pts.filter(p => p[0] < 2), [2, lmin(2 - 1e-9)], [2, N === 5 ? 3 : 2], ...pts.filter(p => p[0] > 2), [sMax, sMax], [99, 99]];
+  el('polygon', { class: 'feas', points: poly.map(p => PX(p[0]) + ',' + PY(p[1])).join(' ') }, g);
+  el('line', { class: 'diagl', x1: PX(0), y1: PY(0), x2: PX(9), y2: PY(9) }, g);
+  if (N === 3) el('polygon', { class: 'yang', points: [[1.5, 2.25], [2, 2], [2, 3], [1.5, 3]].map(p => PX(p[0]) + ',' + PY(p[1])).join(' ') }, g);
+  $('yangkey').style.display = N === 3 ? '' : 'none';
+  // boundary pieces
+  PIECES[N].forEach(pc => { const sm = samples(pc); el('polyline', { class: pc.tilt ? 'bdt' : 'bd', points: sm.map(p => PX(p[0]) + ',' + PY(p[1])).join(' ') }, g); });
+  // annotations
+  if (N === 4) { const s = 1.9302833, r = packR4(s); el('circle', { class: 'pin', cx: PX(s), cy: PY(r.l), r: 3 }, g); el('text', { class: 'note', x: PX(s) - 6, y: PY(r.l) - 8, 'text-anchor': 'end' }, g).textContent = 'Stenlund 1.930 × 3.861'; }
+  if (N === 5) { const s = 2 + 1 / R2; el('circle', { class: 'pin', cx: PX(s), cy: PY(s), r: 3 }, g); el('text', { class: 'note', x: PX(s) - 6, y: PY(s) + 16, 'text-anchor': 'end' }, g).textContent = 's(5) = 2 + 1/√2'; }
+  el('text', { class: 'note', x: PX(V[1]) - 6, y: PY(V[1]) + 14, 'text-anchor': 'end' }, g).textContent = 'ℓ < s';
+  el('circle', { class: 'mk', id: 'mk', r: 6, cx: -50, cy: -50 }, plot);
+  // axes
+  el('line', { class: 'ax', x1: M.l, x2: M.l + PW, y1: M.t + PH, y2: M.t + PH }, plot);
+  el('line', { class: 'ax', x1: M.l, x2: M.l, y1: M.t, y2: M.t + PH }, plot);
+  const tick = (V[1] - V[0]) > .6 ? .5 : .1, tickl = (V[3] - V[2]) > 1.5 ? 1 : .5;
+  for (let s = Math.ceil(V[0] / tick - 1e-9) * tick; s <= V[1] + 1e-9; s += tick) el('text', { class: 'tick', x: PX(s), y: M.t + PH + 14, 'text-anchor': 'middle' }, plot).textContent = +s.toFixed(2);
+  for (let l = Math.ceil(V[2] / tickl - 1e-9) * tickl; l <= V[3] + 1e-9; l += tickl) el('text', { class: 'tick', x: M.l - 5, y: PY(l) + 4, 'text-anchor': 'end' }, plot).textContent = +l.toFixed(2);
+  el('text', { class: 'axl', x: M.l + PW / 2, y: 396, 'text-anchor': 'middle' }, plot).textContent = 'short side s';
+  const yl = el('text', { class: 'axl', x: 12, y: M.t + PH / 2, 'text-anchor': 'middle', transform: `rotate(-90 12 ${M.t + PH / 2})` }, plot); yl.textContent = 'long side ℓ';
+}
+function buildPieceTabs() {
+  const box = $('ptabs'); box.innerHTML = '';
+  PIECES[N].forEach((pc, i) => { const b = document.createElement('button'); b.textContent = pc.name + (pc.vert ? ' (s = 2)' : ''); if (pc.tilt) b.className = 'tilt';
+    b.onclick = () => { cur = { pi: i, f: .5 }; sync(); }; box.appendChild(b); });
+}
+function sync() {
+  const P = PIECES[N], pc = P[cur.pi], r = pieceAt(pc, cur.f);
+  $('bpos').value = Math.round((cur.pi + cur.f) / P.length * 1000);
+  [...$('ptabs').children].forEach((b, i) => b.setAttribute('aria-pressed', i === cur.pi));
+  const mk = $('mk'); mk.setAttribute('cx', PX(r.s)); mk.setAttribute('cy', PY(r.l));
+  drawPack(r, pc);
+  const tl = r.sq.filter(q => q[2] !== 0).map(q => q[2]);
+  const ang = r.t !== undefined ? `tilt t = ${fmt(r.t * 180 / Math.PI, 2)}°` : tl.length ? 'tilted squares at 45°' : 'all squares upright';
+  $('readout').innerHTML = `<div class="big">s = ${fmt(r.s)} &nbsp;ℓ = ${fmt(r.l)}</div>
+    <div><span class="pc">${pc.name}</span> · <span class="mono">${pc.eq}</span> · ${ang}</div>
+    <div class="note">${pc.cred}</div>`;
+}
+function drawPack(r, pc) {
+  const sv = $('pack'), W = r.l, H = r.s, pad = .08;
+  sv.setAttribute('viewBox', `${-pad} ${-pad} ${W + 2 * pad} ${Math.max(H, 2) + 2 * pad}`);
+  sv.innerHTML = '';
+  const g = el('g', { transform: `matrix(1 0 0 -1 0 ${Math.max(H, 2)})` }, sv);
+  el('rect', { class: 'wall', x: 0, y: 0, width: W, height: H }, g);
+  for (const [x, y, t] of r.sq) el('rect', { class: t ? 'sqt' : 'sq', x: -.5, y: -.5, width: 1, height: 1, transform: `translate(${x} ${y}) rotate(${t * 180 / Math.PI})` }, g);
+}
+function pickFromPointer(e) {
+  const p = plot.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; const q = p.matrixTransform(plot.getScreenCTM().inverse());
+  let best = null;
+  PIECES[N].forEach((pc, i) => { for (const [s, l, f] of samples(pc)) { const d = Math.hypot(PX(s) - q.x, PY(l) - q.y); if (!best || d < best.d) best = { d, pi: i, f }; } });
+  if (best) { cur = { pi: best.pi, f: best.f }; sync(); }
+}
+let dragging = false;
+plot.addEventListener('pointerdown', e => { dragging = true; plot.setPointerCapture(e.pointerId); pickFromPointer(e); });
+plot.addEventListener('pointermove', e => { if (dragging) pickFromPointer(e); });
+plot.addEventListener('pointerup', () => { dragging = false; });
+$('bpos').addEventListener('input', () => { const P = PIECES[N], v = +$('bpos').value / 1000 * P.length; const i = Math.min(P.length - 1, Math.floor(v)); cur = { pi: i, f: Math.min(1, v - i) }; sync(); });
+$('zoom').addEventListener('change', () => { drawPlot(); sync(); });
+document.querySelectorAll('#ntabs button').forEach(b => b.addEventListener('click', () => {
+  N = +b.dataset.n; document.querySelectorAll('#ntabs button').forEach(c => c.setAttribute('aria-pressed', c === b));
+  cur = { pi: PIECES[N].findIndex(p => p.tilt), f: .5 }; buildPieceTabs(); drawPlot(); sync();
+}));
+cur = { pi: 1, f: .5 }; buildPieceTabs(); drawPlot(); sync();
+
+/* ---------- weighted point covers ---------- */
+const C0 = 0.91;
+const SETS = {
+  C: { lab: 'short side a', lo: 1 + R2, hi: 4 - R2,
+    make(a) { const b = 4 + R2 - a; return { W: a, H: b, pts: [[C0, 1, 2], [a - C0, 1, 2], [C0, b - 1, 2], [a - C0, b - 1, 2], [1, 1, 1], [a - 1, 1, 1], [1, b - 1, 1], [a - 1, b - 1, 1], [1, b / 2, 1], [a - 1, b / 2, 1]] }; },
+    blocks: [[[0, 4], 'row pair'], [[1, 5], 'row pair'], [[2, 6], 'row pair'], [[3, 7], 'row pair'], [[0, 8], 'wall pair'], [[2, 8], 'wall pair'], [[1, 9], 'wall pair'], [[3, 9], 'wall pair'],
+      [[4, 8, 9], 'centre triple'], [[5, 8, 9], 'centre triple'], [[6, 8, 9], 'centre triple'], [[7, 8, 9], 'centre triple']] },
+  D: { lab: 'short side a', lo: 4 - R2, hi: 2 + 1 / R2,
+    make(a) { const b = 4 + R2 - a; return { W: a, H: b, pts: [[1, 1, 3], [a - 1, 1, 3], [1, b - 1, 3], [a - 1, b - 1, 3]] }; }, blocks: [[[0], 'one point'], [[1], 'one point'], [[2], 'one point'], [[3], 'one point']] },
+  S: { lab: 'strip height H', lo: 1.05, hi: 2 * R2 - 1,
+    make(H) { return { W: 5, H, pts: [[1, H / 2, 3], [2, H / 2, 3], [3, H / 2, 3], [4, H / 2, 3]] }; }, blocks: [[[0], 'one point'], [[1], 'one point'], [[2], 'one point'], [[3], 'one point']] },
+};
+// weights are kept in thirds (integers) so that sums are exact
+const EPS = 1e-9;
+let CS = SETS.C, BOX = null, pose = { x: 1.2, y: 1.5, th: 45 };
+function caught(x, y, thDeg, B = BOX) {
+  const t = thDeg * Math.PI / 180, c = Math.cos(t), s = Math.sin(t); const on = []; let w = 0;
+  for (let i = 0; i < B.pts.length; i++) { const dx = B.pts[i][0] - x, dy = B.pts[i][1] - y, u = c * dx + s * dy, v = -s * dx + c * dy;
+    if (Math.abs(u) <= .5 + EPS && Math.abs(v) <= .5 + EPS) { on.push(i); w += B.pts[i][2]; } }
+  return { on, w };
+}
+const thirds = w => w % 3 === 0 ? String(w / 3) : (w > 3 ? `${Math.floor(w / 3)} ${w % 3}/3` : `${w}/3`);
+const kOf = th => { const t = th * Math.PI / 180; return (Math.abs(Math.cos(t)) + Math.abs(Math.sin(t))) / 2; };
+function clampPose() {
+  // a square fits at this angle only if cos + sin <= the short side; otherwise turn it to the nearest angle that fits
+  const m = Math.min(BOX.W, BOX.H);
+  if (m < R2) { const tm = (Math.asin(m / R2) - Math.PI / 4) * 180 / Math.PI; if (pose.th > tm && pose.th < 90 - tm) pose.th = pose.th < 45 ? tm : 90 - tm; $('ang').value = pose.th; }
+  const k = kOf(pose.th); pose.x = Math.min(Math.max(pose.x, k), BOX.W - k); pose.y = Math.min(Math.max(pose.y, k), BOX.H - k); }
+function buildCover() {
+  const v = CS.lo + (+$('par').value / 1000) * (CS.hi - CS.lo);
+  BOX = CS.make(v);
+  $('parlab').textContent = CS === SETS.S ? `strip 5 × H, H = ${fmt(v)}` : `box a × b on a + b = 4 + √2: a = ${fmt(v)}, b = ${fmt(4 + R2 - v)}`;
+  const sv = $('pl'), pad = .06; sv.innerHTML = '';
+  sv.setAttribute('viewBox', `${-pad} ${-pad} ${BOX.W + 2 * pad} ${BOX.H + 2 * pad}`);
+  const g = el('g', { transform: `matrix(1 0 0 -1 0 ${BOX.H})` }, sv);
+  for (let i = 1; i < BOX.W; i++) el('line', { class: 'gl', x1: i, x2: i, y1: 0, y2: BOX.H }, g);
+  for (let j = 1; j < BOX.H; j++) el('line', { class: 'gl', y1: j, y2: j, x1: 0, x2: BOX.W }, g);
+  el('rect', { class: 'wall', x: 0, y: 0, width: BOX.W, height: BOX.H }, g);
+  const pg = el('g', { id: 'pts' }, g);
+  BOX.pts.forEach((p, i) => el('circle', { class: 'pt', cx: p[0], cy: p[1], r: .035 * Math.sqrt(p[2] / 2) + .01, 'data-i': i }, pg));
+  el('rect', { id: 'usq', class: 'usq', x: -.5, y: -.5, width: 1, height: 1 }, g);
+  $('scannote').textContent = '';
+  updateCover();
+}
+function updateCover() {
+  clampPose();
+  const r = caught(pose.x, pose.y, pose.th), set = new Set(r.on);
+  let blk = null; for (const [ix, name] of CS.blocks) if (ix.every(i => set.has(i))) { blk = { ix: new Set(ix), name }; break; }
+  $('usq').setAttribute('transform', `translate(${pose.x} ${pose.y}) rotate(${pose.th})`);
+  document.querySelectorAll('#pts circle').forEach(c => { const i = +c.dataset.i; c.setAttribute('class', 'pt' + (blk && blk.ix.has(i) ? ' blk' : set.has(i) ? ' on' : '')); });
+  $('cnt').textContent = thirds(r.w); $('cnt').className = 'count' + (r.w < 3 ? ' low' : r.w === 3 ? ' tight' : '');
+  $('cntnote').textContent = (r.w < 3 ? 'below 1: a hole in the cover! ' : r.w === 3 ? 'exactly 1: a tight spot. ' : 'needs at least 1. ') + (blk ? `Contains a ${blk.name} (outlined).` : '');
+  $('angv').textContent = fmt(pose.th, 1) + '°';
+  landscape();
+}
+function cssv(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function hexrgb(h) { const m = h.replace('#', ''); return [0, 2, 4].map(i => parseInt(m.slice(i, i + 2), 16)); }
+function landscape() {
+  const cv = $('land'), ctx = cv.getContext('2d'), NX = 140, NY = Math.max(20, Math.round(140 * BOX.H / BOX.W));
+  cv.width = NX; cv.height = NY;
+  const k = kOf(pose.th), img = ctx.createImageData(NX, NY), cols = { lo: hexrgb(cssv('--red')), one: hexrgb(cssv('--gold')), four: hexrgb(cssv('--gold-soft')), hi: hexrgb(cssv('--accent-soft')), out: hexrgb(cssv('--rule')) };
+  let mn = Infinity, tight = 0, tot = 0;
+  for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) {
+    const x = (i + .5) / NX * BOX.W, y = (j + .5) / NY * BOX.H, o = 4 * ((NY - 1 - j) * NX + i);
+    if (x < k || x > BOX.W - k || y < k || y > BOX.H - k) { img.data[o] = cols.out[0]; img.data[o + 1] = cols.out[1]; img.data[o + 2] = cols.out[2]; img.data[o + 3] = 255; continue; }
+    const w = caught(x, y, pose.th).w; mn = Math.min(mn, w); tot++; if (w === 3) tight++;
+    const c = w < 3 ? cols.lo : w === 3 ? cols.one : w === 4 ? cols.four : cols.hi;
+    img.data[o] = c[0]; img.data[o + 1] = c[1]; img.data[o + 2] = c[2]; img.data[o + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  ctx.fillStyle = cssv('--ink'); ctx.fillRect(Math.round(pose.x / BOX.W * NX) - 1, NY - 1 - Math.round(pose.y / BOX.H * NY) - 1, 3, 3);
+  $('landnote').textContent = tot ? `At ${fmt(pose.th, 1)}°, over ${tot} centres: least weight ${thirds(mn)}; exactly 1 at ${(100 * tight / tot).toFixed(0)}% of them.` : '';
+}
+function scanAll() {
+  $('scan').disabled = true; $('scannote').textContent = 'checking 181 angles…';
+  setTimeout(() => {
+    try {
+      let gmin = Infinity, worst = null; const NX = 80, NY = Math.round(80 * BOX.H / BOX.W);
+      for (let a = 0; a <= 90; a += .5) { const k = kOf(a); if (BOX.W < 2 * k - EPS || BOX.H < 2 * k - EPS) continue;
+        for (let j = 0; j <= NY; j++) for (let i = 0; i <= NX; i++) {
+          const x = k + i / NX * (BOX.W - 2 * k), y = k + j / NY * (BOX.H - 2 * k);
+          const w = caught(x, y, a).w; if (w < gmin) { gmin = w; worst = { x, y, a }; } } }
+      $('scannote').textContent = `181 angles × ${(NX + 1) * (NY + 1)} centres: least weight ${thirds(gmin)} (first at ${worst.a}°, centre ${fmt(worst.x, 2)}, ${fmt(worst.y, 2)}; shown).`;
+      pose = { x: worst.x, y: worst.y, th: worst.a }; $('ang').value = worst.a; updateCover();
+    } finally { $('scan').disabled = false; }
+  }, 30);
+}
+(function initDrag() {
+  const svg = $('pl'); let drag = null;
+  const pt = e => { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; const q = p.matrixTransform(svg.getScreenCTM().inverse()); return { x: q.x, y: BOX.H - q.y }; };
+  svg.addEventListener('pointerdown', e => { const p = pt(e); svg.setPointerCapture(e.pointerId);
+    if (Math.hypot(pose.x - p.x, pose.y - p.y) > .75) { pose.x = p.x; pose.y = p.y; drag = { dx: 0, dy: 0 }; } else drag = { dx: pose.x - p.x, dy: pose.y - p.y }; updateCover(); });
+  svg.addEventListener('pointermove', e => { if (!drag) return; const p = pt(e); pose.x = p.x + drag.dx; pose.y = p.y + drag.dy; updateCover(); });
+  svg.addEventListener('pointerup', () => { drag = null; });
+  svg.addEventListener('wheel', e => { e.preventDefault(); pose.th = ((pose.th + (e.deltaY > 0 ? 1 : -1) * .5) % 90 + 90) % 90; $('ang').value = pose.th; updateCover(); }, { passive: false });
+  svg.addEventListener('keydown', e => { const st = { ArrowLeft: [-.01, 0], ArrowRight: [.01, 0], ArrowUp: [0, .01], ArrowDown: [0, -.01] }[e.key]; if (st) { pose.x += st[0]; pose.y += st[1]; updateCover(); e.preventDefault(); } });
+  $('ang').addEventListener('input', () => { pose.th = +$('ang').value; updateCover(); });
+  $('par').addEventListener('input', buildCover);
+  $('cset').addEventListener('change', () => { CS = SETS[$('cset').value]; $('par').value = CS === SETS.S ? 1000 : 0;
+    pose = CS === SETS.S ? { x: 1.5, y: .7, th: 40 } : { x: 1.2, y: 1.5, th: 45 }; $('ang').value = pose.th; buildCover(); });
+  $('scan').addEventListener('click', scanAll);
+})();
+$('ang').value = pose.th; buildCover();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', landscape);
+})();
+</script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 name: pages
 
 # The site root is site/www/; the write-ups in docs/ are served at /s12/ (s(11), s(12)), /s13/, /s21/, /s32/, /s45/,
-# /s60/ and /k2m3/ (s(k^2-3) = k).
+# /s60/, /k2m3/ (s(k^2-3) = k) and /rect/ (unit squares in rectangles, n = 3, 4, 5).
 
 on:
   push:
@@ -46,6 +46,8 @@ jobs:
           mkdir -p _site/k2m3
           cp docs/k2m3.html _site/k2m3/index.html
           cp certificates/k2m3/L4_k02_box7.txt _site/k2m3/cover.txt
+          mkdir -p _site/rect
+          cp docs/rect.html _site/rect/index.html
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
