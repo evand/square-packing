@@ -317,6 +317,9 @@ import Sqpack
 #print axioms SquarePacking.kap_ge_zigzag
 -- strip slope walk (Sqpack/StripWalk): n squares in a strip of height < 2 give a slope walk with sum kap <= L
 #print axioms SquarePacking.strip_walk
+-- strip slope walk, odd n (Sqpack/StripKernel, StripPot): per-square inequalities behind the prefix potentials
+#print axioms SquarePacking.kap_wall
+#print axioms SquarePacking.kap_B
 #print axioms SquarePacking.final5_high
 -- R_5 exactly (Sqpack/Rect5Thm)
 #print axioms SquarePacking.rect5_iff
