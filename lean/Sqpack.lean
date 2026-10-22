@@ -19,6 +19,7 @@ import Sqpack.StripPot
 import Sqpack.StripS
 import Sqpack.StripOdd
 import Sqpack.StripZigzag
+import Sqpack.StripC
 import Sqpack.Rect5Final
 import Sqpack.Rect5Iff
 import Sqpack.Rect5Thm

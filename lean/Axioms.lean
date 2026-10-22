@@ -327,6 +327,9 @@ import Sqpack
 -- strip constructions (Sqpack/StripZigzag): row (every n), 45-degree zigzag (every odd n)
 #print axioms SquarePacking.strip_row
 #print axioms SquarePacking.strip_zigzag
+-- odd n in a strip, 1.87 <= H < 2, exactly (Sqpack/StripC)
+#print axioms SquarePacking.kap_C
+#print axioms SquarePacking.strip_odd_iff
 #print axioms SquarePacking.final5_high
 -- R_5 exactly (Sqpack/Rect5Thm)
 #print axioms SquarePacking.rect5_iff
