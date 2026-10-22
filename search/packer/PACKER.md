@@ -5202,3 +5202,33 @@ grown pool (grid-locked now excluded): `dgen.py sweep --n 157 --band 0.0,0.012 -
   Predictions: 3+ and opp-* together get < 12 % of second-half CPU at 274 (agreeing with Evan): 60 %; adj-mixed gets
   > 50 %: 65 %; adj-same (the flip family) gets > 15 % at 273: 40 %; a non-adj-mixed 274 within 0.005 of 17.0003: 10 %;
   a 273 below the record: 4 %; a 274 below the floor: 2 %.
+
+## RV1, BF1 stage 1, DB1 results; R308 (10-21 evening)
+* **RV1 result** (value vs legacy reward, 274, 4 paired groups, 1.25 CPU-h each): distinct sides < 17.0005 per run
+  value / legacy 103/39, 82/51, 53/26, 45/38; pooled 272 vs 150.  Value reached the floor in 2 groups (g1 from starts
+  where legacy stopped at 17.000303), legacy in 1.  Nothing below 17.0002995.  Predictions: value more (55 %) yes;
+  value >= 3 of 4 (35 %) yes; below floor (4 %) no.  `--reward value` becomes the default for large-n walks.
+* **BF1 stage 1 result** (bulk single-band flips): best same-tilt line-free seed 273 16.99171 (record 16.983926), 274
+  17.0194, 308 17.99953 (record 17.997149; store same-tilt best was 18.0174), 272 16.97831 (record 16.965586).
+  Predictions: 273 < 16.993 (60 %) yes; 274 < 17.02 (40 %) yes, barely; 308 < 18.0174 (50 %) yes.  Stage 2 launched
+  18:28 (`runs/bf1s2`, 2 walks per n from 24 farthest-point distinct same-tilt seeds, value reward, melt=2, 1.25 CPU-h).
+* **DB1 result** (design bandit; CPU share by parent design class, second half; best per class):
+  274: adj-mixed 47 % (17.000299), adj-same 7 % (17.0113, from 17.0194), one 7 % (17.0167), bent 5 % (17.0173), opp-mixed
+  5.5 % (17.0187), same-wall-same 6 % (17.0191), 3+ 7 % (17.0209), none 6 % (17.0231), same-wall-mixed 9 % (17.0312).
+  273: adj-mixed 62 % (16.983926 = record), adj-same 10 % (16.98815), bent 6 % (16.98832), 3+ 6 % (16.98909), one 5 %
+  (17.0008), opp-mixed 7 % (17.0164), same-wall-same 4 % (17.0184).
+  Predictions: 3+ and opp-* < 12 % at 274 (60 %): no, 13 %; adj-mixed > 50 % (65 %): no, 47 %; adj-same > 15 % at 273
+  (40 %): no, 10 %; non-adj-mixed 274 within 0.005 of floor (10 %): no (0.011); 273 record (4 %) no; 274 below floor (2 %) no.
+  Reading: at 274 every other class sits near the uniform-exploration floor (~3 % + a little), i.e. the bandit agrees
+  with Evan's hypothesis in substance, narrowly missing the pre-registered thresholds.  Opposite-wall children mostly
+  collapse to one-band packings (the moved band does not hold).  '3+' -> adj-mixed 112 times at 274: the 3+ label
+  often means the main design plus a small stray cluster (classifier weakness).  Exception: at 273 same-tilt, bent and
+  3+ are all within 0.005 of the record.
+* **R308, pre-registered (18:45): new-record push at 308** (Evan: "valuable both in its own right and as seeds for
+  274").  `runs/r308x/run.py`: 4 explorer walks, 2.0 CPU-h each, value reward against the record 17.997149,
+  `--desc design`, fp-bank n308, smax 18.03, weights melt=2,bflip=1,bflipx=1,jmelt=1,jrefill=1 (no bmove: DB1).  Starts:
+  runs 0-1 = 12 farthest-point record-family packings each (200 distinct sides < 18.002); runs 2-3 = 6 record-family +
+  6 farthest-point same-tilt (BF1 seeds + BF1 stage-2 archives at launch; best 17.99952).  Metric: best side,
+  distinct sides < 17.998, best same-tilt.  Predictions: new 308 record (< 17.997149 - 1e-9): 7 %; any same-tilt
+  < 17.998: 25 %; >= 20 distinct sides < 17.998 pooled: 50 %.  Follow-up whatever the outcome: L-cut 308 -> 274 from
+  the best distinct 308s of both families (lcut.py), compared against the 274 floor.
