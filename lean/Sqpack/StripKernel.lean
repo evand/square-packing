@@ -133,4 +133,44 @@ theorem kap_ge_zigzag {C S H m m' : ℝ} (hC : 0 ≤ C) (hS : 0 ≤ S) (hCS : C 
   · exact kap_ge_zigzag_of_le hC hS hCS hH1 hH2 hfit h
   · rw [kap_symm]; exact kap_ge_zigzag_of_le hC hS hCS hH1 hH2 hfit h
 
+/-- Mirror symmetry of the step cost: `x ↦ -x` reverses the walk, negates slopes and swaps the frame. -/
+lemma kap_mirror (C S H m m' : ℝ) : kap C S H m m' = kap S C H (-m') (-m) := by
+  unfold kap
+  rw [show -m' - -m = m - m' by ring, show |S + -m' * C| = |m' * C - S| by rw [← abs_neg]; ring_nf,
+    show |-m' * S - C| = |C + m' * S| by rw [← abs_neg]; ring_nf,
+    show |S + -m * C| = |m * C - S| by rw [← abs_neg]; ring_nf,
+    show |-m * S - C| = |C + m * S| by rw [← abs_neg]; ring_nf]
+  ring
+
+/-- Wall step, `m ≥ 0`. -/
+lemma kap_wall_of_nonneg {C S H m : ℝ} (hC : 0 ≤ C) (hS : 0 ≤ S) (hCS : C ^ 2 + S ^ 2 = 1) (hm : 0 ≤ m) :
+    1 + m * (1 - H / 2) ≤ kap C S H 0 m := by
+  have hC1 : C ≤ 1 := by nlinarith
+  have hS1 : S ≤ 1 := by nlinarith
+  unfold kap
+  rw [show (0 : ℝ) - m = -m by ring, abs_neg, abs_of_nonneg hm, abs_of_nonneg (by positivity : 0 ≤ C + m * S),
+    show C + 0 * S = C by ring, show (0 : ℝ) * C - S = -S by ring, abs_neg, abs_of_nonneg hC, abs_of_nonneg hS]
+  rcases le_total S (m * C) with h | h
+  · -- tilt below the kink: (1 + C) · excess = S (m (1 + C - S) - S) ≥ 0
+    rw [abs_of_nonneg (by linarith : 0 ≤ m * C - S)]
+    have : 0 ≤ S * (m * (1 + C - S) - S) := mul_nonneg hS (by nlinarith)
+    have e : (1 + C) * ((1 + m) * C + m * S - (1 + m)) = S * (m * (1 + C - S) - S) := by
+      linear_combination (1 + m) * hCS
+    nlinarith
+  · -- tilt above the kink: (1 + S) · excess = C (1 + S - C - m C) ≥ 0
+    rw [abs_of_nonpos (by linarith : m * C - S ≤ 0)]
+    have : 0 ≤ C * (1 + S - C - m * C) := mul_nonneg hC (by nlinarith)
+    have e : (1 + S) * (C + (1 + m) * S - (1 + m)) = C * (1 + S - C - m * C) := by
+      linear_combination (1 + m) * hCS
+    nlinarith
+
+/-- **Next to a wall, an upright square is cheapest**: the step from the wall (slope `0`) to a line of slope `m`
+costs at least `1 + |m| (1 - H/2)`, the cost of the upright square. -/
+theorem kap_wall {C S H m : ℝ} (hC : 0 ≤ C) (hS : 0 ≤ S) (hCS : C ^ 2 + S ^ 2 = 1) :
+    1 + |m| * (1 - H / 2) ≤ kap C S H 0 m := by
+  rcases le_total 0 m with hm | hm
+  · rw [abs_of_nonneg hm]; exact kap_wall_of_nonneg hC hS hCS hm
+  · rw [abs_of_nonpos hm, kap_mirror, kap_symm, neg_zero]
+    exact kap_wall_of_nonneg hS hC (by linarith) (by linarith)
+
 end SquarePacking
