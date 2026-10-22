@@ -16,6 +16,7 @@ import Sqpack.StripLow
 import Sqpack.StripKernel
 import Sqpack.StripWalk
 import Sqpack.StripPot
+import Sqpack.StripS
 import Sqpack.StripOdd
 import Sqpack.StripZigzag
 import Sqpack.Rect5Final

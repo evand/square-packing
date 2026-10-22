@@ -1,5 +1,6 @@
 import Sqpack.StripWalk
 import Sqpack.StripPot
+import Sqpack.StripS
 
 /-!
 # Odd `n` in a strip: the walk argument, given the per-square inequalities `(S)` and `(C')`
@@ -186,5 +187,15 @@ theorem strip_odd_of {n : ℕ} {L H : ℝ} (hS : KapS H) (hC : KapC H) (hH1 : 2 
   rw [min_le_iff]; right
   simp only [c] at hdecomp hpre hsuf
   linarith
+
+/-- `(S)` holds on the whole range `2√2 - 1 ≤ H < 2` (`kap_S`). -/
+theorem kapS_of {H : ℝ} (hH1 : 2 * Real.sqrt 2 - 1 ≤ H) (hH2 : H < 2) : KapS H :=
+  fun _ _ _ _ hC hS hCS hfit => kap_S hC hS hCS hH1 hH2 hfit
+
+/-- **Odd `n` in a strip, given `(C')`** (`(S)` is proved): `L ≥ min(n, F_n)`. -/
+theorem strip_odd_of_C {n : ℕ} {L H : ℝ} (hC : KapC H) (hH1 : 2 * Real.sqrt 2 - 1 ≤ H) (hH2 : H < 2)
+    (hn : n % 2 = 1) (hp : RectPacks n L H) :
+    min (n : ℝ) (n * (2 * Real.sqrt 2 - H) + 2 * ((1 - (2 * Real.sqrt 2 - H)) + (1 - H / 2))) ≤ L :=
+  strip_odd_of (kapS_of hH1 hH2) hC hH1 hH2 hn hp
 
 end SquarePacking
