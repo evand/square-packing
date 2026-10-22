@@ -322,6 +322,9 @@ import Sqpack
 #print axioms SquarePacking.kap_B
 -- odd n strip theorem, conditional on the per-square inequalities KapS H, KapC H (Sqpack/StripOdd)
 #print axioms SquarePacking.strip_odd_of
+-- strip constructions (Sqpack/StripZigzag): row (every n), 45-degree zigzag (every odd n)
+#print axioms SquarePacking.strip_row
+#print axioms SquarePacking.strip_zigzag
 #print axioms SquarePacking.final5_high
 -- R_5 exactly (Sqpack/Rect5Thm)
 #print axioms SquarePacking.rect5_iff
