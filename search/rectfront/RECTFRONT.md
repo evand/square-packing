@@ -295,3 +295,41 @@ piece" is visible inside it.
 Status: evidence, not proof.  Grid DP is an upper estimate of the relaxation's minimum, so a narrow valley below the target
 between grid points is not excluded; the polish is local.  Next for a proof: the min-plus problem needs a structural
 argument (a two-mode potential, or a segment decomposition showing one tilted run is optimal), not per-n certificates.
+
+### 2026-10-22 (later): structural argument — slope walk, excess, shortest paths
+
+Scripts `chainn/kwalk.py`, `phase_lp.py`, `phase_lp2.py`, `lp_dual*.py`, `excess.py`, `excess_len.py`.
+
+**1. Slope-walk form (exact).**  Put the walls into the chain as lines of slope 0: separating lines x + mᵢy = sᵢ,
+m₀ = mₙ = 0.  Square i gives sᵢ − sᵢ₋₁ ≥ (g_t(mᵢ₋₁) + g_t(mᵢ))/2 + (mᵢ − mᵢ₋₁)y with y ∈ [k_t, H − k_t]; the
+H/2·(mᵢ − mᵢ₋₁) parts telescope away, leaving L ≥ Σ K(mᵢ₋₁, mᵢ) with the symmetric kernel
+  K(m, m′) = min_t [(g_t(m) + g_t(m′))/2 − |m − m′|(H/2 − k_t)],  g_t(m) = |cos t + m sin t| + |m cos t − sin t|
+(= √(1+m²)·2k_{φ−t}, m = tan φ).  K(0,0) = 1 (grid), K(1,−1) = λ := 2√2 − H (zigzag bulk), K(0,±1) = 2 − H/2 (ends);
+these give F₃.  Min-plus walk on a 0.25° slope grid: equals the target to 1e-14 (odd n) / 5e-5 (even, grid) for
+n ≤ 30 at 8 heights.  No shelves needed; one kernel does everything.
+
+**2. What cannot work (proved by the numbers, with reasons).**
+* A single potential with rate λ: K symmetric and the walk closed (m₀ = mₙ = 0), so any potential telescopes to 0.
+* Separable end charges: at H between H*(5) and H*(3) the n = 3 optimum is the grid but n = 5's is the zigzag; any
+  n-independent bound nλ + const is then wrong for one of them.
+* Even n: Morandi beats the 45° even zigzag (which costs exactly the odd formula (n − 2)λ + 4 − H) by
+  δ_n ≈ 0.009, 0.005, 0.0035 (n = 4, 6, 8, H = 1.9), decaying ~1/n.  An n-independent local certificate cannot be
+  exact for every even n; even n needs its own (one-parameter, tilt τ) argument.
+* Phase-charge LP (K − λ ≥ a·min(p, p′) + g|p − p′|, a = 1 − λ, 2g = 4 − H − 2λ; gives min(n, nλ + 2g) = min(n, F_n)
+  for odd n): infeasible by 3.7e-3 at H = 1.9, still 1.0e-3 with line-index parity and a transport potential.  Dual:
+  an even Morandi block (cheap at both ends, lines 38° / −52°) followed by one upright costs only a − δ_k above the
+  target, and per-step charges overcharge the lone upright step.
+
+**3. What works for odd n: excess + shortest paths.**  c := K − λ ≥ 0 (λ is the least cycle mean; K symmetric).
+Odd n ⟸ Σc ≥ min(n·a, 2g).  By monotonicity in H only n·a ≥ 2g matters (else the bound at H*(n) gives L ≥ n), and
+there all-grid-like walks (every c ≥ a) are fine, so it suffices that **every odd walk of length n ≥ N(H) = ⌈2g/a⌉ with
+a cheap step (c < a) has Σc ≥ 2g**.
+* H ≥ 1.85: holds with no length condition: min over cheap steps of d_S + c + d_E = 2g to 1e-13, attained only at the
+  45° zigzag (`excess.py`).  The prefix distances are short: d_S on odd-index lines = the one-step c(0, m); on
+  even-index lines a two-step minimum; d_E = d_S reversed.  So a proof here is a finite set of inequalities in a few
+  slopes and tilts (3-4 consecutive steps), **independent of n**.
+* H < 1.85 (down to 2√2 − 1): the cheap-step condition fails by ~0.01 (Morandi-type walks, 39° / 51°), but only
+  for walks shorter than N(H); with the length condition it holds to 1e-14 for every n tested (`excess_len.py`:
+  H = 1.83, N = 111, n ≤ 149).  A proof here needs a quantitative estimate (Morandi block deficit δ_k ≲ 2g/k).
+
+Open: closed forms for d_S, d_E and the finite inequalities (H ≥ 1.85); the near-threshold band; even n.
