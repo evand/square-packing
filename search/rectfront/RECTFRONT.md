@@ -333,3 +333,18 @@ a cheap step (c < a) has Σc ≥ 2g**.
   H = 1.83, N = 111, n ≤ 149).  A proof here needs a quantitative estimate (Morandi block deficit δ_k ≲ 2g/k).
 
 Open: closed forms for d_S, d_E and the finite inequalities (H ≥ 1.85); the near-threshold band; even n.
+
+### 2026-10-22 (later): odd n, plan and first piece
+
+Pieces: **E1** every step costs ≥ λ (per square, 3 variables + H); **E2** walk logic (Σc ≥ min(n·a, 2g) from per-step
+facts); **E3** monotonicity in H (`RectPacks.mono`); **E4** n-general chain → slope-walk sum in Lean (sort, separate
+consecutive squares, telescope, eliminate heights); **E5** the cheap-step lemma (core; needs parity prefix potentials
+u₁ = one-step wall excess, u₀ = two-step minimum, in closed form or as certified lower bounds — the parity-free
+distance fails by up to 0.017, `chainn/e5probe.py`); plus the upper bound (45° zigzag for every odd n).
+
+**E1 done in Lean** (`lean/Sqpack/StripKernel.lean`, `kap_ge_zigzag`; standard axioms, ~7 s): for
+2√2 − 1 ≤ H ≤ 2 and C + S ≤ H, κ = (g(m) + g(m'))/2 − |m − m'|(H/2 − k) ≥ 2√2 − H.  Three linear certificates
+(m ≥ m'): tilted (2S, 2C < H) weights (2c − S)/C, (C − 2c)/S give 2SCκ ≥ 2p − H, then
+2p − H − (2√2 − H)(p² − 1) = (√2 − p)((2√2 − H)p − (√2H − 2)) + (2p − H)(√2² − 2); near-upright (H ≤ 2S) weights
+(C ± 2c)/S give Sκ ≥ 1; H ≤ 2C by the mirror (C, S, m, m') ↦ (S, C, −m', −m).  (My first paper proof missed the
+near-upright cases: the tilted weights leave [−1, 1] when 2S > H.)
