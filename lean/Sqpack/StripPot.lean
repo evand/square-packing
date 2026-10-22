@@ -215,4 +215,59 @@ theorem kap_B {C S H m m' : ℝ} (hC : 0 ≤ C) (hS : 0 ≤ S) (hCS : C ^ 2 + S 
     rw [kap_symm, add_comm |m| |m'|]; exact opp hC hS hCS hfit hm' hm
   · exact mir (same hS hC hSC (by linarith) (by linarith) (by linarith))
 
+/-- **Lines leaning the same way** (`0 ≤ m' ≤ m`): the square costs at least a grid unit plus `β(m - m')`.
+By the kink of each line the excess is linear; pushed to the vertices it is `1 - C` or `(1 - C)(1 - S)`, and `H` drops
+out.  Tight only for upright squares. -/
+lemma kap_same {C S H m m' : ℝ} (hC : 0 ≤ C) (hS : 0 ≤ S) (hCS : C ^ 2 + S ^ 2 = 1)
+    (hm' : 0 ≤ m') (hmm : m' ≤ m) :
+    1 + (1 - H / 2) * (m - m') ≤ kap C S H m m' := by
+  have hC1 : C ≤ 1 := by nlinarith
+  have hS1 : S ≤ 1 := by nlinarith
+  have hp1 : 1 ≤ C + S := by nlinarith [mul_nonneg hC hS]
+  have hm : 0 ≤ m := hm'.trans hmm
+  unfold kap
+  rw [abs_of_nonneg (by linarith : 0 ≤ m - m'), abs_of_nonneg (by nlinarith : 0 ≤ C + m * S),
+    abs_of_nonneg (by nlinarith : 0 ≤ C + m' * S)]
+  have Cpos : ∀ x, S ≤ x * C → 0 < C := fun x h => by
+    rcases eq_or_lt_of_le hC with h0 | h0
+    · subst h0; have : S = 1 := by nlinarith
+      linarith
+    · exact h0
+  rcases le_total S (m' * C) with h2 | h2
+  · -- both above the kink: C E ≥ 1 - C
+    have h1 : S ≤ m * C := h2.trans (mul_le_mul_of_nonneg_right hmm hC)
+    rw [abs_of_nonneg (by linarith : 0 ≤ m * C - S), abs_of_nonneg (by linarith : 0 ≤ m' * C - S)]
+    have hCp := Cpos m' h2
+    have a1 : 0 ≤ (m - m') * C * (C + S - 1) := mul_nonneg (mul_nonneg (by linarith) hC) (by linarith)
+    have a2 : 0 ≤ (m' * C - S) * (C + S) := mul_nonneg (by linarith) (by linarith)
+    have key : 0 ≤ C * ((C + m * S + (m * C - S) + (C + m' * S) + (m' * C - S)) / 2 -
+        (m - m') * (H / 2 - (C + S) / 2) - 1 - (1 - H / 2) * (m - m')) := by nlinarith
+    have := (mul_nonneg_iff_of_pos_left hCp).1 key
+    linarith
+  rcases le_total S (m * C) with h1 | h1
+  · -- m above, m' below: C E ≥ (1 - C)(1 - S)
+    rw [abs_of_nonneg (by linarith : 0 ≤ m * C - S), abs_of_nonpos (by linarith : m' * C - S ≤ 0)]
+    have hCp := Cpos m h1
+    have a1 : 0 ≤ (m * C - S) * (C + S - 1) := mul_nonneg (by linarith) (by linarith)
+    have a2 : 0 ≤ m' * C * (1 - C) := mul_nonneg (mul_nonneg hm' hC) (by linarith)
+    have a3 : 0 ≤ (1 - C) * (1 - S) := mul_nonneg (by linarith) (by linarith)
+    have key : 0 ≤ C * ((C + m * S + (m * C - S) + (C + m' * S) + -(m' * C - S)) / 2 -
+        (m - m') * (H / 2 - (C + S) / 2) - 1 - (1 - H / 2) * (m - m')) := by nlinarith
+    have := (mul_nonneg_iff_of_pos_left hCp).1 key
+    linarith
+  · -- both below the kink: C E ≥ (1 - C)(1 - S)
+    rw [abs_of_nonpos (by linarith : m * C - S ≤ 0), abs_of_nonpos (by linarith : m' * C - S ≤ 0)]
+    rcases eq_or_lt_of_le hC with hC0 | hCp
+    · subst hC0
+      have : S = 1 := by nlinarith
+      subst this
+      nlinarith
+    have a1 : 0 ≤ (S - m * C) * (1 - S) := mul_nonneg (by linarith) (by linarith)
+    have a2 : 0 ≤ m' * C * (1 - C) := mul_nonneg (mul_nonneg hm' hC) (by linarith)
+    have a3 : 0 ≤ (1 - C) * (1 - S) := mul_nonneg (by linarith) (by linarith)
+    have key : 0 ≤ C * ((C + m * S + -(m * C - S) + (C + m' * S) + -(m' * C - S)) / 2 -
+        (m - m') * (H / 2 - (C + S) / 2) - 1 - (1 - H / 2) * (m - m')) := by nlinarith
+    have := (mul_nonneg_iff_of_pos_left hCp).1 key
+    linarith
+
 end SquarePacking
