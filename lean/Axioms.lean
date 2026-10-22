@@ -315,6 +315,8 @@ import Sqpack
 #print axioms SquarePacking.strip_low
 -- strip slope walk (Sqpack/StripKernel): every step costs >= 2sqrt2 - H
 #print axioms SquarePacking.kap_ge_zigzag
+-- strip slope walk (Sqpack/StripWalk): n squares in a strip of height < 2 give a slope walk with sum kap <= L
+#print axioms SquarePacking.strip_walk
 #print axioms SquarePacking.final5_high
 -- R_5 exactly (Sqpack/Rect5Thm)
 #print axioms SquarePacking.rect5_iff
