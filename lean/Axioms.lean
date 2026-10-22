@@ -320,6 +320,8 @@ import Sqpack
 -- strip slope walk, odd n (Sqpack/StripKernel, StripPot): per-square inequalities behind the prefix potentials
 #print axioms SquarePacking.kap_wall
 #print axioms SquarePacking.kap_B
+-- odd n strip theorem, conditional on the per-square inequalities KapS H, KapC H (Sqpack/StripOdd)
+#print axioms SquarePacking.strip_odd_of
 #print axioms SquarePacking.final5_high
 -- R_5 exactly (Sqpack/Rect5Thm)
 #print axioms SquarePacking.rect5_iff
