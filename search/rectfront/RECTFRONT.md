@@ -348,3 +348,25 @@ distance fails by up to 0.017, `chainn/e5probe.py`); plus the upper bound (45° 
 2p − H − (2√2 − H)(p² − 1) = (√2 − p)((2√2 − H)p − (√2H − 2)) + (2p − H)(√2² − 2); near-upright (H ≤ 2S) weights
 (C ± 2c)/S give Sκ ≥ 1; H ≤ 2C by the mirror (C, S, m, m') ↦ (S, C, −m', −m).  (My first paper proof missed the
 near-upright cases: the tilted weights leave [−1, 1] when 2S > H.)
+
+### 2026-10-22 (later): E4 in Lean; E5 closed-form certificate for H ≥ 1.87
+
+**E4 done** (`lean/Sqpack/StripWalk.lean`, `strip_walk`, standard axioms): n ≥ 1 squares in [0, L] × [0, H], H < 2
+⇒ frames and slopes m₀ = mₙ = 0 with Σ kap ≤ L (sorting by `Tuple.sort`, `separate_lr` normalised to
+x + m y = s, `square_step`, telescoping).
+
+**E5 certificate (paper + numerics, `chainn/u0probe.py`, `chainn/e5cert.py`).**  c = kap − λ ≥ 0 (E1).
+Prefix potentials by line-index parity (odd n; suffixes by the mirror (m ↦ −m, frames swapped), and u₀, u₁ even in m):
+* u₁(m) = 1 + |m|(1 − H/2) − λ: the wall step K(0, m) is attained by an upright square (per-tilt cost is concave on
+  each side of the kink tan t = m; at the kink (1 + m + m²)/√(1 + m²) ≥ 1 + m since the difference of squares is m²).
+* u₀(m) = min(2 − 2λ + |m|(1 − H/2), 1 + |cot φ|(1 − H/2) + (2(C + S) − H)/(2SC) − 2λ), m = tan φ, C = |cos φ|,
+  S = |sin φ|: the two-step minimum, attained by two uprights or by a square aligned with the line (tilt φ, previous
+  line perpendicular; its step cost is E1's vertex value).
+Conditions: (W) c(0, m) ≥ u₁(m); (S1) u₀(m′) ≤ u₁(m) + c(m, m′); (S2) u₁(m′) ≤ u₀(m) + c(m, m′); (C) c(m, m′) < a ⇒
+u_j(m) + c + u_j(m′) ≥ 2g.  Wall steps are never cheap (c(0, m) = a + |m|(1 − H/2)), so no wall case.
+**All hold to 1e-15 for 1.87 ≤ H < 2** (0.25° slope grid, fine tilt grid).  Below, S2 fails (1.3e-2 at 1.86, 2.8e-2 at
+1.85): 3-step prefixes beat u₁, so the low band needs more prefix routes (and, below ~1.845, the length condition).
+With E2 this gives: every odd n, 1.87 ≤ H < 2 ⇒ L ≥ min(n, F_n).  Complete for n = 3, 5 (H*(5) = 1.8713); n ≥ 7
+need H down to H*(n) → 2√2 − 1.
+Lean shape: (W), (S2), (C) are per-square inequalities in (frame, m, m′, H) (two route branches each for u₀);
+(S1) says the two-step minimum is attained on one of two routes (the real content).
