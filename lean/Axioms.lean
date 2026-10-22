@@ -311,6 +311,8 @@ import Sqpack
 #print axioms SquarePacking.rect5_wide_iff
 -- R_5 strip (Sqpack/Rect5Low, Rect5Final): H < 2sqrt2 - 1 by four midline points; higher strips by the chain + generated certificates
 #print axioms SquarePacking.rect5_low
+-- every n (Sqpack/StripLow): H < 2sqrt2 - 1 forces L >= n, by n - 1 midline points
+#print axioms SquarePacking.strip_low
 #print axioms SquarePacking.final5_high
 -- R_5 exactly (Sqpack/Rect5Thm)
 #print axioms SquarePacking.rect5_iff

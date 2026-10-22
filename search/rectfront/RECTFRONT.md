@@ -261,3 +261,37 @@ w + h ≥ 4 + √2; strip h < 2 with w + 4h ≥ 4 + 6√2, or swapped).  Standar
   `r5strip/hi5.py`; details `r5strip/FINAL5.md`.  The lower bound H ≥ 2√2 − 1 is what let the old 10-21
   pipeline (stalled at 120/160) close.
 * Style is machine-generated; a structured strip proof is a later task.
+
+## 2026-10-22: strips for every n — low part in Lean, chain relaxation numerically exact to n = 30
+
+**Conjecture (strip frontier, all n).**  For 1 ≤ H < 2, n unit squares fit in L × H iff L ≥ min(n, F_n(H)), one tilted
+piece per n:
+* odd n: the 45° zigzag (uprights at both ends, middle squares alternating ceiling/floor),
+  F_n = 4 + (2n − 4)√2 − (n − 1)H;
+* even n = 2m: Morandi's family (uprights in opposite corners, all middle squares at one tilt t varying with H),
+  parametric a(t), b(t) of Friedman's pieces 3.2, 5.2, 7.2, 9.2, extended to every m: the b-numerator's t-term is
+  (m − 1)(m − 2)t (`chainn/targets.py`).
+Friedman's boundaries (n ≤ 10) and wand125's edges (n ≤ 15) all have exactly one sub-grid piece for a < 2.  **wand125's
+even entries for n ≥ 12 (zigzag(n − 1) + one upright, e.g. b = 5 + 18√2 − 10a at n = 12) are not the frontier**: the
+extended Morandi family is lower on the whole range; built explicitly with pairwise overlap checks for n = 12, 16 (L matches
+the formula to 1e-5, e.g. 11.10719 vs 11.20520 at a = 1.92506).  Bulk: for alternating parallel squares the cost per two
+squares (1 − sδ)/c + (1 − cδ)/s, δ = H − c − s, is least at 45° for every H, giving 2√2 − H per square (< 1 iff
+H > 2√2 − 1).
+
+**Low strips, every n, in Lean** (`lean/Sqpack/StripLow.lean`, `strip_low`): H < 2√2 − 1 ⇒ L ≥ n.  `rect5_low`'s
+midline cover with n − 1 points (i, H/2); general scaling lemma `no_pack_of_cover_n`.  Standard axioms, ~6 s.  Sharp as
+n → ∞ (the tilted pieces start at H*(n) ↓ 2√2 − 1: 1.9142, 1.8816, 1.8713, 1.8611, …, 1.8358 at n = 24).
+
+**Chain relaxation, all n at once** (`chainn/dp.py`): the R₄/R₅ relaxation (sort by x; upright shelves at both ends with
+free bands; only consecutive middle pairs disjoint) is a sum of consecutive-pair terms, so a min-plus DP over a
+(tilt, height) grid gives every n.  Results (`runs/chainn-sweep1.txt`, 91 tilts × 41 heights, 18 heights H ∈ [1.5, 1.995],
+n = 3..30): DP − target ∈ [0, 1.2e-3] everywhere, never negative.  Polished continuously from the DP chain
+(`chainn/polish.py`, `runs/chainn-polish1.txt`, 5 heights × n ∈ {6, 7, 8, 9, 11, 12}): all 30 values above the target by
+1e-7 .. 2e-4 (Powell / Nelder–Mead stalls on the nonsmooth objective), none below.  **Optimal chains (`chainn/paths.py`)
+have one shape for every (n, H) tried: all middle squares at one tilt, strictly alternating ceiling/floor; no middle
+uprights, no mixed runs** (45° for odd n, 44–47° for even n).  So the relaxation looks exact for all n, and "one tilted
+piece" is visible inside it.
+
+Status: evidence, not proof.  Grid DP is an upper estimate of the relaxation's minimum, so a narrow valley below the target
+between grid points is not excluded; the polish is local.  Next for a proof: the min-plus problem needs a structural
+argument (a two-mode potential, or a segment decomposition showing one tilted run is optimal), not per-n certificates.

@@ -12,6 +12,7 @@ import Sqpack.Rect5Pack
 import Sqpack.Rect5Pts
 import Sqpack.Rect5Line
 import Sqpack.Rect5Low
+import Sqpack.StripLow
 import Sqpack.Rect5Final
 import Sqpack.Rect5Iff
 import Sqpack.Rect5Thm
