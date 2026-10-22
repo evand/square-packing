@@ -13,7 +13,7 @@ effort on extensibility until an approach has proved itself.
 | R₂ | max side ≥ 2 | `rect2_iff` (`Rect.lean`) | centre point lies in every square |
 | R₃ | `rect3_iff`: one side ≥ 3, both ≥ 2, or (short side s < 2) ℓ + 2s ≥ 4 + 2√2 | `Rect3.lean` (171 lines) + `RectChain.lean` | chain, 3 × 3 witness cases |
 | R₄ | `rect4_iff`: one side ≥ 4, both ≥ 2, or s < 2 and ℓ ≥ L(t, s) for some t (Friedman/Morandi piece of S₃) | `Rect4.lean`, `Rect4Core.lean` (592 lines) | chain + one-square lemma + half turn |
-| R₅, s < 2 | L ≥ 5 or L + 4H ≥ 4 + 6√2 (pieces 4.1, 4.2 of S₄) | `Rect5Mid.lean` (middle square), `Rect5.lean` (`rect5_strip_lower_of`, given the real inequality `Final5`) | **done 10-21**: `rect5_low` (H < 2√2 − 1, four midline points, `Rect5Low.lean`); `final5_high` (H ≥ 2√2 − 1, generated Handelman certificates + tight zigzag decomposition, `Rect5Final.lean`, `r5strip/FINAL5.md`); not yet in good style |
+| R₅, s < 2 | L ≥ 5 or L + 4H ≥ 4 + 6√2 (pieces 4.1, 4.2 of S₄) | `Rect5Mid.lean` (middle square), `Rect5.lean` (`rect5_strip_lower_hi_of`, given the real inequality `Final5Hi`) | **done 10-21**: `rect5_low` (H < 2√2 − 1, four midline points, `Rect5Low.lean`); `final5_high` (H ≥ 2√2 − 1, generated Handelman certificates + tight zigzag decomposition, `Rect5Final.lean`, `r5strip/FINAL5.md`); not yet in good style |
 | R₅, s ≥ 2 | b = 3 on 2 ≤ a ≤ 1 + √2; a + b = 4 + √2 on 1 + √2 ≤ a ≤ 2 + 1/√2 (contains s(5)) | `rect5_wide_iff` (`Rect5Line.lean`, `Rect5Pts.lean`) | **done 10-21**: weighted point covers + scaling onto the line (`r5pts/R5PTS.md`); constructions `rect5_upper` (`Rect5Pack.lean`) |
 
 All boundaries are Friedman's (Math Magic, June 2010; closed forms also in wand125 `problems/rectangles`,
@@ -123,13 +123,22 @@ contacts of two squares), as in §5.
 * Lean: `le_or_lt` is now `le_or_gt`; `push_neg` → `push Not`; per-declaration heartbeats — split big case
   analyses into lemmas; `simpa using` to pass hypotheses across `if`/`Bool` normal forms.
 
-## 5. R₅ with short side < 2: where it stands
+## 5. R₅ with short side < 2 (history of the search; closed 10-21)
+
+**Outcome (10-21 evening):** closed by the fallback, not by Plan B: four midline points for H < 2√2 − 1
+(`rect5_low`), and for 2√2 − 1 ≤ H < 2 the certificate pipeline (§2.3) on `Final5Hi` (`final5_high`,
+`r5strip/FINAL5.md`); the lower bound on H is what let the stalled pipeline finish.  The general `Final5` (all
+H) and `rect5_strip_lower_of` were removed 10-21 as unused.  Plan B below stays the route to a structured strip
+proof (open, TODO).  Evan 10-21: certificates at n = 5 are unsurprising; the hope was to put them off to larger n.
+Not doing for now: a vertical-flip WLOG (FF ≡ TT, FT ≡ TF) would halve the generated case files, but Plan B
+would replace them.
+
 
 Target: L ≥ 5 or L + 4H ≥ 4 + 6√2.  Extremal (piece 4.2): uprights in both bottom corners, b and d at 45° on
 the ceiling against them, c at 45° on the floor, edge to edge (the **zigzag**).
 
-Proved in Lean: the chain for five squares up to one real inequality (`Rect5.lean`: `Final5` ⇒
-`rect5_strip_lower`), and the middle-square lemma `mid_set` (width of c between lines b|c and c|d is at
+Proved in Lean (at the pause): the chain for five squares up to one real inequality (`Rect5.lean`: `Final5` ⇒
+`rect5_strip_lower`; now `Final5Hi` ⇒ `rect5_strip_lower_hi_of`), and the middle-square lemma `mid_set` (width of c between lines b|c and c|d is at
 least its width upright or aligned with one of the lines; `Rect5Mid.lean`).
 
 Facts established numerically (scripts in `search/rectfront/r5/`):

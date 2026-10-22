@@ -309,6 +309,8 @@ import Sqpack
 -- R_5 with both sides >= 2 exactly (Sqpack/Rect5Line): cover C (10 points, weights 2/3, 1/3) + scaling onto the line
 #print axioms SquarePacking.rect5_wide_lower
 #print axioms SquarePacking.rect5_wide_iff
+-- R_5 strip (Sqpack/Rect5Low, Rect5Final): H < 2sqrt2 - 1 by four midline points; higher strips by the chain + generated certificates
 #print axioms SquarePacking.rect5_low
 #print axioms SquarePacking.final5_high
+-- R_5 exactly (Sqpack/Rect5Thm)
 #print axioms SquarePacking.rect5_iff
