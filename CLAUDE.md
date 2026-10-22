@@ -46,3 +46,4 @@ Start at `TODO.md` (open items; conventions in `~/math/TODO.md`), then `README.m
 - Licensing (Evan, 10-17): never copy others' code, but packings / certificates are mathematical facts, not
   copyrightable: use them freely (store, Lean, gluing), like a result from a paper, with careful, courteous citation.
 - Work on `main` (single checkout, no long-lived worktrees); branch for big restructures.  Commit messages end with the attribution lines the session gives.
+- Commits and pushes (Evan 10-22): commit locally whenever it makes sense, in good logical groupings, without asking; always ask before pushing to any remote.
