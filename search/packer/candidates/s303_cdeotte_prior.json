@@ -1,0 +1,26 @@
+{
+ "store_id": 2667981,
+ "s": 17.909772217274327,
+ "sources": [
+  "pending:#728 (Evan Daniel (evand))",
+  "register (Evan Daniel)",
+  "register (Evan Daniel)",
+  "run:runs/fault/b_own_lat1 (None)",
+  "run:runs/fault/b_own_latr1 (None)",
+  "run:runs/fault/b_own_strip1 (None)",
+  "run:runs/fault/b_own_strip1r (None)",
+  "run:runs/fault/b_store20 (None)",
+  "run:runs/fault/b_store3 (None)",
+  "run:runs/r303/w0 (ours)"
+ ],
+ "descent": {
+  "s_before": 17.909772217274327,
+  "vv_milp_dS": -4.7512911864928964e-07,
+  "why": "no equilibrium with smooth contacts (not first-order jammed).",
+  "ok": true,
+  "s_after": 17.909772217274327,
+  "rounds": 1
+ },
+ "why": "no equilibrium with smooth contacts (not first-order jammed).",
+ "ok": false
+}
