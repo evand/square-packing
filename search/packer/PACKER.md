@@ -5368,3 +5368,12 @@ notebook (10-23 public / private split; `DESIGN.md` "Plugins").  Framework chang
   Store bests at n <= 324 that improve go through regcheck / candidate.py before any claim (none posted without Evan).
 * Predictions: >= 30 % of packings improve: 55 %.  >= 10 n's store best improves: 50 %.  >= 1 at n <= 324: 15 % (that range is
   heavily polished).  Gains at 325-576 smaller than RS3's (its best were taken): 70 %.
+* **RQ1 result (10-24 ~11:20; `runs/requench/rq1`, 3,017 packings over 331 n, 1.57 CPU-h measured).**  53 % improved
+  (median 3.0e-4, p90 3.3e-3).  By range: n <= 324 54 % improved, store best at 0 n; 325-576 58 %, 1 n (most already
+  taken by RS3); 577-1000 46 %, **95 n**.  All 96 new bests: satcheck_f64 OK.  1,603 kept results imported (source
+  requench:rq1).  Per-n values private (n > 324).
+  - Status of what improves (RS3 nc sample, 1,241): raw 50 %, screened 80 %, **polished 53 %** (median gain 1e-3): a fresh
+    side-free quench moves "polished" packings too, so this is a cheap descent move, not only finishing convergence.
+    Improved packings (> 1e-4) were first sighted mostly in our own runs (467) and imports (72).
+  - Predictions: >= 30 % improve 55 %: yes (53 %).  >= 10 n's best improves 50 %: yes (96).  >= 1 at n <= 324 15 %: no.
+    325-576 gains smaller than RS3's 70 %: yes.
