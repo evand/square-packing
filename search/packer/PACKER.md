@@ -5296,3 +5296,28 @@ notebook (10-23 public / private split; `DESIGN.md` "Plugins").  Framework chang
   - Next: (1) a combined p5 with loose step solves (needs an ALM tolerance for the press steps: they run full ALM
     quenches, not relax_fixed); (2) make p5 the construction default after a replicate on fresh states (rows 23-24),
     pre-registered with the paired metric; (3) a cheap rounded-relax pass over the store's near-record pool (nc / p5).
+
+### Pre-registration: RS1 replicate on fresh rows + capped press steps (RS2, 10-24; Evan: "Let's do it")
+* fq `--round-press-outer K` (QOpt round_press_outer): outer ALM iterations per press step.  Found while adding it: the
+  rounded stage's mu_max (1e2) is below the quench's early exit (mu >= 1e3), so every uncapped press step runs all 60
+  outer iterations.  Schedules round.15c.p5o8 (5 steps, 8 outer) and round.15c.p10o4 (10 steps, 4 outer).  Quiet-machine
+  smoke on the saved n = 325 state: round.15c 6.17 s, p5 1.10 s, p5o8 0.81 s, p10o4 1.02 s, g6s5 0.48 s (single state).
+* States: 24 LW2 tasks per row in rows 23-24 (n 485-575; not used in RS1) x 3 heads = up to 144, built with a new seed.
+  Schedules: round.15c, g6s5, p5, p5o8, p10o4, then the three screens.  ~2 CPU-h.
+* Primary metric (fixed now, after RS1 showed the count metric too sparse): per-state paired comparison vs round.15c on
+  the best line-free screen side (W / T / L, ties |d| < 1e-7; no line-free result = worse than any line-free one), sign
+  test.  Secondary: relax CPU ratio (median per state), median paired difference, motion diagnostic.
+* Rule: p5 replicates RS1 if W > L with sign p < 0.05.  The construction default becomes the cheapest press schedule that
+  beats round.15c at p < 0.05 and is not worse than p5 in a direct paired comparison (sign p > 0.05 for p5 better).
+  g6s5 replicates as outcome-neutral if its sign p > 0.05.
+* Predictions: p5 replicates: 80 %.  p5o8 beats round.15c at p < 0.05: 70 %.  p5o8 not worse than p5: 65 %.  p10o4 beats
+  p5o8 head to head: 35 %.  g6s5 neutral again: 65 %.
+
+### Pre-registration: rounded-relax pass over the near-record store pool (RS3, 10-24)
+* States: every sub-grid n in rows 19-24 (325-575): up to 20 distinct (1e-5) line-free store packings below best(n) +
+  0.01, spread in side rank, all tilt classes: 1,239 packings over 138 n.  Schedules nc and p5o8, each followed by the
+  three screens; results < best(n) + 0.01 imported (source relaxbench:rs3).  ~2-3 CPU-h.
+* Metrics: share of packings ending below their own start (> 1e-9); the size of those gains; n whose store best improves;
+  distinct new line-free packings < best + 0.01 (library growth); nc vs p5o8 paired.
+* Predictions: >= 30 % of packings improve on their start: 60 %.  >= 1 n's store best improves: 50 %.  p5o8 beats nc
+  paired: 50 %.

@@ -1761,6 +1761,10 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
             let press = a.iter().any(|t| t == "--round-press");
             let kpeak: f64 = arg(&a, "--round-kick-peak", -1.0);
             let kw: f64 = arg(&a, "--round-kick-w", 0.03);
+            // --round-press-outer K: outer ALM iterations per press step (default the stage's --outer, 60).  The
+            // stage's mu_max (1e2) is below the quench's early-exit mu (1e3), so without a cap every press step
+            // runs all 60 outer iterations (10-24, RS2).
+            let poq = QOpt { max_outer: arg(&a, "--round-press-outer", oq.max_outer), ..oq };
             let mut nev_round = 0usize;
             for k in 1..=ksteps {
                 let r = r0 * (1.0 - k as f64 / ksteps as f64).max(0.0).powf(pw);
@@ -1768,7 +1772,7 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
                 let sig = if kpeak >= 0.0 { rk * (-((r - kpeak) / kw).powi(2)).exp() } else { rk };
                 if sig > 0.0 { for i in (0..n).filter(|&i| !fr(i)) { x[3 * i] += sig * rng.gauss(); x[3 * i + 1] += sig * rng.gauss(); x[3 * i + 2] += 2.0 * sig * rng.gauss(); } }
                 if press {
-                    let (sq, xq, ne, _, vi, _) = quench(sh, &x, &oq);
+                    let (sq, xq, ne, _, vi, _) = quench(sh, &x, &poq);
                     x = xq; sh = sq; vlast = vi; nev_round += ne;
                 } else {
                     let (xr, vi, ne) = relax_fixed_tol(&mut p, sh, &x, oq.skin, rmaxit, rgtol);
