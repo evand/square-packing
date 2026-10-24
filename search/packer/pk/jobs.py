@@ -36,7 +36,7 @@ Job records: runs/jobs/<NAME>/{meta.json, log}.  meta.json: cmd, cwd, pid (= pro
 (+ dirty flag), load at launch.
 """
 from __future__ import annotations
-import argparse, json, os, signal, subprocess, sys, time
+import argparse, json, os, shlex, signal, subprocess, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 JOBS = os.path.abspath(os.environ.get('PK_JOBS', os.path.join(HERE, '..', 'runs', 'jobs')))
@@ -102,7 +102,7 @@ def alive(name):
     return bool(m) and bool(_group(m['pid']))
 
 
-def start(name, cmd, cwd=None, procs=None, threads=1, strict=False, peek=None, prio=None):
+def start(name, cmd, cwd=None, procs=None, threads=1, strict=False, peek=None, prio=None, sink=True):
     if alive(name):
         sys.exit(f'job {name} is still running (pid {_meta(name)["pid"]}); stop it or pick another name')
     run = running_threads()
@@ -120,9 +120,17 @@ def start(name, cmd, cwd=None, procs=None, threads=1, strict=False, peek=None, p
     for v in THREAD_VARS:                            # the caller's explicit setting wins
         env.setdefault(v, str(threads))
     # start_new_session: setsid() in the child before exec, no extra fork, so p.pid is the job and its group id
+    t_start = time.strftime('%Y-%m-%dT%H:%M:%S')
+    if sink:                                         # 10-24 (TODO "Sink after every job"): when the command exits,
+        pk = os.path.join(HERE, '..', 'pk.py')       # import its results (pk.py sink), then converge new near-record
+        lock = os.path.join(HERE, '..', 'runs', 'sink.lock')   # packings (pk.py converge); one at a time (flock)
+        tail = (f'rc=$?; echo "== jobs.py: sink + converge after exit $rc"; '
+                f'flock {shlex.quote(lock)} sh -c "{sys.executable} {shlex.quote(pk)} sink && '
+                f'{sys.executable} {shlex.quote(pk)} converge --procs {max(1, procs or 4)} --since {t_start}"; exit $rc')
+        cmd = ['bash', '-c', '"$@"; ' + tail, 'job', *cmd]
     p = subprocess.Popen(cmd, cwd=cwd, stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
                          start_new_session=True, env=env)
-    meta = dict(name=name, pid=p.pid, cmd=cmd, cwd=cwd, start=time.strftime('%Y-%m-%dT%H:%M:%S'), t0=time.time(),
+    meta = dict(name=name, pid=p.pid, cmd=cmd, cwd=cwd, start=t_start, t0=time.time(),
                 git=_git(cwd), load=os.getloadavg()[0], running_at_start=run, procs=procs,
                 threads={v: env[v] for v in THREAD_VARS}, peek=peek, prio=prio)
     json.dump(meta, open(os.path.join(d, 'meta.json'), 'w'), indent=1)
@@ -324,6 +332,7 @@ def main():
     p.add_argument('--procs', type=int, help='processes this job will run (checked against the target)')
     p.add_argument('--threads', type=int, default=1, help='math-library threads per process (default 1)')
     p.add_argument('--strict', action='store_true', help='refuse instead of warning when over the target')
+    p.add_argument('--no-sink', action='store_true', help='skip the sink + converge pass when the command exits')
     p.add_argument('--peek', help='shell command that prints early results (run by `jobs.py peek NAME`)')
     p.add_argument('argv', nargs='*')
     sub.add_parser('free')
@@ -341,7 +350,7 @@ def main():
         argv = raw[cut + 1:] or a.argv
         if not argv:
             sys.exit('usage: jobs.py start NAME -- CMD ARGS...')
-        start(a.name, argv, a.cwd, a.procs, a.threads, a.strict, peek=a.peek)
+        start(a.name, argv, a.cwd, a.procs, a.threads, a.strict, peek=a.peek, sink=not a.no_sink)
     elif a.cmd == 'peek':
         peek(a.name)
     elif a.cmd == 'queue':

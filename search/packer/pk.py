@@ -101,6 +101,11 @@ def main():
     p = sp.add_parser('sink', help='import every run result under the intake policy, detect hits / near misses (pk/sink.py)')
     p.add_argument('--runs', nargs='*'); p.add_argument('--dry-run', action='store_true'); p.add_argument('--procs', type=int, default=12)
     p.add_argument('--report', action='store_true', help='run dirs no adapter reads, by manifest name')
+    p = sp.add_parser('converge', help='cheap re-quench of near-record, non-45-degree packings not yet converged (pk/converge.py)')
+    p.add_argument('--ns', default='2-1000'); p.add_argument('--tol', type=float, default=0.01); p.add_argument('--cap', type=int, default=50)
+    p.add_argument('--procs', type=int, default=8); p.add_argument('--dry-run', action='store_true')
+    p.add_argument('--since', help='only packings added at or after this ISO time (jobs.py passes the job start)')
+    p.add_argument('--mark', nargs='*', type=int, help='only tag these packing ids as already converged (backfill), run nothing')
     p = sp.add_parser('prune', help='store thinning per pk/policy.py (report only for now)')
     p.add_argument('--dry-run', action='store_true', required=True); p.add_argument('--policy')
     p = sp.add_parser('archive-dedupe', help='remove explorer archive files the store regenerates byte for byte (pk/archive.py)')
@@ -166,6 +171,16 @@ def main():
                 print(f'{c:6d}  {name}  e.g. {ex}')
             return
         print(sink.run(st, runs=a.runs, dry=a.dry_run, procs=a.procs))
+        return
+    if a.cmd == 'converge':
+        from pk import converge
+        if a.mark is not None:
+            for i in a.mark:
+                st.tag(i, converge.TAG)
+            print(f'tagged {len(a.mark)} packings {converge.TAG}')
+            return
+        lo, hi = (int(x) for x in a.ns.split('-'))
+        converge.run(st, lo, hi, a.tol, a.cap, a.procs, a.dry_run, since=a.since)
         return
     if a.cmd == 'prune':
         from pk import policy, prune

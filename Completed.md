@@ -2,6 +2,7 @@
 
 Moved from `TODO.md`; one line each, newest first.  Details in the linked `search/*.md` / `notes/*.md`.
 
+- 2026-10-24 Converge on entry: `pk/converge.py` + `pk.py converge` (cheap re-quench of near-record, non-45-degree packings; parent link + `requenched` tag); `jobs.py start` runs sink + converge (--since job start, flock) when a job exits (`--no-sink` skips); familymap D/S tolerance 1 -> 3 deg.
 - 2026-10-23 **Public / private split**: private search methods, Kaggle tooling and their notes moved to the plugins repo (`evand/square-packing-plugins`, private; `search/packer/DESIGN.md` "Plugins"); plugin loader in `pk/stages.py`, pre-push guard; public main pushed at 5e862ac1.
 - 2026-10-23 Beyond-the-register check for 268 / 303 / 304: certified the public Kaggle packings (8a8879a2; 268 and 303 by exact descent of lightningv08's / cdeotte's packings) but did not post: franciscouzo's open #763 already held all three.  Imported #763's 350 certificates for n <= 1000 (234 new packings).  Lessons in `search/packer/SUBMITTING.md` checklist.
 - 2026-10-21 **R₄ exactly, in Lean** (`lean/Sqpack/Rect4.lean` + `Rect4Core.lean`, `rect4_iff`, standard axioms, 592 lines): four unit squares fit in w × h iff sides ≥ 1 and (both ≥ 2, one ≥ 4, or ℓ ≥ L(t, s) for short side s < 2; Friedman's piece of S₃, mostly Morandi).  Proof: shelves on the middle pair, the b–c separating line (direction t), a one-square lemma (witness cases V/U/D; two-angle inequalities by half-angle factorisation), half turn for c.

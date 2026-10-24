@@ -6,7 +6,8 @@ Per store-best packing: tilted count T, angle families (pk.bands.families: sizes
 thinness of the tilted set (smallest / largest principal spread of the tilted centres).  Code (heuristic, for
 squinting, not a theorem):
   G  grid (s = k, or no tilted squares)
-  D  45-degree block (>= 80 % of tilted within 1 degree of 45, thick)
+  D  45-degree block (>= 80 % of tilted within DEV45 = 3 degrees of 45, thick; 1 degree before 10-24, which called
+     slightly distorted diamonds, e.g. a 44-46 degree 372, '2')
   S  45-degree strip(s) (same, thin: thickness / length < 0.25)
   V  one low-angle band (tilted angles away from 45, one band)
   2  two or more low-angle bands
@@ -20,6 +21,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+DEV45 = 3.0      # degrees (10-24; TODO "familymap.classify")
 
 
 def classify(n, s, sq):
@@ -43,7 +45,7 @@ def classify(n, s, sq):
         thin = math.sqrt(max(ev[0], 0) / max(ev[1], 1e-12))
         info['thin'] = round(thin, 3)
         info['a_med'] = round(float(np.median(np.minimum(a, 90 - a))), 2)
-        if np.mean(dev45 < 1.0) >= 0.8:
+        if np.mean(dev45 < DEV45) >= 0.8:
             code = 'S' if thin < 0.25 else 'D'
         elif len(info['fams']) >= 3:
             code = 'J'

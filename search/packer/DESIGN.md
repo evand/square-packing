@@ -7,7 +7,7 @@ a standard tail (release, anneal, polish), against a baseline that gets the same
 ## Layers
 | layer | where | what |
 |---|---|---|
-| store | `pk/store.py`, `pk.py` | every packing (dedupe, provenance, status, frontier); never copy coordinates by hand (`pk.py get`) |
+| store | `pk/store.py`, `pk.py` | every packing (dedupe, provenance, status, frontier); never copy coordinates by hand (`pk.py get`).  Near-record non-45-degree packings are re-quenched on entry (`pk/converge.py`, run by `pk/jobs.py` after each job's sink; 10-24) |
 | engine | `pk/engine.py` | `fq_quench(inp, QOpt)`: the one fq call path; `QOpt` = every fq flag (incl. `freeze`, 10-22) |
 | registries | `pk/moves.py` (`@move`), `pk/fill.py` (`@placer`), `pk/schedules.py` (named QOpts), `pk/anneal.py` (`Schedule`) | building blocks, each with a declared parameter space: unspecified parameters are drawn, every value used is logged |
 | stages, chains | `pk/stages.py`, `pk.py stages` | one contract over all registries: kinds `gen`, `ruin`, `recreate`, `constrain`, `relax`, `perturb`; a chain is a string `a(k=v) \| b \| ...` |
