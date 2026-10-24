@@ -5349,3 +5349,11 @@ notebook (10-23 public / private split; `DESIGN.md` "Plugins").  Framework chang
   - Reading: much of the near-record store above n = 324 is not at local minima (explorer screen outputs, imports at
     their posted precision); a ~5 CPU-s rounded relax + screen per packing is the cheapest gain we have measured.
   - Predictions: >= 30 % improve 60 %: yes (60 %).  >= 1 n's best improves 50 %: yes (40 n).  p5o8 beats nc 50 %: no (tie).
+  - **Correction (10-24 ~11:20): the RS3 gain is a plain re-quench, not the rounded relax.**  Without compress, nc's
+    hardening steps start feasible at the packing's own side (rounded shapes are smaller than squares), so nothing is
+    resolved; what remains is the standard side-free ALM quench + SLP.  On 300 RS3 store packings, paired: nc relax vs
+    a plain quench (relax.screen1.0) 134 / 19 / 147 (nc lower / tie / plain lower), median diff +1.6e-12, plain 1.0 s vs
+    nc 1.7 s.  Of the 40 store-best improvements, 36 start from irregular packings (class I), 3 from 45-degree (D), 1 U;
+    D packings improve about as often but only converge onto forms the store already holds.  Reading: near-record
+    store packings above 324 are often not converged (imports at posted precision, explorer screen outputs); a plain
+    quench of the irregular ones recovers it.  Long-term fix: converge packings when they enter the store.
