@@ -382,4 +382,26 @@ def report(goal):
     for n in goal.targets:
         out.append(f'| {n} | {best_before(db, n, "9999"):.9f} | {best_before(db, n, t0):.9f} | '
                    f'{fm(best_match(db, goal, n)[0])} | {fm(best_match(db, goal, n, before=t0)[0])} |')
+    out += ['', 'Library: distinct (1e-6) wanted-family packings within +d of the wanted-family best at goal start '
+            '(start -> now; the reference stays fixed so the counts compare)', '',
+            '| target | +0.001 | +0.005 | +0.02 |', '|---|---|---|---|']
+    for n in goal.targets:
+        f0 = best_match(db, goal, n, before=t0)[0]
+        if f0 is None:
+            out.append(f'| {n} | - | - | - |'); continue
+        a, b = library(db, goal, n, f0, t0), library(db, goal, n, f0, '9999')
+        out.append(f'| {n} | ' + ' | '.join(f'{a[d]} -> {b[d]}' for d in (0.001, 0.005, 0.02)) + ' |')
     return '\n'.join(out)
+
+
+def library(db, goal, n, ref, before, ds=(0.001, 0.005, 0.02)):
+    """distinct (1e-6) wanted-family packings at n with side <= ref + d, added before `before` -> {d: count}"""
+    ex = goal.progress.get('exclude', []); seen = set(); keep = []
+    for s, c in db.execute(f"SELECT s, coords FROM packing WHERE n=? AND {FEAS} AND s<=? AND added<? ORDER BY s",
+                           (n, ref + max(ds), before)):
+        if round(s, 6) in seen:
+            continue
+        seen.add(round(s, 6))
+        if family(n, s, np.frombuffer(c, '<f8').reshape(-1, 3)) not in ex:
+            keep.append(s)
+    return {d: sum(1 for s in keep if s <= ref + d) for d in ds}
