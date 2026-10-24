@@ -52,6 +52,7 @@ class Goal:
     arms: object = 'auto'
     baseline: list = field(default_factory=list)
     notes: str = ''
+    result: str = ''                 # written after the run (the reading of the result)
     path: str = ''
 
     @property
@@ -274,41 +275,160 @@ def best_before(db, n, t):
     return r if r is not None else float(k)
 
 
-def reward(st, goal, jid, t0, n):
-    """from the store: this job's packings (its sources + converge children of them) at target n added since t0.
-    matches = new distinct (1e-6) wanted-family packings within `within` of the best wanted-family packing at t0;
-    gain = how much that family best dropped; store_gain = how much the overall store best dropped (both side units)"""
-    db = st.db
+def _polish_one(a):
+    i, s, sq = a
+    sys.path.insert(0, HERE)
+    import hop
+    from .engine import POLISH
+    with tempfile.TemporaryDirectory(prefix='gp_') as td:
+        try:
+            r = hop.quench(s, [tuple(map(float, q)) for q in sq], td, opt=POLISH)
+        except Exception:
+            r = None
+    return i, ((float(r[0]), np.asarray(r[1], float)) if r else None)
+
+
+def polish_many(items, procs):
+    """[(id, s, sq)] -> {id: (s, sq) or None}: fq POLISH (no ALM, loosen 1.0), the finalize step before counting"""
+    if not items:
+        return {}
+    from concurrent.futures import ProcessPoolExecutor
+    with ProcessPoolExecutor(max(1, min(procs, len(items)))) as ex:
+        return dict(ex.map(_polish_one, items, chunksize=4))
+
+
+def window(goal, ref_side):
+    """the match window: `within_rel` x side if set (comparable across n), else the absolute `within`"""
+    r = goal.progress.get('within_rel')
+    return float(r) * ref_side if r is not None else float(goal.progress.get('within', 0.02))
+
+
+def _add_polished(st, src, P, parents):
+    """polished packings into the store (parent = the packing polished); -> {original id: polished store id}"""
+    from .packing import Packing
+    out = {}
+    for i, v in P.items():
+        if v is None:
+            continue
+        pid, _ = st.add(Packing(v[0], v[1]), src, 'ours', ref=str(i), status='polished', parent=parents.get(i, i), commit=False)
+        out[i] = pid
+    st.db.commit()
+    return out
+
+
+def _wanted(goal, n, s, sq, k):
+    return s < k - 1e-9 and family(n, s, sq) not in goal.progress.get('exclude', [])
+
+
+def reference(st, goal, n, procs=4):
+    """once per (goal, n): the polished wanted-family minima in the window before the goal started; they seed the
+    cluster leaders (tag goal_<name>), so a job is paid only for clusters nobody had.  Cached in the goal dir."""
+    from . import cluster as CL
+    cf = os.path.join(goal.dir, f'ref_n{n}.json')
+    if os.path.exists(cf):
+        return json.load(open(cf))
+    db = st.db; k = kgrid(n)
+    jl = os.path.join(goal.dir, 'jobs.jsonl')
+    rows = [json.loads(l) for l in open(jl)] if os.path.exists(jl) else []
+    dirs = [d for d in os.listdir(goal.dir) if d.startswith('j')] if os.path.isdir(goal.dir) else []
+    t_goal = min([r['t0'] for r in rows] + [time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(os.path.getmtime(os.path.join(goal.dir, d))))
+                                           for d in dirs] + [time.strftime('%Y-%m-%dT%H:%M:%S')])
+    f0, _ = best_match(db, goal, n, before=t_goal)
+    f0 = f0 if f0 is not None else float(k)
+    w = window(goal, f0)
+    items = []
+    for i, s, c in db.execute(f"SELECT id, s, coords FROM packing WHERE n=? AND {FEAS} AND s<=? AND added<? ORDER BY s LIMIT 3000",
+                              (n, min(f0 + 1.5 * w, k - 1e-9), t_goal)):
+        sq = np.frombuffer(c, '<f8').reshape(-1, 3).copy()
+        if _wanted(goal, n, s, sq, k):
+            items.append((i, s, sq))
+    P = polish_many(items, procs)
+    ids = _add_polished(st, f'goal-ref:{goal.goal}', P, {})
+    keep = [(ids[i], v[0], v[1]) for i, v in P.items() if v and i in ids and _wanted(goal, n, v[0], v[1], k)]
+    f0p = min([x[1] for x in keep] + [f0])
+    keep = [x for x in keep if x[1] <= f0p + window(goal, f0p)]
+    for f in (os.path.join(CL.CACHE, f'n{n}_goal_{goal.goal}.json'),):
+        if os.path.exists(f):
+            os.remove(f)
+    L = CL.labels(n, keep, tag=f'goal_{goal.goal}')
+    R = dict(t_goal=t_goal, f0=f0, f0p=f0p, window=window(goal, f0p), minima=len({round(x[1], 8) for x in keep}),
+             clusters=len(set(L.values())))
+    json.dump(R, open(cf, 'w'), indent=1)
+    return R
+
+
+def reward(st, goal, jid, t0, n, procs=4):
+    """v2 (Evan 10-24): this job's packings at target n (its sources + converge children since t0), finalized by an fq
+    polish, deduped at 1e-8, and counted as NEW clusters: region clusters (pk/cluster leaders, tag goal_<name>) that no
+    pre-goal minimum and no earlier job had, within the window of the polished family best at goal start.  gain = drop of
+    the polished family best; store_gain = drop of the overall store best."""
+    from . import cluster as CL
+    db = st.db; k = kgrid(n)
+    ref = reference(st, goal, n, procs)
+    f0p, w = ref['f0p'], ref['window']
     like = f'run:runs/goals/{goal.goal}/{jid}%'
-    ids = {i for (i,) in db.execute('SELECT DISTINCT packing FROM sighting WHERE source LIKE ?', (like,))}
+    ids = {i for (i,) in db.execute('SELECT DISTINCT packing FROM sighting WHERE source LIKE ? AND source NOT LIKE ?',
+                                    (like, like.rstrip('%') + '/polish%'))}
     if ids:
         q = ','.join('?' * len(ids))
-        ids |= {i for (i,) in db.execute(f"SELECT id FROM packing WHERE parent IN ({q}) AND added>=?", (*ids, t0))}
-    b0 = best_before(db, n, t0); f0, _ = best_match(db, goal, n, before=t0)
-    k = kgrid(n)
-    if f0 is None:                         # no wanted-family packing at n yet: any new one below the grid is a match
-        f0 = float(k) - goal.progress.get('within', 0.02)
-    within = goal.progress.get('within', 0.02); ex = goal.progress.get('exclude', [])
-    new_keys, best, fbest, jbest = set(), b0, f0, float('inf')
+        ids |= {i for (i,) in db.execute(f"SELECT id FROM packing WHERE parent IN ({q}) AND added>=? AND id NOT IN "
+                                         f"(SELECT packing FROM sighting WHERE source LIKE '%/polish')", (*ids, t0))}
+    b0 = best_before(db, n, t0)
+    items, raw, jbest = [], 0, float('inf')
     for i in ids:
         r = db.execute(f"SELECT n, s, coords FROM packing WHERE id=? AND {FEAS}", (i,)).fetchone()
-        if not r or r[0] != n or r[1] >= k + 0.05:
+        if not r or r[0] != n:
             continue
-        s = r[1]; jbest = min(jbest, s)
-        if s < k - 1e-9:
-            best = min(best, s)
-        if family(n, s, np.frombuffer(r[2], '<f8').reshape(-1, 3)) in ex:
+        jbest = min(jbest, r[1])
+        sq = np.frombuffer(r[2], '<f8').reshape(-1, 3).copy()
+        if r[1] <= f0p + 1.5 * w and _wanted(goal, n, r[1], sq, k):
+            items.append((i, r[1], sq)); raw += r[1] <= f0p + w
+    P = polish_many(items, procs)
+    pids = _add_polished(st, f'run:runs/goals/{goal.goal}/{jid}/polish', P, {})
+    keep, seen = [], set()
+    for i, v in P.items():
+        if not v or i not in pids:
             continue
-        fbest = min(fbest, s)
-        if s > f0 + within or s >= k - 1e-9 or round(s, 6) in new_keys:
+        jbest = min(jbest, v[0])
+        if v[0] > f0p + w or not _wanted(goal, n, v[0], v[1], k) or round(v[0], 8) in seen:
             continue
-        if db.execute(f"SELECT 1 FROM packing WHERE n=? AND {FEAS} AND abs(s-?)<5e-7 AND added<? LIMIT 1", (n, s, t0)).fetchone():
-            continue
-        new_keys.add(round(s, 6))
-    gain, sgain = max(0.0, f0 - fbest), max(0.0, b0 - best)
+        seen.add(round(v[0], 8)); keep.append((pids[i], v[0], v[1]))
+    L = CL.labels(n, keep, tag=f'goal_{goal.goal}') if keep else {}
+    mine = {x[0] for x in keep}
+    new_clusters = {lab for lab in L.values() if int(lab.split(':')[1]) in mine}
+    fbest = min([x[1] for x in keep] + [f0p])
+    best = min([b0] + [x[1] for x in keep if x[1] < k - 1e-9] + ([jbest] if jbest < k - 1e-9 else []))
+    gain, sgain = max(0.0, f0p - fbest), max(0.0, b0 - best)
     v = goal.value
-    return dict(matches=len(new_keys), gain=gain, store_gain=sgain, best_gap=(jbest - b0) if jbest < float('inf') else None,
-                reward=v.get('match', 1.0) * len(new_keys) + v.get('frontier', 1e4) * (gain + sgain))
+    return dict(matches=len(new_clusters), minima=len(keep), raw=raw, gain=gain, store_gain=sgain,
+                best_gap=(jbest - b0) if jbest < float('inf') else None,
+                reward=v.get('match', 1.0) * len(new_clusters) + v.get('frontier', 1e4) * (gain + sgain))
+
+
+def rescore(goal, procs=12, log=print):
+    """recompute every recorded job's reward with the current reward(), in job order (novelty is chronological); the
+    previous values are kept as v1_* fields; jobs.jsonl is rewritten (backup: jobs.v1.jsonl)"""
+    from .store import Store
+    from . import cluster as CL
+    jl = os.path.join(goal.dir, 'jobs.jsonl')
+    rows = [json.loads(l) for l in open(jl)]
+    if not os.path.exists(jl.replace('.jsonl', '.v1.jsonl')):
+        open(jl.replace('.jsonl', '.v1.jsonl'), 'w').write(''.join(json.dumps(r) + '\n' for r in rows))
+    for f in [os.path.join(goal.dir, x) for x in os.listdir(goal.dir) if x.startswith('ref_n')] + \
+             [os.path.join(CL.CACHE, f'n{n}_goal_{goal.goal}.json') for n in goal.targets]:
+        if os.path.exists(f):
+            os.remove(f)
+    st = Store()
+    try:
+        for r in sorted(rows, key=lambda r: r['job']):
+            R = reward(st, goal, r['job'], r['t0'], r['n'], procs)
+            for kk in ('matches', 'reward', 'gain', 'store_gain'):
+                r.setdefault('v1_' + kk, r.get(kk))
+            r.update(R)
+            log(f"{r['job']} {r['arm']}: v1 matches {r['v1_matches']} -> new clusters {R['matches']} (minima {R['minima']}, raw {R['raw']})")
+    finally:
+        st.close()
+    open(jl, 'w').write(''.join(json.dumps(r) + '\n' for r in sorted(rows, key=lambda r: r['job'])))
 
 
 # ------------------------------------------------------------------ scheduler
@@ -407,11 +527,14 @@ def report(goal):
     for r in rows:
         by.setdefault(r['arm'], []).append(r)
     out = [f'# goal {goal.goal}: {len(rows)} jobs, {sum(r["cpu_h"] for r in rows):.2f} CPU-h of {goal.budget_cpu_h}',
-           '', '| arm | jobs | CPU-h | matches | gain: family / store | best gap to store best | reward / CPU-h |', '|---|---|---|---|---|---|---|']
+           '', '| arm | jobs | CPU-h | new clusters (v1 matches) | new minima | gain: family / store | best gap to store best | reward / CPU-h |',
+           '|---|---|---|---|---|---|---|---|']
     for a, R in sorted(by.items(), key=lambda t: -sum(r['reward'] for r in t[1])):
         c = sum(r['cpu_h'] for r in R); w = sum(r['reward'] for r in R)
         g = [r['best_gap'] for r in R if r.get('best_gap') is not None]
-        out.append(f"| {a} | {len(R)} | {c:.2f} | {sum(r['matches'] for r in R)} | {max(r['gain'] for r in R):.2e} / {max(r.get('store_gain', 0) for r in R):.2e} | {min(g) if g else float('nan'):+.2e} | {w / max(c, 1e-9):.2f} |")
+        v1 = sum(r.get('v1_matches', r['matches']) or 0 for r in R)
+        out.append(f"| {a} | {len(R)} | {c:.2f} | {sum(r['matches'] for r in R)} ({v1}) | {sum(r.get('minima', 0) for r in R)} | "
+                   f"{max(r['gain'] for r in R):.2e} / {max(r.get('store_gain', 0) for r in R):.2e} | {min(g) if g else float('nan'):+.2e} | {w / max(c, 1e-9):.2f} |")
     db = sqlite3.connect(f'file:{os.path.join(HERE, "runs/store.sqlite")}?mode=ro', uri=True)
     out += ['', '| target | store best now | at goal start | wanted-family best now | at goal start |', '|---|---|---|---|---|']
     t0 = min((r['t0'] for r in rows), default=time.strftime('%Y-%m-%dT%H:%M:%S'))

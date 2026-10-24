@@ -102,7 +102,7 @@ def main():
     p.add_argument('--runs', nargs='*'); p.add_argument('--dry-run', action='store_true'); p.add_argument('--procs', type=int, default=12)
     p.add_argument('--report', action='store_true', help='run dirs no adapter reads, by manifest name')
     p = sp.add_parser('goal', help='targeted exploration loop (pk/goal.py): plan / run / report / job')
-    p.add_argument('action', choices=['plan', 'run', 'report', 'job']); p.add_argument('spec', help='goal YAML (report: also a name)')
+    p.add_argument('action', choices=['plan', 'run', 'report', 'job', 'rescore']); p.add_argument('spec', help='goal YAML (report: also a name)')
     p.add_argument('out', nargs='?'); p.add_argument('cpu', nargs='?', type=float); p.add_argument('seed', nargs='?', type=int, default=1)
     p = sp.add_parser('yield', help='lineage yield: which generators / sources feed records and near-records (pk/yieldrep.py)')
     p.add_argument('--cap', type=int, default=50); p.add_argument('--json'); p.add_argument('--top', type=int, default=25)
@@ -189,6 +189,8 @@ def main():
                 print(f"{x['id']:22s} donors at n {x['n'] + x['offset']:4d}: {sz[x['id']]}  {x.get('chain') or 'walk'}")
         elif a.action == 'run':
             st.close(); G.run(g, a.seed)
+        elif a.action == 'rescore':
+            st.close(); G.rescore(g); print(G.report(g))
         else:
             print(G.report(g))
         return
