@@ -5377,3 +5377,6 @@ notebook (10-23 public / private split; `DESIGN.md` "Plugins").  Framework chang
     Improved packings (> 1e-4) were first sighted mostly in our own runs (467) and imports (72).
   - Predictions: >= 30 % improve 55 %: yes (53 %).  >= 10 n's best improves 50 %: yes (96).  >= 1 at n <= 324 15 %: no.
     325-576 gains smaller than RS3's 70 %: yes.
+* **Converge backlog (10-24 ~12:00; `pk.py converge --ns 2-1000`, job converge-backlog).**  5,080 near-record non-45-degree
+  packings never converged before: 2,982 (59 %) improved, 1.18 CPU-h measured, 5.7 min on 15 procs.  Store best moved at 2 n
+  (both > 576, ~1.4e-4 each; satcheck_f64 OK; values private).  Library now converged near the records at every n <= 1000.
