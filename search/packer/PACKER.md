@@ -5321,3 +5321,31 @@ notebook (10-23 public / private split; `DESIGN.md` "Plugins").  Framework chang
   distinct new line-free packings < best + 0.01 (library growth); nc vs p5o8 paired.
 * Predictions: >= 30 % of packings improve on their start: 60 %.  >= 1 n's store best improves: 50 %.  p5o8 beats nc
   paired: 50 %.
+* **RS2 result (10-24 ~10:20; `runs/relaxbench/rs2`, 144 states, rows 23-24, 15 procs).**  Paired vs round.15c (W / T / L,
+  sign p; relax CPU ratio median per state, under load):
+  | schedule | all | grid L | cross | shove | CPU ratio |
+  | p5 | **51 / 61 / 32 (0.048)** | 20 / 19 / 9 | 18 / 14 / 16 | 13 / 28 / 7 | 0.56 |
+  | p5o8 | 43 / 63 / 38 (0.66) | 16 / 21 / 11 | 15 / 13 / 20 | 12 / 29 / 7 | 0.41 |
+  | p10o4 | 45 / 63 / 36 (0.37) | 19 / 18 / 11 | 17 / 16 / 15 | 9 / 29 / 10 | 0.41 |
+  | g6s5 | 30 / 70 / 44 (0.13) | 13 / 22 / 13 | 11 / 19 / 18 | 6 / 29 / 13 | 0.29 |
+  Head to head: p5o8 vs p5 25 / 71 / 48 (p 0.010: capping the press steps' outer iterations costs quality); p10o4 vs p5o8
+  37 / 65 / 42 (0.65).  RS1 per head, p5 vs round.15c: grid L 22 / 19 / 7 (0.008), cross 24 / 15 / 9 (0.014), shove
+  14 / 29 / 5 (0.064).
+  - Rule: p5 replicates (p 0.048, weaker than RS1's 60 / 21; carried by the grid L and shove heads, neutral on the cross
+    at these n).  Construction default = the cheapest press schedule that beats round.15c at p < 0.05 and is not worse
+    than p5: **p5** (p5o8 / p10o4 do not beat round.15c here).  g6s5 neutral (p 0.13, leaning worse 30 : 44).
+  - Reading: each press step's ALM solve to convergence (60 outer iterations) does useful work; capping it trades the
+    gain away.  Pooled RS1 + RS2, p5 vs round.15c: 111 / 124 / 53.
+  - Screens on constructions: single-loosen p90 loss 2.5-4.2e-3: keep three.
+  - Predictions: p5 replicates 80 %: yes.  p5o8 beats round.15c 70 %: no.  p5o8 not worse than p5 65 %: no.  p10o4 beats
+    p5o8 35 %: no.  g6s5 neutral 65 %: yes.
+* **RS3 result (10-24 ~10:35; `runs/relaxbench/rs3`, 1,241 store packings over 138 n in rows 19-24, nc and p5o8).**
+  - **60 % (nc) / 57 % (p5o8) end below their own start**; gain median 8.7e-4 / 1.3e-3, p90 3.9e-3 / 5.4e-3, max 1.0e-2.
+  - **The store best improves at 40 of 138 n** (gains up to 8e-3).  Independent f64 SAT check (`satcheck_f64.py`) on all
+    40 new bests: OK.  Per-n values: private (Evan 10-24: new n > 324 packings stay private for now; plugin NOTEBOOK).
+    2,221 new packings imported (source relaxbench:rs3).
+  - nc vs p5o8 paired: 533 / 158 / 550 (p 0.63) at 0.58x CPU: **nc is the store-pass schedule.**
+  - Screens on store packings: screen1.02 alone p90 loss 4.7e-4 (< 1e-3): one screen suffices for the store pass.
+  - Reading: much of the near-record store above n = 324 is not at local minima (explorer screen outputs, imports at
+    their posted precision); a ~5 CPU-s rounded relax + screen per packing is the cheapest gain we have measured.
+  - Predictions: >= 30 % improve 60 %: yes (60 %).  >= 1 n's best improves 50 %: yes (40 n).  p5o8 beats nc 50 %: no (tie).
