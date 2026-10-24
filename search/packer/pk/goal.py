@@ -433,17 +433,29 @@ def rescore(goal, procs=12, log=print):
 
 # ------------------------------------------------------------------ scheduler
 
+def arm_family(arm_id):
+    """'179:walk' -> 'walk'; '17:disk.p20:0' -> 'disk.p20'; '145:lcut+27' -> 'lcut' (the shared-prior group)"""
+    import re
+    return re.sub(r'[-+]\d+$', '', arm_id.split(':')[1])
+
+
 class Posterior:
-    """Gamma-Poisson reward rate per CPU-h with a shared empirical prior (all arms' pooled rate)"""
+    """Gamma-Poisson reward rate per CPU-h.  Prior mean per arm = its family's pooled rate across targets (cross
+    construction that pays at 148 starts high at 147; 10-24), shrunk to the goal-wide rate when the family has little
+    CPU; prior weight a0 = 0.5 pseudo-events either way"""
     def __init__(self, rows):
-        self.r, self.c = {}, {}
+        self.r, self.c, fr, fc = {}, {}, {}, {}
         for x in rows:
-            self.r[x['arm']] = self.r.get(x['arm'], 0.0) + x['reward']; self.c[x['arm']] = self.c.get(x['arm'], 0.0) + x['cpu_h']
+            a, f = x['arm'], arm_family(x['arm'])
+            self.r[a] = self.r.get(a, 0.0) + x['reward']; self.c[a] = self.c.get(a, 0.0) + x['cpu_h']
+            fr[f] = fr.get(f, 0.0) + x['reward']; fc[f] = fc.get(f, 0.0) + x['cpu_h']
         tot_c = sum(self.c.values()); self.mean = (sum(self.r.values()) / tot_c) if tot_c > 0.5 else 2.0
+        self.fam = {f: (fr[f] + self.mean * 1.0) / (fc[f] + 1.0) for f in fc}     # 1 CPU-h of the goal-wide rate as shrinkage
 
     def sample(self, arm, rng, pending=0.0):
-        a0, b0 = 0.5, 0.5 / max(self.mean, 1e-3)
-        a = a0 + self.r.get(arm, 0.0) + self.mean * pending; b = b0 + self.c.get(arm, 0.0) + pending
+        m = self.fam.get(arm_family(arm), self.mean)
+        a0, b0 = 0.5, 0.5 / max(m, 1e-3)
+        a = a0 + self.r.get(arm, 0.0) + m * pending; b = b0 + self.c.get(arm, 0.0) + pending
         return rng.gammavariate(a, 1.0 / b)
 
 
