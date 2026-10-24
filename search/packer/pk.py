@@ -101,6 +101,11 @@ def main():
     p = sp.add_parser('sink', help='import every run result under the intake policy, detect hits / near misses (pk/sink.py)')
     p.add_argument('--runs', nargs='*'); p.add_argument('--dry-run', action='store_true'); p.add_argument('--procs', type=int, default=12)
     p.add_argument('--report', action='store_true', help='run dirs no adapter reads, by manifest name')
+    p = sp.add_parser('goal', help='targeted exploration loop (pk/goal.py): plan / run / report / job')
+    p.add_argument('action', choices=['plan', 'run', 'report', 'job']); p.add_argument('spec', help='goal YAML (report: also a name)')
+    p.add_argument('out', nargs='?'); p.add_argument('cpu', nargs='?', type=float); p.add_argument('seed', nargs='?', type=int, default=1)
+    p = sp.add_parser('yield', help='lineage yield: which generators / sources feed records and near-records (pk/yieldrep.py)')
+    p.add_argument('--cap', type=int, default=50); p.add_argument('--json'); p.add_argument('--top', type=int, default=25)
     p = sp.add_parser('converge', help='cheap re-quench of near-record, non-45-degree packings not yet converged (pk/converge.py)')
     p.add_argument('--ns', default='2-1000'); p.add_argument('--tol', type=float, default=0.01); p.add_argument('--cap', type=int, default=50)
     p.add_argument('--procs', type=int, default=8); p.add_argument('--dry-run', action='store_true')
@@ -171,6 +176,28 @@ def main():
                 print(f'{c:6d}  {name}  e.g. {ex}')
             return
         print(sink.run(st, runs=a.runs, dry=a.dry_run, procs=a.procs))
+        return
+    if a.cmd == 'goal':
+        from pk import goal as G
+        if a.action == 'job':
+            G.run_job(G.load(a.spec), json.load(open(os.path.join(a.out, 'arm.json'))), a.out, a.cpu, a.seed)
+            return
+        g = G.load(a.spec) if a.spec.endswith(('.yaml', '.yml')) else G.load(os.path.join(HERE, 'goals', a.spec + '.yaml'))
+        if a.action == 'plan':
+            arms = G.plan(g); sz = G.pool_sizes(g, arms)
+            for x in arms:
+                print(f"{x['id']:22s} donors at n {x['n'] + x['offset']:4d}: {sz[x['id']]}  {x.get('chain') or 'walk'}")
+        elif a.action == 'run':
+            st.close(); G.run(g, a.seed)
+        else:
+            print(G.report(g))
+        return
+    if a.cmd == 'yield':
+        from pk import yieldrep
+        R = yieldrep.report(st, a.cap)
+        print(yieldrep.fmt(R, a.top))
+        if a.json:
+            json.dump(R, open(a.json, 'w'), indent=1)
         return
     if a.cmd == 'converge':
         from pk import converge

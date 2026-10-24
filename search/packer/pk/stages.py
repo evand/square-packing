@@ -10,6 +10,7 @@ declared parameter space (pk.moves specs: unspecified parameters are drawn, ever
   constrain  freeze / release        constrain.freeze (every current square), constrain.release
   relax      T = 0 descent           relax.<schedule> for every pk.schedules entry (frozen squares passed as fq --freeze)
   perturb    one stochastic move     perturb.<move> for every pk.moves move (melt, anneal, kick, ...); refuses frozen squares
+  shrink     change n downward      shrink.drop (remove squares), shrink.lcut (inexact L removal); construction only
   grow       change n upward         (plugin stages; 10-24) a bigger box and/or added squares toward ctx['n'], left
                                      unrelaxed, with st.region set for a following recreate; refuses frozen squares
 
@@ -80,6 +81,76 @@ def gen_file(st, rng, ctx, path):
     """a packing file; '{n}' in path is replaced by ctx n (e.g. runs/x/n{n}.txt)"""
     from .packing import read
     return State(read(path.format(n=ctx['n']))), {}
+
+
+# ================================================================== n-changing moves (10-24, explore-loop plan)
+# The elementary closures as moves: drop squares (n + d -> n), cut an inexact L (row k + 1 -> row k), add squares
+# (n - d -> n).  Construction only: a relax stage follows in the chain.  All refuse frozen squares.
+
+def _free(st):
+    if st.frozen.any():
+        raise ValueError('n-changing stages move or remove squares: release frozen squares first')
+
+
+@stage('shrink.drop', 'shrink', pick=('choice', ['extreme', 'random']))
+def shrink_drop(st, rng, ctx, pick):
+    """remove st.n - ctx n squares: 'extreme' = among those touching the bounding box (removal can shrink the side),
+    'random' = any; the box is kept (the following relax compacts)"""
+    _free(st)
+    d = st.p.n - int(ctx['n'])
+    if d < 1:
+        raise ValueError(f"shrink.drop: ctx n {ctx['n']} must be below the packing's {st.p.n}")
+    sq = np.asarray(st.p.sq, float).copy()
+    a = np.radians(sq[:, 2]); h = 0.5 * (np.abs(np.cos(a)) + np.abs(np.sin(a)))
+    lo, hi = sq[:, :2] - h[:, None], sq[:, :2] + h[:, None]
+    keep = np.ones(len(sq), bool)
+    for _ in range(d):
+        idx = np.flatnonzero(keep)
+        if pick == 'extreme':
+            L, H = lo[idx].min(0), hi[idx].max(0)
+            ext = idx[(np.abs(lo[idx] - L) < 1e-6).any(1) | (np.abs(hi[idx] - H) < 1e-6).any(1)]
+            idx = ext if len(ext) else idx
+        keep[int(idx[rng.randrange(len(idx))])] = False
+    return State(Packing(st.p.s, sq[keep])), dict(dropped=d)
+
+
+@stage('shrink.lcut', 'shrink', cut=('choice', ['tilt', 'random']))
+def shrink_lcut(st, rng, ctx, cut):
+    """inexact L removal (lcut.py): a horizontal and a vertical unit strip at (cx, cy); the st.n - ctx n squares most
+    inside them are removed, squares beyond a strip shift by -1, box side - 1.  cut 'tilt' centres the cross near a
+    tilted square (the irregular region), 'random' anywhere"""
+    _free(st)
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    import lcut as LC
+    d = st.p.n - int(ctx['n'])
+    if d < 1:
+        raise ValueError(f"shrink.lcut: ctx n {ctx['n']} must be below the packing's {st.p.n}")
+    s, sq = st.p.s, np.asarray(st.p.sq, float)
+    tl = np.abs(((sq[:, 2] + 45) % 90) - 45) > 1.0
+    if cut == 'tilt' and tl.any():
+        T = sq[tl]; cx, cy = T[rng.randrange(len(T)), :2] + np.array([rng.gauss(0, 1), rng.gauss(0, 1)])
+    else:
+        cx, cy = rng.uniform(0.5, s - 1.5), rng.uniform(0.5, s - 1.5)
+    cx, cy = float(np.clip(cx - 0.5, 0, s - 1)), float(np.clip(cy - 0.5, 0, s - 1))
+    C = LC.apply_cut([tuple(q) for q in sq], cx, cy, d)
+    s1 = s - 1
+    X = np.array([(min(max(x, 0.5), s1 - 0.5), min(max(y, 0.5), s1 - 0.5), a) for x, y, a in C])
+    return State(Packing(s1, X)), dict(cx=round(cx, 3), cy=round(cy, 3), removed=d)
+
+
+@stage('grow.add', 'grow', f=('uni', 1.0, 1.04), K=('choice', [4, 16, 64]))
+def grow_add(st, rng, ctx, f, K):
+    """add ctx n - st.n squares: centres dilated by f, then pk.fill bestofK (K random poses per square) anywhere"""
+    _free(st)
+    from . import fill as FL
+    m = int(ctx['n']) - st.p.n
+    if m < 1:
+        raise ValueError(f"grow.add: ctx n {ctx['n']} must exceed the packing's {st.p.n}")
+    sq = np.asarray(st.p.sq, float).copy(); S = st.p.s * f
+    sq[:, :2] *= f
+    X, info = FL.fill(S, sq, rng, placer='bestofK', m=m, K=K)
+    return State(Packing(S, np.asarray(X, float))), dict(added=int(info.get('added', 0)), pen=info.get('pen'))
 
 
 # ================================================================== ruin

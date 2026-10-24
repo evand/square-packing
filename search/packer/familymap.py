@@ -28,8 +28,9 @@ def classify(n, s, sq):
     from pk import bands as B
     sq = np.asarray(sq, float)
     k = math.isqrt(n - 1) + 1
-    t = B.tilted(sq)
-    T = int(t.sum())
+    off = np.abs(((sq[:, 2] + 45) % 90) - 45)        # degrees off the nearest axis
+    t = off > 1.0                                     # 10-24: B.tilted counts squares 0.02 deg off axis, which put
+    T = int(t.sum())                                  # near-upright squares into the 45-degree test (148 diamonds read as V)
     a = sq[t, 2] % 90.0
     dev45 = np.abs(a - 45.0) if T else np.array([])
     bs, _ = B.bands(sq)

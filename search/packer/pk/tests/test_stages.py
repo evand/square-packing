@@ -32,6 +32,7 @@ def filled(seed=1):
 
 def check(name):
     f = S.STAGES[name]
+    ctx_n = N
     if name in SLOW:
         return 'skip'
     if f.kind == 'gen':
@@ -40,6 +41,9 @@ def check(name):
             return 'skip'                                  # needs a path; covered by trial.py
     elif f.kind in ('perturb',):
         st0 = filled()
+    elif f.kind in ('shrink', 'grow') and name not in TEST_STARTS:  # n-changing: a released, filled start; ctx n moves
+        st0 = S.run_stage('constrain.release', {}, filled(), random.Random(1), dict(n=N))[0]
+        ctx_n = N - 3 if f.kind == 'shrink' else N + 1
     elif name in TEST_STARTS:                               # plugin stages that need their own start (meta)
         st0 = S.run_chain(TEST_STARTS[name], dict(n=N), 1)[0]
     else:
@@ -47,7 +51,7 @@ def check(name):
     fixed = {}
     runs = []
     for _ in range(2):
-        st, row = S.run_stage(name, fixed, st0, random.Random(5), dict(n=N))
+        st, row = S.run_stage(name, fixed, st0, random.Random(5), dict(n=ctx_n))
         runs.append((st, row))
     (a, ra), (b, rb) = runs
     assert set(f.space) <= set(ra['params']), (name, 'parameters not logged', sorted(set(f.space) - set(ra['params'])))
