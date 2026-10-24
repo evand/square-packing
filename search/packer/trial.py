@@ -53,7 +53,7 @@ def ref_sides(suite):
 def preregistered(name):
     """a '### Pre-registration ... (NAME' heading in PACKER.md or a plugin's notebook (plugin NOTEBOOK = path)"""
     from pk import stages as S
-    paths = [os.path.join(HERE, 'PACKER.md')] + [m.NOTEBOOK for m in S.PLUGINS if hasattr(m, 'NOTEBOOK')]
+    paths = [os.path.join(HERE, 'archive', 'PACKER-2026-10.md')] + [m.NOTEBOOK for m in S.PLUGINS if hasattr(m, 'NOTEBOOK')]
     txt = '\n'.join(open(p).read() for p in paths)
     return any(l.startswith('### Pre-registration') and f'({name}' in l for l in txt.splitlines())
 

@@ -1,7 +1,7 @@
 # packer/data
 * `cen4_rec.json`, `cen4_cand.json`: census push (10-04) from the s(110) record and the candidate (Couzo's packing): per trial
   σ, trial, soft-squeeze side, final side (slp2), first-order jam flag, full-line count, fingerprint.  Source of the numbers in
-  `../s110-landscape.md`.
+  `s110-landscape.md` (deleted 10-24; git tag pre-arch-2026-10).
 * `s110_minima/`: one configuration per distinct jammed sub-11 side (rounded 1e-7) from that census (packer text format).
   Caveat: slp2 false-jams at corner–corner touches, so some are not true local minima (exact solver: 5 of 7 tested were not).
   Re-check them with `../exact/` after the slp2 fix.

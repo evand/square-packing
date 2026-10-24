@@ -183,3 +183,13 @@ Steps 1-4 are about a day of work; step 5 is mechanical but long; step 6 an hour
 2. Freeze `PACKER.md` as is, or extract its steering findings into CLAIMS first (an hour; better priors for the arms)?
 3. Goal files public or private by default (public framework, private goals is the current split)?
 4. Value weights V_n: the allocator's guidance (1 for n <= 324, 1/3 above) or per goal?
+
+## Status (10-24 evening)
+
+Built: steps 1-4 (`pk.py yield`; `pk/goal.py` with family-relative selector and reward, planner, job runner, TS
+scheduler, report; shrink.drop / shrink.lcut / grow.add; plugin ARM_TEMPLATES), first goal `fam145-150` running.
+Deleted: 149 files / ~19.5k lines outside the kept import closure (5a); the planning docs and NEEDS / CONFUSIONS (into
+CLAIMS); PACKER.md and the plugin NOTEBOOK frozen under `archive/`; lit notes moved to `literature/`; README, DESIGN,
+CLAUDE.md rewritten.  Open: §8 step 5's paring (mcmin and the slp-era engine, explore -> walk, evaluation modules),
+reward v2, closure hooks, plugin drivers -> goal files.  The lineage report's caveat: the RS-bench / re-quench imports
+carry no parent links, so their "origin" counts are themselves.

@@ -170,7 +170,7 @@ The Lean ladder itself is logged in [`lean/LADDER.md`](../lean/LADDER.md), not h
 
 | Directory | What |
 |---|---|
-| [packer/](packer/README.md) | Packing search engine (Rust + Python), from 2026-10-04.  [PACKER.md](packer/PACKER.md) lab log; [s110-landscape.md](packer/s110-landscape.md) (draft case study); [s292.md](packer/s292.md) (the one record the exact batch could not certify); [lit-optimizers.md](packer/lit-optimizers.md), [lit-statmech.md](packer/lit-statmech.md), [lit-provenance.md](packer/lit-provenance.md) (literature notes). |
+| [packer/](packer/README.md) | Packing search engine (Rust + Python), from 2026-10-04: goals + stages ([DESIGN.md](packer/DESIGN.md)), findings in [CLAIMS.md](packer/CLAIMS.md), record submissions [SUBMITTING.md](packer/SUBMITTING.md).  Lab log to 10-24: [archive/PACKER-2026-10.md](packer/archive/PACKER-2026-10.md); literature notes moved to `../literature/packer-lit-*.md`. |
 | [exact/](exact/README.md) | Exact KKT points and rational certificates `s(n) ≤ S'` for record packings; [EXACT_FORMS.md](exact/EXACT_FORMS.md) (algebraic `S*`, Lean `Packs`); [batch/](exact/batch/README.md) (all n ≤ 324 of jlevy's register). |
 | [uniform/](uniform/UNIFORM.md) | Uniform s(12) certificates (see above). |
 | [goebel_alt/](goebel_alt/README.md) | Alternatives to the rigid s(149) Göbel-type packing (exploratory ILP). |
