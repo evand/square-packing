@@ -5291,7 +5291,7 @@ notebook (10-23 public / private split; `DESIGN.md` "Plugins").  Framework chang
   - Screens: the best single loosen is 1.02 (most line-free, median loss 9e-9) but its p90 loss is 1.16e-3: misses the
     one-screen rule (< 1e-3) narrowly; 1.05 p90 1.9e-3, 1.0 2.1e-3.  Keep three screens for now.
   - Predictions: g6 / g6s5 meets the rule 60 %: no (outcome-neutral and fast, but the count rule fails).  A press arm has
-    the most < +0.01 60 % ... (35 %): yes (p5, pk 3; meaningless at these counts).  Press arms lower axis displacement
+    the most < +0.01 (35 %): yes (p5, pk 3; meaningless at these counts).  Press arms lower axis displacement
     60 %: yes.  pk beats p on < +0.01 30 %: yes (3 vs 2; meaningless).  Single screen 1.05 meets the rule 50 %: no.
   - Next: (1) a combined p5 with loose step solves (needs an ALM tolerance for the press steps: they run full ALM
     quenches, not relax_fixed); (2) make p5 the construction default after a replicate on fresh states (rows 23-24),
