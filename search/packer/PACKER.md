@@ -5236,3 +5236,30 @@ grown pool (grid-locked now excluded): `dgen.py sweep --n 157 --band 0.0,0.012 -
 ---
 From 10-21 on, experiments with new search methods (moves, generators, bandits, Kaggle work) are logged in a private
 notebook (10-23 public / private split; `DESIGN.md` "Plugins").  Framework changes stay here and in `DESIGN.md`.
+
+### Pre-registration: relax-schedule bench (RS1, 10-24; Evan: "Performance first ... make sure this works inside our general framework of schedules and plugins")
+* Why: `relax.round.15c` is ~80 % of a construction's cost (6-11 s at n ~ 325), and almost all of it is the hardening
+  pre-stage: compress at r0 = 0.15 (side free) to below the hard side, then 20 relaxations at that held side, each an
+  L-BFGS to gtol 1e-13 / 4000 its of a problem that cannot be solved (hard-overlap residual ~0.008 throughout; 100k
+  evals).  Evan's hypothesis: forcing an infeasible compaction and expanding afterwards loosens the grid region more than
+  the irregular one, so the work goes into moving the irregular region (solving the wrong problem).  Nakajima's
+  soft-to-rigid protocol (literature/nakajima-soft-to-rigid-2026-10-24.md) never holds the box: it hardens under pressure.
+* New fq flags (rounded pre-stage only; defaults bit-identical: round.15c on a saved n = 325 state gives 18.539209357852798
+  before and after): `--round-maxit / --round-gtol` (inner budget per hardening step), `--round-press` (ALM quench with the
+  side free at every step), `--round-kick-peak R --round-kick-w W` (kick sigma peaking at r = R).  QOpt fields added.
+  Schedules (`pk/schedules.py`): round.15c.{s5, nc, h1003, g6, g6s5, p, p5, pk}, screen1.0 / 1.02 / 1.05.
+  New stage kind `grow` (n upward, unrelaxed, region for a recreate); the L-addition constructions are plugin stages.
+  `pk/tests/test_stages.py`: all new stages ok.
+* Bench (plugin `relaxbench.py`): states = 48 row-(k-1) parents for rows 19-22 x 3 construction heads (grid L, corner
+  shove, cross; built once and saved) + up to 32 near-best store packings (the schedule as a direct store move).  Every
+  state x 9 schedules: relax.<S>, then plain screens at loosen 1.0 / 1.02 / 1.05 from its output.  ~4-5 CPU-h.
+* Metrics per schedule (constructions pooled and per head; store separately): mean relax CPU and total CPU; line-free
+  share; median / p10 gap of the best line-free screen to best(m); count < +0.01 and < +0.003; motion diagnostic =
+  median displacement (optimal matching) of tilted vs axis squares from the state to the relax output; for the screens,
+  what a single loosen loses vs the best of three.
+* Rule: a schedule replaces round.15c as the construction default if its count < +0.01 is >= round.15c's and its relax
+  CPU is <= half.  Press arms support Evan's hypothesis if their axis-square displacement is lower than round.15c's while
+  the tilted displacement is not, and their outcomes are no worse.  One screen replaces three if its p90 loss is < 1e-3.
+* Predictions: g6 or g6s5 meets the replacement rule: 60 %.  Some press arm (p, p5, pk) has the most < +0.01 results: 35 %.
+  Press arms show lower axis displacement than round.15c: 60 %.  pk beats p on < +0.01: 30 %.  A single screen at 1.05
+  meets the one-screen rule: 50 %.  Smoke (6 states, n = 325-361, 54 jobs) is not counted.

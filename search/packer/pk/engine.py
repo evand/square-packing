@@ -62,6 +62,11 @@ class QOpt:
     round_kick: float | None = None
     round_p: float | None = None
     round_loosen: float | None = None
+    round_maxit: int | None = None   # 10-24 (RS1): inner L-BFGS budget per hardening step (fq default 4000 / 1e-13)
+    round_gtol: float | None = None
+    round_press: bool = False        # side free (ALM quench) at every hardening step instead of a held box
+    round_kick_peak: float | None = None   # kick sigma round_kick * exp(-((r - peak) / w)^2)
+    round_kick_w: float | None = None
     soft_p: float | None = None
     d0: float | None = None          # --shrink schedule
     dmin: float | None = None

@@ -41,6 +41,22 @@ _RELAX = {
     'round.15cL1.1': dict(loosen=1.1, round_r0=0.15, round_compress=True),
     'holdP1.01': dict(loosen=1.0, round_r0=0.15, hold_f=1.01, no_alm=True, pit=300, flip_top=8),
     'shrinkhop': dict(loosen=1.1, shrink=True, hops=3),
+    # 10-24 relax-schedule bench (PACKER "RS1"): round.15c variants.  s5: 5 hardening steps; nc: no compress at r0;
+    # h1003: box held 0.3 % above the compressed side; g6: loose inner solves (gtol 1e-6, <= 300 L-BFGS its per step);
+    # p: pressure (side free at every step, Nakajima-style); pk: p + kick noise peaking at r = 0.06 (angle lock-in).
+    'round.15c.s5':    dict(loosen=1.0, round_r0=0.15, round_compress=True, round_steps=5),
+    'round.15c.nc':    dict(loosen=1.0, round_r0=0.15),
+    'round.15c.h1003': dict(loosen=1.0, round_r0=0.15, round_compress=True, hold_f=1.003),
+    'round.15c.g6':    dict(loosen=1.0, round_r0=0.15, round_compress=True, round_gtol=1e-6, round_maxit=300),
+    'round.15c.g6s5':  dict(loosen=1.0, round_r0=0.15, round_compress=True, round_gtol=1e-6, round_maxit=300, round_steps=5),
+    'round.15c.p':     dict(loosen=1.0, round_r0=0.15, round_compress=True, round_press=True),
+    'round.15c.p5':    dict(loosen=1.0, round_r0=0.15, round_compress=True, round_press=True, round_steps=5),
+    'round.15c.pk':    dict(loosen=1.0, round_r0=0.15, round_compress=True, round_press=True, round_kick=0.01,
+                            round_kick_peak=0.06, round_kick_w=0.03),
+    # plain screens at one loosen each (the explorer / shove harness evaluate takes the best of 1.0 / 1.02 / 1.05)
+    'screen1.0':  dict(loosen=1.0),
+    'screen1.02': dict(loosen=1.02),
+    'screen1.05': dict(loosen=1.05),
 }
 
 SCHEDULES: dict[str, QOpt] = dict(_OPS)

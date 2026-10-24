@@ -10,6 +10,8 @@ declared parameter space (pk.moves specs: unspecified parameters are drawn, ever
   constrain  freeze / release        constrain.freeze (every current square), constrain.release
   relax      T = 0 descent           relax.<schedule> for every pk.schedules entry (frozen squares passed as fq --freeze)
   perturb    one stochastic move     perturb.<move> for every pk.moves move (melt, anneal, kick, ...); refuses frozen squares
+  grow       change n upward         (plugin stages; 10-24) a bigger box and/or added squares toward ctx['n'], left
+                                     unrelaxed, with st.region set for a following recreate; refuses frozen squares
 
 A chain is a string of stages joined by '|', e.g.
   'gen.file(path="runs/x/n{n}.txt") | constrain.freeze | recreate.bestofK(K=16) | relax.round.15c | constrain.release'

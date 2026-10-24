@@ -1492,6 +1492,12 @@ struct QOpt { mu0: f64, mu_max: f64, tol: f64, skin: f64, max_outer: usize, verb
 /// Returns (s, x, total evaluations, outer iterations, final violation before repair).
 /// Minimise the pure overlap penalty at fixed side s (separators free, multipliers 0).  Returns (x, max violation, evals).
 fn relax_fixed(p: &mut Prob, s: f64, x0: &[f64], skin: f64) -> (Vec<f64>, f64, usize) {
+    relax_fixed_tol(p, s, x0, skin, 4000, 1e-13)
+}
+
+/// relax_fixed with the inner L-BFGS budget exposed (10-24, `--round-maxit` / `--round-gtol`: intermediate hardening
+/// steps need not be solved to the f64 floor).
+fn relax_fixed_tol(p: &mut Prob, s: f64, x0: &[f64], skin: f64, maxit: usize, gtol: f64) -> (Vec<f64>, f64, usize) {
     let n = p.n;
     let cut = SQRT2 + skin;
     let mut x = x0.to_vec();
@@ -1505,7 +1511,7 @@ fn relax_fixed(p: &mut Prob, s: f64, x0: &[f64], skin: f64) -> (Vec<f64>, f64, u
     for _round in 0..20 {
         let xref = x.clone();
         let mut v = p.pack(&x, s);
-        let (_, ne, _) = { let pr = &*p; lbfgs(&mut |vv: &[f64], gg: &mut [f64]| pr.eval(vv, gg), &mut v, 4000, 1e-13, 0.05) };
+        let (_, ne, _) = { let pr = &*p; lbfgs(&mut |vv: &[f64], gg: &mut [f64]| pr.eval(vv, gg), &mut v, maxit, gtol, 0.05) };
         nev += ne;
         p.unpack(&v);
         x.copy_from_slice(&v[..3 * n]);
@@ -1742,21 +1748,37 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
                 let (sq, xq, _, _, _, _) = quench(s * arg(&a, "--round-loosen", 1.0), &x, &oq);
                 x = xq; sq
             } else { s };
-            let sh = sa * arg(&a, "--hold-f", 1.0);
+            let mut sh = sa * arg(&a, "--hold-f", 1.0);
             for i in (0..n).filter(|&i| !fr(i)) { x[3 * i] *= sh / sa; x[3 * i + 1] *= sh / sa; }
             let mut p = Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: true, b: Vec::new() };
             let mut vlast = 0.0;
+            // 10-24 (PACKER "RS1"): --round-maxit / --round-gtol = inner L-BFGS budget of each hardening step (default the
+            // f64-floor 4000 / 1e-13); --round-press = side free at every step (an ALM quench at the current r, after
+            // Nakajima's pressure-driven hardening) instead of holding the box; --round-kick-peak R [--round-kick-w W]
+            // = kick sigma rk * exp(-((r - R) / W)^2) (noise peaking near the angle lock-in) instead of a constant rk.
+            let rmaxit: usize = arg(&a, "--round-maxit", 4000);
+            let rgtol: f64 = arg(&a, "--round-gtol", 1e-13);
+            let press = a.iter().any(|t| t == "--round-press");
+            let kpeak: f64 = arg(&a, "--round-kick-peak", -1.0);
+            let kw: f64 = arg(&a, "--round-kick-w", 0.03);
+            let mut nev_round = 0usize;
             for k in 1..=ksteps {
                 let r = r0 * (1.0 - k as f64 / ksteps as f64).max(0.0).powf(pw);
                 set_rnd(r);
-                if rk > 0.0 { for i in (0..n).filter(|&i| !fr(i)) { x[3 * i] += rk * rng.gauss(); x[3 * i + 1] += rk * rng.gauss(); x[3 * i + 2] += 2.0 * rk * rng.gauss(); } }
-                let (xr, vi, _) = relax_fixed(&mut p, sh, &x, oq.skin);
-                x = xr; vlast = vi;
-                if oq.verbose { eprintln!("  round r {r:.4} hold {sh:.8} viol {vi:.2e}"); }
+                let sig = if kpeak >= 0.0 { rk * (-((r - kpeak) / kw).powi(2)).exp() } else { rk };
+                if sig > 0.0 { for i in (0..n).filter(|&i| !fr(i)) { x[3 * i] += sig * rng.gauss(); x[3 * i + 1] += sig * rng.gauss(); x[3 * i + 2] += 2.0 * sig * rng.gauss(); } }
+                if press {
+                    let (sq, xq, ne, _, vi, _) = quench(sh, &x, &oq);
+                    x = xq; sh = sq; vlast = vi; nev_round += ne;
+                } else {
+                    let (xr, vi, ne) = relax_fixed_tol(&mut p, sh, &x, oq.skin, rmaxit, rgtol);
+                    x = xr; vlast = vi; nev_round += ne;
+                }
+                if oq.verbose { eprintln!("  round r {r:.4} side {sh:.8} viol {vlast:.2e} sig {sig:.2e}"); }
             }
             set_rnd(0.0);
             s = sh;
-            round_info = format!(", \"round\": {{\"r0\": {r0}, \"s_soft\": {sa:.12}, \"s_hold\": {sh:.12}, \"viol_hard\": {vlast:.3e}}}");
+            round_info = format!(", \"round\": {{\"r0\": {r0}, \"s_soft\": {sa:.12}, \"s_hold\": {sh:.12}, \"viol_hard\": {vlast:.3e}, \"evals\": {nev_round}, \"press\": {press}}}");
         }
         // Soft squares (literature/soft-squares-2026-10-12.md section 2): per-square log aspect a_i = eps tanh(b_i), area 1.
         // (A) optional compress with eps0 (side free); (B) hold the box at hold-f x that side; (C) eps -> 0 in K steps of
