@@ -58,6 +58,11 @@ _RELAX = {
                             round_press_outer=8),
     'round.15c.p10o4': dict(loosen=1.0, round_r0=0.15, round_compress=True, round_press=True, round_steps=10,
                             round_press_outer=4),
+    # 10-24 random starts: disks (r0 = 0.5) compressed, then hardened under pressure to squares (Nakajima's path in fq)
+    'disk.p20':  dict(loosen=1.0, round_r0=0.5, round_compress=True, round_press=True, round_steps=20),
+    'disk.p40':  dict(loosen=1.0, round_r0=0.5, round_compress=True, round_press=True, round_steps=40),
+    'disk.p20k': dict(loosen=1.0, round_r0=0.5, round_compress=True, round_press=True, round_steps=20, round_kick=0.01,
+                      round_kick_peak=0.06, round_kick_w=0.03),
     # plain screens at one loosen each (the explorer / shove harness evaluate takes the best of 1.0 / 1.02 / 1.05)
     'screen1.0':  dict(loosen=1.0),
     'screen1.02': dict(loosen=1.02),

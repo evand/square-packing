@@ -161,6 +161,8 @@ def plan(goal):
 def pool_sizes(goal, arms, seed=0):
     rng = random.Random(seed); out = {}
     for a in arms:
+        if str(a.get('chain') or '').strip().startswith('gen.'):
+            out[a['id']] = 1; continue
         out[a['id']] = len(donors(goal, a['n'] + a['offset'], 3, rng, a.get('match_donors', True)))
     return out
 
@@ -187,7 +189,8 @@ def run_job(goal, arm, out, cpu_s, seed):
     rng = random.Random(seed); c0 = _cpu()
     n = arm['n']; k = kgrid(n)
     os.makedirs(os.path.join(out, 'starts'), exist_ok=True)
-    D = donors(goal, n + arm['offset'], goal.donors, rng, arm.get('match_donors', True))
+    gen_led = str(arm.get('chain') or '').strip().startswith('gen.')
+    D = [(None, None, None)] if gen_led else donors(goal, n + arm['offset'], goal.donors, rng, arm.get('match_donors', True))
     log = dict(arm=arm['id'], donors=[d[0] for d in D], built=0, kept=0)
     parents = {}
     if not D:
@@ -197,7 +200,8 @@ def run_job(goal, arm, out, cpu_s, seed):
         while _cpu() - c0 < goal.construct_share * cpu_s:
             pid, s, sq = D[rng.randrange(len(D))]
             try:
-                st, lg = S.run_chain(arm['chain'], dict(n=n), rng.randrange(1 << 30), st=S.State(Packing(s, sq)))
+                st, lg = S.run_chain(arm['chain'], dict(n=n), rng.randrange(1 << 30),
+                                     st=None if gen_led else S.State(Packing(s, sq)))
             except Exception as e:
                 log.setdefault('errors', []).append(repr(e)[:120]); continue
             log['built'] += 1
@@ -213,7 +217,9 @@ def run_job(goal, arm, out, cpu_s, seed):
             if round(s, 6) in seen:
                 continue
             seen.add(round(s, 6)); f = os.path.join(out, 'starts', f'p{pid}_{len(files)}.txt'); _write(f, s, sq)
-            parents[os.path.basename(f)] = pid; files.append(f)
+            if pid is not None:
+                parents[os.path.basename(f)] = pid
+            files.append(f)
         log['kept'] = len(files); walk_from = files[:4]
     else:
         walk_from = []
@@ -242,6 +248,9 @@ def ingest_job(st, goal, jid, out):
         path = os.path.join(out, 'starts', f)
         if os.path.exists(path):
             st.add(read(path), src + '/starts', 'ours', ref=f, status='screened', parent=pid, commit=False)
+    for f in sorted(os.listdir(os.path.join(out, 'starts'))) if os.path.isdir(os.path.join(out, 'starts')) else []:
+        if f not in P:                                            # starts from gen-led arms (no donor)
+            st.add(read(os.path.join(out, 'starts', f)), src + '/starts', 'ours', ref=f, status='screened', commit=False)
     st.db.commit()
     ex = os.path.join(out, 'ex')
     if os.path.isdir(ex):
@@ -276,27 +285,29 @@ def reward(st, goal, jid, t0, n):
         q = ','.join('?' * len(ids))
         ids |= {i for (i,) in db.execute(f"SELECT id FROM packing WHERE parent IN ({q}) AND added>=?", (*ids, t0))}
     b0 = best_before(db, n, t0); f0, _ = best_match(db, goal, n, before=t0)
-    k = kgrid(n); f0 = f0 if f0 is not None else float(k) + 0.05
+    k = kgrid(n)
+    if f0 is None:                         # no wanted-family packing at n yet: any new one below the grid is a match
+        f0 = float(k) - goal.progress.get('within', 0.02)
     within = goal.progress.get('within', 0.02); ex = goal.progress.get('exclude', [])
-    new_keys, best, fbest = set(), b0, f0
+    new_keys, best, fbest, jbest = set(), b0, f0, float('inf')
     for i in ids:
         r = db.execute(f"SELECT n, s, coords FROM packing WHERE id=? AND {FEAS}", (i,)).fetchone()
         if not r or r[0] != n or r[1] >= k + 0.05:
             continue
-        s = r[1]
+        s = r[1]; jbest = min(jbest, s)
         if s < k - 1e-9:
             best = min(best, s)
         if family(n, s, np.frombuffer(r[2], '<f8').reshape(-1, 3)) in ex:
             continue
         fbest = min(fbest, s)
-        if s > f0 + within or round(s, 6) in new_keys:
+        if s > f0 + within or s >= k - 1e-9 or round(s, 6) in new_keys:
             continue
         if db.execute(f"SELECT 1 FROM packing WHERE n=? AND {FEAS} AND abs(s-?)<5e-7 AND added<? LIMIT 1", (n, s, t0)).fetchone():
             continue
         new_keys.add(round(s, 6))
     gain, sgain = max(0.0, f0 - fbest), max(0.0, b0 - best)
     v = goal.value
-    return dict(matches=len(new_keys), gain=gain, store_gain=sgain,
+    return dict(matches=len(new_keys), gain=gain, store_gain=sgain, best_gap=(jbest - b0) if jbest < float('inf') else None,
                 reward=v.get('match', 1.0) * len(new_keys) + v.get('frontier', 1e4) * (gain + sgain))
 
 
@@ -396,10 +407,11 @@ def report(goal):
     for r in rows:
         by.setdefault(r['arm'], []).append(r)
     out = [f'# goal {goal.goal}: {len(rows)} jobs, {sum(r["cpu_h"] for r in rows):.2f} CPU-h of {goal.budget_cpu_h}',
-           '', '| arm | jobs | CPU-h | matches | gain: family / store | reward / CPU-h |', '|---|---|---|---|---|---|']
+           '', '| arm | jobs | CPU-h | matches | gain: family / store | best gap to store best | reward / CPU-h |', '|---|---|---|---|---|---|---|']
     for a, R in sorted(by.items(), key=lambda t: -sum(r['reward'] for r in t[1])):
         c = sum(r['cpu_h'] for r in R); w = sum(r['reward'] for r in R)
-        out.append(f"| {a} | {len(R)} | {c:.2f} | {sum(r['matches'] for r in R)} | {max(r['gain'] for r in R):.2e} / {max(r.get('store_gain', 0) for r in R):.2e} | {w / max(c, 1e-9):.2f} |")
+        g = [r['best_gap'] for r in R if r.get('best_gap') is not None]
+        out.append(f"| {a} | {len(R)} | {c:.2f} | {sum(r['matches'] for r in R)} | {max(r['gain'] for r in R):.2e} / {max(r.get('store_gain', 0) for r in R):.2e} | {min(g) if g else float('nan'):+.2e} | {w / max(c, 1e-9):.2f} |")
     db = sqlite3.connect(f'file:{os.path.join(HERE, "runs/store.sqlite")}?mode=ro', uri=True)
     out += ['', '| target | store best now | at goal start | wanted-family best now | at goal start |', '|---|---|---|---|---|']
     t0 = min((r['t0'] for r in rows), default=time.strftime('%Y-%m-%dT%H:%M:%S'))

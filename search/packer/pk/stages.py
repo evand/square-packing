@@ -83,6 +83,15 @@ def gen_file(st, rng, ctx, path):
     return State(read(path.format(n=ctx['n']))), {}
 
 
+@stage('gen.random', 'gen', c=('uni', 1.2, 1.6))
+def gen_random(st, rng, ctx, c):
+    """ctx n squares at uniform random centres and angles in a box of side c * sqrt(n) (overlaps allowed: a rounded-
+    square compress resolves them; random starts for the disk -> square pressure path, 10-24)"""
+    n = int(ctx['n']); S = c * math.sqrt(n)
+    sq = np.array([(rng.uniform(0.5, S - 0.5), rng.uniform(0.5, S - 0.5), rng.uniform(0.0, 90.0)) for _ in range(n)])
+    return State(Packing(S, sq)), dict(side0=round(S, 4))
+
+
 # ================================================================== n-changing moves (10-24, explore-loop plan)
 # The elementary closures as moves: drop squares (n + d -> n), cut an inexact L (row k + 1 -> row k), add squares
 # (n - d -> n).  Construction only: a relax stage follows in the chain.  All refuse frozen squares.
