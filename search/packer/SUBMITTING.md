@@ -154,6 +154,8 @@ a separate decision (TODO, next session).
 
 - [ ] `candidate.py ... --stage` ran clean; files committed and pushed; the commit in the draft is that one.
 - [ ] Live check the same day; the claim table's "best public" is today's, incl. Kaggle public outputs and the per-puzzle side list (`regcheck.py`).
+- [ ] Big claim lists the store can't sync (10-23 lesson): read franciscouzo's `upper_bounds.json` at the commit his latest open issue cites (his repo is too large for `pk.py watch`; #763 already held all three of our 10-23 candidates).
+- [ ] Before calling ours a new packing found from a public start, exact-descend the start (`candidate.py` on it): lightningv08's 268 descended to exactly our side (10-23), so the bound was a refinement of theirs.
 - [ ] Relationship terms come from the table above, with the numbers; no "refinement" unless same minimum.
 - [ ] If it is a new minimum but no square moves > 0.1, the draft says so explicitly.
 - [ ] Lineage framed as direct or hunt; for a hunt, the search effort leads.
