@@ -5380,3 +5380,13 @@ notebook (10-23 public / private split; `DESIGN.md` "Plugins").  Framework chang
 * **Converge backlog (10-24 ~12:00; `pk.py converge --ns 2-1000`, job converge-backlog).**  5,080 near-record non-45-degree
   packings never converged before: 2,982 (59 %) improved, 1.18 CPU-h measured, 5.7 min on 15 procs.  Store best moved at 2 n
   (both > 576, ~1.4e-4 each; satcheck_f64 OK; values private).  Library now converged near the records at every n <= 1000.
+
+### Pre-registration: does p5's edge survive an explorer tail? (P5T, 10-24; Evan: "fairly quick test ... not a big cpu time spend?")
+* RS1 / RS2 measured p5 vs round.15c straight after the relax + screens (pooled 111 / 124 / 53).  Rule (CLAUDE.md): judge a
+  relax by what refinement makes of it.  Plugin `p5tail.py`: 20 construction states from RS1 + RS2 where both schedules
+  ended line-free and differ (> 1e-7), each relaxed both ways, then one explorer run per start (4 min x 1 proc, same seed
+  within a pair, melt-weighted mix as LIB1).  ~2.7 CPU-h, ~12 min wall.
+* Metric: paired explorer best side, p5 vs round.15c (W / T / L, sign test), median difference vs the start difference.
+* Rule: p5 becomes the L-walk relax if W >= L (the start edge is not lost in the tail); if L > W at sign p < 0.1, keep
+  round.15c and record that the start edge does not carry.  20 pairs is indicative, not decisive.
+* Predictions: W >= L: 65 %.  Median tail difference smaller in size than the start difference: 70 %.
