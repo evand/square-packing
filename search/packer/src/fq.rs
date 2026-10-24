@@ -19,6 +19,10 @@
 //!   --round-r0 R [--round-compress] [--hold-f F] [--round-steps K] [--round-p P] [--round-kick SIG]: soft-to-rigid
 //!     pre-stage with rounded squares (see run_quench), then the usual quench + polish
 //!   --dump-lp DIR: append every polish LP to DIR/lp-<pid>.jsonl (rows/columns with stable keys, Clarabel time; lp_bench.py)
+//!   --freeze SPEC: squares by index ("0-99,105", 0-based, inclusive ranges) held fixed in absolute coordinates: no
+//!     gradient, no LP / Newton column, no kick, not moved by --loosen / --hold-f / --shrink rescaling; frozen-frozen pairs
+//!     carry no constraints (the frozen set is assumed feasible).  Only the final repair scaling (f64 margin, ~1e-13
+//!     relative) moves them; the JSON reports the largest frozen displacement as frozen_dmax (10-22)
 
 mod ldl;
 mod lpipm;
@@ -26,6 +30,28 @@ use std::fs;
 use std::time::Instant;
 use std::sync::atomic::{AtomicU8, AtomicU64, AtomicUsize, Ordering};
 use std::sync::OnceLock;
+use std::sync::RwLock;
+
+// --freeze: per-square mask (empty = nothing frozen); set per quench by run_quench
+static FROZEN: RwLock<Vec<bool>> = RwLock::new(Vec::new());
+fn frozen_mask(n: usize) -> Vec<bool> {
+    let m = FROZEN.read().unwrap();
+    if m.len() == n && m.iter().any(|&b| b) { m.clone() } else { Vec::new() }
+}
+fn set_frozen(spec: Option<String>, n: usize) {
+    let mut m = vec![false; n];
+    if let Some(sp) = spec {
+        for part in sp.split(',').map(|q| q.trim()).filter(|q| !q.is_empty()) {
+            let (a, b) = match part.split_once('-') {
+                Some((a, b)) => (a.parse::<usize>().expect("--freeze"), b.parse::<usize>().expect("--freeze")),
+                None => { let a = part.parse::<usize>().expect("--freeze"); (a, a) }
+            };
+            assert!(a <= b && b < n, "--freeze range {part} outside 0..{n}");
+            for i in a..=b { m[i] = true; }
+        }
+    }
+    *FROZEN.write().unwrap() = m;
+}
 
 // --dump-lp DIR: append every polish LP (rows, columns with stable keys, Clarabel time) to DIR/lp-<pid>.jsonl
 static DUMP_LP: OnceLock<String> = OnceLock::new();
@@ -303,6 +329,10 @@ impl Prob {
             g[o + 2 * pk + 1] += gd;
         }
         if self.fix_s { g[3 * n] = 0.0; }
+        let fz = frozen_mask(n);
+        if !fz.is_empty() {
+            for i in 0..n { if fz[i] { g[3 * i] = 0.0; g[3 * i + 1] = 0.0; g[3 * i + 2] = 0.0; if sh[i].3 != usize::MAX { g[sh[i].3] = 0.0; } } }
+        }
         f
     }
 
@@ -356,8 +386,10 @@ impl Prob {
         let mut old = std::collections::HashMap::new();
         for p in self.pairs.drain(..) { old.insert((p.i, p.j), p); }
         let c2 = cut * cut;
+        let fz = frozen_mask(n);
         for i in 0..n {
             for j in i + 1..n {
+                if !fz.is_empty() && fz[i] && fz[j] { continue; }
                 let (dx, dy) = (x[3 * j] - x[3 * i], x[3 * j + 1] - x[3 * i + 1]);
                 if dx * dx + dy * dy >= c2 { continue; }
                 if let Some(p) = old.remove(&(i, j)) { self.pairs.push(p); continue; }
@@ -425,6 +457,11 @@ impl Prob {
                     out.push(Con { g, nz, sp: Spec::PJ(pk, k) });
                 }
             }
+        }
+        let fz = frozen_mask(n);
+        if !fz.is_empty() {
+            for c in out.iter_mut() { c.nz.retain(|&(k, _)| !(k < si && fz[k / 3])); }
+            out.retain(|c| !c.nz.is_empty());
         }
         out
     }
@@ -718,6 +755,13 @@ fn hess_lagr(p: &Prob, v: &[f64], cons: &[Con], z: &[f64]) -> Vec<(usize, usize,
 /// Lagrangian Hessian sum_k z_k grad^2 g_k (face tie applied); `convex`: diagonally dominant convexification (SQP),
 /// else the raw upper triangle (Newton finish).
 fn hess_lagr2(p: &Prob, v: &[f64], cons: &[Con], z: &[f64], convex: bool) -> Vec<(usize, usize, f64)> {
+    let mut h = hess_lagr3(p, v, cons, z, convex);
+    let fz = frozen_mask(p.n);
+    if !fz.is_empty() { let si = 3 * p.n; h.retain(|&(a, b, _)| !(a < si && fz[a / 3]) && !(b < si && fz[b / 3])); }
+    h
+}
+
+fn hess_lagr3(p: &Prob, v: &[f64], cons: &[Con], z: &[f64], convex: bool) -> Vec<(usize, usize, f64)> {
     use std::collections::HashMap;
     let n = p.n;
     let o = 3 * n + 1;
@@ -1486,9 +1530,11 @@ fn shrink(s0: f64, x0: &[f64], d0: f64, dmin: f64, vtol: f64, verbose: bool, hop
     let mut rng = Rng::new(seed);
     let n = x0.len() / 3;
     let mut p = Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: true, b: Vec::new() };
+    let fz = frozen_mask(n);
+    let fr = |i: usize| !fz.is_empty() && fz[i];
     let scale = |x: &[f64], s: f64, f: f64| -> Vec<f64> {
         let mut y = x.to_vec();
-        for i in 0..n { y[3 * i] = s * f / 2.0 + (x[3 * i] - s / 2.0) * f; y[3 * i + 1] = s * f / 2.0 + (x[3 * i + 1] - s / 2.0) * f; }
+        for i in (0..n).filter(|&i| !fr(i)) { y[3 * i] = s * f / 2.0 + (x[3 * i] - s / 2.0) * f; y[3 * i + 1] = s * f / 2.0 + (x[3 * i + 1] - s / 2.0) * f; }
         y
     };
     let mut s = s0;
@@ -1520,7 +1566,7 @@ fn shrink(s0: f64, x0: &[f64], d0: f64, dmin: f64, vtol: f64, verbose: bool, hop
             for _ in 0..m {
                 let i = if m == n { 0 } else { (rng.next() % n as u64) as usize };
                 let idx: Vec<usize> = if m == n { (0..n).collect() } else { vec![i] };
-                for &j in &idx {
+                for &j in idx.iter().filter(|&&j| !fr(j)) {
                     xk[3 * j] = (xk[3 * j] + sig * rng.gauss()).clamp(H, st - H);
                     xk[3 * j + 1] = (xk[3 * j + 1] + sig * rng.gauss()).clamp(H, st - H);
                     xk[3 * j + 2] += sig * rng.gauss();
@@ -1664,10 +1710,15 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
         set_rect(arg(&a, "--rect-dx", 0.0), arg(&a, "--rect-dy", 0.0));
         set_rnd(0.0);
         set_soft(0.0);
+        set_frozen(sarg(&a, "--freeze"), n);
+        let fz = frozen_mask(n);
+        let fr = |i: usize| !fz.is_empty() && fz[i];
+        let x_in = x.clone();
         let sig: f64 = arg(&a, "--kick", 0.0);
         if sig > 0.0 {
             let mut r = Rng::new(arg(&a, "--seed", 1u64));
             for i in 0..n {
+                if fr(i) { r.gauss(); r.gauss(); r.gauss(); continue; }
                 x[3 * i] += sig * r.gauss();
                 x[3 * i + 1] += sig * r.gauss();
                 x[3 * i + 2] += (20.0 * sig * r.gauss()).to_radians();
@@ -1692,13 +1743,13 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
                 x = xq; sq
             } else { s };
             let sh = sa * arg(&a, "--hold-f", 1.0);
-            for i in 0..n { x[3 * i] *= sh / sa; x[3 * i + 1] *= sh / sa; }
+            for i in (0..n).filter(|&i| !fr(i)) { x[3 * i] *= sh / sa; x[3 * i + 1] *= sh / sa; }
             let mut p = Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: true, b: Vec::new() };
             let mut vlast = 0.0;
             for k in 1..=ksteps {
                 let r = r0 * (1.0 - k as f64 / ksteps as f64).max(0.0).powf(pw);
                 set_rnd(r);
-                if rk > 0.0 { for i in 0..n { x[3 * i] += rk * rng.gauss(); x[3 * i + 1] += rk * rng.gauss(); x[3 * i + 2] += 2.0 * rk * rng.gauss(); } }
+                if rk > 0.0 { for i in (0..n).filter(|&i| !fr(i)) { x[3 * i] += rk * rng.gauss(); x[3 * i + 1] += rk * rng.gauss(); x[3 * i + 2] += 2.0 * rk * rng.gauss(); } }
                 let (xr, vi, _) = relax_fixed(&mut p, sh, &x, oq.skin);
                 x = xr; vlast = vi;
                 if oq.verbose { eprintln!("  round r {r:.4} hold {sh:.8} viol {vi:.2e}"); }
@@ -1727,13 +1778,13 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
             } else { s };
             let amax0 = b.iter().map(|q| (e0 * q.tanh()).abs()).fold(0.0, f64::max);
             let sh = sa * arg(&a, "--hold-f", 1.0);
-            for i in 0..n { x[3 * i] *= sh / sa; x[3 * i + 1] *= sh / sa; }
+            for i in (0..n).filter(|&i| !fr(i)) { x[3 * i] *= sh / sa; x[3 * i + 1] *= sh / sa; }
             let mut p = Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: true, b };
             let mut vlast = 0.0;
             for k in 1..=ksteps {
                 let e = e0 * (1.0 - k as f64 / ksteps as f64).max(0.0).powf(pw);
                 set_soft(e);
-                if sk > 0.0 { for i in 0..n { x[3 * i] += sk * rng.gauss(); x[3 * i + 1] += sk * rng.gauss(); x[3 * i + 2] += 2.0 * sk * rng.gauss(); } }
+                if sk > 0.0 { for i in (0..n).filter(|&i| !fr(i)) { x[3 * i] += sk * rng.gauss(); x[3 * i + 1] += sk * rng.gauss(); x[3 * i + 2] += 2.0 * sk * rng.gauss(); } }
                 if e == 0.0 { p.b.clear(); }
                 let (xr, vi, _) = relax_fixed(&mut p, sh, &x, oq.skin);
                 x = xr; vlast = vi;
@@ -1745,7 +1796,7 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
         }
         let lo: f64 = arg(&a, "--loosen", 1.02);
         let s1 = s * lo;
-        for i in 0..n {
+        for i in (0..n).filter(|&i| !fr(i)) {
             x[3 * i] = (x[3 * i] * lo).clamp(H, s1 + rdx() - H);
             x[3 * i + 1] = (x[3 * i + 1] * lo).clamp(H, s1 + rdy() - H);
         }
@@ -1779,8 +1830,12 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
         let (fp, ncont) = (fingerprint(&load), load.len());
         let sr = repair(sq, &mut xq, 1e-13);
         let (mg, mw) = check(sr, &xq);
+        let frozen_info = if fz.is_empty() { String::new() } else {
+            let d = (0..n).filter(|&i| fz[i]).map(|i| (xq[3 * i] - x_in[3 * i]).abs().max((xq[3 * i + 1] - x_in[3 * i + 1]).abs()).max(H * SQRT2 * (xq[3 * i + 2] - x_in[3 * i + 2]).abs())).fold(0.0f64, f64::max);
+            format!(", \"frozen\": {}, \"frozen_dmax\": {:.3e}", fz.iter().filter(|&&b| b).count(), d)
+        };
         let json = format!("{{\"s\": {:.15}, \"s_alm\": {:.15}, \"viol\": {:.2e}, \"evals\": {}, \"outer\": {}, \"slp_it\": {}, \"slp_r\": {:.1e}, \"flips\": {}, \"min_gap\": {:.2e}, \"min_wall\": {:.2e}, \"sec\": {:.3}, \"s_coarse\": {:.15}, \"t_alm\": {:.3}, \"s_alm0\": {:.15}, \"trace\": [{}], \"fp\": \"{:016x}\", \"ncontacts\": {}{}{}}}",
-                 sr, sq, viol, nev, outer, pit, pr, flips, mg, mw, t0.elapsed().as_secs_f64(), s_coarse, t_alm, s_alm0, trace.iter().map(|q| format!("[{},{:.4},{:.15},{},{:.3e},{:.3e},{},{}]", q.0, q.1, q.2, q.3, q.4, q.5, q.6, q.7)).collect::<Vec<_>>().join(","), fp, ncont, format!(", \"fin\": [{}]", FIN_LOG.lock().unwrap().iter().map(|q| format!("\"{q}\"")).collect::<Vec<_>>().join(",")) + &if a.iter().any(|t| t == "--ident") { format!(", \"fps\": [{}]", IDENT_FPS.lock().unwrap().iter().map(|h| format!("\"{:016x}\"", h)).collect::<Vec<_>>().join(",")) } else { String::new() }, round_info + &soft_info);
+                 sr, sq, viol, nev, outer, pit, pr, flips, mg, mw, t0.elapsed().as_secs_f64(), s_coarse, t_alm, s_alm0, trace.iter().map(|q| format!("[{},{:.4},{:.15},{},{:.3e},{:.3e},{},{}]", q.0, q.1, q.2, q.3, q.4, q.5, q.6, q.7)).collect::<Vec<_>>().join(","), fp, ncont, format!(", \"fin\": [{}]", FIN_LOG.lock().unwrap().iter().map(|q| format!("\"{q}\"")).collect::<Vec<_>>().join(",")) + &if a.iter().any(|t| t == "--ident") { format!(", \"fps\": [{}]", IDENT_FPS.lock().unwrap().iter().map(|h| format!("\"{:016x}\"", h)).collect::<Vec<_>>().join(",")) } else { String::new() }, round_info + &soft_info + &frozen_info);
         (json, sr, xq)
 }
 

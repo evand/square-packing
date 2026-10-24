@@ -1,48 +1,68 @@
-# packer tooling redesign (10-09, branch `tooling`)
+# packer architecture (rewritten 10-22; the 10-09 redesign plan it replaces is in this file's git history)
 
-Why: exploration so far is good but ad hoc (Evan 10-09).  Costs: coordinates copied by hand between tools; every test of
-a change is a 5-30 min explorer run with ~10x replicate spread; 57-88 % of CPU is full polish, much of it on basins we
-already have; the archive's "new" count is screening-level (110, c110_h3: 5,756 "new" entries, ~17 certified new), so
-bandit rewards are mostly noise; knobs (noise, pressure, schedules) are scattered flags, so sweeping them is expensive.
+Every packing flows through the store; every fq call through one engine.  Every idea is a registered **stage** with a
+declared parameter space, and ideas compose into **chains**.  An idea is graded by a **trial**: its chain head, then
+a standard tail (release, anneal, polish), against a baseline that gets the same tail.
 
-Goal: support tooling first.  A store every packing flows through, an engine with explicit knobs, and a replay bench
-that grades a change in minutes on frozen proposals.  Modularity is the means; context economy (no file dumps, no hand
-copying, one name per packing) is the payoff.
+## Layers
+| layer | where | what |
+|---|---|---|
+| store | `pk/store.py`, `pk.py` | every packing (dedupe, provenance, status, frontier); never copy coordinates by hand (`pk.py get`) |
+| engine | `pk/engine.py` | `fq_quench(inp, QOpt)`: the one fq call path; `QOpt` = every fq flag (incl. `freeze`, 10-22) |
+| registries | `pk/moves.py` (`@move`), `pk/fill.py` (`@placer`), `pk/schedules.py` (named QOpts), `pk/anneal.py` (`Schedule`) | building blocks, each with a declared parameter space: unspecified parameters are drawn, every value used is logged |
+| stages, chains | `pk/stages.py`, `pk.py stages` | one contract over all registries: kinds `gen`, `ruin`, `recreate`, `constrain`, `relax`, `perturb`; a chain is a string `a(k=v) \| b \| ...` |
+| evaluation | `trial.py` (any n, suites), `pk/battery.py` (n = 110 idea battery), `pk/benchkit.py` (event races), `pk/corpus.py` (replay) | verdicts on refined outcomes per measured CPU, never on raw output |
 
-## Pieces (`search/packer/pk/`, CLI `pk.py`)
-1. **Store** (`pk/store.py`, sqlite at `search/packer/runs/store.sqlite`, gitignored).  One row per packing: n, s, coords (f64 blob),
-   source / finder / ref (commit, issue, run path), parent, status (raw < screened < polished < certified | not-min |
-   infeasible), S_exact, fp, D4-canonical hash (dedupe), tags.  A `frontier` table: best known per n (register + pending
-   issues + ours).  Importers: any file format (`import_ext.read_any`), register witnesses, pending-issue cert repos,
-   explorer archives, our candidates.  Export in any format by id or "best of n".  Nothing gets copied by hand again.
-2. **Engine** (`pk/engine.py`): `fq serve` (persistent process, text protocol on stdin/stdout) instead of a process and
-   two temp files per quench; stages screen -> polish with identity checks (side + contact fingerprint) between them,
-   kick-retry on non-jammed stalls.  Every knob (loosen = pressure, mu0 = stiffness, pit, flip-top, stag-tol) is a field
-   of one options object.
-3. **Moves** (`pk/moves.py`): registry; each move declares its parameter space (sigma range, region radius, melt
-   pressure / sweeps / rounding, ...), so a bandit arm can be (move, parameter bin) and a sweep is a list of settings.
-4. **Replay bench** (`pk/corpus.py`): freeze a corpus of proposals (parent id from the store, move, params, seed) at a
-   few n; replay through any engine / options variant; funnel per item (screen side, class, polished side, fp, time,
-   certified class via a shared exact cache).  Metrics: distinct certified new basins per CPU-h, near-frontier yield,
-   false-new rate, stage times.  Same proposals for every variant -> paired, low variance, minutes.
-5. **Explorer v2** on 1-4: archive = store rows tagged with the run; pluggable parent policy (gap-stratified quotas,
-   lineage) and arm set; one job queue across n for chain (async seeds, no idle slots).
-6. **Library** = store queries + tags: grid-beating (s < k), near-frontier (gap to best known < delta), above-grid
-   robust (s in (k, k + 0.05), no full lines, low grid-collapse rate under standard kicks; measured, cached).
+State between stages (`pk.stages.State`): the packing, a per-square `frozen` mask, the `region` the next recreate fills,
+and generator facts in `meta`.  Freezing is state, so every later stage honours it.  Relax passes it to fq as
+`--freeze`.  Perturb stages refuse frozen squares (release first).
 
-Order: 1, 2 (+ fq serve), 4 (needs 1, 2), 3, 5, 6.  Each step keeps the old scripts working until v2 matches them on
-the bench.
+## Adding an idea
+1. **Pick the kind.** Kinds: a start from nothing (`gen`), opening a region (`ruin`), filling it (`recreate`), freezing or
+   releasing (`constrain`), a T = 0 descent (`relax`), a stochastic move (`perturb`).
+2. **Register it where its family lives.**  A placer goes in `pk/fill.py` (`@placer`, becomes `recreate.<name>`), a
+   move in `pk/moves.py` (`@move`, becomes `perturb.<name>`), an fq recipe in `pk/schedules.py` (becomes
+   `relax.<name>`), anything else in `pk/stages.py` (`@stage(name, kind, **space)`).  A private idea registers the same
+   way from a plugin (below).
+   - Declare every knob in the space.
+   - Return an info dict.
+   - Draw all randomness from the `rng` argument.
+3. **Check the contract.**  `python3 pk/tests/test_stages.py` checks that every stage:
+   - logs all its parameters,
+   - is deterministic per seed,
+   - leaves frozen squares alone.
 
-## Data point behind the arm design (10-09, `proposals.jsonl` of c110_h2/h3, hunt1, hunt2)
-Parent gap above the run's starting best vs child outcome.  CPU mostly goes to far parents (hunt1: 29 of 33 CPU-h on
-gap >= 1e-2); parents >= 5e-2 above gave 0 new basins within 1e-3 of the best in ~41k proposals; parents within 1e-3
-give 35-175 per CPU-h.  Big single-step drops are rare with our (mostly local) moves; lineages and big-move arms are
-untested, and the corpus bench is the place to test them.
+   It covers a new stage with nothing to write.  `pk.py stages` lists it.
+4. **Look at a few runs.**
+   ```
+   from pk import stages as S
+   st, log = S.run_chain('gen.file(path="runs/x/n{n}.txt") | constrain.freeze | recreate.bestofK(K=16) | relax.round.15c', dict(n=548), seed=1)
+   ```
+5. **Pre-register.**  Add a `### Pre-registration: <title> (<NAME>, <date>)` block to PACKER.md (or the plugin's
+   NOTEBOOK) with hypothesis, metric and rule.  `trial.py run` refuses a NAME without one.
+6. **Run the trial.**
+   ```
+   trial.py run NAME baseline --suite SUITE
+   trial.py run NAME ARM --head SPEC --suite SUITE
+   trial.py report NAME
+   ```
+   Then write the result under the pre-registration, and in `CLAIMS.md` if it steers strategy.
 
-## Status (end of 10-09 session)
-Done: 1 (store + importers + `pk.py`), 2 (`fq serve`; staged polish tried and dropped: worse), 3 (moves incl. `anneal`,
-`cross`), 4 (`pk/corpus.py`) and the battery (`pk/battery.py`) as the idea-grading front end; plus `anneal sched`,
-`pk/crossing.py`, `pk/umbrella.py`, `pk/rediscovery.py`, `pk/bridging.py`.  Not done: 5 (explorer v2 on pk: the explorer
-still has its own moves / pipeline; recipe fixes were applied to `explore.py` directly), 6 (library tags / grid-collapse
-robustness per packing).  Store size ~0.8 GB (gitignored); rebuild: `pk.py sync-register`, `watch --apply` (`sync-issues --all`),
-`import-run runs`, seed pools (see PACKER.md).
+Why the trial appends a tail: a generator's output is a distribution of starts for refinement (CLAUDE.md rule).  Closing
+a line on raw fit rate is the mistake this prevents (it happened once, 10-22).
+
+## Plugins (10-23)
+Stages, placers, moves and trial suites can live in a separate (e.g. private) checkout.  `pk/stages.py` imports
+`pk_plugin.py` from each directory on `PK_PLUGINS` (default: `../plugins/packer` next to this repo's root, if present;
+`PK_PLUGINS=` disables) before it adapts the registries.  A plugin registers with the same decorators and may define:
+- `TRIAL_SUITES`: suites for `trial.py` (same fields as `trial.SUITES`; `tail` None = the standard tail);
+- `NOTEBOOK`: a markdown file `trial.py` also searches for pre-registrations;
+- `TEST_STARTS`: `{stage: chain}` for stages that need a particular start in `pk/tests/test_stages.py`.
+Scripts in a plugin find this directory through their own bootstrap (they keep `runs/` and the store here).
+
+## Not done yet (TODO.md "Packings")
+- Loops: `repeat(k, ...)` and `accept(metropolis, T)` combinators, so ruin-and-recreate and basin hopping become chains.
+- Hand-wired scripts that predate the stages and still compose by hand: `explore.py`, `chain.py`, `hop.py`,
+  `compose2.py`, `relax.py`, `fresh.py`.  Port each one when a trial shows the port matches it.
+- `trial.py` statistics: sequential stopping and rate posteriors, as in `pk/battery.py` / `pk/benchkit.py`; more
+  suites (a public one, e.g. n = 110).

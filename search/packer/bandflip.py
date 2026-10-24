@@ -155,8 +155,8 @@ def design_class(s, sq):
     opposite, tilt signs) / '3+' (three or more bands)."""
     sq = np.asarray(sq, float)
     a = (sq[:, 2] + 45) % 90 - 45
-    B = bands(sq)
-    if not B:
+    B = [J for J in bands(sq) if abs(np.median(a[J])) >= 8]   # 10-21: drop barely tilted clusters (a -4 deg
+    if not B:                                                    # cluster made a same-tilt pair read '3+')
         return 'none'
     walls = []
     for J in B:

@@ -116,7 +116,7 @@ def run(a):
                *(['--cpu-h', str(a.cpu_h / a.runs)] if a.cpu_h else ['--minutes', str(a.minutes)]),
                '--procs', '1', '--seed', str(a.seed + r), '--adapt', '--adapt-cells', '--sparse-share', '0.5',
                '--fp-bank', f'{R0}/bank.npz', '--smax', str(a.smax), '--frontier-s', str(sides[0]),
-               '--final-polish', '8', '--out', out]
+               '--final-polish', '8', '--out', out, *(a.xargs.split() if a.xargs else [])]
         P.append(subprocess.Popen(cmd, stdout=open(f'{out}/log.txt', 'w'), stderr=subprocess.STDOUT))
     for p in P:
         p.wait()
@@ -187,6 +187,7 @@ if __name__ == '__main__':
     ap.add_argument('--runs', type=int, default=8); ap.add_argument('--minutes', type=float, default=40)
     ap.add_argument('--cpu-h', type=float, default=None, help='total CPU budget, split evenly over --runs (replaces --minutes)')
     ap.add_argument('--pool', type=int, default=400, help='farthest-point sample over the best POOL distinct')
+    ap.add_argument('--xargs', default='', help='extra explore.py args, one string (10-21: e.g. "--reward value --weights melt=2")')
     ap.add_argument('--starts-per-run', type=int, default=6); ap.add_argument('--seed', type=int, default=0)
     a = ap.parse_args()
     a.seed = a.seed or a.n

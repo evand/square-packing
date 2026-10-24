@@ -382,6 +382,7 @@ def _draw(spec, rng):
 @placer('bestofK', K=('choice', [1, 4, 16, 64, 256]), LAM=0.05, SNAP=1, SNAP_R=0.3, h=0.04, TILT=1, PUSH=1,
         RANDANG=0, p_region=0.75, ov_full=0.02, m_max=10 ** 6)
 def _p_bestofk(S, sq, m, rng, region, **P):
+    """noisy greedy best fit: K random raster poses (palette angles), slide each to its local score minimum, keep the best, SAT-push"""
     kn = {k: P[k] for k in BESTOFK_DEFAULTS}
     kn['m_max'] = P['m_max']
     angs = palette(S, sq, kn['TILT']) + [rng.uniform(-45, 45) for _ in range(kn['RANDANG'])]
@@ -391,6 +392,7 @@ def _p_bestofk(S, sq, m, rng, region, **P):
 
 @placer('leastbad', K=('choice', [1, 4, 16, 64, 256]), p_region=0.75, pen_full=0.05, m_max=10 ** 6)
 def _p_leastbad(S, sq, m, rng, region, **P):
+    """least total penetration of K random poses (uncovered raster points, angles 0 / a neighbour tilt / uniform)"""
     X, pen, added = leastbad_place(S, sq, region or [], m, rng, P['K'], p_region=P['p_region'], pen_full=P['pen_full'],
                                    m_max=P['m_max'])
     return X, dict(pen_place=round(pen, 6))
@@ -410,16 +412,19 @@ def _fillfast(S, sq, m, rng, mode, tau, drop):
 
 @placer('exact', drop=('choice', ['random', 'first']))
 def _p_exact(S, sq, m, rng, region, **P):
+    """fillfast exact: largest set of non-overlapping upright squares among its candidates"""
     return _fillfast(S, sq, m, rng, 'exact', 0.0, P['drop'])
 
 
 @placer('greedy', tau=('choice', [0.0, 0.01, 0.03, 0.06]), drop=('choice', ['random', 'first']))
 def _p_greedy(S, sq, m, rng, region, **P):
+    """fillfast greedy with overlap tolerance tau (overcounts by design; the relax repairs it)"""
     return _fillfast(S, sq, m, rng, 'greedy', P['tau'], P['drop'])
 
 
 @placer('farthest', samples=4000)
 def _p_farthest(S, sq, m, rng, region, **P):
+    """upright squares at the sampled points farthest from every centre"""
     if m is None:
         raise ValueError("farthest needs a count (it never runs out of room)")
     add = farthest_points(S, sq, m, rng, P['samples'])
@@ -428,6 +433,7 @@ def _p_farthest(S, sq, m, rng, region, **P):
 
 @placer('uniform')
 def _p_uniform(S, sq, m, rng, region, **P):
+    """centres U(0.5, s - 0.5)^2, angles U(0, 90); ignores the region"""
     if m is None:
         raise ValueError("uniform needs a count")
     add = [(rng.uniform(0.5, S - 0.5), rng.uniform(0.5, S - 0.5), rng.uniform(0, 90)) for _ in range(m)]
@@ -470,6 +476,7 @@ def blf_uprights(S, sq, rng, corner=0, order='yx', h=0.02, m=None):
 
 @placer('blf', corner=('choice', [0, 1, 2, 3]), order=('choice', ['yx', 'xy']), h=0.02)
 def _p_blf(S, sq, m, rng, region, **P):
+    """bottom-left-fill uprights from one corner"""
     add = blf_uprights(S, sq, rng, P['corner'], P['order'], P['h'], m)
     return np.vstack([np.asarray(sq, float)] + ([np.array(add)] if add else [])), dict(room=len(add))
 

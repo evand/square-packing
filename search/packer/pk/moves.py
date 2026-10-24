@@ -113,9 +113,16 @@ def _legacy(fn_name, mod='explore'):
     return f
 
 
+_LEGACY_DOC = {
+    'aswap': 'Swap the angles of two nearby squares whose tilts differ by > 3 degrees (kick if none).',
+    'band': 'movegen band move between the two tilted families (L, B) at their closest pair; count restored against axis squares.',
+    'reinsert': 'Remove a square and re-add it at a clearance hole (weight r^alpha), angle axis / random / nearest neighbour.',
+    'rowslide': 'Slide a contiguous run of axis squares along its row (or column) by 0.2-0.6.',
+    'chainshift': 'Vacancy -> hole chain shift: remove a square, step a chain toward the vacancy, re-insert at the hole.'}
 for _name, _fn, _mod in [('aswap', 'mv_aswap', 'mcmin'), ('band', 'mv_band', 'mcmin'), ('reinsert', 'mv_reinsert', 'mcmin'),
                          ('rowslide', 'mv_rowslide', 'explore'), ('chainshift', 'mv_chainshift', 'explore')]:
-    move(_name)(_legacy(_fn, _mod))
+    _f = _legacy(_fn, _mod); _f.__doc__ = _LEGACY_DOC[_name]
+    move(_name)(_f)
 
 
 class _A:                                    # attribute bag the legacy mcmin moves read

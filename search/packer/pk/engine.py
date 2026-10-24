@@ -76,6 +76,7 @@ class QOpt:
     ident: bool = False
     v: bool = False                  # verbose (stderr)
     dump_lp: str | None = None       # subprocess mode only (fq main)
+    freeze: str | None = None        # frozen square indices, e.g. "0-99,105" (10-22)
 
     def args(self):
         out = []

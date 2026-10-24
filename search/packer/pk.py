@@ -111,6 +111,7 @@ def main():
     p.add_argument('ns', nargs='+', type=int); p.add_argument('--procs', type=int, default=16)
     p.add_argument('--apply', action='store_true'); p.add_argument('--i-discussed-this', action='store_true',
                    help='Evan 10-20: no apply without discussing the rule again in that session')
+    p = sp.add_parser('stages', help='every pk/stages.py stage: kind, parameter space, what it does'); p.add_argument('kind', nargs='?')
     p = sp.add_parser('ingest'); p.add_argument('--apply', action='store_true'); p.add_argument('--since')
     p.add_argument('--procs', type=int, default=16); p.add_argument('--no-fresh', action='store_true')
     p.add_argument('--nmax', type=int, default=324)
@@ -127,6 +128,13 @@ def main():
     if a.cmd == 'nearmiss' and a.action == 'list':            # read-only: safe while a run writes the store
         from pk import nearmiss
         nearmiss.print_list(nearmiss.ro_db(spath), nearmiss.frontier_fn(spath), a)
+        return
+    if a.cmd == 'stages':                                       # no store needed
+        from pk import stages
+        for name, kind, space, doc in stages.table():
+            if a.kind in (None, kind):
+                sp_ = ', '.join(f'{k}={v}' for k, v in space.items())
+                print(f'{kind:9s} {name:22s} {doc[:90]}' + (f'\n{"":32s}{sp_}' if sp_ else ''))
         return
     if a.cmd == 'ingest':
         from pk import ingest
