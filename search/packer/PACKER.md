@@ -5263,3 +5263,36 @@ notebook (10-23 public / private split; `DESIGN.md` "Plugins").  Framework chang
 * Predictions: g6 or g6s5 meets the replacement rule: 60 %.  Some press arm (p, p5, pk) has the most < +0.01 results: 35 %.
   Press arms show lower axis displacement than round.15c: 60 %.  pk beats p on < +0.01: 30 %.  A single screen at 1.05
   meets the one-screen rule: 50 %.  Smoke (6 states, n = 325-361, 54 jobs) is not counted.
+* **RS1 result (10-24, ~09:40-10:20; `relaxbench.py score runs/relaxbench/rs1`, 1,548 jobs, 15 procs: CPU times below
+  are under that load, ~2x a quiet machine).**  States: 144 constructions (48 per head) + 28 store packings.  87
+  results within +0.01 imported (source relaxbench:rs1).
+  | schedule (144 constructions) | relax s | line-free | med / p10 gap | < +0.01 | disp tilted / axis | paired vs round.15c W / T / L (sign p) |
+  | round.15c | 12.98 | 77 | +0.059 / +0.018 | 2 | 0.141 / 0.062 | - |
+  | g6 | 4.62 | 77 | +0.066 / +0.023 | 1 | 0.132 / 0.055 | 39 / 71 / 34 (0.64) |
+  | g6s5 | 4.60 | 85 | +0.066 / +0.022 | 0 | 0.139 / 0.056 | 42 / 65 / 37 (0.65) |
+  | h1003 | 7.98 | 75 | +0.059 / +0.020 | 2 | 0.137 / 0.058 | 47 / 64 / 33 (0.15) |
+  | nc | 8.82 | 61 | +0.078 / +0.019 | 2 | 0.146 / 0.062 | 39 / 54 / 51 (0.25) |
+  | s5 | 7.69 | 78 | +0.059 / +0.023 | 2 | 0.139 / 0.063 | 37 / 70 / 37 (1.0) |
+  | **p** | 18.95 | 85 | **+0.051** / +0.016 | 2 | 0.134 / **0.049** | **66 / 57 / 21 (< 0.001)** |
+  | **p5** | **7.81** | 82 | +0.056 / **+0.015** | 3 | 0.134 / **0.049** | **60 / 63 / 21 (< 0.001)**, median gain 0.0020 |
+  | **pk** | 18.45 | 86 | +0.057 / +0.016 | 3 | 0.135 / **0.045** | **67 / 56 / 21 (< 0.001)** |
+  - Pre-registered rule: no schedule meets "count < +0.01 >= round.15c's and relax CPU <= half": the count is too sparse
+    (0-3 of 144) to separate anything, and p5 is at 0.60x mean / 0.56x median CPU.  **Post hoc** (not pre-registered): the
+    paired per-state comparison separates clearly.  All three pressure arms beat round.15c on the same state ~3 : 1
+    (p < 0.001, median gain ~0.002 where both are line-free); p5 does it at 0.56x CPU.  Loose inner solves (g6, g6s5)
+    are outcome-neutral (sign p 0.64) at 0.26-0.29x CPU: a pure speedup.  Fewer steps alone (s5) and no compress (nc)
+    are neutral or worse.
+  - **Evan's hypothesis: supported.**  Pressure arms move axis squares ~20-27 % less (0.045-0.049 vs 0.062) with tilted
+    motion about unchanged (0.134 vs 0.141), and end better.  Holding an infeasible compressed box spends the relax
+    moving the grid region; hardening under pressure does not.
+  - Store packings as starts (28; the schedule as a direct store move): every schedule ends at or below its start about
+    half the time (round.15c 13 / 28, nc 18 / 28 at 1.1 s, pk 18 / 28, p5 16 / 28 at 2.9 s); many store packings are
+    explorer screen outputs, not fully relaxed minima.  A cheap rounded relax over the store is a productive move.
+  - Screens: the best single loosen is 1.02 (most line-free, median loss 9e-9) but its p90 loss is 1.16e-3: misses the
+    one-screen rule (< 1e-3) narrowly; 1.05 p90 1.9e-3, 1.0 2.1e-3.  Keep three screens for now.
+  - Predictions: g6 / g6s5 meets the rule 60 %: no (outcome-neutral and fast, but the count rule fails).  A press arm has
+    the most < +0.01 60 % ... (35 %): yes (p5, pk 3; meaningless at these counts).  Press arms lower axis displacement
+    60 %: yes.  pk beats p on < +0.01 30 %: yes (3 vs 2; meaningless).  Single screen 1.05 meets the rule 50 %: no.
+  - Next: (1) a combined p5 with loose step solves (needs an ALM tolerance for the press steps: they run full ALM
+    quenches, not relax_fixed); (2) make p5 the construction default after a replicate on fresh states (rows 23-24),
+    pre-registered with the paired metric; (3) a cheap rounded-relax pass over the store's near-record pool (nc / p5).
