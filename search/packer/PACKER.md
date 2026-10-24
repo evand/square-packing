@@ -5357,3 +5357,14 @@ notebook (10-23 public / private split; `DESIGN.md` "Plugins").  Framework chang
     D packings improve about as often but only converge onto forms the store already holds.  Reading: near-record
     store packings above 324 are often not converged (imports at posted precision, explorer screen outputs); a plain
     quench of the irregular ones recovers it.  Long-term fix: converge packings when they enter the store.
+
+### Pre-registration: filtered re-quench pass over the near-record store (RQ1, 10-24; Evan: "Let's run it!")
+* After RS3's correction: near-record store packings are often unconverged; a plain quench recovers it; the store-best gains
+  come from irregular packings.  Selection (plugin `requench.py`): every sub-grid n <= 1000, distinct (1e-5) line-free
+  packings below best(n) + 0.01, tilt class I or U only, <= 20 per n spread in side rank, minus packings RS1-RS3 already
+  ran (~2,500).  Each: relax.screen1.0 and relax.screen1.02 from the packing; keep the best line-free result if below its
+  start and below best + 0.01; import.  ~1.5 CPU-h.
+* Metrics: share improved; gain sizes; n whose store best improves (by range: <= 324 / 325-576 / 577-1000); CPU.
+  Store bests at n <= 324 that improve go through regcheck / candidate.py before any claim (none posted without Evan).
+* Predictions: >= 30 % of packings improve: 55 %.  >= 10 n's store best improves: 50 %.  >= 1 at n <= 324: 15 % (that range is
+  heavily polished).  Gains at 325-576 smaller than RS3's (its best were taken): 70 %.
