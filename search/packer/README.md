@@ -5,6 +5,7 @@ a general solver (any n), since all known approaches fail in ways we now partly 
 log (what was tried, in order, with numbers); this file is the map.  Everything here is **screening** (f64) unless stated.
 
 ## Status (10-14)
+* Architecture and how to add / grade an idea: `DESIGN.md` (10-22).
 * Current state and next steps: `HANDOFF-2026-10-14.md`, then `../../TODO.md` "Packings" and `../../tasks/packer-arch-2026-10-14/`
   (architecture review, TT2 plan).  Strategy numbers: `CLAIMS.md`; open anomalies: `CONFUSIONS.md`; full log: `PACKER.md`.
 * Records so far from this engine: s(266), s(270), s(272) (sweep, 10-06), hunts 1-3 (132, 155, 308, 343, 344, ...),
@@ -29,6 +30,10 @@ log (what was tried, in order, with numbers); this file is the map.  Everything 
 | `compose2.py` | Two-piece composer: store pieces in opposite corners + exact upright fill, bandit arms per n, probe / rank / polish / what-if (`--cf-eps`) / three-piece; `--new-from`, `--target public`. |
 | `relax.py` | fq soft / shrink relax ops on composer layouts or store packings (`--ids`), iterated MBH (`--rounds`).  Its ops table lives in `pk/schedules.py` (10-20). |
 | `submission.py` | registration-request draft from a `candidate.py` work dir (10-20): claim table, certificate files + SHA-256, checkers, local optimality, relationship to the prior record and to each `--start` (polish + compare: same minimum = refinement, else a new packing found from it; jlevy's 0.1 move counts), open questions on our issues.  Style guide and template: `SUBMITTING.md`. |
+| `trial.py` | **Grade an idea** (10-22): chain head (`pk/stages.py`) + suite tail vs the suite baseline + same tail, refined outcomes per measured CPU; refuses names without a PACKER.md pre-registration.  `../DESIGN.md` "Adding an idea". |
+| `regcheck.py` | **What we know that the register doesn't** (10-23): per register n, store packings (ours / public) and side-only public claims (Kaggle per-puzzle list) below the register, classed PUBLIC / FIRST / NEW / SIDEONLY / PENDING; policy in `SUBMITTING.md` "Beyond the register".  `satcheck_f64.py ID...`: independent f64 overlap + containment check of store packings. |
+| `kaggle_import.py` | public Kaggle submission CSV -> the store (10-23). |
+| `priv/` (gitignored) | symlink to a private plugin checkout, if you have one (`../../../plugins/packer`; DESIGN.md "Plugins"). |
 | `fillbench.py` | refill benchmark for `pk/fill.py` (10-20): delete the uprights or a disc at the band boundary from a good packing, refill with a config (`placer:k=v+schedule`), CS1 evaluate; rows scored at their own count (count - n, recovered, d_ref, pen, CPU). |
 | `vband.py` | V-band constructor (staircase arms + exact fill) and `fit` of arms from a packing; idealised arms lose ~20 squares (PACKER 10-13). |
 | `arms.py` | Real-arm library (6,760 arms), local operators, arm-pair composer, `holdout` yardstick (C31, C36). |

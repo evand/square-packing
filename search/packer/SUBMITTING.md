@@ -130,10 +130,30 @@ We give more detail than most record reports.  That is good, but unorganised det
    Numbered steps if useful; the last one is **Polish and certify**.
 9. Optional: questions for them, or answers to their open questions on earlier issues.
 
+## Beyond the register (Evan 10-23)
+
+Other public places get ahead of jlevy's register (Kaggle "Squares in Squares" notebooks and its per-puzzle
+leaderboard, other repos).  `regcheck.py` (after `pk.py sync-register` / `watch --apply`) lists every register n where
+something we know beats the register, by class:
+* **PUBLIC**: a public packing (Kaggle notebook output, kingbird, a watched repo) below the register.  We may post it to
+  jlevy (packings are facts; CLAUDE.md licensing), crediting its finder: the notebook / repo author and source, with
+  the link and date.  If our own packing is the same one, say so; we are not its finder.
+* **FIRST**: only the **side length** was public (e.g. Kaggle per-puzzle leaderboard: team, side, date, no
+  coordinates), and we hold the packing.  We claim finder credit as **"first publicly known packing"**, with full
+  details (certificate, lineage), and name the side-only claim (team, side, date) in the issue, even when we believe
+  they found it first in private.  Wording: "The Kaggle per-puzzle leaderboard listed side S for team T on D without a
+  packing; as far as we know this is the first public packing at that side."
+* **NEW**: ours below every public packing and side we know: an ordinary record candidate.
+* **SIDEONLY**: a side-only claim below every packing we hold: a target to reproduce, nothing to post.
+* **PENDING**: already in an open jlevy issue.
+Every class still goes through `candidate.py` (exact check, same-day live check incl. a fresh side-only list,
+relationship to the prior record) before a draft, and each post needs Evan's OK.  Which results stay private for now is
+a separate decision (TODO, next session).
+
 ## Checklist before asking Evan to post
 
 - [ ] `candidate.py ... --stage` ran clean; files committed and pushed; the commit in the draft is that one.
-- [ ] Live check the same day; the claim table's "best public" is today's.
+- [ ] Live check the same day; the claim table's "best public" is today's, incl. Kaggle public outputs and the per-puzzle side list (`regcheck.py`).
 - [ ] Relationship terms come from the table above, with the numbers; no "refinement" unless same minimum.
 - [ ] If it is a new minimum but no square moves > 0.1, the draft says so explicitly.
 - [ ] Lineage framed as direct or hunt; for a hunt, the search effort leads.
