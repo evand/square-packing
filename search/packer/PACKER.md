@@ -5390,3 +5390,9 @@ notebook (10-23 public / private split; `DESIGN.md` "Plugins").  Framework chang
 * Rule: p5 becomes the L-walk relax if W >= L (the start edge is not lost in the tail); if L > W at sign p < 0.1, keep
   round.15c and record that the start edge does not carry.  20 pairs is indicative, not decisive.
 * Predictions: W >= L: 65 %.  Median tail difference smaller in size than the start difference: 70 %.
+* **P5T result (10-24 ~12:30; `runs/p5tail/t1`, 3.18 CPU-h measured).**  20 pairs, 40 explorer runs x 4 min.  p5 vs
+  round.15c after the tail: **W / T / L 12 / 3 / 5** (sign p 0.14); median difference **-0.0008** vs -0.0002 at the start
+  (p5's start was better in only 10 / 20 of these pairs: the tail widens its edge).  Largest single pair -0.063 (n = 452),
+  largest loss +0.024.  Rule: W >= L -> **p5 becomes the L-walk relax** (plugin `lwalk.py --relax`, default
+  round.15c.p5; `--relax legacy` = LW1 / LW2 behaviour; the plugin arms now run relax.p5 like the benches).
+  Predictions: W >= L 65 %: yes.  Tail difference smaller than the start difference 70 %: no (larger).
