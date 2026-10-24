@@ -6,6 +6,10 @@ Paths from the repo root.  Done: `Completed.md`.  Conventions: `~/math/TODO.md` 
 Pre-tidy text (10-15, has details dropped here): `tasks/todo-tidy-2026-10-15/TODO-before.md`.
 External posts: ask Evan explicitly per post.  **Before any bound-chasing run, check jlevy's register (`jlevy.github.io/squares/cases/<n>.html`).**
 
+## Next session (Evan 10-23)
+- [ ] Public / private split (10-23): new search methods (moves, generators, bandits, priors, Kaggle tooling) and their notes / TODO live in the private plugin repo `../plugins` (`search/packer/DESIGN.md` "Plugins"); this repo keeps the framework, store, verification, exact work and posted records.  `.git/hooks/pre-push` refuses private paths and unreviewed Kaggle mentions.  Posting default (Evan 10-23): post what others already have (e.g. sides that match public ones); revisit later.
+- [ ] Then posts beyond the register (`search/packer/regcheck.py`, policy `search/packer/SUBMITTING.md` "Beyond the register"): **268, 303 FIRST** (side-only on the Kaggle per-puzzle list 10-22, we hold the packings); **268, 303, 304 PUBLIC** (Kaggle notebook packings below the register: credit their authors).  Every one: exact check, same-day live check incl. a fresh side list, Evan OK per post.
+
 ## Waiting on Evan
 - [ ] Review the Lean explainer (`notes/lean-explainer-draft.html`, artifact FJPhwWoQLhdkcerwh4VBwY) → site page.
 - [ ] Compute OKs: s(29) grade-C (`search/exact/homotopy/N29.md` §Pickup); 17 grade-C timeouts uncapped; regularize the 16 raw records; #279 replay (`tasks/s59-replay/`).
@@ -18,26 +22,18 @@ External posts: ask Evan explicitly per post.  **Before any bound-chasing run, c
 
 ## Packings (`search/packer/`: `HANDOFF-2026-10-14.md`, `tasks/packer-arch-2026-10-14/`)
 Thesis (Evan 10-14): diversity pays; local search at current budgets has mined the frontier.  No compute above n = 324 without a specific reason.
-- [ ] TT3: gating PASSED (C42, 2.08x); melt / GLS v0 neutral (C43); parent value model PASSED on the 12-round subset (C44, ~1.7-2x over G) and on the full 49 rounds (PF49 10-15: 2.81x [2.22, 3.45]); no transfer at 110 (absolute gap bins).  Next: a relative-gap model (110), then the all-n hunt-style test (new minima + regions + records).
-- [ ] Baseline on the major tools (Evan 10-15): per family (A composition, B soft-to-rigid, F/G removal, J constructors) level 1 = reproduce events from named parents, level 2 = blind time travel; improvements only after.  `tasks/composition-baseline/`, PACKER "Baseline on the major tools".
-  - Status 10-15 19:00: rectangle blocks 5 / 6 blind (C45); Mondrian v1 (#481) L1 4 / 5 named (C46), **L2e blind 4 / 15 BEAT-ANTE** (exact ranking) -> live hunt next; #500 0; removal 2 / 12; graft 3 / 6; J 0 / 10 by nearby search.  **Next steps ranked: `tasks/packer-next-2026-10-15/`** (paused for Evan's review 10-15).
-  - J generator: EV1 0 / 18 (superseded); EV2 (`search/packer/evolve2/`, LOG.md): gen 0 reproduced 178 / 126 / 145 / 104 / 109 (record shown); gen 1 on the hidden row 234-240 tied 234 + 235 blind, 236 +0.0445, 237 +0.101, 238-240 at the grid.  Gen 2 plan in `tasks/packer-next-2026-10-15/` §2.
-- [ ] **Next core target (Evan 10-20): a grid-beating s(274) < 17.**  Closest: SW2 17.000478 (10-20), LC274c 17.000932 (PACKER LC274b/c/i, LR274).  First grow a large, varied pool of nearby packings to draw from; no rush.  Also 273 and 272 (Evan 10-20: the junctions between the two lobes look too grid-like; something better likely exists).  Discuss after SW2.  Ideas so far: deletion / insertion from adjacent n (Evan); junction refill (cut the lobe junction, pk/fill refill + relax) as a start generator feeding the usual explorer, not a record-maker by itself.
+- [ ] Sink after every job (10-23: kn_ex / kn_ex2's 4,291 explorer packings sat outside the store until a manual `pk.py import-run`): `jobs.py start` runs `pk.py sink` on exit (one sink at a time).
+- [ ] familymap.classify: D/S needs 80% of tilted within 1 deg of 45, so slightly distorted diamonds (our 372 best: 44-46 deg) come out "2"; widen to ~3 deg or add a distorted-diamond class, and store the code as a packing column/tag so "irregular" is a SELECT.
+- [ ] Kaggle per-puzzle side list is a 10-22 snapshot (`runs/kaggle/lb_perpuzzle_2026-10-22.json`, staff notebook output): refresh it (re-download the notebook output, or its successor) before any live check; `candidate.py --live` should run `regcheck.py` on its n (it checks register / issues / kingbird / store, not side-only lists), and `pk.py ingest` could print regcheck's table.
+- [ ] Kaggle CSV imports have no finder (sighting finder NULL; the notebook author is only in the source path): record the author as finder in `kaggle_import.py` so PUBLIC posts credit the right person.
 - [ ] Fill module (10-20, PACKER "Fill module"): `pk/fill.py` + `pk/schedules.py` + `fillbench.py` built; next a pre-registered refill bench (placer x relax x stop x K, incl. K = 1 / softmax), then defaults.
+- [ ] Stages / chains / trials refactor (Evan 10-22: only new work moved so far; `search/packer/DESIGN.md` "Not done yet"): loop combinators (`repeat`, `accept`), **first an accept-loop tail for `trial.py`** (its 10-22 tail is one perturb, which only worsens good starts), then port the hand-wired scripts (explore, chain, hop, compose2, relax, fresh) one at a time with a trial showing each port matches, `trial.py` sequential statistics + a public suite (110).
 - [ ] Archive pass (Evan 10-20, own session): move unused-but-interesting code (old generators on `gen.mis_fill*`, legacy fills, one-off scripts) to an archive dir.
-- [ ] Live slack-composition hunt over n <= 324 (L2e rule fired); first a cheaper compose screen (~6 CPU-h / n now).  `tasks/packer-next-2026-10-15/` §1.
-- [ ] EV2 quench budget: the evaluator quench (320-1,093 s / eval) is now the bottleneck (fill solved, FP1); test seeds / loosens / candidate cap / procs.
-- [ ] Explorer seeded from EV2 gen 1's 55 novel near-record minima (~5 CPU-h).  `tasks/packer-next-2026-10-15/` §3.
 - [ ] s(110) corner-cell holdouts (census 1,078 minima, 19:12 10-15) + a stop-early descent mode (GX1: crossings collapse to the record basin).  §4.
 - [ ] Detour, parked (Evan 10-15): our own register to n = 1024-4096 (every published regular packing, L groups, mechanical constructions), then hunt / submit records > 324.
 - [ ] Dedupe (`pk/ident.py`, PACKER "Conservative dedupe"): applied once 10-20 at 110 / 272-274 (-91k rows); rule must be re-discussed with Evan before any further `--apply`.  Next ideas: contact-graph refusal from exactsolve reports; run-side cluster weighting for seed selection.
-- [ ] Allocator (Evan 10-20: every generator standing; allocation = bandit / Bayesian / VOI; cluster weighting moderate, as a parameter family): design `tasks/allocator/DESIGN.md` for review; sink + inclusive policy built 10-20 (timer not enabled).  Next: CPU budgets, arm registry, h from lineage.
-- [ ] Near-miss drain `nmdrain1014b`: stopped 10-15 (0 gains in 42 items, 100 queued); low value, resume only if cores idle.
 - [ ] (#607 added 10-15 by `pk.py watch --apply`.)  scoring rule for our own posted results inside a scored run (146 in TT2).
 - [ ] Run config with test / record modes; chain imports its own rounds; cfp into the store on import.
-- [ ] Parent-distance model: fit P(gain | parent gap, distance, n band, mechanism) from logs, then a randomized gap-band slice.
-- [ ] Constructors (Evan 10-14): off-diagonal pieces (fq `--rect-dx/--rect-dy`) + offset converter; distorted strip / V-band (fix `vband.py` fit); two-bulb, lopsided bulb.  Band/bulb family (10-19): `search/packer/BULB.md` + `bulbgen.py` (randomised L / V / two-bulb starts, on pk/fill since 10-20; next: fitted distributions from the records, 308 / 211 rebuild check, re-angle move, c*(k) gadget accounting).
-- [ ] Piece sources: crop anywhere (edge strips, interior), pieces from n > 324 and catalogue revisions, published rectangle-packing records.
 - [ ] Perf follow-ups (each ≤ ~10 %; PACKER "Performance session 10-13"): block LDL, SIMD `Prob::eval`, `FQ_SOC_ROUNDS=16`, exactsolve `probe_flat` reuse.
 - [ ] `fresh.py`: fix its finishing gap (364).  (It runs after every sync via `pk.py ingest`.)
 - [ ] exactsolve should snap near-axis corner-loaded squares itself (n = 292, `search/packer/s292.md`).
@@ -46,6 +42,8 @@ Thesis (Evan 10-14): diversity pays; local search at current budgets has mined t
 - [ ] s(110) explainer refresh + write-up (`tasks/landscape110-explainer/`; rewrite of `s110-landscape.md`'s census section).
 
 - [ ] Next jlevy submission: bundle s(260)'s exact form (S* 16.645778786061741…, certified 10-17, `search/packer/runs/candidates/s260_cs3/`, store kind exact-form): the analytic optimum of de Winter's #668 packing, 1.6e-8 below the posted floats; credit de Winter.  Not its own issue (Evan 10-17).
+- [ ] Packer bugs (10-22): `dgen.py` sweep frontier() ignores our pending claims (SW3 reported a fake 343 "record" vs the register, 4.2e-4 above our #702); `explore.py` final refine admits grid-locked results (17.000000 at 274) into the archive.
+
 
 ## Major: exact results
 - [ ] s(12) strip leaf (paused 10-11): 4-strip width ≤ 1.90 + seam at x = 1.02 ⇒ no 12-packing, margin ~0.02; region lemma needs branching. `tasks/strip-leaf/`
@@ -104,4 +102,4 @@ Thesis (Evan 10-14): diversity pays; local search at current budgets has mined t
 - [ ] Per-n history viewer: what changed between consecutive records (matched-square diff, like the s(146) vs #505 page); design first.
 - [ ] Draw every packing we have numbers for (`tasks/site-all-packings/`; replaces the `NEWER` stopgap in viewer.js).
 - [ ] Site build speed (when cores are idle): `site/tools/import_lists.py` -> `analysis.analyze()` takes 160-1,510 s per changed drawing on one core (10-19: step-229-1 1,508 s, step-229-0 759 s); profile it (cProfile on step-229-1: LPs vs `free_region` vs mpmath).  Also cap BLAS threads in import_lists itself (uncapped, 8 workers drove load to 108 on 10-19).
-- [ ] Repo unification: outreach → a small private GitHub repo; `wip/*` branches + pre-push hook if needed.
+- [ ] Repo unification: outreach → a small private GitHub repo (the plugin repo `../plugins` is separate: teammates see it, outreach stays out of it).

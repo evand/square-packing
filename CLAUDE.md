@@ -9,8 +9,13 @@ Start at `TODO.md` (open items; conventions in `~/math/TODO.md`), then `README.m
 - `verify/` (Rust `verify`), `verify2/` (`zmcheck`, `zmx2`), `xcheck.py`, `search/zeromargin.py`, `search/zm_mixed.py`: checkers.
   Exit status of `verify`/`zmcheck`: 0 VERIFIED, 1 NOT VERIFIED, 2 bad input, 3 internal, 4 partial; `zmx2` still exits 0 (read its verdict line).
 - `lean/`: Lean 4 + Mathlib (`cd lean && lake build`; `lake env lean Axioms.lean` must show no `sorryAx`).  Big generated data dirs are gitignored (`lean/scripts/gen_data.sh`).
+- **Public / private (10-23).**  This repo is public.  New search methods (moves, generators, constructors, bandits,
+  priors, acceptance rules), their configs, notes, TODO items and results for unposted packings go in the private plugin
+  repo `../plugins` (`search/packer/DESIGN.md` "Plugins"; run its scripts as `search/packer/priv/<script>`), never here.
+  Framework changes go here as generic extension points.  `.git/hooks/pre-push` refuses private paths and added lines
+  that mention Kaggle (review them, then `PUBLIC_OK=1 git push`).  Unsure which side: ask Evan.
 - `search/`: research code + one `UPPERCASE.md` log per investigation.  `search/packer/` (packing search; `PACKER.md`, `README.md`, `NEEDS.md`, `DESIGN.md`), `search/exact/` (exact forms; `EXACT_FORMS.md`).
-- Packings: use the store (`search/packer/pk.py`: `frontier`, `ls N`, `get best:N --fmt ...`, `sync-register`, `watch --apply`, `sync-issues`; `pk/README.md`), never copy coordinates by hand.  Add verified packings to the store (ours or others') without asking: a packing is checkable.  Provenance and "who was first" are best effort (socially verified): record what we know, fix it when we learn better (Evan, 10-12).  There is no separate records session, only notes on how to do it.  Grade new search ideas with `pk/battery.py` against the frozen baseline.
+- Packings: use the store (`search/packer/pk.py`: `frontier`, `ls N`, `get best:N --fmt ...`, `sync-register`, `watch --apply`, `sync-issues`; `pk/README.md`), never copy coordinates by hand.  Add verified packings to the store (ours or others') without asking: a packing is checkable.  Provenance and "who was first" are best effort (socially verified): record what we know, fix it when we learn better (Evan, 10-12).  There is no separate records session, only notes on how to do it.  New generators / perturbations / fills: register them as `pk/stages.py` stages and grade them with `search/packer/trial.py` (suite tail + baseline; `search/packer/DESIGN.md` "Adding an idea"), or `pk/battery.py` at n = 110.
   Explorer archive files (`b#####.txt`) may be absent (deduplicated against the store, 10-20): read them with `pk.packing.read` / `mcmin.load_deg`, or call
   `pk.archive.ensure(path)` before handing a path to fq; `pk.py archive-restore RUN` rehydrates a run.  Store dedupe (`pk.py dedupe`): never `--apply` without
   discussing the rule with Evan in that session.
@@ -32,14 +37,17 @@ Start at `TODO.md` (open items; conventions in `~/math/TODO.md`), then `README.m
 - Record hunting (Evan, 10-18): a new generator / idea never "produces one packing".  Read its output as a
   distribution of starts for refinement: score how many starts land near the record and are new (matching distance,
   structure), then what equal refinement budget makes of them (refined outcome distribution per CPU-h vs a baseline such
-  as explorer-from-kicked-record).  Never close a line on its best raw output.  (Exact bounds that grow with n are a
-  different kind of result.)
+  as explorer-from-kicked-record).  Never close a line on its best raw output or raw fit rate (`trial.py` appends the
+  refinement tail for you).  (Exact bounds that grow with n are a different kind of result.)
 - Progress, not clocks (Evan 10-20): judge whether a run or quench is making progress from its trajectory and numeric
   output (side vs step, stalls), not from elapsed time.  Wall-clock timeouts are hang guards only; a budget that
   decides results should be CPU (`FQ.quench(cpu_limit=)`) or iterations, and every limit hit gets counted.
 - External posts (GitHub issues/comments on other repos, X, email): draft in `outreach/`, ask Evan explicitly per post.
   Record submissions: follow `search/packer/SUBMITTING.md` (vocabulary: *refinement* only for the same local minimum,
   else *a new packing found from X*; credit; template; checklist); draft with `search/packer/submission.py NAME`.
+- Beyond the register (Evan 10-23): public packings not in jlevy's register get posted with credit to their finder; where
+  only a side length is public (Kaggle per-puzzle list), we may claim "first publicly known packing" with details, naming
+  the side-only claim.  `search/packer/regcheck.py` lists these cases; policy in `search/packer/SUBMITTING.md`.
 - Before any bound-chasing or record claim, check jlevy's register (`jlevy.github.io/squares/cases/<n>.html`, `packing/frontier/RESULTS.md`); the current register is the store's sparse clone `search/packer/runs/jlevy` (`packing/frontier/n-<n>.md`; refresh with `pk.py sync-register`), not the older read-only copy in `~/math/_untrusted-third-party/jlevy-squares`.
 - `site/www/problems.html` is the reader-facing copy of `search/WISHLIST.md`'s object-level items: edit both together.
 - `~/math/_untrusted-third-party/`: read only, never execute.

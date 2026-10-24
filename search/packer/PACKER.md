@@ -5232,3 +5232,7 @@ grown pool (grid-locked now excluded): `dgen.py sweep --n 157 --band 0.0,0.012 -
   distinct sides < 17.998, best same-tilt.  Predictions: new 308 record (< 17.997149 - 1e-9): 7 %; any same-tilt
   < 17.998: 25 %; >= 20 distinct sides < 17.998 pooled: 50 %.  Follow-up whatever the outcome: L-cut 308 -> 274 from
   the best distinct 308s of both families (lcut.py), compared against the 274 floor.
+
+---
+From 10-21 on, experiments with new search methods (moves, generators, bandits, Kaggle work) are logged in a private
+notebook (10-23 public / private split; `DESIGN.md` "Plugins").  Framework changes stay here and in `DESIGN.md`.
