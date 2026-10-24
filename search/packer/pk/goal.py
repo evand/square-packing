@@ -68,6 +68,12 @@ def load(path):
         raise ValueError(f'{path}: unknown keys {sorted(unknown)}')
     if not g.predictions:
         raise ValueError(f'{path}: no predictions (pre-register before running)')
+    num = lambda x: float(x) if isinstance(x, (int, float, str)) and not isinstance(x, bool) else x
+    g.value = {k: num(v) for k, v in g.value.items()}           # PyYAML reads 1.0e4 (no exponent sign) as a string
+    g.progress = {k: (num(v) if k != 'exclude' else v) for k, v in g.progress.items()}
+    for f in ('budget_cpu_h', 'quantum_cpu_h', 'donor_window', 'construct_share'):
+        setattr(g, f, float(getattr(g, f)))
+    g.procs, g.donors = int(g.procs), int(g.donors)
     return g
 
 
@@ -320,7 +326,26 @@ def run(goal, seed=1, log=print):
     arms = plan(goal); A = {a['id']: a for a in arms}
     log(f'goal {goal.goal}: {len(arms)} arms over {goal.targets}; budget {goal.budget_cpu_h} CPU-h, spent '
         f'{sum(r["cpu_h"] for r in rows):.2f}')
-    sizes = pool_sizes(goal, arms); live = {}; jid = len(rows)
+    done = {r['job'] for r in rows}                               # resume: finished jobs never recorded (a crash)
+    for name in sorted(d for d in os.listdir(goal.dir) if d.startswith('j') and d not in done):
+        out = os.path.join(goal.dir, name)
+        if not os.path.exists(os.path.join(out, 'job.json')) or not os.path.exists(os.path.join(out, 'arm.json')):
+            continue
+        arm = json.load(open(os.path.join(out, 'arm.json')))
+        t0 = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(os.path.getmtime(os.path.join(out, 'arm.json'))))
+        st = Store()
+        try:
+            J = ingest_job(st, goal, name, out)
+            converge.run(st, since=t0, procs=1, log=lambda *a: None)
+            R = reward(st, goal, name, t0, arm['n'])
+        finally:
+            st.close()
+        row = dict(job=name, arm=arm['id'], n=arm['n'], t0=t0, cpu_h=J.get('cpu', 0) / 3600, donors=len(J.get('donors', [])),
+                   built=J.get('built', 0), kept=J.get('kept', 0), recovered=True, **R)
+        rows.append(row); open(jl, 'a').write(json.dumps(row) + '\n')
+        log(f"{name} recovered {arm['id']}: {row['cpu_h']:.2f} CPU-h, matches {R['matches']}, reward {R['reward']:.2f}")
+    sizes = pool_sizes(goal, arms); live = {}
+    jid = max([int(d[1:]) for d in os.listdir(goal.dir) if d.startswith('j') and d[1:].isdigit()] + [0])
     last_sizes = time.time()
     while True:
         spent = sum(r['cpu_h'] for r in rows) + goal.quantum_cpu_h * len(live)
