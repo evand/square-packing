@@ -27,7 +27,7 @@ OUT = os.path.join(HERE, 'runs', 'trials')
 
 # The standard tail: release, side-free rounded relax, shallow anneal, polish.  Change it only with a new suite name
 # (trials on one suite must stay comparable).  PROVISIONAL (10-22 smoke test, n = 548): one perturb with no acceptance
-# only worsens a good start (composer 23.89211 -> anneal 24.83 -> polish 23.97), so `best` is the raw side.  Replace it
+# only worsens a good start (anneal then polish ends above the start), so `best` is the raw side.  Replace it
 # by an accept-loop tail (basin hopping: repeat(perturb | relax) with Metropolis acceptance) before grading anything.
 TAIL = 'constrain.release | relax.round.15c | perturb.anneal(sweeps=1000) | relax.polish'
 

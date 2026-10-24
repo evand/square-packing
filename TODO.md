@@ -22,7 +22,7 @@ External posts: ask Evan explicitly per post.  **Before any bound-chasing run, c
 
 ## Packings (`search/packer/`: `HANDOFF-2026-10-14.md`, `tasks/packer-arch-2026-10-14/`)
 Thesis (Evan 10-14): diversity pays; local search at current budgets has mined the frontier.  No compute above n = 324 without a specific reason.
-- [ ] Sink after every job (10-23: kn_ex / kn_ex2's 4,291 explorer packings sat outside the store until a manual `pk.py import-run`): `jobs.py start` runs `pk.py sink` on exit (one sink at a time).
+- [ ] Sink after every job (10-23: 4,291 explorer packings from two runs sat outside the store until a manual `pk.py import-run`): `jobs.py start` runs `pk.py sink` on exit (one sink at a time).
 - [ ] familymap.classify: D/S needs 80% of tilted within 1 deg of 45, so slightly distorted diamonds (our 372 best: 44-46 deg) come out "2"; widen to ~3 deg or add a distorted-diamond class, and store the code as a packing column/tag so "irregular" is a SELECT.
 - [ ] Kaggle per-puzzle side list is a 10-22 snapshot (`runs/kaggle/lb_perpuzzle_2026-10-22.json`, staff notebook output): refresh it (re-download the notebook output, or its successor) before any live check; `candidate.py --live` should run `regcheck.py` on its n (it checks register / issues / kingbird / store, not side-only lists), and `pk.py ingest` could print regcheck's table.
 - [ ] Kaggle CSV imports have no finder (sighting finder NULL; the notebook author is only in the source path): record the author as finder in `kaggle_import.py` so PUBLIC posts credit the right person.
