@@ -12,7 +12,8 @@ Start at `TODO.md` (open items; conventions in `~/math/TODO.md`), then `README.m
 - **Public / private (10-23).**  This repo is public.  New search methods (moves, generators, constructors, bandits,
   priors, acceptance rules), their configs, notes, TODO items and results for unposted packings go in the private plugin
   repo `../plugins` (`search/packer/DESIGN.md` "Plugins"; run its scripts as `search/packer/priv/<script>`), never here.
-  Framework changes go here as generic extension points.  `.git/hooks/pre-push` refuses private paths and added lines
+  Framework changes go here as generic extension points.  Bug fixes and minor updates to existing public moves /
+  generators go public too; major new methods are a judgment call (Evan 10-23).  `.git/hooks/pre-push` refuses private paths and added lines
   that mention Kaggle (review them, then `PUBLIC_OK=1 git push`).  Unsure which side: ask Evan.
 - `search/`: research code + one `UPPERCASE.md` log per investigation.  `search/packer/` (packing search; `PACKER.md`, `README.md`, `NEEDS.md`, `DESIGN.md`), `search/exact/` (exact forms; `EXACT_FORMS.md`).
 - Packings: use the store (`search/packer/pk.py`: `frontier`, `ls N`, `get best:N --fmt ...`, `sync-register`, `watch --apply`, `sync-issues`; `pk/README.md`), never copy coordinates by hand.  Add verified packings to the store (ours or others') without asking: a packing is checkable.  Provenance and "who was first" are best effort (socially verified): record what we know, fix it when we learn better (Evan, 10-12).  There is no separate records session, only notes on how to do it.  New generators / perturbations / fills: register them as `pk/stages.py` stages and grade them with `search/packer/trial.py` (suite tail + baseline; `search/packer/DESIGN.md` "Adding an idea"), or `pk/battery.py` at n = 110.
