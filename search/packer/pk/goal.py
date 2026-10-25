@@ -60,6 +60,7 @@ class Goal:
     donors: int = 6
     score_share: float = 0.25                                   # of the quantum, kept for converge + polish
     construct_share: float = 0.3
+    polish_reuse: bool = True                                   # reuse trusted polish results (polish_cached)
     screen: object = None                                       # pk/screen.py: {k, kmax, ratio, audit} or true
     relax_cap: float = 4.0                                      # relax stage timeout: x the job's median relax
     arms: object = 'auto'
@@ -337,16 +338,17 @@ def finish_job(goal, arm, out, cpu_s, c0, t0):
     from .store import Store
     from . import converge
     jid = os.path.basename(out.rstrip('/')); T = {'walk': _cpu() - c0}; t = _cpu()
-    st = Store()
+    st = Store(); ref_cpu = 0.0
     try:
         J = ingest_job(st, goal, jid, out); T['ingest'] = _cpu() - t; t = _cpu()
         ids = _job_ids(st.db, goal, jid, t0)
         converge.run(st, lo=arm['n'], hi=arm['n'], procs=1, ids=ids, log=lambda *a: None); T['converge'] = _cpu() - t; t = _cpu()
-        F = finalize(st, goal, jid, t0, arm['n'], 1, max(60.0, cpu_s - (_cpu() - c0))); T['polish'] = _cpu() - t
-    finally:
+        reference(st, goal, arm['n'], 1); ref_cpu = _cpu() - t; t = _cpu()   # 10-25: on demand (0 when cached); the goal's
+        F = finalize(st, goal, jid, t0, arm['n'], 1, max(60.0, cpu_s - (_cpu() - c0 - ref_cpu))); T['polish'] = _cpu() - t
+    finally:                                                                 # budget counts it via ref_n*.json, not the job
         st.close()
-    json.dump(dict(J, cpu=_cpu() - c0, cpu_split={k: round(v) for k, v in T.items()}, finalized=True, **F),
-              open(os.path.join(out, 'job.json'), 'w'))
+    json.dump(dict(J, cpu=_cpu() - c0 - ref_cpu, ref_cpu=round(ref_cpu), cpu_split={k: round(v) for k, v in T.items()},
+                   finalized=True, **F), open(os.path.join(out, 'job.json'), 'w'))
 
 
 # ------------------------------------------------------------------ store side: import, reward
@@ -409,6 +411,35 @@ def polish_many(items, procs):
         return dict(ex.map(_polish_one, items, chunksize=max(1, len(items) // (4 * procs))))   # few items: one per worker
 
 
+# sources whose packings are fq POLISH outputs of polish_many (10-25): re-polishing them is a no-op (median 2e-13,
+# max 7.5e-7 over a sample); explorer 'polished' packings are not (up to 2.4e-4 more on a re-polish), so not trusted
+POLISH_SOURCES = ("goal-ref:%", "run:runs/goals/%/polish")
+
+
+def polish_cached(db, items, procs, reuse=True):
+    """polish_many with reuse: a packing that is itself a trusted polish output, or has a trusted polished child (the
+    best one), is not polished again.  -> ({id: (s, sq) or None}, dict(self=, child=, polished=))"""
+    out, stats = {}, dict(self=0, child=0, polished=0)
+    if reuse and items:
+        ids = [i for i, _, _ in items]; q = ','.join('?' * len(ids))
+        tr = ' OR '.join('g.source LIKE ?' for _ in POLISH_SOURCES)
+        selfp = {i for (i,) in db.execute(f"SELECT DISTINCT g.packing FROM sighting g WHERE g.packing IN ({q}) AND ({tr})",
+                                         (*ids, *POLISH_SOURCES))}
+        for i, s, sq in items:
+            if i in selfp:
+                out[i] = (s, sq); stats['self'] += 1
+        rest = [i for i in ids if i not in out]
+        if rest:
+            q = ','.join('?' * len(rest))
+            for par, s, c in db.execute(f"SELECT p.parent, p.s, p.coords FROM packing p JOIN sighting g ON g.packing = p.id "
+                                        f"WHERE p.parent IN ({q}) AND ({tr}) AND {FEAS} ORDER BY p.s DESC", (*rest, *POLISH_SOURCES)):
+                out[par] = (s, np.frombuffer(c, '<f8').reshape(-1, 3).copy())       # ascending last: the best child wins
+            stats['child'] = sum(1 for i in rest if i in out)
+    todo = [x for x in items if x[0] not in out]
+    out.update(polish_many(todo, procs)); stats['polished'] = len(todo)
+    return out, stats
+
+
 def window(goal, ref_side):
     """the match window: `within_rel` x side if set (comparable across n), else the absolute `within`"""
     r = goal.progress.get('within_rel')
@@ -435,16 +466,34 @@ def _wanted(goal, n, s, sq, k):
 def reference(st, goal, n, procs=4):
     """once per (goal, n): the polished wanted-family minima in the window before the goal started; they seed the
     cluster leaders (tag goal_<name>), so a job is paid only for clusters nobody had.  Cached in the goal dir."""
-    from . import cluster as CL
+    import fcntl
     cf = os.path.join(goal.dir, f'ref_n{n}.json')
     if os.path.exists(cf):
         return json.load(open(cf))
-    db = st.db; k = kgrid(n)
+    with open(cf[:-5] + '.lock', 'w') as lk:                     # 10-25: built on demand by the first job to need
+        fcntl.flock(lk, fcntl.LOCK_EX)                            # it; concurrent jobs at n wait, then reuse it
+        if os.path.exists(cf):
+            return json.load(open(cf))
+        return _build_reference(st, goal, n, procs, cf)
+
+
+def goal_start(goal):
+    """the goal's start: start.json (written by run() before any job, 10-25), else the old inference from finished
+    jobs and job-directory times (goals run before 10-25)"""
+    sf = os.path.join(goal.dir, 'start.json')
+    if os.path.exists(sf):
+        return json.load(open(sf))['t_goal']
     jl = os.path.join(goal.dir, 'jobs.jsonl')
     rows = [json.loads(l) for l in open(jl)] if os.path.exists(jl) else []
     dirs = [d for d in os.listdir(goal.dir) if d.startswith('j')] if os.path.isdir(goal.dir) else []
-    t_goal = min([r['t0'] for r in rows] + [time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(os.path.getmtime(os.path.join(goal.dir, d))))
-                                           for d in dirs] + [time.strftime('%Y-%m-%dT%H:%M:%S')])
+    return min([r['t0'] for r in rows] + [time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(os.path.getmtime(os.path.join(goal.dir, d))))
+                                         for d in dirs] + [time.strftime('%Y-%m-%dT%H:%M:%S')])
+
+
+def _build_reference(st, goal, n, procs, cf):
+    from . import cluster as CL
+    db = st.db; k = kgrid(n); c0 = _cpu()                         # cpu_h covers selection + classification too
+    t_goal = goal_start(goal)
     f0, _ = best_match(db, goal, n, before=t_goal)
     f0 = f0 if f0 is not None else float(k)
     w = window(goal, f0)
@@ -454,8 +503,7 @@ def reference(st, goal, n, procs=4):
         sq = np.frombuffer(c, '<f8').reshape(-1, 3).copy()
         if _wanted(goal, n, s, sq, k):
             items.append((i, s, sq))
-    c0 = _cpu()
-    P = polish_many(items, procs)
+    P, pst = polish_cached(db, items, procs, goal.polish_reuse)
     ids = _add_polished(st, f'goal-ref:{goal.goal}', P, {})
     keep = [(ids[i], v[0], v[1]) for i, v in P.items() if v and i in ids and _wanted(goal, n, v[0], v[1], k)]
     f0p = min([x[1] for x in keep] + [f0])
@@ -465,8 +513,8 @@ def reference(st, goal, n, procs=4):
             os.remove(f)
     L = CL.labels(n, keep, tag=f'goal_{goal.goal}')
     R = dict(t_goal=t_goal, f0=f0, f0p=f0p, window=window(goal, f0p), minima=len({round(x[1], 8) for x in keep}),
-             clusters=len(set(L.values())), cpu_h=round((_cpu() - c0) / 3600, 3))   # counted in the budget
-    json.dump(R, open(cf, 'w'), indent=1)
+             clusters=len(set(L.values())), cpu_h=round((_cpu() - c0) / 3600, 3), polish=pst)   # cpu: in the budget
+    json.dump(R, open(cf + '.tmp', 'w'), indent=1); os.replace(cf + '.tmp', cf)   # readers never see a partial file
     return R
 
 
@@ -500,7 +548,7 @@ def finalize(st, goal, jid, t0, n, procs=1, cpu_left=None):
             items.append((i, r[1], sq))
     items.sort(key=lambda t: t[1]); c0 = _cpu(); done = 0; batch = max(4, 4 * procs)
     while done < len(items) and (cpu_left is None or _cpu() - c0 < cpu_left):
-        P = polish_many(items[done:done + batch], procs); done += len(P)
+        P, _ = polish_cached(db, items[done:done + batch], procs, goal.polish_reuse); done += len(P)
         _add_polished(st, f'run:runs/goals/{goal.goal}/{jid}/polish', P, {})
     return dict(cands=len(items), polished=done, jbest=jbest if jbest < float('inf') else None)
 
@@ -555,7 +603,7 @@ def rescore(goal, procs=12, log=print):
     rows = [json.loads(l) for l in open(jl)]
     if not os.path.exists(jl.replace('.jsonl', '.v1.jsonl')):
         open(jl.replace('.jsonl', '.v1.jsonl'), 'w').write(''.join(json.dumps(r) + '\n' for r in rows))
-    for f in [os.path.join(goal.dir, x) for x in os.listdir(goal.dir) if x.startswith('ref_n')] + \
+    for f in [os.path.join(goal.dir, x) for x in os.listdir(goal.dir) if x.startswith('ref_n') and x.endswith('.json')] + \
              [os.path.join(CL.CACHE, f'n{n}_goal_{goal.goal}.json') for n in goal.targets]:
         if os.path.exists(f):
             os.remove(f)
@@ -609,15 +657,11 @@ def run(goal, seed=1, log=print):
     rows = [json.loads(l) for l in open(jl)] if os.path.exists(jl) else []
     rng = random.Random(seed + len(rows))
     arms = plan(goal); A = {a['id']: a for a in arms}
-    st = Store()
-    try:                                                          # references first, on every core, before any job
-        for n in goal.targets:                                    # needs them (a job finalizes against its window)
-            R = reference(st, goal, n, goal.procs)
-            log(f"reference n {n}: {R['minima']} minima, {R['clusters']} clusters, {R.get('cpu_h', 0):.2f} CPU-h")
-    finally:
-        st.close()
+    sf = os.path.join(goal.dir, 'start.json')                    # 10-25: references are built on demand by the
+    if not os.path.exists(sf):                                    # first job to finish at each n (no serial setup:
+        json.dump(dict(t_goal=goal_start(goal)), open(sf, 'w'))   # ~1 h of a mostly idle machine for 40 targets)
     overhead = lambda: sum(json.load(open(os.path.join(goal.dir, f))).get('cpu_h', 0)
-                           for f in os.listdir(goal.dir) if f.startswith('ref_n'))
+                           for f in os.listdir(goal.dir) if f.startswith('ref_n') and f.endswith('.json'))
     def eta():
         left = max(0.0, goal.budget_cpu_h - sum(r['cpu_h'] for r in rows) - overhead())
         return f"ETA {time.strftime('%H:%M', time.localtime(time.time() + 3600 * (left / goal.procs + 0.5 * goal.quantum_cpu_h)))}"
