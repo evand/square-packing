@@ -430,3 +430,21 @@ H*(7) = (10√2 − 3)/6 ≈ 1.85702; below it monotonicity gives L ≥ 7, so th
   ũ₃) and the four-step-suffix cheap step near H*(7) (1e-2).
 Next (needs thought): potentials indexed by line *and* upright count, e.g. u_j = min(j·a + β|m|, zigzag family,
 aligned routes), derived as U_{j+1} = min-plus image of U_j in closed form; this is the n-general low-band question.
+
+### 2026-10-24 (later): exact limits of the method (`chainn/limits.py`)
+* **H_C = 1.8685022534** (tan t = 2.00878): least H with `KapC`; the aligned-lines reduction is the binding case (full
+  grid KapC margin crosses zero at the same H to 1e-7).  Lean uses 1.87 (`C_187`); lowering it to H_C gains no n
+  (H*(5) = 1.8713 > 1.87, H*(7) = 1.8570 < H_C).
+* **H_b ≈ 1.845623** (bisection, slope grids 0.5° and 0.25° agree to 1e-6): least H for which **n-independent parity
+  potentials** work, i.e. the exact parity distances d₀, d₁ (min-plus fixed point over prefixes of any length ending at
+  an even / odd line) satisfy the cheap-step condition d_P + c + d_P ≥ 2g.  Above H_b: margin 0 (zigzag tight); 1.845:
+  −7e-4; 1.84: −6.5e-3.  So with closed forms for d₀, d₁ the Lean argument would give **every odd n down to H_b**: n = 7
+  (H* = 1.85702) and n = 9 (1.84987) completely, n = 11 (1.845584) except the sliver [1.845584, 1.845623).
+  Grid caveat: grid distances miss routes (over-estimate d), so the true H_b can only be slightly higher.
+* **Correction to the n = 7 entry above**: "upright count matters at n = 7" holds only for potentials pinned to uEven
+  at line 4.  The parity fixed point d₀ (which includes routes through the line-3 aligned route ũ₃) is lower than d₄ but
+  still enough, so n = 7 needs better parity potentials, not upright counting.  Upright counting (length-aware
+  potentials) is needed only below H_b: odd n ≥ 11 near their thresholds; there the needed range n·a ≥ 2g is
+  exactly the length condition N(H) = ⌈2g/a⌉ ≤ n (`excess_len.py`, H = 1.83, n ≤ 149: holds).
+* Even n: parity potentials give min(n, nλ + X(H)) with X n-independent, and Morandi's deficit δ_n ~ 1/n > 0, so they
+  are not sharp anywhere on the tilted range of any even n; even n needs tilt-parameterised (n-dependent) potentials.
