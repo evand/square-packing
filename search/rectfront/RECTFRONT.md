@@ -484,3 +484,22 @@ L × H iff L ≥ n or L ≥ (n − 2)(2√2 − H) + 4 − H.  `strip_odd_iff'`:
 * `StripBandMain` (hand): Lipschitz bounds, same-sign slopes via `kap_same'`, sign cases by kap_mirror / kap_symm,
   `band_potOK`, the theorems.  Band start H*(9): there y₁ = 8/7, so every breakpoint is rational in H.
 Next: legibility pass (fewer, structured leaves); odd n ≥ 11 below H*(9) needs length-aware potentials; even n open.
+
+## 2026-10-25: comparison with wand125's "Minimum widths for unit squares in thin rectangles" (v2)
+
+wand125/square-packing `site/public/papers/minimum-widths-v2.md` (fetched 2985613, 10-25; read only, nothing run).
+Claim (computer-assisted, two independent Python implementations, supplement not yet released, not peer reviewed):
+for 1851/1000 ≤ a < 2, odd N ≥ 11: B_N = 4 + 2(N − 2)√2 − (N − 1)a; even N ≥ 12: B_N = min over θ of
+G_N = (N − 4)P + 2Q − 2|A| (two upright caps on opposite walls, interiors at one common angle).
+Method: SAT bounds over angle/height cells, LP rational potentials, saturated DP fixed point for the all-N tail
+(restricts any packing below the 45° width to the alternating class), then calibrated pair inequalities with a
+k·TV angle-variation term reduce to a common angle.
+
+Versus ours:
+* Odd N: same formula as `strip_odd_iff'`.  Ours: Lean, standard axioms, every odd n ≥ 3, H ≥ H*(9) =
+  (14√2 − 5)/8 ≈ 1.84987 (slightly wider band than their 1.851), and n = 7, 9 for every H.
+* Even N: their theorem is exactly our extended Morandi family: `chainn/wand_cmp.py` (our reimplementation of G_N
+  from the paper text) agrees with `targets.F` to 2e-12 for N = 12..50, a ∈ [1.851, 1.99].  So the 10-22 note
+  (their n ≥ 12 even entries were zigzag + upright, not the frontier) is superseded: they now have the Morandi
+  family, with a claimed lower bound.  We have no even-n lower bound.
+* Their N = 11 lower bound and the 1.851 cut mirror our H*(9) phenomenon (n-independent bounds stop near 1.85).
