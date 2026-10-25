@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SUPERSEDED 2026-10-25 by leg_emit.py (line lemmas + pair table); kept for history; leg_emit reuses band_emit leaf helpers and band_cert.
 """Emit the Lean leaves, cells and cores of the band theorem (2026-10-25).
 
 Inputs: band_gen (pieces, leaves), band_cert cache (certificates).  Output (lean/Sqpack/):

@@ -332,7 +332,7 @@ import Sqpack
 #print axioms SquarePacking.strip_odd_iff
 -- odd n, generic walk argument for any admissible parity potentials (Sqpack/StripPotWalk)
 #print axioms SquarePacking.strip_odd_pot
--- odd n down to H*(9) = (14 sqrt2 - 5)/8: tangent potentials, generated leaves (Sqpack/StripBand*, StripBandMain)
+-- odd n down to H*(9) = (14 sqrt2 - 5)/8: tangent potentials: line lemmas + pair table (Sqpack/StripBand*, StripBandMain)
 #print axioms SquarePacking.band_potOK
 #print axioms SquarePacking.strip_odd_band
 #print axioms SquarePacking.strip_odd_lower'

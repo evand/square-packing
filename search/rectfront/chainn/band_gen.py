@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SUPERSEDED 2026-10-25 by leg_emit.py (line lemmas + pair table); kept for history; leg_emit reuses band_emit leaf helpers and band_cert.
 """Band theorem generator (2026-10-25): odd n, H*(9) <= H <= 187/100, H*(9) = (14 sqrt2 - 5)/8.
 
 Opposite slopes x, y >= 0 (positive / negative line), frame (C, S):

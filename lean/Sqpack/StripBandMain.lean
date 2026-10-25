@@ -1,4 +1,4 @@
-import Sqpack.StripBandCells
+import Sqpack.StripBandCore
 import Sqpack.StripC
 
 /-!
@@ -9,8 +9,8 @@ import Sqpack.StripC
 With `strip_odd_lower` (`H ≥ 1.87`): `strip_odd_lower'` on `H*(9) ≤ H < 2`.  Since `H*(7)`, `H*(9) ≥ H*(9)`,
 monotonicity in `H` completes `n = 7, 9` (`strip_odd_iff_le9`: every odd `n ≤ 9`, every `1 ≤ H < 2`).
 
-Per-square facts: opposite slopes from the generated cores `band_Sa`, `band_Sb`, `band_C0`, `band_C1`, `band_N`
-(`StripBandCells`); same-sign slopes from `kap_same` and the Lipschitz bounds of the potentials.
+Per-square facts: opposite slopes from `band_Sa`, `band_Sb`, `band_C0`, `band_C1`, `band_N` (`StripBandCore`: line
+lemmas + pair table); same-sign slopes from `kap_same` and the Lipschitz bounds of the potentials.
 -/
 
 namespace SquarePacking
