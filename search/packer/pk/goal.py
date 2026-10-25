@@ -268,7 +268,8 @@ def run_job(goal, arm, out, cpu_s, seed):
                 p = os.path.join(td, 'e.txt'); mcmin.write_deg(p, float(st.p.s), [tuple(map(float, q)) for q in st.p.sq])
                 if full_lines(p, k):
                     continue
-            kept.append((float(st.p.s), pid, np.asarray(st.p.sq, float)))
+            kept.append((float(st.p.s), pid if pid is not None else st.meta.get('parent'),   # gen-led: the stage's
+                         np.asarray(st.p.sq, float)))                               # meta names its parent
         kept.sort(key=lambda t: t[0]); seen = set(); files = []
         for s, pid, sq in kept:
             if round(s, 6) in seen:
