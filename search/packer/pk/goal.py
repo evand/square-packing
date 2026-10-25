@@ -21,6 +21,7 @@ Goal file (every key but `goal`, `targets`, `predictions` has a default):
   bars: {n: side}                                a bonus (value.bar) for the job that first gets below side at n
   budget_cpu_h: 15   quantum_cpu_h: auto (budget / (procs x 8), >= 0.05)   procs: 4   relax: round.15c.p5   donor_window: 0.05   donors: 6
   arms: auto | [ {kind: walk|chain, offset: 0, chain: "...", match_donors: true}, ... ]
+  arm_kinds: [walk, add]         (optional) with arms auto, keep only these kinds
   predictions: {...}  (required: the scheduler refuses a goal without them)   baseline: [...]   notes: "..."
 
 Arms (`auto`, per target n in row k = ceil sqrt n): walk (donors at n), add (n - 1, grow.add), drop (n + 1, n + 2,
@@ -29,7 +30,7 @@ pk_plugin.py: f(goal, n) -> [arm dict]).  Construction arms spend `construct_sha
 (chain + relax), then walk the best four: they are judged on refined outcomes like everything else.
 """
 from __future__ import annotations
-import json, math, os, random, resource, sqlite3, subprocess, sys, tempfile, time
+import json, math, os, random, re, resource, sqlite3, subprocess, sys, tempfile, time
 from dataclasses import dataclass, field
 import numpy as np
 
@@ -60,6 +61,7 @@ class Goal:
     score_share: float = 0.25                                   # of the quantum, kept for converge + polish
     construct_share: float = 0.3
     arms: object = 'auto'
+    arm_kinds: object = None                                    # auto arms: keep only these kinds (walk, add, drop, lcut, plugin)
     baseline: list = field(default_factory=list)
     notes: str = ''
     result: str = ''                 # written after the run (the reading of the result)
@@ -189,7 +191,14 @@ def plan(goal):
             for tpl in getattr(m, 'ARM_TEMPLATES', []):
                 for a in tpl(goal, n):
                     A.append(dict(dict(match_donors=True, chain=None), **a, n=n))
+    if goal.arm_kinds:
+        A = [a for a in A if arm_kind(a['id']) in goal.arm_kinds]
     return A
+
+
+def arm_kind(aid):
+    """'335:drop+1' -> 'drop'"""
+    return re.match(r'[a-z_]*', aid.split(':')[1]).group(0)
 
 
 def pool_sizes(goal, arms, seed=0):
