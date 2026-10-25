@@ -28,7 +28,7 @@ sys.path and its pk_plugin.py imported before the registries are adapted; a plug
 or pk.moves as usual.  PLUGINS lists the loaded plugin modules (trial.py reads their TRIAL_SUITES).
 """
 from __future__ import annotations
-import ast, math, os, random, re, resource, tempfile, time
+import ast, math, os, random, re, resource, subprocess, tempfile, time
 from dataclasses import dataclass, field, replace
 import numpy as np
 
@@ -215,7 +215,10 @@ def _relax(name):
         if opt.kick or opt.round_kick or opt.soft_kick:
             opt = opt.but(seed=rng.randrange(1 << 30))
         with tempfile.TemporaryDirectory(prefix='stg_') as td:
-            r = fq_quench(st.p, opt, tmp=td, mod90=True, timeout=ctx.get('fq_timeout', 1800))
+            try:
+                r = fq_quench(st.p, opt, tmp=td, mod90=True, timeout=ctx.get('fq_timeout', 1800))
+            except subprocess.TimeoutExpired:                       # 10-25: a capped relax is a failed stage
+                return st, dict(failed='timeout', timeout=ctx.get('fq_timeout'))
             try:
                 d = r.stats(whole=True); s2, sq2 = r.read()
             except Exception as e:

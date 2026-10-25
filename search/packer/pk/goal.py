@@ -60,6 +60,7 @@ class Goal:
     donors: int = 6
     score_share: float = 0.25                                   # of the quantum, kept for converge + polish
     construct_share: float = 0.3
+    relax_cap: float = 4.0                                      # relax stage timeout: x the job's median relax
     arms: object = 'auto'
     arm_kinds: object = None                                    # auto arms: keep only these kinds (walk, add, drop, lcut, plugin)
     baseline: list = field(default_factory=list)
@@ -106,7 +107,7 @@ def load(path):
     g.progress = {k: (num(v) if k != 'exclude' else v) for k, v in g.progress.items()}
     if g.quantum_cpu_h == 'auto':                                 # 10-24: two waves of 0.5 CPU-h left one straggler
         g.quantum_cpu_h = max(0.05, float(g.budget_cpu_h) / (int(g.procs) * WAVES))   # alone for 30 min, 15 cores idle
-    for f in ('budget_cpu_h', 'quantum_cpu_h', 'donor_window', 'construct_share', 'score_share'):
+    for f in ('budget_cpu_h', 'quantum_cpu_h', 'donor_window', 'construct_share', 'score_share', 'relax_cap'):
         setattr(g, f, float(getattr(g, f)))
     g.procs, g.donors = int(g.procs), int(g.donors)
     g.bars = {int(k): float(v) for k, v in (g.bars or {}).items()}
@@ -253,15 +254,21 @@ def run_job(goal, arm, out, cpu_s, seed):
     if not D:
         json.dump(dict(log, empty=True, cpu=_cpu() - c0), open(os.path.join(out, 'job.json'), 'w')); return
     if arm.get('chain'):
-        kept = []
+        kept = []; rt = []                                        # rt: CPU of each finished relax stage
         while _cpu() - c0 < goal.construct_share * cpu_s:
             pid, s, sq = D[rng.randrange(len(D))]
+            # 10-25: relax cap.  At n ~ 1000 a few relaxes run 10-70x the median and end at the grid (978: 8 of 60
+            # took 63 % of the relax time, none useful); cap at relax_cap x the job's running median (first: 1/4 of
+            # the construct budget)
+            cap = max(30.0, goal.relax_cap * float(np.median(rt))) if len(rt) >= 3 else max(60.0, goal.construct_share * cpu_s / 4)
             try:
-                st, lg = S.run_chain(arm['chain'], dict(n=n), rng.randrange(1 << 30),
+                st, lg = S.run_chain(arm['chain'], dict(n=n, fq_timeout=cap), rng.randrange(1 << 30),
                                      st=None if gen_led else S.State(Packing(s, sq)))
             except Exception as e:
                 log.setdefault('errors', []).append(repr(e)[:120]); continue
             log['built'] += 1
+            rt += [r['cpu'] for r in lg if r['kind'] == 'relax' and not r['info'].get('failed')]
+            log['relax_timeouts'] = log.get('relax_timeouts', 0) + sum(r['info'].get('failed') == 'timeout' for r in lg)
             if st.p.n != n or any(r['info'].get('failed') for r in lg) or st.p.s >= k + 0.05:
                 continue
             with tempfile.TemporaryDirectory() as td:
