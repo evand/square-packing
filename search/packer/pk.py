@@ -69,6 +69,7 @@ def main():
     p = sp.add_parser('import'); p.add_argument('paths', nargs='+'); p.add_argument('--source', required=True)
     p.add_argument('--finder'); p.add_argument('--ref'); p.add_argument('--status', default='raw')
     p.add_argument('--kind'); p.add_argument('--tol', type=float, default=1e-9)
+    p = sp.add_parser('relink', help='backfill parent links from <dir>/parents.json (pk/sources.relink)'); p.add_argument('dirs', nargs='+'); p.add_argument('--source')
     p = sp.add_parser('import-run'); p.add_argument('runs', nargs='+'); p.add_argument('--below', type=float)
     p.add_argument('--below-k', action='store_true', help='only entries below ceil(sqrt n)')
     p.add_argument('--procs', type=int, default=12)
@@ -253,6 +254,9 @@ def main():
         watch.run(st, apply=a.apply, max_commits=a.max_commits)
     elif a.cmd == 'import':
         print(sources.import_paths(st, a.paths, a.source, a.finder, a.ref, a.kind, a.status, tol=a.tol))
+    elif a.cmd == 'relink':
+        for d in a.dirs:
+            print(d, sources.relink(st, d, a.source))
     elif a.cmd == 'import-run':
         runs = sorted({os.path.dirname(os.path.abspath(f)) for r in a.runs for f in
                        ([f'{r}/archive.jsonl'] if os.path.exists(f'{r}/archive.jsonl') else

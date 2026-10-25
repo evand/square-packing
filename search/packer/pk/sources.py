@@ -13,7 +13,43 @@ from .github import MAX_MEMBER              # one untrusted file's size cap (git
 HERE = os.path.dirname(os.path.abspath(__file__))
 PKG = os.path.dirname(HERE)
 FILE_RE = re.compile(r'\.(txt|yaml|yml|gz|cert|json|sqcert|sqpk)$')
-SKIP_RE = re.compile(r'check|output|cert50|summary|SOURCES|README|archive\.jsonl|proposals|state\.json|exact\.json')
+SKIP_RE = re.compile(r'parents\.json|check|output|cert50|summary|SOURCES|README|archive\.jsonl|proposals|state\.json|exact\.json')
+
+
+_PAR = {}
+
+
+def _parents(d):
+    """a generator's lineage file: <dir>/parents.json = {file basename: store id of its main donor / start}"""
+    if d not in _PAR:
+        f = os.path.join(d, 'parents.json')
+        try:
+            _PAR[d] = {k: int(v) for k, v in json.load(open(f)).items() if v is not None} if os.path.exists(f) else {}
+        except Exception:
+            _PAR[d] = {}
+    return _PAR[d]
+
+
+def relink(st: Store, d, source=None, batch=200):
+    """backfill: for each file in <d>/parents.json, set the parent of the packing sighted from it (ref = its path),
+    where the parent is unset.  Looks sightings up by source (indexed; default run:<d relative to the packer>) and
+    commits every `batch` rows, so it never holds the store's write lock for long.  Returns (files, linked)."""
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    rel = os.path.relpath(os.path.abspath(d), here)
+    P = _parents(os.path.abspath(d))
+    src = source or f'run:{rel}'
+    by_ref = {}
+    for pid, ref in st.db.execute('SELECT packing, ref FROM sighting WHERE source=?', (src,)):
+        by_ref[os.path.basename(str(ref))] = pid
+    n = 0
+    for k, (b, par) in enumerate(P.items()):
+        pid = by_ref.get(b)
+        if pid is not None and pid != par:
+            n += st.db.execute('UPDATE packing SET parent=? WHERE id=? AND parent IS NULL', (par, pid)).rowcount
+        if k % batch == batch - 1:
+            st.db.commit()
+    st.db.commit()
+    return len(P), n
 
 
 def import_paths(st: Store, paths, source, finder=None, ref=None, kind=None, status='raw', ns=None, tol=1e-9,
@@ -42,7 +78,10 @@ def import_paths(st: Store, paths, source, finder=None, ref=None, kind=None, sta
         if pk is None or pk.n == 0 or (ns and pk.n not in ns):
             continue
         c['seen'] += 1
-        pid, new = st.add(pk, source, finder, ref or f, kind, status=status, tol=tol, commit=False)
+        par = _parents(os.path.dirname(f)).get(b)                # 10-24: <dir>/parents.json {file: parent id} (lineage)
+        pid, new = st.add(pk, source, finder, ref or f, kind, status=status, tol=tol, commit=False, parent=par)
+        if not new and par is not None:
+            st.db.execute('UPDATE packing SET parent=? WHERE id=? AND parent IS NULL AND id != ?', (par, pid, par))
         r = st.db.execute('SELECT status FROM packing WHERE id=?', (pid,)).fetchone()
         if r['status'] == 'infeasible':
             c['infeasible'] += 1
