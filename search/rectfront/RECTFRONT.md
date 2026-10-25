@@ -448,3 +448,22 @@ aligned routes), derived as U_{j+1} = min-plus image of U_j in closed form; this
   exactly the length condition N(H) = ⌈2g/a⌉ ≤ n (`excess_len.py`, H = 1.83, n ≤ 149: holds).
 * Even n: parity potentials give min(n, nλ + X(H)) with X n-independent, and Morandi's deficit δ_n ~ 1/n > 0, so they
   are not sharp anywhere on the tilted range of any even n; even n needs tilt-parameterised (n-dependent) potentials.
+
+## 2026-10-24/25: odd n on 1.849 ≤ H < 1.87 — potentials found, decomposition checked, Lean started
+
+Goal: `strip_odd_lower` on 1.849 ≤ H < 1.87 (covers n = 7, 9 completely, with `strip_odd_iff` and monotonicity).
+* **Exact parity potentials** (`chainn/pfix.py`): every optimal prefix has ≤ 3 steps.  Even lines
+  d₀ = min(2a + β|m|, E), odd lines d₁ = min(a + β|m|, a + E), E(m) = one upright to the perpendicular line, then a square
+  aligned with both lines: E = a + β|cot φ| + (2(C + S) − H)/(2SC) − λ (in x = |m|: −Hx/2 + 2H − H/x + √(x²+1)(1 + 1/x)
+  + 1/x + 1 − 4√2).  E'(1) = −β, so Lean's old uEven branch a + β(2 − x) is the tangent of E at 45°.
+* **Tangent potentials** (`chainn/lincheck.py`): L = max(tangent at 1, tangent at 4/3), the second exact since
+  √(1 + 16/9) = 5/3: T(x) = 7H/12 + 14/3 − 4√2 + (H/16 − 1/10)(x − 4/3).  u₀ = min(2a + βx, L), u₁ = min(a + βx, a + L).
+  All walk conditions hold for 1.849 ≤ H ≤ 1.93 (fail near 2; not needed).  Linear-only potentials fail the cheap step
+  (1.9e-2); the tangent is needed in both parities.  Existing Lean kernel lemmas suffice for same-sign slopes only.
+* **Closed form, opposite slopes** (`kap_opp`, Lean): κ(x, −y) = p + (S − H/2)x + (C − H/2)y + (Cx − S)⁺ + (Sy − C)⁺.
+* **Decomposition** (`chainn/band_dec.py`, `band_dec2.py`): the conditions split into separable convex sub-inequalities
+  (+ side: both branches of a min everywhere; − side: branch chosen per region; y₁ = max(1 + a/2β, T₀/(β − T₁)) for u₁,
+  y₂ = 1 − a/2β for u₀, y_LT = Lz/T crossing); not-cheap lemma (N) x ≤ ½ ⇒ κ ≥ 1; cheap condition on x, y ≥ ½.  All
+  hold at H ∈ {1.849, 1.86, 1.8699}, tight only at the zigzag (45°) and the upright square.
+* Lean: `StripPotWalk.lean` (`strip_odd_pot`, `PotOK`: the walk argument for any parity potentials, builds);
+  `StripBand.lean` (draft: `kap_opp`, potentials).  Next: the per-square lemmas (kink pairs; exact algebra at 45°).

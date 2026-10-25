@@ -6,7 +6,7 @@ Opposite slopes x = m >= 0, y = -m' >= 0, frame (C, S) >= 0, p = C + S <= H:
 Potentials (x = |m|): A0 = 2a + bx, Lz = a + b(2 - x), T = T0 + T1 x (tangent of E at 4/3), L = max(Lz, T),
     u0 = min(A0, L), u1 = min(a + bx, a + L).
 A min on the + side splits into both branches (each must hold everywhere); on the - side a branch is chosen per region
-(split points y1 for -u1, y2 for -u0).  Sub-inequalities (c = kap - lam):
+(split points y1 for -u1, y2 for -u0; L = Lz below yLT, T above).  Sub-inequalities (c = kap - lam):
     Sa  c >= u1(y) - u0(x):  x-branch in {A0, L};  y: [0, y1] with a + by,  [y1, inf) with a + Lz and with a + T
     Sb  c >= u0(y) - u1(x):  x-branch in {a + bx, a + L};  y: [0, y2] with A0,  [y2, inf) with Lz and with T
     C0  x, y >= 1/2: c + u0(x) + u0(y) >= 2g:  branches {A0, L} x {A0, L}
@@ -38,6 +38,7 @@ def run(H, y1, y2, nt=721, xs=None):
     T = lambda x: T0 + T1 * x
     L = lambda x: np.maximum(Lz(x), T(x))
     O = lambda x: a + b * x
+    yLT = (a + 2 * b - T0) / (b + T1)   # Lz = T: L = Lz below, T above
     worst = {}
     for t in np.linspace(0, math.pi / 2, nt):
         C, S = math.cos(t), math.sin(t)
@@ -46,12 +47,12 @@ def run(H, y1, y2, nt=721, xs=None):
         subs = {}
         for xb, P in (('A0', A0), ('L', L)):
             subs[f'Sa {xb}|O[0,y1]'] = np.where(Y <= y1, c + P(X) - O(Y), np.inf)
-            subs[f'Sa {xb}|aLz[y1,)'] = np.where(Y >= y1, c + P(X) - a - Lz(Y), np.inf)
-            subs[f'Sa {xb}|aT[y1,)'] = np.where(Y >= y1, c + P(X) - a - T(Y), np.inf)
+            subs[f'Sa {xb}|aLz[y1,yLT]'] = np.where((Y >= y1) & (Y <= max(y1, yLT)), c + P(X) - a - Lz(Y), np.inf)
+            subs[f'Sa {xb}|aT[yLT,)'] = np.where(Y >= max(y1, yLT), c + P(X) - a - T(Y), np.inf)
         for xb, P in (('O', O), ('aL', lambda x: a + L(x))):
             subs[f'Sb {xb}|A0[0,y2]'] = np.where(Y <= y2, c + P(X) - A0(Y), np.inf)
-            subs[f'Sb {xb}|Lz[y2,)'] = np.where(Y >= y2, c + P(X) - Lz(Y), np.inf)
-            subs[f'Sb {xb}|T[y2,)'] = np.where(Y >= y2, c + P(X) - T(Y), np.inf)
+            subs[f'Sb {xb}|Lz[y2,yLT]'] = np.where((Y >= y2) & (Y <= max(y2, yLT)), c + P(X) - Lz(Y), np.inf)
+            subs[f'Sb {xb}|T[yLT,)'] = np.where(Y >= max(y2, yLT), c + P(X) - T(Y), np.inf)
         big = (X >= 0.5) & (Y >= 0.5)
         for xb, P in (('A0', A0), ('L', L)):
             for yb, Q in (('A0', A0), ('L', L)):
