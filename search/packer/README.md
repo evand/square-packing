@@ -8,8 +8,8 @@ History (the lab log to 10-24): `archive/PACKER-2026-10.md`.
 
 | want | command |
 |---|---|
-| explore a set of n | write `goals/NAME.yaml` (see `goals/fam145-150.yaml`), then `python3 pk/jobs.py start NAME --procs P -- python3 pk.py goal run goals/NAME.yaml`; `pk.py goal report NAME` |
-| see arms and donor pools first | `pk.py goal plan goals/NAME.yaml` |
+| explore a set of n | write `<plugin>/goals/NAME.yaml` (format: `goals/example.yaml`), then `python3 pk/jobs.py start NAME --procs P -- python3 pk.py goal run NAME`; `pk.py goal report NAME` |
+| see arms and donor pools first | `pk.py goal plan NAME` |
 | add an idea | a stage (`DESIGN.md` "Adding an idea"); the planner or a plugin's `ARM_TEMPLATES` turns it into arms |
 | packings at n | `pk.py ls N`, `pk.py get ID -o FILE`, `pk.py frontier` |
 | keep the store current | `pk.py ingest --apply` (register, watched repos, fresh public packings) |
@@ -25,5 +25,6 @@ History (the lab log to 10-24): `archive/PACKER-2026-10.md`.
   ported as stages.  `mcmin.py`, `hop.py`, `layout.py`, `gen.py`: helpers (file I/O, quench wrapper, full-line test,
   exact upright fill).
 - `src/`: Rust (`fq` the quench / polish engine, `anneal`, `harden`).  Build: `cargo build --release`.
-- `goals/`: goal files (each is also its run's pre-registration).
+- `goals/example.yaml`: the goal format.  Real goal files (each is its run's pre-registration and, after the run, its
+  result) are research results: they live in a plugin's `goals/`, found by name.
 - Formats: text `n s` then `x y deg` per square (centres).

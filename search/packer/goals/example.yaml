@@ -1,0 +1,16 @@
+# Example goal (the format: pk/goal.py docstring; the loop: DESIGN.md).  Real goal files are research results and live
+# in a plugin's goals/ directory, found by name (`pk.py goal report NAME`); this one is the only goal file kept here.
+goal: example
+notes: >
+  Grow a library of non-diamond packings near the best at a few n.  Every arm is planned automatically: walks from
+  donors at n, add from n - 1, drop from n + 1 / n + 2, L-cut from the next row, plus any plugin ARM_TEMPLATES.
+targets: [37, 38]
+progress: {exclude: [G, D, S], within_rel: 0.0016}   # wanted = not grid / diamond / strip; window = 0.0016 x side
+value: {match: 1.0, frontier: 1.0e+4}                # reward = new clusters + 1e4 x (family-best + store-best gain)
+budget_cpu_h: 1
+quantum_cpu_h: 0.1
+procs: 4
+relax: round.15c.p5
+predictions:                                         # required: write them before running; grade them in `result`
+  any_target_store_best_improves: 0.05
+  new_clusters_total_ge_10: 0.5

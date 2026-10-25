@@ -3,9 +3,13 @@
 A goal is data (a YAML file); one scheduler spends CPU on arms; every arm is a stage chain run on donors selected from
 the store; every output goes back to the store; reward is measured from the store.
 
-  pk.py goal plan  goals/fam145-150.yaml      arms and their donor pool sizes, nothing run
-  pk.py goal run   goals/fam145-150.yaml      the loop (launch it with pk/jobs.py; it runs `procs` jobs at a time)
-  pk.py goal report fam145-150                per arm: jobs, CPU, reward, posterior; per target: frontier, matches
+  pk.py goal plan  NAME|FILE     arms and their donor pool sizes, nothing run
+  pk.py goal run   NAME|FILE     the loop (launch it with pk/jobs.py; it runs `procs` jobs at a time)
+  pk.py goal report NAME|FILE    per arm: jobs, CPU, reward, posterior; per target: frontier, matches
+
+Where goal files live (10-24): a goal's arms, results and predictions are research results, so goal files belong to a
+plugin (`<plugin dir>/goals/NAME.yaml`, found by name); this repo keeps only `goals/example.yaml`.  Run output goes to
+runs/goals/NAME/ here either way (gitignored).
 
 Goal file (every key but `goal`, `targets`, `predictions` has a default):
   goal: name                      targets: [n, ...]
@@ -61,8 +65,28 @@ class Goal:
         return os.path.join(RUNS, self.goal)
 
 
+def goal_dirs():
+    """where goals are found by name: each loaded plugin's goals/, then this repo's goals/ (the example)"""
+    from . import stages as S
+    return [os.path.join(os.path.dirname(os.path.abspath(m.__file__)), 'goals') for m in S.PLUGINS] + \
+        [os.path.join(HERE, 'goals')]
+
+
+def resolve(spec):
+    """a goal file path, or a goal name looked up in goal_dirs()"""
+    if os.path.exists(spec):
+        return os.path.abspath(spec)
+    name = os.path.basename(spec)
+    name = name if name.endswith(('.yaml', '.yml')) else name + '.yaml'
+    for d in goal_dirs():
+        if os.path.exists(os.path.join(d, name)):
+            return os.path.join(d, name)
+    raise FileNotFoundError(f'goal {spec}: not a file, and not in {goal_dirs()}')
+
+
 def load(path):
     import yaml
+    path = resolve(path)
     d = yaml.safe_load(open(path))
     g = Goal(**{k: v for k, v in d.items() if k in Goal.__dataclass_fields__}, path=os.path.abspath(path))
     unknown = set(d) - set(Goal.__dataclass_fields__)

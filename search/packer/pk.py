@@ -182,7 +182,7 @@ def main():
         if a.action == 'job':
             G.run_job(G.load(a.spec), json.load(open(os.path.join(a.out, 'arm.json'))), a.out, a.cpu, a.seed)
             return
-        g = G.load(a.spec) if a.spec.endswith(('.yaml', '.yml')) else G.load(os.path.join(HERE, 'goals', a.spec + '.yaml'))
+        g = G.load(a.spec)
         if a.action == 'plan':
             arms = G.plan(g); sz = G.pool_sizes(g, arms)
             for x in arms:

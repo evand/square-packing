@@ -12,7 +12,7 @@ one).  A new campaign is a new goal file.  There are no campaign scripts.
 | engine | `pk/engine.py` | `fq_quench(inp, QOpt)`: the one fq call path; `QOpt` = every fq flag |
 | registries | `pk/moves.py` (`@move`), `pk/fill.py` (`@placer`), `pk/schedules.py` (named QOpts) | building blocks with declared parameter spaces |
 | stages, chains | `pk/stages.py` | one contract over all registries; a chain is `a(k=v) \| b \| ...` |
-| goals, arms, scheduler | `pk/goal.py`, `pk.py goal`, `goals/*.yaml` | the loop below |
+| goals, arms, scheduler | `pk/goal.py`, `pk.py goal`, `<plugin>/goals/*.yaml` | the loop below |
 | jobs | `pk/jobs.py` | the only way compute starts; on exit every job runs sink, then converge |
 | reports | `pk.py goal report`, `pk.py yield`, the plugin's status report | numbers from the store |
 
@@ -55,8 +55,9 @@ count       in the scheduler (cheap, serial): the job's polished packings as new
 allocate    Thompson sampling on reward per CPU-h (Gamma-Poisson, pooled prior), pending jobs counted, `procs` at a time
 ```
 
-Run one: `python3 pk/jobs.py start NAME --procs P -- python3 pk.py goal run goals/NAME.yaml`; read it with `pk.py goal
-report NAME`; `pk.py goal plan FILE` lists arms and donor pools without running anything.  The goal file is the
+Run one: `python3 pk/jobs.py start NAME --procs P -- python3 pk.py goal run NAME`; read it with `pk.py goal report
+NAME`; `pk.py goal plan NAME` lists arms and donor pools without running anything.  Goal files live in a plugin's
+`goals/` (they name plugin arms and hold unposted results); this repo keeps only `goals/example.yaml`.  The goal file is the
 pre-registration (the scheduler refuses one without predictions); write the reading of the result under it.
 
 ## Adding an idea
