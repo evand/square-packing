@@ -107,6 +107,8 @@ def main():
     p = sp.add_parser('credit', help='lineage credit audit: store-best gains paid up the ancestry (pk/credit.py)')
     p.add_argument('--since', default='2026-10-10'); p.add_argument('--lam', type=float, nargs='+', default=[0.5, 0.8, 1.0])
     p.add_argument('--top', type=int, default=25)
+    p.add_argument('--rebuild', action='store_true', help='backfill the online credit tables from scratch')
+    p.add_argument('--online', action='store_true', help='show the online credit table')
     p = sp.add_parser('yield', help='lineage yield: which generators / sources feed records and near-records (pk/yieldrep.py)')
     p.add_argument('--cap', type=int, default=50); p.add_argument('--json'); p.add_argument('--top', type=int, default=25)
     p = sp.add_parser('converge', help='cheap re-quench of near-record, non-45-degree packings not yet converged (pk/converge.py)')
@@ -199,7 +201,12 @@ def main():
         return
     if a.cmd == 'credit':
         from pk import credit
-        print(credit.fmt(credit.audit(st, a.since, tuple(a.lam)), a.top))
+        if a.rebuild:
+            credit.rebuild(st)
+        if a.online or a.rebuild:
+            print(credit.table(st.db, a.top) if credit.ready(st.db) else 'online credit not built (pk.py credit --rebuild)')
+        else:
+            print(credit.fmt(credit.audit(st, a.since, tuple(a.lam)), a.top))
         return
     if a.cmd == 'yield':
         from pk import yieldrep

@@ -122,13 +122,18 @@ class Store:
         if created:
             pen = pre['pen'] if 'pen' in pre else (p.max_pen() if check else None)
             st = 'infeasible' if (pen is not None and pen > tol) else status
+            grid = pre['grid'] if 'grid' in pre else p.grid_lines()
             cur = self.db.execute(
                 'INSERT INTO packing(hash,n,s,s_str,coords,status,s_exact,fp,ntilted,grid,pen,parent,tags,added) '
                 'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
                 (h, p.n, float(p.s), p.s_str, p.sq.astype('<f8').tobytes(), st, s_exact, fp,
                  pre.get('ntilted', p.ntilted()) if 'ntilted' in pre else p.ntilted(),
-                 pre['grid'] if 'grid' in pre else p.grid_lines(), pen, parent, json.dumps(sorted(set(tags))), now()))
+                 grid, pen, parent, json.dumps(sorted(set(tags))), now()))
             pid = cur.lastrowid
+            if os.environ.get('PK_NO_CREDIT') is None:            # 10-24: online lineage credit (pk/credit.py)
+                from . import credit
+                credit.on_add(self.db, pid, p.n, float(p.s), source,
+                              st != 'infeasible' and not grid and (pen is None or pen <= 1e-9))
         else:
             pid = row['id']
             if RANK.get(status, 0) > RANK.get(row['status'], 0) and row['status'] != 'infeasible':
