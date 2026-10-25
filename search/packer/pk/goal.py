@@ -48,6 +48,7 @@ class Goal:
     predictions: dict
     progress: dict = field(default_factory=lambda: dict(exclude=['G', 'D', 'S'], within=0.02))
     value: dict = field(default_factory=lambda: dict(match=1.0, frontier=1.0e5, bar=100.0))
+    retire: bool = True                                         # stop scheduling a target once its bar is crossed
     ref_cap: int = 3000                                         # reference: at most this many pre-goal packings per n
     bars: dict = field(default_factory=dict)                    # {n: side}: a bonus (value.bar) for the job that first gets below
     budget_cpu_h: float = 15.0
@@ -611,6 +612,15 @@ def run(goal, seed=1, log=print):
         arm = json.load(open(os.path.join(out, 'arm.json')))
         t0 = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(os.path.getmtime(os.path.join(out, 'arm.json'))))
         score(name, out, arm, t0, True)
+    retired = set()
+    if goal.retire and goal.bars:                                 # 10-24 (Evan): a fast-follow target stops once its
+        st = Store()                                              # bar is crossed (or already is at the start)
+        try:
+            retired = {n for n, b in goal.bars.items() if best_before(st.db, n, '9999') < b}
+        finally:
+            st.close()
+        if retired:
+            log(f'retired at start (already below the bar): {sorted(retired)}')
     sizes = pool_sizes(goal, arms); live = {}
     jid = max([int(d[1:]) for d in os.listdir(goal.dir) if d.startswith('j') and d[1:].isdigit()] + [0])
     last_sizes = time.time()
@@ -623,9 +633,12 @@ def run(goal, seed=1, log=print):
             pend = {}
             for x in live.values():
                 pend[x['arm']] = pend.get(x['arm'], 0.0) + goal.quantum_cpu_h
-            elig = [a for a in arms if sizes.get(a['id'], 0) > 0]
+            retired |= {r['n'] for r in rows if goal.retire and r.get('bar')}
+            elig = [a for a in arms if sizes.get(a['id'], 0) > 0 and a['n'] not in retired]
             if not elig:
-                log('no arm has donors'); break
+                if not getattr(run, '_noarm', False):
+                    log('no arm left (no donors, or every target retired)'); run._noarm = True
+                break
             pick = max(elig, key=lambda a: post.sample(a['id'], rng, pend.get(a['id'], 0.0)))
             jid += 1; name = f'j{jid:04d}'; out = os.path.join(goal.dir, name); os.makedirs(out, exist_ok=True)
             t0 = time.strftime('%Y-%m-%dT%H:%M:%S')
