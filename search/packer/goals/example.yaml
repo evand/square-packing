@@ -9,7 +9,6 @@ progress: {exclude: [G, D, S], within_rel: 0.0016}   # wanted = not grid / diamo
 value: {match: 1.0, frontier: 1.0e+5, bar: 100}     # reward = new clusters + 1e5 x (family-best + store-best gain)
 bars: {37: 6.5986}                                   # + 100 for the job that first gets below a bar (e.g. a known side)
 budget_cpu_h: 1
-quantum_cpu_h: 0.1
 procs: 4
 relax: round.15c.p5
 predictions:                                         # required: write them before running; grade them in `result`

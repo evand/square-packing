@@ -19,7 +19,7 @@ Goal file (every key but `goal`, `targets`, `predictions` has a default):
   value: {match: 1.0, frontier: 1.0e5, bar: 100}  reward = match * new clusters + frontier * (family-best gain + store-
                                                  best gain), side units
   bars: {n: side}                                a bonus (value.bar) for the job that first gets below side at n
-  budget_cpu_h: 15   quantum_cpu_h: 0.5   procs: 4   relax: round.15c.p5   donor_window: 0.05   donors: 6
+  budget_cpu_h: 15   quantum_cpu_h: auto (budget / (procs x 8), >= 0.05)   procs: 4   relax: round.15c.p5   donor_window: 0.05   donors: 6
   arms: auto | [ {kind: walk|chain, offset: 0, chain: "...", match_donors: true}, ... ]
   predictions: {...}  (required: the scheduler refuses a goal without them)   baseline: [...]   notes: "..."
 
@@ -35,6 +35,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))     # search/packer
 RUNS = os.path.join(HERE, 'runs', 'goals')
+WAVES = 8                                                         # auto quantum: the run is about this many job lengths
 FEAS = "status!='infeasible' AND (pen IS NULL OR pen<=1e-9) AND (grid IS NULL OR grid=0)"
 
 
@@ -49,7 +50,7 @@ class Goal:
     value: dict = field(default_factory=lambda: dict(match=1.0, frontier=1.0e5, bar=100.0))
     bars: dict = field(default_factory=dict)                    # {n: side}: a bonus (value.bar) for the job that first gets below
     budget_cpu_h: float = 15.0
-    quantum_cpu_h: float = 0.5
+    quantum_cpu_h: object = 'auto'                              # 'auto': budget / (procs x WAVES)
     procs: int = 4
     relax: str = 'round.15c.p5'
     donor_window: float = 0.05
@@ -99,6 +100,8 @@ def load(path):
     num = lambda x: float(x) if isinstance(x, (int, float, str)) and not isinstance(x, bool) else x
     g.value = {k: num(v) for k, v in g.value.items()}           # PyYAML reads 1.0e4 (no exponent sign) as a string
     g.progress = {k: (num(v) if k != 'exclude' else v) for k, v in g.progress.items()}
+    if g.quantum_cpu_h == 'auto':                                 # 10-24: two waves of 0.5 CPU-h left one straggler
+        g.quantum_cpu_h = max(0.05, float(g.budget_cpu_h) / (int(g.procs) * WAVES))   # alone for 30 min, 15 cores idle
     for f in ('budget_cpu_h', 'quantum_cpu_h', 'donor_window', 'construct_share', 'score_share'):
         setattr(g, f, float(getattr(g, f)))
     g.procs, g.donors = int(g.procs), int(g.donors)
@@ -455,7 +458,7 @@ def finalize(st, goal, jid, t0, n, procs=1, cpu_left=None):
     return dict(cands=len(items), polished=done, jbest=jbest if jbest < float('inf') else None)
 
 
-def count(st, goal, jid, t0, n, jbest=None):
+def count(st, goal, jid, t0, n, jbest=None, fprev=None):
     """the cheap half (the scheduler, one job at a time so cluster leaders never race): this job's polished packings,
     deduped at 1e-8, counted as NEW region clusters (pk/cluster leaders, tag goal_<name>) that no pre-goal minimum and
     no earlier job had, within the window of the polished family best at goal start; gain = drop of the polished
@@ -479,20 +482,21 @@ def count(st, goal, jid, t0, n, jbest=None):
     new_clusters = {lab for lab in L.values() if int(lab.split(':')[1]) in mine}
     fbest = min([x[1] for x in keep] + [f0p])
     best = min([b0] + [x[1] for x in keep if x[1] < k - 1e-9] + ([jbest] if jbest < k - 1e-9 else []))
-    gain, sgain = max(0.0, f0p - fbest), max(0.0, b0 - best)
+    fref = f0p if fprev is None else min(f0p, fprev)               # 10-24: vs the family best already recorded, so a
+    gain, sgain = max(0.0, fref - fbest), max(0.0, b0 - best)      # second job reaching the same side is not paid again
     bar = goal.bars.get(n)                                        # 10-24: 1e4 x a 0.003 record gain paid ~30, less
     crossed = int(bar is not None and best < bar <= b0)           # than a busy cluster arm; gains now 1e5, bars a bonus
     v = goal.value
-    return dict(matches=len(new_clusters), minima=len(keep), raw=raw, gain=gain, store_gain=sgain,
+    return dict(matches=len(new_clusters), minima=len(keep), raw=raw, gain=gain, store_gain=sgain, fbest=fbest,
                 best_gap=(jbest - b0) if jbest < float('inf') else None,
                 bar=crossed, reward=v.get('match', 1.0) * len(new_clusters) + v.get('frontier', 1e5) * (gain + sgain)
                 + v.get('bar', 100.0) * crossed)
 
 
-def reward(st, goal, jid, t0, n, procs=4):
+def reward(st, goal, jid, t0, n, procs=4, fprev=None):
     """v2 (Evan 10-24): finalize (polish everything) + count; for rescore and for jobs that did not finalize"""
     F = finalize(st, goal, jid, t0, n, procs)
-    return count(st, goal, jid, t0, n, F['jbest'])
+    return count(st, goal, jid, t0, n, F['jbest'], fprev)
 
 
 def rescore(goal, procs=12, log=print):
@@ -510,8 +514,10 @@ def rescore(goal, procs=12, log=print):
             os.remove(f)
     st = Store()
     try:
+        fb = {}
         for r in sorted(rows, key=lambda r: r['job']):
-            R = reward(st, goal, r['job'], r['t0'], r['n'], procs)
+            R = reward(st, goal, r['job'], r['t0'], r['n'], procs, fb.get(r['n']))
+            fb[r['n']] = min(fb.get(r['n'], R['fbest']), R['fbest'])
             for kk in ('matches', 'reward', 'gain', 'store_gain'):
                 r.setdefault('v1_' + kk, r.get(kk))
             r.update(R)
@@ -565,8 +571,12 @@ def run(goal, seed=1, log=print):
         st.close()
     overhead = lambda: sum(json.load(open(os.path.join(goal.dir, f))).get('cpu_h', 0)
                            for f in os.listdir(goal.dir) if f.startswith('ref_n'))
+    def eta():
+        left = max(0.0, goal.budget_cpu_h - sum(r['cpu_h'] for r in rows) - overhead())
+        return f"ETA {time.strftime('%H:%M', time.localtime(time.time() + 3600 * (left / goal.procs + 0.5 * goal.quantum_cpu_h)))}"
     log(f'goal {goal.goal}: {len(arms)} arms over {goal.targets}; budget {goal.budget_cpu_h} CPU-h, spent '
-        f'{sum(r["cpu_h"] for r in rows) + overhead():.2f} (references {overhead():.2f})')
+        f'{sum(r["cpu_h"] for r in rows) + overhead():.2f} (references {overhead():.2f}); quantum {goal.quantum_cpu_h:.3f} '
+        f'CPU-h x {goal.procs} procs; {eta()}')
 
     def score(name, out, arm, t0, recovered=False):
         """count (cheap) for a job that finalized itself; a job from before 10-24 or one that crashed: finish it here"""
@@ -579,7 +589,8 @@ def run(goal, seed=1, log=print):
                 converge.run(st, lo=arm['n'], hi=arm['n'], procs=goal.procs, ids=_job_ids(st.db, goal, name, t0),
                              log=lambda *a: None)
                 J.update(finalize(st, goal, name, t0, arm['n'], goal.procs))
-            R = count(st, goal, name, t0, arm['n'], J.get('jbest'))
+            fp = [r['fbest'] for r in rows if r['n'] == arm['n'] and r.get('fbest') is not None]
+            R = count(st, goal, name, t0, arm['n'], J.get('jbest'), min(fp) if fp else None)
         finally:
             st.close()
         row = dict(job=name, arm=arm['id'], n=arm['n'], t0=t0, cpu_h=J.get('cpu', 0) / 3600,
@@ -589,7 +600,7 @@ def run(goal, seed=1, log=print):
         rows.append(row); open(jl, 'a').write(json.dumps(row) + '\n')
         log(f"{name} {'recovered' if recovered else 'done'} {row['arm']}: {row['cpu_h']:.2f} CPU-h {row['cpu_split']}, "
             f"polished {row['polished']} / {row['cands']}, new clusters {R['matches']}, gain {R['gain']:.2e}, "
-            f"reward {R['reward']:.2f}")
+            f"reward {R['reward']:.2f}; {eta()}")
 
     done = {r['job'] for r in rows}                               # resume: finished jobs never recorded (a crash)
     for name in sorted(d for d in os.listdir(goal.dir) if d.startswith('j') and d not in done):
