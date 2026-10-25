@@ -416,27 +416,57 @@ def polish_many(items, procs):
 POLISH_SOURCES = ("goal-ref:%", "run:runs/goals/%/polish")
 
 
+FIXED = 'polish-fixed'
+
+
+def polish_fix(items, procs, rounds=3, tol=1e-10):
+    """polish until a round changes the side by <= tol (at most `rounds`; Evan 10-25: stop once re-polishing stops
+    changing things).  -> {id: (s, sq, fixed) or None}; fixed = the last round moved <= tol (a polish fixpoint)"""
+    out, todo = {}, list(items)
+    for r in range(rounds):
+        P = polish_many(todo, procs); nxt = []
+        for i, s, sq in todo:
+            v = P.get(i)
+            if v is None:
+                out.setdefault(i, None); continue
+            moved = s - v[0]
+            out[i] = (v[0], v[1], abs(moved) <= tol)
+            if abs(moved) > tol:
+                nxt.append((i, v[0], v[1]))
+        todo = nxt
+        if not todo:
+            break
+    return out
+
+
 def polish_cached(db, items, procs, reuse=True):
-    """polish_many with reuse: a packing that is itself a trusted polish output, or has a trusted polished child (the
-    best one), is not polished again.  -> ({id: (s, sq) or None}, dict(self=, child=, polished=))"""
+    """polish with reuse: a packing that is a polish fixpoint (tag polish-fixed) or a trusted polish output, or has
+    such a polished child (the best one), is not polished again; the rest are polished to a fixpoint (polish_fix) and
+    tagged when fixed.  reuse=False: one plain polish_many round (the pre-10-25 behaviour).
+    -> ({id: (s, sq[, fixed]) or None}, dict(self=, child=, polished=))"""
     out, stats = {}, dict(self=0, child=0, polished=0)
-    if reuse and items:
+    if not reuse:
+        P = polish_many(items, procs); stats['polished'] = len(items)
+        return P, stats
+    if items:
         ids = [i for i, _, _ in items]; q = ','.join('?' * len(ids))
         tr = ' OR '.join('g.source LIKE ?' for _ in POLISH_SOURCES)
         selfp = {i for (i,) in db.execute(f"SELECT DISTINCT g.packing FROM sighting g WHERE g.packing IN ({q}) AND ({tr})",
                                          (*ids, *POLISH_SOURCES))}
+        selfp |= {i for (i,) in db.execute(f"SELECT id FROM packing WHERE id IN ({q}) AND tags LIKE ?", (*ids, f'%"{FIXED}"%'))}
         for i, s, sq in items:
             if i in selfp:
                 out[i] = (s, sq); stats['self'] += 1
         rest = [i for i in ids if i not in out]
         if rest:
             q = ','.join('?' * len(rest))
-            for par, s, c in db.execute(f"SELECT p.parent, p.s, p.coords FROM packing p JOIN sighting g ON g.packing = p.id "
-                                        f"WHERE p.parent IN ({q}) AND ({tr}) AND {FEAS} ORDER BY p.s DESC", (*rest, *POLISH_SOURCES)):
+            for par, s, c in db.execute(f"SELECT p.parent, p.s, p.coords FROM packing p LEFT JOIN sighting g ON g.packing = p.id "
+                                        f"WHERE p.parent IN ({q}) AND (({tr}) OR p.tags LIKE ?) AND {FEAS} ORDER BY p.s DESC",
+                                        (*rest, *POLISH_SOURCES, f'%"{FIXED}"%')):
                 out[par] = (s, np.frombuffer(c, '<f8').reshape(-1, 3).copy())       # ascending last: the best child wins
             stats['child'] = sum(1 for i in rest if i in out)
     todo = [x for x in items if x[0] not in out]
-    out.update(polish_many(todo, procs)); stats['polished'] = len(todo)
+    out.update(polish_fix(todo, procs)); stats['polished'] = len(todo)
     return out, stats
 
 
@@ -454,6 +484,8 @@ def _add_polished(st, src, P, parents):
         if v is None:
             continue
         pid, _ = st.add(Packing(v[0], v[1]), src, 'ours', ref=str(i), status='polished', parent=parents.get(i, i), commit=False)
+        if len(v) > 2 and v[2]:                                   # a polish fixpoint: never re-polished (polish_cached)
+            st.tag(pid, FIXED)
         out[i] = pid
     st.db.commit()
     return out
