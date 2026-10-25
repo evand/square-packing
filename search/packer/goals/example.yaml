@@ -6,7 +6,8 @@ notes: >
   donors at n, add from n - 1, drop from n + 1 / n + 2, L-cut from the next row, plus any plugin ARM_TEMPLATES.
 targets: [37, 38]
 progress: {exclude: [G, D, S], within_rel: 0.0016}   # wanted = not grid / diamond / strip; window = 0.0016 x side
-value: {match: 1.0, frontier: 1.0e+4}                # reward = new clusters + 1e4 x (family-best + store-best gain)
+value: {match: 1.0, frontier: 1.0e+5, bar: 100}     # reward = new clusters + 1e5 x (family-best + store-best gain)
+bars: {37: 6.5986}                                   # + 100 for the job that first gets below a bar (e.g. a known side)
 budget_cpu_h: 1
 quantum_cpu_h: 0.1
 procs: 4

@@ -24,6 +24,32 @@ sys.path.insert(0, HERE)
 DEV45 = 3.0      # degrees (10-24; TODO "familymap.classify")
 
 
+def _held(sq, s, idx, tol=1e-6):
+    """10-24: which of squares idx touch a neighbour or a wall (separating-axis gap < tol).  A rattler's angle is
+    arbitrary, so it should not decide the family: copies of the same 37 minimum read D or V by where rattlers sat."""
+    def corners(x, y, d):
+        a = math.radians(d); c, si = math.cos(a) / 2, math.sin(a) / 2
+        return np.array([[x + c - si, y + si + c], [x - c - si, y - si + c], [x - c + si, y - si - c], [x + c + si, y + si - c]])
+    def gap(P, Q):
+        g = -1e9
+        for R in (P, Q):
+            for i in range(4):
+                e = R[(i + 1) % 4] - R[i]; v = np.array([-e[1], e[0]]) / math.hypot(*e)
+                p, q = P @ v, Q @ v
+                g = max(g, q.min() - p.max(), p.min() - q.max())
+        return g
+    out = []
+    for i in idx:
+        P = corners(*sq[i])
+        g = min(P[:, 0].min(), P[:, 1].min(), s - P[:, 0].max(), s - P[:, 1].max())
+        near = np.where(np.hypot(*(sq[:, :2] - sq[i, :2]).T) < 1.5)[0]
+        for j in near:
+            if j != i and g >= tol:
+                g = min(g, gap(P, corners(*sq[j])))
+        out.append(g < tol)
+    return np.array(out, bool)
+
+
 def classify(n, s, sq):
     from pk import bands as B
     sq = np.asarray(sq, float)
@@ -41,8 +67,12 @@ def classify(n, s, sq):
     if s >= k - 1e-9 or T < 5:
         code = 'G'
     else:
-        P = sq[t, :2]
-        ev = np.sort(np.linalg.eigvalsh(np.cov(P.T))) if T >= 3 else np.array([0, 1])
+        h = _held(sq, s, np.where(t)[0])                 # rattlers out, unless this is not a converged packing
+        if h.sum() >= max(5, 0.5 * T):                   # (raw / screened: few contacts at 1e-6 -> keep all)
+            a, dev45 = a[h], dev45[h]
+            info['rattlers'] = int(T - h.sum())
+        P = sq[t, :2][h] if 'rattlers' in info else sq[t, :2]
+        ev = np.sort(np.linalg.eigvalsh(np.cov(P.T))) if len(P) >= 3 else np.array([0, 1])
         thin = math.sqrt(max(ev[0], 0) / max(ev[1], 1e-12))
         info['thin'] = round(thin, 3)
         info['a_med'] = round(float(np.median(np.minimum(a, 90 - a))), 2)

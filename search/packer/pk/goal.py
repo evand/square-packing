@@ -16,8 +16,9 @@ Goal file (every key but `goal`, `targets`, `predictions` has a default):
   progress: {exclude: [G, D, S], within: 0.02}   a match = a new packing at a target whose familymap code is not
                                                  excluded, within `within` of the best such packing at job start
                                                  (family-relative near-record; Evan 10-24, the 148 case)
-  value: {match: 1.0, frontier: 1.0e4}           reward = match * new matches + frontier * (family-best gain + store-
+  value: {match: 1.0, frontier: 1.0e5, bar: 100}  reward = match * new clusters + frontier * (family-best gain + store-
                                                  best gain), side units
+  bars: {n: side}                                a bonus (value.bar) for the job that first gets below side at n
   budget_cpu_h: 15   quantum_cpu_h: 0.5   procs: 4   relax: round.15c.p5   donor_window: 0.05   donors: 6
   arms: auto | [ {kind: walk|chain, offset: 0, chain: "...", match_donors: true}, ... ]
   predictions: {...}  (required: the scheduler refuses a goal without them)   baseline: [...]   notes: "..."
@@ -45,7 +46,8 @@ class Goal:
     targets: list
     predictions: dict
     progress: dict = field(default_factory=lambda: dict(exclude=['G', 'D', 'S'], within=0.02))
-    value: dict = field(default_factory=lambda: dict(match=1.0, frontier=1.0e4))
+    value: dict = field(default_factory=lambda: dict(match=1.0, frontier=1.0e5, bar=100.0))
+    bars: dict = field(default_factory=dict)                    # {n: side}: a bonus (value.bar) for the job that first gets below
     budget_cpu_h: float = 15.0
     quantum_cpu_h: float = 0.5
     procs: int = 4
@@ -100,6 +102,7 @@ def load(path):
     for f in ('budget_cpu_h', 'quantum_cpu_h', 'donor_window', 'construct_share', 'score_share'):
         setattr(g, f, float(getattr(g, f)))
     g.procs, g.donors = int(g.procs), int(g.donors)
+    g.bars = {int(k): float(v) for k, v in (g.bars or {}).items()}
     return g
 
 
@@ -477,10 +480,13 @@ def count(st, goal, jid, t0, n, jbest=None):
     fbest = min([x[1] for x in keep] + [f0p])
     best = min([b0] + [x[1] for x in keep if x[1] < k - 1e-9] + ([jbest] if jbest < k - 1e-9 else []))
     gain, sgain = max(0.0, f0p - fbest), max(0.0, b0 - best)
+    bar = goal.bars.get(n)                                        # 10-24: 1e4 x a 0.003 record gain paid ~30, less
+    crossed = int(bar is not None and best < bar <= b0)           # than a busy cluster arm; gains now 1e5, bars a bonus
     v = goal.value
     return dict(matches=len(new_clusters), minima=len(keep), raw=raw, gain=gain, store_gain=sgain,
                 best_gap=(jbest - b0) if jbest < float('inf') else None,
-                reward=v.get('match', 1.0) * len(new_clusters) + v.get('frontier', 1e4) * (gain + sgain))
+                bar=crossed, reward=v.get('match', 1.0) * len(new_clusters) + v.get('frontier', 1e5) * (gain + sgain)
+                + v.get('bar', 100.0) * crossed)
 
 
 def reward(st, goal, jid, t0, n, procs=4):
