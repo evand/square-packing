@@ -309,7 +309,7 @@ import Sqpack
 -- R_5 with both sides >= 2 exactly (Sqpack/Rect5Line): cover C (10 points, weights 2/3, 1/3) + scaling onto the line
 #print axioms SquarePacking.rect5_wide_lower
 #print axioms SquarePacking.rect5_wide_iff
--- R_5 strip (Sqpack/Rect5Low, Rect5Final): H < 2sqrt2 - 1 by four midline points; higher strips by the chain + generated certificates
+-- R_5 low strip (Sqpack/Rect5Low): H < 2sqrt2 - 1 by four midline points (generalised by strip_low)
 #print axioms SquarePacking.rect5_low
 -- every n (Sqpack/StripLow): H < 2sqrt2 - 1 forces L >= n, by n - 1 midline points
 #print axioms SquarePacking.strip_low
@@ -330,6 +330,6 @@ import Sqpack
 -- odd n in a strip, 1.87 <= H < 2, exactly (Sqpack/StripC)
 #print axioms SquarePacking.kap_C
 #print axioms SquarePacking.strip_odd_iff
-#print axioms SquarePacking.final5_high
--- R_5 exactly (Sqpack/Rect5Thm)
+-- R_5 exactly (Sqpack/Rect5Iff): strip part from strip_odd_lower at n = 5 (+ monotonicity in H below 1.87)
+#print axioms SquarePacking.rect5_strip
 #print axioms SquarePacking.rect5_iff

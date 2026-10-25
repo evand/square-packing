@@ -1,5 +1,9 @@
 # Final5Hi in Lean (2026-10-21)
 
+**Retired 2026-10-24.**  `rect5_iff` no longer uses this: its strip part is `rect5_strip` (`lean/Sqpack/Rect5Iff.lean`), from
+the odd-n strip theorem.  The Lean files described here (`Rect5.lean`, `Rect5Mid.lean`, `Rect5Final.lean`, `Rect5Hi*.lean`)
+are in `lean-attic/` next to this note and are no longer built; `hi5.py` still writes to `lean/Sqpack/`.
+
 `final5_high : Final5Hi` (`lean/Sqpack/Rect5Final.lean`): the real inequality left by the chain for five unit
 squares in a strip of height 2√2 − 1 ≤ H < 2 (low strips: `rect5_low`, four midline points).  With
 `rect5_strip_lower_hi_of` (Rect5.lean) it gives the strip part of R₅.

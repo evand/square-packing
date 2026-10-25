@@ -448,12 +448,14 @@ select{font:inherit;font-size:.9rem;padding:4px 6px;border:1px solid var(--rule)
 </section>
 
 <section id="strip5">
-  <div class="sechead"><span class="eyebrow">05 · Five squares in a strip</span><h2>Midline points, then certificates</h2></div>
+  <div class="sechead"><span class="eyebrow">05 · Five squares in a strip</span><h2>A slope walk, for every odd n</h2></div>
   <p><strong>Low strips</strong>, <span class="mono">H &lt; 2√2 − 1 ≈ 1.828</span>. Four points on the midline,
   <span class="mono">(1, H/2)</span>, …, <span class="mono">(4, H/2)</span>, in the <span class="mono">5 × H</span> box: every
   unit square in it contains one (select "low strip" above). Between two midline points this is the side-strip lemma again,
   with gap 1 at height <span class="mono">H/2</span>, and its condition <span class="mono">1/2 + H/2 ≤ √2</span> is exactly
-  <span class="mono">H ≤ 2√2 − 1</span>. So in low strips five squares need length 5. Lean: 98 lines.</p>
+  <span class="mono">H ≤ 2√2 − 1</span>. So in low strips five squares need length 5. Lean: 98 lines; the same points
+  work for every <i>n</i> (<span class="mono">strip_low</span>). The proof of <span class="mono">rect5_iff</span> no longer
+  needs them (see below), but they are the most direct argument there.</p>
   <p><strong>High strips</strong>, <span class="mono">2√2 − 1 ≤ H &lt; 2</span>. This contains the zigzag, Friedman's piece
   <span class="mono">ℓ + 4s = 4 + 6√2</span> for <span class="mono">s ≥ (6√2 − 1)/4 ≈ 1.8713</span>.</p>
   <figure>
@@ -476,25 +478,35 @@ select{font:inherit;font-size:.9rem;padding:4px 6px;border:1px solid var(--rule)
     <figcaption>The zigzag at <span class="mono">H = 1.95</span>: two uprights, three squares at 45°, edge to edge. Unlike the
     four-square packing, the two separating lines are different lines.</figcaption>
   </figure>
-  <p>The chain applies as before: shelves on <i>b</i> and <i>d</i>, lines between <i>b</i> and <i>c</i> and between <i>c</i> and
-  <i>d</i>. A concavity argument (in Lean) shows that the middle square is narrowest between the two lines when it is upright
-  or parallel to one of them. What is left is one real inequality in the two lines' angles and the height. But the two halves
-  now see different lines, coupled through the middle square, and the natural ways to decouple them lose (numerically, by 0.1
-  or more); one split that loses nothing has not been turned into a proof yet. We proved the remaining inequality by machine:</p>
+  <p>The chain applies as before, but the two halves now see different lines, coupled through the middle square, and the
+  natural ways to decouple them lose. Our first proof (October 21) closed this step by machine: 160 polynomial inequalities,
+  14,411 lines of generated Lean (Handelman certificates and an exact zigzag factorisation; archived, see
+  <a href="https://github.com/evand/square-packing/blob/main/search/rectfront/r5strip/FINAL5.md">r5strip/FINAL5.md</a>).
+  It is now replaced by a theorem for every odd <i>n</i> (<span class="mono">strip_odd_iff</span>): for odd
+  <span class="mono">n ≥ 3</span> and <span class="mono">1.87 ≤ H &lt; 2</span>, <i>n</i> unit squares fit in
+  <span class="mono">L × H</span> iff <span class="mono">L ≥ n</span> or <span class="mono">L ≥ (n − 2)(2√2 − H) + 4 − H</span>,
+  the row or the 45° zigzag. The proof:</p>
   <ul>
-    <li>half-angle substitution makes it polynomial; it splits into 64 case theorems and 160 polynomial inequalities on
-    boxes;</li>
-    <li>144 are not tight and are linear in <span class="mono">H</span>, so it is enough to prove them at the two ends of its
-    range. All but two are proved there by Handelman certificates: the polynomial is written as a positive combination of products of the box constraints
-    (<span class="mono">u ≥ 0</span>, <span class="mono">1 − u ≥ 0</span>, …), found by a linear program and checked by
-    Lean's <span class="mono">linarith</span>;</li>
-    <li>16 are tight: they hold with equality along the zigzag, at both angles 45°, for every <span class="mono">H</span>
-    in the zigzag range. Those are proved by an exact factorisation that exhibits a squared factor;</li>
-    <li>the remaining two vanish only at corners of their box and are proved by hand.</li>
+    <li><strong>Slope walk</strong> (<span class="mono">strip_walk</span>). Sort the squares by centre and take a separating line
+    between each pair of neighbours; the two walls count as lines of slope 0. Each square then needs at least an explicit
+    horizontal length that depends only on the slopes of its two lines, its tilt and <span class="mono">H</span>: the heights
+    cancel when the lengths are added up. So <span class="mono">L</span> is at least a sum of per-square costs along a walk
+    on slopes that starts and ends at 0.</li>
+    <li><strong>Per-square bounds.</strong> Next to a wall an upright square is cheapest (<span class="mono">kap_wall</span>);
+    between two lines leaning the same way a square costs at least a grid unit (<span class="mono">kap_same</span>); in general
+    it costs at least a grid unit or the zigzag amount <span class="mono">2√2 − H</span>, each corrected by a term in the two
+    slopes (<span class="mono">kap_B</span>, <span class="mono">kap_S</span>); and one sharper bound for cheap squares
+    (<span class="mono">kap_C</span>).</li>
+    <li><strong>Parity potentials</strong> (<span class="mono">strip_odd_lower</span>). Charges on the lines, depending on the
+    slope and on whether the line's index is odd or even, turn the per-square bounds into
+    <span class="mono">L ≥ min(n, (n − 2)(2√2 − H) + 4 − H)</span>. Only one inequality, <span class="mono">kap_C</span>, needs
+    <span class="mono">H ≥ 1.87</span>.</li>
   </ul>
-  <p>That is 14,411 lines of generated Lean, about 5 minutes to build on 16 cores (70 CPU-minutes). It was not a surprise to need certificates at
-  <span class="mono">n = 5</span>, though we had hoped to put them off to larger <i>n</i>. A structured proof of this step is
-  open.</p>
+  <p>At <span class="mono">n = 5</span> the zigzag piece starts at <span class="mono">H ≈ 1.8713</span>, inside that range. Below
+  1.87, a strip of height <span class="mono">H</span> fits inside the strip of height 1.87, where the zigzag already needs
+  <span class="mono">3(2√2 − 1.87) + 4 − 1.87 ≈ 5.005 &gt; 5</span>; so five squares need length 5 there
+  (<span class="mono">rect5_strip</span>, a dozen lines). The same argument settles every odd <i>n</i> above 1.87; below it,
+  odd <i>n</i> ≥ 7 have their tilted pieces in the band <span class="mono">2√2 − 1 ≤ H &lt; 1.87</span>, which is open.</p>
 </section>
 
 <section id="check">
@@ -504,15 +516,15 @@ select{font:inherit;font-size:.9rem;padding:4px 6px;border:1px solid var(--rule)
 lake exe cache get              # Mathlib
 lake build Sqpack.Rect3         # rect3_iff     ~15 s
 lake build Sqpack.Rect4         # rect4_iff     ~15 s
-lake build Sqpack.Rect5Thm      # rect5_iff     ~5 min on 16 cores, mostly the generated files
+lake build Sqpack.Rect5Iff      # rect5_iff     ~2 min (17 files, 4.5k lines, ~4 CPU-min)
 lake build &amp;&amp; lake env lean Axioms.lean</code></pre>
     <p class="footnote"><span class="mono">Axioms.lean</span> prints the axioms of every theorem in the library (it imports
     all of it; the rectangle theorems are near the end) and must show only <span class="mono">propext</span>,
     <span class="mono">Classical.choice</span> and <span class="mono">Quot.sound</span>: no <span class="mono">sorry</span>, no
-    <span class="mono">native_decide</span>. To check only these three, put <span class="mono">import Sqpack.Rect5Thm</span>
+    <span class="mono">native_decide</span>. To check only these three, put <span class="mono">import Sqpack.Rect5Iff</span>
     and <span class="mono">#print axioms SquarePacking.rect5_iff</span> (and the same for <span class="mono">rect3_iff</span>,
     <span class="mono">rect4_iff</span>) in a file and run <span class="mono">lake env lean</span> on it. The build times are
-    wall times on a 16-core machine; the generated files build one at a time, each Lean process using about 5 cores. A full
+    wall times on a 16-core machine. A full
     <span class="mono">lake build</span> also builds unrelated parts of the library, one of which needs about 23 GB of memory.</p>
   </div>
   <p>The statements use one definition, <span class="mono">RectPacks n w h</span>: <i>n</i> closed unit squares, at any
@@ -526,16 +538,17 @@ lake build &amp;&amp; lake env lean Axioms.lean</code></pre>
       <tr><td class="num">Rect4.lean, Rect4Core.lean</td><td>one-square lemma, half turn, Friedman's packing; <span class="mono">rect4_iff</span></td></tr>
       <tr><td class="num">Rect5Pack.lean</td><td>the five-square constructions: row, grid, zigzag, stretched s(5)</td></tr>
       <tr><td class="num">Rect5Pts.lean, Rect5Line.lean</td><td>the four points and cover C; both sides ≥ 2</td></tr>
-      <tr><td class="num">Rect5Low.lean</td><td>midline points, low strips</td></tr>
-      <tr><td class="num">Rect5.lean, Rect5Mid.lean, Rect5Final.lean, Rect5Hi*.lean</td><td>high strips: the chain for five squares and the generated certificates</td></tr>
-      <tr><td class="num">Rect5Iff.lean, Rect5Thm.lean</td><td><span class="mono">Fits5</span>; <span class="mono">rect5_iff</span></td></tr>
+      <tr><td class="num">Rect5Low.lean, StripLow.lean</td><td>midline points, low strips (five squares; every <i>n</i>)</td></tr>
+      <tr><td class="num">StripWalk.lean, StripKernel.lean, StripPot.lean, StripS.lean</td><td>strips: the slope walk and the per-square costs</td></tr>
+      <tr><td class="num">StripOdd.lean, StripC.lean, StripZigzag.lean</td><td>parity potentials; the zigzag for every odd <i>n</i>; <span class="mono">strip_odd_iff</span></td></tr>
+      <tr><td class="num">Rect5Iff.lean</td><td><span class="mono">Fits5</span>; <span class="mono">rect5_strip</span>, <span class="mono">rect5_iff</span></td></tr>
     </tbody>
   </table></div>
   <p class="footnote">Research notes: <a href="https://github.com/evand/square-packing/blob/main/search/rectfront/RECTFRONT.md">search/rectfront/RECTFRONT.md</a>
   (the log), <a href="https://github.com/evand/square-packing/blob/main/search/rectfront/LESSONS.md">LESSONS.md</a> (techniques,
   what failed), <a href="https://github.com/evand/square-packing/blob/main/search/rectfront/r5pts/R5PTS.md">r5pts/R5PTS.md</a>
   (point covers, with paper proofs), <a href="https://github.com/evand/square-packing/blob/main/search/rectfront/r5strip/FINAL5.md">r5strip/FINAL5.md</a>
-  (the certificates).</p>
+  (the earlier certificate proof, archived).</p>
 </section>
 
 <section id="limits">
@@ -545,10 +558,14 @@ lake build &amp;&amp; lake env lean Axioms.lean</code></pre>
     <span class="mono">rect3_iff</span>, <span class="mono">rect4_iff</span> and <span class="mono">rect5_iff</span> against
     the definition of <span class="mono">RectPacks</span>; read those (a few lines each) to see that they say what this page
     says.</li>
-    <li>The high-strip part of the five-square proof is generated and teaches little. The rest is written by hand.</li>
+    <li>All of these proofs are written by hand. A few steps are single polynomial inequalities proved with product hints
+    found by a linear program (for example <span class="mono">C_187</span> in <span class="mono">StripC.lean</span>, the reason
+    for the 1.87).</li>
     <li>Credit for the boundaries is as far as we could trace it (Friedman's page, §02). If you know of earlier proofs of any
     of these lower bounds, please tell us.</li>
-    <li>Six squares and up are open here. Friedman's table lists boundaries up to <span class="mono">S₉</span>
+    <li>Six squares and up are open here, apart from strips: odd <i>n</i> for
+    <span class="mono">1.87 ≤ s &lt; 2</span> (<span class="mono">strip_odd_iff</span>) and every <i>n</i> for
+    <span class="mono">s &lt; 2√2 − 1</span> (<span class="mono">strip_low</span>). Friedman's table lists boundaries up to <span class="mono">S₉</span>
     (<i>n</i> = 10), with higher-degree algebraic curves from <i>n</i> = 7 on; wand125's lists go to <i>n</i> = 15 and lower
     one piece for <i>n</i> = 7.</li>
   </ul>

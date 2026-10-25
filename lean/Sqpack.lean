@@ -6,8 +6,6 @@ import Sqpack.RectChain
 import Sqpack.Rect3
 import Sqpack.Rect4Core
 import Sqpack.Rect4
-import Sqpack.Rect5Mid
-import Sqpack.Rect5
 import Sqpack.Rect5Pack
 import Sqpack.Rect5Pts
 import Sqpack.Rect5Line
@@ -20,9 +18,7 @@ import Sqpack.StripS
 import Sqpack.StripOdd
 import Sqpack.StripZigzag
 import Sqpack.StripC
-import Sqpack.Rect5Final
 import Sqpack.Rect5Iff
-import Sqpack.Rect5Thm
 import Sqpack.ZeroMargin
 import Sqpack.D4
 import Sqpack.StripRect

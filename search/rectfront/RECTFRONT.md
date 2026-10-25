@@ -250,7 +250,7 @@ Techniques, what worked (chain, one-square lemma), what failed (tube search, dec
   an LP found fractional point covers (§8); the 2/3–1/3 block cover C (§9); paper proofs (§10).
 Open for R₅: only the strip part (short side < 2, `Final5`, LESSONS.md §5).  (Closed later the same day, below.)
 
-## 2026-10-21 (evening): R₅ done in Lean, `rect5_iff` (`lean/Sqpack/Rect5Thm.lean`)
+## 2026-10-21 (evening): R₅ done in Lean, `rect5_iff` (then `lean/Sqpack/Rect5Thm.lean`; strip part replaced 10-24, below)
 
 `rect5_iff : RectPacks 5 w h ↔ Fits5 w h` (`Fits5` in `Rect5Iff.lean`: row; both sides ≥ 2 with a side ≥ 3 or
 w + h ≥ 4 + √2; strip h < 2 with w + 4h ≥ 4 + 6√2, or swapped).  Standard axioms.
@@ -399,3 +399,14 @@ are exact factorizations.
 
 Open: (1) 2√2 − 1 ≤ H < 1.87 for odd n (needs 3-step prefix routes in u₁, and the length condition below ≈ 1.845,
 `chainn/excess_len.py`); (2) even n (Morandi family; n-dependent tilt, needs its own argument).
+
+## 2026-10-24: R₅'s strip part from the odd-n theorem; certificates retired
+
+`rect5_strip` (`lean/Sqpack/Rect5Iff.lean`, ~12 lines): for H ≥ 1.87, `strip_odd_lower` at n = 5; for H < 1.87, enlarge
+the strip to height 1.87 (`RectPacks.mono` on the swapped box), where the zigzag needs 3(2√2 − 1.87) + 4 − 1.87 ≈ 5.005
+> 5, so L ≥ 5.  `rect5_low` (midline points) is no longer needed for R₅ (still the n = 5 case of `strip_low`).
+`rect5_iff` now lives in `Rect5Iff.lean`; `Rect5Thm.lean` is gone.
+Retired to `search/rectfront/r5strip/lean-attic/` (git mv): `Rect5.lean` (chain for five, `Final5Hi`), `Rect5Mid.lean`
+(`mid_set`, `arc_lin`, `kink_min`), `Rect5Final.lean`, `Rect5Hi*.lean` (14.3k generated lines), `Rect5Thm.lean`.
+`rect5_iff` from scratch: 17 files, 4,469 lines, ~2.5 min / ~4 CPU-min elaborating one file at a time (was ~5 min on 16
+cores, ~70 CPU-min).  Axioms: propext, Classical.choice, Quot.sound.
