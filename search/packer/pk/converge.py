@@ -25,21 +25,32 @@ SKIP_CODES = ('G', 'D', 'S')
 FEAS = "status NOT IN ('infeasible') AND (pen IS NULL OR pen<=1e-9) AND (grid IS NULL OR grid=0)"
 
 
-def select(st, lo=2, hi=1000, tol=0.01, cap=50, since=None):
+def select(st, lo=2, hi=1000, tol=0.01, cap=50, since=None, ids=None):
     """[(id, n, s)] to converge, cheapest checks first (tag, side) and the classifier only on survivors"""
     import sys
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from familymap import classify
     db = st.db
     out = []
+    if ids is not None:                                           # 10-24: just these packings (a goal job's own)
+        ids = list(ids)
+        if not ids:
+            return out
+        q = ','.join('?' * len(ids))
+        ns = sorted({n for (n,) in db.execute(f"SELECT DISTINCT n FROM packing WHERE id IN ({q})", ids)})
+        lo, hi = max(lo, ns[0]), min(hi, ns[-1])
     for n in range(max(2, lo), hi + 1):
+        if ids is not None and n not in ns:
+            continue
         k = math.ceil(math.sqrt(n) - 1e-12)
         b = db.execute(f"SELECT min(s) FROM packing WHERE n=? AND {FEAS} AND s<?", (n, k - 1e-9)).fetchone()[0]
         if b is None:
             continue
         R, seen = [], set()
-        q = f"SELECT id, s, coords, tags FROM packing WHERE n=? AND {FEAS} AND s<?" + (" AND added>=?" if since else "")
-        for i, s, c, tags in db.execute(q + " ORDER BY s", (n, min(b + tol, k - 1e-9), *([since] if since else []))):
+        q = f"SELECT id, s, coords, tags FROM packing WHERE n=? AND {FEAS} AND s<?" + (" AND added>=?" if since else "") + \
+            (f" AND id IN ({','.join('?' * len(ids))})" if ids is not None else "")
+        for i, s, c, tags in db.execute(q + " ORDER BY s", (n, min(b + tol, k - 1e-9), *([since] if since else []),
+                                                             *(ids if ids is not None else []))):
             if round(s, 5) in seen:
                 continue
             seen.add(round(s, 5))
@@ -78,9 +89,9 @@ def _one(args):
     return pid, n, s0, None, None, None, cpu
 
 
-def run(st, lo=2, hi=1000, tol=0.01, cap=50, procs=8, dry=False, log=print, since=None):
+def run(st, lo=2, hi=1000, tol=0.01, cap=50, procs=8, dry=False, log=print, since=None, ids=None):
     from .packing import Packing
-    J = select(st, lo, hi, tol, cap, since)
+    J = select(st, lo, hi, tol, cap, since, ids)
     log(f'converge: {len(J)} packings over {len({n for _, n, _ in J})} n (n {lo}-{hi}, below best + {tol})')
     if dry or not J:
         return dict(selected=len(J))

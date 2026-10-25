@@ -48,6 +48,7 @@ class Goal:
     relax: str = 'round.15c.p5'
     donor_window: float = 0.05
     donors: int = 6
+    score_share: float = 0.25                                   # of the quantum, kept for converge + polish
     construct_share: float = 0.3
     arms: object = 'auto'
     baseline: list = field(default_factory=list)
@@ -72,7 +73,7 @@ def load(path):
     num = lambda x: float(x) if isinstance(x, (int, float, str)) and not isinstance(x, bool) else x
     g.value = {k: num(v) for k, v in g.value.items()}           # PyYAML reads 1.0e4 (no exponent sign) as a string
     g.progress = {k: (num(v) if k != 'exclude' else v) for k, v in g.progress.items()}
-    for f in ('budget_cpu_h', 'quantum_cpu_h', 'donor_window', 'construct_share'):
+    for f in ('budget_cpu_h', 'quantum_cpu_h', 'donor_window', 'construct_share', 'score_share'):
         setattr(g, f, float(getattr(g, f)))
     g.procs, g.donors = int(g.procs), int(g.donors)
     return g
@@ -180,6 +181,20 @@ def _write(path, s, sq):
         fh.write(f'{len(sq)} {float(s)!r}\n' + ''.join(f'{float(x)!r} {float(y)!r} {float(t)!r}\n' for x, y, t in sq))
 
 
+def score_share(goal, n):
+    """the walk leaves this fraction of the quantum for ingest + converge + polish: `score_share` until two jobs at n
+    have finished, then 1.3 x their median measured share (clamped to 0.03-0.6)"""
+    jl = os.path.join(goal.dir, 'jobs.jsonl')
+    f = []
+    for l in open(jl) if os.path.exists(jl) else []:
+        r = json.loads(l); c = r.get('cpu_split')
+        if r.get('n') == n and c and sum(c.values()) > 0:
+            f.append((sum(c.values()) - c.get('walk', 0)) / sum(c.values()))
+    if len(f) < 2:
+        return goal.score_share
+    return min(0.6, max(0.03, 1.3 * sorted(f)[len(f) // 2]))
+
+
 def run_job(goal, arm, out, cpu_s, seed):
     """one arm x one quantum: donors from the store, construct (chain arms), walk; files only (the scheduler imports)"""
     sys.path.insert(0, HERE)
@@ -227,7 +242,7 @@ def run_job(goal, arm, out, cpu_s, seed):
         for pid, s, sq in D[:4]:
             f = os.path.join(out, 'starts', f'id{pid}.txt'); _write(f, s, sq); parents[os.path.basename(f)] = pid
             walk_from.append(f)
-    left = cpu_s - (_cpu() - c0)
+    left = cpu_s * (1 - score_share(goal, n)) - (_cpu() - c0)
     if walk_from and left > 30:
         with open(os.path.join(out, 'walk.log'), 'w') as fh:
             subprocess.run([sys.executable, 'explore.py', '--n', str(n), '--starts', *walk_from, '--procs', '1',
@@ -235,6 +250,26 @@ def run_job(goal, arm, out, cpu_s, seed):
                             '--polish-gate', '2e-3', '--weights', 'melt=2,jmelt=1,jrefill=1'],
                            cwd=HERE, stdout=fh, stderr=subprocess.STDOUT)
     json.dump(dict(log, parents=parents, cpu=_cpu() - c0), open(os.path.join(out, 'job.json'), 'w'))
+    finish_job(goal, arm, out, cpu_s, c0, time.strftime('%Y-%m-%dT%H:%M:%S',
+                                                        time.localtime(os.path.getmtime(os.path.join(out, 'arm.json')))))
+
+
+def finish_job(goal, arm, out, cpu_s, c0, t0):
+    """10-24 (Evan: score incrementally, inside the compute budget): the job imports its own output, converges it and
+    polishes its candidates, all on its own CPU clock; job.json gets the timing split and finalized = True"""
+    from .store import Store
+    from . import converge
+    jid = os.path.basename(out.rstrip('/')); T = {'walk': _cpu() - c0}; t = _cpu()
+    st = Store()
+    try:
+        J = ingest_job(st, goal, jid, out); T['ingest'] = _cpu() - t; t = _cpu()
+        ids = _job_ids(st.db, goal, jid, t0)
+        converge.run(st, lo=arm['n'], hi=arm['n'], procs=1, ids=ids, log=lambda *a: None); T['converge'] = _cpu() - t; t = _cpu()
+        F = finalize(st, goal, jid, t0, arm['n'], 1, max(60.0, cpu_s - (_cpu() - c0))); T['polish'] = _cpu() - t
+    finally:
+        st.close()
+    json.dump(dict(J, cpu=_cpu() - c0, cpu_split={k: round(v) for k, v in T.items()}, finalized=True, **F),
+              open(os.path.join(out, 'job.json'), 'w'))
 
 
 # ------------------------------------------------------------------ store side: import, reward
@@ -342,6 +377,7 @@ def reference(st, goal, n, procs=4):
         sq = np.frombuffer(c, '<f8').reshape(-1, 3).copy()
         if _wanted(goal, n, s, sq, k):
             items.append((i, s, sq))
+    c0 = _cpu()
     P = polish_many(items, procs)
     ids = _add_polished(st, f'goal-ref:{goal.goal}', P, {})
     keep = [(ids[i], v[0], v[1]) for i, v in P.items() if v and i in ids and _wanted(goal, n, v[0], v[1], k)]
@@ -352,20 +388,13 @@ def reference(st, goal, n, procs=4):
             os.remove(f)
     L = CL.labels(n, keep, tag=f'goal_{goal.goal}')
     R = dict(t_goal=t_goal, f0=f0, f0p=f0p, window=window(goal, f0p), minima=len({round(x[1], 8) for x in keep}),
-             clusters=len(set(L.values())))
+             clusters=len(set(L.values())), cpu_h=round((_cpu() - c0) / 3600, 3))   # counted in the budget
     json.dump(R, open(cf, 'w'), indent=1)
     return R
 
 
-def reward(st, goal, jid, t0, n, procs=4):
-    """v2 (Evan 10-24): this job's packings at target n (its sources + converge children since t0), finalized by an fq
-    polish, deduped at 1e-8, and counted as NEW clusters: region clusters (pk/cluster leaders, tag goal_<name>) that no
-    pre-goal minimum and no earlier job had, within the window of the polished family best at goal start.  gain = drop of
-    the polished family best; store_gain = drop of the overall store best."""
-    from . import cluster as CL
-    db = st.db; k = kgrid(n)
-    ref = reference(st, goal, n, procs)
-    f0p, w = ref['f0p'], ref['window']
+def _job_ids(db, goal, jid, t0):
+    """this job's packings: its sources (not its polish) + converge children added since t0"""
     like = f'run:runs/goals/{goal.goal}/{jid}%'
     ids = {i for (i,) in db.execute('SELECT DISTINCT packing FROM sighting WHERE source LIKE ? AND source NOT LIKE ?',
                                     (like, like.rstrip('%') + '/polish%'))}
@@ -373,26 +402,51 @@ def reward(st, goal, jid, t0, n, procs=4):
         q = ','.join('?' * len(ids))
         ids |= {i for (i,) in db.execute(f"SELECT id FROM packing WHERE parent IN ({q}) AND added>=? AND id NOT IN "
                                          f"(SELECT packing FROM sighting WHERE source LIKE '%/polish')", (*ids, t0))}
-    b0 = best_before(db, n, t0)
-    items, raw, jbest = [], 0, float('inf')
-    for i in ids:
+    return ids
+
+
+def finalize(st, goal, jid, t0, n, procs=1, cpu_left=None):
+    """the expensive half of scoring (10-24: runs inside the job, on its CPU budget): fq POLISH this job's packings at
+    target n inside 1.5 x the window, best first, until `cpu_left` CPU-seconds are spent; the polished packings enter
+    the store under .../<jid>/polish.  -> dict(cands, polished, jbest)"""
+    db = st.db; k = kgrid(n)
+    ref = reference(st, goal, n, procs)
+    f0p, w = ref['f0p'], ref['window']
+    items, jbest = [], float('inf')
+    for i in _job_ids(db, goal, jid, t0):
         r = db.execute(f"SELECT n, s, coords FROM packing WHERE id=? AND {FEAS}", (i,)).fetchone()
         if not r or r[0] != n:
             continue
         jbest = min(jbest, r[1])
         sq = np.frombuffer(r[2], '<f8').reshape(-1, 3).copy()
         if r[1] <= f0p + 1.5 * w and _wanted(goal, n, r[1], sq, k):
-            items.append((i, r[1], sq)); raw += r[1] <= f0p + w
-    P = polish_many(items, procs)
-    pids = _add_polished(st, f'run:runs/goals/{goal.goal}/{jid}/polish', P, {})
-    keep, seen = [], set()
-    for i, v in P.items():
-        if not v or i not in pids:
+            items.append((i, r[1], sq))
+    items.sort(key=lambda t: t[1]); c0 = _cpu(); done = 0; batch = max(4, 4 * procs)
+    while done < len(items) and (cpu_left is None or _cpu() - c0 < cpu_left):
+        P = polish_many(items[done:done + batch], procs); done += len(P)
+        _add_polished(st, f'run:runs/goals/{goal.goal}/{jid}/polish', P, {})
+    return dict(cands=len(items), polished=done, jbest=jbest if jbest < float('inf') else None)
+
+
+def count(st, goal, jid, t0, n, jbest=None):
+    """the cheap half (the scheduler, one job at a time so cluster leaders never race): this job's polished packings,
+    deduped at 1e-8, counted as NEW region clusters (pk/cluster leaders, tag goal_<name>) that no pre-goal minimum and
+    no earlier job had, within the window of the polished family best at goal start; gain = drop of the polished
+    family best; store_gain = drop of the overall store best"""
+    from . import cluster as CL
+    db = st.db; k = kgrid(n)
+    ref = reference(st, goal, n)
+    f0p, w = ref['f0p'], ref['window']
+    b0 = best_before(db, n, t0)
+    jbest = float('inf') if jbest is None else jbest
+    keep, seen, raw = [], set(), 0
+    for pid, s, c in db.execute(f"SELECT DISTINCT p.id, p.s, p.coords FROM packing p JOIN sighting g ON g.packing = p.id "
+                                f"WHERE g.source = ? AND p.n = ?", (f'run:runs/goals/{goal.goal}/{jid}/polish', n)):
+        jbest = min(jbest, s)
+        sq = np.frombuffer(c, '<f8').reshape(-1, 3).copy()
+        if s > f0p + w or not _wanted(goal, n, s, sq, k) or round(s, 8) in seen:
             continue
-        jbest = min(jbest, v[0])
-        if v[0] > f0p + w or not _wanted(goal, n, v[0], v[1], k) or round(v[0], 8) in seen:
-            continue
-        seen.add(round(v[0], 8)); keep.append((pids[i], v[0], v[1]))
+        seen.add(round(s, 8)); keep.append((pid, s, sq)); raw += 1
     L = CL.labels(n, keep, tag=f'goal_{goal.goal}') if keep else {}
     mine = {x[0] for x in keep}
     new_clusters = {lab for lab in L.values() if int(lab.split(':')[1]) in mine}
@@ -403,6 +457,12 @@ def reward(st, goal, jid, t0, n, procs=4):
     return dict(matches=len(new_clusters), minima=len(keep), raw=raw, gain=gain, store_gain=sgain,
                 best_gap=(jbest - b0) if jbest < float('inf') else None,
                 reward=v.get('match', 1.0) * len(new_clusters) + v.get('frontier', 1e4) * (gain + sgain))
+
+
+def reward(st, goal, jid, t0, n, procs=4):
+    """v2 (Evan 10-24): finalize (polish everything) + count; for rescore and for jobs that did not finalize"""
+    F = finalize(st, goal, jid, t0, n, procs)
+    return count(st, goal, jid, t0, n, F['jbest'])
 
 
 def rescore(goal, procs=12, log=print):
@@ -461,14 +521,46 @@ class Posterior:
 
 def run(goal, seed=1, log=print):
     from .store import Store
-    from . import converge
     os.makedirs(goal.dir, exist_ok=True)
     jl = os.path.join(goal.dir, 'jobs.jsonl')
     rows = [json.loads(l) for l in open(jl)] if os.path.exists(jl) else []
     rng = random.Random(seed + len(rows))
     arms = plan(goal); A = {a['id']: a for a in arms}
+    st = Store()
+    try:                                                          # references first, on every core, before any job
+        for n in goal.targets:                                    # needs them (a job finalizes against its window)
+            R = reference(st, goal, n, goal.procs)
+            log(f"reference n {n}: {R['minima']} minima, {R['clusters']} clusters, {R.get('cpu_h', 0):.2f} CPU-h")
+    finally:
+        st.close()
+    overhead = lambda: sum(json.load(open(os.path.join(goal.dir, f))).get('cpu_h', 0)
+                           for f in os.listdir(goal.dir) if f.startswith('ref_n'))
     log(f'goal {goal.goal}: {len(arms)} arms over {goal.targets}; budget {goal.budget_cpu_h} CPU-h, spent '
-        f'{sum(r["cpu_h"] for r in rows):.2f}')
+        f'{sum(r["cpu_h"] for r in rows) + overhead():.2f} (references {overhead():.2f})')
+
+    def score(name, out, arm, t0, recovered=False):
+        """count (cheap) for a job that finalized itself; a job from before 10-24 or one that crashed: finish it here"""
+        from . import converge
+        J = json.load(open(os.path.join(out, 'job.json')))
+        st = Store()
+        try:
+            if not J.get('finalized'):
+                J = ingest_job(st, goal, name, out)
+                converge.run(st, lo=arm['n'], hi=arm['n'], procs=goal.procs, ids=_job_ids(st.db, goal, name, t0),
+                             log=lambda *a: None)
+                J.update(finalize(st, goal, name, t0, arm['n'], goal.procs))
+            R = count(st, goal, name, t0, arm['n'], J.get('jbest'))
+        finally:
+            st.close()
+        row = dict(job=name, arm=arm['id'], n=arm['n'], t0=t0, cpu_h=J.get('cpu', 0) / 3600,
+                   donors=len(J.get('donors', [])), built=J.get('built', 0), kept=J.get('kept', 0),
+                   cands=J.get('cands'), polished=J.get('polished'), cpu_split=J.get('cpu_split'),
+                   **(dict(recovered=True) if recovered else {}), **R)
+        rows.append(row); open(jl, 'a').write(json.dumps(row) + '\n')
+        log(f"{name} {'recovered' if recovered else 'done'} {row['arm']}: {row['cpu_h']:.2f} CPU-h {row['cpu_split']}, "
+            f"polished {row['polished']} / {row['cands']}, new clusters {R['matches']}, gain {R['gain']:.2e}, "
+            f"reward {R['reward']:.2f}")
+
     done = {r['job'] for r in rows}                               # resume: finished jobs never recorded (a crash)
     for name in sorted(d for d in os.listdir(goal.dir) if d.startswith('j') and d not in done):
         out = os.path.join(goal.dir, name)
@@ -476,22 +568,12 @@ def run(goal, seed=1, log=print):
             continue
         arm = json.load(open(os.path.join(out, 'arm.json')))
         t0 = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(os.path.getmtime(os.path.join(out, 'arm.json'))))
-        st = Store()
-        try:
-            J = ingest_job(st, goal, name, out)
-            converge.run(st, since=t0, procs=1, log=lambda *a: None)
-            R = reward(st, goal, name, t0, arm['n'])
-        finally:
-            st.close()
-        row = dict(job=name, arm=arm['id'], n=arm['n'], t0=t0, cpu_h=J.get('cpu', 0) / 3600, donors=len(J.get('donors', [])),
-                   built=J.get('built', 0), kept=J.get('kept', 0), recovered=True, **R)
-        rows.append(row); open(jl, 'a').write(json.dumps(row) + '\n')
-        log(f"{name} recovered {arm['id']}: {row['cpu_h']:.2f} CPU-h, matches {R['matches']}, reward {R['reward']:.2f}")
+        score(name, out, arm, t0, True)
     sizes = pool_sizes(goal, arms); live = {}
     jid = max([int(d[1:]) for d in os.listdir(goal.dir) if d.startswith('j') and d[1:].isdigit()] + [0])
     last_sizes = time.time()
     while True:
-        spent = sum(r['cpu_h'] for r in rows) + goal.quantum_cpu_h * len(live)
+        spent = sum(r['cpu_h'] for r in rows) + overhead() + goal.quantum_cpu_h * len(live)
         if time.time() - last_sizes > 600:
             sizes = pool_sizes(goal, arms, seed=jid); last_sizes = time.time()
         while len(live) < goal.procs and spent + goal.quantum_cpu_h <= goal.budget_cpu_h + 1e-9:
@@ -517,18 +599,7 @@ def run(goal, seed=1, log=print):
         time.sleep(5)
         for name in [x for x, v in live.items() if v['p'].poll() is not None]:
             v = live.pop(name)
-            st = Store()
-            try:
-                J = ingest_job(st, goal, name, v['out'])
-                converge.run(st, since=v['t0'], procs=1, log=lambda *a: None)
-                R = reward(st, goal, name, v['t0'], A[v['arm']]['n'])
-            finally:
-                st.close()
-            row = dict(job=name, arm=v['arm'], n=A[v['arm']]['n'], t0=v['t0'], cpu_h=J.get('cpu', 0) / 3600,
-                       donors=len(J.get('donors', [])), built=J.get('built', 0), kept=J.get('kept', 0), **R)
-            rows.append(row)
-            open(jl, 'a').write(json.dumps(row) + '\n')
-            log(f"{name} done {v['arm']}: {row['cpu_h']:.2f} CPU-h, matches {R['matches']}, gain {R['gain']:.2e}, reward {R['reward']:.2f}")
+            score(name, v['out'], A[v['arm']], v['t0'])
     log(report(goal))
 
 

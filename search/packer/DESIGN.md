@@ -46,9 +46,12 @@ select      donors = wanted-family packings within `donor_window` of the best wa
             (family-relative near-record: at 148 the best non-diamond is 0.06 above the diamond)
 run(job)    chain arms build starts for `construct_share` of the quantum, then walk the best four; walk arms walk the
             donors.  `walk` = explore.py's local search with a fixed move mix
-ingest      starts with their donor as parent; the walk archive; walk roots linked to their donor; converge
-reward      from the store: new distinct wanted-family packings within `within` of the family best at job start, plus
-            the family-best and store-best gains (side units x weight)
+finish      inside the job, on its own CPU quantum (the walk leaves a measured share for this): ingest (starts with
+            their donor as parent, the walk archive, walk roots linked to their donor), converge the job's packings,
+            fq-polish its candidates best first until the quantum is spent; job.json has the CPU split
+count       in the scheduler (cheap, serial): the job's polished packings as new region clusters within the window of
+            the polished family best at goal start, plus the family-best and store-best gains (side units x weight).
+            The reference minima are polished once per n before any job starts; their CPU counts in the budget
 allocate    Thompson sampling on reward per CPU-h (Gamma-Poisson, pooled prior), pending jobs counted, `procs` at a time
 ```
 
