@@ -26,7 +26,7 @@ Goal file (every key but `goal`, `targets`, `predictions` has a default):
 
 Arms (`auto`, per target n in row k = ceil sqrt n): walk (donors at n), add (n - 1, grow.add), drop (n + 1, n + 2,
 shrink.drop), lcut (n + 2k + 1 + e, e = 0..2, shrink.lcut), and every plugin template (`ARM_TEMPLATES` in a plugin's
-pk_plugin.py: f(goal, n) -> [arm dict]).  Construction arms spend `construct_share` of the quantum building starts
+pk_plugin.py: f(goal, n) -> [arm dict]).  Construction arms spend `construct_share` of the quantum left after scoring (1 - score_share) building starts
 (chain + relax), then walk the best four: they are judged on refined outcomes like everything else.
 """
 from __future__ import annotations
@@ -60,6 +60,7 @@ class Goal:
     donors: int = 6
     score_share: float = 0.25                                   # of the quantum, kept for converge + polish
     construct_share: float = 0.3
+    screen: object = None                                       # pk/screen.py: {k, kmax, ratio, audit} or true
     relax_cap: float = 4.0                                      # relax stage timeout: x the job's median relax
     arms: object = 'auto'
     arm_kinds: object = None                                    # auto arms: keep only these kinds (walk, add, drop, lcut, plugin)
@@ -253,14 +254,40 @@ def run_job(goal, arm, out, cpu_s, seed):
     parents = {}
     if not D:
         json.dump(dict(log, empty=True, cpu=_cpu() - c0), open(os.path.join(out, 'job.json'), 'w')); return
-    if arm.get('chain'):
+    from . import screen as SCR
+    if arm.get('chain') and goal.screen and SCR.split_chain(arm['chain']):
+        # 10-25: screen-then-promote (pk/screen.py): build many, screen each (a few compress iterations), fully relax
+        # the best by screen score (+ a random audit share); every record goes to job.json for backtests
+        rt = []
+
+        def cap():
+            return max(30.0, goal.relax_cap * float(np.median(rt))) if len(rt) >= 3 else max(60.0, goal.construct_share * cpu_s * (1 - score_share(goal, n)) / 4)
+
+        def on_relax(lg):
+            rt.extend(r['cpu'] for r in lg if r['kind'] == 'relax' and not r['info'].get('failed'))
+
+        def pick_start():
+            pid, s, sq = D[rng.randrange(len(D))]
+            return pid, (None if gen_led else S.State(Packing(s, sq)))
+
+        def keep(st, lg):
+            if st.p.n != n or st.p.s >= k + 0.05:
+                return False
+            with tempfile.TemporaryDirectory() as td:
+                p = os.path.join(td, 'e.txt'); mcmin.write_deg(p, float(st.p.s), [tuple(map(float, q)) for q in st.p.sq])
+                return not full_lines(p, k)
+        kept, recs = SCR.construct(arm['chain'], dict(n=n, cap=cap, on_relax=on_relax), goal.construct_share * cpu_s * (1 - score_share(goal, n)),
+                                   _cpu, rng, pick_start, keep, goal.screen if isinstance(goal.screen, dict) else None, log)
+        log['built'] = sum(1 for r in recs if 'traj' in r)
+        json.dump(recs, open(os.path.join(out, 'screen.json'), 'w'))
+    if arm.get('chain') and not (goal.screen and SCR.split_chain(arm['chain'])):
         kept = []; rt = []                                        # rt: CPU of each finished relax stage
-        while _cpu() - c0 < goal.construct_share * cpu_s:
+        while _cpu() - c0 < goal.construct_share * cpu_s * (1 - score_share(goal, n)):
             pid, s, sq = D[rng.randrange(len(D))]
             # 10-25: relax cap.  At n ~ 1000 a few relaxes run 10-70x the median and end at the grid (978: 8 of 60
             # took 63 % of the relax time, none useful); cap at relax_cap x the job's running median (first: 1/4 of
             # the construct budget)
-            cap = max(30.0, goal.relax_cap * float(np.median(rt))) if len(rt) >= 3 else max(60.0, goal.construct_share * cpu_s / 4)
+            cap = max(30.0, goal.relax_cap * float(np.median(rt))) if len(rt) >= 3 else max(60.0, goal.construct_share * cpu_s * (1 - score_share(goal, n)) / 4)
             try:
                 st, lg = S.run_chain(arm['chain'], dict(n=n, fq_timeout=cap), rng.randrange(1 << 30),
                                      st=None if gen_led else S.State(Packing(s, sq)))
@@ -277,6 +304,7 @@ def run_job(goal, arm, out, cpu_s, seed):
                     continue
             kept.append((float(st.p.s), pid if pid is not None else st.meta.get('parent'),   # gen-led: the stage's
                          np.asarray(st.p.sq, float)))                               # meta names its parent
+    if arm.get('chain'):
         kept.sort(key=lambda t: t[0]); seen = set(); files = []
         for s, pid, sq in kept:
             if round(s, 6) in seen:

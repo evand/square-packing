@@ -56,6 +56,34 @@ fn set_frozen(spec: Option<String>, n: usize) {
 // --dump-lp DIR: append every polish LP (rows, columns with stable keys, Clarabel time) to DIR/lp-<pid>.jsonl
 static DUMP_LP: OnceLock<String> = OnceLock::new();
 static TRACE_TR: OnceLock<bool> = OnceLock::new();
+// 10-25 (relax as a fast move): --deadline SECS stops every phase at the deadline and returns the repaired state
+// ("deadline": true); a quench whose pair list explodes (> PAIR_CAP x n: the side collapsed and squares piled up, the
+// slow tail at n ~ 1000) stops at once ("diverged": true); --traj records (outer, s, viol, mu, sec) of the compress quench.
+static DEADLINE: RwLock<Option<Instant>> = RwLock::new(None);
+static DIVERGED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+static TRAJ_ON: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+static TRAJ: std::sync::Mutex<Vec<(usize, f64, f64, f64, f64)>> = std::sync::Mutex::new(Vec::new());
+const PAIR_CAP: usize = 30;
+fn late() -> bool { DEADLINE.read().unwrap().map_or(false, |d| Instant::now() >= d) }
+fn stopped() -> bool { DIVERGED.load(Ordering::Relaxed) || late() }
+/// JSON numbers: Rust prints inf / NaN, which JSON cannot hold -> null
+fn json_finite(s: &str) -> String {
+    let b = s.as_bytes();
+    let mut out = String::with_capacity(s.len());
+    let mut i = 0;
+    while i < b.len() {
+        let prev_ok = i == 0 || matches!(b[i - 1], b':' | b',' | b'[' | b' ');
+        let mut hit = 0;
+        for tok in ["-inf", "inf", "NaN"] {
+            if prev_ok && s[i..].starts_with(tok) {
+                let j = i + tok.len();
+                if j == b.len() || matches!(b[j], b',' | b']' | b'}' | b' ') { hit = tok.len(); break; }
+            }
+        }
+        if hit > 0 { out.push_str("null"); i += hit; } else { out.push(b[i] as char); i += 1; }
+    }
+    out
+}
 static LP_TAG: AtomicU8 = AtomicU8::new(0); // 0 step, 1 second-order correction, 2 flip search, 3 final force network
 static LP_IT: AtomicUsize = AtomicUsize::new(0);
 static IDENT_FPS: std::sync::Mutex<Vec<u64>> = std::sync::Mutex::new(Vec::new()); // --ident: load-network fingerprint per accepted step
@@ -1321,7 +1349,7 @@ fn lbfgs(f: &mut dyn FnMut(&[f64], &mut [f64]) -> f64, v: &mut [f64], maxit: usi
     let mut stall = 0;
     let ginf = |g: &[f64]| g.iter().fold(0.0f64, |a, &b| a.max(b.abs()));
     for _ in 0..maxit {
-        if ginf(&g) < gtol { break; }
+        if ginf(&g) < gtol || stopped() { break; }
         for k in 0..dim { d[k] = -g[k]; }
         let h = ss.len();
         let mut gd;
@@ -1602,7 +1630,9 @@ fn quench(s0: f64, x0: &[f64], o: &QOpt) -> (f64, Vec<f64>, usize, usize, f64, P
     let mut prev_v = f64::INFINITY;
     let mut outer = 0;
     let mut viol = f64::INFINITY;
-    while outer < o.max_outer {
+    let traj = TRAJ_ON.load(Ordering::Relaxed);
+    let tq = Instant::now();
+    while outer < o.max_outer && !stopped() {
         outer += 1;
         let mut v = p.pack(&x, s);
         let gtol = (1e-2 / p.mu.sqrt()).max(1e-11);
@@ -1624,9 +1654,12 @@ fn quench(s0: f64, x0: &[f64], o: &QOpt) -> (f64, Vec<f64>, usize, usize, f64, P
             p.rebuild(&x, cut);
             xref = x.clone();
             if o.verbose { eprintln!("  rebuild: {} pairs", p.pairs.len()); }
+            if p.pairs.len() > PAIR_CAP * n { DIVERGED.store(true, Ordering::Relaxed); }
+            if traj { TRAJ.lock().unwrap().push((outer, s, f64::NAN, p.mu, tq.elapsed().as_secs_f64())); }
             continue; // re-solve with the new list before judging violation
         }
         viol = p.viol_update(&v, true);
+        if traj { TRAJ.lock().unwrap().push((outer, s, viol, p.mu, tq.elapsed().as_secs_f64())); }
         if o.verbose { eprintln!("outer {outer}: mu {:.1e} s {:.12} viol {:.2e} |g| {:.1e} evals {ne}", p.mu, s, viol, gi); }
         if viol < o.tol && p.mu >= 1e3 { break; }
         if viol > 0.25 * prev_v && p.mu < o.mu_max { p.mu *= 10.0; }
@@ -1713,6 +1746,11 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
     IDENT_FPS.lock().unwrap().clear();
         let t0 = Instant::now();
         let n = x.len() / 3;
+        let dl: f64 = arg(&a, "--deadline", 0.0);
+        *DEADLINE.write().unwrap() = if dl > 0.0 { Some(t0 + std::time::Duration::from_secs_f64(dl)) } else { None };
+        DIVERGED.store(false, Ordering::Relaxed);
+        TRAJ.lock().unwrap().clear();
+        let want_traj = a.iter().any(|t| t == "--traj");
         set_rect(arg(&a, "--rect-dx", 0.0), arg(&a, "--rect-dy", 0.0));
         set_rnd(0.0);
         set_soft(0.0);
@@ -1745,7 +1783,9 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
             let oq = QOpt { mu0: arg(&a, "--mu0", 10.0), mu_max: arg(&a, "--mu-max", 1e2), tol: arg(&a, "--tol", 1e-7),
                             skin: arg(&a, "--skin", 0.3), max_outer: arg(&a, "--outer", 60), verbose: a.iter().any(|t| t == "--v") };
             let sa = if a.iter().any(|t| t == "--round-compress") {
+                TRAJ_ON.store(want_traj, Ordering::Relaxed);
                 let (sq, xq, _, _, _, _) = quench(s * arg(&a, "--round-loosen", 1.0), &x, &oq);
+                TRAJ_ON.store(false, Ordering::Relaxed);
                 x = xq; sq
             } else { s };
             let mut sh = sa * arg(&a, "--hold-f", 1.0);
@@ -1767,6 +1807,7 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
             let poq = QOpt { max_outer: arg(&a, "--round-press-outer", oq.max_outer), ..oq };
             let mut nev_round = 0usize;
             for k in 1..=ksteps {
+                if stopped() { break; }
                 let r = r0 * (1.0 - k as f64 / ksteps as f64).max(0.0).powf(pw);
                 set_rnd(r);
                 let sig = if kpeak >= 0.0 { rk * (-((r - kpeak) / kw).powi(2)).exp() } else { rk };
@@ -1830,7 +1871,7 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
             mu0: arg(&a, "--mu0", 10.0), mu_max: arg(&a, "--mu-max", 1e2), tol: arg(&a, "--tol", 1e-7),
             skin: arg(&a, "--skin", 0.3), max_outer: arg(&a, "--outer", 60), verbose: a.iter().any(|t| t == "--v"),
         };
-        let (mut sq, mut xq, nev, outer, viol, mut prob) = if a.iter().any(|t| t == "--no-alm") {
+        let (mut sq, mut xq, nev, outer, viol, mut prob) = if a.iter().any(|t| t == "--no-alm") || stopped() {
             // already (nearly) feasible: polish directly
             (s1, x.clone(), 0, 0, 0.0, Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: false, b: Vec::new() })
         } else if a.iter().any(|t| t == "--shrink") {
@@ -1848,7 +1889,7 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
         let mut flips = 0;
         let mut trace: Vec<(usize, f64, f64, usize, f64, f64, usize, usize)> = Vec::new();
         let mut load: Vec<(u32, u32, u8, u8)> = Vec::new();
-        if !a.iter().any(|t| t == "--no-polish") {
+        if !a.iter().any(|t| t == "--no-polish") && !stopped() {
             let po = POpt { sqp: a.iter().any(|t| t == "--sqp"), rmax: arg(&a, "--rmax", 4e-3), r0: arg(&a, "--r0", 1e-3), rmin: arg(&a, "--rmin", 1e-10), maxit: arg(&a, "--pit", 300), cc_tol: arg(&a, "--cc-tol", 1e-7), flip_top: arg(&a, "--flip-top", 8), ident: a.iter().any(|t| t == "--ident"), stag_w: arg(&a, "--stag-w", 15), stag_tol: arg(&a, "--stag-tol", 2e-9), finish: a.iter().any(|t| t == "--finish"), tr_grow: arg(&a, "--tr-grow", 0.5), tr_shrink: arg(&a, "--tr-shrink", 4.0), verbose: o.verbose };
             let (s2, x2, it, rr, fl) = polish(&mut prob, sq, &xq, &po, &mut trace, &mut load);
             sq = s2; xq = x2; pit = it; pr = rr; flips = fl;
@@ -1862,6 +1903,10 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
         };
         let json = format!("{{\"s\": {:.15}, \"s_alm\": {:.15}, \"viol\": {:.2e}, \"evals\": {}, \"outer\": {}, \"slp_it\": {}, \"slp_r\": {:.1e}, \"flips\": {}, \"min_gap\": {:.2e}, \"min_wall\": {:.2e}, \"sec\": {:.3}, \"s_coarse\": {:.15}, \"t_alm\": {:.3}, \"s_alm0\": {:.15}, \"trace\": [{}], \"fp\": \"{:016x}\", \"ncontacts\": {}{}{}}}",
                  sr, sq, viol, nev, outer, pit, pr, flips, mg, mw, t0.elapsed().as_secs_f64(), s_coarse, t_alm, s_alm0, trace.iter().map(|q| format!("[{},{:.4},{:.15},{},{:.3e},{:.3e},{},{}]", q.0, q.1, q.2, q.3, q.4, q.5, q.6, q.7)).collect::<Vec<_>>().join(","), fp, ncont, format!(", \"fin\": [{}]", FIN_LOG.lock().unwrap().iter().map(|q| format!("\"{q}\"")).collect::<Vec<_>>().join(",")) + &if a.iter().any(|t| t == "--ident") { format!(", \"fps\": [{}]", IDENT_FPS.lock().unwrap().iter().map(|h| format!("\"{:016x}\"", h)).collect::<Vec<_>>().join(",")) } else { String::new() }, round_info + &soft_info + &frozen_info);
+        let tr = TRAJ.lock().unwrap();
+        let extra = format!(", \"deadline\": {}, \"diverged\": {}{}", late(), DIVERGED.load(Ordering::Relaxed),
+                            if want_traj { format!(", \"traj\": [{}]", tr.iter().map(|q| format!("[{},{:.12},{:.3e},{:.1e},{:.4}]", q.0, q.1, q.2, q.3, q.4)).collect::<Vec<_>>().join(",")) } else { String::new() });
+        let json = json_finite(&(json[..json.len() - 1].to_string() + &extra + "}"));
         (json, sr, xq)
 }
 

@@ -80,6 +80,8 @@ class QOpt:
     sqp: bool = False
     finish: bool = False
     ident: bool = False
+    deadline: float | None = None    # 10-25: wall s; fq stops every phase there and returns the repaired state
+    traj: bool = False               # 10-25: record (outer, s, viol, mu, sec) of the rounded compress quench
     v: bool = False                  # verbose (stderr)
     dump_lp: str | None = None       # subprocess mode only (fq main)
     freeze: str | None = None        # frozen square indices, e.g. "0-99,105" (10-22)

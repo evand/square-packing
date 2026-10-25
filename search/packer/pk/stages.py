@@ -214,17 +214,22 @@ def _relax(name):
             opt = opt.but(freeze=st.freeze_spec())
         if opt.kick or opt.round_kick or opt.soft_kick:
             opt = opt.but(seed=rng.randrange(1 << 30))
+        cap = ctx.get('fq_timeout')
+        if cap:                                                    # 10-25: fq stops itself at the cap and returns
+            opt = opt.but(deadline=float(cap))                     # the repaired state (best so far)
         with tempfile.TemporaryDirectory(prefix='stg_') as td:
             try:
-                r = fq_quench(st.p, opt, tmp=td, mod90=True, timeout=ctx.get('fq_timeout', 1800))
-            except subprocess.TimeoutExpired:                       # 10-25: a capped relax is a failed stage
-                return st, dict(failed='timeout', timeout=ctx.get('fq_timeout'))
+                r = fq_quench(st.p, opt, tmp=td, mod90=True, timeout=(cap + 60) if cap else 1800)
+            except subprocess.TimeoutExpired:                       # hang guard only (the deadline came first)
+                return st, dict(failed='timeout', timeout=cap)
             try:
                 d = r.stats(whole=True); s2, sq2 = r.read()
             except Exception as e:
                 return st, dict(failed=repr(e)[:120])
-        ok = d.get('min_gap', -1) >= 0 and d.get('min_wall', -1) >= 0
-        info = {k: d.get(k) for k in ('s', 'viol', 's_alm', 'frozen_dmax') if d.get(k) is not None}
+        if d.get('diverged'):                                      # the compress collapsed (pair list exploded)
+            return st, dict(failed='diverged', sec=d.get('sec'))
+        ok = (d.get('min_gap') is None or d['min_gap'] >= 0) and (d.get('min_wall') is None or d['min_wall'] >= 0)
+        info = {k: d.get(k) for k in ('s', 'viol', 's_alm', 'frozen_dmax', 'deadline') if d.get(k) is not None}
         if d.get('round'): info['viol_hard'] = d['round'].get('viol_hard')
         if not ok:
             return st, dict(info, failed='infeasible')
