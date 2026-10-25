@@ -361,7 +361,7 @@ def polish_many(items, procs):
         return {}
     from concurrent.futures import ProcessPoolExecutor
     with ProcessPoolExecutor(max(1, min(procs, len(items)))) as ex:
-        return dict(ex.map(_polish_one, items, chunksize=4))
+        return dict(ex.map(_polish_one, items, chunksize=max(1, len(items) // (4 * procs))))   # few items: one per worker
 
 
 def window(goal, ref_side):
