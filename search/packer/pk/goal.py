@@ -48,6 +48,7 @@ class Goal:
     predictions: dict
     progress: dict = field(default_factory=lambda: dict(exclude=['G', 'D', 'S'], within=0.02))
     value: dict = field(default_factory=lambda: dict(match=1.0, frontier=1.0e5, bar=100.0))
+    ref_cap: int = 3000                                         # reference: at most this many pre-goal packings per n
     bars: dict = field(default_factory=dict)                    # {n: side}: a bonus (value.bar) for the job that first gets below
     budget_cpu_h: float = 15.0
     quantum_cpu_h: object = 'auto'                              # 'auto': budget / (procs x WAVES)
@@ -402,8 +403,8 @@ def reference(st, goal, n, procs=4):
     f0 = f0 if f0 is not None else float(k)
     w = window(goal, f0)
     items = []
-    for i, s, c in db.execute(f"SELECT id, s, coords FROM packing WHERE n=? AND {FEAS} AND s<=? AND added<? ORDER BY s LIMIT 3000",
-                              (n, min(f0 + 1.5 * w, k - 1e-9), t_goal)):
+    for i, s, c in db.execute(f"SELECT id, s, coords FROM packing WHERE n=? AND {FEAS} AND s<=? AND added<? ORDER BY s LIMIT ?",
+                              (n, min(f0 + 1.5 * w, k - 1e-9), t_goal, int(goal.ref_cap))):
         sq = np.frombuffer(c, '<f8').reshape(-1, 3).copy()
         if _wanted(goal, n, s, sq, k):
             items.append((i, s, sq))
