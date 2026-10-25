@@ -467,3 +467,20 @@ Goal: `strip_odd_lower` on 1.849 ≤ H < 1.87 (covers n = 7, 9 completely, with 
   hold at H ∈ {1.849, 1.86, 1.8699}, tight only at the zigzag (45°) and the upright square.
 * Lean: `StripPotWalk.lean` (`strip_odd_pot`, `PotOK`: the walk argument for any parity potentials, builds);
   `StripBand.lean` (draft: `kap_opp`, potentials).  Next: the per-square lemmas (kink pairs; exact algebra at 45°).
+
+## 2026-10-25: odd n down to H*(9) in Lean — n = 7, 9 exactly (`strip_odd_iff_le9`)
+
+`strip_odd_iff_le9` (`lean/Sqpack/StripBandMain.lean`): for n ∈ {3, 5, 7, 9} and 1 ≤ H < 2, n unit squares fit in
+L × H iff L ≥ n or L ≥ (n − 2)(2√2 − H) + 4 − H.  `strip_odd_iff'`: every odd n ≥ 3 on H*(9) = (14√2 − 5)/8 ≤ H < 2
+(was 1.87).  Standard axioms.  First version: proof first, legibility later (Evan 10-25).
+* `StripPotWalk` (`strip_odd_pot`, `PotOK`): the walk argument for any parity potentials (wall, two steps, cheap step).
+* `StripBand` (hand): `kap_opp` (closed form for opposite slopes), potentials (`bandU0`, `bandU1`: tangents of the
+  aligned-route cost E at 45° and through (8/7, Lz(8/7)) with E's slope at 4/3), piece lemmas, convex-piece lemmas
+  `plx` / `plx_inf`, tight leaves `tight_P1` = (p − 1)(r − 1)(r − p), `tight_P2` = (r − p)((p + 1)(r + 1) − H(r + p)).
+* Generated (`chainn/band_gen.py`, `band_cert.py`, `band_emit.py`): `StripBandLeaves0–3` (214 leaf theorems, 495
+  sub-leaves after splitting max atoms: 490 Handelman-type certificates in (C, S, H, √2) with the circle relation, 7 with
+  a split at C = 4/5 (one also C = 0.79), 4 tight by hand), `StripBandCells` (26 cells by nested plx, 5 cores
+  band_Sa/Sb/C0/C1/N).  ~25 CPU-min to build the leaves.
+* `StripBandMain` (hand): Lipschitz bounds, same-sign slopes via `kap_same'`, sign cases by kap_mirror / kap_symm,
+  `band_potOK`, the theorems.  Band start H*(9): there y₁ = 8/7, so every breakpoint is rational in H.
+Next: legibility pass (fewer, structured leaves); odd n ≥ 11 below H*(9) needs length-aware potentials; even n open.

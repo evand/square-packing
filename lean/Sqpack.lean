@@ -18,6 +18,14 @@ import Sqpack.StripS
 import Sqpack.StripOdd
 import Sqpack.StripZigzag
 import Sqpack.StripC
+import Sqpack.StripPotWalk
+import Sqpack.StripBand
+import Sqpack.StripBandLeaves0
+import Sqpack.StripBandLeaves1
+import Sqpack.StripBandLeaves2
+import Sqpack.StripBandLeaves3
+import Sqpack.StripBandCells
+import Sqpack.StripBandMain
 import Sqpack.Rect5Iff
 import Sqpack.ZeroMargin
 import Sqpack.D4

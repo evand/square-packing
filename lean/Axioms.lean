@@ -330,6 +330,15 @@ import Sqpack
 -- odd n in a strip, 1.87 <= H < 2, exactly (Sqpack/StripC)
 #print axioms SquarePacking.kap_C
 #print axioms SquarePacking.strip_odd_iff
+-- odd n, generic walk argument for any admissible parity potentials (Sqpack/StripPotWalk)
+#print axioms SquarePacking.strip_odd_pot
+-- odd n down to H*(9) = (14 sqrt2 - 5)/8: tangent potentials, generated leaves (Sqpack/StripBand*, StripBandMain)
+#print axioms SquarePacking.band_potOK
+#print axioms SquarePacking.strip_odd_band
+#print axioms SquarePacking.strip_odd_lower'
+#print axioms SquarePacking.strip_odd_iff'
+-- odd n <= 9 (n = 3, 5, 7, 9), every strip 1 <= H < 2, exactly
+#print axioms SquarePacking.strip_odd_iff_le9
 -- R_5 exactly (Sqpack/Rect5Iff): strip part from strip_odd_lower at n = 5 (+ monotonicity in H below 1.87)
 #print axioms SquarePacking.rect5_strip
 #print axioms SquarePacking.rect5_iff
