@@ -410,3 +410,23 @@ Retired to `search/rectfront/r5strip/lean-attic/` (git mv): `Rect5.lean` (chain 
 (`mid_set`, `arc_lin`, `kink_min`), `Rect5Final.lean`, `Rect5Hi*.lean` (14.3k generated lines), `Rect5Thm.lean`.
 `rect5_iff` from scratch: 17 files, 4,469 lines, ~2.5 min / ~4 CPU-min elaborating one file at a time (was ~5 min on 16
 cores, ~70 CPU-min).  Axioms: propext, Classical.choice, Quot.sound.
+
+## 2026-10-24: n = 7 on the band H*(7) ≤ H < 1.87 — probe (`chainn/n7probe.py`)
+
+H*(7) = (10√2 − 3)/6 ≈ 1.85702; below it monotonicity gives L ≥ 7, so this band is all R₇'s strip lacks.  Slope grid
+0.25°, fine tilt grid, H ∈ {H*(7), 1.86, 1.865, 1.8685, 1.87} (one core, ~40 s each).
+* `KapC` fails by 1.7e-2 at H*(7) (5.3e-3 at 1.865, ≈ 0 at 1.8685).
+* The 7-step walk still equals F₇ (to 2e-15), and the walk argument with **exact per-index prefix distances** d_j
+  (cheap step at lines j, j + 1: d_j + c + d_{6−j} ≥ 2g) holds to 2e-15, tight only at the zigzag.  So a proof for n = 7
+  by index-specific potentials exists in principle.
+* Versus the Lean parity potentials: d₁, d₂, d₄, d₅, d₆ ≥ uOdd/uEven; only **d₃ < uOdd** (by 1.7e-2 at φ ≈ ±64.75°).
+  The route: upright, upright, then a square aligned with line 2, line 3 perpendicular to line 2 (three-step
+  analogue of uEven's aligned branch).  Closed form ũ₃ = min(uOdd, uEven(tan φ₂) + kap(aligned) − λ), φ₂ = ψ ∓ 90°:
+  equals d₃ on the grid and fixes steps 2→3, 3→4 and the middle cheap step.
+* Still failing with uEven at line 4: step 4→5 (1.7e-2) and the cheap step with a four-step suffix (1.2e-2).  Reason:
+  **each upright step costs a = 1 − λ more** (d₂(0) = 2a, d₄(0) = 4a, d₆(0) = 6a); parity potentials drop this, and
+  near H*(n), n·a ≈ 2g, so it matters already at n = 7 (the "length condition" of 10-22).  With exact d₄ everything
+  closes.  First closed-form try U₄ = min(4a + β|m|, a + β(2 − |m|)) fails step 3→4 (6e-2: misses routes through
+  ũ₃) and the four-step-suffix cheap step near H*(7) (1e-2).
+Next (needs thought): potentials indexed by line *and* upright count, e.g. u_j = min(j·a + β|m|, zigzag family,
+aligned routes), derived as U_{j+1} = min-plus image of U_j in closed form; this is the n-general low-band question.
