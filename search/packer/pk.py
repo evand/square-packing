@@ -104,6 +104,9 @@ def main():
     p = sp.add_parser('goal', help='targeted exploration loop (pk/goal.py): plan / run / report / job')
     p.add_argument('action', choices=['plan', 'run', 'report', 'job', 'rescore']); p.add_argument('spec', help='goal YAML (report: also a name)')
     p.add_argument('out', nargs='?'); p.add_argument('cpu', nargs='?', type=float); p.add_argument('seed', nargs='?', type=int, default=1)
+    p = sp.add_parser('credit', help='lineage credit audit: store-best gains paid up the ancestry (pk/credit.py)')
+    p.add_argument('--since', default='2026-10-10'); p.add_argument('--lam', type=float, nargs='+', default=[0.5, 0.8, 1.0])
+    p.add_argument('--top', type=int, default=25)
     p = sp.add_parser('yield', help='lineage yield: which generators / sources feed records and near-records (pk/yieldrep.py)')
     p.add_argument('--cap', type=int, default=50); p.add_argument('--json'); p.add_argument('--top', type=int, default=25)
     p = sp.add_parser('converge', help='cheap re-quench of near-record, non-45-degree packings not yet converged (pk/converge.py)')
@@ -193,6 +196,10 @@ def main():
             st.close(); G.rescore(g); print(G.report(g))
         else:
             print(G.report(g))
+        return
+    if a.cmd == 'credit':
+        from pk import credit
+        print(credit.fmt(credit.audit(st, a.since, tuple(a.lam)), a.top))
         return
     if a.cmd == 'yield':
         from pk import yieldrep
