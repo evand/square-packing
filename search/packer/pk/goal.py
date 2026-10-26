@@ -824,6 +824,7 @@ def run(goal, seed=1, log=print):
             score(name, v['out'], A[v['arm']], v['t0'])
     acct(final=True)
     log(report(goal))
+    acct(final=True)                                              # again: the report's own CPU / wall (~minutes)
 
 
 def accounting(goal, rows):
