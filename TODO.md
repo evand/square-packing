@@ -41,6 +41,7 @@ Thesis (Evan 10-14): diversity pays; local search at current budgets has mined t
 - [ ] s(110) explainer refresh + write-up (`tasks/landscape110-explainer/`; rewrite of `s110-landscape.md`'s census section; that file is in git tag pre-arch-2026-10).
 
 - [ ] Next jlevy submission: bundle s(260)'s exact form (S* 16.645778786061741…, certified 10-17, `search/packer/runs/candidates/s260_cs3/`, store kind exact-form): the analytic optimum of de Winter's #668 packing, 1.6e-8 below the posted floats; credit de Winter.  Not its own issue (Evan 10-17).
+- [ ] `pk.py sync-register` (10-25, register 5c50803): 5 witnesses fail to parse (n = 51, 70, 102, 123, 153: `Invalid literal for Fraction` on a list of fractions: new exact-data format in the register); frontier rows import, witnesses don't.
 - [ ] Packer bugs (10-22): `dgen.py` sweep frontier() ignores our pending claims (SW3 reported a fake 343 "record" vs the register, 4.2e-4 above our #702); `explore.py` final refine admits grid-locked results (17.000000 at 274) into the archive.
 
 
