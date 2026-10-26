@@ -61,6 +61,10 @@ class Goal:
     score_share: float = 0.25                                   # of the quantum, kept for converge + polish
     construct_share: float = 0.3
     polish_reuse: bool = True                                   # reuse trusted polish results (polish_cached)
+    clusters: bool = True                                       # False (10-25): no cluster-novelty reward; the reference
+                                                                # polishes only the REF_TOP best pre-goal packings (f0p)
+    polish_top: object = None                                   # finalize polishes only this many best candidates (None: all
+                                                                # in the window; default 3 when clusters is False)
     screen: object = None                                       # pk/screen.py: {k, kmax, ratio, audit} or true
     relax_cap: float = 4.0                                      # relax stage timeout: x the job's median relax
     arms: object = 'auto'
@@ -537,6 +541,9 @@ def goal_start(goal):
                                          for d in dirs] + [time.strftime('%Y-%m-%dT%H:%M:%S')])
 
 
+REF_TOP = 3                                                       # clusters off: pre-goal packings polished per n
+
+
 def _build_reference(st, goal, n, procs, cf):
     from . import cluster as CL
     db = st.db; k = kgrid(n); c0 = _cpu()                         # cpu_h covers selection + classification too
@@ -550,6 +557,8 @@ def _build_reference(st, goal, n, procs, cf):
         sq = np.frombuffer(c, '<f8').reshape(-1, 3).copy()
         if _wanted(goal, n, s, sq, k):
             items.append((i, s, sq))
+    if not goal.clusters:                                         # 10-25: no novelty reward -> only f0p is needed
+        items = items[:REF_TOP]
     P, pst = polish_cached(db, items, procs, goal.polish_reuse)
     ids = _add_polished(st, f'goal-ref:{goal.goal}', P, {})
     keep = [(ids[i], v[0], v[1]) for i, v in P.items() if v and i in ids and _wanted(goal, n, v[0], v[1], k)]
@@ -558,9 +567,9 @@ def _build_reference(st, goal, n, procs, cf):
     for f in (os.path.join(CL.CACHE, f'n{n}_goal_{goal.goal}.json'),):
         if os.path.exists(f):
             os.remove(f)
-    L = CL.labels(n, keep, tag=f'goal_{goal.goal}')
+    L = CL.labels(n, keep, tag=f'goal_{goal.goal}') if goal.clusters else {}
     R = dict(t_goal=t_goal, f0=f0, f0p=f0p, window=window(goal, f0p), minima=len({round(x[1], 8) for x in keep}),
-             clusters=len(set(L.values())), cpu_h=round((_cpu() - c0) / 3600, 3), polish=pst)   # cpu: in the budget
+             clusters=len(set(L.values())) if goal.clusters else None, cpu_h=round((_cpu() - c0) / 3600, 3), polish=pst)   # cpu: in the budget
     json.dump(R, open(cf + '.tmp', 'w'), indent=1); os.replace(cf + '.tmp', cf)   # readers never see a partial file
     return R
 
@@ -594,10 +603,14 @@ def finalize(st, goal, jid, t0, n, procs=1, cpu_left=None):
         if r[1] <= f0p + 1.5 * w and _wanted(goal, n, r[1], sq, k):
             items.append((i, r[1], sq))
     items.sort(key=lambda t: t[1]); c0 = _cpu(); done = 0; batch = max(4, 4 * procs)
+    ncand = len(items)
+    top = goal.polish_top if goal.polish_top is not None else (None if goal.clusters else 3)
+    if top is not None:                                           # 10-25: gain needs only the best few polished
+        items = items[:int(top)]
     while done < len(items) and (cpu_left is None or _cpu() - c0 < cpu_left):
         P, _ = polish_cached(db, items[done:done + batch], procs, goal.polish_reuse); done += len(P)
         _add_polished(st, f'run:runs/goals/{goal.goal}/{jid}/polish', P, {})
-    return dict(cands=len(items), polished=done, jbest=jbest if jbest < float('inf') else None)
+    return dict(cands=ncand, polished=done, jbest=jbest if jbest < float('inf') else None)
 
 
 def count(st, goal, jid, t0, n, jbest=None, fprev=None):
@@ -619,7 +632,7 @@ def count(st, goal, jid, t0, n, jbest=None, fprev=None):
         if s > f0p + w or not _wanted(goal, n, s, sq, k) or round(s, 8) in seen:
             continue
         seen.add(round(s, 8)); keep.append((pid, s, sq)); raw += 1
-    L = CL.labels(n, keep, tag=f'goal_{goal.goal}') if keep else {}
+    L = CL.labels(n, keep, tag=f'goal_{goal.goal}') if keep and goal.clusters else {}
     mine = {x[0] for x in keep}
     new_clusters = {lab for lab in L.values() if int(lab.split(':')[1]) in mine}
     fbest = min([x[1] for x in keep] + [f0p])
@@ -707,13 +720,26 @@ def run(goal, seed=1, log=print):
     sf = os.path.join(goal.dir, 'start.json')                    # 10-25: references are built on demand by the
     if not os.path.exists(sf):                                    # first job to finish at each n (no serial setup:
         json.dump(dict(t_goal=goal_start(goal)), open(sf, 'w'))   # ~1 h of a mostly idle machine for 40 targets)
-    overhead = lambda: sum(json.load(open(os.path.join(goal.dir, f))).get('cpu_h', 0)
-                           for f in os.listdir(goal.dir) if f.startswith('ref_n') and f.endswith('.json'))
+    refs = lambda: sum(json.load(open(os.path.join(goal.dir, f))).get('cpu_h', 0)
+                       for f in os.listdir(goal.dir) if f.startswith('ref_n') and f.endswith('.json'))
+    # 10-25 accounting: the dispatcher's own CPU (planning, pool scans incl. their worker processes, count / cluster
+    # labels, recovery) is in the budget too; run.json keeps one segment per run() call (wall + setup CPU)
+    af = os.path.join(goal.dir, 'run.json')
+    prev = json.load(open(af))['segments'] if os.path.exists(af) else []
+    seg = dict(start=time.strftime('%Y-%m-%dT%H:%M:%S'), job=os.environ.get('PK_JOB_NAME'), wall_h=0.0, setup_cpu_h=0.0)
+    w0 = time.time(); self0 = sum(resource.getrusage(resource.RUSAGE_SELF)[:2]); pool_cpu = [0.0]
+    def setup_cpu():
+        return (sum(resource.getrusage(resource.RUSAGE_SELF)[:2]) - self0 + pool_cpu[0]) / 3600
+    def acct(final=False):
+        seg.update(wall_h=round((time.time() - w0) / 3600, 4), setup_cpu_h=round(setup_cpu(), 4),
+                   **(dict(end=time.strftime('%Y-%m-%dT%H:%M:%S')) if final else {}))
+        json.dump(dict(segments=prev + [seg]), open(af + '.tmp', 'w'), indent=1); os.replace(af + '.tmp', af)
+    overhead = lambda: refs() + sum(x['setup_cpu_h'] for x in prev) + setup_cpu()
     def eta():
         left = max(0.0, goal.budget_cpu_h - sum(r['cpu_h'] for r in rows) - overhead())
         return f"ETA {time.strftime('%H:%M', time.localtime(time.time() + 3600 * (left / goal.procs + 0.5 * goal.quantum_cpu_h)))}"
     log(f'goal {goal.goal}: {len(arms)} arms over {goal.targets}; budget {goal.budget_cpu_h} CPU-h, spent '
-        f'{sum(r["cpu_h"] for r in rows) + overhead():.2f} (references {overhead():.2f}); quantum {goal.quantum_cpu_h:.3f} '
+        f'{sum(r["cpu_h"] for r in rows) + overhead():.2f} (references {refs():.2f}); quantum {goal.quantum_cpu_h:.3f} '
         f'CPU-h x {goal.procs} procs; {eta()}')
 
     def score(name, out, arm, t0, recovered=False):
@@ -757,11 +783,16 @@ def run(goal, seed=1, log=print):
             st.close()
         if retired:
             log(f'retired at start (already below the bar): {sorted(retired)}')
-    sizes = pool_sizes(goal, arms, procs=goal.procs); live = {}
+    c = sum(resource.getrusage(resource.RUSAGE_CHILDREN)[:2])
+    sizes = pool_sizes(goal, arms, procs=goal.procs); live = {}       # its worker processes: setup CPU
+    pool_cpu[0] += sum(resource.getrusage(resource.RUSAGE_CHILDREN)[:2]) - c
+    acct(); last_acct = time.time()
     jid = max([int(d[1:]) for d in os.listdir(goal.dir) if d.startswith('j') and d[1:].isdigit()] + [0])
     last_sizes = time.time()
     while True:
         spent = sum(r['cpu_h'] for r in rows) + overhead() + goal.quantum_cpu_h * len(live)
+        if time.time() - last_acct > 60:
+            acct(); last_acct = time.time()
         if time.time() - last_sizes > 600:
             sizes = pool_sizes(goal, arms, seed=jid, prev=sizes); last_sizes = time.time()
         while len(live) < goal.procs and spent + goal.quantum_cpu_h <= goal.budget_cpu_h + 1e-9:
@@ -791,7 +822,31 @@ def run(goal, seed=1, log=print):
         for name in [x for x, v in live.items() if v['p'].poll() is not None]:
             v = live.pop(name)
             score(name, v['out'], A[v['arm']], v['t0'])
+    acct(final=True)
     log(report(goal))
+
+
+def accounting(goal, rows):
+    """one line: wall and CPU of the whole run (10-25): jobs + references + dispatcher setup (run.json), and the
+    jobs.py wrapper's own measurement (every waited-for process, plus the sink + converge pass after the run)"""
+    refs = sum(json.load(open(os.path.join(goal.dir, f))).get('cpu_h', 0)
+               for f in os.listdir(goal.dir) if f.startswith('ref_n') and f.endswith('.json'))
+    jobs = sum(r['cpu_h'] for r in rows)
+    af = os.path.join(goal.dir, 'run.json')
+    S = json.load(open(af))['segments'] if os.path.exists(af) else []
+    setup = sum(x['setup_cpu_h'] for x in S); wall = sum(x['wall_h'] for x in S)
+    tot = jobs + refs + setup
+    line = (f'Accounting: CPU {tot:.2f} h = jobs {jobs:.2f} + references {refs:.2f} + dispatcher / setup {setup:.2f}; '
+            f'wall {wall:.2f} h' + (f' (utilization {tot / (wall * goal.procs):.0%} of {goal.procs} procs)' if wall else
+                                    ' (no run.json: a run before 10-25)'))
+    names = [x['job'] for x in S if x.get('job')]
+    if names:
+        from . import jobs as J
+        ac = J.accounting(names[-1])
+        if ac and ac.get('cpu_h') is not None:
+            line += (f'.  jobs.py {names[-1]}: wall {ac["wall_h"]:.2f} h, CPU {ac["cpu_h"]:.2f} h (run {ac["main_cpu_h"]:.2f}, '
+                     f'sink + converge {ac["sink_cpu_h"]:.2f} in {ac["sink_wall_h"]:.2f} h)')
+    return line
 
 
 def report(goal):
@@ -801,7 +856,7 @@ def report(goal):
     for r in rows:
         by.setdefault(r['arm'], []).append(r)
     out = [f'# goal {goal.goal}: {len(rows)} jobs, {sum(r["cpu_h"] for r in rows):.2f} CPU-h of {goal.budget_cpu_h}',
-           '', '| arm | jobs | CPU-h | new clusters (v1 matches) | new minima | gain: family / store | best gap to store best | reward / CPU-h |',
+           '', accounting(goal, rows), '', '| arm | jobs | CPU-h | new clusters (v1 matches) | new minima | gain: family / store | best gap to store best | reward / CPU-h |',
            '|---|---|---|---|---|---|---|---|']
     for a, R in sorted(by.items(), key=lambda t: -sum(r['reward'] for r in t[1])):
         c = sum(r['cpu_h'] for r in R); w = sum(r['reward'] for r in R)
