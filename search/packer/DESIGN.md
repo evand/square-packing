@@ -83,7 +83,7 @@ This side stays generic (Evan 10-25): extension points, public stages, and examp
 plugin's stage / arm names, its weights and priors, its benchmarks and its goal files live in the plugin, never here;
 the pre-push hook enforces the names (`CLAUDE.md`, Public / private).
 
-## Next: the unit loop (design 10-25, agreed with Evan; not built)
+## Next: the unit loop (design 10-25, agreed with Evan; steps 1-2 built 10-26: `pk/families.py`, `pk/units.py`)
 
 Why.  The goal loop schedules 15-minute single-arm jobs from one dispatcher process per goal.  Measured 10-25 on two
 30 CPU-h runs: utilization 48-79 % of the declared processes (serial setup, a 24-minute drain of the last wave,
@@ -145,6 +145,12 @@ Migration.  1. `best` table, `family` column, index (cheap decisions; the curren
 workers next to the current loop, running the same arms; smoke goal.  3. One fresh-target run with the 10-25 lean
 settings (clusters off) for a like-for-like readout of utilization and gain per CPU-h.  4. Variants, then live
 targets.  5. Retire `goal run` / `goal job` / the quantum knobs.
+Step 2 as built (10-26): `python3 -m pk.units add GOAL` / `work --procs N` / `report GOAL`; kinds arm, reference (only
+when a candidate at n needs it), polish (candidates = an arm unit's new wanted-family packings within `polish_margin`
+1e-3 of the family best: polish moved 97 % of 7815 10-25 goal-run candidates by < 1e-3); a polish unit's CPU and gain go to the
+arm that made its candidates.  Smoke (2 targets, 0.8 CPU-h, 3 workers beside a 14-process run): claim + record 0.6 ms
+median (0.01 % of unit CPU), units' CPU = the jobs.py measurement.  Workers swap in the cached-family donor lookup for
+their own process until goal.py adopts it.
 
 Open.  Unit allowance per kind (screened construct needs ~R x 0.5 s + one relax; polish at n ~ 1000 is 1.5-3 min);
 SQLite write rate (16 workers x a few writes per unit per minute: WAL should do); the cluster census if it returns

@@ -258,8 +258,9 @@ def score_share(goal, n):
     return min(0.6, max(0.03, 1.3 * sorted(f)[len(f) // 2]))
 
 
-def run_job(goal, arm, out, cpu_s, seed):
-    """one arm x one quantum: donors from the store, construct (chain arms), walk; files only (the scheduler imports)"""
+def run_job(goal, arm, out, cpu_s, seed, finish=True):
+    """one arm x one quantum: donors from the store, construct (chain arms), walk; files only (the scheduler imports).
+    finish=False (pk/units.py): stop after the walk; the caller ingests and polishes as units of their own"""
     sys.path.insert(0, HERE)
     import mcmin
     from layout import full_lines
@@ -347,8 +348,9 @@ def run_job(goal, arm, out, cpu_s, seed):
                             '--polish-gate', '2e-3', '--weights', 'melt=2,jmelt=1,jrefill=1'],
                            cwd=HERE, stdout=fh, stderr=subprocess.STDOUT)
     json.dump(dict(log, parents=parents, cpu=_cpu() - c0), open(os.path.join(out, 'job.json'), 'w'))
-    finish_job(goal, arm, out, cpu_s, c0, time.strftime('%Y-%m-%dT%H:%M:%S',
-                                                        time.localtime(os.path.getmtime(os.path.join(out, 'arm.json')))))
+    if finish:
+        finish_job(goal, arm, out, cpu_s, c0, time.strftime('%Y-%m-%dT%H:%M:%S',
+                                                            time.localtime(os.path.getmtime(os.path.join(out, 'arm.json')))))
 
 
 def finish_job(goal, arm, out, cpu_s, c0, t0):
