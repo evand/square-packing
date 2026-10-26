@@ -79,6 +79,10 @@ repo, if present) before adapting the registries.  A plugin registers stages wit
 `ARM_TEMPLATES` (`f(goal, n) -> [arm dict]`), `TEST_STARTS` (`{stage: chain}` for the contract test) and goal files of
 its own.  Plugin scripts find this directory through their own bootstrap; `runs/` and the store live here.
 
+This side stays generic (Evan 10-25): extension points, public stages, and examples built from public stages.  A
+plugin's stage / arm names, its weights and priors, its benchmarks and its goal files live in the plugin, never here;
+the pre-push hook enforces the names (`CLAUDE.md`, Public / private).
+
 ## Not done yet (tasks/explore-loop/DESIGN.md §8)
 
 - Reward v2: the pool potential with lineage credit (a construction arm is paid when a later walk descends from it).

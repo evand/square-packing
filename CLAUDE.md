@@ -15,6 +15,11 @@ Start at `TODO.md` (open items; conventions in `~/math/TODO.md`), then `README.m
   Framework changes go here as generic extension points.  Bug fixes and minor updates to existing public moves /
   generators go public too; major new methods are a judgment call (Evan 10-23).  `.git/hooks/pre-push` refuses private paths and added lines
   that mention Kaggle (review them, then `PUBLIC_OK=1 git push`).  Unsure which side: ask Evan.
+  Public code stays generic (Evan 10-25): never name a plugin's stages, arms or modules here (code, docstrings, TODO,
+  examples), and keep per-plugin specifics (weights, priors, benchmarks, configs) in the plugin; public examples use
+  public stages.  The pre-push hook refuses added lines naming a plugin stage (`@stage('x.y')`) or a word in
+  `../plugins/PUBLIC_DENY.txt` (add new bare arm names there); `PLUGIN_OK=1` only for a reviewed exception.  The hook
+  checks the push's net diff but history keeps every commit: fix a slip before it is pushed, ideally before committing.
 - `search/`: research code + one `UPPERCASE.md` log per investigation.  `search/packer/` (packing search; `README.md` map, `DESIGN.md` architecture, `CLAIMS.md` findings; lab log to 10-24 in `archive/`), `search/exact/` (exact forms; `EXACT_FORMS.md`).
 - Packings: use the store (`search/packer/pk.py`: `frontier`, `ls N`, `get best:N --fmt ...`, `sync-register`, `watch --apply`, `sync-issues`; `pk/README.md`), never copy coordinates by hand.  Add verified packings to the store (ours or others') without asking: a packing is checkable.  Provenance and "who was first" are best effort (socially verified): record what we know, fix it when we learn better (Evan, 10-12).  There is no separate records session, only notes on how to do it.  Packing search is goals + stages (`search/packer/DESIGN.md`): a new idea is a stage, a campaign is a goal file run by `pk.py goal run`; the goal file is the pre-registration and holds the result, so it lives in the plugin repo (`../plugins/packer/goals/`), not here.
   Explorer archive files (`b#####.txt`) may be absent (deduplicated against the store, 10-20): read them with `pk.packing.read` / `mcmin.load_deg`, or call
