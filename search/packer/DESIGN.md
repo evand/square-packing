@@ -83,6 +83,73 @@ This side stays generic (Evan 10-25): extension points, public stages, and examp
 plugin's stage / arm names, its weights and priors, its benchmarks and its goal files live in the plugin, never here;
 the pre-push hook enforces the names (`CLAUDE.md`, Public / private).
 
+## Next: the unit loop (design 10-25, agreed with Evan; not built)
+
+Why.  The goal loop schedules 15-minute single-arm jobs from one dispatcher process per goal.  Measured 10-25 on two
+30 CPU-h runs: utilization 48-79 % of the declared processes (serial setup, a 24-minute drain of the last wave,
+hand-off to the next queued run, a queue that would not start a 15-process run behind one stray thread); references
+31-43 % of CPU; sequential runs as experiments (different targets, a moving store: +-35 % noise on gain per CPU-h, so
+~120 CPU-h per condition to see a 2x effect).  Everything here is embarrassingly parallel except decisions and bandit
+updates, and those are small database transactions.  The whole project is a value-of-information problem: where to
+spend the next CPU-minute (which n, which move, polish or explore, which variant to learn about).  Overhead decides
+how many such decisions we can afford, so the rule is: **make decisions cheap**, and make every unit of compute a
+decision.
+
+Principles.
+- The unit is one single-threaded task with a fixed CPU allowance (~1-3 min) that reads the store, computes and writes
+  its results.  No job, quantum, dispatcher or per-goal process.
+- Decide late: a unit picks what to do when it starts, from everything finished so far.
+- Decisions read precomputed state (indexes, summary rows): milliseconds, never a scan.
+- Everything is a row: goals, units, results, CPU.  Accounting, reports and experiment readouts are SELECTs.
+
+Unit kinds (each a stage chain or an existing entry point, run under a CPU allowance; fq `--deadline` keeps the tails):
+- `construct`: donors -> build stages -> screen R builds -> fully relax the best 1 (+ an audit share, random).
+- `walk`: the local search from a chosen store packing for the allowance.
+- `polish` / `converge`: one packing (or the new near-best packings at one n) to a fixpoint.  Queued implicitly: they
+  are options whose value is the chance of a gain, like any move ("relax and polish are moves").
+- `reference`: the polished family best at n before the goal (only what gain accounting needs; cluster census off).
+
+Claim (one transaction, any worker):
+```
+BEGIN IMMEDIATE
+  pick goal  (priority, budget left, CPU share)
+  pick option (n, kind, arm, variant) by Thompson sampling on expected gain per CPU-s, from the summary tables
+  INSERT unit (goal, n, kind, arm, variant, worker, lease_until, started)
+COMMIT
+run -> INSERT result rows (packings via the store API); UPDATE unit (cpu, wall, gain, status); UPDATE summaries
+```
+A lease that expires (crashed or killed worker) returns the option; nothing is lost but that unit's CPU.
+
+Workers.  `pk.py work --procs N`: N persistent processes (imports and caches once, then claim / run / record).  The
+count follows the machine (free cores from `jobs.py`; quick tests for an active conversation still go first), so two
+goals or another session's work share cores at unit granularity; a run "drains" in one unit.
+
+Decision state (kept current on write, read on claim):
+- store: `family` column on packing, a `best` table (n, family -> best side, id) maintained on insert, index (n, s);
+  donor choice is a lookup.
+- targets: live value per n = (current side - bar) / sqrt n from the newest bar list, x expected gain per CPU-s;
+  n retire when they cross the bar.  Goals state an objective and constraints, not a hand-picked list of n.
+- model: gain per CPU-s per option with pooled priors (kind x n band, kind, n) and discounting (gains deplete as a
+  target is worked: never-worked targets paid 2-4x per CPU-h on 10-25); credit for a polish / converge gain goes to the
+  unit that made its parent (lineage).
+
+Experiments.  A goal may declare variants (`clusters: [on, off]`, `screen.k: [2, 8]`, a polish policy, ...); each claim
+draws one at random.  Variants then share targets, time and store state, so the comparison is paired within one run
+and the readout is a grouped SELECT with a bootstrap.  Pre-registration stays: the goal file holds the predictions.
+
+Accounting.  Unit rows carry CPU (`getrusage` of the worker around the unit, children included), wall and kind;
+worker rows carry idle time.  Utilization = unit CPU / (wall x workers); overhead = claim + record time, reported per
+unit.  Targets: utilization >= 95 %, decision + record overhead <= 1 % of unit CPU.
+
+Migration.  1. `best` table, `family` column, index (cheap decisions; the current loop benefits too).  2. Units and
+workers next to the current loop, running the same arms; smoke goal.  3. One fresh-target run with the 10-25 lean
+settings (clusters off) for a like-for-like readout of utilization and gain per CPU-h.  4. Variants, then live
+targets.  5. Retire `goal run` / `goal job` / the quantum knobs.
+
+Open.  Unit allowance per kind (screened construct needs ~R x 0.5 s + one relax; polish at n ~ 1000 is 1.5-3 min);
+SQLite write rate (16 workers x a few writes per unit per minute: WAL should do); the cluster census if it returns
+(needs serializing); how much of the walk's value is in long chains (cut into units, it restarts from the best so far).
+
 ## Not done yet (tasks/explore-loop/DESIGN.md §8)
 
 - Reward v2: the pool potential with lineage credit (a construction arm is paid when a later walk descends from it).
