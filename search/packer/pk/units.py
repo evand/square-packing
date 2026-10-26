@@ -19,6 +19,13 @@ Kinds (each one single-threaded task of at most ~`unit_cpu` CPU-s, on the goal's
   reference  the polished family best at n before the goal (goal.reference; clusters off: the 3 best), built once,
              only when a polish candidate at n needs it
   polish     one unit's polish candidates to a polish fixpoint (goal.polish_cached); charged and credited to its arm
+  refresh    rebuild a generator's inputs (stage hook `refresh()`), claimed only when its `stale()` says so
+
+Deterministic generators (stage hooks, set by the stage's module, 10-26).  A gen stage with `version(ctx)` (a key of
+the inputs its output depends on besides its parameters and rng) and only finite ('choice') parameters is built once
+per (version, parameter combination, variant), `variants` (default 1) rng draws each: a construct unit of such an arm
+fully relaxes its not-yet-built combinations (no screen) and the arm is not offered again until the version changes.
+`stale()` / `refresh()`: the inputs can be brought up to date; refresh is a unit kind, claimed when stale (no timers).
 
 Claim (one BEGIN IMMEDIATE transaction): expire lost leases; pick a goal (priority, then least budget used); in it a
 reference if one is needed, else the best pending polish, else the best pending walk, else an arm by Thompson sampling
@@ -52,12 +59,16 @@ CREATE TABLE IF NOT EXISTS worker(id INTEGER PRIMARY KEY, pid INT, host TEXT, jo
   cpu REAL DEFAULT 0, unit_cpu REAL DEFAULT 0, idle_s REAL DEFAULT 0, claim_s REAL DEFAULT 0, record_s REAL DEFAULT 0,
   units INT DEFAULT 0, status TEXT);
 CREATE TABLE IF NOT EXISTS ctl(key TEXT PRIMARY KEY, value TEXT);
+CREATE TABLE IF NOT EXISTS gen_done(arm TEXT, version TEXT, combo TEXT, variant INT, unit INT,
+  PRIMARY KEY(arm, version, combo, variant));
 """
-LEASE = dict(construct=3.0, walk=3.0, reference=20.0, polish=20.0)   # x unit_cpu_s (min 600 s): past it, a lost worker
+EXTRA = [('unit', 'stage', 'TEXT')]                       # columns added after a db was created
+LEASE = dict(construct=3.0, walk=3.0, reference=20.0, polish=20.0, refresh=20.0)   # x unit_cpu_s (min 600 s): past it, a lost worker
 EMPTY_RETRY = 1800                                        # an arm with no donors is retried after this many seconds
 POLISH_TOP = 3                                            # polish candidates per unit (finalize's clusters-off default)
 WALK_TOP = 2                                              # walk candidates per construct unit (its best new starts)
 HIST = 400                                                # screen scores per arm the serial cut is taken from
+REFRESH_GAP = 30                                          # s between refreshes of one stage (guards a hook that stays stale)
 WALKED = 'walk'                                           # store expansion mechanism of a walk unit
 
 
@@ -66,7 +77,52 @@ def connect(path=DB):
     db = sqlite3.connect(path, timeout=120, isolation_level=None)   # autocommit; transactions are explicit
     db.execute('PRAGMA journal_mode=WAL'); db.execute('PRAGMA synchronous=NORMAL')
     db.executescript(SCHEMA)
+    for tb, col, ty in EXTRA:
+        if col not in {r[1] for r in db.execute(f'PRAGMA table_info({tb})')}:
+            db.execute(f'ALTER TABLE {tb} ADD COLUMN {col} {ty}')
     return db
+
+
+# ------------------------------------------------------------------ deterministic generators
+
+_GEN = {}
+
+
+def gen_stage(arm):
+    """the arm's first stage function if it is a deterministic generator (has `version`), else None (memoized per chain)"""
+    if not arm.get('chain'):
+        return None
+    if arm['chain'] not in _GEN:
+        from . import stages as S
+        try:
+            name, fixed = S.parse(arm['chain'].split('|')[0])[0]
+        except KeyError:                                          # not a registered stage: running the chain will say so
+            name = None
+        f = S.STAGES.get(name)
+        _GEN[arm['chain']] = f if f is not None and hasattr(f, 'version') and combos(f, fixed) is not None else None
+    return _GEN[arm['chain']]
+
+
+def combos(f, fixed):
+    """every distinct parameter combination of stage f given the fixed ones ([] if none vary); None if a parameter is
+    not finite ('choice')"""
+    import itertools
+    keys, vals = [], []
+    for k, v in f.space.items():
+        if k in fixed:
+            continue
+        if not (isinstance(v, tuple) and v and v[0] == 'choice'):
+            return None
+        keys.append(k); vals.append(sorted(set(v[1]), key=repr))
+    return [dict(zip(keys, c)) for c in itertools.product(*vals)]
+
+
+def _todo(db, arm, f, version):
+    """combinations x variants of arm not yet built at this version -> [(combo dict, variant)]"""
+    from . import stages as S
+    done = {(c, v) for c, v in db.execute('SELECT combo, variant FROM gen_done WHERE arm=? AND version=?', (arm['id'], version))}
+    return [(c, v) for c in combos(f, S.parse(arm['chain'].split('|')[0])[0][1]) for v in range(int(getattr(f, 'variants', 1)))
+            if (json.dumps(c, sort_keys=True), v) not in done]
 
 
 def cpu():
@@ -142,6 +198,16 @@ def pick(db, g, arms, rng, now, posterior, window=0.05):
     """the next option in goal g -> dict(kind, n, arm, parent, cand) or None.  window: walk candidates more than this
     above the family best are dropped (the goal's donor window)"""
     name = g['name']
+    from . import stages as S
+    hooks = {}
+    for a in arms:
+        f = gen_stage(a)
+        if f is not None and hasattr(f, 'stale'):
+            hooks[f.stage_name] = f
+    for sname, f in hooks.items():
+        if not db.execute("SELECT 1 FROM unit WHERE kind='refresh' AND stage=? AND (status='running' OR ended>?)",
+                          (sname, now - REFRESH_GAP)).fetchone() and f.stale():     # a hook that stays stale cannot spin
+            return dict(kind='refresh', n=None, arm=None, parent=None, stage=sname)
     fam = "(SELECT COALESCE(fbest, f0, sbest) FROM nstate WHERE nstate.goal=cand.goal AND nstate.n=cand.n)"
     db.execute(f"UPDATE cand SET status='skipped' WHERE goal=? AND kind='polish' AND status='pending' AND s > {fam} + ?",
                (name, g['polish_margin']))
@@ -175,6 +241,16 @@ def pick(db, g, arms, rng, now, posterior, window=0.05):
                                       (name, now - EMPTY_RETRY))}
     retired = {n for (n,) in db.execute('SELECT n FROM nstate WHERE goal=? AND retired=1', (name,))}
     elig = [a for a in arms if a['id'] not in empty and a['n'] not in retired]
+    vers = {}
+    def built(a):                                                 # a deterministic generator with nothing left to build
+        f = gen_stage(a)
+        if f is None:
+            return False
+        if pend.get(a['id']):
+            return True
+        v = vers.setdefault(f.stage_name, f.version())
+        return not _todo(db, a, f, v)
+    elig = [a for a in elig if not built(a)]
     if not elig:
         return None
     post = posterior(stats); uh = g['unit_cpu_s'] / 3600
@@ -207,9 +283,10 @@ def claim(db, wid, rng, arms_of=None, posterior=None, now=None):
                 continue
             lease = now + max(600.0, LEASE[o['kind']] * g['unit_cpu_s'])
             seed = rng.randrange(1 << 30)
-            uid = db.execute("INSERT INTO unit(goal, kind, n, arm, parent, start, worker, seed, status, lease_until, started) "
-                             "VALUES (?,?,?,?,?,?,?,?,?,?,?)", (g['name'], o['kind'], o['n'], o['arm'], o['parent'],
-                                                               o.get('start'), wid, seed, 'running', lease, now)).lastrowid
+            uid = db.execute("INSERT INTO unit(goal, kind, n, arm, parent, start, stage, worker, seed, status, lease_until, "
+                             "started) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", (g['name'], o['kind'], o['n'], o['arm'], o['parent'],
+                                                                         o.get('start'), o.get('stage'), wid, seed, 'running',
+                                                                         lease, now)).lastrowid
             if o['kind'] == 'polish':
                 db.execute("UPDATE cand SET status='claimed', taken_by=? WHERE unit=? AND kind='polish' AND status='pending'",
                            (uid, o['parent']))
@@ -232,7 +309,8 @@ def record(db, u, res, cpu_s, wall, value, bars, retire=True, now=None):
     name, n = u['goal']['name'], u['n']
     db.execute('BEGIN IMMEDIATE')
     try:
-        sbest, fbest, f0p = db.execute('SELECT sbest, fbest, f0p FROM nstate WHERE goal=? AND n=?', (name, n)).fetchone()
+        row = db.execute('SELECT sbest, fbest, f0p FROM nstate WHERE goal=? AND n=?', (name, n)).fetchone()
+        sbest, fbest, f0p = row if row else (math.inf, None, None)     # refresh units have no n
         gain = sgain = 0.0; bar = 0
         status = res.get('status', 'done')
         if u['kind'] == 'reference' and res.get('f0p') is not None:
@@ -256,6 +334,8 @@ def record(db, u, res, cpu_s, wall, value, bars, retire=True, now=None):
         if res.get('screens'):
             db.executemany('INSERT INTO screen VALUES (?,?,?,?)', [(u['arm'], k, s, u['id']) for k, s in res['screens']])
         db.execute("UPDATE cand SET status='done' WHERE taken_by=?", (u['id'],))
+        for v, c, k in res.get('gen_done', []):
+            db.execute('INSERT OR IGNORE INTO gen_done VALUES (?,?,?,?,?)', (u['arm'], v, c, k, u['id']))
         db.execute('COMMIT')
     except BaseException:
         db.execute('ROLLBACK')
@@ -364,8 +444,32 @@ def run_construct(u, goal, arms):
         rt.extend(r['cpu'] for r in lg if r['kind'] == 'relax' and not r['info'].get('failed'))
 
     log = dict(arm=arm['id'], donors=[d[0] for d in D])
-    kept, recs = SCR.construct_serial(arm['chain'], dict(n=n, cap=cap, on_relax=on_relax), budget - (cpu() - c0), cpu, rng,
-                                      pick_start, keep, cfg, hist, log)
+    fg = gen_stage(arm); done = []
+    if fg is not None:                                            # deterministic generator: each combination once
+        version = fg.version()
+        db = connect(); todo = _todo(db, arm, fg, version); db.close()
+        spec = S.parse(arm['chain']); kept, recs = [], []
+        for c, var in todo:
+            if cpu() - c0 > budget:
+                break
+            sp = [(spec[0][0], dict(spec[0][1], **c))] + spec[1:]
+            t = cpu()
+            try:
+                st, lg = S.run_chain(sp, dict(n=n, fq_timeout=cap()), rng.randrange(1 << 30), st=None)
+            except Exception as e:
+                recs.append(dict(combo=c, variant=var, failed=repr(e)[:80])); done.append((version, json.dumps(c, sort_keys=True), var))
+                continue
+            on_relax(lg)
+            ok = not any(r['info'].get('failed') for r in lg) and keep(st, lg)
+            recs.append(dict(combo=c, variant=var, s=float(st.p.s), ok=ok, cpu=cpu() - t,
+                             build_s=lg[0]['s'], relax_cpu=sum(r['cpu'] for r in lg[1:])))
+            done.append((version, json.dumps(c, sort_keys=True), var))
+            if ok:
+                kept.append((float(st.p.s), st.meta.get('parent'), np.asarray(st.p.sq, float)))
+        log.update(built=len(recs), generator=dict(version=version, todo=len(todo), done=len(done)))
+    else:
+        kept, recs = SCR.construct_serial(arm['chain'], dict(n=n, cap=cap, on_relax=on_relax), budget - (cpu() - c0), cpu, rng,
+                                          pick_start, keep, cfg, hist, log)
     json.dump(recs, open(os.path.join(out, 'screen.json'), 'w'))
     kept.sort(key=lambda t: t[0]); seen = set(); parents = {}
     for s, pid, sq in kept:
@@ -373,14 +477,14 @@ def run_construct(u, goal, arms):
             continue
         seen.add(round(s, 6)); f = os.path.join(out, 'starts', f'p{pid}_{len(parents)}.txt'); G._write(f, s, sq)
         parents[os.path.basename(f)] = pid
-    J = dict(log, built=sum(1 for r in recs if 'traj' in r), kept=len(parents), parents=parents, cpu=cpu() - c0)
+    J = dict(log, built=log.get('built', sum(1 for r in recs if 'traj' in r)), kept=len(parents), parents=parents, cpu=cpu() - c0)
     jbest, pol, rows = _ingest(goal, u, jid, out, t0, J)
     ex = goal.progress.get('exclude', [])
     walk = [('walk', i, s) for i, s, f in rows if f is not None and f not in ex][:WALK_TOP]
     screens = [(cfg['k'], SCR.score_at(r['traj'], cfg['k'])) for r in recs if r.get('traj')]
-    return dict(jbest=jbest, cands=pol + walk, screens=[x for x in screens if x[1] is not None],
+    return dict(jbest=jbest, cands=pol + walk, screens=[x for x in screens if x[1] is not None], gen_done=done,
                 info=dict(built=J['built'], screened=log.get('screened'), relaxed=log.get('full_relaxed'), kept=len(parents),
-                          new=len(rows)))
+                          new=len(rows), **({'generator': log['generator']} if 'generator' in log else {})))
 
 
 def _walk_start(goal, u):
@@ -451,6 +555,11 @@ def run_walk(u, goal, arms):
     return dict(jbest=jbest, cands=pol, info=dict(start=pid, start_s=s, new=len(rows), walk_cpu=round(wcpu, 1)))
 
 
+def run_refresh(u, goal, arms):
+    from . import stages as S
+    return dict(info=dict(stage=u['stage'], **(S.STAGES[u['stage']].refresh() or {})))
+
+
 def run_reference(u, goal, arms):
     from . import goal as G
     from .store import Store
@@ -486,7 +595,7 @@ def run_polish(u, goal, arms):
                 info=dict(items=len(items), **stats))
 
 
-RUN = dict(construct=run_construct, walk=run_walk, reference=run_reference, polish=run_polish)
+RUN = dict(construct=run_construct, walk=run_walk, reference=run_reference, polish=run_polish, refresh=run_refresh)
 
 
 def worker(i, path, max_idle, job):

@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS packing (
   coords BLOB NOT NULL, status TEXT NOT NULL DEFAULT 'raw', s_exact TEXT, fp TEXT, ntilted INTEGER, grid INTEGER,
   pen REAL, parent INTEGER, tags TEXT NOT NULL DEFAULT '[]', added TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS packing_ns ON packing(n, s);
+CREATE INDEX IF NOT EXISTS packing_added ON packing(added);       -- 10-26: "what is new since T" (incremental refreshes)
 CREATE TABLE IF NOT EXISTS sighting (
   packing INTEGER NOT NULL REFERENCES packing(id), source TEXT NOT NULL, finder TEXT, ref TEXT, kind TEXT, added TEXT,
   UNIQUE(packing, source, ref));

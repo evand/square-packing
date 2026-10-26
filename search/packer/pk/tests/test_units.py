@@ -85,5 +85,38 @@ def test_walk_arm_kind():
         assert (u['kind'], u.get('start')) == ('walk', None)
 
 
+
+def test_deterministic_generator_and_refresh():
+    from pk import stages as S
+    calls = dict(stale=False, v='v1')
+
+    @S.stage('gen.test_det', 'gen', a=('choice', [0, 0, 1]))
+    def gen_det(st, rng, ctx, a):
+        raise NotImplementedError
+    gen_det.version = lambda ctx=None: calls['v']
+    gen_det.variants = 2
+    gen_det.stale = lambda: calls['stale']
+    gen_det.refresh = lambda: dict(ok=True)
+    try:
+        arms = [dict(id='10:det', n=10, chain='gen.test_det | relax.x')]
+        with tempfile.TemporaryDirectory() as d:
+            db = _db(d)
+            cl = lambda now: U.claim(db, 1, random.Random(0), arms_of=lambda g: arms, posterior=Posterior, now=now)
+            assert len(U.combos(gen_det, {})) == 2                  # distinct values of the choice
+            u = cl(100); assert u['kind'] == 'construct'
+            assert cl(101) is None                                  # running: not offered twice
+            done = [('v1', '{"a": %d}' % a, k) for a in (0, 1) for k in (0, 1)]
+            U.record(db, u, dict(gen_done=done), 5.0, 5.0, VAL, {}, now=110)
+            assert cl(120) is None                                  # every combination built at v1
+            calls['stale'] = True
+            r = cl(130); assert (r['kind'], r['stage']) == ('refresh', 'gen.test_det')
+            U.record(db, r, dict(info={}), 1.0, 1.0, VAL, {}, now=131)
+            assert cl(140) is None                                  # still stale: no second refresh within REFRESH_GAP
+            calls['stale'] = False; calls['v'] = 'v2'
+            assert cl(200)['kind'] == 'construct'                   # a new version: offered again
+    finally:
+        S.STAGES.pop('gen.test_det', None); U._GEN.clear()
+
+
 if __name__ == '__main__':
-    test_arm_reference_polish_lineage(); test_budget_and_lease(); test_bar_retires(); test_walk_candidates_lineage(); test_walk_arm_kind(); print('ok')
+    test_arm_reference_polish_lineage(); test_budget_and_lease(); test_bar_retires(); test_walk_candidates_lineage(); test_walk_arm_kind(); test_deterministic_generator_and_refresh(); print('ok')
