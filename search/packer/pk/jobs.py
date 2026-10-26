@@ -321,6 +321,9 @@ def _sub(x, procs):
     return None if x is None else x.replace('{procs}', str(procs))
 
 
+FIT_TOL = 2
+
+
 def q_run(poll=15.0, settle=45.0):
     """the scheduler loop: start what fits, in priority / FIFO order; exit when the queue is empty"""
     ema, started_last = None, False                        # smoothed use: thread counts swing +-3 between samples
@@ -345,7 +348,9 @@ def q_run(poll=15.0, settle=45.0):
                 cap = TARGET * SLACK if e['prio'] == 'high' else TARGET - RESERVE
                 room = int(cap - used)
                 n = min(e['procs'], room) if e['min_procs'] else e['procs']
-                if (room < (e['min_procs'] or e['procs'])) and used > 0.5:  # an idle machine takes anything
+                # an idle machine takes anything; 10-25: and a job within FIT_TOL of fitting starts (a stray outside
+                # thread or two otherwise held a 15-proc goal run for good; somewhat above target is fine)
+                if (room + FIT_TOL < (e['min_procs'] or e['procs'])) and used > 0.5:
                     blocked.add(e['prio']); continue
                 n = max(1, n)
                 if alive(e['name']):
