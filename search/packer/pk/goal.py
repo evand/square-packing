@@ -204,12 +204,27 @@ def arm_kind(aid):
     return re.match(r'[a-z_]*', aid.split(':')[1]).group(0)
 
 
-def pool_sizes(goal, arms, seed=0):
-    rng = random.Random(seed); out = {}
-    for a in arms:
-        if str(a.get('chain') or '').strip().startswith('gen.'):
-            out[a['id']] = 1; continue
-        out[a['id']] = len(donors(goal, a['n'] + a['offset'], 3, rng, a.get('match_donors', True)))
+def _pool_size(args):
+    goal, a, seed = args
+    if str(a.get('chain') or '').strip().startswith('gen.'):
+        return 1
+    return len(donors(goal, a['n'] + a['offset'], 3, random.Random(seed), a.get('match_donors', True)))
+
+
+def pool_sizes(goal, arms, seed=0, prev=None, procs=1):
+    """{arm id: donors available (<= 3)}.  One store scan per arm (0.1-1 s each; 560 arms ~10 min serial, 10-25), so:
+    procs > 1 runs the scans in a process pool, and with prev only the arms that had no donors are rechecked (the store
+    only grows, so a nonempty pool stays nonempty)."""
+    out = dict(prev or {})
+    todo = [a for a in arms if not out.get(a['id'])]
+    args = [(goal, a, seed + i) for i, a in enumerate(todo)]
+    if procs > 1 and len(todo) > procs:
+        from concurrent.futures import ProcessPoolExecutor
+        with ProcessPoolExecutor(procs) as ex:
+            v = list(ex.map(_pool_size, args, chunksize=4))
+    else:
+        v = [_pool_size(x) for x in args]
+    out.update({a['id']: k for a, k in zip(todo, v)})
     return out
 
 
@@ -742,13 +757,13 @@ def run(goal, seed=1, log=print):
             st.close()
         if retired:
             log(f'retired at start (already below the bar): {sorted(retired)}')
-    sizes = pool_sizes(goal, arms); live = {}
+    sizes = pool_sizes(goal, arms, procs=goal.procs); live = {}
     jid = max([int(d[1:]) for d in os.listdir(goal.dir) if d.startswith('j') and d[1:].isdigit()] + [0])
     last_sizes = time.time()
     while True:
         spent = sum(r['cpu_h'] for r in rows) + overhead() + goal.quantum_cpu_h * len(live)
         if time.time() - last_sizes > 600:
-            sizes = pool_sizes(goal, arms, seed=jid); last_sizes = time.time()
+            sizes = pool_sizes(goal, arms, seed=jid, prev=sizes); last_sizes = time.time()
         while len(live) < goal.procs and spent + goal.quantum_cpu_h <= goal.budget_cpu_h + 1e-9:
             post = Posterior(rows)
             pend = {}

@@ -192,7 +192,7 @@ def main():
             return
         g = G.load(a.spec)
         if a.action == 'plan':
-            arms = G.plan(g); sz = G.pool_sizes(g, arms)
+            arms = G.plan(g); sz = G.pool_sizes(g, arms, procs=g.procs)
             for x in arms:
                 print(f"{x['id']:22s} donors at n {x['n'] + x['offset']:4d}: {sz[x['id']]}  {x.get('chain') or 'walk'}")
         elif a.action == 'run':
