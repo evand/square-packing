@@ -145,12 +145,17 @@ Migration.  1. `best` table, `family` column, index (cheap decisions; the curren
 workers next to the current loop, running the same arms; smoke goal.  3. One fresh-target run with the 10-25 lean
 settings (clusters off) for a like-for-like readout of utilization and gain per CPU-h.  4. Variants, then live
 targets.  5. Retire `goal run` / `goal job` / the quantum knobs.
-Step 2 as built (10-26): `python3 -m pk.units add GOAL` / `work --procs N` / `report GOAL`; kinds arm, reference (only
-when a candidate at n needs it), polish (candidates = an arm unit's new wanted-family packings within `polish_margin`
-1e-3 of the family best: polish moved 97 % of 7815 10-25 goal-run candidates by < 1e-3); a polish unit's CPU and gain go to the
-arm that made its candidates.  Smoke (2 targets, 0.8 CPU-h, 3 workers beside a 14-process run): claim + record 0.6 ms
-median (0.01 % of unit CPU), units' CPU = the jobs.py measurement.  Workers swap in the cached-family donor lookup for
-their own process until goal.py adopts it.
+Step 2 as built (10-26): `python3 -m pk.units add GOAL` / `work --procs N` / `report GOAL`.  Kinds: construct
+(pk/screen.construct_serial: build, screen, relax at once if the score is in the arm's best 1 / ratio of all earlier
+screens at that arm; equal-CPU backtest on the audit-1 calibration set: same best side per unit as the pool, ~10 % more
+top-5 % results per CPU-h), walk (explore.py from one start under a CPU budget: a construct unit's best new starts, or
+for a walk arm the donor-window packing with the least walk CPU so far, from store `expansion` rows that every walk
+writes), reference (only when a polish candidate at n needs it), polish (new wanted-family packings within
+`polish_margin` 1e-3 of the family best: polish moved 97 % of 7815 10-25 goal-run candidates by < 1e-3).  Walks and
+polishes of a construct unit's output are charged and credited to its arm (lineage).  Smoke (2 targets, 0.9 CPU-h,
+3 workers beside a 14-process run): 94 % utilization, claim + record 0.3-0.6 ms median (0.01 % of unit CPU), units'
+CPU = the jobs.py measurement; a walk step in flight can overrun the allowance by up to ~40 CPU-s at n 549.
+Same backtest, a side result: screen depth k 2 gives ~1.6x the top-5 % results per CPU-h of k 8 (10-25 goals use 8).
 
 Open.  Unit allowance per kind (screened construct needs ~R x 0.5 s + one relax; polish at n ~ 1000 is 1.5-3 min);
 SQLite write rate (16 workers x a few writes per unit per minute: WAL should do); the cluster census if it returns

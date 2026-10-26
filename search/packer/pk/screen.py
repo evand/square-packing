@@ -100,6 +100,61 @@ def construct(chain, ctx, budget_cpu, cpu, rng, pick_start, keep, cfg=None, log=
     return kept, recs
 
 
+def construct_serial(chain, ctx, budget_cpu, cpu, rng, pick_start, keep, cfg=None, hist=(), log=None):
+    """Serial screen-then-promote (10-26, for short units): build one, screen it, and fully relax it at once if its
+    score at k is in the best 1 / ratio of the screens seen at this arm (`hist`, earlier units' scores, plus this
+    run's); otherwise drop it.  An audit share (`audit` of the full relaxes) relaxes a build regardless of its score.
+    No pool, so a unit can stop at any point.  Equal-CPU backtest on the audit-1 calibration set (30 arm x n cells,
+    91 CPU-s budgets): same best side per unit as construct() (+-0.02 sd), ~10 % more top-5 % results per CPU-h.
+    Until 1 / ratio scores exist (no history), only audits are relaxed.  Returns (kept, records) like construct()."""
+    from . import stages as S
+    cfg = dict(DEFAULT, **(cfg or {}))
+    pre, last = split_chain(chain)
+    q = 1.0 / cfg['ratio']; k = cfg['k']
+    p_audit = q * cfg['audit'] / max(1e-9, 1.0 - cfg['audit'])     # audits are ~`audit` of all full relaxes
+    seen = sorted(x for x in hist if x is not None)
+    c0 = cpu(); recs = []; kept = []; fulls = screens = 0
+    while cpu() - c0 < budget_cpu:
+        pid, st0 = pick_start()
+        t = cpu()
+        try:
+            st, lg = S.run_chain(pre, dict(ctx), rng.randrange(1 << 30), st=st0)
+        except Exception as e:
+            recs.append(dict(pid=pid, failed=repr(e)[:80])); continue
+        if any(r['info'].get('failed') for r in lg) or st.p.n != int(ctx['n']):
+            recs.append(dict(pid=pid, failed='build')); continue
+        sc = run_screen(st.p, cfg['kmax'])
+        screens += 1
+        rec = dict(pid=pid if pid is not None else st.meta.get('parent'), raw_s=float(st.p.s), traj=sc['traj'],
+                   scr_sec=sc['sec'], scr_cpu=cpu() - t, scr_failed=sc['failed'])
+        recs.append(rec)
+        s = score_at(sc['traj'], k)
+        if sc['failed'] == 'diverged' or s is None:
+            continue
+        import bisect
+        bisect.insort(seen, s)
+        cut = seen[max(0, int(q * len(seen)) - 1)] if len(seen) >= 1.0 / q else -math.inf
+        if s <= cut:
+            how = 'rank'
+        elif rng.random() < p_audit:
+            how = 'audit'
+        else:
+            continue
+        t = cpu()
+        st2, lg = S.run_chain(last, dict(ctx, fq_timeout=ctx['cap']()), rng.randrange(1 << 30), st=st)
+        fulls += 1
+        info = lg[0]['info']
+        rec.update(promoted=how, full_s=float(st2.p.s) if not info.get('failed') else None, full_cpu=cpu() - t,
+                   full_failed=info.get('failed'), deadline=bool(info.get('deadline')), cut=cut)
+        if ctx.get('on_relax'):
+            ctx['on_relax'](lg)
+        if not info.get('failed') and keep(st2, lg):
+            kept.append((float(st2.p.s), rec['pid'], np.asarray(st2.p.sq, float)))
+    if log is not None:
+        log.update(screened=screens, full_relaxed=fulls, screen_cfg=dict(cfg, serial=True))
+    return kept, recs
+
+
 # ------------------------------------------------------------------ backtest
 
 def _sim(R, k, ratio, budget, rng, full=False):

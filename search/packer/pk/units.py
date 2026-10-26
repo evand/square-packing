@@ -1,53 +1,64 @@
 """The unit loop (DESIGN.md "Next: the unit loop", step 2; 10-26): goals spend CPU in short single-threaded units,
 claimed one at a time from a shared database by persistent workers.  No dispatcher, no quantum, no drain.
 
-  python3 -m pk.units add GOAL [--unit-cpu 180] [--prio 0] [--polish-margin 1e-3]   register a goal (its YAML budget)
+  python3 -m pk.units add GOAL [--unit-cpu 120] [--prio 0] [--polish-margin 1e-3]   register a goal (its YAML budget)
   python3 -m pk.units work --procs N [--max-idle S]   N workers: claim / run / record until stopped (or idle S seconds)
   python3 -m pk.units status | report GOAL | stop [GOAL]
 
 Launch workers with jobs.py like any compute: `pk/jobs.py start units --procs N -- python3 -m pk.units work --procs N`.
 
-Kinds (all on the goal's arms and store, as `pk.py goal run` does, minus its job-sized steps):
-  arm        one arm for `unit_cpu` CPU-s: construct + walk (goal.run_job, finish=False), then ingest + converge its own
-             output; its best few wanted-family packings within `polish_margin` of the family best become candidates
+Kinds (each one single-threaded task of at most ~`unit_cpu` CPU-s, on the goal's arms and the store):
+  construct  a chain arm: build, screen, and fully relax the builds whose screen score is in the arm's best 1 / ratio
+             (pk/screen.construct_serial; the cut comes from every earlier unit's screens at that arm), then ingest
+             + converge.  Its best new starts become walk candidates, its best new wanted-family packings within
+             `polish_margin` of the family best polish candidates.
+  walk       explore.py from one start for the allowance, then ingest + converge (polish candidates as above).  The
+             start is a construct unit's candidate (the walk is charged and credited to that arm: lineage), or, for a
+             walk arm, the store packing in the donor window with the least walk CPU spent on it so far, near the
+             family best first (store `expansion` rows, mechanism 'walk', record every walk).
   reference  the polished family best at n before the goal (goal.reference; clusters off: the 3 best), built once,
-             only when a candidate at n needs it
-  polish     one arm unit's candidates to a polish fixpoint (goal.polish_cached); gains credited to that arm (lineage)
+             only when a polish candidate at n needs it
+  polish     one unit's polish candidates to a polish fixpoint (goal.polish_cached); charged and credited to its arm
 
 Claim (one BEGIN IMMEDIATE transaction): expire lost leases; pick a goal (priority, then least budget used); in it a
-reference if one is needed, else the best pending polish, else an arm by Thompson sampling (goal.Posterior) on reward
-per CPU-h from the unit rows.  Record (one transaction): gains against the per-n state (store best, polished family
-best) read inside the transaction, so concurrent units never pay the same gain twice.  Accounting is SELECTs over the
-unit and worker rows (CPU per unit = getrusage of the worker, children included; claim / record wall per unit).
-Requires `clusters: false` (the cluster census needs one serial counter).
+reference if one is needed, else the best pending polish, else the best pending walk, else an arm by Thompson sampling
+(goal.Posterior) on reward per CPU-h from the unit rows.  Record (one transaction): gains against the per-n state
+(store best, polished family best) read inside the transaction, so concurrent units never pay the same gain twice.
+Accounting is SELECTs over the unit and worker rows (CPU per unit = getrusage of the worker, children included; claim
+/ record wall per unit).  Requires `clusters: false` (the cluster census needs one serial counter).
 """
 from __future__ import annotations
-import argparse, dataclasses, json, math, os, random, resource, socket, sqlite3, sys, time, traceback
+import argparse, json, math, os, random, resource, socket, sqlite3, subprocess, sys, tempfile, time, traceback
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB = os.path.join(HERE, 'runs', 'units.sqlite')
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS goal(name TEXT PRIMARY KEY, path TEXT, budget_cpu_h REAL, unit_cpu_s REAL, prio REAL DEFAULT 0,
   polish_margin REAL, status TEXT, t_goal TEXT, added REAL);
-CREATE TABLE IF NOT EXISTS nstate(goal TEXT, n INT, sbest0 REAL, sbest REAL, f0p REAL, fbest REAL, retired INT DEFAULT 0,
-  PRIMARY KEY(goal, n));
+CREATE TABLE IF NOT EXISTS nstate(goal TEXT, n INT, sbest0 REAL, sbest REAL, f0 REAL, f0p REAL, fbest REAL,
+  retired INT DEFAULT 0, PRIMARY KEY(goal, n));
 CREATE TABLE IF NOT EXISTS unit(id INTEGER PRIMARY KEY, goal TEXT, kind TEXT, n INT, arm TEXT, variant TEXT, parent INT,
-  worker INT, seed INT, status TEXT, lease_until REAL, started REAL, ended REAL, cpu REAL, wall REAL, claim_s REAL,
-  record_s REAL, gain REAL DEFAULT 0, store_gain REAL DEFAULT 0, bar INT DEFAULT 0, reward REAL DEFAULT 0, jbest REAL,
-  info TEXT);
+  start INT, worker INT, seed INT, status TEXT, lease_until REAL, started REAL, ended REAL, cpu REAL, wall REAL,
+  claim_s REAL, record_s REAL, gain REAL DEFAULT 0, store_gain REAL DEFAULT 0, bar INT DEFAULT 0, reward REAL DEFAULT 0,
+  jbest REAL, info TEXT);
 CREATE INDEX IF NOT EXISTS unit_goal ON unit(goal, status, arm);
 CREATE INDEX IF NOT EXISTS unit_kind ON unit(goal, kind, n, status);
-CREATE TABLE IF NOT EXISTS cand(id INTEGER PRIMARY KEY, goal TEXT, n INT, unit INT, packing INT, s REAL, status TEXT,
-  polish_unit INT);
-CREATE INDEX IF NOT EXISTS cand_pending ON cand(goal, status, n);
+CREATE TABLE IF NOT EXISTS cand(id INTEGER PRIMARY KEY, goal TEXT, n INT, kind TEXT, unit INT, packing INT, s REAL,
+  status TEXT, taken_by INT);
+CREATE INDEX IF NOT EXISTS cand_pending ON cand(goal, kind, status, n);
+CREATE TABLE IF NOT EXISTS screen(arm TEXT, k INT, score REAL, unit INT);
+CREATE INDEX IF NOT EXISTS screen_arm ON screen(arm, k);
 CREATE TABLE IF NOT EXISTS worker(id INTEGER PRIMARY KEY, pid INT, host TEXT, job TEXT, started REAL, last_seen REAL,
   cpu REAL DEFAULT 0, unit_cpu REAL DEFAULT 0, idle_s REAL DEFAULT 0, claim_s REAL DEFAULT 0, record_s REAL DEFAULT 0,
   units INT DEFAULT 0, status TEXT);
 CREATE TABLE IF NOT EXISTS ctl(key TEXT PRIMARY KEY, value TEXT);
 """
-LEASE = dict(arm=3.0, reference=20.0, polish=20.0)       # x unit_cpu_s (min 600 s): a lease past this is a lost worker
+LEASE = dict(construct=3.0, walk=3.0, reference=20.0, polish=20.0)   # x unit_cpu_s (min 600 s): past it, a lost worker
 EMPTY_RETRY = 1800                                        # an arm with no donors is retried after this many seconds
-POLISH_TOP = 3                                            # candidates per arm unit (finalize's clusters-off default)
+POLISH_TOP = 3                                            # polish candidates per unit (finalize's clusters-off default)
+WALK_TOP = 2                                              # walk candidates per construct unit (its best new starts)
+HIST = 400                                                # screen scores per arm the serial cut is taken from
+WALKED = 'walk'                                           # store expansion mechanism of a walk unit
 
 
 def connect(path=DB):
@@ -84,8 +95,8 @@ def store_ro():
     return sqlite3.connect(f'file:{os.path.join(HERE, "runs", "store.sqlite")}?mode=ro', uri=True, timeout=60)
 
 
-def add_goal(db, spec, unit_cpu=180.0, prio=0.0, margin=1e-3):
-    from . import goal as G
+def add_goal(db, spec, unit_cpu=120.0, prio=0.0, margin=1e-3):
+    from . import goal as G, families as F
     path = G.resolve(spec); g, arms = load_goal(path)
     os.makedirs(g.dir, exist_ok=True)
     sf = os.path.join(g.dir, 'start.json')                # goal.reference reads the goal start from here
@@ -93,15 +104,18 @@ def add_goal(db, spec, unit_cpu=180.0, prio=0.0, margin=1e-3):
         json.dump(dict(t_goal=time.strftime('%Y-%m-%dT%H:%M:%S'), units=True), open(sf, 'w'))
     t_goal = json.load(open(sf))['t_goal']
     st = store_ro()
-    rows = [(g.goal, n, G.best_before(st, n, t_goal)) for n in g.targets]
-    st.close()
+    try:
+        ex = g.progress.get('exclude', [])
+        rows = [(n, G.best_before(st, n, t_goal), F.best(st, n, G.kgrid(n) + 0.05, ex, before=t_goal)[0]) for n in g.targets]
+    finally:
+        st.close()
     db.execute('BEGIN IMMEDIATE')
     db.execute('INSERT OR REPLACE INTO goal VALUES (?,?,?,?,?,?,?,?,?)',
                (g.goal, path, g.budget_cpu_h, unit_cpu, prio, margin, 'active', t_goal, time.time()))
-    for name, n, s in rows:
-        db.execute('INSERT OR IGNORE INTO nstate(goal, n, sbest0, sbest) VALUES (?,?,?,?)', (name, n, s, s))
+    for n, s, f0 in rows:
+        db.execute('INSERT OR IGNORE INTO nstate(goal, n, sbest0, sbest, f0) VALUES (?,?,?,?,?)', (g.goal, n, s, s, f0))
         if g.retire and n in g.bars and s < g.bars[n]:
-            db.execute('UPDATE nstate SET retired=1 WHERE goal=? AND n=?', (name, n))
+            db.execute('UPDATE nstate SET retired=1 WHERE goal=? AND n=?', (g.goal, n))
     db.execute('COMMIT')
     return g, len(arms)
 
@@ -113,7 +127,7 @@ def expire(db, now):
     if lost:
         q = ','.join('?' * len(lost))
         db.execute(f"UPDATE unit SET status='lost' WHERE id IN ({q})", lost)
-        db.execute(f"UPDATE cand SET status='pending', polish_unit=NULL WHERE status='claimed' AND polish_unit IN ({q})", lost)
+        db.execute(f"UPDATE cand SET status='pending', taken_by=NULL WHERE status='claimed' AND taken_by IN ({q})", lost)
     return lost
 
 
@@ -124,28 +138,39 @@ def spent_h(db, g):
     return done / 3600, run * g['unit_cpu_s'] / 3600
 
 
-def pick(db, g, arms, rng, now, posterior):
-    """the next option in goal g -> dict(kind, n, arm, parent) or None"""
+def pick(db, g, arms, rng, now, posterior, window=0.05):
+    """the next option in goal g -> dict(kind, n, arm, parent, cand) or None.  window: walk candidates more than this
+    above the family best are dropped (the goal's donor window)"""
     name = g['name']
-    db.execute("UPDATE cand SET status='skipped' WHERE goal=? AND status='pending' AND s > "
-               "(SELECT fbest FROM nstate WHERE nstate.goal=cand.goal AND nstate.n=cand.n) + ?", (name, g['polish_margin']))
+    fam = "(SELECT COALESCE(fbest, f0, sbest) FROM nstate WHERE nstate.goal=cand.goal AND nstate.n=cand.n)"
+    db.execute(f"UPDATE cand SET status='skipped' WHERE goal=? AND kind='polish' AND status='pending' AND s > {fam} + ?",
+               (name, g['polish_margin']))
+    db.execute(f"UPDATE cand SET status='skipped' WHERE goal=? AND kind='walk' AND status='pending' AND s > {fam} + ?",
+               (name, window))
     db.execute("UPDATE cand SET status='skipped' WHERE goal=? AND status='pending' AND n IN "
                "(SELECT n FROM nstate WHERE goal=? AND retired=1)", (name, name))
     r = db.execute("SELECT DISTINCT c.n FROM cand c JOIN nstate s ON s.goal=c.goal AND s.n=c.n WHERE c.goal=? AND "
-                   "c.status='pending' AND s.f0p IS NULL AND NOT EXISTS (SELECT 1 FROM unit u WHERE u.goal=c.goal AND "
-                   "u.n=c.n AND u.kind='reference' AND u.status='running') LIMIT 1", (name,)).fetchone()
+                   "c.kind='polish' AND c.status='pending' AND s.f0p IS NULL AND NOT EXISTS (SELECT 1 FROM unit u WHERE "
+                   "u.goal=c.goal AND u.n=c.n AND u.kind='reference' AND u.status='running') LIMIT 1", (name,)).fetchone()
     if r:
         return dict(kind='reference', n=r[0], arm=None, parent=None)
     r = db.execute("SELECT c.unit, c.n, MIN(c.s - s.fbest) d FROM cand c JOIN nstate s ON s.goal=c.goal AND s.n=c.n "
-                   "WHERE c.goal=? AND c.status='pending' AND s.f0p IS NOT NULL GROUP BY c.unit ORDER BY d LIMIT 1",
-                   (name,)).fetchone()
+                   "WHERE c.goal=? AND c.kind='polish' AND c.status='pending' AND s.f0p IS NOT NULL GROUP BY c.unit "
+                   "ORDER BY d LIMIT 1", (name,)).fetchone()
     if r:
         arm = db.execute('SELECT arm FROM unit WHERE id=?', (r[0],)).fetchone()[0]
         return dict(kind='polish', n=r[1], arm=arm, parent=r[0])
+    r = db.execute("SELECT c.id, c.unit, c.n, c.packing FROM cand c JOIN nstate s ON s.goal=c.goal AND s.n=c.n WHERE "
+                   "c.goal=? AND c.kind='walk' AND c.status='pending' ORDER BY c.s - COALESCE(s.fbest, s.f0, s.sbest) LIMIT 1",
+                   (name,)).fetchone()
+    if r:
+        arm = db.execute('SELECT arm FROM unit WHERE id=?', (r[1],)).fetchone()[0]
+        return dict(kind='walk', n=r[2], arm=arm, parent=r[1], cand=r[0], start=r[3])
     stats = [dict(arm=a, reward=w, cpu_h=c / 3600) for a, w, c in db.execute(
         "SELECT arm, SUM(reward), SUM(cpu) FROM unit WHERE goal=? AND arm IS NOT NULL AND status NOT IN ('running', 'lost') "
         "GROUP BY arm", (name,))]
-    pend = dict(db.execute("SELECT arm, COUNT(*) FROM unit WHERE goal=? AND status='running' AND kind='arm' GROUP BY arm", (name,)))
+    pend = dict(db.execute("SELECT arm, COUNT(*) FROM unit WHERE goal=? AND status='running' AND arm IS NOT NULL GROUP BY arm",
+                           (name,)))
     empty = {a for (a,) in db.execute("SELECT DISTINCT arm FROM unit WHERE goal=? AND status='empty' AND ended>?",
                                       (name, now - EMPTY_RETRY))}
     retired = {n for (n,) in db.execute('SELECT n FROM nstate WHERE goal=? AND retired=1', (name,))}
@@ -154,7 +179,7 @@ def pick(db, g, arms, rng, now, posterior):
         return None
     post = posterior(stats); uh = g['unit_cpu_s'] / 3600
     a = max(elig, key=lambda a: post.sample(a['id'], rng, pend.get(a['id'], 0) * uh))
-    return dict(kind='arm', n=a['n'], arm=a['id'], parent=None)
+    return dict(kind='construct' if a.get('chain') else 'walk', n=a['n'], arm=a['id'], parent=None)
 
 
 def claim(db, wid, rng, arms_of=None, posterior=None, now=None):
@@ -182,12 +207,14 @@ def claim(db, wid, rng, arms_of=None, posterior=None, now=None):
                 continue
             lease = now + max(600.0, LEASE[o['kind']] * g['unit_cpu_s'])
             seed = rng.randrange(1 << 30)
-            cur = db.execute("INSERT INTO unit(goal, kind, n, arm, parent, worker, seed, status, lease_until, started) "
-                             "VALUES (?,?,?,?,?,?,?,?,?,?)", (g['name'], o['kind'], o['n'], o['arm'], o['parent'], wid,
-                                                             seed, 'running', lease, now))
-            uid = cur.lastrowid
+            uid = db.execute("INSERT INTO unit(goal, kind, n, arm, parent, start, worker, seed, status, lease_until, started) "
+                             "VALUES (?,?,?,?,?,?,?,?,?,?,?)", (g['name'], o['kind'], o['n'], o['arm'], o['parent'],
+                                                               o.get('start'), wid, seed, 'running', lease, now)).lastrowid
             if o['kind'] == 'polish':
-                db.execute("UPDATE cand SET status='claimed', polish_unit=? WHERE unit=? AND status='pending'", (uid, o['parent']))
+                db.execute("UPDATE cand SET status='claimed', taken_by=? WHERE unit=? AND kind='polish' AND status='pending'",
+                           (uid, o['parent']))
+            if o.get('cand'):
+                db.execute("UPDATE cand SET status='claimed', taken_by=? WHERE id=?", (uid, o['cand']))
             db.execute('COMMIT')
             return dict(o, id=uid, seed=seed, goal=g)
         db.execute('COMMIT')
@@ -200,7 +227,7 @@ def claim(db, wid, rng, arms_of=None, posterior=None, now=None):
 # ------------------------------------------------------------------ record
 
 def record(db, u, res, cpu_s, wall, value, bars, retire=True, now=None):
-    """one transaction: gains vs the per-n state, the unit row, candidates, the polished family best"""
+    """one transaction: gains vs the per-n state, the unit row, candidates, screen history, the polished family best"""
     now = time.time() if now is None else now
     name, n = u['goal']['name'], u['n']
     db.execute('BEGIN IMMEDIATE')
@@ -223,10 +250,12 @@ def record(db, u, res, cpu_s, wall, value, bars, retire=True, now=None):
         reward = value.get('frontier', 1e5) * (gain + sgain) + value.get('bar', 100.0) * bar
         db.execute("UPDATE unit SET status=?, ended=?, cpu=?, wall=?, gain=?, store_gain=?, bar=?, reward=?, jbest=?, info=? "
                    "WHERE id=?", (status, now, cpu_s, wall, gain, sgain, bar, reward, jb, json.dumps(res.get('info', {})), u['id']))
-        for pid, s in res.get('cands', []):
-            db.execute("INSERT INTO cand(goal, n, unit, packing, s, status) VALUES (?,?,?,?,?,'pending')", (name, n, u['id'], pid, s))
-        if u['kind'] == 'polish':
-            db.execute("UPDATE cand SET status='done' WHERE polish_unit=?", (u['id'],))
+        for kind, pid, s in res.get('cands', []):
+            db.execute("INSERT INTO cand(goal, n, kind, unit, packing, s, status) VALUES (?,?,?,?,?,?,'pending')",
+                       (name, n, kind, u['id'], pid, s))
+        if res.get('screens'):
+            db.executemany('INSERT INTO screen VALUES (?,?,?,?)', [(u['arm'], k, s, u['id']) for k, s in res['screens']])
+        db.execute("UPDATE cand SET status='done' WHERE taken_by=?", (u['id'],))
         db.execute('COMMIT')
     except BaseException:
         db.execute('ROLLBACK')
@@ -252,49 +281,174 @@ def donors_fast(goal, n, m, rng, match=True, window=None):
     return sorted(picks, key=lambda r: r[1])
 
 
-def run_arm(u, goal, arms):
+def _unit_dir(goal, u):
+    jid = f"u{u['id']:07d}"; out = os.path.join(goal.dir, jid)   # fixed width: source LIKE '<jid>%' is exact
+    os.makedirs(os.path.join(out, 'starts'), exist_ok=True)
+    return jid, out
+
+
+def _family_ref(goal, n):
+    db = connect(); r = db.execute('SELECT COALESCE(fbest, f0, sbest) FROM nstate WHERE goal=? AND n=?', (goal.goal, n)).fetchone()
+    db.close()
+    return r[0] if r else None
+
+
+def _ingest(goal, u, jid, out, t0, J):
+    """starts + walk archive into the store (goal.ingest_job), converge this unit's packings, and its new packings at n
+    -> (jbest, polish candidates, rows [(id, s, family)] of new packings, best first)"""
     from . import goal as G, families as F, converge
     from .store import Store
-    arm = next(a for a in arms if a['id'] == u['arm'])
-    jid = f"u{u['id']:07d}"; out = os.path.join(goal.dir, jid)   # fixed width: source LIKE '<jid>%' is exact
-    os.makedirs(out, exist_ok=True)
-    json.dump(arm, open(os.path.join(out, 'arm.json'), 'w'))
-    t0 = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(time.time() - 1))
-    G.run_job(dataclasses.replace(goal, score_share=0.05), arm, out, u['goal']['unit_cpu_s'], u['seed'], finish=False)
-    J = json.load(open(os.path.join(out, 'job.json')))
-    if J.get('empty'):
-        return dict(status='empty', info=dict(donors=0))
-    n = arm['n']; k = G.kgrid(n)
+    json.dump(J, open(os.path.join(out, 'job.json'), 'w'))
+    n = u['n']; k = G.kgrid(n)
     st = Store()
     try:
         G.ingest_job(st, goal, jid, out)
-        ids = G._job_ids(st.db, goal, jid, t0)
-        converge.run(st, lo=n, hi=n, procs=1, ids=ids, log=lambda *a: None)
+        converge.run(st, lo=n, hi=n, procs=1, ids=G._job_ids(st.db, goal, jid, t0), log=lambda *a: None)
         ids = G._job_ids(st.db, goal, jid, t0)
         rows = []
         if ids:
             q = ','.join('?' * len(ids))
-            rows = st.db.execute(f"SELECT id, s, coords, family, added>=? FROM packing WHERE id IN ({q}) AND n=? AND {G.FEAS} "
-                                 "AND s<? ORDER BY s", (t0, *ids, n, k - 1e-9)).fetchall()
+            rows = st.db.execute(f"SELECT id, s, coords, family FROM packing WHERE id IN ({q}) AND n=? AND {G.FEAS} AND s<? "
+                                 "AND added>=? ORDER BY s", (*ids, n, k - 1e-9, t0)).fetchall()   # new packings only (a
+    finally:                                                      # walk re-imports its start: an old id, nothing to gain)
+        st.close()
+    ex = goal.progress.get('exclude', [])
+    fam = F.fill(rows[:4 * POLISH_TOP], n) if rows else {}
+    fb = _family_ref(goal, n)
+    pol = [('polish', i, s) for i, s, _, _ in rows[:4 * POLISH_TOP]
+           if fam[i] not in ex and (fb is None or s <= fb + u['goal']['polish_margin'])][:POLISH_TOP]
+    return (rows[0][1] if rows else None), pol, [(i, s, fam.get(i)) for i, s, _, _ in rows]
+
+
+def run_construct(u, goal, arms):
+    """a chain arm: serial screen-then-promote construction for the allowance (no walk: walks are units of their own)"""
+    import numpy as np
+    sys.path.insert(0, HERE)
+    import mcmin
+    from layout import full_lines
+    from . import goal as G, stages as S, screen as SCR
+    from .packing import Packing
+    arm = next(a for a in arms if a['id'] == u['arm'])
+    n = arm['n']; k = G.kgrid(n); rng = random.Random(u['seed'])
+    jid, out = _unit_dir(goal, u)
+    json.dump(arm, open(os.path.join(out, 'arm.json'), 'w'))
+    t0 = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(time.time() - 1))
+    c0 = cpu()
+    gen_led = str(arm.get('chain') or '').strip().startswith('gen.')
+    D = [(None, None, None)] if gen_led else donors_fast(goal, n + arm['offset'], goal.donors, rng, arm.get('match_donors', True))
+    if not D:
+        return dict(status='empty', info=dict(donors=0))
+    cfg = dict(SCR.DEFAULT, **(goal.screen if isinstance(goal.screen, dict) else {}))
+    db = connect()
+    hist = [s for (s,) in db.execute('SELECT score FROM screen WHERE arm=? AND k=? ORDER BY rowid DESC LIMIT ?',
+                                     (arm['id'], cfg['k'], HIST))]
+    db.close()
+    budget = 0.95 * u['goal']['unit_cpu_s'] - 3.0                 # ~3 s: ingest + converge
+    rt = []
+
+    def cap():
+        return max(30.0, goal.relax_cap * float(np.median(rt))) if len(rt) >= 3 else max(60.0, budget / 2)
+
+    def pick_start():
+        pid, s, sq = D[rng.randrange(len(D))]
+        return pid, (None if gen_led else S.State(Packing(s, sq)))
+
+    def keep(st, lg):
+        if st.p.n != n or st.p.s >= k + 0.05:
+            return False
+        with tempfile.TemporaryDirectory() as td:
+            p = os.path.join(td, 'e.txt'); mcmin.write_deg(p, float(st.p.s), [tuple(map(float, q)) for q in st.p.sq])
+            return not full_lines(p, k)
+
+    def on_relax(lg):
+        rt.extend(r['cpu'] for r in lg if r['kind'] == 'relax' and not r['info'].get('failed'))
+
+    log = dict(arm=arm['id'], donors=[d[0] for d in D])
+    kept, recs = SCR.construct_serial(arm['chain'], dict(n=n, cap=cap, on_relax=on_relax), budget - (cpu() - c0), cpu, rng,
+                                      pick_start, keep, cfg, hist, log)
+    json.dump(recs, open(os.path.join(out, 'screen.json'), 'w'))
+    kept.sort(key=lambda t: t[0]); seen = set(); parents = {}
+    for s, pid, sq in kept:
+        if round(s, 6) in seen:
+            continue
+        seen.add(round(s, 6)); f = os.path.join(out, 'starts', f'p{pid}_{len(parents)}.txt'); G._write(f, s, sq)
+        parents[os.path.basename(f)] = pid
+    J = dict(log, built=sum(1 for r in recs if 'traj' in r), kept=len(parents), parents=parents, cpu=cpu() - c0)
+    jbest, pol, rows = _ingest(goal, u, jid, out, t0, J)
+    ex = goal.progress.get('exclude', [])
+    walk = [('walk', i, s) for i, s, f in rows if f is not None and f not in ex][:WALK_TOP]
+    screens = [(cfg['k'], SCR.score_at(r['traj'], cfg['k'])) for r in recs if r.get('traj')]
+    return dict(jbest=jbest, cands=pol + walk, screens=[x for x in screens if x[1] is not None],
+                info=dict(built=J['built'], screened=log.get('screened'), relaxed=log.get('full_relaxed'), kept=len(parents),
+                          new=len(rows)))
+
+
+def _walk_start(goal, u):
+    """a walk arm's start: in the donor window at n, the packing with the least walk CPU so far, near the best first
+    (score = (s - best) / window + log(1 + walk CPU / allowance)), skipping starts other running walks hold"""
+    from . import families as F, goal as G
+    n = u['n']; st = store_ro()
+    try:
+        rows = F.near(st, n, G.kgrid(n) + 0.05, goal.progress.get('exclude', []), 400, window=goal.donor_window)
+        if not rows:
+            return None
+        q = ','.join('?' * len(rows))
+        spent = dict(st.execute(f"SELECT packing, SUM(cpu_s) FROM expansion WHERE mechanism=? AND packing IN ({q}) GROUP BY packing",
+                                (WALKED, *[r[0] for r in rows])))
     finally:
         st.close()
-    jbest = rows[0][1] if rows else None
-    db = connect(); fb = db.execute('SELECT fbest FROM nstate WHERE goal=? AND n=?', (goal.goal, n)).fetchone(); db.close()
-    fb = fb[0] if fb and fb[0] is not None else None
-    if fb is None:                                                # no reference yet: the unpolished family best
-        sro = store_ro()
+    db = connect()
+    busy = {i for (i,) in db.execute("SELECT start FROM unit WHERE status='running' AND kind='walk' AND n=? AND id!=?",
+                                     (n, u['id'])) if i}
+    db.close()
+    s0, A = rows[0][1], u['goal']['unit_cpu_s']
+    score = lambda r: (r[1] - s0) / goal.donor_window + math.log1p(spent.get(r[0], 0.0) / A)
+    free = [r for r in rows if r[0] not in busy] or rows
+    return min(free, key=score)
+
+
+def run_walk(u, goal, arms):
+    """explore.py from one start for the allowance; the start is a construct unit's candidate or (walk arm) chosen by
+    _walk_start.  Every walk leaves an expansion row on its start."""
+    import numpy as np
+    from . import goal as G
+    from .store import Store
+    jid, out = _unit_dir(goal, u)
+    t0 = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(time.time() - 1))
+    c0 = cpu()
+    if u.get('start'):
+        st = store_ro(); r = st.execute('SELECT id, s, coords FROM packing WHERE id=?', (u['start'],)).fetchone(); st.close()
+        start = (r[0], r[1], np.frombuffer(r[2], '<f8').reshape(-1, 3)) if r else None
+    else:
+        start = _walk_start(goal, u)
+        if start is not None:
+            db = connect(); db.execute('UPDATE unit SET start=? WHERE id=?', (start[0], u['id'])); db.close()
+    if start is None:
+        return dict(status='empty', info=dict(donors=0))
+    pid, s, sq = start[:3]
+    f = os.path.join(out, 'starts', f'id{pid}.txt'); G._write(f, s, sq)
+    left = 0.95 * u['goal']['unit_cpu_s'] - 4.0 - (cpu() - c0)    # ~4 s: explore start-up, ingest + converge
+    with open(os.path.join(out, 'walk.log'), 'w') as fh:
+        # CPU budget of the explore tree (a step in flight still finishes: up to one step over, charged to the unit);
+        # minutes and the timeout are hang guards only
         try:
-            fb = F.best(sro, n, k + 0.05, goal.progress.get('exclude', []), before=u['goal']['t_goal'])[0]
-        finally:
-            sro.close()
-    cands = []
-    near = [r[:4] for r in rows if r[4] and (fb is None or r[1] <= fb + u['goal']['polish_margin'])]   # new packings only
-                                                                  # (a walk re-imports its donors: old ids, nothing to gain)
-    if near:
-        fam = F.fill(near[:4 * POLISH_TOP], n)
-        cands = [(i, s) for i, s, _, _ in near[:4 * POLISH_TOP] if fam[i] not in goal.progress.get('exclude', [])][:POLISH_TOP]
-    return dict(jbest=jbest, cands=cands, info=dict(built=J.get('built', 0), kept=J.get('kept', 0), donors=len(J.get('donors', [])),
-                                                     packings=len(rows), job_cpu=round(J.get('cpu', 0), 1)))
+            subprocess.run([sys.executable, 'explore.py', '--n', str(u['n']), '--starts', f, '--procs', '1',
+                            '--cpu-h', f'{max(10.0, left) / 3600:.6f}', '--minutes', f'{max(1.0, 3 * left / 60):.2f}',
+                            '--out', os.path.join(out, 'ex'), '--seed', str(u['seed'] % 100000), '--polish-gate', '2e-3',
+                            '--weights', 'melt=2,jmelt=1,jrefill=1'],
+                           cwd=HERE, stdout=fh, stderr=subprocess.STDOUT, timeout=10 * u['goal']['unit_cpu_s'] + 300)
+        except subprocess.TimeoutExpired:
+            fh.write('\nunits: explore killed at the hang guard\n')
+    wcpu = cpu() - c0
+    J = dict(arm=u['arm'], donors=[pid], parents={os.path.basename(f): pid}, cpu=wcpu)
+    jbest, pol, rows = _ingest(goal, u, jid, out, t0, J)
+    st = Store()
+    try:
+        st.record_expansion(pid, u['n'], WALKED, wcpu, run=f'runs/goals/{goal.goal}/{jid}', nprop=len(rows),
+                            best_s=jbest, frontier_s=None)
+    finally:
+        st.close()
+    return dict(jbest=jbest, cands=pol, info=dict(start=pid, start_s=s, new=len(rows), walk_cpu=round(wcpu, 1)))
 
 
 def run_reference(u, goal, arms):
@@ -313,7 +467,7 @@ def run_polish(u, goal, arms):
     from . import goal as G
     from .store import Store
     db = connect()
-    C = db.execute("SELECT packing FROM cand WHERE polish_unit=?", (u['id'],)).fetchall(); db.close()
+    C = db.execute("SELECT packing FROM cand WHERE taken_by=?", (u['id'],)).fetchall(); db.close()
     n, k = u['n'], G.kgrid(u['n'])
     st = Store()
     try:
@@ -332,13 +486,11 @@ def run_polish(u, goal, arms):
                 info=dict(items=len(items), **stats))
 
 
-RUN = dict(arm=run_arm, reference=run_reference, polish=run_polish)
+RUN = dict(construct=run_construct, walk=run_walk, reference=run_reference, polish=run_polish)
 
 
 def worker(i, path, max_idle, job):
     """one persistent worker: claim / run / record until the ctl stop flag, or `max_idle` seconds with nothing to do"""
-    from . import goal as G
-    G.donors = donors_fast                                        # this process only; goal.py switches after 10-26's run
     db = connect(path)
     rng = random.Random(os.getpid() * 1000003 + int(time.time()))
     wid = db.execute("INSERT INTO worker(pid, host, job, started, last_seen, status) VALUES (?,?,?,?,?,'up')",
@@ -380,23 +532,22 @@ def worker(i, path, max_idle, job):
 # ------------------------------------------------------------------ reports
 
 def report(db, name):
-    from . import goal as G
     g = db.execute('SELECT path, budget_cpu_h, unit_cpu_s, t_goal, status FROM goal WHERE name=?', (name,)).fetchone()
     if not g:
         return f'no unit goal {name}'
+    med = lambda xs: sorted(xs)[len(xs) // 2] if xs else float('nan')
     out = [f'# unit goal {name} ({g[4]}): budget {g[1]} CPU-h, units {g[2]:.0f} CPU-s, start {g[3]}', '',
-           '| kind | units | CPU-h | median CPU-s | median wall-s | claim + record ms (median) | errors | empty | lost |',
-           '|---|---|---|---|---|---|---|---|---|']
+           '| kind | units | CPU-h | median CPU-s | median wall-s | claim + record ms (median) | gain: family / store | errors | empty | lost |',
+           '|---|---|---|---|---|---|---|---|---|---|']
     tot = 0.0
     for kind, in db.execute('SELECT DISTINCT kind FROM unit WHERE goal=? ORDER BY kind', (name,)).fetchall():
-        R = db.execute("SELECT cpu, wall, COALESCE(claim_s, 0) + COALESCE(record_s, 0), status FROM unit WHERE goal=? AND kind=?",
-                       (name, kind)).fetchall()
+        R = db.execute("SELECT cpu, wall, COALESCE(claim_s, 0) + COALESCE(record_s, 0), status, gain, store_gain FROM unit "
+                       "WHERE goal=? AND kind=?", (name, kind)).fetchall()
         fin = [r for r in R if r[0] is not None]
-        med = lambda xs: sorted(xs)[len(xs) // 2] if xs else float('nan')
         c = sum(r[0] for r in fin) / 3600; tot += c
         out.append(f"| {kind} | {len(R)} | {c:.3f} | {med([r[0] for r in fin]):.0f} | {med([r[1] for r in fin]):.0f} | "
-                   f"{1000 * med([r[2] for r in fin]):.1f} | {sum(r[3] == 'error' for r in R)} | {sum(r[3] == 'empty' for r in R)} | "
-                   f"{sum(r[3] == 'lost' for r in R)} |")
+                   f"{1000 * med([r[2] for r in fin]):.1f} | {sum(r[4] or 0 for r in fin):.2e} / {sum(r[5] or 0 for r in fin):.2e} | "
+                   f"{sum(r[3] == 'error' for r in R)} | {sum(r[3] == 'empty' for r in R)} | {sum(r[3] == 'lost' for r in R)} |")
     W = db.execute("SELECT SUM(last_seen - started), SUM(cpu), SUM(unit_cpu), SUM(idle_s), SUM(claim_s), SUM(record_s), "
                    "COUNT(*) FROM worker WHERE id IN (SELECT DISTINCT worker FROM unit WHERE goal=?)", (name,)).fetchone()
     if W[0]:
@@ -404,13 +555,15 @@ def report(db, name):
                 f'worker-h, CPU {W[1] / 3600:.3f} h of which units {W[2] / 3600:.3f} h; utilization {W[2] / W[0]:.0%} '
                 f'(units CPU / worker wall), idle {W[3] / 3600:.3f} h, claim + record {100 * (W[4] + W[5]) / max(W[2], 1e-9):.2f} % '
                 f'of unit CPU, worker overhead CPU (imports, claims) {(W[1] - W[2]) / 3600:.3f} h']
-    out += ['', '| arm | units | CPU-h (incl. its polish) | gain: family / store | reward / CPU-h |', '|---|---|---|---|---|']
-    for a, k, c, gn, sg, w in db.execute(
-            "SELECT arm, SUM(kind='arm'), SUM(cpu) / 3600, SUM(gain), SUM(store_gain), SUM(reward) FROM unit WHERE goal=? AND "
-            "arm IS NOT NULL AND cpu IS NOT NULL GROUP BY arm ORDER BY SUM(reward) DESC, SUM(cpu) DESC LIMIT 25", (name,)):
-        out.append(f'| {a} | {k} | {c:.3f} | {gn:.2e} / {sg:.2e} | {w / max(c, 1e-9):.1f} |')
-    S = db.execute('SELECT n, sbest0, sbest, f0p, fbest, retired FROM nstate WHERE goal=? ORDER BY n', (name,)).fetchall()
-    moved = [(n, a, b) for n, a, b, _, _, _ in S if b < a - 1e-12]
+    out += ['', '| arm | construct / walk / polish units | CPU-h (all its units) | gain: family / store | reward / CPU-h |',
+            '|---|---|---|---|---|']
+    for a, kc, kw, kp, c, gn, sg, w in db.execute(
+            "SELECT arm, SUM(kind='construct'), SUM(kind='walk'), SUM(kind='polish'), SUM(cpu) / 3600, SUM(gain), "
+            "SUM(store_gain), SUM(reward) FROM unit WHERE goal=? AND arm IS NOT NULL AND cpu IS NOT NULL GROUP BY arm "
+            "ORDER BY SUM(reward) DESC, SUM(cpu) DESC LIMIT 25", (name,)):
+        out.append(f'| {a} | {kc} / {kw} / {kp} | {c:.3f} | {gn:.2e} / {sg:.2e} | {w / max(c, 1e-9):.1f} |')
+    S = db.execute('SELECT n, sbest0, sbest FROM nstate WHERE goal=? ORDER BY n', (name,)).fetchall()
+    moved = [(n, a, b) for n, a, b in S if b < a - 1e-12]
     out += ['', f'Targets moved: {len(moved)} of {len(S)}; score gain {sum((a - b) / math.sqrt(n) for n, a, b in moved):.3e} '
             f'(store best vs goal start, side / sqrt n)'] + [f'  {n}: {a:.9f} -> {b:.9f}' for n, a, b in moved]
     return '\n'.join(out)
@@ -429,7 +582,7 @@ def status(db):
 def main(argv=None):
     ap = argparse.ArgumentParser(prog='pk.units', description=__doc__.split('\n')[0])
     sp = ap.add_subparsers(dest='cmd', required=True)
-    p = sp.add_parser('add'); p.add_argument('goal'); p.add_argument('--unit-cpu', type=float, default=180.0)
+    p = sp.add_parser('add'); p.add_argument('goal'); p.add_argument('--unit-cpu', type=float, default=120.0)
     p.add_argument('--prio', type=float, default=0.0); p.add_argument('--polish-margin', type=float, default=1e-3)
     p = sp.add_parser('work'); p.add_argument('--procs', type=int, default=1); p.add_argument('--max-idle', type=float)
     sp.add_parser('status')
