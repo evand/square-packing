@@ -243,6 +243,53 @@ def sync_repos(st, apply, max_commits=MAX_COMMITS, log=print):
     return C
 
 
+def full_import(st, repo, commit=None, max_n=None, batch=120 << 20, apply=False, log=print):
+    """10-25: import every packing file of repo@commit (default HEAD), not just the files changed since the last watched
+    commit (sync_repos), in batches of <= batch bytes so each stays under github's MAX_FETCH / MAX_UNPACKED caps (a
+    whole-commit read of franciscouzo/square-packing is 3 GB).  Same sightings as a watch import (watch:<repo>@<sha7>,
+    kind 'watch'); already-held packings only gain that sighting.  max_n: skip files named n<k> with k > max_n before
+    fetching, and import only n <= max_n.  The watch cursor (sync repo:<repo>) is not moved."""
+    finder = watched(st).get(repo) or repo.split('/')[0]
+    sha, files = github.tree_sizes(repo, commit or github.head(repo))
+    sel, skipped = [], collections.Counter()
+    for p, sz in files:
+        b = p.rsplit('/', 1)[-1]
+        m = re.match(r'n(\d+)\b', b)
+        if not FILE_RE.search(b) or SKIP_RE.search(b) or TEST_DIRS.search(p):
+            skipped['name'] += 1
+        elif sz > github.MAX_MEMBER:
+            skipped['too big'] += 1
+        elif max_n and m and int(m.group(1)) > max_n:
+            skipped['n > max_n'] += 1
+        else:
+            sel.append((p, sz))
+    batches, cur, tot = [], [], 0
+    for p, sz in sorted(sel):
+        if cur and tot + sz > batch:
+            batches.append(cur); cur, tot = [], 0
+        cur.append(p); tot += sz
+    if cur:
+        batches.append(cur)
+    log(f'{repo}@{sha[:7]}: {len(sel)} files ({sum(s for _, s in sel) / 1e6:.0f} MB) in {len(batches)} batches; skipped {dict(skipped)}')
+    if not apply:
+        return collections.Counter()
+    C = collections.Counter()
+    ns = range(1, max_n + 1) if max_n else None
+    for i, B in enumerate(batches):
+        try:
+            with github.checkout(repo, sha, name_re=FILE_RE, skip_re=SKIP_RE, paths=set(B)) as d:
+                c = import_paths(st, [d], f'watch:{repo}@{sha[:7]}', finder, f'{repo}@{sha[:7]}', 'watch', ns=ns,
+                                 quiet=True, strict=True, skip_path=TEST_DIRS)
+        except Exception as ex:
+            log(f'  batch {i + 1}/{len(batches)}: failed ({_clean(repr(ex), 120)})'); C['batch_failed'] += 1; continue
+        st.db.commit()
+        log(f'  batch {i + 1}/{len(batches)} ({len(B)} files): {c}')
+        for k, v in c.items():
+            C[k] += v
+    log(f'full import {repo}@{sha[:7]}: {dict(C)}')
+    return C
+
+
 # ---------- driver ----------
 def run(st=None, apply=False, only=None, everything=False, repos=True, max_commits=MAX_COMMITS, log=print):
     """Updated issues since the cursor (or `only` issue numbers, or with everything=True every issue the store has seen

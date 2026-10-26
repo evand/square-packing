@@ -131,11 +131,16 @@ def main():
     a = ap.parse_args()
     work = os.path.join(HERE, 'runs', 'candidates', a.name)
     S = json.load(open(os.path.join(work, 'summary.json')))
-    n = S['n']; Sx = S['S_exact']; Sc = S['S_cert']
+    n = S['n']; Sc = S['S_cert']
+    dil = str(S.get('cert_kind', '')).startswith('dilation')   # 10-25: exactsolve failed; candidate.py fell back to dilate_cert
+    Sx = Sc if dil else S['S_exact']
     C = os.path.join(HERE, 'candidates', a.name)
     files = [(f'{a.name}.cert', 'the certificate'), (f'{a.name}.exact.txt', 'the 80-digit KKT point'),
              (f'{a.name}.input.txt', 'the f64 packing it was solved from'), (f'{a.name}.json', "the solver's report"),
              (f'{a.name}_regularized.cert', 'the same packing at the same side, regularized for display')]
+    if dil:                                    # no KKT point: post the dilation certificate and the packing it dilates
+        files = [(f'{a.name}.cert', 'the certificate (a dilation of the f64 packing: an upper bound, local optimality unresolved)'),
+                 (f'{a.name}.input.txt', 'the f64 packing it dilates')]
     files = [(f, d) for f, d in files if os.path.exists(os.path.join(HERE, 'candidates', f))]
     commit, dirty, pushed = commit_of([os.path.join(HERE, 'candidates', f) for f, _ in files])
     todo = []
@@ -158,7 +163,7 @@ def main():
     by = json.load(open(regj)).get('by') if os.path.exists(regj) else None
     if by is not None and not any(OURS.search(b) for b in by):
         todo.append(f'regularized view says "by": {by}: re-run candidate.py (10-20 fix) or edit it')
-    O = S['optimality']
+    O = S.get('optimality', {})
     # relationships
     vp = C + '_vs_prior.json' if os.path.exists(C + '_vs_prior.json') else os.path.join(work, 'vs_prior.json')
     rel = []
@@ -186,7 +191,10 @@ def main():
     # draft
     date = datetime.date.today().isoformat()
     ver = ', '.join(f"{k} {'VALID' if v['ok'] else 'FAILED'}" for k, v in S['checkers'].items())
-    opt = (f"exact side S* = {Sx[:24]}…; {'a KKT point' if O.get('kkt') else 'TODO: not a KKT point?'}; "
+    opt = ((f"not established: exactsolve did not certify a KKT point, so the certificate dilates the f64 packing by "
+            f"{float(Sc[:30]) - float(S['s_input']):.2e}; the corner–corner MILP linearization suggests a descent "
+            f"(dS* {S.get('descent', {}).get('vv_milp_dS', 0):.3g}) that descend.py did not realise.") if dil else
+           f"exact side S* = {Sx[:24]}…; {'a KKT point' if O.get('kkt') else 'TODO: not a KKT point?'}; "
            f"{O.get('status')}; corner–corner MILP descent: {'none' if (O.get('vv_milp_dS') or 0) >= 0 else O['vv_milp_dS']}; "
            f"{O.get('flat_motions')} exact flat motions, {O.get('corner_corner')} corner–corner contacts, {O.get('rattlers')} rattlers.")
     L_ = [f'# DRAFT {date} (submission.py; style guide search/packer/SUBMITTING.md).  Not posted: needs Evan\'s OK.',

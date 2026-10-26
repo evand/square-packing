@@ -185,10 +185,11 @@ def _safe_path(p):
             all(x not in ('', '.', '..') for x in parts) and parts[0] != '.git')
 
 
-def repo_files(owner_repo, commit, name_re=None, skip_re=None, changed_since=None):
+def repo_files(owner_repo, commit, name_re=None, skip_re=None, changed_since=None, paths=None):
     """[(path, blob sha, size)] of regular files at owner/repo@commit whose basename matches name_re and not skip_re;
     changed_since (a commit) -> only files added / modified since it (all files if it cannot be fetched).  Blobs over
-    MAX_MEMBER or missing after the blob fetch) are left out; at most MAX_MEMBERS files, MAX_UNPACKED bytes."""
+    MAX_MEMBER or missing after the blob fetch) are left out; at most MAX_MEMBERS files, MAX_UNPACKED bytes.
+    paths (a set): only these repo paths (10-25: batched full imports, pk.watch.full_import)."""
     sha = _full_sha(owner_repo, commit)
     gd = _fetch(owner_repo, sha)
     only = None
@@ -212,7 +213,8 @@ def repo_files(owner_repo, commit, name_re=None, skip_re=None, changed_since=Non
         if typ != 'blob' or mode not in ('100644', '100755') or not _safe_path(path):
             continue                              # symlinks, submodules, odd paths: never materialised
         b = path.rsplit('/', 1)[-1]
-        if (name_re and not name_re.search(b)) or (skip_re and skip_re.search(b)) or (only is not None and path not in only):
+        if (name_re and not name_re.search(b)) or (skip_re and skip_re.search(b)) or (only is not None and path not in only) \
+                or (paths is not None and path not in paths):
             continue
         cand.append((path, blob))
     if len(cand) > MAX_MEMBERS:
@@ -229,6 +231,16 @@ def repo_files(owner_repo, commit, name_re=None, skip_re=None, changed_since=Non
             raise ValueError(f'{owner_repo}@{sha[:7]}: files over {MAX_UNPACKED} bytes')
         R.append((path, blob, int(f[2])))
     return R
+
+
+def tree_sizes(owner_repo, commit):
+    """(full sha, [(path, size)]) of every regular file at owner/repo@commit, from the API's recursive tree (it carries
+    blob sizes; the trees-only clone does not have them without fetching the blobs)."""
+    sha = _full_sha(owner_repo, commit)
+    t = json.loads(_gh([f'repos/{owner_repo}/git/trees/{sha}?recursive=1']))
+    if t.get('truncated'):
+        raise ValueError(f'{owner_repo}@{sha[:7]}: tree listing truncated')
+    return sha, [(e['path'], int(e.get('size') or 0)) for e in t['tree'] if e['type'] == 'blob' and _safe_path(e['path'])]
 
 
 def read_blob(owner_repo, blob):
@@ -253,10 +265,10 @@ def read_file(owner_repo, commit, path):
 
 
 @contextlib.contextmanager
-def checkout(owner_repo, commit, name_re=None, skip_re=None, changed_since=None):
+def checkout(owner_repo, commit, name_re=None, skip_re=None, changed_since=None, paths=None):
     """Temp dir holding just the selected files of owner/repo@commit (repo_files' selection) as plain read-only files,
     at their repo paths, so path-based importers (sources.import_paths, globs) work unchanged.  Removed on exit."""
-    files = repo_files(owner_repo, commit, name_re, skip_re, changed_since)
+    files = repo_files(owner_repo, commit, name_re, skip_re, changed_since, paths)
     os.makedirs(EXT, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=EXT, prefix='.co-') as d:
         gd = _mirror(owner_repo)

@@ -6,6 +6,8 @@ copying coordinates.  Store: runs/store.sqlite (env PK_STORE overrides).
   pk.py sync-kingbird [--date D] [--all]   crawl Ellsworth's catalogue (all pages, incl. revisions), dated snapshot in
                                            runs/kingbird/<date>/, parse, import with provenance (pk/kingbird.py)
   pk.py sync-kingbird --snapshot DIR       parse + import an existing snapshot dir (no network)
+  pk.py repo-import REPO [--commit SHA] [--max-n N] [--batch-mb 120] [--apply]   every packing file of a repo at
+                                           a commit (default HEAD), batched under the fetch caps (pk/watch.full_import)
   pk.py watch [--apply]                    jlevy/squares issues updated since the last watch, synced from their
                                            current text (+ pk/overrides.yaml); new commits in watched repos -> every
                                            packing file imported (pk/watch.py; dry run without --apply)
@@ -64,6 +66,8 @@ def main():
     p.add_argument('--snapshot'); p.add_argument('--procs', type=int, default=4)
     p = sp.add_parser('sync-issues'); p.add_argument('issues', type=int, nargs='*'); p.add_argument('--all', action='store_true')
     p.add_argument('--dry', action='store_true')
+    p = sp.add_parser('repo-import'); p.add_argument('repo'); p.add_argument('--commit'); p.add_argument('--max-n', type=int)
+    p.add_argument('--batch-mb', type=int, default=120); p.add_argument('--apply', action='store_true')
     p = sp.add_parser('watch'); p.add_argument('--apply', action='store_true')
     p.add_argument('--max-commits', type=int, default=20)
     p = sp.add_parser('import'); p.add_argument('paths', nargs='+'); p.add_argument('--source', required=True)
@@ -255,6 +259,9 @@ def main():
         if not a.issues and not a.all:
             raise SystemExit('sync-issues: give issue numbers or --all')
         watch.run(st, apply=not a.dry, only=a.issues, everything=a.all, repos=False)
+    elif a.cmd == 'repo-import':
+        from pk import watch as W
+        W.full_import(st, a.repo, a.commit, a.max_n, a.batch_mb << 20, a.apply)
     elif a.cmd == 'watch':
         from pk import watch
         watch.run(st, apply=a.apply, max_commits=a.max_commits)
