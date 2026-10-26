@@ -66,7 +66,7 @@ def construct(chain, ctx, budget_cpu, cpu, rng, pick_start, keep, cfg=None, log=
             pid, st0 = pick_start()
             t = cpu()
             try:
-                st, lg = S.run_chain(pre, dict(ctx), rng.randrange(1 << 30), st=st0)
+                st, lg = S.run_chain(pre, dict(ctx), rng.randrange(1 << 30), st=st0, keep_best=False)
             except Exception as e:
                 recs.append(dict(pid=pid, failed=repr(e)[:80])); continue
             if any(r['info'].get('failed') for r in lg) or st.p.n != int(ctx['n']):
@@ -88,12 +88,13 @@ def construct(chain, ctx, budget_cpu, cpu, rng, pick_start, keep, cfg=None, log=
         t = cpu()
         st2, lg = S.run_chain(last, dict(ctx, fq_timeout=ctx['cap']()), rng.randrange(1 << 30), st=st)
         fulls += 1
-        info = lg[0]['info']
-        rec.update(promoted=how, full_s=float(st2.p.s) if not info.get('failed') else None, full_cpu=cpu() - t,
-                   full_failed=info.get('failed'), deadline=bool(info.get('deadline')))
+        info = lg[0]['info']; bad = S.failed(lg)                 # a keep.best row: the build itself was the best
+        rec.update(promoted=how, full_s=float(st2.p.s) if not bad else None, full_cpu=cpu() - t,
+                   full_failed=info.get('failed'), deadline=bool(info.get('deadline')),
+                   kept_best=lg[-1]['info'].get('src') if lg[-1]['stage'] == 'keep.best' else None)
         if ctx.get('on_relax'):
             ctx['on_relax'](lg)
-        if not info.get('failed') and keep(st2, lg):
+        if not bad and keep(st2, lg):
             kept.append((float(st2.p.s), rec['pid'], np.asarray(st2.p.sq, float)))
     if log is not None:
         log.update(screened=screens, full_relaxed=fulls, screen_cfg=cfg)
@@ -118,7 +119,7 @@ def construct_serial(chain, ctx, budget_cpu, cpu, rng, pick_start, keep, cfg=Non
         pid, st0 = pick_start()
         t = cpu()
         try:
-            st, lg = S.run_chain(pre, dict(ctx), rng.randrange(1 << 30), st=st0)
+            st, lg = S.run_chain(pre, dict(ctx), rng.randrange(1 << 30), st=st0, keep_best=False)
         except Exception as e:
             recs.append(dict(pid=pid, failed=repr(e)[:80])); continue
         if any(r['info'].get('failed') for r in lg) or st.p.n != int(ctx['n']):
@@ -143,12 +144,13 @@ def construct_serial(chain, ctx, budget_cpu, cpu, rng, pick_start, keep, cfg=Non
         t = cpu()
         st2, lg = S.run_chain(last, dict(ctx, fq_timeout=ctx['cap']()), rng.randrange(1 << 30), st=st)
         fulls += 1
-        info = lg[0]['info']
-        rec.update(promoted=how, full_s=float(st2.p.s) if not info.get('failed') else None, full_cpu=cpu() - t,
-                   full_failed=info.get('failed'), deadline=bool(info.get('deadline')), cut=cut)
+        info = lg[0]['info']; bad = S.failed(lg)
+        rec.update(promoted=how, full_s=float(st2.p.s) if not bad else None, full_cpu=cpu() - t,
+                   full_failed=info.get('failed'), deadline=bool(info.get('deadline')), cut=cut,
+                   kept_best=lg[-1]['info'].get('src') if lg[-1]['stage'] == 'keep.best' else None)
         if ctx.get('on_relax'):
             ctx['on_relax'](lg)
-        if not info.get('failed') and keep(st2, lg):
+        if not bad and keep(st2, lg):
             kept.append((float(st2.p.s), rec['pid'], np.asarray(st2.p.sq, float)))
     if log is not None:
         log.update(screened=screens, full_relaxed=fulls, screen_cfg=dict(cfg, serial=True))

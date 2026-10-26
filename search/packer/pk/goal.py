@@ -317,7 +317,7 @@ def run_job(goal, arm, out, cpu_s, seed, finish=True):
             log['built'] += 1
             rt += [r['cpu'] for r in lg if r['kind'] == 'relax' and not r['info'].get('failed')]
             log['relax_timeouts'] = log.get('relax_timeouts', 0) + sum(r['info'].get('failed') == 'timeout' for r in lg)
-            if st.p.n != n or any(r['info'].get('failed') for r in lg) or st.p.s >= k + 0.05:
+            if st.p.n != n or S.failed(lg) or st.p.s >= k + 0.05:
                 continue
             with tempfile.TemporaryDirectory() as td:
                 p = os.path.join(td, 'e.txt'); mcmin.write_deg(p, float(st.p.s), [tuple(map(float, q)) for q in st.p.sq])

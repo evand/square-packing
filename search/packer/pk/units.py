@@ -460,7 +460,7 @@ def run_construct(u, goal, arms):
                 recs.append(dict(combo=c, variant=var, failed=repr(e)[:80])); done.append((version, json.dumps(c, sort_keys=True), var))
                 continue
             on_relax(lg)
-            ok = not any(r['info'].get('failed') for r in lg) and keep(st, lg)
+            ok = not S.failed(lg) and keep(st, lg)
             recs.append(dict(combo=c, variant=var, s=float(st.p.s), ok=ok, cpu=cpu() - t,
                              build_s=lg[0]['s'], relax_cpu=sum(r['cpu'] for r in lg[1:])))
             done.append((version, json.dumps(c, sort_keys=True), var))

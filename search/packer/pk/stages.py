@@ -17,6 +17,13 @@ declared parameter space (pk.moves specs: unspecified parameters are drawn, ever
 A chain is a string of stages joined by '|', e.g.
   'gen.file(path="runs/x/n{n}.txt") | constrain.freeze | recreate.bestofK(K=16) | relax.round.15c | constrain.release'
 run_chain(spec, ctx, seed) -> (State, log): one log row per stage (name, kind, params, measured CPU, side and count after).
+A chain keeps the best feasible packing it saw (10-26, Evan: "keep the best feasible packing found, regardless of where
+in the chain it comes from"): after every stage, a packing with ctx['n'] squares and Packing.max_pen <= FEAS_PEN that
+is smaller than the best so far becomes State.best, which travels with the State (so a chain split into a build call and
+a relax call keeps an exact build too).  If the final state is worse, infeasible or failed, run_chain returns the best
+instead and logs a 'keep.best' row; use failed(log), not the rows' info, to decide whether a chain produced something.
+(Why: relax schedules are quenches, not descents; from a feasible start, e.g. an exact cut, round.15c.p5 returned a
+larger side 16 times in 68 on 10-26, up to +0.011.)
 Evaluate a chain with ../trial.py (suite tail + baseline), never on its raw output (CLAUDE.md rule).
 
 TODO (10-22, see TODO.md): loops (repeat / accept combinators for ruin-and-recreate and basin hopping); explore.py,
@@ -44,6 +51,7 @@ class State:
     frozen: np.ndarray = None                # bool per square (None = nothing frozen)
     region: list = None                      # rectangles (x0, y0, x1, y1) the next recreate stage fills
     meta: dict = field(default_factory=dict)  # generator facts later stages may read (e.g. lattice cells)
+    best: tuple = None                       # (s, Packing, stage): best feasible packing at ctx n so far (run_chain)
 
     def __post_init__(self):
         if self.frozen is None:
@@ -327,13 +335,47 @@ def run_stage(name, fixed, st, rng, ctx):
     return st2, row
 
 
-def run_chain(spec, ctx, seed, st=None):
-    """run every stage of spec in order from st (None: the first stage must be a gen) -> (State, log rows)"""
+FEAS_PEN = 1e-9          # feasible = max SAT penetration at most this (the store's bar, pk.goal.FEAS pen <= 1e-9)
+TRACK_MAX_N = 3000       # Packing.max_pen builds an n x n distance matrix; larger packings are not tracked
+
+
+def _track(best, p, n, name):
+    """best (s, Packing, stage) or None, updated with packing p if it has n squares, is smaller and feasible"""
+    if p.n != n or p.n > TRACK_MAX_N or (best is not None and p.s >= best[0]):
+        return best
+    return (float(p.s), p, name) if p.max_pen() <= FEAS_PEN else best
+
+
+def failed(log):
+    """did this run_chain call fail to produce a packing?  (a 'keep.best' row means it returned an earlier feasible one)"""
+    if log and log[-1]['stage'] == 'keep.best':
+        return False
+    return any(r['info'].get('failed') for r in log)
+
+
+def run_chain(spec, ctx, seed, st=None, keep_best=True):
+    """run every stage of spec in order from st (None: the first stage must be a gen) -> (State, log rows).
+    Tracks the best feasible packing at ctx['n'] after every stage (State.best, carried across calls; the start state's
+    own packing is not a candidate).  keep_best: if the final state is not that best (worse, infeasible, wrong count) or
+    a stage failed, return the best instead, with a 'keep.best' log row.  keep_best=False (the build half of a split
+    chain, which is relaxed next) only tracks."""
     rng = random.Random(seed)
     log = []
+    n = int(ctx['n']) if ctx.get('n') is not None else None
+    best = st.best if st is not None else None
     for name, kw in (parse(spec) if isinstance(spec, str) else spec):
         st, row = run_stage(name, kw, st, rng, ctx)
         log.append(row)
+        if n is not None:
+            best = _track(best, st.p, n, name)
+            st = st.but(best=best)
+    if keep_best and best is not None and (st.p is not best[1] or any(r['info'].get('failed') for r in log)):
+        why = ('failed' if any(r['info'].get('failed') for r in log) else 'count' if st.p.n != n
+               else 'worse' if st.p.s >= best[0] else 'infeasible')
+        final_s = float(st.p.s)
+        st = st.but(p=best[1], frozen=np.zeros(best[1].n, bool), region=None)
+        log.append(dict(stage='keep.best', kind='keep', params={}, cpu=0.0, s=best[0], count=int(best[1].n), frozen=0,
+                        info=dict(src=best[2], why=why, final_s=final_s)))
     return st, log
 
 
