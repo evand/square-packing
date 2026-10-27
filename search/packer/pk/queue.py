@@ -9,6 +9,10 @@ best per n:
           units), tries of that move kind on that parent, and its age
   base    a parent uniformly from the pool within `base_window` (side) of the best at its n, then a move kind uniformly
           (the donor-window picker without the arm bandit)
+A condition's policy is the part of its name before '-' (queue-frozen runs the queue policy).  Conditions listed in
+`frozen` never add their own outputs to their pool (parents stay the goal-start store): live vs frozen with the same
+policy isolates the value of chaining from new entries.  Gaps are measured against the best in the condition's pool
+(for a live condition, its own best).  `ns: [...]` lists the n explicitly instead of the range `n: [lo, hi]`.
 Claims go to the condition with the least CPU so far (equal CPU per condition).
 
 Moves.  The goal's auto arms are planned over every n in the range; a move at parent n0 is any arm whose donor n
@@ -31,7 +35,7 @@ CREATE TABLE IF NOT EXISTS qtry(goal TEXT, cond TEXT, packing INT, kind TEXT, tr
 CREATE TABLE IF NOT EXISTS qclaim(unit INT PRIMARY KEY, goal TEXT, cond TEXT, packing INT, n0 INT, n INT, kind TEXT,
   gap REAL, tries INT, age_h REAL, w REAL, wsum REAL, options INT);
 """
-DEFAULT = dict(conditions=['queue', 'base'], window=2.0e-3, base_window=0.05, pool=8, priority='default')
+DEFAULT = dict(conditions=['queue', 'base'], frozen=[], window=2.0e-3, base_window=0.05, pool=8, priority='default')
 
 PRIORITY = {}
 
@@ -56,8 +60,15 @@ def cfg(goal):
 
 
 def targets(goal):
-    lo, hi = cfg(goal)['n']
+    c = cfg(goal)
+    if c.get('ns'):
+        return sorted(int(n) for n in c['ns'])
+    lo, hi = c['n']
     return list(range(int(lo), int(hi) + 1))
+
+
+def policy(cond):
+    return cond.split('-')[0]
 
 
 def moves(arms):
@@ -106,14 +117,15 @@ def pick(db, g, goal, arms, rng, now):
     M = _moves(goal, arms)
     sp = spent(db, name)
     cond = min(c['conditions'], key=lambda x: (sp.get(x, 0.0), rng.random()))
-    best = dict(db.execute('SELECT n, s FROM qbest WHERE goal=? AND cond=?', (name, cond)))
+    best = dict(db.execute('SELECT n, MIN(s) FROM qpool WHERE goal=? AND cond=? GROUP BY n', (name, cond)))
+    pol = policy(cond)
     tries = {(p, k): t for p, k, t in db.execute('SELECT packing, kind, tries FROM qtry WHERE goal=? AND cond=?', (name, cond))}
     opts = []
     for n, pid, s, t in db.execute('SELECT n, packing, s, t FROM qpool WHERE goal=? AND cond=?', (name, cond)):
         if n not in M or n not in best:
             continue
         gap = max(0.0, (s - best[n]) / math.sqrt(n))
-        if cond == 'base':
+        if pol == 'base':
             if s > best[n] + float(c['base_window']):
                 continue
         elif gap > float(c['window']):
@@ -122,7 +134,7 @@ def pick(db, g, goal, arms, rng, now):
             opts.append((pid, n, kind, gap, tries.get((pid, kind), 0), (now - t) / 3600))
     if not opts:
         return None
-    if cond == 'base':                                    # uniform parent, then uniform kind at its n
+    if pol == 'base':                                     # uniform parent, then uniform kind at its n
         parents = sorted({(o[0], o[1]) for o in opts})
         pid, n0 = parents[rng.randrange(len(parents))]
         mine = [o for o in opts if o[0] == pid]
@@ -171,7 +183,7 @@ def on_record(db, u, res, goal, now):
     r = db.execute('SELECT s FROM qbest WHERE goal=? AND cond=? AND n=?', (name, cond, n)).fetchone()
     b0 = r[0] if r else math.inf
     b1 = min([b0] + [s for _, s in new])
-    for i, s in new:
+    for i, s in ([] if cond in c.get('frozen', []) else new):
         if s <= b1 + float(c['base_window']):
             db.execute('INSERT OR IGNORE INTO qpool VALUES (?,?,?,?,?,?,?)', (name, cond, n, i, s, now, u['id']))
     if b1 < b0:
