@@ -133,16 +133,79 @@ class Grid:
         u = (Xs - x) * c + (Ys - y) * s; v = -(Xs - x) * s + (Ys - y) * c
         self.cov[j0:j1, i0:i1] |= (np.abs(u) <= 0.5) & (np.abs(v) <= 0.5)
 
-    def score(self, a, lam):
+    def kernels(self, a):
         h = self.h
         K1 = _kernel(a, h, 1.0 - 1.5 * h)                     # shrunk: touching squares give no overlap pixels
         K2 = _kernel(a, h, 1.0 + 2 * RING)
         ring = np.clip(K2 - np.pad(K1, ((K2.shape[0] - K1.shape[0]) // 2,) * 2), 0, 1)
+        return K1, ring
+
+    def score(self, a, lam):
+        """whole-grid (overlap area, score) maps for angle a (pixel counts rounded to integers: the FFT's ~1e-12 noise
+        used to break exact ties arbitrarily; 10-27)"""
+        h = self.h
+        K1, ring = self.kernels(a)
         C = self.cov.astype(float)
-        ov = fftconvolve(C, K1, mode='same')
-        ct = fftconvolve(C, ring, mode='same')
-        ov = np.maximum(ov, 0); ov[ov < 0.5] = 0
+        ov = np.rint(fftconvolve(C, K1, mode='same'))
+        ct = np.rint(fftconvolve(C, ring, mode='same'))
+        ov = np.maximum(ov, 0)
         return ov * h * h, ov * h * h - lam * ct * h * h      # (overlap area, score)
+
+
+class LazyMap:
+    """the (overlap area, score) maps of Grid.score for one angle, computed in TxT tiles on first access (10-27: the
+    whole-grid maps cost 2 FFTs of the full box per angle per placed square, ~1.4 s of a refill's 1.5 s placement at
+    n = 500, while K candidates and their descents touch a few small windows).  Values equal Grid.score's exactly
+    (integer pixel counts; zero padding outside the grid as in fftconvolve 'same').  Index like a 2-D array:
+    m.sc[j0:j1, i0:i1], m.ov[j, i]."""
+    T = 64
+
+    def __init__(self, G, a, lam):
+        self.G, self.lam = G, lam
+        self.K1, self.ring = G.kernels(a)
+        self.r1, self.r2 = self.K1.shape[0] // 2, self.ring.shape[0] // 2
+        self.shape = G.cov.shape
+        buf = G.__dict__.setdefault('_lazybuf', {})                 # value buffers reused across placed squares: only
+        if a not in buf:                                             # tiles marked done are ever read
+            buf[a] = (np.empty(self.shape), np.empty(self.shape))
+        self._ov, self._sc = buf[a]
+        nt = (self.shape[0] + self.T - 1) // self.T, (self.shape[1] + self.T - 1) // self.T
+        self.done = np.zeros(nt, bool)
+        self.ov, self.sc = _View(self, self._ov), _View(self, self._sc)
+
+    def _patch(self, j0, j1, i0, i1, r):
+        """cov[j0 - r : j1 + r, i0 - r : i1 + r] as float, zero outside the grid"""
+        C = self.G.cov; P = np.zeros((j1 - j0 + 2 * r, i1 - i0 + 2 * r))
+        a0, a1 = max(0, j0 - r), min(C.shape[0], j1 + r); b0, b1 = max(0, i0 - r), min(C.shape[1], i1 + r)
+        P[a0 - (j0 - r):a1 - (j0 - r), b0 - (i0 - r):b1 - (i0 - r)] = C[a0:a1, b0:b1]
+        return P
+
+    def ensure(self, j0, j1, i0, i1):
+        T, h = self.T, self.G.h
+        for tj in range(max(0, j0) // T, (min(j1, self.shape[0]) - 1) // T + 1):
+            for ti in range(max(0, i0) // T, (min(i1, self.shape[1]) - 1) // T + 1):
+                if self.done[tj, ti]:
+                    continue
+                a0, a1 = tj * T, min(self.shape[0], tj * T + T); b0, b1 = ti * T, min(self.shape[1], ti * T + T)
+                ov = np.rint(fftconvolve(self._patch(a0, a1, b0, b1, self.r1), self.K1, mode='valid'))
+                ct = np.rint(fftconvolve(self._patch(a0, a1, b0, b1, self.r2), self.ring, mode='valid'))
+                ov = np.maximum(ov, 0)
+                self._ov[a0:a1, b0:b1] = ov * h * h
+                self._sc[a0:a1, b0:b1] = ov * h * h - self.lam * ct * h * h
+                self.done[tj, ti] = True
+
+
+class _View:
+    def __init__(self, m, arr):
+        self.m, self.arr, self.shape = m, arr, arr.shape
+
+    def __getitem__(self, k):
+        j, i = k
+        js = j if isinstance(j, slice) else slice(int(j), int(j) + 1)
+        is_ = i if isinstance(i, slice) else slice(int(i), int(i) + 1)
+        self.m.ensure(js.start or 0, self.shape[0] if js.stop is None else js.stop,
+                      is_.start or 0, self.shape[1] if is_.stop is None else is_.stop)
+        return self.arr[k]
 
 
 def fftconvolve(*a, **k):
@@ -252,7 +315,10 @@ def bestofk_candidate(S, sq, m, rng, kn, angs, region=None, p_region=0.75, ov_fu
     rmask = _region_mask(G, region) if region else None
     total = m if m is not None else kn.get('m_max', 10 ** 6)
     for _ in range(total):
-        maps = {a: G.score(a, kn['LAM']) for a in angs}
+        if kn.get('LAZY', 1):
+            maps = {a: (lambda m: (m.ov, m.sc))(LazyMap(G, a, kn['LAM'])) for a in angs}
+        else:
+            maps = {a: G.score(a, kn['LAM']) for a in angs}
         free = np.argwhere(~G.cov)
         if not len(free):
             if m is None:
