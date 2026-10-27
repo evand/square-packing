@@ -19,7 +19,7 @@ from __future__ import annotations
 import math, os, random, tempfile
 import numpy as np
 
-DEFAULT = dict(k=2, kmax=8, ratio=5, audit=0.1)
+DEFAULT = dict(k=2, kmax=8, ratio=16, audit=0.05)   # 10-26: lean, untested (CLAIMS C53)
 
 
 def split_chain(spec):
