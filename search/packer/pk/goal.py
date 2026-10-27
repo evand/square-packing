@@ -69,6 +69,7 @@ class Goal:
     relax_cap: float = 4.0                                      # relax stage timeout: x the job's median relax
     arms: object = 'auto'
     arm_kinds: object = None                                    # auto arms: keep only these kinds (walk, add, drop, lcut, plugin)
+    queue: object = None                                        # unit loop: priority-queue claims over an n range (pk/queue.py)
     baseline: list = field(default_factory=list)
     notes: str = ''
     result: str = ''                 # written after the run (the reading of the result)

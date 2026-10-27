@@ -77,6 +77,8 @@ def connect(path=DB):
     db = sqlite3.connect(path, timeout=120, isolation_level=None)   # autocommit; transactions are explicit
     db.execute('PRAGMA journal_mode=WAL'); db.execute('PRAGMA synchronous=NORMAL')
     db.executescript(SCHEMA)
+    from . import queue as Q
+    db.executescript(Q.SCHEMA)
     for tb, col, ty in EXTRA:
         if col not in {r[1] for r in db.execute(f'PRAGMA table_info({tb})')}:
             db.execute(f'ALTER TABLE {tb} ADD COLUMN {col} {ty}')
@@ -143,6 +145,9 @@ def load_goal(path):
         g = G.load(path)
         if g.clusters:
             raise ValueError(f'{g.goal}: the unit loop needs clusters: false')
+        if g.queue:
+            from . import queue as Q
+            g.targets = Q.targets(g)
         _GOALS[key] = (g, G.plan(g))
     return _GOALS[key]
 
@@ -163,6 +168,12 @@ def add_goal(db, spec, unit_cpu=120.0, prio=0.0, margin=1e-3):
     try:
         ex = g.progress.get('exclude', [])
         rows = [(n, G.best_before(st, n, t_goal), F.best(st, n, G.kgrid(n) + 0.05, ex, before=t_goal)[0]) for n in g.targets]
+        if g.queue:
+            from . import queue as Q
+            db.execute('BEGIN IMMEDIATE')
+            if not db.execute('SELECT 1 FROM qbest WHERE goal=? LIMIT 1', (g.goal,)).fetchone():
+                Q.setup(db, g, t_goal, st)
+            db.execute('COMMIT')
     finally:
         st.close()
     db.execute('BEGIN IMMEDIATE')
@@ -278,22 +289,29 @@ def claim(db, wid, rng, arms_of=None, posterior=None, now=None):
                 continue
             cand.append((-g['prio'], (done + run) / max(g['budget_cpu_h'], 1e-9), g))
         for _, _, g in sorted(cand, key=lambda t: t[:2]):
-            o = pick(db, g, arms_of(g), rng, now, posterior)
+            gl = load_goal(g['path'])[0]
+            if gl.queue:
+                from . import queue as Q
+                o = Q.pick(db, g, gl, arms_of(g), rng, now)
+            else:
+                o = pick(db, g, arms_of(g), rng, now, posterior)
             if o is None:
                 continue
             lease = now + max(600.0, LEASE[o['kind']] * g['unit_cpu_s'])
             seed = rng.randrange(1 << 30)
-            uid = db.execute("INSERT INTO unit(goal, kind, n, arm, parent, start, stage, worker, seed, status, lease_until, "
-                             "started) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", (g['name'], o['kind'], o['n'], o['arm'], o['parent'],
-                                                                         o.get('start'), o.get('stage'), wid, seed, 'running',
-                                                                         lease, now)).lastrowid
+            uid = db.execute("INSERT INTO unit(goal, kind, n, arm, parent, start, stage, variant, worker, seed, status, "
+                             "lease_until, started) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                             (g['name'], o['kind'], o['n'], o['arm'], o['parent'], o.get('start'), o.get('stage'),
+                              o.get('variant'), wid, seed, 'running', lease, now)).lastrowid
+            if o.get('q'):
+                Q.on_claim(db, g['name'], uid, o)
             if o['kind'] == 'polish':
                 db.execute("UPDATE cand SET status='claimed', taken_by=? WHERE unit=? AND kind='polish' AND status='pending'",
                            (uid, o['parent']))
             if o.get('cand'):
                 db.execute("UPDATE cand SET status='claimed', taken_by=? WHERE id=?", (uid, o['cand']))
             db.execute('COMMIT')
-            return dict(o, id=uid, seed=seed, goal=g)
+            return dict({k: v for k, v in o.items() if k != 'q'}, id=uid, seed=seed, goal=g)
         db.execute('COMMIT')
         return None
     except BaseException:
@@ -303,7 +321,7 @@ def claim(db, wid, rng, arms_of=None, posterior=None, now=None):
 
 # ------------------------------------------------------------------ record
 
-def record(db, u, res, cpu_s, wall, value, bars, retire=True, now=None):
+def record(db, u, res, cpu_s, wall, value, bars, retire=True, now=None, goal=None):
     """one transaction: gains vs the per-n state, the unit row, candidates, screen history, the polished family best"""
     now = time.time() if now is None else now
     name, n = u['goal']['name'], u['n']
@@ -326,6 +344,9 @@ def record(db, u, res, cpu_s, wall, value, bars, retire=True, now=None):
             bar = int(b is not None and jb < b <= sbest)
             db.execute('UPDATE nstate SET sbest=?, retired=MAX(retired, ?) WHERE goal=? AND n=?', (jb, int(bar and retire), name, n))
         reward = value.get('frontier', 1e5) * (gain + sgain) + value.get('bar', 100.0) * bar
+        if goal is not None and goal.queue:                          # own best of the unit's condition, score units
+            from . import queue as Q
+            gain, reward = Q.on_record(db, u, res, goal, now)
         db.execute("UPDATE unit SET status=?, ended=?, cpu=?, wall=?, gain=?, store_gain=?, bar=?, reward=?, jbest=?, info=? "
                    "WHERE id=?", (status, now, cpu_s, wall, gain, sgain, bar, reward, jb, json.dumps(res.get('info', {})), u['id']))
         for kind, pid, s in res.get('cands', []):
@@ -415,7 +436,11 @@ def run_construct(u, goal, arms):
     t0 = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(time.time() - 1))
     c0 = cpu()
     gen_led = str(arm.get('chain') or '').strip().startswith('gen.')
-    D = [(None, None, None)] if gen_led else donors_fast(goal, n + arm['offset'], goal.donors, rng, arm.get('match_donors', True))
+    if u.get('start') and not gen_led:                            # a queue claim: the parent is chosen
+        st_ = store_ro(); r = st_.execute('SELECT id, s, coords FROM packing WHERE id=?', (u['start'],)).fetchone(); st_.close()
+        D = [(r[0], r[1], np.frombuffer(r[2], '<f8').reshape(-1, 3).copy())] if r else []
+    else:
+        D = [(None, None, None)] if gen_led else donors_fast(goal, n + arm['offset'], goal.donors, rng, arm.get('match_donors', True))
     if not D:
         return dict(status='empty', info=dict(donors=0))
     cfg = dict(SCR.DEFAULT, **(goal.screen if isinstance(goal.screen, dict) else {}))
@@ -482,7 +507,7 @@ def run_construct(u, goal, arms):
     ex = goal.progress.get('exclude', [])
     walk = [('walk', i, s) for i, s, f in rows if f is not None and f not in ex][:WALK_TOP]
     screens = [(cfg['k'], SCR.score_at(r['traj'], cfg['k'])) for r in recs if r.get('traj')]
-    return dict(jbest=jbest, cands=pol + walk, screens=[x for x in screens if x[1] is not None], gen_done=done,
+    return dict(jbest=jbest, cands=pol + walk, screens=[x for x in screens if x[1] is not None], gen_done=done, new=rows,
                 info=dict(built=J['built'], screened=log.get('screened'), relaxed=log.get('full_relaxed'), kept=len(parents),
                           new=len(rows), **({'generator': log['generator']} if 'generator' in log else {})))
 
@@ -552,7 +577,7 @@ def run_walk(u, goal, arms):
                             best_s=jbest, frontier_s=None)
     finally:
         st.close()
-    return dict(jbest=jbest, cands=pol, info=dict(start=pid, start_s=s, new=len(rows), walk_cpu=round(wcpu, 1)))
+    return dict(jbest=jbest, cands=pol, new=rows, info=dict(start=pid, start_s=s, new=len(rows), walk_cpu=round(wcpu, 1)))
 
 
 def run_refresh(u, goal, arms):
@@ -629,7 +654,7 @@ def worker(i, path, max_idle, job):
                 res = dict(status='error', info=dict(error=traceback.format_exc()[-800:]))
             c, wl = cpu() - c0, time.time() - w0
             w1 = time.time()
-            record(db, u, res, c, wl, goal.value, goal.bars, goal.retire)
+            record(db, u, res, c, wl, goal.value, goal.bars, goal.retire, goal=goal)
             rs = time.time() - w1
             db.execute('UPDATE unit SET claim_s=?, record_s=? WHERE id=?', (cs, rs, u['id']))
             db.execute('UPDATE worker SET units=units+1, unit_cpu=unit_cpu+?, claim_s=claim_s+?, record_s=record_s+?, '
@@ -675,6 +700,10 @@ def report(db, name):
     moved = [(n, a, b) for n, a, b in S if b < a - 1e-12]
     out += ['', f'Targets moved: {len(moved)} of {len(S)}; score gain {sum((a - b) / math.sqrt(n) for n, a, b in moved):.3e} '
             f'(store best vs goal start, side / sqrt n)'] + [f'  {n}: {a:.9f} -> {b:.9f}' for n, a, b in moved]
+    gl = load_goal(g[0])[0]
+    if gl.queue:
+        from . import queue as Q
+        out += ['', Q.report(db, name)]
     return '\n'.join(out)
 
 
