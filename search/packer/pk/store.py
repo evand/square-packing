@@ -124,6 +124,8 @@ class Store:
             pen = pre['pen'] if 'pen' in pre else (p.max_pen() if check else None)
             st = 'infeasible' if (pen is not None and pen > tol) else status
             grid = pre['grid'] if 'grid' in pre else p.grid_lines()
+            if grid and st != 'infeasible' and pen is not None and float(p.s) < p.k - 1e-9:
+                grid = 0      # 10-27: a real forcing line would mean overlap; near-axis (< 1 deg) chains false-positive
             cur = self.db.execute(
                 'INSERT INTO packing(hash,n,s,s_str,coords,status,s_exact,fp,ntilted,grid,pen,parent,tags,added) '
                 'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',

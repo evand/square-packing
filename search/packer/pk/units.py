@@ -137,6 +137,11 @@ def cpu():
 _GOALS = {}
 
 
+def is_queue(db, name):
+    """a priority-queue goal (pk/queue.py setup wrote its per-condition bests)"""
+    return db.execute('SELECT 1 FROM qbest WHERE goal=? LIMIT 1', (name,)).fetchone() is not None
+
+
 def load_goal(path):
     """goal.load, cached per (path, mtime); unit goals need clusters off"""
     from . import goal as G
@@ -289,10 +294,9 @@ def claim(db, wid, rng, arms_of=None, posterior=None, now=None):
                 continue
             cand.append((-g['prio'], (done + run) / max(g['budget_cpu_h'], 1e-9), g))
         for _, _, g in sorted(cand, key=lambda t: t[:2]):
-            gl = load_goal(g['path'])[0]
-            if gl.queue:
+            if is_queue(db, g['name']):
                 from . import queue as Q
-                o = Q.pick(db, g, gl, arms_of(g), rng, now)
+                o = Q.pick(db, g, load_goal(g['path'])[0], arms_of(g), rng, now)
             else:
                 o = pick(db, g, arms_of(g), rng, now, posterior)
             if o is None:
@@ -700,8 +704,7 @@ def report(db, name):
     moved = [(n, a, b) for n, a, b in S if b < a - 1e-12]
     out += ['', f'Targets moved: {len(moved)} of {len(S)}; score gain {sum((a - b) / math.sqrt(n) for n, a, b in moved):.3e} '
             f'(store best vs goal start, side / sqrt n)'] + [f'  {n}: {a:.9f} -> {b:.9f}' for n, a, b in moved]
-    gl = load_goal(g[0])[0]
-    if gl.queue:
+    if is_queue(db, name):
         from . import queue as Q
         out += ['', Q.report(db, name)]
     return '\n'.join(out)
