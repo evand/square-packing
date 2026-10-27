@@ -10,9 +10,12 @@ Tables
   minimum(n, key, S, cls, status, src, pid, added, updated)  -- one row per exact minimum (10-11): key = identity.min_key(S)
                                            (1e-17), cls certified | weak; census / "new minimum" counts read this table
   copy(n, side_key, min_key, via, added)  -- a screened side that descends / solves to a minimum (copies of one minimum)
-  expansion(packing, n, mechanism, params, run, cpu_s, nprop, best_s, frontier_s, added)  -- ledger (10-14): CPU spent
-                                           expanding a store packing (one row per lineage root x run) and the best side its
-                                           descendants reached; every driver writes it, parent pickers read it
+  expansion(packing, n, mechanism, params, run, cpu_s, nprop, best_s, frontier_s, added, child)  -- ledger (10-14): CPU
+                                           spent expanding a store packing (one row per lineage root x run) and the best side
+                                           its descendants reached; every driver writes it, parent pickers read it.  10-27:
+                                           also the move log, one row per application of a move (mechanism = the move,
+                                           e.g. a relax spec), written whether or not it gained (child = the stored output,
+                                           NULL when nothing better came out); tried() asks whether a packing has had a move
   nearmiss(packing, n, s, frontier, gap, origin, status, added, updated, best_s, best_pid, cpu_s, note)  -- near-miss
                                            queue (10-14, pk/nearmiss.py): our packings within ~1e-3 of frontier_now(n);
                                            status queued / running / done / candidate / failed; drained by `pk.py finish`
@@ -100,6 +103,10 @@ class Store:
         self.db.executescript(SCHEMA)
         if 'cluster' not in {r[1] for r in self.db.execute('PRAGMA table_info(packing)')}:   # 10-14 migration
             self.db.execute('ALTER TABLE packing ADD COLUMN cluster TEXT')
+            self.db.commit()
+        if 'child' not in {r[1] for r in self.db.execute('PRAGMA table_info(expansion)')}:   # 10-27 migration: move log
+            self.db.execute('ALTER TABLE expansion ADD COLUMN child INTEGER')
+            self.db.execute('CREATE INDEX IF NOT EXISTS expansion_move ON expansion(packing, mechanism)')
             self.db.commit()
 
     def close(self):
@@ -404,13 +411,20 @@ class Store:
         return r['id'] if r else None
 
     def record_expansion(self, pid, n, mechanism, cpu_s, params=None, run=None, nprop=None, best_s=None, frontier_s=None,
-                         commit=True):
-        """ledger row: `cpu_s` measured CPU spent expanding store packing `pid` (its lineage in one run) by `mechanism`"""
-        self.db.execute('INSERT INTO expansion(packing,n,mechanism,params,run,cpu_s,nprop,best_s,frontier_s,added) '
-                        'VALUES (?,?,?,?,?,?,?,?,?,?)', (pid, n, mechanism, json.dumps(params) if params is not None else None,
-                                                         run, float(cpu_s), nprop, best_s, frontier_s, now()))
+                         commit=True, child=None):
+        """ledger row: `cpu_s` measured CPU spent expanding store packing `pid` (its lineage in one run) by `mechanism`;
+        as a move-log row (10-27): one application of move `mechanism` to `pid`, best_s = the side it reached, child = the
+        stored output (None when nothing better came out)"""
+        self.db.execute('INSERT INTO expansion(packing,n,mechanism,params,run,cpu_s,nprop,best_s,frontier_s,added,child) '
+                        'VALUES (?,?,?,?,?,?,?,?,?,?,?)', (pid, n, mechanism, json.dumps(params) if params is not None else None,
+                                                           run, float(cpu_s), nprop, best_s, frontier_s, now(), child))
         if commit:
             self.db.commit()
+
+    def tried(self, pid, mechanism):
+        """move-log rows for `mechanism` applied to packing `pid`: [(best_s, child, run, added)], oldest first"""
+        return [tuple(r) for r in self.db.execute('SELECT best_s, child, run, added FROM expansion WHERE packing=? AND '
+                                                  'mechanism=? ORDER BY id', (pid, mechanism))]
 
     def expansions(self, n=None, pid=None):
         """{packing id: (total cpu_s, rows, best_s)} from the ledger"""
