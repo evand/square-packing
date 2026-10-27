@@ -151,10 +151,13 @@ def scan(db, frontier, thr=THR, nmin=NMIN, nmax=NMAX, ns=None, ids=None, per_n=P
         ids = list(ids)
         if not ids:
             return []
-        w.append(f'p.id IN ({",".join("?" * len(ids))})'); a += ids
+        db.execute('CREATE TEMP TABLE IF NOT EXISTS scan_ids(id INTEGER PRIMARY KEY)')   # 10-27: an IN list of every
+        db.execute('DELETE FROM scan_ids')                                         # id since the last ingest broke
+        db.executemany('INSERT OR IGNORE INTO scan_ids VALUES (?)', ((i,) for i in ids))   # SQLite's variable limit
+        w.append('p.id IN (SELECT id FROM scan_ids)')
     nset = sorted(set(ns) if ns else {r[0] for r in db.execute(
-        'SELECT DISTINCT n FROM packing WHERE n BETWEEN ? AND ?' + (f' AND id IN ({",".join("?" * len(ids))})' if ids else ''),
-        [nmin, nmax] + (ids or []))})
+        'SELECT DISTINCT n FROM packing WHERE n BETWEEN ? AND ?' + (' AND id IN (SELECT id FROM scan_ids)' if ids else ''),
+        [nmin, nmax])})
     cands = []
     for n in nset:
         if not nmin <= n <= nmax:
