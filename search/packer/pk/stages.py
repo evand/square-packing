@@ -212,40 +212,54 @@ def release(st, rng, ctx):
 
 # ================================================================== relax (every pk.schedules entry)
 
+def _quench(st, rng, ctx, opt):
+    """one fq quench of st under QOpt opt (frozen squares, seeds for kicks, the ctx deadline) -> (State, info)"""
+    from .engine import fq_quench
+    if st.frozen.any():
+        opt = opt.but(freeze=st.freeze_spec())
+    if opt.kick or opt.round_kick or opt.soft_kick:
+        opt = opt.but(seed=rng.randrange(1 << 30))
+    cap = ctx.get('fq_timeout')
+    if cap:                                                    # 10-25: fq stops itself at the cap and returns
+        opt = opt.but(deadline=float(cap))                     # the repaired state (best so far)
+    with tempfile.TemporaryDirectory(prefix='stg_') as td:
+        try:
+            r = fq_quench(st.p, opt, tmp=td, mod90=True, timeout=(cap + 60) if cap else 1800)
+        except subprocess.TimeoutExpired:                       # hang guard only (the deadline came first)
+            return st, dict(failed='timeout', timeout=cap)
+        try:
+            d = r.stats(whole=True); s2, sq2 = r.read()
+        except Exception as e:
+            return st, dict(failed=repr(e)[:120])
+    if d.get('diverged'):                                      # the compress collapsed (pair list exploded)
+        return st, dict(failed='diverged', sec=d.get('sec'))
+    ok = (d.get('min_gap') is None or d['min_gap'] >= 0) and (d.get('min_wall') is None or d['min_wall'] >= 0)
+    info = {k: d.get(k) for k in ('s', 'viol', 's_alm', 'frozen_dmax', 'deadline') if d.get(k) is not None}
+    if d.get('round'): info['viol_hard'] = d['round'].get('viol_hard')
+    if not ok:
+        return st, dict(info, failed='infeasible')
+    if st.frozen.any() and (info.get('frozen_dmax') or 0) > 1e-9:
+        return st, dict(info, failed='frozen moved')   # fq's repair had to rescale: the free squares did not fit
+    return st.but(p=Packing(s2, sq2)), info
+
+
 def _relax(name):
     from .schedules import get
 
     def run(st, rng, ctx):
-        from .engine import fq_quench
-        opt = get(name)
-        if st.frozen.any():
-            opt = opt.but(freeze=st.freeze_spec())
-        if opt.kick or opt.round_kick or opt.soft_kick:
-            opt = opt.but(seed=rng.randrange(1 << 30))
-        cap = ctx.get('fq_timeout')
-        if cap:                                                    # 10-25: fq stops itself at the cap and returns
-            opt = opt.but(deadline=float(cap))                     # the repaired state (best so far)
-        with tempfile.TemporaryDirectory(prefix='stg_') as td:
-            try:
-                r = fq_quench(st.p, opt, tmp=td, mod90=True, timeout=(cap + 60) if cap else 1800)
-            except subprocess.TimeoutExpired:                       # hang guard only (the deadline came first)
-                return st, dict(failed='timeout', timeout=cap)
-            try:
-                d = r.stats(whole=True); s2, sq2 = r.read()
-            except Exception as e:
-                return st, dict(failed=repr(e)[:120])
-        if d.get('diverged'):                                      # the compress collapsed (pair list exploded)
-            return st, dict(failed='diverged', sec=d.get('sec'))
-        ok = (d.get('min_gap') is None or d['min_gap'] >= 0) and (d.get('min_wall') is None or d['min_wall'] >= 0)
-        info = {k: d.get(k) for k in ('s', 'viol', 's_alm', 'frozen_dmax', 'deadline') if d.get(k) is not None}
-        if d.get('round'): info['viol_hard'] = d['round'].get('viol_hard')
-        if not ok:
-            return st, dict(info, failed='infeasible')
-        if st.frozen.any() and (info.get('frozen_dmax') or 0) > 1e-9:
-            return st, dict(info, failed='frozen moved')   # fq's repair had to rescale: the free squares did not fit
-        return st.but(p=Packing(s2, sq2)), info
+        return _quench(st, rng, ctx, get(name))
     run.__doc__ = 'fq quench ' + ' '.join(get(name).args())
     return stage(f'relax.{name}', 'relax')(run)
+
+
+@stage('relax.round', 'relax', r0=0.15, steps=5, compress=True, press=True, kick=0.0, pit=8, loosen=1.0)
+def relax_round(st, rng, ctx, r0, steps, compress, press, kick, pit, loosen):
+    """soft-to-rigid relax with its knobs as parameters (10-27; defaults = relax.round.15c.p5): rounding radius r0,
+    hardening steps, compress at r0, side free while hardening (press), kick per step, SLP iterations, start loosen"""
+    from .engine import SCREEN
+    opt = SCREEN.but(loosen=float(loosen), round_r0=float(r0), round_compress=bool(compress), round_press=bool(press),
+                     round_steps=int(steps), pit=int(pit), **({'round_kick': float(kick)} if kick else {}))
+    return _quench(st, rng, ctx, opt)
 
 
 # ================================================================== perturb (every pk.moves move)
@@ -305,7 +319,9 @@ _TOK = re.compile(r'^\s*([A-Za-z_][\w.]*)\s*(?:\((.*)\))?\s*$', re.S)
 
 
 def parse(spec):
-    """'a(k=1, x="s") | b' -> [('a', {'k': 1, 'x': 's'}), ('b', {})]; values are Python literals"""
+    """'a(k=1, x="s") | b' -> [('a', {'k': 1, 'x': 's'}), ('b', {})]; values are Python literals.  A value that is a
+    parameter space, e.g. r=('uni', 1.0, 6.0), is drawn per application (run_stage), like an unspecified parameter
+    but over the chain's range"""
     out = []
     for part in spec.split('|'):
         m = _TOK.match(part)
@@ -325,9 +341,18 @@ def parse(spec):
     return out
 
 
+SPACE_KINDS = ('log', 'uni', 'int', 'choice')
+
+
+def is_space(v):
+    """a chain value that is a parameter space, e.g. ('log', 0.02, 0.3): drawn per application (10-27)"""
+    return isinstance(v, tuple) and len(v) >= 2 and v[0] in SPACE_KINDS
+
+
 def run_stage(name, fixed, st, rng, ctx):
     f = STAGES[name]
-    P = {k: (fixed[k] if k in fixed else MV.draw(v, rng)) for k, v in f.space.items()}
+    P = {k: (MV.draw(fixed[k], rng) if is_space(fixed.get(k)) else fixed[k] if k in fixed else MV.draw(v, rng))
+         for k, v in f.space.items()}
     t0 = _cpu()
     st2, info = f(st, rng, ctx, **P)
     row = dict(stage=name, kind=f.kind, params={k: v for k, v in P.items() if isinstance(v, (int, float, str, bool, type(None)))},
@@ -335,7 +360,7 @@ def run_stage(name, fixed, st, rng, ctx):
     return st2, row
 
 
-FEAS_PEN = 1e-9          # feasible = max SAT penetration at most this (the store's bar, pk.goal.FEAS pen <= 1e-9)
+FEAS_PEN = 1e-9          # feasible = max SAT penetration at most this (the store's bar: pen <= 1e-9)
 TRACK_MAX_N = 3000       # Packing.max_pen builds an n x n distance matrix; larger packings are not tracked
 
 

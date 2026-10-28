@@ -17,7 +17,13 @@ import numpy as np
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STORE = os.path.join(HERE, 'runs', 'store.sqlite')
 VERSION = 'familymap.classify 10-25'
-FEAS = "status!='infeasible' AND (pen IS NULL OR pen<=1e-9) AND (grid IS NULL OR grid=0)"   # = pk.goal.FEAS
+FEAS = "status!='infeasible' AND (pen IS NULL OR pen<=1e-9) AND (grid IS NULL OR grid=0)"
+
+
+def kgrid(n):
+    """the grid side for n squares: ceil sqrt n"""
+    import math
+    return math.ceil(math.sqrt(n) - 1e-12)
 
 
 def migrate(path=STORE):
@@ -92,6 +98,6 @@ def near(db, n, s_max, exclude=(), limit=400, path=STORE, dedupe=6, write=True, 
 
 def best(db, n, s_max, exclude=(), before=None, path=STORE, write=True):
     """the lowest feasible side at n outside `exclude` (added before `before`) -> (s, id) or (None, None); the cached
-    form of pk.goal.best_match"""
+    form of the old goal loop's best_match"""
     r = near(db, n, s_max, exclude, limit=1, path=path, write=write, before=before)
     return (r[0][1], r[0][0]) if r else (None, None)

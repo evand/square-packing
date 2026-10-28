@@ -1,16 +1,20 @@
-# Example goal (the format: pk/goal.py docstring; the loop: DESIGN.md).  Real goal files are research results and live
-# in a plugin's goals/ directory, found by name (`pk.py goal report NAME`); this one is the only goal file kept here.
+# Example campaign for the event loop (format: pk/events.py docstring; design: DESIGN.md).  Real campaign files are
+# pre-registrations and results; they live in a plugin's goals/ directory, found by name (`python3 -m pk.events add NAME`).
+# This one uses public stages only.
 goal: example
-notes: >
-  Grow a library of non-diamond packings near the best at a few n.  Every arm is planned automatically: walks from
-  donors at n, add from n - 1, drop from n + 1 / n + 2, L-cut from the next row, plus any plugin ARM_TEMPLATES.
-targets: [37, 38]
-progress: {exclude: [G, D, S], within_rel: 0.0016}   # wanted = not grid / diamond / strip; window = 0.0016 x side
-value: {match: 1.0, frontier: 1.0e+5, bar: 100}     # reward = new clusters + 1e5 x (family-best + store-best gain)
-bars: {37: 6.5986}                                   # + 100 for the job that first gets below a bar (e.g. a known side)
 budget_cpu_h: 1
-procs: 4
-relax: round.15c.p5
-predictions:                                         # required: write them before running; grade them in `result`
-  any_target_store_best_improves: 0.05
-  new_clusters_total_ge_10: 0.5
+notes: >
+  Local moves on non-regular packings near the best at a few n, plus add / drop from the neighbours.
+predictions:                       # required: write them before running; grade them in `result`
+  any_target_improves: 0.1
+events:
+  ns: [37, 38, 39]
+  moves:
+    relax: {chain: 'relax.round.05c.p5', once: true, relax: true}
+    kick:  {chain: 'perturb.kick | relax.round.05c.p5'}
+    add:   {chain: 'grow.add | relax.round.05c.p5', dn: 1}
+    drop:  {chain: 'shrink.drop | relax.round.05c.p5', dn: -1}
+  policies: [rule, uniform]
+  window: 2.0e-3
+  exclude: [G, D, S]
+  unit_cpu: 20

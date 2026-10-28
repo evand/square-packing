@@ -1,8 +1,9 @@
-# packer architecture (rewritten 10-24 for the explore loop; earlier versions in git history)
+# packer architecture (rewritten 10-27 for the event loop; the goal / unit loops of 10-24..26 are in git history)
 
-**A goal is data; one scheduler spends CPU on arms; every arm is a stage chain run on donors selected from the store;
-every output goes back to the store; reward is measured from the store.**  A new idea is a new stage (or a parameter of
-one).  A new campaign is a new goal file.  There are no campaign scripts.
+**A new packing is an event; every event becomes a parent; workers claim (parent, move) options one at a time, ranked
+by a scorer; every move is a stage chain; every application goes to the store's move log and every useful output back
+to the store as a new parent.**  A new idea is a new stage (or a parameter of one), used as a move.  A new campaign is
+a new campaign file.  There are no campaign scripts.
 
 ## Layers
 
@@ -12,9 +13,9 @@ one).  A new campaign is a new goal file.  There are no campaign scripts.
 | engine | `pk/engine.py` | `fq_quench(inp, QOpt)`: the one fq call path; `QOpt` = every fq flag |
 | registries | `pk/moves.py` (`@move`), `pk/fill.py` (`@placer`), `pk/schedules.py` (named QOpts) | building blocks with declared parameter spaces |
 | stages, chains | `pk/stages.py` | one contract over all registries; a chain is `a(k=v) \| b \| ...` |
-| goals, arms, scheduler | `pk/goal.py`, `pk.py goal`, `<plugin>/goals/*.yaml` | the loop below |
+| events, scorers | `pk/events.py`, `<plugin>/goals/*.yaml` | the loop below |
 | jobs | `pk/jobs.py` | the only way compute starts; on exit every job runs sink, then converge |
-| reports | `pk.py goal report`, `pk.py yield`, the plugin's status report | numbers from the store |
+| reports | `python3 -m pk.events report NAME`, `pk.py yield`, the plugin's status report | numbers from the store |
 
 ## Stages
 
@@ -36,29 +37,36 @@ A stage is `f(st: State, rng, ctx, **params) -> (State, info)` registered with a
 n-changing and perturb stages refuse frozen squares.  `python3 pk/tests/test_stages.py` checks every registered stage
 (parameters logged, deterministic per seed, frozen squares untouched); a new stage is covered by registering it.
 
-## The loop (`pk/goal.py`)
+## The loop (`pk/events.py`, 10-27)
 
 ```
-goal YAML   targets, progress (wanted families, window), value weights, budget, quantum, predictions (required)
-plan        arms per target n: walk (donors at n), add (n - 1), drop (n + 1, n + 2), lcut (n + 2k + 1 + e), and each
-            plugin's ARM_TEMPLATES; an arm = (donor offset, chain, donor family filter)
-select      donors = wanted-family packings within `donor_window` of the best wanted-family packing at the donor n
-            (family-relative near-record: at 148 the best non-diamond is 0.06 above the diamond)
-run(job)    chain arms build starts for `construct_share` of the quantum, then walk the best four; walk arms walk the
-            donors.  `walk` = explore.py's local search with a fixed move mix
-finish      inside the job, on its own CPU quantum (the walk leaves a measured share for this): ingest (starts with
-            their donor as parent, the walk archive, walk roots linked to their donor), converge the job's packings,
-            fq-polish its candidates best first until the quantum is spent; job.json has the CPU split
-count       in the scheduler (cheap, serial): the job's polished packings as new region clusters within the window of
-            the polished family best at goal start, plus the family-best and store-best gains (side units x weight).
-            The reference minima are polished once per n before any job starts; their CPU counts in the budget
-allocate    Thompson sampling on reward per CPU-h (Gamma-Poisson, pooled prior), pending jobs counted, `procs` at a time
+campaign YAML  targets (ns), w(n), moves (name -> chain, dn, once / relax / source), policies (A/B conditions),
+               window, excluded parent families, unit CPU, budget, predictions (required)
+pool           per condition: the best distinct store packings within the window at every parent n, then every output
+               of the condition's own units (a condition never sees another's outputs; frozen conditions add none)
+claim          one transaction, any worker: sources first (generator builds, refreshes), then relax-first (a parent
+               not yet relaxed offers only relax), else the option (parent, move, target n) with the largest sampled
+               utility x w(n) from the condition's scorer; targets must pass the grid-only rule
+run            the chain on the parent until the unit's CPU is spent; each application -> a move-log row (`expansion`,
+               child = the stored output); outputs below the parent (same n) or within the window (cross n) -> store
+record         tries / wins per (parent, move), new parents, the condition's best per n (its score gain)
 ```
 
-Run one: `python3 pk/jobs.py start NAME --procs P -- python3 pk.py goal run NAME`; read it with `pk.py goal report
-NAME`; `pk.py goal plan NAME` lists arms and donor pools without running anything.  Goal files live in a plugin's
-`goals/` (they name plugin arms and hold unposted results); this repo keeps only `goals/example.yaml`.  The goal file is the
-pre-registration (the scheduler refuses one without predictions); write the reading of the result under it.
+Grid-only rule (Evan 10-27): in triangle row k (k = ceil sqrt n, c = k^2 - n) only the first grid-only entry is a
+target, and only once row k - 1 has that c; deeper entries are never easier (monotonicity).  Scorers (`events.SCORERS`,
+by the condition name before '-'): `uniform`, `rule` (near the best, few tries; regular families are never parents),
+and plugin models fit on the move log.  A scorer returns sampled utilities, so exploration lives in it (Thompson draws
+for a fitted model).  `ctx['cpu']` gives the mean CPU per application of each move so far.
+
+Equivalent choices are mixed, not settled (Evan 10-27): when options do not differ by enough to matter for the
+question at hand (scorers, schedules, placers, parameter values), draw among them at random (ranges in chains, a mixed
+condition 'a+b'); every application stays a logged experiment, so the knowledge keeps building while attention is on
+the larger questions.
+
+Run one: `python3 -m pk.events add NAME`, then `python3 pk/jobs.py start ev --procs N -- python3 -m pk.events work
+--procs N`; read it with `python3 -m pk.events report NAME`.  Campaign files live in a plugin's `goals/` (they name
+plugin stages and hold unposted results); this repo keeps only `goals/example.yaml`.  The campaign file is the
+pre-registration (the loader refuses one without predictions); write the reading of the result under it.
 
 ## Adding an idea
 
@@ -66,105 +74,33 @@ pre-registration (the scheduler refuses one without predictions); write the read
    an fq recipe in `pk/schedules.py`, anything else in `pk/stages.py` (or a plugin).  Declare every knob, return an info
    dict, draw randomness only from `rng`.
 2. `python3 pk/tests/test_stages.py`.
-3. If it changes n or builds starts, it becomes an arm automatically when a goal's planner (or a plugin's
-   `ARM_TEMPLATES`) names its chain; compare it with the existing arms by running a goal and reading the per-arm
-   reward per CPU-h.  Within-n refinements are judged the same way: an arm earns reward only through refined, converged
-   packings in the store.
+3. Name its chain as a move in a campaign (a source if it builds from nothing, `dn` if it changes n); compare it with
+   the existing moves by running the campaign and reading the per-move rows of the report and the move log.
 4. Steering results go into `CLAIMS.md` (one line, with evidence).
 
 ## Plugins
 
 `pk/stages.py` imports `pk_plugin.py` from each directory on `PK_PLUGINS` (default `../plugins/packer` next to this
 repo, if present) before adapting the registries.  A plugin registers stages with the same decorators and may define
-`ARM_TEMPLATES` (`f(goal, n) -> [arm dict]`), `TEST_STARTS` (`{stage: chain}` for the contract test) and goal files of
-its own.  Plugin scripts find this directory through their own bootstrap; `runs/` and the store live here.
+`TEST_STARTS` (`{stage: chain}` for the contract test), event-loop scorers (`pk.events.SCORERS[name] = f`) and
+campaign files of its own.  Plugin scripts find this directory through their own bootstrap; `runs/` and the store
+live here.
 
 This side stays generic (Evan 10-25): extension points, public stages, and examples built from public stages.  A
-plugin's stage / arm names, its weights and priors, its benchmarks and its goal files live in the plugin, never here;
+plugin's stage / move names, its scorers' coefficients and priors, its benchmarks and its goal files live in the plugin, never here;
 the pre-push hook enforces the names (`CLAUDE.md`, Public / private).
-
-## Next: the unit loop (design 10-25, agreed with Evan; steps 1-2 built 10-26: `pk/families.py`, `pk/units.py`)
-
-Why.  The goal loop schedules 15-minute single-arm jobs from one dispatcher process per goal.  Measured 10-25 on two
-30 CPU-h runs: utilization 48-79 % of the declared processes (serial setup, a 24-minute drain of the last wave,
-hand-off to the next queued run, a queue that would not start a 15-process run behind one stray thread); references
-31-43 % of CPU; sequential runs as experiments (different targets, a moving store: +-35 % noise on gain per CPU-h, so
-~120 CPU-h per condition to see a 2x effect).  Everything here is embarrassingly parallel except decisions and bandit
-updates, and those are small database transactions.  The whole project is a value-of-information problem: where to
-spend the next CPU-minute (which n, which move, polish or explore, which variant to learn about).  Overhead decides
-how many such decisions we can afford, so the rule is: **make decisions cheap**, and make every unit of compute a
-decision.
-
-Principles.
-- The unit is one single-threaded task with a fixed CPU allowance (~1-3 min) that reads the store, computes and writes
-  its results.  No job, quantum, dispatcher or per-goal process.
-- Decide late: a unit picks what to do when it starts, from everything finished so far.
-- Decisions read precomputed state (indexes, summary rows): milliseconds, never a scan.
-- Everything is a row: goals, units, results, CPU.  Accounting, reports and experiment readouts are SELECTs.
-
-Unit kinds (each a stage chain or an existing entry point, run under a CPU allowance; fq `--deadline` keeps the tails):
-- `construct`: donors -> build stages -> screen R builds -> fully relax the best 1 (+ an audit share, random).
-- `walk`: the local search from a chosen store packing for the allowance.
-- `polish` / `converge`: one packing (or the new near-best packings at one n) to a fixpoint.  Queued implicitly: they
-  are options whose value is the chance of a gain, like any move ("relax and polish are moves").
-- `reference`: the polished family best at n before the goal (only what gain accounting needs; cluster census off).
-
-Claim (one transaction, any worker):
-```
-BEGIN IMMEDIATE
-  pick goal  (priority, budget left, CPU share)
-  pick option (n, kind, arm, variant) by Thompson sampling on expected gain per CPU-s, from the summary tables
-  INSERT unit (goal, n, kind, arm, variant, worker, lease_until, started)
-COMMIT
-run -> INSERT result rows (packings via the store API); UPDATE unit (cpu, wall, gain, status); UPDATE summaries
-```
-A lease that expires (crashed or killed worker) returns the option; nothing is lost but that unit's CPU.
-
-Workers.  `pk.py work --procs N`: N persistent processes (imports and caches once, then claim / run / record).  The
-count follows the machine (free cores from `jobs.py`; quick tests for an active conversation still go first), so two
-goals or another session's work share cores at unit granularity; a run "drains" in one unit.
-
-Decision state (kept current on write, read on claim):
-- store: `family` column on packing, a `best` table (n, family -> best side, id) maintained on insert, index (n, s);
-  donor choice is a lookup.
-- targets: live value per n = (current side - bar) / sqrt n from the newest bar list, x expected gain per CPU-s;
-  n retire when they cross the bar.  Goals state an objective and constraints, not a hand-picked list of n.
-- model: gain per CPU-s per option with pooled priors (kind x n band, kind, n) and discounting (gains deplete as a
-  target is worked: never-worked targets paid 2-4x per CPU-h on 10-25); credit for a polish / converge gain goes to the
-  unit that made its parent (lineage).
-
-Experiments.  A goal may declare variants (`clusters: [on, off]`, `screen.k: [2, 8]`, a polish policy, ...); each claim
-draws one at random.  Variants then share targets, time and store state, so the comparison is paired within one run
-and the readout is a grouped SELECT with a bootstrap.  Pre-registration stays: the goal file holds the predictions.
-
-Accounting.  Unit rows carry CPU (`getrusage` of the worker around the unit, children included), wall and kind;
-worker rows carry idle time.  Utilization = unit CPU / (wall x workers); overhead = claim + record time, reported per
-unit.  Targets: utilization >= 95 %, decision + record overhead <= 1 % of unit CPU.
-
-Migration.  1. `best` table, `family` column, index (cheap decisions; the current loop benefits too).  2. Units and
-workers next to the current loop, running the same arms; smoke goal.  3. One fresh-target run with the 10-25 lean
-settings (clusters off) for a like-for-like readout of utilization and gain per CPU-h.  4. Variants, then live
-targets.  5. Retire `goal run` / `goal job` / the quantum knobs.
-Step 2 as built (10-26): `python3 -m pk.units add GOAL` / `work --procs N` / `report GOAL`.  Kinds: construct
-(pk/screen.construct_serial: build, screen, relax at once if the score is in the arm's best 1 / ratio of all earlier
-screens at that arm; equal-CPU backtest on the audit-1 calibration set: same best side per unit as the pool, ~10 % more
-top-5 % results per CPU-h), walk (explore.py from one start under a CPU budget: a construct unit's best new starts, or
-for a walk arm the donor-window packing with the least walk CPU so far, from store `expansion` rows that every walk
-writes), reference (only when a polish candidate at n needs it), polish (new wanted-family packings within
-`polish_margin` 1e-3 of the family best: polish moved 97 % of 7815 10-25 goal-run candidates by < 1e-3).  Walks and
-polishes of a construct unit's output are charged and credited to its arm (lineage).  Smoke (2 targets, 0.9 CPU-h,
-3 workers beside a 14-process run): 94 % utilization, claim + record 0.3-0.6 ms median (0.01 % of unit CPU), units'
-CPU = the jobs.py measurement; a walk step in flight can overrun the allowance by up to ~40 CPU-s at n 549.
-Same backtest, a side result: screen depth k 2 gives ~1.6x the top-5 % results per CPU-h of k 8 (10-25 goals use 8).
-
-Open.  Unit allowance per kind (screened construct needs ~R x 0.5 s + one relax; polish at n ~ 1000 is 1.5-3 min);
-SQLite write rate (16 workers x a few writes per unit per minute: WAL should do); the cluster census if it returns
-(needs serializing); how much of the walk's value is in long chains (cut into units, it restarts from the best so far).
 
 ## Not done yet (tasks/explore-loop/DESIGN.md §8)
 
-- Reward v2: the pool potential with lineage credit (a construction arm is paid when a later walk descends from it).
+- Event loop: lineage credit for sources (a build is paid when a later move descends from it); closure credit (a
+  packing at (n, s) is also worth its drop closure at every n' < n); walks (`explore.py`) and screened constructions
+  (`pk/screen.py`) as sources; store imports (public drops) as events; above-grid parents / children at grid-only
+  targets (today pools and children stop at s < k; Evan 10-27: later); a per-campaign intercept learned online if
+  decisions across moves / sources need calibrated totals (scorer totals were off x2-6 per run; ranking within a run
+  is unaffected); claim cost ~130 ms at ~2k parents x moves x 6 settings (cache options per condition if it grows);
+  a near-best diversity reward when there is a cheap measure (first try: the child's family / fingerprint is new in
+  its condition's pool at n).
 - Closures as store hooks (drop-one and exact L-add derived packings queued when a new best enters).
 - Paring: `mcmin.py` (file I/O and moves into `pk/`), then the slp-era engine it imports (`slp*`, `inc`, `rigid`,
   `movegen`, `ftmc`) and the Rust `packer` binary modes; `explore.py` into a `walk` stage; the evaluation modules
-  (`pk/battery`, `corpus`, `eventbench`, `benchkit`, `crossing`, `refset`, ...) into one; `trial.py` folded into goals.
+  (`pk/battery`, `corpus`, `eventbench`, `benchkit`, `crossing`, `refset`, ...) into one; `trial.py` folded into campaigns.

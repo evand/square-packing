@@ -106,11 +106,6 @@ def main():
     p = sp.add_parser('sink', help='import every run result under the intake policy, detect hits / near misses (pk/sink.py)')
     p.add_argument('--runs', nargs='*'); p.add_argument('--dry-run', action='store_true'); p.add_argument('--procs', type=int, default=12)
     p.add_argument('--report', action='store_true', help='run dirs no adapter reads, by manifest name')
-    p = sp.add_parser('goal', help='targeted exploration loop (pk/goal.py): plan / run / report / job')
-    p.add_argument('action', choices=['plan', 'run', 'report', 'job', 'rescore']); p.add_argument('spec', help='goal YAML (report: also a name)')
-    p.add_argument('out', nargs='?'); p.add_argument('cpu', nargs='?', type=float); p.add_argument('seed', nargs='?', type=int, default=1)
-    p = sp.add_parser('screen', help='screen-then-promote calibration and backtest for a goal (pk/screen.py)')
-    p.add_argument('spec')
     p = sp.add_parser('credit', help='lineage credit audit: store-best gains paid up the ancestry (pk/credit.py)')
     p.add_argument('--since', default='2026-10-10'); p.add_argument('--lam', type=float, nargs='+', default=[0.5, 0.8, 1.0])
     p.add_argument('--top', type=int, default=25)
@@ -188,27 +183,6 @@ def main():
                 print(f'{c:6d}  {name}  e.g. {ex}')
             return
         print(sink.run(st, runs=a.runs, dry=a.dry_run, procs=a.procs))
-        return
-    if a.cmd == 'goal':
-        from pk import goal as G
-        if a.action == 'job':
-            G.run_job(G.load(a.spec), json.load(open(os.path.join(a.out, 'arm.json'))), a.out, a.cpu, a.seed)
-            return
-        g = G.load(a.spec)
-        if a.action == 'plan':
-            arms = G.plan(g); sz = G.pool_sizes(g, arms, procs=g.procs)
-            for x in arms:
-                print(f"{x['id']:22s} donors at n {x['n'] + x['offset']:4d}: {sz[x['id']]}  {x.get('chain') or 'walk'}")
-        elif a.action == 'run':
-            st.close(); G.run(g, a.seed)
-        elif a.action == 'rescore':
-            st.close(); G.rescore(g); print(G.report(g))
-        else:
-            print(G.report(g))
-        return
-    if a.cmd == 'screen':
-        from pk import goal as G, screen as SCR
-        print(SCR.report(G.load(a.spec).dir))
         return
     if a.cmd == 'credit':
         from pk import credit
