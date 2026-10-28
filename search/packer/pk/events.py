@@ -28,6 +28,7 @@ Campaign file (the pre-registration: `predictions` is required; the reading of t
     frozen: []                 # conditions whose outputs never join their pool (isolates the value of chaining)
     window: 2.0e-3             # parents within this score gap (side / sqrt n) of the condition's best at their n
     pool: 8                    # start pool per (condition, parent n): the best distinct store packings in the window
+    dedupe: 6                  # distinct = side rounded to this many decimals (4: near-copies of one basin merge)
     exclude: [G, D, S]         # parent families never used (regular packings: perturbing them does not work)
     unit_cpu: 30               # CPU-s per unit (a once-move runs once)
     stop: {conds: [a, b], p: 0.95, min_cpu_h: 2}   # optional sequential stop rule (below)
@@ -85,7 +86,7 @@ CREATE TABLE IF NOT EXISTS ctl(key TEXT PRIMARY KEY, value TEXT);
 CREATE TABLE IF NOT EXISTS gen_done(campaign TEXT, move TEXT, n INT, version TEXT, variant INT, unit INT,
   PRIMARY KEY(campaign, move, n, version, variant));
 """
-DEFAULT = dict(weight={'default': 1.0}, moves={}, policies=['rule', 'uniform'], frozen=[], window=2.0e-3, pool=8,
+DEFAULT = dict(weight={'default': 1.0}, moves={}, policies=['rule', 'uniform'], frozen=[], window=2.0e-3, pool=8, dedupe=6,
                exclude=['G', 'D', 'S'], unit_cpu=30.0, recent_h=2.0, fq_timeout=300, stop=None)
 STOP_EVERY = 60.0                               # s between checks of a campaign's stop rule
 LEASE = 10.0                                   # x unit_cpu (min 600 s): past it, a running unit's worker is lost
@@ -206,7 +207,7 @@ def load(spec):
         for k in ('window', 'unit_cpu', 'recent_h', 'fq_timeout'):
             e[k] = float(e[k])
         _CFG[key] = dict(e, name=d['goal'], budget_cpu_h=float(d['budget_cpu_h']), path=path, ns=ns, moves=moves, weight=w,
-                         pool=int(e['pool']))
+                         pool=int(e['pool']), dedupe=int(e['dedupe']))
     return _CFG[key]
 
 
@@ -280,7 +281,7 @@ def add(db, spec):
         for n in parent_ns(cfg):
             if n < 2 or n in have:                  # an edited campaign file: only the new parent n get pools
                 continue
-            for i, s, _, fam in F.near(st, n, kgrid(n) - 1e-9, cfg['exclude'], cfg['pool'],
+            for i, s, _, fam in F.near(st, n, kgrid(n) - 1e-9, cfg['exclude'], cfg['pool'], dedupe=cfg['dedupe'],
                                        window=cfg['window'] * math.sqrt(n)):
                 rows.append((n, i, s, fam))
         rel = _relaxed(st, [i for _, i, _, _ in rows])
