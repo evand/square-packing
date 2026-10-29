@@ -34,7 +34,7 @@ Campaign file (the pre-registration: `predictions` is required; the reading of t
     stop: {conds: [a, b], p: 0.95, min_cpu_h: 2}   # optional sequential stop rule (below)
 
 Sources (moves with `source: true`, chain starting with a gen stage): built once per (target n, generator version,
-variant) (stage hooks `version()` / `variants`, as for deterministic generators), refreshed by a unit of their own when
+variant) (stage hooks `version(ctx)` (ctx = {'n': n, 'side': known side}; None = skip n) / `variants`, as for deterministic generators), refreshed by a unit of their own when
 the hook `stale()` says so; claimed before any scored option.  Their outputs join every condition's pool and count as
 nobody's gain, so conditions stay comparable.
 
@@ -456,7 +456,10 @@ _STALE_AT = {}
 def _source_option(db, cfg, now):
     """the next source unit: a refresh when a source's inputs are stale (hook `stale()`, checked every REFRESH_GAP s,
     one refresh at a time), else a build of the first (move, n, variant) not built at the generator's current version
-    (hook `version()`, `variants` per version; static generators: once) at an eligible target n -> option or None"""
+    for that n (hook `version(ctx)`, ctx = {'n': n, 'side': the campaign's known side at n or None}: a generator whose
+    output at n depends on n-specific inputs returns a per-n key, so an input change rebuilds only the n it affects, and
+    None when it has nothing worth building at n; it is called for every target n on every claim, so it must be cheap;
+    `variants` per version; static generators: once) at an eligible target n -> option or None"""
     from . import stages as S
     name = cfg['name']
     srcs = [(m, v) for m, v in cfg['moves'].items() if v['source']]
@@ -471,14 +474,17 @@ def _source_option(db, cfg, now):
             _STALE_AT[(name, m)] = now
             if not any(mm == m and '"refresh"' in (i or '') for mm, i in running) and f.stale():
                 return dict(kind='refresh', move=m, n=None)
-        ver = str(f.version()) if hasattr(f, 'version') else 'static'
-        done = {(n, k) for n, k in db.execute('SELECT n, variant FROM gen_done WHERE campaign=? AND move=? AND version=?',
-                                              (name, m, ver))}
+        done = {(n, v, k) for n, v, k in db.execute('SELECT n, version, variant FROM gen_done WHERE campaign=? AND move=?',
+                                                    (name, m))}
         for n in cfg['ns']:
             if not eligible(n, side):
                 continue
+            ver = f.version(dict(n=n, side=side.get(n))) if hasattr(f, 'version') else 'static'
+            if ver is None:                               # the generator has nothing to build at n
+                continue
+            ver = str(ver)
             for k in range(int(getattr(f, 'variants', 1))):
-                if (n, k) not in done:
+                if (n, ver, k) not in done:
                     return dict(kind='build', move=m, n=n, version=ver, variant=k)
     return None
 
