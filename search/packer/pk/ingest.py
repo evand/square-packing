@@ -1,7 +1,8 @@
 """One ingestion command (10-14): sync + watch + fresh pass, its near misses into the queue.
 
   pk.py ingest                     dry run: the plan, --since, and what the store already holds since then (read-only)
-  pk.py ingest --apply [--procs 16] [--no-fresh] [--since ISO]
+  pk.py ingest --apply [--procs 16] [--no-fresh | --fresh-later] [--since ISO]
+  pk.py ingest --fresh-pending [--procs 16]   run the fresh pass for every window --fresh-later deferred (10-28)
 
 --apply runs, each as its own process with the same store (PK_STORE), logs in runs/ingest/<stamp>/:
   1. pk.py sync-register   2. pk.py watch --apply (updated issues + watched repos)
@@ -10,6 +11,9 @@
      packings added since -> the near-miss queue (pk/nearmiss.py; drained by `pk.py finish`)
 State runs/ingest/state.json: `last` = start time of the last ingest whose steps all succeeded (local time, the clock of
 sighting.added), so the next --since covers everything first seen after it.  One line per --apply in runs/ingest/log.jsonl.
+--fresh-later (10-28): steps 1-2 only, but the window is kept in state `fresh_pending` (the earliest deferred --since),
+so a quick refresh need not wait for fresh.py (~20 min with its compositions); `--fresh-pending` later runs one fresh
+pass from that time (steps 3-4) and clears it.  --no-fresh drops the window (the state still advances).
 Nothing is posted anywhere: fresh.py's hits go to candidate.py (local checks + import), never to an issue.
 """
 from __future__ import annotations
@@ -58,12 +62,15 @@ def new_since(db, since):
         WHERE p.status != 'infeasible' AND ({pub}) GROUP BY p.id HAVING first >= ? ORDER BY p.n""", (since,)).fetchall()
 
 
-def run(store=None, apply=False, since=None, procs=16, fresh=True, nmax=324, root=IDIR, runner=None, log=print):
+def run(store=None, apply=False, since=None, procs=16, fresh=True, nmax=324, root=IDIR, runner=None, log=print,
+        later=False):
     from . import nearmiss as NM
     S = load_state(root)
     since = since or S.get('last')
     start = datetime.datetime.now().isoformat(timespec='seconds')
-    if fresh and not since:
+    if later:
+        fresh = False
+    if (fresh or later) and not since:
         raise SystemExit('ingest: no previous ingest in state; give --since ISO (local time) the first time')
     out = os.path.join(root, start.replace(':', '').replace('-', ''))
     P = plan(since, out, procs, fresh, nmax, store)
@@ -91,23 +98,14 @@ def run(store=None, apply=False, since=None, procs=16, fresh=True, nmax=324, roo
         rec['steps'][name] = rc
         log(f'  {name}: rc {rc}')
         ok &= rc == 0
-    # near misses: fresh output dirs + store scan of everything added since `since`
-    from .store import Store
-    st = Store(spath)
-    fnow = NM.frontier_fn(spath)
-    dirs = [d for d in (os.path.join(out, 'fresh', f'compose_{t}') for t in ('lo', 'hi')) if os.path.isdir(d)]
-    items = NM.from_outputs(st, dirs, fnow, nmax=nmax) if dirs else []
-    k1 = NM.enqueue(st, items, note=f'ingest {start}: fresh outputs')
-    if since:
-        ids = [r[0] for r in st.db.execute('SELECT id FROM packing WHERE added >= ?', (since,))]
-        k2 = NM.enqueue(st, NM.scan(st.db, fnow, nmax=nmax, ids=ids), note=f'ingest {start}: store scan')
-    else:
-        k2 = 0
+    k1, k2 = _nearmiss(spath, out, since, start, nmax, log)
     rec.update(nearmiss_fresh=k1, nearmiss_scan=k2, ok=ok, end=datetime.datetime.now().isoformat(timespec='seconds'))
-    log(f'near-miss queue: +{k1} from fresh outputs, +{k2} from the store scan (pk.py finish drains it)')
-    st.close()
     if ok:
         S['last'] = start
+        if later:
+            S['fresh_pending'] = min(x for x in (S.get('fresh_pending'), since) if x)
+            rec['fresh_pending'] = S['fresh_pending']
+            log(f"fresh pass deferred: pending since {S['fresh_pending']} (pk.py ingest --fresh-pending)")
     else:
         log('a step failed: state not advanced (the next ingest repeats this window)')
     S.setdefault('runs', []).append(dict(start=start, ok=ok, out=out))
@@ -115,3 +113,56 @@ def run(store=None, apply=False, since=None, procs=16, fresh=True, nmax=324, roo
     with open(os.path.join(root, 'log.jsonl'), 'a') as f:
         f.write(json.dumps(rec) + '\n')
     return rec
+
+
+def _nearmiss(spath, out, since, start, nmax, log):
+    """near misses: fresh output dirs + store scan of everything added since `since` -> the queue.  (k_fresh, k_scan)"""
+    from . import nearmiss as NM
+    from .store import Store
+    st = Store(spath)
+    fnow = NM.frontier_fn(spath)
+    dirs = [d for d in (os.path.join(out, 'fresh', f'compose_{t}') for t in ('lo', 'hi')) if os.path.isdir(d)]
+    items = NM.from_outputs(st, dirs, fnow, nmax=nmax) if dirs else []
+    k1 = NM.enqueue(st, items, note=f'ingest {start}: fresh outputs')
+    k2 = 0
+    if since:
+        ids = [r[0] for r in st.db.execute('SELECT id FROM packing WHERE added >= ?', (since,))]
+        k2 = NM.enqueue(st, NM.scan(st.db, fnow, nmax=nmax, ids=ids), note=f'ingest {start}: store scan')
+    log(f'near-miss queue: +{k1} from fresh outputs, +{k2} from the store scan (pk.py finish drains it)')
+    st.close()
+    return k1, k2
+
+
+def run_pending(store=None, procs=16, nmax=324, root=IDIR, runner=None, log=print):
+    """the fresh pass for the windows --fresh-later deferred: one fresh.py run from the earliest pending time, then
+    its near misses; clears `fresh_pending` on success unless a newer ingest changed it meanwhile."""
+    S = load_state(root)
+    since = S.get('fresh_pending')
+    if not since:
+        log('ingest --fresh-pending: nothing pending')
+        return None
+    start = datetime.datetime.now().isoformat(timespec='seconds')
+    out = os.path.join(root, start.replace(':', '').replace('-', '') + '-fresh')
+    (name, cmd), = [x for x in plan(since, out, procs, True, nmax, store) if x[0] == 'fresh']
+    spath = store or os.environ.get('PK_STORE') or os.path.join(PK, 'runs', 'store.sqlite')
+    os.makedirs(out, exist_ok=True)
+    env = dict(os.environ, PK_STORE=os.path.abspath(spath))
+    runner = runner or (lambda cmd, logf: subprocess.run(cmd, stdout=logf, stderr=subprocess.STDOUT, cwd=PK,
+                                                         env=env).returncode)
+    log(f'ingest --fresh-pending: since {since}; out {out}')
+    with open(os.path.join(out, 'fresh.log'), 'w') as f:
+        rc = runner(cmd, f)
+    log(f'  fresh: rc {rc}')
+    k1, k2 = _nearmiss(spath, out, since, start, nmax, log)
+    S = load_state(root)                                  # re-read: an ingest may have run meanwhile
+    if rc == 0 and S.get('fresh_pending') == since:
+        S.pop('fresh_pending')
+    elif rc:
+        log('fresh failed: still pending')
+    S.setdefault('runs', []).append(dict(start=start, ok=rc == 0, out=out, fresh_pending=since))
+    save_state(S, root)
+    with open(os.path.join(root, 'log.jsonl'), 'a') as f:
+        f.write(json.dumps(dict(start=start, since=since, out=out, steps={'fresh': rc}, nearmiss_fresh=k1,
+                                nearmiss_scan=k2, ok=rc == 0, pending=True)) + '\n')
+    return rc
+

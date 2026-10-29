@@ -34,7 +34,7 @@ copying coordinates.  Store: runs/store.sqlite (env PK_STORE overrides).
   pk.py archive-dedupe [ROOT...] [--apply]  drop explorer archive files the store regenerates byte for byte
   pk.py archive-restore RUN...             write them back (reads do this per file automatically)
   pk.py dedupe N... [--apply --i-discussed-this]   conservative same-minimum dedupe (pk/ident.py); plan in runs/dedup/
-  pk.py ingest [--apply] [--since ISO] [--no-fresh]   sync-register + watch --apply + fresh.py since
+  pk.py ingest [--apply] [--since ISO] [--no-fresh | --fresh-later];  pk.py ingest --fresh-pending   sync-register + watch --apply + fresh.py since
                                            the last ingest -> near-miss queue (pk/ingest.py; dry run without --apply)
 """
 import argparse, glob, json, math, os, sys
@@ -138,6 +138,8 @@ def main():
     p = sp.add_parser('stages', help='every pk/stages.py stage: kind, parameter space, what it does'); p.add_argument('kind', nargs='?')
     p = sp.add_parser('ingest'); p.add_argument('--apply', action='store_true'); p.add_argument('--since')
     p.add_argument('--procs', type=int, default=16); p.add_argument('--no-fresh', action='store_true')
+    p.add_argument('--fresh-later', action='store_true', help='syncs now, fresh pass deferred (pk/ingest.py)')
+    p.add_argument('--fresh-pending', action='store_true', help='run the deferred fresh pass')
     p.add_argument('--nmax', type=int, default=324)
     a = ap.parse_args()
     spath = a.store or os.environ.get('PK_STORE') or os.path.join(HERE, 'runs', 'store.sqlite')
@@ -162,7 +164,10 @@ def main():
         return
     if a.cmd == 'ingest':
         from pk import ingest
-        ingest.run(store=a.store, apply=a.apply, since=a.since, procs=a.procs, fresh=not a.no_fresh, nmax=a.nmax)
+        if a.fresh_pending:
+            sys.exit(0 if not ingest.run_pending(store=a.store, procs=a.procs, nmax=a.nmax) else 1)
+        ingest.run(store=a.store, apply=a.apply, since=a.since, procs=a.procs, fresh=not a.no_fresh, nmax=a.nmax,
+                   later=a.fresh_later)
         return
     if a.cmd == 'finish' and a.dry_run:
         from pk import nearmiss
