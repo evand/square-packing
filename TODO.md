@@ -13,11 +13,14 @@ External posts: ask Evan explicitly per post.  **Before any bound-chasing run, c
 
 - [ ] **exact/descend.py is unusable at large n (10-27, Evan: why so slow; are we over-using a precision tool?).**  At n = 700 the first corner-corner MILP (HiGHS, every corner-corner contact a binary, solved to optimality) did not return in 28 min; candidate.py's 2 h descent cap hit for the same reason.  Measured on that packing: `polish` (SLP only) gains 1.75e-6 in 3 passes / ~150 CPU-s, then stalls; rounded relaxes (r0 0.05 .. 0.001, + polish) end 5e-7 .. 5e-6 worse, so no rounding for finishing.  The MILP's dS* (-3.7e-4) is a first-order rate, not an achievable gain.  Fix candidates: polish to convergence first (always), then a MILP restricted to contacts near the steepest region or a time-limited MILP (any improving direction suffices to kick, optimality is not needed); measure on the 700 and 509 candidates.
 
+- [ ] **Event loop claim time grows with the parent pool (10-28):** median claim + record 2.7 s at ~8.8k parents (window 1e-2, pool 8), worker utilisation 75 %.  `pk/events.py` options() scores every (parent, move) row per claim; pre-filter by a cheap bound (gap, tries) or cache options per condition before handing them to the scorer.
+
 ## Waiting on Evan
 - [ ] Review the Lean explainer (`notes/lean-explainer-draft.html`, artifact FJPhwWoQLhdkcerwh4VBwY) → site page.
 - [ ] Compute OKs: s(29) grade-C (`search/exact/homotopy/N29.md` §Pickup); 17 grade-C timeouts uncapped; regularize the 16 raw records; #279 replay (`tasks/s59-replay/`).
 - [ ] Decide: n = 88 strip-family test set (~16 CPU-h; TT2 is done, results not 110-shaped → drop?).
 - [ ] Posts: VibeMathed s(21), s(32), k²−3, k²−4 (`outreach/drafts-s21-s32.md`); variant lists to jlevy (after the write-up below).
+- [ ] Push local commit c6a821f7 (events: campaign setting `dedupe` for the start pool; default unchanged).
 - [ ] Time-lapse records video (`site/timelapse/`): Evan to return; store sighting times are local, not UTC.
 
 ## Watch
