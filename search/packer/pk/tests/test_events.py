@@ -4,6 +4,7 @@ claim balance across conditions, record (tries / wins, new parents, condition be
   python3 pk/tests/test_events.py
 """
 import math, os, random, sys, tempfile, time
+import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from pk import events as E
 
@@ -153,6 +154,38 @@ def test_open_space_and_chosen_params():
     print('open space / chosen params ok')
 
 
+def test_batch_queue():
+    """batch claims: one fill queues several distinct parents; pops need no rescoring; a once-move tried meanwhile is
+    skipped; a new condition best at n drops that n's queued entries"""
+    d = tempfile.mkdtemp()
+    db = E.connect(os.path.join(d, 'ev.sqlite'))
+    cfg = seed_db(db, campaign_file(d))
+    db.execute("UPDATE parent SET relaxed=1")
+    for pid, s in [(5, 9.951), (6, 9.952), (7, 9.953)]:
+        for cond in cfg['policies']:
+            db.execute('INSERT INTO parent VALUES (?,?,?,?,?,?,?,?,?,NULL)', ('tcamp', cond, pid, 100, s, 'V', time.time(), 0, 1))
+    calls = []
+    def counting(opts, ctx, rng):
+        calls.append(ctx['draws'])
+        return np.array([[1.0 + 0.01 * o['pid'] + 0.001 * k for k in range(ctx['draws'])] for o in opts])
+    E.SCORERS['counting'] = counting
+    cfg['policies'][:] = ['counting']; cfg['batch'] = 8; cfg['draws'] = 3; cfg['batch_per_n'] = 8
+    db.execute("INSERT INTO nbest SELECT campaign, 'counting', n, s0, s, t FROM nbest WHERE cond='rule'")
+    db.execute("INSERT INTO parent SELECT campaign, 'counting', pid, n, s, fam, t_in, fresh, relaxed, unit FROM parent WHERE cond='rule'")
+    rng = random.Random(0)
+    u1 = E.claim(db, 1, rng)
+    assert calls == [3], calls                                    # one scorer call, all draws at once
+    q = db.execute("SELECT pid FROM queue WHERE campaign='tcamp' AND cond='counting'").fetchall()
+    pids = [u1['pid']] + [r[0] for r in q]
+    assert len(pids) == len(set(pids)) == 6, pids                 # one entry per parent (parents 1, 4, 5, 6, 7; 4 at 101)
+    u2 = E.claim(db, 1, rng)
+    assert u2['pid'] != u1['pid'] and len(calls) == 1             # popped, not rescored
+    E.record(db, u2, dict(status='done', apps=[dict(s=9.9, cpu=1.0, win=1)], children=[(98, 100, 9.9, 'V')]), 1.0, 1.0)
+    assert not db.execute("SELECT 1 FROM queue WHERE cond='counting' AND (n0=100 OR n=100)").fetchone()   # dropped
+    cfg['policies'][:] = ['rule', 'uniform']; cfg['batch'] = 64; cfg['draws'] = 8
+    print('batch queue ok')
+
+
 def test_mixed_policy():
     rng = random.Random(0)
     assert {E.policy('rule+uniform', rng) for _ in range(50)} == {'rule', 'uniform'}
@@ -177,6 +210,7 @@ def test_stop_rule():
 
 if __name__ == '__main__':
     test_open_space_and_chosen_params()
+    test_batch_queue()
     test_mixed_policy()
     test_stop_rule()
     test_eligible()

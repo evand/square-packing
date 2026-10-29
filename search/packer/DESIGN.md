@@ -44,9 +44,12 @@ campaign YAML  targets (ns), w(n), moves (name -> chain, dn, once / relax / sour
                window, excluded parent families, unit CPU, budget, predictions (required)
 pool           per condition: the best distinct store packings within the window at every parent n, then every output
                of the condition's own units (a condition never sees another's outputs; frozen conditions add none)
-claim          one transaction, any worker: sources first (generator builds, refreshes), then relax-first (a parent
-               not yet relaxed offers only relax), else the option (parent, move, target n) with the largest sampled
-               utility x w(n) from the condition's scorer; targets must pass the grid-only rule
+claim          any worker: sources first (generator builds, refreshes), then the head of the condition's claim queue.
+               A refill (one worker at a time; scoring outside the write lock) queues relax options first (a parent
+               not yet relaxed offers only relax), else a batch of options (parent, move, target n) by sampled
+               utility x w(n), round-robin over several Thompson draws, one per parent; a new best at n drops that
+               n's entries.  Targets must pass the grid-only rule.  (10-29: per-claim rescoring of every option cost
+               2.8 s at 260k options; near-best options number in the thousands, so batches lose nothing.)
 run            the chain on the parent until the unit's CPU is spent; each application -> a move-log row (`expansion`,
                child = the stored output); outputs below the parent (same n) or within the window (cross n) -> store
 record         tries / wins per (parent, move), new parents, the condition's best per n (its score gain)
@@ -97,7 +100,7 @@ the pre-push hook enforces the names (`CLAUDE.md`, Public / private).
   (`pk/screen.py`) as sources; store imports (public drops) as events; above-grid parents / children at grid-only
   targets (today pools and children stop at s < k; Evan 10-27: later); a per-campaign intercept learned online if
   decisions across moves / sources need calibrated totals (scorer totals were off x2-6 per run; ranking within a run
-  is unaffected); claim cost ~130 ms at ~2k parents x moves x 6 settings (cache options per condition if it grows);
+  is unaffected); claim cost ~40 ms per pop plus one ~4 s refill per batch at ~260k options (10-29);
   a near-best diversity reward when there is a cheap measure (first try: the child's family / fingerprint is new in
   its condition's pool at n).
 - Closures as store hooks (drop-one and exact L-add derived packings queued when a new best enters).

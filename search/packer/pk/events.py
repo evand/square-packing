@@ -31,6 +31,11 @@ Campaign file (the pre-registration: `predictions` is required; the reading of t
     dedupe: 6                  # distinct = side rounded to this many decimals (4: near-copies of one basin merge)
     exclude: [G, D, S]         # parent families never used (regular packings: perturbing them does not work)
     unit_cpu: 30               # CPU-s per unit (a once-move runs once)
+    batch: 64                  # claims are queued in batches (10-29): one scoring pass fills up to `batch` entries,
+    draws: 8                   #   round-robin over `draws` Thompson draws by rank, one entry per parent and at most
+    batch_per_n: 8             #   batch_per_n per parent n; refilled at <= batch / 4 left or after batch_age s, and a
+    batch_age: 60              #   new condition best at n drops that n's entries.  Scorers see ctx['draws'] and may
+                               #   return a (options, draws) array (one feature pass for every draw)
     stop: {conds: [a, b], p: 0.95, min_cpu_h: 2}   # optional sequential stop rule (below)
 
 Sources (moves with `source: true`, chain starting with a gen stage): built once per (target n, generator version,
@@ -48,8 +53,8 @@ Rules, every claim:
     sides = the store best and the register at campaign start, then each condition's own bests.
   - a parent that is not relaxed offers only the campaign's relax move (marked `relax: true`), so every other move is
     credited against a relaxed parent; outputs of a chain ending in a relax stage enter relaxed.
-  - relax options go first (nearest the best first); otherwise the option with the largest sampled utility x w(n)
-    wins; scorers (SCORERS, by the condition name before '-'):
+  - relax options go first (nearest the best first); otherwise options are queued by sampled utility x w(n) (batch
+    above); scorers (SCORERS, by the condition name before '-'):
     uniform, rule (Evan's: near the best, few tries, not regular) and plugin models.  A scorer gets the option rows and
     returns sampled utilities (Thompson draws or a weighted race), so exploration lives in the scorer; it may instead
     return (utilities, settings): settings[i] = {stage: {param: value}} for option i, chosen from `open_space(chain)`
@@ -83,17 +88,23 @@ CREATE TABLE IF NOT EXISTS worker(id INTEGER PRIMARY KEY, pid INT, host TEXT, jo
   cpu REAL DEFAULT 0, unit_cpu REAL DEFAULT 0, idle_s REAL DEFAULT 0, claim_s REAL DEFAULT 0, record_s REAL DEFAULT 0,
   units INT DEFAULT 0, status TEXT);
 CREATE TABLE IF NOT EXISTS ctl(key TEXT PRIMARY KEY, value TEXT);
+CREATE TABLE IF NOT EXISTS queue(id INTEGER PRIMARY KEY, campaign TEXT, cond TEXT, pid INT, n0 INT, n INT, move TEXT,
+  util REAL, params TEXT, scorer TEXT, nopt INT, t REAL, UNIQUE(campaign, cond, pid, move));
+CREATE INDEX IF NOT EXISTS queue_c ON queue(campaign, cond, id);
 CREATE TABLE IF NOT EXISTS gen_done(campaign TEXT, move TEXT, n INT, version TEXT, variant INT, unit INT,
   PRIMARY KEY(campaign, move, n, version, variant));
 """
 DEFAULT = dict(weight={'default': 1.0}, moves={}, policies=['rule', 'uniform'], frozen=[], window=2.0e-3, pool=8, dedupe=6,
-               exclude=['G', 'D', 'S'], unit_cpu=30.0, recent_h=2.0, fq_timeout=300, stop=None)
+               exclude=['G', 'D', 'S'], unit_cpu=30.0, recent_h=2.0, fq_timeout=300, stop=None,
+               batch=64, draws=8, batch_per_n=8, batch_age=60.0)
 STOP_EVERY = 60.0                               # s between checks of a campaign's stop rule
 LEASE = 10.0                                   # x unit_cpu (min 600 s): past it, a running unit's worker is lost
 STALE = 300.0                                  # s: a worker not seen for this long counts as down
 FAIL_RUN = 3                                   # a unit stops after this many failed applications in a row
 SOURCE = '_source'                             # the cond of source / refresh units (shared by every condition)
 REFRESH_GAP = 30.0                             # s between stale() checks of a source's inputs
+FILL_LEASE = 120.0                             # s: a claimed queue refill not finished by then may be taken over
+FILL_WAIT = 30.0                               # s a claim waits on an empty queue that another worker is filling
 
 
 from .families import kgrid  # noqa: E402
@@ -529,77 +540,189 @@ def _open_campaigns(db, wid, rng, now, t0):
         raise
 
 
-def _pick(db, live, rng, now):
-    """read transaction (no write lock: scoring is the slow part of a claim and other workers keep claiming meanwhile):
-    the first condition with options, in spent-CPU order -> (name, cfg, cond, option, utility, params, scorer, #options) or None"""
+def _jsonable(x):
+    return x.item() if hasattr(x, 'item') else str(x)
+
+
+def _draw_columns(opts, cfg, cond, name, db, now, rng):
+    """scored utilities for the options: [(utilities, chosen settings or None, scorer name)] per Thompson draw.
+    The scorer gets ctx['draws'] = D and may return a (len(opts), D) array (and settings as D lists): one feature pass
+    for every draw; a scorer returning one column is called D times"""
+    D = max(1, int(cfg['draws']))
+    per = {m: c / a for m, c, a in db.execute('SELECT move, SUM(cpu), SUM(apps) FROM unit WHERE campaign=? '
+                                              'AND apps>0 GROUP BY move', (name,))}
+    w = np.array([weight(cfg, o['n']) for o in opts])
+    cols = []
+    while len(cols) < D:
+        sc = policy(cond, rng)
+        r = SCORERS[sc](opts, dict(cfg=cfg, cond=cond, now=now, cpu=per, draws=D - len(cols)), rng)
+        u, ch = r if isinstance(r, tuple) else (r, None)
+        u = np.asarray(u, float)
+        if u.ndim == 1:
+            cols.append((u * w, ch, sc))
+        else:
+            for d in range(u.shape[1]):
+                cols.append((u[:, d] * w, ch[d] if ch is not None else None, sc))
+    return cols[:D]
+
+
+def _fill(db, name, cfg, cond, rng, now):
+    """refill the condition's claim queue (Evan 10-29: near-best options are plentiful, so pick in batches): options and
+    scores in a read transaction (no write lock), then the queue replaced in one short write.  Relax options first
+    (nearest the best first, as before); else round-robin over D Thompson draws by rank, at most one entry per parent
+    and batch_per_n per parent n, up to `batch` entries -> entries queued"""
+    B = max(1, int(cfg['batch'])); cap = max(1, int(cfg['batch_per_n']))
     db.execute('BEGIN')
     try:
-        for name, cfg, sp in live:
-            for cond in sorted(cfg['policies'], key=lambda c: (sp.get(c, 0.0), rng.random())):
-                opts = options(db, cfg, cond, now)
-                if not opts:
-                    continue
-                rel = [j for j, o in enumerate(opts) if cfg['moves'][o['move']]['relax']]
-                chosen, sc = None, None
-                if rel:                                   # relax first (every policy): cheap, and every later move is
-                    i = min(rel, key=lambda j: opts[j]['gap'])          # credited against a relaxed parent
-                    ui = math.inf
-                else:
-                    per = {m: c / a for m, c, a in db.execute('SELECT move, SUM(cpu), SUM(apps) FROM unit WHERE campaign=? '
-                                                              'AND apps>0 GROUP BY move', (name,))}
-                    sc = policy(cond, rng)
-                    u = SCORERS[sc](opts, dict(cfg=cfg, cond=cond, now=now, cpu=per), rng)
-                    if isinstance(u, tuple):              # (utilities, chosen parameter setting per option)
-                        u, chosen = u
-                    u = np.asarray(u, float) * np.array([weight(cfg, o['n']) for o in opts])
-                    i = int(np.argmax(u)); ui = float(u[i])
-                return name, cfg, cond, opts[i], ui, (chosen[i] if chosen is not None else None), sc, len(opts)
-        return None
+        opts = options(db, cfg, cond, now)
+        rows = []
+        rel = [j for j, o in enumerate(opts) if cfg['moves'][o['move']]['relax']]
+        if rel:
+            for j in sorted(rel, key=lambda j: opts[j]['gap'])[:B]:
+                rows.append((j, math.inf, None, None))
+        elif opts:
+            cols = _draw_columns(opts, cfg, cond, name, db, now, rng)
+            order = [np.argsort(-u, kind='stable') for u, _, _ in cols]
+            used, per_n = set(), {}
+            for r in range(len(opts)):
+                for d, (u, ch, sc) in enumerate(cols):
+                    if len(rows) >= B:
+                        break
+                    j = int(order[d][r]); o = opts[j]
+                    if o['pid'] in used or per_n.get(o['n0'], 0) >= cap or not u[j] > 0:
+                        continue
+                    used.add(o['pid']); per_n[o['n0']] = per_n.get(o['n0'], 0) + 1
+                    rows.append((j, float(u[j]), ch[j] if ch is not None else None, sc))
+                if len(rows) >= B:
+                    break
+            if not rows:                               # every utility <= 0: fall back to the first draw's argmax
+                u, ch, sc = cols[0]; j = int(np.argmax(u))
+                rows.append((j, float(u[j]), ch[j] if ch is not None else None, sc))
     finally:
         db.execute('COMMIT')
+    db.execute('BEGIN IMMEDIATE')
+    try:
+        db.execute('DELETE FROM queue WHERE campaign=? AND cond=?', (name, cond))
+        for j, ui, prm, sc in rows:
+            o = opts[j]
+            db.execute('INSERT OR IGNORE INTO queue(campaign, cond, pid, n0, n, move, util, params, scorer, nopt, t) '
+                       'VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+                       (name, cond, o['pid'], o['n0'], o['n'], o['move'], min(ui, 1e300),
+                        None if prm is None else json.dumps(prm, default=_jsonable), sc, len(opts), now))
+        db.execute('DELETE FROM ctl WHERE key=?', (f'fill:{name}:{cond}',))
+        db.execute('COMMIT')
+    except BaseException:
+        db.execute('ROLLBACK')
+        raise
+    return len(rows)
 
 
-def claim(db, wid, rng, now=None):
-    """the next unit for worker wid -> unit dict or None.  Three steps: a short write transaction (expiry, stop rules,
-    budgets, sources), the option scoring in a read transaction, then a short write transaction that takes the chosen
-    option.  Between the last two another worker may take the same option: harmless for repeatable moves (one more
-    try on that parent), so only a once-move already tried meanwhile, or a campaign closed meanwhile, starts over."""
-    now = time.time() if now is None else now
-    t0 = time.time()
-    for _ in range(4):
-        live = _open_campaigns(db, wid, rng, now, t0)
-        if isinstance(live, dict):
-            return live
-        if not live:
-            return None
-        p = _pick(db, live, rng, now)
-        if p is None:
-            return None
-        name, cfg, cond, o, ui, prm, sc, nopt = p
-        db.execute('BEGIN IMMEDIATE')
-        try:
-            uc, budget, status = db.execute('SELECT unit_cpu, budget_cpu_h, status FROM campaign WHERE name=?', (name,)).fetchone()
-            t = db.execute('SELECT tries FROM ptry WHERE campaign=? AND cond=? AND pid=? AND move=?',
-                           (name, cond, o['pid'], o['move'])).fetchone()
-            if status != 'active' or sum(spent(db, name).values()) + uc > 3600 * budget or \
-                    (cfg['moves'][o['move']]['once'] and t and t[0]):
-                db.execute('COMMIT')
+def _pop(db, wid, rng, name, cfg, cond, now, t0):
+    """one write transaction: take the queue head of (campaign, cond) as a unit -> (unit or None, refill due).  A
+    once-move tried since it was queued is dropped (another worker took it); refill is due when the queue is short
+    (<= batch / 4) or older than batch_age, and the caller then holds the refill lease"""
+    B = max(1, int(cfg['batch']))
+    db.execute('BEGIN IMMEDIATE')
+    try:
+        uc, budget, status = db.execute('SELECT unit_cpu, budget_cpu_h, status FROM campaign WHERE name=?', (name,)).fetchone()
+        if status != 'active' or sum(spent(db, name).values()) + uc > 3600 * budget:
+            db.execute('COMMIT')
+            return None, False
+        u = None
+        while True:
+            q = db.execute('SELECT id, pid, n0, n, move, util, params, scorer, nopt FROM queue WHERE campaign=? AND cond=? '
+                           'ORDER BY id LIMIT 1', (name, cond)).fetchone()
+            if q is None:
+                break
+            qid, pid, n0, n, mv, ui, prm, sc, nopt = q
+            db.execute('DELETE FROM queue WHERE id=?', (qid,))
+            if mv not in cfg['moves']:
                 continue
-            lease = now + max(600.0, LEASE * uc)
+            t = db.execute('SELECT tries FROM ptry WHERE campaign=? AND cond=? AND pid=? AND move=?', (name, cond, pid, mv)).fetchone()
+            if cfg['moves'][mv]['once'] and t and t[0]:
+                continue
+            s = db.execute('SELECT s FROM parent WHERE campaign=? AND cond=? AND pid=?', (name, cond, pid)).fetchone()
+            if s is None:
+                continue
             seed = rng.randrange(1 << 30)
             uid = db.execute('INSERT INTO unit(campaign, cond, pid, n0, n, move, worker, seed, status, lease_until, started, '
                              'util, options, claim_s) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
-                             (name, cond, o['pid'], o['n0'], o['n'], o['move'], wid, seed, 'running', lease, now,
-                              min(ui, 1e300), nopt, time.time() - t0)).lastrowid
+                             (name, cond, pid, n0, n, mv, wid, seed, 'running', now + max(600.0, LEASE * uc), now,
+                              ui, nopt, time.time() - t0)).lastrowid
             db.execute('INSERT INTO ptry VALUES (?,?,?,?,1,0) ON CONFLICT(campaign, cond, pid, move) DO UPDATE SET '
-                       'tries=tries+1', (name, cond, o['pid'], o['move']))
-            db.execute('COMMIT')
-        except BaseException:
-            db.execute('ROLLBACK')
-            raise
-        return dict(id=uid, campaign=name, cond=cond, seed=seed, cfg=cfg, params=prm, scorer=sc,
-                    **{k: o[k] for k in ('pid', 'n0', 'n', 'move', 's')})
+                       'tries=tries+1', (name, cond, pid, mv))
+            u = dict(id=uid, campaign=name, cond=cond, seed=seed, cfg=cfg, params=json.loads(prm) if prm else None,
+                     scorer=sc, pid=pid, n0=n0, n=n, move=mv, s=s[0])
+            break
+        left, oldest = db.execute('SELECT COUNT(*), MIN(t) FROM queue WHERE campaign=? AND cond=?', (name, cond)).fetchone()
+        due = u is None or left <= B // 4 or (oldest is not None and now - oldest > float(cfg['batch_age']))
+        if due and u is not None:                     # one refill at a time while the queue still serves claims
+            key = f'fill:{name}:{cond}'
+            r = db.execute('SELECT value FROM ctl WHERE key=?', (key,)).fetchone()
+            if r is not None and time.time() - float(r[0]) < FILL_LEASE:
+                due = False
+            else:
+                db.execute('INSERT OR REPLACE INTO ctl VALUES (?,?)', (key, str(time.time())))
+        db.execute('COMMIT')
+        return u, due
+    except BaseException:
+        db.execute('ROLLBACK')
+        raise
+
+
+def _take_lease(db, name, cond):
+    """the refill lease of (campaign, cond) in ctl -> True if this caller now holds it"""
+    key = f'fill:{name}:{cond}'; t = time.time()
+    db.execute('BEGIN IMMEDIATE')
+    try:
+        r = db.execute('SELECT value FROM ctl WHERE key=?', (key,)).fetchone()
+        ok = r is None or t - float(r[0]) >= FILL_LEASE
+        if ok:
+            db.execute('INSERT OR REPLACE INTO ctl VALUES (?,?)', (key, str(t)))
+        db.execute('COMMIT')
+        return ok
+    except BaseException:
+        db.execute('ROLLBACK')
+        raise
+
+
+def claim(db, wid, rng, now=None):
+    """the next unit for worker wid -> unit dict or None.  A short write transaction for expiry, stop rules, budgets
+    and sources; then the head of a condition's claim queue (conditions in spent-CPU order).  An empty queue is filled
+    first by the claiming worker; a short or old one is refilled by the worker that noticed, after taking its unit
+    (one refill at a time per condition: lease in ctl)."""
+    now = time.time() if now is None else now
+    t0 = time.time()
+    live = _open_campaigns(db, wid, rng, now, t0)
+    if isinstance(live, dict):
+        return live
+    for name, cfg, sp in live:
+        for cond in sorted(cfg['policies'], key=lambda c: (sp.get(c, 0.0), rng.random())):
+            u, due = _pop(db, wid, rng, name, cfg, cond, now, t0)
+            if u is None:
+                if not due:
+                    continue                            # campaign closed or over budget
+                w0 = time.time()                        # empty queue: one worker fills, the others wait for it
+                while not _take_lease(db, name, cond) and time.time() - w0 < FILL_WAIT:
+                    time.sleep(0.25)
+                    u, due = _pop(db, wid, rng, name, cfg, cond, now, t0)
+                    if u is not None or not due:
+                        break
+                if u is None and due:
+                    if not _fill(db, name, cfg, cond, rng, now):
+                        continue                        # no options for this condition
+                    u, due = _pop(db, wid, rng, name, cfg, cond, now, t0)
+                if u is None:
+                    continue
+            if due:
+                _fill(db, name, cfg, cond, rng, now)
+            return u
     return None
+
+
+def drop_queued(db, name, cond, n):
+    """queued entries whose parent or target is at n (its condition best moved: the gap features changed)"""
+    db.execute('DELETE FROM queue WHERE campaign=? AND cond=? AND (n0=? OR n=?)', (name, cond, n, n))
 
 
 # ------------------------------------------------------------------ run (in the worker)
@@ -729,6 +852,7 @@ def record(db, u, res, cpu_s, wall, now=None):
                 elif s < r[0]:
                     gain += (r[0] - s) / math.sqrt(n) if c == cond else 0.0
                     db.execute('UPDATE nbest SET s=?, t=? WHERE campaign=? AND cond=? AND n=?', (s, now, name, c, n))
+                    drop_queued(db, name, c, n)
         best = min([a['s'] for a in apps if a['s'] is not None], default=None)
         db.execute('UPDATE unit SET status=?, ended=?, cpu=?, wall=?, apps=?, wins=?, gain=?, best_s=?, info=? WHERE id=?',
                    (res.get('status', 'done'), now, cpu_s, wall, len(apps), wins, gain, best,
