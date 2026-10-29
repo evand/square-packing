@@ -33,8 +33,9 @@ Campaign file (the pre-registration: `predictions` is required; the reading of t
     unit_cpu: 30               # CPU-s per unit (a once-move runs once)
     batch: 64                  # claims are queued in batches (10-29): one scoring pass fills up to `batch` entries,
     draws: 8                   #   round-robin over `draws` Thompson draws by rank, one entry per parent and at most
-    batch_per_n: 8             #   batch_per_n per parent n; refilled at <= batch / 4 left or after batch_age s, and a
-    batch_age: 60              #   new condition best at n drops that n's entries.  Scorers see ctx['draws'] and may
+    batch_per_n: 8             #   batch_per_n per parent n; refilled at <= batch / 4 left or after batch_age s; a
+    batch_age: 300             #   new condition best at n drops that n's entries and triggers a full refill (at most
+    batch_gap: 10              #   one per batch_gap s; batch_age is a backstop).  Scorers see ctx['draws'] and may
                                #   return a (options, draws) array (one feature pass for every draw)
     stop: {conds: [a, b], p: 0.95, min_cpu_h: 2}   # optional sequential stop rule (below)
 
@@ -96,7 +97,7 @@ CREATE TABLE IF NOT EXISTS gen_done(campaign TEXT, move TEXT, n INT, version TEX
 """
 DEFAULT = dict(weight={'default': 1.0}, moves={}, policies=['rule', 'uniform'], frozen=[], window=2.0e-3, pool=8, dedupe=6,
                exclude=['G', 'D', 'S'], unit_cpu=30.0, recent_h=2.0, fq_timeout=300, stop=None,
-               batch=64, draws=8, batch_per_n=8, batch_age=60.0)
+               batch=64, draws=8, batch_per_n=8, batch_age=300.0, batch_gap=10.0)
 STOP_EVERY = 60.0                               # s between checks of a campaign's stop rule
 LEASE = 10.0                                   # x unit_cpu (min 600 s): past it, a running unit's worker is lost
 STALE = 300.0                                  # s: a worker not seen for this long counts as down
@@ -572,6 +573,7 @@ def _fill(db, name, cfg, cond, rng, now):
     (nearest the best first, as before); else round-robin over D Thompson draws by rank, at most one entry per parent
     and batch_per_n per parent n, up to `batch` entries -> entries queued"""
     B = max(1, int(cfg['batch'])); cap = max(1, int(cfg['batch_per_n']))
+    t_fill = time.time()                               # a new best after this moment keeps its refill flag
     db.execute('BEGIN')
     try:
         opts = options(db, cfg, cond, now)
@@ -610,6 +612,8 @@ def _fill(db, name, cfg, cond, rng, now):
                        (name, cond, o['pid'], o['n0'], o['n'], o['move'], min(ui, 1e300),
                         None if prm is None else json.dumps(prm, default=_jsonable), sc, len(opts), now))
         db.execute('DELETE FROM ctl WHERE key=?', (f'fill:{name}:{cond}',))
+        db.execute('INSERT OR REPLACE INTO ctl VALUES (?,?)', (f'filled:{name}:{cond}', str(t_fill)))
+        db.execute('DELETE FROM ctl WHERE key=? AND CAST(value AS REAL)<=?', (f'due:{name}:{cond}', t_fill))
         db.execute('COMMIT')
     except BaseException:
         db.execute('ROLLBACK')
@@ -620,7 +624,8 @@ def _fill(db, name, cfg, cond, rng, now):
 def _pop(db, wid, rng, name, cfg, cond, now, t0):
     """one write transaction: take the queue head of (campaign, cond) as a unit -> (unit or None, refill due).  A
     once-move tried since it was queued is dropped (another worker took it); refill is due when the queue is short
-    (<= batch / 4) or older than batch_age, and the caller then holds the refill lease"""
+    (<= batch / 4), older than batch_age (a backstop), or a condition best moved since the last fill (record() sets the
+    flag; at most one such refill per batch_gap s), and the caller then holds the refill lease"""
     B = max(1, int(cfg['batch']))
     db.execute('BEGIN IMMEDIATE')
     try:
@@ -656,6 +661,12 @@ def _pop(db, wid, rng, name, cfg, cond, now, t0):
             break
         left, oldest = db.execute('SELECT COUNT(*), MIN(t) FROM queue WHERE campaign=? AND cond=?', (name, cond)).fetchone()
         due = u is None or left <= B // 4 or (oldest is not None and now - oldest > float(cfg['batch_age']))
+        if not due:                                   # a new condition best since the last fill (coalesced: at most
+            ev = db.execute('SELECT value FROM ctl WHERE key=?', (f'due:{name}:{cond}',)).fetchone()   # one per batch_gap s)
+            if ev is not None:
+                f = db.execute('SELECT value FROM ctl WHERE key=?', (f'filled:{name}:{cond}',)).fetchone()
+                tf = float(f[0]) if f else 0.0
+                due = float(ev[0]) > tf and time.time() - tf >= float(cfg['batch_gap'])
         if due and u is not None:                     # one refill at a time while the queue still serves claims
             key = f'fill:{name}:{cond}'
             r = db.execute('SELECT value FROM ctl WHERE key=?', (key,)).fetchone()
@@ -853,6 +864,7 @@ def record(db, u, res, cpu_s, wall, now=None):
                     gain += (r[0] - s) / math.sqrt(n) if c == cond else 0.0
                     db.execute('UPDATE nbest SET s=?, t=? WHERE campaign=? AND cond=? AND n=?', (s, now, name, c, n))
                     drop_queued(db, name, c, n)
+                    db.execute('INSERT OR REPLACE INTO ctl VALUES (?,?)', (f'due:{name}:{c}', str(time.time())))
         best = min([a['s'] for a in apps if a['s'] is not None], default=None)
         db.execute('UPDATE unit SET status=?, ended=?, cpu=?, wall=?, apps=?, wins=?, gain=?, best_s=?, info=? WHERE id=?',
                    (res.get('status', 'done'), now, cpu_s, wall, len(apps), wins, gain, best,

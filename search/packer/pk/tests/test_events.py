@@ -161,15 +161,15 @@ def test_batch_queue():
     db = E.connect(os.path.join(d, 'ev.sqlite'))
     cfg = seed_db(db, campaign_file(d))
     db.execute("UPDATE parent SET relaxed=1")
-    for pid, s in [(5, 9.951), (6, 9.952), (7, 9.953)]:
+    for pid, n, s in [(5, 100, 9.951), (6, 100, 9.952), (7, 100, 9.953)] + [(p, 101, 10.6 + 1e-4 * p) for p in range(20, 40)]:
         for cond in cfg['policies']:
-            db.execute('INSERT INTO parent VALUES (?,?,?,?,?,?,?,?,?,NULL)', ('tcamp', cond, pid, 100, s, 'V', time.time(), 0, 1))
+            db.execute('INSERT INTO parent VALUES (?,?,?,?,?,?,?,?,?,NULL)', ('tcamp', cond, pid, n, s, 'V', time.time(), 0, 1))
     calls = []
     def counting(opts, ctx, rng):
         calls.append(ctx['draws'])
         return np.array([[1.0 + 0.01 * o['pid'] + 0.001 * k for k in range(ctx['draws'])] for o in opts])
     E.SCORERS['counting'] = counting
-    cfg['policies'][:] = ['counting']; cfg['batch'] = 8; cfg['draws'] = 3; cfg['batch_per_n'] = 8
+    cfg['policies'][:] = ['counting']; cfg['batch'] = 16; cfg['draws'] = 3; cfg['batch_per_n'] = 16; cfg['window'] = 1.0
     db.execute("INSERT INTO nbest SELECT campaign, 'counting', n, s0, s, t FROM nbest WHERE cond='rule'")
     db.execute("INSERT INTO parent SELECT campaign, 'counting', pid, n, s, fam, t_in, fresh, relaxed, unit FROM parent WHERE cond='rule'")
     rng = random.Random(0)
@@ -177,12 +177,23 @@ def test_batch_queue():
     assert calls == [3], calls                                    # one scorer call, all draws at once
     q = db.execute("SELECT pid FROM queue WHERE campaign='tcamp' AND cond='counting'").fetchall()
     pids = [u1['pid']] + [r[0] for r in q]
-    assert len(pids) == len(set(pids)) == 6, pids                 # one entry per parent (parents 1, 4, 5, 6, 7; 4 at 101)
+    assert len(pids) == len(set(pids)) == 16, pids                # one entry per parent
     u2 = E.claim(db, 1, rng)
     assert u2['pid'] != u1['pid'] and len(calls) == 1             # popped, not rescored
     E.record(db, u2, dict(status='done', apps=[dict(s=9.9, cpu=1.0, win=1)], children=[(98, 100, 9.9, 'V')]), 1.0, 1.0)
     assert not db.execute("SELECT 1 FROM queue WHERE cond='counting' AND (n0=100 OR n=100)").fetchone()   # dropped
-    cfg['policies'][:] = ['rule', 'uniform']; cfg['batch'] = 64; cfg['draws'] = 8
+    cfg['batch_gap'] = 1e6
+    E.claim(db, 1, rng); assert len(calls) == 1                   # new best, but within batch_gap of the last fill
+    cfg['batch_gap'] = 0.0
+    E.claim(db, 1, rng); assert len(calls) == 2, calls            # new best since the last fill -> refilled
+    E.claim(db, 1, rng); assert len(calls) == 2, calls            # flag cleared: no second refill
+    u = E.claim(db, 1, rng)
+    E.record(db, u, dict(status='done', apps=[dict(s=9.8, cpu=1.0, win=1)], children=[(97, 100, 9.8, 'V')]), 1.0, 1.0)
+    E.record(db, u, dict(status='done', apps=[dict(s=9.7, cpu=1.0, win=1)], children=[(96, 100, 9.7, 'V')]), 1.0, 1.0)
+    E.claim(db, 1, rng); E.claim(db, 1, rng)
+    assert len(calls) == 3, calls                                 # two bests in a row: one refill (coalesced)
+    cfg['policies'][:] = ['rule', 'uniform']; cfg['batch'] = 64; cfg['draws'] = 8; cfg['batch_gap'] = 10.0
+    cfg['batch_per_n'] = 8; cfg['window'] = 1.0e-3
     print('batch queue ok')
 
 
