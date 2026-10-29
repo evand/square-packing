@@ -381,10 +381,24 @@ def main():
         if out['live']['beaten']:
             sys.exit('not importing as a record candidate: beaten / tied (see the live check)')
         imp, status = (os.path.join(work, 'cand.exact.txt'), 'certified') if J else (fl, 'polished')
+        par = input_store_id(a.file)                          # 10-28: lineage (pk.py lineage) through the descended copy
         r = sh([sys.executable, os.path.join(HERE, 'pk.py'), 'import', imp, '--source', f'candidate:{a.name}',
-                '--finder', 'ours', '--status', status, '--kind', 'record-candidate'] + (['--ref', a.ref] if a.ref else []), cwd=HERE)
+                '--finder', 'ours', '--status', status, '--kind', 'record-candidate'] + (['--ref', a.ref] if a.ref else [])
+               + (['--parent', str(par)] if par else []), cwd=HERE)
         print('[10] store import: ' + (r.stdout.strip() or r.stderr.strip())[-300:])
 
+
+
+def input_store_id(path, tol=1e-12):
+    """store id of the candidate's input packing (same n, side to tol), or None"""
+    import sqlite3
+    from pk.packing import read
+    p = read(path)
+    st = os.environ.get('PK_STORE', os.path.join(HERE, 'runs', 'store.sqlite'))
+    db = sqlite3.connect(f'file:{st}?mode=ro', uri=True)
+    r = db.execute('SELECT id FROM packing WHERE n=? AND s BETWEEN ? AND ? ORDER BY ABS(s-?) LIMIT 1',
+                   (p.n, p.s - tol, p.s + tol, p.s)).fetchone()
+    return r[0] if r else None
 
 if __name__ == '__main__':
     main()

@@ -89,7 +89,9 @@ packings, those produced more, and a couple of generations on one was a new reco
   X's packing (#issue / register witness) as the start"), and any construction it keeps ("Y's two-wedge construction").
   Ancestors that were themselves found by others get named even when they are several steps back.
 * For a **refinement** of someone else's packing: they are the finder; ask to be listed as an improver.
-* Lineage must be traceable: cite the tool that traced it (`chain_lineage.py`, explorer logs) and make sure it is
+* Lineage must be traceable: `pk.py lineage ID` (10-28: every parent link kind, cross-n steps, the credit start =
+  nearest public ancestor found by someone else; hints where the recorded lineage ends).  Cite the tool that traced it
+  (`pk.py lineage`, `chain_lineage.py`, explorer logs) and make sure it is
   committed at the pin.
 * The regularized view's JSON `"by"` field names the **finder of that packing** (candidate.py writes it from the
   credit line since 10-20).  It is not a credit request.
@@ -159,7 +161,7 @@ a separate decision (TODO, next session).
 - [ ] Relationship terms come from the table above, with the numbers; no "refinement" unless same minimum.
 - [ ] If it is a new minimum but no square moves > 0.1, the draft says so explicitly.
 - [ ] Lineage framed as direct or hunt; for a hunt, the search effort leads.
-- [ ] Every start / ancestor named, with its source; lineage tool committed.
+- [ ] Every start / ancestor named, with its source (`pk.py lineage ID`: no INCOMPLETE line, or the gap stated in the draft); lineage tool committed.
 - [ ] Regularized view's `"by"` names the finder (check the staged `_regularized.json`).
 - [ ] Open questions from jlevy on earlier issues: answered or listed (`outreach/` drafts).
 

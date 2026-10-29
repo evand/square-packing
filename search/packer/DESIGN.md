@@ -9,7 +9,7 @@ a new campaign file.  There are no campaign scripts.
 
 | layer | where | what |
 |---|---|---|
-| store | `pk/store.py`, `pk.py` | every packing (dedupe, provenance, parent links, status).  Read with `pk.py get` / queries; write through `pk/sink.py`.  New near-record non-45-degree packings are re-quenched on entry (`pk/converge.py`). |
+| store | `pk/store.py`, `pk.py` | every packing (dedupe, provenance, parent links, status; every driver records parents: `parents.json`, `_p<id>_` file names, the move log, or `pk.py import --parent`; `pk.py lineage` reads them all).  Read with `pk.py get` / queries; write through `pk/sink.py`.  New near-record non-45-degree packings are re-quenched on entry (`pk/converge.py`). |
 | engine | `pk/engine.py` | `fq_quench(inp, QOpt)`: the one fq call path; `QOpt` = every fq flag |
 | registries | `pk/moves.py` (`@move`), `pk/fill.py` (`@placer`), `pk/schedules.py` (named QOpts) | building blocks with declared parameter spaces |
 | stages, chains | `pk/stages.py` | one contract over all registries; a chain is `a(k=v) \| b \| ...` |

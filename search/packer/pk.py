@@ -19,6 +19,9 @@ copying coordinates.  Store: runs/store.sqlite (env PK_STORE overrides).
   pk.py ls N [--below S] [--source PAT] [--tag T] [--nongrid] [--limit 20]
   pk.py get ID|best:N [--fmt ours|couzo|ellsworth|json] [-o FILE]    print / write a packing
   pk.py info ID                            row + sightings + parent chain
+  pk.py lineage ID|best:N [--json] [--no-donors]   parents through all three link kinds (packing.parent, move log,
+                                           file names), cross-n steps, missing run dirs, credit start (pk/lineage.py)
+  pk.py lineage --backfill [--apply]       copy move-log / file-name links into packing.parent where unset
   pk.py tag ID TAG... [--rm]
   pk.py export N... --dir D [--source PAT]   best packing per n -> n-<n>.txt (inputs for legacy tools)
   pk.py nearmiss list [--thr 1e-3] [--per-n 2]   near misses a scan would queue + the queue (read-only; pk/nearmiss.py)
@@ -73,6 +76,7 @@ def main():
     p = sp.add_parser('import'); p.add_argument('paths', nargs='+'); p.add_argument('--source', required=True)
     p.add_argument('--finder'); p.add_argument('--ref'); p.add_argument('--status', default='raw')
     p.add_argument('--kind'); p.add_argument('--tol', type=float, default=1e-9)
+    p.add_argument('--parent', type=int, help='store id of the packing these were made from (lineage)')
     p = sp.add_parser('relink', help='backfill parent links from <dir>/parents.json (pk/sources.relink)'); p.add_argument('dirs', nargs='+'); p.add_argument('--source')
     p = sp.add_parser('import-run'); p.add_argument('runs', nargs='+'); p.add_argument('--below', type=float)
     p.add_argument('--below-k', action='store_true', help='only entries below ceil(sqrt n)')
@@ -86,6 +90,9 @@ def main():
     p = sp.add_parser('get'); p.add_argument('ref'); p.add_argument('--fmt', default='ours'); p.add_argument('-o')
     p.add_argument('--source')
     p = sp.add_parser('info'); p.add_argument('ref')
+    p = sp.add_parser('lineage', help='lineage for credit: every parent link kind, cross-n steps, credit start (pk/lineage.py)')
+    p.add_argument('ref', nargs='?'); p.add_argument('--json', action='store_true'); p.add_argument('--depth', type=int, default=200)
+    p.add_argument('--no-donors', action='store_true'); p.add_argument('--backfill', action='store_true'); p.add_argument('--apply', action='store_true')
     p = sp.add_parser('tag'); p.add_argument('id', type=int); p.add_argument('tags', nargs='+'); p.add_argument('--rm', action='store_true')
     p = sp.add_parser('export'); p.add_argument('ns', nargs='+', type=int); p.add_argument('--dir', required=True)
     p.add_argument('--source'); p.add_argument('--fmt', default='ours')
@@ -240,7 +247,7 @@ def main():
         from pk import watch
         watch.run(st, apply=a.apply, max_commits=a.max_commits)
     elif a.cmd == 'import':
-        print(sources.import_paths(st, a.paths, a.source, a.finder, a.ref, a.kind, a.status, tol=a.tol))
+        print(sources.import_paths(st, a.paths, a.source, a.finder, a.ref, a.kind, a.status, tol=a.tol, parent=a.parent))
     elif a.cmd == 'relink':
         for d in a.dirs:
             print(d, sources.relink(st, d, a.source))
@@ -295,6 +302,17 @@ def main():
             chain.append(f'{r["id"]}({r["s"]:.9f})'); q = r['parent']
         if chain:
             print('   parents:', ' <- '.join(chain))
+    elif a.cmd == 'lineage':
+        from pk import lineage as LG
+        if a.backfill:
+            LG.backfill(st, apply=a.apply)
+        else:
+            steps = LG.walk(st.db, resolve(st, a.ref).meta['id'], depth=a.depth)
+            if a.json:
+                near, pubs = LG.credit(steps)
+                print(json.dumps(dict(steps=steps, credit_start=near and near['id'], public=[s['id'] for s in pubs]), indent=1))
+            else:
+                print(LG.fmt(st.db, steps, with_donors=not a.no_donors))
     elif a.cmd == 'tag':
         st.tag(a.id, *([] if a.rm else a.tags), remove=a.tags if a.rm else ())
     elif a.cmd == 'export':

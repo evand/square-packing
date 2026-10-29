@@ -4,7 +4,7 @@
 pk/github.py); their files come in through import_paths here (strict parse for untrusted files).
 """
 from __future__ import annotations
-import collections, glob, json, os, re, subprocess
+import collections, glob, json, os, re, subprocess, sys
 import yaml
 from .packing import Packing, read, side_val
 from .store import Store
@@ -17,6 +17,7 @@ SKIP_RE = re.compile(r'parents\.json|check|output|cert50|summary|SOURCES|README|
 
 
 _PAR = {}
+_PREF = re.compile(r'(?:^|_)p(\d+)_')        # same pattern as pk/lineage.PREF
 
 
 def _parents(d):
@@ -53,11 +54,14 @@ def relink(st: Store, d, source=None, batch=200):
 
 
 def import_paths(st: Store, paths, source, finder=None, ref=None, kind=None, status='raw', ns=None, tol=1e-9,
-                 quiet=False, strict=False, collect=None, skip_path=None):
+                 quiet=False, strict=False, collect=None, skip_path=None, parent=None):
     """Every recognisable packing file under paths -> store.  Returns counts.  strict: untrusted files (pk.packing
     strict parse + validate, size cap MAX_MEMBER).  collect: list to append (path, n, s, id, new) to.  skip_path: regex;
-    files whose path (below the given dir) matches are ignored."""
+    files whose path (below the given dir) matches are ignored.  Parent of each file (lineage, 10-28): `parent` if given,
+    else <dir>/parents.json, else (trusted files only) a basename holding `_p<id>_` (pk/lineage.PREF).  New rows from a
+    run: source with no parent are counted ('noparent') and reported: their lineage will dead-end (pk.py lineage)."""
     c = dict(seen=0, new=0, dup=0, infeasible=0, unreadable=0)
+    nopar = 0
     files = []
     for p in paths:
         if os.path.isfile(p):
@@ -78,7 +82,11 @@ def import_paths(st: Store, paths, source, finder=None, ref=None, kind=None, sta
         if pk is None or pk.n == 0 or (ns and pk.n not in ns):
             continue
         c['seen'] += 1
-        par = _parents(os.path.dirname(f)).get(b)                # 10-24: <dir>/parents.json {file: parent id} (lineage)
+        par = parent if parent is not None else _parents(os.path.dirname(f)).get(b)   # 10-24: <dir>/parents.json
+        if par is None and not strict:                           # 10-28: drivers that name outputs after their parent
+            m = _PREF.search(b)
+            if m and st.db.execute('SELECT 1 FROM packing WHERE id=?', (int(m.group(1)),)).fetchone():
+                par = int(m.group(1))
         pid, new = st.add(pk, source, finder, ref or f, kind, status=status, tol=tol, commit=False, parent=par)
         if not new and par is not None:
             st.db.execute('UPDATE packing SET parent=? WHERE id=? AND parent IS NULL AND id != ?', (par, pid, par))
@@ -87,9 +95,16 @@ def import_paths(st: Store, paths, source, finder=None, ref=None, kind=None, sta
             c['infeasible'] += 1
             if not quiet and new: print(f'  infeasible n={pk.n} s={pk.s:.12f} {f}')
         c['new' if new else 'dup'] += 1
+        if new and par is None and source.startswith('run:'):
+            nopar += 1
         if collect is not None:
             collect.append((f, pk.n, pk.s, pid, new))
     st.db.commit()
+    if nopar:
+        c['noparent'] = nopar
+        if not quiet:
+            print(f'  {nopar} new packings from {source} have no parent (no parents.json entry or _p<id>_ name): '
+                  'their lineage ends here; record parents in the driver', file=sys.stderr)
     return c
 
 
