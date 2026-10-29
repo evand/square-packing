@@ -133,12 +133,19 @@ class Store:
             grid = pre['grid'] if 'grid' in pre else p.grid_lines()
             if grid and st != 'infeasible' and pen is not None and float(p.s) < p.k - 1e-9:
                 grid = 0      # 10-27: a real forcing line would mean overlap; near-axis (< 1 deg) chains false-positive
-            cur = self.db.execute(
-                'INSERT INTO packing(hash,n,s,s_str,coords,status,s_exact,fp,ntilted,grid,pen,parent,tags,added) '
-                'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
-                (h, p.n, float(p.s), p.s_str, p.sq.astype('<f8').tobytes(), st, s_exact, fp,
-                 pre.get('ntilted', p.ntilted()) if 'ntilted' in pre else p.ntilted(),
-                 grid, pen, parent, json.dumps(sorted(set(tags))), now()))
+            try:
+                cur = self.db.execute(
+                    'INSERT INTO packing(hash,n,s,s_str,coords,status,s_exact,fp,ntilted,grid,pen,parent,tags,added) '
+                    'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                    (h, p.n, float(p.s), p.s_str, p.sq.astype('<f8').tobytes(), st, s_exact, fp,
+                     pre.get('ntilted', p.ntilted()) if 'ntilted' in pre else p.ntilted(),
+                     grid, pen, parent, json.dumps(sorted(set(tags))), now()))
+            except sqlite3.IntegrityError:               # another process stored the same packing since the SELECT
+                row = self.db.execute('SELECT id, status, tags FROM packing WHERE hash=?', (h,)).fetchone()
+                if row is None:
+                    raise
+                created = False
+        if created:
             pid = cur.lastrowid
             if os.environ.get('PK_NO_CREDIT') is None:            # 10-24: online lineage credit (pk/credit.py)
                 from . import credit
