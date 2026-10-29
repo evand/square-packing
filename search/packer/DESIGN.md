@@ -55,6 +55,9 @@ run            the chain on the parent until the unit's CPU is spent; each appli
 record         tries / wins per (parent, move), new parents, the condition's best per n (its score gain)
 ```
 
+Unit structure (CLAIMS C54, untested): a chain is one structural step plus the minimum repair that makes its output
+store-ready ([fill] + relax); everything else composes through the store, where the scorer allocates and selection acts.
+
 Grid-only rule (Evan 10-27): in triangle row k (k = ceil sqrt n, c = k^2 - n) only the first grid-only entry is a
 target, and only once row k - 1 has that c; deeper entries are never easier (monotonicity).  Scorers (`events.SCORERS`,
 by the condition name before '-'): `uniform`, `rule` (near the best, few tries; regular families are never parents),
