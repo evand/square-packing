@@ -483,13 +483,13 @@ def _source_option(db, cfg, now):
     return None
 
 
-def claim(db, wid, rng, now=None):
-    """one transaction: the next unit for worker wid -> unit dict or None"""
-    now = time.time() if now is None else now
-    t0 = time.time()
+def _open_campaigns(db, wid, rng, now, t0):
+    """write transaction 1 (short): expire lost units, apply stop rules and budgets, claim a due source unit ->
+    the source unit dict, or [(name, cfg, spent)] of the campaigns with scored options to look at"""
     db.execute('BEGIN IMMEDIATE')
     try:
         expire(db, now)
+        live = []
         for (name, uc, budget) in db.execute("SELECT name, unit_cpu, budget_cpu_h FROM campaign WHERE status='active' "
                                              "ORDER BY added").fetchall():
             cfg = load(db.execute('SELECT path FROM campaign WHERE name=?', (name,)).fetchone()[0])
@@ -515,15 +515,29 @@ def claim(db, wid, rng, now=None):
                     db.execute('INSERT OR IGNORE INTO gen_done VALUES (?,?,?,?,?,?)', (name, o['move'], o['n'], o['version'], o['variant'], uid))
                 db.execute('COMMIT')
                 return dict(id=uid, campaign=name, cond=SOURCE, seed=uid, cfg=cfg, pid=None, n0=None, s=None, **o)
+            live.append((name, cfg, sp))
+        db.execute('COMMIT')
+        return live
+    except BaseException:
+        db.execute('ROLLBACK')
+        raise
+
+
+def _pick(db, live, rng, now):
+    """read transaction (no write lock: scoring is the slow part of a claim and other workers keep claiming meanwhile):
+    the first condition with options, in spent-CPU order -> (name, cfg, cond, option, utility, params, scorer, #options) or None"""
+    db.execute('BEGIN')
+    try:
+        for name, cfg, sp in live:
             for cond in sorted(cfg['policies'], key=lambda c: (sp.get(c, 0.0), rng.random())):
                 opts = options(db, cfg, cond, now)
                 if not opts:
                     continue
                 rel = [j for j, o in enumerate(opts) if cfg['moves'][o['move']]['relax']]
-                chosen = None
+                chosen, sc = None, None
                 if rel:                                   # relax first (every policy): cheap, and every later move is
                     i = min(rel, key=lambda j: opts[j]['gap'])          # credited against a relaxed parent
-                    u = np.zeros(len(opts)); u[i] = math.inf
+                    ui = math.inf
                 else:
                     per = {m: c / a for m, c, a in db.execute('SELECT move, SUM(cpu), SUM(apps) FROM unit WHERE campaign=? '
                                                               'AND apps>0 GROUP BY move', (name,))}
@@ -532,25 +546,54 @@ def claim(db, wid, rng, now=None):
                     if isinstance(u, tuple):              # (utilities, chosen parameter setting per option)
                         u, chosen = u
                     u = np.asarray(u, float) * np.array([weight(cfg, o['n']) for o in opts])
-                    i = int(np.argmax(u))
-                o = opts[i]
-                prm = chosen[i] if (not rel and chosen is not None) else None
-                lease = now + max(600.0, LEASE * uc)
-                seed = rng.randrange(1 << 30)
-                uid = db.execute('INSERT INTO unit(campaign, cond, pid, n0, n, move, worker, seed, status, lease_until, started, '
-                                 'util, options, claim_s) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
-                                 (name, cond, o['pid'], o['n0'], o['n'], o['move'], wid, seed, 'running', lease, now,
-                                  float(min(u[i], 1e300)), len(opts), time.time() - t0)).lastrowid
-                db.execute('INSERT INTO ptry VALUES (?,?,?,?,1,0) ON CONFLICT(campaign, cond, pid, move) DO UPDATE SET '
-                           'tries=tries+1', (name, cond, o['pid'], o['move']))
-                db.execute('COMMIT')
-                return dict(id=uid, campaign=name, cond=cond, seed=seed, cfg=cfg, params=prm, scorer=None if rel else sc,
-                            **{k: o[k] for k in ('pid', 'n0', 'n', 'move', 's')})
-        db.execute('COMMIT')
+                    i = int(np.argmax(u)); ui = float(u[i])
+                return name, cfg, cond, opts[i], ui, (chosen[i] if chosen is not None else None), sc, len(opts)
         return None
-    except BaseException:
-        db.execute('ROLLBACK')
-        raise
+    finally:
+        db.execute('COMMIT')
+
+
+def claim(db, wid, rng, now=None):
+    """the next unit for worker wid -> unit dict or None.  Three steps: a short write transaction (expiry, stop rules,
+    budgets, sources), the option scoring in a read transaction, then a short write transaction that takes the chosen
+    option.  Between the last two another worker may take the same option: harmless for repeatable moves (one more
+    try on that parent), so only a once-move already tried meanwhile, or a campaign closed meanwhile, starts over."""
+    now = time.time() if now is None else now
+    t0 = time.time()
+    for _ in range(4):
+        live = _open_campaigns(db, wid, rng, now, t0)
+        if isinstance(live, dict):
+            return live
+        if not live:
+            return None
+        p = _pick(db, live, rng, now)
+        if p is None:
+            return None
+        name, cfg, cond, o, ui, prm, sc, nopt = p
+        db.execute('BEGIN IMMEDIATE')
+        try:
+            uc, budget, status = db.execute('SELECT unit_cpu, budget_cpu_h, status FROM campaign WHERE name=?', (name,)).fetchone()
+            t = db.execute('SELECT tries FROM ptry WHERE campaign=? AND cond=? AND pid=? AND move=?',
+                           (name, cond, o['pid'], o['move'])).fetchone()
+            if status != 'active' or sum(spent(db, name).values()) + uc > 3600 * budget or \
+                    (cfg['moves'][o['move']]['once'] and t and t[0]):
+                db.execute('COMMIT')
+                continue
+            lease = now + max(600.0, LEASE * uc)
+            seed = rng.randrange(1 << 30)
+            uid = db.execute('INSERT INTO unit(campaign, cond, pid, n0, n, move, worker, seed, status, lease_until, started, '
+                             'util, options, claim_s) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                             (name, cond, o['pid'], o['n0'], o['n'], o['move'], wid, seed, 'running', lease, now,
+                              min(ui, 1e300), nopt, time.time() - t0)).lastrowid
+            db.execute('INSERT INTO ptry VALUES (?,?,?,?,1,0) ON CONFLICT(campaign, cond, pid, move) DO UPDATE SET '
+                       'tries=tries+1', (name, cond, o['pid'], o['move']))
+            db.execute('COMMIT')
+        except BaseException:
+            db.execute('ROLLBACK')
+            raise
+        return dict(id=uid, campaign=name, cond=cond, seed=seed, cfg=cfg, params=prm, scorer=sc,
+                    **{k: o[k] for k in ('pid', 'n0', 'n', 'move', 's')})
+    return None
 
 
 # ------------------------------------------------------------------ run (in the worker)
