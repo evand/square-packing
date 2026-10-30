@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS gen_done(campaign TEXT, move TEXT, n INT, version TEX
   PRIMARY KEY(campaign, move, n, version, variant));
 """
 DEFAULT = dict(weight={'default': 1.0}, moves={}, policies=['rule', 'uniform'], frozen=[], window=2.0e-3, pool=8, dedupe=6,
-               exclude=['G', 'D', 'S'], unit_cpu=30.0, recent_h=2.0, fq_timeout=300, stop=None,
+               exclude=['G', 'D', 'S'], unit_cpu=30.0, recent_h=2.0, fq_timeout=300, stop=None, parents=None,
                batch=64, draws=8, batch_per_n=8, batch_age=300.0, batch_gap=10.0)
 STOP_EVERY = 60.0                               # s between checks of a campaign's stop rule
 LEASE = 10.0                                   # x unit_cpu (min 600 s): past it, a running unit's worker is lost
@@ -290,7 +290,14 @@ def add(db, spec):
             if r:
                 since[n] = r[1]                      # when the store best at n arrived (its last improvement)
         rows = []
-        for n in parent_ns(cfg):
+        if cfg['parents']:                           # explicit start parents (store ids) instead of the nearest pools
+            ids = [int(i) for i in cfg['parents']]
+            pn = set(parent_ns(cfg))
+            for i, n, s, fam in st.execute(f"SELECT id, n, s, family FROM packing WHERE id IN ({','.join('?' * len(ids))}) "
+                                           f"AND {FEAS}", ids):
+                if n in pn and n not in have:
+                    rows.append((n, i, s, fam))
+        for n in ([] if cfg['parents'] else parent_ns(cfg)):
             if n < 2 or n in have:                  # an edited campaign file: only the new parent n get pools
                 continue
             for i, s, _, fam in F.near(st, n, kgrid(n) - 1e-9, cfg['exclude'], cfg['pool'], dedupe=cfg['dedupe'],

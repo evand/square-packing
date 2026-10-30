@@ -44,6 +44,8 @@ campaign YAML  targets (ns), w(n), moves (name -> chain, dn, once / relax / sour
                window, excluded parent families, unit CPU, budget, predictions (required)
 pool           per condition: the best distinct store packings within the window at every parent n, then every output
                of the condition's own units (a condition never sees another's outputs; frozen conditions add none)
+               (`parents: [store ids]`: those packings are the start pools instead, e.g. outputs of one move, to test
+               what follows them without the scorer's selection; they still need to be within the window)
 claim          any worker: sources first (generator builds, refreshes), then the head of the condition's claim queue.
                A refill (one worker at a time; scoring outside the write lock) queues relax options first (a parent
                not yet relaxed offers only relax), else a batch of options (parent, move, target n) by sampled
