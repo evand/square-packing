@@ -4,8 +4,11 @@ shade = full-side contacts).  Grid cells (best side >= k, or no store packing) a
 squares.  Writes OUT (full size) and OUT with '-small' (downscaled to --small px wide).
 
   python3 triangle1000.py [--nmax 1000] [--cell 96] [--out runs/kaggle/triangle1000.png] [--procs 15]
+                          [--title TEXT] [--frames FILE]
+--frames: JSON {n: "#rrggbb"}, a coloured frame around those cells.  --cell 192 at n <= 1024 is ~14k x 8k px.  The output
+holds every store best: treat it like the store (runs/ is not published).
 """
-import argparse, math, os, sqlite3, sys
+import argparse, json, math, os, sqlite3, sys
 from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
@@ -46,15 +49,19 @@ def main():
     ap.add_argument('--cell', type=int, default=96); ap.add_argument('--procs', type=int, default=15)
     ap.add_argument('--out', default=os.path.join(HERE, 'runs/kaggle/triangle1000.png'))
     ap.add_argument('--small', type=int, default=2400)
+    ap.add_argument('--title', default=''); ap.add_argument('--frames')
     A = ap.parse_args()
     rows = K(A.nmax); cell = A.cell; pitch = int(cell * 1.12); rpitch = int(cell * 1.22)
-    gapf = 0.45; mr, top, lab = 30, 30, max(9, cell // 7)
+    gapf = 0.45; mr, lab = 30, max(9, cell // 7); top = 30 + (cell if A.title else 0)
+    frames = {int(n): c for n, c in json.load(open(A.frames)).items()} if A.frames else {}
     W = int(mr * 2 + (2 * rows - 1 + gapf) * pitch); H = top + rows * rpitch + 20
     res = {}
     with ProcessPoolExecutor(A.procs) as ex:
         for n, b, g, s in ex.map(tile_job, [(n, cell) for n in range(1, A.nmax + 1)], chunksize=4):
             res[n] = (Image.frombytes('RGB', (cell, cell), b), g, s)
     im = Image.new('RGB', (W, H), render.BG); d = ImageDraw.Draw(im); f = render.font(lab)
+    if A.title:
+        d.text((mr, 30), A.title, fill=render.INK, font=render.font(cell // 2, True))
     for k in range(1, rows + 1):
         ns = [n for n in range((k - 1) ** 2 + 1, k * k + 1) if n <= A.nmax]
         g0 = next((m for m in ns if all(res[q][1] for q in ns if q >= m)), k * k + 1)
@@ -63,6 +70,9 @@ def main():
             x = int(W - mr - cell - c * pitch - (gapf * pitch if n < g0 else 0))
             y = top + (k - 1) * rpitch
             im.paste(res[n][0], (x, y))
+            if n in frames:
+                w = max(2, cell // 24)
+                d.rectangle([x - w, y - w, x + cell + w - 1, y + cell + w - 1], outline=frames[n], width=w)
             d.text((x, y + cell + 1), f'{n}', fill=render.MUTED, font=f)
     im.save(A.out)
     sm = im.resize((A.small, int(H * A.small / W)), Image.LANCZOS)
