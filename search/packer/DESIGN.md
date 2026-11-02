@@ -19,6 +19,29 @@ a new campaign file.  There are no campaign scripts.
 | follow-ups | `pk/react.py` | new store rows -> pool units (converge, near misses, plugin rules); `hold` for isolated experiments |
 | reports | `python3 -m pk.events report NAME`, `pk.py yield`, the plugin's status report | numbers from the store |
 
+
+## Compute (11-01)
+
+Three ways work runs; choose by shape, never by core count:
+
+| Work | How | Notes |
+|---|---|---|
+| Short, independent (10-60 s, a few minutes at most) | `pk/tasks.py add` / `repeat`, priority high, normal or low | No preemption: a slot frees about once a second under real units |
+| A script keeping state between tries | ordinary process (`jobs.py start` for a log) with `tasks.Executor` in place of `ProcessPoolExecutor` | The script sleeps; each call is a unit; its memory is lost if it dies, saved results are not |
+| Long and unsplittable, renders, anything else | `jobs.py start`, or just run it | Counts as outside load; the pool makes room within about 30 s |
+
+Event-loop campaigns: `pk/tasks.py repeat NAME --budget CPU_H --prio low -- python3 -m pk.events work --campaign NAME --max-units 3`.
+`--campaign` matters: without it a worker claims from every active campaign, and pool priority stops meaning anything.
+
+Follow-ups: `pk/react.py` reads new store rows once a minute and queues units from its rules (`@rule`; plugins add theirs).
+Results feed back as new rows.  `python3 -m pk.react hold` stops follow-ups for isolated experiments; rows arriving during
+a hold never get them.  `pk/tasks.py limit 0` drains the pool for timing runs.  Tools that write result files instead of
+store rows need `pk.py sink` afterwards: nothing imports them automatically now.
+
+Measured 11-01 on event-loop runs of 1.5 CPU-h: 15.85 cores in units (long-lived workers 16.00), CPU overhead 0.41 s per
+process; feedback from a new row to its converge child, median 1.0 min, p90 1.7 (the former job exit step: 32 min, 7 h).
+Open: whether the faster loop finds better packings is untested, and out of scope of that work.
+
 ## Stages
 
 A stage is `f(st: State, rng, ctx, **params) -> (State, info)` registered with a kind and a parameter space
