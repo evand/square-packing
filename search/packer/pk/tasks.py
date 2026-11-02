@@ -116,7 +116,7 @@ def _finish(db, uid, name, rc, cpu, wall):
     db.execute('UPDATE campaign SET cpu=cpu+?, wall=wall+?, max_wall=MAX(max_wall, ?), units=units+?, fails=fails+?, '
                'consec=CASE WHEN ? THEN consec+1 WHEN ? THEN consec ELSE 0 END, '
                'last_work=CASE WHEN ?=0 THEN ? ELSE last_work END, next_t=CASE WHEN ? THEN ? ELSE next_t END WHERE name=?',
-               (cpu, wall, wall, rc == 0, fail, fail, rc == EX_IDLE, rc, now, rc == EX_IDLE, now + BACKOFF, name))
+               (cpu, wall * (rc != EX_IDLE), wall, rc == 0, fail, fail, rc == EX_IDLE, rc, now, rc == EX_IDLE, now + BACKOFF, name))
     db.execute('UPDATE campaign SET next_t=?+every WHERE name=? AND every IS NOT NULL', (now, name))
     st, rep, budget, used, consec, last, every = db.execute('SELECT status, repeat, budget_h, cpu, consec, last_work, every '
                                                             'FROM campaign WHERE name=?', (name,)).fetchone()
