@@ -14,7 +14,8 @@ a new campaign file.  There are no campaign scripts.
 | registries | `pk/moves.py` (`@move`), `pk/fill.py` (`@placer`), `pk/schedules.py` (named QOpts) | building blocks with declared parameter spaces |
 | stages, chains | `pk/stages.py` | one contract over all registries; a chain is `a(k=v) \| b \| ...` |
 | events, scorers | `pk/events.py`, `<plugin>/goals/*.yaml` | the loop below |
-| jobs | `pk/jobs.py` | the only way compute starts; on exit every job runs sink, then converge |
+| pool | `pk/tasks.py` | short single-threaded units by priority: the default way compute starts |
+| jobs | `pk/jobs.py` | long runs that cannot be split; the pool counts them as outside load; on exit a job still runs sink, then converge |
 | reports | `python3 -m pk.events report NAME`, `pk.py yield`, the plugin's status report | numbers from the store |
 
 ## Stages

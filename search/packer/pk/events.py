@@ -9,7 +9,7 @@ of the best at their n become parents at once.  No dispatcher, no quantum, no dr
                                              again after editing it: new targets get pools, budget / unit edits apply
   python3 -m pk.events work --procs N [--max-idle S]
   python3 -m pk.events status | report CAMPAIGN | stop [CAMPAIGN] | resume
-Launch workers with jobs.py: `pk/jobs.py start ev --procs N -- python3 -m pk.events work --procs N`.
+Launch through the pool: `pk/tasks.py repeat NAME --budget CPU_H --prio low -- python3 -m pk.events work --max-units 3`.
 
 Campaign file (the pre-registration: `predictions` is required; the reading of the result goes under `result`):
   goal: NAME
@@ -885,19 +885,22 @@ def record(db, u, res, cpu_s, wall, now=None):
 
 # ------------------------------------------------------------------ workers
 
-def worker(i, path, max_idle, job):
-    """claim / run / record until the ctl stop flag, or `max_idle` seconds with nothing to do"""
+def worker(i, path, max_idle, job, max_units=None):
+    """claim / run / record until the ctl stop flag, `max_idle` seconds with nothing to do, or `max_units` units (for
+    the pool, pk/tasks.py: nothing to claim then ends at once) -> units run"""
     db = connect(path)
     rng = random.Random(os.getpid() * 1000003 + int(time.time() * 1000))
     wid = db.execute("INSERT INTO worker(pid, host, job, started, last_seen, status) VALUES (?,?,?,?,?,'up')",
                      (os.getpid(), socket.gethostname(), job, time.time(), time.time())).lastrowid
-    idle0 = None
+    idle0 = None; done = 0
     try:
-        while (db.execute("SELECT value FROM ctl WHERE key='stop'").fetchone() or ['0'])[0] != '1':
+        while (max_units is None or done < max_units) and (db.execute("SELECT value FROM ctl WHERE key='stop'").fetchone() or ['0'])[0] != '1':
             w = time.time()
             u = claim(db, wid, rng)
             cs = time.time() - w
             if u is None:
+                if max_units is not None:
+                    break
                 idle0 = idle0 or time.time()
                 if max_idle is not None and time.time() - idle0 > max_idle:
                     break
@@ -905,7 +908,7 @@ def worker(i, path, max_idle, job):
                 db.execute("UPDATE worker SET idle_s=idle_s+?, claim_s=claim_s+?, last_seen=?, cpu=?, status='up' WHERE id=?",
                            (time.time() - w - cs, cs, time.time(), cpu(), wid))
                 continue
-            idle0 = None
+            idle0 = None; done += 1
             c0, w0 = cpu(), time.time()
             try:
                 res = run_unit(u)
@@ -920,6 +923,7 @@ def worker(i, path, max_idle, job):
                        "last_seen=?, cpu=?, status='up' WHERE id=?", (c, cs, rs, time.time(), cpu(), wid))
     finally:
         db.execute("UPDATE worker SET status='down', last_seen=?, cpu=? WHERE id=?", (time.time(), cpu(), wid))
+    return done
 
 
 # ------------------------------------------------------------------ reports
@@ -980,6 +984,7 @@ def main(argv=None):
     sp = ap.add_subparsers(dest='cmd', required=True)
     p = sp.add_parser('add'); p.add_argument('campaign')
     p = sp.add_parser('work'); p.add_argument('--procs', type=int, default=1); p.add_argument('--max-idle', type=float)
+    p.add_argument('--max-units', type=int, help='for the pool: run this many units, exit 75 if there was nothing to do')
     sp.add_parser('status')
     p = sp.add_parser('report'); p.add_argument('campaign')
     p = sp.add_parser('stop'); p.add_argument('campaign', nargs='?')
@@ -992,6 +997,8 @@ def main(argv=None):
         print(f"{cfg['name']}: {len(cfg['ns'])} targets, {len(cfg['moves'])} moves, policies {cfg['policies']}, "
               f"{k} new start parents per condition, budget {cfg['budget_cpu_h']} CPU-h")
     elif a.cmd == 'work':
+        if a.max_units:                          # a pool unit must not clear a stop that someone set
+            sys.exit(0 if worker(0, DB, None, os.environ.get('PK_JOB_NAME'), a.max_units) else 75)
         db.execute("INSERT OR REPLACE INTO ctl VALUES ('stop', '0')")
         job = os.environ.get('PK_JOB_NAME')
         if a.procs == 1:
