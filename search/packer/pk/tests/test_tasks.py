@@ -3,7 +3,7 @@
 import os, sqlite3, subprocess, sys, tempfile, time
 
 TOOL = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'tasks.py')
-ENV = dict(os.environ, PK_TASKS=tempfile.mkdtemp(prefix='pktasks_'))
+ENV = dict(os.environ, PK_TASKS=tempfile.mkdtemp(prefix='pktasks_'), PK_TASKS_NO_OUTSIDE='1')
 
 
 def t(*args, check=True):
@@ -19,15 +19,24 @@ def order():
     return [l.split() for l in open(ENV['PK_TASKS'] + '/order')]
 
 
+def square(x):
+    return x * x
+
+
+def boom(_):
+    raise ValueError('boom')
+
+
+def die(_):
+    os._exit(9)
+
+
 def main():
-    t('limit', '2')
-    # a blocker fills both slots, so that everything below waits and then starts in priority order
-    subprocess.run([sys.executable, TOOL, 'add', 'block', '--file', '-'], env=ENV, input='sleep 1.5\nsleep 1.5\n', text=True,
-                   check=True, capture_output=True)
-    time.sleep(0.5)
+    t('limit', '0')                            # nothing starts until all three wait
     for c, prio in (('lo', 'low'), ('no', 'normal'), ('hi', 'high')):
         t('add', c, '--prio', prio, '--', *stamp(c))
-    for c in ('block', 'lo', 'no', 'hi'):
+    t('limit', '1')
+    for c in ('lo', 'no', 'hi'):
         assert t('wait', c).strip().endswith('done'), c
     got = [o[0] for o in order()]
     assert got == ['hi', 'no', 'lo'], got
@@ -52,6 +61,7 @@ def main():
     assert 'oops' in open(os.path.join(ENV['PK_TASKS'], 'bad', sorted(f for f in os.listdir(os.path.join(ENV['PK_TASKS'], 'bad'))
                                                                      if f.startswith('u'))[0])).read()
     assert 'paused' in t('ls')
+    t('add', 'bad', '--', 'true'); assert 'paused' in [l for l in t('ls').splitlines() if l.startswith('bad')][0]    # stays paused
     t('cancel', 'bad')
 
     # a command that cannot start is a failed unit, not a dead dispatcher
@@ -77,6 +87,22 @@ def main():
     subprocess.run([sys.executable, TOOL, 'add', 'burst', '--file', '-'], env=ENV, input='true\n' * 400, text=True, check=True, capture_output=True)
     assert t('wait', 'burst').strip().endswith('done')
     assert db.execute("SELECT units FROM campaign WHERE name='burst'").fetchone()[0] == 400
+
+    # Executor: a function of the calling script, a raised exception, a unit that dies
+    from importlib import import_module
+    sys.path.insert(0, os.path.join(os.path.dirname(TOOL), '..'))
+    os.environ.update(PK_TASKS=ENV['PK_TASKS'], PK_TASKS_NO_OUTSIDE='1')
+    tasks = import_module('pk.tasks')
+    with tasks.Executor('calls') as ex:
+        assert list(ex.map(square, [2, 3, 4])) == [4, 9, 16]
+        try:
+            ex.submit(boom, 1).result(60); raise SystemExit('no exception')
+        except ValueError as e:
+            assert 'boom' in str(e)
+        try:
+            ex.submit(die, 1).result(60); raise SystemExit('no exception')
+        except RuntimeError as e:
+            assert 'without a result' in str(e)
 
     # drain: limit 0 starts nothing
     t('limit', '0'); t('add', 'held', '--', 'true'); time.sleep(1.5)
