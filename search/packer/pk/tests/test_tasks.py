@@ -104,6 +104,25 @@ def main():
         except RuntimeError as e:
             assert 'without a result' in str(e)
 
+    # a unit that keeps dying pauses the campaign: waiting calls fail instead of hanging; a new run clears it; cancel clears it too
+    ex = tasks.Executor('crash')
+    fs = [ex.submit(die, 1) for _ in range(12)]
+    msgs = []
+    for f in fs:
+        try:
+            f.result(60); raise SystemExit('no exception')
+        except RuntimeError as e:
+            msgs.append(str(e))
+    assert any('paused' in m for m in msgs), msgs
+    ex.stop = True; ex.poller.join()
+    assert db.execute("SELECT status FROM campaign WHERE name='crash'").fetchone()[0] == 'paused'
+    with tasks.Executor('crash') as ex:
+        assert ex.submit(square, 5).result(60) == 25
+    t('add', 'crash2', '--', 'false')
+    for _ in range(6): t('add', 'crash2', '--', 'false')
+    assert t('wait', 'crash2', check=False).strip().endswith('paused')
+    t('cancel', 'crash2'); assert db.execute("SELECT status, consec FROM campaign WHERE name='crash2'").fetchone() == ('cancelled', 0)
+
     # drain: limit 0 starts nothing
     t('limit', '0'); t('add', 'held', '--', 'true'); time.sleep(1.5)
     assert ' 1 ' in [l for l in t('ls').splitlines() if l.startswith('held')][0]

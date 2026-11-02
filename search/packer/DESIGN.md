@@ -35,7 +35,7 @@ Event-loop campaigns: `pk/tasks.py repeat NAME --budget CPU_H --prio low -- pyth
 
 Follow-ups: `pk/react.py` reads new store rows once a minute and queues units from its rules (`@rule`; plugins add theirs).
 Results feed back as new rows.  `python3 -m pk.react hold` stops follow-ups for isolated experiments; rows arriving during
-a hold never get them.  `pk/tasks.py limit 0` drains the pool for timing runs.  Tools that write result files instead of
+a hold never get them.  `pk/tasks.py limit 0` drains the pool for timing runs.  A paused campaign (`FAIL_STOP` failures in a row) fails its `tasks.Executor` calls, so the script stops and says why; a new `Executor` on that name clears the pause, as does `cancel`; plain `add` warns and its units wait for `resume`.  Tools that write result files instead of
 store rows need `pk.py sink` afterwards: nothing imports them automatically now.
 
 Measured 11-01 on event-loop runs of 1.5 CPU-h: 15.85 cores in units (long-lived workers 16.00), CPU overhead 0.41 s per

@@ -223,6 +223,8 @@ def add(name, cmds, prio='normal', cwd=None):
     db.executemany("INSERT INTO unit(campaign, cmd, cwd, state) VALUES (?,?,?,'pending')",
                    [(name, json.dumps(c), cwd) for c in cmds])
     db.execute('COMMIT')
+    if db.execute("SELECT 1 FROM campaign WHERE name=? AND status='paused'", (name,)).fetchone():
+        print(f'tasks: campaign {name} is paused by failures; units wait until `tasks.py resume {name}`', file=sys.stderr, flush=True)
     ensure_dispatcher()
     return len(cmds)
 
@@ -248,7 +250,7 @@ def wait(name, poll=1.0):
 
 def cancel(name, kill=False):
     db = connect()
-    db.execute("UPDATE campaign SET status='cancelled' WHERE name=? AND status='active'", (name,))
+    db.execute("UPDATE campaign SET status='cancelled', consec=0 WHERE name=? AND status IN ('active', 'paused')", (name,))
     db.execute("DELETE FROM unit WHERE campaign=? AND state='pending'", (name,))
     if kill:
         for pid, in db.execute("SELECT pid FROM unit WHERE campaign=? AND state='running'", (name,)).fetchall():
@@ -289,6 +291,9 @@ class Executor:
         self.campaign, self.prio, self.calls = campaign, prio, {}
         self.dir = os.path.join(DIR, campaign, f'calls{os.getpid()}'); os.makedirs(self.dir, exist_ok=True)
         self.lock, self.seq, self.stop = threading.Lock(), 0, False
+        db = connect()                               # a new run is new code: a pause left by an earlier one does not bind it
+        if db.execute("UPDATE campaign SET status='active', consec=0, note=NULL WHERE name=? AND status='paused'", (campaign,)).rowcount:
+            print(f'tasks: campaign {campaign} was paused by an earlier run; resumed', file=sys.stderr, flush=True)
         self.poller = threading.Thread(target=self._poll, daemon=True); self.poller.start()
 
     def submit(self, fn, *args):
@@ -313,9 +318,12 @@ class Executor:
             with self.lock:
                 calls = list(self.calls.items())
             gone = calls and not db.execute('SELECT 1 FROM unit WHERE campaign=? LIMIT 1', (self.campaign,)).fetchone()
+            paused = calls and db.execute("SELECT note FROM campaign WHERE name=? AND status='paused'", (self.campaign,)).fetchone()
             for p, f in calls:
                 if os.path.exists(p + '.done'):
                     ok, v = pickle.load(open(p + '.done', 'rb'))
+                elif paused:                         # nothing more will run: fail now, so the script stops and says why
+                    ok, v = False, RuntimeError(f'campaign {self.campaign} paused: {paused[0]}')
                 elif gone:                           # its unit ended without a result (killed, cancelled)
                     ok, v = False, RuntimeError(f'unit of {p} ended without a result')
                 else:
