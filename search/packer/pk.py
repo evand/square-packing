@@ -110,7 +110,7 @@ def main():
     p.add_argument('--candidate', action='store_true', help='run candidate.py on items below the frontier (default: print)')
     p.add_argument('--dry-run', action='store_true', help='print the items and their bars (read-only)')
     p.add_argument('--out')
-    p = sp.add_parser('sink', help='import every run result under the intake policy, detect hits / near misses (pk/sink.py)')
+    p = sp.add_parser('sink', help='import result files of tools that do not write to the store (pk/sink.py); run it after them')
     p.add_argument('--runs', nargs='*'); p.add_argument('--dry-run', action='store_true'); p.add_argument('--procs', type=int, default=12)
     p.add_argument('--report', action='store_true', help='run dirs no adapter reads, by manifest name')
     p = sp.add_parser('credit', help='lineage credit audit: store-best gains paid up the ancestry (pk/credit.py)')
@@ -123,7 +123,8 @@ def main():
     p = sp.add_parser('converge', help='cheap re-quench of near-record, non-45-degree packings not yet converged (pk/converge.py)')
     p.add_argument('--ns', default='2-1000'); p.add_argument('--tol', type=float, default=0.01); p.add_argument('--cap', type=int, default=50)
     p.add_argument('--procs', type=int, default=8); p.add_argument('--dry-run', action='store_true')
-    p.add_argument('--since', help='only packings added at or after this ISO time (jobs.py passes the job start)')
+    p.add_argument('--since', help='only packings added at or after this ISO time')
+    p.add_argument('--ids', nargs='*', type=int, help='only these packings')
     p.add_argument('--mark', nargs='*', type=int, help='only tag these packing ids as already converged (backfill), run nothing')
     p = sp.add_parser('prune', help='store thinning per pk/policy.py (report only for now)')
     p.add_argument('--dry-run', action='store_true', required=True); p.add_argument('--policy')
@@ -220,7 +221,7 @@ def main():
             print(f'tagged {len(a.mark)} packings {converge.TAG}')
             return
         lo, hi = (int(x) for x in a.ns.split('-'))
-        converge.run(st, lo, hi, a.tol, a.cap, a.procs, a.dry_run, since=a.since)
+        converge.run(st, lo, hi, a.tol, a.cap, a.procs, a.dry_run, since=a.since, ids=a.ids)
         return
     if a.cmd == 'prune':
         from pk import policy, prune

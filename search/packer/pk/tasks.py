@@ -9,6 +9,7 @@ a new high-priority campaign takes each slot as a unit ends.
   python3 pk/tasks.py add CAMPAIGN [--prio high|normal|low] [--cwd DIR] -- CMD ARGS...    one unit
   python3 pk/tasks.py add CAMPAIGN [--prio ...] --file LINES                              one unit per line ('-': stdin)
   python3 pk/tasks.py repeat CAMPAIGN --budget CPU_H [--prio low] -- CMD ARGS...
+  python3 pk/tasks.py repeat CAMPAIGN --every SECONDS [--prio ...] -- CMD   one at a time, no budget, keeps the pool up
   python3 pk/tasks.py ls                                   campaigns, slots, load
   python3 pk/tasks.py wait CAMPAIGN                        until it ends (exit 1 if paused by failures)
   python3 pk/tasks.py cancel CAMPAIGN [--kill]             drop what is pending; --kill also ends running units
@@ -16,7 +17,7 @@ a new high-priority campaign takes each slot as a unit ends.
   python3 pk/tasks.py limit [N]                            slots (default 16); `limit 0` drains for timing runs
 
 Rules.  A unit starts while running units + outside load < limit.  Outside load = runnable threads (/proc/loadavg)
-minus running units, smoothed, ignored below NOISE: renders, long `jobs.py start` runs and everything else make the pool start fewer units.
+minus running units and NOISE, smoothed: renders, long `jobs.py start` runs and everything else make the pool start fewer units.
 Next unit: highest priority, then the campaign with the fewest running units, then fewest finished (equal priorities
 share evenly, also when slots free one at a time).
 A command exits 75 for "nothing to do now": its campaign backs off, and a repeat campaign ends after IDLE_END s of
@@ -39,12 +40,12 @@ EX_IDLE = 75             # EX_TEMPFAIL: "nothing to do right now"
 BACKOFF = 15.0           # s a campaign waits after an idle exit
 IDLE_END = 600.0         # s of only idle exits that end a repeat campaign
 FAIL_STOP = 5
-NOISE = 2                # outside load below this is ignored (desktop, a browser, monitoring): idle cores cost more
+NOISE = 2                # runnable threads above the units even with no outside work (units' helpers, desktop, monitoring)
 LINGER = 60.0            # s the dispatcher stays after the last unit
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS campaign(name TEXT PRIMARY KEY, prio INT, repeat TEXT, cwd TEXT, budget_h REAL, status TEXT,
   note TEXT, t0 REAL, next_t REAL DEFAULT 0, last_work REAL, units INT DEFAULT 0, fails INT DEFAULT 0,
-  consec INT DEFAULT 0, cpu REAL DEFAULT 0, wall REAL DEFAULT 0, max_wall REAL DEFAULT 0);
+  consec INT DEFAULT 0, cpu REAL DEFAULT 0, wall REAL DEFAULT 0, max_wall REAL DEFAULT 0, every REAL);
 CREATE TABLE IF NOT EXISTS unit(id INTEGER PRIMARY KEY, campaign TEXT, cmd TEXT, cwd TEXT, state TEXT, pid INT, t0 REAL);
 CREATE INDEX IF NOT EXISTS unit_state ON unit(state, campaign);
 CREATE TABLE IF NOT EXISTS ctl(key TEXT PRIMARY KEY, value REAL);
@@ -56,6 +57,8 @@ def connect():
     db = sqlite3.connect(os.path.join(DIR, 'tasks.sqlite'), timeout=30, isolation_level=None)
     db.execute('PRAGMA journal_mode=WAL'); db.execute('PRAGMA synchronous=NORMAL')
     db.executescript(SCHEMA)
+    if 'every' not in {r[1] for r in db.execute('PRAGMA table_info(campaign)')}:
+        db.execute('ALTER TABLE campaign ADD COLUMN every REAL')
     return db
 
 
@@ -95,6 +98,7 @@ def _launch(db, pick):
         except OSError as e:                         # a command that cannot start is a failed unit
             out.write(f'cannot start: {e}\n'); _finish(db, uid, name, 127, 0.0, 0.0); return None
     db.execute("UPDATE unit SET state='running', pid=?, t0=? WHERE id=?", (p.pid, time.time(), uid))
+    db.execute('UPDATE campaign SET next_t=?+every WHERE name=? AND every IS NOT NULL', (time.time(), name))
     return p, uid, name, time.time()
 
 
@@ -113,8 +117,9 @@ def _finish(db, uid, name, rc, cpu, wall):
                'consec=CASE WHEN ? THEN consec+1 WHEN ? THEN consec ELSE 0 END, '
                'last_work=CASE WHEN ?=0 THEN ? ELSE last_work END, next_t=CASE WHEN ? THEN ? ELSE next_t END WHERE name=?',
                (cpu, wall, wall, rc == 0, fail, fail, rc == EX_IDLE, rc, now, rc == EX_IDLE, now + BACKOFF, name))
-    st, rep, budget, used, consec, last = db.execute('SELECT status, repeat, budget_h, cpu, consec, last_work FROM campaign '
-                                                     'WHERE name=?', (name,)).fetchone()
+    db.execute('UPDATE campaign SET next_t=?+every WHERE name=? AND every IS NOT NULL', (now, name))
+    st, rep, budget, used, consec, last, every = db.execute('SELECT status, repeat, budget_h, cpu, consec, last_work, every '
+                                                            'FROM campaign WHERE name=?', (name,)).fetchone()
     left = db.execute("SELECT COUNT(*) FROM unit WHERE campaign=? AND state='pending'", (name,)).fetchone()[0]
     run = db.execute("SELECT COUNT(*) FROM unit WHERE campaign=? AND state='running'", (name,)).fetchone()[0]
     new, note = None, None
@@ -123,7 +128,7 @@ def _finish(db, uid, name, rc, cpu, wall):
             new, note = 'paused', f'{consec} failures in a row; see {f}'
         elif budget is not None and used >= budget * 3600:
             new, note = 'done', 'budget spent'
-        elif rep and now - last > IDLE_END:
+        elif rep and not every and now - last > IDLE_END:
             new, note = 'done', 'nothing to do'
         elif not rep and not left and not run:
             new, note = 'done', None
@@ -161,7 +166,7 @@ def dispatch():
         if now - last_sample >= 1.0:
             ema, last_sample = 0.8 * ema + 0.2 * max(0, runnable() - 1 - len(live)), now     # - 1: the dispatcher itself
         cap = limit(db)
-        outside = round(ema) if ema >= NOISE else 0
+        outside = max(0, round(ema - NOISE))
         while len(live) + outside < cap:
             p = _pick(db, now)
             if not p:
@@ -198,10 +203,11 @@ def ensure_dispatcher():
 
 # ------------------------------------------------------------------ commands
 
-def _campaign(db, name, prio, cwd, rep=None, budget=None):
-    db.execute("INSERT INTO campaign(name, prio, repeat, cwd, budget_h, status, t0) VALUES (?,?,?,?,?,'active',?) ON CONFLICT(name) "
-               "DO UPDATE SET prio=excluded.prio, repeat=excluded.repeat, cwd=excluded.cwd, budget_h=excluded.budget_h, "
-               "status='active', note=NULL, consec=0, next_t=0", (name, PRIO[prio], rep, cwd, budget, time.time()))
+def _campaign(db, name, prio, cwd, rep=None, budget=None, every=None):
+    db.execute("INSERT INTO campaign(name, prio, repeat, cwd, budget_h, every, status, t0) VALUES (?,?,?,?,?,?,'active',?) "
+               "ON CONFLICT(name) DO UPDATE SET prio=excluded.prio, repeat=excluded.repeat, cwd=excluded.cwd, "
+               "budget_h=excluded.budget_h, every=excluded.every, status='active', note=NULL, consec=0, next_t=0",
+               (name, PRIO[prio], rep, cwd, budget, every, time.time()))
     db.execute("UPDATE campaign SET last_work=? WHERE name=?", (time.time(), name))
 
 
@@ -217,9 +223,9 @@ def add(name, cmds, prio='normal', cwd=None):
     return len(cmds)
 
 
-def repeat(name, cmd, budget, prio='low', cwd=None):
+def repeat(name, cmd, budget=None, prio='low', cwd=None, every=None):
     db = connect()
-    _campaign(db, name, prio, os.path.abspath(cwd or os.getcwd()), json.dumps(cmd), budget)
+    _campaign(db, name, prio, os.path.abspath(cwd or os.getcwd()), json.dumps(cmd), budget, every)
     ensure_dispatcher()
 
 
@@ -278,14 +284,14 @@ def main():
     sp = ap.add_subparsers(dest='cmd', required=True)
     p = sp.add_parser('add'); p.add_argument('name'); p.add_argument('--prio', default='normal', choices=PRIO)
     p.add_argument('--cwd'); p.add_argument('--file')
-    p = sp.add_parser('repeat'); p.add_argument('name'); p.add_argument('--budget', type=float, required=True)
+    p = sp.add_parser('repeat'); p.add_argument('name'); p.add_argument('--budget', type=float); p.add_argument('--every', type=float)
     p.add_argument('--prio', default='low', choices=PRIO); p.add_argument('--cwd')
     sp.add_parser('ls')
     p = sp.add_parser('wait'); p.add_argument('name')
     p = sp.add_parser('cancel'); p.add_argument('name'); p.add_argument('--kill', action='store_true')
     p = sp.add_parser('resume'); p.add_argument('name')
     p = sp.add_parser('limit'); p.add_argument('n', nargs='?', type=int)
-    sp.add_parser('_dispatch')
+    sp.add_parser('_dispatch'); sp.add_parser('up')
     a = ap.parse_args(raw[:cut])
     argv = raw[cut + 1:]
     if a.cmd == 'add':
@@ -296,9 +302,9 @@ def main():
             cmds = [argv] if argv else sys.exit('usage: tasks.py add CAMPAIGN -- CMD ARGS...')
         print(f'{a.name}: {add(a.name, cmds, a.prio, a.cwd)} units queued')
     elif a.cmd == 'repeat':
-        if not argv:
-            sys.exit('usage: tasks.py repeat CAMPAIGN --budget CPU_H -- CMD ARGS...')
-        repeat(a.name, argv, a.budget, a.prio, a.cwd)
+        if not argv or not (a.budget or a.every):
+            sys.exit('usage: tasks.py repeat CAMPAIGN --budget CPU_H | --every SECONDS -- CMD ARGS...')
+        repeat(a.name, argv, a.budget, a.prio, a.cwd, a.every)
     elif a.cmd == 'ls':
         ls()
     elif a.cmd == 'wait':
@@ -308,6 +314,8 @@ def main():
     elif a.cmd == 'resume':
         db = connect(); db.execute("UPDATE campaign SET status='active', consec=0, next_t=0, note=NULL WHERE name=?", (a.name,))
         ensure_dispatcher()
+    elif a.cmd == 'up':                          # after a reboot: resume what is active
+        connect(); ensure_dispatcher()
     elif a.cmd == 'limit':
         db = connect()
         if a.n is not None:

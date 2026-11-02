@@ -15,7 +15,8 @@ a new campaign file.  There are no campaign scripts.
 | stages, chains | `pk/stages.py` | one contract over all registries; a chain is `a(k=v) \| b \| ...` |
 | events, scorers | `pk/events.py`, `<plugin>/goals/*.yaml` | the loop below |
 | pool | `pk/tasks.py` | short single-threaded units by priority: the default way compute starts |
-| jobs | `pk/jobs.py` | long runs that cannot be split; the pool counts them as outside load; on exit a job still runs sink, then converge |
+| jobs | `pk/jobs.py` | long runs that cannot be split; the pool counts them as outside load |
+| follow-ups | `pk/react.py` | new store rows -> pool units (converge, near misses, plugin rules); `hold` for isolated experiments |
 | reports | `python3 -m pk.events report NAME`, `pk.py yield`, the plugin's status report | numbers from the store |
 
 ## Stages

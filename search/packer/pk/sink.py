@@ -1,4 +1,4 @@
-"""One sink (10-20; Evan: "If they're distinct packings, track them"): every evaluated result reaches the store, under
+"""File import for tools that write result files (10-20; run by hand or by the tool: compute writing straight to the store needs none; Evan: "If they're distinct packings, track them"): every evaluated result reaches the store, under
 one intake policy (pk/policy.py + pk/policy.yaml), with detection on import.
 
 What it reads (adapters; every run dir under runs/, ext/ excluded):
@@ -14,8 +14,6 @@ Intake: policy.classify(intake=True): 'drop' rows are counted, not stored.  The 
 is a sighting on the existing row) and follows pk/ident's dedup table.
 
 Detection (on the rows this pass created or sighted):
-  hit        s < public frontier(n) - 1e-9 and no public sighting -> tag 'candidate-hit', line in runs/sink/hits.jsonl
-             (candidate.py is not run here: it is the checker, launched by hand / the finisher)
   near miss  nearmiss.scan(ids=...) -> the queue (pk.py finish drains it)
 
   pk.py sink [--dry-run] [--runs DIR ...] [--procs 12] [--report]
@@ -30,7 +28,6 @@ PK = os.path.dirname(HERE)
 RUNS = os.path.join(PK, 'runs')
 SDIR = os.path.join(RUNS, 'sink')
 SETTLE = 600.0          # s: archive lines / output files younger than this wait for the next pass
-HIT = 1e-9
 
 
 def _rel(d):
@@ -180,36 +177,18 @@ def run(st=None, runs=None, dry=False, procs=12, log=print, outputs=True):
                 touched.add(pid); tot['entries'] += 1; tot['new' if new else 'seen'] += 1
             if not dry:
                 st.db.commit(); S['bulb'][key] = mt; save_state(S)
-    hits = []
     if not dry and touched:
         ids = sorted(touched)
-        for k in range(0, len(ids), 900):
-            ch = ids[k:k + 900]
-            for r in st.db.execute(f"SELECT id, n, s FROM packing WHERE id IN ({','.join('?' * len(ch))}) "
-                                   f"AND status != 'infeasible' AND NOT EXISTS (SELECT 1 FROM sighting g WHERE "
-                                   f"g.packing=packing.id AND {public_sql('g')})", ch):
-                f = pubF.get(r['n'])
-                if f is not None and r['s'] < f - HIT:
-                    hits.append(dict(id=r['id'], n=r['n'], s=r['s'], frontier=f, gap=r['s'] - f))
-        if hits:
-            os.makedirs(SDIR, exist_ok=True)
-            with open(os.path.join(SDIR, 'hits.jsonl'), 'a') as fh:
-                for h in hits:
-                    st.tag(h['id'], 'candidate-hit')
-                    fh.write(json.dumps(dict(h, t=time.strftime('%Y-%m-%dT%H:%M:%S'))) + '\n')
         from . import nearmiss as NM
         fr = lambda n: pubF.get(n)
         items = (NM.scan(st.db, fr, ids=ids) if len(ids) <= 20000 else
                  NM.scan(st.db, fr, ns={r[0] for k in range(0, len(ids), 900) for r in st.db.execute(
                      f"SELECT DISTINCT n FROM packing WHERE id IN ({','.join('?' * len(ids[k:k + 900]))})", ids[k:k + 900])}))
         tot['nearmiss'] = NM.enqueue(st, items, note='sink')
-    tot['hits'] = len(hits)
     if not dry:
         os.makedirs(SDIR, exist_ok=True)
         with open(os.path.join(SDIR, 'log.jsonl'), 'a') as fh:
             fh.write(json.dumps(dict(t=time.strftime('%Y-%m-%dT%H:%M:%S'), **tot)) + '\n')
-    for h in hits:
-        log(f"sink: HIT n={h['n']} s={h['s']:.12f} ({h['gap']:+.3e} vs frontier) id {h['id']}")
     return tot
 
 

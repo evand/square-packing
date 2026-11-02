@@ -11,11 +11,11 @@ status screened, tag `requenched`).  The start is tagged `requenched` either way
 
   pk.py converge [--ns 2-1000] [--tol 0.01] [--cap 50] [--procs 8] [--since ISO] [--dry-run]
 
-Run by `pk/jobs.py` after every job's sink with --since = the job's start (one at a time, flock on runs/sink.lock);
-the backlog (packings that entered before this module existed) is a separate, explicit run.
+New rows reach it as pool units (pk/react.py: `--ids`, a few packings per unit); the backlog (packings that entered
+before this module existed) is a separate, explicit run.
 """
 from __future__ import annotations
-import json, math, os, random, tempfile
+import contextlib, json, math, os, random, tempfile
 from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 
@@ -97,8 +97,9 @@ def run(st, lo=2, hi=1000, tol=0.01, cap=50, procs=8, dry=False, log=print, sinc
         return dict(selected=len(J))
     args = [(i, n, s, st.db.execute('SELECT coords FROM packing WHERE id=?', (i,)).fetchone()[0], None) for i, n, s in J]
     improved, new, cpu = 0, 0, 0.0
-    with ProcessPoolExecutor(procs) as ex:
-        for k, (pid, n, s0, s1, sq1, by, c) in enumerate(ex.map(_one, args, chunksize=2)):
+    ex = ProcessPoolExecutor(procs) if procs > 1 else None
+    with ex or contextlib.nullcontext():
+        for k, (pid, n, s0, s1, sq1, by, c) in enumerate(ex.map(_one, args, chunksize=2) if ex else map(_one, args)):
             cpu += c
             if s1 is not None:
                 improved += 1

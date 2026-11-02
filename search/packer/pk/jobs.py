@@ -92,7 +92,7 @@ def alive(name):
     return bool(m) and bool(_group(m['pid']))
 
 
-def start(name, cmd, cwd=None, procs=None, threads=1, strict=False, peek=None, sink=True):
+def start(name, cmd, cwd=None, procs=None, threads=1, strict=False, peek=None):
     if alive(name):
         sys.exit(f'job {name} is still running (pid {_meta(name)["pid"]}); stop it or pick another name')
     run = running_threads()
@@ -114,18 +114,9 @@ def start(name, cmd, cwd=None, procs=None, threads=1, strict=False, peek=None, s
         env.setdefault(v, str(threads))
     # start_new_session: setsid() in the child before exec, no extra fork, so p.pid is the job and its group id
     t_start = time.strftime('%Y-%m-%dT%H:%M:%S')
-    acct = shlex.quote(os.path.join(d, 'acct'))     # 10-25: whole-job accounting (bash `times`: CPU of every waited-for
-    mark = lambda tag: f'{{ echo "{tag} $(date +%s.%N)"; times; }} >> {acct}; '   # descendant, jobs included)
-    if sink:                                         # 10-24 (TODO "Sink after every job"): when the command exits,
-        pk = os.path.join(HERE, '..', 'pk.py')       # import its results (pk.py sink), then converge new near-record
-        lock = os.path.join(HERE, '..', 'runs', 'sink.lock')   # packings (pk.py converge); one at a time (flock)
-        tail = (f'rc=$?; ' + mark('main') + f'echo "== jobs.py: sink + converge after exit $rc"; '
-                f'flock {shlex.quote(lock)} sh -c "{sys.executable} {shlex.quote(pk)} sink && '
-                f'{sys.executable} {shlex.quote(pk)} converge --procs {max(1, procs or 4)} --since {t_start}"; '
-                + mark('end') + 'exit $rc')
-    else:
-        tail = 'rc=$?; ' + mark('main') + mark('end') + 'exit $rc'
-    cmd = ['bash', '-c', mark('start') + '"$@"; ' + tail, 'job', *cmd]
+    acct = shlex.quote(os.path.join(d, 'acct'))      # whole-job accounting (bash `times`: CPU of every waited-for descendant)
+    mark = lambda tag: f'{{ echo "{tag} $(date +%s.%N)"; times; }} >> {acct}; '
+    cmd = ['bash', '-c', mark('start') + '"$@"; rc=$?; ' + mark('end') + 'exit $rc', 'job', *cmd]
     p = subprocess.Popen(cmd, cwd=cwd, stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
                          start_new_session=True, env=env)
     meta = dict(name=name, pid=p.pid, cmd=cmd, cwd=cwd, start=t_start, t0=time.time(),
@@ -133,6 +124,7 @@ def start(name, cmd, cwd=None, procs=None, threads=1, strict=False, peek=None, s
                 threads={v: env[v] for v in THREAD_VARS}, peek=peek)
     json.dump(meta, open(os.path.join(d, 'meta.json'), 'w'), indent=1)
     print(f'started {name}: pid/pgid {p.pid}, log {os.path.join(d, "log")}')
+    subprocess.Popen([sys.executable, os.path.join(HERE, 'tasks.py'), 'up'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     return p.pid
 
 
@@ -143,9 +135,7 @@ def _sec(t):
 
 
 def accounting(name):
-    """whole-job wall and CPU from the wrapper's acct marks (10-25): main = the command (with every descendant it
-    waited for), sink = the sink + converge tail.  -> dict(wall_h, cpu_h, main_wall_h, main_cpu_h, sink_wall_h,
-    sink_cpu_h, done) or None (no marks: a job started before 10-25)"""
+    """whole-job wall and CPU from the wrapper's acct marks (10-25) -> dict(wall_h, cpu_h, done) or None"""
     f = os.path.join(_dir(name), 'acct')
     if not os.path.exists(f):
         return None
@@ -157,15 +147,9 @@ def accounting(name):
             M[tag] = (float(t), _sec(cu) + _sec(cs))
     if 'start' not in M:
         return None
-    t0 = M['start'][0]
-    now = (time.time(), None)
-    main = M.get('main', now); end = M.get('end', main)
-    h = lambda x: round(x / 3600, 4) if x is not None else None
-    r = dict(done='end' in M, main_wall_h=h(main[0] - t0), main_cpu_h=h(main[1]))
-    if 'main' in M:
-        r.update(sink_wall_h=h(end[0] - main[0]), sink_cpu_h=h(end[1] - main[1]) if end[1] is not None else None,
-                 wall_h=h(end[0] - t0), cpu_h=h(end[1]))
-    return r
+    end = M.get('end')
+    h = lambda x: round(x / 3600, 4)
+    return dict(done=bool(end), wall_h=h((end[0] if end else time.time()) - M['start'][0]), cpu_h=h(end[1]) if end else None)
 
 
 def stop(name, grace=10.0):
@@ -228,8 +212,7 @@ def status(name=None):
             print(f'{"":24s} | {_last_line(nm)[:150]}')
             ac = accounting(nm)
             if ac and ac.get('cpu_h') is not None:
-                print(f'{"":24s} | accounting: wall {ac["wall_h"]:.2f} h, CPU {ac["cpu_h"]:.2f} h (command {ac["main_cpu_h"]:.2f} '
-                      f'in {ac["main_wall_h"]:.2f} h wall; sink + converge {ac["sink_cpu_h"]:.2f} in {ac["sink_wall_h"]:.2f})')
+                print(f'{"":24s} | accounting: wall {ac["wall_h"]:.2f} h, CPU {ac["cpu_h"]:.2f} h')
     l1, l5, _ = os.getloadavg()
     run = running_threads()
     warn = '  OVER TARGET' if run > TARGET * SLACK else ''
@@ -253,7 +236,6 @@ def main():
     p.add_argument('--procs', type=int, help='processes this job will run (checked against the target)')
     p.add_argument('--threads', type=int, default=1, help='math-library threads per process (default 1)')
     p.add_argument('--strict', action='store_true', help='refuse instead of warning when over the target')
-    p.add_argument('--no-sink', action='store_true', help='skip the sink + converge pass when the command exits')
     p.add_argument('--peek', help='shell command that prints early results (run by `jobs.py peek NAME`)')
     p.add_argument('argv', nargs='*')
     sub.add_parser('free')
@@ -268,7 +250,7 @@ def main():
         argv = raw[cut + 1:] or a.argv
         if not argv:
             sys.exit('usage: jobs.py start NAME -- CMD ARGS...')
-        start(a.name, argv, a.cwd, a.procs, a.threads, a.strict, peek=a.peek, sink=not a.no_sink)
+        start(a.name, argv, a.cwd, a.procs, a.threads, a.strict, peek=a.peek)
     elif a.cmd == 'peek':
         peek(a.name)
     elif a.cmd == 'free':
