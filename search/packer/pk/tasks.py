@@ -81,7 +81,9 @@ def _pick(db, now):
     """-> (campaign, unit id or None, repeat cmd, cwd) of the next unit, or None"""
     return db.execute(
         "SELECT name, (SELECT MIN(id) FROM unit WHERE campaign=name AND state='pending') u, repeat, cwd FROM campaign "
-        "WHERE status='active' AND next_t<=? AND (u IS NOT NULL OR repeat IS NOT NULL) ORDER BY prio, "
+        "WHERE status='active' AND next_t<=? AND (u IS NOT NULL OR repeat IS NOT NULL) "
+        "AND NOT (every IS NOT NULL AND EXISTS (SELECT 1 FROM unit WHERE campaign=name AND state='running')) "   # --every: one at a time, even when a unit hangs past the interval
+        "ORDER BY prio, "
         "(SELECT COUNT(*) FROM unit WHERE campaign=name AND state='running'), units + fails, t0 LIMIT 1", (now,)).fetchone()
 
 

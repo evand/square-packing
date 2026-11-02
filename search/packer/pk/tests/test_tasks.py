@@ -82,6 +82,13 @@ def main():
     assert (fails, units) == (0, 0) and next_t > time.time(), (fails, units, next_t)
     t('cancel', 'idle')
 
+    # --every runs one unit at a time: a unit that outlives the interval does not get a sibling (11 hung ticks held 11 slots, 11-02)
+    t('limit', '4')
+    t('repeat', 'tick', '--every', '1', '--prio', 'high', '--', 'bash', '-c', 'sleep 4')
+    time.sleep(3.5)
+    assert db.execute("SELECT COUNT(*) FROM unit WHERE campaign='tick' AND state='running'").fetchone()[0] == 1
+    t('cancel', 'tick')
+
     # many units ending at once: every slot comes back (a Popen dropped too early reaped children behind wait4)
     t('limit', '16')
     subprocess.run([sys.executable, TOOL, 'add', 'burst', '--file', '-'], env=ENV, input='true\n' * 400, text=True, check=True, capture_output=True)
