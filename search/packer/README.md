@@ -8,7 +8,7 @@ History (the lab log to 10-24): `archive/PACKER-2026-10.md`.
 
 | want | command |
 |---|---|
-| search a set of n | write `<plugin>/goals/NAME.yaml` (format: `goals/example.yaml`), `python3 -m pk.events add NAME`, then `python3 pk/tasks.py repeat NAME --budget CPU_H --prio low -- python3 -m pk.events work --max-units 3`; `python3 -m pk.events report NAME` |
+| search a set of n | write `<plugin>/goals/NAME.yaml` (format: `goals/example.yaml`), `python3 -m pk.events add NAME`, then `python3 pk/tasks.py repeat NAME --budget CPU_H --prio low -- python3 -m pk.events work --campaign NAME --max-units 3`; `python3 -m pk.events report NAME` |
 | add an idea | a stage (`DESIGN.md` "Adding an idea"), named as a move in a campaign |
 | packings at n | `pk.py ls N`, `pk.py get ID -o FILE`, `pk.py frontier` |
 | keep the store current | `pk.py ingest --apply` (register, watched repos, fresh public packings) |

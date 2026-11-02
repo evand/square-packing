@@ -9,7 +9,7 @@ of the best at their n become parents at once.  No dispatcher, no quantum, no dr
                                              again after editing it: new targets get pools, budget / unit edits apply
   python3 -m pk.events work --procs N [--max-idle S]
   python3 -m pk.events status | report CAMPAIGN | stop [CAMPAIGN] | resume
-Launch through the pool: `pk/tasks.py repeat NAME --budget CPU_H --prio low -- python3 -m pk.events work --max-units 3`.
+Launch through the pool: `pk/tasks.py repeat NAME --budget CPU_H --prio low -- python3 -m pk.events work --campaign NAME --max-units 3`.
 
 Campaign file (the pre-registration: `predictions` is required; the reading of the result goes under `result`):
   goal: NAME
@@ -508,7 +508,7 @@ def _source_option(db, cfg, now):
     return None
 
 
-def _open_campaigns(db, wid, rng, now, t0):
+def _open_campaigns(db, wid, rng, now, t0, only=None):
     """write transaction 1 (short): expire lost units, apply stop rules and budgets, claim a due source unit ->
     the source unit dict, or [(name, cfg, spent)] of the campaigns with scored options to look at"""
     db.execute('BEGIN IMMEDIATE')
@@ -516,7 +516,7 @@ def _open_campaigns(db, wid, rng, now, t0):
         expire(db, now)
         live = []
         for (name, uc, budget) in db.execute("SELECT name, unit_cpu, budget_cpu_h FROM campaign WHERE status='active' "
-                                             "ORDER BY added").fetchall():
+                                             "AND (?1 IS NULL OR name=?1) ORDER BY added", (only,)).fetchall():
             cfg = load(db.execute('SELECT path FROM campaign WHERE name=?', (name,)).fetchone()[0])
             if cfg.get('stop') and now - _STOP_AT.get(name, 0.0) > STOP_EVERY:
                 _STOP_AT[name] = now
@@ -704,14 +704,14 @@ def _take_lease(db, name, cond):
         raise
 
 
-def claim(db, wid, rng, now=None):
+def claim(db, wid, rng, now=None, only=None):
     """the next unit for worker wid -> unit dict or None.  A short write transaction for expiry, stop rules, budgets
     and sources; then the head of a condition's claim queue (conditions in spent-CPU order).  An empty queue is filled
     first by the claiming worker; a short or old one is refilled by the worker that noticed, after taking its unit
     (one refill at a time per condition: lease in ctl)."""
     now = time.time() if now is None else now
     t0 = time.time()
-    live = _open_campaigns(db, wid, rng, now, t0)
+    live = _open_campaigns(db, wid, rng, now, t0, only)
     if isinstance(live, dict):
         return live
     for name, cfg, sp in live:
@@ -885,9 +885,10 @@ def record(db, u, res, cpu_s, wall, now=None):
 
 # ------------------------------------------------------------------ workers
 
-def worker(i, path, max_idle, job, max_units=None):
+def worker(i, path, max_idle, job, max_units=None, only=None):
     """claim / run / record until the ctl stop flag, `max_idle` seconds with nothing to do, or `max_units` units (for
-    the pool, pk/tasks.py: nothing to claim then ends at once) -> units run"""
+    the pool, pk/tasks.py: nothing to claim then ends at once) -> units run.  only: claim from this campaign alone (a
+    pool campaign's priority is then its event campaign's)"""
     db = connect(path)
     rng = random.Random(os.getpid() * 1000003 + int(time.time() * 1000))
     wid = db.execute("INSERT INTO worker(pid, host, job, started, last_seen, status) VALUES (?,?,?,?,?,'up')",
@@ -896,7 +897,7 @@ def worker(i, path, max_idle, job, max_units=None):
     try:
         while (max_units is None or done < max_units) and (db.execute("SELECT value FROM ctl WHERE key='stop'").fetchone() or ['0'])[0] != '1':
             w = time.time()
-            u = claim(db, wid, rng)
+            u = claim(db, wid, rng, only=only)
             cs = time.time() - w
             if u is None:
                 if max_units is not None:
@@ -985,6 +986,7 @@ def main(argv=None):
     p = sp.add_parser('add'); p.add_argument('campaign')
     p = sp.add_parser('work'); p.add_argument('--procs', type=int, default=1); p.add_argument('--max-idle', type=float)
     p.add_argument('--max-units', type=int, help='for the pool: run this many units, exit 75 if there was nothing to do')
+    p.add_argument('--campaign', help='claim from this campaign only')
     sp.add_parser('status')
     p = sp.add_parser('report'); p.add_argument('campaign')
     p = sp.add_parser('stop'); p.add_argument('campaign', nargs='?')
@@ -998,14 +1000,14 @@ def main(argv=None):
               f"{k} new start parents per condition, budget {cfg['budget_cpu_h']} CPU-h")
     elif a.cmd == 'work':
         if a.max_units:                          # a pool unit must not clear a stop that someone set
-            sys.exit(0 if worker(0, DB, None, os.environ.get('PK_JOB_NAME'), a.max_units) else 75)
+            sys.exit(0 if worker(0, DB, None, os.environ.get('PK_JOB_NAME'), a.max_units, a.campaign) else 75)
         db.execute("INSERT OR REPLACE INTO ctl VALUES ('stop', '0')")
         job = os.environ.get('PK_JOB_NAME')
         if a.procs == 1:
-            worker(0, DB, a.max_idle, job)
+            worker(0, DB, a.max_idle, job, only=a.campaign)
         else:
             import multiprocessing as mp
-            ps = [mp.Process(target=worker, args=(i, DB, a.max_idle, job)) for i in range(a.procs)]
+            ps = [mp.Process(target=worker, args=(i, DB, a.max_idle, job, None, a.campaign)) for i in range(a.procs)]
             for p in ps:
                 p.start()
             for p in ps:
