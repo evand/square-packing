@@ -252,13 +252,15 @@ def _relax(name):
     return stage(f'relax.{name}', 'relax')(run)
 
 
-@stage('relax.round', 'relax', r0=0.15, steps=5, compress=True, press=True, kick=0.0, pit=8, loosen=1.0)
-def relax_round(st, rng, ctx, r0, steps, compress, press, kick, pit, loosen):
+@stage('relax.round', 'relax', r0=0.15, steps=5, compress=True, press=True, kick=0.0, pit=8, loosen=1.0, press_outer=30)
+def relax_round(st, rng, ctx, r0, steps, compress, press, kick, pit, loosen, press_outer):
     """soft-to-rigid relax with its knobs as parameters (10-27; defaults = relax.round.15c.p5): rounding radius r0,
-    hardening steps, compress at r0, side free while hardening (press), kick per step, SLP iterations, start loosen"""
+    hardening steps, compress at r0, side free while hardening (press), kick per step, SLP iterations, start loosen,
+    outer ALM iterations per press step"""
     from .engine import SCREEN
     opt = SCREEN.but(loosen=float(loosen), round_r0=float(r0), round_compress=bool(compress), round_press=bool(press),
-                     round_steps=int(steps), pit=int(pit), **({'round_kick': float(kick)} if kick else {}))
+                     round_steps=int(steps), pit=int(pit), **({'round_kick': float(kick)} if kick else {}),
+                     **({'round_press_outer': int(press_outer)} if press else {}))
     return _quench(st, rng, ctx, opt)
 
 

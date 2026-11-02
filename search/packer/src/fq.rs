@@ -64,6 +64,7 @@ static DIVERGED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::
 static TRAJ_ON: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 static TRAJ: std::sync::Mutex<Vec<(usize, f64, f64, f64, f64)>> = std::sync::Mutex::new(Vec::new());
 const PAIR_CAP: usize = 30;
+fn wall_skip() -> bool { static W: OnceLock<bool> = OnceLock::new(); *W.get_or_init(|| std::env::var("FQ_WALLSKIP").map(|v| v != "0").unwrap_or(true)) }
 fn late() -> bool { DEADLINE.read().unwrap().map_or(false, |d| Instant::now() >= d) }
 fn stopped() -> bool { DIVERGED.load(Ordering::Relaxed) || late() }
 /// JSON numbers: Rust prints inf / NaN, which JSON cannot hold -> null
@@ -278,10 +279,14 @@ impl Prob {
         let sh = self.shapes(v);
         // container / rounding knobs read once per evaluation (same values as per corner; perf 10-13, bit-identical)
         let (r, wx, wy) = (rnd(), s + rdx(), s + rdy());
-        // walls
+        // walls.  A square whose circumscribed circle clears all four walls with zero multipliers contributes only -0.0
+        // to f and nothing to g: skip its 16 terms, bit-identical (FQ_WALLSKIP=0 restores the full loop)
+        let wskip = self.b.is_empty() && wall_skip();
+        let wm = H * SQRT2 * (1.0 + 1e-12);
         for i in 0..n {
             let (c, sn) = cs[i];
             let (x, y) = (v[3 * i], v[3 * i + 1]);
+            if wskip && x - wm > r && x + wm < wx - r && y - wm > r && y + wm < wy - r && self.wlam[16 * i..16 * i + 16].iter().all(|&l| l == 0.0) { continue; }
             let (wi, hi, dab, bi) = sh[i];
             for k in 0..4 {
                 let (ox, oy, oxa, oya) = corner_wh(c, sn, k, wi, hi);

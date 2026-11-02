@@ -50,7 +50,9 @@ _RELAX = {
     'round.15c.g6':    dict(loosen=1.0, round_r0=0.15, round_compress=True, round_gtol=1e-6, round_maxit=300),
     'round.15c.g6s5':  dict(loosen=1.0, round_r0=0.15, round_compress=True, round_gtol=1e-6, round_maxit=300, round_steps=5),
     'round.15c.p':     dict(loosen=1.0, round_r0=0.15, round_compress=True, round_press=True),
-    'round.15c.p5':    dict(loosen=1.0, round_r0=0.15, round_compress=True, round_press=True, round_steps=5),
+    # 11-01: press steps capped at 30 outer ALM iterations (uncapped 60; ~1.2x, side neutral in paired tests; 8 loses, RS2)
+    'round.15c.p5':    dict(loosen=1.0, round_r0=0.15, round_compress=True, round_press=True, round_steps=5,
+                            round_press_outer=30),
     'round.15c.pk':    dict(loosen=1.0, round_r0=0.15, round_compress=True, round_press=True, round_kick=0.01,
                             round_kick_peak=0.06, round_kick_w=0.03),
     # 10-24 RS2: press steps capped at K outer ALM iterations (fq --round-press-outer; uncapped they always run 60)
