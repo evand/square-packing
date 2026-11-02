@@ -156,7 +156,8 @@ class LazyMap:
     """the (overlap area, score) maps of Grid.score for one angle, computed in TxT tiles on first access (10-27: the
     whole-grid maps cost 2 FFTs of the full box per angle per placed square, ~1.4 s of a refill's 1.5 s placement at
     n = 500, while K candidates and their descents touch a few small windows).  Values equal Grid.score's exactly
-    (integer pixel counts; zero padding outside the grid as in fftconvolve 'same').  Index like a 2-D array:
+    (integer pixel counts; zero padding outside the grid as in fftconvolve 'same').  One forward FFT per tile, kernel
+    spectra cached per angle (~2x on top of the tiles).  Index like a 2-D array:
     m.sc[j0:j1, i0:i1], m.ov[j, i]."""
     T = 64
 
@@ -180,15 +181,28 @@ class LazyMap:
         P[a0 - (j0 - r):a1 - (j0 - r), b0 - (i0 - r):b1 - (i0 - r)] = C[a0:a1, b0:b1]
         return P
 
+    def _spectra(self):
+        """rFFTs of the two kernels at the tile patch's size: the patch is transformed once and every tile of this
+        angle reuses these (circular convolution of length L = T + 2 r2 aliases only outside the tile's output cells)"""
+        from scipy import fft as sf
+        L = self.T + 2 * self.r2
+        pad = lambda K: sf.rfft2(K, s=(L, L))
+        self._fft, self._L, self._S1, self._S2 = sf, L, pad(self.K1), pad(self.ring)
+
     def ensure(self, j0, j1, i0, i1):
         T, h = self.T, self.G.h
         for tj in range(max(0, j0) // T, (min(j1, self.shape[0]) - 1) // T + 1):
             for ti in range(max(0, i0) // T, (min(i1, self.shape[1]) - 1) // T + 1):
                 if self.done[tj, ti]:
                     continue
+                if not hasattr(self, '_S1'):
+                    self._spectra()
+                sf, L, r1, r2 = self._fft, self._L, self.r1, self.r2
                 a0, a1 = tj * T, min(self.shape[0], tj * T + T); b0, b1 = ti * T, min(self.shape[1], ti * T + T)
-                ov = np.rint(fftconvolve(self._patch(a0, a1, b0, b1, self.r1), self.K1, mode='valid'))
-                ct = np.rint(fftconvolve(self._patch(a0, a1, b0, b1, self.r2), self.ring, mode='valid'))
+                P = sf.rfft2(self._patch(a0, a1, b0, b1, r2), s=(L, L))
+                o0, c0 = r2 + r1, 2 * r2                          # output cell of the tile's first pixel
+                ov = np.rint(sf.irfft2(P * self._S1, s=(L, L)))[o0:o0 + a1 - a0, o0:o0 + b1 - b0]
+                ct = np.rint(sf.irfft2(P * self._S2, s=(L, L)))[c0:c0 + a1 - a0, c0:c0 + b1 - b0]
                 ov = np.maximum(ov, 0)
                 self._ov[a0:a1, b0:b1] = ov * h * h
                 self._sc[a0:a1, b0:b1] = ov * h * h - self.lam * ct * h * h
