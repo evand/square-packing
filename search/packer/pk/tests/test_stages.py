@@ -37,8 +37,8 @@ def check(name):
         return 'skip'
     if f.kind == 'gen':
         st0 = None
-        if name == 'gen.file':
-            return 'skip'                                  # needs a path; covered by trial.py
+        if any(v is None for v in f.space.values()):
+            return 'skip'                                  # required inputs (gen.file's path; covered by trial.py)
     elif f.kind in ('perturb',):
         st0 = filled()
     elif f.kind in ('shrink', 'grow') and name not in TEST_STARTS:  # n-changing: a released, filled start; ctx n moves
