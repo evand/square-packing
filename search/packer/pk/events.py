@@ -985,14 +985,16 @@ def run_source(u):
     if ok and s1 < min(lim, kgrid(n) - 1e-9):
         store = Store()
         try:
-            cid, _ = store.add(p, f"run:runs/events/{u['campaign']}/u{u['id']:07d}", status='raw')
+            par = next((r['info']['parent'] for r in lg if (r.get('info') or {}).get('parent') is not None), None)  # a generator's donor
+            cid, _ = store.add(p, f"run:runs/events/{u['campaign']}/u{u['id']:07d}", status='raw', parent=par)
         finally:
             store.close()
         fam = F.fill([(cid, s1, p.sq.astype('<f8').tobytes(), None)], n, path=store_path()).get(cid)
         if fam not in cfg['exclude']:
             children.append((cid, n, s1, fam))
     return dict(status='done', apps=[dict(s=s1, cpu=round(cpu() - t, 2), win=0)], children=children,
-                info=dict(version=u.get('version'), variant=u.get('variant')))
+                info=dict(version=u.get('version'), variant=u.get('variant'),
+                          **{k: r['info'][k] for r in lg for k in ('parent', 'donors') if (r.get('info') or {}).get(k) is not None}))
 
 
 # ------------------------------------------------------------------ record
