@@ -35,12 +35,16 @@ def main():
     st.record(pid, 'x | relax.round.15c.p5', dict(arm='a1', rep=0, seed=123), None, 2.0, run='try:t1', s=r['s'] - 1e-6)
     st.record(pid, 'x | relax.round.15c.p5', dict(arm='a1', rep=1, seed=5), None, 2.0, run='try:t1')
     st.record(pid, 'relax.round.15c.p5', dict(arm='ctl', rep=1, seed=5), None, 2.0, run='try:t1', s=s0 * 1.001)
+    # both outputs worse than the parent (s0 * 1.002) but different: scored on the outputs, not tied at the parent
+    st.record(pid, 'x | relax.round.15c.p5', dict(arm='a1', rep=2, seed=7), None, 2.0, run='try:t1', s=s0 * 1.01)
+    st.record(pid, 'relax.round.15c.p5', dict(arm='ctl', rep=2, seed=7), None, 2.0, run='try:t1', s=s0 * 1.005)
     st.close()
     rep = lab.report('t1')
     row = [l for l in rep.splitlines() if l.startswith('| a1 | 50 |')][0]
-    assert '| 2 | 1 |' in row and '1 / 1 / 0' in row, rep              # tries 2, failed 1; one pair up, one down
+    # tries 3, failed 1 (rep 1: left out of the pairs), below parent 1 (rep 0); pairs 2: rep 0 up, rep 2 down
+    assert '| 3 | 1 | 1 |' in row and '| 2 | 1 / 1 / 0 |' in row, rep
     S = {x['name']: x for x in lab.stage_rows()}
-    assert S['relax.round.15c.p5']['apps'] == 4 and S['relax.round.15c.p5']['children'] == 1, S['relax.round.15c.p5']
+    assert S['relax.round.15c.p5']['apps'] == 6 and S['relax.round.15c.p5']['children'] == 1, S['relax.round.15c.p5']
     assert all(x['status'] in ('lab', 'default', 'retired') for x in S.values())
     assert lab.stage_table(lab.stage_rows(), md=True).startswith('| stage |')
     seen = []                                                             # react: the held child is not handed to rules

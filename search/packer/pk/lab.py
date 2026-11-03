@@ -19,9 +19,10 @@ Arms (11-02): an ARM is a chain, 'dn=D: CHAIN' (an n-changing arm: parent at n0,
 move: a MOVES dict {name: arm} in a loaded plugin / lab module).  Every row is scored against a reference: the store
 best at its target n when the plan is made (or among rows added before --asof, to replay a past win).  Wins = outputs
 below that reference (events.below: relative tolerance WIN_RTOL); 'below parent' is shown for dn = 0 arms.  The paired
-diff is in score units (side / sqrt n): u = min(parent gap at n0, output gap at n0 + dn), each gap measured from the
-reference at its n, so a failed or worse output counts as keeping the parent, whatever the arm's dn; d = u(ctl) -
-u(arm) > 0: the arm did better.  The control is the default relax at the parent's n unless --control names another
+diff is on each application's actual output (the chain's final or best feasible packing at its target n, not capped at
+the parent), in score units: u = (output side - reference at n0 + dn) / sqrt(n0 + dn), so arms of different dn share
+one scale; d = u(ctl) - u(arm) > 0: the arm did better; pairs where either side failed (no feasible output) are left
+out of the paired columns and counted in 'failed'.  The control is the default relax at the parent's n unless --control names another
 arm (for an underfill arm, the same chain with dn=0 isolates the n change).  Outputs of dn != 0 arms are stored
 within --window of the store best at their n (as the event loop does across n).  A control that is deterministic
 (stages.deterministic) runs once per parent and pairs with every rep.  --requires keeps parents whose cached features
@@ -219,7 +220,8 @@ def plan_of(name):
 def report(name, path=None):
     """per arm x target n: tries, failures, outputs below the parent (dn 0), wins (below the reference best at the
     target n), best output - reference, gain / CPU-h (sum of gains below the reference); paired vs the control (same
-    parent, seed): sign counts and median of d = u(ctl) - u(arm) in score units (module doc; d > 0: the arm did better);
+    parent, seed): sign counts and median of d = u(ctl) - u(arm), u = the output's gap to the reference in score units
+    (module doc; d > 0: the arm did better; failed sides left out);
     median output gap: (output side - reference at its n) / sqrt n over feasible outputs (informative when the parent is
     the reference itself, where every u is 0)"""
     from .events import below, WIN_RTOL
@@ -239,9 +241,8 @@ def report(name, path=None):
     med = lambda xs: sorted(xs)[len(xs) // 2] if xs else float('nan')
     gap = lambda s, n: (s - ref[n]) / math.sqrt(n)
 
-    def u(r):
-        g = gap(r['s0'], r['n'])
-        return min(g, gap(r['s'], r['nt'])) if r['s'] is not None else g
+    def u(r):                                                  # the output itself (11-02: not capped at the parent)
+        return gap(r['s'], r['nt']) if r['s'] is not None else None
     chain = {r['arm']: (r['dn'], r['chain']) for r in R}
     ctl = {(r['pid'], r['rep']): u(r) for r in R if r['arm'] == 'ctl'}
     ctl1 = {r['pid']: u(r) for r in R if r['arm'] == 'ctl'} if P.get('ctl_once') else {}
@@ -259,7 +260,7 @@ def report(name, path=None):
         h = sum(r['cpu'] for r in G) / 3600
         D = [] if arm == 'ctl' else [(ctl.get((r['pid'], r['rep'])) if (r['pid'], r['rep']) in ctl else ctl1.get(r['pid']),
                                       u(r)) for r in G]
-        D = [c - a for c, a in D if c is not None]
+        D = [c - a for c, a in D if c is not None and a is not None]
         pm = f'{sum(d > tie for d in D)} / {sum(d < -tie for d in D)} / {sum(abs(d) <= tie for d in D)}' if D else ''
         bp = sum(below(r['s'], r['s0']) for r in ok if r['dn'] == 0) if any(r['dn'] == 0 for r in G) else ''
         bs = min((r['s'] - ref[r['nt']] for r in ok), default=None) if n is not None else None
