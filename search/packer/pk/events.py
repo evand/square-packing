@@ -422,7 +422,7 @@ def _same_kind(db, cfg, pids):
 @scorer('tilted')
 def _tilted(opts, ctx, rng):
     """proportional sampling without replacement, propensities logged (11-02).  w = gap term (flat) x (1 + A_same)^-0.5
-    (A_same: discounted same-kind claims on the parent and its ancestors, _same_kind) x w(n); a move with tags.share
+    (A_same: discounted same-kind claims on the parent and its ancestors, _same_kind) x tags.w (default 1) x w(n); a move with tags.share
     (e.g. a relax-only noise floor) gets that share of the total.  The ranking is an exponential race u = w / Exp(1)
     (Gumbel-top-k: Plackett-Luce).  The refill's selection rules (one entry per parent, batch_per_n per parent n, batch)
     are applied here as _fill applies them, so every queued entry carries its propensity: _w / _den = P(chosen next |
@@ -435,7 +435,7 @@ def _tilted(opts, ctx, rng):
     A = _same_kind(ctx['db'], cfg, sorted({o['pid'] for o in opts}))
     kinds = [_kind(cfg, o['move']) for o in opts]
     a = np.array([A[o['pid']].get(k, 0.0) for o, k in zip(opts, kinds)])
-    ws = (1.0 + a) ** -TILT_P
+    ws = (1.0 + a) ** -TILT_P * np.array([float((o['tags'] or {}).get('w', 1.0)) for o in opts])   # tags.w: a fixed move weight
     wn = np.array([weight(cfg, o['n']) for o in opts])
     sh = np.array([float((o['tags'] or {}).get('share', 0.0)) for o in opts])
     if (sh > 0).any() and (sh == 0).any():           # shared moves: their total is share x the whole
