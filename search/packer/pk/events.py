@@ -7,7 +7,7 @@ of the best at their n become parents at once.  No dispatcher, no quantum, no dr
 
   python3 -m pk.events add CAMPAIGN          register a campaign (a YAML file in a plugin's goals/, by name or path);
                                              again after editing it: new targets get pools, budget / unit edits apply
-  python3 -m pk.events work --procs N [--max-idle S]
+  python3 -m pk.events work [--max-idle S]             one worker; in parallel: as pool units (below)
   python3 -m pk.events status | report CAMPAIGN | stop [CAMPAIGN] | resume
 Launch through the pool: `pk/tasks.py repeat NAME --budget CPU_H --prio low -- python3 -m pk.events work --campaign NAME --max-units 3`.
 
@@ -18,7 +18,9 @@ Campaign file (the pre-registration: `predictions` is required; the reading of t
   events:
     ns: [...]                  # or n: [lo, hi]; targets.  Parents may sit at n - dn for cross-n moves
     weight: {default: 1.0}     # w(n): utility multiplier per target n (production: 1 = score units per CPU)
-    moves:                     # name -> stage chain; dn: target n - parent n; once: one application per parent
+    moves:                     # name -> stage chain; dn: target n - parent n; once: one application per parent;
+                               # admit: better (default: a same-n output is stored only below its parent) | window
+                               # (stored within the window of the condition's best at n: score-neutral steps, 11-02)
       relax:  {chain: 'relax.round.05c.p5', once: true, relax: true}
       add:    {chain: 'grow.add | relax.round.05c.p5', dn: 1}
       lcut:   {chain: 'shrink.lcut | relax.round.05c.p5', dn: '-(2*k-3)'}   # dn in k = ceil sqrt(parent n): an outer L
@@ -212,7 +214,10 @@ def load(spec):
             src = bool(m.get('source', False))
             if src and not m['chain'].strip().startswith('gen.'):
                 raise ValueError(f'{path}: source move {name} must start with a gen stage')
+            if m.get('admit', 'better') not in ('better', 'window'):
+                raise ValueError(f"{path}: move {name}: admit is 'better' or 'window'")
             moves[name] = dict(chain=m['chain'], dn=dn, dnf=_dn_fn(dn), once=bool(m.get('once', False)), source=src,
+                               admit=m.get('admit', 'better'),
                                relax=bool(m.get('relax', False)), tags=m.get('tags', {}),
                                relaxed_out=m['chain'].split('|')[-1].strip().startswith('relax.'))
         w = {k if k == 'default' else int(k): float(v) for k, v in (e['weight'] or {}).items()}
@@ -745,12 +750,28 @@ def drop_queued(db, name, cond, n):
 
 # ------------------------------------------------------------------ run (in the worker)
 
+def apply_chain(spec, n, s0, sq0, seed, fq_timeout):
+    """one application of a chain to a parent (s0, sq0) at target n -> (Packing or None, its side if feasible at n else
+    None, {stage: params as drawn} (or {'error': ...}), CPU-s); shared by run_unit and pk/lab.py (`pk.py try`)"""
+    from . import stages as S
+    from .packing import Packing
+    t = cpu()
+    try:
+        st, lg = S.run_chain(spec, dict(n=n, fq_timeout=fq_timeout), seed, st=S.State(Packing(s0, np.array(sq0, float))))
+        p = st.p
+        ok = p.n == n and not S.failed(lg) and float(p.max_pen()) <= 1e-9
+        params = {r_['stage']: {k: v for k, v in r_.get('params', {}).items() if isinstance(v, (int, float, str, bool))}
+                  for r_ in lg if r_.get('stage') != 'keep.best'}
+    except Exception as e:
+        ok, p, params = False, None, dict(error=repr(e)[:160])
+    return p, (float(p.s) if ok else None), params, cpu() - t
+
+
 def run_unit(u):
     """apply the move's chain to the parent until the allowance is spent (once-moves: one application).  Every
     application -> one move-log row; outputs below the parent (same n) or within the window of the condition's best
     (cross n), not of an excluded family -> stored with the parent link -> returned as new parents."""
     from . import stages as S, families as F
-    from .packing import Packing
     from .store import Store
     cfg = u['cfg']; mv = cfg['moves'][u['move']]; n = u['n']
     if u['cond'] == SOURCE:
@@ -766,7 +787,7 @@ def run_unit(u):
     db = connect(); bref = db.execute('SELECT s FROM nbest WHERE campaign=? AND cond=? AND n=?',
                                       (u['campaign'], u['cond'], n)).fetchone(); db.close()
     bn = bref[0] if bref else float(kgrid(n))
-    lim = (s0 - 1e-12) if mv['dn'] == 0 else bn + cfg['window'] * math.sqrt(n)
+    lim = (s0 - 1e-12) if mv['dn'] == 0 and mv.get('admit', 'better') == 'better' else bn + cfg['window'] * math.sqrt(n)
     rng = random.Random(u['seed']); c0 = cpu()
     run = f"runs/events/{u['campaign']}/u{u['id']:07d}"
     spec = [(name, dict(kw, **(u.get('params') or {}).get(name, {}))) for name, kw in S.parse(mv['chain'])]
@@ -774,27 +795,16 @@ def run_unit(u):
     store = None
     try:
         while True:
-            seed = rng.randrange(1 << 30); t = cpu()
-            try:
-                st, lg = S.run_chain(spec, dict(n=n, fq_timeout=cfg['fq_timeout']), seed, st=S.State(Packing(s0, sq0.copy())))
-                p = st.p
-                ok = p.n == n and not S.failed(lg) and float(p.max_pen()) <= 1e-9
-                params = {r_['stage']: {k: v for k, v in r_.get('params', {}).items() if isinstance(v, (int, float, str, bool))}
-                          for r_ in lg if r_.get('stage') != 'keep.best'}
-            except Exception as e:
-                ok, p, params = False, None, dict(error=repr(e)[:160])
-            c = cpu() - t
-            s1 = float(p.s) if ok else None
-            cid = None
-            if ok and s1 < min(lim, kgrid(n) - 1e-9):
-                store = store or Store()
-                cid, created = store.add(p, f'run:{run}', parent=u['pid'], status='raw')
+            seed = rng.randrange(1 << 30)
+            p, s1, params, c = apply_chain(spec, n, s0, sq0, seed, cfg['fq_timeout'])
+            store = store or Store()
+            keep = s1 is not None and s1 < min(lim, kgrid(n) - 1e-9)
+            ad = {} if mv.get('admit', 'better') == 'better' else dict(admit=mv['admit'])
+            cid = store.record(u['pid'], u['move'], dict(params, seed=seed, **ad), p if keep else None, c, run=run, n=u['n0'], s=s1)
+            if cid is not None:
                 fam = F.fill([(cid, s1, p.sq.astype('<f8').tobytes(), None)], n, path=store_path()).get(cid)
                 if fam not in cfg['exclude']:
                     children.append((cid, n, s1, fam))
-            store = store or Store()
-            store.record_expansion(u['pid'], u['n0'], u['move'], c, params=dict(params, seed=seed), run=run, nprop=1,
-                                   best_s=s1, child=cid)
             # a win is a new best of the condition at the target n, for every move (Evan 10-27: within and across n alike;
             # below the parent is not a win: a drop child always is, and the scorer models new bests)
             apps.append(dict(s=s1, cpu=round(c, 2), win=int(s1 is not None and s1 < bn - 1e-12)))
@@ -984,7 +994,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(prog='pk.events', description=__doc__.split('\n')[0])
     sp = ap.add_subparsers(dest='cmd', required=True)
     p = sp.add_parser('add'); p.add_argument('campaign')
-    p = sp.add_parser('work'); p.add_argument('--procs', type=int, default=1); p.add_argument('--max-idle', type=float)
+    p = sp.add_parser('work'); p.add_argument('--max-idle', type=float)
     p.add_argument('--max-units', type=int, help='for the pool: run this many units, exit 75 if there was nothing to do')
     p.add_argument('--campaign', help='claim from this campaign only')
     sp.add_parser('status')
@@ -1003,15 +1013,7 @@ def main(argv=None):
             sys.exit(0 if worker(0, DB, None, os.environ.get('PK_JOB_NAME'), a.max_units, a.campaign) else 75)
         db.execute("INSERT OR REPLACE INTO ctl VALUES ('stop', '0')")
         job = os.environ.get('PK_JOB_NAME')
-        if a.procs == 1:
-            worker(0, DB, a.max_idle, job, only=a.campaign)
-        else:
-            import multiprocessing as mp
-            ps = [mp.Process(target=worker, args=(i, DB, a.max_idle, job, None, a.campaign)) for i in range(a.procs)]
-            for p in ps:
-                p.start()
-            for p in ps:
-                p.join()
+        worker(0, DB, a.max_idle, job, only=a.campaign)
     elif a.cmd == 'status':
         print(status(db))
     elif a.cmd == 'report':

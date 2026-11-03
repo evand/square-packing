@@ -69,9 +69,17 @@ class State:
         return ','.join(f'{a}-{b}' if a < b else f'{a}' for a, b in out)
 
 
-def stage(_name, _kind, **space):
+STATUS = ('lab', 'default', 'retired')
+
+
+def stage(_name, _kind, status='default', evidence='', **space):
+    """register f as stage _name of kind _kind over parameter space `space`.  status (11-02): 'lab' (being tried:
+    `pk.py try`), 'default' (in use), 'retired' (kept so old chains replay); evidence: a short pointer (CLAIMS line, goal
+    file, `try:NAME`).  `pk.py stages` lists both with the move log's use of every stage"""
+    assert status in STATUS, (_name, status)
+
     def deco(f):
-        f.stage_name, f.kind, f.space = _name, _kind, space
+        f.stage_name, f.kind, f.space, f.status, f.evidence = _name, _kind, space, status, evidence
         STAGES[_name] = f
         return f
     return deco
@@ -409,3 +417,13 @@ def run_chain(spec, ctx, seed, st=None, keep_best=True):
 def table():
     """(name, kind, space, first doc line) for every stage"""
     return [(k, f.kind, f.space, ((f.__doc__ or '').strip().splitlines() or [''])[0]) for k, f in sorted(STAGES.items())]
+
+
+def names(spec):
+    """stage names in a chain string or a move-log params key list (unknown tokens dropped; no parse errors)"""
+    out = set()
+    for part in str(spec or '').split('|'):
+        m = re.match(r'\s*([A-Za-z_][\w.]*)', part)
+        if m and m.group(1) in STAGES:
+            out.add(m.group(1))
+    return out

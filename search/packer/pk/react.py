@@ -4,7 +4,8 @@ rule, which queues pool units (pk/tasks.py).  Rules are small and independent; a
 
   python3 pk/tasks.py repeat _react --every 60 --prio high -- python3 -m pk.react      keep it running (once)
   python3 -m pk.react hold | release          a hold keeps experiments isolated: rows that arrive during it get no
-                                              follow-ups, ever (release does not catch up)
+                                              follow-ups, ever (release does not catch up).  For one experiment
+                                              instead: rows tagged react:hold are skipped (`pk.py try --hold`)
 
 Cursor per rule: runs/tasks/react.json (a new rule starts at the current end of the store, without a backlog).
 """
@@ -15,6 +16,7 @@ from . import tasks
 
 CURSOR = os.path.join(tasks.DIR, 'react.json')
 HOLD = os.path.join(tasks.DIR, 'react.hold')
+HOLD_TAG = '"react:hold"'  # a row tagged react:hold never gets follow-ups (one experiment held, the rest live; 11-02)
 PK_DIR = os.path.dirname(tasks.HERE)
 MAX_ROWS = 5000          # rows per rule per pass; the rest wait for the next pass
 RULES = {}
@@ -32,7 +34,7 @@ def _converge(st, ids, batch=8, cap=50):
     """near-record rows -> units of a few packings each (about 5 CPU-s per packing)"""
     from . import converge
     J = [i for i, _, _ in converge.select(st, ids=ids, cap=cap)]
-    cmds = [[sys.executable, 'pk.py', 'converge', '--procs', '1', '--ids', *map(str, J[k:k + batch])]
+    cmds = [[sys.executable, 'pk.py', 'converge', '--serial', '--ids', *map(str, J[k:k + batch])]
             for k in range(0, len(J), batch)]
     if cmds:
         tasks.add('converge', cmds, cwd=PK_DIR)
@@ -55,11 +57,12 @@ def run_pass():
     held, rows = os.path.exists(HOLD), 0
     for name, f in RULES.items():
         c = cur.get(name, end)
-        ids = [r[0] for r in st.db.execute('SELECT id FROM packing WHERE id>? ORDER BY id LIMIT ?', (c, MAX_ROWS))]
+        R = st.db.execute('SELECT id, tags FROM packing WHERE id>? ORDER BY id LIMIT ?', (c, MAX_ROWS)).fetchall()
+        ids = [i for i, t in R if HOLD_TAG not in t]          # rows of a held experiment (`pk.py try --hold`) skipped
         if ids and not held:
             print(f'{name}: {len(ids)} rows -> {f(st, ids)}', flush=True)
             rows += len(ids)
-        cur[name] = ids[-1] if ids else c
+        cur[name] = R[-1][0] if R else c
         with open(CURSOR + '.tmp', 'w') as o:          # per rule: a failing rule does not repeat the others
             json.dump(cur, o)
         os.replace(CURSOR + '.tmp', CURSOR)

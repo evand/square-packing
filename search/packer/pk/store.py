@@ -428,6 +428,26 @@ class Store:
         if commit:
             self.db.commit()
 
+    def record(self, parent, move, params, child, cpu_s, run=None, n=None, s=None, source=None, finder=None, tags=(),
+               status='raw', commit=True):
+        """the one logging call for a move applied outside the event loop (11-02): one move-log row for `move` (a chain
+        string or a script's move name) applied to store packing `parent` with `params` as drawn, `cpu_s` measured.
+        child: the output Packing (stored with the parent link, source `source` or 'run:<run>'), a store id already
+        stored, or None (a loss: logged with best_s = s, nothing stored).  n: the parent's unless given -> child id or None"""
+        if parent is None:
+            raise ValueError('Store.record: the move log needs a parent store id')
+        cid = None
+        if isinstance(child, Packing):
+            s = float(child.s) if s is None else s
+            cid, _ = self.add(child, source or f'run:{run}', finder=finder, status=status, parent=parent, tags=tags,
+                              commit=False)
+        elif child is not None:
+            cid = int(child)
+        if n is None:
+            n = self.db.execute('SELECT n FROM packing WHERE id=?', (parent,)).fetchone()[0]
+        self.record_expansion(parent, n, move, cpu_s, params=params, run=run, nprop=1, best_s=s, child=cid, commit=commit)
+        return cid
+
     def tried(self, pid, mechanism):
         """move-log rows for `mechanism` applied to packing `pid`: [(best_s, child, run, added)], oldest first"""
         return [tuple(r) for r in self.db.execute('SELECT best_s, child, run, added FROM expansion WHERE packing=? AND '

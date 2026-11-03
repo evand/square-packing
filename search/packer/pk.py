@@ -27,13 +27,17 @@ copying coordinates.  Store: runs/store.sqlite (env PK_STORE overrides).
   pk.py nearmiss list [--thr 1e-3] [--per-n 2]   near misses a scan would queue + the queue (read-only; pk/nearmiss.py)
   pk.py nearmiss tag [--from DIR ...]      scan the store (+ compose2 / harden / fresh output dirs) -> near-miss queue
   pk.py nearmiss requeue ID...             queue items back to queued
-  pk.py finish [--limit N] [--stages polish,harden1,harden] [--procs 4] [--candidate] [--dry-run]
+  pk.py finish [--limit N] [--stages polish,harden1,harden] [--candidate] [--dry-run]
                                            drain the queue: fq long polish, harden rounds; below frontier -> candidate.py
                                            (printed only without --candidate)
   pk.py prune --dry-run [--policy F]       what pk/policy.py would keep (tiers, threshold sweep, record lineage)
   pk.py archive-dedupe [ROOT...] [--apply]  drop explorer archive files the store regenerates byte for byte
   pk.py archive-restore RUN...             write them back (reads do this per file automatically)
   pk.py dedupe N... [--apply --i-discussed-this]   conservative same-minimum dedupe (pk/ident.py); plan in runs/dedup/
+  pk.py try CHAIN... (--ns N,N [--best K] | --ids I,I | --where SQL) --tries T [--control C | --no-control] [--name X]
+                                           paired test on store parents, every application a pool unit + move-log row;
+                                           pk.py try --report X (pk/lab.py)
+  pk.py stages [KIND] [--status lab] [--md]   stage registry with status, evidence and move-log use
   pk.py ingest [--apply] [--since ISO] [--no-fresh | --fresh-later];  pk.py ingest --fresh-pending   sync-register + watch --apply + fresh.py since
                                            the last ingest -> near-miss queue (pk/ingest.py; dry run without --apply)
 """
@@ -66,7 +70,7 @@ def main():
     sp = ap.add_subparsers(dest='cmd', required=True)
     sp.add_parser('sync-register')
     p = sp.add_parser('sync-kingbird'); p.add_argument('--date'); p.add_argument('--all', action='store_true')
-    p.add_argument('--snapshot'); p.add_argument('--procs', type=int, default=4)
+    p.add_argument('--snapshot')
     p = sp.add_parser('sync-issues'); p.add_argument('issues', type=int, nargs='*'); p.add_argument('--all', action='store_true')
     p.add_argument('--dry', action='store_true')
     p = sp.add_parser('repo-import'); p.add_argument('repo'); p.add_argument('--commit'); p.add_argument('--max-n', type=int)
@@ -80,7 +84,6 @@ def main():
     p = sp.add_parser('relink', help='backfill parent links from <dir>/parents.json (pk/sources.relink)'); p.add_argument('dirs', nargs='+'); p.add_argument('--source')
     p = sp.add_parser('import-run'); p.add_argument('runs', nargs='+'); p.add_argument('--below', type=float)
     p.add_argument('--below-k', action='store_true', help='only entries below ceil(sqrt n)')
-    p.add_argument('--procs', type=int, default=12)
     p = sp.add_parser('import-finals', help='battery / corpus finals with a certified / weak verdict -> packing table'); p.add_argument('--n', type=int, default=110)
     p = sp.add_parser('frontier'); p.add_argument('ns', nargs='*', type=int); p.add_argument('--lo', type=int, default=1)
     p.add_argument('--hi', type=int, default=10000); p.add_argument('--pending-only', action='store_true')
@@ -105,13 +108,13 @@ def main():
     p.add_argument('--no-scan', action='store_true', help='tag: only the --from dirs')
     p.add_argument('--limit', type=int, default=40)
     p = sp.add_parser('finish'); p.add_argument('--limit', type=int, default=None, help='items (default: all queued)'); p.add_argument('--ids', type=int, nargs='*')
-    p.add_argument('--stages', default='polish,harden1,harden'); p.add_argument('--procs', type=int, default=4)
+    p.add_argument('--stages', default='polish,harden1,harden')
     p.add_argument('--nm-gate', type=float, default=5e-4, help='NM harden only while the gap is below this')
     p.add_argument('--candidate', action='store_true', help='run candidate.py on items below the frontier (default: print)')
     p.add_argument('--dry-run', action='store_true', help='print the items and their bars (read-only)')
     p.add_argument('--out')
     p = sp.add_parser('sink', help='import result files of tools that do not write to the store (pk/sink.py); run it after them')
-    p.add_argument('--runs', nargs='*'); p.add_argument('--dry-run', action='store_true'); p.add_argument('--procs', type=int, default=12)
+    p.add_argument('--runs', nargs='*'); p.add_argument('--dry-run', action='store_true')
     p.add_argument('--report', action='store_true', help='run dirs no adapter reads, by manifest name')
     p = sp.add_parser('credit', help='lineage credit audit: store-best gains paid up the ancestry (pk/credit.py)')
     p.add_argument('--since', default='2026-10-10'); p.add_argument('--lam', type=float, nargs='+', default=[0.5, 0.8, 1.0])
@@ -122,7 +125,8 @@ def main():
     p.add_argument('--cap', type=int, default=50); p.add_argument('--json'); p.add_argument('--top', type=int, default=25)
     p = sp.add_parser('converge', help='cheap re-quench of near-record, non-45-degree packings not yet converged (pk/converge.py)')
     p.add_argument('--ns', default='2-1000'); p.add_argument('--tol', type=float, default=0.01); p.add_argument('--cap', type=int, default=50)
-    p.add_argument('--procs', type=int, default=8); p.add_argument('--dry-run', action='store_true')
+    p.add_argument('--serial', action='store_true', help='in this process (a pool unit), not as pool units')
+    p.add_argument('--dry-run', action='store_true')
     p.add_argument('--since', help='only packings added at or after this ISO time')
     p.add_argument('--ids', nargs='*', type=int, help='only these packings')
     p.add_argument('--mark', nargs='*', type=int, help='only tag these packing ids as already converged (backfill), run nothing')
@@ -130,15 +134,30 @@ def main():
     p.add_argument('--dry-run', action='store_true', required=True); p.add_argument('--policy')
     p = sp.add_parser('archive-dedupe', help='remove explorer archive files the store regenerates byte for byte (pk/archive.py)')
     p.add_argument('roots', nargs='*'); p.add_argument('--apply', action='store_true')
-    p.add_argument('--min-age-h', type=float, default=12.0); p.add_argument('--procs', type=int, default=16)
+    p.add_argument('--min-age-h', type=float, default=12.0)
     p = sp.add_parser('archive-restore', help='write back the archive files dedupe removed'); p.add_argument('runs', nargs='+')
     p = sp.add_parser('dedupe', help='conservative identity dedupe per n (pk/ident.py; dry run unless --apply)')
-    p.add_argument('ns', nargs='+', type=int); p.add_argument('--procs', type=int, default=16)
+    p.add_argument('ns', nargs='+', type=int)
     p.add_argument('--apply', action='store_true'); p.add_argument('--i-discussed-this', action='store_true',
                    help='Evan 10-20: no apply without discussing the rule again in that session')
-    p = sp.add_parser('stages', help='every pk/stages.py stage: kind, parameter space, what it does'); p.add_argument('kind', nargs='?')
+    p = sp.add_parser('stages', help='every stage: kind, status, parameter space, evidence, what it does, move-log use (pk/lab.py)')
+    p.add_argument('kind', nargs='?'); p.add_argument('--status', choices=['lab', 'default', 'retired'])
+    p.add_argument('--md', action='store_true', help='markdown table (the move registry)')
+    p = sp.add_parser('try', help='paired test of chains vs a control on store parents, logged move by move (pk/lab.py)')
+    p.add_argument('chains', nargs='*'); p.add_argument('--report', metavar='NAME')
+    p.add_argument('--ns', help='parent n, comma separated'); p.add_argument('--best', type=int, default=4, help='parents per n')
+    p.add_argument('--window', type=float, default=2e-3, help='score gap (side / sqrt n) above the best at n')
+    p.add_argument('--ids', help='parent store ids, comma separated'); p.add_argument('--where', help='SQL on packing')
+    p.add_argument('--tries', type=int, default=4, help='paired applications per parent and arm')
+    p.add_argument('--control', help='control chain (default: relax.round.15c.p5)'); p.add_argument('--no-control', action='store_true')
+    p.add_argument('--prio', default='high', choices=['high', 'normal', 'low']); p.add_argument('--name')
+    p.add_argument('--seeds', type=int, default=0, help='seed base (same base = same seeds)')
+    p.add_argument('--hold', action='store_true', help='tag the outputs react:hold: no follow-ups for this experiment')
+    p.add_argument('--fq-timeout', type=float, default=300.0)
+    p.add_argument('--admit', default='better', choices=['better', 'window'],
+                   help='store outputs below the parent (better) or within --window of the best at n (window)')
     p = sp.add_parser('ingest'); p.add_argument('--apply', action='store_true'); p.add_argument('--since')
-    p.add_argument('--procs', type=int, default=16); p.add_argument('--no-fresh', action='store_true')
+    p.add_argument('--no-fresh', action='store_true')
     p.add_argument('--fresh-later', action='store_true', help='syncs now, fresh pass deferred (pk/ingest.py)')
     p.add_argument('--fresh-pending', action='store_true', help='run the deferred fresh pass')
     p.add_argument('--nmax', type=int, default=324)
@@ -147,7 +166,7 @@ def main():
     if a.cmd in ('archive-dedupe', 'archive-restore'):          # store read-only here
         from pk import archive
         if a.cmd == 'archive-dedupe':
-            archive.dedupe(a.roots or [os.path.join(HERE, 'runs')], apply=a.apply, min_age_h=a.min_age_h, procs=a.procs)
+            archive.dedupe(a.roots or [os.path.join(HERE, 'runs')], apply=a.apply, min_age_h=a.min_age_h)
         else:
             for r in a.runs:
                 print(r, archive.restore(r), 'files restored')
@@ -156,18 +175,29 @@ def main():
         from pk import nearmiss
         nearmiss.print_list(nearmiss.ro_db(spath), nearmiss.frontier_fn(spath), a)
         return
-    if a.cmd == 'stages':                                       # no store needed
-        from pk import stages
-        for name, kind, space, doc in stages.table():
-            if a.kind in (None, kind):
-                sp_ = ', '.join(f'{k}={v}' for k, v in space.items())
-                print(f'{kind:9s} {name:22s} {doc[:90]}' + (f'\n{"":32s}{sp_}' if sp_ else ''))
+    if a.cmd == 'stages':                                       # the store read-only (move-log use)
+        from pk import lab
+        print(lab.stage_table(lab.stage_rows(a.status, a.kind, spath), a.md))
+        return
+    if a.cmd == 'try':
+        from pk import lab
+        if a.report:
+            print(lab.report(a.report, spath)); return
+        if not a.chains or sum(x is not None for x in (a.ns, a.ids, a.where)) != 1:
+            sys.exit('pk.py try CHAIN [CHAIN ...] with one of --ns / --ids / --where (or --report NAME)')
+        ints = lambda x: [int(v) for v in x.split(',') if v.strip()]
+        pids = lab.parents(ns=ints(a.ns) if a.ns else None, best=a.best, window=a.window,
+                           ids=ints(a.ids) if a.ids else None, where=a.where)
+        if not pids:
+            sys.exit('no parents')
+        lab.run(a.chains, pids, a.tries, control=None if a.no_control else (a.control or lab.CONTROL), name=a.name,
+                prio=a.prio, seeds=a.seeds, hold=a.hold, fq_timeout=a.fq_timeout, admit=a.admit, window=a.window)
         return
     if a.cmd == 'ingest':
         from pk import ingest
         if a.fresh_pending:
-            sys.exit(0 if not ingest.run_pending(store=a.store, procs=a.procs, nmax=a.nmax) else 1)
-        ingest.run(store=a.store, apply=a.apply, since=a.since, procs=a.procs, fresh=not a.no_fresh, nmax=a.nmax,
+            sys.exit(0 if not ingest.run_pending(store=a.store, nmax=a.nmax) else 1)
+        ingest.run(store=a.store, apply=a.apply, since=a.since, fresh=not a.no_fresh, nmax=a.nmax,
                    later=a.fresh_later)
         return
     if a.cmd == 'finish' and a.dry_run:
@@ -183,7 +213,7 @@ def main():
             sys.exit('dedupe --apply: discuss the rule with Evan first (pk/ident.py RULE), then add --i-discussed-this')
         os.makedirs(os.path.join(HERE, 'runs', 'dedup'), exist_ok=True)
         for n in a.ns:
-            P = ident.plan(st, n, procs=a.procs)
+            P = ident.plan(st, n)
             json.dump(dict(stats=P['stats'], groups={str(k): v for k, v in P['groups'].items()}, refused=P['refused']),
                       open(os.path.join(HERE, 'runs', 'dedup', f'plan_{n}.json'), 'w'))
             if a.apply:
@@ -195,7 +225,7 @@ def main():
             for c, name, ex in sink.report():
                 print(f'{c:6d}  {name}  e.g. {ex}')
             return
-        print(sink.run(st, runs=a.runs, dry=a.dry_run, procs=a.procs))
+        print(sink.run(st, runs=a.runs, dry=a.dry_run))
         return
     if a.cmd == 'credit':
         from pk import credit
@@ -221,7 +251,7 @@ def main():
             print(f'tagged {len(a.mark)} packings {converge.TAG}')
             return
         lo, hi = (int(x) for x in a.ns.split('-'))
-        converge.run(st, lo, hi, a.tol, a.cap, a.procs, a.dry_run, since=a.since, ids=a.ids)
+        converge.run(st, lo, hi, a.tol, a.cap, not a.serial, a.dry_run, since=a.since, ids=a.ids)
         return
     if a.cmd == 'prune':
         from pk import policy, prune
@@ -237,10 +267,10 @@ def main():
     elif a.cmd == 'sync-kingbird':
         from pk import kingbird
         if a.snapshot:
-            recs = kingbird.parse_snapshot(a.snapshot, a.procs)
+            recs = kingbird.parse_snapshot(a.snapshot)
             kingbird.import_snapshot(st, a.snapshot, recs)
         else:
-            kingbird.sync(st, a.date, a.all, a.procs)
+            kingbird.sync(st, a.date, a.all)
     elif a.cmd == 'sync-issues':
         from pk import watch
         if not a.issues and not a.all:
@@ -262,7 +292,7 @@ def main():
                        ([f'{r}/archive.jsonl'] if os.path.exists(f'{r}/archive.jsonl') else
                         glob.glob(f'{r}/**/archive.jsonl', recursive=True))})
         print(f'{len(runs)} archives')
-        print(sources.import_runs(st, runs, below=a.below, procs=a.procs, below_k=a.below_k))
+        print(sources.import_runs(st, runs, below=a.below, below_k=a.below_k))
     elif a.cmd == 'import-finals':
         print(sources.import_finals(st, a.n))
     elif a.cmd == 'frontier':
@@ -345,7 +375,7 @@ def main():
         import datetime, scratch
         scratch.scope('finish')
         out = a.out or os.path.join(HERE, 'runs', 'finish', datetime.datetime.now().strftime('%Y%m%dT%H%M%S'))
-        R = nearmiss.finish(st, out, a.limit, a.stages.split(','), a.procs, a.candidate,
+        R = nearmiss.finish(st, out, a.limit, a.stages.split(','), a.candidate,
                             fnow=nearmiss.frontier_fn(spath), ids=a.ids, nm_gate=a.nm_gate)
         print(f"{len(R)} items: {sum(1 for r in R if r.get('candidate'))} below the frontier, "
               f"{sum(1 for r in R if r.get('err'))} failed; log {out}/finish.jsonl")

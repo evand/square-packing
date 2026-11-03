@@ -27,11 +27,16 @@ Three ways work runs; choose by shape, never by core count:
 | Work | How | Notes |
 |---|---|---|
 | Short, independent (10-60 s, a few minutes at most) | `pk/tasks.py add` / `repeat`, priority high, normal or low | No preemption: a slot frees about once a second under real units |
-| A script keeping state between tries | ordinary process (`jobs.py start` for a log) with `tasks.Executor` in place of `ProcessPoolExecutor` | The script sleeps; each call is a unit; its memory is lost if it dies, saved results are not |
+| A script keeping state between tries | ordinary process (`jobs.py start` for a log) with `tasks.Executor` | The script sleeps; each call is a unit; its memory is lost if it dies, saved results are not |
 | Long and unsplittable, renders, anything else | `jobs.py start`, or just run it | Counts as outside load; the pool makes room within about 30 s |
 
 Event-loop campaigns: `pk/tasks.py repeat NAME --budget CPU_H --prio low -- python3 -m pk.events work --campaign NAME --max-units 3`.
 `--campaign` matters: without it a worker claims from every active campaign, and pool priority stops meaning anything.
+
+Parallel scripts use `tasks.Executor` (submit / map like ProcessPoolExecutor; `initializer=`, per-unit `timeout=`,
+`map(chunksize=)` for calls much shorter than 10 s; `jobpool.run_jobs` is the same with a hard timeout).  No private
+pools (`--procs`, `--local`, `Pool(N)`): a fixed pool can't grow when neighbours end (11-02: hv853 at 3 procs and
+tiltx `--local 4` left about 8 cores idle for hours).
 
 Follow-ups: `pk/react.py` reads new store rows once a minute and queues units from its rules (`@rule`; plugins add theirs).
 Results feed back as new rows.  `python3 -m pk.react hold` stops follow-ups for isolated experiments; rows arriving during
@@ -96,20 +101,29 @@ question at hand (scorers, schedules, placers, parameter values), draw among the
 condition 'a+b'); every application stays a logged experiment, so the knowledge keeps building while attention is on
 the larger questions.
 
-Run one: `python3 -m pk.events add NAME`, then `python3 pk/jobs.py start ev --procs N -- python3 -m pk.events work
---procs N`; read it with `python3 -m pk.events report NAME`.  Campaign files live in a plugin's `goals/` (they name
+Run one: `python3 -m pk.events add NAME`, then the pool `repeat` line under "Compute"; read it with `python3 -m pk.events report NAME`.  Campaign files live in a plugin's `goals/` (they name
 plugin stages and hold unposted results); this repo keeps only `goals/example.yaml`.  The campaign file is the
 pre-registration (the loader refuses one without predictions); write the reading of the result under it.
 
-## Adding an idea
+## Adding an idea (11-02)
 
-1. Register it as a stage of the right kind, where its family lives: a placer in `pk/fill.py`, a move in `pk/moves.py`,
-   an fq recipe in `pk/schedules.py`, anything else in `pk/stages.py` (or a plugin).  Declare every knob, return an info
-   dict, draw randomness only from `rng`.
-2. `python3 pk/tests/test_stages.py`.
-3. Name its chain as a move in a campaign (a source if it builds from nothing, `dn` if it changes n); compare it with
-   the existing moves by running the campaign and reading the per-move rows of the report and the move log.
-4. Steering results go into `CLAIMS.md` (one line, with evidence).
+A new move is a lab stage plus `pk.py try`:
+
+1. Register it as a stage of the right kind with `status='lab'` and an `evidence` pointer (a plugin's `lab/*.py` is
+   imported automatically; or next to its family: `pk/fill.py`, `pk/moves.py`, `pk/schedules.py`, `pk/stages.py`).
+   Declare every knob, return an info dict, draw randomness only from `rng`.  `python3 pk/tests/test_stages.py` covers it.
+2. `pk.py try 'new.stage | relax.round.15c.p5' --ns 791,853 --tries 8`: every arm and the control (`relax.round.15c.p5`
+   alone) on the same parents and seeds, every application a pool unit (prio high) and a move-log row
+   (`run = try:NAME`), children in the store with parent links; `pk.py try --report NAME` gives the paired reading.
+   `--admit window` keeps score-neutral outputs too (within the window of the best at n), for moves that pay off later.
+   `--hold` keeps follow-ups (`pk/react.py`) off this experiment's outputs.
+3. If it earns a place, name its chain as a move in a campaign (`admit: window` per move there too), set
+   `status='default'` and the evidence; steering results go into `CLAIMS.md`.  `pk.py stages [--md] [--status lab]`
+   is the move registry: registry fields joined with the move log's use of every stage.
+
+Scripts that are not stages log through one call, `Store.record(parent, move, params, child, cpu_s, run=)` (or
+`pk.record`): a row for every output, kept or not.  The scratchpad is for plots and one-off analysis.  If you are writing
+a loop over parents in a scratch script, stop: that is `pk try`.
 
 ## Plugins
 
