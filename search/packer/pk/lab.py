@@ -1,7 +1,8 @@
 """Interactive experiments as logged moves (11-02): `pk.py try` and `pk.py stages`.
 
-  pk.py try CHAIN [CHAIN ...] (--ns 791,853 [--best K] [--window W] | --ids 1,2 | --where SQL) --tries T
-            [--control CHAIN | --no-control] [--prio high] [--name NAME] [--seeds S] [--hold] [--admit better|window]
+  pk.py try ARM [ARM ...] (--ns 791,853 [--best K] [--window W] | --ids 1,2 | --where SQL) --tries T
+            [--control ARM | --no-control] [--prio high] [--name NAME] [--seeds S] [--hold] [--admit better|window]
+            [--requires F,F] [--asof ISO]
   pk.py try --report NAME
   pk.py stages [KIND] [--status lab] [--md]
 
@@ -13,9 +14,21 @@ window of the store best at its n) goes to the store with the parent link
 (tags try:NAME, and react:hold with --hold), losses are rows with child NULL.  The report reads only those rows, so it
 works while the run goes on, after it, and after the driver died.  Same application step as the event loop
 (events.apply_chain, Store.record).
+
+Arms (11-02): an ARM is a chain, 'dn=D: CHAIN' (an n-changing arm: parent at n0, ctx n = n0 + D), or '@NAME' (a named
+move: a MOVES dict {name: arm} in a loaded plugin / lab module).  Every row is scored against a reference: the store
+best at its target n when the plan is made (or among rows added before --asof, to replay a past win).  Wins = outputs
+below that reference (events.below: relative tolerance WIN_RTOL); 'below parent' is shown for dn = 0 arms.  The paired
+diff is in score units (side / sqrt n): u = min(parent gap at n0, output gap at n0 + dn), each gap measured from the
+reference at its n, so a failed or worse output counts as keeping the parent, whatever the arm's dn; d = u(ctl) -
+u(arm) > 0: the arm did better.  The control is the default relax at the parent's n unless --control names another
+arm (for an underfill arm, the same chain with dn=0 isolates the n change).  Outputs of dn != 0 arms are stored
+within --window of the store best at their n (as the event loop does across n).  A control that is deterministic
+(stages.deterministic) runs once per parent and pairs with every rep.  --requires keeps parents whose cached features
+(pk/features.py) meet every requirement.
 """
 from __future__ import annotations
-import json, math, os, random, sqlite3, sys, time
+import json, math, os, random, re, sqlite3, sys, time
 
 CONTROL = 'relax.round.15c.p5'          # DESIGN.md "Stages": the default relax after constructions (CLAIMS C50)
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -58,19 +71,51 @@ def parents(ns=None, best=4, window=2e-3, exclude=('G', 'D', 'S'), ids=None, whe
 
 # ------------------------------------------------------------------ one application (a pool unit)
 
-def apply(name, arm, chain, pid, rep, seed, fq_timeout=300.0, tags=(), lim=None):
-    """apply chain to store packing pid once -> dict(arm, pid, rep, s0, s, cpu, child); logs the move-log row itself.
-    lim None (admit better): the output is stored only below the parent; else below lim (admit window)"""
+_ARM = re.compile(r'^\s*dn\s*=\s*([-+]?\d+)\s*:(.*)$', re.S)
+
+
+def moves():
+    """named arms: MOVES dicts of loaded plugins and lab modules"""
+    from . import stages as S
+    out = {}
+    for m in list(S.PLUGINS) + [v for k, v in sorted(sys.modules.items()) if k.startswith('lab_')]:
+        out.update(getattr(m, 'MOVES', None) or {})
+    return out
+
+
+def arm_spec(a):
+    """'dn=-1: CHAIN' | '@NAME' | CHAIN -> (dn, chain)"""
+    a = a.strip()
+    if a.startswith('@'):
+        M = moves()
+        if a[1:] not in M:
+            raise SystemExit(f'unknown move {a} (named moves: {sorted(M)})')
+        a = M[a[1:]]
+    m = _ARM.match(a)
+    return (int(m.group(1)), m.group(2).strip()) if m else (0, a)
+
+
+def best_at(db, n, asof=None):
+    q = f'SELECT MIN(s) FROM packing WHERE n=? AND {FEAS}' + (' AND added<?' if asof else '')
+    r = db.execute(q, (n, asof) if asof else (n,)).fetchone()[0]
+    return float(r) if r is not None else None
+
+
+def apply(name, arm, chain, pid, rep, seed, fq_timeout=300.0, tags=(), lim=None, dn=0):
+    """apply chain to store packing pid once at target n = parent n + dn -> dict(arm, pid, rep, s0, s, cpu, child);
+    logs the move-log row itself.  lim None (admit better, dn 0): the output is stored only below the parent; else
+    below lim (admit window / cross n)"""
     import numpy as np
-    from .events import apply_chain
+    from .events import apply_chain, WIN_RTOL
     from .store import Store
     st = Store()
     try:
         n, s0, c = st.db.execute('SELECT n, s, coords FROM packing WHERE id=?', (pid,)).fetchone()
-        p, s1, params, cpu = apply_chain(chain, n, s0, np.frombuffer(c, '<f8').reshape(-1, 3), seed, fq_timeout)
+        p, s1, params, cpu = apply_chain(chain, n + dn, s0, np.frombuffer(c, '<f8').reshape(-1, 3), seed, fq_timeout)
         from .families import kgrid
-        keep = s1 is not None and s1 < min(s0 - 1e-12 if lim is None else lim, kgrid(n) - 1e-9)
-        cid = st.record(pid, chain, dict(params, seed=seed, arm=arm, rep=rep, admit='better' if lim is None else 'window'),
+        keep = s1 is not None and s1 < min(s0 * (1 - WIN_RTOL) if lim is None else lim, kgrid(n + dn) - 1e-9)
+        cid = st.record(pid, chain, dict(params, seed=seed, arm=arm, rep=rep, admit='better' if lim is None else 'window',
+                                         **({'dn': dn} if dn else {})),
                         p if keep else None, cpu, run=f'try:{name}',
                         n=n, s=s1, tags=tags)
         return dict(arm=arm, pid=pid, rep=rep, s0=s0, s=s1, cpu=cpu, child=cid)
@@ -81,32 +126,48 @@ def apply(name, arm, chain, pid, rep, seed, fq_timeout=300.0, tags=(), lim=None)
 # ------------------------------------------------------------------ the driver
 
 def run(chains, pids, tries, control=CONTROL, name=None, prio='high', seeds=0, hold=False, fq_timeout=300.0,
-        every=30.0, out=sys.stdout, admit='better', window=2e-3):
+        every=30.0, out=sys.stdout, admit='better', window=2e-3, asof=None, requires=()):
     """submit every (parent, rep, arm) application as a pool unit and wait, printing the report every `every` s.
-    admit 'window': outputs within window * sqrt(n) of the store best at n are stored too (score-neutral steps)"""
+    admit 'window': outputs within window * sqrt(n) of the store best at n are stored too (score-neutral steps).
+    Arms: see the module doc (dn, @NAME); asof: reference bests from rows added before this ISO time"""
     from . import stages as S, tasks
     name = name or time.strftime('t%m%d-%H%M%S')
     arms = ([('ctl', control)] if control else []) + [(f'a{i + 1}', c) for i, c in enumerate(chains)]
-    for _, c in arms:
+    arms = [(a, *arm_spec(c)) for a, c in arms]                  # (arm, dn, chain)
+    for _, _, c in arms:
         S.parse(c)                                               # unknown stages / parameters fail here, not in units
+    if requires:
+        from . import features as FT
+        k = len(pids); pids = FT.filter_ids(pids, requires)
+        print(f'requires {list(requires)}: {len(pids)} of {k} parents', file=out)
+        if not pids:
+            raise SystemExit('no parents meet --requires')
     db = ro()
     try:
         if db.execute('SELECT 1 FROM expansion WHERE run=? LIMIT 1', (f'try:{name}',)).fetchone():
             raise SystemExit(f'try {name}: rows exist already (pick another --name; read it with --report {name})')
+        n0 = dict(db.execute(f"SELECT id, n FROM packing WHERE id IN ({','.join('?' * len(pids))})", pids).fetchall())
+        T = sorted({n0[p] + dn for p in pids for _, dn, _ in arms} | set(n0.values()))
+        ref = {n: best_at(db, n, asof) for n in T}               # the scoring reference per target n
+        now = {n: best_at(db, n) for n in T}                     # admission: the store as it is
         lim = {}
-        if admit == 'window':
-            for pid, n in db.execute(f"SELECT id, n FROM packing WHERE id IN ({','.join('?' * len(pids))})", pids).fetchall():
-                b = db.execute(f'SELECT MIN(s) FROM packing WHERE n=? AND {FEAS}', (n,)).fetchone()[0]
-                lim[pid] = b + window * math.sqrt(n)
+        for a, dn, _ in arms:
+            for p in pids:
+                n = n0[p] + dn
+                if (dn or admit == 'window') and now[n] is not None:
+                    lim[f'{a}:{p}'] = now[n] + window * math.sqrt(n)
     finally:
         db.close()
+    ctl_once = bool(control) and S.deterministic(arms[0][2])
     rng = random.Random(f'{name}:{seeds}')
     plan = [(pid, j, random.Random(f'{seeds}:{pid}:{j}').randrange(1 << 30)) for pid in pids for j in range(tries)]
-    units = [(arm, c, pid, j, sd) for pid, j, sd in plan for arm, c in arms]
+    units = [(arm, dn, c, pid, j, sd) for pid, j, sd in plan for arm, dn, c in arms
+             if not (arm == 'ctl' and ctl_once and j > 0)]       # a deterministic control: once per parent
     rng.shuffle(units)                                           # arms interleave in time (equal load on average)
     os.makedirs(os.path.join(HERE, 'runs', 'try'), exist_ok=True)
-    json.dump(dict(name=name, arms=dict(arms), parents=pids, tries=tries, seeds=seeds, hold=hold, prio=prio, admit=admit,
-                   lim=lim,
+    json.dump(dict(name=name, arms={a: c for a, _, c in arms}, dn={a: dn for a, dn, _ in arms}, parents=pids,
+                   tries=tries, seeds=seeds, hold=hold, prio=prio, admit=admit, lim=lim, asof=asof,
+                   ref={str(n): v for n, v in ref.items()}, ctl_once=ctl_once, requires=list(requires),
                    store=store_path(), argv=sys.argv, t=time.time()),
               open(os.path.join(HERE, 'runs', 'try', f'{name}.json'), 'w'), indent=1)
     tags = (f'try:{name}',) + (('react:hold',) if hold else ())
@@ -114,7 +175,8 @@ def run(chains, pids, tries, control=CONTROL, name=None, prio='high', seeds=0, h
           f'(pool campaign try-{name}, prio {prio}, store {store_path()})', file=out, flush=True)
     t0, last, done, errs = time.time(), time.time(), 0, []
     with tasks.Executor(f'try-{name}', prio=prio, timeout=fq_timeout + 300) as ex:
-        fs = [ex.submit(apply, name, arm, c, pid, j, sd, fq_timeout, tags, lim.get(pid)) for arm, c, pid, j, sd in units]
+        fs = [ex.submit(apply, name, arm, c, pid, j, sd, fq_timeout, tags, lim.get(f'{arm}:{pid}'), dn)
+              for arm, dn, c, pid, j, sd in units]
         while done < len(fs):
             time.sleep(1.0)
             done = sum(f.done() for f in fs)
@@ -132,7 +194,7 @@ def run(chains, pids, tries, control=CONTROL, name=None, prio='high', seeds=0, h
 # ------------------------------------------------------------------ report
 
 def rows(name, path=None):
-    """move-log rows of a try -> [dict(pid, n, chain, arm, rep, cpu, s0, s, child)]"""
+    """move-log rows of a try -> [dict(pid, n, nt, dn, chain, arm, rep, cpu, s0, s, child)] (n: the parent's, nt: target)"""
     db = ro(path)
     try:
         R = db.execute('SELECT e.packing, e.n, e.mechanism, e.params, e.cpu_s, e.best_s, e.child, p.s FROM expansion e '
@@ -141,35 +203,65 @@ def rows(name, path=None):
         db.close()
     out = []
     for pid, n, mech, params, cpu, s, child, s0 in R:
-        P = json.loads(params or '{}')
-        out.append(dict(pid=pid, n=n, chain=mech, arm=P.get('arm', '?'), rep=P.get('rep'), cpu=cpu, s0=s0, s=s, child=child))
+        P = json.loads(params or '{}'); dn = int(P.get('dn', 0))
+        out.append(dict(pid=pid, n=n, nt=n + dn, dn=dn, chain=mech, arm=P.get('arm', '?'), rep=P.get('rep'), cpu=cpu, s0=s0,
+                        s=s, child=child))
     return out
 
 
+def plan_of(name):
+    f = os.path.join(HERE, 'runs', 'try', f'{name}.json')
+    return json.load(open(f)) if os.path.exists(f) else {}
+
+
 def report(name, path=None):
-    """per arm x n: tries, failures, wins vs parent, best gain, gain / CPU-h; paired vs the control (same parent, seed):
-    sign counts and median of d = r(ctl) - r(arm), r = min(parent side, output side) (d > 0: the arm did better)"""
+    """per arm x target n: tries, failures, outputs below the parent (dn 0), wins (below the reference best at the
+    target n), best output - reference, gain / CPU-h (sum of gains below the reference); paired vs the control (same
+    parent, seed): sign counts and median of d = u(ctl) - u(arm) in score units (module doc; d > 0: the arm did better)"""
+    from .events import below, WIN_RTOL
     R = rows(name, path)
     if not R:
         return f'try {name}: no rows yet'
+    P = plan_of(name)
+    ref = {int(k): v for k, v in (P.get('ref') or {}).items()}
+    miss = sorted(({r['nt'] for r in R} | {r['n'] for r in R}) - {k for k, v in ref.items() if v is not None})
+    if miss:                                                     # an old plan: the store best now (none: the grid side)
+        from .families import kgrid
+        db = ro(path)
+        try:
+            ref.update({n: best_at(db, n) or float(kgrid(n)) for n in miss})
+        finally:
+            db.close()
     med = lambda xs: sorted(xs)[len(xs) // 2] if xs else float('nan')
-    res = lambda r: min(r['s0'], r['s']) if r['s'] is not None else r['s0']
-    chain = {r['arm']: r['chain'] for r in R}
-    ctl = {(r['pid'], r['rep']): res(r) for r in R if r['arm'] == 'ctl'}
-    out = [f'# try {name}: {len(R)} applications, {sum(r["cpu"] for r in R) / 3600:.2f} CPU-h', '',
-           '| arm | n | tries | failed | wins | best gain | gain / CPU-h | pairs | + / - / = vs ctl | median paired diff |',
-           '|---|---|---|---|---|---|---|---|---|---|']
-    keys = sorted({(r['arm'], r['n']) for r in R}, key=lambda k: (k[0] != 'ctl', k))
+    gap = lambda s, n: (s - ref[n]) / math.sqrt(n)
+
+    def u(r):
+        g = gap(r['s0'], r['n'])
+        return min(g, gap(r['s'], r['nt'])) if r['s'] is not None else g
+    chain = {r['arm']: (r['dn'], r['chain']) for r in R}
+    ctl = {(r['pid'], r['rep']): u(r) for r in R if r['arm'] == 'ctl'}
+    ctl1 = {r['pid']: u(r) for r in R if r['arm'] == 'ctl'} if P.get('ctl_once') else {}
+    tie = 2 * WIN_RTOL
+    out = [f'# try {name}: {len(R)} applications, {sum(r["cpu"] for r in R) / 3600:.2f} CPU-h'
+           + (f'; references as of {P["asof"]}' if P.get('asof') else '') + (' (control once per parent)' if ctl1 else ''),
+           '', '| arm | n | ref | tries | failed | below parent | wins | best - ref | gain / CPU-h | pairs | '
+           '+ / - / = vs ctl | median paired diff (score) |', '|---|---|---|---|---|---|---|---|---|---|---|---|']
+    keys = sorted({(r['arm'], r['nt']) for r in R}, key=lambda k: (k[0] != 'ctl', k))
     for arm, n in keys + [(a, None) for a in sorted({a for a, _ in keys}, key=lambda a: (a != 'ctl', a))]:
-        G = [r for r in R if r['arm'] == arm and (n is None or r['n'] == n)]
-        g = [max(0.0, r['s0'] - r['s']) for r in G if r['s'] is not None]
+        G = [r for r in R if r['arm'] == arm and (n is None or r['nt'] == n)]
+        ok = [r for r in G if r['s'] is not None]
+        g = [max(0.0, ref[r['nt']] - r['s']) for r in ok if below(r['s'], ref[r['nt']])]
         h = sum(r['cpu'] for r in G) / 3600
-        D = [ctl[(r['pid'], r['rep'])] - res(r) for r in G if arm != 'ctl' and (r['pid'], r['rep']) in ctl]
-        pm = f'{sum(d > 1e-12 for d in D)} / {sum(d < -1e-12 for d in D)} / {sum(abs(d) <= 1e-12 for d in D)}' if D else ''
-        out.append(f"| {arm} | {n if n is not None else 'all'} | {len(G)} | {sum(r['s'] is None for r in G)} | "
-                   f"{sum(x > 1e-12 for x in g)} | {max(g, default=0):.3e} | {sum(g) / max(h, 1e-9):.3e} | {len(D) or ''} | "
-                   f"{pm} | {f'{med(D):+.3e}' if D else ''} |")
-    out += [''] + [f'  {a}: {c}' for a, c in sorted(chain.items(), key=lambda x: (x[0] != 'ctl', x[0]))]
+        D = [] if arm == 'ctl' else [(ctl.get((r['pid'], r['rep'])) if (r['pid'], r['rep']) in ctl else ctl1.get(r['pid']),
+                                      u(r)) for r in G]
+        D = [c - a for c, a in D if c is not None]
+        pm = f'{sum(d > tie for d in D)} / {sum(d < -tie for d in D)} / {sum(abs(d) <= tie for d in D)}' if D else ''
+        bp = sum(below(r['s'], r['s0']) for r in ok if r['dn'] == 0) if any(r['dn'] == 0 for r in G) else ''
+        bs = min((r['s'] - ref[r['nt']] for r in ok), default=None) if n is not None else None
+        out.append(f"| {arm} | {n if n is not None else 'all'} | {f'{ref[n]:.6f}' if n is not None else ''} | {len(G)} | "
+                   f"{len(G) - len(ok)} | {bp} | {len(g)} | {f'{bs:+.3e}' if bs is not None else ''} | "
+                   f"{sum(g) / max(h, 1e-9):.3e} | {len(D) or ''} | {pm} | {f'{med(D):+.3e}' if D else ''} |")
+    out += [''] + [f'  {a}: ' + (f'dn={d}: ' if d else '') + c for a, (d, c) in sorted(chain.items(), key=lambda x: (x[0] != 'ctl', x[0]))]
     return '\n'.join(out)
 
 

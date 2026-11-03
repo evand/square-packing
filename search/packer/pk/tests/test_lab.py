@@ -49,6 +49,19 @@ def main():
     react.run_pass()
     assert pid in seen and r['child'] not in seen, (seen, r['child'])
     assert json.load(open(react.CURSOR))['t'] == r['child']              # the cursor moves past held rows
+    # 11-02: arm syntax, cross-n rows scored against the target n's reference, determinism, features
+    assert lab.arm_spec('dn=-2: relax.round.15c.p5') == (-2, 'relax.round.15c.p5') and lab.arm_spec(' relax.polish ') == (0, 'relax.polish')
+    from pk import stages as S, features as FT, events as E
+    assert S.deterministic('relax.round.15c.p5') and not S.deterministic('perturb.kick | relax.round.15c.p5')
+    assert E.below(1.0, 1.0 + 1e-9) and not E.below(1.0, 1.0 + 1e-12) and not E.below(None, 1.0)
+    st = Store()
+    st.record(pid, 'shrink.drop | relax.round.15c.p5', dict(arm='a2', rep=0, seed=123, dn=-1), None, 2.0, run='try:t1', s=1.0)
+    st.close()
+    row = [l for l in lab.report('t1').splitlines() if l.startswith('| a2 | 49 |')][0]
+    assert '| 1 | 0 |  | 1 |' in row and '1 / 0 / 0' in row, row        # a win at 49: scored vs 49's reference
+    FT.FEATURES.clear()
+    FT.feature('nsq')(lambda s, sq: len(sq)); FT.feature('big')(lambda s, sq: len(sq) > 100)
+    assert FT.filter_ids([pid], ['nsq>=50', '!big', 'nsq=50']) == [pid] and FT.filter_ids([pid], ['big']) == []
     print('lab ok')
 
 

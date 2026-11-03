@@ -34,7 +34,8 @@ copying coordinates.  Store: runs/store.sqlite (env PK_STORE overrides).
   pk.py archive-dedupe [ROOT...] [--apply]  drop explorer archive files the store regenerates byte for byte
   pk.py archive-restore RUN...             write them back (reads do this per file automatically)
   pk.py dedupe N... [--apply --i-discussed-this]   conservative same-minimum dedupe (pk/ident.py); plan in runs/dedup/
-  pk.py try CHAIN... (--ns N,N [--best K] | --ids I,I | --where SQL) --tries T [--control C | --no-control] [--name X]
+  pk.py try ARM... (--ns N,N [--best K] | --ids I,I | --where SQL) --tries T [--control C | --no-control] [--name X]
+                                           [--requires F,F] [--asof ISO]; ARM = CHAIN | 'dn=D: CHAIN' | @MOVE
                                            paired test on store parents, every application a pool unit + move-log row;
                                            pk.py try --report X (pk/lab.py)
   pk.py stages [KIND] [--status lab] [--md]   stage registry with status, evidence and move-log use
@@ -156,6 +157,8 @@ def main():
     p.add_argument('--fq-timeout', type=float, default=300.0)
     p.add_argument('--admit', default='better', choices=['better', 'window'],
                    help='store outputs below the parent (better) or within --window of the best at n (window)')
+    p.add_argument('--requires', help='parent filter: cached features, comma separated (pk/features.py)')
+    p.add_argument('--asof', help='reference bests from store rows added before this ISO time (replay a past win)')
     p = sp.add_parser('ingest'); p.add_argument('--apply', action='store_true'); p.add_argument('--since')
     p.add_argument('--no-fresh', action='store_true')
     p.add_argument('--fresh-later', action='store_true', help='syncs now, fresh pass deferred (pk/ingest.py)')
@@ -191,7 +194,8 @@ def main():
         if not pids:
             sys.exit('no parents')
         lab.run(a.chains, pids, a.tries, control=None if a.no_control else (a.control or lab.CONTROL), name=a.name,
-                prio=a.prio, seeds=a.seeds, hold=a.hold, fq_timeout=a.fq_timeout, admit=a.admit, window=a.window)
+                prio=a.prio, seeds=a.seeds, hold=a.hold, fq_timeout=a.fq_timeout, admit=a.admit, window=a.window,
+                asof=a.asof, requires=[x for x in (a.requires or '').split(',') if x.strip()])
         return
     if a.cmd == 'ingest':
         from pk import ingest

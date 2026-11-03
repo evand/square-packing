@@ -218,6 +218,19 @@ def release(st, rng, ctx):
     return st.but(frozen=np.zeros(st.p.n, bool)), {}
 
 
+@stage('constrain.best', 'constrain', status='lab', evidence='keep-if-better cycles (11-02 move registry)')
+def keep_best(st, rng, ctx):
+    """continue from the best feasible packing at ctx n seen so far in this chain (State.best; nothing frozen, no
+    region), so 'ruin | recreate | relax | constrain.best | ruin | ...' repeats a move on the best so far"""
+    if st.best is None or (st.p is st.best[1]):
+        return st, dict(reverted=False)
+    return st.but(p=st.best[1], frozen=np.zeros(st.best[1].n, bool), region=None), dict(reverted=True, src=st.best[2])
+
+
+for _f in (freeze, release, keep_best):
+    _f.deterministic = True
+
+
 # ================================================================== relax (every pk.schedules entry)
 
 def _quench(st, rng, ctx, opt):
@@ -257,6 +270,8 @@ def _relax(name):
     def run(st, rng, ctx):
         return _quench(st, rng, ctx, get(name))
     run.__doc__ = 'fq quench ' + ' '.join(get(name).args())
+    o = get(name)
+    run.deterministic = not (o.kick or o.round_kick or o.soft_kick)     # fq draws a seed only for kicks
     return stage(f'relax.{name}', 'relax')(run)
 
 
@@ -270,6 +285,9 @@ def relax_round(st, rng, ctx, r0, steps, compress, press, kick, pit, loosen, pre
                      round_steps=int(steps), pit=int(pit), **({'round_kick': float(kick)} if kick else {}),
                      **({'round_press_outer': int(press_outer)} if press else {}))
     return _quench(st, rng, ctx, opt)
+
+
+relax_round.deterministic = lambda P: not P.get('kick')
 
 
 # ================================================================== perturb (every pk.moves move)
@@ -412,6 +430,18 @@ def run_chain(spec, ctx, seed, st=None, keep_best=True):
         log.append(dict(stage='keep.best', kind='keep', params={}, cpu=0.0, s=best[0], count=int(best[1].n), frozen=0,
                         info=dict(src=best[2], why=why, final_s=final_s)))
     return st, log
+
+
+def deterministic(spec):
+    """does the chain give the same output for every seed?  True only if every stage declares it (attribute
+    `deterministic`: bool, or a function of the fixed parameters) and no parameter is left to draw"""
+    for name, kw in (parse(spec) if isinstance(spec, str) else spec):
+        f = STAGES[name]; d = getattr(f, 'deterministic', False)
+        if any(is_space(kw.get(k, v)) if k in kw else isinstance(v, tuple) for k, v in f.space.items()):
+            return False
+        if not (d(dict({k: v for k, v in f.space.items()}, **kw)) if callable(d) else d):
+            return False
+    return True
 
 
 def table():

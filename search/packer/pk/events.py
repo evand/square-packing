@@ -21,6 +21,7 @@ Campaign file (the pre-registration: `predictions` is required; the reading of t
     moves:                     # name -> stage chain; dn: target n - parent n; once: one application per parent;
                                # admit: better (default: a same-n output is stored only below its parent) | window
                                # (stored within the window of the condition's best at n: score-neutral steps, 11-02)
+                               # requires: [f, '!f', 'f=v', 'f>=x'] parent filter on cached features (pk/features.py)
       relax:  {chain: 'relax.round.05c.p5', once: true, relax: true}
       add:    {chain: 'grow.add | relax.round.05c.p5', dn: 1}
       lcut:   {chain: 'shrink.lcut | relax.round.05c.p5', dn: '-(2*k-3)'}   # dn in k = ceil sqrt(parent n): an outer L
@@ -108,6 +109,13 @@ SOURCE = '_source'                             # the cond of source / refresh un
 REFRESH_GAP = 30.0                             # s between stale() checks of a source's inputs
 FILL_LEASE = 120.0                             # s: a claimed queue refill not finished by then may be taken over
 FILL_WAIT = 30.0                               # s a claim waits on an empty queue that another worker is filling
+WIN_RTOL = 1e-10                               # 11-02: s beats ref only if s < ref * (1 - WIN_RTOL) (float noise of a
+                                               # relax is ~1e-12 relative; one constant for run_unit, record and pk try)
+
+
+def below(s, ref):
+    """s is a real improvement on ref (relative tolerance WIN_RTOL; None never is)"""
+    return s is not None and ref is not None and s < ref * (1.0 - WIN_RTOL)
 
 
 from .families import kgrid  # noqa: E402
@@ -216,8 +224,10 @@ def load(spec):
                 raise ValueError(f'{path}: source move {name} must start with a gen stage')
             if m.get('admit', 'better') not in ('better', 'window'):
                 raise ValueError(f"{path}: move {name}: admit is 'better' or 'window'")
+            req = m.get('requires') or []
+            req = [req] if isinstance(req, str) else [str(x) for x in req]
             moves[name] = dict(chain=m['chain'], dn=dn, dnf=_dn_fn(dn), once=bool(m.get('once', False)), source=src,
-                               admit=m.get('admit', 'better'),
+                               admit=m.get('admit', 'better'), requires=req,
                                relax=bool(m.get('relax', False)), tags=m.get('tags', {}),
                                relaxed_out=m['chain'].split('|')[-1].strip().startswith('relax.'))
         w = {k if k == 'default' else int(k): float(v) for k, v in (e['weight'] or {}).items()}
@@ -430,6 +440,9 @@ def options(db, cfg, cond, now):
     rec = dict(db.execute("SELECT n, SUM(apps) + SUM(status='running') FROM unit WHERE campaign=? AND cond=? AND "
                           "(status='running' OR ended>?) GROUP BY n", (name, cond, now - 3600 * cfg['recent_h'])))
     relax = [m for m, v in cfg['moves'].items() if v['relax']]
+    req = {m: v['requires'] for m, v in cfg['moves'].items() if v.get('requires')}
+    if req:
+        from . import features as FT                   # per-move parent filter (11-02): cached per store packing
     out = []
     for pid, n0, s, fam, t_in, fresh, relaxed in db.execute(
             'SELECT pid, n, s, fam, t_in, fresh, relaxed FROM parent WHERE campaign=? AND cond=?', (name, cond)):
@@ -444,6 +457,8 @@ def options(db, cfg, cond, now):
                 continue
             t, w = tries.get((pid, m), (0, 0))
             if v['once'] and t:
+                continue
+            if m in req and not FT.ok(pid, req[m]):
                 continue
             T, W = tot.get(pid, (0, 0))
             out.append(dict(pid=pid, n0=n0, n=n, s=s, fam=fam, move=m, tags=v['tags'], gap=gap, best=b,
@@ -787,10 +802,12 @@ def run_unit(u):
     db = connect(); bref = db.execute('SELECT s FROM nbest WHERE campaign=? AND cond=? AND n=?',
                                       (u['campaign'], u['cond'], n)).fetchone(); db.close()
     bn = bref[0] if bref else float(kgrid(n))
-    lim = (s0 - 1e-12) if mv['dn'] == 0 and mv.get('admit', 'better') == 'better' else bn + cfg['window'] * math.sqrt(n)
+    lim = s0 * (1.0 - WIN_RTOL) if mv['dn'] == 0 and mv.get('admit', 'better') == 'better' else bn + cfg['window'] * math.sqrt(n)
     rng = random.Random(u['seed']); c0 = cpu()
     run = f"runs/events/{u['campaign']}/u{u['id']:07d}"
     spec = [(name, dict(kw, **(u.get('params') or {}).get(name, {}))) for name, kw in S.parse(mv['chain'])]
+    asg = {k: v for k, v in (u.get('params') or {}).items() if k.startswith('_')}   # the scorer's assignment facts
+    #   (11-02: settings keys starting with '_', e.g. _random_move, are logged with every application, never applied)
     apps, children = [], []
     store = None
     try:
@@ -800,14 +817,15 @@ def run_unit(u):
             store = store or Store()
             keep = s1 is not None and s1 < min(lim, kgrid(n) - 1e-9)
             ad = {} if mv.get('admit', 'better') == 'better' else dict(admit=mv['admit'])
-            cid = store.record(u['pid'], u['move'], dict(params, seed=seed, **ad), p if keep else None, c, run=run, n=u['n0'], s=s1)
+            cid = store.record(u['pid'], u['move'], dict(params, seed=seed, **ad, **asg), p if keep else None, c, run=run,
+                               n=u['n0'], s=s1)
             if cid is not None:
                 fam = F.fill([(cid, s1, p.sq.astype('<f8').tobytes(), None)], n, path=store_path()).get(cid)
                 if fam not in cfg['exclude']:
                     children.append((cid, n, s1, fam))
             # a win is a new best of the condition at the target n, for every move (Evan 10-27: within and across n alike;
             # below the parent is not a win: a drop child always is, and the scorer models new bests)
-            apps.append(dict(s=s1, cpu=round(c, 2), win=int(s1 is not None and s1 < bn - 1e-12)))
+            apps.append(dict(s=s1, cpu=round(c, 2), win=int(below(s1, bn))))
             if mv['once'] or cpu() - c0 > cfg['unit_cpu'] - (c if apps else 0) * 0.5:
                 break
             if len(apps) >= FAIL_RUN and all(a['s'] is None for a in apps[-FAIL_RUN:]):
@@ -877,7 +895,7 @@ def record(db, u, res, cpu_s, wall, now=None):
                 r = db.execute('SELECT s FROM nbest WHERE campaign=? AND cond=? AND n=?', (name, c, n)).fetchone()
                 if r is None:
                     db.execute('INSERT INTO nbest VALUES (?,?,?,?,?,?)', (name, c, n, s, s, now))
-                elif s < r[0]:
+                elif below(s, r[0]):
                     gain += (r[0] - s) / math.sqrt(n) if c == cond else 0.0
                     db.execute('UPDATE nbest SET s=?, t=? WHERE campaign=? AND cond=? AND n=?', (s, now, name, c, n))
                     drop_queued(db, name, c, n)
@@ -951,7 +969,7 @@ def report(db, name):
     for cond, in db.execute('SELECT DISTINCT cond FROM nbest WHERE campaign=? ORDER BY cond', (name,)).fetchall():
         U = db.execute('SELECT COUNT(*), COALESCE(SUM(apps), 0), COALESCE(SUM(cpu), 0) / 3600 FROM unit WHERE campaign=? AND '
                        'cond=? AND cpu IS NOT NULL', (name, cond)).fetchone()
-        M = db.execute('SELECT n, s0, s FROM nbest WHERE campaign=? AND cond=? AND s < s0 - 1e-12', (name, cond)).fetchall()
+        M = db.execute('SELECT n, s0, s FROM nbest WHERE campaign=? AND cond=? AND s < s0 * (1 - 1e-10)', (name, cond)).fetchall()
         g = sum((a - b) / math.sqrt(n) for n, a, b in M)
         P = db.execute('SELECT COUNT(*), SUM(fresh) FROM parent WHERE campaign=? AND cond=?', (name, cond)).fetchone()
         out.append(f'| {cond} | {U[0]} | {U[1]} | {U[2]:.2f} | {len(M)} | {g:.3e} | {g / max(U[2], 1e-9):.2e} | {P[0]} ({P[1] or 0}) |')
@@ -975,7 +993,7 @@ def report(db, name):
         a, b = cfg['stop']['conds']
         out.append(f"stop rule {a} vs {b}: P({a} rate > {b} rate) = {z['p']:.3f}; improvements {z['k']}, CPU-h {z['h']}"
                    + (f"; STOPPED at {time.strftime('%H:%M', time.localtime(json.loads(d[0])['t']))}" if d else ''))
-    moved = db.execute('SELECT cond, n, s0, s FROM nbest WHERE campaign=? AND s < s0 - 1e-12 ORDER BY n, cond', (name,)).fetchall()
+    moved = db.execute('SELECT cond, n, s0, s FROM nbest WHERE campaign=? AND s < s0 * (1 - 1e-10) ORDER BY n, cond', (name,)).fetchall()
     out += ['', 'moved:'] + [f'  {c} {n}: {a:.9f} -> {b:.9f} ({(a - b) / math.sqrt(n):.2e})' for c, n, a, b in moved]
     return '\n'.join(out)
 
