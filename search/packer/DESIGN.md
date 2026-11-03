@@ -117,6 +117,13 @@ A new move is a lab stage plus `pk.py try`:
    (`run = try:NAME`), children in the store with parent links; `pk.py try --report NAME` gives the paired reading.
    `--admit window` keeps score-neutral outputs too (within the window of the best at n), for moves that pay off later.
    `--hold` keeps follow-ups (`pk/react.py`) off this experiment's outputs.
+   An n-changing arm is `'dn=D: CHAIN'` (parent at n0, ctx n = n0 + D); `@NAME` is a named move (a plugin's `MOVES`).
+   Each row is scored against the store best at its target n when the plan is made (`--asof ISO`: among rows added
+   before then, to replay a past win); wins need `s < ref * (1 - events.WIN_RTOL)`.  The paired diff is in score units
+   (a failed or worse output counts as keeping the parent), so arms of different dn compare on one scale; a
+   deterministic control (`stages.deterministic`) runs once per parent.  `--requires F,...` keeps parents whose cached
+   features (`pk/features.py`) qualify; campaign moves take `requires:` too.  `constrain.best` continues a chain from
+   its best packing so far (keep-if-better cycles in one application).
 3. If it earns a place, name its chain as a move in a campaign (`admit: window` per move there too), set
    `status='default'` and the evidence; steering results go into `CLAIMS.md`.  `pk.py stages [--md] [--status lab]`
    is the move registry: registry fields joined with the move log's use of every stage.
@@ -129,7 +136,7 @@ a loop over parents in a scratch script, stop: that is `pk try`.
 
 `pk/stages.py` imports `pk_plugin.py` from each directory on `PK_PLUGINS` (default `../plugins/packer` next to this
 repo, if present) before adapting the registries.  A plugin registers stages with the same decorators and may define
-`TEST_STARTS` (`{stage: chain}` for the contract test), event-loop scorers (`pk.events.SCORERS[name] = f`) and
+`TEST_STARTS` (`{stage: chain}` or `(chain, start n, ctx n)` for the contract test), features (`pk.features.feature`), event-loop scorers (`pk.events.SCORERS[name] = f`) and
 campaign files of its own.  Plugin scripts find this directory through their own bootstrap; `runs/` and the store
 live here.
 
