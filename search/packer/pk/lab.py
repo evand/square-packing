@@ -217,7 +217,9 @@ def plan_of(name):
 def report(name, path=None):
     """per arm x target n: tries, failures, outputs below the parent (dn 0), wins (below the reference best at the
     target n), best output - reference, gain / CPU-h (sum of gains below the reference); paired vs the control (same
-    parent, seed): sign counts and median of d = u(ctl) - u(arm) in score units (module doc; d > 0: the arm did better)"""
+    parent, seed): sign counts and median of d = u(ctl) - u(arm) in score units (module doc; d > 0: the arm did better);
+    median output gap: (output side - reference at its n) / sqrt n over feasible outputs (informative when the parent is
+    the reference itself, where every u is 0)"""
     from .events import below, WIN_RTOL
     R = rows(name, path)
     if not R:
@@ -245,7 +247,8 @@ def report(name, path=None):
     out = [f'# try {name}: {len(R)} applications, {sum(r["cpu"] for r in R) / 3600:.2f} CPU-h'
            + (f'; references as of {P["asof"]}' if P.get('asof') else '') + (' (control once per parent)' if ctl1 else ''),
            '', '| arm | n | ref | tries | failed | below parent | wins | best - ref | gain / CPU-h | pairs | '
-           '+ / - / = vs ctl | median paired diff (score) |', '|---|---|---|---|---|---|---|---|---|---|---|---|']
+           '+ / - / = vs ctl | median paired diff (score) | median output gap (score) |',
+           '|---|---|---|---|---|---|---|---|---|---|---|---|---|']
     keys = sorted({(r['arm'], r['nt']) for r in R}, key=lambda k: (k[0] != 'ctl', k))
     for arm, n in keys + [(a, None) for a in sorted({a for a, _ in keys}, key=lambda a: (a != 'ctl', a))]:
         G = [r for r in R if r['arm'] == arm and (n is None or r['nt'] == n)]
@@ -258,9 +261,11 @@ def report(name, path=None):
         pm = f'{sum(d > tie for d in D)} / {sum(d < -tie for d in D)} / {sum(abs(d) <= tie for d in D)}' if D else ''
         bp = sum(below(r['s'], r['s0']) for r in ok if r['dn'] == 0) if any(r['dn'] == 0 for r in G) else ''
         bs = min((r['s'] - ref[r['nt']] for r in ok), default=None) if n is not None else None
+        og = [gap(r['s'], r['nt']) for r in ok]
         out.append(f"| {arm} | {n if n is not None else 'all'} | {f'{ref[n]:.6f}' if n is not None else ''} | {len(G)} | "
                    f"{len(G) - len(ok)} | {bp} | {len(g)} | {f'{bs:+.3e}' if bs is not None else ''} | "
-                   f"{sum(g) / max(h, 1e-9):.3e} | {len(D) or ''} | {pm} | {f'{med(D):+.3e}' if D else ''} |")
+                   f"{sum(g) / max(h, 1e-9):.3e} | {len(D) or ''} | {pm} | {f'{med(D):+.3e}' if D else ''} | "
+                   f"{f'{med(og):+.3e}' if og else ''} |")
     out += [''] + [f'  {a}: ' + (f'dn={d}: ' if d else '') + c for a, (d, c) in sorted(chain.items(), key=lambda x: (x[0] != 'ctl', x[0]))]
     return '\n'.join(out)
 
