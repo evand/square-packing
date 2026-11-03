@@ -1,7 +1,7 @@
 """Grid-crossing tests: from states with side >= k and no sub-k ancestry, how often does a method reach a sub-k minimum?
 
   crossing.py run NAME --n 110 --classes grid above scratch pos neg --methods quench kick:0.05 anneal:diagonal:0.3:20000
-              [--trials 20] [--procs 16] [--snapq 0]
+              [--trials 20] [--snapq 0]
   crossing.py report NAME [--by method,cls]
 
 Start classes (per n; k = ceil sqrt n):
@@ -25,7 +25,6 @@ import os
 for _v in ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS'):
     os.environ.setdefault(_v, '1')
 import argparse, collections, json, math, random, sys, time
-from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -33,6 +32,7 @@ from pk.store import Store
 from pk.packing import Packing
 from pk import anneal as AN
 from pk.pipeline import Policy, Known, evaluate
+from pk.tasks import Executor
 
 ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'runs', 'crossing')
 POLICY = Policy(same=0.0, smax_above_k=10.0, grid_check=False)   # polish everything; grid tested on the final state
@@ -194,7 +194,7 @@ def run(a):
     st = Store()
     d = os.path.join(ROOT, a.name); os.makedirs(d, exist_ok=True)
     from pk import manifest
-    man = manifest.start(d, 'crossing', seed=a.seed, args=vars(a), procs=a.procs)
+    man = manifest.start(d, 'crossing', seed=a.seed, args=vars(a))
     rng = random.Random(a.seed)
     tasks = []
     for n in a.n:
@@ -234,8 +234,8 @@ def run(a):
                          a.snapq, keys))
     print(f'{a.name}: {len(jobs)} trials', flush=True)
     t0 = time.time()
-    with open(f'{d}/trials.jsonl', 'a') as f, ProcessPoolExecutor(a.procs) as ex:
-        for r in ex.map(trial, jobs, chunksize=1):
+    with open(f'{d}/trials.jsonl', 'a') as f, Executor(f'crossing-{a.name}') as ex:
+        for r in ex.map(trial, jobs):
             if r is not None:
                 f.write(json.dumps(r) + '\n'); f.flush()
     print(f'done in {time.time() - t0:.0f}s', flush=True)
@@ -314,7 +314,7 @@ def main():
     p = sp.add_parser('run'); p.add_argument('name'); p.add_argument('--n', type=int, nargs='+', required=True)
     p.add_argument('--classes', nargs='+', default=['grid', 'above', 'scratch', 'pos', 'neg'])
     p.add_argument('--methods', nargs='+', required=True); p.add_argument('--trials', type=int, default=20)
-    p.add_argument('--procs', type=int, default=16); p.add_argument('--seed', type=int, default=1)
+    p.add_argument('--seed', type=int, default=1)
     p.add_argument('--dmin', type=float, default=0.1); p.add_argument('--snaps', type=int, default=20)
     p.add_argument('--snapq', type=int, default=0)
     p = sp.add_parser('report'); p.add_argument('name')

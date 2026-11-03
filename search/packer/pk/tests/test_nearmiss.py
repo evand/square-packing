@@ -75,7 +75,7 @@ def test_bar():
 
 def fake_runner(delta, fail=False, calls=None):
     """stage runner: writes the input scaled to side s - delta (feasible for these lattices while s - delta >= 4)"""
-    def run(inp, wd, n, target, procs):
+    def run(inp, wd, n, target):
         if calls is not None:
             calls.append(os.path.basename(wd))
         if fail:

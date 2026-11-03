@@ -11,7 +11,7 @@ band's ends swapped: the junction it meets is new.  D = band depth + U(0, 1.5); 
 + U(0, 1.5) margins, clipped at the other bands' depth on the perpendicular walls (corner blocks stay).  fq quench
 (loosen 1.02 / 1.05), full-line check.  Mode 'both' flips every band (the mirror image, a control: same design).
 
-  bandflip.py --donors ID ... --reps 40 --procs 8 --out runs/bandflip/f274
+  bandflip.py --donors ID ... --reps 40 --out runs/bandflip/f274
 """
 import argparse, json, math, os, random, sys, tempfile, time
 import numpy as np
@@ -99,7 +99,7 @@ def main():
     ap.add_argument('--donors', nargs='*', default=[]); ap.add_argument('--donor-list')
     ap.add_argument('--reps', type=int, default=20, help='per donor and band')
     ap.add_argument('--both', type=int, default=4, help="mirror-image controls per donor")
-    ap.add_argument('--procs', type=int, default=4); ap.add_argument('--seed', type=int, default=1)
+    ap.add_argument('--seed', type=int, default=1)
     ap.add_argument('--out', required=True)
     a = ap.parse_args()
     from pk.store import Store
@@ -108,7 +108,7 @@ def main():
     import mcmin, scratch
     scratch.scope('bandflip')
     os.makedirs(f'{a.out}/donors', exist_ok=True); os.makedirs(f'{a.out}/seeds', exist_ok=True)
-    man = manifest.start(a.out, 'bandflip', seed=a.seed, args=vars(a), procs=a.procs)
+    man = manifest.start(a.out, 'bandflip', seed=a.seed, args=vars(a))
     st = Store(); rng = random.Random(a.seed)
     if a.donor_list:
         a.donors += [l.split()[0] for l in open(a.donor_list) if l.strip()]
@@ -124,7 +124,7 @@ def main():
         for q in range(a.both):
             J.append((src, 'both', 0, (1.02, 1.05)[q % 2], rng.randrange(10 ** 9)))
     t0 = time.time()
-    R = [r for r in run_jobs(job, J, procs=a.procs, timeout=1200) if isinstance(r, dict)]
+    R = [r for r in run_jobs(job, J, timeout=1200) if isinstance(r, dict)]
     with open(f'{a.out}/seeds.jsonl', 'w') as fo:
         for i, r in enumerate(R):
             if r.get('s') and not r['grid']:

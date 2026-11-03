@@ -153,13 +153,13 @@ def runs_under(root):
                   if '/ext/' not in p)
 
 
-def dedupe(roots, apply=False, min_age_h=12.0, procs=16, log=print):
-    from concurrent.futures import ProcessPoolExecutor
+def dedupe(roots, apply=False, min_age_h=12.0, log=print):
+    from . import tasks
     runs = [r for root in roots for r in (runs_under(root) if not os.path.exists(os.path.join(root, 'archive.jsonl'))
                                           else [root])]
     tot = dict(runs=0, entries=0, removed=0, bytes=0, not_in_store=0, differs=0, missing=0, skipped=0)
-    with ProcessPoolExecutor(procs) as ex:
-        for r in ex.map(dedupe_run, runs, [apply] * len(runs), [min_age_h] * len(runs), chunksize=4):
+    with tasks.Executor('archive-dedupe') as ex:
+        for r in ex.map(dedupe_run, runs, [apply] * len(runs), [min_age_h] * len(runs), chunksize=8):
             tot['runs'] += 1
             if r['skipped']:
                 tot['skipped'] += 1; continue

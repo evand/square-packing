@@ -89,16 +89,15 @@ def e2_job(t):
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument('cmd'); ap.add_argument('--out', default='runs/core/bend174')
-    ap.add_argument('--procs', type=int, default=15)
     a = ap.parse_args()
-    from multiprocessing import Pool
+    from pk import tasks
     os.makedirs(a.out, exist_ok=True)
     s, B = bases()
     if a.cmd == 'e1':
         T = [(nm, s, sq.tolist(), k, r0, box, seed) for nm, sq in B for k in range(len(strip_order(sq)) + 1)
              for r0 in (0.1, 0.2) for box in ('held', 'free') for seed in (1, 2)]
-        with Pool(a.procs) as pool:
-            R = pool.map(e1_job, T)
+        with tasks.Executor() as ex:
+            R = list(ex.map(e1_job, T))
         json.dump(R, open(os.path.join(a.out, 'e1.json'), 'w'))
         ok = [r for r in R if r['res']]
         print(len(T), 'runs', len(ok), 'feasible;  s(175) record 13.7641743175, s(174) 13.7071067812')
@@ -114,8 +113,8 @@ def main():
     else:
         T = [(nm, s, sq.tolist(), k, rad, seed) for nm, sq in B for k in range(len(strip_order(sq)))
              for rad in (1.5, 2.5) for seed in (1, 2, 3)]
-        with Pool(a.procs) as pool:
-            R = pool.map(e2_job, T)
+        with tasks.Executor() as ex:
+            R = list(ex.map(e2_job, T))
         json.dump(R, open(os.path.join(a.out, 'e2.json'), 'w'))
         ok = [r for r in R if r['res']]
         tie = [r for r in ok if r['res'][0] < s + 1e-9]

@@ -10,7 +10,7 @@ tilt (0 or U(+-tmax), + per-square jitter) so the refill is staggered / tilted, 
 Cuts: arm 'scored' = the --cuts cleanest distinct cuts on a --step grid (cleanliness = area of squares on the far side of
 a cut line from their centre, i.e. what the shift tears), arm 'random' = uniform cuts (edge cuts included).
 
-  ladd.py --donors 291673 --n 274 --cuts 40 --reps 2 --random 80 --procs 8 --out runs/ladd/a274
+  ladd.py --donors 291673 --n 274 --cuts 40 --reps 2 --random 80 --out runs/ladd/a274
 Useful pairs (store records 10-21): 241 (15.98712) -> 274 (d 33, 16.987 + squeeze), 240 -> 274 (34), 273 -> 308 (35),
 272 -> 307 / 308.
 """
@@ -95,7 +95,7 @@ def main():
     ap.add_argument('--reps', type=int, default=2); ap.add_argument('--random', type=int, default=80)
     ap.add_argument('--step', type=float, default=0.1); ap.add_argument('--sep', type=float, default=0.3)
     ap.add_argument('--wmax', type=float, default=1.06); ap.add_argument('--tmax', type=float, default=20.0)
-    ap.add_argument('--procs', type=int, default=4); ap.add_argument('--seed', type=int, default=1)
+    ap.add_argument('--seed', type=int, default=1)
     ap.add_argument('--out', required=True)
     a = ap.parse_args()
     from pk.store import Store
@@ -104,7 +104,7 @@ def main():
     import mcmin, scratch
     scratch.scope('ladd')
     os.makedirs(f'{a.out}/donors', exist_ok=True); os.makedirs(f'{a.out}/seeds', exist_ok=True)
-    man = manifest.start(a.out, 'ladd', seed=a.seed, args=vars(a), procs=a.procs)
+    man = manifest.start(a.out, 'ladd', seed=a.seed, args=vars(a))
     st = Store(); rng = random.Random(a.seed)
     k = math.ceil(math.sqrt(a.n) - 1e-12)
     if a.donor_list:
@@ -122,7 +122,7 @@ def main():
         for t in range(a.random):
             J.append(('random', src, a.n, k, 0, 0, (1.02, 1.05)[t % 2], rng.randrange(10 ** 9), a.wmax, a.tmax))
     t0 = time.time()
-    R = [r for r in run_jobs(job, J, procs=a.procs, timeout=1200) if isinstance(r, dict)]
+    R = [r for r in run_jobs(job, J, timeout=1200) if isinstance(r, dict)]
     with open(f'{a.out}/seeds.jsonl', 'w') as fo:
         for i, r in enumerate(R):
             if r.get('s') and not r['grid']:

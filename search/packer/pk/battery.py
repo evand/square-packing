@@ -1,7 +1,7 @@
 """Idea battery: one command from a new move / schedule to a verdict against a frozen baseline, with uncertainty.
 
   battery.py freeze [--n 110]                       write runs/battery/suite_<n>.json (frozen parents, tasks, withheld set)
-  battery.py run NAME ARM [--minutes 10] [--procs 16] [--n 110]   ARM: pk.moves arm spec ('ashallow', 'kick:sigma=0.02',
+  battery.py run NAME ARM [--minutes 10] [--n 110]   ARM: pk.moves arm spec ('ashallow', 'kick:sigma=0.02',
                                                     or 'mix' = the explorer's weighted arm mix = the baseline)
   battery.py report NAME [--vs baseline]
 
@@ -21,13 +21,12 @@ import os
 for _v in ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS'):
     os.environ.setdefault(_v, '1')
 import argparse, collections, json, math, random, sys, time
-from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from pk.store import Store
 from pk.packing import Packing
-from pk import moves
+from pk import moves, tasks
 from pk.pipeline import Policy, Known, evaluate
 
 ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'runs', 'battery')
@@ -141,14 +140,14 @@ def _pd(args):
     return f'{min(i, j)},{max(i, j)}', match_distance(st.get(i), st.get(j))
 
 
-def pairdist(S, procs=16):
+def pairdist(S):
     """Matching distances within each suite's parent pool (cached; used for nearest-mate selection)."""
     path = f'{ROOT}/pairdist_{S["n"]}.json'
     if os.path.exists(path):
         return
     pairs = {(min(i, j), max(i, j)) for pool in (S['bench'], S['reach'], S['above'], S['pos']) for i in pool for j in pool if i != j}
-    with ProcessPoolExecutor(procs) as ex:
-        D = dict(ex.map(_pd, sorted(pairs), chunksize=16))
+    with tasks.Executor('battery-pairdist') as ex:
+        D = dict(ex.map(_pd, sorted(pairs), chunksize=64))     # one matching each: short
     json.dump(D, open(path, 'w'))
     print(f'pair distances: {len(D)}', flush=True)
 
@@ -157,16 +156,16 @@ def run(a):
     sp = f'{ROOT}/suite_{a.n}.json'
     S = json.load(open(sp))
     if a.arm.startswith('cross'):
-        pairdist(S, a.procs)
+        pairdist(S)
     d = f'{ROOT}/{a.name}'; os.makedirs(d, exist_ok=True)
     json.dump(dict(arm=a.arm, n=a.n, minutes=a.minutes), open(f'{d}/meta.json', 'w'))
     from pk import manifest                  # 10-11: commit, binaries, suite hash, measured CPU (meta.json kept for old readers)
-    man = manifest.start(d, 'battery', seed=hash(a.name) & 0xffffffff, args=vars(a), procs=a.procs,
+    man = manifest.start(d, 'battery', seed=hash(a.name) & 0xffffffff, args=vars(a),
                          extra=dict(suite=sp, suite_sha256=manifest.file_sha256(sp)))
     rng = random.Random(hash(a.name) & 0xffffffff)
     t_end = time.time() + 60 * a.minutes
     rnd = 0
-    with ProcessPoolExecutor(a.procs, initializer=_init, initargs=(sp,)) as ex:
+    with tasks.Executor(f'battery-{a.name}', initializer=_init, initargs=(sp,)) as ex:
         while time.time() < t_end:
             rnd += 1
             jobs = []
@@ -176,7 +175,7 @@ def run(a):
                         jobs.append((suite, pid, a.arm, rng.randrange(1 << 30)))
             rng.shuffle(jobs)
             with open(f'{d}/trials.jsonl', 'a') as f:
-                for r in ex.map(_job, jobs, chunksize=2):
+                for r in ex.map(_job, jobs, chunksize=4):
                     sq = r.pop('sq', None)
                     if sq is not None:
                         r['fin'] = sq
@@ -203,7 +202,7 @@ def _cert1(args):
     return key(s), r
 
 
-def certify(d, S, procs=16):
+def certify(d, S):
     st = Store()
     todo = {}
     lines = []
@@ -214,7 +213,7 @@ def certify(d, S, procs=16):
             if kk not in todo and st.basin(S['n'], kk) is None:
                 todo[kk] = (r['s'], r['fin'])
     if todo:
-        with ProcessPoolExecutor(procs) as ex:
+        with tasks.Executor(f'battery-{os.path.basename(d)}') as ex:
             for kk, r in ex.map(_cert1, todo.values()):
                 st.record_verdict(S['n'], kk, r, via=f'battery:{os.path.basename(d)}')
 
@@ -319,7 +318,7 @@ def main():
     sp = ap.add_subparsers(dest='cmd', required=True)
     p = sp.add_parser('freeze'); p.add_argument('--n', type=int, default=110); p.add_argument('--dist', default='runs/dist110.json')
     p = sp.add_parser('run'); p.add_argument('name'); p.add_argument('arm'); p.add_argument('--minutes', type=float, default=10)
-    p.add_argument('--procs', type=int, default=16); p.add_argument('--n', type=int, default=110); p.add_argument('--vs', default='baseline')
+    p.add_argument('--n', type=int, default=110); p.add_argument('--vs', default='baseline')
     p = sp.add_parser('report'); p.add_argument('name'); p.add_argument('--vs', default='baseline'); p.add_argument('--n', type=int, default=110)
     a = ap.parse_args()
     {'freeze': freeze, 'run': run, 'report': report}[a.cmd](a)

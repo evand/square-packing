@@ -13,7 +13,7 @@ Evaluation (--eval): 'fill' = ftmc.evaluate with reasons (relax T alone, exact a
 squeeze, reject full lines); 'keep' (default) = keep the start's axis squares, fix the count locally, penalty squeeze from the
 overlapping state.  Then slp2 finish -> side, jam, full lines, role counts (L, B, axis, other).
 
-  movegen.py start.txt [start2.txt ...] --n 110 --k 11 --trials 200 --out runs/mv1/m [--procs 15] [--seed 1]   (--trials per start)
+  movegen.py start.txt [start2.txt ...] --n 110 --k 11 --trials 200 --out runs/mv1/m [--seed 1]   (--trials per start)
 """
 import argparse, collections, json, math, os, random, tempfile
 from ftmc import load, run_packer
@@ -292,14 +292,14 @@ def job(args):
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument('start', nargs='+'); ap.add_argument('--n', type=int, required=True); ap.add_argument('--k', type=int, required=True)
-    ap.add_argument('--trials', type=int, default=100); ap.add_argument('--procs', type=int, default=15)
+    ap.add_argument('--trials', type=int, default=100)
     ap.add_argument('--seed', type=int, default=1); ap.add_argument('--eval', choices=['fill', 'keep'], default='keep'); ap.add_argument('--focus', choices=['L', 'B'], default=None); ap.add_argument('--out', required=True)
     a = ap.parse_args()
     os.makedirs(os.path.dirname(a.out) or '.', exist_ok=True)
     # trials per start; seeds unique across starts
     jobs = [(st, a.n, a.k, a.seed * 100000 + i * a.trials + t, a.out, a.eval, a.focus)
             for i, st in enumerate(a.start) for t in range(a.trials)]
-    res = run_jobs(job, jobs, procs=a.procs, timeout=3 * JOB_BUDGET,
+    res = run_jobs(job, jobs, timeout=3 * JOB_BUDGET,
                    on_timeout=lambda j: dict(seed=j[3], status='killed'),
                    on_error=lambda j, e: dict(seed=j[3], status=f'failed: {e}'))
     res = [r if r is not None else dict(seed=j[3], status='failed') for r, j in zip(res, jobs)]

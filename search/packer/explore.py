@@ -11,11 +11,12 @@ an archive entry.
 Descriptor (search): (ntilted bin of 2, number of tilt-angle classes, below-k flag).  Evaluation only (n = 110): role
 counts (L, B, axis, other) as in census_roles, and novelty against runs/known110.json (48 certified sub-11 minima).
 
-  explore.py --n 110 --starts seeds/rec110.txt ... --minutes 60 --procs 15 --out runs/ex0
+  explore.py --n 110 --starts seeds/rec110.txt ... --minutes 60 --out runs/ex0
   explore.py --report runs/ex0
 """
 import argparse, collections, json, math, os, random, subprocess, tempfile, time
-from concurrent.futures import ProcessPoolExecutor, FIRST_COMPLETED, wait
+from concurrent.futures import FIRST_COMPLETED, wait
+from pk import tasks
 from pk import identity as ID           # SAME_SIDE: one f64 same-side tolerance (10-11)
 import mcmin, hop
 from pk.engine import QOpt, SCREEN, POLISH   # the explorer's fq stages (one flag builder, 10-14)
@@ -659,7 +660,7 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument('--n', type=int, default=110); ap.add_argument('--starts', nargs='+')
     ap.add_argument('--minutes', type=float, default=None, help='wall budget (default 60); with --cpu-h a hang guard only (default 24 h)')
-    ap.add_argument('--cpu-h', type=float, default=None, help='CPU budget of the whole run tree (pk/cpubudget; allocator)'); ap.add_argument('--procs', type=int, default=15)
+    ap.add_argument('--cpu-h', type=float, default=None, help='CPU budget of the whole run tree (pk/cpubudget; allocator)')
     ap.add_argument('--smax', type=float, default=None, help='stepping-stone ceiling (default k + 0.05)')
     ap.add_argument('--same', type=float, default=0.0, help='screened side within this of a known basin = return, no polish '
                     '(10-09 bench c110a: 1e-6 lost half the new certified basins; default 0 = polish everything)')
@@ -724,7 +725,7 @@ if __name__ == '__main__':
     import scratch
     scratch.scope('explore')                 # all temp dirs of this run (workers, fq / anneal files) under one dir, removed at exit
     from pk import manifest
-    man = manifest.start(a.out, 'explore', seed=a.seed, args=vars(a), procs=a.procs)
+    man = manifest.start(a.out, 'explore', seed=a.seed, args=vars(a))
     k = math.ceil(math.sqrt(a.n) - 1e-12)
     known = json.load(open(f'{HERE}/runs/known{a.n}.json')) if os.path.exists(f'{HERE}/runs/known{a.n}.json') else []
     ar = Archive(a.out, a.n, k, a.smax or k + 0.05, known)
@@ -806,7 +807,7 @@ if __name__ == '__main__':
         if a.polish_gate:                    # gate-ref run (10-15): far seeds; polish near the run's own best
             return (ar_best[0] if a.gate_ref == 'run' else min(frontier_s, ar_best[0])) + a.polish_gate
         return (min(e['s'] for e in ar.E) + a.polish_margin) if a.polish_margin else float('inf')
-    with ProcessPoolExecutor(a.procs) as ex:
+    with tasks.Executor() as ex:
         def submit():
             fr = None; pick = None
             if focus[0] is not None and focus[1] > 0 and rng.random() < a.focus_share:   # FB1: fresh run best
@@ -834,7 +835,7 @@ if __name__ == '__main__':
                                        pol_above(), a.polish_extra.split(),
                                        mates(kind, par), (a.finish, a.kick_sigma, False, True) if a.finish else (a.kick_retry, a.kick_sigma, True, False)))
             pend[f] = (par, sd, pick)
-        for _ in range(a.procs):
+        for _ in range(16):                  # calls kept queued (the pool decides how many run)
             submit()
         last = 0
         while pend:

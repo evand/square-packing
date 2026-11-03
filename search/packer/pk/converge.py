@@ -9,14 +9,13 @@ relax.screen1.0 and relax.screen1.02 from the packing (pk.stages; fq SCREEN = AL
 line-free result kept if below the start by > 1e-9: stored as a new packing (source `converge`, parent = the start,
 status screened, tag `requenched`).  The start is tagged `requenched` either way, so nothing is converged twice.
 
-  pk.py converge [--ns 2-1000] [--tol 0.01] [--cap 50] [--procs 8] [--since ISO] [--dry-run]
+  pk.py converge [--ns 2-1000] [--tol 0.01] [--cap 50] [--serial] [--since ISO] [--dry-run]
 
-New rows reach it as pool units (pk/react.py: `--ids`, a few packings per unit); the backlog (packings that entered
+New rows reach it as pool units (pk/react.py: `--serial --ids`, a few packings per unit); the backlog (packings that entered
 before this module existed) is a separate, explicit run.
 """
 from __future__ import annotations
 import contextlib, json, math, os, random, tempfile
-from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 
 TAG = 'requenched'
@@ -89,17 +88,19 @@ def _one(args):
     return pid, n, s0, None, None, None, cpu
 
 
-def run(st, lo=2, hi=1000, tol=0.01, cap=50, procs=8, dry=False, log=print, since=None, ids=None):
+def run(st, lo=2, hi=1000, tol=0.01, cap=50, parallel=True, dry=False, log=print, since=None, ids=None):
+    """parallel: pool units of a few packings (serial inside a unit)"""
     from .packing import Packing
+    from . import tasks
     J = select(st, lo, hi, tol, cap, since, ids)
     log(f'converge: {len(J)} packings over {len({n for _, n, _ in J})} n (n {lo}-{hi}, below best + {tol})')
     if dry or not J:
         return dict(selected=len(J))
     args = [(i, n, s, st.db.execute('SELECT coords FROM packing WHERE id=?', (i,)).fetchone()[0], None) for i, n, s in J]
     improved, new, cpu = 0, 0, 0.0
-    ex = ProcessPoolExecutor(procs) if procs > 1 else None
-    with ex or contextlib.nullcontext():
-        for k, (pid, n, s0, s1, sq1, by, c) in enumerate(ex.map(_one, args, chunksize=2) if ex else map(_one, args)):
+    ex = tasks.Executor('converge') if parallel else None
+    with ex or contextlib.nullcontext():           # ~5 CPU-s per packing: 8 per unit
+        for k, (pid, n, s0, s1, sq1, by, c) in enumerate(ex.map(_one, args, chunksize=8) if ex else map(_one, args)):
             cpu += c
             if s1 is not None:
                 improved += 1

@@ -1,8 +1,8 @@
 """One ingestion command (10-14): sync + watch + fresh pass, its near misses into the queue.
 
   pk.py ingest                     dry run: the plan, --since, and what the store already holds since then (read-only)
-  pk.py ingest --apply [--procs 16] [--no-fresh | --fresh-later] [--since ISO]
-  pk.py ingest --fresh-pending [--procs 16]   run the fresh pass for every window --fresh-later deferred (10-28)
+  pk.py ingest --apply [--no-fresh | --fresh-later] [--since ISO]
+  pk.py ingest --fresh-pending              run the fresh pass for every window --fresh-later deferred (10-28)
 
 --apply runs, each as its own process with the same store (PK_STORE), logs in runs/ingest/<stamp>/:
   1. pk.py sync-register   2. pk.py watch --apply (updated issues + watched repos)
@@ -42,14 +42,14 @@ def save_state(S, root=IDIR):
     os.replace(tmp, state_path(root))
 
 
-def plan(since, out, procs=16, fresh=True, nmax=324, store=None):
+def plan(since, out, fresh=True, nmax=324, store=None):
     """[(name, argv)] for --apply (cwd search/packer)."""
     py, pk = sys.executable, os.path.join(PK, 'pk.py')
     base = [py, pk] + (['--store', store] if store else [])
     P = [('sync-register', base + ['sync-register']), ('watch', base + ['watch', '--apply'])]
     if fresh:
         P.append(('fresh', [py, os.path.join(PK, 'fresh.py'), 'run', '--since', since, '--nmax', str(nmax),
-                            '--procs', str(procs), '--out', os.path.join(out, 'fresh'),
+                            '--out', os.path.join(out, 'fresh'),
                             '--name', 'ingest_' + os.path.basename(out)]))
     return P
 
@@ -62,7 +62,7 @@ def new_since(db, since):
         WHERE p.status != 'infeasible' AND ({pub}) GROUP BY p.id HAVING first >= ? ORDER BY p.n""", (since,)).fetchall()
 
 
-def run(store=None, apply=False, since=None, procs=16, fresh=True, nmax=324, root=IDIR, runner=None, log=print,
+def run(store=None, apply=False, since=None, fresh=True, nmax=324, root=IDIR, runner=None, log=print,
         later=False):
     from . import nearmiss as NM
     S = load_state(root)
@@ -73,7 +73,7 @@ def run(store=None, apply=False, since=None, procs=16, fresh=True, nmax=324, roo
     if (fresh or later) and not since:
         raise SystemExit('ingest: no previous ingest in state; give --since ISO (local time) the first time')
     out = os.path.join(root, start.replace(':', '').replace('-', ''))
-    P = plan(since, out, procs, fresh, nmax, store)
+    P = plan(since, out, fresh, nmax, store)
     spath = store or os.environ.get('PK_STORE') or os.path.join(PK, 'runs', 'store.sqlite')
     log(f'ingest {"--apply" if apply else "(dry run)"}: since {since} (state last {S.get("last")}); out {out}')
     for name, cmd in P:
@@ -133,7 +133,7 @@ def _nearmiss(spath, out, since, start, nmax, log):
     return k1, k2
 
 
-def run_pending(store=None, procs=16, nmax=324, root=IDIR, runner=None, log=print):
+def run_pending(store=None, nmax=324, root=IDIR, runner=None, log=print):
     """the fresh pass for the windows --fresh-later deferred: one fresh.py run from the earliest pending time, then
     its near misses; clears `fresh_pending` on success unless a newer ingest changed it meanwhile."""
     S = load_state(root)
@@ -143,7 +143,7 @@ def run_pending(store=None, procs=16, nmax=324, root=IDIR, runner=None, log=prin
         return None
     start = datetime.datetime.now().isoformat(timespec='seconds')
     out = os.path.join(root, start.replace(':', '').replace('-', '') + '-fresh')
-    (name, cmd), = [x for x in plan(since, out, procs, True, nmax, store) if x[0] == 'fresh']
+    (name, cmd), = [x for x in plan(since, out, True, nmax, store) if x[0] == 'fresh']
     spath = store or os.environ.get('PK_STORE') or os.path.join(PK, 'runs', 'store.sqlite')
     os.makedirs(out, exist_ok=True)
     env = dict(os.environ, PK_STORE=os.path.abspath(spath))

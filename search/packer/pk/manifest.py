@@ -46,9 +46,10 @@ def git_state(cwd=PACKER):
 
 
 def cpu_seconds():
-    """Measured CPU of this process + waited-for descendants (user + system)."""
+    """Measured CPU of this process + waited-for descendants + its finished pool units (user + system)."""
+    from .cpubudget import unit_cpu
     s = resource.getrusage(resource.RUSAGE_SELF); c = resource.getrusage(resource.RUSAGE_CHILDREN)
-    return s.ru_utime + s.ru_stime + c.ru_utime + c.ru_stime
+    return s.ru_utime + s.ru_stime + c.ru_utime + c.ru_stime + unit_cpu()
 
 
 class Manifest:

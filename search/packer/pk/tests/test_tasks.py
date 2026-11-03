@@ -31,6 +31,30 @@ def die(_):
     os._exit(9)
 
 
+G = 0
+
+
+def setg(v):
+    global G
+    G = v
+
+
+def plusg(x):
+    return x + G
+
+
+def power(b, e=1):
+    return b ** e
+
+
+def hang(_):
+    return sum(range(10 ** 12))                 # one C call: no Python signal handler runs before it returns
+
+
+def slow(x):
+    time.sleep(1.5); return x
+
+
 def main():
     t('limit', '0')                            # nothing starts until all three wait
     for c, prio in (('lo', 'low'), ('no', 'normal'), ('hi', 'high')):
@@ -110,6 +134,32 @@ def main():
             ex.submit(die, 1).result(60); raise SystemExit('no exception')
         except RuntimeError as e:
             assert 'without a result' in str(e)
+
+    # 11-02 (private pools removed): kwargs, chunked map, initializer per unit, a timeout that kills a hang in C code,
+    # two executors sharing a campaign, leaving the block waits, a call pickle from an older Executor
+    with tasks.Executor('calls2', initializer=setg, initargs=(7,), timeout=3) as ex:
+        assert ex.submit(power, 2, e=3).result(60) == 8
+        os.environ['PK_T_ENV'] = 'yes'; assert ex.submit(os.getenv, 'PK_T_ENV').result(60) == 'yes'
+        assert list(ex.map(plusg, range(10), chunksize=4)) == [x + 7 for x in range(10)]
+        time.sleep(1); assert db.execute("SELECT units FROM campaign WHERE name='calls2'").fetchone()[0] == 5   # 2 + 3 chunks
+        t1 = time.time()
+        try:
+            ex.submit(hang, 1).result(60); raise SystemExit('no exception')
+        except TimeoutError as e:
+            assert 'killed' in str(e) and time.time() - t1 < 15, (e, time.time() - t1)
+        time.sleep(0.5)
+        assert db.execute("SELECT fails FROM campaign WHERE name='calls2'").fetchone()[0] == 0    # a timeout is no failure
+        late = ex.submit(slow, 5)
+        other = tasks.Executor('calls2'); other.dir += 'b'; os.makedirs(other.dir)
+        f2 = other.submit(slow, 6); other.shutdown(cancel_futures=True)
+    assert late.done() and late.result() == 5
+    assert tasks.UNIT_CPU > 2, tasks.UNIT_CPU                # the hang's CPU and the others'
+    import pickle
+    p = os.path.join(ENV['PK_TASKS'], 'legacy'); os.makedirs(p, exist_ok=True); p += '/1'
+    with open(p + '.call', 'wb') as o:
+        pickle.dump(os.path.abspath(__file__), o); pickle.dump((square, (9,)), o)
+    subprocess.run([sys.executable, TOOL, '_call', p], env=ENV, check=True)
+    assert pickle.load(open(p + '.done', 'rb')) == (True, 81)
 
     # a unit that keeps dying pauses the campaign: waiting calls fail instead of hanging; a new run clears it; cancel clears it too
     ex = tasks.Executor('crash')

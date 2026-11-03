@@ -203,12 +203,15 @@ def _prep_run(args):
     return run, out
 
 
-def import_runs(st: Store, runs, below=None, procs=12, below_k=False):
-    """explore.py archives -> store (parallel parse, serial insert), parent links and exact results kept."""
-    from concurrent.futures import ProcessPoolExecutor
+def import_runs(st: Store, runs, below=None, below_k=False):
+    """explore.py archives -> store (parse: a pool unit per run when there are several; serial insert), parent links and
+    exact results kept."""
+    import contextlib
+    from . import tasks
     tot = dict(runs=0, entries=0, new=0)
-    with ProcessPoolExecutor(procs) as ex:
-        for run, items in ex.map(_prep_run, [(r, below) for r in runs], chunksize=1):
+    ex = tasks.Executor('import-run') if len(runs) > 1 else None
+    with ex or contextlib.nullcontext():
+        for run, items in (ex.map if ex else map)(_prep_run, [(r, below) for r in runs]):
             src = f'run:{os.path.relpath(os.path.abspath(run), PKG)}'
             ids = {}
             for e, pk, pre, status, S in items:
@@ -224,7 +227,7 @@ def import_runs(st: Store, runs, below=None, procs=12, below_k=False):
 
 
 def import_run(st: Store, run, below=None):
-    return import_runs(st, [run], below=below, procs=1)
+    return import_runs(st, [run], below=below)
 
 
 def import_finals(st: Store, n, only_verdict=('certified', 'weak')):

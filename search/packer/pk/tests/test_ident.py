@@ -25,7 +25,7 @@ def test_plan_apply(monkeypatch):
         e = add(5e-11, 1e-5, 'E')                # side outside the window: distinct
         f = add(2e-12, 1e-5, 'F', status='not-min')  # not a candidate
         child = st.add(Packing(2.6, base), 'K', parent=b, check=False)[0]
-        P = ident.plan(st, 3, procs=1, log=lambda *x: None)
+        P = ident.plan(st, 3, parallel=False, log=lambda *x: None)
         assert {k: [o for o, *_ in v] for k, v in P['groups'].items()} == {a: [b]}, P['groups']
         ident.apply(st, P, log=lambda *x: None)
         assert st.db.execute('SELECT COUNT(*) FROM packing WHERE id=?', (b,)).fetchone()[0] == 0
@@ -53,5 +53,5 @@ def test_guard(monkeypatch):
         st.add(Packing(2.5 + 3e-12, q), 'B', status='polished', check=False)
         for S in ('2.5000000000001', '2.5000000000003'):
             st.db.execute('INSERT INTO minimum(n, key, S, cls) VALUES (3, ?, ?, ?)', (S, S, 'certified'))
-        P = ident.plan(st, 3, procs=1, log=lambda *x: None)
+        P = ident.plan(st, 3, parallel=False, log=lambda *x: None)
         assert P['groups'] == {} and P['stats']['refused'] == {'near two known minima (guard band)': 1}, P['stats']

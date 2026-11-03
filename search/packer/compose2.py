@@ -12,11 +12,10 @@ WB HB) >= n; tilted squares of A and B must not overlap; then exact_fill re-fill
 a time budget per n: pk.bandit.CellBandit over (cell A, cell B) groups (reward 2^-(n - count)), prior weight within a
 group.  Every fill is logged to fills.jsonl (to calibrate the prior).  count >= n = success; the layout is fq-polished.
 
-  python3 compose2.py run --ns 100-324 --out runs/compose2/c1 [--target now|cutoff:ISO] [--budget 120] [--procs 14]
+  python3 compose2.py run --ns 100-324 --out runs/compose2/c1 [--target now|cutoff:ISO] [--budget 120]
 """
 from __future__ import annotations
 import argparse, json, math, os, subprocess, sys, time
-from concurrent.futures import ProcessPoolExecutor
 
 for _v in ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS'):
     os.environ.setdefault(_v, '1')
@@ -24,6 +23,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+from pk import tasks  # noqa: E402
 FQ = os.path.join(HERE, 'target', 'release', 'fq')
 PIECES = None
 BLIND = None                   # compose2 run --blind ISO_LOCAL (see load_pieces)
@@ -245,10 +245,10 @@ def polish_near(a):
             if len(L) < a.per_n and all((r['A'], r['B']) != (x['A'], x['B']) for x in L):
                 L.append(r)
     os.makedirs(a.out, exist_ok=True)
-    tasks = [(n, r, n, r['S_min'], r['sq'], a.out, f'_{i}') for n, L in sorted(by.items()) for i, r in enumerate(L)]
-    print(f'{len(tasks)} polishes over {len(by)} n', flush=True)
-    with ProcessPoolExecutor(a.procs) as ex, open(os.path.join(a.out, 'polish.jsonl'), 'w') as f:
-        for n, r, res in ex.map(_polish_job, tasks):
+    T = [(n, r, n, r['S_min'], r['sq'], a.out, f'_{i}') for n, L in sorted(by.items()) for i, r in enumerate(L)]
+    print(f'{len(T)} polishes over {len(by)} n', flush=True)
+    with tasks.Executor() as ex, open(os.path.join(a.out, 'polish.jsonl'), 'w') as f:
+        for n, r, res in ex.map(_polish_job, T):
             fr = E.frontier_now(n)
             gain = fr - res.get('s_pol', math.inf)
             f.write(json.dumps(dict(n=n, A=r['A'], B=r['B'], need=r['need'], frontier=fr, gain=gain, **res)) + '\n')
@@ -332,9 +332,9 @@ def job3(args):
     return dict(base, count=best[0] if best else None)
 
 
-def init(mmin, per_cell, source, cf_eps=0.0, new_from=None):
-    global PIECES, REQUIRE
-    REQUIRE = bool(new_from)
+def init(mmin, per_cell, source, cf_eps=0.0, new_from=None, blind=None, blind_t=None):
+    global PIECES, REQUIRE, BLIND, BLIND_T
+    REQUIRE, BLIND, BLIND_T = bool(new_from), blind, blind_t
     PIECES = load_pieces(mmin, per_cell, source, cf_eps, new_from)
 
 
@@ -342,12 +342,12 @@ def run(a):
     from pk import manifest, eventbench as E
     import scratch
     os.makedirs(a.out, exist_ok=True)
-    man = manifest.start(a.out, 'compose2', args=vars(a), procs=a.procs)
+    man = manifest.start(a.out, 'compose2', args=vars(a))
     scratch.scope('compose2')
     global BLIND, BLIND_T
-    BLIND, BLIND_T = a.blind, a.blind_t                                      # workers fork after this, so they inherit it
+    BLIND, BLIND_T = a.blind, a.blind_t                                      # (units get them from init)
     lo, hi = map(int, a.ns.split('-'))
-    tasks = []
+    T = []
     only = {int(x) for x in a.only.split(',')} if a.only else None
     for n in range(lo, hi + 1):
         if only and n not in only:
@@ -359,14 +359,14 @@ def run(a):
             f = E.frontier_at(n, a.target.split(':', 1)[1])
         if f >= math.ceil(math.sqrt(n) - 1e-12) - 1e-9 and not a.grid:
             continue
-        tasks.append((n, f - a.below, a.tight, a.time_limit, a.budget, a.max_fills, a.seed + n, a.probe, a.probe_steps))
+        T.append((n, f - a.below, a.tight, a.time_limit, a.budget, a.max_fills, a.seed + n, a.probe, a.probe_steps))
     new_from = set(json.load(open(a.new_from))) if a.new_from else None
     P0 = load_pieces(a.mmin, a.per_cell, a.source, new_from=new_from)
-    print(f'{len(tasks)} targets, {len(P0)} pieces' + (f", {sum(q['new'] for q in P0)} from --new-from" if new_from else ''), flush=True)
+    print(f'{len(T)} targets, {len(P0)} pieces' + (f", {sum(q['new'] for q in P0)} from --new-from" if new_from else ''), flush=True)
     res = []
-    with ProcessPoolExecutor(a.procs, initializer=init, initargs=(a.mmin, a.per_cell, a.source, a.cf_eps, new_from)) as ex, \
+    with tasks.Executor(initializer=init, initargs=(a.mmin, a.per_cell, a.source, a.cf_eps, new_from, a.blind, a.blind_t)) as ex, \
             open(os.path.join(a.out, 'results.jsonl'), 'w') as f, open(os.path.join(a.out, 'fills.jsonl'), 'w') as fl:
-        for r in ex.map(job3 if a.three else job, tasks):
+        for r in ex.map(job3 if a.three else job, T):
             sq = r.pop('sq', None)
             fl.write(''.join(json.dumps(x) + '\n' for x in r.pop('fills', []))); fl.flush()
             near = r.pop('near', [])
@@ -380,7 +380,7 @@ def run(a):
             print(f"{r['n']:4d} S {r['S']:.10f} cand {r['cand']:4d} arms {r['arms']:7d} tried {r['tried']:5d} {r['sec']:6.0f}s best count {r.get('count')}"
                   f"{'  need %.2e' % r['need'] if 'need' in r else ''}"
                   f"{'  HIT ' + str(r.get('s_pol')) if 's_pol' in r else ''}", flush=True)
-    man.finish(summary=dict(targets=len(tasks)))
+    man.finish(summary=dict(targets=len(T)))
 
 
 def rank(a):
@@ -427,7 +427,7 @@ if __name__ == '__main__':
     r.add_argument('--exclude-src', nargs='*', default=[], help="with --target public: sighting sources to leave out ('pending:#584')")
     r.add_argument('--below', type=float, default=1e-9); r.add_argument('--tight', type=float, default=0.03)
     r.add_argument('--mmin', type=int, default=10); r.add_argument('--time-limit', type=float, default=10)
-    r.add_argument('--procs', type=int, default=14); r.add_argument('--grid', action='store_true')
+    r.add_argument('--grid', action='store_true')
     r.add_argument('--budget', type=float, default=120, help='seconds of fills per n (weighted random arms)')
     r.add_argument('--max-fills', type=int, default=10 ** 9); r.add_argument('--seed', type=int, default=0)
     r.add_argument('--probe', type=float, default=0.0,
@@ -445,6 +445,5 @@ if __name__ == '__main__':
     k.add_argument('--top', type=int, default=40); k.add_argument('--out')
     q = sp.add_parser('polish'); q.add_argument('dirs', nargs='+'); q.add_argument('--out', required=True)
     q.add_argument('--max-need', type=float, default=2e-3); q.add_argument('--per-n', type=int, default=3)
-    q.add_argument('--procs', type=int, default=14)
     a = ap.parse_args()
     {'run': run, 'rank': rank, 'polish': polish_near}[a.cmd](a)

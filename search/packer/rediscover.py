@@ -10,7 +10,7 @@ Protocol (frozen): kicks from the old packing, sigma in {0.003, 0.01, 0.03, 0.1}
 Detected: final side <= new + 1e-7 and no grid obstruction.
 
   rediscover.py --dist-only            # distances and deltas
-  rediscover.py --trials 10 --procs 15 --out runs/rd1
+  rediscover.py --trials 10 --out runs/rd1
 """
 import argparse, collections, json, math, os, random, tempfile
 import numpy as np
@@ -88,7 +88,7 @@ def job(j):
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument('--dist-only', action='store_true'); ap.add_argument('--trials', type=int, default=10)
-    ap.add_argument('--procs', type=int, default=15); ap.add_argument('--out', default='runs/rd1')
+    ap.add_argument('--out', default='runs/rd1')
     a = ap.parse_args()
     P = pairs()
     for p in P:
@@ -100,7 +100,7 @@ if __name__ == '__main__':
         raise SystemExit
     os.makedirs(a.out, exist_ok=True)
     jobs = [(p, sg, t, a.out) for p in sorted(P, key=lambda p: -p['n']) for sg in SIGMAS for t in range(a.trials)]
-    res = run_jobs(job, jobs, procs=a.procs, timeout=900, on_timeout=lambda j: dict(label=j[0]['label'], sig=j[1], t=j[2], status='killed'),
+    res = run_jobs(job, jobs, timeout=900, on_timeout=lambda j: dict(label=j[0]['label'], sig=j[1], t=j[2], status='killed'),
                    on_error=lambda j, e: dict(label=j[0]['label'], sig=j[1], t=j[2], status=f'failed {e}'))
     res = [r or dict(label=j[0]['label'], sig=j[1], t=j[2], status='failed') for r, j in zip(res, jobs)]
     meta = [{k: v for k, v in p.items() if k not in ('old', 'new')} for p in P]

@@ -114,7 +114,7 @@ def run(a):
         json.dump([dict(id=int(ids[j]), s=float(sides[j])) for j in S], open(f'{out}/starts.json', 'w'))
         cmd = [sys.executable, f'{HERE}/explore.py', '--n', str(a.n), '--starts', *paths,
                *(['--cpu-h', str(a.cpu_h / a.runs)] if a.cpu_h else ['--minutes', str(a.minutes)]),
-               '--procs', '1', '--seed', str(a.seed + r), '--adapt', '--adapt-cells', '--sparse-share', '0.5',
+               '--seed', str(a.seed + r), '--adapt', '--adapt-cells', '--sparse-share', '0.5',
                '--fp-bank', f'{R0}/bank.npz', '--smax', str(a.smax), '--frontier-s', str(sides[0]),
                '--final-polish', '8', '--out', out, *(a.xargs.split() if a.xargs else [])]
         P.append(subprocess.Popen(cmd, stdout=open(f'{out}/log.txt', 'w'), stderr=subprocess.STDOUT))

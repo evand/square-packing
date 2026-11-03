@@ -205,7 +205,7 @@ if __name__ == '__main__':
     ap.add_argument('--archive'); ap.add_argument('--n', type=int, default=110); ap.add_argument('--trials', type=int, default=150)
     ap.add_argument('--P', type=int, default=5); ap.add_argument('--cands', type=int, default=30)
     ap.add_argument('--variants', nargs='+', default=['kick', 'uniform', 'bestfit:3', 'field', 'softfield', 'half'])
-    ap.add_argument('--procs', type=int, default=8); ap.add_argument('--out'); ap.add_argument('--report')
+    ap.add_argument('--out'); ap.add_argument('--report')
     ap.add_argument('--seed', type=int, default=3)
     a = ap.parse_args()
     if a.report:
@@ -222,7 +222,7 @@ if __name__ == '__main__':
         for v in a.variants:
             jobs.append((v, ref, others, a.P, k, smax, seed))
     os.makedirs(a.out, exist_ok=True)
-    res = run_jobs(job, jobs, procs=a.procs, timeout=900)
+    res = run_jobs(job, jobs, timeout=900)
     with open(f'{a.out}/res.jsonl', 'w') as f:
         for r in res:
             if isinstance(r, dict):

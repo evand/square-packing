@@ -6,7 +6,7 @@ Why: all three 10-13 records (339, 364, 375) were compositions using crops of pa
 s(304), BuddenPing's s(146), Xu's s(129)), found by a broad sweep.  This pass does only the new part: every arm uses at
 least one piece cut from a new packing, so it is cheap and can run after every sync.
 
-  python3 fresh.py run --since 2026-10-13T08:00 --out runs/fresh/f1 [--ids 291615 ...] [--procs 16] [--budget 30]
+  python3 fresh.py run --since 2026-10-13T08:00 --out runs/fresh/f1 [--ids 291615 ...] [--budget 30]
   python3 fresh.py new --since ISO          list the new packings only
 
 Steps:
@@ -22,7 +22,6 @@ Nothing is posted (CLAUDE.md): a certified candidate gets a draft in outreach/ b
 """
 from __future__ import annotations
 import argparse, json, math, os, subprocess, sys, time
-from concurrent.futures import ProcessPoolExecutor
 from types import SimpleNamespace
 
 for _v in ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS'):
@@ -51,14 +50,15 @@ def new_packings(since=None, ids=None, nmin=10):
     return [(i, n, s, f'store:{i}:{src}') for i, n, s, src in rows if n >= nmin]
 
 
-def make_atlas(rows, path, procs):
+def make_atlas(rows, path):
     """mondrian atlas (W, H, m, o, sid + sources) of the corner crops of `rows`."""
     import mondrian
     from pk.store import Store
+    from pk import tasks
     st = Store()
     src = [dict(label=lab, n=n, s=float(s), sq=np.array(st.get(i).sq)) for i, n, s, lab in rows]
     parts = []
-    with ProcessPoolExecutor(procs) as ex:
+    with tasks.Executor() as ex:
         for k, r in ex.map(mondrian._pieces_job, [(k, p['s'], p['sq']) for k, p in enumerate(src)]):
             if r is not None:
                 parts.append(r + (np.full(len(r[0]), k),))
@@ -101,7 +101,7 @@ def run(a):
     from pk import manifest, pieces, eventbench as E
     import rectlib, scratch
     os.makedirs(a.out, exist_ok=True)
-    man = manifest.start(a.out, 'fresh', args=vars(a), procs=a.procs)
+    man = manifest.start(a.out, 'fresh', args=vars(a))
     scratch.scope('fresh')
     out = lambda *p: os.path.join(os.path.abspath(a.out), *p)
     t0 = time.time()
@@ -113,11 +113,11 @@ def run(a):
         json.dump(S, open(out('summary.json'), 'w'), indent=1); man.finish(summary=S); return
     json.dump([r[0] for r in rows], open(out('new_ids.json'), 'w'))
     # 2. pieces
-    nat = make_atlas(rows, out('atlas.npz'), a.procs)
+    nat = make_atlas(rows, out('atlas.npz'))
     S['crops'] = nat
     if nat:
         rectlib.cmd_build(SimpleNamespace(atlas=out('atlas.npz'), out=out('lib'), mmin=8, mmax=a.mmax, hmax=a.hmax,
-                                          per_cell=1, procs=a.procs, limit=0, dmax=8, seed=1))
+                                          per_cell=1, limit=0, dmax=8, seed=1))
         S['pieces_seen'], S['pieces_new'] = pieces.import_paths([out('lib', 'pieces.jsonl')])
     S['whole_new'] = add_whole(rows)
     S['t_pieces'] = round(time.time() - t0)
@@ -125,7 +125,7 @@ def run(a):
           f"{S['whole_new']} whole packings new ({S['t_pieces']} s)", flush=True)
     # 3. compose (two ranges: below the grid at n <= 324; n > 324 with --grid, the L-step frontier is the bar there)
     base = [sys.executable, 'compose2.py', 'run', '--new-from', out('new_ids.json'), '--probe', str(a.probe),
-            '--budget', str(a.budget), '--procs', str(a.procs), '--target', a.target]
+            '--budget', str(a.budget), '--target', a.target]
     if a.exclude_src:
         base += ['--exclude-src'] + a.exclude_src
     for tag, ns, extra in (('lo', f'20-{min(324, a.nmax)}', []), ('hi', f'325-{a.nmax}', ['--grid'])):
@@ -162,7 +162,7 @@ def run(a):
                      beaten=c.get('live', {}).get('beaten'), dir=os.path.dirname(cs))
         return h
     from concurrent.futures import ThreadPoolExecutor        # candidate.py is one process each: run them side by side
-    with ThreadPoolExecutor(max(1, min(len(hits), a.procs))) as ex:
+    with ThreadPoolExecutor(max(1, min(len(hits), 8))) as ex:
         for h in ex.map(certify, hits):
             print(f"  {h['n']}: cert {h.get('cert')} S' {h.get('S_cert')} beaten {h.get('beaten')}", flush=True)
     S['hits'] = hits
@@ -178,8 +178,7 @@ if __name__ == '__main__':
     r = sp.add_parser('run')
     r.add_argument('--since'); r.add_argument('--ids', type=int, nargs='*')
     r.add_argument('--out', required=True); r.add_argument('--name')
-    r.add_argument('--procs', type=int, default=16); r.add_argument('--budget', type=float, default=30,
-                                                                    help='composer seconds per n')
+    r.add_argument('--budget', type=float, default=30, help='composer seconds per n')
     r.add_argument('--probe', type=float, default=0.005); r.add_argument('--nmax', type=int, default=480)
     r.add_argument('--target', default='now', help='composer target: now | public (see compose2)')
     r.add_argument('--exclude-src', nargs='*', default=[], help='with --target public (control replays)')

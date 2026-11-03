@@ -4,10 +4,11 @@
                   tree, utime + stime + cutime + cstime (/proc/<p>/stat).  A finished process that was waited for is in
                   its parent's cutime / cstime; a zombie still shows its own times.  (A finished child whose parent never
                   waits for it is lost: none of our launchers do that.)
-  Budget(cpu_s)   .spent() / .left() / .over(), polled at most every `every` s (a /proc walk costs ~ms).
+  unit_cpu()      CPU seconds of this process's finished pk/tasks.Executor units (pool units are not descendants).
+  Budget(cpu_s)   .spent() / .left() / .over() (tree + units), polled at most every `every` s (a /proc walk costs ~ms).
 """
 from __future__ import annotations
-import os, time
+import os, sys, time
 
 TCK = os.sysconf('SC_CLK_TCK')
 
@@ -41,14 +42,18 @@ def tree_cpu(pid=None):
     return tot
 
 
+def unit_cpu():
+    return sum(getattr(sys.modules.get(m), 'UNIT_CPU', 0.0) for m in ('pk.tasks', 'tasks'))   # imported either way
+
+
 class Budget:
     def __init__(self, cpu_s, pid=None, every=5.0):
         self.cpu_s, self.pid, self.every = cpu_s, pid or os.getpid(), every
-        self.c0 = tree_cpu(self.pid); self._t = 0.0; self._last = 0.0
+        self.c0 = tree_cpu(self.pid) + unit_cpu(); self._t = 0.0; self._last = 0.0
 
     def spent(self):
         if time.time() - self._t >= self.every:
-            self._last = tree_cpu(self.pid) - self.c0; self._t = time.time()
+            self._last = tree_cpu(self.pid) + unit_cpu() - self.c0; self._t = time.time()
         return self._last
 
     def left(self):

@@ -3,7 +3,7 @@
 the suite's baseline head given the same tail.  The raw head output is logged but never the verdict (CLAUDE.md rule:
 a generator's output is a distribution of starts for refinement).
 
-  trial.py run NAME ARM --head SPEC --suite SUITE [--starts 8] [--procs 4]
+  trial.py run NAME ARM --head SPEC --suite SUITE [--starts 8]
   trial.py run NAME baseline --suite SUITE                  the suite's baseline head (run it once per trial)
   trial.py report NAME
 
@@ -17,7 +17,6 @@ TODO (10-22, TODO.md): sequential stopping and rate posteriors (benchkit.race / 
 """
 from __future__ import annotations
 import argparse, json, math, os, sys, time
-from concurrent.futures import ProcessPoolExecutor
 
 for _v in ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS'):
     os.environ.setdefault(_v, '1')
@@ -88,13 +87,14 @@ def cmd_run(a):
     from pk import stages as S
     S.parse(head); S.parse(su['tail'])                     # fail fast on a bad spec
     from pk import manifest
+    from pk.tasks import Executor
     d = os.path.join(OUT, a.name); os.makedirs(d, exist_ok=True)
-    man = manifest.start(d, f'trial:{a.name}:{a.arm}', args=vars(a), procs=a.procs, fname=f'manifest_{a.arm}.json')
+    man = manifest.start(d, f'trial:{a.name}:{a.arm}', args=vars(a), fname=f'manifest_{a.arm}.json')
     starts = 1 if a.arm == 'baseline' and 'gen.file' in head and 'perturb' not in head else a.starts
     tasks = [(n, 1000 * n + k + a.seed0, head, su['tail']) for k in range(starts) for n in su['ns']]
     pdir = os.path.join(d, a.arm); os.makedirs(pdir, exist_ok=True)
     rows = 0
-    with open(os.path.join(d, f'{a.arm}.jsonl'), 'a') as fh, ProcessPoolExecutor(a.procs) as ex:
+    with open(os.path.join(d, f'{a.arm}.jsonl'), 'a') as fh, Executor() as ex:
         for rec, p in ex.map(one, tasks):
             rec['suite'] = a.suite; rec['arm'] = a.arm
             fh.write(json.dumps(rec) + '\n'); fh.flush(); rows += 1
@@ -141,7 +141,7 @@ def main():
     sub = ap.add_subparsers(dest='cmd', required=True)
     r = sub.add_parser('run'); r.add_argument('name'); r.add_argument('arm'); r.add_argument('--head')
     r.add_argument('--suite', required=True, choices=sorted(SUITES)); r.add_argument('--starts', type=int, default=8)
-    r.add_argument('--procs', type=int, default=4); r.add_argument('--seed0', type=int, default=0)
+    r.add_argument('--seed0', type=int, default=0)
     p = sub.add_parser('report'); p.add_argument('name')
     a = ap.parse_args()
     {'run': cmd_run, 'report': cmd_report}[a.cmd](a)

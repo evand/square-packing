@@ -16,12 +16,11 @@ is a sighting on the existing row) and follows pk/ident's dedup table.
 Detection (on the rows this pass created or sighted):
   near miss  nearmiss.scan(ids=...) -> the queue (pk.py finish drains it)
 
-  pk.py sink [--dry-run] [--runs DIR ...] [--procs 12] [--report]
+  pk.py sink [--dry-run] [--runs DIR ...] [--report]
 State: runs/sink/state.json {run: lines imported}; log runs/sink/log.jsonl (one line per pass).
 """
 from __future__ import annotations
 import glob, json, os, time
-from concurrent.futures import ProcessPoolExecutor
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PK = os.path.dirname(HERE)
@@ -90,8 +89,8 @@ def _parent_lookup(st, src, i):
     return r[0] if r else None
 
 
-def run(st=None, runs=None, dry=False, procs=12, log=print, outputs=True):
-    from . import policy as P
+def run(st=None, runs=None, dry=False, log=print, outputs=True):
+    from . import policy as P, tasks
     from .store import Store, public_sql
     st = st or Store()
     cfg = P.load()
@@ -104,8 +103,8 @@ def run(st=None, runs=None, dry=False, procs=12, log=print, outputs=True):
     todo = [(r, S['explore'].get(_rel(r), 0), now) for r in runs]
     tot = dict(runs=0, entries=0, new=0, seen=0, drop=0)
     touched = set()
-    with ProcessPoolExecutor(procs) as ex:
-        for r, stop, items in ex.map(_prep_explore, todo, chunksize=4):
+    with tasks.Executor('sink') as ex:
+        for r, stop, items in ex.map(_prep_explore, todo, chunksize=16):      # most runs: nothing new, ms each
             if not items:
                 if stop != S['explore'].get(_rel(r), 0):
                     S['explore'][_rel(r)] = stop

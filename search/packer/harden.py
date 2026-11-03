@@ -15,7 +15,6 @@ Transforms: `none`; `insert:K` (K squares at uniform random positions / angles i
 """
 from __future__ import annotations
 import argparse, itertools, json, math, os, subprocess, sys
-from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -79,11 +78,12 @@ def _locked(path):
 
 def run(a):
     from pk import manifest
+    from pk.tasks import Executor
     import scratch
     from pk.store import Store
     from pk import eventbench as E
     os.makedirs(a.out, exist_ok=True)
-    man = manifest.start(a.out, 'harden', args=vars(a), procs=a.procs)
+    man = manifest.start(a.out, 'harden', args=vars(a))
     scratch.scope('harden')
     st = Store()
     srcs = []
@@ -100,7 +100,7 @@ def run(a):
     targets, best, ntask = {}, {}, 0
     # round 0: sources x transform; later rounds: the --keep best distinct outputs per source (transform none)
     cur = {si: [(lab, n, s, sq, a.xform)] for si, (lab, n, s, sq) in enumerate(srcs)}
-    with ProcessPoolExecutor(a.procs) as ex, open(os.path.join(a.out, 'results.jsonl'), 'a') as f:
+    with Executor() as ex, open(os.path.join(a.out, 'results.jsonl'), 'a') as f:
         for rd in range(a.rounds):
             tasks, meta = [], []
             for si, ins in cur.items():
@@ -190,7 +190,6 @@ if __name__ == '__main__':
     r.add_argument('--grid', default='')
     r.add_argument('--seeds', type=int, default=4)
     r.add_argument('--target', type=float, default=0.0, help='default: frontier_now(n) of the output count')
-    r.add_argument('--procs', type=int, default=4)
     r.add_argument('--rounds', type=int, default=1, help='monotone rounds: each source restarts from its --keep best')
     r.add_argument('--keep', type=int, default=4)
     r.add_argument('--line-free', action='store_true', help='later rounds restart only from outputs without a full line '

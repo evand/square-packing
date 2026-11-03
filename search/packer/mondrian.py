@@ -7,7 +7,7 @@ Composition puts pieces in corners of a square box and fills the rest with whole
 the side is a piece dimension plus an integer (exact).  Then the seams are repaired (fq polish) and the result is
 compared with the frontier.
 
-  mondrian.py atlas --out runs/mondrian/atlas_all.npz [--exclude-src pending:#481 ...] [--procs 3]
+  mondrian.py atlas --out runs/mondrian/atlas_all.npz [--exclude-src pending:#481 ...]
   mondrian.py t1 --atlas runs/mondrian/atlas_all.npz [--nmin 50 --nmax 400] [--margin 5e-3]
   mondrian.py t3 --atlas ... (two pieces; guillotine cut between them)
   mondrian.py build --atlas ... --layout JSON --out FILE   (coordinates, exact axis fill, fq repair)
@@ -17,7 +17,6 @@ rows + floor(s-W) columns of height floor(H) right of the piece; variant 'v' = t
 """
 from __future__ import annotations
 import argparse, json, math, os, sys, time
-from concurrent.futures import ProcessPoolExecutor
 
 for _v in ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS'):
     os.environ.setdefault(_v, '1')
@@ -25,6 +24,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+from pk import tasks  # noqa: E402
 REPO = os.path.abspath(os.path.join(HERE, '..', '..'))
 KINGBIRD = os.path.join(REPO, 'site', 'data', 'packings.json')
 FT = 1e-9          # floor tolerance
@@ -173,7 +173,7 @@ def cmd_atlas(a):
     print(f'{len(src)} source packings ({time.time() - t0:.0f} s)', flush=True)
     parts = []
     jobs = [(k, p['s'], p['sq']) for k, p in enumerate(src)]
-    with ProcessPoolExecutor(a.procs) as ex:
+    with tasks.Executor() as ex:
         for k, r in ex.map(_pieces_job, jobs, chunksize=8):
             if r is not None:
                 parts.append(r + (np.full(len(r[0]), k),))
@@ -370,7 +370,7 @@ def cmd_compose(a):
     jobs = [(a.atlas, n, front[n][0] - a.below, front[n][0] + a.margin, a.tol) for n in ns]
     rep = []
     t0 = time.time()
-    with ProcessPoolExecutor(a.procs) as ex:
+    with tasks.Executor() as ex:
         for n, r in ex.map(_compose_n, jobs):
             if r is None:
                 continue
@@ -697,7 +697,7 @@ def placements(src, corner, S, R):
     return list(out.values())
 
 
-def replicate(n, S, piecesA, piecesB, procs=2, top=30, fq_top=6, slack=8, fill_tol=1e-6, insert_max=0, tries=6, log=print):
+def replicate(n, S, piecesA, piecesB, top=30, fq_top=6, slack=8, fill_tol=1e-6, insert_max=0, tries=6, log=print):
     """Two pieces (lists from crop_pieces), A at LL and B at UR / LR; conflicts resolved by dropping the other piece's
     tilted squares (both priority orders).  Single-piece MILP excess -> additive estimate -> joint MILP on the best
     pairs -> fq repair of the layouts that reach n.  Returns list of dicts."""
@@ -748,7 +748,7 @@ def replicate(n, S, piecesA, piecesB, procs=2, top=30, fq_top=6, slack=8, fill_t
         log(f'  no pair within slack')
         return []
     t0 = time.time()
-    with ProcessPoolExecutor(procs) as ex:
+    with tasks.Executor() as ex:
         counts = list(ex.map(_fill_job, jobs, chunksize=2))
     log(f'  {len(jobs)} joint fills in {time.time() - t0:.0f} s')
     res = sorted(zip(counts, range(len(jobs))), key=lambda r: -r[0])
@@ -834,11 +834,11 @@ def comp_sides(S, pieces, window=0.02, extra=4):
     return out + sorted(cand)[:extra]
 
 
-def explore_from(n, starts, out, minutes=10, procs=4, seed=1):
+def explore_from(n, starts, out, minutes=10, seed=1):
     """Hunt-recipe explorer from start files; returns the best side in its archive."""
     import subprocess
     os.makedirs(out, exist_ok=True)
-    cmd = [sys.executable, os.path.join(HERE, 'explore.py'), '--n', str(n), '--starts', *starts, '--procs', str(procs),
+    cmd = [sys.executable, os.path.join(HERE, 'explore.py'), '--n', str(n), '--starts', *starts,
            '--minutes', str(minutes), '--seed', str(seed), '--out', os.path.join(out, 'run'), '--adapt',
            '--elite-share', '0.3', '--reward', 'value']
     subprocess.run(cmd, stdout=open(os.path.join(out, 'log'), 'w'), stderr=subprocess.STDOUT)
@@ -864,7 +864,7 @@ def cmd_replicate(a):
         best, comp, stage = math.inf, [], '-'
         for Sc in comp_sides(S, pa + pb, a.window, a.extra):
             for X, Y in ((pa, pb), (pb, pa)) if (sa, ma) != (sb, mb) else ((pa, pb),):
-                res = replicate(n, Sc, X, Y, procs=a.procs, top=a.top, fq_top=a.fq_top)
+                res = replicate(n, Sc, X, Y, top=a.top, fq_top=a.fq_top)
                 for r in res:
                     comp.append((r['polish'], Sc, r['packing']))
                     if r['polish'] < best:
@@ -877,7 +877,7 @@ def cmd_replicate(a):
             print(f'  relaxation fallback: insert up to {a.insert_max} squares into the best composed layouts', flush=True)
             for Sc in comp_sides(S, pa + pb, a.window, a.extra):
                 for X, Y in ((pa, pb), (pb, pa)) if (sa, ma) != (sb, mb) else ((pa, pb),):
-                    res = replicate(n, Sc, X, Y, procs=a.procs, top=a.top, fq_top=a.fq_top, insert_max=a.insert_max, tries=a.tries)
+                    res = replicate(n, Sc, X, Y, top=a.top, fq_top=a.fq_top, insert_max=a.insert_max, tries=a.tries)
                     for r in res:
                         comp.append((r['polish'], Sc, r['packing']))
                         if r['polish'] < best:
@@ -893,8 +893,8 @@ def cmd_replicate(a):
                 if len(starts) >= 4:
                     break
             print(f'  explorer from {len(starts)} composed starts (best {comp[0][0]:.10f}), '
-                  f'{a.explore_procs} procs x {a.explore_min} min', flush=True)
-            bx = explore_from(n, starts, d, a.explore_min, a.explore_procs)
+                  f'{a.explore_min} min', flush=True)
+            bx = explore_from(n, starts, d, a.explore_min)
             if bx < best:
                 best, stage = bx, f'compose+fq+explorer {a.explore_min} min'
         summary.append((n, S, best, stage))
@@ -912,7 +912,7 @@ def cmd_selftest(a):
     t0 = time.time()
     S, (sa, ma), (sb, mb) = LINEAGE_481[259]
     pa = crop_pieces(load_src(sa), ma, 3); pb = crop_pieces(load_src(sb), mb, 3)
-    res = replicate(259, round(S + 1e-9, 12), pa, pb, procs=a.procs, top=150, fq_top=2, log=lambda *_: None)
+    res = replicate(259, round(S + 1e-9, 12), pa, pb, top=150, fq_top=2, log=lambda *_: None)
     best = min((r['polish'] for r in res), default=math.inf)
     dt = time.time() - t0
     ok = best <= S + 1e-9 and dt <= a.budget
@@ -1021,7 +1021,7 @@ def cmd_overlap(a):
     print(f'{len(jobs)} big pieces m = {a.mmin}..{a.mmax}', flush=True)
     t0, allrec, tot = time.time(), [], 0
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
-    with ProcessPoolExecutor(a.procs) as ex:
+    with tasks.Executor() as ex:
         for m, recs, nm in ex.map(_overlap_job, jobs):
             tot += nm
             allrec += recs
@@ -1048,7 +1048,6 @@ def main():
     sub = ap.add_subparsers(dest='cmd', required=True)
     p = sub.add_parser('atlas')
     p.add_argument('--out', required=True)
-    p.add_argument('--procs', type=int, default=3)
     p.add_argument('--top-runs', type=int, default=30)
     p.add_argument('--exclude-src', nargs='*', default=[])
     p.add_argument('--no-kingbird', action='store_true')
@@ -1069,26 +1068,22 @@ def main():
     p.add_argument('--margin', type=float, default=3e-3, help='report layouts up to this far above the frontier')
     p.add_argument('--below', type=float, default=0.05)
     p.add_argument('--tol', type=float, default=1e-10)
-    p.add_argument('--procs', type=int, default=2)
     p.add_argument('--json')
     p = sub.add_parser('replicate', help='rebuild the 15 #481 compositions from their listed sources')
     p.add_argument('--n', type=int, nargs='*')
     p.add_argument('--R', type=int, default=3)
-    p.add_argument('--procs', type=int, default=2)
     p.add_argument('--top', type=int, default=30)
     p.add_argument('--fq-top', type=int, default=6)
     p.add_argument('--window', type=float, default=0.02)
     p.add_argument('--mtol', type=int, default=0)
     p.add_argument('--extra', type=int, default=4, help='composition sides beyond their S to try')
     p.add_argument('--explore-min', type=float, default=0, help='explorer minutes after compose+fq (0 = off)')
-    p.add_argument('--explore-procs', type=int, default=4)
     p.add_argument('--insert-max', type=int, default=4)
     p.add_argument('--tries', type=int, default=6, help='insertion tries per layout')
     p.add_argument('--relax', action='store_true', help='if nothing composes within the window, compose at a larger '
                    'side (up to ceil S), trim to n, and let fq + explorer squeeze')
     p.add_argument('--out', default=os.path.join(HERE, 'runs/mondrian/replicate'))
     p = sub.add_parser('selftest', help='positive control: rebuild #481 n = 259 (PASS/FAIL, exit status)')
-    p.add_argument('--procs', type=int, default=2)
     p.add_argument('--budget', type=float, default=120)
     p = sub.add_parser('overlap', help='corner-overlap sweep: frontier s(m) at LL + small s(k) at UR, boxes overlapping')
     p.add_argument('--mmin', type=int, default=5)
@@ -1099,7 +1094,6 @@ def main():
     p.add_argument('--smax', type=float, default=18.2)
     p.add_argument('--margin', type=float, default=0.02, help='counts whose frontier is above S - margin are of interest')
     p.add_argument('--slack', type=int, default=2, help='the rigid count may undercount the MILP by this much (observed 0-2)')
-    p.add_argument('--procs', type=int, default=2)
     p.add_argument('--out', default=os.path.join(HERE, 'runs/mondrian/overlap.json'))
     a = ap.parse_args()
     {'selftest': cmd_selftest, 'atlas': cmd_atlas, 't1': cmd_t1, 'compose': cmd_compose, 'replicate': cmd_replicate,

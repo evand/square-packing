@@ -4,8 +4,8 @@ table; paired metrics in minutes.
   corpus.py build NAME --n 110 --parents 'query' --arms kick lkick ... --per 4 [--seed 1]
       parents: store query (e.g. "n=110 below=11 status=certified limit=40" or ids "ids=12,15,...");
       writes runs/corpus/NAME/{items.jsonl, props.npz}: item = (parent id, arm, move params, seed), proposal coords frozen.
-  corpus.py replay NAME VARIANT [--procs 16] [--known ref|none]    -> runs/corpus/NAME/out_VARIANT.jsonl (+ .npz finals)
-  corpus.py certify NAME [VARIANT...] [--procs 16]   exactsolve every distinct new? side below k (cache: store basin table)
+  corpus.py replay NAME VARIANT [--known ref|none]    -> runs/corpus/NAME/out_VARIANT.jsonl (+ .npz finals)
+  corpus.py certify NAME [VARIANT...]   exactsolve every distinct new? side below k (cache: store basin table)
   corpus.py report NAME [VARIANT...] [--by arm|param:sigma|loosen]
 
 Variants are named Policy settings (VARIANTS below; add more freely).  The known-basin set for a corpus is frozen at build
@@ -16,13 +16,12 @@ import os
 for _v in ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS'):    # before numpy: one BLAS thread per worker
     os.environ.setdefault(_v, '1')
 import argparse, collections, json, math, os, random, statistics as stt, sys, time
-from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from pk.store import Store
 from pk.packing import Packing
-from pk import moves
+from pk import moves, tasks
 from pk.engine import QOpt, SCREEN, POLISH
 from dataclasses import replace
 from pk.pipeline import Policy, Known, evaluate
@@ -125,13 +124,13 @@ def replay(a):
         items = items[:a.limit]
     tag = a.variant + ('' if a.known == 'ref' else f'_{a.known}')
     from pk import manifest
-    man = manifest.start(d, 'corpus-replay', args=vars(a), procs=a.procs, fname=f'manifest_out_{tag}.json',
+    man = manifest.start(d, 'corpus-replay', args=vars(a), fname=f'manifest_out_{tag}.json',
                          extra=dict(items_sha256=manifest.file_sha256(f'{d}/items.jsonl')))
     t0 = time.time()
     out = {}
     finals = {}
-    with ProcessPoolExecutor(a.procs, initializer=_init, initargs=(d, a.variant, a.known)) as ex:
-        for i, r, fin in ex.map(_work, items, chunksize=2):
+    with tasks.Executor(f'corpus-{a.name}', initializer=_init, initargs=(d, a.variant, a.known)) as ex:
+        for i, r, fin in ex.map(_work, items, chunksize=4):
             out[i] = r
             if fin is not None and r['st'] == 'new?':
                 finals[str(i)] = np.concatenate([[fin[0], 0, 0], fin[1].ravel()])
@@ -141,8 +140,7 @@ def replay(a):
     np.savez_compressed(f'{d}/fin_{tag}.npz', **finals)
     wsec = sum(r['sec'] for r in out.values())         # summed per-item wall in workers (what older logs call "CPU")
     man.finish(summary=dict(proposals=len(out), item_wall_s=round(wsec, 1)))
-    print(f'{a.name}/{tag}: {len(out)} proposals, wall {time.time() - t0:.0f}s, item wall {wsec:.0f}s, '
-          f'measured CPU {man.d["cpu_s"]:.0f}s; '
+    print(f'{a.name}/{tag}: {len(out)} proposals, wall {time.time() - t0:.0f}s, item wall {wsec:.0f}s; '   # (units: CPU in tasks.py ls)
           + ' '.join(f'{k}={v}' for k, v in collections.Counter(r['st'] for r in out.values()).most_common()))
 
 
@@ -181,7 +179,7 @@ def certify(a):
             todo[key] = (key, float(x[0]), x[3:].reshape(-1, 3))
     print(f'certify {a.name}: {len(todo)} distinct uncached sides below {k}')
     t0 = time.time()
-    with ProcessPoolExecutor(a.procs) as ex:
+    with tasks.Executor(f'corpus-{a.name}') as ex:
         for key, r in ex.map(_solve, todo.values()):
             st.record_verdict(n, key, r, via=f'corpus:{a.name}')
     print(f'  done in {time.time() - t0:.0f}s')
@@ -271,9 +269,9 @@ def main():
     p = sp.add_parser('build'); p.add_argument('name'); p.add_argument('--n', type=int, required=True)
     p.add_argument('--parents', required=True); p.add_argument('--arms', nargs='+', default=list(moves.WEIGHTS))
     p.add_argument('--per', type=int, default=4); p.add_argument('--seed', type=int, default=1)
-    p = sp.add_parser('replay'); p.add_argument('name'); p.add_argument('variant'); p.add_argument('--procs', type=int, default=16)
+    p = sp.add_parser('replay'); p.add_argument('name'); p.add_argument('variant')
     p.add_argument('--known', default='ref', choices=['ref', 'none']); p.add_argument('--limit', type=int)
-    p = sp.add_parser('certify'); p.add_argument('name'); p.add_argument('variants', nargs='*'); p.add_argument('--procs', type=int, default=16)
+    p = sp.add_parser('certify'); p.add_argument('name'); p.add_argument('variants', nargs='*')
     p = sp.add_parser('report'); p.add_argument('name'); p.add_argument('variants', nargs='*'); p.add_argument('--by')
     a = ap.parse_args()
     dict(build=build, replay=replay, certify=certify, report=report)[a.cmd](a)

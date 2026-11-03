@@ -18,10 +18,10 @@ one pool (same load conditions for the CPU ratio); per-call CPU is the fq child'
 """
 from __future__ import annotations
 import argparse, json, math, os, random, subprocess, sys, tempfile, textwrap, zlib
-from concurrent.futures import ProcessPoolExecutor
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+from pk import tasks  # noqa: E402
 BEST_VISIBLE = 10.9968869868          # bench110: best visible side of the h110_basinA holdout
 SAME_SIDE = 2e-9                      # pk.identity.SAME_SIDE
 
@@ -139,11 +139,11 @@ def run_cmd(a):
                 env[k] = v
         arms.append((name, os.path.abspath(binary), env, jit))
     os.makedirs(a.out, exist_ok=True)
-    man = manifest.start(a.out, 'fqreplay', args=vars(a), procs=a.procs)
+    man = manifest.start(a.out, 'fqreplay', args=vars(a))
     jobs = [(name, b, env, jit, a.corpus, c) for c in calls for (name, b, env, jit) in arms]   # interleaved
     fh = {name: open(os.path.join(a.out, f'{name}.jsonl'), 'w') for name, *_ in arms}
-    with ProcessPoolExecutor(a.procs) as ex:
-        for i, r in enumerate(ex.map(one, jobs, chunksize=4)):
+    with tasks.Executor() as ex:              # replayed fq calls take ~0.1-2 s: 20 per unit
+        for i, r in enumerate(ex.map(one, jobs, chunksize=20)):
             fh[r['arm']].write(json.dumps(r) + '\n')
             if (i + 1) % 2000 == 0:
                 print(f'{i + 1} / {len(jobs)}', flush=True)
@@ -242,7 +242,7 @@ def certify_cmd(a):
     calls = {c['id']: c for c in map(json.loads, open(os.path.join(meta['corpus'], 'calls.jsonl')))}
     jobs = [(x['name'], x['binary'], x['env'], meta['corpus'], calls[i], os.path.join(a.dir, 'cert', x['name'], i))
             for i in pick for x in arms]
-    with ProcessPoolExecutor(a.procs) as ex:
+    with tasks.Executor() as ex:
         res = list(ex.map(cert_one, jobs))
     json.dump(res, open(os.path.join(a.dir, 'cert.json'), 'w'))
     print(f'{len(pick)} calls ({min(len(div), a.calls)} diverging between arms)')
@@ -265,10 +265,10 @@ if __name__ == '__main__':
     p.add_argument('--arm', action='append', required=True); p.add_argument('--sample', type=int, default=4000)
     p.add_argument('--skip', type=int, default=0)
     p.add_argument('--stage', choices=['all', 'screen', 'polish'], default='all')
-    p.add_argument('--seed', type=int, default=1); p.add_argument('--procs', type=int, default=16)
+    p.add_argument('--seed', type=int, default=1)
     p = sub.add_parser('compare'); p.add_argument('dir'); p.add_argument('--base', default='base')
     p = sub.add_parser('certify'); p.add_argument('dir'); p.add_argument('--arms', nargs='+', default=['base', 'noir'])
-    p.add_argument('--calls', type=int, default=60); p.add_argument('--seed', type=int, default=1); p.add_argument('--procs', type=int, default=16)
+    p.add_argument('--calls', type=int, default=60); p.add_argument('--seed', type=int, default=1)
     a = ap.parse_args(argv)
     {'record': lambda: record_cmd(a, rest), 'run': lambda: run_cmd(a), 'compare': lambda: compare_cmd(a),
      'certify': lambda: certify_cmd(a)}[a.cmd]()

@@ -78,7 +78,7 @@ def _polish(args):
 
 
 def calibrate(a):
-    from concurrent.futures import ProcessPoolExecutor
+    from pk import tasks
     ids, S, SQ = load(a.n, a.smax)
     z = np.load(f'runs/ident_{a.n}.npz'); d, arg = z['d'], z['arg']
     rng = random.Random(a.seed)
@@ -89,7 +89,7 @@ def calibrate(a):
         idx = [i for i in range(len(S)) if lo <= d[i] < hi and arg[i] >= 0]
         P += [(i, int(arg[i]), lo) for i in rng.sample(idx, min(a.pairs, len(idx)))]
     rows = sorted({k for i, j, _ in P for k in (i, j)})
-    with ProcessPoolExecutor(a.procs) as ex:
+    with tasks.Executor() as ex:
         pol = dict(zip(rows, ex.map(_polish, [(float(S[k]), SQ[k]) for k in rows])))
     out = []
     print(f'{len(P)} pairs, {len(rows)} polishes')
@@ -109,7 +109,7 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser(); sp = ap.add_subparsers(dest='cmd', required=True)
     for c in ('cluster', 'calibrate'):
         p = sp.add_parser(c); p.add_argument('--n', type=int, required=True); p.add_argument('--smax', type=float, required=True)
-        p.add_argument('--pairs', type=int, default=20); p.add_argument('--procs', type=int, default=15)
+        p.add_argument('--pairs', type=int, default=20)
         p.add_argument('--seed', type=int, default=1)
     a = ap.parse_args()
     dict(cluster=cluster, calibrate=calibrate)[a.cmd](a)

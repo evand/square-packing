@@ -17,7 +17,6 @@ Third-party data (attribute "David Ellsworth, kingbird.myphotos.cc"); raw files 
 """
 from __future__ import annotations
 import hashlib, json, os, re, shutil, subprocess, sys, time, urllib.parse
-from concurrent.futures import ProcessPoolExecutor
 
 import numpy as np
 
@@ -146,10 +145,11 @@ def _parse_job(path):
     return rec
 
 
-def parse_snapshot(snap, procs=4, log=print):
+def parse_snapshot(snap, log=print):
+    from . import tasks
     paths = sorted(os.path.join(snap, 'svg', f) for f in os.listdir(os.path.join(snap, 'svg')) if f.endswith('.svg'))
-    with ProcessPoolExecutor(procs) as ex:
-        recs = list(ex.map(_parse_job, paths, chunksize=4))
+    with tasks.Executor('kingbird') as ex:
+        recs = list(ex.map(_parse_job, paths, chunksize=64))         # files parse in well under a second
     bad = [r for r in recs if 'error' in r]
     over = [r for r in recs if r.get('pen') and r['pen'] > 1e-9]
     mism = [r for r in recs if 'n' in r and r['n_name'] and r['n'] != r['n_name']]
@@ -198,8 +198,8 @@ def latest(name):
     return None
 
 
-def sync(st, date=None, refetch_all=False, procs=4, log=print):
+def sync(st, date=None, refetch_all=False, log=print):
     snap = fetch(date, refetch_all, log)
-    recs = parse_snapshot(snap, procs, log)
+    recs = parse_snapshot(snap, log)
     import_snapshot(st, snap, recs, log)
     return snap

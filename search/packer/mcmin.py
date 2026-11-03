@@ -300,6 +300,7 @@ def energy(s, lines, a):
 # ---------- one replica epoch (runs in a worker process) ----------
 def epoch(job):
     rid, walker, T, path, E, steps, seed, a = job
+    globals()['SLP_BUDGET'] = a.slp_budget           # (set in main: units do not inherit it)
     rng = random.Random(seed)
     s, sq = load_deg(path)
     tmp = tempfile.mkdtemp()
@@ -362,7 +363,7 @@ def main():
     ap.add_argument('--kinds', default=','.join(f'{k}={v}' for k, v in KINDS.items()))
     ap.add_argument('--line-pen', type=float, default=0.0); ap.add_argument('--save-below', type=float, default=None)
     ap.add_argument('--hours', type=float, default=1.0); ap.add_argument('--stop-below', type=float, default=-1)
-    ap.add_argument('--procs', type=int, default=None); ap.add_argument('--seed', type=int, default=1)
+    ap.add_argument('--seed', type=int, default=1)
     ap.add_argument('--slp-budget', type=float, default=SLP_BUDGET, help='slp2 wall budget per quench (s)')
     a = ap.parse_args()
     globals()['SLP_BUDGET'] = a.slp_budget
@@ -393,7 +394,7 @@ def main():
     while time.time() < t_end:
         jobs = [(r, slot[r], Ts[r], walkers[slot[r]]['path'], walkers[slot[r]]['E'], 0,
                  a.seed * 10 ** 7 + ep * 1000 + r, a) for r in range(R)]
-        res = run_jobs(epoch, jobs, procs=a.procs or R, timeout=a.epoch_sec + 4 * SLP_BUDGET + 300,
+        res = run_jobs(epoch, jobs, timeout=a.epoch_sec + 4 * SLP_BUDGET + 300,
                        on_timeout=lambda j: None, on_error=lambda j, e: None)
         for r, x in enumerate(res):
             if x is None:

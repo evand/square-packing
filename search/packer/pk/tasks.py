@@ -22,12 +22,12 @@ Next unit: highest priority, then the campaign with the fewest running units, th
 share evenly, also when slots free one at a time).
 A command exits 75 for "nothing to do now": its campaign backs off, and a repeat campaign ends after IDLE_END s of
 that.  FAIL_STOP failures in a row pause a campaign.  Budgets are checked as units finish, so they can overrun slightly.
-A script that keeps state between tries stays an ordinary sleeping process and swaps ProcessPoolExecutor for
-tasks.Executor(campaign, prio=...): every call is a unit (the function must be importable, as with spawn).
+A script that runs calls in parallel uses tasks.Executor (no private pools, 11-02): it stays an ordinary sleeping
+process and every call is a unit (the function must be importable, as with spawn; see the class).
 Logs: runs/tasks/<campaign>/log (every unit, appended when it ends), u<id>.log (a failed unit's own output).
 """
 from __future__ import annotations
-import argparse, fcntl, importlib.util, json, os, pickle, shlex, shutil, signal, sqlite3, subprocess, sys, threading, time, traceback
+import argparse, fcntl, importlib.util, json, os, pickle, resource, shlex, shutil, signal, sqlite3, subprocess, sys, threading, time, traceback
 from concurrent.futures import Future
 
 try:
@@ -266,8 +266,10 @@ def ls(show_done=5):
     db = connect()
     rows = db.execute("SELECT name, prio, status, note, units, fails, cpu, wall, max_wall, repeat IS NOT NULL, budget_h, "
                       "(SELECT COUNT(*) FROM unit u WHERE u.campaign=c.name AND state='running'), "
+                      "(SELECT ?-MIN(t0) FROM unit u WHERE u.campaign=c.name AND state='running'), "
                       "(SELECT COUNT(*) FROM unit u WHERE u.campaign=c.name AND state='pending') FROM campaign c "
-                      "ORDER BY status='done', status!='active', CASE WHEN status='active' THEN prio ELSE 0 END, t0 DESC").fetchall()
+                      "ORDER BY status='done', status!='active', CASE WHEN status='active' THEN prio ELSE 0 END, t0 DESC",
+                      (time.time(),)).fetchall()
     names = {v: k for k, v in PRIO.items()}
     print(f'{"campaign":24s} {"prio":6s} {"status":9s} {"run":>4s} {"wait":>6s} {"units":>7s} {"fail":>5s} {"CPU-h":>8s} '
           f'{"mean s":>7s} {"max s":>6s}')
@@ -278,55 +280,82 @@ def ls(show_done=5):
             continue
         n = r[4] + r[5]
         budget = f' of {r[10]:g}' if r[10] else ''
-        flag = '  LONG UNIT' if r[8] > 600 else ''
-        print(f'{r[0]:24s} {names[r[1]]:6s} {r[2]:9s} {r[11]:4d} {"repeat" if r[9] else r[12]:>6} {r[4]:7d} {r[5]:5d} '
+        flag = f'  LONG UNIT {r[12]:.0f} s' if (r[12] or 0) > 600 else ''        # a unit running now (max s: all time)
+        print(f'{r[0]:24s} {names[r[1]]:6s} {r[2]:9s} {r[11]:4d} {"repeat" if r[9] else r[13]:>6} {r[4]:7d} {r[5]:5d} '
               f'{r[6] / 3600:8.2f} {r[7] / max(n, 1):7.1f} {r[8]:6.0f}{budget}{flag}{"  " + r[3] if r[3] else ""}')
     run = db.execute("SELECT COUNT(*) FROM unit WHERE state='running'").fetchone()[0]
-    print(f'limit {limit(db)}; running units {run}; outside load ~{max(0, runnable() - run)}')
+    cap, outside = limit(db), max(0, runnable() - run)
+    print(f'limit {cap}; running units {run}; outside load ~{outside}; idle ~{max(0, cap - run - outside)}')
 
 
 # ------------------------------------------------------------------ calls from a running script
 
+def default_campaign():
+    """the running script's name (runs of one script may share a campaign: each drops only its own calls)"""
+    main = getattr(sys.modules['__main__'], '__file__', None)
+    return os.path.splitext(os.path.basename(main))[0] if main else 'calls'
+
+
 class Executor:
-    """submit / map like ProcessPoolExecutor, each call a unit of `campaign`.  Leaving the block drops what has not started."""
-    def __init__(self, campaign, prio='normal'):
-        self.campaign, self.prio, self.calls = campaign, prio, {}
-        self.dir = os.path.join(DIR, campaign, f'calls{os.getpid()}'); os.makedirs(self.dir, exist_ok=True)
+    """submit / map like ProcessPoolExecutor, each call (or chunk of map calls) a unit of `campaign` (default: the
+    script's name).  Every unit is a fresh process with the caller's environment: `initializer(*initargs)` runs in it
+    before its calls, and `timeout` (s, per unit) kills an overdue unit even inside C code (its calls raise TimeoutError;
+    not a campaign failure).  Leaving the block waits for the calls, as ProcessPoolExecutor does; leaving it by an
+    exception (or shutdown(cancel_futures=True)) drops this executor's calls that have not started."""
+    def __init__(self, campaign=None, prio='normal', initializer=None, initargs=(), timeout=None):
+        self.campaign, self.prio, self.calls = campaign or default_campaign(), prio, {}
+        self.job = dict(init=(initializer, tuple(initargs)) if initializer else None, timeout=timeout)
+        self.dir = os.path.join(DIR, self.campaign, f'calls{os.getpid()}'); os.makedirs(self.dir, exist_ok=True)
         self.lock, self.seq, self.stop = threading.Lock(), 0, False
         db = connect()                               # a new run is new code: a pause left by an earlier one does not bind it
-        if db.execute("UPDATE campaign SET status='active', consec=0, note=NULL WHERE name=? AND status='paused'", (campaign,)).rowcount:
-            print(f'tasks: campaign {campaign} was paused by an earlier run; resumed', file=sys.stderr, flush=True)
+        if db.execute("UPDATE campaign SET status='active', consec=0, note=NULL WHERE name=? AND status='paused'",
+                      (self.campaign,)).rowcount:
+            print(f'tasks: campaign {self.campaign} was paused by an earlier run; resumed', file=sys.stderr, flush=True)
         self.poller = threading.Thread(target=self._poll, daemon=True); self.poller.start()
 
-    def submit(self, fn, *args):
-        f = Future()
-        with self.lock:
-            self.seq += 1; p = os.path.join(self.dir, str(self.seq))
+    def _put(self, fn, units, one):
+        """queue units, each a list of (args, kwargs) -> their Futures (one: a unit's result is its single call's)"""
         main = getattr(sys.modules['__main__'], '__file__', None)
-        with open(p + '.tmp', 'wb') as o:
-            pickle.dump(os.path.abspath(main) if main else None, o); pickle.dump((fn, args), o)
-        os.replace(p + '.tmp', p + '.call')
-        add(self.campaign, [[sys.executable, os.path.abspath(__file__), '_call', p]], self.prio)
-        with self.lock:                              # after the unit exists: a call without one reads as lost
-            self.calls[p] = f
-        return f
+        paths = []
+        for calls in units:
+            with self.lock:
+                self.seq += 1; p = os.path.join(self.dir, str(self.seq))
+            with open(p + '.tmp', 'wb') as o:
+                pickle.dump((os.path.abspath(main) if main else None, dict(os.environ)), o)
+                pickle.dump(dict(self.job, fn=fn, calls=calls, one=one), o)
+            os.replace(p + '.tmp', p + '.call'); paths.append(p)
+        add(self.campaign, [[sys.executable, os.path.abspath(__file__), '_call', p] for p in paths], self.prio)
+        fs = [Future() for _ in paths]
+        with self.lock:                              # after the units exist: a call without one reads as lost
+            self.calls.update(zip(paths, fs))
+        return fs
 
-    def map(self, fn, *its):
-        return (f.result() for f in [self.submit(fn, *a) for a in zip(*its)])
+    def submit(self, fn, /, *args, **kwargs):
+        return self._put(fn, [[(args, kwargs)]], True)[0]
+
+    def map(self, fn, *its, timeout=None, chunksize=1):
+        """ordered results; chunksize calls per unit (batch calls much shorter than a unit's 10-60 s)"""
+        calls = [(a, {}) for a in zip(*its)]
+        fs = self._put(fn, [calls[i:i + chunksize] for i in range(0, len(calls), chunksize)], False)
+        return (r for f in fs for r in f.result(timeout))
 
     def _poll(self):
+        global UNIT_CPU
         db = connect()
         while not self.stop:
             with self.lock:
                 calls = list(self.calls.items())
-            gone = calls and not db.execute('SELECT 1 FROM unit WHERE campaign=? LIMIT 1', (self.campaign,)).fetchone()
-            paused = calls and db.execute("SELECT note FROM campaign WHERE name=? AND status='paused'", (self.campaign,)).fetchone()
+            if calls:                                # units of this executor still queued or running
+                live = {json.loads(c)[-1] for c, in db.execute('SELECT cmd FROM unit WHERE campaign=? AND cmd LIKE ?',
+                                                               (self.campaign, f'%{self.dir}/%'))}
+                paused = db.execute("SELECT note FROM campaign WHERE name=? AND status='paused'", (self.campaign,)).fetchone()
             for p, f in calls:
                 if os.path.exists(p + '.done'):
-                    ok, v = pickle.load(open(p + '.done', 'rb'))
+                    ok, v, cpu = pickle.load(open(p + '.done', 'rb'))
+                    UNIT_CPU += cpu
                 elif paused:                         # nothing more will run: fail now, so the script stops and says why
                     ok, v = False, RuntimeError(f'campaign {self.campaign} paused: {paused[0]}')
-                elif gone:                           # its unit ended without a result (killed, cancelled)
+                elif p not in live:                  # its unit ended without a result (killed, cancelled)
                     ok, v = False, RuntimeError(f'unit of {p} ended without a result')
                 else:
                     continue
@@ -339,29 +368,96 @@ class Executor:
     def __enter__(self):
         return self
 
-    def __exit__(self, *exc):
-        cancel(self.campaign); self.stop = True; self.poller.join()
+    def __exit__(self, exc_type, *exc):
+        self.shutdown(cancel_futures=exc_type is not None)
+
+    def shutdown(self, wait=True, cancel_futures=False):
+        if self.stop:
+            return
+        if wait and not cancel_futures:
+            while self.calls:
+                time.sleep(0.2)
+        db = connect()
+        db.execute('BEGIN IMMEDIATE')
+        db.execute("DELETE FROM unit WHERE campaign=? AND state='pending' AND cmd LIKE ?", (self.campaign, f'%{self.dir}/%'))
+        db.execute("UPDATE campaign SET status='done' WHERE name=? AND status='active' AND repeat IS NULL "
+                   "AND NOT EXISTS (SELECT 1 FROM unit WHERE campaign=name)", (self.campaign,))
+        db.execute('COMMIT')
+        self.stop = True; self.poller.join()
         shutil.rmtree(self.dir, ignore_errors=True)
 
 
+def _calls(job):
+    try:
+        if job.get('init'):
+            job['init'][0](*job['init'][1])
+        v = [job['fn'](*a, **k) for a, k in job['calls']]
+        return True, v[0] if job['one'] else v
+    except Exception as e:
+        traceback.print_exc(); return False, e
+
+
+UNIT_CPU = 0.0       # CPU s of this process's finished Executor units (pk/cpubudget and pk/manifest add it)
+LEGACY = False       # a call written by an Executor from before 11-02: its result is (ok, value), no CPU
+
+
+def _done(p, r):
+    u, c = resource.getrusage(resource.RUSAGE_SELF), resource.getrusage(resource.RUSAGE_CHILDREN)
+    r = r if LEGACY else (*r, u.ru_utime + u.ru_stime + c.ru_utime + c.ru_stime)
+    try:
+        b = pickle.dumps(r)
+    except Exception as e:                           # an unpicklable result or exception
+        b = pickle.dumps((False, RuntimeError(f'{r[1]!r} (unpicklable: {e})'), *r[2:]))
+    with open(p + '.tmp', 'wb') as o:
+        o.write(b)
+    os.replace(p + '.tmp', p + '.done')
+    return 0 if r[0] else 1
+
+
 def _call(p):
-    """run one Executor call -> exit status"""
+    """run one Executor unit -> exit status"""
     with open(p + '.call', 'rb') as f:
-        main = pickle.load(f)
+        main, env = (lambda m: m if isinstance(m, tuple) else (m, None))(pickle.load(f))     # (path, env); a path before 11-02
+        for k, v in (env or {}).items():             # the caller's environment, as a ProcessPoolExecutor worker has it
+            if k not in THREAD_VARS and k != 'PK_JOB_NAME':
+                os.environ[k] = v
         if main:                                     # functions of the calling script (as multiprocessing's spawn does)
             sys.path.insert(0, os.path.dirname(os.path.realpath(main)))
             spec = importlib.util.spec_from_file_location('__mp_main__', main)
             m = importlib.util.module_from_spec(spec); sys.modules['__mp_main__'] = sys.modules['__main__'] = m
             spec.loader.exec_module(m)
         try:
-            fn, args = pickle.load(f)
-            r = (True, fn(*args))
+            job = pickle.load(f)
         except Exception as e:
-            traceback.print_exc(); r = (False, e)
-    with open(p + '.tmp', 'wb') as o:
-        pickle.dump(r, o)
-    os.replace(p + '.tmp', p + '.done')
-    return 0 if r[0] else 1
+            traceback.print_exc(); return _done(p, (False, e))
+    if isinstance(job, tuple):                       # (fn, args): written by an Executor from before 11-02
+        global LEGACY
+        job, LEGACY = dict(fn=job[0], calls=[(job[1], {})], one=True), True
+    t = job.get('timeout')
+    if not t:
+        return _done(p, _calls(job))
+    pid = os.fork()                                  # the calls run in a child, so that a hang in C code can be killed
+    if pid == 0:
+        c = 1
+        try:
+            os.setpgid(0, 0); c = _done(p, _calls(job)); sys.stdout.flush(); sys.stderr.flush()
+        finally:
+            os._exit(c)
+    try:
+        os.setpgid(pid, pid)                         # (also here: the kill below may come before the child's own call)
+    except OSError:
+        pass
+    end = time.time() + t
+    while time.time() < end:
+        q, st = os.waitpid(pid, os.WNOHANG)
+        if q:
+            return os.waitstatus_to_exitcode(st) if os.path.exists(p + '.done') else \
+                _done(p, (False, RuntimeError(f'call died (exit {os.waitstatus_to_exitcode(st)})')))
+        time.sleep(0.05)
+    os.killpg(pid, signal.SIGKILL); os.waitpid(pid, 0)
+    print(f'tasks: unit killed after {t:g} s', flush=True)
+    _done(p, (False, TimeoutError(f'unit killed after {t:g} s')))
+    return 0
 
 
 def main():

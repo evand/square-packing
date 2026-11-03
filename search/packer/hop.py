@@ -6,7 +6,7 @@ Moves (per proposal, from the current state): global kick (sigma 0.003/0.01/0.03
 (squares within radius r of a random square get sigma 0.05-0.2, the rest 0.002).  Quench = `fq quench` (loosen 1.02).
 Metropolis at temperature T (side units); reset to the best state after `--patience` proposals without a new best.
 
-  hop.py --n 108 130 --minutes 10 --chains 1 --procs 15 --out runs/hop0
+  hop.py --n 108 130 --minutes 10 --chains 1 --out runs/hop0
   hop.py --summary runs/hop0
 """
 import argparse, json, math, os, random, subprocess, tempfile, time
@@ -134,7 +134,8 @@ def search_da(s_start, sq_start, budget, rng, tmp, log, T=1e-5, patience=40, k=8
 
 
 def chain(j):
-    n, cid, minutes, T, patience, out, sk, sm = j
+    n, cid, minutes, T, patience, out, sk, sm, loosen = j
+    EXTRA[:] = ['--loosen', str(loosen)]
     rng = random.Random(n * 1000 + cid)
     tmp = tempfile.mkdtemp()
     s0, sq0 = mcmin.load_deg(f'{BATCH}/n-{n}.txt')
@@ -196,7 +197,6 @@ if __name__ == '__main__':
     ap.add_argument('--chains', type=int, default=1)
     ap.add_argument('--T', type=float, default=1e-5)
     ap.add_argument('--patience', type=int, default=40)
-    ap.add_argument('--procs', type=int, default=15)
     ap.add_argument('--out', default='runs/hop0')
     ap.add_argument('--summary')
     ap.add_argument('--seed-k', type=int, default=0, help='start from record(n+k) minus k random squares')
@@ -205,8 +205,7 @@ if __name__ == '__main__':
     a = ap.parse_args()
     if a.summary:
         summary(a.summary); raise SystemExit
-    EXTRA[:] = ['--loosen', str(a.loosen)]
     os.makedirs(a.out, exist_ok=True)
-    jobs = [(n, c, a.minutes, a.T, a.patience, a.out, a.seed_k, a.seed_m) for n in a.n for c in range(a.chains)]
-    run_jobs(chain, jobs, procs=a.procs, timeout=60 * a.minutes + 1800)
+    jobs = [(n, c, a.minutes, a.T, a.patience, a.out, a.seed_k, a.seed_m, a.loosen) for n in a.n for c in range(a.chains)]
+    run_jobs(chain, jobs, timeout=60 * a.minutes + 1800)
     summary(a.out)

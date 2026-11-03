@@ -290,7 +290,7 @@ def bar(item, fnow):
     return f
 
 
-def stage_polish(inp, wd, n, target, procs):
+def stage_polish(inp, wd, n, target):
     """fq long polish -> [(s, path)] (feasible outputs only), number of proposals"""
     out = os.path.join(wd, 'polish.txt')
     from .engine import QOpt, fq_quench               # the one fq call path (B2)
@@ -304,11 +304,11 @@ def stage_polish(inp, wd, n, target, procs):
 
 
 def _stage_harden(name):
-    def run(inp, wd, n, target, procs):
+    def run(inp, wd, n, target):
         r = RECIPES[name]
         hd = os.path.join(wd, name)
         cmd = [sys.executable, os.path.join(PK, 'harden.py'), 'run', '--files', inp, '--out', hd, '--grid', r['grid'],
-               '--seeds', str(r['seeds']), '--rounds', str(r['rounds']), '--keep', str(r['keep']), '--procs', str(procs),
+               '--seeds', str(r['seeds']), '--rounds', str(r['rounds']), '--keep', str(r['keep']),
                '--target', repr(float(target))]
         if target >= math.ceil(math.sqrt(n) - 1e-12) - 1e-9:
             cmd.append('--line-free')                     # grid bar: rounds restart from line-free outputs only
@@ -355,7 +355,7 @@ def reclaim_stale(st, log=print):
     return k
 
 
-def finish(st, out, limit=None, stages=STAGES, procs=4, candidate=False, dry=False, fnow=None, runners=None,
+def finish(st, out, limit=None, stages=STAGES, candidate=False, dry=False, fnow=None, runners=None,
            nm_gate=NM_GATE, ids=None, log=print):
     """Drain up to `limit` queued items (None = all; smallest gap first).  Returns [result dict per item]."""
     from .packing import read
@@ -398,7 +398,7 @@ def finish(st, out, limit=None, stages=STAGES, procs=4, candidate=False, dry=Fal
                 if name == 'harden' and cur_s - b > nm_gate:
                     log_st.append(dict(stage=name, skipped=f'gap {cur_s - b:.1e} > gate {nm_gate:g}')); continue
                 swd = os.path.join(wd, name); os.makedirs(swd, exist_ok=True)
-                outs, k = runners[name](cur_path, swd, n, min(b, cur_s), procs)   # below the bar: aim below itself
+                outs, k = runners[name](cur_path, swd, n, min(b, cur_s))   # below the bar: aim below itself
                 nprop += k
                 if gridbar and outs:
                     # 10-20: at a grid bar, an output with a full line / chain is grid-locked (side >= the grid

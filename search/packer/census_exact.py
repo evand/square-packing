@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Exact dedupe + coupon statistics for census3 runs.
 
-  census_exact.py runs/X/rec.json runs/X/cand.json [--procs 14] [--k 11]
+  census_exact.py runs/X/rec.json runs/X/cand.json [--k 11]
 
 For every trial output below k without full lines: exactsolve (../exact) -> class (pk/identity.py, 10-11)
   certified   KKT point with a valid certificate and a proved second order (PD / rigid / strict mod flat motions);
@@ -69,7 +69,7 @@ def stats(keys):
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
-    ap.add_argument('runs', nargs='+'); ap.add_argument('--procs', type=int, default=14)
+    ap.add_argument('runs', nargs='+')
     ap.add_argument('--k', type=float, default=11); ap.add_argument('--timeout', type=float, default=900)
     a = ap.parse_args()
     T = [r for p in a.runs for r in load_run(p)]
@@ -79,7 +79,7 @@ if __name__ == '__main__':
         r['sub'] = 's' in r and r['s'] < a.k and r.get('lines', 1) == 0
     todo = [r for r in T if r['sub'] and not os.path.exists(os.path.join(r['outdir'], r['name'] + '.json'))]
     print(f'{len(T)} trials, {sum(r["sub"] for r in T)} below {a.k:g} without lines; {len(todo)} to solve', flush=True)
-    res = run_jobs(solve, [(r['path'], r['outdir']) for r in todo], procs=a.procs, timeout=a.timeout,
+    res = run_jobs(solve, [(r['path'], r['outdir']) for r in todo], timeout=a.timeout,
                    on_timeout=lambda j: dict(cls='unresolved', status='killed'),
                    on_error=lambda j, e: dict(cls='unresolved', status=f'error {e}'[:60]))
     for r, x in zip(todo, res):

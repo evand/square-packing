@@ -3,13 +3,12 @@
 shade = full-side contacts).  Grid cells (best side >= k, or no store packing) are drawn as the k x k grid minus
 squares.  Writes OUT (full size) and OUT with '-small' (downscaled to --small px wide).
 
-  python3 triangle1000.py [--nmax 1000] [--cell 96] [--out runs/kaggle/triangle1000.png] [--procs 15]
+  python3 triangle1000.py [--nmax 1000] [--cell 96] [--out runs/kaggle/triangle1000.png]
                           [--title TEXT] [--frames FILE]
 --frames: JSON {n: "#rrggbb"}, a coloured frame around those cells.  --cell 192 at n <= 1024 is ~14k x 8k px.  The output
 holds every store best: treat it like the store (runs/ is not published).
 """
 import argparse, json, math, os, sqlite3, sys
-from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
@@ -17,6 +16,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.join(ROOT, 'site', 'timelapse'))
 import render                                                           # noqa: E402  (tile, font, colours)
+from pk import tasks                                                    # noqa: E402
 
 STORE = os.path.join(HERE, 'runs/store.sqlite')
 FEAS = "status!='infeasible' AND (pen IS NULL OR pen<=1e-9)"
@@ -46,7 +46,7 @@ def tile_job(a):
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument('--nmax', type=int, default=1000)
-    ap.add_argument('--cell', type=int, default=96); ap.add_argument('--procs', type=int, default=15)
+    ap.add_argument('--cell', type=int, default=96)
     ap.add_argument('--out', default=os.path.join(HERE, 'runs/kaggle/triangle1000.png'))
     ap.add_argument('--small', type=int, default=2400)
     ap.add_argument('--title', default=''); ap.add_argument('--frames')
@@ -56,8 +56,8 @@ def main():
     frames = {int(n): c for n, c in json.load(open(A.frames)).items()} if A.frames else {}
     W = int(mr * 2 + (2 * rows - 1 + gapf) * pitch); H = top + rows * rpitch + 20
     res = {}
-    with ProcessPoolExecutor(A.procs) as ex:
-        for n, b, g, s in ex.map(tile_job, [(n, cell) for n in range(1, A.nmax + 1)], chunksize=4):
+    with tasks.Executor() as ex:          # tiles take tens of ms: 100 per unit
+        for n, b, g, s in ex.map(tile_job, [(n, cell) for n in range(1, A.nmax + 1)], chunksize=100):
             res[n] = (Image.frombytes('RGB', (cell, cell), b), g, s)
     im = Image.new('RGB', (W, H), render.BG); d = ImageDraw.Draw(im); f = render.font(lab)
     if A.title:

@@ -21,14 +21,14 @@ of each posting at n (sighting source pending:#N), exactsolve on each (Newton to
 Writes site/data/lineage_minima.json: {"<posting>|<n>": {verdict, root, S_ev, S_root, gap, why}}; read by
 site/tools/provenance.py (a root is credited as the finder only on 'same').
 
-  same_minimum.py [--procs 14] [--gap 1e-5] [--close 1e-7]
+  same_minimum.py [--gap 1e-5] [--close 1e-7]
 """
 import argparse, json, os, subprocess, sys, tempfile
-from multiprocessing import Pool
 HERE = os.path.dirname(os.path.abspath(__file__))
 PK = os.path.dirname(HERE)
 ROOT = os.path.abspath(os.path.join(PK, '..', '..'))
 sys.path.insert(0, PK)
+from pk import tasks  # noqa: E402
 EXACT = os.path.join(ROOT, 'search', 'exact', 'exactsolve.py')
 DESCEND = os.path.join(ROOT, 'search', 'exact', 'descend.py')
 OUT = os.path.join(PK, 'runs', 'same_minimum')
@@ -114,7 +114,7 @@ def path_job(args):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--procs', type=int, default=14); ap.add_argument('--gap', type=float, default=1e-5)
+    ap.add_argument('--gap', type=float, default=1e-5)
     ap.add_argument('--close', type=float, default=1e-7)
     a = ap.parse_args()
     import yaml
@@ -141,8 +141,8 @@ def main():
                 pairs.append((f'{x}|{y}|{n}', n, x, y, A, B))
     todo = sorted({(p[0], n) for k, n, ev, root, A, B in pairs if A and B and abs(A[1] - B[1]) <= a.gap for p in (A, B)})
     print(f'{nl} lineage pairs + {len(pairs) - nl} close pairs; {len(todo)} packings to solve exactly', flush=True)
-    with Pool(a.procs) as pool:
-        S = dict(pool.imap_unordered(solve, todo))
+    with tasks.Executor() as ex:
+        S = dict(ex.map(solve, todo))
     out = {}
     from fractions import Fraction
     for k, n, ev, root, A, B in pairs:
@@ -173,8 +173,8 @@ def main():
             hi, lo = (A, B) if A[1] >= B[1] else (B, A)
             PJ.append((k, n, (hi[0], S[hi[0]]['via']), (lo[0], S[lo[0]]['via'])))
     print(f'{len(PJ)} same verdicts: certifying paths', flush=True)
-    with Pool(a.procs) as pool:
-        for k, r in pool.imap_unordered(path_job, PJ):
+    with tasks.Executor() as ex:
+        for k, r in ex.map(path_job, PJ):
             out[k]['path'] = r
             if r and r['ok']:
                 out[k]['why'] += '; path certified at the higher posting\'s side'

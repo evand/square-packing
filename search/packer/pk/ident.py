@@ -180,10 +180,10 @@ def census_protect(n):
     return P
 
 
-def plan(st, n, procs=16, side_tol=SIDE_TOL, core_tol=CORE_TOL, check_exact=True, log=print):
-    """-> dict(groups=[(rep, [(old, method, evidence)])], stats)"""
-    from concurrent.futures import ProcessPoolExecutor
-    from . import policy
+def plan(st, n, parallel=True, side_tol=SIDE_TOL, core_tol=CORE_TOL, check_exact=True, log=print):
+    """-> dict(groups=[(rep, [(old, method, evidence)])], stats); parallel: cores and chains as pool units"""
+    import contextlib
+    from . import policy, tasks
     from .identity import min_key
     from .store import RANK
     db = st.db
@@ -207,20 +207,17 @@ def plan(st, n, procs=16, side_tol=SIDE_TOL, core_tol=CORE_TOL, check_exact=True
         if (i + 1 < len(cand) and S[i + 1] - S[i] <= side_tol) or (i > 0 and S[i] - S[i - 1] <= side_tol):
             need.add(cand[i][0])
     log(f'n {n}: {len(rows):,} rows, {len(cand):,} converged candidates, {len(need):,} with a neighbour within '
-        f'{side_tol:g}; protected {len(prot & set(R)):,}; cores for {len(need):,} rows on {procs} procs')
+        f'{side_tol:g}; protected {len(prot & set(R)):,}; cores for {len(need):,} rows')
     cache = os.path.join(PK, 'runs', 'dedup', f'cores_{n}.npz')      # rigid cores keyed by row id (rerun = seconds)
     masks = {}
     if os.path.exists(cache):
         z = np.load(cache)
         masks = {int(p): m.astype(bool) for p, m in zip(z['ids'], z['masks'])}
     jobs = [(p, R[p][1], R[p][5]) for p in need if p not in masks]
-    if procs <= 1:
-        masks.update(map(core_mask, jobs))
-    else:
-        with ProcessPoolExecutor(procs) as ex:
-            for pid, m in ex.map(core_mask, jobs, chunksize=32):
-                masks[pid] = m
-    if jobs and procs > 1:
+    ex = tasks.Executor('ident') if parallel else None
+    with ex or contextlib.nullcontext():
+        masks.update(ex.map(core_mask, jobs, chunksize=64) if ex else map(core_mask, jobs))    # many short cores per unit
+    if jobs and parallel:
         ok = [(p, m) for p, m in masks.items() if m is not None and len(m) == n]
         os.makedirs(os.path.dirname(cache), exist_ok=True)
         np.savez_compressed(cache, ids=np.array([p for p, _ in ok]), masks=np.array([m for _, m in ok]))
@@ -249,12 +246,10 @@ def plan(st, n, procs=16, side_tol=SIDE_TOL, core_tol=CORE_TOL, check_exact=True
     args = [(c, side_tol, core_tol, known) for c in chains]
     done, t0, refused_list = 0, __import__('time').time(), []
     order = sorted(range(len(args)), key=lambda i: -len(args[i][0]))       # big chains first
-    it = map(_group_chain, [args[i] for i in order]) if procs <= 1 else None
-    ex = None
-    if it is None:
-        ex = ProcessPoolExecutor(procs); it = ex.map(_group_chain, [args[i] for i in order], chunksize=1)
-    try:
-        for G, ref, cmp_, rp in it:
+    ex = tasks.Executor('ident') if parallel else None
+    with ex or contextlib.nullcontext():
+        for G, ref, cmp_, rp in (ex.map(_group_chain, [args[i] for i in order], chunksize=8) if ex else    # chains are short
+                                 map(_group_chain, [args[i] for i in order])):
             compared += cmp_; refused.update(ref); done += 1; refused_list.extend(rp)
             for rep, L in G.items():
                 for old, m, ev in L:
@@ -264,9 +259,6 @@ def plan(st, n, procs=16, side_tol=SIDE_TOL, core_tol=CORE_TOL, check_exact=True
                             rep_of[x[0]] = rep; groups[rep].append(x)
             if done % 500 == 0 or done == len(args):
                 log(f'  chains {done:,} / {len(args):,}, comparisons {compared:,}, {__import__("time").time() - t0:.0f} s')
-    finally:
-        if ex is not None:
-            ex.shutdown()
     # drop protected rows from deletion (kept, linked only)
     cens = census_protect(n)
     keep_linked = [(rep, old) for rep, L in groups.items() for old, *_ in L if old in prot]

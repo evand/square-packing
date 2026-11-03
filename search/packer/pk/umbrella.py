@@ -13,11 +13,11 @@ import os
 for _v in ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS'):
     os.environ.setdefault(_v, '1')
 import argparse, collections, json, math, subprocess, sys, tempfile, time
-from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from pk.anneal import ANNEAL
+from pk import tasks
 
 ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'runs', 'umbrella')
 
@@ -64,7 +64,7 @@ def run(a):
     jobs = [(a.n, P, float(q0), a.kappa, a.sweeps, 1000 * s + i) for P in a.P for i, q0 in enumerate(qs) for s in range(a.seeds)]
     print(f'{a.name}: {len(jobs)} windows', flush=True)
     t0 = time.time()
-    with open(f'{d}/windows.jsonl', 'a') as f, ProcessPoolExecutor(a.procs) as ex:
+    with open(f'{d}/windows.jsonl', 'a') as f, tasks.Executor(f'umbrella-{a.name}') as ex:
         for r in ex.map(window, jobs):
             f.write(json.dumps(r) + '\n')
     print(f'done in {time.time() - t0:.0f}s', flush=True)
@@ -107,7 +107,7 @@ def main():
     p = sp.add_parser('run'); p.add_argument('name'); p.add_argument('--n', type=int, default=110)
     p.add_argument('--P', type=float, nargs='+', default=[30, 100, 300, 1000]); p.add_argument('--q0', default='-0.9:1.0:0.1')
     p.add_argument('--kappa', type=float, default=4.0); p.add_argument('--sweeps', type=int, default=40000)
-    p.add_argument('--seeds', type=int, default=2); p.add_argument('--procs', type=int, default=16)
+    p.add_argument('--seeds', type=int, default=2)
     p = sp.add_parser('report'); p.add_argument('name')
     a = ap.parse_args()
     {'run': run, 'report': report}[a.cmd](a)

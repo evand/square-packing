@@ -9,13 +9,12 @@ own source), so `mondrian.py compose --atlas OUT` (exact guillotine upright coun
 on it unchanged.
 
   python3 rectlib.py build --atlas runs/mondrian/atlas_v2.npz --out runs/rectlib/lib1 [--mmin 8 --mmax 250]
-                           [--per-cell 1] [--procs 12] [--limit N]
+                           [--per-cell 1] [--limit N]
   python3 rectlib.py table runs/rectlib/lib1          (best h per (m, d) vs the crop's H; gain histogram)
   python3 rectlib.py atlas runs/rectlib/lib1 --out runs/rectlib/lib1/atlas.npz [--with-crops ATLAS]
 """
 from __future__ import annotations
 import argparse, json, math, os, subprocess, sys, tempfile, time
-from concurrent.futures import ProcessPoolExecutor
 
 for _v in ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS'):
     os.environ.setdefault(_v, '1')
@@ -96,9 +95,10 @@ def select(A, mmin, mmax, per_cell, hmax):
 def cmd_build(a):
     import mondrian
     from pk import manifest
+    from pk.tasks import Executor
     import scratch
     os.makedirs(a.out, exist_ok=True)
-    man = manifest.start(a.out, 'rectlib', args=vars(a), procs=a.procs)
+    man = manifest.start(a.out, 'rectlib', args=vars(a))
     scratch.scope('rectlib')
     A = mondrian.load_atlas(a.atlas)
     sel = select(A, a.mmin, a.mmax, a.per_cell, a.hmax)
@@ -117,7 +117,7 @@ def cmd_build(a):
     print(f'{len(sel)} pieces selected, {len(tasks)} re-optimisations', flush=True)
     res_path = os.path.join(a.out, 'pieces.jsonl')
     t0 = time.time(); nd = 0
-    with ProcessPoolExecutor(a.procs) as ex, open(res_path, 'w') as f:
+    with Executor() as ex, open(res_path, 'w') as f:
         for r in ex.map(reopt, tasks, chunksize=4):
             f.write(json.dumps(r) + '\n'); nd += 1
             if nd % 500 == 0:
@@ -255,7 +255,7 @@ if __name__ == '__main__':
     b.add_argument('--atlas', default=os.path.join(HERE, 'runs', 'mondrian', 'atlas_v2.npz'))
     b.add_argument('--out', required=True); b.add_argument('--mmin', type=int, default=8)
     b.add_argument('--mmax', type=int, default=250); b.add_argument('--hmax', type=float, default=18.5)
-    b.add_argument('--per-cell', type=int, default=1); b.add_argument('--procs', type=int, default=12)
+    b.add_argument('--per-cell', type=int, default=1)
     b.add_argument('--limit', type=int, default=0); b.add_argument('--dmax', type=int, default=8); b.add_argument('--seed', type=int, default=1)
     t = sp.add_parser('table'); t.add_argument('dir'); t.add_argument('--show', type=int, default=0)
     t2 = sp.add_parser('atlas'); t2.add_argument('dir'); t2.add_argument('--out', required=True)

@@ -6,7 +6,7 @@ above / right of a strip by -1 (side s -> s - 1); fix the count to n (drop the m
 squares at least-overlap positions); penalty squeeze from the overlapping state at side (s-1)*loosen; reject full lines;
 slp2 finish.  Cuts are drawn uniformly over the square (through bands, junction, or axis region); mu0 and loosen vary.
 
-  crop.py src.txt --n 110 --k 11 --trials 300 --out runs/crop1/c [--procs 15] [--seed 1]
+  crop.py src.txt --n 110 --k 11 --trials 300 --out runs/crop1/c [--seed 1]
 Output per trial: cut, removed count, count fix, soft side, final side, jam, full lines, role counts.
 """
 import argparse, collections, json, math, os, random, tempfile
@@ -81,12 +81,12 @@ def job(args):
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument('src'); ap.add_argument('--n', type=int, required=True); ap.add_argument('--k', type=int, required=True)
-    ap.add_argument('--trials', type=int, default=100); ap.add_argument('--procs', type=int, default=15)
+    ap.add_argument('--trials', type=int, default=100)
     ap.add_argument('--seed', type=int, default=1); ap.add_argument('--out', required=True)
     a = ap.parse_args()
     os.makedirs(os.path.dirname(a.out) or '.', exist_ok=True)
     jobs = [(a.src, a.n, a.k, a.seed * 100000 + t, a.out) for t in range(a.trials)]
-    res = run_jobs(job, jobs, procs=a.procs, timeout=3 * JOB_BUDGET,
+    res = run_jobs(job, jobs, timeout=3 * JOB_BUDGET,
                    on_timeout=lambda j: dict(seed=j[3], status='killed'),
                    on_error=lambda j, e: dict(seed=j[3], status=f'failed: {e}'))
     res = [r if r is not None else dict(seed=j[3], status='failed') for r, j in zip(res, jobs)]

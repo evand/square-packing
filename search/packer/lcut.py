@@ -9,7 +9,7 @@ wasted space).  Enumerate cuts on a --step grid, keep the --cuts best-scoring di
 beyond a strip by -1 (by their centre's side of the strip's midline), fq quench (loosen 1.02 / 1.05), full-line check.
 Arm 'random' = cropseed.py's rule (uniform cut, centre-in-strip removal, crop.fix_count) on the same donors, as baseline.
 
-  lcut.py --donors ID... --n 183 --cuts 60 --reps 2 --random 120 --procs 4 --out runs/lcut183
+  lcut.py --donors ID... --n 183 --cuts 60 --reps 2 --random 120 --out runs/lcut183
 """
 import argparse, collections, json, math, os, random, sys, tempfile, time
 import numpy as np
@@ -99,7 +99,7 @@ def main():
     ap.add_argument('--n', type=int, default=183); ap.add_argument('--cuts', type=int, default=60)
     ap.add_argument('--reps', type=int, default=2); ap.add_argument('--random', type=int, default=120)
     ap.add_argument('--step', type=float, default=0.05); ap.add_argument('--sep', type=float, default=0.15)
-    ap.add_argument('--procs', type=int, default=4); ap.add_argument('--seed', type=int, default=1)
+    ap.add_argument('--seed', type=int, default=1)
     ap.add_argument('--out', required=True)
     a = ap.parse_args()
     from pk.store import Store
@@ -108,7 +108,7 @@ def main():
     import mcmin, scratch
     scratch.scope('lcut')
     os.makedirs(f'{a.out}/donors', exist_ok=True); os.makedirs(f'{a.out}/seeds', exist_ok=True)
-    man = manifest.start(a.out, 'lcut', seed=a.seed, args=vars(a), procs=a.procs)
+    man = manifest.start(a.out, 'lcut', seed=a.seed, args=vars(a))
     st = Store(); rng = random.Random(a.seed)
     k = math.ceil(math.sqrt(a.n) - 1e-12)
     J, cutinfo = [], {}
@@ -132,7 +132,7 @@ def main():
         for t in range(a.random):
             J.append(('random', src, a.n, k, 0, 0, (1.02, 1.05)[t % 2], rng.randrange(10 ** 9)))
     t0 = time.time()
-    R = run_jobs(job, J, procs=a.procs, timeout=1200)
+    R = run_jobs(job, J, timeout=1200)
     R = [r for r in R if isinstance(r, dict)]
     with open(f'{a.out}/seeds.jsonl', 'w') as fo:
         for i, r in enumerate(R):

@@ -10,7 +10,6 @@ operator x seed -> fq quench; the result side vs the input's frontier target.
 """
 from __future__ import annotations
 import argparse, itertools, json, math, os, subprocess, sys
-from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -33,9 +32,10 @@ def job(t):
 
 def run(a):
     from pk import manifest
+    from pk.tasks import Executor
     import scratch, mondrian
     os.makedirs(a.out, exist_ok=True)
-    man = manifest.start(a.out, 'relax', args=vars(a), procs=a.procs)
+    man = manifest.start(a.out, 'relax', args=vars(a))
     scratch.scope('relax')
     from pk import eventbench as E
     rows, per = [], {}
@@ -65,7 +65,7 @@ def run(a):
         cur[i] = (inp, float(r['S_min']))
     # rounds: monotonic basin hopping with soft kicks; each input restarts from its best result so far
     tasks = []
-    with ProcessPoolExecutor(a.procs) as ex, open(os.path.join(a.out, 'results.jsonl'), 'w') as f:
+    with Executor() as ex, open(os.path.join(a.out, 'results.jsonl'), 'w') as f:
         for rd in range(a.rounds):
             T = [(cur[i][0], os.path.join(a.out, f'out{i:03d}_r{rd}_{op}_{seed}.txt'), op, seed + 1000 * rd, i)
                  for i in cur for op, seed in itertools.product(a.ops.split(','), range(1, a.seeds + 1))
@@ -109,7 +109,7 @@ if __name__ == '__main__':
     r.add_argument('--min-need', type=float, default=-1.0); r.add_argument('--max-need', type=float, default=1.0)
     r.add_argument('--per-n', type=int, default=10 ** 6); r.add_argument('--rounds', type=int, default=1)
     r.add_argument('--ns', help='comma list: only these n')
-    r.add_argument('--seeds', type=int, default=4); r.add_argument('--procs', type=int, default=14)
+    r.add_argument('--seeds', type=int, default=4)
     q = sp.add_parser('report'); q.add_argument('--out', required=True); q.add_argument('--target', type=float, default=0.0)
     q.add_argument('--ops', default=','.join(OPS))
     a = ap.parse_args()
