@@ -71,7 +71,8 @@ n-changing and perturb stages refuse frozen squares.  `python3 pk/tests/test_sta
 
 ```
 campaign YAML  targets (ns), w(n), moves (name -> chain, dn, once / relax / source), policies (A/B conditions),
-               window, excluded parent families, unit CPU, budget, predictions (required)
+               window, excluded parent families, unit CPU, budget, predictions (required); per move conds (A/B on
+               move sets), admit; admit_window (admission width drawn per unit)
 pool           per condition: the best distinct store packings within the window at every parent n, then every output
                of the condition's own units (a condition never sees another's outputs; frozen conditions add none)
                (`parents: [store ids]`: those packings are the start pools instead, e.g. outputs of one move, to test
@@ -93,6 +94,8 @@ store-ready ([fill] + relax); everything else composes through the store, where 
 Grid-only rule (Evan 10-27): in triangle row k (k = ceil sqrt n, c = k^2 - n) only the first grid-only entry is a
 target, and only once row k - 1 has that c; deeper entries are never easier (monotonicity).  Scorers (`events.SCORERS`,
 by the condition name before '-'): `uniform`, `rule` (near the best, few tries; regular families are never parents),
+`tilted` (11-02: proportional sampling over (1 + A_same)^-0.5, A_same = discounted same-kind claims on the parent's
+lineage; every queued entry logs its propensity `_w / _den`, so offline analyses can reweight; `draws: 1`),
 and plugin models fit on the move log.  A scorer returns sampled utilities, so exploration lives in it (Thompson draws
 for a fitted model).  `ctx['cpu']` gives the mean CPU per application of each move so far.
 
