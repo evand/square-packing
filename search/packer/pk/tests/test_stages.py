@@ -1,6 +1,6 @@
 """Contract of pk/stages.py (10-22): every registered stage logs all its parameters, is deterministic for a seed, and
 leaves frozen squares where they were.  A new stage is covered by registering it (no test to write; a plugin stage that
-needs a particular start names its chain in the plugin's TEST_STARTS).  Plugins load as usual (PK_PLUGINS= skips them).
+needs a particular start names its chain in the plugin's TEST_STARTS, or (chain, start n, ctx n)).  Plugins load as usual (PK_PLUGINS= skips them).
 
   python3 pk/tests/test_stages.py            (needs target/release/fq and anneal; PK_FQ overrides fq)
 """
@@ -44,8 +44,10 @@ def check(name):
     elif f.kind in ('shrink', 'grow') and name not in TEST_STARTS:  # n-changing: a released, filled start; ctx n moves
         st0 = S.run_stage('constrain.release', {}, filled(), random.Random(1), dict(n=N))[0]
         ctx_n = N - 3 if f.kind == 'shrink' else N + 1
-    elif name in TEST_STARTS:                               # plugin stages that need their own start (meta)
-        st0 = S.run_chain(TEST_STARTS[name], dict(n=N), 1)[0]
+    elif name in TEST_STARTS:                               # plugin stages that need their own start (meta); a tuple
+        v = TEST_STARTS[name]                               # (chain, start n, ctx n) for a start of another size
+        chain, n0, ctx_n = v if isinstance(v, tuple) else (v, N, N)
+        st0 = S.run_chain(chain, dict(n=n0), 1)[0]
     else:
         st0 = start()
     fixed = {}
