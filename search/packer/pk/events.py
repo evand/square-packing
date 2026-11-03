@@ -9,6 +9,7 @@ of the best at their n become parents at once.  No dispatcher, no quantum, no dr
                                              again after editing it: new targets get pools, budget / unit edits apply
   python3 -m pk.events work [--max-idle S]             one worker; in parallel: as pool units (below)
   python3 -m pk.events status | report CAMPAIGN | stop [CAMPAIGN] | resume
+PK_EVENTS=path: another events db (tests; PK_STORE likewise for the store).
 Launch through the pool: `pk/tasks.py repeat NAME --budget CPU_H --prio low -- python3 -m pk.events work --campaign NAME --max-units 3`.
 
 Campaign file (the pre-registration: `predictions` is required; the reading of the result goes under `result`):
@@ -22,6 +23,9 @@ Campaign file (the pre-registration: `predictions` is required; the reading of t
                                # admit: better (default: a same-n output is stored only below its parent) | window
                                # (stored within the window of the condition's best at n: score-neutral steps, 11-02)
                                # requires: [f, '!f', 'f=v', 'f>=x'] parent filter on cached features (pk/features.py)
+                               # conds: [c, ...] offered only to these conditions (A/B on move sets; 11-02); a source
+                               # with one cond feeds only that condition, and its CPU and gains count there
+                               # variants: a source's builds per (n, version), overriding the stage's `variants`
       relax:  {chain: 'relax.round.05c.p5', once: true, relax: true}
       add:    {chain: 'grow.add | relax.round.05c.p5', dn: 1}
       lcut:   {chain: 'shrink.lcut | relax.round.05c.p5', dn: '-(2*k-3)'}   # dn in k = ceil sqrt(parent n): an outer L
@@ -41,6 +45,8 @@ Campaign file (the pre-registration: `predictions` is required; the reading of t
     batch_gap: 10              #   one per batch_gap s; batch_age is a backstop).  Scorers see ctx['draws'] and may
                                #   return a (options, draws) array (one feature pass for every draw)
     stop: {conds: [a, b], p: 0.95, min_cpu_h: 2}   # optional sequential stop rule (below)
+    admit_window: [1.0e-4, 3.0e-3]   # optional: the window of admit-window / cross-n outputs drawn per unit, log-uniform,
+                               #   logged (_admit_w); an admit-window unit stores one descending sequence of outputs
 
 Sources (moves with `source: true`, chain starting with a gen stage): built once per (target n, generator version,
 variant) (stage hooks `version(ctx)` (ctx = {'n': n, 'side': known side}; None = skip n) / `variants`, as for deterministic generators), refreshed by a unit of their own when
@@ -59,7 +65,8 @@ Rules, every claim:
     credited against a relaxed parent; outputs of a chain ending in a relax stage enter relaxed.
   - relax options go first (nearest the best first); otherwise options are queued by sampled utility x w(n) (batch
     above); scorers (SCORERS, by the condition name before '-'):
-    uniform, rule (Evan's: near the best, few tries, not regular) and plugin models.  A scorer gets the option rows and
+    uniform, rule (Evan's: near the best, few tries, not regular), tilted (proportional to (1 + A_same)^-0.5, the
+    propensity of every queued entry logged; 11-02) and plugin models.  A scorer gets the option rows and
     returns sampled utilities (Thompson draws or a weighted race), so exploration lives in the scorer; it may instead
     return (utilities, settings): settings[i] = {stage: {param: value}} for option i, chosen from `open_space(chain)`
     (the planner as optimizer), used by every application of the unit; else the chain draws per application.  ctx carries the
@@ -70,7 +77,7 @@ import argparse, json, math, os, random, resource, socket, sqlite3, sys, time, t
 import numpy as np
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB = os.path.join(HERE, 'runs', 'events.sqlite')
+DB = os.environ.get('PK_EVENTS', os.path.join(HERE, 'runs', 'events.sqlite'))   # PK_EVENTS: a test copy
 RUNS = os.path.join(HERE, 'runs', 'events')
 FEAS = "status!='infeasible' AND (pen IS NULL OR pen<=1e-9)"
 SCHEMA = """
@@ -100,7 +107,7 @@ CREATE TABLE IF NOT EXISTS gen_done(campaign TEXT, move TEXT, n INT, version TEX
 """
 DEFAULT = dict(weight={'default': 1.0}, moves={}, policies=['rule', 'uniform'], frozen=[], window=2.0e-3, pool=8, dedupe=6,
                exclude=['G', 'D', 'S'], unit_cpu=30.0, recent_h=2.0, fq_timeout=300, stop=None, parents=None,
-               batch=64, draws=8, batch_per_n=8, batch_age=300.0, batch_gap=10.0)
+               batch=64, draws=8, batch_per_n=8, batch_age=300.0, batch_gap=10.0, admit_window=None)
 STOP_EVERY = 60.0                               # s between checks of a campaign's stop rule
 LEASE = 10.0                                   # x unit_cpu (min 600 s): past it, a running unit's worker is lost
 STALE = 300.0                                  # s: a worker not seen for this long counts as down
@@ -226,8 +233,11 @@ def load(spec):
                 raise ValueError(f"{path}: move {name}: admit is 'better' or 'window'")
             req = m.get('requires') or []
             req = [req] if isinstance(req, str) else [str(x) for x in req]
+            conds = m.get('conds')
+            if conds is not None and (not conds or set(conds) - set(e['policies'])):
+                raise ValueError(f'{path}: move {name}: conds must name policies')
             moves[name] = dict(chain=m['chain'], dn=dn, dnf=_dn_fn(dn), once=bool(m.get('once', False)), source=src,
-                               admit=m.get('admit', 'better'), requires=req,
+                               admit=m.get('admit', 'better'), requires=req, conds=conds, variants=m.get('variants'),
                                relax=bool(m.get('relax', False)), tags=m.get('tags', {}),
                                relaxed_out=m['chain'].split('|')[-1].strip().startswith('relax.'))
         w = {k if k == 'default' else int(k): float(v) for k, v in (e['weight'] or {}).items()}
@@ -366,6 +376,100 @@ def _rule(opts, ctx, rng):
     return w / np.array([rng.expovariate(1.0) for _ in opts])
 
 
+TILT_D, TILT_P, TILT_G = 0.5, 0.5, 6               # tilted: discount per generation, power, generations
+
+
+def _kind(cfg, move):
+    """a move's kind: its tags.kind in this campaign, else the name without trailing digits (other campaigns' moves)"""
+    m = cfg['moves'].get(move)
+    return str(((m or {}).get('tags') or {}).get('kind', move)) if m else move.rstrip('0123456789')
+
+
+def _same_kind(db, cfg, pids):
+    """{pid: {kind: A}}: A = sum over the parent (g = 0) and its ancestors (g <= TILT_G) of TILT_D^g x claims of that
+    kind on them (every campaign's units in this events db).  Lineage: the unit that made a parent row (any campaign),
+    else the store's parent column.  Two grouped queries per refill (~0.1 s at 130k units); store lookups only for
+    pids the events db does not place"""
+    tk = {}
+    for pid, mv, c in db.execute('SELECT pid, move, COUNT(*) FROM unit WHERE pid IS NOT NULL GROUP BY pid, move'):
+        d = tk.setdefault(pid, {}); k = _kind(cfg, mv); d[k] = d.get(k, 0) + c
+    par = dict(db.execute('SELECT p.pid, u.pid FROM parent p JOIN unit u ON u.id = p.unit WHERE u.pid IS NOT NULL'))
+    gen, out, st = {p: [p] for p in pids}, {}, None
+    try:
+        for g in range(TILT_G):
+            miss = sorted({a[-1] for a in gen.values() if a[-1] is not None and a[-1] not in par})
+            if miss:
+                st = st or store_ro()
+                for i in range(0, len(miss), 900):
+                    q = miss[i:i + 900]
+                    par.update(dict(st.execute(f"SELECT id, parent FROM packing WHERE id IN ({','.join('?' * len(q))})", q)))
+                    par.update({x: None for x in q if x not in par})
+            for a in gen.values():
+                if a[-1] is not None:
+                    a.append(par.get(a[-1]))
+    finally:
+        if st is not None:
+            st.close()
+    for p, a in gen.items():
+        d = {}
+        for g, x in enumerate(a):
+            for k, c in tk.get(x, {}).items() if x is not None else ():
+                d[k] = d.get(k, 0.0) + TILT_D ** g * c
+        out[p] = d
+    return out
+
+
+@scorer('tilted')
+def _tilted(opts, ctx, rng):
+    """proportional sampling without replacement, propensities logged (11-02).  w = gap term (flat) x (1 + A_same)^-0.5
+    (A_same: discounted same-kind claims on the parent and its ancestors, _same_kind) x w(n); a move with tags.share
+    (e.g. a relax-only noise floor) gets that share of the total.  The ranking is an exponential race u = w / Exp(1)
+    (Gumbel-top-k: Plackett-Luce).  The refill's selection rules (one entry per parent, batch_per_n per parent n, batch)
+    are applied here as _fill applies them, so every queued entry carries its propensity: _w / _den = P(chosen next |
+    the entries before it), _den = sum of w over the options still eligible then; also _W (sum over every option),
+    _k (queue position), _rank (race rank), _refill, _A, _kind.  Needs draws: 1"""
+    cfg = ctx['cfg']
+    if int(cfg['draws']) != 1 or ctx['draws'] != 1:
+        raise ValueError('tilted: set draws: 1 (one ranking per refill)')
+    N = len(opts)
+    A = _same_kind(ctx['db'], cfg, sorted({o['pid'] for o in opts}))
+    kinds = [_kind(cfg, o['move']) for o in opts]
+    a = np.array([A[o['pid']].get(k, 0.0) for o, k in zip(opts, kinds)])
+    ws = (1.0 + a) ** -TILT_P
+    wn = np.array([weight(cfg, o['n']) for o in opts])
+    sh = np.array([float((o['tags'] or {}).get('share', 0.0)) for o in opts])
+    if (sh > 0).any() and (sh == 0).any():           # shared moves: their total is share x the whole
+        S = float(sh.max()); m = sh > 0
+        ws[m] *= S / (1.0 - S) * float((ws * wn)[~m].sum()) / float((ws * wn)[m].sum())
+    u = ws / np.random.default_rng(rng.randrange(1 << 62)).exponential(size=N)
+    wf, uf = ws * wn, u * wn                           # what _fill ranks (_draw_columns multiplies by w(n))
+    B, cap = max(1, int(cfg['batch'])), max(1, int(cfg['batch_per_n']))
+    byp, byn = {}, {}
+    for j, o in enumerate(opts):
+        byp.setdefault(o['pid'], []).append(j); byn.setdefault(o['n0'], []).append(j)
+    alive = np.ones(N, bool); W = rem = float(wf.sum()); used, per_n, out = set(), {}, [None] * N
+    rid = f"{int(time.time() * 1000)}-{rng.randrange(1 << 20)}"
+
+    def drop(ix):
+        nonlocal rem
+        for i in ix:
+            if alive[i]:
+                alive[i] = False; rem -= wf[i]
+    for r, j in enumerate(np.argsort(-uf, kind='stable')):
+        o = opts[j]
+        if len(used) >= B:
+            break
+        if o['pid'] in used or per_n.get(o['n0'], 0) >= cap or not uf[j] > 0:
+            continue
+        out[j] = dict(_w=float(wf[j]), _den=float(rem), _W=W, _k=len(used), _rank=r, _refill=rid,
+                      _A=round(float(a[j]), 4), _kind=kinds[j])
+        used.add(o['pid']); per_n[o['n0']] = per_n.get(o['n0'], 0) + 1
+        drop(byp[o['pid']])
+        if per_n[o['n0']] >= cap:
+            drop(byn[o['n0']])
+    return u, out
+
+
 def policy(cond, rng=None):
     """a condition's scorer: the name before '-'; 'a+b+...' mixes scorers, one drawn per claim (Evan 10-27: when a
     choice does not matter for the question at hand, mix the options and keep learning)"""
@@ -450,7 +554,8 @@ def options(db, cfg, cond, now):
         gap = max(0.0, (s - b) / math.sqrt(n0))
         if gap > cfg['window']:
             continue
-        mvs = relax if (relax and not relaxed) else [m for m, v in cfg['moves'].items() if m not in relax and not v['source']]
+        mvs = relax if (relax and not relaxed) else [m for m, v in cfg['moves'].items() if m not in relax and not v['source']
+                                                     and (not v['conds'] or cond in v['conds'])]
         for m in mvs:
             v = cfg['moves'][m]; n = n0 + v['dnf'](n0)
             if n not in ok or not ok[n]:
@@ -492,7 +597,7 @@ def stop_state(db, cfg):
 _STALE_AT = {}
 
 
-def _source_option(db, cfg, now):
+def _source_option(db, cfg, now, sp=None):
     """the next source unit: a refresh when a source's inputs are stale (hook `stale()`, checked every REFRESH_GAP s,
     one refresh at a time), else a build of the first (move, n, variant) not built at the generator's current version
     for that n (hook `version(ctx)`, ctx = {'n': n, 'side': the campaign's known side at n or None}: a generator whose
@@ -504,15 +609,19 @@ def _source_option(db, cfg, now):
     srcs = [(m, v) for m, v in cfg['moves'].items() if v['source']]
     if not srcs:
         return None
-    running = {(m, i) for m, i in db.execute("SELECT move, info FROM unit WHERE campaign=? AND cond=? AND status='running'",
-                                              (name, SOURCE))}
+    running = {(m, i) for m, i in db.execute("SELECT move, info FROM unit WHERE campaign=? AND pid IS NULL AND "
+                                              "status='running'", (name,))}
     side = dict(db.execute('SELECT n, s FROM known WHERE campaign=?', (name,)))
+    uc = float(cfg['unit_cpu']); lo = min((sp or {}).get(c, 0.0) for c in cfg['policies'])
     for m, v in srcs:
+        c = _src_cond(v)
+        if c != SOURCE and (sp or {}).get(c, 0.0) > lo + uc:
+            continue                                      # its condition is ahead: the others catch up first
         f = S.STAGES[S.parse(v['chain'].split('|')[0])[0][0]]
         if hasattr(f, 'stale') and now - _STALE_AT.get((name, m), 0.0) > REFRESH_GAP:
             _STALE_AT[(name, m)] = now
             if not any(mm == m and '"refresh"' in (i or '') for mm, i in running) and f.stale():
-                return dict(kind='refresh', move=m, n=None)
+                return dict(kind='refresh', move=m, n=None, cond=_src_cond(v))
         done = {(n, v, k) for n, v, k in db.execute('SELECT n, version, variant FROM gen_done WHERE campaign=? AND move=?',
                                                     (name, m))}
         for n in cfg['ns']:
@@ -522,10 +631,16 @@ def _source_option(db, cfg, now):
             if ver is None:                               # the generator has nothing to build at n
                 continue
             ver = str(ver)
-            for k in range(int(getattr(f, 'variants', 1))):
+            for k in range(int(v['variants'] or getattr(f, 'variants', 1))):      # a move's variants: overrides the stage's
                 if (n, ver, k) not in done:
-                    return dict(kind='build', move=m, n=n, version=ver, variant=k)
+                    return dict(kind='build', move=m, n=n, version=ver, variant=k, cond=_src_cond(v))
     return None
+
+
+def _src_cond(v):
+    """a source unit's condition: the one condition its move is restricted to (`conds: [c]`: its CPU and gains count
+    for c, so conditions with different sources stay on equal budgets), else SOURCE (shared, nobody's gain)"""
+    return v['conds'][0] if v.get('conds') and len(v['conds']) == 1 else SOURCE
 
 
 def _open_campaigns(db, wid, rng, now, t0, only=None):
@@ -550,16 +665,16 @@ def _open_campaigns(db, wid, rng, now, t0, only=None):
                 if not db.execute("SELECT 1 FROM unit WHERE campaign=? AND status='running'", (name,)).fetchone():
                     db.execute("UPDATE campaign SET status='done' WHERE name=?", (name,))
                 continue
-            o = _source_option(db, cfg, now)
+            o = _source_option(db, cfg, now, sp)
             if o is not None:
                 uid = db.execute('INSERT INTO unit(campaign, cond, pid, n0, n, move, worker, seed, status, lease_until, started, '
                                  'options, claim_s, info) VALUES (?,?,NULL,NULL,?,?,?,?,?,?,?,0,?,?)',
-                                 (name, SOURCE, o['n'], o['move'], wid, rng.randrange(1 << 30), 'running',
+                                 (name, o['cond'], o['n'], o['move'], wid, rng.randrange(1 << 30), 'running',
                                   now + max(600.0, LEASE * uc), now, time.time() - t0, json.dumps(o))).lastrowid
                 if o['kind'] == 'build':
                     db.execute('INSERT OR IGNORE INTO gen_done VALUES (?,?,?,?,?,?)', (name, o['move'], o['n'], o['version'], o['variant'], uid))
                 db.execute('COMMIT')
-                return dict(id=uid, campaign=name, cond=SOURCE, seed=uid, cfg=cfg, pid=None, n0=None, s=None, **o)
+                return dict(id=uid, campaign=name, seed=uid, cfg=cfg, pid=None, n0=None, s=None, **o)
             live.append((name, cfg, sp))
         db.execute('COMMIT')
         return live
@@ -583,7 +698,7 @@ def _draw_columns(opts, cfg, cond, name, db, now, rng):
     cols = []
     while len(cols) < D:
         sc = policy(cond, rng)
-        r = SCORERS[sc](opts, dict(cfg=cfg, cond=cond, now=now, cpu=per, draws=D - len(cols)), rng)
+        r = SCORERS[sc](opts, dict(cfg=cfg, cond=cond, now=now, cpu=per, draws=D - len(cols), db=db), rng)
         u, ch = r if isinstance(r, tuple) else (r, None)
         u = np.asarray(u, float)
         if u.ndim == 1:
@@ -789,7 +904,7 @@ def run_unit(u):
     from . import stages as S, families as F
     from .store import Store
     cfg = u['cfg']; mv = cfg['moves'][u['move']]; n = u['n']
-    if u['cond'] == SOURCE:
+    if u.get('kind') in ('build', 'refresh'):
         return run_source(u)
     st0 = store_ro()
     try:
@@ -802,12 +917,18 @@ def run_unit(u):
     db = connect(); bref = db.execute('SELECT s FROM nbest WHERE campaign=? AND cond=? AND n=?',
                                       (u['campaign'], u['cond'], n)).fetchone(); db.close()
     bn = bref[0] if bref else float(kgrid(n))
-    lim = s0 * (1.0 - WIN_RTOL) if mv['dn'] == 0 and mv.get('admit', 'better') == 'better' else bn + cfg['window'] * math.sqrt(n)
     rng = random.Random(u['seed']); c0 = cpu()
-    run = f"runs/events/{u['campaign']}/u{u['id']:07d}"
-    spec = [(name, dict(kw, **(u.get('params') or {}).get(name, {}))) for name, kw in S.parse(mv['chain'])]
     asg = {k: v for k, v in (u.get('params') or {}).items() if k.startswith('_')}   # the scorer's assignment facts
     #   (11-02: settings keys starting with '_', e.g. _random_move, are logged with every application, never applied)
+    win = cfg['window']
+    if cfg.get('admit_window'):                      # 11-02: the admission window drawn per unit (log-uniform), logged
+        lo, hi = map(float, cfg['admit_window'])
+        win = asg['_admit_w'] = math.exp(random.Random(u['seed'] + 1).uniform(math.log(lo), math.log(hi)))
+    wadm = mv.get('admit', 'better') == 'window'
+    lim = s0 * (1.0 - WIN_RTOL) if mv['dn'] == 0 and not wadm else bn + win * math.sqrt(n)
+    kept = None                                      # admit window: one descending sequence of stored outputs per unit
+    run = f"runs/events/{u['campaign']}/u{u['id']:07d}"
+    spec = [(name, dict(kw, **(u.get('params') or {}).get(name, {}))) for name, kw in S.parse(mv['chain'])]
     apps, children = [], []
     store = None
     try:
@@ -816,6 +937,9 @@ def run_unit(u):
             p, s1, params, c = apply_chain(spec, n, s0, sq0, seed, cfg['fq_timeout'])
             store = store or Store()
             keep = s1 is not None and s1 < min(lim, kgrid(n) - 1e-9)
+            if keep and wadm:                        # (a near-copy of the parent, or no better than this unit's last
+                keep = not (mv['dn'] == 0 and abs(s1 - s0) <= s0 * WIN_RTOL) and (kept is None or below(s1, kept))
+                kept = s1 if keep else kept          #  stored output, is not a new parent: no flood of copies)
             ad = {} if mv.get('admit', 'better') == 'better' else dict(admit=mv['admit'])
             cid = store.record(u['pid'], u['move'], dict(params, seed=seed, **ad, **asg), p if keep else None, c, run=run,
                                n=u['n0'], s=s1)
@@ -834,7 +958,7 @@ def run_unit(u):
         if store is not None:
             store.close()
     return dict(status='done', apps=apps, children=children,
-                info={k: u[k] for k in ('params', 'scorer') if u.get(k)})
+                info=dict({k: u[k] for k in ('params', 'scorer') if u.get(k)}, **({'admit_w': asg['_admit_w']} if '_admit_w' in asg else {})))
 
 
 def run_source(u):
@@ -847,7 +971,9 @@ def run_source(u):
     if u['kind'] == 'refresh':
         return dict(status='done', apps=[], children=[], info=dict(refresh=f.refresh() or {}))
     n = u['n']
-    db = connect(); r = db.execute('SELECT MIN(s) FROM nbest WHERE campaign=? AND n=?', (u['campaign'], n)).fetchone(); db.close()
+    cs = mv['conds'] or cfg['policies']
+    db = connect(); r = db.execute(f"SELECT MIN(s) FROM nbest WHERE campaign=? AND n=? AND cond IN ({','.join('?' * len(cs))})",
+                                   (u['campaign'], n, *cs)).fetchone(); db.close()
     lim = (r[0] if r and r[0] is not None else float(kgrid(n))) + cfg['window'] * math.sqrt(n)
     t = cpu(); children = []
     try:
@@ -886,7 +1012,8 @@ def record(db, u, res, cpu_s, wall, now=None):
         if mv['relax']:
             db.execute('UPDATE parent SET relaxed=1 WHERE campaign=? AND pid=?', (name, u['pid']))
         gain = 0.0
-        conds = cfg['policies'] if cond == SOURCE else [cond]          # source outputs: every condition, gain to none
+        conds = (mv['conds'] or cfg['policies']) if u['pid'] is None else [cond]   # source outputs: its conditions; gain:
+        #                                               nobody's (cond SOURCE), or its one condition's (conds: [c])
         for c in conds:
             for cid, n, s, fam in res.get('children', []):
                 if c not in cfg['frozen']:

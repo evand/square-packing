@@ -197,6 +197,36 @@ def test_batch_queue():
     print('batch queue ok')
 
 
+def test_tilted():
+    """tilted: every queued entry carries its propensity; _fill's selection rules reproduced (queue order = _k); the
+    first entry's denominator is the whole sum; inherited same-kind claims lower w"""
+    import json
+    d = tempfile.mkdtemp()
+    db = E.connect(os.path.join(d, 'ev.sqlite'))
+    cfg = seed_db(db, campaign_file(d))
+    db.execute("UPDATE parent SET relaxed=1")
+    for pid, n, s in [(p, 100, 9.95 + 1e-5 * p) for p in range(10, 30)]:
+        db.execute('INSERT INTO parent VALUES (?,?,?,?,?,?,?,?,?,NULL)', ('tcamp', 'tilted', pid, n, s, 'V', time.time(), 0, 1))
+    db.execute("INSERT INTO nbest SELECT campaign, 'tilted', n, s0, s, t FROM nbest WHERE cond='rule'")
+    # parent 11 was made by a unit on parent 10, which had 3 'walk' claims: A_same(11, walk) = 0.5 * 3
+    for k in range(3):
+        db.execute("INSERT INTO unit(campaign, cond, pid, n0, n, move, status) VALUES ('old', 'x', 10, 100, 100, 'walk', 'done')")
+    db.execute("UPDATE parent SET unit=1 WHERE pid=11")
+    cfg['policies'][:] = ['tilted']; cfg['draws'] = 1; cfg['batch'] = 6; cfg['batch_per_n'] = 8; cfg['window'] = 1.0
+    A = E._same_kind(db, cfg, [10, 11, 12])
+    assert A[10] == {'walk': 3.0} and A[11] == {'walk': 1.5} and A[12] == {}, A
+    u0 = E.claim(db, 1, random.Random(3))
+    q = [json.loads(r[0]) for r in db.execute("SELECT params FROM queue WHERE cond='tilted' ORDER BY id")]
+    P = [u0['params']] + q
+    assert [x['_k'] for x in P] == list(range(len(P))) and len(P) == 6, [x['_k'] for x in P]
+    assert P[0]['_den'] == P[0]['_W'] and all(a['_den'] > b['_den'] for a, b in zip(P, P[1:]))
+    assert sum(1 for x in P if x['_rank'] >= 0) == 6 and len({x['_refill'] for x in P}) == 1
+    for x in P:                                                   # w = (1 + A_same)^-0.5 (flat gap, w(n) = 1)
+        assert abs(x['_w'] - (1 + x['_A']) ** -0.5) < 1e-3, x
+    cfg['policies'][:] = ['rule', 'uniform']; cfg['draws'] = 8; cfg['batch'] = 64; cfg['batch_per_n'] = 8; cfg['window'] = 1.0e-3
+    print('tilted ok')
+
+
 def test_mixed_policy():
     rng = random.Random(0)
     assert {E.policy('rule+uniform', rng) for _ in range(50)} == {'rule', 'uniform'}
@@ -223,6 +253,7 @@ if __name__ == '__main__':
     test_open_space_and_chosen_params()
     test_batch_queue()
     test_mixed_policy()
+    test_tilted()
     test_stop_rule()
     test_eligible()
     test_options_claim_record()
