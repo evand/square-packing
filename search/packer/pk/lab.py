@@ -161,9 +161,11 @@ def run(chains, pids, tries, control=CONTROL, name=None, prio='high', seeds=0, h
     ctl_once = bool(control) and S.deterministic(arms[0][2])
     rng = random.Random(f'{name}:{seeds}')
     plan = [(pid, j, random.Random(f'{seeds}:{pid}:{j}').randrange(1 << 30)) for pid in pids for j in range(tries)]
-    units = [(arm, dn, c, pid, j, sd) for pid, j, sd in plan for arm, dn, c in arms
-             if not (arm == 'ctl' and ctl_once and j > 0)]       # a deterministic control: once per parent
-    rng.shuffle(units)                                           # arms interleave in time (equal load on average)
+    rng.shuffle(plan)                                            # (parent, rep) blocks in random order, arms shuffled
+    units = []                                                   # within a block: pairs complete as the run goes
+    for pid, j, sd in plan:
+        blk = [(arm, dn, c, pid, j, sd) for arm, dn, c in arms if not (arm == 'ctl' and ctl_once and j > 0)]
+        rng.shuffle(blk); units += blk                           # (a deterministic control: once per parent)
     os.makedirs(os.path.join(HERE, 'runs', 'try'), exist_ok=True)
     json.dump(dict(name=name, arms={a: c for a, _, c in arms}, dn={a: dn for a, dn, _ in arms}, parents=pids,
                    tries=tries, seeds=seeds, hold=hold, prio=prio, admit=admit, lim=lim, asof=asof,
