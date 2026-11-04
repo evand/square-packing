@@ -884,7 +884,9 @@ def apply_chain(spec, n, s0, sq0, seed, fq_timeout):
     """one application of a chain to a parent (s0, sq0) at target n -> (Packing or None, its side if feasible at n else
     None, {stage: params as drawn, with the stage's declared log_info keys as 'info.KEY'} (or {'error': ...}), CPU-s);
     shared by run_unit and pk/lab.py (`pk.py try`).  If keep.best returned an earlier packing: params '_kept_src', '_kept_why'
-    and, when the final state was feasible but worse, '_final_s' (its side: what the chain itself produced)"""
+    and, when the final state was feasible but worse, '_final_s' (its side: what the chain itself produced); '_trace': the
+    side after every stage (None: the stage failed; not checked for feasibility), e.g. each round of a
+    'perturb | relax | constrain.best' sequence, whose final side is capped at the start"""
     from . import stages as S
     from .packing import Packing
     t = cpu()
@@ -905,6 +907,9 @@ def apply_chain(spec, n, s0, sq0, seed, fq_timeout):
                 if k in r_.get('info', {}):
                     d['info.' + k] = r_['info'][k]
             params[r_['stage']] = d
+        params['_trace'] = [None if r_.get('info', {}).get('failed') else round(float(r_['s']), 9)   # 11-04: the side
+                            for r_ in lg if r_.get('stage') != 'keep.best']   # after each stage (a stage repeated in
+        #                                                                       a chain keeps only its last params)
     except Exception as e:
         ok, p, params = False, None, dict(error=repr(e)[:160])
     return p, (float(p.s) if ok else None), params, cpu() - t
