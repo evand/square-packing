@@ -105,7 +105,7 @@ CREATE INDEX IF NOT EXISTS queue_c ON queue(campaign, cond, id);
 CREATE TABLE IF NOT EXISTS gen_done(campaign TEXT, move TEXT, n INT, version TEXT, variant INT, unit INT,
   PRIMARY KEY(campaign, move, n, version, variant));
 """
-DEFAULT = dict(weight={'default': 1.0}, moves={}, policies=['rule', 'uniform'], frozen=[], window=2.0e-3, pool=8, dedupe=6,
+DEFAULT = dict(weight={'default': 1.0}, moves={}, policies=['rule', 'uniform'], frozen=[], window=2.0e-3, pool=8, dedupe=6, shape=0,
                exclude=['G', 'D', 'S'], unit_cpu=30.0, recent_h=2.0, fq_timeout=300, stop=None, parents=None,
                batch=64, draws=8, batch_per_n=8, batch_age=300.0, batch_gap=10.0, admit_window=None)
 STOP_EVERY = 60.0                               # s between checks of a campaign's stop rule
@@ -244,7 +244,7 @@ def load(spec):
         for k in ('window', 'unit_cpu', 'recent_h', 'fq_timeout'):
             e[k] = float(e[k])
         _CFG[key] = dict(e, name=d['goal'], budget_cpu_h=float(d['budget_cpu_h']), path=path, ns=ns, moves=moves, weight=w,
-                         pool=int(e['pool']), dedupe=int(e['dedupe']))
+                         pool=int(e['pool']), dedupe=int(e['dedupe']), shape=int(e['shape']))
     return _CFG[key]
 
 
@@ -326,6 +326,7 @@ def add(db, spec):
             if n < 2 or n in have:                  # an edited campaign file: only the new parent n get pools
                 continue
             for i, s, _, fam in F.near(st, n, kgrid(n) - 1e-9, cfg['exclude'], cfg['pool'], dedupe=cfg['dedupe'],
+                                       shape=cfg['shape'],
                                        window=cfg['window'] * math.sqrt(n)):
                 rows.append((n, i, s, fam))
         rel = _relaxed(st, [i for _, i, _, _ in rows])

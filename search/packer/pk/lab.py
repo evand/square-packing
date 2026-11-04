@@ -47,9 +47,10 @@ def ro(path=None):
 
 # ------------------------------------------------------------------ parents
 
-def parents(ns=None, best=4, window=2e-3, exclude=('G', 'D', 'S'), ids=None, where=None):
+def parents(ns=None, best=4, window=2e-3, exclude=('G', 'D', 'S'), ids=None, where=None, shape=0):
     """store ids: explicit ids, a WHERE clause on packing (feasible rows only), or per n the `best` best distinct
-    packings (side to 6 decimals) within window * sqrt(n) of the first, regular families excluded (as an event-loop pool)"""
+    packings (side to 6 decimals; shape > 0: distinct arrangements, families.near) within window * sqrt(n) of the first,
+    regular families excluded (as an event-loop pool)"""
     from . import families as F
     db = ro()
     try:
@@ -64,7 +65,7 @@ def parents(ns=None, best=4, window=2e-3, exclude=('G', 'D', 'S'), ids=None, whe
         out = []
         for n in ns:
             out += [i for i, *_ in F.near(db, n, F.kgrid(n) - 1e-9, exclude, best, dedupe=6, window=window * math.sqrt(n),
-                                          path=store_path())]
+                                          path=store_path(), shape=shape)]
         return out
     finally:
         db.close()

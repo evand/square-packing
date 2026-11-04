@@ -59,9 +59,35 @@ def test_fill_readonly():
         assert [x[3] for x in r] == ['G']
 
 
+def test_shape_dedupe():
+    """near(shape=k): up to k packings per rounded side when they are different arrangements (differs())"""
+    rng = np.random.default_rng(0)
+    g = np.array([[x + .5, y + .5, 0.0] for x in range(4) for y in range(4)])        # 16 squares, side 4
+    noise = g + np.r_[rng.normal(0, 1e-3, (16, 2)).T, np.zeros((1, 16))].T              # one packing, relax noise
+    mirror = g.copy(); mirror[:, 0] = 4 - mirror[:, 0]                                  # a box symmetry of g
+    moved = g.copy(); moved[:6, 0] += 0.4                                               # six squares rearranged
+    assert not F.differs(4.0, g, noise) and not F.differs(4.0, g, mirror) and F.differs(4.0, g, moved)
+    few = g.copy(); few[:2, 0] += 0.4
+    assert not F.differs(4.0, g, few)                                                   # <= SHAPE_K wanderers
+    with tempfile.TemporaryDirectory() as d:
+        from pk.store import Store
+        p = os.path.join(d, 's.sqlite'); Store(p).close(); F.migrate(p)
+        db = sqlite3.connect(p)
+        for i, (s, X) in enumerate([(4.0, g), (4.0000000001, noise), (4.0000000002, moved), (4.0000000003, moved + 1e-4),
+                                    (4.1, g)]):
+            db.execute("INSERT INTO packing (hash, n, s, coords, status, pen, grid, added, tags) VALUES (?,?,?,?,?,?,?,?,?)",
+                       (f'h{i}', 16, s, X.astype('<f8').tobytes(), 'raw', 0.0, 0, '2026-01-01', '["J"]'))
+        db.commit()
+        F.classify = lambda n, s, sq: 'J'
+        assert [round(x[1], 10) for x in F.near(db, 16, 5.0, path=p)] == [4.0, 4.1]
+        assert [round(x[1], 10) for x in F.near(db, 16, 5.0, path=p, shape=3)] == [4.0, 4.0000000002]   # 4.1 = g again
+        assert [round(x[1], 10) for x in F.near(db, 16, 5.0, path=p, shape=1)] == [4.0]
+        assert [round(x[1], 10) for x in F.near(db, 16, 5.0, path=p, shape=3, window=0.05)] == [4.0, 4.0000000002]
+
+
 def teardown_function(_):
     F.classify = REAL
 
 
 if __name__ == '__main__':
-    test_near_and_cache(); test_fill_readonly(); print('ok')
+    test_near_and_cache(); test_fill_readonly(); test_shape_dedupe(); print('ok')

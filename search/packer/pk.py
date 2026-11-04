@@ -148,6 +148,7 @@ def main():
     p.add_argument('chains', nargs='*'); p.add_argument('--report', metavar='NAME')
     p.add_argument('--ns', help='parent n, comma separated'); p.add_argument('--best', type=int, default=4, help='parents per n')
     p.add_argument('--window', type=float, default=2e-3, help='score gap (side / sqrt n) above the best at n')
+    p.add_argument('--shape', type=int, default=0, help='--ns pools: dedupe by arrangement, at most K per side (families.near)')
     p.add_argument('--ids', help='parent store ids, comma separated'); p.add_argument('--where', help='SQL on packing')
     p.add_argument('--tries', type=int, default=4, help='paired applications per parent and arm')
     p.add_argument('--control', help='control chain (default: relax.round.15c.p5)'); p.add_argument('--no-control', action='store_true')
@@ -190,7 +191,7 @@ def main():
             sys.exit('pk.py try CHAIN [CHAIN ...] with one of --ns / --ids / --where (or --report NAME)')
         ints = lambda x: [int(v) for v in x.split(',') if v.strip()]
         pids = lab.parents(ns=ints(a.ns) if a.ns else None, best=a.best, window=a.window,
-                           ids=ints(a.ids) if a.ids else None, where=a.where)
+                           ids=ints(a.ids) if a.ids else None, where=a.where, shape=a.shape)
         if not pids:
             sys.exit('no parents')
         lab.run(a.chains, pids, a.tries, control=None if a.no_control else (a.control or lab.CONTROL), name=a.name,
