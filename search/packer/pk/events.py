@@ -894,7 +894,7 @@ def apply_chain(spec, n, s0, sq0, seed, fq_timeout):
         st, lg = S.run_chain(spec, dict(n=n, fq_timeout=fq_timeout), seed, st=S.State(Packing(s0, np.array(sq0, float))))
         p = st.p
         ok = p.n == n and not S.failed(lg) and float(p.max_pen()) <= 1e-9
-        params = {}
+        params = {}; draws = []
         for r_ in lg:
             if r_.get('stage') == 'keep.best':                # 11-04: the chain's own final side when keep.best
                 kb = r_.get('info', {})                       # returned an earlier packing ('worse' only: the
@@ -907,9 +907,12 @@ def apply_chain(spec, n, s0, sq0, seed, fq_timeout):
                 if k in r_.get('info', {}):
                     d['info.' + k] = r_['info'][k]
             params[r_['stage']] = d
+            draws.append([r_['stage'], d])
+        if len({nm for nm, _ in draws}) < len(draws):          # 11-04: a stage repeated in the chain: every
+            params['_draws'] = draws                            # occurrence's params, in chain order
         params['_trace'] = [None if r_.get('info', {}).get('failed') else round(float(r_['s']), 9)   # 11-04: the side
                             for r_ in lg if r_.get('stage') != 'keep.best']   # after each stage (a stage repeated in
-        #                                                                       a chain keeps only its last params)
+        #                                                     a chain keeps its last params under its name; all in _draws)
     except Exception as e:
         ok, p, params = False, None, dict(error=repr(e)[:160])
     return p, (float(p.s) if ok else None), params, cpu() - t

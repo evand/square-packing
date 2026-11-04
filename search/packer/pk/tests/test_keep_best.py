@@ -78,9 +78,12 @@ def test_apply_chain_logs_final():
         assert s1 == 2.2 and params['_kept_src'] == 'perturb.tk_same' and params['_kept_why'] == 'worse'
         assert abs(params['_final_s'] - 2.5) < 1e-12
         assert params['perturb.tk_same'] == {'info.pick': ['a', 'b']} and 'keep.best' not in params
-        assert params['_trace'] == [2.2, 2.5]
+        assert params['_trace'] == [2.2, 2.5] and '_draws' not in params
         p, s1, params, _ = apply_chain('perturb.tk_same', N, 2.2, sq, 1, 10.0)        # no keep.best: no extra keys
         assert s1 == 2.2 and '_final_s' not in params and '_kept_src' not in params
+        p, s1, params, _ = apply_chain('perturb.tk_same | relax.tk_worse2 | perturb.tk_same', N, 2.2, sq, 1, 10.0)
+        assert [nm for nm, _ in params['_draws']] == ['perturb.tk_same', 'relax.tk_worse2', 'perturb.tk_same']
+        assert params['_draws'][0][1] == {'info.pick': ['a', 'b']}           # a repeated stage: every occurrence
     finally:
         for k in NAMES:
             S.STAGES.pop(k, None)
