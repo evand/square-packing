@@ -882,7 +882,9 @@ def drop_queued(db, name, cond, n):
 
 def apply_chain(spec, n, s0, sq0, seed, fq_timeout):
     """one application of a chain to a parent (s0, sq0) at target n -> (Packing or None, its side if feasible at n else
-    None, {stage: params as drawn} (or {'error': ...}), CPU-s); shared by run_unit and pk/lab.py (`pk.py try`)"""
+    None, {stage: params as drawn, with the stage's declared log_info keys as 'info.KEY'} (or {'error': ...}), CPU-s);
+    shared by run_unit and pk/lab.py (`pk.py try`).  If keep.best returned an earlier packing: params '_kept_src', '_kept_why'
+    and, when the final state was feasible but worse, '_final_s' (its side: what the chain itself produced)"""
     from . import stages as S
     from .packing import Packing
     t = cpu()
@@ -890,8 +892,19 @@ def apply_chain(spec, n, s0, sq0, seed, fq_timeout):
         st, lg = S.run_chain(spec, dict(n=n, fq_timeout=fq_timeout), seed, st=S.State(Packing(s0, np.array(sq0, float))))
         p = st.p
         ok = p.n == n and not S.failed(lg) and float(p.max_pen()) <= 1e-9
-        params = {r_['stage']: {k: v for k, v in r_.get('params', {}).items() if isinstance(v, (int, float, str, bool))}
-                  for r_ in lg if r_.get('stage') != 'keep.best'}
+        params = {}
+        for r_ in lg:
+            if r_.get('stage') == 'keep.best':                # 11-04: the chain's own final side when keep.best
+                kb = r_.get('info', {})                       # returned an earlier packing ('worse' only: the
+                params['_kept_src'], params['_kept_why'] = kb.get('src'), kb.get('why')   # final state feasible at n)
+                if kb.get('why') == 'worse':
+                    params['_final_s'] = float(kb['final_s'])
+                continue
+            d = {k: v for k, v in r_.get('params', {}).items() if isinstance(v, (int, float, str, bool))}
+            for k in getattr(S.STAGES.get(r_.get('stage')), 'log_info', ()):   # declared info keys (stage choices)
+                if k in r_.get('info', {}):
+                    d['info.' + k] = r_['info'][k]
+            params[r_['stage']] = d
     except Exception as e:
         ok, p, params = False, None, dict(error=repr(e)[:160])
     return p, (float(p.s) if ok else None), params, cpu() - t

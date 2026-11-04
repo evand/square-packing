@@ -72,14 +72,16 @@ class State:
 STATUS = ('lab', 'default', 'retired')
 
 
-def stage(_name, _kind, status='default', evidence='', **space):
+def stage(_name, _kind, status='default', evidence='', log_info=(), **space):
     """register f as stage _name of kind _kind over parameter space `space`.  status (11-02): 'lab' (being tried:
     `pk.py try`), 'default' (in use), 'retired' (kept so old chains replay); evidence: a short pointer (CLAIMS line, goal
-    file, `try:NAME`).  `pk.py stages` lists both with the move log's use of every stage"""
+    file, `try:NAME`).  `pk.py stages` lists both with the move log's use of every stage.  log_info (11-04): keys of the
+    stage's info dict that the move log keeps with its params (small JSON values: a random choice the stage made)"""
     assert status in STATUS, (_name, status)
 
     def deco(f):
         f.stage_name, f.kind, f.space, f.status, f.evidence = _name, _kind, space, status, evidence
+        f.log_info = tuple(log_info)
         STAGES[_name] = f
         return f
     return deco

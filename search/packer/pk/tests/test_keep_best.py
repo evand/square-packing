@@ -64,5 +64,26 @@ def test_keep_best():
             S.STAGES.pop(k, None)
 
 
+def test_apply_chain_logs_final():
+    """events.apply_chain (11-04): the chain's own final side when keep.best returned an earlier packing, and the
+    info keys a stage declares with log_info"""
+    from pk.events import apply_chain
+    S.stage('perturb.tk_same', 'perturb', log_info=('pick',))(
+        lambda st, rng, ctx: (st.but(p=grid(st.p.s)), dict(pick=['a', 'b'], other=1)))   # side-keeping, feasible
+    NAMES.append('perturb.tk_same')
+    _reg('relax.tk_worse2', 'relax', lambda st, rng, ctx: (st.but(p=grid(st.p.s + 0.3)), {}))
+    try:
+        sq = grid(2.2).sq
+        p, s1, params, _ = apply_chain('perturb.tk_same | relax.tk_worse2', N, 2.2, sq, 1, 10.0)
+        assert s1 == 2.2 and params['_kept_src'] == 'perturb.tk_same' and params['_kept_why'] == 'worse'
+        assert abs(params['_final_s'] - 2.5) < 1e-12
+        assert params['perturb.tk_same'] == {'info.pick': ['a', 'b']} and 'keep.best' not in params
+        p, s1, params, _ = apply_chain('perturb.tk_same', N, 2.2, sq, 1, 10.0)        # no keep.best: no extra keys
+        assert s1 == 2.2 and '_final_s' not in params and '_kept_src' not in params
+    finally:
+        for k in NAMES:
+            S.STAGES.pop(k, None)
+
+
 if __name__ == '__main__':
-    test_keep_best(); print('ok')
+    test_keep_best(); test_apply_chain_logs_final(); print('ok')

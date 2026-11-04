@@ -197,7 +197,9 @@ def run(chains, pids, tries, control=CONTROL, name=None, prio='high', seeds=0, h
 # ------------------------------------------------------------------ report
 
 def rows(name, path=None):
-    """move-log rows of a try -> [dict(pid, n, nt, dn, chain, arm, rep, cpu, s0, s, child)] (n: the parent's, nt: target)"""
+    """move-log rows of a try -> [dict(pid, n, nt, dn, chain, arm, rep, cpu, s0, s, child, out, params)] (n: the parent's,
+    nt: target; s: the side returned (keep.best may return an earlier stage's packing); out: the chain's own final side
+    when keep.best logged it (11-04), else s; params: the logged params)"""
     db = ro(path)
     try:
         R = db.execute('SELECT e.packing, e.n, e.mechanism, e.params, e.cpu_s, e.best_s, e.child, p.s FROM expansion e '
@@ -208,7 +210,7 @@ def rows(name, path=None):
     for pid, n, mech, params, cpu, s, child, s0 in R:
         P = json.loads(params or '{}'); dn = int(P.get('dn', 0))
         out.append(dict(pid=pid, n=n, nt=n + dn, dn=dn, chain=mech, arm=P.get('arm', '?'), rep=P.get('rep'), cpu=cpu, s0=s0,
-                        s=s, child=child))
+                        s=s, child=child, out=P.get('_final_s', s) if s is not None else None, params=P))
     return out
 
 
@@ -223,7 +225,9 @@ def report(name, path=None):
     parent, seed): sign counts and median of d = u(ctl) - u(arm), u = the output's gap to the reference in score units
     (module doc; d > 0: the arm did better; failed sides left out);
     median output gap: (output side - reference at its n) / sqrt n over feasible outputs (informative when the parent is
-    the reference itself, where every u is 0)"""
+    the reference itself, where every u is 0).  Paired diffs and output gaps use the chain's own final side (rows: out),
+    so a side-keeping stage early in a chain (its output equals the parent's side) does not mask what follows; wins,
+    below parent and best - ref use the side returned (what is stored)"""
     from .events import below, WIN_RTOL
     R = rows(name, path)
     if not R:
@@ -241,8 +245,8 @@ def report(name, path=None):
     med = lambda xs: sorted(xs)[len(xs) // 2] if xs else float('nan')
     gap = lambda s, n: (s - ref[n]) / math.sqrt(n)
 
-    def u(r):                                                  # the output itself (11-02: not capped at the parent)
-        return gap(r['s'], r['nt']) if r['s'] is not None else None
+    def u(r):                                                  # the output itself (11-02: not capped at the parent;
+        return gap(r['out'], r['nt']) if r['out'] is not None else None   # 11-04: nor at a side-keeping stage's output)
     chain = {r['arm']: (r['dn'], r['chain']) for r in R}
     ctl = {(r['pid'], r['rep']): u(r) for r in R if r['arm'] == 'ctl'}
     ctl1 = {r['pid']: u(r) for r in R if r['arm'] == 'ctl'} if P.get('ctl_once') else {}
@@ -264,7 +268,7 @@ def report(name, path=None):
         pm = f'{sum(d > tie for d in D)} / {sum(d < -tie for d in D)} / {sum(abs(d) <= tie for d in D)}' if D else ''
         bp = sum(below(r['s'], r['s0']) for r in ok if r['dn'] == 0) if any(r['dn'] == 0 for r in G) else ''
         bs = min((r['s'] - ref[r['nt']] for r in ok), default=None) if n is not None else None
-        og = [gap(r['s'], r['nt']) for r in ok]
+        og = [gap(r['out'], r['nt']) for r in ok]
         out.append(f"| {arm} | {n if n is not None else 'all'} | {f'{ref[n]:.6f}' if n is not None else ''} | {len(G)} | "
                    f"{len(G) - len(ok)} | {bp} | {len(g)} | {f'{bs:+.3e}' if bs is not None else ''} | "
                    f"{sum(g) / max(h, 1e-9):.3e} | {len(D) or ''} | {pm} | {f'{med(D):+.3e}' if D else ''} | "
