@@ -614,7 +614,9 @@ def _source_option(db, cfg, now, sp=None):
                                               "status='running'", (name,))}
     side = dict(db.execute('SELECT n, s FROM known WHERE campaign=?', (name,)))
     uc = float(cfg['unit_cpu']); lo = min((sp or {}).get(c, 0.0) for c in cfg['policies'])
-    for m, v in srcs:
+    built = dict(db.execute('SELECT move, count(*) FROM gen_done WHERE campaign=? GROUP BY move', (name,)))
+    srcs.sort(key=lambda mv: built.get(mv[0], 0))       # 11-04: least-built source first (file order starved the
+    for m, v in srcs:                                     # later sources while the first kept getting new versions)
         c = _src_cond(v)
         if c != SOURCE and (sp or {}).get(c, 0.0) > lo + uc:
             continue                                      # its condition is ahead: the others catch up first
