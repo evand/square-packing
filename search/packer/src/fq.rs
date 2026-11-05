@@ -21,7 +21,8 @@
 //!   --dump-lp DIR: append every polish LP to DIR/lp-<pid>.jsonl (rows/columns with stable keys, Clarabel time; lp_bench.py)
 //!   --freeze SPEC: squares by index ("0-99,105", 0-based, inclusive ranges) held fixed in absolute coordinates: no
 //!     gradient, no LP / Newton column, no kick, not moved by --loosen / --hold-f / --shrink rescaling; frozen-frozen pairs
-//!     carry no constraints (the frozen set is assumed feasible).  Only the final repair scaling (f64 margin, ~1e-13
+//!     carry no constraints (the frozen set is assumed feasible), and frozen squares carry no wall constraints (obstacles may
+//!     reach outside the container; 11-05).  Only the final repair scaling (f64 margin, ~1e-13
 //!     relative) moves them; the JSON reports the largest frozen displacement as frozen_dmax (10-22)
 
 mod ldl;
@@ -283,7 +284,9 @@ impl Prob {
         // to f and nothing to g: skip its 16 terms, bit-identical (FQ_WALLSKIP=0 restores the full loop)
         let wskip = self.b.is_empty() && wall_skip();
         let wm = H * SQRT2 * (1.0 + 1e-12);
+        let fzw = frozen_mask(n);                  // frozen squares: no wall terms (11-05)
         for i in 0..n {
+            if !fzw.is_empty() && fzw[i] { continue; }
             let (c, sn) = cs[i];
             let (x, y) = (v[3 * i], v[3 * i + 1]);
             if wskip && x - wm > r && x + wm < wx - r && y - wm > r && y + wm < wy - r && self.wlam[16 * i..16 * i + 16].iter().all(|&l| l == 0.0) { continue; }
@@ -376,7 +379,9 @@ impl Prob {
         let s = v[3 * n];
         let mut mv: f64 = 0.0;
         let sh = self.shapes(v);
+        let fzw = frozen_mask(n);                  // frozen squares: no wall constraints (11-05)
         for i in 0..n {
+            if !fzw.is_empty() && fzw[i] { continue; }
             let t = v[3 * i + 2];
             let (c, sn) = (t.cos(), t.sin());
             for k in 0..4 {
@@ -446,7 +451,9 @@ impl Prob {
         let si = 3 * n;
         let s = v[si];
         let mut out = Vec::new();
+        let fzw = frozen_mask(n);                  // frozen squares are obstacles: no wall constraints (11-05)
         for i in 0..n {
+            if !fzw.is_empty() && fzw[i] { continue; }
             let t = v[3 * i + 2];
             let (c, sn) = (t.cos(), t.sin());
             for k in 0..4 {
@@ -1676,9 +1683,11 @@ fn quench(s0: f64, x0: &[f64], o: &QOpt) -> (f64, Vec<f64>, usize, usize, f64, P
 /// Exact-ish (f64 SAT) feasibility: min pair gap and min wall clearance.
 fn check(s: f64, x: &[f64]) -> (f64, f64) {
     let n = x.len() / 3;
+    let fz = frozen_mask(n);             // frozen-frozen pairs carry no constraints (--freeze), so no check (11-05)
     let mut mg = f64::INFINITY;
     for i in 0..n {
         for j in i + 1..n {
+            if !fz.is_empty() && fz[i] && fz[j] { continue; }
             let (dx, dy) = (x[3 * j] - x[3 * i], x[3 * j + 1] - x[3 * i + 1]);
             if dx * dx + dy * dy < 2.1 {
                 mg = mg.min(sat_gap(x[3 * i], x[3 * i + 1], x[3 * i + 2], x[3 * j], x[3 * j + 1], x[3 * j + 2]));
@@ -1687,6 +1696,7 @@ fn check(s: f64, x: &[f64]) -> (f64, f64) {
     }
     let mut mw = f64::INFINITY;
     for i in 0..n {
+        if !fz.is_empty() && fz[i] { continue; }
         let t = x[3 * i + 2];
         let w = H * (t.cos().abs() + t.sin().abs());
         mw = mw.min(x[3 * i] - w).min(s + rdx() - x[3 * i] - w).min(x[3 * i + 1] - w).min(s + rdy() - x[3 * i + 1] - w);
