@@ -881,6 +881,22 @@ def drop_queued(db, name, cond, n):
 
 # ------------------------------------------------------------------ run (in the worker)
 
+def moved(A, B, cuts=(0.1, 0.5)):
+    """[squares of B whose centre is more than c from every centre of A, for c in cuts] (same frame, no symmetry): how
+    far an output moved from its parent, so a move's outputs can be told apart as re-finds of the parent's arrangement
+    vs new arrangements even when they are not wins (11-04, Evan).  None if it cannot be computed."""
+    try:
+        A = np.asarray(A, float)[:, :2]; B = np.asarray(B, float)[:, :2]
+        try:
+            from scipy.spatial import cKDTree
+            d = cKDTree(A).query(B)[0]
+        except ImportError:
+            d = np.array([np.hypot(*(A - b).T).min() for b in B])
+        return [int((d > c).sum()) for c in cuts]
+    except Exception:
+        return None
+
+
 def apply_chain(spec, n, s0, sq0, seed, fq_timeout):
     """one application of a chain to a parent (s0, sq0) at target n -> (Packing or None, its side if feasible at n else
     None, {stage: params as drawn, with the stage's declared log_info keys as 'info.KEY'} (or {'error': ...}), CPU-s);
@@ -914,6 +930,7 @@ def apply_chain(spec, n, s0, sq0, seed, fq_timeout):
         params['_trace'] = [None if r_.get('info', {}).get('failed') else round(float(r_['s']), 9)   # 11-04: the side
                             for r_ in lg if r_.get('stage') != 'keep.best']   # after each stage (a stage repeated in
         #                                                     a chain keeps its last params under its name; all in _draws)
+        params['_moved'] = moved(sq0, p.sq)                     # 11-04: how far the output is from its parent
     except Exception as e:
         ok, p, params = False, None, dict(error=repr(e)[:160])
     return p, (float(p.s) if ok else None), params, cpu() - t
