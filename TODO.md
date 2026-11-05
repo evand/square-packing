@@ -7,6 +7,7 @@ Pre-tidy text (10-15, has details dropped here): `tasks/todo-tidy-2026-10-15/TOD
 External posts: ask Evan explicitly per post.  **Before any bound-chasing run, check jlevy's register (`jlevy.github.io/squares/cases/<n>.html`).**
 
 ## Next session
+- [ ] **submission.py claim table (11-05, jlevy#914):** "best public before it" took the live check's lowest row, which was our own unpublished store best ("store best any", e.g. 17.9018346 at 303 vs the register's 17.9069782); the #914 table was built by hand from the register.  Use only public sources (register, issues, catalogue, imported public packings) for that column.  Also: `candidate.py --stage` re-runs the whole check; a stage-only mode for an existing work dir would have saved hand-copying seven dirs.
 - [ ] Teammate onboarding when a team forms (form the Kaggle team first: no private sharing outside teams): `../plugins` README covers the clone layout; add an `install-hooks.sh` (the public pre-push guard is per clone); delete the local `archive/pre-split-2026-10-23` branch + tag once the split looks right (bundle in `../../square-packing-backups/`).
 - [ ] Optional, Evan: a credit note on jlevy #763 (n = 268: Couzo credits kirilltym's Seam LP notebook; the packing first appears in lightningv08's CUDA Packing Search output, kirilltym's input).  Our tighter 268 / 304 certificates are at 8a8879a2 if useful.
 - [ ] Couzo certificates above n = 1000 (#763, ~1,684, ~1 GB): not imported (Evan 10-23: leave for now); index at `search/packer/runs/couzo763/upper_bounds_964ee2b.json`.
