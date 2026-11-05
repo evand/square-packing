@@ -161,7 +161,7 @@ a separate decision (TODO, next session).
 - [ ] Relationship terms come from the table above, with the numbers; no "refinement" unless same minimum.
 - [ ] If it is a new minimum but no square moves > 0.1, the draft says so explicitly.
 - [ ] Lineage framed as direct or hunt; for a hunt, the search effort leads.
-- [ ] Every start / ancestor named, with its source (`pk.py lineage ID`: no INCOMPLETE line, or the gap stated in the draft); lineage tool committed.
+- [ ] Every start / ancestor we know named, with its source (`pk.py lineage ID`); where the lineage is INCOMPLETE, the draft says what is unknown (e.g. composer gadget donors, not logged before 11-04).  The register asks for "the work this builds on" (template) and keeps method credit with the result (`attribution.md`: our composer is Chris Deotte's fault-line method); it does not require full donor provenance (Evan 11-05: "unknown source" is fine).  Lineage tool committed.
 - [ ] Regularized view's `"by"` names the finder (check the staged `_regularized.json`).
 - [ ] Open questions from jlevy on earlier issues: answered or listed (`outreach/` drafts).
 
