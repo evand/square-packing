@@ -51,16 +51,20 @@ def compute_one(args):
         src = reg.load(n)
         poster = os.path.join(RUNS, 'poster', policy); os.makedirs(poster, exist_ok=True)
         lev, levtext = level_of(reg, reg.load(n), d4inv(reg, R, rep['g']), rep, policy)
+        if R.get('S_grow'):                       # 11-05: the regularized angles needed a slightly larger box
+            levtext += f"; the view's box is {mpm.nstr(R['S_grow'], 3)} larger than S* (inside the certificate dilation)"
         cert_ok, Sp = reg.write_cert(R, os.path.join(poster, f'n-{n:03d}.cert'))
         hp = lambda Q: dict(S=mpm.nstr(Q['S'], 50), sq=[[mpm.nstr(x, 50), mpm.nstr(y, 50), mpm.nstr(t, 50)]
                                                        for x, y, t in zip(Q['X'], Q['Y'], Q['T'])])
-        json.dump(dict(n=n, S_exact=mpm.nstr(R['S'], 60), S_cert=str(Sp), cert_valid=cert_ok,
+        json.dump(dict(n=n, S_exact=mpm.nstr(R['S'] - R.get('S_grow', 0), 60), S_cert=str(Sp), cert_valid=cert_ok,
                        verify_80=rep['verify'], input=reg.refreshed(n) or 'search/exact/batch', by=rep['by'],
                        orientation_g=rep['g'], symmetry=rep.get('sym_imposed'), shape=rep.get('shape', {}).get('kind'),
                        groups_before=rep['groups_before'], groups_after=rep['groups_after'],
                        angle_changes=rep.get('merged_determined'), packing=hp(R),
                        policy=policy, level=lev, level_text=levtext,
-                       note='regularized display view of a certified packing at the same side; not a new bound'),
+                       note='regularized display view of a certified packing at the same side; not a new bound',
+                       **({'S_grow': mpm.nstr(R['S_grow'], 5), 'S_grow_note': 'the view needs a box this much larger than S* '
+                           '(regularized angles; still inside the certificate dilation)'} if R.get('S_grow') else {})),
                   open(os.path.join(poster, f'n-{n:03d}.json'), 'w'), default=str)
         json.dump(dict(n=n, ok=bool(rep['verify']['ok']) and cert_ok, g=rep['g'], kind=rep.get('shape', {}).get('kind'),
                        groups_before=rep['groups_before'], groups_after=rep['groups_after'],

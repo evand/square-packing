@@ -399,7 +399,9 @@ def refine(P, X, Y, moved, sym=(), tight_tol=1e-9):
         else:
             _, i, j, nx, ny, r = rw
             g = nx * (Xm[j] - Xm[i]) + ny * (Ym[j] - Ym[i]) - r
-        return abs(g) < mpf('1e-14')
+        return g < mpf('1e-14')                  # 11-05: was abs(g): a violated row (an unmoved square the angle
+                                                 # step left 5e-13 into a wall, n = 303) was dropped as if a gap
+    collected = list(rows)                       # every collected row is an inequality (gap >= 0) in the final phase
     rows = [rw for rw in rows if keep(rw)]
     symrows = []
     for g, p in sym:
@@ -410,7 +412,10 @@ def refine(P, X, Y, moved, sym=(), tight_tol=1e-9):
                 for d in range(2):
                     symrows.append((i, j, d, M, t))
 
+    Sbox = [S]                                   # the box side; feasibility_phase may grow it
+
     def residuals():
+        S = Sbox[0]
         R = []
         for rw in rows:
             if rw[0] == 'w':
@@ -459,14 +464,101 @@ def refine(P, X, Y, moved, sym=(), tight_tol=1e-9):
                 Xm[i] += step
             else:
                 Ym[i] += step
+    ineq = feasibility_phase(collected, len(rows), J, var, Xm, Ym, Sbox, residuals,
+                             s_sym=[-int(t[d]) for i, j, d, M, t in symrows])
     Q = dict(P); Q.update(X=Xm, Y=Ym)
+    if Sbox[0] != S:                             # the view needed a (tiny) larger box: say so, keep the claim's S* apart
+        Q['S'] = Sbox[0]; Q['S_grow'] = Sbox[0] - S
     worst = []
     if hist[-1] > 1e-60:
         R = residuals()
         allrows = rows + [('s',) + tuple(r[:3]) for r in symrows]
         worst = sorted(((float(abs(v)), allrows[k][:3] if allrows[k][0] != 'p' else allrows[k][:3]) for k, v in enumerate(R)),
                        reverse=True)[:6]
-    return Q, dict(n_eq=len(rows) + len(symrows), n_var=len(var), rank=int(rank), resid=hist[-1], hist=hist, worst=worst)
+    return Q, dict(n_eq=len(rows) + len(symrows), n_var=len(var), rank=int(rank), resid=hist[-1], hist=hist, worst=worst,
+                   ineq=ineq)
+
+
+def feasibility_phase(collected, nrows, J, var, Xm, Ym, Sbox, residuals, s_sym=(), iters=12, grow_max=mpf('1e-20'), tol=mpf('1e-60')):
+    """After refine's equality Newton (11-05, n = 303): the tight set can be overdetermined and inconsistent at ~1e-17
+    (872 rows, rank 595 for 606 unknowns once the angle step has changed angles), and rows dropped from it as true small
+    gaps were not enforced at all, so least squares left overlaps of 1e-17 .. 1e-19.  Contacts are inequalities: step
+    the centres (in place) by min-L1 LPs with every collected pair / wall row as gap >= 0 and the symmetry rows as
+    equalities, in units of the worst violation (non-binding rows clipped), until no row is violated at 80 digits.
+    If no step exists at the fixed side (n = 303: the conservative angle merge needs the box 1.9e-32 larger), the side
+    joins as a variable (min dS >= 0, at most grow_max in total; far-wall and symmetry rows carry it) and Sbox[0] grows:
+    the view is then a packing in a box that much larger than S*, still far inside the certificate's dilation.
+    -> [(min gap, max symmetry residual, LP status[, dS])] per step"""
+    def gaps():
+        S = Sbox[0]
+        G = []
+        for rw in collected:
+            if rw[0] == 'w':
+                _, i, d, side, ev = rw
+                z = Xm[i] if d == 0 else Ym[i]
+                G.append(z - ev if side == 0 else S - ev - z)
+            else:
+                _, i, j, nx, ny, r = rw
+                G.append(nx * (Xm[j] - Xm[i]) + ny * (Ym[j] - Ym[i]) - r)
+        return G
+    nv = len(var)
+    JI = np.zeros((len(collected), nv))
+    for k, rw in enumerate(collected):
+        if rw[0] == 'w':
+            _, i, d, side, ev = rw
+            JI[k, var[(i, d)]] = 1 if side == 0 else -1
+        else:
+            _, i, j, nx, ny, r = rw
+            for q, sg in ((i, -1), (j, 1)):
+                JI[k, var[(q, 0)]] += sg * float(nx); JI[k, var[(q, 1)]] += sg * float(ny)
+    JS = J[nrows:]
+    S0 = Sbox[0]
+    log = []
+    for _ in range(iters):
+        G = gaps(); RS = residuals()[nrows:]
+        gmin = min(G) if G else mpf(0)
+        smax = max([abs(v) for v in RS] + [mpf(0)])
+        if gmin >= -tol and smax < mpf('1e-75'):     # tol well inside verify's EQ_TOL (1e-50): no chasing noise
+            log.append((float(gmin), float(smax), 'ok'))
+            break
+        scale = max(float(-gmin) if gmin < 0 else 0.0, float(smax), 1e-300)
+        Gf = np.minimum(np.array([float(g) for g in G]) / scale, 1e3)
+        A_ub = np.vstack([np.hstack([-JI, np.zeros((len(G), nv))]),
+                          np.hstack([np.eye(nv), -np.eye(nv)]), np.hstack([-np.eye(nv), -np.eye(nv)])])
+        b_ub = np.concatenate([Gf, np.zeros(2 * nv)])
+        kw = dict(A_eq=np.hstack([JS, np.zeros((len(RS), nv))]), b_eq=-np.array([float(v) for v in RS]) / scale) if len(RS) else {}
+        res = None
+        for meth in ('highs', 'highs-ds', 'highs-ipm'):
+            res = linprog(np.r_[np.zeros(nv), np.ones(nv)], A_ub=A_ub, b_ub=b_ub,
+                          bounds=[(None, None)] * nv + [(0, None)] * nv, method=meth, **kw)
+            if res.status == 0:
+                break
+        dS = 0.0
+        if res.status != 0:                      # no step at this side: let the side grow (minimal dS)
+            wS = np.array([1.0 if (rw[0] == 'w' and rw[3] == 1) else 0.0 for rw in collected])
+            kw2 = {}
+            if len(RS):
+                kw2 = dict(A_eq=np.hstack([JS, np.array(s_sym, float)[:, None]]), b_eq=kw['b_eq'])
+            r2 = linprog(np.r_[np.zeros(nv), 1.0], A_ub=np.hstack([-JI, -wS[:, None]]), b_ub=Gf,
+                         bounds=[(-10, 10)] * nv + [(0, None)], method='highs', **kw2)
+            if r2.status == 0 and float(r2.x[-1]) * scale < float(tol):     # below tolerance: not worth a box change
+                log.append((float(gmin), float(smax), 'stop', float(r2.x[-1]) * scale))
+                break
+            if r2.status == 0 and (Sbox[0] - S0) + mpf(float(r2.x[-1]) * scale) <= grow_max:
+                dS = float(r2.x[-1]) * 1.01 + 1e-6      # a hair over the minimum (the next check is at 80 digits)
+                res = type('LP', (), dict(status=0, x=np.r_[r2.x[:nv], np.zeros(nv)]))()
+        log.append((float(gmin), float(smax), int(res.status)) + ((dS * scale,) if dS else ()))
+        if res.status != 0:
+            break
+        if dS:
+            Sbox[0] += mpf(dS) * mpf(scale)
+        for (i, d), k in var.items():
+            step = mpf(float(res.x[k])) * mpf(scale)
+            if d == 0:
+                Xm[i] += step
+            else:
+                Ym[i] += step
+    return log
 
 
 def verify(P):

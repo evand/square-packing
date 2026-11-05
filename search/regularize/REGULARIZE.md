@@ -263,3 +263,16 @@ irrational.  (Its note: four level-3 alternates now, not five: 270's went with i
 - Round-1 feedback → rules; then levels 1/3 of the angle plan (exact field equality for determined angles; merges
   backed by a certificate) and the flat rotational modes `minpoly.py` pins at an arbitrary rational t.
 - Fix 199, 292; exact (field) verification of the output instead of 80-digit.
+
+## 2026-11-05: refine robustness (n = 303 view failed both checkers)
+
+The conservative angle step (one straighten, one free-angle merge -23.892 -> -24.000 deg) left squares 275 / 277
+5-6e-13 into the bottom wall; the LP moved them < 1e-9, so they counted as unmoved, and `refine.keep()` dropped their
+rows (`abs(g) < 1e-14` treated a violation as a gap).  The tight set was also overdetermined and inconsistent at ~1e-17
+(872 rows, rank 595, 606 unknowns), so least squares left overlaps of 1e-17 .. 1e-19, including near-gap rows that
+`keep()` correctly kept out of the equality solve but nothing enforced.  Fixes: `keep()` keeps violated rows; new
+`feasibility_phase` after the Newton step (every collected row as gap >= 0, LP steps in units of the worst violation,
+stop at 1e-60); where no step exists at S* the side grows by the LP minimum (303: 1.9e-32, recorded as `S_grow`, the
+JSON's `S_exact` stays S*; the certificate's dilation is 1.8e-19).  Regression (scratch, old vs new): the 5 11-05
+candidates + 20 register n (36 .. 308): all 24 that passed still pass, 303 now passes (both checkers VALID);
+worst gap -1.3e-64; S_grow only at 303.
