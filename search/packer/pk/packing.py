@@ -15,6 +15,41 @@ def side_val(x) -> float:
     return float(Fraction(x)) if '/' in x else float(x)
 
 
+def field_val(scalar):
+    """a witness `scalar` block (kind algebraic-number-field: minimal polynomial, highest degree first, and a rational
+    isolating interval for its root a; jlevy register since 11-05) -> val(x): a number given as rational coefficients of
+    1, a, a^2, ... (or a plain rational / decimal) -> float.  a is refined by bisection at 60 digits"""
+    import mpmath
+    with mpmath.workdps(60):
+        P = [mpmath.mpf(Fraction(str(c)).numerator) / Fraction(str(c)).denominator for c in scalar['minimal_polynomial']]
+        lo, hi = (Fraction(str(c)) for c in scalar['isolating_interval'])
+        lo, hi = mpmath.mpf(lo.numerator) / lo.denominator, mpmath.mpf(hi.numerator) / hi.denominator
+        f = lambda x: mpmath.polyval(P, x)
+        if lo == hi:
+            a = lo
+        else:
+            flo = f(lo)
+            if flo * f(hi) > 0:
+                raise ValueError('isolating interval does not bracket a sign change')
+            for _ in range(400):
+                m = (lo + hi) / 2; fm = f(m)
+                if fm == 0 or hi - lo < mpmath.mpf(10) ** -55:
+                    break
+                if (fm < 0) == (flo < 0): lo, flo = m, fm
+                else: hi = m
+            a = (lo + hi) / 2
+
+    def val(x):
+        if not isinstance(x, (list, tuple)):
+            return side_val(x)
+        with mpmath.workdps(60):
+            t = mpmath.mpf(0)
+            for i, c in enumerate(x):
+                q = Fraction(str(c)); t += mpmath.mpf(q.numerator) / q.denominator * a ** i
+            return float(t)
+    return val
+
+
 @dataclass
 class Packing:
     s: float
@@ -237,17 +272,20 @@ def _parse(txt: str, strict=False) -> Packing | None:
             raise ValueError('too many squares')
         if w['coordinates'].get('origin') != 'lower-left':
             return None
+        sc = w.get('scalar') or {}
+        V = field_val(sc) if sc.get('kind') == 'algebraic-number-field' else side_val   # 11-05: field-element coordinates
+        S = V(w['side']); s_str = str(w['side']) if V is side_val else repr(S)
         if w.get('representation') == 'center-basis':           # basis = direction (cos, sin), unnormalised
-            sq = [(side_val(q['center'][0]), side_val(q['center'][1]),
-                   math.degrees(math.atan2(side_val(q['basis'][1]), side_val(q['basis'][0])))) for q in w['squares']]
-            return Packing(side_val(w['side']), sq, str(w['side']))
+            sq = [(V(q['center'][0]), V(q['center'][1]),
+                   math.degrees(math.atan2(V(q['basis'][1]), V(q['basis'][0])))) for q in w['squares']]
+            return Packing(S, sq, s_str)
         if w.get('representation') == 'corners':                # 4 corners in order: centre = mean, angle of edge 0->1
             sq = []
             for q in w['squares']:
-                C = [(side_val(a), side_val(b)) for a, b in q['corners']]
+                C = [(V(a), V(b)) for a, b in q['corners']]
                 sq.append((sum(c[0] for c in C) / 4, sum(c[1] for c in C) / 4,
                            math.degrees(math.atan2(C[1][1] - C[0][1], C[1][0] - C[0][0]))))
-            return Packing(side_val(w['side']), sq, str(w['side']))
+            return Packing(S, sq, s_str)
         if w.get('representation') != 'center-angle':
             return None
         f = 1.0 if w['coordinates']['angle_unit'] == 'degrees' else 180 / math.pi
