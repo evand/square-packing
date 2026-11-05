@@ -1,5 +1,5 @@
 import Sqpack.LemmaEK
-import Sqpack.RowMinK
+import Sqpack.RowMinN
 
 /-!
 # The vertex test without enumerating the combinations
@@ -8,7 +8,8 @@ import Sqpack.RowMinK
 the Kronecker test of its sum.  Here all the terms are raised to one common denominator and degree
 and the rows are replaced by their digit-wise minima (`KArith.rmLoop`): if those pass, every
 combination's sum is `≥ 0` at every pose of the sub-bin (`rowOkM_sound`).  The cost is linear in
-the number of terms.
+the number of terms.  The digits are taken on natural numbers (`KArith.rmChk`, which implies
+`rmLoop`).
 -/
 
 namespace SquarePacking
@@ -57,7 +58,7 @@ def rowOkM (c : Ctx) (σ : Bool) (rows : List (List KR)) (fx : List KR) : Bool :
   decide (0 < c.K) &&
     ts.all (fun r => r.r.d != 0 &&
       decide (2 * (liftH c.B N (rzK c E I J Kx L r).h).b * c.M ^ N < 2 ^ c.K)) &&
-    rmLoop c.K ε (N + 2) (rows.map (·.map fun r => (liftH c.B N (rzK c E I J Kx L r).h).v))
+    rmChk c.K ε (N + 2) (rows.map (·.map fun r => (liftH c.B N (rzK c E I J Kx L r).h).v))
       (fx.map fun r => (liftH c.B N (rzK c E I J Kx L r).h).v)
 
 /-! ## 2.  Soundness -/
@@ -182,7 +183,7 @@ theorem rowOkM_sound {Δ X Y : Poly} {b0 b1 R K : ℕ} (hR : 0 < R) {σ : Bool}
       obtain ⟨x, hx, rfl⟩ := List.mem_map.mp hy
       exact (hall x (hSts x hx)).2)
     (fun i hi => by
-      have := rmLoop_sound (N + 2) _ _ _ hloop
+      have := rmLoop_sound (N + 2) _ _ _ (rmChk_sound hK hloop)
         (forall₂_map (fun r => (liftH c.B N (rzK c E I J Kx L r).h).v) hf2) i hi
       have hcK : c.K = K := rfl
       simpa [List.map_append, List.map_map, Function.comp_def, hS, hcK] using this)
