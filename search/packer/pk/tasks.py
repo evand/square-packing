@@ -300,9 +300,11 @@ class Executor:
     """submit / map like ProcessPoolExecutor, each call (or chunk of map calls) a unit of `campaign` (default: the
     script's name).  Every unit is a fresh process with the caller's environment: `initializer(*initargs)` runs in it
     before its calls, and `timeout` (s, per unit) kills an overdue unit even inside C code (its calls raise TimeoutError;
-    not a campaign failure).  Leaving the block waits for the calls, as ProcessPoolExecutor does; leaving it by an
+    not a campaign failure).  prio defaults to $PK_PRIO, else 'normal' (`PK_PRIO=low python3 script.py` backgrounds a
+    whole script).  Leaving the block waits for the calls, as ProcessPoolExecutor does; leaving it by an
     exception (or shutdown(cancel_futures=True)) drops this executor's calls that have not started."""
-    def __init__(self, campaign=None, prio='normal', initializer=None, initargs=(), timeout=None):
+    def __init__(self, campaign=None, prio=None, initializer=None, initargs=(), timeout=None):
+        prio = prio or os.environ.get('PK_PRIO', 'normal')       # PK_PRIO: a whole script's calls at one priority
         self.campaign, self.prio, self.calls = campaign or default_campaign(), prio, {}
         self.job = dict(init=(initializer, tuple(initargs)) if initializer else None, timeout=timeout)
         self.dir = os.path.join(DIR, self.campaign, f'calls{os.getpid()}'); os.makedirs(self.dir, exist_ok=True)
