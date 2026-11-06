@@ -154,6 +154,9 @@ def find_contacts(P, tol=1e-8, etol=1e-7, atol=0.0, use_vv=False, reach=1e-4):
     return cands, vv
 
 
+RELEASE_TOL = mpf('1e-12')     # run(): release a pair only if another line clears it by more than the contact tolerance
+
+
 def slack_separated(P, Eq, thr):
     """Pairs whose contacts in Eq are not binding: some side line NOT carrying one of the pair's incidences in Eq
     separates the pair with clearance > thr (every corner of the other square strictly outside).  Non-overlap is a
@@ -1007,7 +1010,11 @@ def run(path, dps=80, eps='1e-20', outdir=None, algdeg=0, tol=0, quiet=False, fo
     # are not constraints of the true (disjunctive) problem here.  Release them from every analysis below; if the rest
     # cannot hold the load, the point is not a local minimum (10-08: four "certified" s(110) census minima were such
     # branch artifacts, e.g. a corner on side 1 of square i while side 3 of square j cleared i by 1.6e-8).
-    rel = slack_separated(P, Eq, mpf(10) ** (-(dps - 15)))
+    # Threshold = the contact tolerance used just above (find_contacts(P, 1e-12)): a line that clears the pair by less
+    # than that counts as touching, so the pair stays a corner-corner disjunction in the MILP.  11-05: with the old
+    # 10^-(dps-15) (~1e-65) s(303)'s pair (60, 63), cleared by another line by 4.9e-16, was released, and the MILP
+    # reported dS -2.2e-4 along a direction that overlaps that pair for every step t > ~2e-16 (max real gain ~1e-19).
+    rel = slack_separated(P, Eq, RELEASE_TOL)
     rep['released_pairs'] = [[i, j, float(g), list(ln)] for (i, j), (g, ln) in sorted(rel.items())]
     if rel:
         log_(f'  {len(rel)} touching pair(s) also separated with positive clearance by another side line: '
