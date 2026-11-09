@@ -85,6 +85,8 @@ class QOpt:
     v: bool = False                  # verbose (stderr)
     dump_lp: str | None = None       # subprocess mode only (fq main)
     freeze: str | None = None        # frozen square indices, e.g. "0-99,105" (10-22)
+    anchor_x: str | None = None      # frozen squares whose x follows the right wall (same syntax; 11-08)
+    anchor_y: str | None = None      # frozen squares whose y follows the top wall (11-08)
 
     def args(self):
         out = []

@@ -54,6 +54,53 @@ fn set_frozen(spec: Option<String>, n: usize) {
     *FROZEN.write().unwrap() = m;
 }
 
+// --anchor-x SPEC / --anchor-y SPEC (11-08): frozen squares (same index syntax as --freeze) whose x (y) follows the
+// right (top) wall: effective position x0 + (s - s0) for the input side s0 and input position x0, so a frozen block
+// anchored to the far walls moves rigidly with them while the side changes (the grid of a two-tilt design: uprights on
+// Z + f belong to the right / top walls).  Unanchored frozen squares stay in absolute coordinates (= anchored to the left
+// / bottom walls, which sit at 0).  Every reader of positions sees the effective ones (eval, viol_update, near, check,
+// repair; run_quench writes them after each rescaling); the s gradient and the s column of the polish LP carry the
+// anchored squares' x / y terms.  Not supported with --sqp / --finish / --shrink (Hessian / shrink paths ignore it).
+static ANCHOR: RwLock<Vec<(f64, f64, f64, f64)>> = RwLock::new(Vec::new());   // per square (ax, ay, x0, y0)
+static ANCHOR_S0: AtomicU64 = AtomicU64::new(0);
+fn parse_idx(spec: &str, n: usize, what: &str) -> Vec<bool> {
+    let mut m = vec![false; n];
+    for part in spec.split(',').map(|q| q.trim()).filter(|q| !q.is_empty()) {
+        let (a, b) = match part.split_once('-') {
+            Some((a, b)) => (a.parse::<usize>().expect(what), b.parse::<usize>().expect(what)),
+            None => { let a = part.parse::<usize>().expect(what); (a, a) }
+        };
+        assert!(a <= b && b < n, "{what} range {part} outside 0..{n}");
+        for i in a..=b { m[i] = true; }
+    }
+    m
+}
+fn set_anchor(sx: Option<String>, sy: Option<String>, n: usize, s0: f64, x: &[f64]) {
+    let fz = frozen_mask(n);
+    let mut v = Vec::new();
+    if (sx.is_some() || sy.is_some()) && !fz.is_empty() {
+        let mx = sx.map(|q| parse_idx(&q, n, "--anchor-x")).unwrap_or_else(|| vec![false; n]);
+        let my = sy.map(|q| parse_idx(&q, n, "--anchor-y")).unwrap_or_else(|| vec![false; n]);
+        v = (0..n).map(|i| (if fz[i] && mx[i] { 1.0 } else { 0.0 }, if fz[i] && my[i] { 1.0 } else { 0.0 }, x[3 * i], x[3 * i + 1])).collect();
+        if !v.iter().any(|q| q.0 != 0.0 || q.1 != 0.0) { v.clear(); }
+    }
+    *ANCHOR.write().unwrap() = v;
+    ANCHOR_S0.store(s0.to_bits(), Ordering::Relaxed);
+}
+fn anchors_on() -> bool { !ANCHOR.read().unwrap().is_empty() }
+/// write the anchored squares' effective positions for side s into x (layout x, y, theta per square)
+fn anchor_pos(x: &mut [f64], s: f64) {
+    let a = ANCHOR.read().unwrap();
+    if a.is_empty() { return; }
+    let s0 = f64::from_bits(ANCHOR_S0.load(Ordering::Relaxed));
+    for (i, &(ax, ay, x0, y0)) in a.iter().enumerate() {
+        if ax != 0.0 { x[3 * i] = x0 + ax * (s - s0); }
+        if ay != 0.0 { x[3 * i + 1] = y0 + ay * (s - s0); }
+    }
+}
+/// (ax, ay) per square, or empty
+fn anchor_flags() -> Vec<(f64, f64)> { ANCHOR.read().unwrap().iter().map(|q| (q.0, q.1)).collect() }
+
 // --dump-lp DIR: append every polish LP (rows, columns with stable keys, Clarabel time) to DIR/lp-<pid>.jsonl
 static DUMP_LP: OnceLock<String> = OnceLock::new();
 static TRACE_TR: OnceLock<bool> = OnceLock::new();
@@ -255,6 +302,8 @@ impl Prob {
     /// Augmented Lagrangian value and gradient.
     fn eval(&self, v: &[f64], g: &mut [f64]) -> f64 {
         let n = self.n;
+        let va: Vec<f64>;
+        let v: &[f64] = if anchors_on() { va = { let mut c = v.to_vec(); anchor_pos(&mut c, v[3 * n]); c }; &va } else { v };
         let mu = self.mu;
         for q in g.iter_mut() { *q = 0.0; }
         let s = v[3 * n];
@@ -364,6 +413,8 @@ impl Prob {
             g[o + 2 * pk] += gphi;
             g[o + 2 * pk + 1] += gd;
         }
+        let af = anchor_flags();                   // anchored frozen squares: d/ds of their x / y (11-08)
+        for (i, &(ax, ay)) in af.iter().enumerate() { if ax != 0.0 { g[3 * n] += ax * g[3 * i]; } if ay != 0.0 { g[3 * n] += ay * g[3 * i + 1]; } }
         if self.fix_s { g[3 * n] = 0.0; }
         let fz = frozen_mask(n);
         if !fz.is_empty() {
@@ -375,6 +426,8 @@ impl Prob {
     /// Max constraint violation, and multiplier update lam <- max(0, lam + mu g).
     fn viol_update(&mut self, v: &[f64], update: bool) -> f64 {
         let n = self.n;
+        let va: Vec<f64>;
+        let v: &[f64] = if anchors_on() { va = { let mut c = v.to_vec(); anchor_pos(&mut c, v[3 * n]); c }; &va } else { v };
         let mu = self.mu;
         let s = v[3 * n];
         let mut mv: f64 = 0.0;
@@ -448,6 +501,8 @@ impl Prob {
     /// Constraints with g > -delta and their sparse gradients (variable layout as pack()).
     fn near(&self, v: &[f64], delta: f64) -> Vec<Con> {
         let n = self.n;
+        let va: Vec<f64>;
+        let v: &[f64] = if anchors_on() { va = { let mut c = v.to_vec(); anchor_pos(&mut c, v[3 * n]); c }; &va } else { v };
         let si = 3 * n;
         let s = v[si];
         let mut out = Vec::new();
@@ -500,7 +555,19 @@ impl Prob {
         }
         let fz = frozen_mask(n);
         if !fz.is_empty() {
-            for c in out.iter_mut() { c.nz.retain(|&(k, _)| !(k < si && fz[k / 3])); }
+            let af = anchor_flags();
+            for c in out.iter_mut() {
+                if !af.is_empty() {                    // anchored x / y of a frozen square -> the s column (11-08)
+                    let mut ds = 0.0;
+                    for &(k, a) in c.nz.iter() {
+                        if k < si && fz[k / 3] { let (ax, ay) = af[k / 3]; if k % 3 == 0 { ds += a * ax; } else if k % 3 == 1 { ds += a * ay; } }
+                    }
+                    if ds != 0.0 {
+                        if let Some(e) = c.nz.iter_mut().find(|e| e.0 == si) { e.1 += ds; } else { c.nz.push((si, ds)); }
+                    }
+                }
+                c.nz.retain(|&(k, _)| !(k < si && fz[k / 3]));
+            }
             out.retain(|c| !c.nz.is_empty());
         }
         out
@@ -1683,6 +1750,8 @@ fn quench(s0: f64, x0: &[f64], o: &QOpt) -> (f64, Vec<f64>, usize, usize, f64, P
 /// Exact-ish (f64 SAT) feasibility: min pair gap and min wall clearance.
 fn check(s: f64, x: &[f64]) -> (f64, f64) {
     let n = x.len() / 3;
+    let xa: Vec<f64>;
+    let x: &[f64] = if anchors_on() { xa = { let mut c = x.to_vec(); anchor_pos(&mut c, s); c }; &xa } else { x };
     let fz = frozen_mask(n);             // frozen-frozen pairs carry no constraints (--freeze), so no check (11-05)
     let mut mg = f64::INFINITY;
     for i in 0..n {
@@ -1721,7 +1790,9 @@ fn repair(s: f64, x: &mut [f64], margin: f64) -> f64 {
         // centres scale about the origin; rectangle mode: grow the side so both walls scale by >= f
         let (dx, dy) = (rdx(), rdy());
         s = if dx == 0.0 && dy == 0.0 { s * f } else { ((s + dx) * f - dx).max((s + dy) * f - dy) };
+        anchor_pos(x, s);
     }
+    anchor_pos(x, s);
     s
 }
 
@@ -1773,6 +1844,10 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
         let fz = frozen_mask(n);
         let fr = |i: usize| !fz.is_empty() && fz[i];
         let x_in = x.clone();
+        set_anchor(sarg(&a, "--anchor-x"), sarg(&a, "--anchor-y"), n, s, &x);
+        if anchors_on() {
+            assert!(!a.iter().any(|t| t == "--sqp" || t == "--finish" || t == "--shrink"), "--anchor-x / --anchor-y: not with --sqp / --finish / --shrink");
+        }
         let sig: f64 = arg(&a, "--kick", 0.0);
         if sig > 0.0 {
             let mut r = Rng::new(arg(&a, "--seed", 1u64));
@@ -1805,6 +1880,7 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
             } else { s };
             let mut sh = sa * arg(&a, "--hold-f", 1.0);
             for i in (0..n).filter(|&i| !fr(i)) { x[3 * i] *= sh / sa; x[3 * i + 1] *= sh / sa; }
+            anchor_pos(&mut x, sh);
             let mut p = Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: true, b: Vec::new() };
             let mut vlast = 0.0;
             // 10-24 (PACKER "RS1"): --round-maxit / --round-gtol = inner L-BFGS budget of each hardening step (default the
@@ -1861,6 +1937,7 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
             let amax0 = b.iter().map(|q| (e0 * q.tanh()).abs()).fold(0.0, f64::max);
             let sh = sa * arg(&a, "--hold-f", 1.0);
             for i in (0..n).filter(|&i| !fr(i)) { x[3 * i] *= sh / sa; x[3 * i + 1] *= sh / sa; }
+            anchor_pos(&mut x, sh);
             let mut p = Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: true, b };
             let mut vlast = 0.0;
             for k in 1..=ksteps {
@@ -1882,6 +1959,7 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
             x[3 * i] = (x[3 * i] * lo).clamp(H, s1 + rdx() - H);
             x[3 * i + 1] = (x[3 * i + 1] * lo).clamp(H, s1 + rdy() - H);
         }
+        anchor_pos(&mut x, s1);
         let o = QOpt {
             mu0: arg(&a, "--mu0", 10.0), mu_max: arg(&a, "--mu-max", 1e2), tol: arg(&a, "--tol", 1e-7),
             skin: arg(&a, "--skin", 0.3), max_outer: arg(&a, "--outer", 60), verbose: a.iter().any(|t| t == "--v"),
@@ -1895,6 +1973,7 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
             if o.verbose { eprintln!("shrink: s {ss:.10} evals {ne} steps {st}"); }
             (ss, xs, ne, st, 0.0, Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: false, b: Vec::new() })
         } else { quench(s1, &x, &o) };
+        anchor_pos(&mut xq, sq);
         let t_alm = t0.elapsed().as_secs_f64();
         let mut xc = xq.clone();
         let s_coarse = repair(sq, &mut xc, 1e-13);
@@ -1908,12 +1987,14 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
             let po = POpt { sqp: a.iter().any(|t| t == "--sqp"), rmax: arg(&a, "--rmax", 4e-3), r0: arg(&a, "--r0", 1e-3), rmin: arg(&a, "--rmin", 1e-10), maxit: arg(&a, "--pit", 300), cc_tol: arg(&a, "--cc-tol", 1e-7), flip_top: arg(&a, "--flip-top", 8), ident: a.iter().any(|t| t == "--ident"), stag_w: arg(&a, "--stag-w", 15), stag_tol: arg(&a, "--stag-tol", 2e-9), finish: a.iter().any(|t| t == "--finish"), tr_grow: arg(&a, "--tr-grow", 0.5), tr_shrink: arg(&a, "--tr-shrink", 4.0), verbose: o.verbose };
             let (s2, x2, it, rr, fl) = polish(&mut prob, sq, &xq, &po, &mut trace, &mut load);
             sq = s2; xq = x2; pit = it; pr = rr; flips = fl;
+            anchor_pos(&mut xq, sq);
         }
         let (fp, ncont) = (fingerprint(&load), load.len());
         let sr = repair(sq, &mut xq, 1e-13);
         let (mg, mw) = check(sr, &xq);
         let frozen_info = if fz.is_empty() { String::new() } else {
-            let d = (0..n).filter(|&i| fz[i]).map(|i| (xq[3 * i] - x_in[3 * i]).abs().max((xq[3 * i + 1] - x_in[3 * i + 1]).abs()).max(H * SQRT2 * (xq[3 * i + 2] - x_in[3 * i + 2]).abs())).fold(0.0f64, f64::max);
+            let mut xr = x_in.clone(); anchor_pos(&mut xr, sr);   // anchored squares: vs their anchored reference
+            let d = (0..n).filter(|&i| fz[i]).map(|i| (xq[3 * i] - xr[3 * i]).abs().max((xq[3 * i + 1] - xr[3 * i + 1]).abs()).max(H * SQRT2 * (xq[3 * i + 2] - xr[3 * i + 2]).abs())).fold(0.0f64, f64::max);
             format!(", \"frozen\": {}, \"frozen_dmax\": {:.3e}", fz.iter().filter(|&&b| b).count(), d)
         };
         let json = format!("{{\"s\": {:.15}, \"s_alm\": {:.15}, \"viol\": {:.2e}, \"evals\": {}, \"outer\": {}, \"slp_it\": {}, \"slp_r\": {:.1e}, \"flips\": {}, \"min_gap\": {:.2e}, \"min_wall\": {:.2e}, \"sec\": {:.3}, \"s_coarse\": {:.15}, \"t_alm\": {:.3}, \"s_alm0\": {:.15}, \"trace\": [{}], \"fp\": \"{:016x}\", \"ncontacts\": {}{}{}}}",
