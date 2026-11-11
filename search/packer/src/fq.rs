@@ -24,6 +24,7 @@
 //!     carry no constraints (the frozen set is assumed feasible), and frozen squares carry no wall constraints (obstacles may
 //!     reach outside the container; 11-05).  Only the final repair scaling (f64 margin, ~1e-13
 //!     relative) moves them; the JSON reports the largest frozen displacement as frozen_dmax (10-22)
+//!   ALM convergence knobs (11-09, opt-in; defaults reproduce the plain quench bit for bit): see alm_opt
 
 mod ldl;
 mod lpipm;
@@ -1594,7 +1595,30 @@ fn dot(a: &[f64], b: &[f64]) -> f64 {
 }
 
 // ---------------------------------------------------------------- quench
-struct QOpt { mu0: f64, mu_max: f64, tol: f64, skin: f64, max_outer: usize, verbose: bool }
+struct QOpt { mu0: f64, mu_max: f64, tol: f64, skin: f64, max_outer: usize, verbose: bool,
+              exit_mu: f64, gtol_c: f64, gtol_min: f64, gtol_viol: f64, kkt: f64, safeguard: bool, stall: f64, stall_viol: f64 }
+
+/// The quench options from the command line.  11-09 convergence knobs (all opt-in; defaults = the plain quench):
+///   --alm-exit-mu M     early exit needs mu >= M (default 1e3; with the default --mu-max 1e2 the exit never fires and
+///                       every quench runs --outer iterations)
+///   --alm-gtol-c C, --alm-gtol-min G   inner L-BFGS tolerance max(G, C / sqrt(mu)) (defaults 1e-2, 1e-11)
+///   --alm-gtol-viol F   also cap the inner tolerance at F x the previous outer's max violation (0 = off)
+///   --alm-kkt K         stop when max violation < --tol and the inner solve ended with |grad L|_inf < K (0 = off)
+///   --alm-safeguard     multipliers updated only after a sufficient violation decrease (<= 0.25 x previous) or at
+///                       mu_max; otherwise mu x 10 with the multipliers kept
+///   --alm-stall T [--alm-stall-viol V]   stop after 3 consecutive outers with |delta s| < T and max violation < V
+///                       (default V 1e-4; T 0 = off)
+///   --alm-final-only    the knobs above and --mu-max apply to the final quench only (rounded / soft pre-stage
+///                       quenches keep the plain defaults)
+fn alm_opt(a: &[String], pre: bool) -> QOpt {
+    let c = !(pre && a.iter().any(|t| t == "--alm-final-only"));
+    let k = |name: &str, def: f64| if c { arg(a, name, def) } else { def };
+    QOpt { mu0: arg(a, "--mu0", 10.0), mu_max: if c { arg(a, "--mu-max", 1e2) } else { 1e2 }, tol: arg(a, "--tol", 1e-7),
+           skin: arg(a, "--skin", 0.3), max_outer: arg(a, "--outer", 60), verbose: a.iter().any(|t| t == "--v"),
+           exit_mu: k("--alm-exit-mu", 1e3), gtol_c: k("--alm-gtol-c", 1e-2), gtol_min: k("--alm-gtol-min", 1e-11),
+           gtol_viol: k("--alm-gtol-viol", 0.0), kkt: k("--alm-kkt", 0.0), safeguard: c && a.iter().any(|t| t == "--alm-safeguard"),
+           stall: k("--alm-stall", 0.0), stall_viol: k("--alm-stall-viol", 1e-4) }
+}
 
 /// Returns (s, x, total evaluations, outer iterations, final violation before repair).
 /// Minimise the pure overlap penalty at fixed side s (separators free, multipliers 0).  Returns (x, max violation, evals).
@@ -1711,10 +1735,13 @@ fn quench(s0: f64, x0: &[f64], o: &QOpt) -> (f64, Vec<f64>, usize, usize, f64, P
     let mut viol = f64::INFINITY;
     let traj = TRAJ_ON.load(Ordering::Relaxed);
     let tq = Instant::now();
+    let mut nstall = 0;
     while outer < o.max_outer && !stopped() {
         outer += 1;
         let mut v = p.pack(&x, s);
-        let gtol = (1e-2 / p.mu.sqrt()).max(1e-11);
+        let s_prev = s;
+        let mut gtol = (o.gtol_c / p.mu.sqrt()).max(o.gtol_min);
+        if o.gtol_viol > 0.0 { gtol = gtol.min(o.gtol_viol * prev_v).max(o.gtol_min); }
         let (_, ne, gi) = {
             let pr = &p;
             lbfgs(&mut |vv: &[f64], gg: &mut [f64]| pr.eval(vv, gg), &mut v, 20000, gtol, 0.05)
@@ -1737,10 +1764,17 @@ fn quench(s0: f64, x0: &[f64], o: &QOpt) -> (f64, Vec<f64>, usize, usize, f64, P
             if traj { TRAJ.lock().unwrap().push((outer, s, f64::NAN, p.mu, tq.elapsed().as_secs_f64())); }
             continue; // re-solve with the new list before judging violation
         }
-        viol = p.viol_update(&v, true);
+        // --alm-safeguard: no multiplier update after an insufficient violation decrease (mu is raised instead)
+        let hold = o.safeguard && p.mu < o.mu_max && p.viol_update(&v, false) > 0.25 * prev_v;
+        viol = p.viol_update(&v, !hold);
         if traj { TRAJ.lock().unwrap().push((outer, s, viol, p.mu, tq.elapsed().as_secs_f64())); }
         if o.verbose { eprintln!("outer {outer}: mu {:.1e} s {:.12} viol {:.2e} |g| {:.1e} evals {ne}", p.mu, s, viol, gi); }
-        if viol < o.tol && p.mu >= 1e3 { break; }
+        if viol < o.tol && p.mu >= o.exit_mu { break; }
+        if o.kkt > 0.0 && viol < o.tol && gi < o.kkt { break; }
+        if o.stall > 0.0 {
+            nstall = if (s - s_prev).abs() < o.stall && viol < o.stall_viol { nstall + 1 } else { 0 };
+            if nstall >= 3 { break; }
+        }
         if viol > 0.25 * prev_v && p.mu < o.mu_max { p.mu *= 10.0; }
         prev_v = viol;
     }
@@ -1870,8 +1904,7 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
             let rk: f64 = arg(&a, "--round-kick", 0.0);
             let mut rng = Rng::new(arg(&a, "--seed", 1u64) ^ 0x5eed);
             set_rnd(r0);
-            let oq = QOpt { mu0: arg(&a, "--mu0", 10.0), mu_max: arg(&a, "--mu-max", 1e2), tol: arg(&a, "--tol", 1e-7),
-                            skin: arg(&a, "--skin", 0.3), max_outer: arg(&a, "--outer", 60), verbose: a.iter().any(|t| t == "--v") };
+            let oq = alm_opt(&a, true);
             let sa = if a.iter().any(|t| t == "--round-compress") {
                 TRAJ_ON.store(want_traj, Ordering::Relaxed);
                 let (sq, xq, _, _, _, _) = quench(s * arg(&a, "--round-loosen", 1.0), &x, &oq);
@@ -1927,8 +1960,7 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
             let sk: f64 = arg(&a, "--soft-kick", 0.0);
             let mut rng = Rng::new(arg(&a, "--seed", 1u64) ^ 0x50f7);
             set_soft(e0);
-            let oq = QOpt { mu0: arg(&a, "--mu0", 10.0), mu_max: arg(&a, "--mu-max", 1e2), tol: arg(&a, "--tol", 1e-7),
-                            skin: arg(&a, "--skin", 0.3), max_outer: arg(&a, "--outer", 60), verbose: a.iter().any(|t| t == "--v") };
+            let oq = alm_opt(&a, true);
             let mut b = vec![0.0; n];
             let sa = if a.iter().any(|t| t == "--soft-compress") {
                 let (sq, xq, _, _, _, pq) = quench(s, &x, &oq);
@@ -1960,10 +1992,7 @@ fn run_quench(a: &[String], s: f64, mut x: Vec<f64>) -> (String, f64, Vec<f64>) 
             x[3 * i + 1] = (x[3 * i + 1] * lo).clamp(H, s1 + rdy() - H);
         }
         anchor_pos(&mut x, s1);
-        let o = QOpt {
-            mu0: arg(&a, "--mu0", 10.0), mu_max: arg(&a, "--mu-max", 1e2), tol: arg(&a, "--tol", 1e-7),
-            skin: arg(&a, "--skin", 0.3), max_outer: arg(&a, "--outer", 60), verbose: a.iter().any(|t| t == "--v"),
-        };
+        let o = alm_opt(&a, false);
         let (mut sq, mut xq, nev, outer, viol, mut prob) = if a.iter().any(|t| t == "--no-alm") || stopped() {
             // already (nearly) feasible: polish directly
             (s1, x.clone(), 0, 0, 0.0, Prob { n, pairs: Vec::new(), wlam: vec![0.0; 16 * n], mu: 1.0, fix_s: false, b: Vec::new() })

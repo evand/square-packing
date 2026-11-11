@@ -87,6 +87,16 @@ class QOpt:
     freeze: str | None = None        # frozen square indices, e.g. "0-99,105" (10-22)
     anchor_x: str | None = None      # frozen squares whose x follows the right wall (same syntax; 11-08)
     anchor_y: str | None = None      # frozen squares whose y follows the top wall (11-08)
+    # 11-09 ALM convergence knobs (fq alm_opt; None / False = the plain quench, bit for bit)
+    alm_exit_mu: float | None = None     # early exit needs mu >= this (fq 1e3, above the default mu_max 1e2)
+    alm_gtol_c: float | None = None      # inner tolerance max(gtol_min, c / sqrt(mu)) (fq 1e-2, 1e-11)
+    alm_gtol_min: float | None = None
+    alm_gtol_viol: float | None = None   # inner tolerance also <= this x the previous max violation
+    alm_kkt: float | None = None         # stop at max violation < tol and inner |grad L| < this
+    alm_safeguard: bool = False          # multiplier update only after a sufficient violation decrease
+    alm_stall: float | None = None       # stop after 3 outers with |ds| < this and violation < alm_stall_viol (fq 1e-4)
+    alm_stall_viol: float | None = None
+    alm_final_only: bool = False         # the knobs and mu_max apply to the final quench only (not the pre-stages)
 
     def args(self):
         out = []
