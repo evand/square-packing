@@ -1,0 +1,15 @@
+# Python environment for square-packing (packer pool, exact forms, site tools).  Pinned: an upgrade must be a
+# deliberate edit here, never a side effect of another project.  Build / use: search/packer/activate.sh.
+# Python 3.13 (NixOS system python3); wheels need nix-ld's libstdc++ (activate.sh sets LD_LIBRARY_PATH).
+numpy==2.4.2
+scipy==1.17.0
+highspy==1.15.1
+mpmath==1.3.0
+sympy==1.14.0
+PyYAML==6.0.3
+matplotlib==3.10.8
+pillow==12.1.1
+z3-solver==5.1.0.0
+python-flint==0.9.0
+pytest==9.0.2
+# Not included (one importer each; separate venvs under runs/): cvxpy (runs/sos_venv), cyipopt (nlpdesc.py), scikit-learn.

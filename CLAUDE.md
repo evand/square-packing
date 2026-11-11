@@ -25,6 +25,7 @@ Start at `TODO.md` (open items; conventions in `~/math/TODO.md`), then `README.m
   Explorer archive files (`b#####.txt`) may be absent (deduplicated against the store, 10-20): read them with `pk.packing.read` / `mcmin.load_deg`, or call
   `pk.archive.ensure(path)` before handing a path to fq; `pk.py archive-restore RUN` rehydrates a run.  Store dedupe (`pk.py dedupe`): never `--apply` without
   discussing the rule with Evan in that session.
+- Python (11-10): `source search/packer/activate.sh` first, in every shell that runs the packer, starts the pool or a job (own venv `../venv`, pinned by `requirements.lock`; a new dependency goes into `requirements.txt`, then `pip freeze > requirements.lock`).  Session shells may otherwise inherit another project's python.
 - Short work (units of 10-60 s, a few minutes at most) goes to the pool: `python3 search/packer/pk/tasks.py add CAMPAIGN --prio high|normal|low -- CMD` or `repeat CAMPAIGN --budget CPU_H -- CMD`; no core counts (`tasks.py -h`).  Renders and other ordinary scripts run outside it; it makes room.
 - Launch long runs that cannot be split with `python3 search/packer/pk/jobs.py start NAME --procs N -- CMD` (`jobs.py free` suggests N; it caps math-library threads at 1 per process, since an in-process numpy / exactsolve pool otherwise runs ~47 threads per worker: load ~300 on 10-14).  Check `jobs.py status` after launch: it flags oversubscription.
 - Strategy-steering numbers and open confusions live in `search/packer/CLAIMS.md` (cite IDs, update status there).
